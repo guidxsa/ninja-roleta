@@ -32,7 +32,7 @@ export interface CampaignResult {
   rounds: number[];
 }
 
-/** Campanha sem recompensas e sem o exame (ainda indefinido): mede a curva de dificuldade crua. */
+/** Campanha sem eventos, recompensas e exame: mede a curva de dificuldade crua. */
 export function runCampaign(
   initial: PlayerState,
   stages: Stage[],

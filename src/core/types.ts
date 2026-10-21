@@ -74,3 +74,11 @@ export interface Origin {
   affinity: Element | null;
   jinchuuriki: boolean;
 }
+
+export type SummonAnimal = 'toad' | 'snake' | 'slug';
+
+export interface SummonState {
+  animal: SummonAnimal;
+  /** Começa em 1; sobe quando o encontro de invocação se repete. */
+  level: number;
+}

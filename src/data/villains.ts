@@ -38,6 +38,43 @@ export const villains: VillainDef[] = [
       { id: 'iceMirrors', type: 'ninjutsu', baseDamage: 15, weight: 2 },
     ],
   },
+  // Exame chunin: genins genéricos (nomes próprios, não do universo original).
+  {
+    id: 'examSand',
+    element: 'wind',
+    hp: 90,
+    speed: 11,
+    defense: { taijutsu: 9, ninjutsu: 10, genjutsu: 8 },
+    critBonus: 0.02,
+    techniques: [
+      { id: 'fanGust', type: 'ninjutsu', baseDamage: 16, weight: 2 },
+      { id: 'kunaiStrike', type: 'taijutsu', baseDamage: 13, weight: 2 },
+    ],
+  },
+  {
+    id: 'examSound',
+    element: 'lightning',
+    hp: 85,
+    speed: 12,
+    defense: { taijutsu: 9, ninjutsu: 9, genjutsu: 11 },
+    critBonus: 0.03,
+    techniques: [
+      { id: 'soundWave', type: 'genjutsu', baseDamage: 9, weight: 1, debilitateTurns: 1 },
+      { id: 'kunaiStrike', type: 'taijutsu', baseDamage: 14, weight: 3 },
+    ],
+  },
+  {
+    id: 'examLeaf',
+    element: 'fire',
+    hp: 100,
+    speed: 12,
+    defense: { taijutsu: 12, ninjutsu: 9, genjutsu: 9 },
+    critBonus: 0.03,
+    techniques: [
+      { id: 'palmStrike', type: 'taijutsu', baseDamage: 17, weight: 3 },
+      { id: 'fireballVillain', type: 'ninjutsu', baseDamage: 15, weight: 1 },
+    ],
+  },
   {
     id: 'gaara',
     element: 'earth',

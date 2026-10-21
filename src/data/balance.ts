@@ -34,6 +34,49 @@ export const balance = {
 
   revive: { initialItems: 1 },
 
+  // 1 estágio de status (eventos de treino, jokenpô e recompensas). Proposta.
+  statStage: { taijutsu: 1, ninjutsu: 1, genjutsu: 1, speed: 1, hp: 5, chakra: 2 },
+
+  // Upgrade de técnica (pergaminho): dano base extra por nível, por tipo de técnica.
+  techniqueUpgrade: { baseDamagePerLevel: 2 },
+
+  // Ferramenta ninja: dano base extra em todos os ataques, por nível.
+  ninjaTool: { baseDamagePerLevel: 1 },
+
+  // Invocação: uma vez por luta. Sempre funciona (não rola acerto).
+  summon: {
+    chakraCost: 5,
+    toad: { baseDamage: 18, baseDamagePerLevel: 6 },
+    snake: { baseDamage: 6, baseDamagePerLevel: 3, debilitateTurns: 1 },
+    slug: { healPct: 0.3, healPctPerLevel: 0.1 },
+  },
+
+  events: {
+    trainingStages: 1,
+    jokenpoWinStages: 2,
+    // Akatsuki com jinchuuriki sem item de retorno: começa a próxima luta assim.
+    akatsukiNoReviveHpPct: 0.5,
+    akatsukiNoReviveChakraPct: 0.5,
+  },
+
+  // Recompensas: a "camada" (1 comum, 2 raro, 3 lendário) multiplica a quantidade.
+  rewards: {
+    stagesPerTier: 1,
+    resistancePerTier: 1,
+    critBonusPerTier: 0.03,
+  },
+
+  exam: {
+    restoreBetweenFights: true,
+    // Índice = vitórias no exame.
+    rewardByWins: [
+      { tier: 1, spins: 1 },
+      { tier: 1, spins: 1 },
+      { tier: 2, spins: 2 },
+      { tier: 3, spins: 2 },
+    ],
+  },
+
   jinchuuriki: {
     chakraBonusPct: 1.0,
     surge: {

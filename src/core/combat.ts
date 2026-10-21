@@ -6,9 +6,9 @@ import { initiativeChance, rollInitiative } from './initiative';
 import type { PlayerState } from './player';
 import type { Rng } from './rng';
 import { chanceSlices, spin } from './roulette';
-import type { AttackType, Element, TechniqueDef, VillainDef } from './types';
+import type { AttackType, Element, SummonAnimal, TechniqueDef, VillainDef } from './types';
 
-export type PlayerAction = AttackType | 'gates' | 'rest';
+export type PlayerAction = AttackType | 'gates' | 'summon' | 'rest';
 export type Side = 'player' | 'villain';
 export type BattleStatus = 'ongoing' | 'won' | 'lost';
 export type SurgeMode = 'control' | 'frenzy';
@@ -26,6 +26,9 @@ export interface PlayerFx extends StatusFx {
   surgeUsed: boolean;
   surgeTurns: number;
   surgeMode: SurgeMode | null;
+  /** Ramen: o próximo ataque do jogador é crítico garantido. */
+  guaranteedCrit: boolean;
+  summonUsed: boolean;
 }
 
 export interface VillainState {
@@ -39,6 +42,10 @@ export interface BattleOptions {
   allowRevive: boolean;
   /** Emboscada: o jogador age primeiro na 1ª rodada. */
   playerStartsFirst: boolean;
+  /** Desvantagem de ação (velhinha, derrota no jokenpô): o vilão age primeiro na 1ª rodada. */
+  villainStartsFirst: boolean;
+  /** Ramen: o primeiro ataque do jogador é crítico garantido (pula a rolagem de acerto). */
+  guaranteedCrit: boolean;
   /** Buff temporário do vilão (evento pré-luta). */
   villainDamageMult: number;
 }
@@ -46,6 +53,8 @@ export interface BattleOptions {
 export type BattleEvent =
   | { type: 'round'; round: number }
   | { type: 'ambush' }
+  | { type: 'late' }
+  | { type: 'guaranteedCrit' }
   | { type: 'initiative'; first: Side; playerChance: number }
   | { type: 'skip'; side: Side }
   | { type: 'rest'; chakra: number }
@@ -64,6 +73,7 @@ export type BattleEvent =
   | { type: 'movementReading'; damageBefore: number; damage: number }
   | { type: 'debilitate'; target: Side; turns: number }
   | { type: 'debilitateResisted'; target: Side }
+  | { type: 'summon'; animal: SummonAnimal; damage: number; healed: number }
   | { type: 'regen'; hp: number; chakra: number }
   | { type: 'surge'; mode: SurgeMode; healed: number }
   | { type: 'surgeDrain'; hpLost: number }
@@ -84,6 +94,8 @@ export interface BattleState {
 const DEFAULT_OPTIONS: BattleOptions = {
   allowRevive: true,
   playerStartsFirst: false,
+  villainStartsFirst: false,
+  guaranteedCrit: false,
   villainDamageMult: 1,
 };
 
@@ -92,6 +104,7 @@ export function startBattle(
   villain: VillainDef,
   options: Partial<BattleOptions> = {},
 ): BattleState {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
   return {
     round: 0,
     status: 'ongoing',
@@ -104,23 +117,33 @@ export function startBattle(
       surgeUsed: false,
       surgeTurns: 0,
       surgeMode: null,
+      guaranteedCrit: opts.guaranteedCrit,
+      summonUsed: false,
     },
     villain: { def: villain, hp: villain.hp, fx: { debilitated: 0, debilitateImmunity: 0 } },
-    options: { ...DEFAULT_OPTIONS, ...options },
+    options: opts,
     log: [],
   };
 }
 
-/** Técnica que o jogador usa para um tipo: a aprendida ou a ação básica, com elemento resolvido. */
+/**
+ * Técnica que o jogador usa para um tipo: a aprendida ou a ação básica, com elemento resolvido
+ * e dano base já somado aos upgrades do tipo e à ferramenta ninja.
+ */
 export function playerTechnique(
   player: PlayerState,
   type: AttackType,
   data: GameData,
 ): TechniqueDef & { element: Element | null } {
+  const { balance } = data;
   const id = player.techniques[type];
   const tech = (id && data.techniquesById[id]) || data.basicTechniques[type];
   const element = type === 'taijutsu' ? null : tech.element === 'affinity' ? player.affinity : tech.element;
-  return { ...tech, element };
+  const baseDamage =
+    tech.baseDamage +
+    (player.techniqueLevels[type] ?? 0) * balance.techniqueUpgrade.baseDamagePerLevel +
+    player.ninjaToolLevel * balance.ninjaTool.baseDamagePerLevel;
+  return { ...tech, element, baseDamage };
 }
 
 export function availableActions(state: BattleState, data: GameData): PlayerAction[] {
@@ -136,6 +159,9 @@ export function availableActions(state: BattleState, data: GameData): PlayerActi
     p.chakra >= playerTechnique(p, 'taijutsu', data).chakraCost
   ) {
     actions.push('gates');
+  }
+  if (p.summon && !state.playerFx.summonUsed && p.chakra >= data.balance.summon.chakraCost) {
+    actions.push('summon');
   }
   actions.push('rest');
   return actions;
@@ -159,6 +185,9 @@ export function playRound(prev: BattleState, action: PlayerAction, rng: Rng, dat
   if (s.round === 1 && s.options.playerStartsFirst) {
     s.log.push({ type: 'ambush' });
     playerFirst = true;
+  } else if (s.round === 1 && s.options.villainStartsFirst) {
+    s.log.push({ type: 'late' });
+    playerFirst = false;
   } else {
     const chance = initiativeChance(s.player.speed, s.villain.def.speed);
     playerFirst = rollInitiative(s.player.speed, s.villain.def.speed, rng) === 'a';
@@ -282,6 +311,8 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
     s.log.push({ type: 'gates', hpLost });
     checkSurge(s, rng, data);
     playerAttack(s, 'taijutsu', rng, data);
+  } else if (action === 'summon') {
+    playerSummon(s, data);
   } else {
     playerAttack(s, action, rng, data);
   }
@@ -300,7 +331,14 @@ function playerAttack(s: BattleState, type: AttackType, rng: Rng, data: GameData
       ? genjutsuHitChance(p.offense.genjutsu, v.def.defense.genjutsu, balance.genjutsuHit)
       : hitChance(p.speed, v.def.speed, balance.hit);
   const critP = critChance(p.critBonus, balance.crit.baseChance);
-  const outcome = rollHit(hitP, critP, rng);
+  let outcome: HitOutcome;
+  if (s.playerFx.guaranteedCrit) {
+    s.playerFx.guaranteedCrit = false;
+    s.log.push({ type: 'guaranteedCrit' });
+    outcome = 'crit';
+  } else {
+    outcome = rollHit(hitP, critP, rng);
+  }
   const elementMult = elementMultiplier(tech.element, v.def.element, data.beats, balance.elements);
 
   let damage = 0;
@@ -335,6 +373,43 @@ function playerAttack(s: BattleState, type: AttackType, rng: Rng, data: GameData
     return;
   }
   if (outcome !== 'miss' && tech.debilitateTurns) applyDebilitate(s, v.fx, 'villain', tech.debilitateTurns);
+}
+
+/** Invocação: uma vez por luta, sem rolagem de acerto. O efeito depende do animal. */
+function playerSummon(s: BattleState, data: GameData): void {
+  const p = s.player;
+  const v = s.villain;
+  const summon = p.summon;
+  if (!summon) throw new Error('O jogador não sabe invocar');
+  const cfg = data.balance.summon;
+  const extraLevels = summon.level - 1;
+  p.chakra -= cfg.chakraCost;
+  s.playerFx.summonUsed = true;
+
+  let damage = 0;
+  let healed = 0;
+  if (summon.animal === 'slug') {
+    const pct = cfg.slug.healPct + cfg.slug.healPctPerLevel * extraLevels;
+    healed = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * pct));
+    p.hp += healed;
+  } else {
+    const animal = cfg[summon.animal];
+    damage = playerDamage({
+      baseDamage: animal.baseDamage + animal.baseDamagePerLevel * extraLevels,
+      offense: p.offense.ninjutsu,
+      defense: v.def.defense.ninjutsu,
+      elementMult: data.balance.elements.neutral,
+      critMult: 1,
+    });
+    v.hp = Math.max(0, v.hp - damage);
+  }
+  s.log.push({ type: 'summon', animal: summon.animal, damage, healed });
+
+  if (v.hp === 0) {
+    finish(s, 'won');
+    return;
+  }
+  if (summon.animal === 'snake') applyDebilitate(s, v.fx, 'villain', cfg.snake.debilitateTurns);
 }
 
 function villainTurn(s: BattleState, rng: Rng, data: GameData): void {

@@ -69,6 +69,7 @@ A origem é definida por uma sequência de rolagens, todas visíveis na roleta:
 | Uzumaki | 15 | Chakra +50%, HP +20% | Rolada como as comuns | **Vitalidade Uzumaki**: recupera 1 de chakra e 3% do HP máximo por turno. |
 
 Notas:
+- **Só o Uchiha tem afinidade fixa (fogo).** Hyuuga e Uzumaki rolam a afinidade normalmente, podendo cair em qualquer um dos 5 elementos.
 - Quanto mais rara a linhagem, mais forte. O Uzumaki é a mais rara.
 - A passiva do Hyuuga mudou em relação à ideia inicial ("ignora chakra do inimigo"), porque vilões têm atributos defensivos, não reserva de chakra. Fica como proposta.
 - A pool de recompensas é filtrada pela origem (o prodígio do taijutsu nunca recebe técnica de ninjutsu ou genjutsu).
@@ -77,7 +78,7 @@ Notas:
 
 - Chakra máximo **+100%**.
 - **Surto da besta**: uma vez por luta, ao chegar abaixo de 30% de HP, rola uma roleta de **controle** (60%: dano ×1,5 por 3 turnos e recupera parte do HP) ou **descontrole** (40%: dano ×2 por 3 turnos, mas perde 10% do HP máximo por turno, sem matar: mínimo de 1 HP). Proposta inicial, opcional.
-- Pode acumular com linhagem especial (ex.: Uzumaki + jinchuuriki).
+- **Acumula** com linhagem especial (ex.: Uzumaki + jinchuuriki).
 
 ### Elementos
 
@@ -172,15 +173,69 @@ dano = max(1, dano_base_do_vilão × mult_elemento × mult_crítico − resistê
 
 Cada vilão tem: elemento, status, 3 atributos defensivos (tai/nin/gen), dano base, diferencial de crítico, técnicas e uma tabela de recompensas própria. Combate em grupo fica fora do escopo inicial.
 
-### Roleta pré-vilão
+### Roleta pré-vilão (eventos)
 
-Antes de cada confronto, uma roleta define um evento que afeta a luta. Fatias de tipos variados:
-- **Emboscada**: o jogador age primeiro.
-- **Terreno favorável**: bônus para um elemento.
-- **Vilão em vantagem**: buff temporário para o inimigo.
-- **Evento neutro** ou pequeno bônus de recuperação.
+Antes de cada vilão, uma roleta sorteia um evento. Em blocos com várias lutas (Zabuza e Haku, Quarteto do Som), gira **uma vez antes do bloco**. Não gira antes das lutas do exame chunin (sugestão, confirmar).
 
-Os status do jogador alteram o tamanho das fatias (ex.: speed alta aumenta a chance de emboscada).
+| Peso | Evento | Efeito |
+|---|---|---|
+| 10% | **Nada acontece** | Sem efeito. |
+| 10% | **Ajudou uma velhinha e se atrasou** | Desvantagem de ação: o vilão age primeiro no 1º turno (sem rolar iniciativa). |
+| 10% | **Ramen muito bom** | O próximo ataque de dano do jogador é **crítico garantido** (pula a rolagem de acerto). |
+| 10% | **Encontro misterioso** | Gira a roleta de encontros (ver abaixo). |
+| 20% | **Treino** | Sobe **1 estágio** em todos os status. |
+| 20% | **Jokenpô com um companheiro de vila** | Mini-jogo (ver abaixo). |
+| 20% | **Achou um item** | Gira a roleta de itens (ver abaixo). |
+
+Os pesos são fixos nesta versão (os status não alteram as fatias).
+
+Efeitos de "vantagem/desvantagem de ação" valem só para o **1º turno** da próxima luta.
+
+#### Estágio de status
+
+Unidade de melhoria usada por eventos e recompensas. Proposta: 1 estágio = +1 em Taijutsu, Ninjutsu, Genjutsu e Speed, +5 de HP máximo e +2 de chakra máximo. Valores em configuração. HP e chakra atuais sobem junto com o máximo.
+
+Para o prodígio do taijutsu, ninjutsu e genjutsu continuam zerados (o estágio não os afeta).
+
+#### Jokenpô
+
+- O jogador escolhe pedra, papel ou tesoura com um toque; o companheiro escolhe por `rng` (1/3 cada).
+- **Vitória**: sobe **2 estágios** em todos os status.
+- **Empate**: nada acontece (sem revanche).
+- **Derrota**: desvantagem de ação na próxima luta (o jogador age em segundo no 1º turno).
+
+#### Roleta de itens
+
+Usada no evento "Achou um item" e também pode aparecer nas recompensas.
+
+| Item (nome de trabalho) | Efeito |
+|---|---|
+| **Item de retorno** | +1 revive (acumulável). |
+| **Ferramenta ninja** | Dano base +1 em todos os ataques. Item **único, mas evoluível**: se sair de novo, sobe de nível (+1 a cada nível). |
+| **Pergaminho de técnica** | Upgrade em uma técnica do jogador (sorteada entre as que ele tem). Sem técnicas, melhora o taijutsu imbuído. Respeita o filtro de origem. |
+| **Item de resistência** | `diferencial_de_resistência` +1. |
+| **Item de velocidade** | Speed +1. |
+
+Pesos a definir (sugestão inicial: pesos iguais, item de retorno um pouco mais raro).
+
+#### Roleta de encontros misteriosos
+
+| Encontro | Efeito |
+|---|---|
+| **Akatsuki** | **Jinchuuriki**: perde 1 item de retorno. Nunca causa game over. Sem item disponível: a definir (sugestão: começa a próxima luta com metade do HP e chakra). **Não jinchuuriki**: a definir (sugestão: eles passam direto, nada acontece). |
+| **Invocação** | Aprende a **invocar** (nova ação de combate, ver abaixo). Se já sabe invocar: a definir (sugestão: a invocação sobe de nível). |
+
+Pesos a definir (sugestão: 50/50).
+
+#### Invocação (proposta)
+
+- Nova ação de combate, liberada pelo encontro misterioso.
+- Custo alto de chakra (ex.: 5), **uma vez por luta**.
+- O animal é sorteado no encontro (nomes de trabalho, um por efeito):
+  - **Sapo**: um ataque de ninjutsu forte e neutro.
+  - **Cobra**: aplica Debilitado por 1 turno.
+  - **Lesma**: cura uma parte do HP.
+- Detalhes (dano, cura) em configuração.
 
 ### Exame chunin (evento especial)
 
@@ -191,7 +246,7 @@ Os status do jogador alteram o tamanho das fatias (ex.: speed alta aumenta a cha
 
 ### Recompensas
 
-- Após cada vilão derrotado, o jogador gira uma **roleta de recompensa**. Possíveis resultados: aumento de status, nova técnica, upgrade de técnica, elemento secundário, aumento de `diferencial_de_resistência`, aumento de `diferencial_de_dano_%`, recuperação de HP/chakra, item de retorno.
+- Após cada vilão derrotado, o jogador gira uma **roleta de recompensa**. Possíveis resultados: estágios de status, nova técnica, upgrade de técnica, elemento secundário, aumento de `diferencial_de_resistência`, aumento de `diferencial_de_dano_%`, recuperação de HP/chakra, ou um giro na **roleta de itens**.
 - A pool é **filtrada pela origem** (ex.: sem técnicas de ninjutsu/genjutsu para o prodígio do taijutsu).
 - Raridade (comum, raro, lendário) escala com o vilão. No exame, escala com o desempenho.
 
@@ -234,7 +289,11 @@ Os status do jogador alteram o tamanho das fatias (ex.: speed alta aumenta a cha
 - [ ] Chance base de acerto e o que a modifica (ex.: diferença de speed).
 - [ ] Custos de chakra das técnicas de ninjutsu e genjutsu (taijutsu imbuído já é 1).
 - [ ] Valores finais das origens: 10% de linhagem especial, pesos da 2ª roleta, 5% de jinchuuriki, modificadores e passivas (hoje provisórios).
-- [ ] Confirmar que o jinchuuriki acumula com linhagem especial.
+- [ ] Valor de 1 estágio de status.
+- [ ] Akatsuki: efeito para quem não é jinchuuriki e para jinchuuriki sem item de retorno.
+- [ ] Invocação: confirmar a proposta e o que acontece se já souber invocar.
+- [ ] Pesos da roleta de itens e da roleta de encontros.
+- [ ] Eventos pré-vilão giram antes das lutas do exame?
 - [ ] Confirmar que o atributo defensivo do vilão substitui a "resistência" (sem subtração dupla).
 - [ ] Estrutura exata do exame: quantas lutas e como o desempenho vira pontuação.
 - [ ] Nome do projeto e licença (sugestão: MIT).
