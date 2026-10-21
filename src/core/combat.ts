@@ -3,12 +3,12 @@ import { elementMultiplier } from './elements';
 import type { GameData } from './gameData';
 import { critChance, genjutsuHitChance, hitChance, rollHit, type HitOutcome } from './hit';
 import { initiativeChance, rollInitiative } from './initiative';
-import type { PlayerState } from './player';
+import { medicalHealPct, type PlayerState } from './player';
 import type { Rng } from './rng';
 import { chanceSlices, spin } from './roulette';
 import type { AttackType, Element, SummonAnimal, TechniqueDef, VillainDef } from './types';
 
-export type PlayerAction = AttackType | 'gates' | 'summon' | 'rest';
+export type PlayerAction = AttackType | 'gates' | 'medical' | 'rest';
 export type Side = 'player' | 'villain';
 export type BattleStatus = 'ongoing' | 'won' | 'lost';
 export type SurgeMode = 'control' | 'frenzy';
@@ -28,12 +28,14 @@ export interface PlayerFx extends StatusFx {
   surgeMode: SurgeMode | null;
   /** Ramen: o próximo ataque do jogador é crítico garantido. */
   guaranteedCrit: boolean;
-  summonUsed: boolean;
 }
 
 export interface VillainState {
   def: VillainDef;
   hp: number;
+  chakra: number;
+  /** Veneno da cobra: dano no fim da rodada, cai 1 por rodada. 0 = sem veneno. */
+  poison: number;
   fx: StatusFx;
 }
 
@@ -58,6 +60,8 @@ export type BattleEvent =
   | { type: 'initiative'; first: Side; playerChance: number }
   | { type: 'skip'; side: Side }
   | { type: 'rest'; chakra: number }
+  | { type: 'villainRest'; chakra: number }
+  | { type: 'medical'; healed: number }
   | { type: 'gates'; hpLost: number }
   | {
       type: 'attack';
@@ -73,7 +77,9 @@ export type BattleEvent =
   | { type: 'movementReading'; damageBefore: number; damage: number }
   | { type: 'debilitate'; target: Side; turns: number }
   | { type: 'debilitateResisted'; target: Side }
-  | { type: 'summon'; animal: SummonAnimal; damage: number; healed: number }
+  | { type: 'summonRegen'; hp: number }
+  | { type: 'poison'; value: number }
+  | { type: 'poisonTick'; damage: number; remaining: number }
   | { type: 'regen'; hp: number; chakra: number }
   | { type: 'surge'; mode: SurgeMode; healed: number }
   | { type: 'surgeDrain'; hpLost: number }
@@ -118,17 +124,51 @@ export function startBattle(
       surgeTurns: 0,
       surgeMode: null,
       guaranteedCrit: opts.guaranteedCrit,
-      summonUsed: false,
     },
-    villain: { def: villain, hp: villain.hp, fx: { debilitated: 0, debilitateImmunity: 0 } },
+    villain: {
+      def: villain,
+      hp: villain.hp,
+      chakra: villain.chakra,
+      poison: 0,
+      fx: { debilitated: 0, debilitateImmunity: 0 },
+    },
     options: opts,
     log: [],
   };
 }
 
+/** "Por nível" das invocações conta a partir do nível 2. */
+function summonBonus(player: PlayerState, animal: SummonAnimal): number | null {
+  return player.summon?.animal === animal ? player.summon.level - 1 : null;
+}
+
+/** Sapo: dano base extra em todos os ataques. */
+export function toadDamageBonus(player: PlayerState, data: GameData): number {
+  const extra = summonBonus(player, 'toad');
+  if (extra === null) return 0;
+  const cfg = data.balance.summon.toad;
+  return cfg.baseDamage + cfg.baseDamagePerLevel * extra;
+}
+
+/** Cobra: valor inicial do veneno aplicado. 0 = não tem cobra. */
+export function snakePoison(player: PlayerState, data: GameData): number {
+  const extra = summonBonus(player, 'snake');
+  if (extra === null) return 0;
+  const cfg = data.balance.summon.snake;
+  return cfg.poison + cfg.poisonPerLevel * extra;
+}
+
+/** Lesma: fração do HP máximo curada no início de cada rodada. 0 = não tem lesma. */
+export function slugHealPct(player: PlayerState, data: GameData): number {
+  const extra = summonBonus(player, 'slug');
+  if (extra === null) return 0;
+  const cfg = data.balance.summon.slug;
+  return cfg.healPct + cfg.healPctPerLevel * extra;
+}
+
 /**
  * Técnica que o jogador usa para um tipo: a aprendida ou a ação básica, com elemento resolvido
- * e dano base já somado aos upgrades do tipo e à ferramenta ninja.
+ * e dano base já somado aos upgrades do tipo, à ferramenta ninja e ao sapo.
  */
 export function playerTechnique(
   player: PlayerState,
@@ -142,8 +182,15 @@ export function playerTechnique(
   const baseDamage =
     tech.baseDamage +
     (player.techniqueLevels[type] ?? 0) * balance.techniqueUpgrade.baseDamagePerLevel +
-    player.ninjaToolLevel * balance.ninjaTool.baseDamagePerLevel;
+    player.ninjaToolLevel * balance.ninjaTool.baseDamagePerLevel +
+    toadDamageBonus(player, data);
   return { ...tech, element, baseDamage };
+}
+
+/** Ninjutsu médico do jogador (null = não sabe). */
+export function playerMedical(player: PlayerState, data: GameData): TechniqueDef | null {
+  const id = player.techniques.medical;
+  return (id && data.techniquesById[id]) || null;
 }
 
 export function availableActions(state: BattleState, data: GameData): PlayerAction[] {
@@ -160,9 +207,8 @@ export function availableActions(state: BattleState, data: GameData): PlayerActi
   ) {
     actions.push('gates');
   }
-  if (p.summon && !state.playerFx.summonUsed && p.chakra >= data.balance.summon.chakraCost) {
-    actions.push('summon');
-  }
+  const medical = playerMedical(p, data);
+  if (medical && p.chakra >= medical.chakraCost && p.hp < p.maxHp) actions.push('medical');
   actions.push('rest');
   return actions;
 }
@@ -179,7 +225,7 @@ export function playRound(prev: BattleState, action: PlayerAction, rng: Rng, dat
   s.round++;
   s.log.push({ type: 'round', round: s.round });
 
-  startOfRound(s);
+  startOfRound(s, data);
 
   let playerFirst: boolean;
   if (s.round === 1 && s.options.playerStartsFirst) {
@@ -235,18 +281,40 @@ function applyDebilitate(s: BattleState, fx: StatusFx, target: Side, turns: numb
   s.log.push({ type: 'debilitate', target, turns });
 }
 
-function startOfRound(s: BattleState): void {
+function startOfRound(s: BattleState, data: GameData): void {
   const p = s.player;
-  if (p.passive?.kind !== 'vitality') return;
-  const hp = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * p.passive.hpPctPerTurn));
-  const chakra = Math.min(p.maxChakra - p.chakra, p.passive.chakraPerTurn);
-  if (hp <= 0 && chakra <= 0) return;
-  p.hp += hp;
-  p.chakra += chakra;
-  s.log.push({ type: 'regen', hp, chakra });
+  if (p.passive?.kind === 'vitality') {
+    const hp = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * p.passive.hpPctPerTurn));
+    const chakra = Math.min(p.maxChakra - p.chakra, p.passive.chakraPerTurn);
+    if (hp > 0 || chakra > 0) {
+      p.hp += hp;
+      p.chakra += chakra;
+      s.log.push({ type: 'regen', hp, chakra });
+    }
+  }
+  const slugPct = slugHealPct(p, data);
+  if (slugPct > 0) {
+    const hp = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * slugPct));
+    if (hp > 0) {
+      p.hp += hp;
+      s.log.push({ type: 'summonRegen', hp });
+    }
+  }
 }
 
 function endOfRound(s: BattleState, data: GameData): void {
+  const v = s.villain;
+  if (v.poison > 0) {
+    const damage = Math.min(v.hp, v.poison);
+    v.hp -= damage;
+    v.poison--;
+    s.log.push({ type: 'poisonTick', damage, remaining: v.poison });
+    if (v.hp === 0) {
+      finish(s, 'won');
+      return;
+    }
+  }
+
   const p = s.player;
   const fx = s.playerFx;
   if (fx.gatesTurns > 0) fx.gatesTurns--;
@@ -311,8 +379,14 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
     s.log.push({ type: 'gates', hpLost });
     checkSurge(s, rng, data);
     playerAttack(s, 'taijutsu', rng, data);
-  } else if (action === 'summon') {
-    playerSummon(s, data);
+  } else if (action === 'medical') {
+    // Ninjutsu médico: cura sem rolar acerto.
+    const tech = playerMedical(p, data);
+    if (!tech) throw new Error('O jogador não sabe ninjutsu médico');
+    p.chakra -= tech.chakraCost;
+    const healed = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * medicalHealPct(p, data)));
+    p.hp += healed;
+    s.log.push({ type: 'medical', healed });
   } else {
     playerAttack(s, action, rng, data);
   }
@@ -372,44 +446,14 @@ function playerAttack(s: BattleState, type: AttackType, rng: Rng, data: GameData
     finish(s, 'won');
     return;
   }
-  if (outcome !== 'miss' && tech.debilitateTurns) applyDebilitate(s, v.fx, 'villain', tech.debilitateTurns);
-}
-
-/** Invocação: uma vez por luta, sem rolagem de acerto. O efeito depende do animal. */
-function playerSummon(s: BattleState, data: GameData): void {
-  const p = s.player;
-  const v = s.villain;
-  const summon = p.summon;
-  if (!summon) throw new Error('O jogador não sabe invocar');
-  const cfg = data.balance.summon;
-  const extraLevels = summon.level - 1;
-  p.chakra -= cfg.chakraCost;
-  s.playerFx.summonUsed = true;
-
-  let damage = 0;
-  let healed = 0;
-  if (summon.animal === 'slug') {
-    const pct = cfg.slug.healPct + cfg.slug.healPctPerLevel * extraLevels;
-    healed = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * pct));
-    p.hp += healed;
-  } else {
-    const animal = cfg[summon.animal];
-    damage = playerDamage({
-      baseDamage: animal.baseDamage + animal.baseDamagePerLevel * extraLevels,
-      offense: p.offense.ninjutsu,
-      defense: v.def.defense.ninjutsu,
-      elementMult: data.balance.elements.neutral,
-      critMult: 1,
-    });
-    v.hp = Math.max(0, v.hp - damage);
+  if (outcome === 'miss') return;
+  if (tech.debilitateTurns) applyDebilitate(s, v.fx, 'villain', tech.debilitateTurns);
+  // Cobra: um golpe que acerta envenena o alvo, se ele ainda não estiver envenenado.
+  const poison = snakePoison(p, data);
+  if (poison > 0 && v.poison === 0) {
+    v.poison = poison;
+    s.log.push({ type: 'poison', value: poison });
   }
-  s.log.push({ type: 'summon', animal: summon.animal, damage, healed });
-
-  if (v.hp === 0) {
-    finish(s, 'won');
-    return;
-  }
-  if (summon.animal === 'snake') applyDebilitate(s, v.fx, 'villain', cfg.snake.debilitateTurns);
 }
 
 function villainTurn(s: BattleState, rng: Rng, data: GameData): void {
@@ -418,10 +462,20 @@ function villainTurn(s: BattleState, rng: Rng, data: GameData): void {
   const { balance } = data;
   const p = s.player;
 
+  // O vilão só escolhe entre as técnicas que pode pagar; sem nenhuma, concentra chakra.
+  const affordable = v.def.techniques.filter((t) => t.chakraCost <= v.chakra);
+  if (affordable.length === 0) {
+    const gained = Math.min(v.def.chakra - v.chakra, balance.villainRest.chakraRecovered);
+    v.chakra += gained;
+    s.log.push({ type: 'villainRest', chakra: gained });
+    afterAction(v.fx);
+    return;
+  }
   const tech = spin(
-    v.def.techniques.map((t) => ({ label: t.id, weight: t.weight, value: t })),
+    affordable.map((t) => ({ label: t.id, weight: t.weight, value: t })),
     rng,
   ).slice.value;
+  v.chakra -= tech.chakraCost;
 
   const hitP =
     tech.type === 'genjutsu'

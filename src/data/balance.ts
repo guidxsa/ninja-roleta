@@ -19,15 +19,18 @@ export const balance = {
 
   resistance: { offenseDivisor: 2, initialBonus: 1 },
 
-  // Ações básicas: usadas quando o jogador não tem técnica daquele tipo.
+  // Ações básicas: usadas quando o jogador não tem técnica daquele tipo. Taijutsu não gasta chakra.
   basicActions: {
-    taijutsu: { baseDamage: 8, chakraCost: 1 },
+    taijutsu: { baseDamage: 8, chakraCost: 0 },
     ninjutsu: { baseDamage: 10, chakraCost: 3 },
     genjutsu: { baseDamage: 4, chakraCost: 3, debilitateTurns: 1 },
   },
 
-  // Proposta: sem chakra o jogador ficaria sem ação nenhuma, então existe "concentrar chakra".
+  // "Concentrar chakra": recupera chakra no lugar de atacar.
   rest: { chakraRecovered: 3 },
+
+  // Vilão sem chakra para nenhuma técnica concentra chakra no lugar de atacar.
+  villainRest: { chakraRecovered: 4 },
 
   // Proposta anti-trava: após sair de Debilitado, o alvo age ao menos uma vez antes de poder ser debilitado de novo.
   debilitated: { immunityActions: 1 },
@@ -38,22 +41,48 @@ export const balance = {
   statStage: { taijutsu: 1, ninjutsu: 1, genjutsu: 1, speed: 1, hp: 5, chakra: 2 },
 
   // Upgrade de técnica (pergaminho): dano base extra por nível, por tipo de técnica.
-  techniqueUpgrade: { baseDamagePerLevel: 2 },
+  // No ninjutsu médico, cada nível aumenta a cura.
+  techniqueUpgrade: { baseDamagePerLevel: 2, healPctPerLevel: 0.05 },
 
   // Ferramenta ninja: dano base extra em todos os ataques, por nível.
   ninjaTool: { baseDamagePerLevel: 1 },
 
-  // Invocação: uma vez por luta. Sempre funciona (não rola acerto).
+  // Invocação: passiva, vale em todas as lutas. "Por nível" conta a partir do nível 2.
   summon: {
-    chakraCost: 5,
-    toad: { baseDamage: 18, baseDamagePerLevel: 6 },
-    snake: { baseDamage: 6, baseDamagePerLevel: 3, debilitateTurns: 1 },
-    slug: { healPct: 0.3, healPctPerLevel: 0.1 },
+    // Sapo: dano base extra em todos os ataques.
+    toad: { baseDamage: 3, baseDamagePerLevel: 2 },
+    // Cobra: ao acertar um alvo sem veneno, aplica veneno. No fim de cada rodada o veneno causa
+    // o seu valor em dano e cai 1; em 0, some (5 → 5+4+3+2+1 = 15 de dano por aplicação).
+    snake: { poison: 5, poisonPerLevel: 2 },
+    // Lesma: cura uma fração do HP máximo no início de cada rodada.
+    slug: { healPct: 0.04, healPctPerLevel: 0.02 },
+  },
+
+  // Nível: cada vilão derrotado dá XP (`xp` em villains.ts). Juntando o XP do nível, sobe 1.
+  // XP para ir do nível N ao N+1: xpBase + xpGrowth × (N − 1). No teto, o XP deixa de acumular.
+  // HP e chakra máximos sobem sempre; depois a roleta de nível sorteia um status para um bônus
+  // extra (pesos em events.ts).
+  level: {
+    cap: 10,
+    xpBase: 100,
+    xpGrowth: 20,
+    hpPerLevel: 12,
+    chakraPerLevel: 2,
+    statGains: { taijutsu: 3, ninjutsu: 3, genjutsu: 3, speed: 1, hp: 15, chakra: 4, resistance: 1 },
+  },
+
+  // Dificuldade: multiplica a força dos vilões (HP, dano base das técnicas e atributos defensivos).
+  // Speed, chakra e XP não mudam.
+  difficulty: {
+    default: 'normal' as const,
+    multipliers: { easy: 0.75, normal: 1, hard: 1.5 },
   },
 
   events: {
     trainingStages: 1,
     jokenpoWinStages: 2,
+    // Akatsuki com quem não é jinchuuriki: viu a luta deles de longe e aprendeu a mirar pontos vitais.
+    akatsukiCritBonus: 0.05,
     // Akatsuki com jinchuuriki sem item de retorno: começa a próxima luta assim.
     akatsukiNoReviveHpPct: 0.5,
     akatsukiNoReviveChakraPct: 0.5,

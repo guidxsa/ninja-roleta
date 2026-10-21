@@ -1,11 +1,18 @@
-// Tudo o que acontece fora do combate: eventos pré-vilão, jokenpô, itens, encontros e recompensas.
+// Tudo o que acontece fora do combate: eventos pré-vilão, jokenpô, itens, encontros, recompensas e nível.
 // Funções puras: recebem o jogador e devolvem um novo, mais a descrição do efeito para a UI.
-import type { EncounterId, ItemId, RewardId, Weighted } from '../data/events';
+import type { EncounterId, ItemId, LevelStatId, RewardId, Weighted } from '../data/events';
 import type { GameData } from './gameData';
-import { applyStatStages, learnTechnique, type PlayerState } from './player';
+import {
+  applyLevelUp,
+  applyStatStages,
+  learnTechnique,
+  levelUpPool,
+  techniqueSlot,
+  type PlayerState,
+} from './player';
 import type { Rng } from './rng';
 import { spin, type Slice } from './roulette';
-import type { AttackType, SummonAnimal } from './types';
+import type { SummonAnimal, TechniqueSlot } from './types';
 
 /** Uma roleta girada, com as fatias e o resultado, para a UI animar. */
 export interface Roll<T> {
@@ -33,14 +40,15 @@ export type ProgressEffect =
   | { kind: 'stages'; n: number }
   | { kind: 'revive' }
   | { kind: 'ninjaTool'; level: number }
-  | { kind: 'techniqueUpgrade'; type: AttackType; level: number }
+  | { kind: 'techniqueUpgrade'; type: TechniqueSlot; level: number }
   | { kind: 'resistance'; amount: number }
   | { kind: 'speed'; amount: number }
   | { kind: 'critBonus'; amount: number }
   | { kind: 'newTechnique'; techniqueId: string }
   | { kind: 'akatsukiTookRevive' }
   | { kind: 'akatsukiWeakened' }
-  | { kind: 'akatsukiPassed' }
+  | { kind: 'akatsukiInsight'; amount: number }
+  | { kind: 'levelUp'; level: number; stat: LevelStatId; amount: number }
   | { kind: 'summonLearned'; animal: SummonAnimal }
   | { kind: 'summonLevel'; animal: SummonAnimal; level: number };
 
@@ -120,9 +128,9 @@ export function applyItem(player: PlayerState, item: ItemId, rng: Rng): Step {
       return step({ ...player, ninjaToolLevel: level }, { kind: 'ninjaTool', level });
     }
     case 'techniqueScroll': {
-      // Sorteia entre os tipos com técnica aprendida; sem técnicas, melhora o taijutsu imbuído.
-      const learned = (Object.keys(player.techniques) as AttackType[]).filter((t) => player.techniques[t]);
-      const types: AttackType[] = learned.length > 0 ? learned : ['taijutsu'];
+      // Sorteia entre os espaços com técnica aprendida; sem técnicas, melhora o taijutsu imbuído.
+      const learned = (Object.keys(player.techniques) as TechniqueSlot[]).filter((t) => player.techniques[t]);
+      const types: TechniqueSlot[] = learned.length > 0 ? learned : ['taijutsu'];
       const type = spin(
         types.map((t) => ({ label: t, weight: 1, value: t })),
         rng,
@@ -147,11 +155,17 @@ export function rollEncounter(rng: Rng, data: GameData): Roll<EncounterId> {
   return rollWeighted(data.encounters, rng);
 }
 
-/** Akatsuki: só se interessa por jinchuuriki. Nunca causa game over. */
+/**
+ * Akatsuki: caça jinchuuriki. Nunca causa game over.
+ * Quem não é jinchuuriki só assiste a uma luta deles de longe e aprende a mirar pontos vitais (+crítico).
+ */
 export function applyAkatsuki(player: PlayerState, data: GameData): Step {
-  if (!player.jinchuuriki) return step(player, { kind: 'akatsukiPassed' });
-  if (player.revives > 0) return step({ ...player, revives: player.revives - 1 }, { kind: 'akatsukiTookRevive' });
   const cfg = data.balance.events;
+  if (!player.jinchuuriki) {
+    const amount = cfg.akatsukiCritBonus;
+    return step({ ...player, critBonus: player.critBonus + amount }, { kind: 'akatsukiInsight', amount });
+  }
+  if (player.revives > 0) return step({ ...player, revives: player.revives - 1 }, { kind: 'akatsukiTookRevive' });
   return step(
     {
       ...player,
@@ -176,12 +190,25 @@ export function applySummonEncounter(player: PlayerState, animal: SummonAnimal):
 }
 
 // ---------------------------------------------------------------------------
+// Nível
+
+/** Roleta de nível: sorteia qual status recebe o bônus extra ao subir de nível. */
+export function rollLevelUp(player: PlayerState, rng: Rng, data: GameData): Roll<LevelStatId> {
+  return rollWeighted(levelUpPool(player, data), rng);
+}
+
+export function levelUp(player: PlayerState, stat: LevelStatId, data: GameData): Step {
+  const next = applyLevelUp(player, stat, data);
+  return step(next, { kind: 'levelUp', level: next.level, stat, amount: data.balance.level.statGains[stat] });
+}
+
+// ---------------------------------------------------------------------------
 // Recompensas
 
 /** Técnicas que a recompensa "nova técnica" pode ensinar: respeita a origem e ignora as já aprendidas. */
 export function learnableTechniques(player: PlayerState, data: GameData): string[] {
   return data.techniques
-    .filter((t) => !player.forbiddenAttackTypes.includes(t.type) && player.techniques[t.type] !== t.id)
+    .filter((t) => !player.forbiddenAttackTypes.includes(t.type) && player.techniques[techniqueSlot(t)] !== t.id)
     .map((t) => t.id);
 }
 

@@ -90,10 +90,51 @@ Notas:
 
 ### Técnicas
 
-- Cada personagem tem **no máximo uma técnica de cada tipo**: uma de taijutsu, uma de ninjutsu e uma de genjutsu.
+- Cada personagem tem **no máximo uma técnica de cada tipo**: uma de taijutsu, uma de ninjutsu e uma de genjutsu, mais uma de **ninjutsu médico** (espaço próprio, ver abaixo).
 - As técnicas podem receber **upgrades** (via recompensa de roleta).
-- Quem não tem técnica de um tipo usa a ação básica correspondente. Para taijutsu, a ação básica é o **taijutsu imbuído de chakra**, com **custo de 1 chakra**.
+- Quem não tem técnica de um tipo usa a ação básica correspondente. Para taijutsu, a ação básica é o **taijutsu imbuído de chakra**.
+- **Taijutsu não consome chakra** (nem o básico, nem as técnicas aprendidas, nem o dos vilões).
 - Ninjutsu e genjutsu consomem chakra. Sem chakra suficiente, a técnica não pode ser usada.
+
+#### Ninjutsu médico
+
+- Técnica de suporte aprendível como recompensa ("nova técnica"). Ocupa um **espaço próprio**: não substitui o ninjutsu de ataque.
+- Ação de combate: cura **20% do HP máximo** (sem rolar acerto), custa **4 de chakra**. Indisponível com HP cheio.
+- O pergaminho de técnica também a melhora: **+5% de cura por nível**.
+- Usa chakra de ninjutsu, então o **prodígio do taijutsu não aprende**.
+
+### Nível
+
+- O jogador começa no **nível 1**. **Nível máximo: 10.**
+- Cada vilão derrotado dá **XP** conforme a dificuldade dele (campo `xp` nos dados; no exame, só vitórias dão XP). Nos blocos de várias lutas, cada mini vilão dá menos XP: o jogador **não** sobe de nível a cada luta.
+- XP para ir do nível N ao N+1: **100 + 20 × (N − 1)** (100, 120, 140... 260). A sobra passa para o próximo nível; no nível máximo o XP não acumula.
+- Com todas as vitórias, o jogador chega ao nível 10 logo antes de Orochimaru.
+- Todo nível: **HP máximo +12** e **chakra máximo +2** (os atuais sobem junto).
+- Depois, a **roleta de nível** sorteia um status para um bônus extra:
+
+| Status | Peso | Bônus |
+|---|---|---|
+| Taijutsu | 2 | +3 |
+| Ninjutsu | 2 | +3 |
+| Genjutsu | 2 | +3 |
+| Speed | 2 | +1 |
+| HP máximo | 2 | +15 |
+| Chakra máximo | 1 | +4 |
+| Resistência (`diferencial_de_resistência`) | 1 | +1 |
+
+- Tipos proibidos pela origem (ninjutsu e genjutsu do prodígio do taijutsu) saem da roleta.
+- Ganhos por nível subiram (eram +8 HP, +1 chakra e +2/+12/+3 na roleta) para compensar menos níveis por campanha.
+
+### Dificuldade
+
+- Escolhida na tela de origem, antes da primeira luta (fica salva como preferência do aparelho e no histórico da run).
+- Multiplica a **força dos vilões**: HP, dano base das técnicas e atributos defensivos. Speed, chakra, crítico e XP não mudam.
+
+| Dificuldade | Força dos vilões |
+|---|---|
+| Fácil | 75% |
+| Médio | 100% (base) |
+| Difícil | 150% |
 
 ### Combate
 
@@ -140,6 +181,11 @@ dano = max(1, dano_base_do_vilão × mult_elemento × mult_crítico − resistê
 - `diferencial_de_resistência` **começa em 1** e pode crescer com recompensas/upgrades.
 - Cada vilão tem valor base de dano e elemento próprios.
 
+#### Chakra dos vilões
+
+- Cada vilão tem uma **reserva de chakra** e cada técnica dele tem custo (taijutsu é grátis).
+- O vilão sorteia a técnica (pelos pesos) **só entre as que pode pagar**. Sem chakra para nenhuma, perde a vez **concentrando chakra** (+4).
+
 #### Genjutsu
 
 - Aplica o efeito **Debilitado** no alvo: o alvo **fica sem ações** durante o turno.
@@ -157,7 +203,7 @@ dano = max(1, dano_base_do_vilão × mult_elemento × mult_crítico − resistê
 
 - Visível por padrão (animação nos sorteios relevantes).
 - Configuração para desligar: modo "resultado instantâneo".
-- Componente reutilizável: recebe lista de fatias (rótulo, peso, efeito) e um `rng`, devolve a fatia sorteada. Usada em origem, linhagem, jinchuuriki, iniciativa, acerto/crítico, eventos pré-vilão, exame e recompensas.
+- Componente reutilizável: recebe lista de fatias (rótulo, peso, efeito) e um `rng`, devolve a fatia sorteada. Usada em origem, linhagem, jinchuuriki, iniciativa, acerto/crítico, eventos pré-vilão, exame, recompensas e nível.
 
 ## Campanha
 
@@ -222,20 +268,19 @@ Pesos a definir (sugestão inicial: pesos iguais, item de retorno um pouco mais 
 
 | Encontro | Efeito |
 |---|---|
-| **Akatsuki** | **Jinchuuriki**: perde 1 item de retorno. Nunca causa game over. Sem item disponível: a definir (sugestão: começa a próxima luta com metade do HP e chakra). **Não jinchuuriki**: a definir (sugestão: eles passam direto, nada acontece). |
-| **Invocação** | Aprende a **invocar** (nova ação de combate, ver abaixo). Se já sabe invocar: a definir (sugestão: a invocação sobe de nível). |
+| **Akatsuki** | **Jinchuuriki**: perde 1 item de retorno. Nunca causa game over. Sem item disponível: começa a próxima luta com metade do HP e chakra. **Não jinchuuriki**: eles procuram um jinchuuriki e passam direto, mas o jogador assiste à luta deles de longe e aprende a mirar nos pontos vitais: **chance de crítico +5%** (`diferencial_de_dano_%`). |
+| **Invocação** | Aprende a **invocar** (passiva, ver abaixo). Se já sabe invocar: a invocação sobe de nível (o animal não muda). |
 
 Pesos a definir (sugestão: 50/50).
 
-#### Invocação (proposta)
+#### Invocação (passiva)
 
-- Nova ação de combate, liberada pelo encontro misterioso.
-- Custo alto de chakra (ex.: 5), **uma vez por luta**.
-- O animal é sorteado no encontro (nomes de trabalho, um por efeito):
-  - **Sapo**: um ataque de ninjutsu forte e neutro.
-  - **Cobra**: aplica Debilitado por 1 turno.
-  - **Lesma**: cura uma parte do HP.
-- Detalhes (dano, cura) em configuração.
+- Liberada pelo encontro misterioso. **Não é uma ação de combate**: o animal acompanha o jogador e complementa as características dele em todas as lutas, sem custo de chakra.
+- O animal é sorteado no encontro (nomes de trabalho, um por efeito). "Por nível" conta a partir do nível 2:
+  - **Sapo** (suporte de dano): **+3 de dano base** em todos os ataques, +2 por nível.
+  - **Cobra** (veneno): um ataque que acerta um alvo **sem veneno** aplica **veneno 5** (+2 por nível). No fim de cada rodada o veneno causa o seu valor em dano e cai 1; ao chegar a 0, a condição some e pode ser reaplicada. Veneno 5 = 5+4+3+2+1 = 15 de dano.
+  - **Lesma** (cura passiva): cura **4% do HP máximo** no início de cada rodada, +2% por nível.
+- Detalhes em configuração.
 
 ### Exame chunin (evento especial)
 
@@ -283,15 +328,16 @@ Pesos a definir (sugestão: 50/50).
 - Todo número de balanceamento (multiplicadores, custos, resistências, pesos de fatias, porcentagens de linhagem e jinchuuriki) fica em arquivo de configuração.
 - Valores de dano e resistência são arredondados para inteiro ao final do cálculo (sugestão: `Math.floor`).
 - Antes de mudar uma fórmula, escrever ou ajustar o teste correspondente.
+- **Toda funcionalidade ou versão nova termina publicada**: testar, commitar, fazer push e subir a tag `vX.Y.Z`, sem esperar pedido (passo a passo na skill `.claude/skills/lancar-versao`). Nunca `--force`; só não publicar se o usuário disser para segurar.
 
 ## Decisões em aberto
 
 - [ ] Chance base de acerto e o que a modifica (ex.: diferença de speed).
-- [ ] Custos de chakra das técnicas de ninjutsu e genjutsu (taijutsu imbuído já é 1).
+- [ ] Custos de chakra das técnicas de ninjutsu e genjutsu (taijutsu não gasta chakra).
 - [ ] Valores finais das origens: 10% de linhagem especial, pesos da 2ª roleta, 5% de jinchuuriki, modificadores e passivas (hoje provisórios).
 - [ ] Valor de 1 estágio de status.
-- [ ] Akatsuki: efeito para quem não é jinchuuriki e para jinchuuriki sem item de retorno.
-- [ ] Invocação: confirmar a proposta e o que acontece se já souber invocar.
+- [ ] Valores de nível (HP/chakra por nível, bônus e pesos da roleta de nível) e de chakra dos vilões.
+- [ ] Gaara virou o gargalo da campanha na simulação (defesa alta + lutas longas). Ajustar.
 - [ ] Pesos da roleta de itens e da roleta de encontros.
 - [ ] Eventos pré-vilão giram antes das lutas do exame?
 - [ ] Confirmar que o atributo defensivo do vilão substitui a "resistência" (sem subtração dupla).

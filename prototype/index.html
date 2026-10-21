@@ -3,17 +3,25 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#14161c" />
+    <meta name="theme-color" content="#0d1222" />
     <title>Ninja Roleta</title>
+    <!-- Fontes de pincel/estilo japonês. Sem internet, caem para as fontes do sistema. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Shojumaru&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap"
+    />
     <style>
 /*STYLE*/
     </style>
   </head>
   <body>
     <header class="top">
-      <div class="brand">忍 <b>Ninja Roleta</b> <small>protótipo</small></div>
+      <div class="brand"><span class="seal">忍</span> <b>Ninja Roleta</b> <small>protótipo</small></div>
       <div class="top-actions">
         <label class="toggle small"><input type="checkbox" id="instant" /> ⚡ <span id="instant-label"></span></label>
+        <button class="btn small" id="sheet-btn" title="Ficha ninja">🥷</button>
         <button class="btn small" id="history-btn" title="Histórico">📜</button>
       </div>
       <div class="dots" id="dots"></div>

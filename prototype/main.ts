@@ -1,9 +1,13 @@
 // Protótipo jogável: interface mínima sobre o core real. Toda regra vem de src/core; aqui só há fluxo e animação.
 import {
   availableActions,
+  playerMedical,
   playerTechnique,
   playRound,
+  slugHealPct,
+  snakePoison,
   startBattle,
+  toadDamageBonus,
   type BattleOptions,
   type BattleState,
   type PlayerAction,
@@ -13,7 +17,16 @@ import { elementMultiplier } from '../src/core/elements';
 import { critChance, genjutsuHitChance, hitChance, hitSlices } from '../src/core/hit';
 import { initiativeSlices } from '../src/core/initiative';
 import { rollOrigin, type OriginStep } from '../src/core/origin';
-import { createPlayer, fullRestore, type PlayerState } from '../src/core/player';
+import { scaleVillain, type Difficulty } from '../src/core/difficulty';
+import {
+  canLevelUp,
+  createPlayer,
+  fullRestore,
+  gainXp,
+  medicalHealPct,
+  xpToNextLevel,
+  type PlayerState,
+} from '../src/core/player';
 import {
   applyAkatsuki,
   applyItem,
@@ -21,9 +34,11 @@ import {
   applySimpleEvent,
   applySummonEncounter,
   HANDS,
+  levelUp,
   playJokenpo,
   rollEncounter,
   rollItem,
+  rollLevelUp,
   rollReward,
   rollSummonAnimal,
   rollWeighted,
@@ -34,7 +49,7 @@ import {
   type Step,
 } from '../src/core/progression';
 import type { Rng } from '../src/core/rng';
-import type { AttackType, Element, Origin } from '../src/core/types';
+import type { AttackType, Element, Origin, SummonAnimal } from '../src/core/types';
 import { campaign, type Stage } from '../src/data/campaign';
 import { gameData as data } from '../src/data/index';
 import { ptBR as S } from '../src/data/strings/ptBR';
@@ -66,11 +81,20 @@ const storage: KeyValueStorage = (() => {
 })();
 
 const SETTINGS_KEY = 'proto_settings_v1';
-const settings = (() => {
+const DIFFICULTIES = Object.keys(data.balance.difficulty.multipliers) as Difficulty[];
+const DEFAULT_DIFFICULTY: Difficulty = data.balance.difficulty.default;
+/** Preferências do aparelho (não é estado de campanha). A dificuldade é a última escolhida. */
+interface Settings {
+  instant: boolean;
+  difficulty: Difficulty;
+}
+const settings: Settings = (() => {
   try {
-    return { instant: false, ...JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}') } as { instant: boolean };
+    const saved = JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}') as Partial<Settings>;
+    const difficulty = saved.difficulty && DIFFICULTIES.includes(saved.difficulty) ? saved.difficulty : DEFAULT_DIFFICULTY;
+    return { instant: Boolean(saved.instant), difficulty };
   } catch {
-    return { instant: false };
+    return { instant: false, difficulty: DEFAULT_DIFFICULTY };
   }
 })();
 const saveSettings = () => {
@@ -173,8 +197,14 @@ function effectText(e: ProgressEffect): string {
       return E.akatsukiTookRevive;
     case 'akatsukiWeakened':
       return E.akatsukiWeakened;
-    case 'akatsukiPassed':
-      return E.akatsukiPassed;
+    case 'akatsukiInsight':
+      return E.akatsukiInsight(Math.round(e.amount * 100));
+    case 'levelUp': {
+      const L = data.balance.level;
+      const hp = L.hpPerLevel + (e.stat === 'hp' ? e.amount : 0);
+      const ck = L.chakraPerLevel + (e.stat === 'chakra' ? e.amount : 0);
+      return E.levelUp(e.level, hp, ck, S.levelStats[e.stat] ?? e.stat, e.amount);
+    }
     case 'summonLearned':
       return E.summonLearned(S.summons[e.animal]!.name);
     case 'summonLevel':
@@ -189,6 +219,7 @@ interface Campaign {
   runId: string;
   origin: Origin;
   player: PlayerState;
+  difficulty: Difficulty;
   stageIndex: number;
   mods: NextFightMods;
   weakened: boolean;
@@ -197,7 +228,7 @@ interface Campaign {
 let camp: Campaign | null = null;
 const NO_MODS: NextFightMods = { villainStartsFirst: false, guaranteedCrit: false };
 
-function track(patch: { status?: RunStatus; furthestStage?: number }) {
+function track(patch: { status?: RunStatus; furthestStage?: number; difficulty?: Difficulty }) {
   if (!camp) return;
   updateRun(storage, camp.runId, { ...patch, revivesUsed: camp.player.revivesUsed }, new Date(), data.balance.history.maxRuns);
 }
@@ -232,45 +263,170 @@ function modChips(mods: NextFightMods, weakened: boolean): string {
 }
 
 function techniqueRows(p: PlayerState): string {
-  return (['taijutsu', 'ninjutsu', 'genjutsu'] as const)
+  const lvl = (n: number | undefined) => (n ? ` <span class="lvl">+${n}</span>` : '');
+  const rows = (['taijutsu', 'ninjutsu', 'genjutsu'] as const)
     .filter((t) => !p.forbiddenAttackTypes.includes(t))
     .map((t) => {
       const tech = playerTechnique(p, t, data);
-      const lvl = p.techniqueLevels[t] ? ` <span class="lvl">+${p.techniqueLevels[t]}</span>` : '';
-      return `<li><span class="muted">${S.actions[t]}</span> ${esc(techName(tech.id))}${lvl} ${elChip(tech.element)}<span class="muted small"> · ${tech.baseDamage} dano · ${tech.chakraCost} ck</span></li>`;
-    })
-    .join('');
+      return `<li><span class="muted">${S.actions[t]}</span> ${esc(techName(tech.id))}${lvl(p.techniqueLevels[t])} ${elChip(tech.element)}<span class="muted small"> · ${tech.baseDamage} dano · ${S.ui.cost(tech.chakraCost)}</span></li>`;
+    });
+  const medical = playerMedical(p, data);
+  if (medical) {
+    const pct = Math.round(medicalHealPct(p, data) * 100);
+    rows.push(
+      `<li><span class="muted">${S.actions.medical}</span> ${esc(techName(medical.id))}${lvl(p.techniqueLevels.medical)}<span class="muted small"> · ${S.ui.heal(pct)} · ${S.ui.cost(medical.chakraCost)}</span></li>`,
+    );
+  }
+  return rows.join('');
+}
+
+/** Valor atual do efeito passivo da invocação (para o inventário). */
+function summonEffect(p: PlayerState): string {
+  if (!p.summon) return '';
+  const fx = S.summonEffects[p.summon.animal]!;
+  if (p.summon.animal === 'toad') return fx(toadDamageBonus(p, data));
+  if (p.summon.animal === 'snake') return fx(snakePoison(p, data));
+  return fx(Math.round(slugHealPct(p, data) * 100));
+}
+
+/**
+ * Retrato do ninja. Sem foto, uma silhueta padrão com bandana.
+ * Aberto a personalização: basta passar a URL de uma imagem.
+ */
+function avatar(size: 'sm' | 'lg' = 'sm', src: string | null = null): string {
+  const img = src
+    ? `<img src="${esc(src)}" alt="">`
+    : `<svg viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="27" r="13" fill="#0b0f1c"/>
+        <path d="M8 64c2-14 12-21 24-21s22 7 24 21z" fill="#0b0f1c"/>
+        <path d="M17 22c4-3 26-3 30 0v6c-4-2-26-2-30 0z" fill="#3a4568"/>
+        <rect x="25" y="20.5" width="14" height="7.5" rx="1.5" fill="#c9d1e6"/>
+        <path d="M29 22.5l6 3.5m0-3.5l-6 3.5" stroke="#3a4568" stroke-width="1.4"/>
+        <path d="M47 23l10 4-9 1.5z" fill="#3a4568"/>
+        <path d="M24 33h16" stroke="#ff7a1a" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+      </svg>`;
+  return `<span class="avatar avatar-${size}">${img}</span>`;
+}
+
+function xpBar(p: PlayerState): string {
+  const need = xpToNextLevel(p.level, data);
+  const pct = need ? Math.min(100, (p.xp / need) * 100) : 100;
+  const label = need ? S.ui.xp(p.xp, need) : S.ui.xpMax;
+  return `<div class="bar bar-xp${need ? '' : ' max'}"><div class="fill" style="width:${pct}%"></div><span>${label}</span></div>`;
+}
+
+function diffChip(d: Difficulty): string {
+  return `<span class="chip diff diff-${d}">${S.difficulty[d].name}</span>`;
 }
 
 function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS, weakened = false): string {
-  const passive = p.passive ? S.passives[p.passive.kind] : null;
   const crit = critChance(p.critBonus, data.balance.crit.baseChance);
+  const passive = p.passive ? S.passives[p.passive.kind] : null;
   const stat = (label: string, v: string | number) => `<div><small>${label}</small><b>${v}</b></div>`;
-  const inv = [
-    `<span class="inv">❤ ${S.ui.revives} ×${p.revives}</span>`,
-    p.ninjaToolLevel ? `<span class="inv">🔧 ${S.ui.ninjaTool} ${S.ui.level}${p.ninjaToolLevel}</span>` : '',
-    p.summon
-      ? `<span class="inv">🐾 ${S.summons[p.summon.animal]!.name} ${S.ui.level}${p.summon.level}</span>`
-      : '',
-  ].join('');
   return `
   <section class="card player-panel">
-    <div class="row between">
-      <div><b class="name">${originLabel(p.origin)}</b> ${p.affinity ? elChip(p.affinity) : `<span class="chip">${S.ui.noAffinity}</span>`}
-      ${p.jinchuuriki ? `<span class="chip jin">${S.origin.jinchuuriki}</span>` : ''}</div>
+    <div class="panel-head">
+      ${avatar('sm')}
+      <div class="panel-id">
+        <b class="name">${originLabel(p.origin)}</b>
+        <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${p.affinity ? elChip(p.affinity) : `<span class="chip">${S.ui.noAffinity}</span>`}${p.jinchuuriki ? `<span class="chip jin">${S.origin.jinchuuriki}</span>` : ''}${camp ? diffChip(camp.difficulty) : ''}</div>
+      </div>
+      <button class="btn small sheet-btn" data-sheet>🎒 ${S.ui.openSheet}</button>
     </div>
+    ${xpBar(p)}
     ${bar('hp', p.hp, p.maxHp)}
     ${bar('ck', p.chakra, p.maxChakra)}
     <div class="stats">
       ${stat(S.stats.taijutsu, p.offense.taijutsu)}${stat(S.stats.ninjutsu, p.offense.ninjutsu)}${stat(S.stats.genjutsu, p.offense.genjutsu)}
       ${stat(S.stats.speed, p.speed)}${stat(S.stats.resistance, `+${p.resistanceBonus}`)}${stat(S.stats.crit, formatPct(crit))}
     </div>
-    <div class="inv-row">${inv}</div>
-    <ul class="techs">${techniqueRows(p)}</ul>
     ${passive ? `<p class="passive"><b>${passive.name}</b> · ${passive.desc}</p>` : ''}
     ${p.jinchuuriki ? `<p class="passive"><b>${S.passives.jinchuuriki!.name}</b> · ${S.passives.jinchuuriki!.desc}</p>` : ''}
     ${mods.villainStartsFirst || mods.guaranteedCrit || weakened ? `<div class="mods"><small>${S.ui.nextFight}</small> ${modChips(mods, weakened)}</div>` : ''}
   </section>`;
+}
+
+// ---------------------------------------------------------------------------
+// Ficha ninja (janela à parte): retrato, atributos, técnicas, bolsa e passivas
+
+const SUMMON_ICONS: Record<SummonAnimal, string> = { toad: '🐸', snake: '🐍', slug: '🐌' };
+
+function bagSlots(p: PlayerState): string {
+  const B = S.bag;
+  const slot = (icon: string, name: string, desc: string, qty: string) =>
+    `<li class="slot"><i>${icon}</i><b>${name}</b>${qty ? `<em>${qty}</em>` : ''}<small>${desc}</small></li>`;
+  const filled: string[] = [];
+  if (p.revives > 0) filled.push(slot('🍶', B.revive.name, B.revive.desc, `×${p.revives}`));
+  if (p.ninjaToolLevel > 0) {
+    const dmg = p.ninjaToolLevel * data.balance.ninjaTool.baseDamagePerLevel;
+    filled.push(slot('🗡️', B.ninjaTool.name, B.ninjaTool.desc(dmg), `${S.ui.level}${p.ninjaToolLevel}`));
+  }
+  if (p.summon) {
+    const name = S.summons[p.summon.animal]!.name;
+    filled.push(slot(SUMMON_ICONS[p.summon.animal], B.summon.name, `${B.summon.desc(name)} ${summonEffect(p)}`, `${S.ui.level}${p.summon.level}`));
+  }
+  const scrolls = Object.values(p.techniqueLevels).reduce((a, b) => a + (b ?? 0), 0);
+  if (scrolls > 0) filled.push(slot('📜', B.scrolls.name, B.scrolls.desc(scrolls), `×${scrolls}`));
+  const empty = Math.max(0, 6 - filled.length);
+  return filled.join('') + `<li class="slot empty"><span>${S.ui.bagEmpty}</span></li>`.repeat(empty);
+}
+
+/** Durante a luta, o jogador "vivo" está no estado da batalha, não na campanha. */
+let battlePlayer: (() => PlayerState) | null = null;
+
+function sheetHtml(c: Campaign): string {
+  const p = battlePlayer?.() ?? c.player;
+  const crit = critChance(p.critBonus, data.balance.crit.baseChance);
+  const passive = p.passive ? S.passives[p.passive.kind] : null;
+  const attr = (label: string, v: string | number) => `<div><small>${label}</small><b>${v}</b></div>`;
+  const passives = [
+    passive ? `<li><b>${passive.name}</b> · ${passive.desc}</li>` : '',
+    p.jinchuuriki ? `<li><b>${S.passives.jinchuuriki!.name}</b> · ${S.passives.jinchuuriki!.desc}</li>` : '',
+    p.summon ? `<li><b>${S.summons[p.summon.animal]!.name}</b> · ${S.summons[p.summon.animal]!.desc}</li>` : '',
+  ].join('');
+  const elements = [p.affinity, ...p.secondaryElements].filter((e): e is Element => Boolean(e));
+  const nextFight = c.mods.villainStartsFirst || c.mods.guaranteedCrit || c.weakened;
+  return `
+    <div class="scroll-paper">
+      <span class="hanko" aria-hidden="true">忍</span>
+      <header class="sheet-head">
+        ${avatar('lg')}
+        <div class="sheet-id">
+          <h2 class="sheet-name">${originLabel(p.origin)}</h2>
+          <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${elements.length ? elements.map(elChip).join('') : `<span class="chip">${S.ui.noAffinity}</span>`}${p.jinchuuriki ? `<span class="chip jin">${S.origin.jinchuuriki}</span>` : ''}${diffChip(c.difficulty)}</div>
+          ${xpBar(p)}
+        </div>
+      </header>
+      ${bar('hp', p.hp, p.maxHp)}
+      ${bar('ck', p.chakra, p.maxChakra)}
+      <h3 class="sheet-title">${S.ui.attributes}</h3>
+      <div class="attrs">
+        ${attr(S.stats.taijutsu, p.offense.taijutsu)}${attr(S.stats.ninjutsu, p.offense.ninjutsu)}${attr(S.stats.genjutsu, p.offense.genjutsu)}${attr(S.stats.speed, p.speed)}
+        ${attr(S.stats.resistance, `+${p.resistanceBonus}`)}${attr(S.stats.crit, formatPct(crit))}${attr(S.stats.hp, p.maxHp)}${attr(S.stats.chakra, p.maxChakra)}
+      </div>
+      <h3 class="sheet-title">${S.ui.bag}</h3>
+      <ul class="bag">${bagSlots(p)}</ul>
+      <h3 class="sheet-title">${S.ui.techniques}</h3>
+      <ul class="techs">${techniqueRows(p)}</ul>
+      ${passives ? `<h3 class="sheet-title">${S.ui.passives}</h3><ul class="sheet-passives">${passives}</ul>` : ''}
+      ${nextFight ? `<h3 class="sheet-title">${S.ui.nextFight}</h3><div class="mods">${modChips(c.mods, c.weakened)}</div>` : ''}
+    </div>`;
+}
+
+/** Abre a ficha como uma janela à parte, sobre qualquer tela (inclusive no meio da luta). */
+function openSheet() {
+  if (!camp || document.querySelector('.sheet-wrap')) return;
+  const overlay = h(`<div class="sheet-wrap" role="dialog" aria-label="${S.ui.sheet}">
+    <div class="scroll">
+      <div class="rod"></div>
+      ${sheetHtml(camp)}
+      <div class="rod"></div>
+      <button class="btn primary sheet-close" data-close>${S.ui.close}</button>
+    </div></div>`);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) overlay.remove();
+  });
+  document.body.appendChild(overlay);
 }
 
 function stageTrail(current: number): string {
@@ -359,7 +515,15 @@ async function originScreen(): Promise<void> {
     const runId = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
     startRun(storage, { id: runId, origin: roll.origin, now: new Date() }, data.balance.history.maxRuns);
     const player = createPlayer(roll.origin, data);
-    camp = { runId, origin: roll.origin, player, stageIndex: 0, mods: { ...NO_MODS }, weakened: false };
+    camp = {
+      runId,
+      origin: roll.origin,
+      player,
+      difficulty: settings.difficulty,
+      stageIndex: 0,
+      mods: { ...NO_MODS },
+      weakened: false,
+    };
 
     const root = show(
       h(`<div class="screen"><h2>${S.ui.title}</h2><div class="chips-line" id="origin-chips"></div><div id="slot"></div><div id="after"></div></div>`),
@@ -373,12 +537,34 @@ async function originScreen(): Promise<void> {
     }
     slot.innerHTML = playerPanel(player);
     const after = root.querySelector<HTMLElement>('#after')!;
-    after.innerHTML = `<div class="actions-row">
+    after.innerHTML = `<div class="difficulty-box">
+      <h3>${S.ui.difficulty}</h3>
+      <div class="segmented">${DIFFICULTIES.map(
+        (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === settings.difficulty}">${S.difficulty[d].name}</button>`,
+      ).join('')}</div>
+      <p class="muted center small" id="diff-desc">${S.difficulty[settings.difficulty].desc}</p>
+    </div>
+    <div class="actions-row">
       <button class="btn" data-choice="reroll">🎲 ${S.ui.reroll}</button>
       <button class="btn primary" data-choice="start">${S.ui.startCampaign}</button></div>`;
+    // A dificuldade só pode mudar antes de começar a campanha.
+    after.querySelector('.segmented')!.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-diff]');
+      if (!btn || !camp) return;
+      const d = btn.dataset.diff as Difficulty;
+      settings.difficulty = d;
+      camp.difficulty = d;
+      saveSettings();
+      after.querySelectorAll('[data-diff]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      after.querySelector('#diff-desc')!.textContent = S.difficulty[d].desc;
+      slot.innerHTML = playerPanel(player);
+    });
     const choice = await choose<'reroll' | 'start'>(after);
-    if (choice === 'start') return;
-    track({ status: 'reroll' });
+    if (choice === 'start') {
+      track({ difficulty: camp.difficulty });
+      return;
+    }
+    track({ status: 'reroll', difficulty: camp.difficulty });
   }
 }
 
@@ -506,6 +692,7 @@ function villainPanel(s: BattleState): string {
   return `<section class="card villain-panel" id="vcard">
     <div class="row between"><b class="name">${villainName(v.id)}</b><span>${elChip(v.element)}</span></div>
     ${bar('hp', s.villain.hp, v.hp)}
+    ${bar('ck', s.villain.chakra, v.chakra)}
     <div class="row between small muted"><span>Def ${S.stats.taijutsu} ${d.taijutsu} · ${S.stats.ninjutsu} ${d.ninjutsu} · ${S.stats.genjutsu} ${d.genjutsu}</span><span>${S.stats.speed} ${v.speed}</span></div>
     <div class="badges" id="vbadges"></div>
   </section>`;
@@ -516,6 +703,7 @@ function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
   if (side === 'villain') {
     if (s.villain.fx.debilitated > 0) out.push(`<span class="chip bad">${S.ui.debilitated}</span>`);
     if (s.villain.fx.debilitateImmunity > 0) out.push(`<span class="chip">${S.ui.immune}</span>`);
+    if (s.villain.poison > 0) out.push(`<span class="chip good">🐍 ${S.ui.poisoned(s.villain.poison)}</span>`);
     return out.join('');
   }
   const fx = s.playerFx;
@@ -559,9 +747,13 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     const tech = playerTechnique(p, 'taijutsu', data);
     sub = S.passives.gates!.name;
     extra = `−25% HP · ${S.ui.cost(tech.chakraCost)}`;
-  } else if (action === 'summon' && p.summon) {
-    sub = `${S.summons[p.summon.animal]!.name} ${S.ui.level}${p.summon.level}`;
-    extra = `${S.ui.cost(B.summon.chakraCost)} · 1×/luta`;
+  } else if (action === 'medical') {
+    const tech = playerMedical(p, data);
+    if (tech) {
+      const heal = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * medicalHealPct(p, data)));
+      sub = esc(techName(tech.id));
+      extra = `+${heal} HP · ${S.ui.cost(tech.chakraCost)}`;
+    }
   } else if (action === 'rest') {
     sub = '';
     extra = `+${B.rest.chakraRecovered} ck`;
@@ -576,7 +768,7 @@ function actionList(s: BattleState): PlayerAction[] {
     (t) => !p.forbiddenAttackTypes.includes(t),
   );
   if (p.passive?.kind === 'gates') list.push('gates');
-  if (p.summon) list.push('summon');
+  if (playerMedical(p, data)) list.push('medical');
   list.push('rest');
   return list;
 }
@@ -595,8 +787,9 @@ function floatNumber(card: HTMLElement | null, text: string, cls: string) {
 
 async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   const c = camp!;
-  const villain = villainsById[setup.villainId]!;
+  const villain = scaleVillain(villainsById[setup.villainId]!, c.difficulty, data);
   let state = startBattle(c.player, villain, setup.options);
+  battlePlayer = () => state.player;
 
   const root = show(
     h(`<div class="screen battle">
@@ -605,7 +798,9 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       <div id="dice" class="dice"></div>
       <ol id="log" class="log"></ol>
       <section class="card player-mini" id="pcard">
-        <div class="row between"><b class="name">${S.ui.you} · ${originLabel(c.origin)}</b><span>${elChip(c.player.affinity)}</span></div>
+        <div class="panel-head">${avatar('sm')}<div class="panel-id"><b class="name">${S.ui.you} · ${originLabel(c.origin)}</b>
+          <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elChip(c.player.affinity)}</div></div>
+          <button class="btn small sheet-btn" data-sheet>🎒</button></div>
         ${bar('hp', state.player.hp, state.player.maxHp)}
         ${bar('ck', state.player.chakra, state.player.maxChakra)}
         <div class="badges" id="pbadges"></div>
@@ -652,10 +847,13 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   }
 
   // Resultado
+  battlePlayer = null;
   const overlay = root.querySelector<HTMLElement>('#overlay')!;
   const won = state.status === 'won';
   const msg = won ? S.ui.battleWon : setup.exam ? S.ui.examLost : S.ui.battleLost;
-  overlay.innerHTML = `<div class="overlay ${won ? 'win' : 'lose'}"><div><h2>${msg}</h2>
+  const atCap = xpToNextLevel(state.player.level, data) === null;
+  const xpLine = won && !atCap ? `<p class="xp-gain pop">${S.ui.xpGained(villainsById[setup.villainId]!.xp)}</p>` : '';
+  overlay.innerHTML = `<div class="overlay ${won ? 'win' : 'lose'}"><div><h2>${msg}</h2>${xpLine}
     <p class="muted">${S.ui.round(state.round)}</p>
     <button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div></div>`;
   await choose(overlay);
@@ -664,12 +862,15 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   async function animateRound(prev: BattleState, next: BattleState) {
     const events = next.log.slice(prev.log.length);
     const p0 = prev.player;
-    const disp = { php: p0.hp, pck: p0.chakra, vhp: prev.villain.hp };
+    const disp = { php: p0.hp, pck: p0.chakra, vhp: prev.villain.hp, vck: prev.villain.chakra };
     const sync = () => {
       setBar(pcard, 'hp', disp.php, next.player.maxHp);
       setBar(pcard, 'ck', disp.pck, next.player.maxChakra);
       const vc = vcard();
-      if (vc) setBar(vc, 'hp', disp.vhp, next.villain.def.hp);
+      if (vc) {
+        setBar(vc, 'hp', disp.vhp, next.villain.def.hp);
+        setBar(vc, 'ck', disp.vck, next.villain.def.chakra);
+      }
     };
     const who = (side: 'player' | 'villain') => (side === 'player' ? S.log.you : villainName(next.villain.def.id));
     let critForced = false;
@@ -724,6 +925,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'attack': {
           const mine = ev.side === 'player';
           if (mine) disp.pck -= playerTechnique(p0, ev.attackType, data).chakraCost;
+          else disp.vck -= prev.villain.def.techniques.find((t) => t.id === ev.techniqueId)?.chakraCost ?? 0;
           if (!(mine && critForced)) {
             const hs = hitSlices(ev.hitChance, ev.critChance);
             await stripRoulette(
@@ -790,16 +992,30 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           floatNumber(pcard, '❤ retorno', 'heal');
           log(S.log.revive(ev.revivesLeft), 'good');
           break;
-        case 'summon': {
-          disp.pck -= data.balance.summon.chakraCost;
-          disp.vhp -= ev.damage;
+        case 'medical':
+          disp.pck -= playerMedical(p0, data)?.chakraCost ?? 0;
           disp.php += ev.healed;
-          const name = S.summons[ev.animal]!.name;
-          if (ev.healed) floatNumber(pcard, `+${ev.healed}`, 'heal');
-          else floatNumber(vcard(), `−${ev.damage}`, 'dmg');
-          log(S.log.summon(name, ev.damage, ev.healed), 'good');
+          floatNumber(pcard, `+${ev.healed}`, 'heal');
+          log(S.log.medical(ev.healed), 'good');
           break;
-        }
+        case 'villainRest':
+          disp.vck += ev.chakra;
+          floatNumber(vcard(), `+${ev.chakra} ck`, 'ck');
+          log(S.log.villainRest(who('villain'), ev.chakra), 'sys');
+          break;
+        case 'summonRegen':
+          disp.php += ev.hp;
+          floatNumber(pcard, `+${ev.hp}`, 'heal');
+          log(S.log.summonRegen(ev.hp), 'good');
+          break;
+        case 'poison':
+          log(S.log.poison(ev.value), 'good');
+          break;
+        case 'poisonTick':
+          disp.vhp -= ev.damage;
+          floatNumber(vcard(), `−${ev.damage} 🐍`, 'dmg');
+          log(S.log.poisonTick(ev.damage), 'good');
+          break;
         case 'end':
           log(ev.status === 'won' ? S.log.won : S.log.lost, ev.status === 'won' ? 'good' : 'bad');
           break;
@@ -854,6 +1070,40 @@ async function rewardScreen(title: string, tier: number, spins: number): Promise
 }
 
 // ---------------------------------------------------------------------------
+// XP e subida de nível
+
+/** Ganha o XP do vilão derrotado; a roleta de nível só gira quando o XP do nível se completa. */
+async function awardXp(villainId: string): Promise<void> {
+  const c = camp!;
+  c.player = gainXp(c.player, villainsById[villainId]!.xp, data);
+  while (canLevelUp(c.player, data)) await levelUpScreen();
+}
+
+async function levelUpScreen(): Promise<void> {
+  const c = camp!;
+  const root = show(
+    h(`<div class="screen"><h2>${S.ui.levelUpTitle}</h2><p class="center"><span class="chip tier tier-2">${S.ui.levelLabel(c.player.level + 1)}</span></p>
+      <div id="slot"></div><div id="results"></div><div id="hud"></div><div id="cta"></div></div>`),
+  );
+  const slot = root.querySelector<HTMLElement>('#slot')!;
+  const hud = root.querySelector<HTMLElement>('#hud')!;
+  hud.innerHTML = playerPanel(c.player, c.mods, c.weakened);
+
+  const roll = rollLevelUp(c.player, rng, data);
+  await bigWheel(slot, S.roulettes.levelUp, rollSlices(roll, (id) => S.levelStats[id] ?? id), roll.index);
+  const step = levelUp(c.player, roll.value, data);
+  applyStep(step);
+  root
+    .querySelector('#results')!
+    .insertAdjacentHTML('beforeend', `<div class="effect pop">${effectText(step.effect)}</div>`);
+  hud.innerHTML = playerPanel(c.player, c.mods, c.weakened);
+  hud.firstElementChild?.classList.add('pulse');
+  const cta = root.querySelector<HTMLElement>('#cta')!;
+  cta.innerHTML = `<div class="sticky-cta"><button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div>`;
+  await choose(cta);
+}
+
+// ---------------------------------------------------------------------------
 // Fim de run e histórico
 
 async function endScreen(won: boolean, stoppedAt: string | null): Promise<void> {
@@ -890,7 +1140,8 @@ function openHistory() {
             const origin = `${originLabel(o)}${o.affinity ? ` · ${S.elements[o.affinity]}` : ''}${o.jinchuuriki ? ` · ${S.origin.jinchuuriki}` : ''}`;
             const stage = campaign[r.furthestStage];
             const reached = r.status !== 'victory' && r.status !== 'reroll' && stage ? ` · ${S.ui.reachedStage(stageName(stage))}` : '';
-            return `<li><div class="row between"><b>${origin}</b><span class="chip st-${r.status}">${S.ui.runStatus[r.status]}</span></div>
+            const diff = r.difficulty ? ` ${diffChip(r.difficulty)}` : '';
+            return `<li><div class="row between"><b>${origin}</b><span>${diff} <span class="chip st-${r.status}">${S.ui.runStatus[r.status]}</span></span></div>
               <small class="muted">${date}${reached} · ${S.ui.revivesUsed(r.revivesUsed)}</small></li>`;
           })
           .join('')
@@ -927,9 +1178,12 @@ async function runCampaign(): Promise<void> {
           label: `${S.stages.exam} · ${S.ui.fightOf(j + 1, stage.villains.length)}`,
           exam: true,
         });
-        if (result.status === 'won') wins++;
         // Perder no exame não mata: nunca sai dele com 0 de HP.
         c.player = { ...result.player, hp: Math.max(1, result.player.hp) };
+        if (result.status === 'won') {
+          wins++;
+          await awardXp(stage.villains[j]!);
+        }
       }
       if (data.balance.campaign.restoreBetweenStages) c.player = fullRestore(c.player);
       const reward = data.balance.exam.rewardByWins[wins] ?? data.balance.exam.rewardByWins[0]!;
@@ -953,6 +1207,8 @@ async function runCampaign(): Promise<void> {
         await endScreen(false, villainName(stage.villains[j]!));
         return;
       }
+      const finalFight = i === campaign.length - 1 && j === stage.villains.length - 1;
+      if (!finalFight) await awardXp(stage.villains[j]!);
     }
     if (i === campaign.length - 1) break;
     if (data.balance.campaign.restoreBetweenStages) c.player = fullRestore(c.player);
@@ -972,6 +1228,11 @@ async function main() {
     saveSettings();
   });
   document.getElementById('history-btn')!.addEventListener('click', openHistory);
+  document.getElementById('sheet-btn')!.addEventListener('click', openSheet);
+  // Botões "Ficha" dentro das telas (painel do jogador, card da luta).
+  document.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('[data-sheet]')) openSheet();
+  });
   document.getElementById('disclaimer')!.textContent = S.ui.disclaimer;
   document.getElementById('instant-label')!.textContent = S.ui.instant;
 

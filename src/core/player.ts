@@ -1,8 +1,23 @@
+import type { LevelStatId } from '../data/events';
 import type { GameData } from './gameData';
-import type { AttackStats, AttackType, Element, Origin, PassiveDef, StatKey, SummonState } from './types';
+import type {
+  AttackStats,
+  AttackType,
+  Element,
+  Origin,
+  PassiveDef,
+  StatKey,
+  SummonState,
+  TechniqueDef,
+  TechniqueSlot,
+} from './types';
 
 export interface PlayerState {
   origin: Origin;
+  /** Começa em 1. Sobe ao juntar o XP do nível, até `balance.level.cap`. */
+  level: number;
+  /** XP acumulado rumo ao próximo nível (zera ao subir). No teto, fica em 0. */
+  xp: number;
   maxHp: number;
   hp: number;
   maxChakra: number;
@@ -15,10 +30,10 @@ export interface PlayerState {
   critBonus: number;
   /** diferencial_de_resistência. */
   resistanceBonus: number;
-  /** No máximo uma técnica por tipo. Sem técnica = ação básica. */
-  techniques: Partial<Record<AttackType, string>>;
-  /** Upgrades (pergaminho) por tipo: valem para a técnica que estiver naquele tipo, inclusive a básica. */
-  techniqueLevels: Partial<Record<AttackType, number>>;
+  /** No máximo uma técnica por espaço. Sem técnica de ataque = ação básica; sem médica = não cura. */
+  techniques: Partial<Record<TechniqueSlot, string>>;
+  /** Upgrades (pergaminho) por espaço: valem para a técnica que estiver nele, inclusive a básica. */
+  techniqueLevels: Partial<Record<TechniqueSlot, number>>;
   /** Ferramenta ninja: item único, evoluível. 0 = não tem. */
   ninjaToolLevel: number;
   summon: SummonState | null;
@@ -45,6 +60,8 @@ export function createPlayer(origin: Origin, data: GameData): PlayerState {
 
   return {
     origin,
+    level: 1,
+    xp: 0,
     maxHp,
     hp: maxHp,
     maxChakra,
@@ -72,14 +89,80 @@ export function fullRestore(player: PlayerState): PlayerState {
   return { ...player, hp: player.maxHp, chakra: player.maxChakra };
 }
 
-/** Ensina uma técnica, substituindo a do mesmo tipo. Respeita a restrição da origem. */
+export function techniqueSlot(tech: TechniqueDef): TechniqueSlot {
+  return tech.slot ?? tech.type;
+}
+
+/** Ensina uma técnica, substituindo a do mesmo espaço. Respeita a restrição da origem. */
 export function learnTechnique(player: PlayerState, techniqueId: string, data: GameData): PlayerState {
   const tech = data.techniquesById[techniqueId];
   if (!tech) throw new Error(`Técnica desconhecida: ${techniqueId}`);
   if (player.forbiddenAttackTypes.includes(tech.type)) {
     throw new Error(`Esta origem não aprende técnicas de ${tech.type}`);
   }
-  return { ...player, techniques: { ...player.techniques, [tech.type]: tech.id } };
+  return { ...player, techniques: { ...player.techniques, [techniqueSlot(tech)]: tech.id } };
+}
+
+/** Fração do HP máximo que o ninjutsu médico cura, com os upgrades. 0 = não sabe. */
+export function medicalHealPct(player: PlayerState, data: GameData): number {
+  const id = player.techniques.medical;
+  const tech = id ? data.techniquesById[id] : undefined;
+  if (!tech) return 0;
+  return (tech.healPct ?? 0) + (player.techniqueLevels.medical ?? 0) * data.balance.techniqueUpgrade.healPctPerLevel;
+}
+
+/** Status que a roleta de nível pode sortear: tira os tipos de ataque proibidos pela origem. */
+export function levelUpPool(player: PlayerState, data: GameData) {
+  return data.levelUpStats.filter((s) => !player.forbiddenAttackTypes.includes(s.id as AttackType));
+}
+
+/** XP para sair de `level` e ir ao próximo. `null` no teto de nível. */
+export function xpToNextLevel(level: number, data: GameData): number | null {
+  const cfg = data.balance.level;
+  if (level >= cfg.cap) return null;
+  return cfg.xpBase + cfg.xpGrowth * (level - 1);
+}
+
+/** Soma XP. Não sobe de nível sozinho: enquanto `canLevelUp`, a UI gira a roleta de nível. */
+export function gainXp(player: PlayerState, amount: number, data: GameData): PlayerState {
+  if (xpToNextLevel(player.level, data) === null) return { ...player, xp: 0 };
+  return { ...player, xp: player.xp + amount };
+}
+
+export function canLevelUp(player: PlayerState, data: GameData): boolean {
+  const need = xpToNextLevel(player.level, data);
+  return need !== null && player.xp >= need;
+}
+
+/**
+ * Sobe 1 nível, gastando o XP do nível: HP e chakra máximos sobem sempre (os atuais sobem junto)
+ * e `stat` recebe o bônus da roleta de nível.
+ */
+export function applyLevelUp(player: PlayerState, stat: LevelStatId, data: GameData): PlayerState {
+  const cfg = data.balance.level;
+  if (!canLevelUp(player, data)) throw new Error('XP insuficiente ou nível máximo');
+  const gain = cfg.statGains[stat];
+  const hp = cfg.hpPerLevel + (stat === 'hp' ? gain : 0);
+  const chakra = cfg.chakraPerLevel + (stat === 'chakra' ? gain : 0);
+  const level = player.level + 1;
+  const leftover = player.xp - xpToNextLevel(player.level, data)!;
+  const p: PlayerState = {
+    ...player,
+    level,
+    xp: level >= cfg.cap ? 0 : leftover,
+    maxHp: player.maxHp + hp,
+    hp: player.hp + hp,
+    maxChakra: player.maxChakra + chakra,
+    chakra: player.chakra + chakra,
+  };
+  if (stat === 'taijutsu' || stat === 'ninjutsu' || stat === 'genjutsu') {
+    if (!p.forbiddenAttackTypes.includes(stat)) p.offense = { ...p.offense, [stat]: p.offense[stat] + gain };
+  } else if (stat === 'speed') {
+    p.speed += gain;
+  } else if (stat === 'resistance') {
+    p.resistanceBonus += gain;
+  }
+  return p;
 }
 
 /**

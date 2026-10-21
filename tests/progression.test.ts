@@ -1,18 +1,31 @@
 import { describe, expect, it } from 'vitest';
 import { availableActions, playerTechnique, playRound, startBattle, type BattleEvent } from '../src/core/combat';
-import { applyStatStages, createPlayer, learnTechnique } from '../src/core/player';
+import { scaleVillain } from '../src/core/difficulty';
+import {
+  applyLevelUp,
+  applyStatStages,
+  canLevelUp,
+  createPlayer,
+  gainXp,
+  learnTechnique,
+  levelUpPool,
+  xpToNextLevel,
+} from '../src/core/player';
 import {
   applyAkatsuki,
   applyItem,
   applyReward,
   applySimpleEvent,
   applySummonEncounter,
+  learnableTechniques,
+  levelUp,
   playJokenpo,
   rewardPool,
 } from '../src/core/progression';
 import { createRng } from '../src/core/rng';
 import type { Origin } from '../src/core/types';
 import { gameData } from '../src/data/index';
+import { villainsById } from '../src/data/villains';
 import { seq, testVillain } from './helpers';
 
 const common: Origin = { lineageId: null, affinity: 'fire', jinchuuriki: false };
@@ -90,9 +103,12 @@ describe('itens', () => {
 });
 
 describe('encontros misteriosos', () => {
-  it('Akatsuki: ignora quem não é jinchuuriki', () => {
+  it('Akatsuki: quem não é jinchuuriki ganha chance de crítico', () => {
     const p = createPlayer(common, gameData);
-    expect(applyAkatsuki(p, gameData)).toMatchObject({ player: p, effect: { kind: 'akatsukiPassed' } });
+    const step = applyAkatsuki(p, gameData);
+    expect(step.effect).toEqual({ kind: 'akatsukiInsight', amount: 0.05 });
+    expect(step.player.critBonus).toBeCloseTo(0.05);
+    expect(step.player.revives).toBe(p.revives);
   });
 
   it('Akatsuki: jinchuuriki perde 1 item de retorno; sem item, começa enfraquecido', () => {
@@ -133,26 +149,209 @@ describe('combate: efeitos de eventos', () => {
     expect(ofType(s2.log, 'attack').filter((a) => a.side === 'player').at(-1)).toMatchObject({ outcome: 'miss' });
   });
 
-  it('invocação: uma vez por luta e custa chakra', () => {
+});
+
+describe('invocações (passivas)', () => {
+  it('não são uma ação de combate', () => {
     const p = applySummonEncounter(createPlayer(common, gameData), 'toad').player;
-    const s0 = startBattle(p, testVillain({ hp: 200 }), { playerStartsFirst: true });
-    expect(availableActions(s0, gameData)).toContain('summon');
-    const s1 = playRound(s0, 'summon', seq(0.5), gameData);
-    // sapo: 18 + 10 − 5 = 23, sem rolagem de acerto
-    expect(ofType(s1.log, 'summon')).toEqual([{ type: 'summon', animal: 'toad', damage: 23, healed: 0 }]);
-    expect(s1.player.chakra).toBe(5);
-    expect(availableActions(s1, gameData)).not.toContain('summon');
+    expect(availableActions(startBattle(p, testVillain()), gameData)).toEqual([
+      'taijutsu',
+      'ninjutsu',
+      'genjutsu',
+      'rest',
+    ]);
   });
 
-  it('invocação da cobra debilita; a da lesma cura', () => {
-    const snake = applySummonEncounter(createPlayer(common, gameData), 'snake').player;
-    const s1 = playRound(startBattle(snake, testVillain(), { playerStartsFirst: true }), 'summon', seq(0.5), gameData);
-    expect(ofType(s1.log, 'debilitate')).toHaveLength(1);
-    expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'villain' }]);
+  it('sapo: dano base extra em todos os ataques, maior a cada nível', () => {
+    const lv1 = applySummonEncounter(createPlayer(common, gameData), 'toad').player;
+    expect(playerTechnique(lv1, 'taijutsu', gameData).baseDamage).toBe(11); // 8 + 3
+    expect(playerTechnique(lv1, 'ninjutsu', gameData).baseDamage).toBe(13); // 10 + 3
+    const lv2 = applySummonEncounter(lv1, 'toad').player;
+    expect(playerTechnique(lv2, 'taijutsu', gameData).baseDamage).toBe(13); // 8 + 3 + 2
+  });
 
-    const slug = { ...applySummonEncounter(createPlayer(common, gameData), 'slug').player, hp: 40 };
-    const s2 = playRound(startBattle(slug, testVillain(), { playerStartsFirst: true }), 'summon', seq(0.5), gameData);
-    expect(ofType(s2.log, 'summon')[0]).toMatchObject({ healed: 30 });
+  it('cobra: acerto envenena; o veneno causa seu valor no fim da rodada e cai 1', () => {
+    const p = applySummonEncounter(createPlayer(common, gameData), 'snake').player;
+    const s0 = startBattle(p, testVillain({ hp: 100 }), { playerStartsFirst: true });
+    const s1 = playRound(s0, 'taijutsu', seq(0.5), gameData);
+    expect(ofType(s1.log, 'poison')).toEqual([{ type: 'poison', value: 5 }]);
+    expect(ofType(s1.log, 'poisonTick')).toEqual([{ type: 'poisonTick', damage: 5, remaining: 4 }]);
+    expect(s1.villain.hp).toBe(100 - 13 - 5);
+
+    // Novo acerto com o alvo já envenenado não reaplica: o veneno segue caindo.
+    const s2 = playRound(s1, 'taijutsu', seq(0.1, 0.5), gameData);
+    expect(ofType(s2.log, 'poison')).toHaveLength(1);
+    expect(s2.villain.poison).toBe(3);
+  });
+
+  it('cobra: o veneno some ao chegar a 0 e pode ser reaplicado', () => {
+    const p = applySummonEncounter(createPlayer(common, gameData), 'snake').player;
+    const s0 = startBattle(p, testVillain({ hp: 200 }), { playerStartsFirst: true });
+    const s1 = playRound({ ...s0, villain: { ...s0.villain, poison: 1 } }, 'rest', seq(0.1, 0.5), gameData);
+    expect(s1.villain.poison).toBe(0);
+    const s2 = playRound(s1, 'taijutsu', seq(0.1, 0.5), gameData);
+    expect(ofType(s2.log, 'poison')).toEqual([{ type: 'poison', value: 5 }]);
+  });
+
+  it('cobra: o veneno pode derrotar o vilão', () => {
+    const p = applySummonEncounter(createPlayer(common, gameData), 'snake').player;
+    const s0 = startBattle(p, testVillain({ hp: 15 }), { playerStartsFirst: true });
+    const s1 = playRound(s0, 'taijutsu', seq(0.5), gameData);
+    expect(s1.status).toBe('won');
+    expect(ofType(s1.log, 'poisonTick')).toEqual([{ type: 'poisonTick', damage: 2, remaining: 4 }]);
+  });
+
+  it('lesma: cura uma parte do HP no início de cada rodada', () => {
+    const p = { ...applySummonEncounter(createPlayer(common, gameData), 'slug').player, hp: 40 };
+    const s1 = playRound(startBattle(p, testVillain(), { playerStartsFirst: true }), 'rest', seq(0.01), gameData);
+    expect(ofType(s1.log, 'summonRegen')).toEqual([{ type: 'summonRegen', hp: 4 }]);
+    const lv2 = { ...applySummonEncounter(p, 'slug').player, hp: 40 };
+    const s2 = playRound(startBattle(lv2, testVillain(), { playerStartsFirst: true }), 'rest', seq(0.01), gameData);
+    expect(ofType(s2.log, 'summonRegen')).toEqual([{ type: 'summonRegen', hp: 6 }]);
+  });
+});
+
+describe('ninjutsu médico', () => {
+  const medic = () => learnTechnique(createPlayer(common, gameData), 'medicalNinjutsu', gameData);
+
+  it('ocupa um espaço próprio: não substitui o ninjutsu de ataque', () => {
+    const p = learnTechnique(medic(), 'fireball', gameData);
+    expect(p.techniques).toEqual({ medical: 'medicalNinjutsu', ninjutsu: 'fireball' });
+  });
+
+  it('cura 20% do HP máximo, gasta chakra e não rola acerto', () => {
+    const p = { ...medic(), hp: 50 };
+    const s0 = startBattle(p, testVillain(), { playerStartsFirst: true });
+    expect(availableActions(s0, gameData)).toContain('medical');
+    const s1 = playRound(s0, 'medical', seq(0.01), gameData);
+    expect(ofType(s1.log, 'medical')).toEqual([{ type: 'medical', healed: 20 }]);
+    expect(s1.player.chakra).toBe(6);
+  });
+
+  it('indisponível com HP cheio ou sem chakra', () => {
+    expect(availableActions(startBattle(medic(), testVillain()), gameData)).not.toContain('medical');
+    const broke = { ...medic(), hp: 50, chakra: 3 };
+    expect(availableActions(startBattle(broke, testVillain()), gameData)).not.toContain('medical');
+  });
+
+  it('o pergaminho também melhora a cura', () => {
+    const step = applyItem(medic(), 'techniqueScroll', seq(0.5));
+    expect(step.effect).toEqual({ kind: 'techniqueUpgrade', type: 'medical', level: 1 });
+    const p = { ...step.player, hp: 50 };
+    const s1 = playRound(startBattle(p, testVillain(), { playerStartsFirst: true }), 'medical', seq(0.01), gameData);
+    expect(ofType(s1.log, 'medical')).toEqual([{ type: 'medical', healed: 25 }]);
+  });
+
+  it('o prodígio do taijutsu não aprende', () => {
+    expect(learnableTechniques(createPlayer(prodigy, gameData), gameData)).not.toContain('medicalNinjutsu');
+    expect(learnableTechniques(createPlayer(common, gameData), gameData)).toContain('medicalNinjutsu');
+  });
+});
+
+describe('nível e XP', () => {
+  /** Jogador com XP suficiente para subir 1 nível. */
+  const ready = (o: Origin = common) => ({ ...createPlayer(o, gameData), xp: 100 });
+
+  it('começa no nível 1, sem XP', () => {
+    const p = createPlayer(common, gameData);
+    expect([p.level, p.xp]).toEqual([1, 0]);
+  });
+
+  it('o XP para o próximo nível cresce a cada nível; no teto não há próximo', () => {
+    expect(xpToNextLevel(1, gameData)).toBe(100);
+    expect(xpToNextLevel(2, gameData)).toBe(120);
+    expect(xpToNextLevel(9, gameData)).toBe(260);
+    expect(xpToNextLevel(10, gameData)).toBeNull();
+  });
+
+  it('ganhar XP não sobe de nível sozinho; subir gasta o XP do nível e guarda a sobra', () => {
+    const p = gainXp(createPlayer(common, gameData), 130, gameData);
+    expect([p.level, p.xp]).toEqual([1, 130]);
+    expect(canLevelUp(p, gameData)).toBe(true);
+    const up = applyLevelUp(p, 'speed', gameData);
+    expect([up.level, up.xp]).toEqual([2, 30]);
+    expect(canLevelUp(up, gameData)).toBe(false);
+  });
+
+  it('sem XP suficiente, não sobe', () => {
+    const p = gainXp(createPlayer(common, gameData), 99, gameData);
+    expect(canLevelUp(p, gameData)).toBe(false);
+    expect(() => applyLevelUp(p, 'hp', gameData)).toThrow();
+  });
+
+  it('nível máximo 10: o XP deixa de acumular', () => {
+    const p = { ...createPlayer(common, gameData), level: 9, xp: 300 };
+    const top = applyLevelUp(p, 'hp', gameData);
+    expect([top.level, top.xp]).toEqual([10, 0]);
+    expect(gainXp(top, 500, gameData).xp).toBe(0);
+    expect(canLevelUp(gainXp(top, 500, gameData), gameData)).toBe(false);
+  });
+
+  it('nos blocos de várias lutas não sobe de nível a cada mini vilão', () => {
+    // Quarteto do Som chegando no nível 7 com o XP zerado: 4 lutas, só 1 nível.
+    let p = { ...createPlayer(common, gameData), level: 7 };
+    let levelUps = 0;
+    for (const id of ['jirobo', 'kidomaru', 'tayuya', 'sakon']) {
+      p = gainXp(p, villainsById[id]!.xp, gameData);
+      while (canLevelUp(p, gameData)) {
+        p = applyLevelUp(p, 'hp', gameData);
+        levelUps++;
+      }
+    }
+    expect(levelUps).toBe(1);
+  });
+
+  it('cada nível aumenta HP e chakra máximos (e os atuais), mais o status da roleta', () => {
+    const p = { ...ready(), hp: 50 };
+    const up = applyLevelUp(p, 'taijutsu', gameData);
+    expect(up.level).toBe(2);
+    expect([up.maxHp, up.hp]).toEqual([112, 62]);
+    expect([up.maxChakra, up.chakra]).toEqual([12, 12]);
+    expect(up.offense).toEqual({ taijutsu: 13, ninjutsu: 10, genjutsu: 10 });
+  });
+
+  it('HP, chakra, speed e resistência na roleta somam ao ganho fixo', () => {
+    const p = ready();
+    expect(applyLevelUp(p, 'hp', gameData).maxHp).toBe(127);
+    expect(applyLevelUp(p, 'chakra', gameData).maxChakra).toBe(16);
+    expect(applyLevelUp(p, 'speed', gameData).speed).toBe(11);
+    expect(applyLevelUp(p, 'resistance', gameData).resistanceBonus).toBe(2);
+  });
+
+  it('a roleta de nível tira os tipos proibidos pela origem', () => {
+    const ids = levelUpPool(createPlayer(prodigy, gameData), gameData).map((s) => s.id);
+    expect(ids).not.toContain('ninjutsu');
+    expect(ids).not.toContain('genjutsu');
+    expect(ids).toContain('taijutsu');
+  });
+
+  it('levelUp descreve o efeito para a UI', () => {
+    const step = levelUp(ready(), 'speed', gameData);
+    expect(step.effect).toEqual({ kind: 'levelUp', level: 2, stat: 'speed', amount: 1 });
+  });
+});
+
+describe('dificuldade', () => {
+  const v = testVillain({ hp: 100, defense: { taijutsu: 10, ninjutsu: 8, genjutsu: 6 } });
+
+  it('médio mantém o vilão original', () => {
+    expect(scaleVillain(v, 'normal', gameData)).toBe(v);
+  });
+
+  it('fácil (75%) e difícil (150%) escalam HP, dano base e defesa', () => {
+    const easy = scaleVillain(v, 'easy', gameData);
+    expect(easy.hp).toBe(75);
+    expect(easy.defense).toEqual({ taijutsu: 7, ninjutsu: 6, genjutsu: 4 });
+    expect(easy.techniques[0]!.baseDamage).toBe(7);
+    const hard = scaleVillain(v, 'hard', gameData);
+    expect(hard.hp).toBe(150);
+    expect(hard.defense).toEqual({ taijutsu: 15, ninjutsu: 12, genjutsu: 9 });
+    expect(hard.techniques[0]!.baseDamage).toBe(15);
+  });
+
+  it('speed, chakra e XP não mudam', () => {
+    const hard = scaleVillain(v, 'hard', gameData);
+    expect([hard.speed, hard.chakra, hard.xp]).toEqual([v.speed, v.chakra, v.xp]);
   });
 });
 

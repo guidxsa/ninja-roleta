@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: veneno-acumula
+expected_outcome: |
+  O veneno da invocação cobra passa a acumular até 3 aplicações (limite em balance.ts), com testes cobrindo o acúmulo e o teto, simulação rodada antes/depois, CLAUDE.md atualizado e relatório com os números.

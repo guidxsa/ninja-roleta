@@ -12,10 +12,12 @@ export function testVillain(overrides: Partial<VillainDef> = {}): VillainDef {
     id: 'dummy',
     element: 'earth',
     hp: 50,
+    chakra: 20,
     speed: 10,
     defense: { taijutsu: 5, ninjutsu: 5, genjutsu: 5 },
     critBonus: 0,
-    techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 10, weight: 1 }],
+    xp: 50,
+    techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 10, chakraCost: 0, weight: 1 }],
     ...overrides,
   };
 }

@@ -34,6 +34,7 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
   const vfx = state.villain.fx;
 
   if (actions.includes('gates') && p.hp > p.maxHp * 0.5) return 'gates';
+  if (actions.includes('medical') && p.hp < p.maxHp * 0.4) return 'medical';
 
   const canDebilitate = vfx.debilitated === 0 && vfx.debilitateImmunity === 0;
   if (actions.includes('genjutsu') && canDebilitate && p.hp < p.maxHp * 0.6) return 'genjutsu';

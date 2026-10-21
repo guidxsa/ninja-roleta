@@ -17,10 +17,24 @@ export type EncounterId = 'akatsuki' | 'summon';
 
 export type RewardId = 'stages' | 'newTechnique' | 'techniqueUpgrade' | 'resistance' | 'critBonus' | 'item';
 
+/** Status que a roleta de nível pode melhorar. Quanto de cada: `balance.level.statGains`. */
+export type LevelStatId = 'taijutsu' | 'ninjutsu' | 'genjutsu' | 'speed' | 'hp' | 'chakra' | 'resistance';
+
 export interface Weighted<T> {
   id: T;
   weight: number;
 }
+
+/** Roleta de nível. Status proibidos pela origem (ex.: ninjutsu do prodígio) saem da roleta. */
+export const levelUpStats: Weighted<LevelStatId>[] = [
+  { id: 'taijutsu', weight: 2 },
+  { id: 'ninjutsu', weight: 2 },
+  { id: 'genjutsu', weight: 2 },
+  { id: 'speed', weight: 2 },
+  { id: 'hp', weight: 2 },
+  { id: 'chakra', weight: 1 },
+  { id: 'resistance', weight: 1 },
+];
 
 /** Roleta pré-vilão. Pesos fixos nesta versão (os status não alteram as fatias). */
 export const preFightEvents: Weighted<PreFightEventId>[] = [

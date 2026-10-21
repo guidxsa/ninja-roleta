@@ -17,7 +17,7 @@ describe('rodada básica', () => {
     const s0 = startBattle(createPlayer(common, gameData), testVillain({ hp: 5 }), { playerStartsFirst: true });
     const s1 = playRound(s0, 'taijutsu', seq(0.5), gameData);
     expect(s1.status).toBe('won');
-    expect(s1.player.chakra).toBe(9); // taijutsu imbuído custa 1
+    expect(s1.player.chakra).toBe(10); // taijutsu não gasta chakra
     expect(ofType(s1.log, 'ambush')).toHaveLength(1);
     expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'hit', damage: 13 });
   });
@@ -46,11 +46,11 @@ describe('rodada básica', () => {
     expect(s1.villain.hp).toBe(50);
   });
 
-  it('ações indisponíveis lançam erro; sem chakra só resta concentrar', () => {
+  it('ações indisponíveis lançam erro; sem chakra sobram taijutsu e concentrar', () => {
     const p = { ...createPlayer(common, gameData), chakra: 0 };
     const s0 = startBattle(p, testVillain());
-    expect(availableActions(s0, gameData)).toEqual(['rest']);
-    expect(() => playRound(s0, 'taijutsu', seq(0.5), gameData)).toThrow();
+    expect(availableActions(s0, gameData)).toEqual(['taijutsu', 'rest']);
+    expect(() => playRound(s0, 'ninjutsu', seq(0.5), gameData)).toThrow();
     const s1 = playRound(s0, 'rest', seq(0.1, 0.01, 0.01), gameData);
     expect(s1.player.chakra).toBe(3);
   });
@@ -67,7 +67,7 @@ describe('item de retorno', () => {
     expect(s1.player.revives).toBe(0);
     expect(s1.player.revivesUsed).toBe(1);
     expect(s1.player.hp).toBe(100);
-    expect(s1.player.chakra).toBe(9); // restaurado para 10 e gastou 1 no taijutsu
+    expect(s1.player.chakra).toBe(10); // restaurado para 10; taijutsu não gasta
     expect(ofType(s1.log, 'revive')).toHaveLength(1);
   });
 
@@ -187,6 +187,41 @@ describe('surto da besta (jinchuuriki)', () => {
     const s1 = playRound(startBattle(p, testVillain()), 'rest', seq(0.9, 0.5, 0.5, 0.1), gameData);
     const s2 = playRound({ ...s1, player: { ...s1.player, hp: 10 } }, 'rest', seq(0.9, 0.5, 0.5, 0.1), gameData);
     expect(ofType(s2.log, 'surge')).toHaveLength(1);
+  });
+});
+
+describe('chakra dos vilões', () => {
+  const caster = () =>
+    testVillain({
+      chakra: 6,
+      techniques: [{ id: 'blast', type: 'ninjutsu', baseDamage: 10, chakraCost: 5, weight: 1 }],
+    });
+
+  it('gasta chakra ao usar técnica', () => {
+    // vilão primeiro (0.9), técnica, acerto
+    const s1 = playRound(startBattle(createPlayer(common, gameData), caster()), 'rest', seq(0.9, 0.5, 0.5), gameData);
+    expect(s1.villain.chakra).toBe(1);
+    expect(ofType(s1.log, 'attack').filter((a) => a.side === 'villain')).toHaveLength(1);
+  });
+
+  it('sem chakra para nenhuma técnica, concentra chakra no lugar de atacar', () => {
+    const s0 = startBattle(createPlayer(common, gameData), caster());
+    const s1 = playRound({ ...s0, villain: { ...s0.villain, chakra: 1 } }, 'rest', seq(0.9, 0.01, 0.01), gameData);
+    expect(ofType(s1.log, 'villainRest')).toEqual([{ type: 'villainRest', chakra: 4 }]);
+    expect(s1.villain.chakra).toBe(5);
+    expect(ofType(s1.log, 'attack').filter((a) => a.side === 'villain')).toHaveLength(0);
+  });
+
+  it('só sorteia entre as técnicas que pode pagar', () => {
+    const v = testVillain({
+      chakra: 3,
+      techniques: [
+        { id: 'blast', type: 'ninjutsu', baseDamage: 30, chakraCost: 5, weight: 100 },
+        { id: 'punch', type: 'taijutsu', baseDamage: 10, chakraCost: 0, weight: 1 },
+      ],
+    });
+    const s1 = playRound(startBattle(createPlayer(common, gameData), v), 'rest', seq(0.9, 0.0, 0.5), gameData);
+    expect(ofType(s1.log, 'attack').find((a) => a.side === 'villain')).toMatchObject({ techniqueId: 'punch' });
   });
 });
 

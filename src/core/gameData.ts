@@ -1,5 +1,5 @@
 import type { Balance } from '../data/balance';
-import type { EncounterId, ItemId, PreFightEventId, RewardId, Weighted } from '../data/events';
+import type { EncounterId, ItemId, LevelStatId, PreFightEventId, RewardId, Weighted } from '../data/events';
 import type { AttackType, Element, LineageDef, SummonAnimal, TechniqueDef } from './types';
 
 /** Pacote de dados que o core recebe por parâmetro (nunca importa diretamente). */
@@ -17,4 +17,5 @@ export interface GameData {
   encounters: Weighted<EncounterId>[];
   summonAnimals: Weighted<SummonAnimal>[];
   rewards: Weighted<RewardId>[];
+  levelUpStats: Weighted<LevelStatId>[];
 }

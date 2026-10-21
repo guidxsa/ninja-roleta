@@ -1,3 +1,4 @@
+import type { Difficulty } from '../core/difficulty';
 import type { Origin } from '../core/types';
 
 export const RUNS_STORAGE_KEY = 'runs_v1';
@@ -13,6 +14,8 @@ export interface RunRecord {
   /** Índice da etapa da campanha mais avançada alcançada. */
   furthestStage: number;
   revivesUsed: number;
+  /** Ausente nos registros antigos (antes da escolha de dificuldade). */
+  difficulty?: Difficulty;
 }
 
 /** Subconjunto do `localStorage` usado aqui (injetável nos testes). */
@@ -61,7 +64,7 @@ export function startRun(
 export function updateRun(
   storage: KeyValueStorage,
   id: string,
-  patch: Partial<Pick<RunRecord, 'status' | 'furthestStage' | 'revivesUsed'>>,
+  patch: Partial<Pick<RunRecord, 'status' | 'furthestStage' | 'revivesUsed' | 'difficulty'>>,
   now: Date,
   maxRuns: number,
 ): void {

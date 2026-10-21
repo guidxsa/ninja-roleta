@@ -44,3 +44,5 @@ MIT. Veja o arquivo [LICENSE](LICENSE).
 | v0.2.0 | Progressão (estágios de status, itens, encontros, jokenpô), eventos pré-vilão, novos vilões e textos PT-BR. |
 | v0.3.0 | Protótipo jogável em HTML com roletas animadas, combate, inventário, recompensas e histórico de runs. |
 | v0.3.1 | Licença MIT e histórico de versões no README. |
+| v0.4.0 | Balanceamento: sistema de nível com roleta de status, taijutsu sem custo de chakra, ninjutsu médico, chakra dos vilões, invocações passivas (sapo, cobra com veneno, lesma) e Akatsuki dá crítico a quem não é jinchuuriki. |
+| v0.5.0 | Nível por XP (cada vilão dá XP pela dificuldade, nível máximo 10), dificuldade fácil/médio/difícil, ficha ninja com retrato e bolsa de itens, visual com tema ninja e skills do projeto (nova mecânica, lançar versão). |

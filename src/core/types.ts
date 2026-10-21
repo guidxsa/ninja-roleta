@@ -5,6 +5,9 @@ export type Element = 'fire' | 'wind' | 'lightning' | 'earth' | 'water';
 export type AttackType = 'taijutsu' | 'ninjutsu' | 'genjutsu';
 export type AttackStats = Record<AttackType, number>;
 
+/** Espaço de técnica: um por tipo de ataque, mais o de ninjutsu médico (suporte). */
+export type TechniqueSlot = AttackType | 'medical';
+
 export type StatKey = 'hp' | AttackType | 'chakra' | 'speed';
 export type Stats = Record<StatKey, number>;
 
@@ -38,19 +41,26 @@ export type TechniqueElement = Element | null | 'affinity';
 
 export interface TechniqueDef {
   id: string;
+  /** Tipo de chakra da técnica (filtro de origem). O ninjutsu médico é do tipo ninjutsu. */
   type: AttackType;
+  /** Omitido = o próprio tipo. Técnicas de suporte ocupam um espaço próprio. */
+  slot?: TechniqueSlot;
   element: TechniqueElement;
   baseDamage: number;
   chakraCost: number;
   /** Só genjutsu: turnos de Debilitado aplicados ao acertar. */
   debilitateTurns?: number;
+  /** Só ninjutsu médico: fração do HP máximo curada. */
+  healPct?: number;
 }
 
 export interface VillainTechnique {
   id: string;
   type: AttackType;
   baseDamage: number;
-  /** Peso na escolha da técnica pelo vilão. */
+  /** Taijutsu é sempre 0. Sem chakra para nenhuma técnica, o vilão concentra chakra. */
+  chakraCost: number;
+  /** Peso na escolha da técnica pelo vilão (entre as que ele pode pagar). */
   weight: number;
   /** Omitido = elemento do vilão. Taijutsu é sempre neutro. */
   element?: Element | null;
@@ -61,11 +71,15 @@ export interface VillainDef {
   id: string;
   element: Element;
   hp: number;
+  /** Reserva de chakra do vilão. */
+  chakra: number;
   speed: number;
   /** Atributos defensivos por tipo. O de genjutsu também mede o poder de ilusão do vilão. */
   defense: AttackStats;
   /** Diferencial de crítico do vilão (somado aos 5% base). */
   critBonus: number;
+  /** Experiência que o jogador ganha ao derrotar o vilão (escala com a dificuldade dele). */
+  xp: number;
   techniques: VillainTechnique[];
 }
 
@@ -77,6 +91,7 @@ export interface Origin {
 
 export type SummonAnimal = 'toad' | 'snake' | 'slug';
 
+/** Invocação passiva: o animal acompanha o jogador em todas as lutas. */
 export interface SummonState {
   animal: SummonAnimal;
   /** Começa em 1; sobe quando o encontro de invocação se repete. */
