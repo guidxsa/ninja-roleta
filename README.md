@@ -6,7 +6,7 @@ Jogo de browser de sessões curtas, movido a roletas, inspirado no universo ninj
 
 ## Estado atual
 
-Só o núcleo de regras (`src/core`), com testes e uma simulação em terminal para ajustar o balanceamento. Ainda não há interface.
+Núcleo de regras (`src/core`) com testes, uma simulação em terminal para ajustar o balanceamento e um **protótipo jogável** em HTML (`prototype/`), feito só para visualizar o jogo: roletas animadas, eventos pré-luta, combate com barras de HP/chakra, inventário, recompensas, exame chunin e histórico de runs. Não é a interface final.
 
 ## Comandos
 
@@ -15,6 +15,7 @@ npm install
 npm test                                   # testes das regras (Vitest)
 npm run typecheck                          # checagem de tipos
 npm run sim -- --fights 2000 --seed 42     # simulação de balanceamento
+npm run proto                              # gera dist/prototipo.html (abre direto no navegador, funciona offline)
 ```
 
 ## Estrutura
@@ -24,7 +25,8 @@ src/core    regras puras: roleta, origem, iniciativa, acerto, dano, elementos, c
 src/data    números de balanceamento, linhagens, técnicas, vilões, campanha, textos (PT-BR)
 src/state   histórico de runs (localStorage injetável)
 src/sim     jogador automático e executor de lutas/campanha
-scripts     simulate.ts
+prototype   protótipo jogável (HTML + TS), usa o core real
+scripts     simulate.ts, build-prototype.ts
 tests       testes do core
 ```
 
@@ -32,4 +34,13 @@ Todo número de balanceamento fica em `src/data/balance.ts` e nos arquivos de da
 
 ## Licença
 
-MIT (a confirmar).
+MIT. Veja o arquivo [LICENSE](LICENSE).
+
+## Histórico de versões
+
+| Versão | O que mudou |
+|---|---|
+| v0.1.0 | Núcleo de regras (roleta, origem, iniciativa, acerto, dano, elementos, combate), testes e simulação de balanceamento. |
+| v0.2.0 | Progressão (estágios de status, itens, encontros, jokenpô), eventos pré-vilão, novos vilões e textos PT-BR. |
+| v0.3.0 | Protótipo jogável em HTML com roletas animadas, combate, inventário, recompensas e histórico de runs. |
+| v0.3.1 | Licença MIT e histórico de versões no README. |
