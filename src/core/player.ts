@@ -9,8 +9,15 @@ import type {
   StatKey,
   SummonState,
   TechniqueDef,
+  TechniqueElement,
   TechniqueSlot,
 } from './types';
+
+/** Quantos amuletos de cada tipo o jogador carrega. */
+export interface Amulets {
+  speed: number;
+  resistance: number;
+}
 
 export interface PlayerState {
   origin: Origin;
@@ -36,6 +43,8 @@ export interface PlayerState {
   techniqueLevels: Partial<Record<TechniqueSlot, number>>;
   /** Ferramenta ninja: item único, evoluível. 0 = não tem. */
   ninjaToolLevel: number;
+  /** Amuletos carregados (efeito permanente, aparecem na bolsa). O bônus já está em speed/resistanceBonus. */
+  amulets: Amulets;
   summon: SummonState | null;
   forbiddenAttackTypes: AttackType[];
   passive: PassiveDef | null;
@@ -75,6 +84,7 @@ export function createPlayer(origin: Origin, data: GameData): PlayerState {
     techniques: {},
     techniqueLevels: {},
     ninjaToolLevel: 0,
+    amulets: { speed: 0, resistance: 0 },
     summon: null,
     forbiddenAttackTypes: [...(lineage?.forbiddenAttackTypes ?? [])],
     passive: lineage?.passive ?? null,
@@ -100,7 +110,14 @@ export function learnTechnique(player: PlayerState, techniqueId: string, data: G
   if (player.forbiddenAttackTypes.includes(tech.type)) {
     throw new Error(`Esta origem não aprende técnicas de ${tech.type}`);
   }
+  if (!knowsElement(player, tech.element)) throw new Error(`O jogador não domina o elemento ${tech.element}`);
   return { ...player, techniques: { ...player.techniques, [techniqueSlot(tech)]: tech.id } };
+}
+
+/** Técnica sem elemento (ou da afinidade) serve a qualquer um; elemental exige dominar o elemento. */
+export function knowsElement(player: PlayerState, element: TechniqueElement): boolean {
+  if (element === null || element === 'affinity') return true;
+  return player.affinity === element || player.secondaryElements.includes(element);
 }
 
 /** Fração do HP máximo que o ninjutsu médico cura, com os upgrades. 0 = não sabe. */
@@ -135,8 +152,9 @@ export function canLevelUp(player: PlayerState, data: GameData): boolean {
 }
 
 /**
- * Sobe 1 nível, gastando o XP do nível: HP e chakra máximos sobem sempre (os atuais sobem junto)
- * e `stat` recebe o bônus da roleta de nível.
+ * Sobe 1 nível, gastando o XP do nível: HP e chakra máximos sobem sempre, `stat` recebe o bônus
+ * da roleta de nível e HP e chakra são restaurados por completo (o único gatilho de recuperação
+ * fora do item de retorno).
  */
 export function applyLevelUp(player: PlayerState, stat: LevelStatId, data: GameData): PlayerState {
   const cfg = data.balance.level;
@@ -151,9 +169,7 @@ export function applyLevelUp(player: PlayerState, stat: LevelStatId, data: GameD
     level,
     xp: level >= cfg.cap ? 0 : leftover,
     maxHp: player.maxHp + hp,
-    hp: player.hp + hp,
     maxChakra: player.maxChakra + chakra,
-    chakra: player.chakra + chakra,
   };
   if (stat === 'taijutsu' || stat === 'ninjutsu' || stat === 'genjutsu') {
     if (!p.forbiddenAttackTypes.includes(stat)) p.offense = { ...p.offense, [stat]: p.offense[stat] + gain };
@@ -162,7 +178,7 @@ export function applyLevelUp(player: PlayerState, stat: LevelStatId, data: GameD
   } else if (stat === 'resistance') {
     p.resistanceBonus += gain;
   }
-  return p;
+  return fullRestore(p);
 }
 
 /**

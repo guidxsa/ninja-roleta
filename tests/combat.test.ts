@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { availableActions, playRound, startBattle, type BattleEvent } from '../src/core/combat';
-import { createPlayer } from '../src/core/player';
+import { createPlayer, learnTechnique } from '../src/core/player';
 import { createRng } from '../src/core/rng';
 import type { Origin } from '../src/core/types';
 import { gameData } from '../src/data/index';
@@ -235,5 +235,56 @@ describe('lutas completas', () => {
         expect(r.round).toBeLessThan(MAX_ROUNDS);
       }
     }
+  });
+});
+
+describe('genjutsu: aprisionamento sem dano', () => {
+  const withGen = (genjutsu: number) => {
+    const p = createPlayer(common, gameData);
+    return { ...p, offense: { ...p.offense, genjutsu } };
+  };
+  const prison = (s: ReturnType<typeof playRound>) => ofType(s.log, 'debilitate')[0]?.turns;
+
+  it('não causa dano: o vilão só perde a vez', () => {
+    const s0 = startBattle(withGen(10), testVillain(), { playerStartsFirst: true });
+    const s1 = playRound(s0, 'genjutsu', seq(0.5), gameData);
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'hit', damage: 0 });
+    expect(s1.villain.hp).toBe(50);
+  });
+
+  it('os turnos crescem com a proficiência do usuário contra o genjutsu do alvo, até 3', () => {
+    const turns = (gen: number, villainGen = 5) =>
+      prison(playRound(startBattle(withGen(gen), testVillain({ defense: { taijutsu: 5, ninjutsu: 5, genjutsu: villainGen } }), { playerStartsFirst: true }), 'genjutsu', seq(0.5), gameData));
+    expect(turns(10)).toBe(1); // vantagem 5
+    expect(turns(13)).toBe(2); // vantagem 8
+    expect(turns(21)).toBe(3); // vantagem 16
+    expect(turns(60)).toBe(3); // teto
+    expect(turns(21, 20)).toBe(1); // alvo resistente
+  });
+
+  it('técnica e pergaminho de genjutsu aumentam o poder de aprisionamento', () => {
+    const crow = learnTechnique(withGen(10), 'crowIllusion', gameData); // 10 + 6 = 16 → vantagem 11
+    expect(prison(playRound(startBattle(crow, testVillain(), { playerStartsFirst: true }), 'genjutsu', seq(0.5), gameData))).toBe(2);
+    const scroll = { ...withGen(10), techniqueLevels: { genjutsu: 1 } }; // 10 + 3 = 13 → vantagem 8
+    expect(prison(playRound(startBattle(scroll, testVillain(), { playerStartsFirst: true }), 'genjutsu', seq(0.5), gameData))).toBe(2);
+  });
+
+  it('não gasta o crítico garantido do ramen', () => {
+    const s0 = startBattle(withGen(10), testVillain(), { playerStartsFirst: true, guaranteedCrit: true });
+    const s1 = playRound(s0, 'genjutsu', seq(0.5), gameData);
+    expect(s1.playerFx.guaranteedCrit).toBe(true);
+    expect(ofType(s1.log, 'guaranteedCrit')).toHaveLength(0);
+  });
+
+  it('o genjutsu do vilão também não causa dano e aprisiona o jogador conforme o genjutsu dele', () => {
+    const v = testVillain({
+      defense: { taijutsu: 5, ninjutsu: 5, genjutsu: 26 },
+      techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, debilitateTurns: 1 }],
+    });
+    const s0 = startBattle(withGen(10), v, { villainStartsFirst: true });
+    const s1 = playRound(s0, 'taijutsu', seq(0.5), gameData);
+    expect(s1.player.hp).toBe(s0.player.hp);
+    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'player', turns: 3 }]);
+    expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'player' }]);
   });
 });

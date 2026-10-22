@@ -73,7 +73,7 @@ export const villains: VillainDef[] = [
     critBonus: 0.03,
     xp: 110,
     techniques: [
-      { id: 'soundWave', type: 'genjutsu', baseDamage: 9, chakraCost: 4, weight: 1, debilitateTurns: 1 },
+      { id: 'soundWave', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, debilitateTurns: 1 },
       { id: 'kunaiStrike', type: 'taijutsu', baseDamage: 14, chakraCost: 0, weight: 3 },
     ],
   },
@@ -143,7 +143,7 @@ export const villains: VillainDef[] = [
     critBonus: 0.02,
     xp: 90,
     techniques: [
-      { id: 'demonFlute', type: 'genjutsu', baseDamage: 10, chakraCost: 5, weight: 1, debilitateTurns: 1 },
+      { id: 'demonFlute', type: 'genjutsu', baseDamage: 0, chakraCost: 5, weight: 1, debilitateTurns: 1 },
       { id: 'summonedOgre', type: 'taijutsu', baseDamage: 16, chakraCost: 0, weight: 2 },
     ],
   },
@@ -187,7 +187,7 @@ export const villains: VillainDef[] = [
     techniques: [
       { id: 'hiddenSnakes', type: 'ninjutsu', baseDamage: 24, chakraCost: 5, weight: 3 },
       { id: 'grassSword', type: 'taijutsu', baseDamage: 22, chakraCost: 0, weight: 2 },
-      { id: 'killingIntent', type: 'genjutsu', baseDamage: 12, chakraCost: 6, weight: 1, debilitateTurns: 1 },
+      { id: 'killingIntent', type: 'genjutsu', baseDamage: 0, chakraCost: 6, weight: 1, debilitateTurns: 1 },
     ],
   },
 ];

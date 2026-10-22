@@ -4,8 +4,8 @@ export const balance = {
   baseStats: { hp: 100, taijutsu: 10, ninjutsu: 10, genjutsu: 10, chakra: 10, speed: 10 },
 
   origin: {
-    specialLineageChance: 0.1,
-    jinchuurikiChance: 0.05,
+    specialLineageChance: 0.2,
+    jinchuurikiChance: 0.1,
   },
 
   elements: { advantage: 1.5, disadvantage: 0.75, neutral: 1 },
@@ -14,6 +14,10 @@ export const balance = {
   hit: { base: 0.85, perSpeedPoint: 0.01, min: 0.6, max: 0.95 },
   // Genjutsu do atacante vs. genjutsu do defensor.
   genjutsuHit: { base: 0.6, perPoint: 0.02, min: 0.2, max: 0.9 },
+  // Genjutsu não causa dano: aprisiona o alvo (perde a vez). Turnos = turnos base da técnica
+  // + 1 a cada `pointsPerExtraTurn` de vantagem (poder de genjutsu do atacante − genjutsu do alvo),
+  // entre 1 e `maxTurns`. Proposta.
+  genjutsuPrison: { pointsPerExtraTurn: 8, maxTurns: 3 },
 
   crit: { baseChance: 0.05, multiplier: 2 },
 
@@ -23,7 +27,7 @@ export const balance = {
   basicActions: {
     taijutsu: { baseDamage: 8, chakraCost: 0 },
     ninjutsu: { baseDamage: 10, chakraCost: 3 },
-    genjutsu: { baseDamage: 4, chakraCost: 3, debilitateTurns: 1 },
+    genjutsu: { baseDamage: 0, chakraCost: 3, debilitateTurns: 1 },
   },
 
   // "Concentrar chakra": recupera chakra no lugar de atacar.
@@ -41,8 +45,8 @@ export const balance = {
   statStage: { taijutsu: 1, ninjutsu: 1, genjutsu: 1, speed: 1, hp: 5, chakra: 2 },
 
   // Upgrade de técnica (pergaminho): dano base extra por nível, por tipo de técnica.
-  // No ninjutsu médico, cada nível aumenta a cura.
-  techniqueUpgrade: { baseDamagePerLevel: 2, healPctPerLevel: 0.05 },
+  // No ninjutsu médico, cada nível aumenta a cura; no genjutsu, o poder de aprisionamento.
+  techniqueUpgrade: { baseDamagePerLevel: 2, healPctPerLevel: 0.05, genjutsuPowerPerLevel: 3 },
 
   // Ferramenta ninja: dano base extra em todos os ataques, por nível.
   ninjaTool: { baseDamagePerLevel: 1 },
@@ -61,11 +65,13 @@ export const balance = {
   // Nível: cada vilão derrotado dá XP (`xp` em villains.ts). Juntando o XP do nível, sobe 1.
   // XP para ir do nível N ao N+1: xpBase + xpGrowth × (N − 1). No teto, o XP deixa de acumular.
   // HP e chakra máximos sobem sempre; depois a roleta de nível sorteia um status para um bônus
-  // extra (pesos em events.ts).
+  // extra (pesos em events.ts). Subir de nível restaura HP e chakra (terminar uma luta não restaura).
+  // XP 100/25 (era 100/20): pequeno nerf, ~11% mais XP até o nível 10. O 1º nível segue em 100
+  // para o Mizuki ainda dar nível antes do Zabuza.
   level: {
     cap: 10,
     xpBase: 100,
-    xpGrowth: 20,
+    xpGrowth: 25,
     hpPerLevel: 12,
     chakraPerLevel: 2,
     statGains: { taijutsu: 3, ninjutsu: 3, genjutsu: 3, speed: 1, hp: 15, chakra: 4, resistance: 1 },
@@ -96,6 +102,8 @@ export const balance = {
   },
 
   exam: {
+    // Exceção à regra "só o nível restaura": entre as lutas do exame o jogador volta cheio,
+    // senão uma derrota (que deixa 1 de HP) perderia todas as lutas seguintes.
     restoreBetweenFights: true,
     // Índice = vitórias no exame.
     rewardByWins: [
@@ -117,7 +125,8 @@ export const balance = {
     },
   },
 
-  campaign: { restoreBetweenStages: true },
+  // Terminar uma etapa não restaura HP nem chakra: quem restaura é a subida de nível.
+  campaign: { restoreBetweenStages: false },
 
   history: { maxRuns: 100 },
 };

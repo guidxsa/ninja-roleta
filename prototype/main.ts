@@ -1,6 +1,7 @@
 // Protótipo jogável: interface mínima sobre o core real. Toda regra vem de src/core; aqui só há fluxo e animação.
 import {
   availableActions,
+  playerGenjutsuTurns,
   playerMedical,
   playerTechnique,
   playRound,
@@ -360,6 +361,13 @@ function bagSlots(p: PlayerState): string {
   if (p.ninjaToolLevel > 0) {
     const dmg = p.ninjaToolLevel * data.balance.ninjaTool.baseDamagePerLevel;
     filled.push(slot('🗡️', B.ninjaTool.name, B.ninjaTool.desc(dmg), `${S.ui.level}${p.ninjaToolLevel}`));
+  }
+  if (p.amulets.speed > 0) {
+    filled.push(slot('🪶', B.speedAmulet.name, B.speedAmulet.desc(p.amulets.speed), `×${p.amulets.speed}`));
+  }
+  if (p.amulets.resistance > 0) {
+    const n = p.amulets.resistance;
+    filled.push(slot('🧿', B.resistanceAmulet.name, B.resistanceAmulet.desc(n), `×${n}`));
   }
   if (p.summon) {
     const name = S.summons[p.summon.animal]!.name;
@@ -722,12 +730,14 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
   const B = data.balance;
   let sub = '';
   let extra = '';
-  if (action === 'taijutsu' || action === 'ninjutsu' || action === 'genjutsu') {
+  if (action === 'genjutsu') {
     const tech = playerTechnique(p, action, data);
-    const hit =
-      action === 'genjutsu'
-        ? genjutsuHitChance(p.offense.genjutsu, v.defense.genjutsu, B.genjutsuHit)
-        : hitChance(p.speed, v.speed, B.hit);
+    const hit = genjutsuHitChance(p.offense.genjutsu, v.defense.genjutsu, B.genjutsuHit);
+    sub = esc(techName(tech.id));
+    extra = `${S.ui.prisonTurns(playerGenjutsuTurns(p, v, data))} · ${formatPct(hit)} · ${S.ui.cost(tech.chakraCost)}`;
+  } else if (action === 'taijutsu' || action === 'ninjutsu') {
+    const tech = playerTechnique(p, action, data);
+    const hit = hitChance(p.speed, v.speed, B.hit);
     const mult = elementMultiplier(tech.element, v.element, data.beats, B.elements);
     const gates = action === 'taijutsu' && s.playerFx.gatesTurns > 0 && p.passive?.kind === 'gates' ? p.passive.taijutsuMult : 1;
     const surge = s.playerFx.surgeTurns > 0 && s.playerFx.surgeMode ? B.jinchuuriki.surge[s.playerFx.surgeMode].damageMult : 1;
@@ -742,7 +752,7 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     });
     const elMark = mult > 1 ? ` <span class="adv">${S.ui.advantage}</span>` : mult < 1 ? ` <span class="dis">${S.ui.disadvantage}</span>` : '';
     sub = `${esc(techName(tech.id))}`;
-    extra = `≈${dmg}${elMark} · ${formatPct(hit)} · ${S.ui.cost(tech.chakraCost)}${tech.debilitateTurns ? ' · 💫' : ''}`;
+    extra = `≈${dmg}${elMark} · ${formatPct(hit)} · ${S.ui.cost(tech.chakraCost)}`;
   } else if (action === 'gates') {
     const tech = playerTechnique(p, 'taijutsu', data);
     sub = S.passives.gates!.name;
@@ -946,6 +956,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           if (ev.outcome === 'miss') {
             log(S.log.attackMiss(who(ev.side), tech), 'muted');
             floatNumber(mine ? vcard() : pcard, 'errou', 'miss');
+          } else if (ev.attackType === 'genjutsu') {
+            log(S.log.genjutsuHit(who(ev.side), tech), mine ? 'mine' : 'theirs');
           } else {
             if (mine) disp.vhp -= ev.damage;
             else disp.php -= ev.damage;
@@ -955,7 +967,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         }
         case 'debilitate':
-          log(S.log.debilitate(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad');
+          log(S.log.debilitate(who(ev.target), ev.turns), ev.target === 'villain' ? 'good' : 'bad');
           break;
         case 'debilitateResisted':
           log(S.log.debilitateResisted(who(ev.target)), 'sys');

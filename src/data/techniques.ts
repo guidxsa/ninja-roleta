@@ -31,7 +31,8 @@ export const techniques: TechniqueDef[] = [
   { id: 'lightningSpear', type: 'ninjutsu', element: 'lightning', baseDamage: 17, chakraCost: 5 },
   { id: 'earthWall', type: 'ninjutsu', element: 'earth', baseDamage: 14, chakraCost: 3 },
   { id: 'waterDragon', type: 'ninjutsu', element: 'water', baseDamage: 16, chakraCost: 4 },
-  { id: 'crowIllusion', type: 'genjutsu', element: null, baseDamage: 6, chakraCost: 4, debilitateTurns: 1 },
+  // Genjutsu não causa dano: aprisiona o alvo. `genjutsuPower` soma ao genjutsu do usuário no cálculo dos turnos.
+  { id: 'crowIllusion', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 4, debilitateTurns: 1, genjutsuPower: 6 },
   // Suporte: ocupa um espaço próprio (não substitui o ninjutsu de ataque). Cura sem rolar acerto.
   // Usa chakra de ninjutsu, então o prodígio do taijutsu não aprende.
   {

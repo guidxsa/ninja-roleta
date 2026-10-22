@@ -5,6 +5,7 @@ import type { GameData } from './gameData';
 import {
   applyLevelUp,
   applyStatStages,
+  knowsElement,
   learnTechnique,
   levelUpPool,
   techniqueSlot,
@@ -141,10 +142,21 @@ export function applyItem(player: PlayerState, item: ItemId, rng: Rng): Step {
         { kind: 'techniqueUpgrade', type, level },
       );
     }
+    // Amuletos: efeito permanente; ficam na bolsa.
     case 'resistanceItem':
-      return step({ ...player, resistanceBonus: player.resistanceBonus + 1 }, { kind: 'resistance', amount: 1 });
+      return step(
+        {
+          ...player,
+          resistanceBonus: player.resistanceBonus + 1,
+          amulets: { ...player.amulets, resistance: player.amulets.resistance + 1 },
+        },
+        { kind: 'resistance', amount: 1 },
+      );
     case 'speedItem':
-      return step({ ...player, speed: player.speed + 1 }, { kind: 'speed', amount: 1 });
+      return step(
+        { ...player, speed: player.speed + 1, amulets: { ...player.amulets, speed: player.amulets.speed + 1 } },
+        { kind: 'speed', amount: 1 },
+      );
   }
 }
 
@@ -205,10 +217,18 @@ export function levelUp(player: PlayerState, stat: LevelStatId, data: GameData):
 // ---------------------------------------------------------------------------
 // Recompensas
 
-/** Técnicas que a recompensa "nova técnica" pode ensinar: respeita a origem e ignora as já aprendidas. */
+/**
+ * Técnicas que a recompensa "nova técnica" pode ensinar: respeita a origem, ignora as já aprendidas
+ * e só oferece técnicas elementais dos elementos que o jogador domina (afinidade ou secundários).
+ */
 export function learnableTechniques(player: PlayerState, data: GameData): string[] {
   return data.techniques
-    .filter((t) => !player.forbiddenAttackTypes.includes(t.type) && player.techniques[techniqueSlot(t)] !== t.id)
+    .filter(
+      (t) =>
+        !player.forbiddenAttackTypes.includes(t.type) &&
+        player.techniques[techniqueSlot(t)] !== t.id &&
+        knowsElement(player, t.element),
+    )
     .map((t) => t.id);
 }
 

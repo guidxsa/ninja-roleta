@@ -169,6 +169,7 @@ export function slugHealPct(player: PlayerState, data: GameData): number {
 /**
  * Técnica que o jogador usa para um tipo: a aprendida ou a ação básica, com elemento resolvido
  * e dano base já somado aos upgrades do tipo, à ferramenta ninja e ao sapo.
+ * Genjutsu não causa dano: o dano base fica 0 (os upgrades dele aumentam o poder de aprisionamento).
  */
 export function playerTechnique(
   player: PlayerState,
@@ -179,12 +180,39 @@ export function playerTechnique(
   const id = player.techniques[type];
   const tech = (id && data.techniquesById[id]) || data.basicTechniques[type];
   const element = type === 'taijutsu' ? null : tech.element === 'affinity' ? player.affinity : tech.element;
+  if (type === 'genjutsu') return { ...tech, element, baseDamage: 0 };
   const baseDamage =
     tech.baseDamage +
     (player.techniqueLevels[type] ?? 0) * balance.techniqueUpgrade.baseDamagePerLevel +
     player.ninjaToolLevel * balance.ninjaTool.baseDamagePerLevel +
     toadDamageBonus(player, data);
   return { ...tech, element, baseDamage };
+}
+
+/**
+ * Turnos de aprisionamento de um genjutsu que acerta: turnos base da técnica + 1 a cada
+ * `pointsPerExtraTurn` de vantagem do poder do atacante sobre o genjutsu do alvo, entre 1 e o teto.
+ */
+export function genjutsuTurns(power: number, targetGenjutsu: number, baseTurns: number, data: GameData): number {
+  const cfg = data.balance.genjutsuPrison;
+  const extra = Math.floor(Math.max(0, power - targetGenjutsu) / cfg.pointsPerExtraTurn);
+  return Math.min(cfg.maxTurns, Math.max(1, baseTurns + extra));
+}
+
+/** Poder de genjutsu do jogador: genjutsu + bônus da técnica + upgrades (pergaminho). */
+export function playerGenjutsuPower(player: PlayerState, data: GameData): number {
+  const tech = playerTechnique(player, 'genjutsu', data);
+  return (
+    player.offense.genjutsu +
+    (tech.genjutsuPower ?? 0) +
+    (player.techniqueLevels.genjutsu ?? 0) * data.balance.techniqueUpgrade.genjutsuPowerPerLevel
+  );
+}
+
+/** Turnos que o genjutsu do jogador aprisiona o vilão, se acertar. */
+export function playerGenjutsuTurns(player: PlayerState, villain: VillainDef, data: GameData): number {
+  const tech = playerTechnique(player, 'genjutsu', data);
+  return genjutsuTurns(playerGenjutsuPower(player, data), villain.defense.genjutsu, tech.debilitateTurns ?? 1, data);
 }
 
 /** Ninjutsu médico do jogador (null = não sabe). */
@@ -387,23 +415,44 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
     const healed = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * medicalHealPct(p, data)));
     p.hp += healed;
     s.log.push({ type: 'medical', healed });
+  } else if (action === 'genjutsu') {
+    playerGenjutsu(s, rng, data);
   } else {
     playerAttack(s, action, rng, data);
   }
   afterAction(s.playerFx);
 }
 
-function playerAttack(s: BattleState, type: AttackType, rng: Rng, data: GameData): void {
+/** Genjutsu: não causa dano nem consome o crítico garantido; se acertar, aprisiona o vilão. */
+function playerGenjutsu(s: BattleState, rng: Rng, data: GameData): void {
+  const p = s.player;
+  const v = s.villain;
+  const tech = playerTechnique(p, 'genjutsu', data);
+  p.chakra -= tech.chakraCost;
+  const hitP = genjutsuHitChance(p.offense.genjutsu, v.def.defense.genjutsu, data.balance.genjutsuHit);
+  const outcome = rollHit(hitP, 0, rng);
+  s.log.push({
+    type: 'attack',
+    side: 'player',
+    techniqueId: tech.id,
+    attackType: 'genjutsu',
+    outcome,
+    damage: 0,
+    elementMult: 1,
+    hitChance: hitP,
+    critChance: 0,
+  });
+  if (outcome !== 'miss') applyDebilitate(s, v.fx, 'villain', playerGenjutsuTurns(p, v.def, data));
+}
+
+function playerAttack(s: BattleState, type: Exclude<AttackType, 'genjutsu'>, rng: Rng, data: GameData): void {
   const { balance } = data;
   const p = s.player;
   const v = s.villain;
   const tech = playerTechnique(p, type, data);
   p.chakra -= tech.chakraCost;
 
-  const hitP =
-    type === 'genjutsu'
-      ? genjutsuHitChance(p.offense.genjutsu, v.def.defense.genjutsu, balance.genjutsuHit)
-      : hitChance(p.speed, v.def.speed, balance.hit);
+  const hitP = hitChance(p.speed, v.def.speed, balance.hit);
   const critP = critChance(p.critBonus, balance.crit.baseChance);
   let outcome: HitOutcome;
   if (s.playerFx.guaranteedCrit) {
@@ -447,7 +496,6 @@ function playerAttack(s: BattleState, type: AttackType, rng: Rng, data: GameData
     return;
   }
   if (outcome === 'miss') return;
-  if (tech.debilitateTurns) applyDebilitate(s, v.fx, 'villain', tech.debilitateTurns);
   // Cobra: um golpe que acerta envenena o alvo, se ele ainda não estiver envenenado.
   const poison = snakePoison(p, data);
   if (poison > 0 && v.poison === 0) {
@@ -477,10 +525,30 @@ function villainTurn(s: BattleState, rng: Rng, data: GameData): void {
   ).slice.value;
   v.chakra -= tech.chakraCost;
 
-  const hitP =
-    tech.type === 'genjutsu'
-      ? genjutsuHitChance(v.def.defense.genjutsu, p.offense.genjutsu, balance.genjutsuHit)
-      : hitChance(v.def.speed, p.speed, balance.hit);
+  if (tech.type === 'genjutsu') {
+    // Genjutsu do vilão: sem dano; o poder dele é o atributo de genjutsu, contra o genjutsu do jogador.
+    const hitP = genjutsuHitChance(v.def.defense.genjutsu, p.offense.genjutsu, balance.genjutsuHit);
+    const outcome = rollHit(hitP, 0, rng);
+    s.log.push({
+      type: 'attack',
+      side: 'villain',
+      techniqueId: tech.id,
+      attackType: 'genjutsu',
+      outcome,
+      damage: 0,
+      elementMult: 1,
+      hitChance: hitP,
+      critChance: 0,
+    });
+    afterAction(v.fx);
+    if (outcome !== 'miss') {
+      const turns = genjutsuTurns(v.def.defense.genjutsu, p.offense.genjutsu, tech.debilitateTurns ?? 1, data);
+      applyDebilitate(s, s.playerFx, 'player', turns);
+    }
+    return;
+  }
+
+  const hitP = hitChance(v.def.speed, p.speed, balance.hit);
   const critP = critChance(v.def.critBonus, balance.crit.baseChance);
   const outcome = rollHit(hitP, critP, rng);
   const element = tech.type === 'taijutsu' ? null : tech.element === undefined ? v.def.element : tech.element;
@@ -527,7 +595,6 @@ function villainTurn(s: BattleState, rng: Rng, data: GameData): void {
     handleKnockout(s);
     return;
   }
-  if (outcome !== 'miss' && tech.debilitateTurns) applyDebilitate(s, s.playerFx, 'player', tech.debilitateTurns);
   checkSurge(s, rng, data);
 }
 

@@ -107,8 +107,8 @@ export const ptBR = {
     revive: 'Item de retorno',
     ninjaTool: 'Ferramenta ninja',
     techniqueScroll: 'Pergaminho de técnica',
-    resistanceItem: 'Item de resistência',
-    speedItem: 'Item de velocidade',
+    resistanceItem: 'Amuleto de resistência',
+    speedItem: 'Amuleto de velocidade',
   } as Record<string, string>,
   encounters: {
     akatsuki: 'Akatsuki',
@@ -236,7 +236,9 @@ export const ptBR = {
     villainFirst: 'Vilão age primeiro',
     guaranteedCrit: 'Crítico garantido',
     halfStart: 'Começa enfraquecido',
-    debilitated: 'Debilitado',
+    debilitated: 'Aprisionado',
+    /** Botão de genjutsu: turnos de aprisionamento se acertar. */
+    prisonTurns: (n: number) => `💫 ${n} turno(s)`,
     immune: 'Imune',
     gatesOn: (n: number) => `Portões ${n}t`,
     surgeOn: (mode: string, n: number) => `${mode} ${n}t`,
@@ -275,6 +277,8 @@ export const ptBR = {
     revive: { name: 'Item de retorno', desc: 'Ao cair, volta com HP e chakra cheios.' },
     ninjaTool: { name: 'Ferramenta ninja', desc: (n: number) => `+${n} de dano base em todos os ataques.` },
     summon: { name: 'Contrato', desc: (animal: string) => `Invocação: ${animal}.` },
+    speedAmulet: { name: 'Amuleto de velocidade', desc: (n: number) => `Speed +${n}.` },
+    resistanceAmulet: { name: 'Amuleto de resistência', desc: (n: number) => `Resistência +${n}.` },
     scrolls: { name: 'Pergaminhos', desc: (n: number) => `${n} upgrade(s) de técnica lidos.` },
   },
   effects: {
@@ -287,9 +291,9 @@ export const ptBR = {
       level === 1
         ? 'Ferramenta ninja: +1 de dano base em todos os ataques.'
         : `Ferramenta ninja subiu para o nível ${level}.`,
-    techniqueUpgrade: (type: string, level: number) => `${type} subiu para o nível ${level} (+dano base).`,
-    resistance: (n: number) => `Resistência +${n}.`,
-    speed: (n: number) => `Speed +${n}.`,
+    techniqueUpgrade: (type: string, level: number) => `${type} subiu para o nível ${level}.`,
+    resistance: (n: number) => `Resistência +${n}. O amuleto vai para a bolsa.`,
+    speed: (n: number) => `Speed +${n}. O amuleto vai para a bolsa.`,
     critBonus: (pct: number) => `Chance de crítico +${pct}%.`,
     newTechnique: (name: string) => `Aprendeu: ${name}!`,
     akatsukiTookRevive: 'A Akatsuki atacou o jinchuuriki: perdeu 1 item de retorno.',
@@ -297,7 +301,7 @@ export const ptBR = {
     akatsukiInsight: (pct: number) =>
       `Eles procuram um jinchuuriki e passaram direto. Mas você assistiu à luta deles de longe e aprendeu a mirar nos pontos vitais: crítico +${pct}%.`,
     levelUp: (level: number, hp: number, ck: number, stat: string, amount: number) =>
-      `Nível ${level}! HP máx. +${hp}, chakra máx. +${ck} e ${stat} +${amount}.`,
+      `Nível ${level}! HP máx. +${hp}, chakra máx. +${ck} e ${stat} +${amount}. HP e chakra restaurados.`,
     summonLearned: (name: string) => `Aprendeu a invocar: ${name}!`,
     summonLevel: (name: string, level: number) => `${name} subiu para o nível ${level}.`,
   },
@@ -305,7 +309,7 @@ export const ptBR = {
     ambush: 'Emboscada! Você age primeiro.',
     late: 'Você chegou atrasado: o vilão age primeiro.',
     initiative: (who: string) => `Iniciativa: ${who} age primeiro.`,
-    skip: (who: string) => `${who} está Debilitado e perde a vez.`,
+    skip: (who: string) => `${who} está aprisionado no genjutsu e perde a vez.`,
     rest: (n: number) => `Você concentra chakra (+${n}).`,
     gates: (n: number) => `Portões abertos! Perde ${n} de HP.`,
     attackMiss: (who: string, tech: string) => `${who} usou ${tech}: errou!`,
@@ -315,8 +319,9 @@ export const ptBR = {
     elementDis: ' (desvantagem elemental)',
     guaranteedCrit: 'Ramen no estômago: crítico garantido!',
     movementReading: (a: number, b: number) => `Leitura de movimento: dano ${a} → ${b}.`,
-    debilitate: (who: string) => `${who} ficou Debilitado.`,
-    debilitateResisted: (who: string) => `${who} resistiu ao Debilitado.`,
+    genjutsuHit: (who: string, tech: string) => `${who} usou ${tech}: a ilusão pegou!`,
+    debilitate: (who: string, turns: number) => `${who} ficou aprisionado por ${turns} turno(s).`,
+    debilitateResisted: (who: string) => `${who} acabou de se soltar e resistiu ao genjutsu.`,
     regen: (hp: number, ck: number) => `Vitalidade: +${hp} HP, +${ck} chakra.`,
     surge: (mode: string, healed: number) => `Surto da besta: ${mode}!${healed ? ` +${healed} HP.` : ''}`,
     surgeDrain: (n: number) => `O descontrole consome ${n} de HP.`,

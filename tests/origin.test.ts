@@ -44,8 +44,8 @@ describe('rolagem de origem', () => {
       if (origin.lineageId) special++;
       if (origin.jinchuuriki) jin++;
     }
-    expect(special / n).toBeCloseTo(0.1, 1);
-    expect(jin / n).toBeCloseTo(0.05, 1);
+    expect(special / n).toBeCloseTo(0.2, 1);
+    expect(jin / n).toBeCloseTo(0.1, 1);
   });
 
   it('cada passo guarda o índice da fatia sorteada (para a UI animar)', () => {

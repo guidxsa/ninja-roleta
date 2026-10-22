@@ -100,6 +100,15 @@ describe('itens', () => {
     expect(applyItem(p, 'resistanceItem', seq(0.5)).player.resistanceBonus).toBe(2);
     expect(applyItem(p, 'speedItem', seq(0.5)).player.speed).toBe(11);
   });
+
+  it('amuletos de resistência e velocidade ficam guardados na bolsa e acumulam', () => {
+    expect(p.amulets).toEqual({ speed: 0, resistance: 0 });
+    let q = applyItem(p, 'speedItem', seq(0.5)).player;
+    q = applyItem(q, 'speedItem', seq(0.5)).player;
+    q = applyItem(q, 'resistanceItem', seq(0.5)).player;
+    expect(q.amulets).toEqual({ speed: 2, resistance: 1 });
+    expect([q.speed, q.resistanceBonus]).toEqual([12, 2]);
+  });
 });
 
 describe('encontros misteriosos', () => {
@@ -248,6 +257,38 @@ describe('ninjutsu médico', () => {
   });
 });
 
+describe('técnicas elementais respeitam o elemento do jogador', () => {
+  const lightning: Origin = { lineageId: null, affinity: 'lightning', jinchuuriki: false };
+  const elemental = ['fireball', 'windBlade', 'lightningSpear', 'earthWall', 'waterDragon'];
+
+  it('um ninja de raio nunca aprende técnica de água pela recompensa "nova técnica"', () => {
+    const rng = createRng(7);
+    for (let i = 0; i < 300; i++) {
+      const step = applyReward(createPlayer(lightning, gameData), 'newTechnique', 1, rng, gameData);
+      expect(step.effect).not.toEqual({ kind: 'newTechnique', techniqueId: 'waterDragon' });
+      expect(step.player.techniques.ninjutsu ?? 'lightningSpear').toBe('lightningSpear');
+    }
+  });
+
+  it('só a técnica da afinidade entra na pool; técnicas sem elemento continuam', () => {
+    const pool = learnableTechniques(createPlayer(lightning, gameData), gameData);
+    expect(pool.filter((id) => elemental.includes(id))).toEqual(['lightningSpear']);
+    expect(pool).toEqual(expect.arrayContaining(['leafWhirlwind', 'crowIllusion', 'medicalNinjutsu']));
+  });
+
+  it('elemento secundário libera as técnicas dele', () => {
+    const p = { ...createPlayer(lightning, gameData), secondaryElements: ['water' as const] };
+    expect(learnableTechniques(p, gameData).filter((id) => elemental.includes(id))).toEqual([
+      'lightningSpear',
+      'waterDragon',
+    ]);
+  });
+
+  it('learnTechnique recusa técnica de elemento que o jogador não domina', () => {
+    expect(() => learnTechnique(createPlayer(lightning, gameData), 'waterDragon', gameData)).toThrow();
+  });
+});
+
 describe('nível e XP', () => {
   /** Jogador com XP suficiente para subir 1 nível. */
   const ready = (o: Origin = common) => ({ ...createPlayer(o, gameData), xp: 100 });
@@ -259,8 +300,8 @@ describe('nível e XP', () => {
 
   it('o XP para o próximo nível cresce a cada nível; no teto não há próximo', () => {
     expect(xpToNextLevel(1, gameData)).toBe(100);
-    expect(xpToNextLevel(2, gameData)).toBe(120);
-    expect(xpToNextLevel(9, gameData)).toBe(260);
+    expect(xpToNextLevel(2, gameData)).toBe(125);
+    expect(xpToNextLevel(9, gameData)).toBe(300);
     expect(xpToNextLevel(10, gameData)).toBeNull();
   });
 
@@ -301,11 +342,11 @@ describe('nível e XP', () => {
     expect(levelUps).toBe(1);
   });
 
-  it('cada nível aumenta HP e chakra máximos (e os atuais), mais o status da roleta', () => {
-    const p = { ...ready(), hp: 50 };
+  it('cada nível aumenta HP e chakra máximos, mais o status da roleta, e restaura HP e chakra', () => {
+    const p = { ...ready(), hp: 50, chakra: 1 };
     const up = applyLevelUp(p, 'taijutsu', gameData);
     expect(up.level).toBe(2);
-    expect([up.maxHp, up.hp]).toEqual([112, 62]);
+    expect([up.maxHp, up.hp]).toEqual([112, 112]);
     expect([up.maxChakra, up.chakra]).toEqual([12, 12]);
     expect(up.offense).toEqual({ taijutsu: 13, ninjutsu: 10, genjutsu: 10 });
   });

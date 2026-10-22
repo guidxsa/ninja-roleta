@@ -35,9 +35,10 @@ Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não fo
 
 1. Confira o que vai entrar: `git status --short`. Adicione os arquivos pelo nome (`git add <arquivos>`), não `git add -A`.
 2. **Nunca** commite: `dist/`, `node_modules/`, `.claude/settings.local.json` (configuração local do usuário), saídas de simulação ou capturas de tela, nem qualquer arquivo com credenciais. Skills em `.claude/skills/` fazem parte do projeto e podem entrar.
-3. Mensagem no padrão do repositório: em PT-BR, sem acentos (como os commits anteriores), título no imperativo com a versão entre parênteses e um item por mudança importante:
+3. Mensagem no padrão do repositório: em PT-BR, sem acentos (como os commits anteriores), título no imperativo com a versão entre parênteses, **uma linha em branco** (sem ela o Git junta o título com a linha seguinte) e um item por mudança importante:
    ```
    Adiciona nivel por XP e dificuldade (v0.5.0)
+
    - Cada vilao da XP pela dificuldade; nivel maximo 10
    - Dificuldade facil/medio/dificil escala HP, dano e defesa dos viloes
    - Ficha ninja com retrato e bolsa de itens; tema visual ninja

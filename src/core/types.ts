@@ -48,8 +48,10 @@ export interface TechniqueDef {
   element: TechniqueElement;
   baseDamage: number;
   chakraCost: number;
-  /** Só genjutsu: turnos de Debilitado aplicados ao acertar. */
+  /** Só genjutsu: turnos base de aprisionamento aplicados ao acertar. */
   debilitateTurns?: number;
+  /** Só genjutsu: poder extra somado ao genjutsu do usuário (mais turnos de aprisionamento). */
+  genjutsuPower?: number;
   /** Só ninjutsu médico: fração do HP máximo curada. */
   healPct?: number;
 }

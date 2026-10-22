@@ -49,10 +49,10 @@ Futuro (fora da v1): um status de **inteligência**, que poderia influenciar pro
 
 A origem é definida por uma sequência de rolagens, todas visíveis na roleta:
 
-1. **Rolagem de linhagem**: **10%** de chance de ser **especial**, 90% de ser **comum** (valores provisórios).
+1. **Rolagem de linhagem**: **20%** de chance de ser **especial**, 80% de ser **comum** (valores provisórios).
 2. **Se comum**: rola apenas a **afinidade de chakra** (um dos 5 elementos, pesos iguais por padrão). Sem passiva, status base padrão.
 3. **Se especial**: uma **segunda roleta**, com distribuição própria, sorteia a linhagem especial (ver tabela abaixo). A linhagem define modificadores de status, afinidade e uma passiva.
-4. **Rolagem de jinchuuriki**: roleta **independente** das anteriores, com **5%** de chance (provisório). Pode acontecer em qualquer origem, comum ou especial. Concede um bônus próprio (ver abaixo).
+4. **Rolagem de jinchuuriki**: roleta **independente** das anteriores, com **10%** de chance (provisório). Pode acontecer em qualquer origem, comum ou especial. Concede um bônus próprio (ver abaixo).
 
 #### Re-roll
 
@@ -86,6 +86,7 @@ Notas:
 - Multiplicadores: **1,5x** na vantagem, **0,75x** na desvantagem, 1,0x neutro. Valores em arquivo de configuração.
 - **Taijutsu não é elemental** (sempre neutro, inclusive o taijutsu imbuído de chakra).
 - Cada técnica de ninjutsu tem um elemento. Cada vilão tem um elemento fixo.
+- **Só se aprende técnica elemental do próprio elemento**: a afinidade ou um elemento secundário. Um ninja de raio nunca recebe técnica de água. Técnicas sem elemento (taijutsu, genjutsu, médico) servem a todos.
 - Elemento secundário pode ser ganho como recompensa de roleta.
 
 ### Técnicas
@@ -95,6 +96,7 @@ Notas:
 - Quem não tem técnica de um tipo usa a ação básica correspondente. Para taijutsu, a ação básica é o **taijutsu imbuído de chakra**.
 - **Taijutsu não consome chakra** (nem o básico, nem as técnicas aprendidas, nem o dos vilões).
 - Ninjutsu e genjutsu consomem chakra. Sem chakra suficiente, a técnica não pode ser usada.
+- **Genjutsu não causa dano** (ver "Genjutsu" no combate). O pergaminho de técnica no genjutsu aumenta o poder de aprisionamento (+3 por nível), não o dano.
 
 #### Ninjutsu médico
 
@@ -107,9 +109,10 @@ Notas:
 
 - O jogador começa no **nível 1**. **Nível máximo: 10.**
 - Cada vilão derrotado dá **XP** conforme a dificuldade dele (campo `xp` nos dados; no exame, só vitórias dão XP). Nos blocos de várias lutas, cada mini vilão dá menos XP: o jogador **não** sobe de nível a cada luta.
-- XP para ir do nível N ao N+1: **100 + 20 × (N − 1)** (100, 120, 140... 260). A sobra passa para o próximo nível; no nível máximo o XP não acumula.
-- Com todas as vitórias, o jogador chega ao nível 10 logo antes de Orochimaru.
-- Todo nível: **HP máximo +12** e **chakra máximo +2** (os atuais sobem junto).
+- XP para ir do nível N ao N+1: **100 + 25 × (N − 1)** (100, 125, 150... 300). A sobra passa para o próximo nível; no nível máximo o XP não acumula. (Era 100 + 20; o crescimento maior é um pequeno nerf, ~11% mais XP no total. O 1º nível segue em 100 para o Mizuki dar nível antes do Zabuza.)
+- Com todas as vitórias, o jogador chega a Orochimaru por volta do nível 9.
+- Todo nível: **HP máximo +12** e **chakra máximo +2**.
+- **Subir de nível restaura HP e chakra por completo.** É o único gatilho de recuperação fora do item de retorno: **terminar uma luta ou etapa não restaura** (`campaign.restoreBetweenStages: false`). Exceção: entre as lutas do exame chunin o jogador volta cheio (`exam.restoreBetweenFights`), senão uma derrota, que deixa 1 de HP, perderia todas as lutas seguintes.
 - Depois, a **roleta de nível** sorteia um status para um bônus extra:
 
 | Status | Peso | Bônus |
@@ -188,9 +191,16 @@ dano = max(1, dano_base_do_vilão × mult_elemento × mult_crítico − resistê
 
 #### Genjutsu
 
-- Aplica o efeito **Debilitado** no alvo: o alvo **fica sem ações** durante o turno.
-- Duração base: **1 turno** (pode ser alterada por técnica/upgrade).
-- Chance de acerto baseada em genjutsu do atacante vs. genjutsu/chakra do defensor.
+- **Não causa dano.** Se acertar, **aprisiona** o alvo (efeito Debilitado, "Aprisionado" na tela): ele **perde a vez** por alguns turnos. Vale para jogador e vilões.
+- Chance de acerto: genjutsu do atacante vs. genjutsu do defensor (`genjutsuHit`). Não tem crítico e não gasta o crítico garantido do ramen.
+- Turnos de aprisionamento:
+  ```
+  poder  = genjutsu do atacante + poder da técnica + 3 × nível do pergaminho de genjutsu
+  turnos = clamp(turnos_base_da_técnica + floor(max(0, poder − genjutsu_do_alvo) / 8), 1, 3)
+  ```
+  Para o vilão, o poder é o atributo de genjutsu dele e o alvo usa o genjutsu do jogador (o prodígio do taijutsu, com genjutsu 0, fica preso por mais tempo).
+- Técnica básica: 1 turno base. Ilusão dos corvos: 1 turno base e +6 de poder.
+- Anti-trava: ao sair do aprisionamento, o alvo age ao menos uma vez antes de poder ser aprisionado de novo.
 
 ### Item de retorno (revive)
 
@@ -259,8 +269,8 @@ Usada no evento "Achou um item" e também pode aparecer nas recompensas.
 | **Item de retorno** | +1 revive (acumulável). |
 | **Ferramenta ninja** | Dano base +1 em todos os ataques. Item **único, mas evoluível**: se sair de novo, sobe de nível (+1 a cada nível). |
 | **Pergaminho de técnica** | Upgrade em uma técnica do jogador (sorteada entre as que ele tem). Sem técnicas, melhora o taijutsu imbuído. Respeita o filtro de origem. |
-| **Item de resistência** | `diferencial_de_resistência` +1. |
-| **Item de velocidade** | Speed +1. |
+| **Amuleto de resistência** | `diferencial_de_resistência` +1. Permanente; fica na bolsa (acumula). |
+| **Amuleto de velocidade** | Speed +1. Permanente; fica na bolsa (acumula). |
 
 Pesos a definir (sugestão inicial: pesos iguais, item de retorno um pouco mais raro).
 
@@ -334,10 +344,12 @@ Pesos a definir (sugestão: 50/50).
 
 - [ ] Chance base de acerto e o que a modifica (ex.: diferença de speed).
 - [ ] Custos de chakra das técnicas de ninjutsu e genjutsu (taijutsu não gasta chakra).
-- [ ] Valores finais das origens: 10% de linhagem especial, pesos da 2ª roleta, 5% de jinchuuriki, modificadores e passivas (hoje provisórios).
+- [ ] Valores finais das origens: 20% de linhagem especial, pesos da 2ª roleta, 10% de jinchuuriki, modificadores e passivas (hoje provisórios).
 - [ ] Valor de 1 estágio de status.
 - [ ] Valores de nível (HP/chakra por nível, bônus e pesos da roleta de nível) e de chakra dos vilões.
-- [ ] Gaara virou o gargalo da campanha na simulação (defesa alta + lutas longas). Ajustar.
+- [ ] Gaara virou o gargalo da campanha na simulação (defesa alta + lutas longas). Ajustar. Com a v0.6.0 (sem restauração ao fim da luta) ficou pior: 69% das runs no Médio param nele.
+- [ ] Exame chunin restaura HP/chakra entre as lutas (exceção à regra "só o nível restaura"). Confirmar.
+- [ ] Recompensa "recuperação de HP/chakra" está na lista de recompensas mas não existe no jogo; ficou mais relevante sem a restauração entre etapas.
 - [ ] Pesos da roleta de itens e da roleta de encontros.
 - [ ] Eventos pré-vilão giram antes das lutas do exame?
 - [ ] Confirmar que o atributo defensivo do vilão substitui a "resistência" (sem subtração dupla).
