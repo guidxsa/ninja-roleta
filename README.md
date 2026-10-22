@@ -17,6 +17,7 @@ npm install
 npm test                                   # testes das regras (Vitest)
 npm run typecheck                          # checagem de tipos
 npm run sim -- --fights 2000 --seed 42     # simulação de balanceamento
+npm run sim:origens -- --runs 300          # campanha completa por linhagem
 npm run proto                              # gera dist/prototipo.html (abre direto no navegador, funciona offline)
 ```
 
@@ -50,3 +51,4 @@ MIT. Veja o arquivo [LICENSE](LICENSE).
 | v0.5.0 | Nível por XP (cada vilão dá XP pela dificuldade, nível máximo 10), dificuldade fácil/médio/difícil, ficha ninja com retrato e bolsa de itens, visual com tema ninja e skills do projeto (nova mecânica, lançar versão). |
 | v0.6.0 | Genjutsu não causa dano: aprisiona o alvo por 1 a 3 turnos conforme a proficiência. Subir de nível restaura HP e chakra (terminar luta não restaura). Técnicas elementais só do próprio elemento (correção). Amuletos de speed e resistência na bolsa. XP um pouco mais lento. Linhagem especial 20% e jinchuuriki 10%. |
 | v0.6.1 | Protótipo publicado no GitHub Pages (https://guidxsa.github.io/ninja-roleta/) via GitHub Actions. |
+| v0.7.0 | Linhagens reformuladas: status iniciais por linhagem, Sharingan (ativável, evolui com o nível, resistência a genjutsu) e Byakugan (golpes não erram, golpe inibidor de chakra). Skill set por categoria com abas na luta, taijutsu fortalecido que gasta chakra, técnicas aprendidas nos níveis 4 e 7. Só o Uchiha começa com genjutsu. Passivas de vilões: Gaara jinchuuriki, Kabuto médico, Orochimaru com cobras. Simulação por origem (`npm run sim:origens`). |

@@ -50,7 +50,7 @@ Futuro (fora da v1): um status de **inteligência**, que poderia influenciar pro
 A origem é definida por uma sequência de rolagens, todas visíveis na roleta:
 
 1. **Rolagem de linhagem**: **20%** de chance de ser **especial**, 80% de ser **comum** (valores provisórios).
-2. **Se comum**: rola apenas a **afinidade de chakra** (um dos 5 elementos, pesos iguais por padrão). Sem passiva, status base padrão.
+2. **Se comum**: rola apenas a **afinidade de chakra** (um dos 5 elementos, pesos iguais por padrão). Sem passiva, status base padrão. Começa com **taijutsu básico (e o fortalecido) + ninjutsu básico do próprio elemento**; sem genjutsu.
 3. **Se especial**: uma **segunda roleta**, com distribuição própria, sorteia a linhagem especial (ver tabela abaixo). A linhagem define modificadores de status, afinidade e uma passiva.
 4. **Rolagem de jinchuuriki**: roleta **independente** das anteriores, com **10%** de chance (provisório). Pode acontecer em qualquer origem, comum ou especial. Concede um bônus próprio (ver abaixo).
 
@@ -61,18 +61,26 @@ A origem é definida por uma sequência de rolagens, todas visíveis na roleta:
 
 #### Linhagens especiais (valores provisórios, ajustar nos testes)
 
-| Linhagem (nome de trabalho) | Peso na 2ª roleta | Modificadores | Afinidade | Passiva |
+Os status iniciais são redistribuídos pela linhagem (modificadores sobre o status base 10 / HP 100).
+
+| Linhagem (nome de trabalho) | Peso na 2ª roleta | Modificadores | Afinidade | Passiva / dōjutsu |
 |---|---|---|---|---|
-| Uchiha | 30 | Ninjutsu +20%, Genjutsu +20%, Speed +10% | Fogo (fixa) | **Leitura de movimento**: 15% de chance de reduzir à metade o dano recebido. |
-| Hyuuga | 30 | Taijutsu +30%, Speed +10%, Chakra +10% | Rolada como as comuns | **Punho preciso**: ataques de taijutsu ignoram 30% do atributo defensivo de taijutsu do vilão. |
-| Prodígio do taijutsu (estilo Lee) | 25 | Taijutsu +50%, Speed +30%, HP +10%, Chakra −30%. Ninjutsu e genjutsu zerados. | Nenhuma | **Portões**: uma vez por luta, perde 25% do HP máximo (nunca abaixo de 1) e causa ×1,5 de dano de taijutsu por 3 turnos. **Não aprende técnicas de ninjutsu ou genjutsu.** |
-| Uzumaki | 15 | Chakra +50%, HP +20% | Rolada como as comuns | **Vitalidade Uzumaki**: recupera 1 de chakra e 3% do HP máximo por turno. |
+| Uchiha | 30 | Genjutsu +50%, Ninjutsu +30%, Chakra +80%, Speed +10%, **Taijutsu −10%** (o ponto mais fraco) | Fogo (fixa) | **Olhos treinados** (passiva): +6 no genjutsu contra ilusões do vilão. **Sharingan** (ativo, ver abaixo). Único com **genjutsu inicial**. |
+| Hyuuga | 30 | Taijutsu +30%, Speed +10%, Chakra +10%, **Ninjutsu −30%** | Rolada como as comuns | **Punho preciso** (passiva): taijutsu ignora 30% da defesa de taijutsu do vilão. **Byakugan** (ativo) e o **golpe inibidor**. |
+| Prodígio do taijutsu (estilo Lee) | 25 | Taijutsu +50%, Speed +30%, HP +10%, Chakra −30%. Ninjutsu e genjutsu zerados. | Nenhuma | **Portões**: uma vez por luta, perde 25% do HP máximo (nunca abaixo de 1) e causa ×1,5 de dano de taijutsu por 3 turnos (ataca com o taijutsu grátis mais forte). **Não aprende técnicas de ninjutsu ou genjutsu.** |
+| Uzumaki | 15 | HP +30%, Chakra +60%, Ninjutsu +10% | Rolada como as comuns | **Vitalidade Uzumaki**: recupera 1 de chakra e 3% do HP máximo por turno. |
 
 Notas:
 - **Só o Uchiha tem afinidade fixa (fogo).** Hyuuga e Uzumaki rolam a afinidade normalmente, podendo cair em qualquer um dos 5 elementos.
 - Quanto mais rara a linhagem, mais forte. O Uzumaki é a mais rara.
-- A passiva do Hyuuga mudou em relação à ideia inicial ("ignora chakra do inimigo"), porque vilões têm atributos defensivos, não reserva de chakra. Fica como proposta.
+- **Só o Uchiha começa com genjutsu.** Os outros (menos o prodígio) liberam a categoria ao aprender um genjutsu como recompensa.
 - A pool de recompensas é filtrada pela origem (o prodígio do taijutsu nunca recebe técnica de ninjutsu ou genjutsu).
+
+#### Dōjutsu (técnicas oculares ativáveis)
+
+- Ação de combate própria: **ativar gasta o turno** e chakra; ativo, custa chakra **por rodada** (manutenção) e **desliga sozinho** quando falta chakra para pagar. Valores em `balance.dojutsu`.
+- **Sharingan (Uchiha)**: ativar 4, manutenção 1. Começa com 1 tomoe e **evolui com o nível** (2 tomoe no nível 4, 3 no nível 7). Ativo: tai/nin/gen +3/+5/+7, speed +1/+2/+3, genjutsu com +10/15/20% de acerto e +3/+6/+9 de poder de aprisionamento, e **leitura de movimento**: 25/30/35% de chance de reduzir à metade o dano recebido.
+- **Byakugan (Hyuuga)**: ativar 3, manutenção 1. Ativo: **os golpes (taijutsu e ninjutsu) não erram** (o crítico continua rolando), taijutsu ×1,1 e libera o **golpe inibidor** (taijutsu grátis, dano base 6, drena 6 de chakra do vilão). Só com o Byakugan ativo.
 
 #### Jinchuuriki (bônus independente)
 
@@ -91,10 +99,17 @@ Notas:
 
 ### Técnicas
 
-- Cada personagem tem **no máximo uma técnica de cada tipo**: uma de taijutsu, uma de ninjutsu e uma de genjutsu, mais uma de **ninjutsu médico** (espaço próprio, ver abaixo).
-- As técnicas podem receber **upgrades** (via recompensa de roleta).
-- Quem não tem técnica de um tipo usa a ação básica correspondente. Para taijutsu, a ação básica é o **taijutsu imbuído de chakra**.
-- **Taijutsu não consome chakra** (nem o básico, nem as técnicas aprendidas, nem o dos vilões).
+- Cada personagem tem um **skill set por categoria** (taijutsu, ninjutsu, genjutsu e ninjutsu médico): pode ter **várias técnicas por categoria** e escolhe qual usar em cada turno (na tela, uma aba por categoria). Aprender uma técnica nova **soma** ao skill set, não substitui.
+- **Ações básicas** vêm da origem: taijutsu imbuído de chakra (dano 8, grátis) e **taijutsu fortalecido** (dano 14, **gasta 3 de chakra**) para todos; ninjutsu básico do próprio elemento para quem usa ninjutsu; genjutsu básico só para o Uchiha.
+- **Técnicas de nível**: aprendidas sozinhas ao atingir o nível (se a origem permitir a categoria e o jogador dominar o elemento). **Mais fortes, porém mais caras** (inclusive as de taijutsu):
+
+  | Nível | Taijutsu | Ninjutsu (do elemento) | Genjutsu (só quem usa genjutsu) |
+  |---|---|---|---|
+  | 4 | Combo do furacão (20, 5 ck) | 22 a 25 de dano, 5 a 7 ck | Ilusão do medo (poder +10, 5 ck) |
+  | 7 | Lótus oculta (30, 9 ck) | 32 a 36 de dano, 9 a 11 ck | Mundo espelhado (2 turnos base, poder +14, 8 ck) |
+
+- As técnicas podem receber **upgrades** (pergaminho), **por categoria**: o upgrade vale para todas as técnicas dela, inclusive as básicas.
+- **Taijutsu não consome chakra**, com exceções: o taijutsu fortalecido e as técnicas de taijutsu de nível (dos vilões, sempre grátis).
 - Ninjutsu e genjutsu consomem chakra. Sem chakra suficiente, a técnica não pode ser usada.
 - **Genjutsu não causa dano** (ver "Genjutsu" no combate). O pergaminho de técnica no genjutsu aumenta o poder de aprisionamento (+3 por nível), não o dano.
 
@@ -189,6 +204,16 @@ dano = max(1, dano_base_do_vilão × mult_elemento × mult_crítico − resistê
 - Cada vilão tem uma **reserva de chakra** e cada técnica dele tem custo (taijutsu é grátis).
 - O vilão sorteia a técnica (pelos pesos) **só entre as que pode pagar**. Sem chakra para nenhuma, perde a vez **concentrando chakra** (+4).
 
+#### Passivas dos vilões
+
+Vilões, principalmente os mais avançados, podem ter uma passiva única (`passive` em `villains.ts`):
+
+| Vilão | Passiva | Efeito |
+|---|---|---|
+| Gaara | **Jinchuuriki** | Uma vez por luta, abaixo de 30% do HP: cura 15% do HP máximo e causa ×1,4 de dano por 3 turnos. |
+| Kabuto | **Ninjutsu médico** | Abaixo de 50% do HP, troca o ataque por uma cura de 20% do HP máximo (6 de chakra), até 2 vezes por luta. |
+| Orochimaru | **Invocação de cobra** | Golpe que acerta um jogador sem veneno aplica **veneno 5** (fim da rodada: perde o valor em HP, cai 1). Veneno pode derrubar (usa o item de retorno, que limpa o veneno). |
+
 #### Genjutsu
 
 - **Não causa dano.** Se acertar, **aprisiona** o alvo (efeito Debilitado, "Aprisionado" na tela): ele **perde a vez** por alguns turnos. Vale para jogador e vilões.
@@ -198,7 +223,7 @@ dano = max(1, dano_base_do_vilão × mult_elemento × mult_crítico − resistê
   poder  = genjutsu do atacante + poder da técnica + 3 × nível do pergaminho de genjutsu
   turnos = clamp(turnos_base_da_técnica + floor(max(0, poder − genjutsu_do_alvo) / 8), 1, 3)
   ```
-  Para o vilão, o poder é o atributo de genjutsu dele e o alvo usa o genjutsu do jogador (o prodígio do taijutsu, com genjutsu 0, fica preso por mais tempo).
+  Para o vilão, o poder é o atributo de genjutsu dele e o alvo usa o genjutsu do jogador, somado à resistência passiva do Uchiha (o prodígio do taijutsu, com genjutsu 0, fica preso por mais tempo).
 - Técnica básica: 1 turno base. Ilusão dos corvos: 1 turno base e +6 de poder.
 - Anti-trava: ao sair do aprisionamento, o alvo age ao menos uma vez antes de poder ser aprisionado de novo.
 
@@ -268,7 +293,7 @@ Usada no evento "Achou um item" e também pode aparecer nas recompensas.
 |---|---|
 | **Item de retorno** | +1 revive (acumulável). |
 | **Ferramenta ninja** | Dano base +1 em todos os ataques. Item **único, mas evoluível**: se sair de novo, sobe de nível (+1 a cada nível). |
-| **Pergaminho de técnica** | Upgrade em uma técnica do jogador (sorteada entre as que ele tem). Sem técnicas, melhora o taijutsu imbuído. Respeita o filtro de origem. |
+| **Pergaminho de técnica** | Upgrade em uma categoria do jogador (sorteada entre as que ele usa: tai, nin, gen, médico); vale para todas as técnicas dela. Respeita o filtro de origem. |
 | **Amuleto de resistência** | `diferencial_de_resistência` +1. Permanente; fica na bolsa (acumula). |
 | **Amuleto de velocidade** | Speed +1. Permanente; fica na bolsa (acumula). |
 
@@ -347,7 +372,10 @@ Pesos a definir (sugestão: 50/50).
 - [ ] Valores finais das origens: 20% de linhagem especial, pesos da 2ª roleta, 10% de jinchuuriki, modificadores e passivas (hoje provisórios).
 - [ ] Valor de 1 estágio de status.
 - [ ] Valores de nível (HP/chakra por nível, bônus e pesos da roleta de nível) e de chakra dos vilões.
-- [ ] Gaara virou o gargalo da campanha na simulação (defesa alta + lutas longas). Ajustar. Com a v0.6.0 (sem restauração ao fim da luta) ficou pior: 69% das runs no Médio param nele.
+- [ ] Gaara virou o gargalo da campanha na simulação (defesa alta + lutas longas). Com a v0.6.0 (sem restauração ao fim da luta) ficou pior: 69% das runs no Médio param nele. Na v0.7.0 ganhou a passiva de jinchuuriki e foi aliviado (HP 160 → 140, defesa tai/nin 14 → 12). O muro real é o **chakra**: sem restauração entre etapas, quase todos chegam nele com ~0 de chakra.
+- [ ] Equilíbrio entre linhagens no Médio (simulação v0.7.0, `npm run sim:origens`): Comum ~4%, Uchiha ~8%, Prodígio ~20%, Hyuuga ~50%, Uzumaki ~94% de vitórias. O Uchiha depende de chakra (Sharingan, ninjutsu, genjutsu) e sofre mais com a falta de restauração; o Hyuuga tem golpes grátis fortes.
+- [ ] Dōjutsu: ativar gasta o turno (simples para um toque). Alternativa: ativação grátis, com custo maior. Confirmar.
+- [ ] Desativar o dōjutsu manualmente (hoje só desliga sem chakra).
 - [ ] Exame chunin restaura HP/chakra entre as lutas (exceção à regra "só o nível restaura"). Confirmar.
 - [ ] Recompensa "recuperação de HP/chakra" está na lista de recompensas mas não existe no jogo; ficou mais relevante sem a restauração entre etapas.
 - [ ] Pesos da roleta de itens e da roleta de encontros.

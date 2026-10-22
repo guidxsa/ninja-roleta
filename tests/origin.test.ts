@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { rollOrigin } from '../src/core/origin';
-import { createPlayer, learnTechnique } from '../src/core/player';
+import { canUseType, createPlayer, knownTechniques, learnTechnique } from '../src/core/player';
 import { createRng } from '../src/core/rng';
 import { gameData } from '../src/data/index';
 import { seq } from './helpers';
@@ -66,11 +66,39 @@ describe('criação do jogador', () => {
     expect(p.passive).toBeNull();
   });
 
-  it('aplica modificadores da linhagem', () => {
+  it('comum começa com taijutsu (básico e fortalecido) e ninjutsu básico do próprio elemento, sem genjutsu', () => {
+    const p = createPlayer({ lineageId: null, affinity: 'water', jinchuuriki: false }, gameData);
+    expect(p.basicTypes).toEqual(['taijutsu', 'ninjutsu']);
+    expect(knownTechniques(p, gameData).map((t) => t.id)).toEqual(['basicTaijutsu', 'empoweredTaijutsu', 'basicNinjutsu']);
+    expect(canUseType(p, 'genjutsu', gameData)).toBe(false);
+    expect(p.dojutsu).toBeNull();
+  });
+
+  it('Uchiha: bom chakra e genjutsu, ninjutsu bom, taijutsu o mais fraco; único com genjutsu inicial', () => {
     const p = createPlayer({ lineageId: 'uchiha', affinity: 'fire', jinchuuriki: false }, gameData);
-    expect(p.offense).toEqual({ taijutsu: 10, ninjutsu: 12, genjutsu: 12 });
+    expect(p.offense).toEqual({ taijutsu: 9, ninjutsu: 13, genjutsu: 15 });
+    expect(p.maxChakra).toBe(18);
     expect(p.speed).toBe(11);
-    expect(p.passive?.kind).toBe('movementReading');
+    expect(p.passive?.kind).toBe('genjutsuResistance');
+    expect(p.dojutsu).toBe('sharingan');
+    expect(canUseType(p, 'genjutsu', gameData)).toBe(true);
+    for (const id of ['hyuuga', 'taijutsuProdigy', 'uzumaki']) {
+      const other = createPlayer({ lineageId: id, affinity: id === 'taijutsuProdigy' ? null : 'water', jinchuuriki: false }, gameData);
+      expect(canUseType(other, 'genjutsu', gameData)).toBe(false);
+    }
+  });
+
+  it('Hyuuga: foco em taijutsu, pouco ninjutsu, Byakugan e golpe inibidor', () => {
+    const p = createPlayer({ lineageId: 'hyuuga', affinity: 'water', jinchuuriki: false }, gameData);
+    expect(p.offense).toEqual({ taijutsu: 13, ninjutsu: 7, genjutsu: 10 });
+    expect(p.dojutsu).toBe('byakugan');
+    expect(p.techniques).toEqual(['chakraBlockStrike']);
+  });
+
+  it('Uzumaki: muita vitalidade e chakra', () => {
+    const p = createPlayer({ lineageId: 'uzumaki', affinity: 'wind', jinchuuriki: false }, gameData);
+    expect(p.maxHp).toBe(130);
+    expect(p.maxChakra).toBe(16);
   });
 
   it('prodígio do taijutsu: nin/gen zerados e técnicas proibidas', () => {
@@ -80,13 +108,14 @@ describe('criação do jogador', () => {
     expect(p.maxChakra).toBe(7);
     expect(p.speed).toBe(13);
     expect(() => learnTechnique(p, 'fireball', gameData)).toThrow();
-    expect(learnTechnique(p, 'leafWhirlwind', gameData).techniques.taijutsu).toBe('leafWhirlwind');
+    expect(learnTechnique(p, 'leafWhirlwind', gameData).techniques).toEqual(['leafWhirlwind']);
+    expect(p.basicTypes).toEqual(['taijutsu']);
   });
 
   it('jinchuuriki dobra o chakra e acumula com linhagem', () => {
     const p = createPlayer({ lineageId: 'uzumaki', affinity: 'wind', jinchuuriki: true }, gameData);
-    expect(p.maxChakra).toBe(30); // 10 × 1.5 × 2
-    expect(p.maxHp).toBe(120);
+    expect(p.maxChakra).toBe(32); // 10 × 1.6 × 2
+    expect(p.maxHp).toBe(130);
     expect(p.jinchuuriki).toBe(true);
   });
 });

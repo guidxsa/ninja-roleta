@@ -1,10 +1,19 @@
 // Protótipo jogável: interface mínima sobre o core real. Toda regra vem de src/core; aqui só há fluxo e animação.
 import {
+  actionTechniqueId,
+  attackPreview,
+  attackTechniques,
   availableActions,
+  canUseTechnique,
+  dojutsuActivationCost,
+  gatesTechnique,
+  playerGenjutsuHitChance,
   playerGenjutsuTurns,
   playerMedical,
   playerTechnique,
   playRound,
+  sharinganStage,
+  techAction,
   slugHealPct,
   snakePoison,
   startBattle,
@@ -13,18 +22,18 @@ import {
   type BattleState,
   type PlayerAction,
 } from '../src/core/combat';
-import { playerDamage } from '../src/core/damage';
-import { elementMultiplier } from '../src/core/elements';
-import { critChance, genjutsuHitChance, hitChance, hitSlices } from '../src/core/hit';
-import { initiativeSlices } from '../src/core/initiative';
+import { critChance, hitSlices } from '../src/core/hit';
 import { rollOrigin, type OriginStep } from '../src/core/origin';
 import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
   canLevelUp,
+  canUseType,
   createPlayer,
+  knownTechniques,
   fullRestore,
   gainXp,
   medicalHealPct,
+  techniqueSlot,
   xpToNextLevel,
   type PlayerState,
 } from '../src/core/player';
@@ -185,7 +194,7 @@ function effectText(e: ProgressEffect): string {
     case 'ninjaTool':
       return E.ninjaTool(e.level);
     case 'techniqueUpgrade':
-      return E.techniqueUpgrade(S.actions[e.type], e.level);
+      return E.techniqueUpgrade(S.actions[e.type] ?? e.type, e.level);
     case 'resistance':
       return E.resistance(e.amount);
     case 'speed':
@@ -204,7 +213,12 @@ function effectText(e: ProgressEffect): string {
       const L = data.balance.level;
       const hp = L.hpPerLevel + (e.stat === 'hp' ? e.amount : 0);
       const ck = L.chakraPerLevel + (e.stat === 'chakra' ? e.amount : 0);
-      return E.levelUp(e.level, hp, ck, S.levelStats[e.stat] ?? e.stat, e.amount);
+      const lines = [E.levelUp(e.level, hp, ck, S.levelStats[e.stat] ?? e.stat, e.amount)];
+      if (e.learned.length) lines.push(E.learnedAtLevel(e.learned.map(techName).join(', ')));
+      const stages = data.balance.dojutsu.sharingan.stages;
+      const evolved = stages.findIndex((st) => st.minLevel === e.level);
+      if (camp?.player.dojutsu === 'sharingan' && evolved > 0) lines.push(E.sharinganEvolved(evolved + 1));
+      return lines.join(' ');
     }
     case 'summonLearned':
       return E.summonLearned(S.summons[e.animal]!.name);
@@ -265,20 +279,35 @@ function modChips(mods: NextFightMods, weakened: boolean): string {
 
 function techniqueRows(p: PlayerState): string {
   const lvl = (n: number | undefined) => (n ? ` <span class="lvl">+${n}</span>` : '');
-  const rows = (['taijutsu', 'ninjutsu', 'genjutsu'] as const)
-    .filter((t) => !p.forbiddenAttackTypes.includes(t))
+  return knownTechniques(p, data)
     .map((t) => {
-      const tech = playerTechnique(p, t, data);
-      return `<li><span class="muted">${S.actions[t]}</span> ${esc(techName(tech.id))}${lvl(p.techniqueLevels[t])} ${elChip(tech.element)}<span class="muted small"> · ${tech.baseDamage} dano · ${S.ui.cost(tech.chakraCost)}</span></li>`;
-    });
-  const medical = playerMedical(p, data);
-  if (medical) {
-    const pct = Math.round(medicalHealPct(p, data) * 100);
-    rows.push(
-      `<li><span class="muted">${S.actions.medical}</span> ${esc(techName(medical.id))}${lvl(p.techniqueLevels.medical)}<span class="muted small"> · ${S.ui.heal(pct)} · ${S.ui.cost(medical.chakraCost)}</span></li>`,
-    );
+      const slot = techniqueSlot(t);
+      const tech = playerTechnique(p, t.id, data);
+      let info: string;
+      if (slot === 'medical') info = S.ui.heal(Math.round(medicalHealPct(p, data) * 100));
+      else if (t.type === 'genjutsu') info = S.ui.prisonTurns(t.debilitateTurns ?? 1);
+      else info = `${tech.baseDamage} dano`;
+      if (t.chakraDrain) info += ` · ${S.ui.drain(t.chakraDrain)}`;
+      if (t.requiresDojutsu) info += ` · ${S.ui.requires(S.dojutsu[t.requiresDojutsu]!.name)}`;
+      return `<li><span class="muted">${S.actions[slot]}</span> ${esc(techName(t.id))}${lvl(p.techniqueLevels[slot])} ${elChip(tech.element)}<span class="muted small"> · ${info} · ${S.ui.cost(t.chakraCost)}</span></li>`;
+    })
+    .join('');
+}
+
+/** Passivas e dōjutsu do jogador, como itens de lista (`tag` = li ou p). */
+function passiveItems(p: PlayerState, tag: 'li' | 'p'): string[] {
+  const item = (name: string, desc: string) =>
+    tag === 'li' ? `<li><b>${name}</b> · ${desc}</li>` : `<p class="passive"><b>${name}</b> · ${desc}</p>`;
+  const out: string[] = [];
+  const passive = p.passive ? S.passives[p.passive.kind] : null;
+  if (passive) out.push(item(passive.name, passive.desc));
+  if (p.dojutsu) {
+    const d = S.dojutsu[p.dojutsu]!;
+    const stage = sharinganStage(p, data);
+    out.push(item(stage ? `${d.name} (${S.sharinganStage(stage)})` : d.name, d.desc));
   }
-  return rows.join('');
+  if (p.jinchuuriki) out.push(item(S.passives.jinchuuriki!.name, S.passives.jinchuuriki!.desc));
+  return out;
 }
 
 /** Valor atual do efeito passivo da invocação (para o inventário). */
@@ -322,7 +351,6 @@ function diffChip(d: Difficulty): string {
 
 function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS, weakened = false): string {
   const crit = critChance(p.critBonus, data.balance.crit.baseChance);
-  const passive = p.passive ? S.passives[p.passive.kind] : null;
   const stat = (label: string, v: string | number) => `<div><small>${label}</small><b>${v}</b></div>`;
   return `
   <section class="card player-panel">
@@ -341,8 +369,7 @@ function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS, weakened = f
       ${stat(S.stats.taijutsu, p.offense.taijutsu)}${stat(S.stats.ninjutsu, p.offense.ninjutsu)}${stat(S.stats.genjutsu, p.offense.genjutsu)}
       ${stat(S.stats.speed, p.speed)}${stat(S.stats.resistance, `+${p.resistanceBonus}`)}${stat(S.stats.crit, formatPct(crit))}
     </div>
-    ${passive ? `<p class="passive"><b>${passive.name}</b> · ${passive.desc}</p>` : ''}
-    ${p.jinchuuriki ? `<p class="passive"><b>${S.passives.jinchuuriki!.name}</b> · ${S.passives.jinchuuriki!.desc}</p>` : ''}
+    ${passiveItems(p, 'p').join('')}
     ${mods.villainStartsFirst || mods.guaranteedCrit || weakened ? `<div class="mods"><small>${S.ui.nextFight}</small> ${modChips(mods, weakened)}</div>` : ''}
   </section>`;
 }
@@ -385,11 +412,9 @@ let battlePlayer: (() => PlayerState) | null = null;
 function sheetHtml(c: Campaign): string {
   const p = battlePlayer?.() ?? c.player;
   const crit = critChance(p.critBonus, data.balance.crit.baseChance);
-  const passive = p.passive ? S.passives[p.passive.kind] : null;
   const attr = (label: string, v: string | number) => `<div><small>${label}</small><b>${v}</b></div>`;
   const passives = [
-    passive ? `<li><b>${passive.name}</b> · ${passive.desc}</li>` : '',
-    p.jinchuuriki ? `<li><b>${S.passives.jinchuuriki!.name}</b> · ${S.passives.jinchuuriki!.desc}</li>` : '',
+    ...passiveItems(p, 'li'),
     p.summon ? `<li><b>${S.summons[p.summon.animal]!.name}</b> · ${S.summons[p.summon.animal]!.desc}</li>` : '',
   ].join('');
   const elements = [p.affinity, ...p.secondaryElements].filter((e): e is Element => Boolean(e));
@@ -634,7 +659,7 @@ async function eventScreen(stage: Stage): Promise<void> {
     case 'foundItem': {
       const item = rollItem(rng, data);
       await bigWheel(slot, S.roulettes.item, rollSlices(item, (id) => S.items[id]!), item.index);
-      step = applyItem(c.player, item.value, rng);
+      step = applyItem(c.player, item.value, rng, data);
       break;
     }
     case 'mysteriousEncounter':
@@ -702,6 +727,7 @@ function villainPanel(s: BattleState): string {
     ${bar('hp', s.villain.hp, v.hp)}
     ${bar('ck', s.villain.chakra, v.chakra)}
     <div class="row between small muted"><span>Def ${S.stats.taijutsu} ${d.taijutsu} · ${S.stats.ninjutsu} ${d.ninjutsu} · ${S.stats.genjutsu} ${d.genjutsu}</span><span>${S.stats.speed} ${v.speed}</span></div>
+    ${v.passive ? `<p class="passive small"><b>${S.villainPassives[v.passive.kind]!.name}</b> · ${S.villainPassives[v.passive.kind]!.desc}</p>` : ''}
     <div class="badges" id="vbadges"></div>
   </section>`;
 }
@@ -712,11 +738,14 @@ function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
     if (s.villain.fx.debilitated > 0) out.push(`<span class="chip bad">${S.ui.debilitated}</span>`);
     if (s.villain.fx.debilitateImmunity > 0) out.push(`<span class="chip">${S.ui.immune}</span>`);
     if (s.villain.poison > 0) out.push(`<span class="chip good">🐍 ${S.ui.poisoned(s.villain.poison)}</span>`);
+    if (s.villain.surgeTurns > 0) out.push(`<span class="chip bad">${S.villainPassives.beastSurge!.name} ${s.villain.surgeTurns}t</span>`);
     return out.join('');
   }
   const fx = s.playerFx;
   if (fx.debilitated > 0) out.push(`<span class="chip bad">${S.ui.debilitated}</span>`);
   if (fx.guaranteedCrit) out.push(`<span class="chip good">${S.ui.guaranteedCrit}</span>`);
+  if (fx.dojutsuActive && s.player.dojutsu) out.push(`<span class="chip eye">👁 ${S.ui.dojutsuOn(S.dojutsu[s.player.dojutsu]!.name)}</span>`);
+  if (fx.poison > 0) out.push(`<span class="chip bad">🐍 ${S.ui.poisoned(fx.poison)}</span>`);
   if (fx.gatesTurns > 0) out.push(`<span class="chip good">${S.ui.gatesOn(fx.gatesTurns)}</span>`);
   if (fx.surgeTurns > 0 && fx.surgeMode)
     out.push(`<span class="chip jin">${S.ui.surgeOn(S.ui.surgeModes[fx.surgeMode]!, fx.surgeTurns)}</span>`);
@@ -726,37 +755,32 @@ function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
 
 function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): string {
   const p = s.player;
-  const v = s.villain.def;
   const B = data.balance;
+  let title = S.actions[action] ?? action;
   let sub = '';
   let extra = '';
-  if (action === 'genjutsu') {
-    const tech = playerTechnique(p, action, data);
-    const hit = genjutsuHitChance(p.offense.genjutsu, v.defense.genjutsu, B.genjutsuHit);
-    sub = esc(techName(tech.id));
-    extra = `${S.ui.prisonTurns(playerGenjutsuTurns(p, v, data))} · ${formatPct(hit)} · ${S.ui.cost(tech.chakraCost)}`;
-  } else if (action === 'taijutsu' || action === 'ninjutsu') {
-    const tech = playerTechnique(p, action, data);
-    const hit = hitChance(p.speed, v.speed, B.hit);
-    const mult = elementMultiplier(tech.element, v.element, data.beats, B.elements);
-    const gates = action === 'taijutsu' && s.playerFx.gatesTurns > 0 && p.passive?.kind === 'gates' ? p.passive.taijutsuMult : 1;
-    const surge = s.playerFx.surgeTurns > 0 && s.playerFx.surgeMode ? B.jinchuuriki.surge[s.playerFx.surgeMode].damageMult : 1;
-    const dmg = playerDamage({
-      baseDamage: tech.baseDamage,
-      offense: p.offense[action],
-      defense: v.defense[action],
-      defensePierce: action === 'taijutsu' && p.passive?.kind === 'preciseFist' ? p.passive.defensePierce : 0,
-      elementMult: mult,
-      critMult: 1,
-      extraMult: gates * surge,
-    });
-    const elMark = mult > 1 ? ` <span class="adv">${S.ui.advantage}</span>` : mult < 1 ? ` <span class="dis">${S.ui.disadvantage}</span>` : '';
-    sub = `${esc(techName(tech.id))}`;
-    extra = `≈${dmg}${elMark} · ${formatPct(hit)} · ${S.ui.cost(tech.chakraCost)}`;
+  let cls: string = action;
+  const techId = actionTechniqueId(action);
+  if (techId) {
+    const tech = playerTechnique(p, techId, data);
+    title = esc(techName(techId));
+    cls = tech.type;
+    if (tech.type === 'genjutsu') {
+      extra = `${S.ui.prisonTurns(playerGenjutsuTurns(s, techId, data))} · ${formatPct(playerGenjutsuHitChance(s, data))} · ${S.ui.cost(tech.chakraCost)}`;
+    } else {
+      const prev = attackPreview(s, techId, data);
+      const elMark = prev.elementMult > 1 ? ` <span class="adv">${S.ui.advantage}</span>` : prev.elementMult < 1 ? ` <span class="dis">${S.ui.disadvantage}</span>` : '';
+      extra = `≈${prev.damage}${elMark} · ${formatPct(prev.hitChance)} · ${S.ui.cost(tech.chakraCost)}`;
+    }
+    if (tech.chakraDrain) sub = S.ui.drain(tech.chakraDrain);
+  } else if (action === 'dojutsu' && p.dojutsu) {
+    const stage = sharinganStage(p, data);
+    title = S.dojutsu[p.dojutsu]!.name;
+    sub = stage ? S.sharinganStage(stage) : '';
+    extra = `${S.ui.cost(dojutsuActivationCost(p, data) ?? 0)} · −${B.dojutsu[p.dojutsu].upkeep}/rodada`;
   } else if (action === 'gates') {
-    const tech = playerTechnique(p, 'taijutsu', data);
-    sub = S.passives.gates!.name;
-    extra = `−25% HP · ${S.ui.cost(tech.chakraCost)}`;
+    sub = esc(techName(gatesTechnique(p, data).id));
+    extra = `−25% HP`;
   } else if (action === 'medical') {
     const tech = playerMedical(p, data);
     if (tech) {
@@ -765,18 +789,30 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
       extra = `+${heal} HP · ${S.ui.cost(tech.chakraCost)}`;
     }
   } else if (action === 'rest') {
-    sub = '';
     extra = `+${B.rest.chakraRecovered} ck`;
   }
-  return `<button class="btn act act-${action}" data-choice="${action}" ${enabled ? '' : 'disabled'}>
-    <b>${S.actions[action]}</b>${sub ? `<span>${sub}</span>` : ''}<small>${extra}</small></button>`;
+  return `<button class="btn act act-${cls}" data-choice="${action}" ${enabled ? '' : 'disabled'}>
+    <b>${title}</b>${sub ? `<span>${sub}</span>` : ''}<small>${extra}</small></button>`;
 }
 
-function actionList(s: BattleState): PlayerAction[] {
+type ActionTab = AttackType | 'special';
+
+/** Abas de categoria que o jogador usa (tai, nin, gen) e a de ações especiais. */
+function actionTabs(s: BattleState): ActionTab[] {
+  const types = (['taijutsu', 'ninjutsu', 'genjutsu'] as AttackType[]).filter((t) => canUseType(s.player, t, data));
+  return [...types, 'special'];
+}
+
+/** Botões da aba: técnicas da categoria (as que exigem dōjutsu só aparecem com ele ativo) ou as especiais. */
+function actionList(s: BattleState, tab: ActionTab): PlayerAction[] {
   const p = s.player;
-  const list: PlayerAction[] = (['taijutsu', 'ninjutsu', 'genjutsu'] as AttackType[]).filter(
-    (t) => !p.forbiddenAttackTypes.includes(t),
-  );
+  if (tab !== 'special') {
+    return attackTechniques(p, data)
+      .filter((t) => t.type === tab && (!t.requiresDojutsu || canUseTechnique(s, { ...t, chakraCost: 0 })))
+      .map((t) => techAction(t.id));
+  }
+  const list: PlayerAction[] = [];
+  if (p.dojutsu && !s.playerFx.dojutsuActive) list.push('dojutsu');
   if (p.passive?.kind === 'gates') list.push('gates');
   if (playerMedical(p, data)) list.push('medical');
   list.push('rest');
@@ -833,12 +869,30 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     root.querySelector('#vbadges')!.innerHTML = badgesHtml(s, 'villain');
     root.querySelector('#pbadges')!.innerHTML = badgesHtml(s, 'player');
   };
+  let tab: ActionTab = 'taijutsu';
+  let current = state;
+  let enabledNow = false;
   const renderActions = (s: BattleState, enabled: boolean) => {
+    current = s;
+    enabledNow = enabled;
     const avail = availableActions(s, data);
-    actionsEl.innerHTML = actionList(s)
+    const tabs = actionTabs(s);
+    if (!tabs.includes(tab)) tab = tabs[0]!;
+    const tabLabel = (t: ActionTab) => (t === 'special' ? S.ui.special : S.actions[t]);
+    const tabsHtml = `<div class="act-tabs" role="tablist">${tabs
+      .map((t) => `<button class="act-tab tab-${t}${t === tab ? ' on' : ''}" role="tab" aria-selected="${t === tab}" data-tab="${t}">${tabLabel(t)}</button>`)
+      .join('')}</div>`;
+    const buttons = actionList(s, tab)
       .map((a) => actionButton(s, a, enabled && avail.includes(a)))
       .join('');
+    actionsEl.innerHTML = `${tabsHtml}<div class="act-grid">${buttons}</div>`;
   };
+  actionsEl.addEventListener('click', (e) => {
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-tab]');
+    if (!t) return;
+    tab = t.dataset.tab as ActionTab;
+    renderActions(current, enabledNow);
+  });
   renderBadges(state);
   if (setup.options.villainStartsFirst) log(S.ui.villainFirst, 'sys');
   if (c.weakened) {
@@ -898,7 +952,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           log(S.log.late, 'bad');
           break;
         case 'initiative': {
-          const slices = initiativeSlices(p0.speed, prev.villain.def.speed);
+          const slices = [{ weight: ev.playerChance }, { weight: 1 - ev.playerChance }];
           await stripRoulette(
             dice,
             S.roulettes.initiative,
@@ -934,7 +988,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         case 'attack': {
           const mine = ev.side === 'player';
-          if (mine) disp.pck -= playerTechnique(p0, ev.attackType, data).chakraCost;
+          if (mine) disp.pck -= playerTechnique(p0, ev.techniqueId, data).chakraCost;
           else disp.vck -= prev.villain.def.techniques.find((t) => t.id === ev.techniqueId)?.chakraCost ?? 0;
           if (!(mine && critForced)) {
             const hs = hitSlices(ev.hitChance, ev.critChance);
@@ -1028,6 +1082,42 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           floatNumber(vcard(), `−${ev.damage} 🐍`, 'dmg');
           log(S.log.poisonTick(ev.damage), 'good');
           break;
+        case 'dojutsu': {
+          const name = S.dojutsu[ev.dojutsu]!.name;
+          disp.pck -= data.balance.dojutsu[ev.dojutsu].activationCost;
+          floatNumber(pcard, `👁 ${name}`, 'heal');
+          log(S.log.dojutsu(ev.stage ? `${name} (${S.sharinganStage(ev.stage)})` : name), 'good');
+          break;
+        }
+        case 'dojutsuEnd':
+          log(S.log.dojutsuEnd(S.dojutsu[ev.dojutsu]!.name), 'sys');
+          break;
+        case 'chakraDrain':
+          disp.vck -= ev.amount;
+          floatNumber(vcard(), `−${ev.amount} ck`, 'ck');
+          log(S.log.chakraDrain(ev.amount), 'good');
+          break;
+        case 'villainSurge':
+          disp.vhp += ev.healed;
+          floatNumber(vcard(), `+${ev.healed}`, 'heal');
+          log(S.log.villainSurge(who('villain'), ev.healed), 'bad');
+          break;
+        case 'villainMedical': {
+          const passive = prev.villain.def.passive;
+          if (passive?.kind === 'medical') disp.vck -= passive.chakraCost;
+          disp.vhp += ev.healed;
+          floatNumber(vcard(), `+${ev.healed}`, 'heal');
+          log(S.log.villainMedical(who('villain'), ev.healed), 'bad');
+          break;
+        }
+        case 'playerPoisoned':
+          log(S.log.playerPoisoned(ev.value), 'bad');
+          break;
+        case 'playerPoisonTick':
+          disp.php -= ev.damage;
+          floatNumber(pcard, `−${ev.damage} 🐍`, 'dmg');
+          log(S.log.playerPoisonTick(ev.damage), 'bad');
+          break;
         case 'end':
           log(ev.status === 'won' ? S.log.won : S.log.lost, ev.status === 'won' ? 'good' : 'bad');
           break;
@@ -1066,7 +1156,7 @@ async function rewardScreen(title: string, tier: number, spins: number): Promise
       await sleep(settings.instant ? 0 : 400);
       const item = rollItem(rng, data);
       await bigWheel(slot, S.roulettes.item, rollSlices(item, (id) => S.items[id]!), item.index);
-      step = applyItem(c.player, item.value, rng);
+      step = applyItem(c.player, item.value, rng, data);
     } else {
       step = applyReward(c.player, roll.value, tier, rng, data);
     }

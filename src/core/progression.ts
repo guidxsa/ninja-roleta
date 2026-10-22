@@ -5,6 +5,8 @@ import type { GameData } from './gameData';
 import {
   applyLevelUp,
   applyStatStages,
+  canUseType,
+  knownTechniques,
   knowsElement,
   learnTechnique,
   levelUpPool,
@@ -49,7 +51,8 @@ export type ProgressEffect =
   | { kind: 'akatsukiTookRevive' }
   | { kind: 'akatsukiWeakened' }
   | { kind: 'akatsukiInsight'; amount: number }
-  | { kind: 'levelUp'; level: number; stat: LevelStatId; amount: number }
+  /** `learned`: técnicas de nível aprendidas junto com a subida. */
+  | { kind: 'levelUp'; level: number; stat: LevelStatId; amount: number; learned: string[] }
   | { kind: 'summonLearned'; animal: SummonAnimal }
   | { kind: 'summonLevel'; animal: SummonAnimal; level: number };
 
@@ -120,7 +123,7 @@ export function rollItem(rng: Rng, data: GameData): Roll<ItemId> {
   return rollWeighted(data.items, rng);
 }
 
-export function applyItem(player: PlayerState, item: ItemId, rng: Rng): Step {
+export function applyItem(player: PlayerState, item: ItemId, rng: Rng, data: GameData): Step {
   switch (item) {
     case 'revive':
       return step({ ...player, revives: player.revives + 1 }, { kind: 'revive' });
@@ -129,9 +132,11 @@ export function applyItem(player: PlayerState, item: ItemId, rng: Rng): Step {
       return step({ ...player, ninjaToolLevel: level }, { kind: 'ninjaTool', level });
     }
     case 'techniqueScroll': {
-      // Sorteia entre os espaços com técnica aprendida; sem técnicas, melhora o taijutsu imbuído.
-      const learned = (Object.keys(player.techniques) as TechniqueSlot[]).filter((t) => player.techniques[t]);
-      const types: TechniqueSlot[] = learned.length > 0 ? learned : ['taijutsu'];
+      // Sorteia entre as categorias que o jogador usa; o upgrade vale para todas as técnicas dela.
+      const types: TechniqueSlot[] = (['taijutsu', 'ninjutsu', 'genjutsu'] as const).filter((t) =>
+        canUseType(player, t, data),
+      );
+      if (knownTechniques(player, data).some((t) => techniqueSlot(t) === 'medical')) types.push('medical');
       const type = spin(
         types.map((t) => ({ label: t, weight: 1, value: t })),
         rng,
@@ -211,7 +216,8 @@ export function rollLevelUp(player: PlayerState, rng: Rng, data: GameData): Roll
 
 export function levelUp(player: PlayerState, stat: LevelStatId, data: GameData): Step {
   const next = applyLevelUp(player, stat, data);
-  return step(next, { kind: 'levelUp', level: next.level, stat, amount: data.balance.level.statGains[stat] });
+  const learned = next.techniques.filter((id) => !player.techniques.includes(id));
+  return step(next, { kind: 'levelUp', level: next.level, stat, amount: data.balance.level.statGains[stat], learned });
 }
 
 // ---------------------------------------------------------------------------
@@ -226,7 +232,7 @@ export function learnableTechniques(player: PlayerState, data: GameData): string
     .filter(
       (t) =>
         !player.forbiddenAttackTypes.includes(t.type) &&
-        player.techniques[techniqueSlot(t)] !== t.id &&
+        !player.techniques.includes(t.id) &&
         knowsElement(player, t.element),
     )
     .map((t) => t.id);
@@ -269,7 +275,7 @@ export function applyReward(
       return step(learnTechnique(player, techniqueId, data), { kind: 'newTechnique', techniqueId });
     }
     case 'techniqueUpgrade':
-      return applyItem(player, 'techniqueScroll', rng);
+      return applyItem(player, 'techniqueScroll', rng, data);
     case 'resistance': {
       const amount = cfg.resistancePerTier * tier;
       return step({ ...player, resistanceBonus: player.resistanceBonus + amount }, { kind: 'resistance', amount });
