@@ -76,36 +76,43 @@ describe('itens', () => {
   const p = createPlayer(common, gameData);
 
   it('ferramenta ninja é única e evolui: +1 de dano base por nível em todos os ataques', () => {
-    const lv1 = applyItem(p, 'ninjaTool', seq(0.5)).player;
-    const lv2 = applyItem(lv1, 'ninjaTool', seq(0.5)).player;
+    const lv1 = applyItem(p, 'ninjaTool', seq(0.5), gameData).player;
+    const lv2 = applyItem(lv1, 'ninjaTool', seq(0.5), gameData).player;
     expect(lv2.ninjaToolLevel).toBe(2);
-    expect(playerTechnique(lv2, 'taijutsu', gameData).baseDamage).toBe(10);
-    expect(playerTechnique(lv2, 'ninjutsu', gameData).baseDamage).toBe(12);
+    expect(playerTechnique(lv2, 'basicTaijutsu', gameData).baseDamage).toBe(10);
+    expect(playerTechnique(lv2, 'basicNinjutsu', gameData).baseDamage).toBe(12);
   });
 
-  it('pergaminho sem técnicas melhora o taijutsu imbuído', () => {
-    const step = applyItem(p, 'techniqueScroll', seq(0.5));
+  it('pergaminho sorteia uma categoria que o jogador usa e melhora todas as técnicas dela', () => {
+    const step = applyItem(p, 'techniqueScroll', seq(0.1), gameData);
     expect(step.effect).toEqual({ kind: 'techniqueUpgrade', type: 'taijutsu', level: 1 });
-    expect(playerTechnique(step.player, 'taijutsu', gameData).baseDamage).toBe(10);
+    expect(playerTechnique(step.player, 'basicTaijutsu', gameData).baseDamage).toBe(10);
+    expect(playerTechnique(step.player, 'empoweredTaijutsu', gameData).baseDamage).toBe(16);
   });
 
-  it('pergaminho sorteia entre as técnicas aprendidas', () => {
+  it('pergaminho de quem não usa genjutsu nunca cai no genjutsu', () => {
+    for (const r of [0.01, 0.5, 0.99]) {
+      expect(applyItem(p, 'techniqueScroll', seq(r), gameData).effect).not.toMatchObject({ type: 'genjutsu' });
+    }
+  });
+
+  it('pergaminho sorteia entre as categorias, inclusive a das técnicas aprendidas', () => {
     const learned = learnTechnique(p, 'fireball', gameData);
-    const step = applyItem(learned, 'techniqueScroll', seq(0.9));
+    const step = applyItem(learned, 'techniqueScroll', seq(0.9), gameData);
     expect(step.effect).toMatchObject({ type: 'ninjutsu' });
   });
 
   it('retorno, resistência e velocidade', () => {
-    expect(applyItem(p, 'revive', seq(0.5)).player.revives).toBe(2);
-    expect(applyItem(p, 'resistanceItem', seq(0.5)).player.resistanceBonus).toBe(2);
-    expect(applyItem(p, 'speedItem', seq(0.5)).player.speed).toBe(11);
+    expect(applyItem(p, 'revive', seq(0.5), gameData).player.revives).toBe(2);
+    expect(applyItem(p, 'resistanceItem', seq(0.5), gameData).player.resistanceBonus).toBe(2);
+    expect(applyItem(p, 'speedItem', seq(0.5), gameData).player.speed).toBe(11);
   });
 
   it('amuletos de resistência e velocidade ficam guardados na bolsa e acumulam', () => {
     expect(p.amulets).toEqual({ speed: 0, resistance: 0 });
-    let q = applyItem(p, 'speedItem', seq(0.5)).player;
-    q = applyItem(q, 'speedItem', seq(0.5)).player;
-    q = applyItem(q, 'resistanceItem', seq(0.5)).player;
+    let q = applyItem(p, 'speedItem', seq(0.5), gameData).player;
+    q = applyItem(q, 'speedItem', seq(0.5), gameData).player;
+    q = applyItem(q, 'resistanceItem', seq(0.5), gameData).player;
     expect(q.amulets).toEqual({ speed: 2, resistance: 1 });
     expect([q.speed, q.resistanceBonus]).toEqual([12, 2]);
   });
@@ -139,7 +146,7 @@ describe('encontros misteriosos', () => {
 describe('combate: efeitos de eventos', () => {
   it('velhinha: o vilão age primeiro na 1ª rodada, sem rolar iniciativa', () => {
     const s0 = startBattle(createPlayer(common, gameData), testVillain(), { villainStartsFirst: true });
-    const s1 = playRound(s0, 'taijutsu', seq(0.01), gameData);
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.01), gameData);
     expect(ofType(s1.log, 'late')).toHaveLength(1);
     expect(ofType(s1.log, 'initiative')).toHaveLength(0);
     expect(ofType(s1.log, 'attack')[0]!.side).toBe('villain');
@@ -150,11 +157,11 @@ describe('combate: efeitos de eventos', () => {
       playerStartsFirst: true,
       guaranteedCrit: true,
     });
-    const s1 = playRound(s0, 'taijutsu', seq(0.01), gameData);
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.01), gameData);
     // (8 + 10 − 5) × 2 = 26
     expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'crit', damage: 26 });
     expect(s1.playerFx.guaranteedCrit).toBe(false);
-    const s2 = playRound(s1, 'taijutsu', seq(0.01), gameData);
+    const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.01), gameData);
     expect(ofType(s2.log, 'attack').filter((a) => a.side === 'player').at(-1)).toMatchObject({ outcome: 'miss' });
   });
 
@@ -164,31 +171,31 @@ describe('invocações (passivas)', () => {
   it('não são uma ação de combate', () => {
     const p = applySummonEncounter(createPlayer(common, gameData), 'toad').player;
     expect(availableActions(startBattle(p, testVillain()), gameData)).toEqual([
-      'taijutsu',
-      'ninjutsu',
-      'genjutsu',
+      'tech:basicTaijutsu',
+      'tech:empoweredTaijutsu',
+      'tech:basicNinjutsu',
       'rest',
     ]);
   });
 
   it('sapo: dano base extra em todos os ataques, maior a cada nível', () => {
     const lv1 = applySummonEncounter(createPlayer(common, gameData), 'toad').player;
-    expect(playerTechnique(lv1, 'taijutsu', gameData).baseDamage).toBe(11); // 8 + 3
-    expect(playerTechnique(lv1, 'ninjutsu', gameData).baseDamage).toBe(13); // 10 + 3
+    expect(playerTechnique(lv1, 'basicTaijutsu', gameData).baseDamage).toBe(11); // 8 + 3
+    expect(playerTechnique(lv1, 'basicNinjutsu', gameData).baseDamage).toBe(13); // 10 + 3
     const lv2 = applySummonEncounter(lv1, 'toad').player;
-    expect(playerTechnique(lv2, 'taijutsu', gameData).baseDamage).toBe(13); // 8 + 3 + 2
+    expect(playerTechnique(lv2, 'basicTaijutsu', gameData).baseDamage).toBe(13); // 8 + 3 + 2
   });
 
   it('cobra: acerto envenena; o veneno causa seu valor no fim da rodada e cai 1', () => {
     const p = applySummonEncounter(createPlayer(common, gameData), 'snake').player;
     const s0 = startBattle(p, testVillain({ hp: 100 }), { playerStartsFirst: true });
-    const s1 = playRound(s0, 'taijutsu', seq(0.5), gameData);
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(ofType(s1.log, 'poison')).toEqual([{ type: 'poison', value: 5 }]);
     expect(ofType(s1.log, 'poisonTick')).toEqual([{ type: 'poisonTick', damage: 5, remaining: 4 }]);
     expect(s1.villain.hp).toBe(100 - 13 - 5);
 
     // Novo acerto com o alvo já envenenado não reaplica: o veneno segue caindo.
-    const s2 = playRound(s1, 'taijutsu', seq(0.1, 0.5), gameData);
+    const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.1, 0.5), gameData);
     expect(ofType(s2.log, 'poison')).toHaveLength(1);
     expect(s2.villain.poison).toBe(3);
   });
@@ -198,14 +205,14 @@ describe('invocações (passivas)', () => {
     const s0 = startBattle(p, testVillain({ hp: 200 }), { playerStartsFirst: true });
     const s1 = playRound({ ...s0, villain: { ...s0.villain, poison: 1 } }, 'rest', seq(0.1, 0.5), gameData);
     expect(s1.villain.poison).toBe(0);
-    const s2 = playRound(s1, 'taijutsu', seq(0.1, 0.5), gameData);
+    const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.1, 0.5), gameData);
     expect(ofType(s2.log, 'poison')).toEqual([{ type: 'poison', value: 5 }]);
   });
 
   it('cobra: o veneno pode derrotar o vilão', () => {
     const p = applySummonEncounter(createPlayer(common, gameData), 'snake').player;
     const s0 = startBattle(p, testVillain({ hp: 15 }), { playerStartsFirst: true });
-    const s1 = playRound(s0, 'taijutsu', seq(0.5), gameData);
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(s1.status).toBe('won');
     expect(ofType(s1.log, 'poisonTick')).toEqual([{ type: 'poisonTick', damage: 2, remaining: 4 }]);
   });
@@ -225,7 +232,8 @@ describe('ninjutsu médico', () => {
 
   it('ocupa um espaço próprio: não substitui o ninjutsu de ataque', () => {
     const p = learnTechnique(medic(), 'fireball', gameData);
-    expect(p.techniques).toEqual({ medical: 'medicalNinjutsu', ninjutsu: 'fireball' });
+    expect(p.techniques).toEqual(['medicalNinjutsu', 'fireball']);
+    expect(availableActions(startBattle(p, testVillain()), gameData)).toContain('tech:fireball');
   });
 
   it('cura 20% do HP máximo, gasta chakra e não rola acerto', () => {
@@ -244,7 +252,7 @@ describe('ninjutsu médico', () => {
   });
 
   it('o pergaminho também melhora a cura', () => {
-    const step = applyItem(medic(), 'techniqueScroll', seq(0.5));
+    const step = applyItem(medic(), 'techniqueScroll', seq(0.9), gameData);
     expect(step.effect).toEqual({ kind: 'techniqueUpgrade', type: 'medical', level: 1 });
     const p = { ...step.player, hp: 50 };
     const s1 = playRound(startBattle(p, testVillain(), { playerStartsFirst: true }), 'medical', seq(0.01), gameData);
@@ -266,7 +274,7 @@ describe('técnicas elementais respeitam o elemento do jogador', () => {
     for (let i = 0; i < 300; i++) {
       const step = applyReward(createPlayer(lightning, gameData), 'newTechnique', 1, rng, gameData);
       expect(step.effect).not.toEqual({ kind: 'newTechnique', techniqueId: 'waterDragon' });
-      expect(step.player.techniques.ninjutsu ?? 'lightningSpear').toBe('lightningSpear');
+      expect(step.player.techniques.filter((id) => elemental.includes(id))).not.toContain('waterDragon');
     }
   });
 
@@ -368,7 +376,7 @@ describe('nível e XP', () => {
 
   it('levelUp descreve o efeito para a UI', () => {
     const step = levelUp(ready(), 'speed', gameData);
-    expect(step.effect).toEqual({ kind: 'levelUp', level: 2, stat: 'speed', amount: 1 });
+    expect(step.effect).toEqual({ kind: 'levelUp', level: 2, stat: 'speed', amount: 1, learned: [] });
   });
 });
 

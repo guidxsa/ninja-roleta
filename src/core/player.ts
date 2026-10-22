@@ -3,6 +3,7 @@ import type { GameData } from './gameData';
 import type {
   AttackStats,
   AttackType,
+  DojutsuId,
   Element,
   Origin,
   PassiveDef,
@@ -37,10 +38,17 @@ export interface PlayerState {
   critBonus: number;
   /** diferencial_de_resistência. */
   resistanceBonus: number;
-  /** No máximo uma técnica por espaço. Sem técnica de ataque = ação básica; sem médica = não cura. */
-  techniques: Partial<Record<TechniqueSlot, string>>;
-  /** Upgrades (pergaminho) por espaço: valem para a técnica que estiver nele, inclusive a básica. */
+  /** Tipos com ação básica desde o início (genjutsu só no Uchiha). */
+  basicTypes: AttackType[];
+  /**
+   * Skill set: técnicas aprendidas (recompensa, nível ou linhagem), várias por categoria.
+   * As ações básicas não entram aqui (vêm de `basicTypes`).
+   */
+  techniques: string[];
+  /** Upgrades (pergaminho) por categoria: valem para todas as técnicas dela, inclusive as básicas. */
   techniqueLevels: Partial<Record<TechniqueSlot, number>>;
+  /** Técnica ocular ativável em batalha (Sharingan, Byakugan). */
+  dojutsu: DojutsuId | null;
   /** Ferramenta ninja: item único, evoluível. 0 = não tem. */
   ninjaToolLevel: number;
   /** Amuletos carregados (efeito permanente, aparecem na bolsa). O bônus já está em speed/resistanceBonus. */
@@ -66,8 +74,10 @@ export function createPlayer(origin: Origin, data: GameData): PlayerState {
   let maxChakra = stat('chakra');
   if (origin.jinchuuriki) maxChakra = Math.floor(maxChakra * (1 + balance.jinchuuriki.chakraBonusPct));
   const maxHp = stat('hp');
+  const forbidden = lineage?.forbiddenAttackTypes ?? [];
+  const basicTypes = (lineage?.startingTypes ?? balance.commonStartingTypes).filter((t) => !forbidden.includes(t));
 
-  return {
+  return grantLevelTechniques({
     origin,
     level: 1,
     xp: 0,
@@ -81,17 +91,19 @@ export function createPlayer(origin: Origin, data: GameData): PlayerState {
     secondaryElements: [],
     critBonus: 0,
     resistanceBonus: balance.resistance.initialBonus,
-    techniques: {},
+    basicTypes,
+    techniques: [...(lineage?.startingTechniques ?? [])],
     techniqueLevels: {},
+    dojutsu: lineage?.dojutsu ?? null,
     ninjaToolLevel: 0,
     amulets: { speed: 0, resistance: 0 },
     summon: null,
-    forbiddenAttackTypes: [...(lineage?.forbiddenAttackTypes ?? [])],
+    forbiddenAttackTypes: [...forbidden],
     passive: lineage?.passive ?? null,
     jinchuuriki: origin.jinchuuriki,
     revives: balance.revive.initialItems,
     revivesUsed: 0,
-  };
+  }, data);
 }
 
 /** Restaura HP e chakra (item de retorno, ou entre etapas da campanha). */
@@ -103,7 +115,10 @@ export function techniqueSlot(tech: TechniqueDef): TechniqueSlot {
   return tech.slot ?? tech.type;
 }
 
-/** Ensina uma técnica, substituindo a do mesmo espaço. Respeita a restrição da origem. */
+/**
+ * Ensina uma técnica e a soma ao skill set (não substitui as da mesma categoria).
+ * Respeita a restrição da origem. Aprender um genjutsu libera a categoria (e as técnicas de nível dela).
+ */
 export function learnTechnique(player: PlayerState, techniqueId: string, data: GameData): PlayerState {
   const tech = data.techniquesById[techniqueId];
   if (!tech) throw new Error(`Técnica desconhecida: ${techniqueId}`);
@@ -111,7 +126,47 @@ export function learnTechnique(player: PlayerState, techniqueId: string, data: G
     throw new Error(`Esta origem não aprende técnicas de ${tech.type}`);
   }
   if (!knowsElement(player, tech.element)) throw new Error(`O jogador não domina o elemento ${tech.element}`);
-  return { ...player, techniques: { ...player.techniques, [techniqueSlot(tech)]: tech.id } };
+  if (player.techniques.includes(tech.id)) return player;
+  return grantLevelTechniques({ ...player, techniques: [...player.techniques, tech.id] }, data);
+}
+
+/** O jogador tem ações desse tipo: ação básica da origem ou alguma técnica aprendida do tipo. */
+export function canUseType(player: PlayerState, type: AttackType, data: GameData): boolean {
+  if (player.forbiddenAttackTypes.includes(type)) return false;
+  if (player.basicTypes.includes(type)) return true;
+  return player.techniques.some((id) => {
+    const t = data.techniquesById[id];
+    return t !== undefined && t.type === type && techniqueSlot(t) === type;
+  });
+}
+
+const SLOT_ORDER: TechniqueSlot[] = ['taijutsu', 'ninjutsu', 'genjutsu', 'medical'];
+
+/** Skill set completo, por categoria: ações básicas da origem + técnicas aprendidas. */
+export function knownTechniques(player: PlayerState, data: GameData): TechniqueDef[] {
+  const basics = player.basicTypes.flatMap((t) => data.basicTechniques[t]);
+  const learned = player.techniques.map((id) => data.techniquesById[id]).filter((t): t is TechniqueDef => !!t);
+  const all = [...basics, ...learned];
+  return SLOT_ORDER.flatMap((slot) => all.filter((t) => techniqueSlot(t) === slot));
+}
+
+/** Técnicas de nível que o jogador já pode aprender (nível, origem, categoria e elemento). */
+export function pendingLevelTechniques(player: PlayerState, data: GameData): string[] {
+  return data.levelTechniques
+    .filter(
+      (t) =>
+        (t.minLevel ?? 1) <= player.level &&
+        !player.techniques.includes(t.id) &&
+        canUseType(player, t.type, data) &&
+        knowsElement(player, t.element),
+    )
+    .map((t) => t.id);
+}
+
+/** Aprende as técnicas de nível já liberadas. */
+export function grantLevelTechniques(player: PlayerState, data: GameData): PlayerState {
+  const ids = pendingLevelTechniques(player, data);
+  return ids.length ? { ...player, techniques: [...player.techniques, ...ids] } : player;
 }
 
 /** Técnica sem elemento (ou da afinidade) serve a qualquer um; elemental exige dominar o elemento. */
@@ -122,8 +177,7 @@ export function knowsElement(player: PlayerState, element: TechniqueElement): bo
 
 /** Fração do HP máximo que o ninjutsu médico cura, com os upgrades. 0 = não sabe. */
 export function medicalHealPct(player: PlayerState, data: GameData): number {
-  const id = player.techniques.medical;
-  const tech = id ? data.techniquesById[id] : undefined;
+  const tech = knownTechniques(player, data).find((t) => techniqueSlot(t) === 'medical');
   if (!tech) return 0;
   return (tech.healPct ?? 0) + (player.techniqueLevels.medical ?? 0) * data.balance.techniqueUpgrade.healPctPerLevel;
 }
@@ -154,7 +208,7 @@ export function canLevelUp(player: PlayerState, data: GameData): boolean {
 /**
  * Sobe 1 nível, gastando o XP do nível: HP e chakra máximos sobem sempre, `stat` recebe o bônus
  * da roleta de nível e HP e chakra são restaurados por completo (o único gatilho de recuperação
- * fora do item de retorno).
+ * fora do item de retorno). Técnicas de nível liberadas são aprendidas na hora.
  */
 export function applyLevelUp(player: PlayerState, stat: LevelStatId, data: GameData): PlayerState {
   const cfg = data.balance.level;
@@ -178,7 +232,7 @@ export function applyLevelUp(player: PlayerState, stat: LevelStatId, data: GameD
   } else if (stat === 'resistance') {
     p.resistanceBonus += gain;
   }
-  return fullRestore(p);
+  return grantLevelTechniques(fullRestore(p), data);
 }
 
 /**

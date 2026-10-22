@@ -301,7 +301,18 @@ footer { padding: 12px 16px 20px; color: var(--muted); text-align: center; max-w
 .log li.sys, .log li.muted { color: var(--muted); }
 .log li.jin { color: var(--jin); font-weight: 800; }
 .player-mini { border-top-color: var(--ck); }
-.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.actions { display: flex; flex-direction: column; gap: 8px; }
+.act-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.act-tabs { display: flex; gap: 6px; }
+.act-tab {
+  flex: 1; min-height: 40px; border-radius: 10px; border: 1px solid var(--line); background: transparent;
+  color: var(--muted); font: inherit; font-weight: 600; cursor: pointer;
+}
+.act-tab.on { color: var(--text); background: #ffffff14; border-bottom: 3px solid var(--accent); }
+.act-tab.tab-taijutsu.on { border-bottom-color: #ff8a5a; }
+.act-tab.tab-ninjutsu.on { border-bottom-color: var(--ck); }
+.act-tab.tab-genjutsu.on { border-bottom-color: #c070f5; }
+.chip.eye { background: #c0392b33; border-color: #e74c3c; }
 .btn.act { display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 1px; padding: 8px 10px; min-height: 64px; }
 .btn.act b { font-family: var(--font-display); font-weight: 400; letter-spacing: .02em; }
 .btn.act span { font-size: 12px; font-weight: 500; }
@@ -309,7 +320,7 @@ footer { padding: 12px 16px 20px; color: var(--muted); text-align: center; max-w
 .btn.act-taijutsu { border-left: 4px solid #ff8a5a; }
 .btn.act-ninjutsu { border-left: 4px solid var(--ck); }
 .btn.act-genjutsu { border-left: 4px solid #c070f5; }
-.btn.act-gates { border-left: 4px solid var(--gold); }
+.btn.act-gates, .btn.act-dojutsu { border-left: 4px solid var(--gold); }
 .btn.act-medical, .btn.act-summon { border-left: 4px solid var(--good); }
 .adv { color: var(--good); }
 .dis { color: var(--bad); }

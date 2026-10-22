@@ -3,7 +3,7 @@ import { balance } from './balance';
 import { BEATS, elementWeights } from './elements';
 import { encounters, items, levelUpStats, preFightEvents, rewards, summonAnimals } from './events';
 import { lineages } from './lineages';
-import { basicTechniques, techniques, techniquesById } from './techniques';
+import { basicTechniques, levelTechniques, techniques, techniquesById } from './techniques';
 
 export const gameData: GameData = {
   balance,
@@ -13,6 +13,7 @@ export const gameData: GameData = {
   basicTechniques,
   techniquesById,
   techniques,
+  levelTechniques,
   preFightEvents,
   items,
   encounters,

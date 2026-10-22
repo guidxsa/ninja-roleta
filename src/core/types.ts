@@ -13,7 +13,7 @@ export type Stats = Record<StatKey, number>;
 
 // Passivas são comportamento (código); os parâmetros delas são dados.
 export type PassiveDef =
-  | { kind: 'movementReading'; chance: number; damageFactor: number }
+  | { kind: 'genjutsuResistance'; bonus: number }
   | { kind: 'preciseFist'; defensePierce: number }
   | { kind: 'gates'; hpCostPct: number; taijutsuMult: number; turns: number }
   | { kind: 'vitality'; chakraPerTurn: number; hpPctPerTurn: number };
@@ -22,6 +22,9 @@ export type AffinityRule =
   | { kind: 'rolled' }
   | { kind: 'fixed'; element: Element }
   | { kind: 'none' };
+
+/** Técnica ocular ativável em batalha (parâmetros em `balance.dojutsu`). */
+export type DojutsuId = 'sharingan' | 'byakugan';
 
 export interface LineageDef {
   id: string;
@@ -34,6 +37,11 @@ export interface LineageDef {
   passive: PassiveDef;
   /** Tipos de técnica que a linhagem não pode usar nem aprender. */
   forbiddenAttackTypes?: AttackType[];
+  /** Tipos com ação básica desde o início. Omitido = `balance.commonStartingTypes` (taijutsu e ninjutsu). */
+  startingTypes?: AttackType[];
+  /** Técnicas que a linhagem já conhece ao nascer (ex.: golpe inibidor do Hyuuga). */
+  startingTechniques?: string[];
+  dojutsu?: DojutsuId;
 }
 
 /** `'affinity'` = usa a afinidade de chakra do jogador (ações básicas). */
@@ -54,6 +62,12 @@ export interface TechniqueDef {
   genjutsuPower?: number;
   /** Só ninjutsu médico: fração do HP máximo curada. */
   healPct?: number;
+  /** Aprendida sozinha ao atingir este nível (se a origem e o elemento permitirem). */
+  minLevel?: number;
+  /** Só pode ser usada com este dōjutsu ativado. */
+  requiresDojutsu?: DojutsuId;
+  /** Ao acertar, drena esta quantidade do chakra do vilão. */
+  chakraDrain?: number;
 }
 
 export interface VillainTechnique {
@@ -83,7 +97,17 @@ export interface VillainDef {
   /** Experiência que o jogador ganha ao derrotar o vilão (escala com a dificuldade dele). */
   xp: number;
   techniques: VillainTechnique[];
+  /** Passiva única do vilão (ex.: Gaara jinchuuriki, Orochimaru com cobras, Kabuto médico). */
+  passive?: VillainPassive;
 }
+
+export type VillainPassive =
+  /** Uma vez por luta, abaixo do limiar de HP: cura uma parte e causa mais dano por alguns turnos. */
+  | { kind: 'beastSurge'; hpThresholdPct: number; healPct: number; damageMult: number; turns: number }
+  /** Golpes que acertam um jogador sem veneno aplicam veneno (cai 1 por rodada). */
+  | { kind: 'snakeSummon'; poison: number }
+  /** Abaixo do limiar de HP, troca o ataque por uma cura (no máximo `maxUses` por luta). */
+  | { kind: 'medical'; hpThresholdPct: number; healPct: number; chakraCost: number; maxUses: number };
 
 export interface Origin {
   lineageId: string | null;

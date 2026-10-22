@@ -3,12 +3,21 @@ import { elementMultiplier } from './elements';
 import type { GameData } from './gameData';
 import { critChance, genjutsuHitChance, hitChance, rollHit, type HitOutcome } from './hit';
 import { initiativeChance, rollInitiative } from './initiative';
-import { medicalHealPct, type PlayerState } from './player';
+import { knownTechniques, medicalHealPct, techniqueSlot, type PlayerState } from './player';
 import type { Rng } from './rng';
 import { chanceSlices, spin } from './roulette';
-import type { AttackType, Element, SummonAnimal, TechniqueDef, VillainDef } from './types';
+import type { AttackType, DojutsuId, Element, SummonAnimal, TechniqueDef, VillainDef } from './types';
 
-export type PlayerAction = AttackType | 'gates' | 'medical' | 'rest';
+/** Usar uma técnica do skill set: `tech:<id>`. */
+export type TechniqueAction = `tech:${string}`;
+export type PlayerAction = TechniqueAction | 'gates' | 'medical' | 'dojutsu' | 'rest';
+
+export const techAction = (id: string): TechniqueAction => `tech:${id}`;
+
+/** Id da técnica de uma ação `tech:<id>` (null para as ações especiais). */
+export function actionTechniqueId(action: PlayerAction): string | null {
+  return action.startsWith('tech:') ? action.slice(5) : null;
+}
 export type Side = 'player' | 'villain';
 export type BattleStatus = 'ongoing' | 'won' | 'lost';
 export type SurgeMode = 'control' | 'frenzy';
@@ -28,6 +37,10 @@ export interface PlayerFx extends StatusFx {
   surgeMode: SurgeMode | null;
   /** Ramen: o próximo ataque do jogador é crítico garantido. */
   guaranteedCrit: boolean;
+  /** Sharingan/Byakugan ativado. */
+  dojutsuActive: boolean;
+  /** Veneno no jogador (cobras do Orochimaru): dano no fim da rodada, cai 1 por rodada. */
+  poison: number;
 }
 
 export interface VillainState {
@@ -37,6 +50,10 @@ export interface VillainState {
   /** Veneno da cobra: dano no fim da rodada, cai 1 por rodada. 0 = sem veneno. */
   poison: number;
   fx: StatusFx;
+  /** Usos da passiva do vilão nesta luta (surto ou cura). */
+  passiveUses: number;
+  /** Turnos restantes do surto da besta do vilão. */
+  surgeTurns: number;
 }
 
 export interface BattleOptions {
@@ -75,6 +92,13 @@ export type BattleEvent =
       critChance: number;
     }
   | { type: 'movementReading'; damageBefore: number; damage: number }
+  | { type: 'dojutsu'; dojutsu: DojutsuId; stage: number }
+  | { type: 'dojutsuEnd'; dojutsu: DojutsuId }
+  | { type: 'chakraDrain'; amount: number }
+  | { type: 'villainSurge'; healed: number }
+  | { type: 'villainMedical'; healed: number }
+  | { type: 'playerPoisoned'; value: number }
+  | { type: 'playerPoisonTick'; damage: number; remaining: number }
   | { type: 'debilitate'; target: Side; turns: number }
   | { type: 'debilitateResisted'; target: Side }
   | { type: 'summonRegen'; hp: number }
@@ -124,6 +148,8 @@ export function startBattle(
       surgeTurns: 0,
       surgeMode: null,
       guaranteedCrit: opts.guaranteedCrit,
+      dojutsuActive: false,
+      poison: 0,
     },
     villain: {
       def: villain,
@@ -131,6 +157,8 @@ export function startBattle(
       chakra: villain.chakra,
       poison: 0,
       fx: { debilitated: 0, debilitateImmunity: 0 },
+      passiveUses: 0,
+      surgeTurns: 0,
     },
     options: opts,
     log: [],
@@ -167,20 +195,21 @@ export function slugHealPct(player: PlayerState, data: GameData): number {
 }
 
 /**
- * Técnica que o jogador usa para um tipo: a aprendida ou a ação básica, com elemento resolvido
- * e dano base já somado aos upgrades do tipo, à ferramenta ninja e ao sapo.
- * Genjutsu não causa dano: o dano base fica 0 (os upgrades dele aumentam o poder de aprisionamento).
+ * Técnica do skill set com elemento resolvido e dano base já somado aos upgrades da categoria,
+ * à ferramenta ninja e ao sapo. Genjutsu não causa dano: o dano base fica 0
+ * (os upgrades dele aumentam o poder de aprisionamento).
  */
 export function playerTechnique(
   player: PlayerState,
-  type: AttackType,
+  techniqueId: string,
   data: GameData,
 ): TechniqueDef & { element: Element | null } {
   const { balance } = data;
-  const id = player.techniques[type];
-  const tech = (id && data.techniquesById[id]) || data.basicTechniques[type];
+  const tech = data.techniquesById[techniqueId];
+  if (!tech) throw new Error(`Técnica desconhecida: ${techniqueId}`);
+  const type = tech.type;
   const element = type === 'taijutsu' ? null : tech.element === 'affinity' ? player.affinity : tech.element;
-  if (type === 'genjutsu') return { ...tech, element, baseDamage: 0 };
+  if (type === 'genjutsu' || techniqueSlot(tech) === 'medical') return { ...tech, element, baseDamage: 0 };
   const baseDamage =
     tech.baseDamage +
     (player.techniqueLevels[type] ?? 0) * balance.techniqueUpgrade.baseDamagePerLevel +
@@ -188,6 +217,62 @@ export function playerTechnique(
     toadDamageBonus(player, data);
   return { ...tech, element, baseDamage };
 }
+
+/** Técnicas de ataque do skill set (tai, nin e gen), na ordem das categorias. */
+export function attackTechniques(player: PlayerState, data: GameData): TechniqueDef[] {
+  return knownTechniques(player, data).filter((t) => techniqueSlot(t) !== 'medical');
+}
+
+// ---------------------------------------------------------------------------
+// Dōjutsu
+
+/** Estágio do Sharingan pelo nível (1, 2 ou 3 tomoe). 0 = não tem Sharingan. */
+export function sharinganStage(player: PlayerState, data: GameData): number {
+  if (player.dojutsu !== 'sharingan') return 0;
+  const stages = data.balance.dojutsu.sharingan.stages;
+  let stage = 0;
+  stages.forEach((st, i) => {
+    if (player.level >= st.minLevel) stage = i + 1;
+  });
+  return stage;
+}
+
+/** Bônus do Sharingan ativo (null se não estiver ativo). */
+function activeSharingan(s: BattleState, data: GameData) {
+  if (!s.playerFx.dojutsuActive || s.player.dojutsu !== 'sharingan') return null;
+  const stage = sharinganStage(s.player, data);
+  return stage > 0 ? data.balance.dojutsu.sharingan.stages[stage - 1]! : null;
+}
+
+function byakuganActive(s: BattleState): boolean {
+  return s.playerFx.dojutsuActive && s.player.dojutsu === 'byakugan';
+}
+
+/** Custo para ativar o dōjutsu do jogador (null = não tem). */
+export function dojutsuActivationCost(player: PlayerState, data: GameData): number | null {
+  return player.dojutsu ? data.balance.dojutsu[player.dojutsu].activationCost : null;
+}
+
+/** Atributo ofensivo efetivo na luta (com o Sharingan ativo). Tipos proibidos continuam zerados. */
+export function effectiveOffense(s: BattleState, type: AttackType, data: GameData): number {
+  const base = s.player.offense[type];
+  if (s.player.forbiddenAttackTypes.includes(type)) return base;
+  return base + (activeSharingan(s, data)?.statBonus ?? 0);
+}
+
+export function effectiveSpeed(s: BattleState, data: GameData): number {
+  return s.player.speed + (activeSharingan(s, data)?.speed ?? 0);
+}
+
+/** Genjutsu do jogador contra ilusões do vilão: genjutsu efetivo + resistência passiva (Uchiha). */
+export function playerGenjutsuDefense(s: BattleState, data: GameData): number {
+  const p = s.player;
+  const passive = p.passive?.kind === 'genjutsuResistance' ? p.passive.bonus : 0;
+  return effectiveOffense(s, 'genjutsu', data) + passive;
+}
+
+// ---------------------------------------------------------------------------
+// Genjutsu
 
 /**
  * Turnos de aprisionamento de um genjutsu que acerta: turnos base da técnica + 1 a cada
@@ -199,42 +284,107 @@ export function genjutsuTurns(power: number, targetGenjutsu: number, baseTurns: 
   return Math.min(cfg.maxTurns, Math.max(1, baseTurns + extra));
 }
 
-/** Poder de genjutsu do jogador: genjutsu + bônus da técnica + upgrades (pergaminho). */
-export function playerGenjutsuPower(player: PlayerState, data: GameData): number {
-  const tech = playerTechnique(player, 'genjutsu', data);
+/** Poder de genjutsu do jogador: genjutsu efetivo + bônus da técnica + upgrades + Sharingan. */
+export function playerGenjutsuPower(s: BattleState, techniqueId: string, data: GameData): number {
+  const tech = playerTechnique(s.player, techniqueId, data);
   return (
-    player.offense.genjutsu +
+    effectiveOffense(s, 'genjutsu', data) +
     (tech.genjutsuPower ?? 0) +
-    (player.techniqueLevels.genjutsu ?? 0) * data.balance.techniqueUpgrade.genjutsuPowerPerLevel
+    (s.player.techniqueLevels.genjutsu ?? 0) * data.balance.techniqueUpgrade.genjutsuPowerPerLevel +
+    (activeSharingan(s, data)?.genjutsuPower ?? 0)
   );
 }
 
 /** Turnos que o genjutsu do jogador aprisiona o vilão, se acertar. */
-export function playerGenjutsuTurns(player: PlayerState, villain: VillainDef, data: GameData): number {
-  const tech = playerTechnique(player, 'genjutsu', data);
-  return genjutsuTurns(playerGenjutsuPower(player, data), villain.defense.genjutsu, tech.debilitateTurns ?? 1, data);
+export function playerGenjutsuTurns(s: BattleState, techniqueId: string, data: GameData): number {
+  const tech = playerTechnique(s.player, techniqueId, data);
+  return genjutsuTurns(
+    playerGenjutsuPower(s, techniqueId, data),
+    s.villain.def.defense.genjutsu,
+    tech.debilitateTurns ?? 1,
+    data,
+  );
+}
+
+export function playerGenjutsuHitChance(s: BattleState, data: GameData): number {
+  const cfg = data.balance.genjutsuHit;
+  const bonus = activeSharingan(s, data)?.genjutsuHit ?? 0;
+  return Math.min(1, genjutsuHitChance(effectiveOffense(s, 'genjutsu', data), s.villain.def.defense.genjutsu, cfg) + bonus);
+}
+
+// ---------------------------------------------------------------------------
+// Prévia de ataque (UI e jogador automático usam a mesma conta do combate)
+
+export interface AttackPreview {
+  hitChance: number;
+  critChance: number;
+  elementMult: number;
+  /** Dano de um acerto normal (sem crítico nem passivas aleatórias). */
+  damage: number;
+}
+
+export function attackPreview(s: BattleState, techniqueId: string, data: GameData): AttackPreview {
+  const { balance } = data;
+  const p = s.player;
+  const v = s.villain.def;
+  const tech = playerTechnique(p, techniqueId, data);
+  const type = tech.type;
+  const elementMult = elementMultiplier(tech.element, v.element, data.beats, balance.elements);
+  const hitP = byakuganActive(s) ? 1 : hitChance(effectiveSpeed(s, data), v.speed, balance.hit);
+  const critP = critChance(p.critBonus, balance.crit.baseChance);
+  const damage = playerDamage({
+    baseDamage: tech.baseDamage,
+    offense: effectiveOffense(s, type, data),
+    defense: v.defense[type],
+    defensePierce: type === 'taijutsu' && p.passive?.kind === 'preciseFist' ? p.passive.defensePierce : 0,
+    elementMult,
+    critMult: 1,
+    extraMult: playerDamageMult(s, type, data),
+  });
+  return { hitChance: hitP, critChance: critP, elementMult, damage };
+}
+
+/** Multiplicadores de dano do jogador: portões, Byakugan (taijutsu) e surto da besta. */
+function playerDamageMult(s: BattleState, type: AttackType, data: GameData): number {
+  const p = s.player;
+  let mult = surgeDamageMult(s, data);
+  if (type === 'taijutsu') {
+    if (s.playerFx.gatesTurns > 0 && p.passive?.kind === 'gates') mult *= p.passive.taijutsuMult;
+    if (byakuganActive(s)) mult *= data.balance.dojutsu.byakugan.taijutsuMult;
+  }
+  return mult;
 }
 
 /** Ninjutsu médico do jogador (null = não sabe). */
 export function playerMedical(player: PlayerState, data: GameData): TechniqueDef | null {
-  const id = player.techniques.medical;
-  return (id && data.techniquesById[id]) || null;
+  return knownTechniques(player, data).find((t) => techniqueSlot(t) === 'medical') ?? null;
+}
+
+/** Taijutsu sem custo mais forte do jogador: o golpe que acompanha a abertura dos portões. */
+export function gatesTechnique(player: PlayerState, data: GameData): TechniqueDef {
+  const free = attackTechniques(player, data).filter(
+    (t) => t.type === 'taijutsu' && t.chakraCost === 0 && !t.requiresDojutsu,
+  );
+  return free.reduce((a, b) => (b.baseDamage > a.baseDamage ? b : a));
+}
+
+/** A técnica pode ser usada agora (dōjutsu exigido ativo e chakra suficiente). */
+export function canUseTechnique(s: BattleState, tech: TechniqueDef): boolean {
+  const p = s.player;
+  if (p.forbiddenAttackTypes.includes(tech.type)) return false;
+  if (tech.requiresDojutsu && !(s.playerFx.dojutsuActive && p.dojutsu === tech.requiresDojutsu)) return false;
+  return p.chakra >= tech.chakraCost;
 }
 
 export function availableActions(state: BattleState, data: GameData): PlayerAction[] {
   const p = state.player;
   const actions: PlayerAction[] = [];
-  for (const type of ['taijutsu', 'ninjutsu', 'genjutsu'] as const) {
-    if (p.forbiddenAttackTypes.includes(type)) continue;
-    if (p.chakra >= playerTechnique(p, type, data).chakraCost) actions.push(type);
+  for (const tech of attackTechniques(p, data)) {
+    if (canUseTechnique(state, tech)) actions.push(techAction(tech.id));
   }
-  if (
-    p.passive?.kind === 'gates' &&
-    !state.playerFx.gatesUsed &&
-    p.chakra >= playerTechnique(p, 'taijutsu', data).chakraCost
-  ) {
-    actions.push('gates');
-  }
+  if (p.passive?.kind === 'gates' && !state.playerFx.gatesUsed) actions.push('gates');
+  const dojutsuCost = dojutsuActivationCost(p, data);
+  if (dojutsuCost !== null && !state.playerFx.dojutsuActive && p.chakra >= dojutsuCost) actions.push('dojutsu');
   const medical = playerMedical(p, data);
   if (medical && p.chakra >= medical.chakraCost && p.hp < p.maxHp) actions.push('medical');
   actions.push('rest');
@@ -263,8 +413,9 @@ export function playRound(prev: BattleState, action: PlayerAction, rng: Rng, dat
     s.log.push({ type: 'late' });
     playerFirst = false;
   } else {
-    const chance = initiativeChance(s.player.speed, s.villain.def.speed);
-    playerFirst = rollInitiative(s.player.speed, s.villain.def.speed, rng) === 'a';
+    const speed = effectiveSpeed(s, data);
+    const chance = initiativeChance(speed, s.villain.def.speed);
+    playerFirst = rollInitiative(speed, s.villain.def.speed, rng) === 'a';
     s.log.push({ type: 'initiative', first: playerFirst ? 'player' : 'villain', playerChance: chance });
   }
 
@@ -275,7 +426,7 @@ export function playRound(prev: BattleState, action: PlayerAction, rng: Rng, dat
     else villainTurn(s, rng, data);
   }
 
-  if (s.status === 'ongoing') endOfRound(s, data);
+  if (s.status === 'ongoing') endOfRound(s, rng, data);
   return s;
 }
 
@@ -330,7 +481,7 @@ function startOfRound(s: BattleState, data: GameData): void {
   }
 }
 
-function endOfRound(s: BattleState, data: GameData): void {
+function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
   const v = s.villain;
   if (v.poison > 0) {
     const damage = Math.min(v.hp, v.poison);
@@ -341,10 +492,24 @@ function endOfRound(s: BattleState, data: GameData): void {
       finish(s, 'won');
       return;
     }
+    checkVillainSurge(s);
   }
+  if (v.surgeTurns > 0) v.surgeTurns--;
 
   const p = s.player;
   const fx = s.playerFx;
+  if (fx.poison > 0) {
+    const damage = Math.min(p.hp, fx.poison);
+    p.hp -= damage;
+    fx.poison--;
+    s.log.push({ type: 'playerPoisonTick', damage, remaining: fx.poison });
+    if (p.hp === 0) {
+      handleKnockout(s);
+      if (s.status !== 'ongoing') return;
+    } else {
+      checkSurge(s, rng, data);
+    }
+  }
   if (fx.gatesTurns > 0) fx.gatesTurns--;
   if (fx.surgeTurns > 0) {
     if (fx.surgeMode === 'frenzy') {
@@ -355,6 +520,16 @@ function endOfRound(s: BattleState, data: GameData): void {
     }
     fx.surgeTurns--;
     if (fx.surgeTurns === 0) fx.surgeMode = null;
+  }
+  // Dōjutsu ativo custa chakra a cada rodada; sem chakra para pagar, desliga.
+  if (fx.dojutsuActive && p.dojutsu) {
+    const upkeep = data.balance.dojutsu[p.dojutsu].upkeep;
+    if (p.chakra >= upkeep) {
+      p.chakra -= upkeep;
+    } else {
+      fx.dojutsuActive = false;
+      s.log.push({ type: 'dojutsuEnd', dojutsu: p.dojutsu });
+    }
   }
 }
 
@@ -394,10 +569,20 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
   if (consumeSkip(s, s.playerFx, 'player', data)) return;
   const p = s.player;
 
-  if (action === 'rest') {
+  const techId = actionTechniqueId(action);
+  if (techId) {
+    const tech = data.techniquesById[techId]!;
+    if (tech.type === 'genjutsu') playerGenjutsu(s, techId, rng, data);
+    else playerAttack(s, techId, rng, data);
+  } else if (action === 'rest') {
     const gained = Math.min(p.maxChakra - p.chakra, data.balance.rest.chakraRecovered);
     p.chakra += gained;
     s.log.push({ type: 'rest', chakra: gained });
+  } else if (action === 'dojutsu') {
+    if (!p.dojutsu) throw new Error('O jogador não tem dōjutsu');
+    p.chakra -= data.balance.dojutsu[p.dojutsu].activationCost;
+    s.playerFx.dojutsuActive = true;
+    s.log.push({ type: 'dojutsu', dojutsu: p.dojutsu, stage: sharinganStage(p, data) });
   } else if (action === 'gates') {
     if (p.passive?.kind !== 'gates') throw new Error('Portões exigem a passiva correspondente');
     const hpLost = Math.min(Math.floor(p.maxHp * p.passive.hpCostPct), p.hp - 1);
@@ -406,7 +591,7 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
     s.playerFx.gatesTurns = p.passive.turns;
     s.log.push({ type: 'gates', hpLost });
     checkSurge(s, rng, data);
-    playerAttack(s, 'taijutsu', rng, data);
+    playerAttack(s, gatesTechnique(p, data).id, rng, data);
   } else if (action === 'medical') {
     // Ninjutsu médico: cura sem rolar acerto.
     const tech = playerMedical(p, data);
@@ -415,21 +600,17 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
     const healed = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * medicalHealPct(p, data)));
     p.hp += healed;
     s.log.push({ type: 'medical', healed });
-  } else if (action === 'genjutsu') {
-    playerGenjutsu(s, rng, data);
-  } else {
-    playerAttack(s, action, rng, data);
   }
   afterAction(s.playerFx);
 }
 
 /** Genjutsu: não causa dano nem consome o crítico garantido; se acertar, aprisiona o vilão. */
-function playerGenjutsu(s: BattleState, rng: Rng, data: GameData): void {
+function playerGenjutsu(s: BattleState, techId: string, rng: Rng, data: GameData): void {
   const p = s.player;
   const v = s.villain;
-  const tech = playerTechnique(p, 'genjutsu', data);
+  const tech = playerTechnique(p, techId, data);
   p.chakra -= tech.chakraCost;
-  const hitP = genjutsuHitChance(p.offense.genjutsu, v.def.defense.genjutsu, data.balance.genjutsuHit);
+  const hitP = playerGenjutsuHitChance(s, data);
   const outcome = rollHit(hitP, 0, rng);
   s.log.push({
     type: 'attack',
@@ -442,40 +623,37 @@ function playerGenjutsu(s: BattleState, rng: Rng, data: GameData): void {
     hitChance: hitP,
     critChance: 0,
   });
-  if (outcome !== 'miss') applyDebilitate(s, v.fx, 'villain', playerGenjutsuTurns(p, v.def, data));
+  if (outcome !== 'miss') applyDebilitate(s, v.fx, 'villain', playerGenjutsuTurns(s, techId, data));
 }
 
-function playerAttack(s: BattleState, type: Exclude<AttackType, 'genjutsu'>, rng: Rng, data: GameData): void {
+function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData): void {
   const { balance } = data;
   const p = s.player;
   const v = s.villain;
-  const tech = playerTechnique(p, type, data);
+  const tech = playerTechnique(p, techId, data);
+  const type = tech.type;
+  const preview = attackPreview(s, techId, data);
   p.chakra -= tech.chakraCost;
 
-  const hitP = hitChance(p.speed, v.def.speed, balance.hit);
-  const critP = critChance(p.critBonus, balance.crit.baseChance);
   let outcome: HitOutcome;
   if (s.playerFx.guaranteedCrit) {
     s.playerFx.guaranteedCrit = false;
     s.log.push({ type: 'guaranteedCrit' });
     outcome = 'crit';
   } else {
-    outcome = rollHit(hitP, critP, rng);
+    outcome = rollHit(preview.hitChance, preview.critChance, rng);
   }
-  const elementMult = elementMultiplier(tech.element, v.def.element, data.beats, balance.elements);
 
   let damage = 0;
   if (outcome !== 'miss') {
-    const gatesMult =
-      type === 'taijutsu' && s.playerFx.gatesTurns > 0 && p.passive?.kind === 'gates' ? p.passive.taijutsuMult : 1;
     damage = playerDamage({
       baseDamage: tech.baseDamage,
-      offense: p.offense[type],
+      offense: effectiveOffense(s, type, data),
       defense: v.def.defense[type],
       defensePierce: type === 'taijutsu' && p.passive?.kind === 'preciseFist' ? p.passive.defensePierce : 0,
-      elementMult,
+      elementMult: preview.elementMult,
       critMult: outcome === 'crit' ? balance.crit.multiplier : 1,
-      extraMult: gatesMult * surgeDamageMult(s, data),
+      extraMult: playerDamageMult(s, type, data),
     });
     v.hp = Math.max(0, v.hp - damage);
   }
@@ -486,9 +664,9 @@ function playerAttack(s: BattleState, type: Exclude<AttackType, 'genjutsu'>, rng
     attackType: type,
     outcome,
     damage,
-    elementMult,
-    hitChance: hitP,
-    critChance: critP,
+    elementMult: preview.elementMult,
+    hitChance: preview.hitChance,
+    critChance: preview.critChance,
   });
 
   if (v.hp === 0) {
@@ -496,12 +674,32 @@ function playerAttack(s: BattleState, type: Exclude<AttackType, 'genjutsu'>, rng
     return;
   }
   if (outcome === 'miss') return;
+  // Golpe inibidor: drena o chakra do vilão.
+  if (tech.chakraDrain) {
+    const amount = Math.min(v.chakra, tech.chakraDrain);
+    v.chakra -= amount;
+    s.log.push({ type: 'chakraDrain', amount });
+  }
   // Cobra: um golpe que acerta envenena o alvo, se ele ainda não estiver envenenado.
   const poison = snakePoison(p, data);
   if (poison > 0 && v.poison === 0) {
     v.poison = poison;
     s.log.push({ type: 'poison', value: poison });
   }
+  checkVillainSurge(s);
+}
+
+/** Surto da besta do vilão (Gaara): uma vez por luta, abaixo do limiar de HP. */
+function checkVillainSurge(s: BattleState): void {
+  const v = s.villain;
+  const passive = v.def.passive;
+  if (passive?.kind !== 'beastSurge' || v.passiveUses > 0 || v.hp <= 0) return;
+  if (v.hp >= v.def.hp * passive.hpThresholdPct) return;
+  v.passiveUses++;
+  v.surgeTurns = passive.turns;
+  const healed = Math.min(v.def.hp - v.hp, Math.floor(v.def.hp * passive.healPct));
+  v.hp += healed;
+  s.log.push({ type: 'villainSurge', healed });
 }
 
 function villainTurn(s: BattleState, rng: Rng, data: GameData): void {
@@ -509,6 +707,23 @@ function villainTurn(s: BattleState, rng: Rng, data: GameData): void {
   if (consumeSkip(s, v.fx, 'villain', data)) return;
   const { balance } = data;
   const p = s.player;
+  const passive = v.def.passive;
+
+  // Ninjutsu médico do vilão (Kabuto): abaixo do limiar, cura no lugar de atacar.
+  if (
+    passive?.kind === 'medical' &&
+    v.passiveUses < passive.maxUses &&
+    v.hp < v.def.hp * passive.hpThresholdPct &&
+    v.chakra >= passive.chakraCost
+  ) {
+    v.passiveUses++;
+    v.chakra -= passive.chakraCost;
+    const healed = Math.min(v.def.hp - v.hp, Math.floor(v.def.hp * passive.healPct));
+    v.hp += healed;
+    s.log.push({ type: 'villainMedical', healed });
+    afterAction(v.fx);
+    return;
+  }
 
   // O vilão só escolhe entre as técnicas que pode pagar; sem nenhuma, concentra chakra.
   const affordable = v.def.techniques.filter((t) => t.chakraCost <= v.chakra);
@@ -526,8 +741,10 @@ function villainTurn(s: BattleState, rng: Rng, data: GameData): void {
   v.chakra -= tech.chakraCost;
 
   if (tech.type === 'genjutsu') {
-    // Genjutsu do vilão: sem dano; o poder dele é o atributo de genjutsu, contra o genjutsu do jogador.
-    const hitP = genjutsuHitChance(v.def.defense.genjutsu, p.offense.genjutsu, balance.genjutsuHit);
+    // Genjutsu do vilão: sem dano; o poder dele é o atributo de genjutsu, contra o genjutsu do jogador
+    // (com a resistência passiva do Uchiha).
+    const defense = playerGenjutsuDefense(s, data);
+    const hitP = genjutsuHitChance(v.def.defense.genjutsu, defense, balance.genjutsuHit);
     const outcome = rollHit(hitP, 0, rng);
     s.log.push({
       type: 'attack',
@@ -542,36 +759,39 @@ function villainTurn(s: BattleState, rng: Rng, data: GameData): void {
     });
     afterAction(v.fx);
     if (outcome !== 'miss') {
-      const turns = genjutsuTurns(v.def.defense.genjutsu, p.offense.genjutsu, tech.debilitateTurns ?? 1, data);
+      const turns = genjutsuTurns(v.def.defense.genjutsu, defense, tech.debilitateTurns ?? 1, data);
       applyDebilitate(s, s.playerFx, 'player', turns);
     }
     return;
   }
 
-  const hitP = hitChance(v.def.speed, p.speed, balance.hit);
+  const hitP = hitChance(v.def.speed, effectiveSpeed(s, data), balance.hit);
   const critP = critChance(v.def.critBonus, balance.crit.baseChance);
   const outcome = rollHit(hitP, critP, rng);
   const element = tech.type === 'taijutsu' ? null : tech.element === undefined ? v.def.element : tech.element;
   const elementMult = elementMultiplier(element, p.affinity, data.beats, balance.elements);
+  const surgeMult = v.surgeTurns > 0 && passive?.kind === 'beastSurge' ? passive.damageMult : 1;
 
   let damage = 0;
   if (outcome !== 'miss') {
     damage = villainDamage({
       baseDamage: tech.baseDamage,
-      playerOffense: p.offense[tech.type],
+      playerOffense: effectiveOffense(s, tech.type, data),
       resistanceBonus: p.resistanceBonus,
       offenseDivisor: balance.resistance.offenseDivisor,
       elementMult,
       critMult: outcome === 'crit' ? balance.crit.multiplier : 1,
-      extraMult: s.options.villainDamageMult,
+      extraMult: s.options.villainDamageMult * surgeMult,
     });
-    if (p.passive?.kind === 'movementReading') {
+    // Sharingan ativo: chance de ler o movimento e reduzir o dano.
+    const sharingan = activeSharingan(s, data);
+    if (sharingan) {
       const read = spin(
-        chanceSlices(p.passive.chance, { label: 'read', value: true }, { label: 'noRead', value: false }),
+        chanceSlices(sharingan.readChance, { label: 'read', value: true }, { label: 'noRead', value: false }),
         rng,
       ).slice.value;
       if (read) {
-        const reduced = Math.max(1, Math.floor(damage * p.passive.damageFactor));
+        const reduced = Math.max(1, Math.floor(damage * balance.dojutsu.sharingan.readDamageFactor));
         s.log.push({ type: 'movementReading', damageBefore: damage, damage: reduced });
         damage = reduced;
       }
@@ -595,10 +815,15 @@ function villainTurn(s: BattleState, rng: Rng, data: GameData): void {
     handleKnockout(s);
     return;
   }
+  // Cobras do vilão (Orochimaru): golpe que acerta envenena, se o jogador ainda não estiver envenenado.
+  if (outcome !== 'miss' && passive?.kind === 'snakeSummon' && s.playerFx.poison === 0) {
+    s.playerFx.poison = passive.poison;
+    s.log.push({ type: 'playerPoisoned', value: passive.poison });
+  }
   checkSurge(s, rng, data);
 }
 
-/** HP 0: usa o item de retorno (restauração total) ou encerra a luta. */
+/** HP 0: usa o item de retorno (restauração total, limpa o veneno) ou encerra a luta. */
 function handleKnockout(s: BattleState): void {
   const p = s.player;
   if (s.options.allowRevive && p.revives > 0) {
@@ -606,6 +831,7 @@ function handleKnockout(s: BattleState): void {
     p.revivesUsed++;
     p.hp = p.maxHp;
     p.chakra = p.maxChakra;
+    s.playerFx.poison = 0;
     s.log.push({ type: 'revive', revivesLeft: p.revives });
     return;
   }

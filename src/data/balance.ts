@@ -3,6 +3,10 @@
 export const balance = {
   baseStats: { hp: 100, taijutsu: 10, ninjutsu: 10, genjutsu: 10, chakra: 10, speed: 10 },
 
+  // Tipos com ação básica para quem não define `startingTypes` na linhagem (comuns e Uzumaki):
+  // taijutsu e ninjutsu do próprio elemento. Genjutsu inicial é só do Uchiha.
+  commonStartingTypes: ['taijutsu', 'ninjutsu'] as ('taijutsu' | 'ninjutsu' | 'genjutsu')[],
+
   origin: {
     specialLineageChance: 0.2,
     jinchuurikiChance: 0.1,
@@ -23,15 +27,38 @@ export const balance = {
 
   resistance: { offenseDivisor: 2, initialBonus: 1 },
 
-  // Ações básicas: usadas quando o jogador não tem técnica daquele tipo. Taijutsu não gasta chakra.
+  // Ações básicas de cada tipo. O taijutsu básico não gasta chakra; o fortalecido gasta chakra
+  // para bater mais forte (exceção à regra "taijutsu não gasta chakra").
   basicActions: {
     taijutsu: { baseDamage: 8, chakraCost: 0 },
+    empoweredTaijutsu: { baseDamage: 14, chakraCost: 3 },
     ninjutsu: { baseDamage: 10, chakraCost: 3 },
     genjutsu: { baseDamage: 0, chakraCost: 3, debilitateTurns: 1 },
   },
 
   // "Concentrar chakra": recupera chakra no lugar de atacar.
   rest: { chakraRecovered: 3 },
+
+  // Dōjutsu: ativar gasta o turno e `activationCost`; ativo, custa `upkeep` de chakra no fim de cada
+  // rodada e se desliga sozinho quando falta chakra. Proposta.
+  dojutsu: {
+    // Sharingan: evolui com o nível (1, 2 e 3 tomoe). Ativo, soma `statBonus` a tai/nin/gen,
+    // `speed`, melhora o genjutsu (acerto e poder de aprisionamento) e tem chance de ler o
+    // movimento do vilão (dano recebido × `readDamageFactor`).
+    sharingan: {
+      activationCost: 4,
+      upkeep: 1,
+      readDamageFactor: 0.5,
+      stages: [
+        { minLevel: 1, statBonus: 3, speed: 1, genjutsuHit: 0.1, genjutsuPower: 3, readChance: 0.25 },
+        { minLevel: 4, statBonus: 5, speed: 2, genjutsuHit: 0.15, genjutsuPower: 6, readChance: 0.3 },
+        { minLevel: 7, statBonus: 7, speed: 3, genjutsuHit: 0.2, genjutsuPower: 9, readChance: 0.35 },
+      ],
+    },
+    // Byakugan: ativo, os golpes (taijutsu e ninjutsu) não erram, o taijutsu causa ×`taijutsuMult`
+    // e libera o golpe inibidor (drena chakra do vilão).
+    byakugan: { activationCost: 3, upkeep: 1, taijutsuMult: 1.1 },
+  },
 
   // Vilão sem chakra para nenhuma técnica concentra chakra no lugar de atacar.
   villainRest: { chakraRecovered: 4 },

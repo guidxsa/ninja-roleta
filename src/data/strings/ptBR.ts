@@ -45,10 +45,27 @@ export const ptBR = {
     gates: 'Abrir os portões',
     medical: 'Ninjutsu médico',
     rest: 'Concentrar chakra',
-  },
+    dojutsu: 'Dōjutsu',
+  } as Record<string, string>,
   techniques: {
     medicalNinjutsu: 'Palma curativa',
     basicTaijutsu: 'Taijutsu imbuído',
+    empoweredTaijutsu: 'Taijutsu fortalecido',
+    chakraBlockStrike: 'Golpe inibidor',
+    whirlwindCombo: 'Combo do furacão',
+    hiddenLotus: 'Lótus oculta',
+    phoenixFlower: 'Flores da fênix',
+    galeBlast: 'Grande rajada',
+    lightningCurrent: 'Corrente de raio',
+    earthSpear: 'Lança de terra',
+    waterShark: 'Tubarão de água',
+    greatBlaze: 'Grande incêndio',
+    vacuumSphere: 'Esfera de vácuo',
+    lightningBlade: 'Lâmina relâmpago',
+    earthDragon: 'Dragão de terra',
+    greatWaterfall: 'Grande cachoeira',
+    fearIllusion: 'Ilusão do medo',
+    mirrorWorld: 'Mundo espelhado',
     basicNinjutsu: 'Ninjutsu básico',
     basicGenjutsu: 'Ilusão básica',
     leafWhirlwind: 'Redemoinho da folha',
@@ -85,7 +102,7 @@ export const ptBR = {
     killingIntent: 'Intenção assassina',
   } as Record<string, string>,
   passives: {
-    movementReading: { name: 'Leitura de movimento', desc: '15% de chance de reduzir à metade o dano recebido.' },
+    genjutsuResistance: { name: 'Olhos treinados', desc: 'Resiste melhor a genjutsu (+6 contra ilusões do vilão).' },
     preciseFist: { name: 'Punho preciso', desc: 'Taijutsu ignora 30% da defesa de taijutsu do vilão.' },
     gates: {
       name: 'Portões',
@@ -93,6 +110,24 @@ export const ptBR = {
     },
     vitality: { name: 'Vitalidade Uzumaki', desc: 'Recupera 1 de chakra e 3% do HP por turno.' },
     jinchuuriki: { name: 'Surto da besta', desc: '1×/luta, abaixo de 30% de HP: controle (60%) ou descontrole (40%).' },
+  } as Record<string, { name: string; desc: string }>,
+  /** Técnicas oculares ativáveis em batalha. */
+  dojutsu: {
+    sharingan: {
+      name: 'Sharingan',
+      desc: 'Ativável (4 ck, −1 ck/rodada): +tai/nin/gen e speed, genjutsu mais eficiente e chance de ler o movimento (metade do dano). Evolui nos níveis 4 e 7.',
+    },
+    byakugan: {
+      name: 'Byakugan',
+      desc: 'Ativável (3 ck, −1 ck/rodada): golpes não erram, taijutsu ×1,1 e libera o golpe inibidor (drena chakra do vilão).',
+    },
+  } as Record<string, { name: string; desc: string }>,
+  sharinganStage: (n: number) => `${n} tomoe`,
+  /** Passivas únicas dos vilões. */
+  villainPassives: {
+    beastSurge: { name: 'Jinchuuriki', desc: 'Abaixo de 30% de HP, a besta desperta: cura e bate mais forte.' },
+    snakeSummon: { name: 'Invocação de cobra', desc: 'Golpes que acertam envenenam.' },
+    medical: { name: 'Ninjutsu médico', desc: 'Abaixo da metade do HP, se cura.' },
   } as Record<string, { name: string; desc: string }>,
   events: {
     nothing: { name: 'Nada acontece', desc: 'Um dia tranquilo. Sem efeito.' },
@@ -271,6 +306,10 @@ export const ptBR = {
     passives: 'Passivas',
     elements: 'Elementos',
     noSheet: 'A ficha aparece quando houver um personagem.',
+    dojutsuOn: (name: string) => `${name} ativo`,
+    requires: (name: string) => `só com ${name}`,
+    drain: (n: number) => `drena ${n} ck`,
+    special: 'Outros',
   },
   /** Itens que o jogador carrega, como aparecem na bolsa ninja da ficha. */
   bag: {
@@ -302,6 +341,8 @@ export const ptBR = {
       `Eles procuram um jinchuuriki e passaram direto. Mas você assistiu à luta deles de longe e aprendeu a mirar nos pontos vitais: crítico +${pct}%.`,
     levelUp: (level: number, hp: number, ck: number, stat: string, amount: number) =>
       `Nível ${level}! HP máx. +${hp}, chakra máx. +${ck} e ${stat} +${amount}. HP e chakra restaurados.`,
+    learnedAtLevel: (names: string) => `Novas técnicas: ${names}!`,
+    sharinganEvolved: (n: number) => `O Sharingan evoluiu: ${n} tomoe!`,
     summonLearned: (name: string) => `Aprendeu a invocar: ${name}!`,
     summonLevel: (name: string, level: number) => `${name} subiu para o nível ${level}.`,
   },
@@ -331,6 +372,13 @@ export const ptBR = {
     summonRegen: (n: number) => `A lesma cura você: +${n} HP.`,
     poison: (n: number) => `A cobra envenenou o alvo (veneno ${n}).`,
     poisonTick: (n: number) => `Veneno: ${n} de dano.`,
+    dojutsu: (name: string) => `${name} ativado!`,
+    dojutsuEnd: (name: string) => `Sem chakra: o ${name} se desliga.`,
+    chakraDrain: (n: number) => `Golpe inibidor: o vilão perde ${n} de chakra.`,
+    villainSurge: (who: string, n: number) => `A besta de ${who} desperta!${n ? ` +${n} HP.` : ''}`,
+    villainMedical: (who: string, n: number) => `${who} usa ninjutsu médico: +${n} HP.`,
+    playerPoisoned: (n: number) => `As cobras te envenenaram (veneno ${n}).`,
+    playerPoisonTick: (n: number) => `Veneno: você perde ${n} de HP.`,
     won: 'Vilão derrotado!',
     lost: 'Você foi derrotado.',
     you: 'Você',

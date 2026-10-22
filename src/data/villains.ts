@@ -94,16 +94,19 @@ export const villains: VillainDef[] = [
   {
     id: 'gaara',
     element: 'earth',
-    hp: 160,
+    // Era 160 de HP e defesa 14/14: aliviado para compensar o surto da besta (e por ser o gargalo).
+    hp: 140,
     chakra: 36,
     speed: 9,
-    defense: { taijutsu: 14, ninjutsu: 14, genjutsu: 10 },
+    defense: { taijutsu: 12, ninjutsu: 12, genjutsu: 10 },
     critBonus: 0.02,
     xp: 250,
     techniques: [
       { id: 'sandCoffin', type: 'ninjutsu', baseDamage: 20, chakraCost: 4, weight: 3 },
       { id: 'sandTsunami', type: 'ninjutsu', baseDamage: 26, chakraCost: 8, weight: 1 },
     ],
+    // Jinchuuriki: uma vez por luta, abaixo de 30% de HP, a besta desperta.
+    passive: { kind: 'beastSurge', hpThresholdPct: 0.3, healPct: 0.15, damageMult: 1.4, turns: 3 },
   },
   {
     id: 'jirobo',
@@ -174,6 +177,8 @@ export const villains: VillainDef[] = [
       { id: 'chakraScalpel', type: 'taijutsu', baseDamage: 20, chakraCost: 0, weight: 3 },
       { id: 'deadSoul', type: 'ninjutsu', baseDamage: 18, chakraCost: 5, weight: 1 },
     ],
+    // Ninjutsu médico: abaixo de metade do HP, se cura (até 2 vezes por luta).
+    passive: { kind: 'medical', hpThresholdPct: 0.5, healPct: 0.2, chakraCost: 6, maxUses: 2 },
   },
   {
     id: 'orochimaru',
@@ -189,6 +194,8 @@ export const villains: VillainDef[] = [
       { id: 'grassSword', type: 'taijutsu', baseDamage: 22, chakraCost: 0, weight: 2 },
       { id: 'killingIntent', type: 'genjutsu', baseDamage: 0, chakraCost: 6, weight: 1, debilitateTurns: 1 },
     ],
+    // Invocação de cobra: golpes que acertam envenenam o jogador.
+    passive: { kind: 'snakeSummon', poison: 5 },
   },
 ];
 
