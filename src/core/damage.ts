@@ -8,7 +8,7 @@ export interface PlayerDamageInput {
   defensePierce?: number;
   elementMult: number;
   critMult: number;
-  /** Multiplicadores extras (portões, surto da besta). */
+  /** Multiplicadores extras (portões, Byakugan, manto). */
   extraMult?: number;
 }
 
@@ -28,6 +28,8 @@ export interface VillainDamageInput {
   playerOffense: number;
   resistanceBonus: number;
   offenseDivisor: number;
+  /** Fração da resistência do jogador ignorada (ex.: Kabuto no hardcore). */
+  resistancePierce?: number;
   elementMult: number;
   critMult: number;
   extraMult?: number;
@@ -40,7 +42,8 @@ export function playerResistance(offense: number, resistanceBonus: number, offen
 
 /** dano = max(1, base × elemento × crítico − resistência) */
 export function villainDamage(i: VillainDamageInput): number {
-  const resistance = playerResistance(i.playerOffense, i.resistanceBonus, i.offenseDivisor);
+  const full = playerResistance(i.playerOffense, i.resistanceBonus, i.offenseDivisor);
+  const resistance = Math.floor(full * (1 - (i.resistancePierce ?? 0)));
   return Math.max(
     1,
     Math.floor(i.baseDamage * i.elementMult * i.critMult * (i.extraMult ?? 1) - resistance),

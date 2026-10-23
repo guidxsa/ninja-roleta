@@ -1,6 +1,6 @@
-// Tudo o que acontece fora do combate: eventos pré-vilão, jokenpô, itens, encontros, recompensas e nível.
+// Tudo o que acontece fora do combate: eventos pré-vilão, jokenpô, itens, encontros, guru, recompensas e nível.
 // Funções puras: recebem o jogador e devolvem um novo, mais a descrição do efeito para a UI.
-import type { EncounterId, ItemId, LevelStatId, RewardId, Weighted } from '../data/events';
+import type { AkatsukiOutcome, GuruOutcome, ItemId, RewardId, Weighted } from '../data/events';
 import type { GameData } from './gameData';
 import {
   applyLevelUp,
@@ -9,7 +9,7 @@ import {
   knownTechniques,
   knowsElement,
   learnTechnique,
-  levelUpPool,
+  lineageAllows,
   techniqueSlot,
   type PlayerState,
 } from './player';
@@ -30,16 +30,19 @@ export function rollWeighted<T extends string>(list: readonly Weighted<T>[], rng
   return { slices, index, value: slice.value };
 }
 
-/** Efeitos que valem só para o 1º turno / 1º ataque da próxima luta. */
+/** Vantagem ou desvantagem de ação: vale só para o 1º turno da próxima luta. */
 export interface NextFightMods {
   villainStartsFirst: boolean;
-  guaranteedCrit: boolean;
+  playerStartsFirst: boolean;
 }
+
+/** Por que a Akatsuki tirou uma Vontade do Fogo: caçou o jinchuuriki ou o jogador se meteu. */
+export type AkatsukiReason = 'hunted' | 'meddled';
 
 export type ProgressEffect =
   | { kind: 'none' }
   | { kind: 'villainFirst' }
-  | { kind: 'guaranteedCrit' }
+  | { kind: 'playerFirst' }
   | { kind: 'stages'; n: number }
   | { kind: 'revive' }
   | { kind: 'ninjaTool'; level: number }
@@ -48,11 +51,14 @@ export type ProgressEffect =
   | { kind: 'speed'; amount: number }
   | { kind: 'critBonus'; amount: number }
   | { kind: 'newTechnique'; techniqueId: string }
-  | { kind: 'akatsukiTookRevive' }
-  | { kind: 'akatsukiWeakened' }
+  | { kind: 'akatsukiTookRevive'; reason: AkatsukiReason }
+  | { kind: 'akatsukiWeakened'; reason: AkatsukiReason }
   | { kind: 'akatsukiInsight'; amount: number }
+  | { kind: 'akatsukiUnnoticed' }
+  | { kind: 'guruCharlatan' }
+  | { kind: 'guruFocus' }
   /** `learned`: técnicas de nível aprendidas junto com a subida. */
-  | { kind: 'levelUp'; level: number; stat: LevelStatId; amount: number; learned: string[] }
+  | { kind: 'levelUp'; level: number; hp: number; chakra: number; learned: string[] }
   | { kind: 'summonLearned'; animal: SummonAnimal }
   | { kind: 'summonLevel'; animal: SummonAnimal; level: number };
 
@@ -72,16 +78,14 @@ const step = (player: PlayerState, effect: ProgressEffect, mods: Partial<NextFig
 // Eventos pré-vilão
 
 /** Eventos que se resolvem sem outra roleta nem escolha do jogador. */
-export type SimpleEventId = 'nothing' | 'oldLady' | 'ramen' | 'training';
+export type SimpleEventId = 'oldLady' | 'ramen' | 'training';
 
 export function applySimpleEvent(player: PlayerState, id: SimpleEventId, data: GameData): Step {
   switch (id) {
-    case 'nothing':
-      return step(player, { kind: 'none' });
     case 'oldLady':
-      return step(player, { kind: 'villainFirst' }, { villainStartsFirst: true });
+      return step(player, { kind: 'villainFirst' }, { villainStartsFirst: true, playerStartsFirst: false });
     case 'ramen':
-      return step(player, { kind: 'guaranteedCrit' }, { guaranteedCrit: true });
+      return step(player, { kind: 'playerFirst' }, { playerStartsFirst: true, villainStartsFirst: false });
     case 'training': {
       const n = data.balance.events.trainingStages;
       return step(applyStatStages(player, n, data), { kind: 'stages', n });
@@ -113,7 +117,11 @@ export function playJokenpo(player: PlayerState, choice: Hand, rng: Rng, data: G
     const n = data.balance.events.jokenpoWinStages;
     return { roll, result: 'win', ...step(applyStatStages(player, n, data), { kind: 'stages', n }) };
   }
-  return { roll, result: 'loss', ...step(player, { kind: 'villainFirst' }, { villainStartsFirst: true }) };
+  return {
+    roll,
+    result: 'loss',
+    ...step(player, { kind: 'villainFirst' }, { villainStartsFirst: true, playerStartsFirst: false }),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -166,31 +174,73 @@ export function applyItem(player: PlayerState, item: ItemId, rng: Rng, data: Gam
 }
 
 // ---------------------------------------------------------------------------
-// Encontros misteriosos
+// Encontros: Akatsuki, invocação e guru
 
-export function rollEncounter(rng: Rng, data: GameData): Roll<EncounterId> {
-  return rollWeighted(data.encounters, rng);
+/** Roleta da Akatsuki: as fatias dependem de o jogador ser jinchuuriki. */
+export function rollAkatsuki(player: PlayerState, rng: Rng, data: GameData): Roll<AkatsukiOutcome> {
+  return rollWeighted(player.jinchuuriki ? data.akatsukiOutcomes.jinchuuriki : data.akatsukiOutcomes.others, rng);
 }
 
 /**
- * Akatsuki: caça jinchuuriki. Nunca causa game over.
- * Quem não é jinchuuriki só assiste a uma luta deles de longe e aprende a mirar pontos vitais (+crítico).
+ * Akatsuki: caça jinchuuriki. Nunca causa game over: sem Vontade do Fogo para perder, o jogador começa
+ * a próxima luta com metade do HP e do chakra.
+ * Quem não é jinchuuriki costuma só assistir a uma luta deles e aprender a mirar pontos vitais (+crítico).
  */
-export function applyAkatsuki(player: PlayerState, data: GameData): Step {
+export function applyAkatsuki(player: PlayerState, outcome: AkatsukiOutcome, data: GameData): Step {
   const cfg = data.balance.events;
-  if (!player.jinchuuriki) {
+  if (outcome === 'unnoticed') return step(player, { kind: 'akatsukiUnnoticed' });
+  if (outcome === 'insight') {
     const amount = cfg.akatsukiCritBonus;
     return step({ ...player, critBonus: player.critBonus + amount }, { kind: 'akatsukiInsight', amount });
   }
-  if (player.revives > 0) return step({ ...player, revives: player.revives - 1 }, { kind: 'akatsukiTookRevive' });
+  const reason = outcome;
+  if (player.revives > 0) {
+    return step({ ...player, revives: player.revives - 1 }, { kind: 'akatsukiTookRevive', reason });
+  }
   return step(
     {
       ...player,
       hp: Math.max(1, Math.floor(player.maxHp * cfg.akatsukiNoReviveHpPct)),
       chakra: Math.floor(player.maxChakra * cfg.akatsukiNoReviveChakraPct),
     },
-    { kind: 'akatsukiWeakened' },
+    { kind: 'akatsukiWeakened', reason },
   );
+}
+
+/** Técnicas ofensivas que o guru pode ensinar (as aprendíveis, menos o ninjutsu médico). */
+export function offensiveLearnable(player: PlayerState, data: GameData): string[] {
+  return learnableTechniques(player, data).filter((id) => techniqueSlot(data.techniquesById[id]!) !== 'medical');
+}
+
+/** Roleta do guru: sem técnica para ensinar (ou já sabendo o foco), a fatia some. */
+export function guruPool(player: PlayerState, data: GameData): Weighted<GuruOutcome>[] {
+  return data.guruOutcomes.filter(
+    (o) =>
+      (o.id !== 'technique' || offensiveLearnable(player, data).length > 0) && (o.id !== 'focus' || !player.focusCrit),
+  );
+}
+
+export function rollGuru(player: PlayerState, rng: Rng, data: GameData): Roll<GuruOutcome> {
+  return rollWeighted(guruPool(player, data), rng);
+}
+
+/** Guru: charlatão (desvantagem de ação), técnica ofensiva adequada ou o foco (crítico garantido 1×/luta). */
+export function applyGuru(player: PlayerState, outcome: GuruOutcome, rng: Rng, data: GameData): Step {
+  switch (outcome) {
+    case 'charlatan':
+      return step(player, { kind: 'guruCharlatan' }, { villainStartsFirst: true, playerStartsFirst: false });
+    case 'focus':
+      return step({ ...player, focusCrit: true }, { kind: 'guruFocus' });
+    case 'technique': {
+      const pool = offensiveLearnable(player, data);
+      if (pool.length === 0) throw new Error('Nenhuma técnica ofensiva disponível para esta origem');
+      const techniqueId = spin(
+        pool.map((id) => ({ label: id, weight: 1, value: id })),
+        rng,
+      ).slice.value;
+      return step(learnTechnique(player, techniqueId, data), { kind: 'newTechnique', techniqueId });
+    }
+  }
 }
 
 export function rollSummonAnimal(rng: Rng, data: GameData): Roll<SummonAnimal> {
@@ -209,15 +259,17 @@ export function applySummonEncounter(player: PlayerState, animal: SummonAnimal):
 // ---------------------------------------------------------------------------
 // Nível
 
-/** Roleta de nível: sorteia qual status recebe o bônus extra ao subir de nível. */
-export function rollLevelUp(player: PlayerState, rng: Rng, data: GameData): Roll<LevelStatId> {
-  return rollWeighted(levelUpPool(player, data), rng);
-}
-
-export function levelUp(player: PlayerState, stat: LevelStatId, data: GameData): Step {
-  const next = applyLevelUp(player, stat, data);
+/** Sobe 1 nível (HP e chakra máximos pela dificuldade, restauração total e técnicas de nível). */
+export function levelUp(player: PlayerState, data: GameData): Step {
+  const next = applyLevelUp(player, data);
   const learned = next.techniques.filter((id) => !player.techniques.includes(id));
-  return step(next, { kind: 'levelUp', level: next.level, stat, amount: data.balance.level.statGains[stat], learned });
+  return step(next, {
+    kind: 'levelUp',
+    level: next.level,
+    hp: next.maxHp - player.maxHp,
+    chakra: next.maxChakra - player.maxChakra,
+    learned,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -233,7 +285,8 @@ export function learnableTechniques(player: PlayerState, data: GameData): string
       (t) =>
         !player.forbiddenAttackTypes.includes(t.type) &&
         !player.techniques.includes(t.id) &&
-        knowsElement(player, t.element),
+        knowsElement(player, t.element) &&
+        lineageAllows(player, t),
     )
     .map((t) => t.id);
 }

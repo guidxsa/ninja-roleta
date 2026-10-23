@@ -1,3 +1,4 @@
+import type { BattleState, Side } from '../src/core/combat';
 import type { Rng } from '../src/core/rng';
 import type { VillainDef } from '../src/core/types';
 
@@ -5,6 +6,11 @@ import type { VillainDef } from '../src/core/types';
 export function seq(...values: number[]): Rng {
   let i = 0;
   return () => values[Math.min(i++, values.length - 1)]!;
+}
+
+/** Fixa a iniciativa da luta (sem gastar um número do rng com a rolagem da 1ª rodada). */
+export function withInitiative(s: BattleState, side: Side = 'player'): BattleState {
+  return { ...s, initiative: side };
 }
 
 export function testVillain(overrides: Partial<VillainDef> = {}): VillainDef {

@@ -4,9 +4,11 @@ import {
   attackPreview,
   attackTechniques,
   availableActions,
+  canFocus,
   canUseTechnique,
   dojutsuActivationCost,
-  gatesTechnique,
+  gatesHpCost,
+  gatesToOpen,
   playerGenjutsuHitChance,
   playerGenjutsuTurns,
   playerMedical,
@@ -15,7 +17,7 @@ import {
   sharinganStage,
   techAction,
   slugHealPct,
-  snakePoison,
+  snakePoisonBonus,
   startBattle,
   toadDamageBonus,
   type BattleOptions,
@@ -23,7 +25,7 @@ import {
   type PlayerAction,
 } from '../src/core/combat';
 import { critChance, hitSlices } from '../src/core/hit';
-import { rollOrigin, type OriginStep } from '../src/core/origin';
+import { COMMON_LINEAGE, rollOrigin, type OriginStep } from '../src/core/origin';
 import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
   canLevelUp,
@@ -32,13 +34,16 @@ import {
   knownTechniques,
   fullRestore,
   gainXp,
+  gatesStage,
   medicalHealPct,
   techniqueSlot,
+  withDifficulty,
   xpToNextLevel,
   type PlayerState,
 } from '../src/core/player';
 import {
   applyAkatsuki,
+  applyGuru,
   applyItem,
   applyReward,
   applySimpleEvent,
@@ -46,9 +51,9 @@ import {
   HANDS,
   levelUp,
   playJokenpo,
-  rollEncounter,
+  rollAkatsuki,
+  rollGuru,
   rollItem,
-  rollLevelUp,
   rollReward,
   rollSummonAnimal,
   rollWeighted,
@@ -65,6 +70,7 @@ import { gameData as data } from '../src/data/index';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { villainsById } from '../src/data/villains';
 import {
+  isHardcoreUnlocked,
   loadRuns,
   markAbandonedRuns,
   startRun,
@@ -185,8 +191,8 @@ function effectText(e: ProgressEffect): string {
       return E.none;
     case 'villainFirst':
       return E.villainFirst;
-    case 'guaranteedCrit':
-      return E.guaranteedCrit;
+    case 'playerFirst':
+      return E.playerFirst;
     case 'stages':
       return E.stages(e.n);
     case 'revive':
@@ -204,16 +210,19 @@ function effectText(e: ProgressEffect): string {
     case 'newTechnique':
       return E.newTechnique(techName(e.techniqueId));
     case 'akatsukiTookRevive':
-      return E.akatsukiTookRevive;
+      return E.akatsukiTookRevive[e.reason]!;
     case 'akatsukiWeakened':
-      return E.akatsukiWeakened;
+      return E.akatsukiWeakened[e.reason]!;
     case 'akatsukiInsight':
       return E.akatsukiInsight(Math.round(e.amount * 100));
+    case 'akatsukiUnnoticed':
+      return E.akatsukiUnnoticed;
+    case 'guruCharlatan':
+      return E.guruCharlatan;
+    case 'guruFocus':
+      return E.guruFocus;
     case 'levelUp': {
-      const L = data.balance.level;
-      const hp = L.hpPerLevel + (e.stat === 'hp' ? e.amount : 0);
-      const ck = L.chakraPerLevel + (e.stat === 'chakra' ? e.amount : 0);
-      const lines = [E.levelUp(e.level, hp, ck, S.levelStats[e.stat] ?? e.stat, e.amount)];
+      const lines = [E.levelUp(e.level, e.hp, e.chakra)];
       if (e.learned.length) lines.push(E.learnedAtLevel(e.learned.map(techName).join(', ')));
       const stages = data.balance.dojutsu.sharingan.stages;
       const evolved = stages.findIndex((st) => st.minLevel === e.level);
@@ -241,7 +250,7 @@ interface Campaign {
 }
 
 let camp: Campaign | null = null;
-const NO_MODS: NextFightMods = { villainStartsFirst: false, guaranteedCrit: false };
+const NO_MODS: NextFightMods = { villainStartsFirst: false, playerStartsFirst: false };
 
 function track(patch: { status?: RunStatus; furthestStage?: number; difficulty?: Difficulty }) {
   if (!camp) return;
@@ -272,7 +281,7 @@ function setBar(root: HTMLElement, kind: 'hp' | 'ck', cur: number, max: number) 
 function modChips(mods: NextFightMods, weakened: boolean): string {
   const chips = [];
   if (mods.villainStartsFirst) chips.push(`<span class="chip bad">${S.ui.villainFirst}</span>`);
-  if (mods.guaranteedCrit) chips.push(`<span class="chip good">${S.ui.guaranteedCrit}</span>`);
+  if (mods.playerStartsFirst) chips.push(`<span class="chip good">${S.ui.playerFirst}</span>`);
   if (weakened) chips.push(`<span class="chip bad">${S.ui.halfStart}</span>`);
   return chips.join('');
 }
@@ -300,13 +309,22 @@ function passiveItems(p: PlayerState, tag: 'li' | 'p'): string[] {
     tag === 'li' ? `<li><b>${name}</b> · ${desc}</li>` : `<p class="passive"><b>${name}</b> · ${desc}</p>`;
   const out: string[] = [];
   const passive = p.passive ? S.passives[p.passive.kind] : null;
-  if (passive) out.push(item(passive.name, passive.desc));
+  if (passive) {
+    const stage = gatesStage(p, data);
+    const next = data.balance.gates.stages[stage];
+    const gates = p.passive?.kind === 'gates' ? ` (${stage ? S.gatesStage(stage) : '—'}${next ? ` · ${S.ui.gatesLocked(next.minTaijutsu)}` : ''})` : '';
+    out.push(item(passive.name + gates, passive.desc));
+  }
   if (p.dojutsu) {
     const d = S.dojutsu[p.dojutsu]!;
     const stage = sharinganStage(p, data);
     out.push(item(stage ? `${d.name} (${S.sharinganStage(stage)})` : d.name, d.desc));
   }
-  if (p.jinchuuriki) out.push(item(S.passives.jinchuuriki!.name, S.passives.jinchuuriki!.desc));
+  if (p.jinchuuriki) {
+    out.push(item(S.passives.jinchuuriki!.name, S.passives.jinchuuriki!.desc));
+    out.push(item(S.passives.innerDemon!.name, S.passives.innerDemon!.desc));
+  }
+  if (p.focusCrit) out.push(item(S.passives.focus!.name, S.passives.focus!.desc));
   return out;
 }
 
@@ -315,7 +333,7 @@ function summonEffect(p: PlayerState): string {
   if (!p.summon) return '';
   const fx = S.summonEffects[p.summon.animal]!;
   if (p.summon.animal === 'toad') return fx(toadDamageBonus(p, data));
-  if (p.summon.animal === 'snake') return fx(snakePoison(p, data));
+  if (p.summon.animal === 'snake') return fx(snakePoisonBonus(p, data) ?? 0);
   return fx(Math.round(slugHealPct(p, data) * 100));
 }
 
@@ -350,7 +368,7 @@ function diffChip(d: Difficulty): string {
 }
 
 function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS, weakened = false): string {
-  const crit = critChance(p.critBonus, data.balance.crit.baseChance);
+  const crit = critChance(p.critBonus, data.balance.crit);
   const stat = (label: string, v: string | number) => `<div><small>${label}</small><b>${v}</b></div>`;
   return `
   <section class="card player-panel">
@@ -370,7 +388,7 @@ function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS, weakened = f
       ${stat(S.stats.speed, p.speed)}${stat(S.stats.resistance, `+${p.resistanceBonus}`)}${stat(S.stats.crit, formatPct(crit))}
     </div>
     ${passiveItems(p, 'p').join('')}
-    ${mods.villainStartsFirst || mods.guaranteedCrit || weakened ? `<div class="mods"><small>${S.ui.nextFight}</small> ${modChips(mods, weakened)}</div>` : ''}
+    ${mods.villainStartsFirst || mods.playerStartsFirst || weakened ? `<div class="mods"><small>${S.ui.nextFight}</small> ${modChips(mods, weakened)}</div>` : ''}
   </section>`;
 }
 
@@ -411,14 +429,14 @@ let battlePlayer: (() => PlayerState) | null = null;
 
 function sheetHtml(c: Campaign): string {
   const p = battlePlayer?.() ?? c.player;
-  const crit = critChance(p.critBonus, data.balance.crit.baseChance);
+  const crit = critChance(p.critBonus, data.balance.crit);
   const attr = (label: string, v: string | number) => `<div><small>${label}</small><b>${v}</b></div>`;
   const passives = [
     ...passiveItems(p, 'li'),
     p.summon ? `<li><b>${S.summons[p.summon.animal]!.name}</b> · ${S.summons[p.summon.animal]!.desc}</li>` : '',
   ].join('');
   const elements = [p.affinity, ...p.secondaryElements].filter((e): e is Element => Boolean(e));
-  const nextFight = c.mods.villainStartsFirst || c.mods.guaranteedCrit || c.weakened;
+  const nextFight = c.mods.villainStartsFirst || c.mods.playerStartsFirst || c.weakened;
   return `
     <div class="scroll-paper">
       <span class="hanko" aria-hidden="true">忍</span>
@@ -515,14 +533,14 @@ function originStepSlices(step: OriginStep): WheelSlice[] {
   const L = S.sliceLabels;
   return step.slices.map((s, i) => {
     switch (step.kind) {
-      case 'lineageTier':
-        return { label: L[s.value]!, weight: s.weight, color: s.value === 'special' ? '#f5c542' : '#5b6578' };
       case 'jinchuuriki':
         return { label: L[s.value]!, weight: s.weight, color: s.value === 'yes' ? '#ff5a3c' : '#5b6578' };
       case 'affinity':
         return { label: S.elements[s.value as Element], weight: s.weight, color: ELEMENT_COLORS[s.value as Element] };
       case 'lineage':
-        return { label: S.lineages[s.value] ?? s.value, weight: s.weight, color: PALETTE[i % PALETTE.length]! };
+        return s.value === COMMON_LINEAGE
+          ? { label: L.common!, weight: s.weight, color: '#5b6578' }
+          : { label: S.lineages[s.value] ?? s.value, weight: s.weight, color: PALETTE[i % PALETTE.length]! };
     }
   });
 }
@@ -530,10 +548,8 @@ function originStepSlices(step: OriginStep): WheelSlice[] {
 function stepResultText(step: OriginStep): string {
   const v = step.slices[step.index]!.value;
   switch (step.kind) {
-    case 'lineageTier':
-      return v === 'special' ? S.origin.special : S.origin.common;
     case 'lineage':
-      return S.lineages[v] ?? v;
+      return v === COMMON_LINEAGE ? S.origin.common : S.lineages[v] ?? v;
     case 'affinity':
       return S.elements[v as Element];
     case 'jinchuuriki':
@@ -547,7 +563,10 @@ async function originScreen(): Promise<void> {
     const roll = rollOrigin(rng, data);
     const runId = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
     startRun(storage, { id: runId, origin: roll.origin, now: new Date() }, data.balance.history.maxRuns);
-    const player = createPlayer(roll.origin, data);
+    // Hardcore bloqueado (ainda não venceu no Difícil): cai para a dificuldade padrão.
+    const hardcoreOk = isHardcoreUnlocked(loadRuns(storage), data.balance.difficulty.hardcoreUnlockedBy);
+    if (settings.difficulty === 'hardcore' && !hardcoreOk) settings.difficulty = DEFAULT_DIFFICULTY;
+    let player = createPlayer(roll.origin, data, settings.difficulty);
     camp = {
       runId,
       origin: roll.origin,
@@ -573,9 +592,10 @@ async function originScreen(): Promise<void> {
     after.innerHTML = `<div class="difficulty-box">
       <h3>${S.ui.difficulty}</h3>
       <div class="segmented">${DIFFICULTIES.map(
-        (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === settings.difficulty}">${S.difficulty[d].name}</button>`,
+        (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === settings.difficulty}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? '🔒 ' : ''}${S.difficulty[d].name}</button>`,
       ).join('')}</div>
       <p class="muted center small" id="diff-desc">${S.difficulty[settings.difficulty].desc}</p>
+      ${hardcoreOk ? '' : `<p class="muted center small">${S.ui.hardcoreLocked}</p>`}
     </div>
     <div class="actions-row">
       <button class="btn" data-choice="reroll">🎲 ${S.ui.reroll}</button>
@@ -583,10 +603,12 @@ async function originScreen(): Promise<void> {
     // A dificuldade só pode mudar antes de começar a campanha.
     after.querySelector('.segmented')!.addEventListener('click', (e) => {
       const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-diff]');
-      if (!btn || !camp) return;
+      if (!btn || !camp || (btn as HTMLButtonElement).disabled) return;
       const d = btn.dataset.diff as Difficulty;
       settings.difficulty = d;
       camp.difficulty = d;
+      player = withDifficulty(player, d, data);
+      camp.player = player;
       saveSettings();
       after.querySelectorAll('[data-diff]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
       after.querySelector('#diff-desc')!.textContent = S.difficulty[d].desc;
@@ -647,7 +669,6 @@ async function eventScreen(stage: Stage): Promise<void> {
 
   let step: Step;
   switch (roll.value) {
-    case 'nothing':
     case 'oldLady':
     case 'ramen':
     case 'training':
@@ -662,9 +683,21 @@ async function eventScreen(stage: Stage): Promise<void> {
       step = applyItem(c.player, item.value, rng, data);
       break;
     }
-    case 'mysteriousEncounter':
-      step = await encounterFlow(slot);
+    case 'summon':
+      step = await summonFlow(slot);
       break;
+    case 'akatsuki': {
+      const out = rollAkatsuki(c.player, rng, data);
+      await bigWheel(slot, S.roulettes.akatsuki, rollSlices(out, (id) => S.akatsuki[id]!), out.index);
+      step = applyAkatsuki(c.player, out.value, data);
+      break;
+    }
+    case 'guru': {
+      const out = rollGuru(c.player, rng, data);
+      await bigWheel(slot, S.roulettes.guru, rollSlices(out, (id) => S.guru[id]!), out.index);
+      step = applyGuru(c.player, out.value, rng, data);
+      break;
+    }
   }
   applyStep(step);
   detail.insertAdjacentHTML('beforeend', `<div class="effect pop">${effectText(step.effect)}</div>`);
@@ -697,12 +730,9 @@ async function jokenpoFlow(slot: HTMLElement): Promise<Step> {
   return result;
 }
 
-async function encounterFlow(slot: HTMLElement): Promise<Step> {
+/** Encontro com invocações: aprende a invocar (roleta do animal) ou a invocação atual sobe de nível. */
+async function summonFlow(slot: HTMLElement): Promise<Step> {
   const c = camp!;
-  const enc = rollEncounter(rng, data);
-  await bigWheel(slot, S.roulettes.encounter, rollSlices(enc, (id) => S.encounters[id]!), enc.index);
-  await sleep(settings.instant ? 0 : 400);
-  if (enc.value === 'akatsuki') return applyAkatsuki(c.player, data);
   if (c.player.summon) return applySummonEncounter(c.player, c.player.summon.animal);
   const animal = rollSummonAnimal(rng, data);
   await bigWheel(slot, S.roulettes.summonAnimal, rollSlices(animal, (id) => S.summons[id]!.name), animal.index);
@@ -727,28 +757,48 @@ function villainPanel(s: BattleState): string {
     ${bar('hp', s.villain.hp, v.hp)}
     ${bar('ck', s.villain.chakra, v.chakra)}
     <div class="row between small muted"><span>Def ${S.stats.taijutsu} ${d.taijutsu} · ${S.stats.ninjutsu} ${d.ninjutsu} · ${S.stats.genjutsu} ${d.genjutsu}</span><span>${S.stats.speed} ${v.speed}</span></div>
-    ${v.passive ? `<p class="passive small"><b>${S.villainPassives[v.passive.kind]!.name}</b> · ${S.villainPassives[v.passive.kind]!.desc}</p>` : ''}
+    ${villainPassiveLine(v)}
     <div class="badges" id="vbadges"></div>
   </section>`;
 }
 
-function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
+/** Passiva do vilão (na versão da dificuldade: a hardcore já vem trocada por scaleVillain). */
+function villainPassiveLine(v: BattleState['villain']['def']): string {
+  const passive = v.passive;
+  if (!passive) return '';
+  const t = S.villainPassives[passive.kind === 'cloak' ? passive.variant : passive.kind]!;
+  const hardcore = camp?.difficulty === 'hardcore' && v.hardcorePassive !== undefined;
+  return `<p class="passive small"><b>${t.name}</b> · ${hardcore ? t.hardcore : t.desc}</p>`;
+}
+
+/** Efeitos negativos e de luta comuns aos dois lados. `bad` = cor para o lado afetado. */
+function statusChips(fx: BattleState['playerFx'] | BattleState['villain']['fx'], bad: string): string[] {
   const out: string[] = [];
+  if (fx.debilitated > 0) out.push(`<span class="chip ${bad}">${S.ui.debilitated}</span>`);
+  if (fx.paralyzed > 0) out.push(`<span class="chip ${bad}">⚡ ${S.ui.paralyzed}</span>`);
+  if (fx.stunned > 0) out.push(`<span class="chip ${bad}">💫 ${S.ui.stunned}</span>`);
+  if (fx.debilitateImmunity > 0) out.push(`<span class="chip">${S.ui.immune}</span>`);
+  if (fx.burn > 0) out.push(`<span class="chip ${bad}">${S.ui.burning(fx.burn)}</span>`);
+  if (fx.poison) out.push(`<span class="chip ${bad}">${S.ui.poisoned}</span>`);
+  if (fx.bleeding) out.push(`<span class="chip ${bad}">${S.ui.bleeding}</span>`);
+  if (fx.cloakTurns > 0) out.push(`<span class="chip jin">${S.ui.cloakOn(fx.cloakTurns)}</span>`);
+  if (fx.guaranteedCrit) out.push(`<span class="chip ${bad === 'bad' ? 'good' : 'bad'}">${S.ui.guaranteedCrit}</span>`);
+  return out;
+}
+
+function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
   if (side === 'villain') {
-    if (s.villain.fx.debilitated > 0) out.push(`<span class="chip bad">${S.ui.debilitated}</span>`);
-    if (s.villain.fx.debilitateImmunity > 0) out.push(`<span class="chip">${S.ui.immune}</span>`);
-    if (s.villain.poison > 0) out.push(`<span class="chip good">🐍 ${S.ui.poisoned(s.villain.poison)}</span>`);
-    if (s.villain.surgeTurns > 0) out.push(`<span class="chip bad">${S.villainPassives.beastSurge!.name} ${s.villain.surgeTurns}t</span>`);
+    const v = s.villain;
+    const out = statusChips(v.fx, 'good');
+    if (v.mistTurns > 0) out.push(`<span class="chip bad">${S.ui.mistOn(v.mistTurns)}</span>`);
+    if (v.insaneTimer > 0) out.push(`<span class="chip good">${S.ui.insaneTimer(v.insaneTimer)}</span>`);
+    if (v.lastStand) out.push(`<span class="chip bad">${S.ui.lastStand}</span>`);
     return out.join('');
   }
   const fx = s.playerFx;
-  if (fx.debilitated > 0) out.push(`<span class="chip bad">${S.ui.debilitated}</span>`);
-  if (fx.guaranteedCrit) out.push(`<span class="chip good">${S.ui.guaranteedCrit}</span>`);
-  if (fx.dojutsuActive && s.player.dojutsu) out.push(`<span class="chip eye">👁 ${S.ui.dojutsuOn(S.dojutsu[s.player.dojutsu]!.name)}</span>`);
-  if (fx.poison > 0) out.push(`<span class="chip bad">🐍 ${S.ui.poisoned(fx.poison)}</span>`);
-  if (fx.gatesTurns > 0) out.push(`<span class="chip good">${S.ui.gatesOn(fx.gatesTurns)}</span>`);
-  if (fx.surgeTurns > 0 && fx.surgeMode)
-    out.push(`<span class="chip jin">${S.ui.surgeOn(S.ui.surgeModes[fx.surgeMode]!, fx.surgeTurns)}</span>`);
+  const out = statusChips(fx, 'bad');
+  if (fx.dojutsuActive && s.player.dojutsu) out.push(`<span class="chip eye">👁 ${S.ui.dojutsuOn(S.dojutsu[s.player.dojutsu]!.name, fx.dojutsuTurns)}</span>`);
+  if (fx.gatesTurns > 0) out.push(`<span class="chip good">${S.ui.gatesOn(S.gatesStage(fx.gatesStage), fx.gatesTurns)}</span>`);
   out.push(`<span class="chip">❤ ×${s.player.revives}</span>`);
   return out.join('');
 }
@@ -779,8 +829,11 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     sub = stage ? S.sharinganStage(stage) : '';
     extra = `${S.ui.cost(dojutsuActivationCost(p, data) ?? 0)} · −${B.dojutsu[p.dojutsu].upkeep}/rodada`;
   } else if (action === 'gates') {
-    sub = esc(techName(gatesTechnique(p, data).id));
-    extra = `−25% HP`;
+    const gates = gatesToOpen(p, data);
+    if (gates) {
+      sub = S.gatesStage(gates.stage);
+      extra = `−${gatesHpCost(p, gates.hpCostPct)} HP · ${S.ui.cost(gates.chakraCost)} · ×${String(gates.taijutsuMult).replace('.', ',')} tai`;
+    }
   } else if (action === 'medical') {
     const tech = playerMedical(p, data);
     if (tech) {
@@ -872,6 +925,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   let tab: ActionTab = 'taijutsu';
   let current = state;
   let enabledNow = false;
+  /** Foco do guru armado para a próxima jogada. */
+  let focusArmed = false;
   const renderActions = (s: BattleState, enabled: boolean) => {
     current = s;
     enabledNow = enabled;
@@ -885,9 +940,17 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     const buttons = actionList(s, tab)
       .map((a) => actionButton(s, a, enabled && avail.includes(a)))
       .join('');
-    actionsEl.innerHTML = `${tabsHtml}<div class="act-grid">${buttons}</div>`;
+    const focus = canFocus(s)
+      ? `<button class="btn focus-btn${focusArmed ? ' on' : ''}" data-focus aria-pressed="${focusArmed}" ${enabled ? '' : 'disabled'}>${focusArmed ? S.ui.focusArmed : S.ui.focus}<small>${S.ui.focusHint}</small></button>`
+      : '';
+    actionsEl.innerHTML = `${tabsHtml}${focus}<div class="act-grid">${buttons}</div>`;
   };
   actionsEl.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('[data-focus]') && enabledNow) {
+      focusArmed = !focusArmed;
+      renderActions(current, enabledNow);
+      return;
+    }
     const t = (e.target as HTMLElement).closest<HTMLElement>('[data-tab]');
     if (!t) return;
     tab = t.dataset.tab as ActionTab;
@@ -895,6 +958,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   });
   renderBadges(state);
   if (setup.options.villainStartsFirst) log(S.ui.villainFirst, 'sys');
+  if (setup.options.playerStartsFirst) log(S.ui.playerFirst, 'sys');
   if (c.weakened) {
     log(S.ui.halfStart, 'sys');
     c.weakened = false;
@@ -904,7 +968,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     renderActions(state, true);
     const action = await choose<PlayerAction>(actionsEl);
     renderActions(state, false);
-    const next = playRound(state, action, rng, data);
+    const next = playRound(state, action, rng, data, focusArmed && canFocus(state));
+    focusArmed = false;
     await animateRound(state, next);
     state = next;
     renderBadges(state);
@@ -938,6 +1003,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     };
     const who = (side: 'player' | 'villain') => (side === 'player' ? S.log.you : villainName(next.villain.def.id));
     let critForced = false;
+    let villainCritForced = false;
 
     for (const ev of events) {
       switch (ev.type) {
@@ -967,7 +1033,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         }
         case 'skip':
-          log(S.log.skip(who(ev.side)), 'sys');
+          log(S.log.skip[ev.reason]!(who(ev.side)), 'sys');
           break;
         case 'rest':
           disp.pck += ev.chakra;
@@ -976,12 +1042,17 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         case 'gates':
           disp.php -= ev.hpLost;
+          disp.pck -= ev.chakra;
           floatNumber(pcard, `−${ev.hpLost}`, 'dmg');
-          log(S.log.gates(ev.hpLost), 'good');
+          log(S.log.gates(S.gatesStage(ev.stage), ev.hpLost, ev.chakra), 'good');
+          break;
+        case 'focus':
+          log(S.log.focus, 'good');
           break;
         case 'guaranteedCrit':
-          critForced = true;
-          log(S.log.guaranteedCrit, 'good');
+          if (ev.side === 'player') critForced = true;
+          else villainCritForced = true;
+          log(S.log.guaranteedCrit(who(ev.side)), ev.side === 'player' ? 'good' : 'bad');
           break;
         case 'movementReading':
           log(S.log.movementReading(ev.damageBefore, ev.damage), 'good');
@@ -990,7 +1061,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           const mine = ev.side === 'player';
           if (mine) disp.pck -= playerTechnique(p0, ev.techniqueId, data).chakraCost;
           else disp.vck -= prev.villain.def.techniques.find((t) => t.id === ev.techniqueId)?.chakraCost ?? 0;
-          if (!(mine && critForced)) {
+          if (!(mine ? critForced : villainCritForced)) {
             const hs = hitSlices(ev.hitChance, ev.critChance);
             await stripRoulette(
               dice,
@@ -1005,6 +1076,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
             );
           }
           if (mine) critForced = false;
+          else villainCritForced = false;
           const el = ev.elementMult > 1 ? S.log.elementAdv : ev.elementMult < 1 ? S.log.elementDis : '';
           const tech = techName(ev.techniqueId);
           if (ev.outcome === 'miss') {
@@ -1021,7 +1093,81 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         }
         case 'debilitate':
-          log(S.log.debilitate(who(ev.target), ev.turns), ev.target === 'villain' ? 'good' : 'bad');
+          log(S.log.debilitate[ev.kind]!(who(ev.target), ev.turns), ev.target === 'villain' ? 'good' : 'bad');
+          break;
+        case 'genjutsuImmune':
+          log(S.log.genjutsuImmune(who(ev.target)), 'sys');
+          break;
+        case 'status':
+          log(S.log.status[ev.kind]!(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad');
+          break;
+        case 'burnExtend':
+          log(S.log.burnExtend(who(ev.target), ev.turns), ev.target === 'villain' ? 'good' : 'bad');
+          break;
+        case 'burnTick':
+        case 'poisonTick': {
+          const icon = ev.type === 'burnTick' ? '🔥' : '🐍';
+          if (ev.target === 'villain') disp.vhp -= ev.damage;
+          else disp.php -= ev.damage;
+          floatNumber(ev.target === 'villain' ? vcard() : pcard, `−${ev.damage} ${icon}`, 'dmg');
+          const text = ev.type === 'burnTick' ? S.log.burnTick : S.log.poisonTick;
+          log(text(who(ev.target), ev.damage), ev.target === 'villain' ? 'good' : 'bad');
+          break;
+        }
+        case 'burnOut':
+          log(S.log.burnOut(who(ev.target)), 'sys');
+          break;
+        case 'poisonCured':
+          log(S.log.poisonCured(who(ev.target)), 'sys');
+          break;
+        case 'cloak':
+          if (ev.side === 'player') log(S.log.cloak.player, 'jin');
+          else {
+            const passive = next.villain.def.passive;
+            const variant = passive?.kind === 'cloak' ? passive.variant : 'beast';
+            log(S.log.cloak[variant](who('villain')), 'bad');
+          }
+          floatNumber(ev.side === 'player' ? pcard : vcard(), '🔥 manto', 'heal');
+          break;
+        case 'cloakRegen':
+          if (ev.side === 'player') disp.php += ev.hp;
+          else disp.vhp += ev.hp;
+          floatNumber(ev.side === 'player' ? pcard : vcard(), `+${ev.hp}`, 'heal');
+          log(S.log.cloakRegen(who(ev.side), ev.hp), ev.side === 'player' ? 'good' : 'bad');
+          break;
+        case 'recoil':
+          if (ev.side === 'player') disp.php -= ev.damage;
+          else disp.vhp -= ev.damage;
+          floatNumber(ev.side === 'player' ? pcard : vcard(), `−${ev.damage}`, 'dmg');
+          log(S.log.recoil(who(ev.side), ev.damage), ev.side === 'player' ? 'bad' : 'good');
+          break;
+        case 'villainRegen':
+          disp.vhp += ev.hp;
+          floatNumber(vcard(), `+${ev.hp}`, 'heal');
+          log(S.log.villainRegen(who('villain'), ev.hp), 'bad');
+          break;
+        case 'mist':
+          log(S.log.mist(ev.turns), 'bad');
+          break;
+        case 'mistEnd':
+          log(S.log.mistEnd, 'sys');
+          break;
+        case 'trickster':
+          disp.vhp = 1;
+          log(S.log.trickster(who('villain'), ev.counterCrit), 'bad');
+          break;
+        case 'lastStand':
+          disp.vhp = ev.healed;
+          floatNumber(vcard(), `+${ev.healed}`, 'heal');
+          log(S.log.lastStand(ev.healed), 'bad');
+          break;
+        case 'insaneTimer':
+          log(S.log.insaneTimer(who('villain'), ev.rounds), 'bad');
+          break;
+        case 'insaneRevive':
+          disp.vhp = ev.hp;
+          floatNumber(vcard(), `🐍 ${ev.hp}`, 'heal');
+          log(S.log.insaneRevive(who('villain'), ev.hp), 'bad');
           break;
         case 'debilitateResisted':
           log(S.log.debilitateResisted(who(ev.target)), 'sys');
@@ -1030,27 +1176,6 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           disp.php += ev.hp;
           disp.pck += ev.chakra;
           log(S.log.regen(ev.hp, ev.chakra), 'good');
-          break;
-        case 'surge': {
-          const cfg = data.balance.jinchuuriki.surge;
-          await stripRoulette(
-            dice,
-            S.passives.jinchuuriki!.name,
-            [
-              { label: S.ui.surgeModes.control!, weight: cfg.controlChance, color: '#4cd07d' },
-              { label: S.ui.surgeModes.frenzy!, weight: 1 - cfg.controlChance, color: '#ff5a3c' },
-            ],
-            ev.mode === 'control' ? 0 : 1,
-            pace.strip() * 1.5,
-          );
-          disp.php += ev.healed;
-          log(S.log.surge(S.ui.surgeModes[ev.mode]!, ev.healed), 'jin');
-          break;
-        }
-        case 'surgeDrain':
-          disp.php -= ev.hpLost;
-          floatNumber(pcard, `−${ev.hpLost}`, 'dmg');
-          log(S.log.surgeDrain(ev.hpLost), 'bad');
           break;
         case 'revive':
           disp.php = next.player.maxHp;
@@ -1074,14 +1199,6 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           floatNumber(pcard, `+${ev.hp}`, 'heal');
           log(S.log.summonRegen(ev.hp), 'good');
           break;
-        case 'poison':
-          log(S.log.poison(ev.value), 'good');
-          break;
-        case 'poisonTick':
-          disp.vhp -= ev.damage;
-          floatNumber(vcard(), `−${ev.damage} 🐍`, 'dmg');
-          log(S.log.poisonTick(ev.damage), 'good');
-          break;
         case 'dojutsu': {
           const name = S.dojutsu[ev.dojutsu]!.name;
           disp.pck -= data.balance.dojutsu[ev.dojutsu].activationCost;
@@ -1090,33 +1207,12 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         }
         case 'dojutsuEnd':
-          log(S.log.dojutsuEnd(S.dojutsu[ev.dojutsu]!.name), 'sys');
+          log(S.log.dojutsuEnd[ev.reason]!(S.dojutsu[ev.dojutsu]!.name), 'sys');
           break;
         case 'chakraDrain':
           disp.vck -= ev.amount;
           floatNumber(vcard(), `−${ev.amount} ck`, 'ck');
           log(S.log.chakraDrain(ev.amount), 'good');
-          break;
-        case 'villainSurge':
-          disp.vhp += ev.healed;
-          floatNumber(vcard(), `+${ev.healed}`, 'heal');
-          log(S.log.villainSurge(who('villain'), ev.healed), 'bad');
-          break;
-        case 'villainMedical': {
-          const passive = prev.villain.def.passive;
-          if (passive?.kind === 'medical') disp.vck -= passive.chakraCost;
-          disp.vhp += ev.healed;
-          floatNumber(vcard(), `+${ev.healed}`, 'heal');
-          log(S.log.villainMedical(who('villain'), ev.healed), 'bad');
-          break;
-        }
-        case 'playerPoisoned':
-          log(S.log.playerPoisoned(ev.value), 'bad');
-          break;
-        case 'playerPoisonTick':
-          disp.php -= ev.damage;
-          floatNumber(pcard, `−${ev.damage} 🐍`, 'dmg');
-          log(S.log.playerPoisonTick(ev.damage), 'bad');
           break;
         case 'end':
           log(ev.status === 'won' ? S.log.won : S.log.lost, ev.status === 'won' ? 'good' : 'bad');
@@ -1174,7 +1270,7 @@ async function rewardScreen(title: string, tier: number, spins: number): Promise
 // ---------------------------------------------------------------------------
 // XP e subida de nível
 
-/** Ganha o XP do vilão derrotado; a roleta de nível só gira quando o XP do nível se completa. */
+/** Ganha o XP do vilão derrotado; cada nível completado mostra a tela de subida. */
 async function awardXp(villainId: string): Promise<void> {
   const c = camp!;
   c.player = gainXp(c.player, villainsById[villainId]!.xp, data);
@@ -1187,13 +1283,11 @@ async function levelUpScreen(): Promise<void> {
     h(`<div class="screen"><h2>${S.ui.levelUpTitle}</h2><p class="center"><span class="chip tier tier-2">${S.ui.levelLabel(c.player.level + 1)}</span></p>
       <div id="slot"></div><div id="results"></div><div id="hud"></div><div id="cta"></div></div>`),
   );
-  const slot = root.querySelector<HTMLElement>('#slot')!;
   const hud = root.querySelector<HTMLElement>('#hud')!;
   hud.innerHTML = playerPanel(c.player, c.mods, c.weakened);
 
-  const roll = rollLevelUp(c.player, rng, data);
-  await bigWheel(slot, S.roulettes.levelUp, rollSlices(roll, (id) => S.levelStats[id] ?? id), roll.index);
-  const step = levelUp(c.player, roll.value, data);
+  await sleep(settings.instant ? 0 : 300);
+  const step = levelUp(c.player, data);
   applyStep(step);
   root
     .querySelector('#results')!
@@ -1298,7 +1392,7 @@ async function runCampaign(): Promise<void> {
       const first = j === 0;
       const result = await battleScreen({
         villainId: stage.villains[j]!,
-        options: first ? { villainStartsFirst: c.mods.villainStartsFirst, guaranteedCrit: c.mods.guaranteedCrit } : {},
+        options: first ? { villainStartsFirst: c.mods.villainStartsFirst, playerStartsFirst: c.mods.playerStartsFirst } : {},
         label: `${i + 1}. ${stageName(stage)}${stage.villains.length > 1 ? ` · ${S.ui.fightOf(j + 1, stage.villains.length)}` : ''}`,
         exam: false,
       });

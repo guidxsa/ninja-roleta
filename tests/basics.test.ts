@@ -102,9 +102,10 @@ describe('acerto e crítico', () => {
     expect(genjutsuHitChance(15, 10, balance.genjutsuHit)).toBeCloseTo(0.7);
   });
 
-  it('crítico = 5% + diferencial', () => {
-    expect(critChance(0, 0.05)).toBeCloseTo(0.05);
-    expect(critChance(0.1, 0.05)).toBeCloseTo(0.15);
+  it('crítico = 5% + diferencial, no máximo 50%', () => {
+    expect(critChance(0, balance.crit)).toBeCloseTo(0.05);
+    expect(critChance(0.1, balance.crit)).toBeCloseTo(0.15);
+    expect(critChance(0.9, balance.crit)).toBe(0.5);
   });
 
   it('fatias: erro | acerto | crítico (topo do dado)', () => {

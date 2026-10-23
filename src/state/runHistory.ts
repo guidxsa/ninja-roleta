@@ -74,6 +74,13 @@ export function updateRun(
   saveRuns(storage, runs, maxRuns);
 }
 
+/**
+ * O hardcore só libera depois de vencer uma run na dificuldade `unlockedBy` (ou no próprio hardcore).
+ */
+export function isHardcoreUnlocked(runs: RunRecord[], unlockedBy: Difficulty): boolean {
+  return runs.some((r) => r.status === 'victory' && (r.difficulty === unlockedBy || r.difficulty === 'hardcore'));
+}
+
 /** Ao carregar a página: toda run "em andamento" que sobrou foi abandonada (F5, aba fechada). */
 export function markAbandonedRuns(storage: KeyValueStorage, now: Date, maxRuns: number): number {
   let count = 0;

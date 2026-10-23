@@ -12,10 +12,11 @@ export type StatKey = 'hp' | AttackType | 'chakra' | 'speed';
 export type Stats = Record<StatKey, number>;
 
 // Passivas são comportamento (código); os parâmetros delas são dados.
+// Os estágios dos portões ficam em `balance.gates` (evoluem com o taijutsu, como o Sharingan com o nível).
 export type PassiveDef =
   | { kind: 'genjutsuResistance'; bonus: number }
   | { kind: 'preciseFist'; defensePierce: number }
-  | { kind: 'gates'; hpCostPct: number; taijutsuMult: number; turns: number }
+  | { kind: 'gates' }
   | { kind: 'vitality'; chakraPerTurn: number; hpPctPerTurn: number };
 
 export type AffinityRule =
@@ -28,7 +29,7 @@ export type DojutsuId = 'sharingan' | 'byakugan';
 
 export interface LineageDef {
   id: string;
-  /** Peso na 2ª roleta (linhagem especial). */
+  /** Peso na roleta de linhagem (a fatia "comum" tem `balance.origin.commonWeight`). */
   weight: number;
   /** Modificadores percentuais sobre o status base (0.2 = +20%). */
   modifiers: Partial<Stats>;
@@ -64,11 +65,16 @@ export interface TechniqueDef {
   healPct?: number;
   /** Aprendida sozinha ao atingir este nível (se a origem e o elemento permitirem). */
   minLevel?: number;
+  /** Só estas linhagens aprendem (ex.: combos avançados de taijutsu, só do prodígio). */
+  lineages?: string[];
   /** Só pode ser usada com este dōjutsu ativado. */
   requiresDojutsu?: DojutsuId;
   /** Ao acertar, drena esta quantidade do chakra do vilão. */
   chakraDrain?: number;
 }
+
+/** Golpe com lâmina: o crítico de espada causa sangramento; quem sangra toma mais dano de lâminas. */
+export type BladeKind = 'sword' | 'cutting';
 
 export interface VillainTechnique {
   id: string;
@@ -81,6 +87,7 @@ export interface VillainTechnique {
   /** Omitido = elemento do vilão. Taijutsu é sempre neutro. */
   element?: Element | null;
   debilitateTurns?: number;
+  blade?: BladeKind;
 }
 
 export interface VillainDef {
@@ -97,17 +104,60 @@ export interface VillainDef {
   /** Experiência que o jogador ganha ao derrotar o vilão (escala com a dificuldade dele). */
   xp: number;
   techniques: VillainTechnique[];
-  /** Passiva única do vilão (ex.: Gaara jinchuuriki, Orochimaru com cobras, Kabuto médico). */
+  /** Passiva única do vilão. */
   passive?: VillainPassive;
+  /** Versão da passiva no modo hardcore (substitui `passive`). */
+  hardcorePassive?: VillainPassive;
+}
+
+/** Manto: abaixo do limiar de HP, uma vez por luta, por alguns turnos (jinchuuriki, marca da maldição). */
+export interface CloakDef {
+  hpThresholdPct: number;
+  /** Multiplica dano e defesas do vilão enquanto ativo. */
+  statMult: number;
+  /** Fração do HP máximo recuperada no início de cada rodada, enquanto ativo. */
+  regenPct: number;
+  /** Fração do dano causado que volta como dano no próprio vilão (nunca o derruba). */
+  recoilPct: number;
+  turns: number;
 }
 
 export type VillainPassive =
-  /** Uma vez por luta, abaixo do limiar de HP: cura uma parte e causa mais dano por alguns turnos. */
-  | { kind: 'beastSurge'; hpThresholdPct: number; healPct: number; damageMult: number; turns: number }
-  /** Golpes que acertam um jogador sem veneno aplicam veneno (cai 1 por rodada). */
-  | { kind: 'snakeSummon'; poison: number }
-  /** Abaixo do limiar de HP, troca o ataque por uma cura (no máximo `maxUses` por luta). */
-  | { kind: 'medical'; hpThresholdPct: number; healPct: number; chakraCost: number; maxUses: number };
+  /** Enganador: sobrevive ao primeiro golpe fatal com 1 de HP e perde a vez acovardado
+   * (`counterCrit`: no lugar de perder a vez, o próximo ataque dele é crítico garantido). */
+  | { kind: 'trickster'; counterCrit?: boolean }
+  /** Espelhos: `actions` ações por turno, cada uma com `damageMult` do dano. */
+  | { kind: 'mirrors'; actions: number; damageMult: number }
+  /** Névoa oculta: começa a luta na névoa; a chance de erro do jogador × `evasionMult`.
+   * `lastStand` (hardcore): ao tomar o golpe fatal, volta com parte do HP, mais forte e fazendo sangrar. */
+  | {
+      kind: 'mist';
+      turns: number;
+      evasionMult: number;
+      lastStand?: { healPct: number; damageMult: number };
+    }
+  /** Jinchuuriki ou marca da maldição. `defenseMult` (hardcore) vale a luta toda. */
+  | {
+      kind: 'cloak';
+      variant: 'beast' | 'curseMark';
+      cloak: CloakDef;
+      genjutsuImmune: boolean;
+      fromStart?: boolean;
+      defenseMult?: number;
+    }
+  /** Bisturi: cura passiva por rodada; no hardcore os golpes fazem sangrar e furam a resistência. */
+  | { kind: 'scalpel'; regenPct: number; bleedOnHit?: boolean; resistancePierce?: number }
+  /** Insano: cobra (veneno nos acertos). Abaixo do limiar de HP, se não for derrotado em `killWindow`
+   * rodadas, revive com o maior entre `reviveMinPct` do HP máximo e `reviveCurrentMult` × o HP atual. */
+  | {
+      kind: 'insane';
+      snakeBonus: number;
+      hpThresholdPct: number;
+      killWindow: number;
+      reviveMinPct: number;
+      reviveCurrentMult: number;
+      reviveFull?: boolean;
+    };
 
 export interface Origin {
   lineageId: string | null;

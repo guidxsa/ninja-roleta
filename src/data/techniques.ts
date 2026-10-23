@@ -8,15 +8,15 @@ import { balance } from './balance';
 export const basicTechniques: Record<AttackType, TechniqueDef[]> = {
   taijutsu: [
     { id: 'basicTaijutsu', type: 'taijutsu', element: null, ...balance.basicActions.taijutsu },
-    // Taijutsu fortalecido: gasta chakra para bater mais forte.
-    { id: 'empoweredTaijutsu', type: 'taijutsu', element: null, ...balance.basicActions.empoweredTaijutsu },
   ],
   ninjutsu: [{ id: 'basicNinjutsu', type: 'ninjutsu', element: 'affinity', ...balance.basicActions.ninjutsu }],
   genjutsu: [{ id: 'basicGenjutsu', type: 'genjutsu', element: null, ...balance.basicActions.genjutsu }],
 };
 
-// Técnicas aprendíveis (via recompensa). Nomes de trabalho. Taijutsu não gasta chakra.
+// Técnicas aprendíveis (via recompensa e guru). Nomes de trabalho. Taijutsu não gasta chakra (exceto o fortalecido).
 export const techniques: TechniqueDef[] = [
+  // Taijutsu fortalecido: gasta chakra para bater mais forte. Ninguém nasce com ele: sai na recompensa.
+  { id: 'empoweredTaijutsu', type: 'taijutsu', element: null, ...balance.basicActions.empoweredTaijutsu },
   { id: 'leafWhirlwind', type: 'taijutsu', element: null, baseDamage: 13, chakraCost: 0 },
   { id: 'fireball', type: 'ninjutsu', element: 'fire', baseDamage: 16, chakraCost: 4 },
   { id: 'windBlade', type: 'ninjutsu', element: 'wind', baseDamage: 15, chakraCost: 3 },
@@ -42,11 +42,12 @@ export const techniques: TechniqueDef[] = [
 /**
  * Técnicas de nível: aprendidas sozinhas ao atingir `minLevel`, se a origem permitir o tipo e o
  * jogador dominar o elemento. Mais fortes, porém mais caras (inclusive as de taijutsu).
+ * Os combos avançados de taijutsu são só do prodígio do taijutsu.
  * Genjutsu de nível só para quem já usa genjutsu (Uchiha, ou quem aprendeu um).
  */
 export const levelTechniques: TechniqueDef[] = [
-  { id: 'whirlwindCombo', type: 'taijutsu', element: null, baseDamage: 20, chakraCost: 5, minLevel: 4 },
-  { id: 'hiddenLotus', type: 'taijutsu', element: null, baseDamage: 30, chakraCost: 9, minLevel: 7 },
+  { id: 'whirlwindCombo', type: 'taijutsu', element: null, baseDamage: 20, chakraCost: 5, minLevel: 4, lineages: ['taijutsuProdigy'] },
+  { id: 'hiddenLotus', type: 'taijutsu', element: null, baseDamage: 30, chakraCost: 9, minLevel: 7, lineages: ['taijutsuProdigy'] },
 
   { id: 'phoenixFlower', type: 'ninjutsu', element: 'fire', baseDamage: 24, chakraCost: 6, minLevel: 4 },
   { id: 'galeBlast', type: 'ninjutsu', element: 'wind', baseDamage: 23, chakraCost: 5, minLevel: 4 },

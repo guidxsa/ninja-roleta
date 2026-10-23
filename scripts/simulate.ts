@@ -33,8 +33,8 @@ const pad = (s: string, n: number) => s.padEnd(n);
 const pct = (x: number) => `${Math.round(x * 100)}%`.padStart(4);
 
 console.log(`\nSimulação: ${fights} lutas por célula, seed ${seed}`);
-console.log('Cada luta com jogador recém-criado (nível 1, 1 item de retorno), sem recompensas.\n');
-console.log('Célula = vitória% / rodadas médias / itens de retorno usados por luta\n');
+console.log('Cada luta com jogador recém-criado (nível 1, 1 Vontade do Fogo), sem recompensas.\n');
+console.log('Célula = vitória% / rodadas médias / Vontades do Fogo usadas por luta\n');
 
 const colWidth = 18;
 console.log(pad('', 16) + villains.map((v) => pad(ptBR.villains[v.id] ?? v.id, colWidth)).join(''));
@@ -71,7 +71,7 @@ for (const difficulty of difficulties) {
   const fightOrder = campaign.flatMap((st) => st.villains);
   for (let i = 0; i < runs; i++) {
     const { origin } = rollOrigin(rng, gameData);
-    const result = runCampaign(createPlayer(origin, gameData), campaign, villainsById, rng, gameData, difficulty);
+    const result = runCampaign(createPlayer(origin, gameData, difficulty), campaign, villainsById, rng, gameData, difficulty);
     allRounds += result.rounds.reduce((a, b) => a + b, 0);
     fightCount += result.rounds.length;
     result.levels.forEach((lv, k) => {

@@ -1,4 +1,4 @@
-import type { LevelStatId } from '../data/events';
+import type { Difficulty } from './difficulty';
 import type { GameData } from './gameData';
 import type {
   AttackStats,
@@ -26,6 +26,8 @@ export interface PlayerState {
   level: number;
   /** XP acumulado rumo ao próximo nível (zera ao subir). No teto, fica em 0. */
   xp: number;
+  /** HP e chakra máximos ganhos por nível (e por estágio de status), conforme a dificuldade. */
+  growth: { hp: number; chakra: number };
   maxHp: number;
   hp: number;
   maxChakra: number;
@@ -57,11 +59,17 @@ export interface PlayerState {
   forbiddenAttackTypes: AttackType[];
   passive: PassiveDef | null;
   jinchuuriki: boolean;
+  /** Ensinado pelo guru: uma vez por luta, ativa um crítico garantido no próximo ataque. */
+  focusCrit: boolean;
   revives: number;
   revivesUsed: number;
 }
 
-export function createPlayer(origin: Origin, data: GameData): PlayerState {
+export function createPlayer(
+  origin: Origin,
+  data: GameData,
+  difficulty: Difficulty = data.balance.difficulty.default,
+): PlayerState {
   const { balance } = data;
   const lineage = origin.lineageId ? data.lineages.find((l) => l.id === origin.lineageId) : undefined;
   if (origin.lineageId && !lineage) throw new Error(`Linhagem desconhecida: ${origin.lineageId}`);
@@ -81,6 +89,7 @@ export function createPlayer(origin: Origin, data: GameData): PlayerState {
     origin,
     level: 1,
     xp: 0,
+    growth: { ...balance.level.growth[difficulty] },
     maxHp,
     hp: maxHp,
     maxChakra,
@@ -101,12 +110,18 @@ export function createPlayer(origin: Origin, data: GameData): PlayerState {
     forbiddenAttackTypes: [...forbidden],
     passive: lineage?.passive ?? null,
     jinchuuriki: origin.jinchuuriki,
+    focusCrit: false,
     revives: balance.revive.initialItems,
     revivesUsed: 0,
   }, data);
 }
 
-/** Restaura HP e chakra (item de retorno, ou entre etapas da campanha). */
+/** Troca a dificuldade antes da primeira luta (muda o ganho de HP e chakra por nível). */
+export function withDifficulty(player: PlayerState, difficulty: Difficulty, data: GameData): PlayerState {
+  return { ...player, growth: { ...data.balance.level.growth[difficulty] } };
+}
+
+/** Restaura HP e chakra (Vontade do Fogo, ou entre etapas da campanha). */
 export function fullRestore(player: PlayerState): PlayerState {
   return { ...player, hp: player.maxHp, chakra: player.maxChakra };
 }
@@ -126,6 +141,7 @@ export function learnTechnique(player: PlayerState, techniqueId: string, data: G
     throw new Error(`Esta origem não aprende técnicas de ${tech.type}`);
   }
   if (!knowsElement(player, tech.element)) throw new Error(`O jogador não domina o elemento ${tech.element}`);
+  if (!lineageAllows(player, tech)) throw new Error(`Esta origem não aprende ${tech.id}`);
   if (player.techniques.includes(tech.id)) return player;
   return grantLevelTechniques({ ...player, techniques: [...player.techniques, tech.id] }, data);
 }
@@ -158,9 +174,15 @@ export function pendingLevelTechniques(player: PlayerState, data: GameData): str
         (t.minLevel ?? 1) <= player.level &&
         !player.techniques.includes(t.id) &&
         canUseType(player, t.type, data) &&
-        knowsElement(player, t.element),
+        knowsElement(player, t.element) &&
+        lineageAllows(player, t),
     )
     .map((t) => t.id);
+}
+
+/** Técnica exclusiva de linhagem (ex.: combos avançados do prodígio) só serve a quem é dela. */
+export function lineageAllows(player: PlayerState, tech: TechniqueDef): boolean {
+  return !tech.lineages || (player.origin.lineageId !== null && tech.lineages.includes(player.origin.lineageId));
 }
 
 /** Aprende as técnicas de nível já liberadas. */
@@ -182,11 +204,6 @@ export function medicalHealPct(player: PlayerState, data: GameData): number {
   return (tech.healPct ?? 0) + (player.techniqueLevels.medical ?? 0) * data.balance.techniqueUpgrade.healPctPerLevel;
 }
 
-/** Status que a roleta de nível pode sortear: tira os tipos de ataque proibidos pela origem. */
-export function levelUpPool(player: PlayerState, data: GameData) {
-  return data.levelUpStats.filter((s) => !player.forbiddenAttackTypes.includes(s.id as AttackType));
-}
-
 /** XP para sair de `level` e ir ao próximo. `null` no teto de nível. */
 export function xpToNextLevel(level: number, data: GameData): number | null {
   const cfg = data.balance.level;
@@ -194,7 +211,7 @@ export function xpToNextLevel(level: number, data: GameData): number | null {
   return cfg.xpBase + cfg.xpGrowth * (level - 1);
 }
 
-/** Soma XP. Não sobe de nível sozinho: enquanto `canLevelUp`, a UI gira a roleta de nível. */
+/** Soma XP. Não sobe de nível sozinho: enquanto `canLevelUp`, a UI mostra uma subida por vez. */
 export function gainXp(player: PlayerState, amount: number, data: GameData): PlayerState {
   if (xpToNextLevel(player.level, data) === null) return { ...player, xp: 0 };
   return { ...player, xp: player.xp + amount };
@@ -206,37 +223,28 @@ export function canLevelUp(player: PlayerState, data: GameData): boolean {
 }
 
 /**
- * Sobe 1 nível, gastando o XP do nível: HP e chakra máximos sobem sempre, `stat` recebe o bônus
- * da roleta de nível e HP e chakra são restaurados por completo (o único gatilho de recuperação
- * fora do item de retorno). Técnicas de nível liberadas são aprendidas na hora.
+ * Sobe 1 nível, gastando o XP do nível: HP e chakra máximos sobem (`growth`, pela dificuldade) e
+ * são restaurados por completo (o único gatilho de recuperação fora da Vontade do Fogo).
+ * Técnicas de nível liberadas são aprendidas na hora.
  */
-export function applyLevelUp(player: PlayerState, stat: LevelStatId, data: GameData): PlayerState {
+export function applyLevelUp(player: PlayerState, data: GameData): PlayerState {
   const cfg = data.balance.level;
   if (!canLevelUp(player, data)) throw new Error('XP insuficiente ou nível máximo');
-  const gain = cfg.statGains[stat];
-  const hp = cfg.hpPerLevel + (stat === 'hp' ? gain : 0);
-  const chakra = cfg.chakraPerLevel + (stat === 'chakra' ? gain : 0);
   const level = player.level + 1;
   const leftover = player.xp - xpToNextLevel(player.level, data)!;
   const p: PlayerState = {
     ...player,
     level,
     xp: level >= cfg.cap ? 0 : leftover,
-    maxHp: player.maxHp + hp,
-    maxChakra: player.maxChakra + chakra,
+    maxHp: player.maxHp + player.growth.hp,
+    maxChakra: player.maxChakra + player.growth.chakra,
   };
-  if (stat === 'taijutsu' || stat === 'ninjutsu' || stat === 'genjutsu') {
-    if (!p.forbiddenAttackTypes.includes(stat)) p.offense = { ...p.offense, [stat]: p.offense[stat] + gain };
-  } else if (stat === 'speed') {
-    p.speed += gain;
-  } else if (stat === 'resistance') {
-    p.resistanceBonus += gain;
-  }
   return grantLevelTechniques(fullRestore(p), data);
 }
 
 /**
- * Sobe `n` estágios em todos os status. HP e chakra atuais sobem junto com o máximo.
+ * Sobe `n` estágios em todos os status. HP e chakra máximos sobem o mesmo que numa subida de nível,
+ * e os atuais sobem junto com o máximo.
  * Tipos proibidos pela origem (ex.: ninjutsu do prodígio do taijutsu) continuam zerados.
  */
 export function applyStatStages(player: PlayerState, n: number, data: GameData): PlayerState {
@@ -249,9 +257,19 @@ export function applyStatStages(player: PlayerState, n: number, data: GameData):
     ...player,
     offense,
     speed: player.speed + st.speed * n,
-    maxHp: player.maxHp + st.hp * n,
-    hp: player.hp + st.hp * n,
-    maxChakra: player.maxChakra + st.chakra * n,
-    chakra: player.chakra + st.chakra * n,
+    maxHp: player.maxHp + player.growth.hp * n,
+    hp: player.hp + player.growth.hp * n,
+    maxChakra: player.maxChakra + player.growth.chakra * n,
+    chakra: player.chakra + player.growth.chakra * n,
   };
+}
+
+/** Maior portão liberado pelo atributo de taijutsu (1, 2, 3...). 0 = não tem portões ou não liberou. */
+export function gatesStage(player: PlayerState, data: GameData): number {
+  if (player.passive?.kind !== 'gates') return 0;
+  let stage = 0;
+  data.balance.gates.stages.forEach((st, i) => {
+    if (player.offense.taijutsu >= st.minTaijutsu) stage = i + 1;
+  });
+  return stage;
 }

@@ -29,9 +29,9 @@ export function genjutsuHitChance(
   return clamp(cfg.base + (attackerGenjutsu - defenderGenjutsu) * cfg.perPoint, cfg.min, cfg.max);
 }
 
-/** chance_crítico = base (5%) + diferencial_de_dano_% */
-export function critChance(critBonus: number, baseChance: number): number {
-  return clamp(baseChance + critBonus, 0, 1);
+/** chance_crítico = base (5%) + diferencial_de_dano_%, no máximo `max` (50%). */
+export function critChance(critBonus: number, cfg: { baseChance: number; max: number }): number {
+  return clamp(cfg.baseChance + critBonus, 0, cfg.max);
 }
 
 /**

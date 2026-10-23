@@ -2,6 +2,7 @@ import {
   actionTechniqueId,
   attackPreview,
   availableActions,
+  canFocus,
   playerGenjutsuHitChance,
   playerGenjutsuTurns,
   type BattleState,
@@ -19,6 +20,7 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
     return id ? data.techniquesById[id]! : null;
   };
 
+  // Portões gastam o turno: abre cedo, com HP sobrando, para aproveitar as 5 rodadas.
   if (actions.includes('gates') && p.hp > p.maxHp * 0.5) return 'gates';
   if (actions.includes('medical') && p.hp < p.maxHp * 0.4) return 'medical';
   // Dōjutsu: ativa logo, se sobrar chakra para lutar depois.
@@ -60,4 +62,11 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
     }
   }
   return best;
+}
+
+/** Foco do guru: gasta no primeiro ataque com dano (o jogador automático não guarda para depois). */
+export function shouldFocus(state: BattleState, action: PlayerAction, data: GameData): boolean {
+  if (!canFocus(state)) return false;
+  const id = actionTechniqueId(action);
+  return id !== null && data.techniquesById[id]!.type !== 'genjutsu';
 }

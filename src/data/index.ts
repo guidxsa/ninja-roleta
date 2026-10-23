@@ -1,7 +1,7 @@
 import type { GameData } from '../core/gameData';
 import { balance } from './balance';
 import { BEATS, elementWeights } from './elements';
-import { encounters, items, levelUpStats, preFightEvents, rewards, summonAnimals } from './events';
+import { akatsukiOutcomes, guruOutcomes, items, preFightEvents, rewards, summonAnimals } from './events';
 import { lineages } from './lineages';
 import { basicTechniques, levelTechniques, techniques, techniquesById } from './techniques';
 
@@ -16,8 +16,8 @@ export const gameData: GameData = {
   levelTechniques,
   preFightEvents,
   items,
-  encounters,
+  akatsukiOutcomes,
+  guruOutcomes,
   summonAnimals,
   rewards,
-  levelUpStats,
 };

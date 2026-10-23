@@ -38,7 +38,7 @@ for (const o of origins) {
     let wins = 0;
     const stops = new Map<string, number>();
     for (let i = 0; i < runs; i++) {
-      const r = runCampaign(createPlayer(o.make(i), gameData), campaign, villainsById, rng, gameData, d);
+      const r = runCampaign(createPlayer(o.make(i), gameData, d), campaign, villainsById, rng, gameData, d);
       if (r.won) wins++;
       else stops.set(r.villainReached!, (stops.get(r.villainReached!) ?? 0) + 1);
     }

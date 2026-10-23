@@ -2,11 +2,11 @@ import { playRound, startBattle, type BattleOptions, type BattleState } from '..
 import type { GameData } from '../core/gameData';
 import { scaleVillain, type Difficulty } from '../core/difficulty';
 import { canLevelUp, fullRestore, gainXp, type PlayerState } from '../core/player';
-import { levelUp, rollLevelUp } from '../core/progression';
+import { levelUp } from '../core/progression';
 import type { Rng } from '../core/rng';
 import type { VillainDef } from '../core/types';
 import type { Stage } from '../data/campaign';
-import { choosePlayerAction } from './policy';
+import { choosePlayerAction, shouldFocus } from './policy';
 
 /** Teto de segurança contra lutas infinitas (ex.: ambos só descansando). */
 export const MAX_ROUNDS = 200;
@@ -20,15 +20,16 @@ export function runBattle(
 ): BattleState {
   let state = startBattle(player, villain, options);
   while (state.status === 'ongoing' && state.round < MAX_ROUNDS) {
-    state = playRound(state, choosePlayerAction(state, data), rng, data);
+    const action = choosePlayerAction(state, data);
+    state = playRound(state, action, rng, data, shouldFocus(state, action, data));
   }
   return state;
 }
 
-/** Ganha o XP do vilão derrotado e gira a roleta de nível enquanto houver nível para subir. */
-export function awardXp(player: PlayerState, villain: VillainDef, rng: Rng, data: GameData): PlayerState {
+/** Ganha o XP do vilão derrotado e sobe de nível enquanto houver XP para isso. */
+export function awardXp(player: PlayerState, villain: VillainDef, data: GameData): PlayerState {
   let p = gainXp(player, villain.xp, data);
-  while (canLevelUp(p, data)) p = levelUp(p, rollLevelUp(p, rng, data).value, data).player;
+  while (canLevelUp(p, data)) p = levelUp(p, data).player;
   return p;
 }
 
@@ -45,7 +46,7 @@ export interface CampaignResult {
 
 /**
  * Campanha com XP e subida de nível, sem eventos nem recompensas: mede a curva de dificuldade.
- * No exame, como no jogo, perder não encerra a run nem gasta item de retorno; só vencer dá XP.
+ * No exame, como no jogo, perder não encerra a run nem gasta a Vontade do Fogo; só vencer dá XP.
  */
 export function runCampaign(
   initial: PlayerState,
@@ -68,7 +69,7 @@ export function runCampaign(
         const result = runBattle(player, villain(villainId), rng, data, { allowRevive: false });
         rounds.push(result.round);
         player = { ...result.player, hp: Math.max(1, result.player.hp) };
-        if (result.status === 'won') player = awardXp(player, villainsById[villainId]!, rng, data);
+        if (result.status === 'won') player = awardXp(player, villainsById[villainId]!, data);
       }
       if (data.balance.campaign.restoreBetweenStages) player = fullRestore(player);
       continue;
@@ -81,7 +82,7 @@ export function runCampaign(
       if (result.status !== 'won') {
         return { won: false, stageReached: i, villainReached: villainId, revivesUsed: player.revivesUsed, rounds, levels };
       }
-      player = awardXp(player, villainsById[villainId]!, rng, data);
+      player = awardXp(player, villainsById[villainId]!, data);
     }
     if (data.balance.campaign.restoreBetweenStages) player = fullRestore(player);
   }

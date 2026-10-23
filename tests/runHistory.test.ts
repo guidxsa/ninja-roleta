@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   RUNS_STORAGE_KEY,
+  isHardcoreUnlocked,
   loadRuns,
   markAbandonedRuns,
   startRun,
@@ -57,5 +58,19 @@ describe('histórico de runs', () => {
     const st = memoryStorage();
     st.data.set(RUNS_STORAGE_KEY, '{oops');
     expect(loadRuns(st)).toEqual([]);
+  });
+});
+
+describe('hardcore', () => {
+  it('só libera depois de vencer uma run no Difícil (ou no próprio hardcore)', () => {
+    const st = memoryStorage();
+    startRun(st, { id: 'a', origin, now }, 100);
+    updateRun(st, 'a', { status: 'victory', difficulty: 'normal' }, now, 100);
+    startRun(st, { id: 'b', origin, now }, 100);
+    updateRun(st, 'b', { status: 'defeat', difficulty: 'hard' }, now, 100);
+    expect(isHardcoreUnlocked(loadRuns(st), 'hard')).toBe(false);
+    startRun(st, { id: 'c', origin, now }, 100);
+    updateRun(st, 'c', { status: 'victory', difficulty: 'hard' }, now, 100);
+    expect(isHardcoreUnlocked(loadRuns(st), 'hard')).toBe(true);
   });
 });

@@ -3,51 +3,43 @@ import type { SummonAnimal } from '../core/types';
 // Roletas fora do combate. Textos visíveis ficam em strings/ptBR.ts. Pesos provisórios.
 
 export type PreFightEventId =
-  | 'nothing'
+  | 'summon'
   | 'oldLady'
   | 'ramen'
-  | 'mysteriousEncounter'
+  | 'akatsuki'
   | 'training'
   | 'jokenpo'
-  | 'foundItem';
+  | 'foundItem'
+  | 'guru';
 
 export type ItemId = 'revive' | 'ninjaTool' | 'techniqueScroll' | 'resistanceItem' | 'speedItem';
 
-export type EncounterId = 'akatsuki' | 'summon';
+/** Encontro com a Akatsuki: o jinchuuriki é caçado (ou passa despercebido); os outros assistem (ou se metem). */
+export type AkatsukiOutcome = 'hunted' | 'unnoticed' | 'insight' | 'meddled';
+
+/** Encontro com o guru: charlatão, técnica nova ou o segredo do crítico garantido. */
+export type GuruOutcome = 'charlatan' | 'technique' | 'focus';
 
 export type RewardId = 'stages' | 'newTechnique' | 'techniqueUpgrade' | 'resistance' | 'critBonus' | 'item';
-
-/** Status que a roleta de nível pode melhorar. Quanto de cada: `balance.level.statGains`. */
-export type LevelStatId = 'taijutsu' | 'ninjutsu' | 'genjutsu' | 'speed' | 'hp' | 'chakra' | 'resistance';
 
 export interface Weighted<T> {
   id: T;
   weight: number;
 }
 
-/** Roleta de nível. Status proibidos pela origem (ex.: ninjutsu do prodígio) saem da roleta. */
-export const levelUpStats: Weighted<LevelStatId>[] = [
-  { id: 'taijutsu', weight: 2 },
-  { id: 'ninjutsu', weight: 2 },
-  { id: 'genjutsu', weight: 2 },
-  { id: 'speed', weight: 2 },
-  { id: 'hp', weight: 2 },
-  { id: 'chakra', weight: 1 },
-  { id: 'resistance', weight: 1 },
-];
-
 /** Roleta pré-vilão. Pesos fixos nesta versão (os status não alteram as fatias). */
 export const preFightEvents: Weighted<PreFightEventId>[] = [
-  { id: 'nothing', weight: 10 },
+  { id: 'summon', weight: 10 },
   { id: 'oldLady', weight: 10 },
   { id: 'ramen', weight: 10 },
-  { id: 'mysteriousEncounter', weight: 10 },
+  { id: 'akatsuki', weight: 10 },
   { id: 'training', weight: 20 },
   { id: 'jokenpo', weight: 20 },
-  { id: 'foundItem', weight: 20 },
+  { id: 'foundItem', weight: 10 },
+  { id: 'guru', weight: 10 },
 ];
 
-/** Sugestão inicial: pesos iguais, item de retorno um pouco mais raro. */
+/** Sugestão inicial: pesos iguais, Vontade do Fogo um pouco mais rara. */
 export const items: Weighted<ItemId>[] = [
   { id: 'revive', weight: 2 },
   { id: 'ninjaTool', weight: 3 },
@@ -56,9 +48,22 @@ export const items: Weighted<ItemId>[] = [
   { id: 'speedItem', weight: 3 },
 ];
 
-export const encounters: Weighted<EncounterId>[] = [
-  { id: 'akatsuki', weight: 1 },
-  { id: 'summon', weight: 1 },
+export const akatsukiOutcomes: { jinchuuriki: Weighted<AkatsukiOutcome>[]; others: Weighted<AkatsukiOutcome>[] } = {
+  jinchuuriki: [
+    { id: 'hunted', weight: 70 },
+    { id: 'unnoticed', weight: 30 },
+  ],
+  others: [
+    { id: 'insight', weight: 70 },
+    { id: 'meddled', weight: 30 },
+  ],
+};
+
+/** Sem técnica ofensiva para ensinar (ou já sabendo o crítico garantido), a fatia some. */
+export const guruOutcomes: Weighted<GuruOutcome>[] = [
+  { id: 'charlatan', weight: 30 },
+  { id: 'technique', weight: 50 },
+  { id: 'focus', weight: 20 },
 ];
 
 export const summonAnimals: Weighted<SummonAnimal>[] = [

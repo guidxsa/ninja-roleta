@@ -3,7 +3,7 @@ import type { Rng } from './rng';
 import { chanceSlices, spin, type Slice } from './roulette';
 import type { Element, Origin } from './types';
 
-export type OriginStepKind = 'lineageTier' | 'lineage' | 'affinity' | 'jinchuuriki';
+export type OriginStepKind = 'lineage' | 'affinity' | 'jinchuuriki';
 
 /** Uma roleta girada na criação, com as fatias e o resultado, para a UI animar. */
 export interface OriginStep {
@@ -17,6 +17,9 @@ export interface OriginRoll {
   steps: OriginStep[];
 }
 
+/** Valor da fatia "comum" na roleta de linhagem. */
+export const COMMON_LINEAGE = 'common';
+
 function step(kind: OriginStepKind, slices: Slice<string>[], rng: Rng): OriginStep {
   return { kind, slices, index: spin(slices, rng).index };
 }
@@ -27,31 +30,29 @@ function stepValue(s: OriginStep): string {
 
 /**
  * Sequência de rolagens da origem:
- * 1. comum ou especial; 2a. comum: afinidade; 2b. especial: qual linhagem (+ afinidade se a linhagem rolar);
+ * 1. linhagem: uma roleta só, com a fatia comum e as linhagens especiais;
+ * 2. afinidade, se a linhagem rolar (comuns, Hyuuga, Uzumaki);
  * 3. jinchuuriki, independente das anteriores.
  */
 export function rollOrigin(rng: Rng, data: GameData): OriginRoll {
   const { origin: cfg } = data.balance;
   const steps: OriginStep[] = [];
 
-  const tier = step(
-    'lineageTier',
-    chanceSlices(cfg.specialLineageChance, { label: 'special', value: 'special' }, { label: 'common', value: 'common' }),
+  const lineageStep = step(
+    'lineage',
+    [
+      { label: COMMON_LINEAGE, weight: cfg.commonWeight, value: COMMON_LINEAGE },
+      ...data.lineages.map((l) => ({ label: l.id, weight: l.weight, value: l.id })),
+    ],
     rng,
   );
-  steps.push(tier);
+  steps.push(lineageStep);
 
   let lineageId: string | null = null;
   let affinity: Element | null = null;
   let rollAffinity = true;
 
-  if (stepValue(tier) === 'special') {
-    const lineageStep = step(
-      'lineage',
-      data.lineages.map((l) => ({ label: l.id, weight: l.weight, value: l.id })),
-      rng,
-    );
-    steps.push(lineageStep);
+  if (stepValue(lineageStep) !== COMMON_LINEAGE) {
     lineageId = stepValue(lineageStep);
     const lineage = data.lineages.find((l) => l.id === lineageId)!;
     if (lineage.affinity.kind === 'fixed') {
