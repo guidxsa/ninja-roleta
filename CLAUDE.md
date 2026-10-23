@@ -157,7 +157,7 @@ Notas:
 ### Combate
 
 - Por turnos, com RNG em vários pontos.
-- **Iniciativa**: sorteio ponderado por speed com fórmula **quadrática**: `chance_A = a² / (a² + b²)` (5 vs 3 ≈ 74%). É rolada apenas no início do combate e determina a ordem do combate inteiro. Vantagem/desvantagem de ação (eventos) troca só a ordem da 1ª rodada.
+- **Iniciativa**: sorteio ponderado por speed com fórmula **quadrática**: `chance_A = a² / (a² + b²)` (5 vs 3 ≈ 74%). É rolada apenas no início do combate e determina a ordem do combate inteiro. Vantagem/desvantagem de ação (eventos) substitui a roleta de iniciativa: define quem ataca primeiro na luta.
 - **Elementos**: multiplicador de 1,5x / 0,75x aplicado ao dano.
 - **Crítico**: multiplicador de **2x**.
 
@@ -303,8 +303,8 @@ Antes de cada vilão, uma roleta sorteia um evento. Em blocos com várias lutas 
 | Peso | Evento | Efeito |
 |---|---|---|
 | 10% | **Encontro com invocações** | Ver "Invocação" abaixo. |
-| 10% | **Ajudou uma velhinha e se atrasou** | Desvantagem de ação: o vilão age primeiro no 1º turno (sem rolar iniciativa). |
-| 10% | **Ramen muito bom** | Vantagem de ação: o jogador age primeiro no 1º turno. |
+| 10% | **Ajudou uma velhinha e se atrasou** | Desvantagem de ação: o vilão ataca primeiro na próxima luta (sem rolar iniciativa). |
+| 10% | **Ramen muito bom** | Vantagem de ação: o jogador ataca primeiro na próxima luta (sem rolar iniciativa). |
 | 10% | **Encontro com a Akatsuki** | Gira a roleta da Akatsuki (ver abaixo). |
 | 20% | **Treino** | Sobe **1 estágio** em todos os status. |
 | 20% | **Jokenpô com um companheiro de vila** | Mini-jogo (ver abaixo). |
@@ -314,7 +314,7 @@ Antes de cada vilão, uma roleta sorteia um evento. Em blocos com várias lutas 
 
 Os pesos são fixos nesta versão (os status não alteram as fatias).
 
-Efeitos de "vantagem/desvantagem de ação" valem só para o **1º turno** da próxima luta.
+Efeitos de "vantagem/desvantagem de ação" valem para a **próxima luta contra vilão** (no bloco Haku/Zabuza, só a 1ª luta; o exame não consome): substituem a roleta de iniciativa.
 
 #### Estágio de status
 
@@ -327,7 +327,7 @@ Para o prodígio do taijutsu, ninjutsu e genjutsu continuam zerados (o estágio 
 - O jogador escolhe pedra, papel ou tesoura com um toque; o companheiro escolhe por `rng` (1/3 cada).
 - **Vitória**: sobe **2 estágios** em todos os status.
 - **Empate**: nada acontece (sem revanche).
-- **Derrota**: desvantagem de ação na próxima luta (o jogador age em segundo no 1º turno).
+- **Derrota**: desvantagem de ação na próxima luta (o vilão ataca primeiro).
 
 #### Roleta de itens
 

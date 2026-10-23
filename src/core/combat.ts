@@ -94,9 +94,9 @@ export interface VillainState {
 export interface BattleOptions {
   /** false no exame chunin: a Vontade do Fogo não é consumida e perder só encerra a luta. */
   allowRevive: boolean;
-  /** Vantagem de ação (ramen): o jogador age primeiro na 1ª rodada. */
+  /** Vantagem de ação (ramen): o jogador age primeiro, sem rolar iniciativa. */
   playerStartsFirst: boolean;
-  /** Desvantagem de ação (velhinha, derrota no jokenpô, guru charlatão): o vilão age primeiro na 1ª rodada. */
+  /** Desvantagem de ação (velhinha, derrota no jokenpô, guru charlatão): o vilão age primeiro, sem rolar iniciativa. */
   villainStartsFirst: boolean;
   /** Buff temporário do vilão (evento pré-luta). */
   villainDamageMult: number;
@@ -160,7 +160,7 @@ export interface BattleState {
   playerFx: PlayerFx;
   villain: VillainState;
   options: BattleOptions;
-  /** Quem age primeiro: rolado uma vez no início da luta, vale a luta toda (exceto a 1ª rodada com vantagem/desvantagem de ação). */
+  /** Quem age primeiro: rolado uma vez no início da luta (ou definido pela vantagem/desvantagem de ação), vale a luta toda. */
   initiative: Side | null;
   /** Log acumulado da luta, em ordem. A UI anima a partir dele. */
   log: BattleEvent[];
@@ -544,20 +544,20 @@ export function playRound(
   startOfRound(s, data);
   if (s.status !== 'ongoing') return s;
 
-  if (s.initiative === null) {
+  // Vantagem/desvantagem de ação substitui a roleta de iniciativa: define quem ataca primeiro na luta.
+  if (s.initiative === null && s.options.playerStartsFirst) {
+    s.initiative = 'player';
+    s.log.push({ type: 'ambush' });
+  } else if (s.initiative === null && s.options.villainStartsFirst) {
+    s.initiative = 'villain';
+    s.log.push({ type: 'late' });
+  } else if (s.initiative === null) {
     const speed = effectiveSpeed(s, data);
     const chance = initiativeChance(speed, s.villain.def.speed);
     s.initiative = rollInitiative(speed, s.villain.def.speed, rng) === 'a' ? 'player' : 'villain';
     s.log.push({ type: 'initiative', first: s.initiative, playerChance: chance });
   }
-  let playerFirst = s.initiative === 'player';
-  if (s.round === 1 && s.options.playerStartsFirst) {
-    s.log.push({ type: 'ambush' });
-    playerFirst = true;
-  } else if (s.round === 1 && s.options.villainStartsFirst) {
-    s.log.push({ type: 'late' });
-    playerFirst = false;
-  }
+  const playerFirst = s.initiative === 'player';
 
   if (focus) {
     s.playerFx.focusUsed = true;

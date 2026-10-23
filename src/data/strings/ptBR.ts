@@ -169,8 +169,8 @@ export const ptBR = {
   } as Record<string, { name: string; desc: string; hardcore: string }>,
   events: {
     summon: { name: 'Encontro com invocações', desc: 'Um animal quer firmar um contrato.' },
-    oldLady: { name: 'Ajudou uma velhinha', desc: 'Chegou atrasado: o vilão age primeiro no 1º turno.' },
-    ramen: { name: 'Ramen muito bom', desc: 'Cheio de energia: você age primeiro no 1º turno.' },
+    oldLady: { name: 'Ajudou uma velhinha', desc: 'Chegou atrasado: o vilão ataca primeiro na próxima luta.' },
+    ramen: { name: 'Ramen muito bom', desc: 'Cheio de energia: você ataca primeiro na próxima luta.' },
     akatsuki: { name: 'Encontro com a Akatsuki', desc: 'Gire a roleta do encontro.' },
     training: { name: 'Treino', desc: '+1 estágio em todos os status.' },
     jokenpo: { name: 'Jokenpô', desc: 'Um companheiro de vila te desafia.' },
@@ -275,7 +275,7 @@ export const ptBR = {
     companion: 'Companheiro',
     jokenpoWin: 'Vitória! +2 estágios em todos os status.',
     jokenpoDraw: 'Empate. Nada acontece.',
-    jokenpoLoss: 'Derrota. O vilão age primeiro no 1º turno.',
+    jokenpoLoss: 'Derrota. O vilão ataca primeiro na próxima luta.',
     inventory: 'Inventário',
     techniques: 'Técnicas',
     nextFight: 'Próxima luta',
@@ -372,8 +372,8 @@ export const ptBR = {
   },
   effects: {
     none: 'Nada muda.',
-    villainFirst: 'O vilão age primeiro no 1º turno da próxima luta.',
-    playerFirst: 'Você age primeiro no 1º turno da próxima luta.',
+    villainFirst: 'O vilão ataca primeiro na próxima luta.',
+    playerFirst: 'Você ataca primeiro na próxima luta.',
     stages: (n: number) => `+${n} estágio(s) em todos os status.`,
     revive: '+1 Vontade do Fogo.',
     ninjaTool: (level: number) =>
@@ -396,7 +396,7 @@ export const ptBR = {
     akatsukiInsight: (pct: number) =>
       `Eles procuram um jinchuuriki e passaram direto. Mas você assistiu à luta deles de longe e aprendeu a mirar nos pontos vitais: crítico +${pct}%.`,
     akatsukiUnnoticed: 'Você se escondeu bem: a Akatsuki passou sem te notar.',
-    guruCharlatan: 'Era um charlatão! Perdeu tempo: o vilão age primeiro no 1º turno.',
+    guruCharlatan: 'Era um charlatão! Perdeu tempo: o vilão ataca primeiro na próxima luta.',
     guruFocus: 'O guru te ensinou a concentrar a mira: 1×/luta, ative o foco e o próximo ataque é crítico.',
     levelUp: (level: number, hp: number, ck: number) =>
       `Nível ${level}! HP máx. +${hp} e chakra máx. +${ck}. HP e chakra restaurados.`,

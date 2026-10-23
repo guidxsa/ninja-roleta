@@ -562,7 +562,6 @@ async function originScreen(): Promise<void> {
   for (;;) {
     const roll = rollOrigin(rng, data);
     const runId = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
-    startRun(storage, { id: runId, origin: roll.origin, now: new Date() }, data.balance.history.maxRuns);
     // Hardcore bloqueado (ainda não venceu no Difícil): cai para a dificuldade padrão.
     const hardcoreOk = isHardcoreUnlocked(loadRuns(storage), data.balance.difficulty.hardcoreUnlockedBy);
     if (settings.difficulty === 'hardcore' && !hardcoreOk) settings.difficulty = DEFAULT_DIFFICULTY;
@@ -587,6 +586,8 @@ async function originScreen(): Promise<void> {
       chips.insertAdjacentHTML('beforeend', `<span class="chip pop">${stepResultText(step)}</span>`);
       await sleep(settings.instant ? 0 : 500);
     }
+    // Só registra depois das roletas: o histórico não pode revelar a origem antes da animação.
+    startRun(storage, { id: runId, origin: roll.origin, now: new Date() }, data.balance.history.maxRuns);
     slot.innerHTML = playerPanel(player);
     const after = root.querySelector<HTMLElement>('#after')!;
     after.innerHTML = `<div class="difficulty-box">

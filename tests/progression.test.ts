@@ -206,23 +206,26 @@ describe('encontros', () => {
 });
 
 describe('combate: efeitos de eventos', () => {
-  it('velhinha: o vilão age primeiro na 1ª rodada, mesmo ganhando a iniciativa; depois vale a iniciativa', () => {
+  it('velhinha: o vilão ataca primeiro a luta toda, sem rolar iniciativa', () => {
     const s0 = startBattle(createPlayer(common, gameData), testVillain({ hp: 200 }), { villainStartsFirst: true });
-    // 0.01 → o jogador ganha a iniciativa da luta.
-    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.01), gameData);
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(ofType(s1.log, 'late')).toHaveLength(1);
-    expect(s1.initiative).toBe('player');
+    expect(ofType(s1.log, 'initiative')).toHaveLength(0);
+    expect(s1.initiative).toBe('villain');
     expect(ofType(s1.log, 'attack')[0]!.side).toBe('villain');
     const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5), gameData);
-    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]!.side).toBe('player');
+    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]!.side).toBe('villain');
   });
 
-  it('ramen: o jogador age primeiro na 1ª rodada, mesmo perdendo a iniciativa', () => {
+  it('ramen: o jogador ataca primeiro a luta toda, sem rolar iniciativa', () => {
     const s0 = startBattle(createPlayer(common, gameData), testVillain({ hp: 200 }), { playerStartsFirst: true });
-    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.99, 0.5), gameData);
-    expect(s1.initiative).toBe('villain');
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(ofType(s1.log, 'ambush')).toHaveLength(1);
+    expect(ofType(s1.log, 'initiative')).toHaveLength(0);
+    expect(s1.initiative).toBe('player');
     expect(ofType(s1.log, 'attack')[0]!.side).toBe('player');
+    const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5), gameData);
+    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]!.side).toBe('player');
   });
 
   it('foco do guru: 1×/luta, o próximo ataque é crítico mesmo com um rng que erraria', () => {
