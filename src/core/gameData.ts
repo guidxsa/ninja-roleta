@@ -1,17 +1,16 @@
 import type { Balance } from '../data/balance';
 import type { AkatsukiOutcome, GuruOutcome, ItemId, PreFightEventId, RewardId, Weighted } from '../data/events';
-import type { AttackType, Element, LineageDef, SummonAnimal, TechniqueDef } from './types';
+import type { Element, LineageDef, SummonAnimal, TechniqueDef } from './types';
 
 /** Pacote de dados que o core recebe por parâmetro (nunca importa diretamente). */
 export interface GameData {
   balance: Balance;
+  /** Todas as origens da roleta, inclusive a comum (`id: 'common'`). */
   lineages: LineageDef[];
   elementWeights: Record<Element, number>;
   beats: Record<Element, Element>;
-  /** Ações básicas por tipo (o jogador só tem as dos tipos iniciais da origem). */
-  basicTechniques: Record<AttackType, TechniqueDef[]>;
   techniquesById: Record<string, TechniqueDef>;
-  /** Técnicas aprendíveis (pool da recompensa "nova técnica"). */
+  /** Técnicas aprendíveis (pool da recompensa "nova técnica" e do guru). */
   techniques: TechniqueDef[];
   /** Técnicas aprendidas sozinhas ao atingir um nível (`minLevel`). */
   levelTechniques: TechniqueDef[];

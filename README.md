@@ -16,14 +16,15 @@ Núcleo de regras (`src/core`) com testes, uma simulação em terminal para ajus
 npm install
 npm test                                   # testes das regras (Vitest)
 npm run typecheck                          # checagem de tipos
-npm run sim -- --fights 2000 --seed 42     # simulação de balanceamento
-npm run sim:origens -- --runs 300          # campanha completa por linhagem
+npm run sim -- --fights 2000 --seed 42     # simulação de balanceamento (--bare: sem eventos nem recompensas)
+npm run sim:origens -- --runs 300          # campanha completa por origem, com eventos e recompensas automáticos
 npm run proto                              # gera dist/prototipo.html (abre direto no navegador, funciona offline)
 ```
 
 ## Estrutura
 
 ```
+docs        design do jogo (regras e números de cada sistema)
 src/core    regras puras: roleta, origem, iniciativa, acerto, dano, elementos, combate
 src/data    números de balanceamento, linhagens, técnicas, vilões, campanha, textos (PT-BR)
 src/state   histórico de runs (localStorage injetável)
@@ -54,3 +55,4 @@ MIT. Veja o arquivo [LICENSE](LICENSE).
 | v0.7.0 | Linhagens reformuladas: status iniciais por linhagem, Sharingan (ativável, evolui com o nível, resistência a genjutsu) e Byakugan (golpes não erram, golpe inibidor de chakra). Skill set por categoria com abas na luta, taijutsu fortalecido que gasta chakra, técnicas aprendidas nos níveis 4 e 7. Só o Uchiha começa com genjutsu. Passivas de vilões: Gaara jinchuuriki, Kabuto médico, Orochimaru com cobras. Simulação por origem (`npm run sim:origens`). |
 | v0.8.0 | Jogabilidade: origem numa roleta só (50% comum), linhagens rebalanceadas, portões que evoluem com o taijutsu (custam chakra e HP, gastam o turno), dōjutsu dura 5 rodadas, jinchuuriki com manto de chakra e imunidade a genjutsu. Efeitos negativos (paralisia, atordoamento, queimadura, envenenamento, sangramento). Passivas novas para todos os vilões, com versões do modo Hardcore (125%, libera após vencer no Difícil). Nível sem roleta (HP/chakra por dificuldade), iniciativa rolada uma vez por luta, crítico máximo de 50%, combos de taijutsu só do prodígio e taijutsu fortalecido como recompensa. Eventos novos: invocações, Akatsuki 70/30 e guru (técnica ou foco com crítico garantido). Haku antes do Zabuza. |
 | v0.8.1 | Correções: o histórico de runs não revela mais a origem antes das roletas girarem; velhinha, ramen, derrota no jokenpô e guru charlatão agora definem quem ataca primeiro na próxima luta contra vilão, no lugar da roleta de iniciativa. |
+| v0.9.0 | Design reorganizado em `docs/` e implementado: toda luta começa restaurada (subir de nível não restaura), nível sem limite com XP pela curva planejada, Determinação e Pergaminho de experiência. Origens numa roleta de três níveis (comum 30%, clãs 40%, raras 30%) com os clãs Nara, Akimichi, Yamanaka, Aburame e Inuzuka e status absolutos de 70 pontos. Ficha de técnica (precisão, golpes, crítico, penetração, efeito no acerto, prioridade) e catálogo novo, com Rotação e Clones das Sombras. Ações universais (Concentrar chakra, Substituição, Usar item), efeitos de genjutsu (Sono, Pavor, Confusão, Tormento), manto pago com chakra, golpe carregado, Palma Mística do Kabuto e Punho de Areia do Gaara. Bolsa de consumíveis, Moeda viciada, Pesos de treino, recompensa por raridade com escolha na lendária e exame com recompensa por vitórias. Simulação com eventos e recompensas automáticos. |

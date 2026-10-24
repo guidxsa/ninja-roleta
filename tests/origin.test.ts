@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { rollOrigin } from '../src/core/origin';
 import { canUseType, createPlayer, knownTechniques, learnTechnique } from '../src/core/player';
 import { createRng } from '../src/core/rng';
+import type { Stats } from '../src/core/types';
 import { gameData } from '../src/data/index';
 import { seq } from './helpers';
 
 describe('rolagem de origem', () => {
-  // Roleta de linhagem (uma só): comum 0..0.5, Uchiha 0.5..0.6, Hyuuga 0.6..0.7, prodígio 0.7..0.9, Uzumaki 0.9..1.
+  // Roleta de linhagem (uma só): comum 0..0.30, Nara ..0.38, Akimichi ..0.46, Yamanaka ..0.54,
+  // Aburame ..0.62, Inuzuka ..0.70, prodígio ..0.79, Uchiha ..0.86, Hyuuga ..0.93, Uzumaki ..1.
   it('comum: rola afinidade, sem linhagem', () => {
     // 0.2 → comum; 0.0 → fogo; 0.99 → não jinchuuriki
     const { origin, steps } = rollOrigin(seq(0.2, 0.0, 0.99), gameData);
@@ -14,49 +16,54 @@ describe('rolagem de origem', () => {
     expect(steps.map((s) => s.kind)).toEqual(['lineage', 'affinity', 'jinchuuriki']);
   });
 
-  it('uma roleta só: a fatia comum tem 50% e fica ao lado das linhagens especiais', () => {
+  it('uma roleta só: comum 30%, clãs 40% e raras 30%', () => {
     const { steps } = rollOrigin(seq(0.2, 0.0, 0.99), gameData);
     const lineage = steps[0]!;
     const total = lineage.slices.reduce((a, s) => a + s.weight, 0);
-    expect(lineage.slices.map((s) => [s.value, s.weight / total])).toEqual([
-      ['common', 0.5],
-      ['uchiha', 0.1],
-      ['hyuuga', 0.1],
-      ['taijutsuProdigy', 0.2],
-      ['uzumaki', 0.1],
-    ]);
+    const share = (ids: string[]) =>
+      lineage.slices.filter((s) => ids.includes(s.value)).reduce((a, s) => a + s.weight, 0) / total;
+    expect(share(['common'])).toBeCloseTo(0.3);
+    expect(share(['nara', 'akimichi', 'yamanaka', 'aburame', 'inuzuka'])).toBeCloseTo(0.4);
+    expect(share(['taijutsuProdigy', 'uchiha', 'hyuuga', 'uzumaki'])).toBeCloseTo(0.3);
+    // Os níveis batem com o peso de cada fatia nos dados.
+    for (const l of gameData.lineages) {
+      const tier = l.id === 'common' ? 'common' : ['taijutsuProdigy', 'uchiha', 'hyuuga', 'uzumaki'].includes(l.id) ? 'rare' : 'clan';
+      expect(l.tier).toBe(tier);
+    }
   });
 
   it('Uchiha tem afinidade fixa em fogo e pula a roleta de afinidade', () => {
-    const { origin, steps } = rollOrigin(seq(0.55, 0.0), gameData);
+    const { origin, steps } = rollOrigin(seq(0.8, 0.0), gameData);
     expect(origin).toEqual({ lineageId: 'uchiha', affinity: 'fire', jinchuuriki: true });
     expect(steps.map((s) => s.kind)).toEqual(['lineage', 'jinchuuriki']);
   });
 
   it('Prodígio do taijutsu não tem afinidade', () => {
-    const { origin } = rollOrigin(seq(0.8, 0.99), gameData);
+    const { origin } = rollOrigin(seq(0.75, 0.99), gameData);
     expect(origin.lineageId).toBe('taijutsuProdigy');
     expect(origin.affinity).toBeNull();
   });
 
-  it('Uzumaki rola afinidade como as comuns', () => {
+  it('clãs e Uzumaki rolam afinidade como as comuns', () => {
+    const nara = rollOrigin(seq(0.32, 0.99, 0.99), gameData);
+    expect(nara.origin.lineageId).toBe('nara');
+    expect(nara.origin.affinity).toBe('water');
     const { origin, steps } = rollOrigin(seq(0.95, 0.99, 0.99), gameData);
     expect(origin.lineageId).toBe('uzumaki');
     expect(steps.map((s) => s.kind)).toEqual(['lineage', 'affinity', 'jinchuuriki']);
-    expect(origin.affinity).toBe('water');
   });
 
   it('frequências batem com a configuração', () => {
     const rng = createRng(123);
     const n = 50000;
-    let special = 0;
+    let common = 0;
     let jin = 0;
     for (let i = 0; i < n; i++) {
       const { origin } = rollOrigin(rng, gameData);
-      if (origin.lineageId) special++;
+      if (!origin.lineageId) common++;
       if (origin.jinchuuriki) jin++;
     }
-    expect(special / n).toBeCloseTo(0.5, 1);
+    expect(common / n).toBeCloseTo(0.3, 1);
     expect(jin / n).toBeCloseTo(0.1, 1);
   });
 
@@ -67,68 +74,86 @@ describe('rolagem de origem', () => {
 });
 
 describe('criação do jogador', () => {
-  it('comum usa status base, 1 Vontade do Fogo e diferencial de resistência 1', () => {
+  /** Orçamento de status: tai/nin/gen 1, speed 1,5, 10 de HP = 1, 2 de chakra = 1. */
+  const budget = (s: Stats) => s.taijutsu + s.ninjutsu + s.genjutsu + s.speed * 1.5 + s.hp / 10 + s.chakra / 2;
+
+  it('todas as origens têm o mesmo orçamento de 70 pontos', () => {
+    for (const l of gameData.lineages) expect([l.id, budget(l.stats)]).toEqual([l.id, 70]);
+  });
+
+  it('comum: status absolutos, 1 Vontade do Fogo, diferencial 1 e Determinação', () => {
     const p = createPlayer({ lineageId: null, affinity: 'water', jinchuuriki: false }, gameData);
     expect(p.maxHp).toBe(100);
     expect(p.offense).toEqual({ taijutsu: 10, ninjutsu: 10, genjutsu: 10 });
-    expect(p.maxChakra).toBe(10);
+    expect(p.maxChakra).toBe(30);
     expect(p.speed).toBe(10);
     expect(p.revives).toBe(1);
     expect(p.resistanceBonus).toBe(1);
-    expect(p.passive).toBeNull();
+    expect(p.passive).toBe('determination');
   });
 
-  it('comum começa com taijutsu básico e ninjutsu básico do próprio elemento, sem genjutsu nem fortalecido', () => {
+  it('comum começa com Punho de Chakra e o ninjutsu básico do elemento, sem genjutsu', () => {
     const p = createPlayer({ lineageId: null, affinity: 'water', jinchuuriki: false }, gameData);
-    expect(p.basicTypes).toEqual(['taijutsu', 'ninjutsu']);
-    expect(knownTechniques(p, gameData).map((t) => t.id)).toEqual(['basicTaijutsu', 'basicNinjutsu']);
+    expect(knownTechniques(p, gameData).map((t) => t.id)).toEqual(['basicTaijutsu', 'waterBullet']);
     expect(canUseType(p, 'genjutsu', gameData)).toBe(false);
     expect(p.dojutsu).toBeNull();
   });
 
-  it('Uchiha: bom chakra e genjutsu, ninjutsu bom, taijutsu o mais fraco; único com genjutsu inicial', () => {
+  it('kits de clã: Imitação de Sombra, Transferência de Mente, Enxame e Presas Giratórias', () => {
+    const kit = (id: string) =>
+      knownTechniques(createPlayer({ lineageId: id, affinity: 'earth', jinchuuriki: false }, gameData), gameData).map((t) => t.id);
+    expect(kit('nara')).toEqual(['basicTaijutsu', 'rockFist', 'shadowImitation']);
+    expect(kit('akimichi')).toEqual(['basicTaijutsu', 'rockFist']);
+    expect(kit('yamanaka')).toEqual(['basicTaijutsu', 'rockFist', 'mindTransfer']);
+    expect(kit('aburame')).toEqual(['basicTaijutsu', 'rockFist', 'insectSwarm']);
+    expect(kit('inuzuka')).toEqual(['basicTaijutsu', 'fangOverFang', 'rockFist']);
+  });
+
+  it('Uchiha: genjutsu inicial (Olhar Hipnótico) e Fagulha do Dragão; junto com o Yamanaka, os únicos com genjutsu', () => {
     const p = createPlayer({ lineageId: 'uchiha', affinity: 'fire', jinchuuriki: false }, gameData);
-    expect(p.offense).toEqual({ taijutsu: 9, ninjutsu: 13, genjutsu: 15 });
-    expect(p.maxChakra).toBe(18);
-    expect(p.speed).toBe(11);
-    expect(p.passive?.kind).toBe('genjutsuResistance');
+    expect(p.offense).toEqual({ taijutsu: 7, ninjutsu: 12, genjutsu: 14 });
+    expect(p.maxChakra).toBe(26);
+    expect(p.passive).toBe('genjutsuResistance');
     expect(p.dojutsu).toBe('sharingan');
-    expect(canUseType(p, 'genjutsu', gameData)).toBe(true);
-    for (const id of ['hyuuga', 'taijutsuProdigy', 'uzumaki']) {
+    expect(knownTechniques(p, gameData).map((t) => t.id)).toEqual(['basicTaijutsu', 'fireSpark', 'basicGenjutsu']);
+    for (const id of ['hyuuga', 'taijutsuProdigy', 'uzumaki', 'nara', 'akimichi', 'aburame', 'inuzuka']) {
       const other = createPlayer({ lineageId: id, affinity: id === 'taijutsuProdigy' ? null : 'water', jinchuuriki: false }, gameData);
       expect(canUseType(other, 'genjutsu', gameData)).toBe(false);
     }
   });
 
-  it('Hyuuga: foco em taijutsu, pouco ninjutsu, Byakugan e golpe inibidor', () => {
+  it('Hyuuga: foco em taijutsu, Byakugan e Selo dos Pontos Vitais', () => {
     const p = createPlayer({ lineageId: 'hyuuga', affinity: 'water', jinchuuriki: false }, gameData);
-    expect(p.offense).toEqual({ taijutsu: 16, ninjutsu: 7, genjutsu: 10 });
+    expect(p.offense).toEqual({ taijutsu: 16, ninjutsu: 6, genjutsu: 8 });
     expect(p.dojutsu).toBe('byakugan');
-    expect(p.techniques).toEqual(['chakraBlockStrike']);
+    expect(p.techniques).toContain('chakraBlockStrike');
   });
 
-  it('Uzumaki: muita vitalidade e chakra', () => {
+  it('Uzumaki: muita vitalidade e chakra, Clones das Sombras', () => {
     const p = createPlayer({ lineageId: 'uzumaki', affinity: 'wind', jinchuuriki: false }, gameData);
-    expect(p.maxHp).toBe(150);
-    expect(p.maxChakra).toBe(20);
+    expect(p.maxHp).toBe(120);
+    expect(p.maxChakra).toBe(35);
+    expect(p.active).toBe('shadowClones');
   });
 
   it('prodígio do taijutsu: nin/gen zerados e técnicas proibidas', () => {
     const p = createPlayer({ lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false }, gameData);
-    expect(p.offense).toEqual({ taijutsu: 18, ninjutsu: 0, genjutsu: 0 });
-    expect(p.maxHp).toBe(110);
-    expect(p.maxChakra).toBe(7);
-    expect(p.speed).toBe(13);
-    expect(() => learnTechnique(p, 'fireball', gameData)).toThrow();
-    expect(learnTechnique(p, 'leafWhirlwind', gameData).techniques).toEqual(['leafWhirlwind']);
+    expect(p.offense).toEqual({ taijutsu: 22, ninjutsu: 0, genjutsu: 0 });
+    expect(p.maxHp).toBe(130);
+    expect(p.maxChakra).toBe(28);
+    expect(p.speed).toBe(14);
+    expect(p.passive).toBe('ironBody');
+    expect(p.active).toBe('gates');
+    expect(() => learnTechnique(p, 'fireSpark', gameData)).toThrow();
+    expect(() => learnTechnique(p, 'medicalNinjutsu', gameData)).toThrow();
+    expect(learnTechnique(p, 'empoweredTaijutsu', gameData).techniques).toEqual(['basicTaijutsu', 'empoweredTaijutsu']);
     expect(knownTechniques(p, gameData).map((t) => t.id)).toEqual(['basicTaijutsu']);
-    expect(p.basicTypes).toEqual(['taijutsu']);
   });
 
   it('jinchuuriki dobra o chakra e acumula com linhagem', () => {
     const p = createPlayer({ lineageId: 'uzumaki', affinity: 'wind', jinchuuriki: true }, gameData);
-    expect(p.maxChakra).toBe(40); // 10 × 2 × 2
-    expect(p.maxHp).toBe(150);
+    expect(p.maxChakra).toBe(70);
+    expect(p.maxHp).toBe(120);
     expect(p.jinchuuriki).toBe(true);
   });
 });

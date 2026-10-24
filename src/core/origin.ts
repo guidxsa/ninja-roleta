@@ -1,7 +1,7 @@
 import type { GameData } from './gameData';
 import type { Rng } from './rng';
 import { chanceSlices, spin, type Slice } from './roulette';
-import type { Element, Origin } from './types';
+import type { Element, LineageDef, Origin } from './types';
 
 export type OriginStepKind = 'lineage' | 'affinity' | 'jinchuuriki';
 
@@ -17,8 +17,16 @@ export interface OriginRoll {
   steps: OriginStep[];
 }
 
-/** Valor da fatia "comum" na roleta de linhagem. */
+/** Id da origem comum na roleta (no `Origin`, a comum é `lineageId: null`). */
 export const COMMON_LINEAGE = 'common';
+
+/** Definição da origem (a comum também é uma linhagem nos dados). */
+export function lineageOf(lineageId: string | null, data: GameData): LineageDef {
+  const id = lineageId ?? COMMON_LINEAGE;
+  const lineage = data.lineages.find((l) => l.id === id);
+  if (!lineage) throw new Error(`Linhagem desconhecida: ${id}`);
+  return lineage;
+}
 
 function step(kind: OriginStepKind, slices: Slice<string>[], rng: Rng): OriginStep {
   return { kind, slices, index: spin(slices, rng).index };
@@ -30,40 +38,25 @@ function stepValue(s: OriginStep): string {
 
 /**
  * Sequência de rolagens da origem:
- * 1. linhagem: uma roleta só, com a fatia comum e as linhagens especiais;
- * 2. afinidade, se a linhagem rolar (comuns, Hyuuga, Uzumaki);
+ * 1. linhagem: uma roleta só, com os níveis comum, clã e rara;
+ * 2. afinidade, se a linhagem não tem afinidade fixa (nem é o prodígio, que não tem nenhuma);
  * 3. jinchuuriki, independente das anteriores.
  */
 export function rollOrigin(rng: Rng, data: GameData): OriginRoll {
-  const { origin: cfg } = data.balance;
   const steps: OriginStep[] = [];
 
   const lineageStep = step(
     'lineage',
-    [
-      { label: COMMON_LINEAGE, weight: cfg.commonWeight, value: COMMON_LINEAGE },
-      ...data.lineages.map((l) => ({ label: l.id, weight: l.weight, value: l.id })),
-    ],
+    data.lineages.map((l) => ({ label: l.id, weight: l.weight, value: l.id })),
     rng,
   );
   steps.push(lineageStep);
 
-  let lineageId: string | null = null;
+  const lineage = lineageOf(stepValue(lineageStep), data);
   let affinity: Element | null = null;
-  let rollAffinity = true;
-
-  if (stepValue(lineageStep) !== COMMON_LINEAGE) {
-    lineageId = stepValue(lineageStep);
-    const lineage = data.lineages.find((l) => l.id === lineageId)!;
-    if (lineage.affinity.kind === 'fixed') {
-      affinity = lineage.affinity.element;
-      rollAffinity = false;
-    } else if (lineage.affinity.kind === 'none') {
-      rollAffinity = false;
-    }
-  }
-
-  if (rollAffinity) {
+  if (lineage.affinity.kind === 'fixed') {
+    affinity = lineage.affinity.element;
+  } else if (lineage.affinity.kind === 'rolled') {
     const affinityStep = step(
       'affinity',
       (Object.keys(data.elementWeights) as Element[]).map((e) => ({
@@ -79,13 +72,17 @@ export function rollOrigin(rng: Rng, data: GameData): OriginRoll {
 
   const jinStep = step(
     'jinchuuriki',
-    chanceSlices(cfg.jinchuurikiChance, { label: 'yes', value: 'yes' }, { label: 'no', value: 'no' }),
+    chanceSlices(data.balance.origin.jinchuurikiChance, { label: 'yes', value: 'yes' }, { label: 'no', value: 'no' }),
     rng,
   );
   steps.push(jinStep);
 
   return {
-    origin: { lineageId, affinity, jinchuuriki: stepValue(jinStep) === 'yes' },
+    origin: {
+      lineageId: lineage.id === COMMON_LINEAGE ? null : lineage.id,
+      affinity,
+      jinchuuriki: stepValue(jinStep) === 'yes',
+    },
     steps,
   };
 }

@@ -1,12 +1,33 @@
 import { playRound, startBattle, type BattleOptions, type BattleState } from '../core/combat';
 import type { GameData } from '../core/gameData';
 import { scaleVillain, type Difficulty } from '../core/difficulty';
-import { canLevelUp, fullRestore, gainXp, type PlayerState } from '../core/player';
-import { levelUp } from '../core/progression';
+import { canLevelUp, equipTrainingWeights, gainXp, trainingWeightsWin, type PlayerState } from '../core/player';
+import {
+  applyAkatsuki,
+  applyGuru,
+  applyItem,
+  applyReward,
+  applySimpleEvent,
+  applySummonEncounter,
+  HANDS,
+  levelUp,
+  playJokenpo,
+  rewardItemSpins,
+  rollAkatsuki,
+  rollGuru,
+  rollItem,
+  rollReward,
+  rollRewardChoices,
+  rollSummonAnimal,
+  rollWeighted,
+  type NextFightMods,
+  type Step,
+} from '../core/progression';
 import type { Rng } from '../core/rng';
 import type { VillainDef } from '../core/types';
+import type { RewardId } from '../data/events';
 import type { Stage } from '../data/campaign';
-import { choosePlayerAction, shouldFocus } from './policy';
+import { chooseExtras, choosePlayerAction } from './policy';
 
 /** Teto de segurança contra lutas infinitas (ex.: ambos só descansando). */
 export const MAX_ROUNDS = 200;
@@ -18,19 +39,30 @@ export function runBattle(
   data: GameData,
   options: Partial<BattleOptions> = {},
 ): BattleState {
-  let state = startBattle(player, villain, options);
+  let state = startBattle(player, villain, options, data, rng);
   while (state.status === 'ongoing' && state.round < MAX_ROUNDS) {
     const action = choosePlayerAction(state, data);
-    state = playRound(state, action, rng, data, shouldFocus(state, action, data));
+    state = playRound(state, action, rng, data, chooseExtras(state, action, data));
   }
   return state;
 }
 
-/** Ganha o XP do vilão derrotado e sobe de nível enquanto houver XP para isso. */
-export function awardXp(player: PlayerState, villain: VillainDef, data: GameData): PlayerState {
-  let p = gainXp(player, villain.xp, data);
+/** Sobe de nível enquanto houver XP para isso. */
+function levelUps(player: PlayerState, data: GameData): PlayerState {
+  let p = player;
   while (canLevelUp(p, data)) p = levelUp(p, data).player;
   return p;
+}
+
+/** Ganha o XP do vilão derrotado (e o taijutsu dos pesos de treino) e sobe de nível. */
+export function awardXp(player: PlayerState, villain: VillainDef, data: GameData, exam = false): PlayerState {
+  const p = exam ? player : trainingWeightsWin(player, data);
+  return levelUps(gainXp(p, villain.xp, data), data);
+}
+
+export interface CampaignOptions {
+  /** Simula também eventos pré-vilão e recompensas, com escolhas automáticas. */
+  progression?: boolean;
 }
 
 export interface CampaignResult {
@@ -42,11 +74,63 @@ export interface CampaignResult {
   rounds: number[];
   /** Nível com que o jogador chegou a cada luta, na ordem. */
   levels: number[];
+  /** Vitórias no exame chunin. */
+  examWins: number;
+}
+
+// Escolhas automáticas fora do combate (simulação com progressão).
+
+/** Ordem de preferência na recompensa lendária (o jogador escolhe 1 de 3). */
+const REWARD_PREFERENCE: RewardId[] = ['newTechnique', 'stages', 'secondaryElement', 'item', 'xp', 'resistance', 'critBonus'];
+
+function autoItem(player: PlayerState, rng: Rng, data: GameData): Step {
+  const item = rollItem(player, rng, data);
+  const step = applyItem(player, item.value, rng, data);
+  // Pesos de treino: o jogador automático equipa e nunca tira.
+  return step.effect.kind === 'trainingWeights' ? { ...step, player: equipTrainingWeights(step.player, data) } : step;
+}
+
+function autoReward(player: PlayerState, tier: number, rng: Rng, data: GameData): PlayerState {
+  let id: RewardId;
+  if (tier >= 3) {
+    const choices = rollRewardChoices(player, rng, data).map((r) => r.value);
+    id = REWARD_PREFERENCE.find((r) => choices.includes(r)) ?? choices[0]!;
+  } else {
+    id = rollReward(player, rng, data).value;
+  }
+  let p = player;
+  if (id === 'item') {
+    for (let i = 0; i < rewardItemSpins(tier, data); i++) p = autoItem(p, rng, data).player;
+  } else {
+    p = applyReward(p, id, tier, rng, data).player;
+  }
+  return levelUps(p, data);
+}
+
+function autoEvent(player: PlayerState, rng: Rng, data: GameData): Step {
+  const ev = rollWeighted(data.preFightEvents, rng).value;
+  switch (ev) {
+    case 'oldLady':
+    case 'ramen':
+    case 'training':
+      return applySimpleEvent(player, ev, data);
+    case 'jokenpo':
+      return playJokenpo(player, HANDS[0]!, rng, data);
+    case 'foundItem':
+      return autoItem(player, rng, data);
+    case 'summon':
+      return applySummonEncounter(player, player.summon?.animal ?? rollSummonAnimal(rng, data).value);
+    case 'akatsuki':
+      return applyAkatsuki(player, rollAkatsuki(player, rng, data).value, data);
+    case 'guru':
+      return applyGuru(player, rollGuru(player, rng, data).value, rng, data);
+  }
 }
 
 /**
- * Campanha com XP e subida de nível, sem eventos nem recompensas: mede a curva de dificuldade.
- * No exame, como no jogo, perder não encerra a run nem gasta a Vontade do Fogo; só vencer dá XP.
+ * Campanha com XP e nível. Toda luta começa restaurada (salvo `restoreWithinBlock: false`).
+ * No exame, perder não encerra a run nem gasta a Vontade do Fogo; só vencer dá XP.
+ * Com `progression`, simula também os eventos pré-vilão e as recompensas.
  */
 export function runCampaign(
   initial: PlayerState,
@@ -55,36 +139,70 @@ export function runCampaign(
   rng: Rng,
   data: GameData,
   difficulty: Difficulty = 'normal',
+  options: CampaignOptions = {},
 ): CampaignResult {
   let player = initial;
   const rounds: number[] = [];
   const levels: number[] = [];
+  let examWins = 0;
   const villain = (id: string) => scaleVillain(villainsById[id]!, difficulty, data);
+  const result = (won: boolean, stageReached: number, villainReached: string | null): CampaignResult => ({
+    won,
+    stageReached,
+    villainReached,
+    revivesUsed: player.revivesUsed,
+    rounds,
+    levels,
+    examWins,
+  });
+
   for (let i = 0; i < stages.length; i++) {
     const stage = stages[i]!;
     if (stage.kind === 'exam') {
+      let wins = 0;
       for (const villainId of stage.villains) {
-        if (data.balance.exam.restoreBetweenFights) player = fullRestore(player);
         levels.push(player.level);
-        const result = runBattle(player, villain(villainId), rng, data, { allowRevive: false });
-        rounds.push(result.round);
-        player = { ...result.player, hp: Math.max(1, result.player.hp) };
-        if (result.status === 'won') player = awardXp(player, villainsById[villainId]!, data);
+        const fight = runBattle(player, villain(villainId), rng, data, { allowRevive: false });
+        rounds.push(fight.round);
+        player = { ...fight.player, hp: Math.max(1, fight.player.hp) };
+        if (fight.status === 'won') {
+          wins++;
+          player = awardXp(player, villainsById[villainId]!, data, true);
+        }
       }
-      if (data.balance.campaign.restoreBetweenStages) player = fullRestore(player);
+      examWins = wins;
+      const tier = data.balance.exam.rewardTierByWins[wins] ?? 0;
+      if (options.progression && tier > 0) player = autoReward(player, tier, rng, data);
       continue;
     }
-    for (const villainId of stage.villains) {
-      levels.push(player.level);
-      const result = runBattle(player, villain(villainId), rng, data);
-      rounds.push(result.round);
-      player = result.player;
-      if (result.status !== 'won') {
-        return { won: false, stageReached: i, villainReached: villainId, revivesUsed: player.revivesUsed, rounds, levels };
-      }
-      player = awardXp(player, villainsById[villainId]!, data);
+
+    let mods: Partial<NextFightMods> = {};
+    let weakened = false;
+    if (options.progression) {
+      const ev = autoEvent(player, rng, data);
+      player = levelUps(ev.player, data);
+      mods = ev.mods;
+      weakened = ev.effect.kind === 'akatsukiWeakened';
     }
-    if (data.balance.campaign.restoreBetweenStages) player = fullRestore(player);
+    for (let j = 0; j < stage.villains.length; j++) {
+      const villainId = stage.villains[j]!;
+      levels.push(player.level);
+      const first = j === 0;
+      const fightOptions: Partial<BattleOptions> = {
+        restore: first || data.balance.combat.restoreWithinBlock,
+        ...(first ? mods : {}),
+        ...(first && weakened
+          ? { startHpPct: data.balance.events.akatsukiNoReviveHpPct, startChakraPct: data.balance.events.akatsukiNoReviveChakraPct }
+          : {}),
+      };
+      const fight = runBattle(player, villain(villainId), rng, data, fightOptions);
+      rounds.push(fight.round);
+      player = fight.player;
+      if (fight.status !== 'won') return result(false, i, villainId);
+      player = awardXp(player, villainsById[villainId]!, data);
+      const tier = stage.rewardTiers[j];
+      if (options.progression && tier) player = autoReward(player, tier, rng, data);
+    }
   }
-  return { won: true, stageReached: stages.length, villainReached: null, revivesUsed: player.revivesUsed, rounds, levels };
+  return result(true, stages.length, null);
 }

@@ -6,16 +6,20 @@ import {
   applyLevelUp,
   applyStatStages,
   canUseType,
+  elementalBasic,
+  gainXp,
+  grantLevelTechniques,
   knownTechniques,
   knowsElement,
   learnTechnique,
   lineageAllows,
   techniqueSlot,
+  xpGain,
   type PlayerState,
 } from './player';
 import type { Rng } from './rng';
 import { spin, type Slice } from './roulette';
-import type { SummonAnimal, TechniqueSlot } from './types';
+import type { ConsumableId, Element, SummonAnimal, TechniqueSlot } from './types';
 
 /** Uma roleta girada, com as fatias e o resultado, para a UI animar. */
 export interface Roll<T> {
@@ -30,7 +34,7 @@ export function rollWeighted<T extends string>(list: readonly Weighted<T>[], rng
   return { slices, index, value: slice.value };
 }
 
-/** Vantagem ou desvantagem de ação: vale só para o 1º turno da próxima luta. */
+/** Vantagem ou desvantagem de ação na próxima luta contra vilão. */
 export interface NextFightMods {
   villainStartsFirst: boolean;
   playerStartsFirst: boolean;
@@ -50,7 +54,13 @@ export type ProgressEffect =
   | { kind: 'resistance'; amount: number }
   | { kind: 'speed'; amount: number }
   | { kind: 'critBonus'; amount: number }
-  | { kind: 'newTechnique'; techniqueId: string }
+  | { kind: 'xp'; amount: number }
+  /** `overflowXp` > 0: a bolsa estava cheia e o item virou XP. */
+  | { kind: 'bagItem'; item: ConsumableId; overflowXp: number }
+  | { kind: 'coin'; coins: number }
+  | { kind: 'trainingWeights' }
+  | { kind: 'newTechnique'; techniqueId: string; scrolls: number }
+  | { kind: 'secondaryElement'; element: Element; techniqueId: string | null }
   | { kind: 'akatsukiTookRevive'; reason: AkatsukiReason }
   | { kind: 'akatsukiWeakened'; reason: AkatsukiReason }
   | { kind: 'akatsukiInsight'; amount: number }
@@ -125,10 +135,30 @@ export function playJokenpo(player: PlayerState, choice: Hand, rng: Rng, data: G
 }
 
 // ---------------------------------------------------------------------------
-// Itens
+// Itens e bolsa
 
-export function rollItem(rng: Rng, data: GameData): Roll<ItemId> {
-  return rollWeighted(data.items, rng);
+/** Itens possíveis para o jogador: os Pesos de treino são únicos. */
+export function itemPool(player: PlayerState, data: GameData): Weighted<ItemId>[] {
+  return data.items.filter((i) => i.id !== 'trainingWeights' || player.trainingWeights === 'none');
+}
+
+export function rollItem(player: PlayerState, rng: Rng, data: GameData): Roll<ItemId> {
+  return rollWeighted(itemPool(player, data), rng);
+}
+
+/** Soma XP e devolve o efeito com o valor efetivo (Determinação incluída). */
+function xpStep(player: PlayerState, amount: number, data: GameData): Step {
+  return step(gainXp(player, amount, data), { kind: 'xp', amount: xpGain(player, amount, data) });
+}
+
+/** Consumível vai para a bolsa (máximo 3 de cada); o excedente vira XP. */
+function addToBag(player: PlayerState, item: ConsumableId, data: GameData): Step {
+  const cfg = data.balance.items;
+  if (player.bag[item] >= cfg.bagMax) {
+    const xp = xpGain(player, cfg.bagOverflowXp, data);
+    return step(gainXp(player, cfg.bagOverflowXp, data), { kind: 'bagItem', item, overflowXp: xp });
+  }
+  return step({ ...player, bag: { ...player.bag, [item]: player.bag[item] + 1 } }, { kind: 'bagItem', item, overflowXp: 0 });
 }
 
 export function applyItem(player: PlayerState, item: ItemId, rng: Rng, data: GameData): Step {
@@ -141,19 +171,12 @@ export function applyItem(player: PlayerState, item: ItemId, rng: Rng, data: Gam
     }
     case 'techniqueScroll': {
       // Sorteia entre as categorias que o jogador usa; o upgrade vale para todas as técnicas dela.
-      const types: TechniqueSlot[] = (['taijutsu', 'ninjutsu', 'genjutsu'] as const).filter((t) =>
-        canUseType(player, t, data),
-      );
-      if (knownTechniques(player, data).some((t) => techniqueSlot(t) === 'medical')) types.push('medical');
+      const types = usedSlots(player, data);
       const type = spin(
         types.map((t) => ({ label: t, weight: 1, value: t })),
         rng,
       ).slice.value;
-      const level = (player.techniqueLevels[type] ?? 0) + 1;
-      return step(
-        { ...player, techniqueLevels: { ...player.techniqueLevels, [type]: level } },
-        { kind: 'techniqueUpgrade', type, level },
-      );
+      return scrollStep(player, type, 1);
     }
     // Amuletos: efeito permanente; ficam na bolsa.
     case 'resistanceItem':
@@ -170,7 +193,40 @@ export function applyItem(player: PlayerState, item: ItemId, rng: Rng, data: Gam
         { ...player, speed: player.speed + 1, amulets: { ...player.amulets, speed: player.amulets.speed + 1 } },
         { kind: 'speed', amount: 1 },
       );
+    case 'xpScroll':
+      return xpStep(player, data.balance.items.xpScroll, data);
+    case 'soldierPill':
+    case 'medKit':
+    case 'explosiveTag':
+    case 'smokeBomb':
+      return addToBag(player, item, data);
+    case 'loadedCoin':
+      return step({ ...player, coins: player.coins + 1 }, { kind: 'coin', coins: player.coins + 1 });
+    case 'trainingWeights':
+      // A UI pergunta se equipa na hora (`equipTrainingWeights`).
+      return step({ ...player, trainingWeights: 'stored' }, { kind: 'trainingWeights' });
   }
+}
+
+/** Categorias com técnica no skill set (o pergaminho só melhora essas). */
+function usedSlots(player: PlayerState, data: GameData): TechniqueSlot[] {
+  const types: TechniqueSlot[] = (['taijutsu', 'ninjutsu', 'genjutsu'] as const).filter((t) => canUseType(player, t, data));
+  if (knownTechniques(player, data).some((t) => techniqueSlot(t) === 'medical')) types.push('medical');
+  return types;
+}
+
+function scrollStep(player: PlayerState, type: TechniqueSlot, n: number): Step {
+  const level = (player.techniqueLevels[type] ?? 0) + n;
+  return step(
+    { ...player, techniqueLevels: { ...player.techniqueLevels, [type]: level } },
+    { kind: 'techniqueUpgrade', type, level },
+  );
+}
+
+/** Moeda viciada: gasta uma para girar de novo uma roleta fora do combate. */
+export function spendCoin(player: PlayerState): PlayerState {
+  if (player.coins <= 0) throw new Error('Sem moeda viciada');
+  return { ...player, coins: player.coins - 1 };
 }
 
 // ---------------------------------------------------------------------------
@@ -183,7 +239,7 @@ export function rollAkatsuki(player: PlayerState, rng: Rng, data: GameData): Rol
 
 /**
  * Akatsuki: caça jinchuuriki. Nunca causa game over: sem Vontade do Fogo para perder, o jogador começa
- * a próxima luta com metade do HP e do chakra.
+ * a próxima luta com metade do HP e do chakra (a UI passa isso para a luta, depois da restauração).
  * Quem não é jinchuuriki costuma só assistir a uma luta deles e aprender a mirar pontos vitais (+crítico).
  */
 export function applyAkatsuki(player: PlayerState, outcome: AkatsukiOutcome, data: GameData): Step {
@@ -197,14 +253,7 @@ export function applyAkatsuki(player: PlayerState, outcome: AkatsukiOutcome, dat
   if (player.revives > 0) {
     return step({ ...player, revives: player.revives - 1 }, { kind: 'akatsukiTookRevive', reason });
   }
-  return step(
-    {
-      ...player,
-      hp: Math.max(1, Math.floor(player.maxHp * cfg.akatsukiNoReviveHpPct)),
-      chakra: Math.floor(player.maxChakra * cfg.akatsukiNoReviveChakraPct),
-    },
-    { kind: 'akatsukiWeakened', reason },
-  );
+  return step(player, { kind: 'akatsukiWeakened', reason });
 }
 
 /** Técnicas ofensivas que o guru pode ensinar (as aprendíveis, menos o ninjutsu médico). */
@@ -234,11 +283,8 @@ export function applyGuru(player: PlayerState, outcome: GuruOutcome, rng: Rng, d
     case 'technique': {
       const pool = offensiveLearnable(player, data);
       if (pool.length === 0) throw new Error('Nenhuma técnica ofensiva disponível para esta origem');
-      const techniqueId = spin(
-        pool.map((id) => ({ label: id, weight: 1, value: id })),
-        rng,
-      ).slice.value;
-      return step(learnTechnique(player, techniqueId, data), { kind: 'newTechnique', techniqueId });
+      const techniqueId = pickOne(pool, rng);
+      return step(learnTechnique(player, techniqueId, data), { kind: 'newTechnique', techniqueId, scrolls: 0 });
     }
   }
 }
@@ -259,7 +305,7 @@ export function applySummonEncounter(player: PlayerState, animal: SummonAnimal):
 // ---------------------------------------------------------------------------
 // Nível
 
-/** Sobe 1 nível (HP e chakra máximos pela dificuldade, restauração total e técnicas de nível). */
+/** Sobe 1 nível (HP e chakra máximos pela dificuldade e técnicas de nível). Não restaura. */
 export function levelUp(player: PlayerState, data: GameData): Step {
   const next = applyLevelUp(player, data);
   const learned = next.techniques.filter((id) => !player.techniques.includes(id));
@@ -275,9 +321,16 @@ export function levelUp(player: PlayerState, data: GameData): Step {
 // ---------------------------------------------------------------------------
 // Recompensas
 
+function pickOne<T extends string>(pool: T[], rng: Rng): T {
+  return spin(
+    pool.map((id) => ({ label: id, weight: 1, value: id })),
+    rng,
+  ).slice.value;
+}
+
 /**
  * Técnicas que a recompensa "nova técnica" pode ensinar: respeita a origem, ignora as já aprendidas
- * e só oferece técnicas elementais dos elementos que o jogador domina (afinidade ou secundários).
+ * e só oferece técnicas elementais dos elementos que o jogador domina (afinidade ou secundário).
  */
 export function learnableTechniques(player: PlayerState, data: GameData): string[] {
   return data.techniques
@@ -291,19 +344,40 @@ export function learnableTechniques(player: PlayerState, data: GameData): string
     .map((t) => t.id);
 }
 
-/** Pool filtrada pela origem: sem técnica para aprender, a fatia some. */
+/** Elementos que o jogador pode ganhar como secundário (nenhum para o prodígio ou quem já tem um). */
+export function secondaryElementOptions(player: PlayerState, data: GameData): Element[] {
+  if (player.secondaryElements.length > 0 || player.affinity === null || player.forbiddenAttackTypes.includes('ninjutsu')) {
+    return [];
+  }
+  return (Object.keys(data.elementWeights) as Element[]).filter((e) => e !== player.affinity);
+}
+
+/** Pool filtrada: fatias impossíveis somem (técnica sem nada para aprender, elemento secundário). */
 export function rewardPool(player: PlayerState, data: GameData): Weighted<RewardId>[] {
   const canLearn = learnableTechniques(player, data).length > 0;
-  return data.rewards.filter((r) => r.id !== 'newTechnique' || canLearn);
+  const canElement = secondaryElementOptions(player, data).length > 0;
+  return data.rewards.filter(
+    (r) => (r.id !== 'newTechnique' || canLearn) && (r.id !== 'secondaryElement' || canElement),
+  );
 }
 
 export function rollReward(player: PlayerState, rng: Rng, data: GameData): Roll<RewardId> {
   return rollWeighted(rewardPool(player, data), rng);
 }
 
+/** Lendária: gira várias vezes e o jogador escolhe 1 dos resultados. */
+export function rollRewardChoices(player: PlayerState, rng: Rng, data: GameData): Roll<RewardId>[] {
+  return Array.from({ length: data.balance.rewards.legendaryChoices }, () => rollReward(player, rng, data));
+}
+
+/** Giros da roleta de itens que a fatia "item" dá nesta raridade. */
+export function rewardItemSpins(tier: number, data: GameData): number {
+  return data.balance.rewards.itemSpins[tier - 1]!;
+}
+
 /**
- * Aplica uma recompensa. `tier` (1 comum, 2 raro, 3 lendário) multiplica a quantidade.
- * A recompensa "item" é resolvida pela roleta de itens (`rollItem` + `applyItem`).
+ * Aplica uma recompensa na raridade `tier` (1 comum, 2 rara, 3 lendária).
+ * A fatia "item" é resolvida pela roleta de itens (`rewardItemSpins` giros de `rollItem` + `applyItem`).
  */
 export function applyReward(
   player: PlayerState,
@@ -313,29 +387,46 @@ export function applyReward(
   data: GameData,
 ): Step {
   const cfg = data.balance.rewards;
+  const i = tier - 1;
   switch (reward) {
     case 'stages': {
-      const n = cfg.stagesPerTier * tier;
+      const n = cfg.stages[i]!;
       return step(applyStatStages(player, n, data), { kind: 'stages', n });
     }
     case 'newTechnique': {
       const pool = learnableTechniques(player, data);
       if (pool.length === 0) throw new Error('Nenhuma técnica disponível para esta origem');
-      const techniqueId = spin(
-        pool.map((id) => ({ label: id, weight: 1, value: id })),
-        rng,
-      ).slice.value;
-      return step(learnTechnique(player, techniqueId, data), { kind: 'newTechnique', techniqueId });
+      const techniqueId = pickOne(pool, rng);
+      let p = learnTechnique(player, techniqueId, data);
+      // Rara e lendária: pergaminhos na categoria da técnica aprendida.
+      const scrolls = cfg.techniqueScrolls[i]!;
+      if (scrolls > 0) p = scrollStep(p, techniqueSlot(data.techniquesById[techniqueId]!), scrolls).player;
+      return step(p, { kind: 'newTechnique', techniqueId, scrolls });
     }
-    case 'techniqueUpgrade':
-      return applyItem(player, 'techniqueScroll', rng, data);
+    case 'xp':
+      return xpStep(player, cfg.xp[i]!, data);
     case 'resistance': {
-      const amount = cfg.resistancePerTier * tier;
+      const amount = cfg.resistance[i]!;
       return step({ ...player, resistanceBonus: player.resistanceBonus + amount }, { kind: 'resistance', amount });
     }
     case 'critBonus': {
-      const amount = cfg.critBonusPerTier * tier;
+      const amount = cfg.critBonus[i]!;
       return step({ ...player, critBonus: player.critBonus + amount }, { kind: 'critBonus', amount });
+    }
+    case 'secondaryElement': {
+      const options = secondaryElementOptions(player, data);
+      if (options.length === 0) throw new Error('Sem elemento secundário possível');
+      const element = pickOne(options, rng);
+      let p: PlayerState = { ...player, secondaryElements: [...player.secondaryElements, element] };
+      // Lendária: aprende também a técnica básica do elemento.
+      let techniqueId: string | null = null;
+      const basic = tier >= 3 ? elementalBasic(element, data) : undefined;
+      if (basic) {
+        p = learnTechnique(p, basic.id, data);
+        techniqueId = basic.id;
+      }
+      // O elemento novo pode liberar técnicas de nível já alcançado.
+      return step(grantLevelTechniques(p, data), { kind: 'secondaryElement', element, techniqueId });
     }
   }
 }

@@ -14,13 +14,13 @@ import type { Origin } from '../src/core/types';
 import { gameData } from '../src/data/index';
 import { villains } from '../src/data/villains';
 import { runBattle, MAX_ROUNDS } from '../src/sim/runner';
-import { seq, testVillain, withInitiative } from './helpers';
+import { battle, seq, testVillain, withInitiative } from './helpers';
 
 const common: Origin = { lineageId: null, affinity: 'fire', jinchuuriki: false };
 /** Comum que usa genjutsu (para testar o aprisionamento sem depender do Uchiha). */
 const withGenjutsu = () => {
   const p = createPlayer(common, gameData);
-  return { ...p, basicTypes: [...p.basicTypes, 'genjutsu' as const] };
+  return { ...p, techniques: [...p.techniques, 'basicGenjutsu'] };
 };
 const ofType = <T extends BattleEvent['type']>(log: BattleEvent[], type: T) =>
   log.filter((e): e is Extract<BattleEvent, { type: T }> => e.type === type);
@@ -30,7 +30,7 @@ describe('rodada básica', () => {
     const s0 = startBattle(createPlayer(common, gameData), testVillain({ hp: 5 }), { playerStartsFirst: true });
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(s1.status).toBe('won');
-    expect(s1.player.chakra).toBe(10); // taijutsu não gasta chakra
+    expect(s1.player.chakra).toBe(30); // taijutsu não gasta chakra
     expect(ofType(s1.log, 'ambush')).toHaveLength(1);
     expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'hit', damage: 13 });
   });
@@ -46,10 +46,10 @@ describe('rodada básica', () => {
     const s0 = startBattle(createPlayer(common, gameData), testVillain({ element: 'wind' }), {
       playerStartsFirst: true,
     });
-    const s1 = playRound(s0, 'tech:basicNinjutsu', seq(0.5), gameData);
-    // (10 + 10 − 5) × 1.5 = 22
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ elementMult: 1.5, damage: 22 });
-    expect(s1.player.chakra).toBe(7);
+    const s1 = playRound(s0, 'tech:fireSpark', seq(0.5), gameData);
+    // Fagulha do Dragão: (12 + 10 − 5) × 1.5 = 25
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ elementMult: 1.5, damage: 25 });
+    expect(s1.player.chakra).toBe(28);
   });
 
   it('erro causa 0 de dano', () => {
@@ -62,12 +62,12 @@ describe('rodada básica', () => {
 
   it('ações indisponíveis lançam erro; sem chakra sobram o taijutsu básico e concentrar', () => {
     const p = { ...createPlayer(common, gameData), chakra: 0 };
-    const s0 = startBattle(p, testVillain());
+    const s0 = battle(p, testVillain());
     expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'rest']);
     expect(() => playRound(s0, 'tech:empoweredTaijutsu', seq(0.5), gameData)).toThrow();
-    expect(() => playRound(s0, 'tech:basicNinjutsu', seq(0.5), gameData)).toThrow();
+    expect(() => playRound(s0, 'tech:fireSpark', seq(0.5), gameData)).toThrow();
     const s1 = playRound(s0, 'rest', seq(0.1, 0.01, 0.01), gameData);
-    expect(s1.player.chakra).toBe(3);
+    expect(s1.player.chakra).toBe(4);
   });
 });
 
@@ -77,25 +77,25 @@ describe('Vontade do Fogo', () => {
 
   it('ao chegar a 0 de HP consome o item e restaura HP e chakra', () => {
     const p = { ...createPlayer(common, gameData), hp: 1, chakra: 2 };
-    const s1 = playRound(startBattle(p, testVillain()), 'tech:basicTaijutsu', villainFirstHit(), gameData);
+    const s1 = playRound(battle(p, testVillain()), 'tech:basicTaijutsu', villainFirstHit(), gameData);
     expect(s1.status).toBe('ongoing');
     expect(s1.player.revives).toBe(0);
     expect(s1.player.revivesUsed).toBe(1);
     expect(s1.player.hp).toBe(100);
-    expect(s1.player.chakra).toBe(10); // restaurado para 10; taijutsu não gasta
+    expect(s1.player.chakra).toBe(30); // restaurado; taijutsu não gasta
     expect(ofType(s1.log, 'revive')).toHaveLength(1);
   });
 
   it('sem item: derrota', () => {
     const p = { ...createPlayer(common, gameData), hp: 1, revives: 0 };
-    const s1 = playRound(startBattle(p, testVillain()), 'tech:basicTaijutsu', villainFirstHit(), gameData);
+    const s1 = playRound(battle(p, testVillain()), 'tech:basicTaijutsu', villainFirstHit(), gameData);
     expect(s1.status).toBe('lost');
     expect(ofType(s1.log, 'attack')).toHaveLength(1); // o jogador não chega a agir
   });
 
   it('exame: não consome o item, só perde a luta', () => {
     const p = { ...createPlayer(common, gameData), hp: 1 };
-    const s0 = startBattle(p, testVillain(), { allowRevive: false });
+    const s0 = battle(p, testVillain(), { allowRevive: false });
     const s1 = playRound(s0, 'tech:basicTaijutsu', villainFirstHit(), gameData);
     expect(s1.status).toBe('lost');
     expect(s1.player.revives).toBe(1);
@@ -121,7 +121,7 @@ describe('debilitado', () => {
     const s0 = startBattle(createPlayer(common, gameData), testVillain());
     const s1 = playRound({ ...s0, playerFx: { ...s0.playerFx, debilitated: 1 } }, 'tech:basicTaijutsu', seq(0.9, 0.5, 0.5), gameData);
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'player', reason: 'prison' }]);
-    expect(s1.player.chakra).toBe(10);
+    expect(s1.player.chakra).toBe(30);
   });
 });
 
@@ -131,16 +131,16 @@ describe('passivas', () => {
   it('Portões: abrir gasta o turno (sem golpe), chakra e HP; taijutsu ×1,5 por 5 rodadas a partir da seguinte', () => {
     const p = createPlayer(prodigy, gameData);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
-    expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'gates', 'rest']);
+    expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'gates', 'rest', 'substitution']);
     const s1 = playRound(s0, 'gates', seq(0.5), gameData);
-    // 15% de 110 = 16 de HP; 1º portão custa 5 de chakra.
-    expect(ofType(s1.log, 'gates')).toEqual([{ type: 'gates', stage: 1, hpLost: 16, chakra: 5 }]);
+    // 15% de 130 = 19 de HP; 1º portão custa 5 de chakra.
+    expect(ofType(s1.log, 'gates')).toEqual([{ type: 'gates', stage: 1, hpLost: 19, chakra: 5 }]);
     expect(ofType(s1.log, 'attack').filter((a) => a.side === 'player')).toHaveLength(0);
-    expect(s1.player.chakra).toBe(2);
+    expect(s1.player.chakra).toBe(23);
     expect(s1.playerFx.gatesTurns).toBe(5);
     const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5), gameData);
-    // (8 + 18 − 5) × 1.5 = 31
-    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]).toMatchObject({ side: 'player', damage: 31 });
+    // (8 + 22 − 5) × 1.5 = 37
+    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]).toMatchObject({ side: 'player', damage: 37 });
     expect(s2.playerFx.gatesTurns).toBe(4);
     expect(availableActions(s2, gameData)).not.toContain('gates');
   });
@@ -148,25 +148,25 @@ describe('passivas', () => {
   it('Portões evoluem com o taijutsu: portão maior, mais forte e mais caro', () => {
     const p = createPlayer(prodigy, gameData);
     expect(gatesToOpen(p, gameData)).toMatchObject({ stage: 1, taijutsuMult: 1.5, chakraCost: 5 });
-    const strong = { ...p, offense: { ...p.offense, taijutsu: 22 } };
+    const strong = { ...p, offense: { ...p.offense, taijutsu: 26 } };
     expect(gatesToOpen(strong, gameData)).toMatchObject({ stage: 2, taijutsuMult: 1.75, chakraCost: 7, hpCostPct: 0.2 });
-    expect(gatesToOpen({ ...p, offense: { ...p.offense, taijutsu: 26 } }, gameData)).toMatchObject({ stage: 3, taijutsuMult: 2 });
+    expect(gatesToOpen({ ...p, offense: { ...p.offense, taijutsu: 30 } }, gameData)).toMatchObject({ stage: 3, taijutsuMult: 2 });
     // Sem chakra para o portão, não abre.
-    expect(availableActions(startBattle({ ...strong, chakra: 6 }, testVillain()), gameData)).not.toContain('gates');
+    expect(availableActions(battle({ ...strong, chakra: 6 }, testVillain()), gameData)).not.toContain('gates');
     expect(gatesToOpen(createPlayer(common, gameData), gameData)).toBeNull();
   });
 
   it('Portões nunca deixam o HP abaixo de 1', () => {
     const p = { ...createPlayer(prodigy, gameData), hp: 5 };
-    const s1 = playRound(withInitiative(startBattle(p, testVillain())), 'gates', seq(0.01), gameData);
+    const s1 = playRound(withInitiative(battle(p, testVillain())), 'gates', seq(0.01), gameData);
     expect(ofType(s1.log, 'gates')).toEqual([{ type: 'gates', stage: 1, hpLost: 4, chakra: 5 }]);
   });
 
   it('Vitalidade Uzumaki: recupera chakra e HP no início da rodada', () => {
     const p = { ...createPlayer({ lineageId: 'uzumaki', affinity: 'wind', jinchuuriki: false }, gameData), hp: 50, chakra: 5 };
-    const s1 = playRound(startBattle(p, testVillain(), { playerStartsFirst: true }), 'rest', seq(0.01), gameData);
-    // 3% de 150 = 4
-    expect(ofType(s1.log, 'regen')).toEqual([{ type: 'regen', hp: 4, chakra: 1 }]);
+    const s1 = playRound(battle(p, testVillain(), { playerStartsFirst: true }), 'rest', seq(0.01), gameData);
+    // 3% de 120 = 3
+    expect(ofType(s1.log, 'regen')).toEqual([{ type: 'regen', hp: 3, chakra: 1 }]);
   });
 
 
@@ -186,24 +186,43 @@ describe('passivas', () => {
 describe('jinchuuriki: manto de chakra e demônio interno', () => {
   const jin: Origin = { lineageId: null, affinity: 'fire', jinchuuriki: true };
 
-  it('abaixo de 50% de HP: status ×1,5, regenera 5% por rodada e metade do dano causado volta como recoil', () => {
+  it('abaixo de 50% de HP: status ×1,5 e regenera 5% por rodada, sem recoil', () => {
     const p = { ...createPlayer(jin, gameData), hp: 53 };
-    const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })), 'villain');
+    const s0 = withInitiative(battle(p, testVillain({ hp: 200 })), 'villain');
     // O vilão acerta 10 − 6 = 4: 49 de HP (< 50), o manto desperta antes do golpe do jogador.
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(ofType(s1.log, 'cloak')).toEqual([{ type: 'cloak', side: 'player' }]);
     expect(effectiveOffense(s1, 'taijutsu', gameData)).toBe(15);
-    // 8 + 15 − 5 = 18; recoil de 9
+    // 8 + 15 − 5 = 18
     expect(ofType(s1.log, 'attack').find((a) => a.side === 'player')).toMatchObject({ damage: 18 });
-    expect(ofType(s1.log, 'recoil')).toEqual([{ type: 'recoil', side: 'player', damage: 9 }]);
-    expect(s1.player.hp).toBe(40);
+    expect(s1.player.hp).toBe(49);
     const s2 = playRound(s1, 'rest', seq(0.5, 0.01), gameData);
     expect(ofType(s2.log.slice(s1.log.length), 'cloakRegen')).toEqual([{ type: 'cloakRegen', side: 'player', hp: 5 }]);
   });
 
+  it('o manto paga 10% do chakra máximo por rodada, a partir da seguinte à ativação', () => {
+    // Chakra máximo 60 (30 × 2): 6 por rodada.
+    const p = { ...createPlayer(jin, gameData), hp: 40 };
+    const s1 = playRound(withInitiative(battle(p, testVillain({ hp: 500 }))), 'tech:basicTaijutsu', seq(0.5, 0.5, 0.01), gameData);
+    expect(ofType(s1.log, 'cloakCost')).toHaveLength(0);
+    const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5, 0.5, 0.01), gameData);
+    expect(ofType(s2.log, 'cloakCost')).toEqual([{ type: 'cloakCost', side: 'player', chakra: 6 }]);
+    expect(s2.player.chakra).toBe(54);
+  });
+
+  it('sem chakra para pagar a rodada, o manto se desfaz', () => {
+    const p = { ...createPlayer(jin, gameData), hp: 40 };
+    const s0 = withInitiative(battle(p, testVillain({ hp: 500 })));
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5, 0.5, 0.01), gameData);
+    const broke = { ...s1, player: { ...s1.player, chakra: 5 } };
+    const s2 = playRound(broke, 'tech:basicTaijutsu', seq(0.5, 0.5, 0.01), gameData);
+    expect(ofType(s2.log, 'cloakFade')).toEqual([{ type: 'cloakFade', side: 'player' }]);
+    expect(s2.playerFx.cloakTurns).toBe(0);
+  });
+
   it('desperta também quem já começa a luta abaixo de 50%; dura 5 rodadas e só uma vez por luta', () => {
     const p = { ...createPlayer(jin, gameData), hp: 40 };
-    let s = withInitiative(startBattle(p, testVillain({ hp: 500 })));
+    let s = withInitiative(battle(p, testVillain({ hp: 500 })));
     s = playRound(s, 'rest', seq(0.5, 0.01), gameData);
     expect(s.playerFx.cloakTurns).toBe(4);
     for (let i = 0; i < 4; i++) s = playRound(s, 'rest', seq(0.5, 0.01), gameData);
@@ -212,19 +231,10 @@ describe('jinchuuriki: manto de chakra e demônio interno', () => {
     expect(ofType(s.log, 'cloak')).toHaveLength(1);
   });
 
-  it('o recoil nunca derruba', () => {
-    const s0 = withInitiative(startBattle({ ...createPlayer(jin, gameData), hp: 2 }, testVillain({ hp: 200 })));
-    const cloaked: BattleState = { ...s0, playerFx: { ...s0.playerFx, cloakTurns: 5, cloakUsed: true } };
-    const s1 = playRound(cloaked, 'tech:basicTaijutsu', seq(0.5, 0.5, 0.01), gameData);
-    // Regenera 5 no início da rodada (7 de HP); o recoil de 9 para em 6 e deixa 1.
-    expect(ofType(s1.log, 'recoil')).toEqual([{ type: 'recoil', side: 'player', damage: 6 }]);
-    expect(s1.player.hp).toBe(1);
-  });
-
   it('demônio interno: imune a genjutsu', () => {
     const v = testVillain({
       defense: { taijutsu: 5, ninjutsu: 5, genjutsu: 26 },
-      techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, debilitateTurns: 1 }],
+      techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalTurns: 1 }],
     });
     const s1 = playRound(withInitiative(startBattle(createPlayer(jin, gameData), v), 'villain'), 'rest', seq(0.5), gameData);
     expect(ofType(s1.log, 'genjutsuImmune')).toEqual([{ type: 'genjutsuImmune', target: 'player' }]);
@@ -250,15 +260,15 @@ describe('efeitos negativos', () => {
   const water: Origin = { lineageId: null, affinity: 'water', jinchuuriki: false };
 
   it('paralisia: crítico de raio faz o alvo perder a vez', () => {
-    const s0 = withInitiative(startBattle(createPlayer(lightning, gameData), testVillain()));
-    const s1 = playRound(s0, 'tech:basicNinjutsu', seq(0.99), gameData);
+    const s0 = withInitiative(startBattle(createPlayer(lightning, gameData), testVillain({ hp: 200 })));
+    const s1 = playRound(s0, 'tech:spark', seq(0.99), gameData);
     expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 1, kind: 'paralysis' }]);
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'paralysis' }]);
   });
 
   it('atordoamento: crítico de água (ou vento, terra) reduz a chance de acerto das próximas 2 ações do alvo', () => {
     const s0 = withInitiative(startBattle(createPlayer(water, gameData), testVillain()));
-    const s1 = playRound(s0, 'tech:basicNinjutsu', seq(0.99, 0.5, 0.5), gameData);
+    const s1 = playRound(s0, 'tech:waterBullet', seq(0.99, 0.5, 0.5), gameData);
     expect(ofType(s1.log, 'status')).toEqual([{ type: 'status', target: 'villain', kind: 'stun', turns: 2 }]);
     expect(ofType(s1.log, 'attack').find((a) => a.side === 'villain')!.hitChance).toBeCloseTo(0.75);
     expect(s1.villain.fx.stunned).toBe(1);
@@ -266,7 +276,7 @@ describe('efeitos negativos', () => {
 
   it('acerto comum não causa efeito elemental', () => {
     const s0 = withInitiative(startBattle(createPlayer(common, gameData), testVillain({ element: 'lightning', hp: 500 })));
-    const s1 = playRound(s0, 'tech:basicNinjutsu', seq(0.5, 0.5, 0.01), gameData);
+    const s1 = playRound(s0, 'tech:fireSpark', seq(0.5, 0.5, 0.01), gameData);
     expect(ofType(s1.log, 'status')).toHaveLength(0);
   });
 
@@ -274,7 +284,7 @@ describe('efeitos negativos', () => {
     // Jogador de fogo contra vilão de raio (neutro), 500 de HP: 2% = 10.
     const burning = () => {
       const s0 = withInitiative(startBattle(createPlayer(common, gameData), testVillain({ element: 'lightning', hp: 500 })));
-      return playRound(s0, 'tech:basicNinjutsu', seq(0.99, 0.5, 0.01), gameData);
+      return playRound(s0, 'tech:fireSpark', seq(0.99, 0.5, 0.01), gameData);
     };
 
     it('crítico de fogo queima por 2 rodadas: 2% e depois 4% do HP máximo', () => {
@@ -288,14 +298,14 @@ describe('efeitos negativos', () => {
 
     it('queimando, cada acerto de fogo prolonga 1 rodada', () => {
       const s1 = burning();
-      const s2 = playRound(s1, 'tech:basicNinjutsu', seq(0.5, 0.5, 0.01), gameData);
+      const s2 = playRound(s1, 'tech:fireSpark', seq(0.5, 0.5, 0.01), gameData);
       expect(ofType(s2.log.slice(s1.log.length), 'burnExtend')).toEqual([{ type: 'burnExtend', target: 'villain', turns: 2 }]);
       expect(s2.villain.fx.burn).toBe(1);
     });
 
     it('depois de apagar, a contagem recomeça e um acerto de fogo comum reacende', () => {
       const s2 = playRound(burning(), 'rest', seq(0.5, 0.01), gameData);
-      const s3 = playRound(s2, 'tech:basicNinjutsu', seq(0.5, 0.5, 0.01), gameData);
+      const s3 = playRound(s2, 'tech:fireSpark', seq(0.5, 0.5, 0.01), gameData);
       const round3 = s3.log.slice(s2.log.length);
       expect(ofType(round3, 'status')).toEqual([{ type: 'status', target: 'villain', kind: 'burn', turns: 1 }]);
       expect(ofType(round3, 'burnTick')).toEqual([{ type: 'burnTick', target: 'villain', damage: 10 }]);
@@ -325,7 +335,7 @@ describe('efeitos negativos', () => {
   });
 
   it('a Vontade do Fogo limpa os efeitos negativos', () => {
-    const s0 = withInitiative(startBattle({ ...createPlayer(common, gameData), hp: 1 }, testVillain()), 'villain');
+    const s0 = withInitiative(battle({ ...createPlayer(common, gameData), hp: 1 }, testVillain()), 'villain');
     const hurt: BattleState = { ...s0, playerFx: { ...s0.playerFx, bleeding: true, burn: 2, poison: { bonus: 1, ticks: 3 } } };
     const s1 = playRound(hurt, 'rest', seq(0.5), gameData);
     expect(ofType(s1.log, 'revive')).toHaveLength(1);
@@ -422,7 +432,7 @@ describe('genjutsu: aprisionamento sem dano', () => {
   it('o genjutsu do vilão também não causa dano e aprisiona o jogador conforme o genjutsu dele', () => {
     const v = testVillain({
       defense: { taijutsu: 5, ninjutsu: 5, genjutsu: 26 },
-      techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, debilitateTurns: 1 }],
+      techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalTurns: 1 }],
     });
     const s0 = startBattle(withGen(10), v, { villainStartsFirst: true });
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);

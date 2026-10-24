@@ -1,4 +1,5 @@
-import type { BattleState, Side } from '../src/core/combat';
+import { startBattle, type BattleOptions, type BattleState, type Side } from '../src/core/combat';
+import type { PlayerState } from '../src/core/player';
 import type { Rng } from '../src/core/rng';
 import type { VillainDef } from '../src/core/types';
 
@@ -26,4 +27,9 @@ export function testVillain(overrides: Partial<VillainDef> = {}): VillainDef {
     techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 10, chakraCost: 0, weight: 1 }],
     ...overrides,
   };
+}
+
+/** Começa uma luta sem a restauração do início (para testar HP e chakra baixos). */
+export function battle(player: PlayerState, villain: VillainDef, options: Partial<BattleOptions> = {}): BattleState {
+  return startBattle(player, villain, { restore: false, ...options });
 }

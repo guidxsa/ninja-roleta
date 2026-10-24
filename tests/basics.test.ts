@@ -90,11 +90,11 @@ describe('iniciativa quadrática', () => {
 });
 
 describe('acerto e crítico', () => {
-  it('chance de acerto usa a diferença de speed, com limites', () => {
-    expect(hitChance(10, 10, balance.hit)).toBeCloseTo(0.85);
-    expect(hitChance(15, 10, balance.hit)).toBeCloseTo(0.9);
-    expect(hitChance(100, 0, balance.hit)).toBe(balance.hit.max);
-    expect(hitChance(0, 100, balance.hit)).toBe(balance.hit.min);
+  it('chance de acerto = precisão da técnica (padrão 85%) + bônus − penalidades, entre 5% e 100%', () => {
+    expect(hitChance(undefined, 0, balance.hit)).toBeCloseTo(0.85);
+    expect(hitChance(0.9, -0.1, balance.hit)).toBeCloseTo(0.8);
+    expect(hitChance(1, 0.5, balance.hit)).toBe(1);
+    expect(hitChance(0.1, -0.5, balance.hit)).toBe(0.05);
   });
 
   it('genjutsu compara genjutsu do atacante com o do defensor', () => {
@@ -102,10 +102,11 @@ describe('acerto e crítico', () => {
     expect(genjutsuHitChance(15, 10, balance.genjutsuHit)).toBeCloseTo(0.7);
   });
 
-  it('crítico = 5% + diferencial, no máximo 50%', () => {
+  it('crítico = 5% + diferencial + bônus da técnica, no máximo 50% e nunca acima do acerto', () => {
     expect(critChance(0, balance.crit)).toBeCloseTo(0.05);
     expect(critChance(0.1, balance.crit)).toBeCloseTo(0.15);
     expect(critChance(0.9, balance.crit)).toBe(0.5);
+    expect(critChance(0.9, balance.crit, 0.3)).toBe(0.3);
   });
 
   it('fatias: erro | acerto | crítico (topo do dado)', () => {
@@ -137,21 +138,23 @@ describe('dano', () => {
     expect(playerDamage({ baseDamage: 1, offense: 0, defense: 50, elementMult: 1, critMult: 1 })).toBe(1);
   });
 
-  it('jogador: perfuração ignora parte da defesa', () => {
+  it('jogador: penetração ignora parte da defesa', () => {
     // 8 + 13 − 10 × 0.7 = 14
     expect(
-      playerDamage({ baseDamage: 8, offense: 13, defense: 10, defensePierce: 0.3, elementMult: 1, critMult: 1 }),
+      playerDamage({ baseDamage: 8, offense: 13, defense: 10, penetration: 0.3, elementMult: 1, critMult: 1 }),
     ).toBe(14);
   });
 
-  it('resistência do jogador = ofensivo / 2 + diferencial', () => {
-    expect(playerResistance(10, 1, 2)).toBe(6);
-    expect(playerResistance(15, 1, 2)).toBe(8);
-    expect(playerResistance(0, 1, 2)).toBe(1);
+  it('resistência do jogador = max(piso, ofensivo / 2) + diferencial', () => {
+    expect(playerResistance(10, 1, 2, 2)).toBe(6);
+    expect(playerResistance(15, 1, 2, 2)).toBe(8);
+    // Piso 2: quem tem o status zerado não fica sem resistência (Corpo de ferro: 4).
+    expect(playerResistance(0, 1, 2, 2)).toBe(3);
+    expect(playerResistance(0, 1, 2, 4)).toBe(5);
   });
 
   it('vilão: base × elemento × crítico − resistência, mínimo 1', () => {
-    const base = { playerOffense: 10, resistanceBonus: 1, offenseDivisor: 2, elementMult: 1, critMult: 1 };
+    const base = { playerOffense: 10, resistanceBonus: 1, offenseDivisor: 2, floor: 2, elementMult: 1, critMult: 1 };
     expect(villainDamage({ ...base, baseDamage: 14 })).toBe(8);
     expect(villainDamage({ ...base, baseDamage: 14, critMult: 2 })).toBe(22);
     expect(villainDamage({ ...base, baseDamage: 14, elementMult: 1.5 })).toBe(15);

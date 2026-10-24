@@ -27,6 +27,11 @@ const archetypes: { label: string; origin: Origin }[] = [
   { label: 'Hyuuga (Água)', origin: { lineageId: 'hyuuga', affinity: 'water', jinchuuriki: false } },
   { label: 'Prodígio tai.', origin: { lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false } },
   { label: 'Uzumaki (Vento)', origin: { lineageId: 'uzumaki', affinity: 'wind', jinchuuriki: false } },
+  { label: 'Nara (Terra)', origin: { lineageId: 'nara', affinity: 'earth', jinchuuriki: false } },
+  { label: 'Akimichi (Terra)', origin: { lineageId: 'akimichi', affinity: 'earth', jinchuuriki: false } },
+  { label: 'Yamanaka (Água)', origin: { lineageId: 'yamanaka', affinity: 'water', jinchuuriki: false } },
+  { label: 'Aburame (Raio)', origin: { lineageId: 'aburame', affinity: 'lightning', jinchuuriki: false } },
+  { label: 'Inuzuka (Vento)', origin: { lineageId: 'inuzuka', affinity: 'wind', jinchuuriki: false } },
 ];
 
 const pad = (s: string, n: number) => s.padEnd(n);
@@ -56,11 +61,13 @@ for (const a of archetypes) {
   console.log(line);
 }
 
-// Campanha completa com origens sorteadas, em cada dificuldade (XP e nível; sem eventos nem recompensas).
+// Campanha completa com origens sorteadas pela roleta, em cada dificuldade, com eventos e recompensas
+// automáticos (`--bare`: só XP e nível).
 const runs = Math.max(1, Math.floor(fights / 2));
+const progression = !process.argv.includes('--bare');
 const difficulties = Object.keys(gameData.balance.difficulty.multipliers) as Difficulty[];
 console.log(`
-Campanha completa: ${runs} runs por dificuldade, origem sorteada (XP e nível; sem eventos nem recompensas)`);
+Campanha completa: ${runs} runs por dificuldade, origem sorteada, ${progression ? 'com eventos e recompensas' : 'sem eventos nem recompensas'}`);
 for (const difficulty of difficulties) {
   const stopCount = new Map<string, number>();
   let victories = 0;
@@ -71,7 +78,7 @@ for (const difficulty of difficulties) {
   const fightOrder = campaign.flatMap((st) => st.villains);
   for (let i = 0; i < runs; i++) {
     const { origin } = rollOrigin(rng, gameData);
-    const result = runCampaign(createPlayer(origin, gameData, difficulty), campaign, villainsById, rng, gameData, difficulty);
+    const result = runCampaign(createPlayer(origin, gameData, difficulty), campaign, villainsById, rng, gameData, difficulty, { progression });
     allRounds += result.rounds.reduce((a, b) => a + b, 0);
     fightCount += result.rounds.length;
     result.levels.forEach((lv, k) => {

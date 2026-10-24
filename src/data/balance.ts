@@ -1,136 +1,131 @@
 // Todos os números de balanceamento. Valores provisórios: ajustar com `npm run sim`.
+// O design de cada regra está em docs/ (o arquivo indicado em cada bloco).
 
 export const balance = {
-  baseStats: { hp: 100, taijutsu: 10, ninjutsu: 10, genjutsu: 10, chakra: 10, speed: 10 },
-
-  // Tipos com ação básica para quem não define `startingTypes` na linhagem (comuns e Uzumaki):
-  // taijutsu e ninjutsu do próprio elemento. Genjutsu inicial é só do Uchiha.
-  commonStartingTypes: ['taijutsu', 'ninjutsu'] as ('taijutsu' | 'ninjutsu' | 'genjutsu')[],
-
   origin: {
-    // Uma roleta só: a fatia "comum" tem este peso; as linhagens especiais, os pesos de lineages.ts
-    // (10 + 10 + 20 + 10 = 50, ou seja, 50% comum).
-    commonWeight: 50,
+    // Jinchuuriki: roleta independente da linhagem (origens.md). Os pesos das linhagens ficam em lineages.ts.
     jinchuurikiChance: 0.1,
   },
 
   elements: { advantage: 1.5, disadvantage: 0.75, neutral: 1 },
 
-  // Chance base de acerto: base + diferença de speed. Proposta.
-  hit: { base: 0.85, perSpeedPoint: 0.01, min: 0.6, max: 0.95 },
+  // Rolagem de acerto (fundamentos.md): chance = precisão da técnica + bônus − penalidades, entre min e max.
+  hit: { defaultAccuracy: 0.85, min: 0.05, max: 1 },
   // Genjutsu do atacante vs. genjutsu do defensor.
   genjutsuHit: { base: 0.6, perPoint: 0.02, min: 0.2, max: 0.9 },
-  // Genjutsu não causa dano: aprisiona o alvo (perde a vez). Turnos = turnos base da técnica
-  // + 1 a cada `pointsPerExtraTurn` de vantagem (poder de genjutsu do atacante − genjutsu do alvo),
-  // entre 1 e `maxTurns`. Proposta.
+  // Efeitos mentais: turnos = turnos base da técnica + 1 a cada `pointsPerExtraTurn` de vantagem
+  // (poder do atacante − genjutsu do alvo), entre 1 e `maxTurns`. Pergaminho: +3 de poder por nível.
   genjutsuPrison: { pointsPerExtraTurn: 8, maxTurns: 3 },
 
-  // Crítico: 5% + diferencial_de_dano_%, no máximo 50%.
+  // Crítico: 5% + diferencial_de_dano_% + bônus da técnica, no máximo 50% e nunca acima do acerto.
   crit: { baseChance: 0.05, multiplier: 2, max: 0.5 },
 
-  resistance: { offenseDivisor: 2, initialBonus: 1 },
+  // Resistência do jogador = max(piso, status / 2) + diferencial (começa em 1). Corpo de ferro: piso 4 em nin e gen.
+  resistance: { offenseDivisor: 2, initialBonus: 1, floor: 2, ironBodyFloor: 4 },
 
-  // Ações básicas de cada tipo. O taijutsu fortalecido não é básico: sai na recompensa "nova técnica".
-  basicActions: {
-    taijutsu: { baseDamage: 8, chakraCost: 0 },
-    empoweredTaijutsu: { baseDamage: 14, chakraCost: 3 },
-    ninjutsu: { baseDamage: 10, chakraCost: 3 },
-    genjutsu: { baseDamage: 0, chakraCost: 3, debilitateTurns: 1 },
-  },
+  // Penetração: soma de técnica, sapo e Punho preciso, com teto.
+  penetration: { max: 0.6 },
 
-  // "Concentrar chakra": recupera chakra no lugar de atacar.
-  rest: { chakraRecovered: 3 },
+  // Restauração (fundamentos.md): o início de cada combate restaura HP e chakra e limpa os efeitos.
+  // `restoreWithinBlock: false` faz o HP carregar entre as lutas de um bloco.
+  combat: { restoreOnStart: true, restoreWithinBlock: true },
 
-  // Dōjutsu: ativar gasta o turno e `activationCost`; ativo, custa `upkeep` de chakra no fim de cada
-  // rodada e se desliga sozinho depois de `duration` rodadas (contadas a partir da seguinte à ativação)
-  // ou quando falta chakra. Pode ser ativado de novo. Proposta.
+  // Ações universais (tecnicas.md).
+  rest: { chakraRecovered: 4 },
+  substitution: { chakraCost: 2, dodgeChance: 0.5 },
+
+  // Golpe carregado dos vilões: dano × `damageMult`, sem crítico.
+  charged: { damageMult: 2 },
+
+  // Dōjutsu: ativar gasta o turno e `activationCost`; ativo, custa `upkeep` no fim de cada rodada e se
+  // desliga depois de `duration` rodadas (contadas a partir da seguinte) ou quando falta chakra.
   dojutsu: {
     duration: 5,
-    // Sharingan: evolui com o nível (1, 2 e 3 tomoe). Ativo, soma `statBonus` a tai/nin/gen,
-    // `speed`, melhora o genjutsu (acerto e poder de aprisionamento) e tem chance de ler o
-    // movimento do vilão (dano recebido × `readDamageFactor`).
+    // Sharingan: evolui com o nível (1, 2 e 3 tomoe).
     sharingan: {
       activationCost: 4,
       upkeep: 1,
       readDamageFactor: 0.5,
       stages: [
-        { minLevel: 1, statBonus: 3, speed: 1, genjutsuHit: 0.1, genjutsuPower: 3, readChance: 0.25 },
-        { minLevel: 4, statBonus: 5, speed: 2, genjutsuHit: 0.15, genjutsuPower: 6, readChance: 0.3 },
-        { minLevel: 7, statBonus: 7, speed: 3, genjutsuHit: 0.2, genjutsuPower: 9, readChance: 0.35 },
+        { minLevel: 1, statBonus: 3, speed: 1, genjutsuHit: 0.1, genjutsuPower: 3, readChance: 0.2 },
+        { minLevel: 4, statBonus: 5, speed: 2, genjutsuHit: 0.15, genjutsuPower: 6, readChance: 0.25 },
+        { minLevel: 7, statBonus: 7, speed: 3, genjutsuHit: 0.2, genjutsuPower: 9, readChance: 0.3 },
       ],
     },
-    // Byakugan: ativo, os golpes de taijutsu não erram, o taijutsu causa ×`taijutsuMult`
-    // e libera o golpe inibidor (drena chakra do vilão).
+    // Byakugan: taijutsu não erra, ×`taijutsuMult` e libera o Selo dos Pontos Vitais.
     byakugan: { activationCost: 3, upkeep: 1, taijutsuMult: 1.1 },
   },
 
-  // Portões (prodígio do taijutsu): uma vez por luta. Abrir gasta o turno (não é golpe), custa chakra
-  // e HP (nunca abaixo de 1) e dá taijutsu ×`taijutsuMult` por `turns` rodadas, a partir da seguinte.
-  // Evoluem com o atributo de taijutsu (o prodígio nasce com 18): abre sempre o maior portão liberado.
-  // Quanto maior o portão, maior o custo. Proposta.
+  // Portões (prodígio do taijutsu): uma vez por luta; abrir gasta o turno e o bônus vale `turns` rodadas
+  // a partir da seguinte. Abre o maior portão liberado pelo taijutsu atual.
   gates: {
     turns: 5,
     stages: [
-      { minTaijutsu: 18, taijutsuMult: 1.5, chakraCost: 5, hpCostPct: 0.15 },
-      { minTaijutsu: 22, taijutsuMult: 1.75, chakraCost: 7, hpCostPct: 0.2 },
-      { minTaijutsu: 26, taijutsuMult: 2, chakraCost: 9, hpCostPct: 0.25 },
+      { minTaijutsu: 22, taijutsuMult: 1.5, chakraCost: 5, hpCostPct: 0.15 },
+      { minTaijutsu: 26, taijutsuMult: 1.75, chakraCost: 7, hpCostPct: 0.2 },
+      { minTaijutsu: 30, taijutsuMult: 2, chakraCost: 9, hpCostPct: 0.25 },
     ],
   },
 
-  // Efeitos negativos causados por ataques (valem para jogador e vilões).
+  // Passivas e ativas de linhagem (origens.md).
+  passives: {
+    determination: { xpBonusPct: 0.1 },
+    heavyBody: { base: 0.8, perHpPct: 0.4 },
+    mindReading: { villainHitPenalty: 0.1 },
+    hive: { chakraDrainPerHit: 2 },
+    duo: { chance: 0.3, damagePct: 0.4 },
+    genjutsuResistance: { bonus: 6 },
+    preciseFist: { penetration: 0.3 },
+    vitality: { chakraPerTurn: 1, hpPctPerTurn: 0.03 },
+  },
+  expansion: { chakraCost: 6, turns: 3, taijutsuMult: 1.5, speedPenalty: 3 },
+  shadowClones: { chakraCost: 6, hitsMult: 3, damagePct: 0.4 },
+  rotation: { reflectPct: 0.5 },
+
+  // Efeitos (efeitos.md). Valem para jogador e vilões.
   status: {
-    // Crítico de ataque elemental de raio: perde a vez.
     paralysis: { turns: 1 },
-    // Crítico de ataque elemental de vento, terra ou água: −`hitPenalty` na chance de acerto das
-    // próximas `turns` ações do atordoado.
     stun: { turns: 2, hitPenalty: 0.1 },
-    // Crítico de ataque elemental de fogo: queima por `turns` rodadas. O n-ésimo tique causa 2^n % do
-    // HP máximo do alvo (2, 4, 8, 16...), no máximo `maxPct`. Queimando, cada acerto de fogo prolonga
-    // 1 rodada; depois de apagar, a contagem volta ao início e um acerto de fogo comum reacende (1 rodada).
+    // O n-ésimo tique causa 2^n % do HP máximo, no máximo `maxPct`.
     burn: { turns: 2, extendPerHit: 1, reigniteTurns: 1, maxPct: 0.16 },
-    // Envenenamento: tique = `basePct` do HP máximo do alvo + bônus da fonte + 1 a cada tique anterior,
-    // no máximo `maxPct` do HP máximo. Não acaba sozinho: depois de cada tique o alvo tem
-    // `cureChance` de resistir e se curar (teste favorável a ele). Proposta.
-    poison: { basePct: 0.01, growthPerTick: 1, maxPct: 0.3, cureChance: 0.6 },
-    // Sangramento: crítico de golpe de espada. Dura a luta; quem sangra toma ×`bladeDamageMult` de lâminas.
+    // Tique = `basePct` do HP máximo + bônus da fonte + 1 por tique anterior, no máximo `maxPct`.
+    // Teste de cura depois de cada tique a partir de `cureFromTick`. Acerto em alvo envenenado soma `hitBonus`.
+    poison: { basePct: 0.01, growthPerTick: 1, maxPct: 0.3, cureChance: 0.4, cureFromTick: 2, hitBonus: 1 },
     bleed: { bladeDamageMult: 1.5 },
+    // Efeitos de genjutsu.
+    sleepExtraTurns: 1,
+    fear: { damageMult: 0.75 },
+    confusion: { failChance: 0.3, selfHitShare: 0.5 },
+    torment: { chakraPerRound: 4 },
   },
 
   // Vilão sem chakra para nenhuma técnica concentra chakra no lugar de atacar.
   villainRest: { chakraRecovered: 4 },
 
-  // Proposta anti-trava: após sair de Debilitado, o alvo age ao menos uma vez antes de poder ser debilitado de novo.
+  // Anti-trava: após sair de um efeito que tira a vez, o alvo age ao menos uma vez antes de perder a vez de novo.
   debilitated: { immunityActions: 1 },
 
   revive: { initialItems: 1 },
 
-  // 1 estágio de status (eventos de treino, jokenpô e recompensas). HP e chakra máximos sobem o mesmo
-  // que numa subida de nível (`level.growth` da dificuldade).
+  // 1 estágio de status: +1 em tai/nin/gen/speed; HP e chakra máximos iguais a uma subida de nível.
   statStage: { taijutsu: 1, ninjutsu: 1, genjutsu: 1, speed: 1 },
 
-  // Upgrade de técnica (pergaminho): dano base extra por nível, por tipo de técnica.
-  // No ninjutsu médico, cada nível aumenta a cura; no genjutsu, o poder de aprisionamento.
-  techniqueUpgrade: { baseDamagePerLevel: 2, healPctPerLevel: 0.05, genjutsuPowerPerLevel: 3 },
+  // Upgrade de técnica (pergaminho), por categoria e por nível.
+  techniqueUpgrade: { baseDamagePerLevel: 3, healPctPerLevel: 0.05, genjutsuPowerPerLevel: 3 },
 
   // Ferramenta ninja: dano base extra em todos os ataques, por nível.
   ninjaTool: { baseDamagePerLevel: 1 },
 
-  // Invocação: passiva, vale em todas as lutas. "Por nível" conta a partir do nível 2.
+  // Invocações (campanha.md). "Por nível" conta a partir do nível 2.
   summon: {
-    // Sapo: dano base extra em todos os ataques.
-    toad: { baseDamage: 4, baseDamagePerLevel: 2 },
-    // Cobra: um acerto envenena o alvo (se ele ainda não estiver envenenado) com este bônus inicial.
-    snake: { poisonBonus: 1, poisonBonusPerLevel: 2 },
-    // Lesma: cura uma fração do HP máximo no início de cada rodada.
-    slug: { healPct: 0.03, healPctPerLevel: 0.03 },
+    toad: { penetration: 0.25, penetrationPerLevel: 0.1 },
+    snake: { poisonBonus: 2, poisonBonusPerLevel: 2 },
+    slug: { healPct: 0.03, healPctPerLevel: 0.01, cureChancePerLevel: 0.1 },
   },
 
-  // Nível: cada vilão derrotado dá XP (`xp` em villains.ts). Juntando o XP do nível, sobe 1.
-  // XP para ir do nível N ao N+1: xpBase + xpGrowth × (N − 1). No teto, o XP deixa de acumular.
-  // Cada nível soma HP e chakra máximos conforme a dificuldade e restaura HP e chakra
-  // (terminar uma luta não restaura). Chakra nunca sobe menos de 1.
+  // Nível sem limite (progressao.md). XP do nível N ao N+1: xpBase + xpGrowth × (N − 1).
+  // Subir de nível não restaura (quem restaura é o início do combate).
   level: {
-    cap: 10,
     xpBase: 100,
     xpGrowth: 25,
     growth: {
@@ -141,9 +136,7 @@ export const balance = {
     },
   },
 
-  // Dificuldade: multiplica a força dos vilões (HP, dano base das técnicas e atributos defensivos).
-  // O hardcore também troca as passivas dos vilões pelas versões hardcore e só libera depois de
-  // vencer uma run no `hardcoreUnlockedBy`.
+  // Dificuldade (campanha.md): multiplica HP, dano base e defesas dos vilões.
   difficulty: {
     default: 'normal' as const,
     multipliers: { easy: 0.85, normal: 1, hard: 1.15, hardcore: 1.25 },
@@ -153,45 +146,45 @@ export const balance = {
   events: {
     trainingStages: 1,
     jokenpoWinStages: 2,
-    // Akatsuki com quem não é jinchuuriki (e escapou): viu a luta deles e aprendeu a mirar pontos vitais.
     akatsukiCritBonus: 0.05,
-    // Akatsuki tirou uma Vontade do Fogo, mas o jogador não tinha nenhuma: começa a próxima luta assim.
+    // Sem Vontade do Fogo para perder: começa a próxima luta assim (depois da restauração).
     akatsukiNoReviveHpPct: 0.5,
     akatsukiNoReviveChakraPct: 0.5,
   },
 
-  // Recompensas: a "camada" (1 comum, 2 raro, 3 lendário) multiplica a quantidade.
+  // Itens e bolsa (itens.md).
+  items: {
+    xpScroll: 100,
+    bagMax: 3,
+    bagOverflowXp: 30,
+    soldierPill: { chakraPct: 0.5 },
+    explosiveTag: { damage: 15 },
+    trainingWeights: { speedPenalty: 2, taijutsuPerWin: 1, removeSpeedBonus: 3 },
+  },
+
+  // Roleta de recompensa por raridade (1 comum, 2 rara, 3 lendária). Índice = raridade − 1.
   rewards: {
-    stagesPerTier: 1,
-    resistancePerTier: 1,
-    critBonusPerTier: 0.03,
+    stages: [1, 2, 3],
+    techniqueScrolls: [0, 1, 2],
+    xp: [60, 120, 200],
+    itemSpins: [1, 2, 3],
+    resistance: [1, 2, 3],
+    critBonus: [0.02, 0.04, 0.06],
+    // Lendária: gira tantas vezes e o jogador escolhe 1.
+    legendaryChoices: 3,
   },
 
   exam: {
-    // Exceção à regra "só o nível restaura": entre as lutas do exame o jogador volta cheio,
-    // senão uma derrota (que deixa 1 de HP) perderia todas as lutas seguintes.
-    restoreBetweenFights: true,
-    // Índice = vitórias no exame.
-    rewardByWins: [
-      { tier: 1, spins: 1 },
-      { tier: 1, spins: 1 },
-      { tier: 2, spins: 2 },
-      { tier: 3, spins: 2 },
-    ],
+    // Índice = vitórias no exame. 0 = sem recompensa.
+    rewardTierByWins: [0, 1, 2, 3],
   },
 
   jinchuuriki: {
     chakraBonusPct: 1.0,
-    // Manto de chakra: uma vez por luta, abaixo do limiar de HP. Por `turns` rodadas: tai/nin/gen e
-    // speed ×`statMult`, regenera `regenPct` do HP máximo por rodada e sofre `recoilPct` do dano que
-    // causa (o recoil nunca derruba).
-    cloak: { hpThresholdPct: 0.5, statMult: 1.5, regenPct: 0.05, recoilPct: 0.5, turns: 5 },
-    // Demônio interno: imune a genjutsu.
+    // Manto de chakra: uma vez por luta, abaixo do limiar de HP. Paga 10% do chakra máximo por rodada.
+    cloak: { hpThresholdPct: 0.5, statMult: 1.5, regenPct: 0.05, chakraPctPerRound: 0.1, turns: 5 },
     genjutsuImmune: true,
   },
-
-  // Terminar uma etapa não restaura HP nem chakra: quem restaura é a subida de nível.
-  campaign: { restoreBetweenStages: false },
 
   history: { maxRuns: 100 },
 };
