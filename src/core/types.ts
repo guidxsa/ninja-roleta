@@ -11,6 +11,21 @@ export type TechniqueSlot = AttackType | 'medical';
 export type StatKey = 'hp' | AttackType | 'chakra' | 'speed';
 export type Stats = Record<StatKey, number>;
 
+/** Resistência física (dano de taijutsu e ninjutsu) e mental (genjutsu e efeitos mentais). */
+export type ResistanceKind = 'physical' | 'mental';
+export type Resistances = Record<ResistanceKind, number>;
+
+/** Pesos das reações de um vilão (fundamentos.md#reações). Resistir é sempre possível. */
+export interface ReactionWeights {
+  resist: number;
+  clash?: number;
+  barrier?: number;
+  substitution?: number;
+}
+
+/** Estado elemental ativo no corpo (Armadura de Raio): conta como encontro de elementos. */
+export type ElementalStateId = 'lightningArmor';
+
 // Passivas são comportamento (código); os parâmetros delas ficam em `balance.passives` e `balance.gates`.
 export type PassiveKind =
   | 'determination'
@@ -43,8 +58,9 @@ export interface LineageDef {
   tier: LineageTier;
   /** Peso na roleta de linhagem (uma roleta só, com todos os níveis). */
   weight: number;
-  /** Status iniciais absolutos (orçamento de 70 pontos, ver docs/origens.md). */
+  /** Status iniciais absolutos (orçamento de 90 pontos com as resistências, ver docs/origens.md). */
   stats: Stats;
+  resistance: Resistances;
   affinity: AffinityRule;
   passive: PassiveKind;
   active?: ActiveKind;
@@ -82,7 +98,7 @@ export interface TechniqueDef {
   accuracy?: number;
   /** Somado à chance de crítico. */
   critBonus?: number;
-  /** Fração da defesa do alvo ignorada (soma com outras fontes, até o teto). */
+  /** Fração da resistência do alvo ignorada (soma com outras fontes, até o teto). */
   penetration?: number;
   /** Efeito com chance no acerto. */
   onHit?: { effect: HitEffect; chance: number };
@@ -99,11 +115,26 @@ export interface TechniqueDef {
   mentalStat?: AttackType;
   /** Só ninjutsu médico: fração do HP máximo curada. */
   healPct?: number;
-  /** Técnica defensiva (Rotação): gasta o turno e bloqueia o próximo ataque de tai ou nin. */
-  defensive?: 'rotation';
+  /** Barreira (só reação): poder de barreira na disputa e na quebra de guarda. */
+  barrier?: number;
+  /** Barreira que, ao aguentar, devolve esta fração do dano que o golpe causaria (Rotação). */
+  reflectPct?: number;
+  /** Barreira de fogo: chance de queimar quem tenta quebrá-la com taijutsu. */
+  burnOnBreakAttempt?: number;
+  /** Barreira de vento: poder extra contra técnicas de vários golpes. */
+  multiHitBonus?: number;
+  /** Poder extra na disputa (Rasengan). */
+  clashBonus?: number;
+  /** Ativa um estado elemental no corpo (Armadura de Raio). */
+  state?: ElementalStateId;
+  /** Linha de upgrade com nome próprio (linhas elementais, Rasengan) e o nível desta ficha nela. */
+  line?: string;
+  lineLevel?: number;
   /** Ninjutsu básico do elemento (kit inicial; a recompensa lendária de elemento ensina). */
   elementalBasic?: boolean;
-  /** Aprendida sozinha ao atingir este nível (se a origem e o elemento permitirem). */
+  /** Só o guru ensina. */
+  premium?: boolean;
+  /** Técnicas de nível: aprendidas sozinhas neste nível. Na pool da recompensa: entra a partir dele. */
   minLevel?: number;
   /** Só estas linhagens aprendem. */
   lineages?: string[];
@@ -119,8 +150,11 @@ export interface VillainTechnique {
   baseDamage: number;
   /** Taijutsu é sempre 0. Sem chakra para nenhuma técnica, o vilão concentra chakra. */
   chakraCost: number;
-  /** Peso na escolha da técnica pelo vilão (entre as que ele pode pagar). */
+  /** Peso na escolha da técnica pelo vilão (entre as que ele pode pagar). Barreiras: peso na reação. */
   weight: number;
+  hits?: number;
+  /** Barreira (só reação): poder de barreira. */
+  barrier?: number;
   /** Omitido = elemento do vilão. Taijutsu é sempre neutro. */
   element?: Element | null;
   /** Omitido = `balance.hit.defaultAccuracy`. */
@@ -145,8 +179,14 @@ export interface VillainDef {
   /** Reserva de chakra do vilão. */
   chakra: number;
   speed: number;
-  /** Atributos defensivos por tipo. O de genjutsu também mede o poder de ilusão do vilão. */
-  defense: AttackStats;
+  /** Ataque por tipo (mesma ficha do jogador). */
+  offense: AttackStats;
+  /** Resistência física e mental (mesma ficha do jogador). */
+  resistance: Resistances;
+  /** Pesos das reações. Omitido = só resiste. */
+  reactions?: ReactionWeights;
+  /** Estado elemental a luta toda (Armadura de Areia do Gaara). */
+  elementalState?: Element;
   /** Diferencial de crítico do vilão (somado aos 5% base). */
   critBonus: number;
   /** Experiência que o jogador ganha ao derrotar o vilão. */
@@ -162,8 +202,10 @@ export interface VillainDef {
 /** Manto: abaixo do limiar de HP, uma vez por luta, por alguns turnos (jinchuuriki, marca da maldição). */
 export interface CloakDef {
   hpThresholdPct: number;
-  /** Multiplica tai/nin/gen e speed (jogador) ou dano e defesas (vilão) enquanto ativo. */
+  /** Multiplica tai/nin/gen e speed (jogador) ou o dano (vilão) enquanto ativo. */
   statMult: number;
+  /** Multiplica as resistências enquanto ativo. */
+  resistanceMult: number;
   /** Fração do HP máximo recuperada no início de cada rodada, enquanto ativo. */
   regenPct: number;
   /** Fração do chakra máximo paga no início de cada rodada; sem chakra, o manto se desfaz. */
@@ -185,14 +227,14 @@ export type VillainPassive =
       evasionMult: number;
       lastStand?: { healPct: number; damageMult: number };
     }
-  /** Jinchuuriki ou marca da maldição. `defenseMult` (hardcore) vale a luta toda, por tipo. */
+  /** Jinchuuriki ou marca da maldição. `resistanceMult` (hardcore) vale a luta toda. */
   | {
       kind: 'cloak';
       variant: 'beast' | 'curseMark';
       cloak: CloakDef;
       genjutsuImmune: boolean;
       fromStart?: boolean;
-      defenseMult?: Partial<AttackStats>;
+      resistanceMult?: Partial<Resistances>;
     }
   /** Bisturi: crítico extra e críticos fazem sangrar; no hardcore todos os golpes sangram e furam a resistência. */
   | { kind: 'scalpel'; critBonus: number; bleedOnHit?: boolean; resistancePierce?: number }

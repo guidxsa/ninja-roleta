@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { playerDamage, playerResistance, villainDamage } from '../src/core/damage';
+import { damage, usedResistance } from '../src/core/damage';
 import { elementMultiplier } from '../src/core/elements';
 import { critChance, genjutsuHitChance, hitChance, hitSlices, rollHit } from '../src/core/hit';
 import { initiativeChance, rollInitiative } from '../src/core/initiative';
@@ -72,6 +72,12 @@ describe('elementos', () => {
     expect(elementMultiplier(null, 'wind', BEATS, cfg)).toBe(1);
     expect(elementMultiplier('fire', null, BEATS, cfg)).toBe(1);
   });
+
+  it('raio perfura terra sólida (barreira ou estado): ×2 no lugar de ×1,5', () => {
+    expect(elementMultiplier('lightning', 'earth', BEATS, cfg, true)).toBe(2);
+    expect(elementMultiplier('lightning', 'earth', BEATS, cfg, false)).toBe(1.5);
+    expect(elementMultiplier('earth', 'lightning', BEATS, cfg, true)).toBe(0.75);
+  });
 });
 
 describe('iniciativa quadrática', () => {
@@ -127,37 +133,31 @@ describe('acerto e crítico', () => {
   });
 });
 
-describe('dano', () => {
-  it('jogador: (base + ofensivo − defensivo) × elemento × crítico, arredondado pra baixo', () => {
-    expect(playerDamage({ baseDamage: 8, offense: 10, defense: 7, elementMult: 1, critMult: 1 })).toBe(11);
-    expect(playerDamage({ baseDamage: 10, offense: 10, defense: 7, elementMult: 1.5, critMult: 2 })).toBe(39);
-    expect(playerDamage({ baseDamage: 10, offense: 10, defense: 7, elementMult: 0.75, critMult: 1 })).toBe(9);
+describe('dano (fórmula única)', () => {
+  const r = balance.resistance;
+
+  it('(base + ataque − resistência × fração) × elemento × crítico, arredondado pra baixo', () => {
+    // Resistir: 8 + 10 − 10 × 0,7 = 11
+    expect(damage({ baseDamage: 8, offense: 10, resistance: 10, fraction: r.resist, elementMult: 1, critMult: 1 })).toBe(11);
+    // (10 + 10 − 7) × 1,5 × 2 = 39
+    expect(damage({ baseDamage: 10, offense: 10, resistance: 10, fraction: r.resist, elementMult: 1.5, critMult: 2 })).toBe(39);
+    expect(damage({ baseDamage: 10, offense: 10, resistance: 10, fraction: r.resist, elementMult: 0.75, critMult: 1 })).toBe(9);
   });
 
-  it('jogador: dano mínimo de quem acerta é 1', () => {
-    expect(playerDamage({ baseDamage: 1, offense: 0, defense: 50, elementMult: 1, critMult: 1 })).toBe(1);
+  it('passiva (40%), Resistir (70%) e postura (100%) usam frações diferentes da mesma resistência', () => {
+    const hit = (fraction: number) => damage({ baseDamage: 10, offense: 10, resistance: 10, fraction, elementMult: 1, critMult: 1 });
+    expect(hit(r.passive)).toBe(16);
+    expect(hit(r.resist)).toBe(13);
+    expect(hit(r.stance)).toBe(10);
   });
 
-  it('jogador: penetração ignora parte da defesa', () => {
-    // 8 + 13 − 10 × 0.7 = 14
-    expect(
-      playerDamage({ baseDamage: 8, offense: 13, defense: 10, penetration: 0.3, elementMult: 1, critMult: 1 }),
-    ).toBe(14);
+  it('dano mínimo de quem acerta é 1', () => {
+    expect(damage({ baseDamage: 1, offense: 0, resistance: 50, fraction: 1, elementMult: 1, critMult: 1 })).toBe(1);
   });
 
-  it('resistência do jogador = max(piso, ofensivo / 2) + diferencial', () => {
-    expect(playerResistance(10, 1, 2, 2)).toBe(6);
-    expect(playerResistance(15, 1, 2, 2)).toBe(8);
-    // Piso 2: quem tem o status zerado não fica sem resistência (Corpo de ferro: 4).
-    expect(playerResistance(0, 1, 2, 2)).toBe(3);
-    expect(playerResistance(0, 1, 2, 4)).toBe(5);
-  });
-
-  it('vilão: base × elemento × crítico − resistência, mínimo 1', () => {
-    const base = { playerOffense: 10, resistanceBonus: 1, offenseDivisor: 2, floor: 2, elementMult: 1, critMult: 1 };
-    expect(villainDamage({ ...base, baseDamage: 14 })).toBe(8);
-    expect(villainDamage({ ...base, baseDamage: 14, critMult: 2 })).toBe(22);
-    expect(villainDamage({ ...base, baseDamage: 14, elementMult: 1.5 })).toBe(15);
-    expect(villainDamage({ ...base, baseDamage: 3 })).toBe(1);
+  it('penetração ignora parte da resistência usada', () => {
+    // 8 + 13 − 10 × 1 × 0,7 = 14
+    expect(usedResistance(10, 1, 0.3)).toBeCloseTo(7);
+    expect(damage({ baseDamage: 8, offense: 13, resistance: 10, fraction: 1, penetration: 0.3, elementMult: 1, critMult: 1 })).toBe(14);
   });
 });

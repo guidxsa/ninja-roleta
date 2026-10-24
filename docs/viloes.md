@@ -27,27 +27,29 @@ Fichas dos vilões da campanha: status, moveset, passiva, versão hardcore, comp
 - **Intenção**: a próxima ação do vilão é sorteada no fim da rodada anterior. A passiva Estrategista (Nara) mostra essa intenção na tela.
 - **Reações**: ao receber um ataque, o vilão sorteia a reação pelos pesos de `reactions`, só entre as que pode pagar e as que valem contra aquele ataque. Resistir é sempre possível. Na Disputa, a técnica é sorteada pelos pesos normais entre os ninjutsu de ataque que ele pode pagar.
 - **Dificuldade**: multiplica HP, dano base, ataques e resistências (ver [campanha.md](campanha.md#dificuldade)). No hardcore, `passive` vira `hardcorePassive`.
-- **Golpe carregado**: quando sorteia a técnica marcada, o vilão gasta a vez (e o chakra) concentrando e anuncia o golpe; na vez seguinte solta o ataque com dano ×2, que não pode ser crítico. A tela mostra o aviso, e o jogador decide entre Substituição, Rotação, cura ou arriscar. Usado pelos vilões marcados abaixo, com a técnica indicada (`behavior.charged`).
+- **Golpe carregado**: quando sorteia a técnica marcada, o vilão gasta a vez (e o chakra) concentrando e anuncia o golpe; na vez seguinte solta o ataque com dano ×2, que não pode ser crítico. A tela mostra o aviso, e o jogador decide entre postura defensiva, Bomba de fumaça ou esperar para reagir (Substituição, disputa ou barreira; na disputa, o poder do golpe carregado também dobra). Usado pelos vilões marcados abaixo, com a técnica indicada (`behavior.charged`).
 
 ## Status base
 
-**Provisório.** As resistências partem das defesas antigas (física = antiga defesa de taijutsu, mental = antiga defesa de genjutsu; a defesa de ninjutsu deixa de existir). Os **ataques** (tai, nin, gen) e o novo `baseDamage` das técnicas serão definidos na simulação, para que o dano médio por luta fique perto do atual.
+Calibrados na simulação para que o dano médio fique perto do da v0.9: o ataque de cada tipo saiu do `baseDamage` das técnicas (novo dano base = antigo + 1 − ataque do tipo, e depois +1 no ataque de taijutsu e ninjutsu para compensar as reações). A resistência física fica uns 15% acima da antiga defesa de taijutsu; a mental, na antiga defesa de genjutsu ÷ 0,7 (o jogador quase sempre Resiste, a 70%).
 
 | # | Vilão | Elemento | HP | Chakra | Speed | Tai | Nin | Gen | Res. física | Res. mental | Crítico extra | XP |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Mizuki | Vento | 70 | 10 | 9 | ? | ? | ? | 7 | 6 | — | 100 |
-| 2a | Haku | Água | 80 | 18 | 14 | ? | ? | ? | 7 | 9 | +5% | 125 |
-| 2b | Zabuza | Água | 110 | 20 | 11 | ? | ? | ? | 10 | 7 | +2% | 150 |
-| 3a | Genin da Areia (exame) | Vento | 90 | 15 | 11 | ? | ? | ? | 9 | 8 | +2% | 60 |
-| 3b | Genin do Som (exame) | Raio | 85 | 12 | 12 | ? | ? | ? | 9 | 11 | +3% | 60 |
-| 3c | Genin da Folha (exame) | Fogo | 100 | 12 | 12 | ? | ? | ? | 12 | 9 | +3% | 60 |
-| 4 | Gaara | Terra | 140 | 36 | 9 | ? | ? | ? | 12 | 10 | +2% | 200 |
-| 5a | Jirobo | Terra | 70 | 15 | 8 | ? | ? | ? | 13 | 8 | — | 60 |
-| 5b | Kidomaru | Raio | 65 | 16 | 12 | ? | ? | ? | 10 | 10 | +5% | 60 |
-| 5c | Tayuya | Vento | 60 | 16 | 11 | ? | ? | ? | 8 | 14 | +2% | 60 |
-| 5d | Sakon | Vento | 75 | 14 | 12 | ? | ? | ? | 12 | 10 | +3% | 60 |
-| 6 | Kabuto | Terra | 150 | 25 | 13 | ? | ? | ? | 13 | 13 | +5% | 250 |
-| 7 | Orochimaru | Vento | 220 | 40 | 14 | ? | ? | ? | 16 | 16 | +5% | 300 |
+| 1 | Mizuki | Vento | 70 | 10 | 9 | 7 | 5 | 3 | 8 | 9 | — | 100 |
+| 2a | Haku | Água | 80 | 18 | 14 | 7 | 9 | 6 | 8 | 13 | +5% | 125 |
+| 2b | Zabuza | Água | 110 | 20 | 11 | 9 | 9 | 5 | 12 | 10 | +2% | 150 |
+| 3a | Genin da Areia (exame) | Vento | 90 | 15 | 11 | 7 | 9 | 5 | 10 | 11 | +2% | 60 |
+| 3b | Genin do Som (exame) | Raio | 85 | 12 | 12 | 8 | 7 | 8 | 10 | 16 | +3% | 60 |
+| 3c | Genin da Folha (exame) | Fogo | 100 | 12 | 12 | 9 | 8 | 5 | 14 | 13 | +3% | 60 |
+| 4 | Gaara | Terra | 140 | 36 | 9 | 8 | 11 | 6 | 14 | 14 | +2% | 200 |
+| 5a | Jirobo | Terra | 70 | 15 | 8 | 10 | 8 | 4 | 15 | 11 | — | 60 |
+| 5b | Kidomaru | Raio | 65 | 16 | 12 | 8 | 10 | 6 | 12 | 14 | +5% | 60 |
+| 5c | Tayuya | Vento | 60 | 16 | 11 | 7 | 7 | 11 | 9 | 20 | +2% | 60 |
+| 5d | Sakon | Vento | 75 | 14 | 12 | 10 | 8 | 6 | 14 | 14 | +3% | 60 |
+| 6 | Kabuto | Terra | 150 | 25 | 13 | 10 | 10 | 10 | 15 | 19 | +5% | 250 |
+| 7 | Orochimaru | Vento | 220 | 40 | 14 | 12 | 12 | 13 | 18 | 23 | +5% | 300 |
+
+O manto do Gaara multiplica o dano dele ×1,5 e as resistências ×1,25; a marca da maldição, ×1,25 e ×1,1.
 
 ## Reações
 
@@ -67,44 +69,44 @@ Pesos de `reactions` (provisórios). Resistir é o padrão; as outras só entram
 | Kabuto | 2 | 1 | — | 3 | Médico calculista. |
 | Orochimaru | 2 | 2 | — | 2 (troca de pele) | Escorregadio. |
 
-Os genins do exame têm nomes próprios no jogo (não são do universo original). O Gaara foi aliviado de 160 de HP e defesas 14/14 por ser o gargalo da campanha. O XP segue a curva planejada em [progressao.md](progressao.md#curva-planejada).
+Os genins do exame têm nomes próprios no jogo (não são do universo original). O Gaara foi aliviado de 160 de HP por ser o gargalo da campanha. O XP segue a curva planejada em [progressao.md](progressao.md#curva-planejada).
 
 ## Moveset
 
-Nomes em português são sugestões para a tela; o `id` é o do código. "Chance" é o peso convertido em porcentagem, quando o vilão pode pagar todas.
+Nomes em português são sugestões para a tela; o `id` é o do código. "Chance" é o peso convertido em porcentagem, quando o vilão pode pagar todas. "Dano" é o dano base: o golpe soma o ataque do tipo e desconta a resistência usada pelo jogador ([fundamentos.md](fundamentos.md#dano)).
 
 | Vilão | Técnica (`id`) | Tipo | Dano | Chakra | Peso (chance) | Especial |
 |---|---|---|---|---|---|---|
-| Mizuki | Golpe de Kunai (`kunaiStrike`) | Taijutsu | 13 | 0 | 3 (75%) | Cortante |
-| Mizuki | Shuriken Gigante (`giantShuriken`) | Taijutsu | 16 | 0 | 1 (25%) | Cortante |
-| Haku | Agulhas Senbon (`senbon`) | Taijutsu | 12 | 0 | 3 (60%) | — |
-| Haku | Espelhos de Gelo (`iceMirrors`) | Ninjutsu | 15 | 5 | 2 (40%) | — |
-| Zabuza | Golpe do Espadão (`cleaverSwing`) | Taijutsu | 16 | 0 | 3 (60%) | Espada (sangra no crítico); golpe carregado |
-| Zabuza | Projétil do Dragão d'Água (`waterDragonBullet`) | Ninjutsu | 18 | 5 | 2 (40%) | — |
-| Genin da Areia | Rajada do Leque (`fanGust`) | Ninjutsu | 16 | 4 | 2 (50%) | — |
-| Genin da Areia | Golpe de Kunai (`kunaiStrike`) | Taijutsu | 13 | 0 | 2 (50%) | Cortante |
+| Mizuki | Golpe de Kunai (`kunaiStrike`) | Taijutsu | 8 | 0 | 3 (75%) | Cortante |
+| Mizuki | Shuriken Gigante (`giantShuriken`) | Taijutsu | 11 | 0 | 1 (25%) | Cortante |
+| Haku | Agulhas Senbon (`senbon`) | Taijutsu | 7 | 0 | 3 (60%) | — |
+| Haku | Espelhos de Gelo (`iceMirrors`) | Ninjutsu | 8 | 5 | 2 (40%) | — |
+| Zabuza | Golpe do Espadão (`cleaverSwing`) | Taijutsu | 9 | 0 | 3 (60%) | Espada (sangra no crítico); golpe carregado |
+| Zabuza | Projétil do Dragão d'Água (`waterDragonBullet`) | Ninjutsu | 11 | 5 | 2 (40%) | — |
+| Genin da Areia | Rajada do Leque (`fanGust`) | Ninjutsu | 9 | 4 | 2 (50%) | — |
+| Genin da Areia | Golpe de Kunai (`kunaiStrike`) | Taijutsu | 8 | 0 | 2 (50%) | Cortante |
 | Genin do Som | Onda Sonora (`soundWave`) | Genjutsu | 0 | 4 | 1 (25%) | Aprisiona 1 turno base |
-| Genin do Som | Golpe de Kunai (`kunaiStrike`) | Taijutsu | 14 | 0 | 3 (75%) | Cortante |
-| Genin da Folha | Golpe de Palma (`palmStrike`) | Taijutsu | 17 | 0 | 3 (75%) | — |
-| Genin da Folha | Bola de Fogo (`fireballVillain`) | Ninjutsu | 15 | 4 | 1 (25%) | — |
-| Gaara | Caixão de Areia (`sandCoffin`) | Ninjutsu | 20 | 4 | 3 (50%) | — |
-| Gaara | Tsunami de Areia (`sandTsunami`) | Ninjutsu | 26 | 8 | 1 (17%) | Golpe carregado |
-| Gaara | Punho de Areia (`sandFist`) | Taijutsu | 14 | 0 | 2 (33%) | Grátis: sem chakra, o Gaara bate em vez de concentrar |
+| Genin do Som | Golpe de Kunai (`kunaiStrike`) | Taijutsu | 8 | 0 | 3 (75%) | Cortante |
+| Genin da Folha | Golpe de Palma (`palmStrike`) | Taijutsu | 10 | 0 | 3 (75%) | — |
+| Genin da Folha | Bola de Fogo (`fireballVillain`) | Ninjutsu | 9 | 4 | 1 (25%) | — |
+| Gaara | Caixão de Areia (`sandCoffin`) | Ninjutsu | 11 | 4 | 3 (50%) | — |
+| Gaara | Tsunami de Areia (`sandTsunami`) | Ninjutsu | 17 | 8 | 1 (17%) | Golpe carregado |
+| Gaara | Punho de Areia (`sandFist`) | Taijutsu | 8 | 0 | 2 (33%) | Grátis: sem chakra, o Gaara bate em vez de concentrar |
 | Gaara | Escudo de Areia (`sandShield`) | Barreira (terra) | — | 4 | Só reação | Poder de barreira 30. Raio perfura (×2); taijutsu precisa quebrar a guarda. |
-| Jirobo | Prisão de Terra (`earthPrison`) | Ninjutsu | 17 | 5 | 2 (50%) | — |
-| Jirobo | Soco Pesado (`heavyPunch`) | Taijutsu | 18 | 0 | 2 (50%) | — |
+| Jirobo | Prisão de Terra (`earthPrison`) | Ninjutsu | 11 | 5 | 2 (50%) | — |
+| Jirobo | Soco Pesado (`heavyPunch`) | Taijutsu | 10 | 0 | 2 (50%) | — |
 | Jirobo | Muralha de Terra (`earthWall`) | Barreira (terra) | — | 5 | Só reação | Poder de barreira 28 (ver [tecnicas.md](tecnicas.md#barreiras)). |
-| Kidomaru | Flecha Dourada (`goldenArrow`) | Ninjutsu | 18 | 5 | 2 (50%) | — |
-| Kidomaru | Teia de Aranha (`spiderWeb`) | Taijutsu | 14 | 0 | 2 (50%) | — |
+| Kidomaru | Flecha Dourada (`goldenArrow`) | Ninjutsu | 10 | 5 | 2 (50%) | — |
+| Kidomaru | Teia de Aranha (`spiderWeb`) | Taijutsu | 8 | 0 | 2 (50%) | — |
 | Tayuya | Flauta Demoníaca (`demonFlute`) | Genjutsu | 0 | 5 | 1 (33%) | Aprisiona 1 turno base |
-| Tayuya | Ogro Invocado (`summonedOgre`) | Taijutsu | 16 | 0 | 2 (67%) | — |
-| Sakon | Golpe Gêmeo (`twinStrike`) | Taijutsu | 17 | 0 | 3 (75%) | Golpe carregado |
-| Sakon | Corpo Parasita (`parasiteBody`) | Ninjutsu | 15 | 4 | 1 (25%) | — |
-| Kabuto | Bisturi de Chakra (`chakraScalpel`) | Taijutsu | 20 | 0 | 3 (75%; 50% com a cura liberada) | Cortante |
-| Kabuto | Alma Morta (`deadSoul`) | Ninjutsu | 18 | 5 | 1 (25%; 17% com a cura liberada) | — |
+| Tayuya | Ogro Invocado (`summonedOgre`) | Taijutsu | 11 | 0 | 2 (67%) | — |
+| Sakon | Golpe Gêmeo (`twinStrike`) | Taijutsu | 9 | 0 | 3 (75%) | Golpe carregado |
+| Sakon | Corpo Parasita (`parasiteBody`) | Ninjutsu | 9 | 4 | 1 (25%) | — |
+| Kabuto | Bisturi de Chakra (`chakraScalpel`) | Taijutsu | 12 | 0 | 3 (75%; 50% com a cura liberada) | Cortante |
+| Kabuto | Alma Morta (`deadSoul`) | Ninjutsu | 10 | 5 | 1 (25%; 17% com a cura liberada) | — |
 | Kabuto | Palma Mística (`mysticPalm`) | Médico | — | 7 | 2 (33%, só abaixo de 50% de HP) | Cura 15% do HP máximo, sem rolar acerto |
-| Orochimaru | Serpentes Ocultas (`hiddenSnakes`) | Ninjutsu | 24 | 5 | 3 (50%) | Golpe carregado |
-| Orochimaru | Espada da Grama (`grassSword`) | Taijutsu | 22 | 0 | 2 (33%) | Espada (sangra no crítico) |
+| Orochimaru | Serpentes Ocultas (`hiddenSnakes`) | Ninjutsu | 14 | 5 | 3 (50%) | Golpe carregado |
+| Orochimaru | Espada da Grama (`grassSword`) | Taijutsu | 12 | 0 | 2 (33%) | Espada (sangra no crítico) |
 | Orochimaru | Intenção Assassina (`killingIntent`) | Genjutsu | 0 | 6 | 1 (17%) | Aprisiona 1 turno base |
 
 Ordem das lutas no Quarteto do Som: Jirobo, Kidomaru, Tayuya e Sakon.

@@ -32,7 +32,8 @@ describe('rodada básica', () => {
     expect(s1.status).toBe('won');
     expect(s1.player.chakra).toBe(30); // taijutsu não gasta chakra
     expect(ofType(s1.log, 'ambush')).toHaveLength(1);
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'hit', damage: 13 });
+    // 8 + 10 − 10 × 0,7 (o vilão resiste) = 11
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'hit', damage: 11 });
   });
 
   it('é pura: não altera o estado anterior', () => {
@@ -42,14 +43,22 @@ describe('rodada básica', () => {
     expect(s0).toEqual(snapshot);
   });
 
-  it('ninjutsu básico usa a afinidade e aplica vantagem elemental', () => {
+  it('ninjutsu básico usa a afinidade; o elemento do vilão não dá vantagem por si só', () => {
     const s0 = startBattle(createPlayer(common, gameData), testVillain({ element: 'wind' }), {
       playerStartsFirst: true,
     });
     const s1 = playRound(s0, 'tech:fireSpark', seq(0.5), gameData);
-    // Fagulha do Dragão: (12 + 10 − 5) × 1.5 = 25
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ elementMult: 1.5, damage: 25 });
+    // Fagulha do Dragão: 12 + 10 − 7 = 15, neutro (não há encontro de elementos)
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ elementMult: 1, damage: 15 });
     expect(s1.player.chakra).toBe(28);
+  });
+
+  it('contra um estado elemental no corpo (Armadura de Areia), o encontro de elementos conta', () => {
+    const lightning = createPlayer({ lineageId: null, affinity: 'lightning', jinchuuriki: false }, gameData);
+    const s0 = startBattle(lightning, testVillain({ elementalState: 'earth', hp: 200 }), { playerStartsFirst: true });
+    const s1 = playRound(s0, 'tech:spark', seq(0.5), gameData);
+    // Faísca contra terra sólida: raio perfura (×2). (13 + 10 − 7 × 0,9) × 2 = 33
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ elementMult: 2, damage: 33 });
   });
 
   it('erro causa 0 de dano', () => {
@@ -63,7 +72,7 @@ describe('rodada básica', () => {
   it('ações indisponíveis lançam erro; sem chakra sobram o taijutsu básico e concentrar', () => {
     const p = { ...createPlayer(common, gameData), chakra: 0 };
     const s0 = battle(p, testVillain());
-    expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'rest']);
+    expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'rest', 'stance']);
     expect(() => playRound(s0, 'tech:empoweredTaijutsu', seq(0.5), gameData)).toThrow();
     expect(() => playRound(s0, 'tech:fireSpark', seq(0.5), gameData)).toThrow();
     const s1 = playRound(s0, 'rest', seq(0.1, 0.01, 0.01), gameData);
@@ -72,7 +81,7 @@ describe('rodada básica', () => {
 });
 
 describe('Vontade do Fogo', () => {
-  // iniciativa 0.9 → vilão primeiro; técnica; acerto. Dano do vilão: 10 − 6 = 4.
+  // iniciativa 0.9 → vilão primeiro; técnica; acerto. Dano do vilão: 10 + 0 − 10 × 0,7 = 3.
   const villainFirstHit = () => seq(0.9, 0.5, 0.5);
 
   it('ao chegar a 0 de HP consome o item e restaura HP e chakra', () => {
@@ -131,7 +140,7 @@ describe('passivas', () => {
   it('Portões: abrir gasta o turno (sem golpe), chakra e HP; taijutsu ×1,5 por 5 rodadas a partir da seguinte', () => {
     const p = createPlayer(prodigy, gameData);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
-    expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'gates', 'rest', 'substitution']);
+    expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'gates', 'rest', 'stance']);
     const s1 = playRound(s0, 'gates', seq(0.5), gameData);
     // 15% de 130 = 19 de HP; 1º portão custa 5 de chakra.
     expect(ofType(s1.log, 'gates')).toEqual([{ type: 'gates', stage: 1, hpLost: 19, chakra: 5 }]);
@@ -139,8 +148,8 @@ describe('passivas', () => {
     expect(s1.player.chakra).toBe(23);
     expect(s1.playerFx.gatesTurns).toBe(5);
     const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5), gameData);
-    // (8 + 22 − 5) × 1.5 = 37
-    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]).toMatchObject({ side: 'player', damage: 37 });
+    // (8 + 22 − 7) × 1,5 = 34
+    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]).toMatchObject({ side: 'player', damage: 34 });
     expect(s2.playerFx.gatesTurns).toBe(4);
     expect(availableActions(s2, gameData)).not.toContain('gates');
   });
@@ -170,16 +179,11 @@ describe('passivas', () => {
   });
 
 
-  it('Punho preciso: taijutsu ignora 30% da defesa do vilão', () => {
+  it('Punho preciso: taijutsu ignora 30% da resistência física do vilão', () => {
     const p = createPlayer({ lineageId: 'hyuuga', affinity: 'water', jinchuuriki: false }, gameData);
-    const s1 = playRound(
-      startBattle(p, testVillain({ defense: { taijutsu: 10, ninjutsu: 5, genjutsu: 5 } }), { playerStartsFirst: true }),
-      'tech:basicTaijutsu',
-      seq(0.5),
-      gameData,
-    );
-    // 8 + 16 − 10 × 0.7 = 17
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ damage: 17 });
+    const s1 = playRound(startBattle(p, testVillain(), { playerStartsFirst: true }), 'tech:basicTaijutsu', seq(0.5), gameData);
+    // 8 + 16 − 10 × 0,7 × 0,7 = 19
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ damage: 19 });
   });
 });
 
@@ -187,14 +191,14 @@ describe('jinchuuriki: manto de chakra e demônio interno', () => {
   const jin: Origin = { lineageId: null, affinity: 'fire', jinchuuriki: true };
 
   it('abaixo de 50% de HP: status ×1,5 e regenera 5% por rodada, sem recoil', () => {
-    const p = { ...createPlayer(jin, gameData), hp: 53 };
+    const p = { ...createPlayer(jin, gameData), hp: 52 };
     const s0 = withInitiative(battle(p, testVillain({ hp: 200 })), 'villain');
-    // O vilão acerta 10 − 6 = 4: 49 de HP (< 50), o manto desperta antes do golpe do jogador.
+    // O vilão acerta 10 − 7 = 3: 49 de HP (< 50), o manto desperta antes do golpe do jogador.
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(ofType(s1.log, 'cloak')).toEqual([{ type: 'cloak', side: 'player' }]);
     expect(effectiveOffense(s1, 'taijutsu', gameData)).toBe(15);
-    // 8 + 15 − 5 = 18
-    expect(ofType(s1.log, 'attack').find((a) => a.side === 'player')).toMatchObject({ damage: 18 });
+    // 8 + 15 − 7 = 16
+    expect(ofType(s1.log, 'attack').find((a) => a.side === 'player')).toMatchObject({ damage: 16 });
     expect(s1.player.hp).toBe(49);
     const s2 = playRound(s1, 'rest', seq(0.5, 0.01), gameData);
     expect(ofType(s2.log.slice(s1.log.length), 'cloakRegen')).toEqual([{ type: 'cloakRegen', side: 'player', hp: 5 }]);
@@ -233,7 +237,7 @@ describe('jinchuuriki: manto de chakra e demônio interno', () => {
 
   it('demônio interno: imune a genjutsu', () => {
     const v = testVillain({
-      defense: { taijutsu: 5, ninjutsu: 5, genjutsu: 26 },
+      offense: { taijutsu: 0, ninjutsu: 0, genjutsu: 26 },
       techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalTurns: 1 }],
     });
     const s1 = playRound(withInitiative(startBattle(createPlayer(jin, gameData), v), 'villain'), 'rest', seq(0.5), gameData);
@@ -325,12 +329,12 @@ describe('efeitos negativos', () => {
     });
     const s0 = withInitiative(startBattle(createPlayer(common, gameData), sword), 'villain');
     const s1 = playRound(s0, 'rest', seq(0.5, 0.99), gameData);
-    // crítico: 20 × 2 − 6 = 34
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'villain', outcome: 'crit', damage: 34 });
+    // crítico: (20 − 7) × 2 = 26
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'villain', outcome: 'crit', damage: 26 });
     expect(ofType(s1.log, 'status')).toEqual([{ type: 'status', target: 'player', kind: 'bleed', turns: 0 }]);
     const s2 = playRound(s1, 'rest', seq(0.5, 0.5), gameData);
-    // 20 × 1.5 − 6 = 24
-    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]).toMatchObject({ damage: 24 });
+    // (20 − 7) × 1,5 = 19
+    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]).toMatchObject({ damage: 19 });
     expect(s2.playerFx.bleeding).toBe(true);
   });
 
@@ -405,33 +409,36 @@ describe('genjutsu: aprisionamento sem dano', () => {
     expect(s1.villain.hp).toBe(50);
   });
 
-  it('os turnos crescem com a proficiência do usuário contra o genjutsu do alvo, até 3', () => {
-    const turns = (gen: number, villainGen = 5) =>
-      prison(playRound(startBattle(withGen(gen), testVillain({ defense: { taijutsu: 5, ninjutsu: 5, genjutsu: villainGen } }), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData));
-    expect(turns(10)).toBe(1); // vantagem 5
-    expect(turns(13)).toBe(2); // vantagem 8
-    expect(turns(21)).toBe(3); // vantagem 16
+  it('os turnos crescem com a vantagem do genjutsu sobre a resistência mental usada pelo alvo, até 3', () => {
+    // O vilão resiste: usa 70% da resistência mental (10 → 7).
+    const turns = (gen: number, villainMental = 10) =>
+      prison(playRound(startBattle(withGen(gen), testVillain({ resistance: { physical: 10, mental: villainMental } }), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData));
+    expect(turns(10)).toBe(1); // vantagem 3
+    expect(turns(15)).toBe(2); // vantagem 8
+    expect(turns(23)).toBe(3); // vantagem 16
     expect(turns(60)).toBe(3); // teto
-    expect(turns(21, 20)).toBe(1); // alvo resistente
+    expect(turns(23, 30)).toBe(1); // alvo resistente: 30 × 0,7 = 21
   });
 
-  it('técnica e pergaminho de genjutsu aumentam o poder de aprisionamento', () => {
-    const crow = learnTechnique(withGen(10), 'crowIllusion', gameData); // 10 + 6 = 16 → vantagem 11
+  it('técnica e upgrade de genjutsu aumentam o poder de aprisionamento', () => {
+    const crow = learnTechnique(withGen(10), 'crowIllusion', gameData); // 10 + 6 = 16 → vantagem 9
     expect(prison(playRound(startBattle(crow, testVillain(), { playerStartsFirst: true }), 'tech:crowIllusion', seq(0.5), gameData))).toBe(2);
-    const scroll = { ...withGen(10), techniqueLevels: { genjutsu: 1 } }; // 10 + 3 = 13 → vantagem 8
-    expect(prison(playRound(startBattle(scroll, testVillain(), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData))).toBe(2);
+    expect(prison(playRound(startBattle(withGen(12), testVillain(), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData))).toBe(1);
+    const upgraded = { ...withGen(12), techniqueLevels: { basicGenjutsu: 1 } }; // 12 + 3 = 15 → vantagem 8
+    expect(prison(playRound(startBattle(upgraded, testVillain(), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData))).toBe(2);
   });
 
   it('não gasta o crítico garantido do foco', () => {
-    const s0 = withInitiative(startBattle({ ...withGen(10), focusCrit: true }, testVillain()));
+    const s0 = withInitiative(startBattle({ ...withGen(10), focusUses: 1 }, testVillain()));
     const s1 = playRound(s0, 'tech:basicGenjutsu', seq(0.5), gameData, true);
     expect(s1.playerFx.guaranteedCrit).toBe(true);
     expect(ofType(s1.log, 'guaranteedCrit')).toHaveLength(0);
   });
 
   it('o genjutsu do vilão também não causa dano e aprisiona o jogador conforme o genjutsu dele', () => {
+    // Genjutsu 26 contra a resistência mental do jogador resistindo (10 × 0,7 = 7): vantagem 19 → 3 turnos.
     const v = testVillain({
-      defense: { taijutsu: 5, ninjutsu: 5, genjutsu: 26 },
+      offense: { taijutsu: 0, ninjutsu: 0, genjutsu: 26 },
       techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalTurns: 1 }],
     });
     const s0 = startBattle(withGen(10), v, { villainStartsFirst: true });

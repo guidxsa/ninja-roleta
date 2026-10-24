@@ -33,21 +33,7 @@ As regras do jogo vivem em `docs/`. Este arquivo trata só de como trabalhar no 
 
 ## Mudanças de design pendentes
 
-**Rodada "reações e ficha única" (24/10/2026)** — escrita nos docs, ainda não implementada. Onde o código diverge disso, vale o doc:
-
-1. **Ficha única** para jogador e vilão: ataques tai/nin/gen + Resistência física e mental; fórmula de dano única; fim do `diferencial_de_resistência`, do piso e da defesa por tipo ([fundamentos](docs/fundamentos.md#ficha-de-status)).
-2. **Resistência passiva/Resistir/postura** (40% / 70% / 100%) e a ação **Postura defensiva** ([fundamentos](docs/fundamentos.md#resistência-passiva-e-ativa)).
-3. **Reações** (Resistir, Disputa, Barreira, Substituição) com custo da próxima ação; Substituição sai das ações universais, vira roleta por speed com 2 usos por luta ([fundamentos](docs/fundamentos.md#reações)).
-4. **Disputa de ninjutsu** e **quebra de guarda** ([fundamentos](docs/fundamentos.md#disputa-de-ninjutsu)).
-5. **Elementos só em encontros** (disputa, barreira, estado elemental), interações especiais; fim do ×1,5 contra o elemento do vilão ([fundamentos](docs/fundamentos.md#elementos)). Ícone de elemento na tela.
-6. **Níveis de técnica**: linhas elementais I–III, upgrade genérico, teto por nível, upgrade grátis nos marcos; pergaminho de técnica passa a ser por técnica ([tecnicas](docs/tecnicas.md#níveis-de-técnica)).
-7. **Barreiras** por elemento, **Armadura de Raio**, Rotação como reação, **premium do guru** (Rasengan, Palma Curativa, Foco, Mestre da Substituição) ponderadas pelo perfil ([tecnicas](docs/tecnicas.md), [campanha](docs/campanha.md#guru)).
-8. **Restauração**: a luta não começa restaurada; restauram tudo só subir de nível, o fim do exame e a Vontade do Fogo; o fim da luta limpa os efeitos; derrota no exame segue com 50% ([fundamentos](docs/fundamentos.md#restauração), [campanha](docs/campanha.md#exame-chunin)).
-9. **Treino**: +60 XP garantido e roleta de destaque ponderada pelos status ([campanha](docs/campanha.md#treino)).
-10. **Origens** com resistências iniciais (orçamento 90), Corpo de ferro novo ([origens](docs/origens.md#status-iniciais)).
-11. **Vilões**: ataques e `baseDamage` novos a definir na simulação, pesos de `reactions`, Escudo de Areia, Muralha de Terra do Jirobo, Armadura de Areia do Gaara ([viloes](docs/viloes.md)).
-
-A rodada anterior (v0.9.0) está toda implementada.
+Nenhuma. A rodada "reações e ficha única" (24/10/2026) foi implementada na v0.10.0: ficha única com resistências física e mental, resistência passiva/Resistir/postura, reações (Resistir, Disputa, Barreira, Substituição) com a rodada pausável na interface, disputa de ninjutsu, quebra de guarda, elementos só em encontros, níveis de técnica, barreiras, Armadura de Raio, premium do guru, restauração por nível e no fim do exame, novo Treino e vilões recalibrados. Decisão tomada junto: na disputa, só a vantagem elemental multiplica o poder (a desvantagem não reduz).
 
 Quando o design mudar antes do código, listar aqui o que falta implementar.
 

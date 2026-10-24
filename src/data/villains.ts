@@ -2,14 +2,24 @@ import type { CloakDef, VillainDef } from '../core/types';
 import { balance } from './balance';
 
 // Fichas dos vilões (docs/viloes.md). Nomes de trabalho e valores provisórios.
+// Mesma ficha do jogador: ataques (tai/nin/gen) e resistências física e mental. O dano de uma técnica é
+// base + ataque do tipo − resistência usada pelo jogador, igual ao do jogador.
 // Vilões também gastam chakra: taijutsu é grátis; ninjutsu e genjutsu custam. Sem chakra para
 // nenhuma técnica, o vilão perde a vez concentrando chakra.
+// `reactions`: pesos de Resistir, Disputa, Barreira e Substituição. Barreiras ficam na lista de técnicas.
 // `xp`: curva planejada em docs/progressao.md.
 // `passive`/`hardcorePassive`: passiva única; a versão hardcore substitui a normal nesse modo.
 // `behavior.charged`: golpe carregado (anuncia numa vez, solta ×2 sem crítico na seguinte).
 
 // Marca da maldição: o manto do jinchuuriki pela metade.
-const CURSE_MARK_CLOAK: CloakDef = { hpThresholdPct: 0.5, statMult: 1.25, regenPct: 0.025, chakraPctPerRound: 0.05, turns: 5 };
+const CURSE_MARK_CLOAK: CloakDef = {
+  hpThresholdPct: 0.5,
+  statMult: 1.25,
+  resistanceMult: 1.1,
+  regenPct: 0.025,
+  chakraPctPerRound: 0.05,
+  turns: 5,
+};
 const curseMark = { kind: 'cloak', variant: 'curseMark', cloak: CURSE_MARK_CLOAK, genjutsuImmune: false } as const;
 
 export const villains: VillainDef[] = [
@@ -19,12 +29,14 @@ export const villains: VillainDef[] = [
     hp: 70,
     chakra: 10,
     speed: 9,
-    defense: { taijutsu: 7, ninjutsu: 6, genjutsu: 6 },
+    offense: { taijutsu: 7, ninjutsu: 5, genjutsu: 3 },
+    resistance: { physical: 8, mental: 9 },
+    reactions: { resist: 4, substitution: 1 },
     critBonus: 0,
     xp: 100,
     techniques: [
-      { id: 'kunaiStrike', type: 'taijutsu', baseDamage: 13, chakraCost: 0, weight: 3, blade: 'cutting' },
-      { id: 'giantShuriken', type: 'taijutsu', baseDamage: 16, chakraCost: 0, weight: 1, blade: 'cutting' },
+      { id: 'kunaiStrike', type: 'taijutsu', baseDamage: 8, chakraCost: 0, weight: 3, blade: 'cutting' },
+      { id: 'giantShuriken', type: 'taijutsu', baseDamage: 11, chakraCost: 0, weight: 1, blade: 'cutting' },
     ],
     passive: { kind: 'trickster' },
     hardcorePassive: { kind: 'trickster', counterCrit: true },
@@ -35,12 +47,14 @@ export const villains: VillainDef[] = [
     hp: 80,
     chakra: 18,
     speed: 14,
-    defense: { taijutsu: 7, ninjutsu: 10, genjutsu: 9 },
+    offense: { taijutsu: 7, ninjutsu: 9, genjutsu: 6 },
+    resistance: { physical: 8, mental: 13 },
+    reactions: { resist: 2, clash: 1, substitution: 2 },
     critBonus: 0.05,
     xp: 125,
     techniques: [
-      { id: 'senbon', type: 'taijutsu', baseDamage: 12, chakraCost: 0, weight: 3 },
-      { id: 'iceMirrors', type: 'ninjutsu', baseDamage: 15, chakraCost: 5, weight: 2 },
+      { id: 'senbon', type: 'taijutsu', baseDamage: 7, chakraCost: 0, weight: 3 },
+      { id: 'iceMirrors', type: 'ninjutsu', baseDamage: 8, chakraCost: 5, weight: 2 },
     ],
     // Espelhos: duas ações por turno, cada uma com 60% do dano (100% no hardcore).
     passive: { kind: 'mirrors', actions: 2, damageMult: 0.6 },
@@ -52,12 +66,14 @@ export const villains: VillainDef[] = [
     hp: 110,
     chakra: 20,
     speed: 11,
-    defense: { taijutsu: 10, ninjutsu: 9, genjutsu: 7 },
+    offense: { taijutsu: 9, ninjutsu: 9, genjutsu: 5 },
+    resistance: { physical: 12, mental: 10 },
+    reactions: { resist: 2, clash: 2, substitution: 1 },
     critBonus: 0.02,
     xp: 150,
     techniques: [
-      { id: 'cleaverSwing', type: 'taijutsu', baseDamage: 16, chakraCost: 0, weight: 3, blade: 'sword' },
-      { id: 'waterDragonBullet', type: 'ninjutsu', baseDamage: 18, chakraCost: 5, weight: 2 },
+      { id: 'cleaverSwing', type: 'taijutsu', baseDamage: 9, chakraCost: 0, weight: 3, blade: 'sword' },
+      { id: 'waterDragonBullet', type: 'ninjutsu', baseDamage: 11, chakraCost: 5, weight: 2 },
     ],
     behavior: { charged: 'cleaverSwing' },
     passive: { kind: 'mist', turns: 4, evasionMult: 1.5 },
@@ -70,12 +86,14 @@ export const villains: VillainDef[] = [
     hp: 90,
     chakra: 15,
     speed: 11,
-    defense: { taijutsu: 9, ninjutsu: 10, genjutsu: 8 },
+    offense: { taijutsu: 7, ninjutsu: 9, genjutsu: 5 },
+    resistance: { physical: 10, mental: 11 },
+    reactions: { resist: 3, clash: 1, substitution: 1 },
     critBonus: 0.02,
     xp: 60,
     techniques: [
-      { id: 'fanGust', type: 'ninjutsu', baseDamage: 16, chakraCost: 4, weight: 2 },
-      { id: 'kunaiStrike', type: 'taijutsu', baseDamage: 13, chakraCost: 0, weight: 2, blade: 'cutting' },
+      { id: 'fanGust', type: 'ninjutsu', baseDamage: 9, chakraCost: 4, weight: 2 },
+      { id: 'kunaiStrike', type: 'taijutsu', baseDamage: 8, chakraCost: 0, weight: 2, blade: 'cutting' },
     ],
   },
   {
@@ -84,12 +102,14 @@ export const villains: VillainDef[] = [
     hp: 85,
     chakra: 12,
     speed: 12,
-    defense: { taijutsu: 9, ninjutsu: 9, genjutsu: 11 },
+    offense: { taijutsu: 8, ninjutsu: 7, genjutsu: 8 },
+    resistance: { physical: 10, mental: 16 },
+    reactions: { resist: 3, clash: 1, substitution: 1 },
     critBonus: 0.03,
     xp: 60,
     techniques: [
       { id: 'soundWave', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalTurns: 1 },
-      { id: 'kunaiStrike', type: 'taijutsu', baseDamage: 14, chakraCost: 0, weight: 3, blade: 'cutting' },
+      { id: 'kunaiStrike', type: 'taijutsu', baseDamage: 8, chakraCost: 0, weight: 3, blade: 'cutting' },
     ],
   },
   {
@@ -98,12 +118,14 @@ export const villains: VillainDef[] = [
     hp: 100,
     chakra: 12,
     speed: 12,
-    defense: { taijutsu: 12, ninjutsu: 9, genjutsu: 9 },
+    offense: { taijutsu: 9, ninjutsu: 8, genjutsu: 5 },
+    resistance: { physical: 14, mental: 13 },
+    reactions: { resist: 3, clash: 1, substitution: 1 },
     critBonus: 0.03,
     xp: 60,
     techniques: [
-      { id: 'palmStrike', type: 'taijutsu', baseDamage: 17, chakraCost: 0, weight: 3 },
-      { id: 'fireballVillain', type: 'ninjutsu', baseDamage: 15, chakraCost: 4, weight: 1 },
+      { id: 'palmStrike', type: 'taijutsu', baseDamage: 10, chakraCost: 0, weight: 3 },
+      { id: 'fireballVillain', type: 'ninjutsu', baseDamage: 9, chakraCost: 4, weight: 1 },
     ],
   },
   {
@@ -113,24 +135,30 @@ export const villains: VillainDef[] = [
     hp: 140,
     chakra: 36,
     speed: 9,
-    defense: { taijutsu: 12, ninjutsu: 12, genjutsu: 10 },
+    offense: { taijutsu: 8, ninjutsu: 11, genjutsu: 6 },
+    resistance: { physical: 14, mental: 14 },
+    // A areia defende sozinha: quase sempre ergue o Escudo de Areia.
+    reactions: { resist: 1, clash: 1, barrier: 4 },
+    // Armadura de Areia: terra no corpo a luta toda (raio perfura).
+    elementalState: 'earth',
     critBonus: 0.02,
     xp: 200,
     techniques: [
-      { id: 'sandCoffin', type: 'ninjutsu', baseDamage: 20, chakraCost: 4, weight: 3 },
-      { id: 'sandTsunami', type: 'ninjutsu', baseDamage: 26, chakraCost: 8, weight: 1 },
+      { id: 'sandCoffin', type: 'ninjutsu', baseDamage: 11, chakraCost: 4, weight: 3 },
+      { id: 'sandTsunami', type: 'ninjutsu', baseDamage: 17, chakraCost: 8, weight: 1 },
       // Grátis: com o manto drenando o chakra, ele bate em vez de concentrar.
-      { id: 'sandFist', type: 'taijutsu', baseDamage: 14, chakraCost: 0, weight: 2 },
+      { id: 'sandFist', type: 'taijutsu', baseDamage: 8, chakraCost: 0, weight: 2 },
+      { id: 'sandShield', type: 'ninjutsu', baseDamage: 0, chakraCost: 4, weight: 1, barrier: 30 },
     ],
     behavior: { charged: 'sandTsunami' },
     passive: { kind: 'cloak', variant: 'beast', cloak: balance.jinchuuriki.cloak, genjutsuImmune: true },
-    // Hardcore: defesa absoluta, defesa de taijutsu dobrada a luta toda.
+    // Hardcore: defesa absoluta, resistência física dobrada a luta toda.
     hardcorePassive: {
       kind: 'cloak',
       variant: 'beast',
       cloak: balance.jinchuuriki.cloak,
       genjutsuImmune: true,
-      defenseMult: { taijutsu: 2 },
+      resistanceMult: { physical: 2 },
     },
   },
   {
@@ -139,12 +167,15 @@ export const villains: VillainDef[] = [
     hp: 70,
     chakra: 15,
     speed: 8,
-    defense: { taijutsu: 13, ninjutsu: 11, genjutsu: 8 },
+    offense: { taijutsu: 10, ninjutsu: 8, genjutsu: 4 },
+    resistance: { physical: 15, mental: 11 },
+    reactions: { resist: 2, barrier: 2 },
     critBonus: 0,
     xp: 60,
     techniques: [
-      { id: 'earthPrison', type: 'ninjutsu', baseDamage: 17, chakraCost: 5, weight: 2 },
-      { id: 'heavyPunch', type: 'taijutsu', baseDamage: 18, chakraCost: 0, weight: 2 },
+      { id: 'earthPrison', type: 'ninjutsu', baseDamage: 11, chakraCost: 5, weight: 2 },
+      { id: 'heavyPunch', type: 'taijutsu', baseDamage: 10, chakraCost: 0, weight: 2 },
+      { id: 'earthWall', type: 'ninjutsu', baseDamage: 0, chakraCost: 5, weight: 1, barrier: 28, element: 'earth' },
     ],
     passive: curseMark,
     hardcorePassive: { ...curseMark, fromStart: true },
@@ -155,12 +186,14 @@ export const villains: VillainDef[] = [
     hp: 65,
     chakra: 16,
     speed: 12,
-    defense: { taijutsu: 10, ninjutsu: 11, genjutsu: 10 },
+    offense: { taijutsu: 8, ninjutsu: 10, genjutsu: 6 },
+    resistance: { physical: 12, mental: 14 },
+    reactions: { resist: 2, clash: 2, substitution: 1 },
     critBonus: 0.05,
     xp: 60,
     techniques: [
-      { id: 'goldenArrow', type: 'ninjutsu', baseDamage: 18, chakraCost: 5, weight: 2 },
-      { id: 'spiderWeb', type: 'taijutsu', baseDamage: 14, chakraCost: 0, weight: 2 },
+      { id: 'goldenArrow', type: 'ninjutsu', baseDamage: 10, chakraCost: 5, weight: 2 },
+      { id: 'spiderWeb', type: 'taijutsu', baseDamage: 8, chakraCost: 0, weight: 2 },
     ],
     passive: curseMark,
     hardcorePassive: { ...curseMark, fromStart: true },
@@ -171,12 +204,14 @@ export const villains: VillainDef[] = [
     hp: 60,
     chakra: 16,
     speed: 11,
-    defense: { taijutsu: 8, ninjutsu: 10, genjutsu: 14 },
+    offense: { taijutsu: 7, ninjutsu: 7, genjutsu: 11 },
+    resistance: { physical: 9, mental: 20 },
+    reactions: { resist: 3, substitution: 1 },
     critBonus: 0.02,
     xp: 60,
     techniques: [
       { id: 'demonFlute', type: 'genjutsu', baseDamage: 0, chakraCost: 5, weight: 1, mentalTurns: 1 },
-      { id: 'summonedOgre', type: 'taijutsu', baseDamage: 16, chakraCost: 0, weight: 2 },
+      { id: 'summonedOgre', type: 'taijutsu', baseDamage: 11, chakraCost: 0, weight: 2 },
     ],
     passive: curseMark,
     hardcorePassive: { ...curseMark, fromStart: true },
@@ -187,12 +222,14 @@ export const villains: VillainDef[] = [
     hp: 75,
     chakra: 14,
     speed: 12,
-    defense: { taijutsu: 12, ninjutsu: 11, genjutsu: 10 },
+    offense: { taijutsu: 10, ninjutsu: 8, genjutsu: 6 },
+    resistance: { physical: 14, mental: 14 },
+    reactions: { resist: 2, clash: 1, substitution: 2 },
     critBonus: 0.03,
     xp: 60,
     techniques: [
-      { id: 'twinStrike', type: 'taijutsu', baseDamage: 17, chakraCost: 0, weight: 3 },
-      { id: 'parasiteBody', type: 'ninjutsu', baseDamage: 15, chakraCost: 4, weight: 1 },
+      { id: 'twinStrike', type: 'taijutsu', baseDamage: 9, chakraCost: 0, weight: 3 },
+      { id: 'parasiteBody', type: 'ninjutsu', baseDamage: 9, chakraCost: 4, weight: 1 },
     ],
     behavior: { charged: 'twinStrike' },
     passive: curseMark,
@@ -204,12 +241,14 @@ export const villains: VillainDef[] = [
     hp: 150,
     chakra: 25,
     speed: 13,
-    defense: { taijutsu: 13, ninjutsu: 13, genjutsu: 13 },
+    offense: { taijutsu: 10, ninjutsu: 10, genjutsu: 10 },
+    resistance: { physical: 15, mental: 19 },
+    reactions: { resist: 2, clash: 1, substitution: 3 },
     critBonus: 0.05,
     xp: 250,
     techniques: [
-      { id: 'chakraScalpel', type: 'taijutsu', baseDamage: 20, chakraCost: 0, weight: 3, blade: 'cutting' },
-      { id: 'deadSoul', type: 'ninjutsu', baseDamage: 18, chakraCost: 5, weight: 1 },
+      { id: 'chakraScalpel', type: 'taijutsu', baseDamage: 12, chakraCost: 0, weight: 3, blade: 'cutting' },
+      { id: 'deadSoul', type: 'ninjutsu', baseDamage: 10, chakraCost: 5, weight: 1 },
       // Palma Mística: só abaixo de 50% de HP; cada cura gasta a vez e 7 de chakra.
       { id: 'mysticPalm', type: 'ninjutsu', baseDamage: 0, chakraCost: 7, weight: 2, healPct: 0.15, useBelowHpPct: 0.5 },
     ],
@@ -223,12 +262,15 @@ export const villains: VillainDef[] = [
     hp: 220,
     chakra: 40,
     speed: 14,
-    defense: { taijutsu: 16, ninjutsu: 16, genjutsu: 16 },
+    offense: { taijutsu: 12, ninjutsu: 12, genjutsu: 13 },
+    resistance: { physical: 18, mental: 23 },
+    // Troca de pele: escorregadio.
+    reactions: { resist: 2, clash: 2, substitution: 2 },
     critBonus: 0.05,
     xp: 300,
     techniques: [
-      { id: 'hiddenSnakes', type: 'ninjutsu', baseDamage: 24, chakraCost: 5, weight: 3 },
-      { id: 'grassSword', type: 'taijutsu', baseDamage: 22, chakraCost: 0, weight: 2, blade: 'sword' },
+      { id: 'hiddenSnakes', type: 'ninjutsu', baseDamage: 14, chakraCost: 5, weight: 3 },
+      { id: 'grassSword', type: 'taijutsu', baseDamage: 12, chakraCost: 0, weight: 2, blade: 'sword' },
       { id: 'killingIntent', type: 'genjutsu', baseDamage: 0, chakraCost: 6, weight: 1, mentalTurns: 1 },
     ],
     behavior: { charged: 'hiddenSnakes' },

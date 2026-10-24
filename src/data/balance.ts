@@ -7,32 +7,45 @@ export const balance = {
     jinchuurikiChance: 0.1,
   },
 
-  elements: { advantage: 1.5, disadvantage: 0.75, neutral: 1 },
+  // Elementos só contam em encontros: disputa, barreira ou estado elemental (fundamentos.md#elementos).
+  // `pierce`: raio contra barreira ou estado de terra. `fireAbsorbsWind`: fogo que vence vento na disputa.
+  elements: { advantage: 1.5, disadvantage: 0.75, neutral: 1, pierce: 2, fireAbsorbsWind: 1.25 },
 
   // Rolagem de acerto (fundamentos.md): chance = precisão da técnica + bônus − penalidades, entre min e max.
   hit: { defaultAccuracy: 0.85, min: 0.05, max: 1 },
-  // Genjutsu do atacante vs. genjutsu do defensor.
+  // Genjutsu do atacante vs. resistência mental usada pelo alvo.
   genjutsuHit: { base: 0.6, perPoint: 0.02, min: 0.2, max: 0.9 },
   // Efeitos mentais: turnos = turnos base da técnica + 1 a cada `pointsPerExtraTurn` de vantagem
-  // (poder do atacante − genjutsu do alvo), entre 1 e `maxTurns`. Pergaminho: +3 de poder por nível.
+  // (poder do atacante − resistência mental usada pelo alvo), entre 1 e `maxTurns`.
   genjutsuPrison: { pointsPerExtraTurn: 8, maxTurns: 3 },
 
   // Crítico: 5% + diferencial_de_dano_% + bônus da técnica, no máximo 50% e nunca acima do acerto.
   crit: { baseChance: 0.05, multiplier: 2, max: 0.5 },
 
-  // Resistência do jogador = max(piso, status / 2) + diferencial (começa em 1). Corpo de ferro: piso 4 em nin e gen.
-  resistance: { offenseDivisor: 2, initialBonus: 1, floor: 2, ironBodyFloor: 4 },
+  // Fração da resistência usada (fundamentos.md#resistência-passiva-e-ativa): passiva (não reagiu ou não
+  // pode reagir), Resistir (reação grátis) e postura defensiva (ação de turno).
+  resistance: { passive: 0.4, resist: 0.7, stance: 1 },
 
   // Penetração: soma de técnica, sapo e Punho preciso, com teto.
   penetration: { max: 0.6 },
 
-  // Restauração (fundamentos.md): o início de cada combate restaura HP e chakra e limpa os efeitos.
-  // `restoreWithinBlock: false` faz o HP carregar entre as lutas de um bloco.
-  combat: { restoreOnStart: true, restoreWithinBlock: true },
+  // Restauração (fundamentos.md): a luta não começa restaurada; HP e chakra seguem entre as lutas.
+  combat: { restoreOnStart: false },
 
   // Ações universais (tecnicas.md).
   rest: { chakraRecovered: 4 },
-  substitution: { chakraCost: 2, dodgeChance: 0.5 },
+  // Reação Substituição: chance = base + (speed de quem reage − speed do atacante) × perSpeed, entre min e max.
+  substitution: { chakraCost: 2, baseChance: 0.5, perSpeed: 0.03, min: 0.25, max: 0.85, usesPerFight: 2 },
+
+  // Disputa de ninjutsu (fundamentos.md#disputa-de-ninjutsu): poder = dano (ou barreira) + ninjutsu × statFactor.
+  // Roleta: poder_A², poder_B² e cancelWeight × A × B. O vencedor passa max(minPassThrough, 1 − perdedor/vencedor)
+  // do dano; com poder ≥ crushRatio × o do outro, passa inteiro. A quebra de guarda usa o mesmo statFactor.
+  clash: { statFactor: 0.5, cancelWeight: 0.5, minPassThrough: 0.25, crushRatio: 2 },
+
+  // Estados elementais (tecnicas.md#estados-elementais). Duram `turns` rodadas a partir da seguinte.
+  states: {
+    lightningArmor: { element: 'lightning' as const, turns: 3, offenseMult: 1.25, resistanceMult: 1.3, speed: 2 },
+  },
 
   // Golpe carregado dos vilões: dano × `damageMult`, sem crítico.
   charged: { damageMult: 2 },
@@ -80,7 +93,6 @@ export const balance = {
   },
   expansion: { chakraCost: 6, turns: 3, taijutsuMult: 1.5, speedPenalty: 3 },
   shadowClones: { chakraCost: 6, hitsMult: 3, damagePct: 0.4 },
-  rotation: { reflectPct: 0.5 },
 
   // Efeitos (efeitos.md). Valem para jogador e vilões.
   status: {
@@ -107,11 +119,22 @@ export const balance = {
 
   revive: { initialItems: 1 },
 
-  // 1 estágio de status: +1 em tai/nin/gen/speed; HP e chakra máximos iguais a uma subida de nível.
-  statStage: { taijutsu: 1, ninjutsu: 1, genjutsu: 1, speed: 1 },
+  // 1 estágio de status: +1 em tai/nin/gen/speed e nas resistências; HP e chakra máximos iguais a uma subida de nível.
+  statStage: { taijutsu: 1, ninjutsu: 1, genjutsu: 1, speed: 1, physical: 1, mental: 1 },
 
-  // Upgrade de técnica (pergaminho), por categoria e por nível.
-  techniqueUpgrade: { baseDamagePerLevel: 3, healPctPerLevel: 0.05, genjutsuPowerPerLevel: 3 },
+  // Níveis de técnica (tecnicas.md#níveis-de-técnica). Teto = 1 + floor((nível do personagem − 1) / levelsPerTier):
+  // I do 1, II do 4, III do 7, IV do 10. Upgrade genérico (técnicas sem linha própria), por nível acima do I.
+  // Marcos dão 1 upgrade grátis à escolha. Sem técnica para subir, o upgrade vira `noTargetXp`.
+  techniqueUpgrade: {
+    levelsPerTier: 3,
+    milestones: [4, 7, 10],
+    baseDamagePerLevel: 3,
+    barrierPerLevel: 4,
+    healPctPerLevel: 0.05,
+    genjutsuPowerPerLevel: 3,
+    chakraPerLevel: 1,
+    noTargetXp: 30,
+  },
 
   // Ferramenta ninja: dano base extra em todos os ataques, por nível.
   ninjaTool: { baseDamagePerLevel: 1 },
@@ -124,7 +147,7 @@ export const balance = {
   },
 
   // Nível sem limite (progressao.md). XP do nível N ao N+1: xpBase + xpGrowth × (N − 1).
-  // Subir de nível não restaura (quem restaura é o início do combate).
+  // Subir de nível restaura HP e chakra por completo.
   level: {
     xpBase: 100,
     xpGrowth: 25,
@@ -136,7 +159,7 @@ export const balance = {
     },
   },
 
-  // Dificuldade (campanha.md): multiplica HP, dano base e defesas dos vilões.
+  // Dificuldade (campanha.md): multiplica HP, dano base, ataques e resistências dos vilões.
   difficulty: {
     default: 'normal' as const,
     multipliers: { easy: 0.85, normal: 1, hard: 1.15, hardcore: 1.25 },
@@ -144,16 +167,22 @@ export const balance = {
   },
 
   events: {
-    trainingStages: 1,
+    // Treino: XP garantido e +highlight no status sorteado (speed ganha speedHighlight). Pesos = os próprios status.
+    training: { xp: 60, highlight: 3, speedHighlight: 2 },
     jokenpoWinStages: 2,
     akatsukiCritBonus: 0.05,
-    // Sem Vontade do Fogo para perder: começa a próxima luta assim (depois da restauração).
+    // Sem Vontade do Fogo para perder: perde esta fração do HP e do chakra que tem (HP nunca abaixo de 1).
     akatsukiNoReviveHpPct: 0.5,
     akatsukiNoReviveChakraPct: 0.5,
   },
 
+  // Guru (campanha.md#guru): premium sorteada por peso do perfil. Palma Curativa pesa chakra máximo ÷ divisor.
+  // Foco e Mestre da Substituição: +1 uso por luta a cada vez, até maxLevel.
+  guru: { medicalChakraDivisor: 3, focusMaxLevel: 3, substitutionMaxLevel: 3 },
+
   // Itens e bolsa (itens.md).
   items: {
+    resistanceAmulet: 2,
     xpScroll: 100,
     bagMax: 3,
     bagOverflowXp: 30,
@@ -165,10 +194,12 @@ export const balance = {
   // Roleta de recompensa por raridade (1 comum, 2 rara, 3 lendária). Índice = raridade − 1.
   rewards: {
     stages: [1, 2, 3],
-    techniqueScrolls: [0, 1, 2],
+    // Upgrades que acompanham a técnica nova (ou que ela vira, sem técnica para aprender).
+    techniqueUpgrades: [0, 1, 2],
     xp: [60, 120, 200],
     itemSpins: [1, 2, 3],
-    resistance: [1, 2, 3],
+    // Pontos de resistência, distribuídos um a um entre física e mental (50% cada).
+    resistance: [2, 4, 6],
     critBonus: [0.02, 0.04, 0.06],
     // Lendária: gira tantas vezes e o jogador escolhe 1.
     legendaryChoices: 3,
@@ -177,12 +208,14 @@ export const balance = {
   exam: {
     // Índice = vitórias no exame. 0 = sem recompensa.
     rewardTierByWins: [0, 1, 2, 3],
+    // Quem perde uma luta do exame segue para a próxima com esta fração do HP e do chakra máximos.
+    lossRecoverPct: 0.5,
   },
 
   jinchuuriki: {
     chakraBonusPct: 1.0,
     // Manto de chakra: uma vez por luta, abaixo do limiar de HP. Paga 10% do chakra máximo por rodada.
-    cloak: { hpThresholdPct: 0.5, statMult: 1.5, regenPct: 0.05, chakraPctPerRound: 0.1, turns: 5 },
+    cloak: { hpThresholdPct: 0.5, statMult: 1.5, resistanceMult: 1.25, regenPct: 0.05, chakraPctPerRound: 0.1, turns: 5 },
     genjutsuImmune: true,
   },
 

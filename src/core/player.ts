@@ -10,6 +10,7 @@ import type {
   Element,
   Origin,
   PassiveKind,
+  Resistances,
   SummonState,
   TechniqueDef,
   TechniqueElement,
@@ -42,24 +43,26 @@ export interface PlayerState {
   maxChakra: number;
   chakra: number;
   offense: AttackStats;
+  /** Resistência física e mental (mesma ficha dos vilões). */
+  resistance: Resistances;
   speed: number;
   affinity: Element | null;
   secondaryElements: Element[];
   /** diferencial_de_dano_%: somado à chance base de crítico. */
   critBonus: number;
-  /** diferencial_de_resistência. */
-  resistanceBonus: number;
   /** Skill set: todas as técnicas conhecidas (kit inicial, nível, recompensa), várias por categoria. */
   techniques: string[];
-  /** Upgrades (pergaminho) por categoria: valem para todas as técnicas dela. */
-  techniqueLevels: Partial<Record<TechniqueSlot, number>>;
+  /** Upgrade genérico por técnica: níveis acima do I (técnicas sem linha própria). */
+  techniqueLevels: Record<string, number>;
+  /** Upgrades à escolha ainda não aplicados (marcos de nível, pergaminho, recompensa). */
+  pendingUpgrades: number;
   /** Técnica ocular ativável em batalha (Sharingan, Byakugan). */
   dojutsu: DojutsuId | null;
   /** Ativa de linhagem (portões, expansão, clones). */
   active: ActiveKind | null;
   /** Ferramenta ninja: item único, evoluível. 0 = não tem. */
   ninjaToolLevel: number;
-  /** Amuletos carregados (efeito permanente). O bônus já está em speed/resistanceBonus. */
+  /** Amuletos carregados (efeito permanente). O bônus já está em speed/resistance. */
   amulets: Amulets;
   /** Consumíveis da bolsa (máximo `balance.items.bagMax` de cada). */
   bag: Bag;
@@ -70,8 +73,10 @@ export interface PlayerState {
   forbiddenAttackTypes: AttackType[];
   passive: PassiveKind;
   jinchuuriki: boolean;
-  /** Ensinado pelo guru: uma vez por luta, ativa um crítico garantido no próximo ataque. */
-  focusCrit: boolean;
+  /** Foco (premium do guru): usos por luta de um crítico garantido no próximo ataque. 0 = não tem. */
+  focusUses: number;
+  /** Mestre da Substituição (premium do guru): usos extras de Substituição por luta. */
+  substitutionBonus: number;
   revives: number;
   revivesUsed: number;
 }
@@ -113,13 +118,14 @@ export function createPlayer(
       maxChakra,
       chakra: maxChakra,
       offense: { taijutsu: st.taijutsu, ninjutsu: st.ninjutsu, genjutsu: st.genjutsu },
+      resistance: { ...lineage.resistance },
       speed: st.speed,
       affinity: origin.affinity,
       secondaryElements: [],
       critBonus: 0,
-      resistanceBonus: balance.resistance.initialBonus,
       techniques: kit,
       techniqueLevels: {},
+      pendingUpgrades: 0,
       dojutsu: lineage.dojutsu ?? null,
       active: lineage.active ?? null,
       ninjaToolLevel: 0,
@@ -131,7 +137,8 @@ export function createPlayer(
       forbiddenAttackTypes: [...forbidden],
       passive: lineage.passive,
       jinchuuriki: origin.jinchuuriki,
-      focusCrit: false,
+      focusUses: 0,
+      substitutionBonus: 0,
       revives: balance.revive.initialItems,
       revivesUsed: 0,
     },
@@ -144,7 +151,7 @@ export function withDifficulty(player: PlayerState, difficulty: Difficulty, data
   return { ...player, growth: { ...data.balance.level.growth[difficulty] } };
 }
 
-/** Restaura HP e chakra (início do combate, Vontade do Fogo). */
+/** Restaura HP e chakra (subir de nível, fim do exame, Vontade do Fogo). */
 export function fullRestore(player: PlayerState): PlayerState {
   return { ...player, hp: player.maxHp, chakra: player.maxChakra };
 }
@@ -166,6 +173,8 @@ export function learnTechnique(player: PlayerState, techniqueId: string, data: G
   if (!knowsElement(player, tech.element)) throw new Error(`O jogador não domina o elemento ${tech.element}`);
   if (!lineageAllows(player, tech)) throw new Error(`Esta origem não aprende ${tech.id}`);
   if (player.techniques.includes(tech.id)) return player;
+  // Uma técnica por linha: o nível seguinte vem por upgrade, não por aprender de novo.
+  if (tech.line && knownLine(player, tech.line, data)) return player;
   return grantLevelTechniques({ ...player, techniques: [...player.techniques, tech.id] }, data);
 }
 
@@ -222,8 +231,82 @@ export function knowsElement(player: PlayerState, element: TechniqueElement): bo
 /** Fração do HP máximo que o ninjutsu médico cura, com os upgrades. 0 = não sabe. */
 export function medicalHealPct(player: PlayerState, data: GameData): number {
   const tech = knownTechniques(player, data).find((t) => techniqueSlot(t) === 'medical');
-  if (!tech) return 0;
-  return (tech.healPct ?? 0) + (player.techniqueLevels.medical ?? 0) * data.balance.techniqueUpgrade.healPctPerLevel;
+  return tech ? (leveledTechnique(player, tech.id, data).healPct ?? 0) : 0;
+}
+
+// ---------------------------------------------------------------------------
+// Níveis de técnica (tecnicas.md#níveis-de-técnica)
+
+/** Técnica da linha que o jogador conhece (null = nenhuma). */
+export function knownLine(player: PlayerState, line: string, data: GameData): TechniqueDef | null {
+  return knownTechniques(player, data).find((t) => t.line === line) ?? null;
+}
+
+/** Teto de nível de técnica pelo nível do personagem: I do 1, II do 4, III do 7, IV do 10... */
+export function techniqueTier(player: PlayerState, data: GameData): number {
+  return 1 + Math.floor((player.level - 1) / data.balance.techniqueUpgrade.levelsPerTier);
+}
+
+/** Nível atual da técnica (I = 1). Linhas: o da ficha; demais: 1 + upgrades genéricos. */
+export function techniqueLevel(player: PlayerState, techniqueId: string, data: GameData): number {
+  const tech = data.techniquesById[techniqueId];
+  if (tech?.line) return tech.lineLevel ?? 1;
+  return 1 + (player.techniqueLevels[techniqueId] ?? 0);
+}
+
+/** Próximo nível de uma linha (null = a linha acabou ou a técnica não tem linha). */
+export function nextLineTechnique(tech: TechniqueDef, data: GameData): TechniqueDef | null {
+  if (!tech.line) return null;
+  const level = (tech.lineLevel ?? 1) + 1;
+  return Object.values(data.techniquesById).find((t) => t.line === tech.line && t.lineLevel === level) ?? null;
+}
+
+/** Estados elementais não sobem; linhas sobem até o último nível; o resto, até o teto. */
+function canUpgrade(player: PlayerState, tech: TechniqueDef, data: GameData): boolean {
+  if (tech.state || player.forbiddenAttackTypes.includes(tech.type)) return false;
+  if (techniqueLevel(player, tech.id, data) + 1 > techniqueTier(player, data)) return false;
+  return tech.line ? nextLineTechnique(tech, data) !== null : true;
+}
+
+/** Técnicas do skill set que podem subir um nível agora. */
+export function upgradableTechniques(player: PlayerState, data: GameData): string[] {
+  return knownTechniques(player, data)
+    .filter((t) => canUpgrade(player, t, data))
+    .map((t) => t.id);
+}
+
+/** Sobe 1 nível: na linha, troca pela ficha seguinte (mesmo espaço); fora dela, upgrade genérico. */
+export function upgradeTechnique(player: PlayerState, techniqueId: string, data: GameData): PlayerState {
+  const tech = data.techniquesById[techniqueId];
+  if (!tech || !player.techniques.includes(techniqueId)) throw new Error(`Técnica não aprendida: ${techniqueId}`);
+  if (!canUpgrade(player, tech, data)) throw new Error(`Técnica sem upgrade agora: ${techniqueId}`);
+  const next = nextLineTechnique(tech, data);
+  if (next) {
+    return { ...player, techniques: player.techniques.map((id) => (id === techniqueId ? next.id : id)) };
+  }
+  const levels = { ...player.techniqueLevels, [techniqueId]: (player.techniqueLevels[techniqueId] ?? 0) + 1 };
+  return { ...player, techniqueLevels: levels };
+}
+
+/**
+ * Ficha da técnica com o upgrade genérico aplicado (sem a ferramenta ninja): por nível acima do I,
+ * +3 de dano por golpe, +4 de barreira, +3 de poder mental ou +5% de cura, e +1 de chakra
+ * (técnica grátis continua grátis).
+ */
+export function leveledTechnique(player: PlayerState, techniqueId: string, data: GameData): TechniqueDef {
+  const tech = data.techniquesById[techniqueId];
+  if (!tech) throw new Error(`Técnica desconhecida: ${techniqueId}`);
+  const n = tech.line ? 0 : (player.techniqueLevels[techniqueId] ?? 0);
+  if (n === 0) return tech;
+  const cfg = data.balance.techniqueUpgrade;
+  return {
+    ...tech,
+    chakraCost: tech.chakraCost > 0 ? tech.chakraCost + n * cfg.chakraPerLevel : 0,
+    baseDamage: tech.baseDamage > 0 ? tech.baseDamage + n * cfg.baseDamagePerLevel : tech.baseDamage,
+    ...(tech.barrier !== undefined ? { barrier: tech.barrier + n * cfg.barrierPerLevel } : {}),
+    ...(tech.mental ? { mentalPower: (tech.mentalPower ?? 0) + n * cfg.genjutsuPowerPerLevel } : {}),
+    ...(tech.healPct !== undefined ? { healPct: tech.healPct + n * cfg.healPctPerLevel } : {}),
+  };
 }
 
 /** XP para sair de `level` e ir ao próximo. */
@@ -248,26 +331,33 @@ export function canLevelUp(player: PlayerState, data: GameData): boolean {
 }
 
 /**
- * Sobe 1 nível, gastando o XP do nível: HP e chakra máximos sobem (`growth`, pela dificuldade).
- * Não restaura (quem restaura é o início do combate). Técnicas de nível liberadas são aprendidas na hora.
+ * Sobe 1 nível, gastando o XP do nível: HP e chakra máximos sobem (`growth`, pela dificuldade) e o
+ * jogador é restaurado por completo. Técnicas de nível liberadas são aprendidas na hora; os marcos
+ * (4, 7, 10) dão 1 upgrade à escolha (`pendingUpgrades`).
  */
 export function applyLevelUp(player: PlayerState, data: GameData): PlayerState {
   if (!canLevelUp(player, data)) throw new Error('XP insuficiente');
+  const level = player.level + 1;
+  const maxHp = player.maxHp + player.growth.hp;
+  const maxChakra = player.maxChakra + player.growth.chakra;
+  const milestone = data.balance.techniqueUpgrade.milestones.includes(level) ? 1 : 0;
   const p: PlayerState = {
     ...player,
-    level: player.level + 1,
+    level,
     xp: player.xp - xpToNextLevel(player.level, data),
-    maxHp: player.maxHp + player.growth.hp,
-    hp: player.hp + player.growth.hp,
-    maxChakra: player.maxChakra + player.growth.chakra,
-    chakra: player.chakra + player.growth.chakra,
+    maxHp,
+    hp: maxHp,
+    maxChakra,
+    chakra: maxChakra,
+    pendingUpgrades: player.pendingUpgrades + milestone,
   };
   return grantLevelTechniques(p, data);
 }
 
 /**
- * Sobe `n` estágios em todos os status. HP e chakra máximos sobem o mesmo que numa subida de nível.
- * Tipos proibidos pela origem (ex.: ninjutsu do prodígio do taijutsu) continuam zerados.
+ * Sobe `n` estágios em todos os status, inclusive as resistências. HP e chakra máximos sobem o mesmo
+ * que numa subida de nível, sem restaurar. Tipos proibidos pela origem (ex.: ninjutsu do prodígio do
+ * taijutsu) continuam zerados.
  */
 export function applyStatStages(player: PlayerState, n: number, data: GameData): PlayerState {
   const st = data.balance.statStage;
@@ -278,6 +368,10 @@ export function applyStatStages(player: PlayerState, n: number, data: GameData):
   return {
     ...player,
     offense,
+    resistance: {
+      physical: player.resistance.physical + st.physical * n,
+      mental: player.resistance.mental + st.mental * n,
+    },
     speed: player.speed + st.speed * n,
     maxHp: player.maxHp + player.growth.hp * n,
     hp: player.hp + player.growth.hp * n,

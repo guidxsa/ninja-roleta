@@ -77,19 +77,30 @@ describe('criação do jogador', () => {
   /** Orçamento de status: tai/nin/gen 1, speed 1,5, 10 de HP = 1, 2 de chakra = 1. */
   const budget = (s: Stats) => s.taijutsu + s.ninjutsu + s.genjutsu + s.speed * 1.5 + s.hp / 10 + s.chakra / 2;
 
-  it('todas as origens têm o mesmo orçamento de 70 pontos', () => {
-    for (const l of gameData.lineages) expect([l.id, budget(l.stats)]).toEqual([l.id, 70]);
+  it('todas as origens têm o mesmo orçamento de 90 pontos (70 + 20 em resistências)', () => {
+    for (const l of gameData.lineages) {
+      expect([l.id, budget(l.stats)]).toEqual([l.id, 70]);
+      expect([l.id, l.resistance.physical + l.resistance.mental]).toEqual([l.id, 20]);
+    }
   });
 
-  it('comum: status absolutos, 1 Vontade do Fogo, diferencial 1 e Determinação', () => {
+  it('comum: status absolutos, resistências 10/10, 1 Vontade do Fogo e Determinação', () => {
     const p = createPlayer({ lineageId: null, affinity: 'water', jinchuuriki: false }, gameData);
     expect(p.maxHp).toBe(100);
     expect(p.offense).toEqual({ taijutsu: 10, ninjutsu: 10, genjutsu: 10 });
+    expect(p.resistance).toEqual({ physical: 10, mental: 10 });
     expect(p.maxChakra).toBe(30);
     expect(p.speed).toBe(10);
     expect(p.revives).toBe(1);
-    expect(p.resistanceBonus).toBe(1);
     expect(p.passive).toBe('determination');
+  });
+
+  it('resistências pela lore: clãs de corpo puxam para a física, de mente para a mental', () => {
+    const res = (id: string) => createPlayer({ lineageId: id, affinity: id === 'taijutsuProdigy' ? null : 'earth', jinchuuriki: false }, gameData).resistance;
+    expect(res('akimichi')).toEqual({ physical: 14, mental: 6 });
+    expect(res('yamanaka')).toEqual({ physical: 6, mental: 14 });
+    expect(res('taijutsuProdigy')).toEqual({ physical: 14, mental: 6 });
+    expect(res('uchiha').mental).toBeGreaterThan(res('uchiha').physical);
   });
 
   it('comum começa com Punho de Chakra e o ninjutsu básico do elemento, sem genjutsu', () => {

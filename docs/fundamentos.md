@@ -151,8 +151,11 @@ Acontece quando um ninjutsu é respondido com outro ninjutsu (reação Disputa o
 
 ```
 poder = (dano_base × golpes  ou  poder_de_barreira) + ninjutsu × 0,5
-poder × mult_elemento (vantagem ×1,5, desvantagem ×0,75, interações especiais abaixo)
+poder × 1,5 para quem tem a vantagem elemental (raio contra barreira de terra: ×2)
 ```
+
+- **Só a vantagem multiplica**: a desvantagem não reduz o poder de quem a tem. Assim a vantagem pesa muito, mas um jutsu básico com vantagem não anula um grande.
+- Rasengan: +25% de poder. Escudo de Vento: +25% contra técnicas de vários golpes. Golpe carregado: ×2.
 
 Os dois poderes vão para uma roleta de três fatias, no espírito da iniciativa:
 
@@ -195,7 +198,7 @@ peso_aguenta = poder_da_barreira²
 
 O elemento só pesa quando **dois elementos se encontram**:
 
-- numa **disputa** ou contra uma **barreira** (poder × vantagem);
+- numa **disputa** ou contra uma **barreira** (só a vantagem multiplica o poder);
 - contra um **estado elemental** ativo no alvo, como Armadura de Raio ou Armadura de Areia (dano × vantagem). Ver [tecnicas.md](tecnicas.md#estados-elementais).
 
 Ciclo de vantagem: **fogo > vento > raio > terra > água > fogo**. Taijutsu e técnicas sem elemento são neutros.

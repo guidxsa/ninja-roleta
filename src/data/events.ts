@@ -26,8 +26,11 @@ export type ItemId =
 /** Encontro com a Akatsuki: o jinchuuriki é caçado (ou passa despercebido); os outros assistem (ou se metem). */
 export type AkatsukiOutcome = 'hunted' | 'unnoticed' | 'insight' | 'meddled';
 
-/** Encontro com o guru: charlatão, técnica nova ou o segredo do crítico garantido. */
-export type GuruOutcome = 'charlatan' | 'technique' | 'focus';
+/** Encontro com o guru: charlatão ou uma premium (campanha.md#guru). */
+export type GuruOutcome = 'charlatan' | 'premium';
+
+/** Premium do guru: técnicas e talentos sem elemento. */
+export type PremiumId = 'rasengan' | 'medical' | 'focus' | 'substitution';
 
 export type RewardId = 'stages' | 'newTechnique' | 'xp' | 'item' | 'resistance' | 'critBonus' | 'secondaryElement';
 
@@ -77,11 +80,10 @@ export const akatsukiOutcomes: { jinchuuriki: Weighted<AkatsukiOutcome>[]; other
   ],
 };
 
-/** Sem técnica ofensiva para ensinar (ou já sabendo o crítico garantido), a fatia some. */
+/** Sem premium para ensinar, a fatia some. A premium é sorteada depois, pelo perfil do jogador. */
 export const guruOutcomes: Weighted<GuruOutcome>[] = [
   { id: 'charlatan', weight: 30 },
-  { id: 'technique', weight: 50 },
-  { id: 'focus', weight: 20 },
+  { id: 'premium', weight: 70 },
 ];
 
 export const summonAnimals: Weighted<SummonAnimal>[] = [

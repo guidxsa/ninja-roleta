@@ -186,10 +186,12 @@ Técnicas e talentos **sem elemento** que só o guru ensina. O guru oferece a qu
 
 | Premium | Tipo | Nível I | Por nível | Quem |
 |---|---|---|---|---|
-| Rasengan | Ninjutsu neutro de ataque | Dano 26, chakra 8, precisão 85%. Na disputa, +25% de poder. | II: dano 34, chakra 10. III: dano 44, chakra 13. | Quem usa ninjutsu |
+| Rasengan | Ninjutsu neutro de ataque (linha própria) | Dano 26, chakra 8, precisão 85%. Na disputa, +25% de poder. | II, Rasengan Gigante: dano 34, chakra 10. III, Rasengan Supremo: dano 44, chakra 13. | Quem usa ninjutsu |
 | Palma Curativa (ninjutsu médico) | Médico | Cura 20% do HP máximo, chakra 4, sem rolar acerto. Indisponível com HP cheio. | +5% de cura, +1 de chakra | Todos, menos o prodígio |
-| Foco | Talento | Uma vez por luta, um botão grátis (não gasta o turno) deixa o próximo ataque com crítico garantido. | +1 uso por luta | Todos |
-| Mestre da Substituição | Talento | +1 uso de Substituição por luta. | +1 uso por luta | Todos |
+| Foco | Talento | Uma vez por luta, um botão grátis (não gasta o turno) deixa o próximo ataque com crítico garantido. | +1 uso por luta (até 3) | Todos |
+| Mestre da Substituição | Talento | +1 uso de Substituição por luta. | +1 uso por luta (até 3) | Todos |
+
+Os níveis das premium respeitam o teto pelo nível do personagem: no nível 1, o guru não ensina o Rasengan II.
 
 ## Técnicas de nível futuro
 

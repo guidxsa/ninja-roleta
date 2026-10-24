@@ -320,6 +320,9 @@ footer { padding: 12px 16px 20px; color: var(--muted); text-align: center; max-w
 .btn.act b { font-family: var(--font-display); font-weight: 400; letter-spacing: .02em; }
 .btn.act span { font-size: 12px; font-weight: 500; }
 .btn.act small { font-size: 11px; font-weight: 500; color: var(--muted); }
+/* Painel de reação: o vilão atacou; Resistir (grátis) vem em destaque. */
+.react-box h3 { text-align: center; margin: 4px 0 10px; }
+.btn.act.primary small { color: var(--accent-ink); opacity: .85; }
 /* Foco do guru: liga/desliga antes de escolher o ataque. */
 .btn.focus-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; margin-bottom: 8px; padding: 8px 10px; }
 .btn.focus-btn small { display: block; font-size: 11px; font-weight: 500; color: var(--muted); }

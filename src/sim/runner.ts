@@ -1,7 +1,7 @@
 import { playRound, startBattle, type BattleOptions, type BattleState } from '../core/combat';
 import type { GameData } from '../core/gameData';
 import { scaleVillain, type Difficulty } from '../core/difficulty';
-import { canLevelUp, equipTrainingWeights, gainXp, trainingWeightsWin, type PlayerState } from '../core/player';
+import { canLevelUp, equipTrainingWeights, fullRestore, gainXp, trainingWeightsWin, type PlayerState } from '../core/player';
 import {
   applyAkatsuki,
   applyGuru,
@@ -9,6 +9,10 @@ import {
   applyReward,
   applySimpleEvent,
   applySummonEncounter,
+  applyTraining,
+  chooseUpgrade,
+  examRecover,
+  forfeitUpgrade,
   HANDS,
   levelUp,
   playJokenpo,
@@ -19,6 +23,7 @@ import {
   rollReward,
   rollRewardChoices,
   rollSummonAnimal,
+  rollTraining,
   rollWeighted,
   type NextFightMods,
   type Step,
@@ -27,7 +32,7 @@ import type { Rng } from '../core/rng';
 import type { VillainDef } from '../core/types';
 import type { RewardId } from '../data/events';
 import type { Stage } from '../data/campaign';
-import { chooseExtras, choosePlayerAction } from './policy';
+import { chooseExtras, choosePlayerAction, chooseReaction, chooseUpgradeTarget } from './policy';
 
 /** Teto de segurança contra lutas infinitas (ex.: ambos só descansando). */
 export const MAX_ROUNDS = 200;
@@ -42,15 +47,25 @@ export function runBattle(
   let state = startBattle(player, villain, options, data, rng);
   while (state.status === 'ongoing' && state.round < MAX_ROUNDS) {
     const action = choosePlayerAction(state, data);
-    state = playRound(state, action, rng, data, chooseExtras(state, action, data));
+    state = playRound(state, action, rng, data, chooseExtras(state, action, data), chooseReaction);
   }
   return state;
 }
 
-/** Sobe de nível enquanto houver XP para isso. */
-function levelUps(player: PlayerState, data: GameData): PlayerState {
+/** Gasta os upgrades à escolha pendentes (o XP de um upgrade sem alvo pode subir de nível de novo). */
+function spendUpgrades(player: PlayerState, data: GameData): PlayerState {
   let p = player;
-  while (canLevelUp(p, data)) p = levelUp(p, data).player;
+  while (p.pendingUpgrades > 0) {
+    const target = chooseUpgradeTarget(p, data);
+    p = target ? chooseUpgrade(p, target, data).player : forfeitUpgrade(p, data).player;
+  }
+  return p;
+}
+
+/** Sobe de nível enquanto houver XP para isso e gasta os upgrades à escolha. */
+function levelUps(player: PlayerState, data: GameData): PlayerState {
+  let p = spendUpgrades(player, data);
+  while (canLevelUp(p, data)) p = spendUpgrades(levelUp(p, data).player, data);
   return p;
 }
 
@@ -112,8 +127,9 @@ function autoEvent(player: PlayerState, rng: Rng, data: GameData): Step {
   switch (ev) {
     case 'oldLady':
     case 'ramen':
+      return applySimpleEvent(player, ev);
     case 'training':
-      return applySimpleEvent(player, ev, data);
+      return applyTraining(player, rollTraining(player, rng).value, data);
     case 'jokenpo':
       return playJokenpo(player, HANDS[0]!, rng, data);
     case 'foundItem':
@@ -128,9 +144,9 @@ function autoEvent(player: PlayerState, rng: Rng, data: GameData): Step {
 }
 
 /**
- * Campanha com XP e nível. Toda luta começa restaurada (salvo `restoreWithinBlock: false`).
- * No exame, perder não encerra a run nem gasta a Vontade do Fogo; só vencer dá XP.
- * Com `progression`, simula também os eventos pré-vilão e as recompensas.
+ * Campanha com XP e nível. HP e chakra seguem entre as lutas; só subir de nível, o fim do exame e a
+ * Vontade do Fogo restauram. No exame, perder não encerra a run nem gasta a Vontade do Fogo (segue com
+ * metade do HP e do chakra); só vencer dá XP. Com `progression`, simula também eventos e recompensas.
  */
 export function runCampaign(
   initial: PlayerState,
@@ -164,37 +180,32 @@ export function runCampaign(
         levels.push(player.level);
         const fight = runBattle(player, villain(villainId), rng, data, { allowRevive: false });
         rounds.push(fight.round);
-        player = { ...fight.player, hp: Math.max(1, fight.player.hp) };
+        player = fight.player;
         if (fight.status === 'won') {
           wins++;
           player = awardXp(player, villainsById[villainId]!, data, true);
+        } else {
+          player = examRecover(player, data);
         }
       }
       examWins = wins;
+      // Fim do exame: sai totalmente restaurado, qualquer que seja o resultado.
+      player = fullRestore(player);
       const tier = data.balance.exam.rewardTierByWins[wins] ?? 0;
       if (options.progression && tier > 0) player = autoReward(player, tier, rng, data);
       continue;
     }
 
     let mods: Partial<NextFightMods> = {};
-    let weakened = false;
     if (options.progression) {
       const ev = autoEvent(player, rng, data);
       player = levelUps(ev.player, data);
       mods = ev.mods;
-      weakened = ev.effect.kind === 'akatsukiWeakened';
     }
     for (let j = 0; j < stage.villains.length; j++) {
       const villainId = stage.villains[j]!;
       levels.push(player.level);
-      const first = j === 0;
-      const fightOptions: Partial<BattleOptions> = {
-        restore: first || data.balance.combat.restoreWithinBlock,
-        ...(first ? mods : {}),
-        ...(first && weakened
-          ? { startHpPct: data.balance.events.akatsukiNoReviveHpPct, startChakraPct: data.balance.events.akatsukiNoReviveChakraPct }
-          : {}),
-      };
+      const fightOptions: Partial<BattleOptions> = j === 0 ? mods : {};
       const fight = runBattle(player, villain(villainId), rng, data, fightOptions);
       rounds.push(fight.round);
       player = fight.player;

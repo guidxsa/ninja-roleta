@@ -14,6 +14,10 @@ export function withInitiative(s: BattleState, side: Side = 'player'): BattleSta
   return { ...s, initiative: side };
 }
 
+/**
+ * Vilão de teste: sem ataque (o dano é só o da técnica) e resistências 10, que Resistindo (70%) valem 7.
+ * Sem `reactions`: só resiste, sem gastar números do rng.
+ */
 export function testVillain(overrides: Partial<VillainDef> = {}): VillainDef {
   return {
     id: 'dummy',
@@ -21,7 +25,8 @@ export function testVillain(overrides: Partial<VillainDef> = {}): VillainDef {
     hp: 50,
     chakra: 20,
     speed: 10,
-    defense: { taijutsu: 5, ninjutsu: 5, genjutsu: 5 },
+    offense: { taijutsu: 0, ninjutsu: 0, genjutsu: 0 },
+    resistance: { physical: 10, mental: 10 },
     critBonus: 0,
     xp: 50,
     techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 10, chakraCost: 0, weight: 1 }],
