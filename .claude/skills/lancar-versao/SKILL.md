@@ -14,9 +14,11 @@ Repositório: `origin` → https://github.com/guidxsa/ninja-roleta, branch `mast
 O histórico de versões fica na tabela **Histórico de versões** do `README.md`, e cada versão publicada tem uma tag (`git tag -l`).
 
 - Se o README já tem uma linha nova cuja versão ainda não virou tag, use essa versão.
-- Se não tem, crie a linha, subindo a partir da última tag:
-  - **menor** (`v0.5.0` → `v0.6.0`): funcionalidade ou mecânica nova, mudança de regra, tela nova;
-  - **patch** (`v0.5.0` → `v0.5.1`): correção de bug, ajuste só de números, texto, documentação.
+- Se não tem, crie a linha, subindo a partir da última tag pelas regras da seção **Versionamento** do `README.md`:
+  - **minor** (`v0.9.0` → `v0.10.0`, `v0.10.0` → `v0.11.0`): funcionalidade ou mecânica nova, mudança de regra, tela nova;
+  - **patch** (`v0.10.0` → `v0.10.1`): correção de bug, ajuste só de números, texto, documentação.
+- O jogo fica em 0.x: depois de `v0.9.0` vem `v0.10.0`, nunca `v1.0.0`. **Nunca suba o major** (`v1.0.0`) por conta própria, nem que o trabalho pareça grande; isso só acontece quando o usuário pedir.
+- Compare versões numericamente (`git tag -l --sort=v:refname`), não em ordem alfabética: `v0.10.0` é maior que `v0.9.0`.
 - Se o trabalho pendente junta mais de uma versão do README sem tag (ex.: v0.4.0 e v0.5.0 nos mesmos arquivos), não tente separar: publique como a versão mais alta e mencione as duas no commit.
 - Atualize `"version"` no `package.json` e no `package-lock.json` para o mesmo número (sem o `v`):
   ```bash
