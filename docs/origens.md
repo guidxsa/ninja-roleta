@@ -30,22 +30,24 @@ Total: 30% comum, 40% clã, 30% rara.
 
 ## Status iniciais
 
-Todas as origens têm o mesmo **orçamento de 70 pontos**. A diferença de poder vem das habilidades, não dos números.
+Todas as origens têm o mesmo **orçamento de 90 pontos**: os 70 de antes mais **20 em resistências**. A diferença de poder vem das habilidades, não dos números.
 
-Conversão: tai, nin e gen valem 1 ponto; speed vale 1,5; 10 de HP vale 1; 2 de chakra valem 1.
+Conversão: tai, nin, gen e as duas resistências valem 1 ponto; speed vale 1,5; 10 de HP vale 1; 2 de chakra valem 1.
 
-| Origem | Tai | Nin | Gen | Speed | HP | Chakra | Afinidade |
-|---|---|---|---|---|---|---|---|
-| Comum | 10 | 10 | 10 | 10 | 100 | 30 | Rolada |
-| Nara | 7 | 13 | 11 | 9 | 95 | 32 | Rolada |
-| Akimichi | 15 | 8 | 5 | 6 | 160 | 34 | Rolada |
-| Yamanaka | 7 | 9 | 15 | 10 | 90 | 30 | Rolada |
-| Aburame | 8 | 12 | 10 | 8 | 110 | 34 | Rolada |
-| Inuzuka | 14 | 8 | 6 | 13 | 105 | 24 | Rolada |
-| Prodígio do taijutsu | 22 | 0 | 0 | 14 | 130 | 28 | Nenhuma |
-| Uchiha | 7 | 12 | 14 | 10 | 90 | 26 | Fogo (fixa) |
-| Hyuuga | 16 | 6 | 8 | 11 | 100 | 27 | Rolada |
-| Uzumaki | 10 | 11 | 6 | 9 | 120 | 35 | Rolada |
+| Origem | Tai | Nin | Gen | Res. física | Res. mental | Speed | HP | Chakra | Afinidade |
+|---|---|---|---|---|---|---|---|---|---|
+| Comum | 10 | 10 | 10 | 10 | 10 | 10 | 100 | 30 | Rolada |
+| Nara | 7 | 13 | 11 | 8 | 12 | 9 | 95 | 32 | Rolada |
+| Akimichi | 15 | 8 | 5 | 14 | 6 | 6 | 160 | 34 | Rolada |
+| Yamanaka | 7 | 9 | 15 | 6 | 14 | 10 | 90 | 30 | Rolada |
+| Aburame | 8 | 12 | 10 | 9 | 11 | 8 | 110 | 34 | Rolada |
+| Inuzuka | 14 | 8 | 6 | 12 | 8 | 13 | 105 | 24 | Rolada |
+| Prodígio do taijutsu | 22 | 0 | 0 | 14 | 6 | 14 | 130 | 28 | Nenhuma |
+| Uchiha | 7 | 12 | 14 | 8 | 12 | 10 | 90 | 26 | Fogo (fixa) |
+| Hyuuga | 16 | 6 | 8 | 11 | 9 | 11 | 100 | 27 | Rolada |
+| Uzumaki | 10 | 11 | 6 | 12 | 8 | 9 | 120 | 35 | Rolada |
+
+Lógica das resistências (provisória): clãs de corpo (Akimichi, Inuzuka, prodígio, Uzumaki) puxam para a física; clãs de mente e ilusão (Yamanaka, Nara, Uchiha) puxam para a mental. O prodígio tem mental baixa: é o alvo natural de genjutsu, como na série.
 
 Jinchuuriki soma **+100% de chakra máximo** sobre a origem.
 
@@ -66,7 +68,7 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 | Hyuuga | Punho preciso | Byakugan | Punho de Chakra, ninjutsu básico | Selo dos Pontos Vitais, Rotação (nível 4) | — |
 | Uzumaki | Vitalidade | Clones das Sombras | Punho de Chakra, ninjutsu básico | Clones das Sombras | — |
 
-"Ninjutsu básico" = a técnica básica do elemento sorteado.
+"Ninjutsu básico" = o nível I da linha de ataque do elemento sorteado (ver [tecnicas.md](tecnicas.md#linhas-de-ataque)).
 
 ## Detalhe por linhagem
 
@@ -102,7 +104,7 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 
 ### Prodígio do taijutsu (estilo Lee)
 
-- **Corpo de ferro** (passiva): piso de resistência 4 em ninjutsu e genjutsu (os status são zerados).
+- **Corpo de ferro** (passiva): a reação Resistir usa 100% da resistência física (como em postura defensiva).
 - **Portões** (ativa): uma vez por luta. Abrir gasta o turno; o bônus vale por 5 rodadas a partir da seguinte. Abre o maior portão liberado pelo taijutsu atual. Custa chakra e HP (nunca abaixo de 1).
 
   | Portão | Taijutsu mínimo | Dano de taijutsu | Chakra | HP |
@@ -112,10 +114,11 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
   | 3º | 30 | ×2 | 9 | 25% |
 
 - Nunca aprende ninjutsu, genjutsu ou ninjutsu médico; a roleta de recompensas é filtrada.
+- Sem ninjutsu, não disputa nem ergue barreiras. Responde a ninjutsu com Resistir ou Substituição, e quebra barreiras com taijutsu ([fundamentos.md](fundamentos.md#quebra-de-guarda)).
 
 ### Uchiha
 
-- **Olhos treinados** (passiva): +6 no genjutsu ao resistir a ilusões.
+- **Olhos treinados** (passiva): +6 na resistência mental ao resistir a ilusões.
 - **Sharingan** (ativa, dōjutsu): ativar 4 de chakra, manutenção 1 por rodada, dura 5 rodadas ou até faltar chakra. Evolui com o nível.
 
   | Estágio | Nível | Tai/Nin/Gen | Speed | Genjutsu: acerto / poder | Leitura de movimento |
@@ -129,9 +132,9 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 
 ### Hyuuga
 
-- **Punho preciso** (passiva): taijutsu ignora 30% da defesa de taijutsu do vilão (conta como penetração).
+- **Punho preciso** (passiva): taijutsu ignora 30% da resistência física do alvo (conta como penetração).
 - **Byakugan** (ativa, dōjutsu): ativar 3, manutenção 1, dura 5 rodadas. Ativo: taijutsu não erra (crítico ainda rola), taijutsu ×1,1 e libera o Selo dos Pontos Vitais.
-- **Rotação** (nível 4): técnica defensiva exclusiva.
+- **Rotação** (nível 4): barreira neutra exclusiva, usada como reação (ver [tecnicas.md](tecnicas.md#ninjutsu-de-linhagem)).
 
 ### Uzumaki
 
@@ -142,7 +145,7 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 
 - **Chakra máximo +100%.**
 - **Manto de chakra**: uma vez por luta, ao ficar abaixo de 50% do HP (inclusive no início da rodada).
-  - Dura até 5 rodadas: tai, nin, gen e speed ×1,5 (a resistência sobe junto) e regenera 5% do HP máximo no início de cada rodada.
+  - Dura até 5 rodadas: tai, nin, gen e speed ×1,5, resistências ×1,25, e regenera 5% do HP máximo no início de cada rodada.
   - **Custo: 10% do chakra máximo por rodada.** Sem chakra para pagar a rodada, o manto se desfaz. Não há recoil.
 - **Demônio interno**: imune a genjutsu.
 - O Gaara usa o mesmo manto (ver [viloes.md](viloes.md)).

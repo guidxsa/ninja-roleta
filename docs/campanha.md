@@ -12,7 +12,7 @@ Estrutura de uma run: ordem dos confrontos, eventos entre eles, encontros, invoc
 6. Kabuto
 7. Orochimaru (chefe final)
 
-- Toda luta começa com o jogador restaurado (ver [fundamentos.md](fundamentos.md#restauração)), inclusive dentro dos blocos.
+- HP e chakra seguem de uma luta para a outra, inclusive dentro dos blocos. Só restauram ao subir de nível, ao fim do exame chunin e pela Vontade do Fogo (ver [fundamentos.md](fundamentos.md#restauração)).
 - Fichas dos vilões: [viloes.md](viloes.md).
 - Combate em grupo fica fora do escopo inicial.
 
@@ -26,13 +26,30 @@ Antes de cada vilão (uma vez antes de cada bloco) gira uma roleta de eventos. N
 | 10 | Ajudou uma velhinha e se atrasou | Desvantagem de ação: o vilão ataca primeiro na próxima luta. |
 | 10 | Ramen muito bom | Vantagem de ação: o jogador ataca primeiro na próxima luta. |
 | 10 | Encontro com a Akatsuki | Ver "Akatsuki". |
-| 20 | Treino | +1 estágio de status. |
+| 20 | Treino | XP garantido e roleta de destaque. Ver "Treino". |
 | 20 | Jokenpô com um companheiro | Ver "Jokenpô". |
 | 10 | Achou um item | Gira a roleta de itens ([itens.md](itens.md)). |
 | 10 | Encontro com guru | Ver "Guru". |
 
 - Vantagem e desvantagem de ação substituem a roleta de iniciativa na próxima luta contra vilão (no bloco Haku e Zabuza, só na primeira; o exame não consome).
 - Pesos fixos nesta versão.
+
+### Treino
+
+1. **+60 de XP, garantido** (é um treino).
+2. **Roleta de destaque**: "você se destacou em...". A fatia sorteada ganha **+3** (speed ganha +2).
+
+| Fatia | Peso |
+|---|---|
+| Taijutsu | Valor atual de taijutsu |
+| Ninjutsu | Valor atual de ninjutsu |
+| Genjutsu | Valor atual de genjutsu |
+| Resistência física | Valor atual |
+| Resistência mental | Valor atual |
+| Speed | Valor atual |
+
+- Os pesos são os próprios status: quem já é bom em algo tende a se destacar nisso (um Hyuuga cai mais em taijutsu, um Yamanaka em genjutsu e resistência mental).
+- Status zerado não entra (o prodígio nunca cai em ninjutsu ou genjutsu).
 
 ### Jokenpô
 
@@ -51,17 +68,26 @@ O jogador escolhe pedra, papel ou tesoura; o companheiro sorteia (1/3 cada).
 | Jinchuuriki | É caçado: perde 1 Vontade do Fogo | Não é percebido |
 | Não jinchuuriki | Assiste à luta deles de longe: +5% de chance de crítico | Se mete onde não devia: perde 1 Vontade do Fogo |
 
-Nunca causa game over. Sem Vontade do Fogo para perder, começa a próxima luta com metade do HP e do chakra.
+Nunca causa game over. Sem Vontade do Fogo para perder, perde metade do HP e do chakra que tem (o HP nunca fica abaixo de 1).
 
 ### Guru
 
 | Chance | Resultado |
 |---|---|
 | 30% | Charlatão: desvantagem de ação na próxima luta. |
-| 50% | Ensina uma técnica ofensiva adequada (pool da "nova técnica", sem o médico). |
-| 20% | Ensina o **Foco**: uma vez por luta, um botão grátis (não gasta o turno) deixa o próximo ataque com crítico garantido. |
+| 70% | Ensina uma **premium** ([tecnicas.md](tecnicas.md#premium-guru)): técnicas e talentos sem elemento. |
 
-Sem técnica para ensinar, ou já sabendo o Foco, a fatia correspondente some.
+A premium é sorteada numa roleta ponderada pelo perfil do jogador:
+
+| Premium | Peso |
+|---|---|
+| Rasengan | Ninjutsu |
+| Palma Curativa | Chakra máximo ÷ 3 |
+| Foco | Taijutsu |
+| Mestre da Substituição | Speed |
+
+- Já tendo a premium sorteada, o guru ensina o próximo nível dela. Premium sem nível para subir, ou proibida pela origem (Rasengan e Palma Curativa para o prodígio), some da roleta.
+- Futuro: mais premium (Clone das Sombras, selos etc.).
 
 ## Invocações
 
@@ -69,7 +95,7 @@ O encontro sorteia um animal, que passa a acompanhar o jogador como **passiva** 
 
 | Animal | Papel | Efeito | Por nível |
 |---|---|---|---|
-| Sapo | Dano contra chefes | Penetração de 25% nas defesas do alvo | +10% de penetração |
+| Sapo | Dano contra chefes | Penetração de 25% na resistência física do alvo | +10% de penetração |
 | Cobra | Veneno | Acerto em alvo não envenenado aplica envenenamento (bônus inicial 2) | +2 de bônus inicial |
 | Lesma | Sustentação | Cura 3% do HP máximo no início de cada rodada | +1% de cura e +10% na chance de curar envenenamento |
 
@@ -77,8 +103,9 @@ Regras do veneno em [efeitos.md](efeitos.md#envenenamento). A penetração soma 
 
 ## Exame chunin
 
-- Três lutas em sequência contra rivais genin, de dificuldade crescente. Toda luta começa restaurada.
-- **Não causa game over e não consome a Vontade do Fogo.** Perder só reduz o desempenho.
+- Três lutas em sequência contra rivais genin, de dificuldade crescente. HP e chakra seguem de uma luta para a outra.
+- **Não causa game over e não consome a Vontade do Fogo.** Perder só reduz o desempenho. Quem perde uma luta é atendido pelos médicos do exame e segue para a próxima com 50% do HP e do chakra máximos.
+- **Ao fim do exame, qualquer que seja o resultado, o jogador sai totalmente restaurado** (HP, chakra e efeitos).
 - Cada vitória dá 60 de XP.
 - O número de vitórias define a recompensa final:
 
@@ -95,7 +122,7 @@ Regras do veneno em [efeitos.md](efeitos.md#envenenamento). A penetração soma 
 
 Escolhida na tela de origem; fica salva como preferência do aparelho e no histórico.
 
-| Dificuldade | Força dos vilões (HP, dano, defesas) |
+| Dificuldade | Força dos vilões (HP, ataques e resistências) |
 |---|---|
 | Fácil | 85% |
 | Médio | 100% |

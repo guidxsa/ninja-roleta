@@ -6,7 +6,7 @@ Como o personagem cresce durante a run: XP, níveis, estágios de status e marco
 
 - Começa no **nível 1**. **Não há nível máximo.**
 - XP para ir do nível N ao N+1: **100 + 25 × (N − 1)**. A sobra passa para o próximo nível.
-- **Subir de nível não restaura HP nem chakra.** A restauração acontece no início de cada combate (ver [fundamentos.md](fundamentos.md#restauração)).
+- **Subir de nível restaura tudo**: HP, chakra e efeitos negativos (ver [fundamentos.md](fundamentos.md#restauração)). Como a luta não começa restaurada, o nível novo é o principal respiro da run.
 - Ganho por nível, sem roleta:
 
 | Dificuldade | HP máximo | Chakra máximo |
@@ -27,6 +27,7 @@ Como o personagem cresce durante a run: XP, níveis, estágios de status e marco
 |---|---|
 | Vilão derrotado | Campo `xp` de cada vilão (ver [viloes.md](viloes.md)) |
 | Luta do exame chunin | 60 por vitória (derrota não dá XP) |
+| Evento Treino | +60, garantido ([campanha.md](campanha.md#treino)) |
 | Roleta de recompensa, fatia XP | Comum +60, raro +120, lendário +200 |
 | Pergaminho de experiência (roleta de itens) | +100 |
 | Passiva Determinação (comum) | +10% sobre todo XP ganho |
@@ -50,15 +51,16 @@ A tabela abaixo usa só o XP dos vilões e do exame. As fatias de XP das roletas
 
 | Nível | O que destrava |
 |---|---|
-| 4 | Técnicas de nível 4 da origem e do elemento; Sharingan com 2 tomoe; Rotação (Hyuuga); Rolo Colossal (Akimichi) |
-| 7 | Técnicas de nível 7; Sharingan com 3 tomoe |
-| 10 | Reservado para um tier futuro de técnicas |
+| 4 | Teto de técnica no nível II e **1 upgrade grátis**; barreiras entram na pool; Sharingan com 2 tomoe; Rotação (Hyuuga); Rolo Colossal (Akimichi); Redemoinho da Folha (prodígio) |
+| 7 | Teto no nível III e **1 upgrade grátis**; Armadura de Raio entra na pool; Sharingan com 3 tomoe; Lótus Primaveril (prodígio) |
+| 10 | Teto no nível IV (reservado) e **1 upgrade grátis** |
 
-Técnicas de nível só são aprendidas se a origem permitir a categoria e o jogador dominar o elemento.
+- Técnicas de nível só são aprendidas se a origem permitir a categoria e o jogador dominar o elemento.
+- A linha elemental não sobe sozinha: o upgrade grátis do marco é escolhido pelo jogador (ver [tecnicas.md](tecnicas.md#níveis-de-técnica)).
 
 ## Estágio de status
 
-Unidade de melhoria usada por eventos e recompensas. 1 estágio = **+1 em taijutsu, ninjutsu, genjutsu e speed**, mais HP e chakra máximos iguais a uma subida de nível na dificuldade atual.
+Unidade de melhoria usada por eventos e recompensas. 1 estágio = **+1 em taijutsu, ninjutsu, genjutsu, resistência física, resistência mental e speed**, mais HP e chakra máximos iguais a uma subida de nível na dificuldade atual. Não restaura HP nem chakra.
 
 - O prodígio do taijutsu continua com ninjutsu e genjutsu zerados (o estágio não os afeta).
-- Fontes: Treino (+1), vitória no jokenpô (+2), roleta de recompensa.
+- Fontes: vitória no jokenpô (+2), roleta de recompensa. O Treino dá XP e um destaque num status só ([campanha.md](campanha.md#treino)).
