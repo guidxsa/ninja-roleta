@@ -227,7 +227,9 @@ export type VillainPassive =
       evasionMult: number;
       lastStand?: { healPct: number; damageMult: number };
     }
-  /** Jinchuuriki ou marca da maldição. `resistanceMult` (hardcore) vale a luta toda. */
+  /** Jinchuuriki ou marca da maldição. `resistanceMult` vale a luta toda.
+   * `monster` (Gaara no hardcore): ao ser derrotado pela 1ª vez, volta na forma do bijuu com `healPct` do HP,
+   * troca as técnicas pelas de monstro e fica com os multiplicadores do manto até morrer (sem custo nem cura). */
   | {
       kind: 'cloak';
       variant: 'beast' | 'curseMark';
@@ -235,17 +237,23 @@ export type VillainPassive =
       genjutsuImmune: boolean;
       fromStart?: boolean;
       resistanceMult?: Partial<Resistances>;
+      monster?: { healPct: number; techniques: VillainTechnique[]; reactions?: ReactionWeights };
     }
   /** Bisturi: crítico extra e críticos fazem sangrar; no hardcore todos os golpes sangram e furam a resistência. */
   | { kind: 'scalpel'; critBonus: number; bleedOnHit?: boolean; resistancePierce?: number }
   /** Insano: cobra (veneno nos acertos). Abaixo do limiar de HP, se não for derrotado em `killWindow`
-   * rodadas, revive com `revivePct` do HP máximo. */
+   * rodadas, revive com `revivePct` do HP máximo, até `maxRevives` vezes por luta (omitido = sem limite).
+   * `revivesByDifficulty`: o limite por dificuldade (`scaleVillain` o copia para `maxRevives`; sem
+   * escala, vale o do normal). `critImmune` (hardcore): não recebe acerto crítico. */
   | {
       kind: 'insane';
       snakeBonus: number;
       hpThresholdPct: number;
       killWindow: number;
       revivePct: number;
+      maxRevives?: number;
+      revivesByDifficulty?: { easy: number; normal: number; hard: number };
+      critImmune?: boolean;
     };
 
 export interface Origin {

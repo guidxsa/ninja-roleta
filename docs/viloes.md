@@ -49,7 +49,7 @@ Calibrados na simulação para que o dano médio fique perto do da v0.9: o ataqu
 | 6 | Kabuto | Terra | 150 | 25 | 13 | 10 | 10 | 10 | 15 | 19 | +5% | 250 |
 | 7 | Orochimaru | Vento | 220 | 40 | 14 | 12 | 12 | 13 | 18 | 23 | +5% | 300 |
 
-O manto do Gaara multiplica o dano dele ×1,5 e as resistências ×1,25; a marca da maldição, ×1,25 e ×1,1.
+O manto do Gaara e a marca da maldição multiplicam o dano ×1,5 e as resistências ×1,25.
 
 ## Reações
 
@@ -116,13 +116,13 @@ Ordem das lutas no Quarteto do Som: Jirobo, Kidomaru, Tayuya e Sakon.
 | Vilão | Passiva | Efeito | Hardcore |
 |---|---|---|---|
 | Mizuki | Enganador | Sobrevive ao primeiro golpe fatal com 1 de HP, mas se acovarda e perde a próxima vez. | No lugar de se acovardar, o próximo ataque dele é crítico garantido. |
-| Haku | Espelhos | 2 ações por turno, cada uma com 60% do dano. | As 2 ações com 100% do dano. |
+| Haku | Espelhos | Cada ataque vale por 2 golpes com 60% do dano. Como toda técnica de vários golpes, é uma reação, um acerto e um crítico para os dois. | Os 2 golpes com 100% do dano. |
 | Zabuza | Demônio da névoa oculta | Começa na névoa por 4 rodadas: a chance de erro do jogador ×1,5. | Ao tomar o golpe fatal, Haku se sacrifica: volta com 50% do HP, 10% mais forte e fazendo sangrar em todos os golpes. |
 | Genins do exame | — | Sem passiva. | — |
-| Gaara | Jinchuuriki | Mesmo manto do jogador (ver [origens.md](origens.md#jinchuuriki)), pagando com o chakra dele, e imune a genjutsu. **Armadura de Areia** a luta toda: estado elemental de terra, então golpes de raio contam ×2 e de água ×0,75 (ver [tecnicas.md](tecnicas.md#estados-elementais)). | Defesa absoluta: resistência física dobrada na luta toda. |
-| Quarteto do Som | Marca da maldição | Manto pela metade: ×1,25, regenera 2,5%, custo de 5% do chakra por rodada. Sem imunidade a genjutsu. | A marca já começa ativa. |
+| Gaara | Jinchuuriki | Mesmo manto do jogador (ver [origens.md](origens.md#jinchuuriki)), pagando com o chakra dele, e imune a genjutsu. **Armadura de Areia** a luta toda: estado elemental de terra, então golpes de raio contam ×2 e de água ×0,75 (ver [tecnicas.md](tecnicas.md#estados-elementais)). | **Monstro**: ao ser derrotado pela 1ª vez, volta na forma do Shukaku com 50% do HP, troca as técnicas pelas de monstro (Garra do Shukaku, Bala de Ar e Funeral de Areia: mais dano, precisão de 55% a 65%) e fica com os multiplicadores do manto (×1,5 no dano, ×1,25 nas resistências) até morrer, sem custo de chakra e sem regeneração. |
+| Quarteto do Som | Marca da maldição | Mesmos valores do manto do jinchuuriki: ×1,5 no dano, ×1,25 nas resistências, regenera 5%, custo de 10% do chakra por rodada, 5 rodadas. Sem imunidade a genjutsu. | A marca já começa ativa. |
 | Kabuto | Bisturi | Chance de crítico +10%, e os críticos causam sangramento. | Todos os golpes fazem sangrar e furam 30% da resistência do jogador. |
-| Orochimaru | Insano | Acertos envenenam (bônus 1). Abaixo de 50% de HP, precisa ser derrotado em 5 rodadas, senão revive com 50% do HP máximo. Vale sempre que cair abaixo de 50%. | Veneno com bônus 3, prazo de 4 rodadas, revive com HP cheio. |
+| Orochimaru | Insano | Acertos envenenam (bônus 1). Abaixo de 50% de HP, precisa ser derrotado em 5 rodadas, senão revive com 50% do HP máximo. Vale sempre que cair abaixo de 50%, até **1 vez no fácil, 2 no normal e 3 no difícil**; esgotado o limite, a contagem não começa mais. | Veneno com bônus 3, prazo de 4 rodadas, revive com 50% do HP **sem limite** e **não recebe acerto crítico**. |
 
 ## Observações de balanceamento
 

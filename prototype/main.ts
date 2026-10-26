@@ -8,6 +8,7 @@ import {
   canClones,
   canFearVariant,
   canFocus,
+  restChakra,
   canUseTechnique,
   dojutsuActivationCost,
   elementalStateOf,
@@ -940,6 +941,7 @@ function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
     if (v.mistTurns > 0) out.push(`<span class="chip bad">${S.ui.mistOn(v.mistTurns)}</span>`);
     if (v.insaneTimer > 0) out.push(`<span class="chip good">${S.ui.insaneTimer(v.insaneTimer)}</span>`);
     if (v.lastStand) out.push(`<span class="chip bad">${S.ui.lastStand}</span>`);
+    if (v.monster) out.push(`<span class="chip bad">${S.ui.monster}</span>`);
     // Golpe carregado: aviso para todos. Estrategista (Nara): vê a próxima ação.
     if (v.charging) out.push(`<span class="chip bad">${S.ui.charging(techName(v.charging))}</span>`);
     else if (s.player.passive === 'strategist' && v.intent) {
@@ -1015,7 +1017,7 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
       extra = `+${heal} HP · ${S.ui.cost(tech.chakraCost)}`;
     }
   } else if (action === 'rest') {
-    extra = `+${B.rest.chakraRecovered} ck`;
+    extra = `+${restChakra(p, data)} ck`;
   }
   return `<button class="btn act act-${cls}" data-choice="${action}" ${enabled ? '' : 'disabled'}>
     <b>${title}</b>${sub ? `<span>${sub}</span>` : ''}<small>${extra}</small></button>`;
@@ -1571,6 +1573,11 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'insaneTimer':
           log(S.log.insaneTimer(who('villain'), ev.rounds), 'bad');
           break;
+        case 'monster':
+          disp.vhp = ev.hp;
+          floatNumber(vcard(), `+${ev.hp}`, 'heal');
+          log(S.log.monster(ev.hp), 'bad');
+          break;
         case 'insaneRevive':
           disp.vhp = ev.hp;
           floatNumber(vcard(), `🐍 ${ev.hp}`, 'heal');
@@ -1922,6 +1929,24 @@ async function main() {
   // Botões "Ficha" dentro das telas (painel do jogador, card da luta).
   document.addEventListener('click', (e) => {
     if ((e.target as HTMLElement).closest('[data-sheet]')) openSheet();
+  });
+  // Tocar na roleta prossegue: aperta o botão principal dela ("Girar"), o que veio junto do resultado
+  // ou o "Continuar" da tela. Nada acontece enquanto ela gira; escolhas de verdade (equipar) não entram.
+  document.addEventListener('click', (e) => {
+    const block = (e.target as HTMLElement).closest<HTMLElement>('.wheel-block');
+    if (!block || block.dataset.spinning) return;
+    const box = block.closest('.wheel-box');
+    const scopes = [box, box?.parentElement, document.querySelector('#screen .sticky-cta')];
+    const pick = ['spin', 'keep', 'ok', 'go', 'start']
+      .map((c) => `button.primary[data-choice="${c}"]:not([disabled])`)
+      .join(',');
+    for (const scope of scopes) {
+      const btn = scope?.querySelector<HTMLButtonElement>(pick);
+      if (btn) {
+        btn.click();
+        return;
+      }
+    }
   });
   document.getElementById('disclaimer')!.textContent = S.ui.disclaimer;
   document.getElementById('instant-label')!.textContent = S.ui.instant;

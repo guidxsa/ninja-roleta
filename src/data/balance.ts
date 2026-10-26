@@ -33,7 +33,8 @@ export const balance = {
   combat: { restoreOnStart: false },
 
   // Ações universais (tecnicas.md).
-  rest: { chakraRecovered: 4 },
+  // Concentrar chakra: recupera esta fração do chakra máximo (arredonda para baixo, mínimo 1).
+  rest: { chakraPct: 0.15 },
   // Reação Substituição: chance = base + (speed de quem reage − speed do atacante) × perSpeed, entre min e max.
   substitution: { chakraCost: 2, baseChance: 0.5, perSpeed: 0.03, min: 0.25, max: 0.85, usesPerFight: 2 },
 
@@ -177,8 +178,9 @@ export const balance = {
   },
 
   // Guru (campanha.md#guru): premium sorteada por peso do perfil. Palma Curativa pesa chakra máximo ÷ divisor.
-  // Foco e Mestre da Substituição: +1 uso por luta a cada vez, até maxLevel.
-  guru: { medicalChakraDivisor: 3, focusMaxLevel: 3, substitutionMaxLevel: 3 },
+  // Foco e Mestre da Substituição: +1 uso por luta a cada vez, até maxLevel. O foco soma `focusCritBonus`
+  // à chance de crítico do próximo ataque (ainda limitada pelo teto do crítico e pela chance de acerto).
+  guru: { medicalChakraDivisor: 3, focusMaxLevel: 3, substitutionMaxLevel: 3, focusCritBonus: 0.25 },
 
   // Itens e bolsa (itens.md).
   items: {

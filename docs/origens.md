@@ -95,7 +95,7 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 ### Aburame (insetos)
 
 - **Colmeia** (passiva): cada golpe que acerta drena 2 de chakra do vilão.
-- **Enxame**: ninjutsu neutro de 4 golpes pequenos. Cada golpe rola acerto e drena chakra pela Colmeia.
+- **Enxame**: ninjutsu neutro de 4 golpes pequenos. O acerto rola uma vez para os 4 golpes; cada golpe que acerta drena chakra pela Colmeia.
 
 ### Inuzuka (parceiro canino)
 
@@ -139,7 +139,7 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 ### Uzumaki
 
 - **Vitalidade** (passiva): recupera 1 de chakra e 3% do HP máximo no início de cada rodada.
-- **Clones das Sombras** (ativa): gasta 6 de chakra, não gasta o turno. O próximo ataque vira 3 golpes de 40% do dano, cada um com acerto e crítico próprios (técnica de vários golpes: cada golpe vira 3).
+- **Clones das Sombras** (ativa): gasta 6 de chakra, não gasta o turno. O próximo ataque vira 3 golpes de 40% do dano, com uma rolagem de acerto e crítico para todos (técnica de vários golpes: cada golpe vira 3).
 
 ## Jinchuuriki
 

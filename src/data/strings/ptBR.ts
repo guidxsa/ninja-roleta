@@ -115,6 +115,9 @@ export const ptBR = {
     sandCoffin: 'Caixão de areia',
     sandTsunami: 'Tsunami de areia',
     sandFist: 'Punho de areia',
+    shukakuClaw: 'Garra do Shukaku',
+    airBullet: 'Bala de ar',
+    sandBurial: 'Funeral de areia',
     earthPrison: 'Prisão de terra',
     heavyPunch: 'Soco pesado',
     goldenArrow: 'Flecha dourada',
@@ -149,7 +152,7 @@ export const ptBR = {
   } as Record<string, { name: string; desc: string }>,
   /** Talentos premium do guru (com o número de usos por luta). */
   talents: {
-    focus: { name: 'Foco', desc: (n: number) => `${n}×/luta: o próximo ataque é crítico garantido.` },
+    focus: { name: 'Foco', desc: (n: number) => `${n}×/luta: +25% de chance de crítico no próximo ataque.` },
     substitution: { name: 'Mestre da Substituição', desc: (n: number) => `+${n} uso(s) de Substituição por luta.` },
   },
   /** Ativas de linhagem. */
@@ -198,11 +201,11 @@ export const ptBR = {
     beast: {
       name: 'Jinchuuriki',
       desc: 'Armadura de Areia (terra): raio perfura. Abaixo de 50% de HP, o manto desperta (mais forte e regenera, pagando chakra). Imune a genjutsu.',
-      hardcore: 'Defesa absoluta: resistência física dobrada. Armadura de Areia e manto abaixo de 50% de HP. Imune a genjutsu.',
+      hardcore: 'Monstro: derrotado pela 1ª vez, volta como Shukaku com 50% do HP, golpes de monstro (mais dano, menos precisão) e os efeitos do manto até morrer. Imune a genjutsu.',
     },
     curseMark: {
       name: 'Marca da maldição',
-      desc: 'Abaixo de 50% de HP, a marca desperta (efeitos do manto pela metade).',
+      desc: 'Abaixo de 50% de HP, a marca desperta (mesmos efeitos do manto do jinchuuriki).',
       hardcore: 'A marca já começa ativa.',
     },
     scalpel: {
@@ -212,8 +215,8 @@ export const ptBR = {
     },
     insane: {
       name: 'Insano',
-      desc: 'Cobra: acertos envenenam. Abaixo de 50% de HP, derrote-o em 5 rodadas ou ele revive com 50% do HP.',
-      hardcore: 'Veneno mais forte. Abaixo de 50% de HP, derrote-o em 4 rodadas ou ele revive com o HP cheio.',
+      desc: 'Cobra: acertos envenenam. Abaixo de 50% de HP, derrote-o em 5 rodadas ou ele revive com 50% do HP (até 1× no fácil, 2× no normal, 3× no difícil).',
+      hardcore: 'Veneno mais forte. Abaixo de 50% de HP, derrote-o em 4 rodadas ou ele revive com 50% do HP, sem limite. Não sofre crítico.',
     },
   } as Record<string, { name: string; desc: string; hardcore: string }>,
   events: {
@@ -457,14 +460,15 @@ export const ptBR = {
     mistOn: (n: number) => `🌫 Névoa ${n}t`,
     insaneTimer: (n: number) => `Revive em ${n}`,
     lastStand: 'Último suspiro',
+    monster: 'Shukaku',
     /** Botão de genjutsu: turnos de aprisionamento se acertar. */
     prisonTurns: (n: number) => `💫 ${n} turno(s)`,
     immune: 'Imune',
     genjutsuImmune: 'imune a genjutsu',
     gatesOn: (stage: string, n: number) => `${stage} ${n}t`,
     focus: '🎯 Foco',
-    focusHint: 'Ative antes de escolher o ataque: crítico garantido.',
-    focusArmed: '🎯 Foco ativo: o próximo ataque é crítico',
+    focusHint: 'Ative antes de escolher o ataque: +25% de chance de crítico.',
+    focusArmed: '🎯 Foco ativo: +25% de crítico no próximo ataque',
     advantage: '▲',
     disadvantage: '▼',
     historyEmpty: 'Nenhuma run registrada ainda.',
@@ -602,7 +606,7 @@ export const ptBR = {
       `${who} usou ${tech}: ${crit ? 'CRÍTICO! ' : ''}${dmg} de dano${el}.`,
     elementAdv: ' (vantagem contra o estado elemental)',
     elementDis: ' (desvantagem contra o estado elemental)',
-    focus: 'Foco do guru: o próximo ataque é crítico garantido!',
+    focus: 'Foco do guru: +25% de chance de crítico no próximo ataque!',
     guaranteedCrit: (who: string) => `${who}: crítico garantido!`,
     movementReading: (a: number, b: number) => `Leitura de movimento: dano ${a} → ${b}.`,
     genjutsuHit: (who: string, tech: string) => `${who} usou ${tech}: a ilusão pegou!`,
@@ -677,6 +681,7 @@ export const ptBR = {
     lastStand: (n: number) => `Haku se sacrifica! Zabuza volta com ${n} de HP, mais forte e sedento de sangue.`,
     insaneTimer: (who: string, n: number) => `${who} ri como um louco: derrote-o em ${n} rodada(s) ou ele revive!`,
     insaneRevive: (who: string, n: number) => `${who} troca de pele e revive com ${n} de HP!`,
+    monster: (n: number) => `A areia ruge: Gaara volta como Shukaku com ${n} de HP!`,
     won: 'Vilão derrotado!',
     lost: 'Você foi derrotado.',
     you: 'Você',

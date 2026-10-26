@@ -158,7 +158,7 @@ export interface StatusFx {
   /** Rodadas restantes do manto (jinchuuriki, marca da maldição). */
   cloakTurns: number;
   cloakUsed: boolean;
-  /** O próximo ataque é crítico garantido (foco do guru; Mizuki no hardcore). */
+  /** O próximo ataque é crítico garantido (Mizuki no hardcore). */
   guaranteedCrit: boolean;
   /** Gastou a próxima ação numa reação: perde o próximo turno. */
   owesAction: boolean;
@@ -198,6 +198,8 @@ export interface PlayerFx extends StatusFx {
   dodge: Dodge | null;
   /** Usos do foco do guru nesta luta. */
   focusUsed: number;
+  /** Foco ativo: o próximo ataque soma `balance.guru.focusCritBonus` à chance de crítico. */
+  focusArmed: boolean;
 }
 
 /** Próxima ação do vilão, sorteada no fim da rodada anterior (Estrategista mostra). */
@@ -218,6 +220,10 @@ export interface VillainState {
   lastStand: boolean;
   /** Rodadas para derrotar o Orochimaru antes que ele reviva. 0 = sem contagem. */
   insaneTimer: number;
+  /** Vezes que o Orochimaru já reviveu nesta luta. */
+  insaneRevives: number;
+  /** Forma de monstro (Gaara no hardcore): técnicas trocadas e manto permanente. */
+  monster: boolean;
   intent: VillainIntent | null;
   /** Golpe carregado anunciado: sai na próxima vez dele. */
   charging: string | null;
@@ -327,6 +333,7 @@ export type BattleEvent =
   | { type: 'lastStand'; healed: number }
   | { type: 'insaneTimer'; rounds: number }
   | { type: 'insaneRevive'; hp: number }
+  | { type: 'monster'; hp: number }
   | { type: 'dodge'; source: Dodge['source'] }
   | { type: 'item'; item: ConsumableId; amount: number }
   | { type: 'revive'; revivesLeft: number }
@@ -341,7 +348,7 @@ export interface RoundPlan {
   index: number;
   /** O turno do vilão já começou (passou pela checagem de perder a vez). */
   villainStarted: boolean;
-  /** Ações do vilão já resolvidas neste turno (Espelhos: mais de uma). */
+  /** Ações do vilão já resolvidas neste turno. */
   villainActions: number;
 }
 
@@ -431,6 +438,7 @@ export function startBattle(
       stance: false,
       dodge: null,
       focusUsed: 0,
+      focusArmed: false,
     },
     villain: {
       def: villain,
@@ -442,6 +450,8 @@ export function startBattle(
       cowering: false,
       lastStand: false,
       insaneTimer: 0,
+      insaneRevives: 0,
+      monster: false,
       intent: null,
       charging: null,
     },
@@ -570,13 +580,16 @@ function villainTechElement(def: VillainDef, tech: VillainTechnique): Element | 
   return tech.element === undefined ? def.element : tech.element;
 }
 
+/** Espelhos (Haku): as ações extras viram golpes do mesmo ataque (um acerto, uma reação, um crítico). */
 function villainCombatTech(s: BattleState, tech: VillainTechnique): CombatTech {
+  const passive = s.villain.def.passive;
+  const mirrors = passive?.kind === 'mirrors' && tech.barrier === undefined ? passive.actions : 1;
   return {
     id: tech.id,
     type: tech.type,
     element: villainTechElement(s.villain.def, tech),
     baseDamage: tech.baseDamage,
-    hits: tech.hits ?? 1,
+    hits: (tech.hits ?? 1) * mirrors,
     chakraCost: tech.chakraCost,
     ...(tech.accuracy !== undefined ? { accuracy: tech.accuracy } : {}),
     ...(tech.blade ? { blade: tech.blade } : {}),
@@ -715,12 +728,17 @@ function villainCloak(s: BattleState) {
   return passive?.kind === 'cloak' ? passive : null;
 }
 
-/** Resistência total do vilão: defesa absoluta (hardcore) e manto ativo. */
+/** Manto do vilão valendo agora: ativo ou forma de monstro (permanente). */
+function villainCloakActive(s: BattleState): boolean {
+  return s.villain.fx.cloakTurns > 0 || s.villain.monster;
+}
+
+/** Resistência total do vilão: multiplicador da passiva e manto ativo. */
 export function villainResistance(s: BattleState, kind: ResistanceKind): number {
   const cloak = villainCloak(s);
   const base = s.villain.def.resistance[kind];
   if (!cloak) return base;
-  const active = s.villain.fx.cloakTurns > 0 ? cloak.cloak.resistanceMult : 1;
+  const active = villainCloakActive(s) ? cloak.cloak.resistanceMult : 1;
   return base * (cloak.resistanceMult?.[kind] ?? 1) * active;
 }
 
@@ -734,7 +752,7 @@ function villainDamageMult(s: BattleState, data: GameData): number {
   const v = s.villain;
   const passive = v.def.passive;
   let mult = s.options.villainDamageMult;
-  if (passive?.kind === 'cloak' && v.fx.cloakTurns > 0) mult *= passive.cloak.statMult;
+  if (passive?.kind === 'cloak' && villainCloakActive(s)) mult *= passive.cloak.statMult;
   if (passive?.kind === 'mirrors') mult *= passive.damageMult;
   if (passive?.kind === 'mist' && passive.lastStand && v.lastStand) mult *= passive.lastStand.damageMult;
   if (v.fx.feared > 0) mult *= data.balance.status.fear.damageMult;
@@ -941,8 +959,12 @@ function playerHitChance(s: BattleState, tech: CombatTech, data: GameData): numb
   return clamp(hit, data.balance.hit.min, data.balance.hit.max);
 }
 
+/** Chance de crítico do jogador: bônus dele e da técnica + foco armado; 0 contra quem não sofre crítico. */
 function techCritChance(s: BattleState, tech: CombatTech, hit: number, data: GameData): number {
-  return critChance(s.player.critBonus + (tech.critBonus ?? 0), data.balance.crit, hit);
+  const passive = s.villain.def.passive;
+  if (passive?.kind === 'insane' && passive.critImmune) return 0;
+  const focus = s.playerFx.focusArmed ? data.balance.guru.focusCritBonus : 0;
+  return critChance(s.player.critBonus + (tech.critBonus ?? 0) + focus, data.balance.crit, hit);
 }
 
 export function attackPreview(s: BattleState, techniqueId: string, data: GameData): AttackPreview {
@@ -967,7 +989,12 @@ export function canUseTechnique(s: BattleState, tech: TechniqueDef, data?: GameD
   return p.chakra >= cost;
 }
 
-/** O foco do guru (crítico garantido no próximo ataque) pode ser ativado nesta rodada. */
+/** Chakra que Concentrar chakra recupera: 15% do chakra máximo (mínimo 1). */
+export function restChakra(player: PlayerState, data: GameData): number {
+  return Math.max(1, Math.floor(player.maxChakra * data.balance.rest.chakraPct));
+}
+
+/** O foco do guru (+25% de chance de crítico no próximo ataque) pode ser ativado nesta rodada. */
 export function canFocus(s: BattleState): boolean {
   return s.player.focusUses > s.playerFx.focusUsed;
 }
@@ -1385,7 +1412,7 @@ export function playRound(
 
   if (ex.focus) {
     s.playerFx.focusUsed++;
-    s.playerFx.guaranteedCrit = true;
+    s.playerFx.focusArmed = true;
     s.log.push({ type: 'focus' });
   }
   if (ex.clones) {
@@ -1449,10 +1476,7 @@ function runPlan(s: BattleState, rng: Rng, data: GameData, react?: ReactionPolic
         continue;
       }
     }
-    // Espelhos (Haku): mais de uma ação por turno; a intenção vale para a primeira.
-    const passive = v.def.passive;
-    const total = passive?.kind === 'mirrors' ? passive.actions : 1;
-    while (plan.villainActions < total && s.status === 'ongoing') {
+    if (plan.villainActions === 0) {
       if (villainAction(s, rng, data, react)) return;
       plan.villainActions++;
     }
@@ -1520,6 +1544,19 @@ function villainDown(s: BattleState): void {
     s.log.push({ type: 'trickster', counterCrit: Boolean(passive.counterCrit) });
     return;
   }
+  if (passive?.kind === 'cloak' && passive.monster && !v.monster) {
+    const m = passive.monster;
+    v.monster = true;
+    v.hp = Math.max(1, Math.floor(v.def.hp * m.healPct));
+    v.def = { ...v.def, techniques: m.techniques, ...(m.reactions ? { reactions: m.reactions } : {}) };
+    v.charging = null;
+    v.intent = null;
+    v.fx.cloakUsed = true;
+    v.fx.cloakTurns = 0;
+    clearNegatives(v.fx);
+    s.log.push({ type: 'monster', hp: v.hp });
+    return;
+  }
   if (passive?.kind === 'mist' && passive.lastStand && !v.lastStand) {
     v.lastStand = true;
     v.hp = Math.max(1, Math.floor(v.def.hp * passive.lastStand.healPct));
@@ -1533,13 +1570,21 @@ function villainDown(s: BattleState): void {
 function checkVillainThresholds(s: BattleState): void {
   const v = s.villain;
   const passive = v.def.passive;
-  if (passive?.kind === 'cloak' && !v.fx.cloakUsed && v.hp < v.def.hp * passive.cloak.hpThresholdPct) {
+  if (passive?.kind === 'cloak' && !v.fx.cloakUsed && !v.monster && v.hp < v.def.hp * passive.cloak.hpThresholdPct) {
     activateCloak(s, 'villain', passive.cloak);
   }
-  if (passive?.kind === 'insane' && v.insaneTimer === 0 && v.hp < v.def.hp * passive.hpThresholdPct) {
+  if (passive?.kind === 'insane' && v.insaneTimer === 0 && insaneRevivesLeft(s) && v.hp < v.def.hp * passive.hpThresholdPct) {
     v.insaneTimer = passive.killWindow;
     s.log.push({ type: 'insaneTimer', rounds: passive.killWindow });
   }
+}
+
+/** O Orochimaru ainda pode reviver nesta luta (limite da dificuldade; sem escala, o do normal). */
+export function insaneRevivesLeft(s: BattleState): boolean {
+  const passive = s.villain.def.passive;
+  if (passive?.kind !== 'insane') return false;
+  const max = passive.maxRevives ?? passive.revivesByDifficulty?.normal ?? Infinity;
+  return s.villain.insaneRevives < max;
 }
 
 function activateCloak(s: BattleState, side: Side, cloak: CloakDef): void {
@@ -1863,6 +1908,7 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
     v.insaneTimer--;
     if (v.insaneTimer === 0) {
       v.hp = Math.max(v.hp, Math.floor(v.def.hp * passive.revivePct));
+      v.insaneRevives++;
       s.log.push({ type: 'insaneRevive', hp: v.hp });
     }
   }
@@ -1927,7 +1973,7 @@ function playerTurn(s: BattleState, action: PlayerAction, ex: RoundExtras, rng: 
   } else if (itemId) {
     useItem(s, itemId, data);
   } else if (action === 'rest') {
-    const gained = Math.min(p.maxChakra - p.chakra, balance.rest.chakraRecovered);
+    const gained = Math.min(p.maxChakra - p.chakra, restChakra(p, data));
     p.chakra += gained;
     s.log.push({ type: 'rest', chakra: gained });
   } else if (action === 'stance') {
@@ -2067,18 +2113,14 @@ function playerStrike(
   guard: Guard,
   rng: Rng,
   data: GameData,
+  rolled?: HitOutcome,
 ): { outcome: HitOutcome; dealt: number } {
   const { balance } = data;
   const hitP = playerHitChance(s, tech, data);
   const critP = techCritChance(s, tech, hitP, data);
-  let outcome: HitOutcome;
-  if (s.playerFx.guaranteedCrit) {
-    s.playerFx.guaranteedCrit = false;
-    s.log.push({ type: 'guaranteedCrit', side: 'player' });
-    outcome = 'crit';
-  } else {
-    outcome = rollHit(hitP, critP, rng);
-  }
+  // Golpes seguintes de um ataque múltiplo repetem o resultado do primeiro.
+  const outcome = rolled ?? rollHit(hitP, critP, rng);
+  s.playerFx.focusArmed = false;
   const critMult = outcome === 'crit' ? balance.crit.multiplier : 1;
   const { damage, elementMult } = strikeDamage(s, 'player', tech, guard, critMult, damageFactor, data);
   s.log.push({
@@ -2123,12 +2165,13 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
   const reaction = performReaction(s, 'player', reactionTech, false, chooseVillainReaction(s, incoming, rng, data), rng, data);
   if (reaction.kind === 'resolved' || s.status !== 'ongoing') return;
 
-  let landed = false;
+  // Ataque múltiplo: acerto e crítico rolam uma vez, no primeiro golpe, e valem para todos.
+  let rolled: HitOutcome | undefined;
   for (let i = 0; i < tech.hits && s.status === 'ongoing'; i++) {
-    const { outcome } = playerStrike(s, tech, tech.id, factor, i === 0 ? tech.chakraCost : 0, reaction.guard, rng, data);
+    const { outcome } = playerStrike(s, tech, tech.id, factor, i === 0 ? tech.chakraCost : 0, reaction.guard, rng, data, rolled);
+    rolled = outcome;
     if (s.status !== 'ongoing') return;
-    if (outcome === 'miss') continue;
-    landed = true;
+    if (outcome === 'miss') break;
     // Selo dos Pontos Vitais e Colmeia (Aburame): drenam o chakra do vilão.
     const drain = (data.techniquesById[techId]?.chakraDrain ?? 0) + (p.passive === 'hive' ? balance.passives.hive.chakraDrainPerHit : 0);
     if (drain > 0) {
@@ -2144,7 +2187,7 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
   }
 
   // Dupla (Inuzuka): depois de um ataque que acerta, o cão pode atacar também.
-  if (landed && s.status === 'ongoing' && p.passive === 'duo') {
+  if (rolled !== undefined && rolled !== 'miss' && s.status === 'ongoing' && p.passive === 'duo') {
     const cfg = balance.passives.duo;
     if (chance(cfg.chance, rng)) {
       const dog: CombatTech = {
@@ -2317,12 +2360,24 @@ function resolveVillainAttack(
   const combat = villainCombatTech(s, tech);
   const reaction = performReaction(s, 'villain', combat, charged, choice, rng, data);
   if (reaction.kind === 'resolved' || s.status !== 'ongoing') return;
+  // Ataque múltiplo: acerto e crítico rolam uma vez, no primeiro golpe, e valem para todos.
+  let rolled: HitOutcome | undefined;
   for (let i = 0; i < combat.hits && s.status === 'ongoing'; i++) {
-    villainStrike(s, combat, charged, i === 0 ? chakra : 0, reaction.guard, rng, data);
+    rolled = villainStrike(s, combat, charged, i === 0 ? chakra : 0, reaction.guard, rng, data, rolled);
+    if (rolled === 'miss') break;
   }
 }
 
-function villainStrike(s: BattleState, tech: CombatTech, charged: boolean, chakra: number, guard: Guard, rng: Rng, data: GameData): void {
+function villainStrike(
+  s: BattleState,
+  tech: CombatTech,
+  charged: boolean,
+  chakra: number,
+  guard: Guard,
+  rng: Rng,
+  data: GameData,
+  rolled?: HitOutcome,
+): HitOutcome {
   const v = s.villain;
   const { balance } = data;
   const p = s.player;
@@ -2336,7 +2391,9 @@ function villainStrike(s: BattleState, tech: CombatTech, charged: boolean, chakr
   // Golpe carregado não pode ser crítico.
   const critP = charged ? 0 : critChance(v.def.critBonus + scalpelCrit, balance.crit, hitP);
   let outcome: HitOutcome;
-  if (v.fx.guaranteedCrit && !charged) {
+  if (rolled) {
+    outcome = rolled;
+  } else if (v.fx.guaranteedCrit && !charged) {
     v.fx.guaranteedCrit = false;
     s.log.push({ type: 'guaranteedCrit', side: 'villain' });
     outcome = 'crit';
@@ -2368,10 +2425,10 @@ function villainStrike(s: BattleState, tech: CombatTech, charged: boolean, chakr
     critChance: critP,
     chakra,
   });
-  if (outcome === 'miss') return;
+  if (outcome === 'miss') return outcome;
 
   hurtPlayer(s, damage, data);
-  if (s.status !== 'ongoing') return;
+  if (s.status !== 'ongoing') return outcome;
   // Cobra do Orochimaru: acertos envenenam.
   if (passive?.kind === 'insane') applyPoison(s, 'player', passive.snakeBonus, data);
   // Sangramento: crítico de espada ou do bisturi, ou todo acerto (Kabuto no hardcore, último suspiro do Zabuza).
@@ -2379,6 +2436,7 @@ function villainStrike(s: BattleState, tech: CombatTech, charged: boolean, chakr
   const bleedOnCrit = tech.blade === 'sword' || passive?.kind === 'scalpel';
   if (bleedOnHit || (bleedOnCrit && outcome === 'crit')) applyBleed(s, 'player');
   applyElementalHit(s, 'player', tech.element, outcome, data);
+  return outcome;
 }
 
 /** HP 0: usa a Vontade do Fogo (restauração total, limpa os efeitos negativos) ou encerra a luta. */

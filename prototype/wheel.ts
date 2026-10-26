@@ -138,7 +138,10 @@ export function createWheel(slices: WheelSlice[]): Wheel {
       rotation = target;
       svg.style.transition = ms > 0 ? `transform ${ms}ms cubic-bezier(0.12, 0.75, 0.16, 1)` : 'none';
       svg.style.transform = `rotate(${target}deg)`;
+      // Enquanto gira, tocar na roleta não prossegue (ver o atalho em main.ts).
+      el.dataset.spinning = '1';
       if (ms > 0) await sleep(ms + 80);
+      delete el.dataset.spinning;
       paths.forEach((path, i) => path.classList.toggle('dim', i !== index));
       items.forEach((li, i) => li.classList.toggle('win', i === index));
     },

@@ -47,7 +47,7 @@ Toda técnica nos dados tem estes campos. Regra de design: todo ponto forte tem 
 | `categoria` | taijutsu, ninjutsu, genjutsu, médico | — |
 | `elemento` | Um dos 5 ou neutro | neutro |
 | `dano` | Dano base por golpe | — |
-| `golpes` | Quantos golpes; cada um rola acerto | 1 |
+| `golpes` | Quantos golpes; o acerto e o crítico rolam uma vez para todos | 1 |
 | `custo` | Chakra | 0 |
 | `precisão` | Chance de acerto | 85% |
 | `bônusCrítico` | Somado à chance de crítico | 0 |
@@ -67,7 +67,7 @@ Toda técnica nos dados tem estes campos. Regra de design: todo ponto forte tem 
 
 | Ação | Custo | Efeito |
 |---|---|---|
-| Concentrar chakra | Turno | Recupera 4 de chakra. |
+| Concentrar chakra | Turno | Recupera 15% do chakra máximo. |
 | Postura defensiva | Turno | Até o seu próximo turno, Resistir usa 100% da resistência (física e mental). As outras reações continuam disponíveis. |
 | Usar item | Turno | Usa um consumível da bolsa (ver [itens.md](itens.md)). |
 
@@ -188,7 +188,7 @@ Técnicas e talentos **sem elemento** que só o guru ensina. O guru oferece a qu
 |---|---|---|---|---|
 | Rasengan | Ninjutsu neutro de ataque (linha própria) | Dano 26, chakra 8, precisão 85%. Na disputa, +25% de poder. | II, Rasengan Gigante: dano 34, chakra 10. III, Rasengan Supremo: dano 44, chakra 13. | Quem usa ninjutsu |
 | Palma Curativa (ninjutsu médico) | Médico | Cura 20% do HP máximo, chakra 4, sem rolar acerto. Indisponível com HP cheio. | +5% de cura, +1 de chakra | Todos, menos o prodígio |
-| Foco | Talento | Uma vez por luta, um botão grátis (não gasta o turno) deixa o próximo ataque com crítico garantido. | +1 uso por luta (até 3) | Todos |
+| Foco | Talento | Uma vez por luta, um botão grátis (não gasta o turno) soma +25% à chance de crítico do próximo ataque. | +1 uso por luta (até 3) | Todos |
 | Mestre da Substituição | Talento | +1 uso de Substituição por luta. | +1 uso por luta (até 3) | Todos |
 
 Os níveis das premium respeitam o teto pelo nível do personagem: no nível 1, o guru não ensina o Rasengan II.

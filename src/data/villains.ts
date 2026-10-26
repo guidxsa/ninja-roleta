@@ -11,15 +11,8 @@ import { balance } from './balance';
 // `passive`/`hardcorePassive`: passiva única; a versão hardcore substitui a normal nesse modo.
 // `behavior.charged`: golpe carregado (anuncia numa vez, solta ×2 sem crítico na seguinte).
 
-// Marca da maldição: o manto do jinchuuriki pela metade.
-const CURSE_MARK_CLOAK: CloakDef = {
-  hpThresholdPct: 0.5,
-  statMult: 1.25,
-  resistanceMult: 1.1,
-  regenPct: 0.025,
-  chakraPctPerRound: 0.05,
-  turns: 5,
-};
+// Marca da maldição: mesmos valores do manto do jinchuuriki.
+const CURSE_MARK_CLOAK: CloakDef = { ...balance.jinchuuriki.cloak };
 const curseMark = { kind: 'cloak', variant: 'curseMark', cloak: CURSE_MARK_CLOAK, genjutsuImmune: false } as const;
 
 export const villains: VillainDef[] = [
@@ -152,13 +145,22 @@ export const villains: VillainDef[] = [
     ],
     behavior: { charged: 'sandTsunami' },
     passive: { kind: 'cloak', variant: 'beast', cloak: balance.jinchuuriki.cloak, genjutsuImmune: true },
-    // Hardcore: defesa absoluta, resistência física dobrada a luta toda.
+    // Hardcore: Monstro. Derrotado pela 1ª vez, volta como Shukaku com metade do HP, golpes de monstro
+    // (mais dano, menos precisão) e os multiplicadores do manto até morrer.
     hardcorePassive: {
       kind: 'cloak',
       variant: 'beast',
       cloak: balance.jinchuuriki.cloak,
       genjutsuImmune: true,
-      resistanceMult: { physical: 2 },
+      monster: {
+        healPct: 0.5,
+        reactions: { resist: 3, clash: 1 },
+        techniques: [
+          { id: 'shukakuClaw', type: 'taijutsu', baseDamage: 14, chakraCost: 0, weight: 3, accuracy: 0.65 },
+          { id: 'airBullet', type: 'ninjutsu', baseDamage: 20, chakraCost: 4, weight: 2, accuracy: 0.6, element: 'wind' },
+          { id: 'sandBurial', type: 'ninjutsu', baseDamage: 26, chakraCost: 8, weight: 1, accuracy: 0.55 },
+        ],
+      },
     },
   },
   {
@@ -275,10 +277,17 @@ export const villains: VillainDef[] = [
     ],
     behavior: { charged: 'hiddenSnakes' },
     // Insano: acertos envenenam (bônus 1). Abaixo de 50% de HP, precisa ser derrotado em 5 rodadas,
-    // senão revive com 50% do HP máximo (sempre que cair abaixo de 50%).
-    passive: { kind: 'insane', snakeBonus: 1, hpThresholdPct: 0.5, killWindow: 5, revivePct: 0.5 },
-    // Hardcore: veneno com bônus 3, prazo de 4 rodadas, revive com o HP cheio.
-    hardcorePassive: { kind: 'insane', snakeBonus: 3, hpThresholdPct: 0.5, killWindow: 4, revivePct: 1 },
+    // senão revive com 50% do HP máximo: no máximo 1 vez no fácil, 2 no normal e 3 no difícil.
+    passive: {
+      kind: 'insane',
+      snakeBonus: 1,
+      hpThresholdPct: 0.5,
+      killWindow: 5,
+      revivePct: 0.5,
+      revivesByDifficulty: { easy: 1, normal: 2, hard: 3 },
+    },
+    // Hardcore: veneno com bônus 3, prazo de 4 rodadas, revive sem limite e não recebe crítico.
+    hardcorePassive: { kind: 'insane', snakeBonus: 3, hpThresholdPct: 0.5, killWindow: 4, revivePct: 0.5, critImmune: true },
   },
 ];
 

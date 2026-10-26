@@ -14,6 +14,7 @@ Estrutura de uma run: ordem dos confrontos, eventos entre eles, encontros, invoc
 
 - HP e chakra seguem de uma luta para a outra, inclusive dentro dos blocos. Só restauram ao subir de nível, ao fim do exame chunin e pela Vontade do Fogo (ver [fundamentos.md](fundamentos.md#restauração)).
 - Fichas dos vilões: [viloes.md](viloes.md).
+- Um bloco com vários vilões (Haku e Zabuza, Quarteto do Som) conta como **um grupo**: a roleta de recompensa só gira depois do confronto final (ver [itens.md](itens.md#raridade-por-confronto)). XP e subida de nível continuam depois de cada luta.
 - Combate em grupo fica fora do escopo inicial.
 
 ## Roleta pré-vilão

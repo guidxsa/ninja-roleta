@@ -57,8 +57,7 @@ Gira depois de cada vilão ou bloco derrotado. A raridade define a força de cad
 | Confronto | Raridade |
 |---|---|
 | Mizuki | Comum |
-| Haku | Comum |
-| Zabuza | Rara |
+| Haku e Zabuza (fim do bloco) | Rara |
 | Exame chunin | Pelo desempenho (ver [campanha.md](campanha.md#exame-chunin)) |
 | Gaara | Rara |
 | Quarteto do Som (fim do bloco) | Rara |

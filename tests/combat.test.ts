@@ -76,7 +76,14 @@ describe('rodada básica', () => {
     expect(() => playRound(s0, 'tech:empoweredTaijutsu', seq(0.5), gameData)).toThrow();
     expect(() => playRound(s0, 'tech:fireSpark', seq(0.5), gameData)).toThrow();
     const s1 = playRound(s0, 'rest', seq(0.1, 0.01, 0.01), gameData);
-    expect(s1.player.chakra).toBe(4);
+    expect(s1.player.chakra).toBe(Math.floor(p.maxChakra * 0.15));
+  });
+
+  it('concentrar chakra recupera 15% do chakra máximo, sem passar do máximo', () => {
+    const p = { ...createPlayer(common, gameData), maxChakra: 60, chakra: 0 };
+    expect(playRound(battle(p, testVillain()), 'rest', seq(0.5), gameData).player.chakra).toBe(9);
+    const full = playRound(battle({ ...p, chakra: 55 }, testVillain()), 'rest', seq(0.5), gameData);
+    expect(full.player.chakra).toBe(60);
   });
 });
 
@@ -428,11 +435,10 @@ describe('genjutsu: aprisionamento sem dano', () => {
     expect(prison(playRound(startBattle(upgraded, testVillain(), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData))).toBe(2);
   });
 
-  it('não gasta o crítico garantido do foco', () => {
+  it('não gasta o foco', () => {
     const s0 = withInitiative(startBattle({ ...withGen(10), focusUses: 1 }, testVillain()));
     const s1 = playRound(s0, 'tech:basicGenjutsu', seq(0.5), gameData, true);
-    expect(s1.playerFx.guaranteedCrit).toBe(true);
-    expect(ofType(s1.log, 'guaranteedCrit')).toHaveLength(0);
+    expect(s1.playerFx.focusArmed).toBe(true);
   });
 
   it('o genjutsu do vilão também não causa dano e aprisiona o jogador conforme o genjutsu dele', () => {

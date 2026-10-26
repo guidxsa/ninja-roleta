@@ -125,15 +125,24 @@ describe('skill set por categoria, técnicas de nível e linhas', () => {
 });
 
 describe('ficha de técnica', () => {
-  it('golpes: cada um rola acerto (Enxame do Aburame, 4 golpes; a Colmeia drena 2 por acerto)', () => {
+  it('golpes: acerto rola uma vez e vale para todos (Enxame do Aburame, 4 golpes; a Colmeia drena 2 por acerto)', () => {
     const p = createPlayer(clan('aburame'), gameData);
     const s1 = playRound(withInitiative(startBattle(p, testVillain())), 'tech:insectSwarm', seq(0.5, 0.01, 0.5, 0.5, 0.5), gameData);
     const hits = ofType(s1.log, 'attack').filter((a) => a.side === 'player');
-    expect(hits.map((a) => a.outcome)).toEqual(['hit', 'miss', 'hit', 'hit']);
+    expect(hits.map((a) => a.outcome)).toEqual(['hit', 'hit', 'hit', 'hit']);
     // 5 + 12 − 7 = 10 por golpe
-    expect(hits.map((a) => a.damage)).toEqual([10, 0, 10, 10]);
-    expect(ofType(s1.log, 'chakraDrain')).toHaveLength(3);
-    expect(s1.villain.chakra).toBe(20 - 6);
+    expect(hits.map((a) => a.damage)).toEqual([10, 10, 10, 10]);
+    expect(ofType(s1.log, 'chakraDrain')).toHaveLength(4);
+    expect(s1.villain.chakra).toBe(20 - 8);
+  });
+
+  it('golpes: um erro no primeiro erra o ataque inteiro, e um crítico vale para todos', () => {
+    const p = createPlayer(clan('aburame'), gameData);
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
+    const miss = ofType(playRound(s0, 'tech:insectSwarm', seq(0.01), gameData).log, 'attack').filter((a) => a.side === 'player');
+    expect(miss.map((a) => a.outcome)).toEqual(['miss']);
+    const crit = ofType(playRound(s0, 'tech:insectSwarm', seq(0.999), gameData).log, 'attack').filter((a) => a.side === 'player');
+    expect(crit.map((a) => a.outcome)).toEqual(['crit', 'crit', 'crit', 'crit']);
   });
 
   it('precisão: cada técnica tem a sua (Faísca 80%, Punho de Rocha 95%)', () => {
@@ -503,6 +512,20 @@ describe('passivas e comportamentos dos vilões', () => {
     ]);
   });
 
+  it('Espelhos (Haku): as duas ações são um ataque só (uma reação, um acerto, um crítico)', () => {
+    const v = testVillain({
+      hp: 200,
+      passive: villainsById.haku!.passive,
+      techniques: [{ id: 'needle', type: 'taijutsu', baseDamage: 20, chakraCost: 0, weight: 1 }],
+    });
+    const s0 = withInitiative(startBattle(createPlayer(common, gameData), v), 'villain');
+    const s1 = playRound(s0, 'rest', seq(0.5), gameData);
+    expect(ofType(s1.log, 'declare').filter((d) => d.side === 'villain')).toHaveLength(1);
+    expect(ofType(s1.log, 'reaction').filter((r) => r.side === 'player')).toHaveLength(1);
+    const miss = playRound(s0, 'rest', seq(0.01), gameData);
+    expect(ofType(miss.log, 'attack').map((a) => a.outcome)).toEqual(['miss']);
+  });
+
   it('Névoa oculta (Zabuza): começa na névoa, a chance de erro do jogador cresce 50% por 4 rodadas', () => {
     const v = testVillain({ hp: 500, passive: { kind: 'mist', turns: 4, evasionMult: 1.5 } });
     let s = withInitiative(startBattle(createPlayer(common, gameData), v));
@@ -570,10 +593,36 @@ describe('passivas e comportamentos dos vilões', () => {
       expect(s1.villain.fx.debilitated).toBe(0);
     });
 
-    it('Gaara no hardcore: defesa absoluta dobra só a resistência física', () => {
-      const s0 = startBattle(createPlayer(common, gameData), gaara(villainsById.gaara!.hardcorePassive!));
-      expect(villainResistance(s0, 'physical')).toBe(20);
-      expect(villainResistance(s0, 'mental')).toBe(10);
+    it('Gaara no hardcore (Monstro): derrotado pela 1ª vez, volta como Shukaku com 50% do HP e golpes de monstro', () => {
+      const s0 = withInitiative(startBattle(createPlayer(common, gameData), gaara(villainsById.gaara!.hardcorePassive!)));
+      const s1 = playRound({ ...s0, villain: { ...s0.villain, hp: 5 } }, 'tech:basicTaijutsu', seq(0.5), gameData);
+      expect(s1.status).toBe('ongoing');
+      expect(ofType(s1.log, 'monster')).toEqual([{ type: 'monster', hp: 50 }]);
+      expect(s1.villain.monster).toBe(true);
+      expect(s1.villain.def.techniques.map((t) => t.id)).toEqual(['shukakuClaw', 'airBullet', 'sandBurial']);
+      // Manto permanente: resistências ×1,25 sem pagar chakra e sem acabar.
+      expect(villainResistance(s1, 'physical')).toBe(12.5);
+      let s = s1;
+      for (let i = 0; i < 8; i++) s = playRound(s, 'stance', seq(0.5), gameData);
+      expect(villainResistance(s, 'physical')).toBe(12.5);
+      expect(ofType(s.log, 'cloakCost')).toHaveLength(0);
+      // Derrotado de novo, morre.
+      const end = playRound({ ...s, villain: { ...s.villain, hp: 1 } }, 'tech:basicTaijutsu', seq(0.5), gameData);
+      expect(end.status).toBe('won');
+    });
+
+    it('golpes de monstro: mais dano e menos precisão que os normais', () => {
+      const passive = villainsById.gaara!.hardcorePassive!;
+      if (passive.kind !== 'cloak') throw new Error('manto esperado');
+      const normal = villainsById.gaara!.techniques.filter((t) => t.barrier === undefined);
+      const monster = passive.monster!.techniques;
+      expect(Math.min(...monster.map((t) => t.baseDamage))).toBeGreaterThan(Math.min(...normal.map((t) => t.baseDamage)));
+      expect(Math.max(...monster.map((t) => t.accuracy!))).toBeLessThan(gameData.balance.hit.defaultAccuracy);
+    });
+
+    it('marca da maldição: mesmos valores do manto do jinchuuriki', () => {
+      const passive = villainsById.jirobo!.passive;
+      expect(passive?.kind === 'cloak' && passive.cloak).toEqual(gameData.balance.jinchuuriki.cloak);
     });
 
     it('Punho de Areia: sem chakra, o Gaara bate em vez de concentrar', () => {
@@ -649,11 +698,37 @@ describe('passivas e comportamentos dos vilões', () => {
       expect(s2.status).toBe('won');
     });
 
-    it('hardcore: 4 rodadas de prazo e revive com o HP cheio', () => {
+    it('hardcore: 4 rodadas de prazo, revive com 50% do HP e não sofre crítico', () => {
       const s0 = withInitiative(startBattle(createPlayer(common, gameData), insane(villainsById.orochimaru!.hardcorePassive!)));
-      let s = playRound({ ...s0, villain: { ...s0.villain, hp: 60 } }, 'tech:basicTaijutsu', seq(0.5), gameData);
+      let s = playRound({ ...s0, villain: { ...s0.villain, hp: 60 } }, 'tech:basicTaijutsu', seq(0.999), gameData);
+      expect(ofType(s.log, 'attack').find((a) => a.side === 'player')).toMatchObject({ outcome: 'hit', critChance: 0 });
       for (let i = 0; i < 3; i++) s = playRound(s, 'rest', seq(0.5), gameData);
-      expect(ofType(s.log, 'insaneRevive')).toEqual([{ type: 'insaneRevive', hp: 100 }]);
+      expect(ofType(s.log, 'insaneRevive')).toEqual([{ type: 'insaneRevive', hp: 50 }]);
+    });
+
+    const reviveCycle = (start: ReturnType<typeof startBattle>, times: number) => {
+      let s = start;
+      // O jogador é curado a cada rodada para a luta não acabar; o golpe que derruba abaixo de 50% inicia a contagem.
+      const healed = (x: typeof s) => ({ ...x, player: { ...x.player, hp: x.player.maxHp } });
+      for (let n = 0; n < times; n++) {
+        s = playRound(healed({ ...s, villain: { ...s.villain, hp: 55 } }), 'tech:basicTaijutsu', seq(0.5), gameData);
+        for (let i = 0; i < 5; i++) s = playRound(healed(s), 'stance', seq(0.5), gameData);
+      }
+      return s;
+    };
+
+    it('revive no máximo maxRevives vezes; depois disso a contagem nem começa', () => {
+      const s0 = withInitiative(startBattle(createPlayer(common, gameData), insane({ maxRevives: 1 })));
+      const s = reviveCycle(s0, 2);
+      expect(ofType(s.log, 'insaneRevive')).toHaveLength(1);
+      expect(ofType(s.log, 'insaneTimer')).toHaveLength(1);
+      expect(s.villain.hp).toBeLessThan(50);
+    });
+
+    it('hardcore: revive sem limite', () => {
+      const v = testVillain({ hp: 100, passive: villainsById.orochimaru!.hardcorePassive! });
+      const s0 = withInitiative(startBattle(createPlayer(common, gameData), v));
+      expect(ofType(reviveCycle(s0, 4).log, 'insaneRevive')).toHaveLength(4);
     });
   });
 });

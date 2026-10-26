@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { availableActions, playerTechnique, playRound, slugHealPct, startBattle, toadPenetration, type BattleEvent } from '../src/core/combat';
-import { scaleVillain } from '../src/core/difficulty';
+import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
   applyLevelUp,
   applyStatStages,
@@ -356,15 +356,19 @@ describe('combate: efeitos de eventos', () => {
     expect(ofType(s1.log, 'attack')[0]!.side).toBe('player');
   });
 
-  it('foco do guru: 1×/luta, o próximo ataque é crítico mesmo com um rng que erraria', () => {
+  it('foco do guru: 1×/luta, +25% de chance de crítico só no próximo ataque', () => {
     const p = { ...createPlayer(common, gameData), focusUses: 1 };
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
-    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.01), gameData, true);
-    // (8 + 10 − 7) × 2 = 22
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'crit', damage: 22 });
-    expect(() => playRound(s1, 'tech:basicTaijutsu', seq(0.01), gameData, true)).toThrow();
-    const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.01), gameData);
-    expect(ofType(s2.log, 'attack').filter((a) => a.side === 'player').at(-1)).toMatchObject({ outcome: 'miss' });
+    const base = ofType(playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData).log, 'attack')[0]!.critChance;
+    // 0,8 cai na faixa de crítico só com o foco (crítico = topo da roleta): (8 + 10 − 7) × 2 = 22
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.8), gameData, true);
+    const first = ofType(s1.log, 'attack')[0]!;
+    expect(first.critChance).toBeCloseTo(base + 0.25);
+    expect(first).toMatchObject({ side: 'player', outcome: 'crit', damage: 22 });
+    expect(s1.playerFx.focusArmed).toBe(false);
+    expect(() => playRound(s1, 'tech:basicTaijutsu', seq(0.8), gameData, true)).toThrow();
+    const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.8), gameData);
+    expect(ofType(s2.log, 'attack').filter((a) => a.side === 'player').at(-1)).toMatchObject({ outcome: 'hit', critChance: base });
   });
 
   it('foco sem ter aprendido com o guru: indisponível', () => {
@@ -619,11 +623,28 @@ describe('dificuldade', () => {
   });
 
   it('hardcore troca as passivas dos vilões pelas versões hardcore', () => {
-    for (const id of ['mizuki', 'haku', 'zabuza', 'gaara', 'jirobo', 'kabuto', 'orochimaru']) {
+    for (const id of ['mizuki', 'haku', 'zabuza', 'jirobo', 'kabuto']) {
       const def = villainsById[id]!;
       expect(scaleVillain(def, 'hard', gameData).passive).toEqual(def.passive);
       expect(scaleVillain(def, 'hardcore', gameData).passive).toEqual(def.hardcorePassive);
     }
+    expect(scaleVillain(villainsById.gaara!, 'hardcore', gameData).passive).toMatchObject({ kind: 'cloak', monster: { healPct: 0.5 } });
+    expect(scaleVillain(villainsById.orochimaru!, 'hardcore', gameData).passive).toMatchObject({ kind: 'insane', critImmune: true });
+  });
+
+  it('Orochimaru revive no máximo 1× no fácil, 2× no normal, 3× no difícil e sem limite no hardcore', () => {
+    const max = (d: Difficulty) => {
+      const passive = scaleVillain(villainsById.orochimaru!, d, gameData).passive;
+      return passive?.kind === 'insane' ? passive.maxRevives : null;
+    };
+    expect([max('easy'), max('normal'), max('hard'), max('hardcore')]).toEqual([1, 2, 3, undefined]);
+  });
+
+  it('a forma de monstro do Gaara também escala com a dificuldade', () => {
+    const passive = scaleVillain(villainsById.gaara!, 'hardcore', gameData).passive;
+    const base = villainsById.gaara!.hardcorePassive;
+    if (passive?.kind !== 'cloak' || base?.kind !== 'cloak') throw new Error('manto esperado');
+    expect(passive.monster!.techniques[0]!.baseDamage).toBe(Math.floor(base.monster!.techniques[0]!.baseDamage * 1.25));
   });
 
   it('speed, chakra e XP não mudam', () => {
@@ -702,13 +723,20 @@ describe('recompensas por raridade', () => {
     expect(rewardPool(q, gameData).map((r) => r.id)).not.toContain('newTechnique');
   });
 
+  it('grupos de vilões (vários no mesmo bloco) só dão recompensa no confronto final', () => {
+    for (const st of campaign) {
+      if (st.kind !== 'fight' || st.villains.length < 2) continue;
+      expect(st.rewardTiers.slice(0, -1).every((t) => t === null)).toBe(true);
+    }
+  });
+
   it('raridade por confronto e exame pelo número de vitórias', () => {
     const tiers = Object.fromEntries(
       campaign.flatMap((st) => (st.kind === 'fight' ? st.villains.map((id, j) => [id, st.rewardTiers[j]]) : [])),
     );
     expect(tiers).toEqual({
       mizuki: 1,
-      haku: 1,
+      haku: null,
       zabuza: 2,
       gaara: 2,
       jirobo: null,

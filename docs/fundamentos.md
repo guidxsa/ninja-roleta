@@ -80,7 +80,7 @@ Quem recebe um ataque escolhe uma **reação** antes da rolagem. Vale igual para
 - **A próxima ação**: se quem reage ainda não agiu na rodada, perde a ação desta rodada. Se já agiu, perde a primeira ação da rodada seguinte. Sem ação livre pela frente (já gasta por outra reação), só pode Resistir.
 - **Sem reação**: quem está Aprisionado, Dormindo ou Paralisado não reage e recebe o golpe com a resistência passiva.
 - Em **Postura defensiva**, Resistir já usa 100%; as outras reações continuam disponíveis.
-- Técnica de vários golpes recebe **uma reação** para a técnica inteira.
+- Técnica de vários golpes (e os Espelhos do Haku) recebe **uma reação** para a técnica inteira.
 - **Golpe carregado**: pode receber qualquer reação. Na disputa, o poder dele já conta o ×2.
 - Na tela: quando o jogador é atacado, aparece o painel de reação com **Resistir** em destaque; só pede um toque a mais quando há Disputa, Barreira ou Substituição disponíveis.
 - O vilão escolhe a reação por pesos próprios (`reactions` na ficha, ver [viloes.md](viloes.md)), só entre as que pode pagar. Se ele gasta a próxima ação reagindo, a intenção sorteada para ela é descartada.
@@ -113,9 +113,10 @@ senão               → erro (dano 0)
 
 - Precisão padrão de uma técnica: **85%**. Cada técnica tem a sua (ver a ficha em [tecnicas.md](tecnicas.md)).
 - Penalidades comuns: Atordoado −10, passiva Yamanaka −10 nos ataques do vilão. A névoa do Zabuza multiplica a chance de **erro** por 1,5.
-- Técnicas com vários golpes rolam um acerto **por golpe**.
+- Técnicas com vários golpes rolam acerto e crítico **uma vez**, no começo, e o resultado vale para todos os golpes: erra tudo, acerta tudo ou critica tudo.
 - Genjutsu usa uma rolagem própria (ver [efeitos.md](efeitos.md#efeitos-de-genjutsu)) e não tem crítico.
-- O crítico garantido (Foco) pula a roleta: o golpe é crítico.
+- O **Foco** (guru) soma +25% à chance de crítico do próximo ataque, ainda limitada a 50% e à chance de acerto.
+- O crítico garantido (Mizuki no hardcore) pula a roleta: o golpe é crítico.
 
 ## Dano
 
@@ -222,7 +223,7 @@ Futuro: estado **Molhado** (acertos de água) que deixa o alvo vulnerável a rai
 
 - Ninjutsu, genjutsu, ativas, reações (menos Resistir) e algumas técnicas de taijutsu custam chakra. Sem chakra suficiente, a ação fica indisponível.
 - Taijutsu básico é grátis.
-- **Concentrar chakra** (ação universal) recupera chakra gastando o turno.
+- **Concentrar chakra** (ação universal) recupera **15% do chakra máximo** (arredondado para baixo, mínimo 1) gastando o turno.
 - Como a luta não começa restaurada, o chakra que sobra de uma luta é o que se tem na próxima.
 - Vilões também têm reserva de chakra e sorteiam a técnica e a reação só entre as que podem pagar (ver [viloes.md](viloes.md)).
 
