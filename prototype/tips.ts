@@ -73,6 +73,7 @@ export function playerTechTip(p: PlayerState, id: string): string {
     t.onHit && T.onHit(pct(t.onHit.chance), T.onHitEffect[t.onHit.effect]!),
     t.priority && T.priority,
     t.blade && T.blade[t.blade],
+    t.type === 'genjutsu' && deals && T.illusion,
     t.mental && T.mental(T.mentalNames[t.mental]!, t.mentalTurns ?? 1),
     t.mentalStat && T.shadow,
     t.barrier !== undefined && T.barrier(t.barrier),
@@ -151,12 +152,18 @@ export function fxConditions(fx: Fx, bad: 'good' | 'bad'): Condition[] {
     out.push({ icon: iconName, label, tone, ...t });
   if (fx.debilitated > 0) add('prison', S.ui.debilitated, bad, St.prison);
   if (fx.paralyzed > 0) add('lightning', S.ui.paralyzed, bad, St.paralyzed);
+  if (fx.possessed > 0) add('genjutsu', S.ui.possessed, bad, St.possessed);
   if (fx.asleep > 0) add('sleep', S.ui.asleep, bad, St.asleep);
   if (fx.stunned > 0) add('stun', S.ui.stunned, bad, St.stunned(pct(B.status.stun.hitPenalty)));
   if (fx.feared > 0) add('fear', S.ui.feared(fx.feared), bad, St.feared(pct(1 - B.status.fear.damageMult)));
   if (fx.confused > 0) add('confusion', S.ui.confused(fx.confused), bad, St.confused(pct(B.status.confusion.failChance)));
   if (fx.tormented > 0) add('torment', S.ui.tormented(fx.tormented), bad, St.tormented(B.status.torment.chakraPerRound));
   if (fx.debilitateImmunity > 0) add('immune', S.ui.immune, '', St.immune);
+  else if (fx.tenacity > 0) add('immune', S.ui.tenacity(pct(fx.tenacity)), '', St.tenacity);
+  if (fx.shield) {
+    const el = fx.shield.element ? S.elements[fx.shield.element] : '';
+    add('barrier', S.ui.shieldOn(fx.shield.points, fx.shield.turns), good, St.shield(el));
+  }
   if (fx.burn > 0) add('fire', S.ui.burning(fx.burn), bad, St.burning(pct(B.status.burn.maxPct)));
   if (fx.poison) add('poison', S.ui.poisoned, bad, St.poisoned(pct(B.status.poison.cureChance)));
   if (fx.bleeding) add('bleed', S.ui.bleeding, bad, St.bleeding(String(B.status.bleed.bladeDamageMult).replace('.', ',')));

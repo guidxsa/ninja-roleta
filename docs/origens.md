@@ -30,24 +30,24 @@ Total: 30% comum, 40% clã, 30% rara.
 
 ## Status iniciais
 
-Todas as origens têm o mesmo **orçamento de 90 pontos**: os 70 de antes mais **20 em resistências**. A diferença de poder vem das habilidades, não dos números.
+O ponto de partida é um **orçamento de 90 pontos**: 70 em status mais **20 em resistências**. Conversão: tai, nin, gen e as duas resistências valem 1 ponto; speed vale 1,5; 10 de HP vale 1; 2 de chakra valem 1.
 
-Conversão: tai, nin, gen e as duas resistências valem 1 ponto; speed vale 1,5; 10 de HP vale 1; 2 de chakra valem 1.
+Na simulação, os pontos não valem o mesmo na prática: genjutsu e resistência mental pesam menos que corpo e HP. Por isso a v0.18 recalibrou algumas origens fora do orçamento (coluna "Pontos"), para que nenhuma fique muito acima ou abaixo das outras.
 
-| Origem | Tai | Nin | Gen | Res. física | Res. mental | Speed | HP | Chakra | Afinidade |
-|---|---|---|---|---|---|---|---|---|---|
-| Comum | 10 | 10 | 10 | 10 | 10 | 10 | 100 | 30 | Rolada |
-| Nara | 7 | 13 | 11 | 8 | 12 | 9 | 95 | 32 | Rolada |
-| Akimichi | 15 | 8 | 5 | 14 | 6 | 6 | 160 | 34 | Rolada |
-| Yamanaka | 7 | 9 | 15 | 6 | 14 | 10 | 90 | 30 | Rolada |
-| Aburame | 8 | 12 | 10 | 9 | 11 | 8 | 110 | 34 | Rolada |
-| Inuzuka | 14 | 8 | 6 | 12 | 8 | 13 | 105 | 24 | Rolada |
-| Prodígio do taijutsu | 22 | 0 | 0 | 14 | 6 | 14 | 130 | 28 | Nenhuma |
-| Uchiha | 7 | 12 | 14 | 8 | 12 | 10 | 90 | 26 | Fogo (fixa) |
-| Hyuuga | 16 | 6 | 8 | 11 | 9 | 11 | 100 | 27 | Rolada |
-| Uzumaki | 10 | 11 | 6 | 12 | 8 | 9 | 120 | 35 | Rolada |
+| Origem | Tai | Nin | Gen | Res. física | Res. mental | Speed | HP | Chakra | Afinidade | Pontos |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Comum | 10 | 10 | 10 | 10 | 10 | 10 | 100 | 30 | Rolada | 90 |
+| Nara | 10 | 13 | 8 | 10 | 10 | 9 | 105 | 32 | Rolada | 91 |
+| Akimichi | 15 | 8 | 5 | 14 | 6 | 6 | 145 | 34 | Rolada | 88,5 |
+| Yamanaka | 10 | 9 | 15 | 10 | 14 | 10 | 110 | 30 | Rolada | 99 |
+| Aburame | 8 | 12 | 10 | 9 | 11 | 8 | 110 | 34 | Rolada | 90 |
+| Inuzuka | 14 | 8 | 6 | 12 | 8 | 13 | 95 | 24 | Rolada | 89 |
+| Prodígio do taijutsu | 17 | 0 | 0 | 11 | 9 | 12 | 110 | 28 | Nenhuma | 80 |
+| Uchiha | 12 | 9 | 12 | 10 | 10 | 10 | 105 | 26 | Fogo (fixa) | 91,5 |
+| Hyuuga | 16 | 6 | 8 | 11 | 9 | 11 | 100 | 27 | Rolada | 90 |
+| Uzumaki | 10 | 11 | 6 | 12 | 8 | 9 | 105 | 35 | Rolada | 88,5 |
 
-Lógica das resistências (provisória): clãs de corpo (Akimichi, Inuzuka, prodígio, Uzumaki) puxam para a física; clãs de mente e ilusão (Yamanaka, Nara, Uchiha) puxam para a mental. O prodígio tem mental baixa: é o alvo natural de genjutsu, como na série.
+Lógica das resistências (provisória): clãs de corpo (Akimichi, Inuzuka, Uzumaki) puxam para a física; clãs de mente e ilusão (Yamanaka) puxam para a mental. O prodígio tem a mental mais baixa que a física: é um alvo natural de genjutsu, como na série.
 
 Jinchuuriki soma **+100% de chakra máximo** sobre a origem.
 
@@ -58,13 +58,13 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 | Origem | Passiva | Ativa | Kit inicial | Exclusivas | Restrições |
 |---|---|---|---|---|---|
 | Comum | Determinação | — | Punho de Chakra, ninjutsu básico | — | — |
-| Nara | Estrategista | — | Punho de Chakra, ninjutsu básico, Imitação de Sombra | Imitação de Sombra | — |
+| Nara | Gênio | — | Punho de Chakra, ninjutsu básico, Imitação de Sombra | Imitação de Sombra | — |
 | Akimichi | Corpo pesado | Expansão | Punho de Chakra, ninjutsu básico | Rolo Colossal (nível 4) | — |
 | Yamanaka | Leitura mental | — | Punho de Chakra, ninjutsu básico, Transferência de Mente | Transferência de Mente | — |
 | Aburame | Colmeia | — | Punho de Chakra, ninjutsu básico, Enxame | Enxame | — |
 | Inuzuka | Dupla | — | Punho de Chakra, ninjutsu básico, Presas Giratórias | Presas Giratórias | — |
 | Prodígio do taijutsu | Corpo de ferro | Portões | Punho de Chakra | Redemoinho da Folha (4), Lótus Primaveril (7) | Sem ninjutsu, genjutsu e médico |
-| Uchiha | Olhos treinados | Sharingan | Punho de Chakra, Fagulha do Dragão, Olhar Hipnótico | Efeitos extras de genjutsu com Sharingan | — |
+| Uchiha | Olhos treinados | Sharingan | Punho de Chakra, Fagulha do Dragão, Olhar Hipnótico, Ilusão da Dor | Ilusões de dano, Tsukuyomi (nível 7) | — |
 | Hyuuga | Punho preciso | Byakugan | Punho de Chakra, ninjutsu básico | Selo dos Pontos Vitais, Rotação (nível 4) | — |
 | Uzumaki | Vitalidade | Clones das Sombras | Punho de Chakra, ninjutsu básico | Clones das Sombras | — |
 
@@ -74,23 +74,23 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 
 ### Comum
 
-- **Determinação** (passiva): +10% de XP ganho. Combina com o nível sem limite: o comum não nasce forte, mas cresce mais rápido.
+- **Determinação** (passiva): +25% de XP ganho e, a cada nível, **+1 no maior status de ataque** (empate: taijutsu, ninjutsu, genjutsu). Combina com o nível sem limite: o comum não nasce forte, mas cresce mais rápido.
 
 ### Nara (sombras)
 
-- **Estrategista** (passiva): a tela mostra a próxima ação do vilão antes de o jogador escolher a sua.
+- **Gênio** (passiva com usos): a tela mostra a próxima ação do vilão antes de o jogador escolher a sua. E, **2 vezes por luta (+1 nos níveis 4 e 7)**, uma escolha grátis (não gasta o turno) arma a próxima roleta do Nara: ela gira duas vezes e fica com o melhor resultado. Vale para acerto (de golpes, genjutsu e Imitação de Sombra), Substituição e disputa.
 - **Imitação de Sombra**: ninjutsu sem dano que prende o alvo (efeito Aprisionado). Por ser ninjutsu, funciona contra quem é imune a genjutsu (Gaara).
 
 ### Akimichi (expansão)
 
-- **Corpo pesado** (passiva): dano de taijutsu × (0,8 + 0,4 × HP atual / HP máximo). ×1,2 com HP cheio, ×0,8 perto de zero.
+- **Corpo pesado** (passiva): dano de taijutsu × (0,7 + 0,4 × HP atual / HP máximo). ×1,1 com HP cheio, ×0,7 perto de zero.
 - **Expansão** (ativa): gasta o turno e 6 de chakra. Por 3 rodadas, a partir da seguinte: taijutsu ×1,5 e speed −3. Pode ser usada de novo quando acabar.
 - **Rolo Colossal** (nível 4): taijutsu exclusivo.
 
 ### Yamanaka (mente)
 
 - **Leitura mental** (passiva): ataques do vilão contra o Yamanaka têm −10 de acerto.
-- **Transferência de Mente**: genjutsu inicial com efeito Confusão. Junto com o Uchiha, é a única origem que nasce com genjutsu.
+- **Transferência de Mente**: genjutsu inicial com efeito **Possessão**: o vilão perde a vez golpeando a si mesmo com a própria técnica de dano mais forte ([efeitos.md](efeitos.md#efeitos-de-genjutsu)). É o potencial ofensivo do Yamanaka: quanto mais forte o vilão, mais ele se fere. Junto com o Uchiha, é a única origem que nasce com genjutsu.
 
 ### Aburame (insetos)
 
@@ -99,27 +99,28 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 
 ### Inuzuka (parceiro canino)
 
-- **Dupla** (passiva): depois de cada ataque do jogador que acerta, 30% de chance de o cão atacar também (taijutsu, 40% do dano base do ataque, rola acerto próprio).
+- **Dupla** (passiva): depois de cada ataque do jogador que acerta, 25% de chance de o cão atacar também (taijutsu, 40% do dano base do ataque, rola acerto próprio).
 - **Presas Giratórias**: taijutsu inicial de 2 golpes.
 
 ### Prodígio do taijutsu (estilo Lee)
 
-- **Corpo de ferro** (passiva): a reação Resistir usa 100% da resistência física (como em postura defensiva).
-- **Portões** (ativa): uma vez por luta. Abrir gasta o turno; o bônus vale por 5 rodadas a partir da seguinte. Abre o maior portão liberado pelo taijutsu atual. Custa chakra e HP (nunca abaixo de 1).
+- **Corpo de ferro** (passiva): contra **taijutsu**, a reação Resistir usa 100% da resistência física (como em postura defensiva). Contra ninjutsu, Resistir normal (70%).
+- **Portões** (ativa): uma vez por luta. Abrir gasta o turno; o bônus vale por 3 rodadas a partir da seguinte. Abre o maior portão liberado pelo taijutsu atual. Custa chakra e HP (nunca abaixo de 1).
 
   | Portão | Taijutsu mínimo | Dano de taijutsu | Chakra | HP |
   |---|---|---|---|---|
-  | 1º | 22 (inicial) | ×1,5 | 5 | 15% do máximo |
-  | 2º | 26 | ×1,75 | 7 | 20% |
-  | 3º | 30 | ×2 | 9 | 25% |
+  | 1º | 17 (inicial) | ×1,3 | 5 | 20% do máximo |
+  | 2º | 21 | ×1,5 | 7 | 25% |
+  | 3º | 25 | ×1,7 | 9 | 30% |
 
 - Nunca aprende ninjutsu, genjutsu ou ninjutsu médico; a roleta de recompensas é filtrada.
-- Sem ninjutsu, não disputa nem ergue barreiras. Responde a ninjutsu com Resistir ou Substituição, e quebra barreiras com taijutsu ([fundamentos.md](fundamentos.md#quebra-de-guarda)).
+- Sem ninjutsu, não disputa nem ergue barreiras. Responde a ninjutsu com Resistir ou Substituição; contra escudos, o taijutsu é neutro ([fundamentos.md](fundamentos.md#escudos)).
 
 ### Uchiha
 
 - **Olhos treinados** (passiva): +6 na resistência mental ao resistir a ilusões.
-- **Sharingan** (ativa, dōjutsu): ativar 4 de chakra, manutenção 1 por rodada, dura 5 rodadas ou até faltar chakra. Evolui com o nível.
+- **Ilusão da Dor**: genjutsu de dano do kit inicial (15 de dano base; fere com genjutsu contra a resistência mental). No nível 7, **Tsukuyomi** (só com o Sharingan): 22 de dano e aprisiona.
+- **Sharingan** (ativa, dōjutsu): ativar é uma **escolha grátis** (não gasta o turno, como os Clones) que custa 4 de chakra; manutenção 1 por rodada, dura 5 rodadas ou até faltar chakra. Evolui com o nível.
 
   | Estágio | Nível | Tai/Nin/Gen | Speed | Genjutsu: acerto / poder | Leitura de movimento |
   |---|---|---|---|---|---|
@@ -128,18 +129,18 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
   | 3 tomoe | 7 | +7 | +3 | +20% / +9 | 30% |
 
   Leitura de movimento: chance de reduzir à metade o dano recebido.
-- Com o Sharingan ativo, o genjutsu do Uchiha pode aplicar Pavor em vez do efeito da técnica (escolha do jogador).
+- Com o Sharingan ativo, o genjutsu do Uchiha pode aplicar Pavor em vez do efeito da técnica (escolha do jogador). O poder do Sharingan também soma no dano das ilusões.
 
 ### Hyuuga
 
 - **Punho preciso** (passiva): taijutsu ignora 30% da resistência física do alvo (conta como penetração).
 - **Byakugan** (ativa, dōjutsu): ativar 3, manutenção 1, dura 5 rodadas. Ativo: taijutsu não erra (crítico ainda rola), taijutsu ×1,1 e libera o Selo dos Pontos Vitais.
-- **Rotação** (nível 4): barreira neutra exclusiva, usada como reação (ver [tecnicas.md](tecnicas.md#ninjutsu-de-linhagem)).
+- **Rotação** (nível 4): barreira neutra exclusiva: escudo que devolve metade do dano bloqueado (ver [tecnicas.md](tecnicas.md#ninjutsu-de-linhagem)).
 
 ### Uzumaki
 
-- **Vitalidade** (passiva): recupera 1 de chakra e 3% do HP máximo no início de cada rodada.
-- **Clones das Sombras** (ativa): gasta 6 de chakra, não gasta o turno. O próximo ataque vira 3 golpes de 40% do dano, com uma rolagem de acerto e crítico para todos (técnica de vários golpes: cada golpe vira 3).
+- **Vitalidade** (passiva): recupera 1 de chakra e 2% do HP máximo no início de cada rodada.
+- **Clones das Sombras** (ativa): gasta 6 de chakra, não gasta o turno. O próximo ataque vira 3 golpes de 35% do dano, com uma rolagem de acerto e crítico para todos (técnica de vários golpes: cada golpe vira 3).
 
 ## Jinchuuriki
 

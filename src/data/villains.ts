@@ -6,7 +6,7 @@ import { balance } from './balance';
 // base + ataque do tipo − resistência usada pelo jogador, igual ao do jogador.
 // Vilões também gastam chakra: taijutsu é grátis; ninjutsu e genjutsu custam. Sem chakra para
 // nenhuma técnica, o vilão perde a vez concentrando chakra.
-// `reactions`: pesos de Resistir, Disputa, Barreira e Substituição. Barreiras ficam na lista de técnicas.
+// `reactions`: pesos de Resistir, Disputa e Substituição. Barreiras são ações (entram no sorteio sem escudo ativo).
 // `xp`: curva planejada em docs/progressao.md.
 // `passive`/`hardcorePassive`: passiva única; a versão hardcore substitui a normal nesse modo.
 // `behavior.charged`: golpe carregado (anuncia numa vez, solta ×2 sem crítico na seguinte).
@@ -130,8 +130,9 @@ export const villains: VillainDef[] = [
     speed: 9,
     offense: { taijutsu: 8, ninjutsu: 11, genjutsu: 6 },
     resistance: { physical: 14, mental: 14 },
-    // A areia defende sozinha: quase sempre ergue o Escudo de Areia.
-    reactions: { resist: 1, clash: 1, barrier: 4 },
+    // A areia defende sozinha: começa a luta com o Escudo de Areia e o ergue de novo quando cai.
+    reactions: { resist: 2, clash: 1 },
+    startingShield: 'sandShield',
     // Armadura de Areia: terra no corpo a luta toda (raio perfura).
     elementalState: 'earth',
     critBonus: 0.02,
@@ -141,7 +142,7 @@ export const villains: VillainDef[] = [
       { id: 'sandTsunami', type: 'ninjutsu', baseDamage: 17, chakraCost: 8, weight: 1 },
       // Grátis: com o manto drenando o chakra, ele bate em vez de concentrar.
       { id: 'sandFist', type: 'taijutsu', baseDamage: 8, chakraCost: 0, weight: 2 },
-      { id: 'sandShield', type: 'ninjutsu', baseDamage: 0, chakraCost: 4, weight: 1, barrier: 30 },
+      { id: 'sandShield', type: 'ninjutsu', baseDamage: 0, chakraCost: 4, weight: 2, barrier: 30 },
     ],
     behavior: { charged: 'sandTsunami' },
     passive: { kind: 'cloak', variant: 'beast', cloak: balance.jinchuuriki.cloak, genjutsuImmune: true },
@@ -171,7 +172,7 @@ export const villains: VillainDef[] = [
     speed: 8,
     offense: { taijutsu: 10, ninjutsu: 8, genjutsu: 4 },
     resistance: { physical: 15, mental: 11 },
-    reactions: { resist: 2, barrier: 2 },
+    reactions: { resist: 1 },
     critBonus: 0,
     xp: 60,
     techniques: [

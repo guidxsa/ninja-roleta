@@ -42,6 +42,7 @@ export const techniques: TechniqueDef[] = [
   { id: 'crowIllusion', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 4, mental: 'prison', mentalTurns: 1, mentalPower: 6 },
   { id: 'sleepSong', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 4, mental: 'sleep', mentalTurns: 2, mentalPower: 0 },
   { id: 'hollowWhisper', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 5, mental: 'torment', mentalTurns: 2, mentalPower: 2 },
+  { id: 'mindMaze', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 4, mental: 'confusion', mentalTurns: 2, mentalPower: 2 },
   // Barreiras (só reação): disputa contra ninjutsu, quebra de guarda contra taijutsu.
   { id: 'earthWall', type: 'ninjutsu', element: 'earth', baseDamage: 0, chakraCost: 5, barrier: 28, minLevel: 4 },
   { id: 'waterWall', type: 'ninjutsu', element: 'water', baseDamage: 0, chakraCost: 5, barrier: 24, minLevel: 4 },
@@ -60,14 +61,16 @@ export const premiumTechniques: TechniqueDef[] = [
 
 /** Aprendidas sozinhas ao atingir `minLevel`, se a origem, a categoria e o elemento permitirem. */
 export const levelTechniques: TechniqueDef[] = [
-  { id: 'whirlwindCombo', type: 'taijutsu', element: null, baseDamage: 20, chakraCost: 5, accuracy: 0.9, minLevel: 4, lineages: ['taijutsuProdigy'] },
-  { id: 'hiddenLotus', type: 'taijutsu', element: null, baseDamage: 30, chakraCost: 9, accuracy: 0.8, critBonus: 0.1, minLevel: 7, lineages: ['taijutsuProdigy'] },
+  { id: 'whirlwindCombo', type: 'taijutsu', element: null, baseDamage: 16, chakraCost: 5, accuracy: 0.9, minLevel: 4, lineages: ['taijutsuProdigy'] },
+  { id: 'hiddenLotus', type: 'taijutsu', element: null, baseDamage: 25, chakraCost: 9, accuracy: 0.8, critBonus: 0.1, minLevel: 7, lineages: ['taijutsuProdigy'] },
   { id: 'humanBoulder', type: 'taijutsu', element: null, baseDamage: 24, chakraCost: 6, accuracy: 0.8, onHit: { effect: 'stun', chance: 0.2 }, minLevel: 4, lineages: ['akimichi'] },
   // Rotação (Hyuuga): barreira neutra; se aguentar, devolve metade do dano.
   { id: 'rotation', type: 'ninjutsu', element: null, baseDamage: 0, chakraCost: 5, barrier: 26, reflectPct: 0.5, minLevel: 4, lineages: ['hyuuga'] },
 
   { id: 'fearIllusion', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 5, mental: 'fear', mentalTurns: 2, mentalPower: 10, minLevel: 4 },
   { id: 'mirrorWorld', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 8, mental: 'prison', mentalTurns: 2, mentalPower: 14, minLevel: 7 },
+  // Tsukuyomi (Uchiha): ilusão de dano que também aprisiona; só com o Sharingan ativo.
+  { id: 'tsukuyomi', type: 'genjutsu', element: null, baseDamage: 22, chakraCost: 9, mental: 'prison', mentalTurns: 1, mentalPower: 6, requiresDojutsu: 'sharingan', minLevel: 7, lineages: ['uchiha'] },
 ];
 
 /** Kit inicial de linhagem (`startingTechniques`): não saem em recompensa. */
@@ -81,7 +84,10 @@ export const lineageTechniques: TechniqueDef[] = [
   // Enxame (Aburame): 4 golpes pequenos; cada acerto drena chakra pela Colmeia.
   { id: 'insectSwarm', type: 'ninjutsu', element: null, baseDamage: 5, hits: 4, chakraCost: 5, lineages: ['aburame'] },
   { id: 'basicGenjutsu', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 3, mental: 'prison', mentalTurns: 1, mentalPower: 0, lineages: ['uchiha'] },
-  { id: 'mindTransfer', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 4, mental: 'confusion', mentalTurns: 1, mentalPower: 2, lineages: ['yamanaka'] },
+  // Ilusão da Dor (Uchiha): genjutsu que fere de verdade (base + genjutsu − resistência mental usada).
+  { id: 'painIllusion', type: 'genjutsu', element: null, baseDamage: 15, chakraCost: 3, lineages: ['uchiha'] },
+  // Transferência de Mente (Yamanaka): possessão; o alvo perde a vez golpeando a si mesmo.
+  { id: 'mindTransfer', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 4, mental: 'possession', mentalTurns: 1, mentalPower: 2, lineages: ['yamanaka'] },
 ];
 
 export const allTechniques: TechniqueDef[] = [

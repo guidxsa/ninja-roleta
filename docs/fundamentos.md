@@ -1,6 +1,6 @@
 # Fundamentos
 
-Regras centrais que valem para todo combate: ficha de status, roleta, restauração, turno, reações, acerto, dano, disputa de ninjutsu, elementos, chakra e Vontade do Fogo. Os números são provisórios e vivem em `balance` / `data/*.ts`.
+Regras centrais que valem para todo combate: ficha de status, roleta, restauração, turno, reações, acerto, dano, disputa de ninjutsu, escudos, elementos, chakra e Vontade do Fogo. Os números são provisórios e vivem em `balance` / `data/*.ts`.
 
 ## Roleta e RNG
 
@@ -19,9 +19,9 @@ Regras centrais que valem para todo combate: ficha de status, roleta, restauraç
 | Speed | Iniciativa e chance da Substituição. |
 | Taijutsu | **Ataque** físico. |
 | Ninjutsu | **Ataque** das técnicas com chakra e poder na disputa de ninjutsu. |
-| Genjutsu | **Ataque** das ilusões. |
+| Genjutsu | **Ataque** das ilusões (acerto, duração e, nas ilusões de dano do Uchiha, o dano). |
 | Resistência física | Reduz o dano de taijutsu e de ninjutsu. |
-| Resistência mental | Resiste a genjutsu e efeitos mentais (acerto e duração, ver [efeitos.md](efeitos.md#efeitos-de-genjutsu)). |
+| Resistência mental | Resiste a genjutsu e efeitos mentais (acerto, duração e dano das ilusões de dano, ver [efeitos.md](efeitos.md#efeitos-de-genjutsu)). |
 
 - Os status de ataque não dão defesa. Bater forte e aguentar pancada são investimentos separados.
 - Os valores iniciais vêm da origem ([origens.md](origens.md#status-iniciais)) e da ficha do vilão ([viloes.md](viloes.md)). Todos podem subir na run ([progressao.md](progressao.md)).
@@ -32,16 +32,19 @@ A resistência total (física ou mental) é usada numa fração que depende da s
 
 | Situação | Fração da resistência | Custo |
 |---|---|---|
-| **Passiva**: não reagiu ou não pode reagir (Aprisionado, Sono, Paralisia, Substituição que falhou, perdeu uma disputa) | 40% | — |
+| **Passiva**: não reagiu ou não pode reagir (Aprisionado, Sono, Paralisia, Possessão, Substituição que falhou, perdeu uma disputa) | 40% | — |
 | **Resistir** (reação) | 70% | Grátis, não gasta o turno |
 | **Postura defensiva** (ação de turno) | 100% até o próximo turno de quem a usou | Gasta o turno |
 
 Configuração: `combat.resistance: { passive: 0.4, resist: 0.7, stance: 1.0 }`.
 
+O Corpo de ferro (prodígio do taijutsu) faz Resistir usar 100% da física, mas só contra taijutsu ([origens.md](origens.md#prodígio-do-taijutsu-estilo-lee)).
+
 ## Restauração
 
 - **A luta não começa restaurada.** HP e chakra seguem de uma luta para a outra, inclusive dentro dos blocos (Haku e Zabuza, Quarteto do Som).
 - O vilão sempre começa a luta com HP e chakra cheios.
+- **Cada vitória recupera 25%** do HP e do chakra máximos (sem passar do máximo), inclusive as vitórias do exame.
 - **Restauram tudo** (HP, chakra e efeitos negativos):
   - **subir de nível**;
   - **o fim do exame chunin**, qualquer que seja o resultado (ver [campanha.md](campanha.md#exame-chunin));
@@ -49,7 +52,7 @@ Configuração: `combat.resistance: { passive: 0.4, resist: 0.7, stance: 1.0 }`.
 - **O fim de cada luta limpa os efeitos negativos** (queimadura, veneno, sangramento etc.), mas não devolve HP nem chakra.
 - Dentro da luta, só restauram parcialmente: técnicas de cura, consumíveis, passivas de regeneração, invocações e Concentrar chakra.
 - Penalidades de "começar a próxima luta com X" (ex.: Akatsuki) valem sobre o HP e o chakra que o jogador tem.
-- Configuração: `combat.restoreOnStart: false`.
+- Configuração: `combat: { restoreOnStart: false, recoverAfterWinPct: 0.25 }`.
 
 ## Turno e ações
 
@@ -62,7 +65,7 @@ Configuração: `combat.resistance: { passive: 0.4, resist: 0.7, stance: 1.0 }`.
 - Técnicas com **prioridade** agem antes naquela rodada, mesmo sem a iniciativa. Dois lados com prioridade: vale a iniciativa.
 - Na sua ação, o personagem escolhe:
   - **Técnica** (de uma das categorias do skill set, ver [tecnicas.md](tecnicas.md)).
-  - **Ativa de linhagem** (dōjutsu, portões, expansão etc.).
+  - **Ativa de linhagem** (portões, expansão, Byakugan etc.). Algumas são **escolhas grátis** feitas junto com a ação, sem gastar o turno: Clones das Sombras, Sharingan, Foco e Gênio.
   - **Ações universais**: Concentrar chakra, Postura defensiva, Usar item (ver [tecnicas.md](tecnicas.md#ações-universais)).
 
 ## Reações
@@ -73,16 +76,17 @@ Quem recebe um ataque escolhe uma **reação** antes da rolagem. Vale igual para
 |---|---|---|---|
 | **Resistir** | Qualquer ataque | Grátis | Usa 70% da resistência. É a reação padrão. |
 | **Disputa de ninjutsu** | Ninjutsu | Chakra da técnica + **a próxima ação** | Lança um ninjutsu contra o outro (ver "Disputa de ninjutsu"). |
-| **Barreira** | Ninjutsu ou taijutsu | Chakra da técnica + **a próxima ação** | Ergue um ninjutsu defensivo. Contra ninjutsu vira disputa; contra taijutsu, o atacante rola a quebra de guarda. |
 | **Substituição** | Taijutsu ou ninjutsu | 2 de chakra + 1 uso da luta (**não gasta ação**) | Roleta de esquiva (ver abaixo). |
+
+As barreiras não são reação: são ações de turno que erguem um **escudo** (ver "Escudos").
 
 - **Contra genjutsu, só Resistir** (com a resistência mental).
 - **A próxima ação**: se quem reage ainda não agiu na rodada, perde a ação desta rodada. Se já agiu, perde a primeira ação da rodada seguinte. Sem ação livre pela frente (já gasta por outra reação), só pode Resistir ou usar a Substituição.
-- **Sem reação**: quem está Aprisionado, Dormindo ou Paralisado não reage e recebe o golpe com a resistência passiva.
+- **Sem reação**: quem está Aprisionado, Dormindo, Paralisado ou Possuído não reage e recebe o golpe com a resistência passiva (e o dano extra de quem perdeu a vez, ver [efeitos.md](efeitos.md#controles)).
 - Em **Postura defensiva**, Resistir já usa 100%; as outras reações continuam disponíveis.
 - Técnica de vários golpes (e os Espelhos do Haku) recebe **uma reação** para a técnica inteira.
-- **Golpe carregado**: pode receber qualquer reação. Na disputa, o poder dele já conta o ×2.
-- Na tela: quando o jogador é atacado, aparece o painel de reação com **Resistir** em destaque; só pede um toque a mais quando há Disputa, Barreira ou Substituição disponíveis.
+- **Golpe carregado**: pode receber qualquer reação. Na disputa, o poder dele já conta o ×2. Um escudo erguido no aviso também segura o golpe.
+- Na tela: quando o jogador é atacado, aparece o painel de reação com **Resistir** em destaque; só pede um toque a mais quando há Disputa ou Substituição disponíveis.
 - O vilão escolhe a reação por pesos próprios (`reactions` na ficha, ver [viloes.md](viloes.md)), só entre as que pode pagar. Se ele gasta a próxima ação reagindo, a intenção sorteada para ela é descartada.
 
 ### Substituição
@@ -95,12 +99,13 @@ chance = clamp(50% + (speed_de_quem_reage − speed_do_atacante) × 3%, 25%, 85%
 - **Falha**: recebe o golpe com a resistência **passiva**.
 - **Não gasta ação**: quem se substitui age normalmente na rodada (ou na seguinte, se já agiu).
 - **Usos por luta**: 2 (o premium "Mestre da Substituição" do guru dá +1, ver [campanha.md](campanha.md#guru)).
+- O Gênio do Nara vale na roleta da Substituição dele (gira duas vezes, fica com a melhor).
 
 Configuração: `substitution: { chakraCost: 2, baseChance: 0.5, perSpeed: 0.03, min: 0.25, max: 0.85, usesPerFight: 2 }`.
 
 ## Rolagem de acerto
 
-Toda técnica de dano que não passou por disputa nem por quebra de guarda rola uma roleta de três fatias: **crítico**, **acerto** e **erro**.
+Toda técnica de dano que não passou por disputa rola uma roleta de três fatias: **crítico**, **acerto** e **erro**.
 
 ```
 chance_acerto  = clamp(precisão_da_técnica + bônus_de_acerto − penalidades, 5%, 100%)
@@ -117,6 +122,7 @@ senão               → erro (dano 0)
 - Técnicas com vários golpes rolam acerto e crítico **uma vez**, no começo, e o resultado vale para todos os golpes: erra tudo, acerta tudo ou critica tudo.
 - Genjutsu usa uma rolagem própria (ver [efeitos.md](efeitos.md#efeitos-de-genjutsu)) e não tem crítico.
 - O **Foco** (guru) soma +25% à chance de crítico do próximo ataque, ainda limitada a 50% e à chance de acerto.
+- O **Gênio** (Nara) gira a roleta duas vezes e fica com o melhor resultado (crítico > acerto > erro).
 - O crítico garantido (Mizuki no hardcore) pula a roleta: o golpe é crítico.
 
 ## Dano
@@ -133,8 +139,9 @@ dano              = max(1, bruto × mult_crítico × mult_elemento × outros_mul
 - `bônus_de_dano`: ferramenta ninja e similares.
 - `penetração`: da técnica, do sapo, da passiva Hyuuga. Somam, com teto de 60%.
 - `mult_elemento`: só quando há um encontro de elementos (ver "Elementos"); senão ×1.
-- `outros_mult`: portões, manto, expansão, pavor, resultado da disputa etc.
+- `outros_mult`: portões, manto, expansão, pavor, resultado da disputa, alvo que perdeu a vez (×1,25) etc.
 - Técnicas de vários golpes descontam a defesa em cada golpe.
+- Se o alvo tem um **escudo**, o dano passa por ele antes do HP (ver "Escudos").
 
 ### Multiplicadores
 
@@ -149,15 +156,15 @@ Valores arredondados para baixo (`Math.floor`) no fim do cálculo. Um ataque que
 
 ## Disputa de ninjutsu
 
-Acontece quando um ninjutsu é respondido com outro ninjutsu (reação Disputa ou Barreira).
+Acontece quando um ninjutsu é respondido com outro ninjutsu (reação Disputa).
 
 ```
-poder = (dano_base × golpes  ou  poder_de_barreira) + ninjutsu × 0,5
-poder × 1,5 para quem tem a vantagem elemental (raio contra barreira de terra: ×2)
+poder = dano_base × golpes + ninjutsu × 0,5
+poder × 1,5 para quem tem a vantagem elemental
 ```
 
 - **Só a vantagem multiplica**: a desvantagem não reduz o poder de quem a tem. Assim a vantagem pesa muito, mas um jutsu básico com vantagem não anula um grande.
-- Rasengan: +25% de poder. Escudo de Vento: +25% contra técnicas de vários golpes. Golpe carregado: ×2.
+- Rasengan: +25% de poder. Golpe carregado: ×2.
 
 Os dois poderes vão para uma roleta de três fatias, no espírito da iniciativa:
 
@@ -173,8 +180,8 @@ peso_anular   = 0,5 × poder_atacante × poder_defensor
 | **Um supera** | O jutsu vencedor atinge o outro lado com `dano × max(25%, 1 − poder_perdedor / poder_vencedor)`, contra a resistência **passiva** de quem perdeu. |
 | **Esmagadora** (o vencedor tem poder ≥ 2× o do outro) | O dano passa inteiro. |
 
-- Se o **defensor** vence com um ninjutsu ofensivo, é um contra-ataque: o jutsu dele atinge o atacante.
-- Uma **barreira** que vence só bloqueia (não causa dano), salvo técnicas que digam o contrário (Rotação).
+- Se o **defensor** vence, é um contra-ataque: o jutsu dele atinge o atacante.
+- O Gênio do Nara vale na roleta da disputa (fica com o resultado melhor para ele).
 - O dano que passa pela disputa não rola acerto nem crítico. Os efeitos de chance no acerto (queimar, atordoar) rolam normalmente.
 - Na tela: um cabo de guerra com a cor de cada elemento e a fatia de anulação no meio.
 
@@ -182,17 +189,22 @@ Exemplo (Ninjutsu 10 dos dois lados): Projétil d'Água I (11 + 5 = 16, ×1,5 po
 
 Configuração: `clash: { statFactor: 0.5, cancelWeight: 0.5, minPassThrough: 0.25, crushRatio: 2 }`.
 
-### Quebra de guarda
+## Escudos
 
-Taijutsu respondido com uma **barreira** rola a quebra de guarda, sem fatia de anulação:
+Barreira é uma **ação de turno** (gasta o turno e o chakra): ergue um **escudo** com os pontos da técnica, que dura **3 rodadas** a partir da seguinte ou até quebrar. Vale igual para jogador e vilão.
 
 ```
-peso_quebra  = (dano_base × golpes + taijutsu × 0,5)²
-peso_aguenta = poder_da_barreira²
+dano_no_escudo = dano_do_golpe × encontro_de_elementos(golpe, escudo)
+absorvido      = min(pontos, dano_no_escudo)
+dano_no_HP     = (dano_no_escudo − absorvido) ÷ encontro
 ```
 
-- **Quebrou**: o golpe passa e rola acerto normalmente, contra a resistência passiva.
-- **Aguentou**: o golpe para na barreira.
+- Absorve **taijutsu e ninjutsu** (cada golpe de uma técnica de vários golpes, um por vez), inclusive o golpe carregado e o dano da disputa. Genjutsu, veneno, queimadura e o Selo explosivo passam direto.
+- O elemento do golpe contra o do escudo multiplica o dano **no escudo** (vantagem ×1,5, desvantagem ×0,75; raio contra terra ×2). Taijutsu é neutro.
+- Com um escudo de pé, não dá para erguer outro; o vilão só sorteia a barreira sem escudo ativo.
+- Especiais (ver [tecnicas.md](tecnicas.md#barreiras)): Rotação devolve 50% do bloqueado; Muralha de Chamas pode queimar quem bate com taijutsu; Parede d'Água que absorve fogo apaga a queimadura; Escudo de Vento aguenta mais contra vários golpes.
+
+Configuração: `barrier: { turns: 3 }`.
 
 ## Elementos
 
@@ -200,7 +212,8 @@ peso_aguenta = poder_da_barreira²
 
 O elemento só pesa quando **dois elementos se encontram**:
 
-- numa **disputa** ou contra uma **barreira** (só a vantagem multiplica o poder);
+- numa **disputa** (só a vantagem multiplica o poder);
+- contra um **escudo** (dano no escudo × vantagem ou desvantagem);
 - contra um **estado elemental** ativo no alvo, como Armadura de Raio ou Armadura de Areia (dano × vantagem). Ver [tecnicas.md](tecnicas.md#estados-elementais).
 
 Ciclo de vantagem: **fogo > vento > raio > terra > água > fogo**. Taijutsu e técnicas sem elemento são neutros.
@@ -209,9 +222,9 @@ Ciclo de vantagem: **fogo > vento > raio > terra > água > fogo**. Taijutsu e t�
 
 | Encontro | Efeito |
 |---|---|
-| Raio contra barreira ou estado de **terra** | Perfura: ×2 no lugar de ×1,5. |
+| Raio contra escudo ou estado de **terra** | Perfura: ×2 no lugar de ×1,5. |
 | Fogo contra **vento** | O fogo absorve o vento: se vencer a disputa, +25% de dano. |
-| Água contra **fogo** | Se vencer ou anular, apaga a queimadura de quem usou a água. |
+| Água contra **fogo** | Se vencer ou anular a disputa (ou se a Parede d'Água absorver fogo), apaga a queimadura de quem usou a água. |
 | Vento contra **Armadura de Raio** | Vantagem e ignora o bônus de resistência da armadura. |
 
 Futuro: estado **Molhado** (acertos de água) que deixa o alvo vulnerável a raio.

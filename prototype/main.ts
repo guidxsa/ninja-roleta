@@ -6,15 +6,21 @@ import {
   attackTechniques,
   availableActions,
   canClones,
+  canDojutsuExtra,
   canFearVariant,
   canFocus,
+  canGenius,
   restChakra,
   canUseTechnique,
   dojutsuActivationCost,
   elementalStateOf,
+  freeDojutsu,
   gatesHpCost,
   gatesToOpen,
+  geniusUses,
+  illusionDamage,
   incomingDamagePreview,
+  isIllusion,
   itemAction,
   playerGenjutsuHitChance,
   playerGenjutsuTurns,
@@ -48,6 +54,7 @@ import {
   createPlayer,
   equipTrainingWeights,
   fullRestore,
+  recoverAfterWin,
   knownTechniques,
   gainXp,
   gatesStage,
@@ -1094,9 +1101,9 @@ function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
     if (v.insaneTimer > 0) add('timer', S.ui.insaneTimer(v.insaneTimer), 'good', St.insaneTimer);
     if (v.lastStand) add('heartbreak', S.ui.lastStand, 'bad', St.lastStand);
     if (v.monster) add('claw', S.ui.monster, 'bad', St.monster);
-    // Golpe carregado: aviso para todos. Estrategista (Nara): vê a próxima ação.
+    // Golpe carregado: aviso para todos. Gênio (Nara): vê a próxima ação.
     if (v.charging) add('warning', S.ui.charging(techName(v.charging)), 'bad', St.charging);
-    else if (s.player.passive === 'strategist' && v.intent) {
+    else if (s.player.passive === 'genius' && v.intent) {
       const what = v.intent.kind === 'rest' ? S.ui.intentRest : techName(v.intent.id);
       add('intent', S.ui.intent(what), '', St.intent);
     }
@@ -1159,8 +1166,13 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     style = look.style;
     ico = techIcon(p, techId);
     tipAttr = playerTechTip(p, techId);
-    if (tech.mental) {
+    if (isIllusion(tech)) {
+      extra = S.ui.illusionHint(illusionDamage(s, techId, data), formatPct(playerGenjutsuHitChance(s, data, techId)), S.ui.cost(tech.chakraCost));
+      if (tech.mental) sub = S.ui.prisonTurns(playerGenjutsuTurns(s, techId, data));
+    } else if (tech.mental) {
       extra = `${S.ui.prisonTurns(playerGenjutsuTurns(s, techId, data))} · ${formatPct(playerGenjutsuHitChance(s, data, techId))} · ${S.ui.cost(tech.chakraCost)}`;
+    } else if (tech.barrier !== undefined) {
+      extra = `${S.ui.barrierHint(tech.barrier, Boolean(tech.reflectPct))} · ${S.ui.cost(tech.chakraCost)}`;
     } else if (tech.state) {
       extra = `${S.ui.armorHint} · ${S.ui.cost(tech.chakraCost)}`;
     } else {
@@ -1236,7 +1248,7 @@ function actionList(s: BattleState, tab: ActionTab): PlayerAction[] {
       .map((t) => techAction(t.id));
   }
   const list: PlayerAction[] = [];
-  if (p.dojutsu && !s.playerFx.dojutsuActive) list.push('dojutsu');
+  if (p.dojutsu && !freeDojutsu(p, data) && !s.playerFx.dojutsuActive) list.push('dojutsu');
   if (p.active === 'gates') list.push('gates');
   if (p.active === 'expansion' && s.playerFx.expansionTurns === 0) list.push('expansion');
   if (playerMedical(p, data)) list.push('medical');
@@ -1269,34 +1281,20 @@ function reactionButton(s: BattleState, pending: PendingReaction, choice: Reacti
         extra: S.ui.reactSubstitutionHint(pct(prev.chance), prev.usesLeft),
         tip: tip(S.ui.reactSubstitution, A.substitution),
       });
-    case 'guard': {
-      const id = reactionTechniqueId(choice)!;
-      const tech = playerTechnique(s.player, id, data);
-      const look = techLook(tech.type, tech.element);
-      return actionCell({
-        choice,
-        cls: `react ${look.cls}`,
-        style: look.style,
-        ico: icon('barrier'),
-        title: S.ui.reactBarrier(esc(techName(id))),
-        extra: `${S.ui.reactGuardHint(pct(prev.holdChance))} · ${S.ui.cost(tech.chakraCost)}`,
-        tip: tip(S.ui.reactBarrier(esc(techName(id))), A.guard),
-      });
-    }
     case 'clash': {
       const id = reactionTechniqueId(choice)!;
       const tech = playerTechnique(s.player, id, data);
       const look = techLook(tech.type, tech.element);
-      const title = tech.barrier !== undefined ? S.ui.reactBarrier(esc(techName(id))) : S.ui.reactClash(esc(techName(id)));
+      const title = S.ui.reactClash(esc(techName(id)));
       const [lose, cancel, win] = prev.odds;
       return actionCell({
         choice,
         cls: `react ${look.cls}`,
         style: look.style,
-        ico: tech.barrier !== undefined ? icon('barrier') : techIcon(s.player, id),
+        ico: techIcon(s.player, id),
         title,
         extra: `${S.ui.reactClashHint(pct(win), pct(cancel), pct(lose))} · ${S.ui.cost(tech.chakraCost)}`,
-        tip: tip(title, tech.barrier !== undefined ? A.guard : A.clash),
+        tip: tip(title, A.clash),
       });
     }
   }
@@ -1396,7 +1394,21 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       s.player.active === 'shadowClones' && !s.playerFx.clonesArmed && s.player.chakra >= data.balance.shadowClones.chakraCost
         ? toggle('clones', 'clones', `${S.ui.clones} · ${S.ui.cost(data.balance.shadowClones.chakraCost)}`, S.ui.clonesArmed, S.ui.clonesHint)
         : '',
-      sharinganActive(s) ? toggle('fear', 'fear', S.ui.fearVariant, `${S.ui.fearVariant} ✓`, S.ui.fearHint) : '',
+      s.player.dojutsu && freeDojutsu(s.player, data) && !s.playerFx.dojutsuActive && s.player.chakra >= (dojutsuActivationCost(s.player, data) ?? 0)
+        ? toggle(
+            'dojutsu',
+            s.player.dojutsu,
+            S.ui.dojutsuFree(S.dojutsu[s.player.dojutsu]!.name, dojutsuActivationCost(s.player, data) ?? 0),
+            `${S.dojutsu[s.player.dojutsu]!.name} ✓`,
+            S.ui.dojutsuFreeHint,
+          )
+        : '',
+      sharinganActive(s) || (extras.dojutsu && s.player.dojutsu === 'sharingan')
+        ? toggle('fear', 'fear', S.ui.fearVariant, `${S.ui.fearVariant} ✓`, S.ui.fearHint)
+        : '',
+      canGenius(s, data)
+        ? toggle('genius', 'intent', S.ui.genius, S.ui.geniusArmed, S.ui.geniusHint(geniusUses(s.player, data) - s.playerFx.geniusUsed))
+        : '',
     ].join('');
     actionsEl.innerHTML = `${tabsHtml}${free ? `<div class="free-row">${free}</div>` : ''}<div class="act-grid">${buttons}</div>`;
   };
@@ -1433,10 +1445,16 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     const action = await choose<PlayerAction>(actionsEl);
     renderActions(state, false);
     // Só valem as escolhas grátis que combinam com a ação (ex.: clones precisam de chakra para os dois).
+    const dojutsu = Boolean(extras.dojutsu) && canDojutsuExtra(state, action, data);
     const chosen: RoundExtras = {
       focus: Boolean(extras.focus) && canFocus(state),
       clones: Boolean(extras.clones) && canClones(state, action, data),
-      fear: Boolean(extras.fear) && canFearVariant(state, action, data),
+      dojutsu,
+      genius: Boolean(extras.genius) && canGenius(state, data),
+      // O Pavor exige o Sharingan ativo (ou ativado junto) e um genjutsu.
+      fear:
+        Boolean(extras.fear) &&
+        (canFearVariant(state, action, data) || (dojutsu && data.techniquesById[actionTechniqueId(action) ?? '']?.type === 'genjutsu')),
     };
     let next = playRound(state, action, rng, data, chosen);
     // O foco e o pavor valem só para a jogada; os clones armados ficam no estado da luta.
@@ -1461,7 +1479,12 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   const won = state.status === 'won';
   const msg = won ? S.ui.battleWon : setup.exam ? S.ui.examLost : S.ui.battleLost;
   const xpLine = won ? `<p class="xp-gain pop">${S.ui.xpGained(xpGain(state.player, villainsById[setup.villainId]!.xp, data))}</p>` : '';
-  overlay.innerHTML = `<div class="overlay ${won ? 'win' : 'lose'}"><div><h2>${msg}</h2>${xpLine}
+  // A vitória devolve parte do HP e do chakra (aplicado no fluxo da campanha).
+  const healed = won ? recoverAfterWin(state.player, data) : null;
+  const recoverLine = healed
+    ? `<p class="muted">${S.ui.recoveredAfterWin(healed.hp - state.player.hp, healed.chakra - state.player.chakra)}</p>`
+    : '';
+  overlay.innerHTML = `<div class="overlay ${won ? 'win' : 'lose'}"><div><h2>${msg}</h2>${xpLine}${recoverLine}
     <p class="muted">${S.ui.round(state.round)}</p>
     <button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div></div>`;
   mood(won ? 'good' : 'bad');
@@ -1616,29 +1639,46 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           floatNumber(ev.target === 'villain' ? vcard() : pcard, `−${ev.damage}`, 'dmg');
           log(S.log.clashHit(who(ev.target), ev.damage), ev.target === 'villain' ? 'mine' : 'theirs');
           break;
-        case 'guardBreak':
-          await stripRoulette(
-            dice,
-            `${S.roulettes.guardBreak} · ${who(ev.attacker)}`,
-            [
-              { label: S.sliceLabels.broken!, weight: ev.breakChance, color: '#ff8a5a' },
-              { label: S.sliceLabels.held!, weight: 1 - ev.breakChance, color: '#a87b4f' },
-            ],
-            ev.broken ? 0 : 1,
-            pace.strip(),
-          );
-          log(S.log.guardBreak(who(ev.attacker), ev.broken), (ev.attacker === 'player') === ev.broken ? 'good' : 'bad');
+        case 'shield':
+          if (ev.side === 'player') disp.pck -= ev.chakra;
+          else disp.vck -= ev.chakra;
+          floatNumber(ev.side === 'player' ? pcard : vcard(), `🛡 ${ev.points}`, 'heal');
+          log(S.log.shield(who(ev.side), techName(ev.techniqueId), ev.points), ev.side === 'player' ? 'good' : 'bad');
           break;
-        case 'barrierHold': {
-          const attacker = ev.side === 'player' ? 'villain' : 'player';
-          if (ev.reflected > 0) {
-            if (attacker === 'villain') disp.vhp -= ev.reflected;
-            else disp.php -= ev.reflected;
-            floatNumber(attacker === 'villain' ? vcard() : pcard, `−${ev.reflected}`, 'dmg');
-          }
-          log(S.log.barrierHold(techName(ev.techniqueId), ev.reflected), ev.side === 'player' ? 'good' : 'bad');
+        case 'shieldHit': {
+          // O dano do golpe já saiu do HP na animação: devolve a parte que o escudo segurou.
+          const blocked = Math.round(ev.absorbed / ev.elementMult);
+          if (ev.side === 'player') disp.php += blocked;
+          else disp.vhp += blocked;
+          log(S.log.shieldHit(who(ev.side), ev.absorbed, ev.left, ev.elementMult > 1), ev.side === 'player' ? 'good' : 'bad');
           break;
         }
+        case 'shieldBreak':
+          log(S.log.shieldBreak(who(ev.side)), ev.side === 'player' ? 'bad' : 'good');
+          break;
+        case 'shieldEnd':
+          log(S.log.shieldEnd(who(ev.side)), 'sys');
+          break;
+        case 'shieldReflect': {
+          const attacker = ev.side === 'player' ? 'villain' : 'player';
+          if (attacker === 'villain') disp.vhp -= ev.damage;
+          else disp.php -= ev.damage;
+          floatNumber(attacker === 'villain' ? vcard() : pcard, `−${ev.damage}`, 'dmg');
+          log(S.log.shieldReflect(ev.damage), ev.side === 'player' ? 'good' : 'bad');
+          break;
+        }
+        case 'possessed':
+          if (ev.side === 'villain') disp.vhp -= ev.damage;
+          else disp.php -= ev.damage;
+          floatNumber(ev.side === 'villain' ? vcard() : pcard, `−${ev.damage}`, 'dmg');
+          log(S.log.possessed(who(ev.side), techName(ev.techniqueId), ev.damage), ev.side === 'villain' ? 'good' : 'bad');
+          break;
+        case 'geniusArmed':
+          log(S.log.geniusArmed, 'good');
+          break;
+        case 'genius':
+          log(S.log.genius(S.sliceLabels[ev.kept] ?? S.sliceLabels[ev.kept === 'true' ? 'yes' : ev.kept === 'false' ? 'no' : ev.kept] ?? ev.kept), 'good');
+          break;
         case 'extinguish':
           log(S.log.extinguish(who(ev.side)), ev.side === 'player' ? 'good' : 'bad');
           break;
@@ -1734,7 +1774,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           if (ev.outcome === 'miss') {
             log(S.log.attackMiss(who(ev.side), tech), 'muted');
             floatNumber(mine ? vcard() : pcard, 'errou', 'miss');
-          } else if (ev.attackType === 'genjutsu' || data.techniquesById[ev.techniqueId]?.mental) {
+          } else if ((ev.attackType === 'genjutsu' || data.techniquesById[ev.techniqueId]?.mental) && ev.damage === 0) {
             log(S.log.genjutsuHit(who(ev.side), tech), mine ? 'mine' : 'theirs');
           } else {
             if (mine) disp.vhp -= ev.damage;
@@ -2101,6 +2141,7 @@ async function runCampaign(): Promise<void> {
         c.player = result.player;
         if (result.status === 'won') {
           wins++;
+          c.player = recoverAfterWin(c.player, data);
           await awardXp(stage.villains[j]!);
         } else {
           c.player = examRecover(c.player, data);
@@ -2134,7 +2175,7 @@ async function runCampaign(): Promise<void> {
         await endScreen(false, villainName(stage.villains[j]!));
         return;
       }
-      c.player = trainingWeightsWin(c.player, data);
+      c.player = trainingWeightsWin(recoverAfterWin(c.player, data), data);
       const finalFight = i === campaign.length - 1 && j === stage.villains.length - 1;
       if (finalFight) break;
       await awardXp(stage.villains[j]!);

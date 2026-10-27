@@ -3,8 +3,13 @@ import {
   attackPreview,
   availableActions,
   canClones,
+  canDojutsuExtra,
+  canGenius,
   canFocus,
   dealsDamage,
+  illusionDamage,
+  isBarrier,
+  isIllusion,
   incomingDamagePreview,
   itemAction,
   playerGenjutsuHitChance,
@@ -19,7 +24,7 @@ import {
 } from '../core/combat';
 import type { GameData } from '../core/gameData';
 import { upgradeOptions } from '../core/progression';
-import type { PlayerState } from '../core/player';
+import { leveledTechnique, type PlayerState } from '../core/player';
 
 /** Dano esperado do melhor ataque disponível agora (o valor da ação que uma reação gastaria). */
 function bestAttackValue(state: BattleState, data: GameData): number {
@@ -32,6 +37,22 @@ function bestAttackValue(state: BattleState, data: GameData): number {
     best = Math.max(best, prev.damage * prev.hitChance * prev.hits);
   }
   return best;
+}
+
+/** Dano que a próxima ação anunciada do vilão causaria (golpe carregado já ×2), se o jogador só Resistir. */
+function villainIntentDamage(state: BattleState, data: GameData): number {
+  const v = state.villain;
+  const id = v.charging ?? (v.intent?.kind === 'technique' ? v.intent.id : null);
+  const tech = id ? v.def.techniques.find((t) => t.id === id) : undefined;
+  if (!tech || tech.type === 'genjutsu' || tech.baseDamage <= 0) return 0;
+  const element = tech.type === 'taijutsu' ? null : tech.element === undefined ? v.def.element : tech.element;
+  const incoming: IncomingAttack = { attacker: 'villain', techniqueId: tech.id, type: tech.type, element, hits: tech.hits ?? 1, charged: Boolean(v.charging) };
+  return incomingDamagePreview(state, incoming, data);
+}
+
+/** Dano esperado de uma ilusão de dano (Uchiha): dano × chance do genjutsu. */
+function illusionValue(state: BattleState, id: string, data: GameData): number {
+  return illusionDamage(state, id, data) * playerGenjutsuHitChance(state, data, id);
 }
 
 /** Jogador automático simples, para a simulação de balanceamento. Determinístico dado o estado. */
@@ -47,6 +68,14 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
     return id ? data.techniquesById[id]! : null;
   };
 
+  // Barreira: escudo contra o golpe carregado ou quando o próximo golpe vale mais que o ataque do turno.
+  const barrier = fx.shield ? undefined : actions.find((a) => techOf(a) && isBarrier(techOf(a)!));
+  if (barrier) {
+    const points = leveledTechnique(p, actionTechniqueId(barrier)!, data).barrier ?? 0;
+    const incoming = villainIntentDamage(state, data);
+    if (v.charging && !fx.dodge && points >= incoming * 0.5) return barrier;
+    if (!v.charging && Math.min(points, incoming * 2.5) > bestAttackValue(state, data) * 1.5 && p.hp < p.maxHp * 0.8) return barrier;
+  }
   // Golpe carregado anunciado: Bomba de fumaça, ou postura defensiva (as reações ainda ficam livres).
   if (v.charging && !fx.dodge) {
     if (has(itemAction('smokeBomb'))) return itemAction('smokeBomb');
@@ -65,27 +94,41 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
   if (has(itemAction('soldierPill')) && p.chakra < p.maxChakra * 0.2) return itemAction('soldierPill');
   if (has(itemAction('explosiveTag')) && v.hp <= data.balance.items.explosiveTag.damage) return itemAction('explosiveTag');
 
-  // Efeitos mentais: valem quando o vilão ainda pode ser afetado e a chance compensa.
-  const canDebilitate = v.fx.debilitated === 0 && v.fx.asleep === 0 && v.fx.debilitateImmunity === 0;
+  // Efeitos mentais: valor em dano equivalente (o dano do vilão evitado, o que ele se fere e o bônus
+  // no próximo golpe contra quem perdeu a vez), comparado com o dano do melhor ataque deste turno.
+  const canDebilitate = v.fx.debilitated === 0 && v.fx.asleep === 0 && v.fx.possessed === 0 && v.fx.debilitateImmunity === 0;
+  const villainHit = Math.max(villainIntentDamage(state, data), 6);
+  const attackNow = bestAttackValue(state, data);
+  const st = data.balance.status;
   let bestMental: PlayerAction | null = null;
   let bestMentalScore = 0;
   for (const a of actions) {
     const t = techOf(a);
-    if (!t?.mental) continue;
-    const losesTurn = t.mental === 'prison' || t.mental === 'sleep';
+    if (!t?.mental || isIllusion(t)) continue;
+    const losesTurn = t.mental === 'prison' || t.mental === 'sleep' || t.mental === 'possession';
     if (losesTurn && !canDebilitate) continue;
     if (t.mental === 'fear' && v.fx.feared > 0) continue;
     if (t.mental === 'confusion' && v.fx.confused > 0) continue;
     if (t.mental === 'torment' && v.fx.tormented > 0) continue;
     const turns = playerGenjutsuTurns(state, t.id, data) + (t.mental === 'sleep' ? 1 : 0);
-    const weight = losesTurn ? 1 : 0.5;
-    const score = playerGenjutsuHitChance(state, data, t.id) * turns * weight;
+    const vulnerable = (data.balance.control.vulnerableDamageMult - 1) * attackNow;
+    const perTurn =
+      t.mental === 'possession'
+        ? 2 * villainHit + vulnerable
+        : losesTurn
+          ? villainHit + vulnerable
+          : t.mental === 'fear'
+            ? villainHit * (1 - st.fear.damageMult)
+            : t.mental === 'confusion'
+              ? villainHit * st.confusion.failChance * 1.25
+              : 1;
+    const score = playerGenjutsuHitChance(state, data, t.id) * turns * perTurn;
     if (score > bestMentalScore) {
       bestMental = a;
       bestMentalScore = score;
     }
   }
-  if (bestMental && (bestMentalScore >= 1.2 || p.hp < p.maxHp * 0.6)) return bestMental;
+  if (bestMental && bestMentalScore > attackNow) return bestMental;
 
   // Melhor ataque pelo dano esperado; o Selo dos Pontos Vitais vale mais se o vilão depende de chakra.
   const villainNeedsChakra = v.def.techniques.some((t) => t.chakraCost > 0);
@@ -93,9 +136,16 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
   let bestScore = 0;
   for (const a of actions) {
     const t = techOf(a);
-    if (!t || !dealsDamage(t)) continue;
-    const prev = attackPreview(state, t.id, data);
-    let score = prev.damage * prev.hitChance * prev.hits;
+    if (!t || (!dealsDamage(t) && !isIllusion(t))) continue;
+    let score: number;
+    if (isIllusion(t)) {
+      score = illusionValue(state, t.id, data);
+      // Ilusão que também controla (Tsukuyomi) vale mais se o vilão ainda pode perder a vez.
+      if (t.mental && canDebilitate) score *= 1.3;
+    } else {
+      const prev = attackPreview(state, t.id, data);
+      score = prev.damage * prev.hitChance * prev.hits;
+    }
     if (t.chakraDrain && villainNeedsChakra && v.chakra > 0) score *= 1.5;
     // Guarda um pouco de chakra: técnicas caras só se valerem a mais.
     score -= t.chakraCost * 0.5;
@@ -124,8 +174,6 @@ export function chooseReaction(state: BattleState, incoming: IncomingAttack, opt
     if (prev.kind === 'substitution') {
       if (!heavy) continue;
       score = prev.chance * incomingDamage;
-    } else if (prev.kind === 'guard') {
-      score = prev.holdChance * incomingDamage - actionValue;
     } else if (prev.kind === 'clash') {
       const [lose, cancel, win] = prev.odds;
       const id = reactionTechniqueId(choice)!;
@@ -143,14 +191,21 @@ export function chooseReaction(state: BattleState, incoming: IncomingAttack, opt
   return best;
 }
 
-/** Escolhas grátis: foco no primeiro ataque com dano; clones quando sobra chakra. */
+/** Escolhas grátis: foco no primeiro ataque com dano; clones quando sobra chakra; Sharingan cedo. */
 export function chooseExtras(state: BattleState, action: PlayerAction, data: GameData): RoundExtras {
   const id = actionTechniqueId(action);
   const tech = id ? data.techniquesById[id] : undefined;
   const attack = tech !== undefined && dealsDamage(tech);
+  const p = state.player;
+  // Gênio: guarda para golpes e controles que podem errar.
+  let geniusHit = 1;
+  if (tech && (tech.mental || isIllusion(tech))) geniusHit = playerGenjutsuHitChance(state, data, tech.id);
+  else if (attack) geniusHit = attackPreview(state, tech.id, data).hitChance;
   return {
+    genius: canGenius(state, data) && geniusHit < 0.9,
     focus: attack && canFocus(state),
-    clones: attack && canClones(state, action, data) && state.player.chakra >= state.player.maxChakra * 0.5,
+    clones: attack && canClones(state, action, data) && p.chakra >= p.maxChakra * 0.5,
+    dojutsu: canDojutsuExtra(state, action, data) && p.chakra >= (p.dojutsu ? data.balance.dojutsu[p.dojutsu].activationCost : 0) + 6,
   };
 }
 

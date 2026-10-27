@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   availableActions,
+  canDojutsuExtra,
+  canGenius,
   effectiveOffense,
   effectiveSpeed,
+  geniusUses,
+  illusionDamage,
   playerGenjutsuHitChance,
   playRound,
   sharinganStage,
@@ -189,8 +193,12 @@ describe('ficha de técnica', () => {
     const c = createPlayer({ lineageId: null, affinity: 'earth', jinchuuriki: false }, gameData);
     expect(taken(c)).toBe(13);
     expect(taken({ ...c, offense: { ...c.offense, ninjutsu: 0 } })).toBe(13);
-    // Corpo de ferro (prodígio): Resistir usa 100% da física: 20 − 14 = 6
-    expect(taken(createPlayer(prodigy, gameData))).toBe(6);
+    // Corpo de ferro (prodígio) não vale contra ninjutsu: 20 − 11 × 0,7 = 12
+    expect(taken(createPlayer(prodigy, gameData))).toBe(12);
+    // Contra taijutsu, Resistir usa 100% da física: 20 − 11 = 9
+    const tai = testVillain({ techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 20, chakraCost: 0, weight: 1 }] });
+    const s = playRound(withInitiative(startBattle(createPlayer(prodigy, gameData), tai), 'villain'), 'rest', seq(0.5), gameData);
+    expect(ofType(s.log, 'attack')[0]!.damage).toBe(9);
   });
 });
 
@@ -258,36 +266,54 @@ describe('efeitos de genjutsu', () => {
     expect(s2.villain.fx.asleep).toBe(0);
   });
 
-  it('Pavor: o alvo causa 25% menos dano', () => {
+  it('Pavor: o alvo causa 35% menos dano', () => {
     const s0 = withInitiative(startBattle(createPlayer(common, gameData), testVillain({ techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 20, chakraCost: 0, weight: 1 }] })), 'villain');
     const feared = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, feared: 2 } } };
-    // (20 − 7) × 0,75 = 9 (sem pavor: 13)
-    expect(ofType(playRound(feared, 'rest', seq(0.5), gameData).log, 'attack')[0]!.damage).toBe(9);
+    // (20 − 7) × 0,65 = 8 (sem pavor: 13)
+    expect(ofType(playRound(feared, 'rest', seq(0.5), gameData).log, 'attack')[0]!.damage).toBe(8);
     expect(ofType(playRound(s0, 'rest', seq(0.5), gameData).log, 'attack')[0]!.damage).toBe(13);
   });
 
-  it('Confusão: 30% de falhar; metade das falhas acerta o próprio lutador', () => {
+  it('Confusão: 40% de falhar; metade das falhas acerta o próprio lutador', () => {
     const s0 = withInitiative(startBattle(createPlayer(common, gameData), testVillain()), 'villain');
     const confused = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, confused: 2 } } };
-    // técnica, falha (0.0 < 30%), acerta a si mesmo (0.0 < 50%): 10 − 10 × 0,4 (a própria resistência passiva) = 6
+    // técnica, falha (0.0 < 40%), acerta a si mesmo (0.0 < 50%): 10 − 10 × 0,4 (a própria resistência passiva) = 6
     const s1 = playRound(confused, 'rest', seq(0.5, 0.0, 0.0), gameData);
     expect(ofType(s1.log, 'confusionFail')).toEqual([{ type: 'confusionFail', side: 'villain', selfHit: 6 }]);
     expect(s1.villain.hp).toBe(44);
     expect(s1.player.hp).toBe(100);
   });
 
-  it('Tormento: o alvo perde 4 de chakra no início de cada rodada', () => {
+  it('Tormento: o alvo perde 5 de chakra no início de cada rodada', () => {
     const s0 = withInitiative(startBattle(createPlayer(common, gameData), testVillain()));
     const tormented = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, tormented: 2 } } };
     const s1 = playRound(tormented, 'rest', seq(0.5), gameData);
-    expect(ofType(s1.log, 'torment')).toEqual([{ type: 'torment', side: 'villain', chakra: 4 }]);
-    expect(s1.villain.chakra).toBe(16);
+    expect(ofType(s1.log, 'torment')).toEqual([{ type: 'torment', side: 'villain', chakra: 5 }]);
+    expect(s1.villain.chakra).toBe(15);
     expect(s1.villain.fx.tormented).toBe(1);
   });
 
-  it('Transferência de Mente (Yamanaka) aplica Confusão', () => {
-    const s1 = playRound(withInitiative(startBattle(createPlayer(clan('yamanaka'), gameData), testVillain())), 'tech:mindTransfer', seq(0.5, 0.99), gameData);
-    expect(ofType(s1.log, 'mental')[0]).toMatchObject({ target: 'villain', effect: 'confusion' });
+  it('Transferência de Mente (Yamanaka): possessão; o vilão perde a vez golpeando a si mesmo', () => {
+    const s1 = playRound(withInitiative(startBattle(createPlayer(clan('yamanaka'), gameData), testVillain())), 'tech:mindTransfer', seq(0.9), gameData);
+    expect(ofType(s1.log, 'debilitate')[0]).toMatchObject({ target: 'villain', kind: 'possession' });
+    expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'possession' }]);
+    // Soco do próprio vilão: 10 + 0 − 10 × 0,4 (a própria resistência física passiva) = 6
+    expect(ofType(s1.log, 'possessed')).toEqual([{ type: 'possessed', side: 'villain', techniqueId: 'punch', damage: 6 }]);
+    expect(s1.villain.hp).toBe(44);
+    expect(s1.player.hp).toBe(s1.player.maxHp);
+  });
+
+  it('Ilusão da Dor (Uchiha): fere com genjutsu contra a resistência mental, sem reação além de Resistir', () => {
+    const s0 = withInitiative(startBattle(createPlayer(uchiha, gameData), testVillain({ hp: 200 })));
+    expect(illusionDamage(s0, 'painIllusion', gameData)).toBe(20); // 15 + 12 − 10 × 0,7
+    const s1 = playRound(s0, 'tech:painIllusion', seq(0.9), gameData);
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', techniqueId: 'painIllusion', damage: 20, outcome: 'hit' });
+    expect(s1.villain.hp).toBe(180);
+    // Com o Sharingan: +3 de genjutsu e +3 de poder.
+    expect(illusionDamage(active(s0), 'painIllusion', gameData)).toBe(26);
+    // Contra imune a genjutsu (Gaara), não pega.
+    const gaara = withInitiative(startBattle(createPlayer(uchiha, gameData), testVillain({ passive: villainsById.gaara!.passive })));
+    expect(ofType(playRound(gaara, 'tech:painIllusion', seq(0.9), gameData).log, 'genjutsuImmune')).toHaveLength(1);
   });
 
   it('Imitação de Sombra (Nara): ninjutsu que aprisiona e funciona em quem é imune a genjutsu', () => {
@@ -309,18 +335,20 @@ describe('Sharingan (Uchiha)', () => {
     expect(sharinganStage(createPlayer(common, gameData), gameData)).toBe(0);
   });
 
-  it('ativar gasta o turno e chakra; ativo aumenta os status e custa chakra por rodada', () => {
+  it('ativar não gasta o turno (escolha grátis) e custa chakra; ativo aumenta os status e custa por rodada', () => {
     const s0 = startBattle(createPlayer(uchiha, gameData), testVillain(), { playerStartsFirst: true });
-    expect(availableActions(s0, gameData)).toContain('dojutsu');
-    const s1 = playRound(s0, 'dojutsu', seq(0.5), gameData);
+    expect(availableActions(s0, gameData)).not.toContain('dojutsu');
+    expect(canDojutsuExtra(s0, 'stance', gameData)).toBe(true);
+    const s1 = playRound(s0, 'stance', seq(0.5), gameData, { dojutsu: true });
     expect(ofType(s1.log, 'dojutsu')).toEqual([{ type: 'dojutsu', dojutsu: 'sharingan', stage: 1, chakra: 4 }]);
+    expect(ofType(s1.log, 'stance')).toHaveLength(1);
     expect(s1.playerFx.dojutsuActive).toBe(true);
     expect(s1.playerFx.dojutsuTurns).toBe(5); // a contagem começa na rodada seguinte
     expect(s1.player.chakra).toBe(26 - 4 - 1); // ativação + manutenção
-    expect(effectiveOffense(s1, 'taijutsu', gameData)).toBe(7 + 3);
-    expect(availableActions(s1, gameData)).not.toContain('dojutsu');
-    // O ataque maior não dá defesa: 10 − 8 × 0,7 (resistência física do Uchiha) = 4.
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'villain', damage: 4 });
+    expect(effectiveOffense(s1, 'taijutsu', gameData)).toBe(12 + 3);
+    expect(canDojutsuExtra(s1, 'stance', gameData)).toBe(false);
+    // O ataque maior não dá defesa: 10 − 10 (postura, resistência física do Uchiha) = 0 → mínimo 1.
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'villain', damage: 1 });
   });
 
   it('sem chakra para a manutenção, desliga sozinho', () => {
@@ -332,19 +360,20 @@ describe('Sharingan (Uchiha)', () => {
 
   it('desliga sozinho depois de 5 rodadas e pode ser ativado de novo', () => {
     let s = withInitiative(startBattle(createPlayer(uchiha, gameData), testVillain({ hp: 500 })));
-    s = playRound(s, 'dojutsu', seq(0.5, 0.01), gameData);
+    s = playRound(s, 'rest', seq(0.5, 0.01), gameData, { dojutsu: true });
     for (let i = 0; i < 4; i++) s = playRound(s, 'rest', seq(0.5, 0.01), gameData);
     expect(s.playerFx.dojutsuActive).toBe(true);
     s = playRound(s, 'rest', seq(0.5, 0.01), gameData);
     expect(ofType(s.log, 'dojutsuEnd')).toEqual([{ type: 'dojutsuEnd', dojutsu: 'sharingan', reason: 'time' }]);
-    expect(availableActions(s, gameData)).toContain('dojutsu');
+    expect(canDojutsuExtra(s, 'rest', gameData)).toBe(true);
   });
 
   it('ativo, lê o movimento do vilão e reduz o dano à metade', () => {
     const s0 = active(startBattle(createPlayer(uchiha, gameData), testVillain()));
     // vilão primeiro (0.9), técnica, acerto, leitura (0.0)
     const s1 = playRound(s0, 'rest', seq(0.9, 0.5, 0.5, 0.0, 0.5), gameData);
-    expect(ofType(s1.log, 'movementReading')).toEqual([{ type: 'movementReading', damageBefore: 4, damage: 2 }]);
+    // 10 − 10 × 0,7 = 3 → metade (mínimo 1)
+    expect(ofType(s1.log, 'movementReading')).toEqual([{ type: 'movementReading', damageBefore: 3, damage: 1 }]);
     const s2 = playRound(startBattle(createPlayer(uchiha, gameData), testVillain()), 'rest', seq(0.9, 0.5, 0.5, 0.0), gameData);
     expect(ofType(s2.log, 'movementReading')).toHaveLength(0);
   });
@@ -368,7 +397,7 @@ describe('Sharingan (Uchiha)', () => {
         .hitChance;
     // A defesa é a resistência mental resistindo (70%).
     expect(chance(common)).toBeCloseTo(0.86); // 0.6 + (20 − 7) × 0.02
-    expect(chance(uchiha)).toBeCloseTo(0.712); // 0.6 + (20 − (8,4 + 6)) × 0.02
+    expect(chance(uchiha)).toBeCloseTo(0.74); // 0.6 + (20 − (7 + 6)) × 0.02
     expect(chance(clan('yamanaka'))).toBeCloseTo(0.704); // 0.6 + (20 − 9,8) × 0.02 − 0.1
   });
 });
@@ -402,32 +431,28 @@ describe('Byakugan e Rotação (Hyuuga)', () => {
     expect(s1.player.chakra).toBe(27 - 3 - 1);
   });
 
-  it('Rotação: barreira de reação; se aguentar, bloqueia o golpe e devolve metade do dano', () => {
+  it('Rotação: barreira neutra; o escudo absorve e devolve metade do dano bloqueado', () => {
     const p = toLevel(createPlayer(hyuuga, gameData), 4);
     const v = testVillain({ hp: 200, techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 30, chakraCost: 0, weight: 1 }] });
-    const s0 = withInitiative(startBattle(p, v), 'villain');
-    // Não é ação de turno: só aparece como reação.
-    expect(availableActions(s0, gameData)).not.toContain('tech:rotation');
-    // técnica do vilão (0.5); quebra de guarda: 30² contra (26 + 6 × 0,5)² = 52% → 0.9 não quebra
-    const s1 = playRound(s0, 'rest', seq(0.5, 0.9), gameData, {}, () => 'barrier:rotation');
-    expect(ofType(s1.log, 'guardBreak')[0]).toMatchObject({ broken: false, barrierId: 'rotation' });
-    // (30 − 11 × 0,7) = 22 bloqueados; devolve 11
-    expect(ofType(s1.log, 'barrierHold')).toEqual([{ type: 'barrierHold', side: 'player', techniqueId: 'rotation', reflected: 11 }]);
+    const s0 = withInitiative(startBattle(p, v));
+    expect(availableActions(s0, gameData)).toContain('tech:rotation');
+    const s1 = playRound(s0, 'tech:rotation', seq(0.5), gameData);
+    // 30 − 11 × 0,7 = 22 no escudo de 26; devolve 11
+    expect(ofType(s1.log, 'shieldHit')).toEqual([{ type: 'shieldHit', side: 'player', absorbed: 22, left: 4, elementMult: 1 }]);
+    expect(ofType(s1.log, 'shieldReflect')).toEqual([{ type: 'shieldReflect', side: 'player', damage: 11 }]);
     expect(s1.player.hp).toBe(p.maxHp);
     expect(s1.villain.hp).toBe(189);
-    // A reação gastou a ação do jogador nesta rodada (o vilão agiu antes).
-    expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'player', reason: 'reacted' }]);
     expect(s1.player.chakra).toBe(p.chakra - 5);
   });
 });
 
 describe('passivas e ativas de clã', () => {
-  it('Determinação (comum): +10% de XP', () => {
-    expect(gainXp(createPlayer(common, gameData), 100, gameData).xp).toBe(110);
+  it('Determinação (comum): +25% de XP', () => {
+    expect(gainXp(createPlayer(common, gameData), 100, gameData).xp).toBe(125);
     expect(gainXp(createPlayer(uchiha, gameData), 100, gameData).xp).toBe(100);
   });
 
-  it('Expansão (Akimichi): gasta o turno; depois, taijutsu ×1,5 e speed −3; Corpo pesado ×1,2 com HP cheio', () => {
+  it('Expansão (Akimichi): gasta o turno; depois, taijutsu ×1,5 e speed −3; Corpo pesado ×1,1 com HP cheio', () => {
     const p = createPlayer(clan('akimichi'), gameData);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
     const s1 = playRound(s0, 'expansion', seq(0.5), gameData);
@@ -435,20 +460,20 @@ describe('passivas e ativas de clã', () => {
     expect(effectiveSpeed(s1, gameData)).toBe(6);
     expect(effectiveSpeed({ ...s1, round: s1.round + 1 }, gameData)).toBe(3);
     const s2 = playRound({ ...s1, player: { ...s1.player, hp: s1.player.maxHp } }, 'tech:basicTaijutsu', seq(0.5), gameData);
-    // (8 + 15 − 7) × 1,5 × 1,2 = 28
-    expect(ofType(ofRound(s1, s2), 'attack')[0]).toMatchObject({ side: 'player', damage: 28 });
+    // (8 + 15 − 7) × 1,5 × 1,1 = 26
+    expect(ofType(ofRound(s1, s2), 'attack')[0]).toMatchObject({ side: 'player', damage: 26 });
   });
 
-  it('Clones das Sombras (Uzumaki): grátis, o próximo ataque vira 3 golpes de 40%', () => {
+  it('Clones das Sombras (Uzumaki): grátis, o próximo ataque vira 3 golpes de 35%', () => {
     const s0 = withInitiative(startBattle(createPlayer(clan('uzumaki', 'wind'), gameData), testVillain({ hp: 200 })));
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { clones: true });
     const hits = ofType(s1.log, 'attack').filter((a) => a.side === 'player');
-    // (8 + 10 − 7) × 0,4 = 4, três vezes
-    expect(hits.map((a) => a.damage)).toEqual([4, 4, 4]);
+    // (8 + 10 − 7) × 0,35 = 3, três vezes
+    expect(hits.map((a) => a.damage)).toEqual([3, 3, 3]);
     expect(s1.player.chakra).toBe(35 - 6);
   });
 
-  it('Dupla (Inuzuka): depois de um acerto, 30% de o cão atacar também', () => {
+  it('Dupla (Inuzuka): depois de um acerto, 25% de o cão atacar também', () => {
     const s0 = withInitiative(startBattle(createPlayer(clan('inuzuka'), gameData), testVillain({ hp: 200 })));
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5, 0.0, 0.5), gameData);
     const hits = ofType(s1.log, 'attack').filter((a) => a.side === 'player');
@@ -459,9 +484,40 @@ describe('passivas e ativas de clã', () => {
     ]);
   });
 
-  it('Estrategista (Nara): a próxima ação do vilão já fica sorteada antes da escolha', () => {
+  it('Gênio (Nara): a próxima ação do vilão já fica sorteada antes da escolha', () => {
     const s0 = startBattle(createPlayer(clan('nara'), gameData), testVillain(), {}, gameData, seq(0.5));
     expect(s0.villain.intent).toEqual({ kind: 'technique', id: 'punch' });
+  });
+
+  it('Gênio (Nara): 2 usos por luta, +1 nos níveis 4 e 7; só o Nara', () => {
+    const nara = createPlayer(clan('nara'), gameData);
+    expect([1, 4, 7].map((level) => geniusUses({ ...nara, level }, gameData))).toEqual([2, 3, 4]);
+    expect(geniusUses(createPlayer(common, gameData), gameData)).toBe(0);
+  });
+
+  it('Gênio (Nara): armado de graça, a próxima roleta gira duas vezes e fica com a melhor', () => {
+    const s0 = withInitiative(startBattle(createPlayer(clan('nara'), gameData), testVillain({ hp: 200 })));
+    expect(canGenius(s0, gameData)).toBe(true);
+    // 1º giro erra (0.0), 2º critica (0.99): fica o crítico.
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.0, 0.99, 0.5), gameData, { genius: true });
+    expect(ofType(s1.log, 'genius')).toEqual([{ type: 'genius', results: ['miss', 'crit'], kept: 'crit' }]);
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'crit' });
+    expect(s1.playerFx).toMatchObject({ geniusUsed: 1, geniusArmed: false });
+    // Sem o Gênio, o mesmo 0.0 erra.
+    const plain = playRound(s0, 'tech:basicTaijutsu', seq(0.0, 0.99, 0.5), gameData);
+    expect(ofType(plain.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'miss' });
+    // Gastos os 2 usos, não arma mais.
+    const s2 = playRound(s1, 'rest', seq(0.5), gameData, { genius: true });
+    expect(canGenius(s2, gameData)).toBe(false);
+    expect(() => playRound(s2, 'rest', seq(0.5), gameData, { genius: true })).toThrow();
+  });
+
+  it('Gênio vale na Substituição do jogador', () => {
+    const s0 = withInitiative(startBattle(createPlayer(clan('nara'), gameData), testVillain()), 'villain');
+    // vilão: técnica; acerto do vilão não rola (esquivou); substituição: 0.99 falha, 0.0 acerta.
+    const s1 = playRound(s0, 'rest', seq(0.5, 0.99, 0.0, 0.5), gameData, { genius: true }, () => 'substitution');
+    expect(ofType(s1.log, 'genius')).toEqual([{ type: 'genius', results: ['false', 'true'], kept: 'true' }]);
+    expect(ofType(s1.log, 'substitutionRoll')[0]).toMatchObject({ success: true });
   });
 });
 

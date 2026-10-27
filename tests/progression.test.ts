@@ -9,6 +9,7 @@ import {
   equipTrainingWeights,
   gainXp,
   learnTechnique,
+  recoverAfterWin,
   removeTrainingWeights,
   trainingWeightsWin,
   withDifficulty,
@@ -103,7 +104,7 @@ describe('estágios de status', () => {
 
   it('prodígio do taijutsu: ninjutsu e genjutsu continuam zerados', () => {
     const up = applyStatStages(createPlayer(prodigy, gameData), 1, gameData);
-    expect(up.offense).toEqual({ taijutsu: 23, ninjutsu: 0, genjutsu: 0 });
+    expect(up.offense).toEqual({ taijutsu: 18, ninjutsu: 0, genjutsu: 0 });
   });
 });
 
@@ -117,9 +118,9 @@ describe('eventos pré-vilão', () => {
   it('treino: XP garantido e +3 no status em destaque (speed +2)', () => {
     const p = createPlayer(common, gameData);
     const step = applyTraining(p, 'taijutsu', gameData);
-    // +60 de XP com a Determinação do comum: 66
-    expect(step.effect).toEqual({ kind: 'training', stat: 'taijutsu', amount: 3, xp: 66 });
-    expect([step.player.offense.taijutsu, step.player.xp]).toEqual([13, 66]);
+    // +60 de XP com a Determinação do comum: 75
+    expect(step.effect).toEqual({ kind: 'training', stat: 'taijutsu', amount: 3, xp: 75 });
+    expect([step.player.offense.taijutsu, step.player.xp]).toEqual([13, 75]);
     expect(applyTraining(p, 'speed', gameData).player.speed).toBe(12);
     expect(applyTraining(p, 'mental', gameData).player.resistance.mental).toBe(13);
   });
@@ -196,9 +197,9 @@ describe('itens', () => {
     const step = applyItem(p, 'techniqueScroll', seq(0.1), gameData);
     expect(step.effect).toEqual({ kind: 'upgradeGranted', n: 1 });
     expect(step.player.pendingUpgrades).toBe(1);
-    // Nível 1: teto no nível I, nada sobe. O upgrade vira XP (30, com a Determinação: 33).
+    // Nível 1: teto no nível I, nada sobe. O upgrade vira XP (30, com a Determinação: 37).
     expect(upgradeOptions(step.player, gameData)).toEqual([]);
-    expect(forfeitUpgrade(step.player, gameData)).toMatchObject({ player: { pendingUpgrades: 0, xp: 33 }, effect: { kind: 'upgradeForfeit', xp: 33 } });
+    expect(forfeitUpgrade(step.player, gameData)).toMatchObject({ player: { pendingUpgrades: 0, xp: 37 }, effect: { kind: 'upgradeForfeit', xp: 37 } });
     // Nível 4: o Punho de Chakra sobe genericamente (+3 de dano; continua grátis).
     const lv4 = { ...step.player, level: 4 };
     expect(upgradeOptions(lv4, gameData)).toEqual(['basicTaijutsu', 'fireSpark']);
@@ -215,8 +216,8 @@ describe('itens', () => {
     expect(mental.player.resistance).toEqual({ physical: 10, mental: 12 });
     expect(mental.effect).toEqual({ kind: 'resistance', physical: 0, mental: 2 });
     expect(applyItem(p, 'speedItem', seq(0.5), gameData).player.speed).toBe(11);
-    // +100 de XP, com a Determinação do comum: 110
-    expect(applyItem(p, 'xpScroll', seq(0.5), gameData)).toMatchObject({ player: { xp: 110 }, effect: { kind: 'xp', amount: 110 } });
+    // +100 de XP, com a Determinação do comum: 125
+    expect(applyItem(p, 'xpScroll', seq(0.5), gameData)).toMatchObject({ player: { xp: 125 }, effect: { kind: 'xp', amount: 125 } });
   });
 
   it('amuletos de resistência e velocidade ficam guardados na bolsa e acumulam', () => {
@@ -536,11 +537,25 @@ describe('nível e XP', () => {
   });
 
   it('subir de nível aumenta HP e chakra máximos e restaura', () => {
-    const p = { ...createPlayer(common, gameData), xp: 100, hp: 50, chakra: 1 };
+    const p = { ...createPlayer(uchiha, gameData), xp: 100, hp: 50, chakra: 1 };
     const up = applyLevelUp(p, gameData);
-    expect([up.maxHp, up.hp]).toEqual([108, 108]);
-    expect([up.maxChakra, up.chakra]).toEqual([31, 31]);
+    expect([up.maxHp, up.hp]).toEqual([p.maxHp + 8, p.maxHp + 8]);
+    expect([up.maxChakra, up.chakra]).toEqual([p.maxChakra + 1, p.maxChakra + 1]);
     expect(up.offense).toEqual(p.offense);
+  });
+
+  it('Determinação (comum): cada nível dá +1 no maior status de ataque (empate: taijutsu)', () => {
+    const p = { ...createPlayer(common, gameData), xp: 100 };
+    const up = applyLevelUp(p, gameData);
+    expect(up.offense).toEqual({ taijutsu: 11, ninjutsu: 10, genjutsu: 10 });
+    const nin = applyLevelUp({ ...p, offense: { taijutsu: 10, ninjutsu: 13, genjutsu: 12 } }, gameData);
+    expect(nin.offense).toEqual({ taijutsu: 10, ninjutsu: 14, genjutsu: 12 });
+  });
+
+  it('vitória recupera 25% do HP e do chakra máximos, sem passar do máximo', () => {
+    const p = { ...createPlayer(common, gameData), hp: 10, chakra: 2 };
+    expect(recoverAfterWin(p, gameData)).toMatchObject({ hp: 35, chakra: 9 });
+    expect(recoverAfterWin({ ...p, hp: 95, chakra: 29 }, gameData)).toMatchObject({ hp: 100, chakra: 30 });
   });
 
   it('marcos 4, 7 e 10 dão 1 upgrade à escolha', () => {
@@ -673,9 +688,9 @@ describe('recompensas por raridade', () => {
     expect(applyReward(p, 'xp', 1, seq(0.5), gameData).player.xp).toBe(60);
     expect(applyReward(p, 'xp', 2, seq(0.5), gameData).player.xp).toBe(120);
     expect(applyReward(p, 'xp', 3, seq(0.5), gameData).player.xp).toBe(200);
-    // Rara: 4 pontos, um a um entre física e mental (0.5 → mental). Uchiha: mental 12 → 16.
+    // Rara: 4 pontos, um a um entre física e mental (0.5 → mental). Uchiha: mental 10 → 14.
     expect(applyReward(p, 'resistance', 2, seq(0.5), gameData)).toMatchObject({
-      player: { resistance: { physical: 8, mental: 16 } },
+      player: { resistance: { physical: 10, mental: 14 } },
       effect: { kind: 'resistance', physical: 0, mental: 4 },
     });
     expect(applyReward(p, 'resistance', 1, seq(0.0, 0.5), gameData).effect).toEqual({ kind: 'resistance', physical: 1, mental: 1 });

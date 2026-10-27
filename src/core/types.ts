@@ -19,7 +19,6 @@ export type Resistances = Record<ResistanceKind, number>;
 export interface ReactionWeights {
   resist: number;
   clash?: number;
-  barrier?: number;
   substitution?: number;
 }
 
@@ -29,7 +28,7 @@ export type ElementalStateId = 'lightningArmor';
 // Passivas são comportamento (código); os parâmetros delas ficam em `balance.passives` e `balance.gates`.
 export type PassiveKind =
   | 'determination'
-  | 'strategist'
+  | 'genius'
   | 'heavyBody'
   | 'mindReading'
   | 'hive'
@@ -75,7 +74,7 @@ export interface LineageDef {
 export type TechniqueElement = Element | null | 'affinity';
 
 /** Efeitos que tiram a vez, atrapalham ou drenam (efeitos.md). */
-export type MentalEffect = 'prison' | 'sleep' | 'fear' | 'confusion' | 'torment';
+export type MentalEffect = 'prison' | 'sleep' | 'fear' | 'confusion' | 'torment' | 'possession';
 /** Efeitos físicos aplicáveis por chance no acerto. */
 export type HitEffect = 'stun' | 'burn';
 
@@ -105,7 +104,10 @@ export interface TechniqueDef {
   /** Age antes na rodada, mesmo sem a iniciativa. */
   priority?: boolean;
   blade?: BladeKind;
-  /** Genjutsu (ou a Imitação de Sombra): efeito mental aplicado ao acertar. */
+  /**
+   * Genjutsu (ou a Imitação de Sombra): efeito mental aplicado ao acertar. Genjutsu com `baseDamage` > 0
+   * é uma ilusão de dano (Uchiha): base + genjutsu − resistência mental usada pelo alvo.
+   */
   mental?: MentalEffect;
   /** Turnos base do efeito mental. */
   mentalTurns?: number;
@@ -115,13 +117,13 @@ export interface TechniqueDef {
   mentalStat?: AttackType;
   /** Só ninjutsu médico: fração do HP máximo curada. */
   healPct?: number;
-  /** Barreira (só reação): poder de barreira na disputa e na quebra de guarda. */
+  /** Barreira (ação de turno): pontos do escudo que absorve dano antes do HP. */
   barrier?: number;
-  /** Barreira que, ao aguentar, devolve esta fração do dano que o golpe causaria (Rotação). */
+  /** Barreira que devolve esta fração do dano bloqueado a quem bateu (Rotação). */
   reflectPct?: number;
-  /** Barreira de fogo: chance de queimar quem tenta quebrá-la com taijutsu. */
+  /** Barreira de fogo: chance de queimar quem bate nela com taijutsu. */
   burnOnBreakAttempt?: number;
-  /** Barreira de vento: poder extra contra técnicas de vários golpes. */
+  /** Barreira de vento: técnicas de vários golpes causam esta fração a menos no escudo. */
   multiHitBonus?: number;
   /** Poder extra na disputa (Rasengan). */
   clashBonus?: number;
@@ -153,7 +155,7 @@ export interface VillainTechnique {
   /** Peso na escolha da técnica pelo vilão (entre as que ele pode pagar). Barreiras: peso na reação. */
   weight: number;
   hits?: number;
-  /** Barreira (só reação): poder de barreira. */
+  /** Barreira (ação): pontos do escudo. Entra no sorteio só sem escudo ativo. */
   barrier?: number;
   /** Omitido = elemento do vilão. Taijutsu é sempre neutro. */
   element?: Element | null;
@@ -187,6 +189,8 @@ export interface VillainDef {
   reactions?: ReactionWeights;
   /** Estado elemental a luta toda (Armadura de Areia do Gaara). */
   elementalState?: Element;
+  /** Barreira (id de uma técnica dele) já erguida no início da luta, sem custo. */
+  startingShield?: string;
   /** Diferencial de crítico do vilão (somado aos 5% base). */
   critBonus: number;
   /** Experiência que o jogador ganha ao derrotar o vilão. */
