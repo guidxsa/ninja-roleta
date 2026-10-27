@@ -360,7 +360,7 @@ export const ptBR = {
     newRun: 'Nova run',
     history: 'Histórico',
     back: 'Voltar',
-    instant: 'Instantâneo',
+    instant: (on: boolean) => (on ? 'Instantâneo: ligado' : 'Instantâneo: desligado'),
     themeDay: 'Modo dia',
     themeNight: 'Modo noite',
     sfx: (on: boolean) => (on ? 'Efeitos sonoros: ligados' : 'Efeitos sonoros: desligados'),

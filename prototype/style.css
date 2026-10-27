@@ -165,8 +165,9 @@ small, .small { font-size: 12px; }
   border-bottom: 3px solid var(--accent);
   box-shadow: 0 2px 0 var(--shadow);
 }
-.brand { font-size: 17px; display: flex; align-items: center; gap: 8px; min-width: 0; }
-.brand b { font-family: var(--font-display); font-weight: 400; letter-spacing: .03em; white-space: nowrap; }
+.brand { font-size: 17px; display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
+.brand b { font-family: var(--font-display); font-weight: 400; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand small { white-space: nowrap; }
 .brand small { color: var(--muted); }
 .seal {
   display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; flex: none;
@@ -177,6 +178,7 @@ small, .small { font-size: 12px; }
 .top-actions { display: flex; gap: 6px; align-items: center; }
 .top-actions .btn .ico { width: 20px; height: 20px; }
 .top-actions .btn[aria-pressed='false'] { color: var(--muted); }
+#instant-btn[aria-pressed='true'] { color: var(--gold); border-color: var(--gold); }
 .dots { grid-column: 1 / -1; display: flex; gap: 6px; }
 .dots i { flex: 1; height: 4px; border-radius: 4px; background: var(--surface-3); }
 .dots i.done { background: var(--leaf); }
@@ -711,13 +713,15 @@ button[data-tip] { cursor: pointer; }
 .pi-ico .ico { width: 18px; height: 18px; }
 .sheet-close { margin-top: 12px; width: 100%; flex: none; }
 
+@media (max-width: 520px) {
+  .brand small { display: none; }
+}
 @media (max-width: 440px) {
-  .brand small, #instant-label { display: none; }
   .brand { font-size: 15px; }
   .top-actions { gap: 4px; }
   .top-actions .btn.small { padding: 4px 7px; }
 }
-@media (max-width: 400px) {
+@media (max-width: 480px) {
   .brand b { display: none; }
 }
 @media (max-width: 380px) {

@@ -2163,7 +2163,7 @@ function applyTheme() {
   btn.setAttribute('aria-label', next);
 }
 
-/** Botões do cabeçalho: dia/noite, efeitos sonoros e música. */
+/** Botões do cabeçalho: instantâneo, dia/noite, efeitos sonoros e música. */
 function installHeaderToggles() {
   applyTheme();
   deviceTheme?.addEventListener?.('change', applyTheme);
@@ -2174,6 +2174,7 @@ function installHeaderToggles() {
   });
 
   const toggles = [
+    { id: 'instant-btn', key: 'instant', on: 'lightning', off: 'lightning', label: S.ui.instant, apply: () => {} },
     { id: 'sfx-btn', key: 'sfx', on: 'soundOn', off: 'soundOff', label: S.ui.sfx, apply: setSfx },
     { id: 'music-btn', key: 'music', on: 'music', off: 'musicOff', label: S.ui.music, apply: setMusic },
   ] as const;
@@ -2199,12 +2200,6 @@ function installHeaderToggles() {
 async function main() {
   markAbandonedRuns(storage, new Date(), data.balance.history.maxRuns);
 
-  const instant = document.getElementById('instant') as HTMLInputElement;
-  instant.checked = settings.instant;
-  instant.addEventListener('change', () => {
-    settings.instant = instant.checked;
-    saveSettings();
-  });
   installAudio(settings);
   installHeaderToggles();
   document.getElementById('history-btn')!.addEventListener('click', openHistory);
@@ -2236,7 +2231,6 @@ async function main() {
   document.getElementById('history-btn')!.innerHTML = icon('timer');
   document.querySelector('.brand .seal')!.innerHTML = clanSymbol(null);
   installTooltips();
-  document.getElementById('instant-label')!.textContent = S.ui.instant;
 
   for (;;) {
     await originScreen();
