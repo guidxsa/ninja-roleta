@@ -33,6 +33,7 @@ jobs:
         run: |
           mkdir -p site
           cp dist/prototipo.html site/index.html
+          if [ -d dist/img ]; then cp -r dist/img site/img; fi
           touch site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:

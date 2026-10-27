@@ -4,6 +4,8 @@ export interface WheelSlice {
   label: string;
   weight: number;
   color: string;
+  /** SVG opcional mostrado na legenda (símbolo do clã, elemento). */
+  icon?: string;
 }
 
 export interface Wheel {
@@ -14,8 +16,16 @@ export interface Wheel {
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SIZE = 300;
-const R = 146;
+const R = 140;
 const C = SIZE / 2;
+const HUB = 20;
+/** Rótulo: da borda (R − LABEL_PAD) até perto do centro (HUB + LABEL_PAD). */
+const LABEL_PAD = 8;
+const LABEL_LEN = R - HUB - LABEL_PAD * 2;
+const FONT_MAX = 13;
+const FONT_MIN = 8;
+/** Largura média de um caractere em negrito, em frações do tamanho da fonte (estimativa antes de medir). */
+const CHAR_W = 0.6;
 
 function point(angleDeg: number, radius: number): [number, number] {
   const a = (angleDeg * Math.PI) / 180;
@@ -64,6 +74,13 @@ export function createWheel(slices: WheelSlice[]): Wheel {
   svg.classList.add('wheel');
   const ranges = spans(slices);
   const paths: SVGElement[] = [];
+  const labels: { el: SVGTextElement; label: string; font: number }[] = [];
+  const rim = document.createElementNS(SVG_NS, 'circle');
+  rim.setAttribute('cx', `${C}`);
+  rim.setAttribute('cy', `${C}`);
+  rim.setAttribute('r', `${R + 6}`);
+  rim.setAttribute('class', 'rim');
+  svg.appendChild(rim);
 
   slices.forEach((s, i) => {
     const [f0, f1] = ranges[i]!;
@@ -87,28 +104,49 @@ export function createWheel(slices: WheelSlice[]): Wheel {
     paths.push(shape);
 
     const span = (f1 - f0) * 360;
-    if (span >= 16) {
+    // A altura da letra cabe na largura da fatia perto do meio do raio; senão, só a legenda mostra.
+    const chord = 2 * (R * 0.5) * Math.sin(((Math.min(span, 180) / 2) * Math.PI) / 180);
+    const font = Math.min(FONT_MAX, chord * 0.62);
+    if (font >= FONT_MIN) {
       const mid = ((f0 + f1) / 2) * 360;
-      const [x, y] = point(mid, R * 0.62);
+      const [x, y] = point(mid, R - LABEL_PAD);
       const text = document.createElementNS(SVG_NS, 'text');
       text.setAttribute('x', `${x}`);
       text.setAttribute('y', `${y}`);
       text.setAttribute('class', 'slice-label');
-      // Texto ao longo do raio, sempre legível da borda para o centro.
-      const rot = mid <= 180 ? mid - 90 : mid + 90;
-      text.setAttribute('transform', `rotate(${rot} ${x} ${y})`);
-      const max = span >= 60 ? 16 : span >= 30 ? 11 : 7;
-      text.textContent = s.label.length > max ? `${s.label.slice(0, max - 1)}…` : s.label;
+      // Texto ao longo do raio, começando na borda e indo para o centro, sempre legível.
+      const right = mid <= 180;
+      text.setAttribute('transform', `rotate(${right ? mid - 90 : mid + 90} ${x} ${y})`);
+      text.setAttribute('text-anchor', right ? 'end' : 'start');
+      text.style.fontSize = `${font}px`;
+      text.textContent = s.label;
+      labels.push({ el: text, label: s.label, font });
       svg.appendChild(text);
     }
   });
 
+  // Hub com a espiral da folha.
   const hub = document.createElementNS(SVG_NS, 'circle');
   hub.setAttribute('cx', `${C}`);
   hub.setAttribute('cy', `${C}`);
-  hub.setAttribute('r', '14');
+  hub.setAttribute('r', `${HUB}`);
   hub.setAttribute('class', 'hub');
   svg.appendChild(hub);
+  const leaf = document.createElementNS(SVG_NS, 'path');
+  leaf.setAttribute('d', `M${C} ${C + 1}a2 2 0 0 1 4 0a4 4 0 0 1-8 0a6 6 0 0 1 12 0`);
+  leaf.setAttribute('class', 'hub-leaf');
+  svg.appendChild(leaf);
+  // Marcas na borda, a cada fatia.
+  ranges.forEach(([f0, f1]) => {
+    if (f1 - f0 <= 0 || f1 - f0 >= 0.9999) return;
+    const [x, y] = point(f0 * 360, R + 3);
+    const dot = document.createElementNS(SVG_NS, 'circle');
+    dot.setAttribute('cx', `${x}`);
+    dot.setAttribute('cy', `${y}`);
+    dot.setAttribute('r', '2.6');
+    dot.setAttribute('class', 'peg');
+    svg.appendChild(dot);
+  });
 
   const pointer = document.createElement('div');
   pointer.className = 'wheel-pointer';
@@ -119,7 +157,7 @@ export function createWheel(slices: WheelSlice[]): Wheel {
   const items = slices.map((s, i) => {
     const [f0, f1] = ranges[i]!;
     const li = document.createElement('li');
-    li.innerHTML = `<i style="background:${s.color}"></i><span></span><b>${formatPct(f1 - f0)}</b>`;
+    li.innerHTML = `<i class="${s.icon ? 'has-ico' : ''}" style="--c:${s.color}">${s.icon ?? ''}</i><span></span><b>${formatPct(f1 - f0)}</b>`;
     li.querySelector('span')!.textContent = s.label;
     if (f1 - f0 <= 0) li.classList.add('zero');
     legend.appendChild(li);
@@ -128,6 +166,26 @@ export function createWheel(slices: WheelSlice[]): Wheel {
 
   el.append(wrap, legend);
   let rotation = 0;
+
+  // Estimativa antes de entrar na página: reduz a fonte e corta com reticências.
+  for (const l of labels) {
+    let font = l.font;
+    while (font > FONT_MIN && l.label.length * font * CHAR_W > LABEL_LEN) font -= 0.5;
+    const max = Math.floor(LABEL_LEN / (font * CHAR_W));
+    l.el.style.fontSize = `${font}px`;
+    l.el.textContent = l.label.length > max ? `${l.label.slice(0, Math.max(1, max - 1))}…` : l.label;
+  }
+  // Já na página, mede de verdade (a fonte real pode ser mais larga que a estimativa).
+  requestAnimationFrame(() => {
+    if (!svg.isConnected) return;
+    for (const l of labels) {
+      let text = l.el.textContent ?? '';
+      while (text.length > 2 && l.el.getComputedTextLength() > LABEL_LEN) {
+        text = `${text.replace(/…$/, '').slice(0, -1)}…`;
+        l.el.textContent = text;
+      }
+    }
+  });
 
   return {
     el,

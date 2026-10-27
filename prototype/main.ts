@@ -111,6 +111,20 @@ import {
   type KeyValueStorage,
   type RunStatus,
 } from '../src/state/runHistory';
+import { clanSymbol, icon, ninjaPortrait, villainPortrait } from './art';
+import {
+  conditionChip,
+  ELEMENT_COLORS,
+  ELEMENT_ICON,
+  elementChip,
+  fxConditions,
+  playerTechTip,
+  techIconName,
+  villainTechElement,
+  villainTechTip,
+  type Condition,
+} from './tips';
+import { installTooltips, tip } from './tooltip';
 import { createWheel, formatPct, stripRoulette, type WheelSlice } from './wheel';
 
 // ---------------------------------------------------------------------------
@@ -170,12 +184,15 @@ function h(html: string): HTMLElement {
   return t.content.firstElementChild as HTMLElement;
 }
 
+/** Botão desligado. As células de ação usam `aria-disabled` (e não `disabled`) para a dica abrir mesmo assim. */
+const isOff = (btn: HTMLElement) => (btn as HTMLButtonElement).disabled || btn.getAttribute('aria-disabled') === 'true';
+
 /** Espera um clique em qualquer `[data-choice]` dentro de `root` e devolve o valor. */
 function choose<T extends string>(root: HTMLElement): Promise<T> {
   return new Promise((resolve) => {
     const onClick = (e: Event) => {
       const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-choice]');
-      if (!btn || !root.contains(btn) || (btn as HTMLButtonElement).disabled) return;
+      if (!btn || !root.contains(btn) || isOff(btn)) return;
       root.removeEventListener('click', onClick);
       resolve(btn.dataset.choice as T);
     };
@@ -193,20 +210,15 @@ function show(el: HTMLElement): HTMLElement {
 // ---------------------------------------------------------------------------
 // Textos e cores
 
-const ELEMENT_COLORS: Record<Element, string> = {
-  fire: '#ef5a3c',
-  wind: '#52c47a',
-  lightning: '#e8c23a',
-  earth: '#a87b4f',
-  water: '#3f8ee8',
-};
-const PALETTE = ['#ff8a1f', '#4aa3ff', '#4cd07d', '#c070f5', '#f5c542', '#ff5a7a', '#36cfc4', '#8f9bff'];
-const TIER_COLORS: Record<LineageTier, string> = { common: '#5b6578', clan: '#4aa3ff', rare: '#f5a524' };
+/** Fatias das roletas: laranja, verde do colete, azul do chakra, vermelho, areia, roxo, verde-água e marinho. */
+const PALETTE = ['#f28c28', '#6f9a3e', '#2f80dc', '#c62828', '#d4a253', '#8e5bb5', '#2a9d8f', '#3d4f8a'];
+const TIER_COLORS: Record<LineageTier, string> = { common: '#6b6f80', clan: '#2f80dc', rare: '#e8a21c' };
+const SIDE_COLORS = { player: '#2f80dc', villain: '#c62828', miss: '#6b6f80', hit: '#3fae6a', crit: '#e6b91e', foeHit: '#e8742c' };
 
 const villainName = (id: string) => S.villains[id] ?? id;
 const techName = (id: string) => S.techniques[id] ?? id;
-const elChip = (el: Element | null) =>
-  el ? `<span class="chip el" style="--c:${ELEMENT_COLORS[el]}">${S.elements[el]}</span>` : '';
+/** Chip de elemento com ícone; `withTip` = false dentro de botões (o botão já tem a própria dica). */
+const elChip = (el: Element | null, withTip = true) => elementChip(el, withTip);
 /** Nível de técnica em algarismos romanos (I, II, III...). */
 const roman = (n: number) => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] ?? String(n);
 
@@ -335,7 +347,8 @@ function applyStep(step: Step) {
 function bar(kind: 'hp' | 'ck', cur: number, max: number): string {
   const pct = max > 0 ? Math.max(0, Math.min(100, (cur / max) * 100)) : 0;
   const low = kind === 'hp' && pct <= 30 ? ' low' : kind === 'hp' && pct <= 60 ? ' mid' : '';
-  return `<div class="bar bar-${kind}${low}" data-bar="${kind}"><div class="fill" style="width:${pct}%"></div><span>${S.stats[kind === 'hp' ? 'hp' : 'chakra']} ${cur}/${max}</span></div>`;
+  const name = S.stats[kind === 'hp' ? 'hp' : 'chakra'];
+  return `<div class="bar bar-${kind}${low}" data-bar="${kind}"${tip(name, S.tips.stats[kind === 'hp' ? 'hp' : 'chakra'])}><div class="fill" style="width:${pct}%"></div><span>${name} ${cur}/${max}</span></div>`;
 }
 
 function setBar(root: HTMLElement, kind: 'hp' | 'ck', cur: number, max: number) {
@@ -345,9 +358,45 @@ function setBar(root: HTMLElement, kind: 'hp' | 'ck', cur: number, max: number) 
 
 function modChips(mods: NextFightMods): string {
   const chips = [];
-  if (mods.villainStartsFirst) chips.push(`<span class="chip bad">${S.ui.villainFirst}</span>`);
-  if (mods.playerStartsFirst) chips.push(`<span class="chip good">${S.ui.playerFirst}</span>`);
+  if (mods.villainStartsFirst) chips.push(`<span class="chip bad">${icon('timer')}${S.ui.villainFirst}</span>`);
+  if (mods.playerStartsFirst) chips.push(`<span class="chip good">${icon('dodge')}${S.ui.playerFirst}</span>`);
   return chips.join('');
+}
+
+/** Caixa de status com a dica do que ele faz. */
+function statBox(key: keyof typeof S.stats, value: string | number): string {
+  const B = data.balance;
+  const T = S.tips.stats;
+  const desc =
+    key === 'physical'
+      ? T.physical(Math.round(B.resistance.passive * 100), Math.round(B.resistance.resist * 100), Math.round(B.resistance.stance * 100))
+      : key === 'crit'
+        ? T.crit(B.crit.multiplier)
+        : T[key];
+  return `<div${tip(S.stats[key], desc)}><small>${S.stats[key]}</small><b>${value}</b></div>`;
+}
+
+/** Selo redondo da linhagem (ou da folha), com o nome do clã na dica. */
+function clanSeal(p: PlayerState): string {
+  const id = p.origin.lineageId;
+  const tier = id ? lineageOf(id, data).tier : 'common';
+  const name = id ? S.lineages[id] ?? id : S.origin.common;
+  const tierName = S.lineageTiers[tier] ?? '';
+  return `<span class="clan-seal clan-${id ?? 'common'}"${tip(name, tierName)}>${clanSymbol(id)}</span>`;
+}
+
+/** Ícone da técnica do jogador: elemento, ou o tipo (taijutsu, genjutsu, médico, barreira). */
+function techIcon(p: PlayerState, id: string): string {
+  const t = playerTechnique(p, id, data);
+  return icon(techIconName(t.type, t.element, { medical: techniqueSlot(t) === 'medical', barrier: t.barrier !== undefined }));
+}
+
+/** Classes e cor de uma célula de técnica (tipo + elemento). */
+function techLook(type: string, element: Element | null): { cls: string; style: string } {
+  return {
+    cls: `type-${type}${element ? ` el-${element}` : ''}`,
+    style: element ? ` style="--c:${ELEMENT_COLORS[element]}"` : '',
+  };
 }
 
 function techniqueRows(p: PlayerState): string {
@@ -364,37 +413,43 @@ function techniqueRows(p: PlayerState): string {
       if (t.chakraDrain) info += ` · ${S.ui.drain(t.chakraDrain)}`;
       if (t.requiresDojutsu) info += ` · ${S.ui.requires(S.dojutsu[t.requiresDojutsu]!.name)}`;
       const lvl = ` <span class="lvl">${roman(techniqueLevel(p, t.id, data))}</span>`;
-      return `<li><span class="muted">${S.actions[slot]}</span> ${esc(techName(t.id))}${lvl} ${elChip(tech.element)}<span class="muted small"> · ${info} · ${S.ui.cost(tech.chakraCost)}</span></li>`;
+      const look = techLook(slot, tech.element);
+      return `<li class="tech-card ${look.cls}"${look.style}${playerTechTip(p, t.id)}><span class="tc-ico">${techIcon(p, t.id)}</span><span class="tc-txt"><b>${esc(techName(t.id))}${lvl}</b><small>${S.actions[slot]} · ${info} · ${S.ui.cost(tech.chakraCost)}</small></span></li>`;
     })
     .join('');
 }
 
-/** Passivas e dōjutsu do jogador, como itens de lista (`tag` = li ou p). */
+/**
+ * Passivas e dōjutsu do jogador. `li`: linha completa (ficha); `p`: selo compacto com a descrição na dica (painéis).
+ */
 function passiveItems(p: PlayerState, tag: 'li' | 'p'): string[] {
-  const item = (name: string, desc: string) =>
-    tag === 'li' ? `<li><b>${name}</b> · ${desc}</li>` : `<p class="passive"><b>${name}</b> · ${desc}</p>`;
+  const item = (ico: string, name: string, desc: string) =>
+    tag === 'li'
+      ? `<li${tip(name, desc)}><span class="pi-ico">${ico}</span><span><b>${name}</b> · ${desc}</span></li>`
+      : `<span class="chip passive-chip"${tip(name, desc)}>${ico}${name}</span>`;
   const out: string[] = [];
   const passive = S.passives[p.passive];
-  if (passive) out.push(item(passive.name, passive.desc));
+  if (passive) out.push(item(clanSymbol(p.origin.lineageId), passive.name, passive.desc));
   const active = p.active ? S.actives[p.active] : null;
   if (active) {
     const stage = gatesStage(p, data);
     const next = data.balance.gates.stages[stage];
     const gates = p.active === 'gates' ? ` (${stage ? S.gatesStage(stage) : '—'}${next ? ` · ${S.ui.gatesLocked(next.minTaijutsu)}` : ''})` : '';
-    out.push(item(active.name + gates, active.desc));
+    const ico = { gates: 'gates', expansion: 'expansion', shadowClones: 'clones' }[p.active!] ?? 'ninjutsu';
+    out.push(item(icon(ico), active.name + gates, active.desc));
   }
   if (p.dojutsu) {
     const d = S.dojutsu[p.dojutsu]!;
     const stage = sharinganStage(p, data);
-    out.push(item(stage ? `${d.name} (${S.sharinganStage(stage)})` : d.name, d.desc));
+    out.push(item(icon(p.dojutsu), stage ? `${d.name} (${S.sharinganStage(stage)})` : d.name, d.desc));
   }
   if (p.jinchuuriki) {
-    out.push(item(S.passives.jinchuuriki!.name, S.passives.jinchuuriki!.desc));
-    out.push(item(S.passives.innerDemon!.name, S.passives.innerDemon!.desc));
+    out.push(item(clanSymbol('jinchuuriki'), S.passives.jinchuuriki!.name, S.passives.jinchuuriki!.desc));
+    out.push(item(icon('genjutsuImmune'), S.passives.innerDemon!.name, S.passives.innerDemon!.desc));
   }
-  if (p.focusUses > 0) out.push(item(S.talents.focus.name, S.talents.focus.desc(p.focusUses)));
-  if (p.substitutionBonus > 0) out.push(item(S.talents.substitution.name, S.talents.substitution.desc(p.substitutionBonus)));
-  if (p.pendingUpgrades > 0) out.push(item('📜', S.ui.upgradesPending(p.pendingUpgrades)));
+  if (p.focusUses > 0) out.push(item(icon('focus'), S.talents.focus.name, S.talents.focus.desc(p.focusUses)));
+  if (p.substitutionBonus > 0) out.push(item(icon('substitution'), S.talents.substitution.name, S.talents.substitution.desc(p.substitutionBonus)));
+  if (p.pendingUpgrades > 0) out.push(item(icon('scroll'), S.ui.upgradeTitle, S.ui.upgradesPending(p.pendingUpgrades)));
   return out;
 }
 
@@ -407,55 +462,47 @@ function summonEffect(p: PlayerState): string {
   return fx(Math.round(slugHealPct(p, data) * 100));
 }
 
-/**
- * Retrato do ninja. Sem foto, uma silhueta padrão com bandana.
- * Aberto a personalização: basta passar a URL de uma imagem.
- */
-function avatar(size: 'sm' | 'lg' = 'sm', src: string | null = null): string {
-  const img = src
-    ? `<img src="${esc(src)}" alt="">`
-    : `<svg viewBox="0 0 64 64" aria-hidden="true">
-        <circle cx="32" cy="27" r="13" fill="#0b0f1c"/>
-        <path d="M8 64c2-14 12-21 24-21s22 7 24 21z" fill="#0b0f1c"/>
-        <path d="M17 22c4-3 26-3 30 0v6c-4-2-26-2-30 0z" fill="#3a4568"/>
-        <rect x="25" y="20.5" width="14" height="7.5" rx="1.5" fill="#c9d1e6"/>
-        <path d="M29 22.5l6 3.5m0-3.5l-6 3.5" stroke="#3a4568" stroke-width="1.4"/>
-        <path d="M47 23l10 4-9 1.5z" fill="#3a4568"/>
-        <path d="M24 33h16" stroke="#ff7a1a" stroke-width="2" stroke-linecap="round" opacity=".85"/>
-      </svg>`;
-  return `<span class="avatar avatar-${size}">${img}</span>`;
+/** Retrato do ninja (desenho da linhagem ou imagem própria em img/ninja/) com o selo do clã. */
+function avatar(p: PlayerState, size: 'sm' | 'lg' = 'sm'): string {
+  return `<span class="avatar avatar-${size}">${ninjaPortrait(p.origin.lineageId, p.jinchuuriki, size === 'lg' ? 'lg' : 'sm')}${clanSeal(p)}</span>`;
 }
 
 function xpBar(p: PlayerState): string {
   const need = xpToNextLevel(p.level, data);
   const pct = Math.min(100, (p.xp / need) * 100);
-  return `<div class="bar bar-xp"><div class="fill" style="width:${pct}%"></div><span>${S.ui.xp(p.xp, need)}</span></div>`;
+  return `<div class="bar bar-xp"${tip('XP', S.tips.stats.xp)}><div class="fill" style="width:${pct}%"></div><span>${S.ui.xp(p.xp, need)}</span></div>`;
 }
 
 function diffChip(d: Difficulty): string {
-  return `<span class="chip diff diff-${d}">${S.difficulty[d].name}</span>`;
+  return `<span class="chip diff diff-${d}"${tip(S.difficulty[d].name, S.difficulty[d].desc)}>${S.difficulty[d].name}</span>`;
+}
+
+function jinChip(p: PlayerState): string {
+  return p.jinchuuriki
+    ? `<span class="chip jin"${tip(S.passives.jinchuuriki!.name, S.passives.jinchuuriki!.desc)}>${clanSymbol('jinchuuriki')}${S.origin.jinchuuriki}</span>`
+    : '';
 }
 
 function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
-  const stat =(label: string, v: string | number) => `<div><small>${label}</small><b>${v}</b></div>`;
+  const passives = passiveItems(p, 'p').join('');
   return `
   <section class="card player-panel">
     <div class="panel-head">
-      ${avatar('sm')}
+      ${avatar(p)}
       <div class="panel-id">
         <b class="name">${originLabel(p.origin)}</b>
-        <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${p.affinity ? elChip(p.affinity) : `<span class="chip">${S.ui.noAffinity}</span>`}${p.jinchuuriki ? `<span class="chip jin">${S.origin.jinchuuriki}</span>` : ''}${camp ? diffChip(camp.difficulty) : ''}</div>
+        <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${p.affinity ? elChip(p.affinity) : `<span class="chip"${tip(S.ui.noAffinity, S.tips.noElement)}>${S.ui.noAffinity}</span>`}${jinChip(p)}${camp ? diffChip(camp.difficulty) : ''}</div>
       </div>
-      <button class="btn small sheet-btn" data-sheet>🎒 ${S.ui.openSheet}</button>
+      <button class="btn small sheet-btn" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button>
     </div>
     ${xpBar(p)}
     ${bar('hp', p.hp, p.maxHp)}
     ${bar('ck', p.chakra, p.maxChakra)}
     <div class="stats">
-      ${stat(S.stats.taijutsu, p.offense.taijutsu)}${stat(S.stats.ninjutsu, p.offense.ninjutsu)}${stat(S.stats.genjutsu, p.offense.genjutsu)}
-      ${stat(S.stats.physical, p.resistance.physical)}${stat(S.stats.mental, p.resistance.mental)}${stat(S.stats.speed, p.speed)}
+      ${statBox('taijutsu', p.offense.taijutsu)}${statBox('ninjutsu', p.offense.ninjutsu)}${statBox('genjutsu', p.offense.genjutsu)}
+      ${statBox('physical', p.resistance.physical)}${statBox('mental', p.resistance.mental)}${statBox('speed', p.speed)}
     </div>
-    ${passiveItems(p, 'p').join('')}
+    ${passives ? `<div class="passive-row">${passives}</div>` : ''}
     ${mods.villainStartsFirst || mods.playerStartsFirst ? `<div class="mods"><small>${S.ui.nextFight}</small> ${modChips(mods)}</div>` : ''}
   </section>`;
 }
@@ -463,37 +510,37 @@ function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
 // ---------------------------------------------------------------------------
 // Ficha ninja (janela à parte): retrato, atributos, técnicas, bolsa e passivas
 
-const SUMMON_ICONS: Record<SummonAnimal, string> = { toad: '🐸', snake: '🐍', slug: '🐌' };
+const SUMMON_ICONS: Record<SummonAnimal, string> = { toad: 'toad', snake: 'snake', slug: 'slug' };
 
 function bagSlots(p: PlayerState): string {
   const B = S.bag;
-  const slot = (icon: string, name: string, desc: string, qty: string) =>
-    `<li class="slot"><i>${icon}</i><b>${name}</b>${qty ? `<em>${qty}</em>` : ''}<small>${desc}</small></li>`;
+  const slot = (ico: string, name: string, desc: string, qty: string) =>
+    `<li class="slot slot-${ico}"${tip(name, desc)}><i>${icon(ico)}</i><b>${name}</b>${qty ? `<em>${qty}</em>` : ''}<small>${desc}</small></li>`;
   const filled: string[] = [];
-  if (p.revives > 0) filled.push(slot('🍶', B.revive.name, B.revive.desc, `×${p.revives}`));
-  const icons: Record<ConsumableId, string> = { soldierPill: '💊', medKit: '🩹', explosiveTag: '💥', smokeBomb: '💨' };
+  if (p.revives > 0) filled.push(slot('willOfFire', B.revive.name, B.revive.desc, `×${p.revives}`));
+  const icons: Record<ConsumableId, string> = { soldierPill: 'pill', medKit: 'kit', explosiveTag: 'tag', smokeBomb: 'smoke' };
   for (const id of CONSUMABLES) {
     if (p.bag[id] > 0) filled.push(slot(icons[id], S.consumables[id]!.name, S.consumables[id]!.desc, `×${p.bag[id]}`));
   }
-  if (p.coins > 0) filled.push(slot('🪙', B.coin.name, B.coin.desc, `×${p.coins}`));
-  if (p.trainingWeights !== 'none') filled.push(slot('🏋️', B.weights.name, B.weights.desc[p.trainingWeights] ?? '', ''));
+  if (p.coins > 0) filled.push(slot('coin', B.coin.name, B.coin.desc, `×${p.coins}`));
+  if (p.trainingWeights !== 'none') filled.push(slot('weights', B.weights.name, B.weights.desc[p.trainingWeights] ?? '', ''));
   if (p.ninjaToolLevel > 0) {
     const dmg = p.ninjaToolLevel * data.balance.ninjaTool.baseDamagePerLevel;
-    filled.push(slot('🗡️', B.ninjaTool.name, B.ninjaTool.desc(dmg), `${S.ui.level}${p.ninjaToolLevel}`));
+    filled.push(slot('blade', B.ninjaTool.name, B.ninjaTool.desc(dmg), `${S.ui.level}${p.ninjaToolLevel}`));
   }
   if (p.amulets.speed > 0) {
-    filled.push(slot('🪶', B.speedAmulet.name, B.speedAmulet.desc(p.amulets.speed), `×${p.amulets.speed}`));
+    filled.push(slot('amuletSpeed', B.speedAmulet.name, B.speedAmulet.desc(p.amulets.speed), `×${p.amulets.speed}`));
   }
   if (p.amulets.resistance > 0) {
     const n = p.amulets.resistance;
-    filled.push(slot('🧿', B.resistanceAmulet.name, B.resistanceAmulet.desc(n), `×${n}`));
+    filled.push(slot('amuletRes', B.resistanceAmulet.name, B.resistanceAmulet.desc(n), `×${n}`));
   }
   if (p.summon) {
     const name = S.summons[p.summon.animal]!.name;
     filled.push(slot(SUMMON_ICONS[p.summon.animal], B.summon.name, `${B.summon.desc(name)} ${summonEffect(p)}`, `${S.ui.level}${p.summon.level}`));
   }
   const scrolls = Object.values(p.techniqueLevels).reduce((a, b) => a + (b ?? 0), 0);
-  if (scrolls > 0) filled.push(slot('📜', B.scrolls.name, B.scrolls.desc(scrolls), `×${scrolls}`));
+  if (scrolls > 0) filled.push(slot('scroll', B.scrolls.name, B.scrolls.desc(scrolls), `×${scrolls}`));
   const empty = Math.max(0, 6 - filled.length);
   return filled.join('') + `<li class="slot empty"><span>${S.ui.bagEmpty}</span></li>`.repeat(empty);
 }
@@ -504,21 +551,22 @@ let battlePlayer: (() => PlayerState) | null = null;
 function sheetHtml(c: Campaign): string {
   const p = battlePlayer?.() ?? c.player;
   const crit = critChance(p.critBonus, data.balance.crit);
-  const attr = (label: string, v: string | number) => `<div><small>${label}</small><b>${v}</b></div>`;
   const passives = [
     ...passiveItems(p, 'li'),
-    p.summon ? `<li><b>${S.summons[p.summon.animal]!.name}</b> · ${S.summons[p.summon.animal]!.desc}</li>` : '',
+    p.summon
+      ? `<li><span class="pi-ico">${icon(SUMMON_ICONS[p.summon.animal])}</span><span><b>${S.summons[p.summon.animal]!.name}</b> · ${S.summons[p.summon.animal]!.desc}</span></li>`
+      : '',
   ].join('');
   const elements = [p.affinity, ...p.secondaryElements].filter((e): e is Element => Boolean(e));
   const nextFight = c.mods.villainStartsFirst || c.mods.playerStartsFirst;
   return `
     <div class="scroll-paper">
-      <span class="hanko" aria-hidden="true">忍</span>
+      <span class="hanko" aria-hidden="true">${clanSymbol(p.origin.lineageId)}</span>
       <header class="sheet-head">
-        ${avatar('lg')}
+        ${avatar(p, 'lg')}
         <div class="sheet-id">
           <h2 class="sheet-name">${originLabel(p.origin)}</h2>
-          <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${elements.length ? elements.map(elChip).join('') : `<span class="chip">${S.ui.noAffinity}</span>`}${p.jinchuuriki ? `<span class="chip jin">${S.origin.jinchuuriki}</span>` : ''}${diffChip(c.difficulty)}</div>
+          <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${elements.length ? elements.map((e) => elChip(e)).join('') : `<span class="chip">${S.ui.noAffinity}</span>`}${jinChip(p)}${diffChip(c.difficulty)}</div>
           ${xpBar(p)}
         </div>
       </header>
@@ -526,13 +574,14 @@ function sheetHtml(c: Campaign): string {
       ${bar('ck', p.chakra, p.maxChakra)}
       <h3 class="sheet-title">${S.ui.attributes}</h3>
       <div class="attrs">
-        ${attr(S.stats.taijutsu, p.offense.taijutsu)}${attr(S.stats.ninjutsu, p.offense.ninjutsu)}${attr(S.stats.genjutsu, p.offense.genjutsu)}${attr(S.stats.speed, p.speed)}
-        ${attr(S.stats.physical, p.resistance.physical)}${attr(S.stats.mental, p.resistance.mental)}${attr(S.stats.crit, formatPct(crit))}${attr(S.stats.hp, p.maxHp)}${attr(S.stats.chakra, p.maxChakra)}
+        ${statBox('taijutsu', p.offense.taijutsu)}${statBox('ninjutsu', p.offense.ninjutsu)}${statBox('genjutsu', p.offense.genjutsu)}${statBox('speed', p.speed)}
+        ${statBox('physical', p.resistance.physical)}${statBox('mental', p.resistance.mental)}${statBox('crit', formatPct(crit))}${statBox('hp', p.maxHp)}${statBox('chakra', p.maxChakra)}
       </div>
       <h3 class="sheet-title">${S.ui.bag}</h3>
       <ul class="bag">${bagSlots(p)}</ul>
       <h3 class="sheet-title">${S.ui.techniques}</h3>
       <ul class="techs">${techniqueRows(p)}</ul>
+      <p class="tip-hint">${icon('info')} ${S.tips.hint}</p>
       ${passives ? `<h3 class="sheet-title">${S.ui.passives}</h3><ul class="sheet-passives">${passives}</ul>` : ''}
       ${nextFight ? `<h3 class="sheet-title">${S.ui.nextFight}</h3><div class="mods">${modChips(c.mods)}</div>` : ''}
     </div>`;
@@ -566,7 +615,10 @@ function stageTrail(current: number): string {
             : '1 luta';
       const best = st.kind === 'fight' ? Math.max(0, ...st.rewardTiers.map((t) => t ?? 0)) : 0;
       const tier = best > 0 ? ` · ${S.ui.rewardTier(S.rewardTiers[best] ?? '')}` : '';
-      return `<li class="${state}"><i>${i < current ? '✓' : i + 1}</i><div><b>${stageName(st)}</b><small>${sub}${tier}</small></div></li>`;
+      const faces = st.kind === 'exam'
+        ? `<span class="trail-ico">${icon('scroll')}</span>`
+        : `<span class="trail-faces">${st.villains.map((v) => villainPortrait(v, 'sm')).join('')}</span>`;
+      return `<li class="${state}"><i>${i < current ? '✓' : i + 1}</i>${faces}<div><b>${stageName(st)}</b><small>${sub}${tier}</small></div></li>`;
     })
     .join('')}</ol>`;
 }
@@ -653,13 +705,20 @@ function originStepSlices(step: OriginStep): WheelSlice[] {
   return step.slices.map((s) => {
     switch (step.kind) {
       case 'jinchuuriki':
-        return { label: L[s.value]!, weight: s.weight, color: s.value === 'yes' ? '#ff5a3c' : '#5b6578' };
-      case 'affinity':
-        return { label: S.elements[s.value as Element], weight: s.weight, color: ELEMENT_COLORS[s.value as Element] };
+        return {
+          label: L[s.value]!,
+          weight: s.weight,
+          color: s.value === 'yes' ? '#e2482f' : TIER_COLORS.common,
+          icon: s.value === 'yes' ? clanSymbol('jinchuuriki') : undefined,
+        };
+      case 'affinity': {
+        const el = s.value as Element;
+        return { label: S.elements[el], weight: s.weight, color: ELEMENT_COLORS[el], icon: icon(ELEMENT_ICON[el]) };
+      }
       case 'lineage': {
         // A cor da fatia indica o nível: comum, clã ou rara.
         const tier = lineageOf(s.value, data).tier;
-        return { label: S.lineages[s.value] ?? s.value, weight: s.weight, color: TIER_COLORS[tier] };
+        return { label: S.lineages[s.value] ?? s.value, weight: s.weight, color: TIER_COLORS[tier], icon: clanSymbol(s.value) };
       }
     }
   });
@@ -670,12 +729,12 @@ function stepResultText(step: OriginStep): string {
   switch (step.kind) {
     case 'lineage': {
       const tier = lineageOf(v, data).tier;
-      return `${S.lineages[v] ?? v}${tier === 'common' ? '' : ` · ${S.lineageTiers[tier]}`}`;
+      return `${clanSymbol(v)}${S.lineages[v] ?? v}${tier === 'common' ? '' : ` · ${S.lineageTiers[tier]}`}`;
     }
     case 'affinity':
-      return S.elements[v as Element];
+      return `${icon(ELEMENT_ICON[v as Element])}${S.elements[v as Element]}`;
     case 'jinchuuriki':
-      return v === 'yes' ? S.origin.jinchuuriki : `${S.origin.jinchuuriki}: ${S.sliceLabels.no}`;
+      return v === 'yes' ? `${clanSymbol('jinchuuriki')}${S.origin.jinchuuriki}` : `${S.origin.jinchuuriki}: ${S.sliceLabels.no}`;
   }
 }
 
@@ -704,7 +763,7 @@ async function originScreen(): Promise<void> {
     const slot = root.querySelector<HTMLElement>('#slot')!;
     for (const step of roll.steps) {
       await bigWheel(slot, S.roulettes[step.kind], originStepSlices(step), step.index);
-      chips.insertAdjacentHTML('beforeend', `<span class="chip pop">${stepResultText(step)}</span>`);
+      chips.insertAdjacentHTML('beforeend', `<span class="chip origin-chip pop">${stepResultText(step)}</span>`);
       await sleep(settings.instant ? 0 : 500);
     }
     // Só registra depois das roletas: o histórico não pode revelar a origem antes da animação.
@@ -720,7 +779,7 @@ async function originScreen(): Promise<void> {
       ${hardcoreOk ? '' : `<p class="muted center small">${S.ui.hardcoreLocked}</p>`}
     </div>
     <div class="actions-row">
-      <button class="btn" data-choice="reroll">🎲 ${S.ui.reroll}</button>
+      <button class="btn" data-choice="reroll">${icon('dice')} ${S.ui.reroll}</button>
       <button class="btn primary" data-choice="start">${S.ui.startCampaign}</button></div>`;
     // A dificuldade só pode mudar antes de começar a campanha.
     after.querySelector('.segmented')!.addEventListener('click', (e) => {
@@ -756,11 +815,12 @@ async function mapScreen(): Promise<void> {
     h(`<div class="screen">
       <h2>${S.ui.campaign}</h2>
       ${stageTrail(c.stageIndex)}
+      ${stage.kind === 'fight' ? `<div class="foes">${stage.villains.map((v) => villainCard(v)).join('')}</div>` : ''}
       ${playerPanel(c.player, c.mods)}
       <p class="muted small center">${S.ui.carryHint}</p>
-      ${c.player.trainingWeights === 'equipped' ? `<button class="btn" data-choice="weights">🏋️ ${S.ui.weightsRemove}</button>` : ''}
-      ${c.player.trainingWeights === 'stored' ? `<button class="btn" data-choice="weights">🏋️ ${S.ui.weightsEquip}</button>` : ''}
-      <div class="sticky-cta"><button class="btn primary big" data-choice="go">${stage.kind === 'exam' ? '📜' : '⚔️'} ${stageName(stage)}</button></div>
+      ${c.player.trainingWeights === 'equipped' ? `<button class="btn" data-choice="weights">${icon('weights')} ${S.ui.weightsRemove}</button>` : ''}
+      ${c.player.trainingWeights === 'stored' ? `<button class="btn" data-choice="weights">${icon('weights')} ${S.ui.weightsEquip}</button>` : ''}
+      <div class="sticky-cta"><button class="btn primary big" data-choice="go">${icon(stage.kind === 'exam' ? 'scroll' : 'swords')} ${stageName(stage)}</button></div>
     </div>`),
   );
   // Os pesos só são equipados ou tirados fora de combate.
@@ -843,7 +903,7 @@ async function eventScreen(stage: Stage): Promise<void> {
   detail.insertAdjacentHTML('beforeend', `<div class="effect pop">${effectText(step.effect)}</div>`);
   refreshHud(true);
   const cta = root.querySelector<HTMLElement>('#cta')!;
-  cta.innerHTML = `<div class="sticky-cta"><button class="btn primary big" data-choice="go">⚔️ ${S.ui.fight}</button></div>`;
+  cta.innerHTML = `<div class="sticky-cta"><button class="btn primary big" data-choice="go">${icon('swords')} ${S.ui.fight}</button></div>`;
   await choose(cta);
   await levelUps();
 }
@@ -890,92 +950,180 @@ interface BattleSetup {
   exam: boolean;
 }
 
+type VillainDefT = BattleState['villain']['def'];
+
+const PASSIVE_ICONS: Record<string, string> = {
+  trickster: 'trickster',
+  mirrors: 'mirrors',
+  mist: 'mist',
+  beast: 'beast',
+  curseMark: 'curseMark',
+  scalpel: 'scalpel',
+  insane: 'snake',
+};
+
+/** Passivas do vilão como selos (na versão da dificuldade: a hardcore já vem trocada por scaleVillain). */
+function villainPassiveChips(v: VillainDefT): string {
+  const out: string[] = [];
+  const passive = v.passive;
+  if (passive) {
+    const key = passive.kind === 'cloak' ? passive.variant : passive.kind;
+    const t = S.villainPassives[key]!;
+    const hardcore = camp?.difficulty === 'hardcore' && v.hardcorePassive !== undefined;
+    out.push(`<span class="chip passive-chip foe"${tip(t.name, hardcore ? t.hardcore : t.desc)}>${icon(PASSIVE_ICONS[key] ?? 'warning')}${t.name}</span>`);
+    if (passive.kind === 'cloak' && passive.genjutsuImmune) {
+      const g = S.tips.status.genjutsuImmune;
+      out.push(`<span class="chip passive-chip"${tip(g.name, g.desc)}>${icon('genjutsuImmune')}${S.ui.genjutsuImmune}</span>`);
+    }
+  }
+  if (v.behavior?.charged) {
+    const c = S.tips.status.charging;
+    const name = esc(techName(v.behavior.charged));
+    out.push(`<span class="chip passive-chip"${tip(`${c.name}: ${name}`, S.tips.charged)}>${icon('warning')}${name}</span>`);
+  }
+  return out.join('');
+}
+
+/** Técnicas do vilão, cada uma com a cor do elemento e a ficha na dica. */
+function villainKit(v: VillainDefT): string {
+  return v.techniques
+    .map((t) => {
+      const el = villainTechElement(v, t);
+      const look = techLook(t.healPct !== undefined ? 'medical' : t.type, el);
+      const ico = icon(techIconName(t.type, el, { barrier: t.barrier !== undefined, medical: t.healPct !== undefined, blade: Boolean(t.blade) }));
+      return `<span class="kit-chip ${look.cls}"${look.style}${villainTechTip(v, t)}>${ico}<span>${esc(techName(t.id))}</span></span>`;
+    })
+    .join('');
+}
+
+/** Selos de atributo do vilão (resistências e speed), com a dica do que cada um faz. */
+function villainStats(phys: number, mental: number, speed: number): string {
+  const pill = (key: 'physical' | 'mental' | 'speed', ico: string, v: number) => {
+    const T = S.tips.stats;
+    const B = data.balance.resistance;
+    const desc =
+      key === 'physical' ? T.physical(Math.round(B.passive * 100), Math.round(B.resist * 100), Math.round(B.stance * 100)) : T[key];
+    return `<span class="stat-pill"${tip(S.stats[key], desc)}>${icon(ico)}<small>${S.stats[key]}</small><b>${v}</b></span>`;
+  };
+  return `<div class="stat-pills">${pill('physical', 'barrier', phys)}${pill('mental', 'genjutsu', mental)}${pill('speed', 'dodge', speed)}</div>`;
+}
+
+/** Ficha do próximo vilão no mapa: retrato, atributos, passivas e técnicas. */
+function villainCard(id: string): string {
+  const v = scaleVillain(villainsById[id]!, camp!.difficulty, data);
+  return `<section class="card villain-card">
+    <div class="foe-head">${villainPortrait(id, 'lg')}
+      <div class="foe-id"><b class="name">${villainName(id)}</b>
+        <div class="chips-left">${elChip(v.element)}<span class="chip">${S.stats.hp} ${v.hp}</span><span class="chip">${S.stats.chakra} ${v.chakra}</span></div>
+        ${villainStats(Math.floor(v.resistance.physical), Math.floor(v.resistance.mental), v.speed)}
+      </div></div>
+    <div class="passive-row">${villainPassiveChips(v)}</div>
+    <div class="kit">${villainKit(v)}</div>
+  </section>`;
+}
+
 function villainPanel(s: BattleState): string {
   const v = s.villain.def;
-  const state = elementalStateOf(s, 'villain', data);
-  const res = (kind: 'physical' | 'mental') => Math.floor(villainResistance(s, kind));
   return `<section class="card villain-panel" id="vcard">
-    <div class="row between"><b class="name">${villainName(v.id)}</b><span>${elChip(v.element)}</span></div>
-    ${bar('hp', s.villain.hp, v.hp)}
-    ${bar('ck', s.villain.chakra, v.chakra)}
-    <div class="row between small muted"><span>${S.ui.resistShort(res('physical'), res('mental'))}</span><span>${S.stats.speed} ${v.speed}</span></div>
-    ${state ? `<div class="small">${elChip(state)} <span class="muted">${S.ui.stateChip(S.elements[state])}</span></div>` : ''}
-    ${villainPassiveLine(v)}
+    <div class="foe-head">${villainPortrait(v.id, 'md')}
+      <div class="foe-id">
+        <div class="row between"><b class="name">${villainName(v.id)}</b>${elChip(v.element)}</div>
+        ${bar('hp', s.villain.hp, v.hp)}
+        ${bar('ck', s.villain.chakra, v.chakra)}
+        <div id="vstats">${villainLiveStats(s)}</div>
+      </div>
+    </div>
+    <div class="passive-row" id="vpassives">${villainPassiveChips(v)}</div>
+    <div class="kit" id="vkit">${villainKit(v)}</div>
     <div class="badges" id="vbadges"></div>
   </section>`;
 }
 
-/** Passiva do vilão (na versão da dificuldade: a hardcore já vem trocada por scaleVillain). */
-function villainPassiveLine(v: BattleState['villain']['def']): string {
-  const passive = v.passive;
-  if (!passive) return '';
-  const t = S.villainPassives[passive.kind === 'cloak' ? passive.variant : passive.kind]!;
-  const hardcore = camp?.difficulty === 'hardcore' && v.hardcorePassive !== undefined;
-  return `<p class="passive small"><b>${t.name}</b> · ${hardcore ? t.hardcore : t.desc}</p>`;
-}
-
-/** Efeitos negativos e de luta comuns aos dois lados. `bad` = cor para o lado afetado. */
-function statusChips(fx: BattleState['playerFx'] | BattleState['villain']['fx'], bad: string): string[] {
-  const out: string[] = [];
-  if (fx.debilitated > 0) out.push(`<span class="chip ${bad}">${S.ui.debilitated}</span>`);
-  if (fx.paralyzed > 0) out.push(`<span class="chip ${bad}">⚡ ${S.ui.paralyzed}</span>`);
-  if (fx.asleep > 0) out.push(`<span class="chip ${bad}">💤 ${S.ui.asleep}</span>`);
-  if (fx.stunned > 0) out.push(`<span class="chip ${bad}">💫 ${S.ui.stunned}</span>`);
-  if (fx.feared > 0) out.push(`<span class="chip ${bad}">${S.ui.feared(fx.feared)}</span>`);
-  if (fx.confused > 0) out.push(`<span class="chip ${bad}">${S.ui.confused(fx.confused)}</span>`);
-  if (fx.tormented > 0) out.push(`<span class="chip ${bad}">${S.ui.tormented(fx.tormented)}</span>`);
-  if (fx.debilitateImmunity > 0) out.push(`<span class="chip">${S.ui.immune}</span>`);
-  if (fx.burn > 0) out.push(`<span class="chip ${bad}">${S.ui.burning(fx.burn)}</span>`);
-  if (fx.poison) out.push(`<span class="chip ${bad}">${S.ui.poisoned}</span>`);
-  if (fx.bleeding) out.push(`<span class="chip ${bad}">${S.ui.bleeding}</span>`);
-  if (fx.cloakTurns > 0) out.push(`<span class="chip jin">${S.ui.cloakOn(fx.cloakTurns)}</span>`);
-  if (fx.guaranteedCrit) out.push(`<span class="chip ${bad === 'bad' ? 'good' : 'bad'}">${S.ui.guaranteedCrit}</span>`);
-  if (fx.owesAction) out.push(`<span class="chip ${bad}">${S.ui.owesAction}</span>`);
-  return out;
+/** Atributos do vilão na luta (resistências com manto, névoa etc.). */
+function villainLiveStats(s: BattleState): string {
+  const res = (kind: 'physical' | 'mental') => Math.floor(villainResistance(s, kind));
+  return villainStats(res('physical'), res('mental'), s.villain.def.speed);
 }
 
 function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
+  const St = S.tips.status;
+  const out: Condition[] = [];
+  const add = (ico: string, label: string, tone: Condition['tone'], t: { name: string; desc: string }) =>
+    out.push({ icon: ico, label, tone, ...t });
   if (side === 'villain') {
     const v = s.villain;
-    const out = statusChips(v.fx, 'good');
-    if (v.mistTurns > 0) out.push(`<span class="chip bad">${S.ui.mistOn(v.mistTurns)}</span>`);
-    if (v.insaneTimer > 0) out.push(`<span class="chip good">${S.ui.insaneTimer(v.insaneTimer)}</span>`);
-    if (v.lastStand) out.push(`<span class="chip bad">${S.ui.lastStand}</span>`);
-    if (v.monster) out.push(`<span class="chip bad">${S.ui.monster}</span>`);
+    out.push(...fxConditions(v.fx, 'good'));
+    const state = elementalStateOf(s, 'villain', data);
+    if (state) add(ELEMENT_ICON[state], S.ui.stateChip(S.elements[state]), '', St.elementalState(S.elements[state]));
+    if (v.mistTurns > 0) add('mist', S.ui.mistOn(v.mistTurns), 'bad', St.mist);
+    if (v.insaneTimer > 0) add('timer', S.ui.insaneTimer(v.insaneTimer), 'good', St.insaneTimer);
+    if (v.lastStand) add('heartbreak', S.ui.lastStand, 'bad', St.lastStand);
+    if (v.monster) add('claw', S.ui.monster, 'bad', St.monster);
     // Golpe carregado: aviso para todos. Estrategista (Nara): vê a próxima ação.
-    if (v.charging) out.push(`<span class="chip bad">${S.ui.charging(techName(v.charging))}</span>`);
+    if (v.charging) add('warning', S.ui.charging(techName(v.charging)), 'bad', St.charging);
     else if (s.player.passive === 'strategist' && v.intent) {
       const what = v.intent.kind === 'rest' ? S.ui.intentRest : techName(v.intent.id);
-      out.push(`<span class="chip">${S.ui.intent(what)}</span>`);
+      add('intent', S.ui.intent(what), '', St.intent);
     }
-    return out.join('');
+    return out.map(conditionChip).join('');
   }
   const fx = s.playerFx;
-  const out = statusChips(fx, 'bad');
-  if (fx.dojutsuActive && s.player.dojutsu) out.push(`<span class="chip eye">👁 ${S.ui.dojutsuOn(S.dojutsu[s.player.dojutsu]!.name, fx.dojutsuTurns)}</span>`);
-  if (fx.gatesTurns > 0) out.push(`<span class="chip good">${S.ui.gatesOn(S.gatesStage(fx.gatesStage), fx.gatesTurns)}</span>`);
-  if (fx.expansionTurns > 0) out.push(`<span class="chip good">${S.ui.expansionOn(fx.expansionTurns)}</span>`);
-  if (fx.clonesArmed) out.push(`<span class="chip good">${S.ui.clonesArmed}</span>`);
-  if (fx.armorTurns > 0) out.push(`<span class="chip good">${S.ui.armorOn(fx.armorTurns)}</span>`);
-  if (fx.stance) out.push(`<span class="chip good">${S.ui.stanceOn}</span>`);
-  if (fx.dodge) out.push(`<span class="chip good">${S.ui.dodge(Math.round(fx.dodge.chance * 100))}</span>`);
-  out.push(`<span class="chip">❤ ×${s.player.revives}</span>`);
-  return out.join('');
+  out.push(...fxConditions(fx, 'bad'));
+  if (fx.dojutsuActive && s.player.dojutsu) {
+    const d = S.dojutsu[s.player.dojutsu]!;
+    add(s.player.dojutsu, S.ui.dojutsuOn(d.name, fx.dojutsuTurns), 'good', { name: d.name, desc: d.desc });
+  }
+  if (fx.gatesTurns > 0) add('gates', S.ui.gatesOn(S.gatesStage(fx.gatesStage), fx.gatesTurns), 'good', St.gates);
+  if (fx.expansionTurns > 0) add('expansion', S.ui.expansionOn(fx.expansionTurns), 'good', St.expansion);
+  if (fx.clonesArmed) add('clones', S.ui.clonesArmed, 'good', St.clones);
+  if (fx.armorTurns > 0) add('armor', S.ui.armorOn(fx.armorTurns), 'good', St.armor);
+  if (fx.stance) add('stance', S.ui.stanceOn, 'good', St.stance);
+  if (fx.dodge) add('dodge', S.ui.dodge(Math.round(fx.dodge.chance * 100)), 'good', St.dodge);
+  add('willOfFire', `×${s.player.revives}`, '', St.revives);
+  return out.map(conditionChip).join('');
 }
+
+/** Célula de ação: ícone, nome, valores e a cor do tipo/elemento. A ficha completa fica na dica. */
+function actionCell(o: {
+  choice: string;
+  cls: string;
+  style?: string;
+  ico: string;
+  title: string;
+  sub?: string;
+  extra: string;
+  tip: string;
+  enabled?: boolean;
+  primary?: boolean;
+}): string {
+  const off = o.enabled === false ? ' aria-disabled="true"' : '';
+  return `<button class="btn act ${o.cls}${o.primary ? ' primary' : ''}"${o.style ?? ''} data-choice="${o.choice}"${off}${o.tip}>
+    <span class="act-ico">${o.ico}</span><span class="act-txt"><b>${o.title}</b>${o.sub ? `<span>${o.sub}</span>` : ''}<small>${o.extra}</small></span></button>`;
+}
+
+const ITEM_ICONS: Record<ConsumableId, string> = { soldierPill: 'pill', medKit: 'kit', explosiveTag: 'tag', smokeBomb: 'smoke' };
 
 function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): string {
   const p = s.player;
   const B = data.balance;
+  const A = S.tips.actions;
   let title = S.actions[action] ?? action;
   let sub = '';
   let extra = '';
-  let cls: string = action;
+  let cls = `act-${action}`;
+  let style = '';
+  let ico = icon(action);
+  let tipAttr = '';
   const techId = actionTechniqueId(action);
   const itemId = actionItemId(action);
   if (techId) {
     const tech = playerTechnique(p, techId, data);
+    const look = techLook(tech.type, tech.element);
     title = esc(techName(techId));
-    cls = tech.type;
+    cls = `act-${tech.type} ${look.cls}`;
+    style = look.style;
+    ico = techIcon(p, techId);
+    tipAttr = playerTechTip(p, techId);
     if (tech.mental) {
       extra = `${S.ui.prisonTurns(playerGenjutsuTurns(s, techId, data))} · ${formatPct(playerGenjutsuHitChance(s, data, techId))} · ${S.ui.cost(tech.chakraCost)}`;
     } else if (tech.state) {
@@ -991,36 +1139,47 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     const it = S.consumables[itemId]!;
     title = `${it.name} ×${p.bag[itemId]}`;
     extra = it.desc;
-    cls = 'item';
+    cls = 'act-item';
+    ico = icon(ITEM_ICONS[itemId]);
+    tipAttr = tip(it.name, it.desc);
   } else if (action === 'expansion') {
     extra = `${S.ui.cost(B.expansion.chakraCost)} · ×${String(B.expansion.taijutsuMult).replace('.', ',')} tai`;
+    tipAttr = tip(S.actives.expansion!.name, S.actives.expansion!.desc);
   } else if (action === 'stance') {
     extra = S.ui.stanceHint;
+    tipAttr = tip(title, A.stance);
   } else if (action === 'pass') {
     extra = S.ui.passHint;
+    tipAttr = tip(title, A.pass);
   } else if (action === 'dojutsu' && p.dojutsu) {
     const stage = sharinganStage(p, data);
-    title = S.dojutsu[p.dojutsu]!.name;
+    const d = S.dojutsu[p.dojutsu]!;
+    title = d.name;
     sub = stage ? S.sharinganStage(stage) : '';
     extra = `${S.ui.cost(dojutsuActivationCost(p, data) ?? 0)} · −${B.dojutsu[p.dojutsu].upkeep}/rodada`;
+    ico = icon(p.dojutsu);
+    tipAttr = tip(d.name, d.desc);
   } else if (action === 'gates') {
     const gates = gatesToOpen(p, data);
     if (gates) {
       sub = S.gatesStage(gates.stage);
       extra = `−${gatesHpCost(p, gates.hpCostPct)} HP · ${S.ui.cost(gates.chakraCost)} · ×${String(gates.taijutsuMult).replace('.', ',')} tai`;
     }
+    tipAttr = tip(S.actives.gates!.name, S.actives.gates!.desc);
   } else if (action === 'medical') {
     const tech = playerMedical(p, data);
     if (tech) {
       const heal = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * medicalHealPct(p, data)));
       sub = esc(techName(tech.id));
       extra = `+${heal} HP · ${S.ui.cost(tech.chakraCost)}`;
+      tipAttr = playerTechTip(p, tech.id);
     }
   } else if (action === 'rest') {
-    extra = `+${restChakra(p, data)} ck`;
+    const n = restChakra(p, data);
+    extra = `+${n} ck`;
+    tipAttr = tip(title, A.rest(n));
   }
-  return `<button class="btn act act-${cls}" data-choice="${action}" ${enabled ? '' : 'disabled'}>
-    <b>${title}</b>${sub ? `<span>${sub}</span>` : ''}<small>${extra}</small></button>`;
+  return actionCell({ choice: action, cls, style, ico, title, sub, extra, tip: tipAttr, enabled });
 }
 
 type ActionTab = AttackType | 'special' | 'items';
@@ -1054,36 +1213,58 @@ function actionList(s: BattleState, tab: ActionTab): PlayerAction[] {
 function reactionButton(s: BattleState, pending: PendingReaction, choice: ReactionChoice): string {
   const prev = reactionPreview(s, pending.incoming, choice, data);
   const pct = (x: number) => Math.round(x * 100);
-  let title: string;
-  let hint: string;
-  let cls = 'react';
+  const A = S.tips.actions;
   switch (prev.kind) {
     case 'resist':
-      title = S.ui.reactResist;
-      hint = S.ui.reactResistHint(pct(prev.fraction), incomingDamagePreview(s, pending.incoming, data));
-      cls += ' primary';
-      break;
+      return actionCell({
+        choice,
+        cls: 'react',
+        primary: true,
+        ico: icon('stance'),
+        title: S.ui.reactResist,
+        extra: S.ui.reactResistHint(pct(prev.fraction), incomingDamagePreview(s, pending.incoming, data)),
+        tip: tip(S.ui.reactResist, A.resist),
+      });
     case 'substitution':
-      title = S.ui.reactSubstitution;
-      hint = S.ui.reactSubstitutionHint(pct(prev.chance), prev.usesLeft);
-      break;
+      return actionCell({
+        choice,
+        cls: 'react act-substitution',
+        ico: icon('substitution'),
+        title: S.ui.reactSubstitution,
+        extra: S.ui.reactSubstitutionHint(pct(prev.chance), prev.usesLeft),
+        tip: tip(S.ui.reactSubstitution, A.substitution),
+      });
     case 'guard': {
       const id = reactionTechniqueId(choice)!;
-      title = S.ui.reactBarrier(esc(techName(id)));
-      hint = `${S.ui.reactGuardHint(pct(prev.holdChance))} · ${S.ui.cost(playerTechnique(s.player, id, data).chakraCost)}`;
-      break;
+      const tech = playerTechnique(s.player, id, data);
+      const look = techLook(tech.type, tech.element);
+      return actionCell({
+        choice,
+        cls: `react ${look.cls}`,
+        style: look.style,
+        ico: icon('barrier'),
+        title: S.ui.reactBarrier(esc(techName(id))),
+        extra: `${S.ui.reactGuardHint(pct(prev.holdChance))} · ${S.ui.cost(tech.chakraCost)}`,
+        tip: tip(S.ui.reactBarrier(esc(techName(id))), A.guard),
+      });
     }
     case 'clash': {
       const id = reactionTechniqueId(choice)!;
       const tech = playerTechnique(s.player, id, data);
-      title = tech.barrier !== undefined ? S.ui.reactBarrier(esc(techName(id))) : S.ui.reactClash(esc(techName(id)));
+      const look = techLook(tech.type, tech.element);
+      const title = tech.barrier !== undefined ? S.ui.reactBarrier(esc(techName(id))) : S.ui.reactClash(esc(techName(id)));
       const [lose, cancel, win] = prev.odds;
-      hint = `${S.ui.reactClashHint(pct(win), pct(cancel), pct(lose))} · ${S.ui.cost(tech.chakraCost)}`;
-      title += ` ${elChip(tech.element)}`;
-      break;
+      return actionCell({
+        choice,
+        cls: `react ${look.cls}`,
+        style: look.style,
+        ico: tech.barrier !== undefined ? icon('barrier') : techIcon(s.player, id),
+        title,
+        extra: `${S.ui.reactClashHint(pct(win), pct(cancel), pct(lose))} · ${S.ui.cost(tech.chakraCost)}`,
+        tip: tip(title, tech.barrier !== undefined ? A.guard : A.clash),
+      });
     }
   }
-  return `<button class="btn act ${cls}" data-choice="${choice}"><b>${title}</b><small>${hint}</small></button>`;
 }
 
 function floatNumber(card: HTMLElement | null, text: string, cls: string) {
@@ -1107,14 +1288,14 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
 
   const root = show(
     h(`<div class="screen battle">
-      <div class="battle-head"><span>${setup.label}</span><span id="round">${S.ui.round(0)}</span></div>
+      <div class="battle-head"><span>${icon('swords')} ${setup.label}</span><span id="round">${S.ui.round(0)}</span></div>
       <div id="vslot">${villainPanel(state)}</div>
       <div id="dice" class="dice"></div>
       <ol id="log" class="log"></ol>
       <section class="card player-mini" id="pcard">
-        <div class="panel-head">${avatar('sm')}<div class="panel-id"><b class="name">${S.ui.you} · ${originLabel(c.origin)}</b>
-          <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elChip(c.player.affinity)}</div></div>
-          <button class="btn small sheet-btn" data-sheet>🎒</button></div>
+        <div class="panel-head">${avatar(c.player)}<div class="panel-id"><b class="name">${S.ui.you} · ${originLabel(c.origin)}</b>
+          <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elChip(c.player.affinity)}${jinChip(c.player)}</div></div>
+          <button class="btn small sheet-btn" data-sheet aria-label="${S.ui.sheet}">${icon('scroll')}</button></div>
         ${bar('hp', state.player.hp, state.player.maxHp)}
         ${bar('ck', state.player.chakra, state.player.maxChakra)}
         <div class="badges" id="pbadges"></div>
@@ -1133,9 +1314,17 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     logEl.insertAdjacentHTML('afterbegin', `<li class="${cls}">${text}</li>`);
     while (logEl.children.length > 30) logEl.lastElementChild!.remove();
   };
+  let kitOf: BattleState['villain']['def'] | null = state.villain.def;
   const renderBadges = (s: BattleState) => {
     root.querySelector('#vbadges')!.innerHTML = badgesHtml(s, 'villain');
     root.querySelector('#pbadges')!.innerHTML = badgesHtml(s, 'player');
+    root.querySelector('#vstats')!.innerHTML = villainLiveStats(s);
+    // O vilão pode trocar de ficha no meio da luta (Shukaku): refaz técnicas e passivas.
+    if (s.villain.def !== kitOf) {
+      kitOf = s.villain.def;
+      root.querySelector('#vkit')!.innerHTML = villainKit(s.villain.def);
+      root.querySelector('#vpassives')!.innerHTML = villainPassiveChips(s.villain.def);
+    }
   };
   let tab: ActionTab = 'taijutsu';
   let current = state;
@@ -1154,26 +1343,31 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     const tabs = actionTabs(s);
     if (!tabs.includes(tab)) tab = tabs[0]!;
     const tabLabel = (t: ActionTab) => (t === 'special' ? S.ui.special : t === 'items' ? S.ui.bag : S.actions[t]);
+    const tabIcon = (t: ActionTab) => icon(t === 'special' ? 'swords' : t === 'items' ? 'item' : t);
+    const tabTip = (t: ActionTab) => {
+      const info = S.tips.types[t];
+      return info ? tip(info.name, info.desc) : '';
+    };
     const tabsHtml = `<div class="act-tabs" role="tablist">${tabs
-      .map((t) => `<button class="act-tab tab-${t}${t === tab ? ' on' : ''}" role="tab" aria-selected="${t === tab}" data-tab="${t}">${tabLabel(t)}</button>`)
+      .map((t) => `<button class="act-tab tab-${t}${t === tab ? ' on' : ''}" role="tab" aria-selected="${t === tab}" data-tab="${t}"${tabTip(t)}>${tabIcon(t)}<span>${tabLabel(t)}</span></button>`)
       .join('')}</div>`;
     const buttons = actionList(s, tab)
       .map((a) => actionButton(s, a, enabled && avail.includes(a)))
       .join('');
-    const toggle = (key: keyof RoundExtras, label: string, armedLabel: string, hint: string) =>
-      `<button class="btn focus-btn${extras[key] ? ' on' : ''}" data-extra="${key}" aria-pressed="${Boolean(extras[key])}" ${enabled ? '' : 'disabled'}>${extras[key] ? armedLabel : label}<small>${hint}</small></button>`;
+    const toggle = (key: keyof RoundExtras, ico: string, label: string, armedLabel: string, hint: string) =>
+      `<button class="btn focus-btn${extras[key] ? ' on' : ''}" data-extra="${key}" aria-pressed="${Boolean(extras[key])}" ${enabled ? '' : 'aria-disabled="true"'}${tip(label, hint)}>${icon(ico)}<span>${extras[key] ? armedLabel : label}<small>${hint}</small></span></button>`;
     const free = [
-      canFocus(s) ? toggle('focus', S.ui.focus, S.ui.focusArmed, S.ui.focusHint) : '',
+      canFocus(s) ? toggle('focus', 'focus', S.ui.focus, S.ui.focusArmed, S.ui.focusHint) : '',
       s.player.active === 'shadowClones' && !s.playerFx.clonesArmed && s.player.chakra >= data.balance.shadowClones.chakraCost
-        ? toggle('clones', `${S.ui.clones} · ${S.ui.cost(data.balance.shadowClones.chakraCost)}`, S.ui.clonesArmed, S.ui.clonesHint)
+        ? toggle('clones', 'clones', `${S.ui.clones} · ${S.ui.cost(data.balance.shadowClones.chakraCost)}`, S.ui.clonesArmed, S.ui.clonesHint)
         : '',
-      sharinganActive(s) ? toggle('fear', S.ui.fearVariant, `${S.ui.fearVariant} ✓`, S.ui.fearHint) : '',
+      sharinganActive(s) ? toggle('fear', 'fear', S.ui.fearVariant, `${S.ui.fearVariant} ✓`, S.ui.fearHint) : '',
     ].join('');
-    actionsEl.innerHTML = `${tabsHtml}${free}<div class="act-grid">${buttons}</div>`;
+    actionsEl.innerHTML = `${tabsHtml}${free ? `<div class="free-row">${free}</div>` : ''}<div class="act-grid">${buttons}</div>`;
   };
   actionsEl.addEventListener('click', (e) => {
     const extra = (e.target as HTMLElement).closest<HTMLElement>('[data-extra]');
-    if (extra && enabledNow) {
+    if (extra && enabledNow && !isOff(extra)) {
       const key = extra.dataset.extra as keyof RoundExtras;
       extras = { ...extras, [key]: !extras[key] };
       renderActions(current, enabledNow);
@@ -1192,7 +1386,9 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   const chooseReaction = async (s: BattleState, pending: PendingReaction): Promise<ReactionChoice> => {
     const tech = techName(pending.incoming.techniqueId);
     const charged = pending.incoming.charged ? ` <span class="chip bad">${S.ui.charged}</span>` : '';
-    actionsEl.innerHTML = `<div class="react-box"><h3>${S.ui.reactTitle(villainName(s.villain.def.id), esc(tech))} ${elChip(pending.incoming.element)}${charged}</h3>
+    const def = s.villain.def.techniques.find((t) => t.id === pending.incoming.techniqueId);
+    const techTip = def ? villainTechTip(s.villain.def, def) : '';
+    actionsEl.innerHTML = `<div class="react-box"><div class="react-head">${villainPortrait(s.villain.def.id, 'sm')}<h3><span class="react-tech"${techTip}>${S.ui.reactTitle(villainName(s.villain.def.id), esc(tech))}</span> ${elChip(pending.incoming.element)}${charged}</h3></div>
       <div class="act-grid">${pending.options.map((o) => reactionButton(s, pending, o)).join('')}</div></div>`;
     return choose<ReactionChoice>(actionsEl);
   };
@@ -1271,8 +1467,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
             dice,
             S.roulettes.initiative,
             [
-              { label: S.sliceLabels.player!, weight: slices[0]!.weight, color: '#4aa3ff' },
-              { label: villainName(prev.villain.def.id), weight: slices[1]!.weight, color: '#ff5a5a' },
+              { label: S.sliceLabels.player!, weight: slices[0]!.weight, color: SIDE_COLORS.player },
+              { label: villainName(prev.villain.def.id), weight: slices[1]!.weight, color: SIDE_COLORS.villain },
             ],
             ev.first === 'player' ? 0 : 1,
             pace.strip(),
@@ -1341,8 +1537,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
             dice,
             `${S.roulettes.substitution} · ${who(ev.side)}`,
             [
-              { label: S.sliceLabels.dodged!, weight: ev.chance, color: '#4cd07d' },
-              { label: S.sliceLabels.failed!, weight: 1 - ev.chance, color: '#5b6578' },
+              { label: S.sliceLabels.dodged!, weight: ev.chance, color: SIDE_COLORS.hit },
+              { label: S.sliceLabels.failed!, weight: 1 - ev.chance, color: SIDE_COLORS.miss },
             ],
             ev.success ? 0 : 1,
             pace.strip(),
@@ -1363,7 +1559,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
             S.roulettes.clash,
             [
               { label: techName(ev.attackTechnique), weight: ev.odds[0], color: color(ev.attacker, ev.attackTechnique, '#ff8a5a') },
-              { label: S.sliceLabels.cancel!, weight: ev.odds[1], color: '#5b6578' },
+              { label: S.sliceLabels.cancel!, weight: ev.odds[1], color: SIDE_COLORS.miss },
               { label: techName(ev.defenseTechnique), weight: ev.odds[2], color: color(defender, ev.defenseTechnique, '#4aa3ff') },
             ],
             ev.result === 'attacker' ? 0 : ev.result === 'cancel' ? 1 : 2,
@@ -1487,9 +1683,9 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
               dice,
               `${S.roulettes.hit} · ${who(ev.side)}`,
               [
-                { label: S.sliceLabels.miss!, weight: hs[0]!.weight, color: '#5b6578' },
-                { label: S.sliceLabels.hit!, weight: hs[1]!.weight, color: mine ? '#4cd07d' : '#ff8a5a' },
-                { label: S.sliceLabels.crit!, weight: hs[2]!.weight, color: '#f5c542' },
+                { label: S.sliceLabels.miss!, weight: hs[0]!.weight, color: SIDE_COLORS.miss },
+                { label: S.sliceLabels.hit!, weight: hs[1]!.weight, color: mine ? SIDE_COLORS.hit : SIDE_COLORS.foeHit },
+                { label: S.sliceLabels.crit!, weight: hs[2]!.weight, color: SIDE_COLORS.crit },
               ],
               ev.outcome === 'miss' ? 0 : ev.outcome === 'hit' ? 1 : 2,
               pace.strip(),
@@ -1799,13 +1995,13 @@ async function endScreen(won: boolean, stoppedAt: string | null): Promise<void> 
   progressDots(won ? campaign.length : c.stageIndex);
   const root = show(
     h(`<div class="screen end ${won ? 'win' : 'lose'}">
-      <h1>${won ? '🏆' : '💀'}</h1>
+      <div class="end-seal">${won ? clanSymbol(c.player.origin.lineageId) : villainPortrait(campaign[c.stageIndex]!.villains[0]!, 'lg')}</div>
       <h2>${won ? S.ui.victoryTitle : S.ui.defeatTitle}</h2>
       ${stoppedAt ? `<p class="center">${S.ui.defeatBy(stoppedAt)}</p>` : ''}
       <p class="center muted">${S.ui.revivesUsed(c.player.revivesUsed)}</p>
       ${stageTrail(won ? campaign.length : c.stageIndex)}
       ${playerPanel(c.player)}
-      <div class="sticky-cta"><button class="btn primary big" data-choice="new">🎲 ${S.ui.newRun}</button></div>
+      <div class="sticky-cta"><button class="btn primary big" data-choice="new">${icon('dice')} ${S.ui.newRun}</button></div>
     </div>`),
   );
   await choose(root);
@@ -1949,6 +2145,10 @@ async function main() {
     }
   });
   document.getElementById('disclaimer')!.textContent = S.ui.disclaimer;
+  document.getElementById('sheet-btn')!.innerHTML = icon('scroll');
+  document.getElementById('history-btn')!.innerHTML = icon('timer');
+  document.querySelector('.brand .seal')!.innerHTML = clanSymbol(null);
+  installTooltips();
   document.getElementById('instant-label')!.textContent = S.ui.instant;
 
   for (;;) {

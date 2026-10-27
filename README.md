@@ -29,7 +29,8 @@ src/core    regras puras: roleta, origem, iniciativa, acerto, dano, elementos, c
 src/data    números de balanceamento, linhagens, técnicas, vilões, campanha, textos (PT-BR)
 src/state   histórico de runs (localStorage injetável)
 src/sim     jogador automático e executor de lutas/campanha
-prototype   protótipo jogável (HTML + TS), usa o core real
+prototype   protótipo jogável (HTML + TS), usa o core real; arte em SVG original (prototype/art.ts)
+public/img  imagens próprias opcionais que substituem os retratos (ver public/img/LEIAME.md)
 scripts     simulate.ts, build-prototype.ts
 tests       testes do core
 ```
@@ -79,3 +80,4 @@ O **v1.0.0** fica para quando o jogo estiver completo para quem joga:
 | v0.12.1 | README: aviso de projeto de fã mais curto. |
 | v0.13.0 | Vilão sem chakra concentra com a mesma fórmula do jogador: 15% do chakra máximo (mínimo 1), no lugar dos +4 fixos. |
 | v0.14.0 | Segunda fase dos vilões (Zabuza no último suspiro, Gaara como Shukaku, Orochimaru trocando de pele): o chakra volta na mesma fração do HP, sem baixar o que ele já tinha. |
+| v0.15.0 | Visual novo do protótipo: tema claro e escuro que segue o aparelho, com paleta da vila da Folha; retratos desenhados dos vilões e do ninja (por linhagem, com marcas de jinchuuriki), símbolos dos clãs nas roletas e na ficha; ficha do vilão no mapa e na luta com passivas e técnicas; células de ataque com cor e ícone por elemento e tipo; condições de batalha com ícones; dicas ao passar o mouse ou segurar o dedo em técnicas, passivas, condições e status; nomes das roletas cabem nas fatias. Imagens próprias em `public/img/` substituem os retratos. |

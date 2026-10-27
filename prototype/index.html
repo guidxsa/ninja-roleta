@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0d1222" />
+    <meta name="theme-color" content="#10121b" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fbf4e3" media="(prefers-color-scheme: light)" />
     <title>Ninja Roleta</title>
     <!-- Fontes de pincel/estilo japonês. Sem internet, caem para as fontes do sistema. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,11 +19,11 @@
   </head>
   <body>
     <header class="top">
-      <div class="brand"><span class="seal">忍</span> <b>Ninja Roleta</b> <small>protótipo</small></div>
+      <div class="brand"><span class="seal" aria-hidden="true">忍</span> <b>Ninja Roleta</b> <small>protótipo</small></div>
       <div class="top-actions">
         <label class="toggle small"><input type="checkbox" id="instant" /> ⚡ <span id="instant-label"></span></label>
-        <button class="btn small" id="sheet-btn" title="Ficha ninja">🥷</button>
-        <button class="btn small" id="history-btn" title="Histórico">📜</button>
+        <button class="btn small" id="sheet-btn" title="Ficha ninja" aria-label="Ficha ninja">🥷</button>
+        <button class="btn small" id="history-btn" title="Histórico" aria-label="Histórico">📜</button>
       </div>
       <div class="dots" id="dots"></div>
     </header>
