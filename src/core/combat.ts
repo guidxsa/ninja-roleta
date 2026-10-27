@@ -330,10 +330,10 @@ export type BattleEvent =
   | { type: 'mist'; turns: number }
   | { type: 'mistEnd' }
   | { type: 'trickster'; counterCrit: boolean }
-  | { type: 'lastStand'; healed: number }
+  | { type: 'lastStand'; healed: number; chakra: number }
   | { type: 'insaneTimer'; rounds: number }
-  | { type: 'insaneRevive'; hp: number }
-  | { type: 'monster'; hp: number }
+  | { type: 'insaneRevive'; hp: number; chakra: number }
+  | { type: 'monster'; hp: number; chakra: number }
   | { type: 'dodge'; source: Dodge['source'] }
   | { type: 'item'; item: ConsumableId; amount: number }
   | { type: 'revive'; revivesLeft: number }
@@ -1541,6 +1541,12 @@ function hurtVillain(s: BattleState, amount: number): number {
   return dealt;
 }
 
+/** Segunda fase do vilão: o chakra volta na mesma fração do HP (sem baixar o que ele já tem). */
+function restoreVillainChakra(v: BattleState['villain'], pct: number): number {
+  v.chakra = Math.max(v.chakra, Math.floor(v.def.chakra * pct));
+  return v.chakra;
+}
+
 function villainDown(s: BattleState): void {
   const v = s.villain;
   const passive = v.def.passive;
@@ -1562,13 +1568,15 @@ function villainDown(s: BattleState): void {
     v.fx.cloakUsed = true;
     v.fx.cloakTurns = 0;
     clearNegatives(v.fx);
-    s.log.push({ type: 'monster', hp: v.hp });
+    const chakra = restoreVillainChakra(v, m.healPct);
+    s.log.push({ type: 'monster', hp: v.hp, chakra });
     return;
   }
   if (passive?.kind === 'mist' && passive.lastStand && !v.lastStand) {
     v.lastStand = true;
     v.hp = Math.max(1, Math.floor(v.def.hp * passive.lastStand.healPct));
-    s.log.push({ type: 'lastStand', healed: v.hp });
+    const chakra = restoreVillainChakra(v, passive.lastStand.healPct);
+    s.log.push({ type: 'lastStand', healed: v.hp, chakra });
     return;
   }
   finish(s, 'won');
@@ -1917,7 +1925,8 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
     if (v.insaneTimer === 0) {
       v.hp = Math.max(v.hp, Math.floor(v.def.hp * passive.revivePct));
       v.insaneRevives++;
-      s.log.push({ type: 'insaneRevive', hp: v.hp });
+      const chakra = restoreVillainChakra(v, passive.revivePct);
+      s.log.push({ type: 'insaneRevive', hp: v.hp, chakra });
     }
   }
 

@@ -1568,7 +1568,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'lastStand':
           disp.vhp = ev.healed;
           floatNumber(vcard(), `+${ev.healed}`, 'heal');
-          log(S.log.lastStand(ev.healed), 'bad');
+          log(S.log.lastStand(ev.healed, ev.chakra), 'bad');
           break;
         case 'insaneTimer':
           log(S.log.insaneTimer(who('villain'), ev.rounds), 'bad');
@@ -1576,12 +1576,12 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'monster':
           disp.vhp = ev.hp;
           floatNumber(vcard(), `+${ev.hp}`, 'heal');
-          log(S.log.monster(ev.hp), 'bad');
+          log(S.log.monster(ev.hp, ev.chakra), 'bad');
           break;
         case 'insaneRevive':
           disp.vhp = ev.hp;
           floatNumber(vcard(), `🐍 ${ev.hp}`, 'heal');
-          log(S.log.insaneRevive(who('villain'), ev.hp), 'bad');
+          log(S.log.insaneRevive(who('villain'), ev.hp, ev.chakra), 'bad');
           break;
         case 'debilitateResisted':
           log(S.log.debilitateResisted(who(ev.target)), 'sys');

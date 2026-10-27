@@ -678,10 +678,10 @@ export const ptBR = {
     mistEnd: 'A névoa se dissipa.',
     trickster: (who: string, counter: boolean) =>
       counter ? `${who} escapa do golpe fatal e prepara um contra-ataque!` : `${who} escapa do golpe fatal com 1 de HP!`,
-    lastStand: (n: number) => `Haku se sacrifica! Zabuza volta com ${n} de HP, mais forte e sedento de sangue.`,
+    lastStand: (n: number, ck: number) => `Haku se sacrifica! Zabuza volta com ${n} de HP e ${ck} de chakra, mais forte e sedento de sangue.`,
     insaneTimer: (who: string, n: number) => `${who} ri como um louco: derrote-o em ${n} rodada(s) ou ele revive!`,
-    insaneRevive: (who: string, n: number) => `${who} troca de pele e revive com ${n} de HP!`,
-    monster: (n: number) => `A areia ruge: Gaara volta como Shukaku com ${n} de HP!`,
+    insaneRevive: (who: string, n: number, ck: number) => `${who} troca de pele e revive com ${n} de HP e ${ck} de chakra!`,
+    monster: (n: number, ck: number) => `A areia ruge: Gaara volta como Shukaku com ${n} de HP e ${ck} de chakra!`,
     won: 'Vilão derrotado!',
     lost: 'Você foi derrotado.',
     you: 'Você',

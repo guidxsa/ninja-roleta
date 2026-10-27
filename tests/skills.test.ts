@@ -545,8 +545,9 @@ describe('passivas e comportamentos dos vilões', () => {
       passive: { kind: 'mist', turns: 4, evasionMult: 1.5, lastStand: { healPct: 0.5, damageMult: 1.1 } },
     });
     const s0 = withInitiative(startBattle(createPlayer(common, gameData), v));
-    const s1 = playRound({ ...s0, villain: { ...s0.villain, hp: 10 } }, 'tech:basicTaijutsu', seq(0.5), gameData);
-    expect(ofType(s1.log, 'lastStand')).toEqual([{ type: 'lastStand', healed: 25 }]);
+    const s1 = playRound({ ...s0, villain: { ...s0.villain, hp: 10, chakra: 0 } }, 'tech:basicTaijutsu', seq(0.5), gameData);
+    // O chakra volta na mesma fração do HP: 50% de 20.
+    expect(ofType(s1.log, 'lastStand')).toEqual([{ type: 'lastStand', healed: 25, chakra: 10 }]);
     // (10 − 7) × 1,1 = 3
     expect(ofType(s1.log, 'attack').find((a) => a.side === 'villain')).toMatchObject({ damage: 3 });
     expect(s1.playerFx.bleeding).toBe(true);
@@ -595,9 +596,10 @@ describe('passivas e comportamentos dos vilões', () => {
 
     it('Gaara no hardcore (Monstro): derrotado pela 1ª vez, volta como Shukaku com 50% do HP e golpes de monstro', () => {
       const s0 = withInitiative(startBattle(createPlayer(common, gameData), gaara(villainsById.gaara!.hardcorePassive!)));
-      const s1 = playRound({ ...s0, villain: { ...s0.villain, hp: 5 } }, 'tech:basicTaijutsu', seq(0.5), gameData);
+      const s1 = playRound({ ...s0, villain: { ...s0.villain, hp: 5, chakra: 0 } }, 'tech:basicTaijutsu', seq(0.5), gameData);
       expect(s1.status).toBe('ongoing');
-      expect(ofType(s1.log, 'monster')).toEqual([{ type: 'monster', hp: 50 }]);
+      const chakra = Math.floor(s0.villain.def.chakra * 0.5);
+      expect(ofType(s1.log, 'monster')).toEqual([{ type: 'monster', hp: 50, chakra }]);
       expect(s1.villain.monster).toBe(true);
       expect(s1.villain.def.techniques.map((t) => t.id)).toEqual(['shukakuClaw', 'airBullet', 'sandBurial']);
       // Manto permanente: resistências ×1,25 sem pagar chakra e sem acabar.
@@ -683,9 +685,12 @@ describe('passivas e comportamentos dos vilões', () => {
       const s0 = withInitiative(startBattle(createPlayer(common, gameData), insane()));
       let s = playRound({ ...s0, villain: { ...s0.villain, hp: 60 } }, 'tech:basicTaijutsu', seq(0.5), gameData);
       expect(ofType(s.log, 'insaneTimer')).toEqual([{ type: 'insaneTimer', rounds: 5 }]);
-      s = { ...s, villain: { ...s.villain, hp: 20 } };
+      s = { ...s, villain: { ...s.villain, hp: 20, chakra: 0 } };
       for (let i = 0; i < 4; i++) s = playRound(s, 'rest', seq(0.5), gameData);
-      expect(ofType(s.log, 'insaneRevive')).toEqual([{ type: 'insaneRevive', hp: 50 }]);
+      expect(ofType(s.log, 'insaneRevive')).toMatchObject([{ type: 'insaneRevive', hp: 50 }]);
+      // Revive com o chakra na mesma fração do HP (50% do máximo), sem baixar o que já tinha.
+      const ev = ofType(s.log, 'insaneRevive')[0]!;
+      expect(ev.chakra).toBeGreaterThanOrEqual(Math.floor(s0.villain.def.chakra * 0.5));
       // A contagem recomeça sempre que ele cair abaixo de 50% de novo.
       s = playRound({ ...s, villain: { ...s.villain, hp: 55 } }, 'tech:basicTaijutsu', seq(0.5), gameData);
       expect(ofType(s.log, 'insaneTimer')).toHaveLength(2);
@@ -703,7 +708,7 @@ describe('passivas e comportamentos dos vilões', () => {
       let s = playRound({ ...s0, villain: { ...s0.villain, hp: 60 } }, 'tech:basicTaijutsu', seq(0.999), gameData);
       expect(ofType(s.log, 'attack').find((a) => a.side === 'player')).toMatchObject({ outcome: 'hit', critChance: 0 });
       for (let i = 0; i < 3; i++) s = playRound(s, 'rest', seq(0.5), gameData);
-      expect(ofType(s.log, 'insaneRevive')).toEqual([{ type: 'insaneRevive', hp: 50 }]);
+      expect(ofType(s.log, 'insaneRevive')).toMatchObject([{ type: 'insaneRevive', hp: 50 }]);
     });
 
     const reviveCycle = (start: ReturnType<typeof startBattle>, times: number) => {

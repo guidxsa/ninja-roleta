@@ -78,3 +78,4 @@ O **v1.0.0** fica para quando o jogo estiver completo para quem joga:
 | v0.12.0 | Substituição não gasta mais ação (continua custando 2 de chakra e 1 dos usos da luta) e pode ser usada mesmo devendo a ação por outra reação. Vale para jogador e vilão. |
 | v0.12.1 | README: aviso de projeto de fã mais curto. |
 | v0.13.0 | Vilão sem chakra concentra com a mesma fórmula do jogador: 15% do chakra máximo (mínimo 1), no lugar dos +4 fixos. |
+| v0.14.0 | Segunda fase dos vilões (Zabuza no último suspiro, Gaara como Shukaku, Orochimaru trocando de pele): o chakra volta na mesma fração do HP, sem baixar o que ele já tinha. |
