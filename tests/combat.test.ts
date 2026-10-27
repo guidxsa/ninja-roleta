@@ -368,11 +368,19 @@ describe('chakra dos vilões', () => {
     expect(ofType(s1.log, 'attack').filter((a) => a.side === 'villain')).toHaveLength(1);
   });
 
-  it('sem chakra para nenhuma técnica, concentra chakra no lugar de atacar', () => {
+  it('sem chakra para nenhuma técnica, concentra chakra no lugar de atacar (15% do máximo, como o jogador)', () => {
+    const s0 = startBattle(createPlayer(common, gameData), testVillain({ ...caster(), chakra: 20 }));
+    const s1 = playRound({ ...s0, villain: { ...s0.villain, chakra: 1 } }, 'rest', seq(0.9, 0.01, 0.01), gameData);
+    expect(ofType(s1.log, 'villainRest')).toEqual([{ type: 'villainRest', chakra: 3 }]);
+    expect(s1.villain.chakra).toBe(4);
+    expect(ofType(s1.log, 'attack').filter((a) => a.side === 'villain')).toHaveLength(0);
+  });
+
+  it('concentrar chakra do vilão recupera no mínimo 1', () => {
     const s0 = startBattle(createPlayer(common, gameData), caster());
     const s1 = playRound({ ...s0, villain: { ...s0.villain, chakra: 1 } }, 'rest', seq(0.9, 0.01, 0.01), gameData);
-    expect(ofType(s1.log, 'villainRest')).toEqual([{ type: 'villainRest', chakra: 4 }]);
-    expect(s1.villain.chakra).toBe(5);
+    expect(ofType(s1.log, 'villainRest')).toEqual([{ type: 'villainRest', chakra: 1 }]);
+    expect(s1.villain.chakra).toBe(2);
     expect(ofType(s1.log, 'attack').filter((a) => a.side === 'villain')).toHaveLength(0);
   });
 

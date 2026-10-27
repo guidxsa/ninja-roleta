@@ -21,7 +21,7 @@ Fichas dos vilões da campanha: status, moveset, passiva, versão hardcore, comp
 
 ## Regras de combate dos vilões
 
-- **Chakra**: cada técnica tem custo (taijutsu é grátis). O vilão sorteia a técnica pelos pesos, só entre as que pode pagar. Sem chakra para nenhuma, concentra chakra (+4) e perde a vez.
+- **Chakra**: cada técnica tem custo (taijutsu é grátis). O vilão sorteia a técnica pelos pesos, só entre as que pode pagar. Sem chakra para nenhuma, concentra chakra e perde a vez, recuperando o mesmo que o jogador: 15% do chakra máximo ([fundamentos.md](fundamentos.md#chakra)). Hoje todo vilão tem uma técnica grátis, então isso só acontece com vilões sem taijutsu grátis.
 - **Precisão**: as técnicas dos vilões usam a precisão padrão (85%) e a mesma rolagem de três fatias do jogador ([fundamentos.md](fundamentos.md#rolagem-de-acerto)).
 - **Cura**: técnica médica de vilão cura uma fração do HP máximo sem rolar acerto e só entra no sorteio com o HP abaixo do limite indicado (`useBelowHpPct`).
 - **Intenção**: a próxima ação do vilão é sorteada no fim da rodada anterior. A passiva Estrategista (Nara) mostra essa intenção na tela.

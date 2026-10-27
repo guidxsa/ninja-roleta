@@ -33,7 +33,7 @@ export const balance = {
   combat: { restoreOnStart: false },
 
   // Ações universais (tecnicas.md).
-  // Concentrar chakra: recupera esta fração do chakra máximo (arredonda para baixo, mínimo 1).
+  // Concentrar chakra (jogador e vilão): recupera esta fração do chakra máximo (arredonda para baixo, mínimo 1).
   rest: { chakraPct: 0.15 },
   // Reação Substituição: chance = base + (speed de quem reage − speed do atacante) × perSpeed, entre min e max.
   substitution: { chakraCost: 2, baseChance: 0.5, perSpeed: 0.03, min: 0.25, max: 0.85, usesPerFight: 2 },
@@ -112,8 +112,6 @@ export const balance = {
     torment: { chakraPerRound: 4 },
   },
 
-  // Vilão sem chakra para nenhuma técnica concentra chakra no lugar de atacar.
-  villainRest: { chakraRecovered: 4 },
 
   // Anti-trava: após sair de um efeito que tira a vez, o alvo age ao menos uma vez antes de perder a vez de novo.
   debilitated: { immunityActions: 1 },

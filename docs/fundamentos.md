@@ -226,7 +226,7 @@ Futuro: estado **Molhado** (acertos de água) que deixa o alvo vulnerável a rai
 - Taijutsu básico é grátis.
 - **Concentrar chakra** (ação universal) recupera **15% do chakra máximo** (arredondado para baixo, mínimo 1) gastando o turno.
 - Como a luta não começa restaurada, o chakra que sobra de uma luta é o que se tem na próxima.
-- Vilões também têm reserva de chakra e sorteiam a técnica e a reação só entre as que podem pagar (ver [viloes.md](viloes.md)).
+- Vilões também têm reserva de chakra, concentram chakra com a mesma fórmula e sorteiam a técnica e a reação só entre as que podem pagar (ver [viloes.md](viloes.md)).
 
 ## Vontade do Fogo (revive)
 

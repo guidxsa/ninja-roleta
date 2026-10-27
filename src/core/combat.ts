@@ -989,9 +989,14 @@ export function canUseTechnique(s: BattleState, tech: TechniqueDef, data?: GameD
   return p.chakra >= cost;
 }
 
-/** Chakra que Concentrar chakra recupera: 15% do chakra máximo (mínimo 1). */
+/** Chakra que Concentrar chakra recupera: 15% do chakra máximo (mínimo 1). Vale para o jogador e o vilão. */
+export function restChakraFor(maxChakra: number, data: GameData): number {
+  return Math.max(1, Math.floor(maxChakra * data.balance.rest.chakraPct));
+}
+
+/** Chakra que o jogador recupera com Concentrar chakra. */
 export function restChakra(player: PlayerState, data: GameData): number {
-  return Math.max(1, Math.floor(player.maxChakra * data.balance.rest.chakraPct));
+  return restChakraFor(player.maxChakra, data);
 }
 
 /** O foco do guru (+25% de chance de crítico no próximo ataque) pode ser ativado nesta rodada. */
@@ -2234,7 +2239,6 @@ function rollIntent(s: BattleState, rng: Rng): VillainIntent {
 /** Uma ação do vilão. Devolve true se a rodada parou esperando a reação do jogador. */
 function villainAction(s: BattleState, rng: Rng, data: GameData, react?: ReactionPolicy): boolean {
   const v = s.villain;
-  const { balance } = data;
 
   // Golpe carregado anunciado na vez anterior: sai agora.
   if (v.charging) {
@@ -2253,7 +2257,7 @@ function villainAction(s: BattleState, rng: Rng, data: GameData, react?: Reactio
   const stillValid = planned !== null && (plannedId ? options.some((t) => t.id === plannedId) : options.length === 0);
   const intent = stillValid ? planned : rollIntent(s, rng);
   if (intent.kind === 'rest') {
-    const gained = Math.min(v.def.chakra - v.chakra, balance.villainRest.chakraRecovered);
+    const gained = Math.min(v.def.chakra - v.chakra, restChakraFor(v.def.chakra, data));
     v.chakra += gained;
     s.log.push({ type: 'villainRest', chakra: gained });
     return false;
