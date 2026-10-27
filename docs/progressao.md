@@ -6,7 +6,7 @@ Como o personagem cresce durante a run: XP, níveis, estágios de status e marco
 
 - Começa no **nível 1**. **Não há nível máximo.**
 - XP para ir do nível N ao N+1: **100 + 25 × (N − 1)**. A sobra passa para o próximo nível.
-- **Subir de nível restaura tudo**: HP, chakra e efeitos negativos (ver [fundamentos.md](fundamentos.md#restauração)). Como a luta não começa restaurada, o nível novo é o principal respiro da run.
+- **Subir de nível restaura tudo**: HP, chakra e efeitos negativos (ver [fundamentos.md](fundamentos.md#restauração)). Como a luta não começa restaurada (cada vitória devolve só 25%), o nível novo é o principal respiro da run.
 - Ganho por nível, sem roleta:
 
 | Dificuldade | HP máximo | Chakra máximo |
@@ -30,7 +30,7 @@ Como o personagem cresce durante a run: XP, níveis, estágios de status e marco
 | Evento Treino | +60, garantido ([campanha.md](campanha.md#treino)) |
 | Roleta de recompensa, fatia XP | Comum +60, raro +120, lendário +200 |
 | Pergaminho de experiência (roleta de itens) | +100 |
-| Passiva Determinação (comum) | +10% sobre todo XP ganho |
+| Passiva Determinação (comum) | +25% sobre todo XP ganho (e +1 no maior status de ataque a cada nível, ver [origens.md](origens.md#comum)) |
 
 ## Curva planejada
 

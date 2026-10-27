@@ -1,4 +1,4 @@
-// Ordem da campanha (docs/campanha.md). Toda luta começa com o jogador restaurado.
+// Ordem da campanha (docs/campanha.md). HP e chakra seguem entre as lutas (cada vitória devolve 25%).
 // `rewardTiers`: raridade da recompensa depois de cada luta (1 comum, 2 rara, 3 lendária, null = nenhuma).
 // Um bloco com vários vilões (Haku e Zabuza, Quarteto do Som) é um grupo só: a recompensa vem depois
 // do confronto final. XP e subida de nível continuam depois de cada luta.

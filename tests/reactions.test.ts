@@ -14,6 +14,7 @@ import {
 import { createPlayer, learnTechnique, type PlayerState } from '../src/core/player';
 import type { Origin, VillainTechnique } from '../src/core/types';
 import { gameData } from '../src/data/index';
+import { villainsById } from '../src/data/villains';
 import { seq, testVillain, withInitiative } from './helpers';
 
 const ofType = <T extends BattleEvent['type']>(log: BattleEvent[], type: T) =>
@@ -21,6 +22,7 @@ const ofType = <T extends BattleEvent['type']>(log: BattleEvent[], type: T) =>
 const origin = (affinity: Origin['affinity'], lineageId: string | null = null): Origin => ({ lineageId, affinity, jinchuuriki: false });
 const player = (affinity: Origin['affinity'] = 'water') => createPlayer(origin(affinity), gameData);
 const always = (choice: ReactionChoice) => () => choice;
+const ofRound = (before: BattleState, after: BattleState) => after.log.slice(before.log.length);
 
 /** Vilão de fogo com uma técnica grande de fogo e ninjutsu 10. */
 const blaze: VillainTechnique = { id: 'blaze', type: 'ninjutsu', baseDamage: 34, chakraCost: 10, weight: 1 };
@@ -118,42 +120,57 @@ describe('disputa de ninjutsu', () => {
   });
 });
 
-describe('barreiras e quebra de guarda', () => {
+describe('barreiras (escudo)', () => {
   const earthWall: VillainTechnique = { id: 'earthWall', type: 'ninjutsu', baseDamage: 0, chakraCost: 5, weight: 1, barrier: 28, element: 'earth' };
-  const walled = () => testVillain({ hp: 200, element: 'earth', reactions: { resist: 0, barrier: 1 }, techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 10, chakraCost: 0, weight: 1 }, earthWall] });
+  const puncher = (base: number) => testVillain({ hp: 200, techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: base, chakraCost: 0, weight: 1 }] });
+  const walledPlayer = () => learnTechnique(player('earth'), 'earthWall', gameData);
 
-  it('raio perfura a barreira de terra: ×2 no poder', () => {
-    const s1 = playRound(withInitiative(startBattle(player('lightning'), walled())), 'tech:spark', seq(0.5, 0.0), gameData);
-    // Faísca: (13 + 5) × 2 = 36 contra a barreira 28
-    expect(ofType(s1.log, 'clash')[0]).toMatchObject({ attackPower: 36, defensePower: 28, result: 'attacker' });
-    const fire = playRound(withInitiative(startBattle(player('fire'), walled())), 'tech:fireSpark', seq(0.5, 0.0), gameData);
-    expect(ofType(fire.log, 'clash')[0]).toMatchObject({ attackPower: 17, defensePower: 28 });
+  it('ação de turno: o escudo absorve o dano antes do HP até quebrar', () => {
+    const s0 = withInitiative(startBattle(walledPlayer(), puncher(20)));
+    expect(availableActions(s0, gameData)).toContain('tech:earthWall');
+    const s1 = playRound(s0, 'tech:earthWall', seq(0.5), gameData);
+    expect(ofType(s1.log, 'shield')).toEqual([{ type: 'shield', side: 'player', techniqueId: 'earthWall', points: 28, chakra: 5 }]);
+    // Soco: 20 − 10 × 0,7 = 13, todo no escudo.
+    expect(ofType(s1.log, 'shieldHit')).toEqual([{ type: 'shieldHit', side: 'player', absorbed: 13, left: 15, elementMult: 1 }]);
+    expect(s1.player.hp).toBe(100);
+    expect(availableActions(s1, gameData)).not.toContain('tech:earthWall');
+    const s2 = playRound(s1, 'rest', seq(0.5), gameData);
+    const s3 = playRound(s2, 'rest', seq(0.5), gameData);
+    // 3º soco: o escudo (2) quebra e 11 passam.
+    expect(ofType(ofRound(s2, s3), 'shieldBreak')).toEqual([{ type: 'shieldBreak', side: 'player' }]);
+    expect(s3.player.hp).toBe(89);
+    expect(s3.playerFx.shield).toBeNull();
   });
 
-  it('barreira que vence só bloqueia', () => {
-    const s1 = playRound(withInitiative(startBattle(player('fire'), walled())), 'tech:fireSpark', seq(0.5, 0.99), gameData);
-    expect(ofType(s1.log, 'barrierHold')).toEqual([{ type: 'barrierHold', side: 'villain', techniqueId: 'earthWall', reflected: 0 }]);
-    expect(s1.villain.hp).toBe(200);
+  it('dura 3 rodadas a partir da seguinte', () => {
+    let s = playRound(withInitiative(startBattle(walledPlayer(), puncher(1))), 'tech:earthWall', seq(0.5), gameData);
+    for (let i = 0; i < 2; i++) s = playRound(s, 'rest', seq(0.5), gameData);
+    expect(s.playerFx.shield).not.toBeNull();
+    const end = playRound(s, 'rest', seq(0.5), gameData);
+    expect(ofType(ofRound(s, end), 'shieldEnd')).toEqual([{ type: 'shieldEnd', side: 'player' }]);
+    expect(end.playerFx.shield).toBeNull();
   });
 
-  it('taijutsu rola a quebra de guarda: quebrou, o golpe passa contra a resistência passiva', () => {
-    const s0 = withInitiative(startBattle(player('fire'), walled()));
-    // (8 + 10 × 0,5)² contra 28²: 18%
-    const held = playRound(s0, 'tech:basicTaijutsu', seq(0.5, 0.99), gameData);
-    expect(ofType(held.log, 'guardBreak')[0]).toMatchObject({ broken: false });
-    expect(ofType(held.log, 'guardBreak')[0]!.breakChance).toBeCloseTo(169 / (169 + 784));
-    expect(held.villain.hp).toBe(200);
-    const broke = playRound(s0, 'tech:basicTaijutsu', seq(0.5, 0.0, 0.5), gameData);
-    expect(ofType(broke.log, 'guardBreak')[0]).toMatchObject({ broken: true });
-    // 8 + 10 − 10 × 0,4 = 14
-    expect(ofType(broke.log, 'attack')[0]).toMatchObject({ side: 'player', damage: 14 });
+  it('elemento conta no escudo: raio contra terra ×2; fogo contra terra é neutro', () => {
+    const walled = testVillain({ hp: 200, element: 'earth', startingShield: 'earthWall', techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 1, chakraCost: 0, weight: 1 }, earthWall] });
+    const spark = playRound(withInitiative(startBattle(player('lightning'), walled)), 'tech:spark', seq(0.5), gameData);
+    // Faísca: 13 + 10 − 10 × 0,9 (penetração 10%) × 0,7 = 16; no escudo vale 32: quebra os 28 e passam 2.
+    expect(ofType(spark.log, 'shieldHit')[0]).toMatchObject({ side: 'villain', absorbed: 28, left: 0, elementMult: 2 });
+    expect(spark.villain.hp).toBe(198);
+    const fire = playRound(withInitiative(startBattle(player('fire'), walled)), 'tech:fireSpark', seq(0.5), gameData);
+    expect(ofType(fire.log, 'shieldHit')[0]).toMatchObject({ side: 'villain', absorbed: 15, left: 13, elementMult: 1 });
+    expect(fire.villain.hp).toBe(200);
   });
 
-  it('o prodígio quebra guarda com mais facilidade (taijutsu alto)', () => {
-    const lee = createPlayer(origin(null, 'taijutsuProdigy'), gameData);
-    const s1 = playRound(withInitiative(startBattle(lee, walled())), 'tech:basicTaijutsu', seq(0.5, 0.99), gameData);
-    // (8 + 22 × 0,5)² = 361 contra 784
-    expect(ofType(s1.log, 'guardBreak')[0]!.breakChance).toBeCloseTo(361 / (361 + 784));
+  it('o vilão ergue a barreira como ação, só sem escudo ativo; o Gaara já começa com a areia', () => {
+    const builder = testVillain({ hp: 200, techniques: [earthWall] });
+    const s1 = playRound(withInitiative(startBattle(player(), builder), 'villain'), 'rest', seq(0.5), gameData);
+    expect(ofType(s1.log, 'shield')).toEqual([{ type: 'shield', side: 'villain', techniqueId: 'earthWall', points: 28, chakra: 5 }]);
+    // Com o escudo de pé, a barreira sai do sorteio: sem outra técnica, concentra chakra.
+    const s2 = playRound(s1, 'rest', seq(0.5), gameData);
+    expect(ofType(ofRound(s1, s2), 'villainRest')).toHaveLength(1);
+    const gaara = playRound(withInitiative(startBattle(player(), villainsById.gaara!)), 'rest', seq(0.5), gameData);
+    expect(ofType(gaara.log, 'shield')[0]).toMatchObject({ side: 'villain', techniqueId: 'sandShield', points: 30, chakra: 0 });
   });
 });
 
@@ -220,8 +237,8 @@ describe('economia das reações', () => {
     const jailed = { ...s0, playerFx: { ...s0.playerFx, debilitated: 1 } };
     const s1 = playRound(jailed, 'rest', seq(0.5, 0.5), gameData, {}, always('substitution'));
     expect(ofType(s1.log, 'reaction')[0]).toMatchObject({ side: 'player', kind: 'passive' });
-    // 10 − 10 × 0,4 = 6 (resistindo seriam 3)
-    expect(s1.player.hp).toBe(94);
+    // (10 − 10 × 0,4) × 1,25 (perdeu a vez: vulnerável) = 7 (resistindo seriam 3)
+    expect(s1.player.hp).toBe(93);
   });
 
   it('contra genjutsu, só Resistir', () => {

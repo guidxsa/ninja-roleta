@@ -4,6 +4,7 @@ import type { GameData } from './gameData';
 import { critChance, genjutsuHitChance, hitChance, rollHit, type HitOutcome } from './hit';
 import { initiativeChance, rollInitiative } from './initiative';
 import {
+  BASIC_TAIJUTSU,
   fullRestore,
   gatesStage,
   knownTechniques,
@@ -63,15 +64,14 @@ export function actionItemId(action: PlayerAction): ConsumableId | null {
 }
 
 /**
- * Reação a um ataque recebido (fundamentos.md#reações): Resistir (grátis), Substituição, Disputa com um
- * ninjutsu de ataque (`clash:<id>`) ou Barreira (`barrier:<id>`). As três últimas gastam a próxima ação.
+ * Reação a um ataque recebido (fundamentos.md#reações): Resistir (grátis), Substituição ou Disputa com um
+ * ninjutsu de ataque (`clash:<id>`), que gasta a próxima ação. Barreiras são ações de turno (escudo).
  */
-export type ReactionChoice = 'resist' | 'substitution' | `clash:${string}` | `barrier:${string}`;
+export type ReactionChoice = 'resist' | 'substitution' | `clash:${string}`;
 
 export const clashReaction = (id: string): ReactionChoice => `clash:${id}`;
-export const barrierReaction = (id: string): ReactionChoice => `barrier:${id}`;
 
-/** Id da técnica de uma reação de disputa ou barreira (null para as outras). */
+/** Id da técnica de uma reação de disputa (null para as outras). */
 export function reactionTechniqueId(choice: ReactionChoice): string | null {
   const i = choice.indexOf(':');
   return i >= 0 ? choice.slice(i + 1) : null;
@@ -107,17 +107,21 @@ export interface RoundExtras {
   clones?: boolean;
   /** Sharingan ativo: o genjutsu aplica Pavor em vez do efeito da técnica. */
   fear?: boolean;
+  /** Ativa o dōjutsu sem gastar o turno (Sharingan). */
+  dojutsu?: boolean;
+  /** Gênio (Nara): a próxima roleta do jogador gira duas vezes e fica com a melhor. */
+  genius?: boolean;
 }
 
 export type Side = 'player' | 'villain';
 export type BattleStatus = 'ongoing' | 'won' | 'lost';
 
 /** Por que o lutador perdeu a vez. `reacted` = a ação foi gasta numa reação. */
-export type SkipReason = 'prison' | 'sleep' | 'paralysis' | 'cower' | 'reacted';
+export type SkipReason = 'prison' | 'sleep' | 'paralysis' | 'possession' | 'cower' | 'reacted';
 /** Efeitos que aparecem como "status" na luta. */
 export type StatusKind = 'stun' | 'burn' | 'poison' | 'bleed';
 /** Efeitos que tiram a vez (anti-trava). */
-export type DebilitateKind = 'prison' | 'sleep' | 'paralysis';
+export type DebilitateKind = 'prison' | 'sleep' | 'paralysis' | 'possession';
 
 /** Como quem recebe o golpe usa a resistência: passiva (40%) ou Resistir (70%, 100% em postura). */
 export type Guard = 'passive' | 'resist';
@@ -128,6 +132,26 @@ export interface PoisonState {
   ticks: number;
 }
 
+/**
+ * Escudo de uma barreira (tecnicas.md#barreiras): pontos que absorvem o dano de taijutsu e ninjutsu
+ * antes do HP, por algumas rodadas. O elemento do golpe contra o do escudo multiplica o dano nele.
+ */
+export interface ShieldState {
+  techniqueId: string;
+  element: Element | null;
+  points: number;
+  max: number;
+  /** Rodadas restantes, contadas a partir da seguinte à que ergueu. */
+  turns: number;
+  round: number;
+  /** Rotação: devolve esta fração do dano bloqueado a quem bateu. */
+  reflectPct?: number;
+  /** Muralha de Chamas: chance de queimar quem bate com taijutsu. */
+  burnOnTouch?: number;
+  /** Escudo de Vento: técnicas de vários golpes causam esta fração a menos no escudo. */
+  multiHitResist?: number;
+}
+
 /** Estado de luta comum ao jogador e ao vilão. */
 export interface StatusFx {
   /** Ações que o lutador ainda vai perder aprisionado. */
@@ -136,8 +160,12 @@ export interface StatusFx {
   asleep: number;
   /** Ações que o lutador ainda vai perder paralisado (crítico de raio). */
   paralyzed: number;
+  /** Ações que o lutador ainda vai perder possuído (Yamanaka): golpeia a si mesmo. */
+  possessed: number;
   /** Ações que o lutador precisa fazer antes de poder perder a vez de novo. */
   debilitateImmunity: number;
+  /** Tenacidade (0 a 1): a chance do próximo controle × (1 − tenacidade). Sobe ao ser controlado e cai por rodada. */
+  tenacity: number;
   /** Próximas ações com a chance de acerto reduzida. */
   stunned: number;
   /** Rodadas de queimadura restantes. */
@@ -164,6 +192,8 @@ export interface StatusFx {
   owesAction: boolean;
   /** Substituições usadas nesta luta. */
   substitutionsUsed: number;
+  /** Escudo de barreira ativo. */
+  shield: ShieldState | null;
 }
 
 /** Esquiva preparada (Bomba de fumaça): vale para o próximo ataque recebido. */
@@ -200,9 +230,12 @@ export interface PlayerFx extends StatusFx {
   focusUsed: number;
   /** Foco ativo: o próximo ataque soma `balance.guru.focusCritBonus` à chance de crítico. */
   focusArmed: boolean;
+  /** Usos do Gênio nesta luta e se ele está armado para a próxima roleta. */
+  geniusUsed: number;
+  geniusArmed: boolean;
 }
 
-/** Próxima ação do vilão, sorteada no fim da rodada anterior (Estrategista mostra). */
+/** Próxima ação do vilão, sorteada no fim da rodada anterior (Gênio mostra). */
 export type VillainIntent = { kind: 'technique'; id: string } | { kind: 'rest' };
 
 export interface VillainState {
@@ -247,13 +280,16 @@ export interface BattleOptions {
   interactive: boolean;
 }
 
-export type ReactionKind = 'passive' | 'resist' | 'substitution' | 'clash' | 'barrier';
+export type ReactionKind = 'passive' | 'resist' | 'substitution' | 'clash';
 
 export type BattleEvent =
   | { type: 'round'; round: number }
   | { type: 'ambush' }
   | { type: 'late' }
   | { type: 'focus' }
+  | { type: 'geniusArmed' }
+  /** Gênio: a roleta girou duas vezes; `kept` é o resultado que ficou. */
+  | { type: 'genius'; results: [string, string]; kept: string }
   | { type: 'guaranteedCrit'; side: Side }
   | { type: 'initiative'; first: Side; playerChance: number }
   | { type: 'priority'; side: Side }
@@ -286,8 +322,13 @@ export type BattleEvent =
       crushed: boolean;
     }
   | { type: 'clashHit'; target: Side; techniqueId: string; damage: number; passPct: number }
-  | { type: 'guardBreak'; attacker: Side; techniqueId: string; barrierId: string; breakChance: number; broken: boolean }
-  | { type: 'barrierHold'; side: Side; techniqueId: string; reflected: number }
+  /** Barreira erguida: escudo de `points` pontos em `side`. */
+  | { type: 'shield'; side: Side; techniqueId: string; points: number; chakra: number }
+  /** O escudo de `side` absorveu dano (`elementMult`: encontro de elementos com o golpe). */
+  | { type: 'shieldHit'; side: Side; absorbed: number; left: number; elementMult: number }
+  | { type: 'shieldBreak'; side: Side }
+  | { type: 'shieldEnd'; side: Side }
+  | { type: 'shieldReflect'; side: Side; damage: number }
   | { type: 'extinguish'; side: Side }
   | {
       type: 'attack';
@@ -308,7 +349,9 @@ export type BattleEvent =
   | { type: 'dojutsuEnd'; dojutsu: DojutsuId; reason: 'time' | 'chakra' }
   | { type: 'chakraDrain'; amount: number; source: 'seal' | 'hive' }
   | { type: 'debilitate'; target: Side; turns: number; kind: DebilitateKind }
-  | { type: 'mental'; target: Side; effect: Exclude<MentalEffect, 'prison' | 'sleep'>; turns: number }
+  | { type: 'mental'; target: Side; effect: Exclude<MentalEffect, 'prison' | 'sleep' | 'possession'>; turns: number }
+  /** Possuído: perdeu a vez golpeando a si mesmo com a própria técnica. */
+  | { type: 'possessed'; side: Side; techniqueId: string; damage: number }
   | { type: 'debilitateResisted'; target: Side }
   | { type: 'genjutsuImmune'; target: Side }
   | { type: 'wake'; side: Side }
@@ -379,7 +422,9 @@ function newFx(): StatusFx {
     debilitated: 0,
     asleep: 0,
     paralyzed: 0,
+    possessed: 0,
     debilitateImmunity: 0,
+    tenacity: 0,
     stunned: 0,
     burn: 0,
     burnTicks: 0,
@@ -394,12 +439,13 @@ function newFx(): StatusFx {
     guaranteedCrit: false,
     owesAction: false,
     substitutionsUsed: 0,
+    shield: null,
   };
 }
 
 /**
  * Começa a luta. HP e chakra seguem como estão (a luta não começa restaurada), salvo `restore: true`.
- * Com `rng`, a primeira intenção do vilão já fica sorteada (Estrategista mostra na 1ª rodada).
+ * Com `rng`, a primeira intenção do vilão já fica sorteada (Gênio mostra na 1ª rodada).
  */
 export function startBattle(
   player: PlayerState,
@@ -439,6 +485,8 @@ export function startBattle(
       dodge: null,
       focusUsed: 0,
       focusArmed: false,
+      geniusUsed: 0,
+      geniusArmed: false,
     },
     villain: {
       def: villain,
@@ -517,6 +565,7 @@ export function playerTechnique(
 ): TechniqueDef & { element: Element | null } {
   const tech = leveledTechnique(player, techniqueId, data);
   const element = tech.type === 'taijutsu' ? null : tech.element === 'affinity' ? player.affinity : tech.element;
+  if (isIllusion(tech)) return { ...tech, element: null };
   if (!dealsDamage(tech)) return { ...tech, element, baseDamage: 0 };
   const baseDamage = tech.baseDamage + player.ninjaToolLevel * data.balance.ninjaTool.baseDamagePerLevel;
   return { ...tech, element, baseDamage };
@@ -533,19 +582,19 @@ export function dealsDamage(tech: TechniqueDef): boolean {
   );
 }
 
-/** Barreira: só pode ser usada como reação. */
-export function isBarrier(tech: TechniqueDef): boolean {
+/** Ilusão de dano: genjutsu com dano base (rola o acerto do genjutsu e fere contra a resistência mental). */
+export function isIllusion(tech: TechniqueDef): boolean {
+  return tech.type === 'genjutsu' && tech.baseDamage > 0;
+}
+
+/** Barreira: ação de turno que ergue um escudo. */
+export function isBarrier(tech: { barrier?: number }): boolean {
   return tech.barrier !== undefined;
 }
 
-/** Técnicas de ação do skill set (tai, nin e gen), na ordem das categorias. Médico e barreiras ficam de fora. */
+/** Técnicas de ação do skill set (tai, nin e gen, inclusive barreiras), na ordem das categorias. Médico fica de fora. */
 export function attackTechniques(player: PlayerState, data: GameData): TechniqueDef[] {
-  return knownTechniques(player, data).filter((t) => techniqueSlot(t) !== 'medical' && !isBarrier(t));
-}
-
-/** Barreiras do skill set (reação). */
-export function barrierTechniques(player: PlayerState, data: GameData): TechniqueDef[] {
-  return knownTechniques(player, data).filter(isBarrier);
+  return knownTechniques(player, data).filter((t) => techniqueSlot(t) !== 'medical');
 }
 
 /** Ficha comum aos dois lados para golpes, disputas e barreiras. */
@@ -562,10 +611,6 @@ interface CombatTech {
   penetration?: number;
   onHit?: { effect: HitEffect; chance: number };
   blade?: BladeKind;
-  barrier?: number;
-  reflectPct?: number;
-  burnOnBreakAttempt?: number;
-  multiHitBonus?: number;
   clashBonus?: number;
 }
 
@@ -593,7 +638,6 @@ function villainCombatTech(s: BattleState, tech: VillainTechnique): CombatTech {
     chakraCost: tech.chakraCost,
     ...(tech.accuracy !== undefined ? { accuracy: tech.accuracy } : {}),
     ...(tech.blade ? { blade: tech.blade } : {}),
-    ...(tech.barrier !== undefined ? { barrier: tech.barrier } : {}),
   };
 }
 
@@ -771,6 +815,21 @@ export function genjutsuImmune(s: BattleState, target: Side, data: GameData): bo
   return villainCloak(s)?.genjutsuImmune ?? false;
 }
 
+/** Perde a vez agora (aprisionado, dormindo ou paralisado): recebe o golpe com dano extra. */
+export function isControlled(fx: StatusFx): boolean {
+  return fx.debilitated > 0 || fx.asleep > 0 || fx.paralyzed > 0 || fx.possessed > 0;
+}
+
+/** Multiplicador da chance de um controle contra o alvo: 1 − tenacidade. */
+export function controlChanceMult(fx: StatusFx): number {
+  return 1 - fx.tenacity;
+}
+
+/** Efeito mental que tira a vez (sofre a tenacidade). */
+export function isControlEffect(effect: MentalEffect): boolean {
+  return effect === 'prison' || effect === 'sleep' || effect === 'possession';
+}
+
 function stunPenalty(fx: StatusFx, data: GameData): number {
   return fx.stunned > 0 ? data.balance.status.stun.hitPenalty : 0;
 }
@@ -779,19 +838,26 @@ function stunPenalty(fx: StatusFx, data: GameData): number {
 export function canReact(s: BattleState, side: Side): boolean {
   const fx = fxOf(s, side);
   if (side === 'villain' && s.villain.cowering) return false;
-  return fx.debilitated === 0 && fx.asleep === 0 && fx.paralyzed === 0;
+  return !isControlled(fx);
 }
 
 /**
- * Fração da resistência usada. Passiva: 40%. Resistir: 70%; 100% em postura defensiva e, na física,
- * com o Corpo de ferro (prodígio do taijutsu).
+ * Fração da resistência usada. Passiva: 40%. Resistir: 70%; 100% em postura defensiva e, contra
+ * taijutsu, com o Corpo de ferro (prodígio do taijutsu).
  */
-export function guardFraction(s: BattleState, side: Side, guard: Guard, kind: ResistanceKind, data: GameData): number {
+export function guardFraction(
+  s: BattleState,
+  side: Side,
+  guard: Guard,
+  kind: ResistanceKind,
+  data: GameData,
+  attackType?: AttackType,
+): number {
   const cfg = data.balance.resistance;
   if (guard === 'passive') return cfg.passive;
   if (side === 'player') {
     if (s.playerFx.stance) return cfg.stance;
-    if (kind === 'physical' && s.player.passive === 'ironBody') return cfg.stance;
+    if (kind === 'physical' && attackType === 'taijutsu' && s.player.passive === 'ironBody') return cfg.stance;
   }
   return cfg.resist;
 }
@@ -853,15 +919,17 @@ export function playerGenjutsuTurns(s: BattleState, techniqueId: string, data: G
 export function playerGenjutsuHitChance(s: BattleState, data: GameData, techniqueId?: string): number {
   const tech = techniqueId ? data.techniquesById[techniqueId] : undefined;
   // Imitação de Sombra: é ninjutsu, rola a precisão da técnica e funciona em jinchuuriki.
+  // Controles (perder a vez) sofrem a tenacidade do alvo.
+  const tenacity = tech?.mental && isControlEffect(tech.mental) ? controlChanceMult(s.villain.fx) : 1;
   if (tech && tech.type !== 'genjutsu') {
-    return hitChance(tech.accuracy, -stunPenalty(s.playerFx, data), data.balance.hit);
+    return hitChance(tech.accuracy, -stunPenalty(s.playerFx, data), data.balance.hit) * tenacity;
   }
   if (genjutsuImmune(s, 'villain', data)) return 0;
   const cfg = data.balance.genjutsuHit;
   const bonus = activeSharingan(s, data)?.genjutsuHit ?? 0;
   const defense = villainResistance(s, 'mental') * guardFraction(s, 'villain', defaultGuard(s, 'villain'), 'mental', data);
   const base = genjutsuHitChance(effectiveOffense(s, 'genjutsu', data), defense, cfg);
-  return clamp(base + bonus - stunPenalty(s.playerFx, data), 0, 1);
+  return clamp(base + bonus - stunPenalty(s.playerFx, data), 0, 1) * tenacity;
 }
 
 // ---------------------------------------------------------------------------
@@ -923,16 +991,18 @@ function strikeDamage(
   const resistance = defender === 'player' ? playerResistance(s, 'physical', data, ignoreArmor) : villainResistance(s, 'physical');
   const offense = attacker === 'player' ? effectiveOffense(s, tech.type, data) : villainOffense(s, tech.type);
   const sideMult = attacker === 'player' ? playerDamageMult(s, tech.type, data) : villainDamageMult(s, data);
+  // Alvo que perdeu a vez (aprisionado, dormindo, paralisado) recebe mais dano.
+  const vulnerable = isControlled(fxOf(s, defender)) ? data.balance.control.vulnerableDamageMult : 1;
   return {
     damage: computeDamage({
       baseDamage: tech.baseDamage,
       offense,
       resistance,
-      fraction: guardFraction(s, defender, guard, 'physical', data),
+      fraction: guardFraction(s, defender, guard, 'physical', data, tech.type),
       penetration: attacker === 'player' ? playerPenetration(s, tech, data) : villainPenetration(s, data),
       elementMult,
       critMult,
-      extraMult: sideMult * extraMult,
+      extraMult: sideMult * extraMult * vulnerable,
     }),
     elementMult,
   };
@@ -1004,10 +1074,50 @@ export function canFocus(s: BattleState): boolean {
   return s.player.focusUses > s.playerFx.focusUsed;
 }
 
+/** Usos do Gênio por luta: base + 1 por nível de `extraUseLevels` já alcançado. 0 = não é Nara. */
+export function geniusUses(player: PlayerState, data: GameData): number {
+  if (player.passive !== 'genius') return 0;
+  const cfg = data.balance.passives.genius;
+  return cfg.uses + cfg.extraUseLevels.filter((lv) => player.level >= lv).length;
+}
+
+/** O Gênio pode ser armado nesta rodada. */
+export function canGenius(s: BattleState, data: GameData): boolean {
+  return !s.playerFx.geniusArmed && s.playerFx.geniusUsed < geniusUses(s.player, data);
+}
+
+/**
+ * Roleta do jogador: com o Gênio armado, gira duas vezes e fica com o melhor resultado (`rank` maior)
+ * e desarma; sem ele, gira uma vez.
+ */
+function playerRoll<T>(s: BattleState, roll: () => T, rank: (value: T) => number): T {
+  if (!s.playerFx.geniusArmed) return roll();
+  s.playerFx.geniusArmed = false;
+  const a = roll();
+  const b = roll();
+  const kept = rank(b) > rank(a) ? b : a;
+  s.log.push({ type: 'genius', results: [String(a), String(b)], kept: String(kept) });
+  return kept;
+}
+
+const HIT_RANK: Record<HitOutcome, number> = { miss: 0, hit: 1, crit: 2 };
+
 /** O Uchiha pode trocar o efeito do genjutsu por Pavor (Sharingan ativo). */
 export function canFearVariant(s: BattleState, action: PlayerAction, data: GameData): boolean {
   const id = actionTechniqueId(action);
   return id !== null && sharinganActive(s) && data.techniquesById[id]?.type === 'genjutsu';
+}
+
+/** O dōjutsu do jogador ativa sem gastar o turno (Sharingan). */
+export function freeDojutsu(player: PlayerState, data: GameData): boolean {
+  return player.dojutsu !== null && data.balance.dojutsu[player.dojutsu].freeActivation;
+}
+
+/** O dōjutsu grátis pode ser ativado junto com esta ação (chakra para os dois). */
+export function canDojutsuExtra(s: BattleState, action: PlayerAction, data: GameData): boolean {
+  const p = s.player;
+  if (!freeDojutsu(p, data) || s.playerFx.dojutsuActive) return false;
+  return p.chakra >= (dojutsuActivationCost(p, data) ?? 0) + actionCost(s, action, data);
 }
 
 export function availableActions(state: BattleState, data: GameData): PlayerAction[] {
@@ -1019,13 +1129,14 @@ export function availableActions(state: BattleState, data: GameData): PlayerActi
   const actions: PlayerAction[] = [];
   for (const tech of attackTechniques(p, data)) {
     if (tech.state && fx.armorTurns > 0) continue;
+    if (isBarrier(tech) && fx.shield) continue;
     if (canUseTechnique(state, tech, data)) actions.push(techAction(tech.id));
   }
   const gates = gatesToOpen(p, data);
   if (gates && !fx.gatesUsed && p.chakra >= gates.chakraCost) actions.push('gates');
   if (p.active === 'expansion' && fx.expansionTurns === 0 && p.chakra >= balance.expansion.chakraCost) actions.push('expansion');
   const dojutsuCost = dojutsuActivationCost(p, data);
-  if (dojutsuCost !== null && !fx.dojutsuActive && p.chakra >= dojutsuCost) actions.push('dojutsu');
+  if (dojutsuCost !== null && !freeDojutsu(p, data) && !fx.dojutsuActive && p.chakra >= dojutsuCost) actions.push('dojutsu');
   const medical = playerMedical(p, data);
   if (medical && p.chakra >= medical.chakraCost && p.hp < p.maxHp) actions.push('medical');
   actions.push('rest', 'stance');
@@ -1079,23 +1190,16 @@ export function playerReactionOptions(s: BattleState, incoming: IncomingAttack, 
   if (s.playerFx.owesAction) return options;
   for (const tech of knownTechniques(s.player, data)) {
     if (!canUseTechnique(s, tech, data)) continue;
-    if (isBarrier(tech)) options.push(barrierReaction(tech.id));
-    else if (incoming.type === 'ninjutsu' && tech.type === 'ninjutsu' && dealsDamage(tech)) options.push(clashReaction(tech.id));
+    if (incoming.type === 'ninjutsu' && tech.type === 'ninjutsu' && dealsDamage(tech)) options.push(clashReaction(tech.id));
   }
   return options;
 }
 
-/** Barreiras e ninjutsu de ataque que o vilão pode pagar agora. */
-function villainReactionTechs(s: BattleState, incoming: IncomingAttack) {
+/** Ninjutsu de ataque que o vilão pode pagar agora para disputar. */
+function villainClashTechs(s: BattleState, incoming: IncomingAttack): VillainTechnique[] {
   const v = s.villain;
-  const affordable = v.def.techniques.filter((t) => t.chakraCost <= v.chakra);
-  return {
-    clash:
-      incoming.type === 'ninjutsu'
-        ? affordable.filter((t) => t.type === 'ninjutsu' && t.baseDamage > 0 && t.barrier === undefined && !t.healPct)
-        : [],
-    barrier: incoming.type === 'genjutsu' ? [] : affordable.filter((t) => t.barrier !== undefined),
-  };
+  if (incoming.type !== 'ninjutsu') return [];
+  return v.def.techniques.filter((t) => t.chakraCost <= v.chakra && t.type === 'ninjutsu' && t.baseDamage > 0 && !isBarrier(t) && !t.healPct);
 }
 
 /** Reação do vilão: sorteada pelos pesos de `reactions`, só entre as possíveis (Resistir sempre). */
@@ -1105,32 +1209,30 @@ function chooseVillainReaction(s: BattleState, incoming: IncomingAttack, rng: Rn
   const weights = v.def.reactions ?? { resist: 1 };
   if (incoming.type === 'genjutsu') return 'resist';
   // Devendo a ação, só a Substituição (que não gasta ação) continua no sorteio.
-  const techs = v.fx.owesAction ? { clash: [], barrier: [] } : villainReactionTechs(s, incoming);
-  const kinds: { label: string; weight: number; value: 'resist' | 'clash' | 'barrier' | 'substitution' }[] = [
+  const clash = v.fx.owesAction ? [] : villainClashTechs(s, incoming);
+  const kinds: { label: string; weight: number; value: 'resist' | 'clash' | 'substitution' }[] = [
     { label: 'resist', weight: weights.resist, value: 'resist' },
   ];
-  if (weights.clash && techs.clash.length) kinds.push({ label: 'clash', weight: weights.clash, value: 'clash' });
-  if (weights.barrier && techs.barrier.length) kinds.push({ label: 'barrier', weight: weights.barrier, value: 'barrier' });
+  if (weights.clash && clash.length) kinds.push({ label: 'clash', weight: weights.clash, value: 'clash' });
   if (weights.substitution && canSubstitute(s, 'villain', data)) {
     kinds.push({ label: 'substitution', weight: weights.substitution, value: 'substitution' });
   }
   if (kinds.length === 1) return 'resist';
   const kind = spin(kinds, rng).slice.value;
   if (kind === 'resist' || kind === 'substitution') return kind;
-  const list = techs[kind];
-  const tech = list.length === 1 ? list[0]! : spin(list.map((t) => ({ label: t.id, weight: Math.max(1, t.weight), value: t })), rng).slice.value;
-  return kind === 'clash' ? clashReaction(tech.id) : barrierReaction(tech.id);
+  const tech = clash.length === 1 ? clash[0]! : spin(clash.map((t) => ({ label: t.id, weight: Math.max(1, t.weight), value: t })), rng).slice.value;
+  return clashReaction(tech.id);
 }
 
-/** Ficha da técnica de reação de quem defende. */
+/** Ficha da técnica de disputa de quem defende. */
 function defenderTech(s: BattleState, side: Side, techniqueId: string, data: GameData): CombatTech {
   return side === 'player' ? playerCombatTech(s, techniqueId, data) : villainCombatTech(s, villainTech(s, techniqueId));
 }
 
-/** Poder na disputa: (dano × golpes ou barreira) + ninjutsu × 0,5; Rasengan +25%; golpe carregado ×2. */
+/** Poder na disputa: dano × golpes + ninjutsu × 0,5; Rasengan +25%; golpe carregado ×2. */
 function clashPower(s: BattleState, side: Side, tech: CombatTech, charged: boolean, data: GameData): number {
   const ninjutsu = side === 'player' ? effectiveOffense(s, 'ninjutsu', data) : villainOffense(s, 'ninjutsu');
-  let power = (tech.barrier ?? tech.baseDamage * tech.hits) + ninjutsu * data.balance.clash.statFactor;
+  let power = tech.baseDamage * tech.hits + ninjutsu * data.balance.clash.statFactor;
   if (tech.clashBonus) power *= 1 + tech.clashBonus;
   if (charged) power *= data.balance.charged.damageMult;
   return power;
@@ -1146,8 +1248,8 @@ export function clashOdds(attackPower: number, defensePower: number, data: GameD
 }
 
 /**
- * Poderes dos dois lados na disputa. Só a vantagem elemental multiplica (×1,5; raio contra barreira
- * de terra ×2): a desvantagem não reduz, para um jutsu básico com vantagem não anular um grande.
+ * Poderes dos dois lados na disputa. Só a vantagem elemental multiplica (×1,5): a desvantagem não
+ * reduz, para um jutsu básico com vantagem não anular um grande.
  */
 function clashPowers(
   s: BattleState,
@@ -1160,35 +1262,22 @@ function clashPowers(
   const cfg = data.balance.elements;
   const edge = (mult: number) => Math.max(1, mult);
   let attackPower = clashPower(s, attacker, atk, charged, data);
-  attackPower *= edge(elementMultiplier(atk.element, def.element, data.beats, cfg, def.barrier !== undefined));
+  attackPower *= edge(elementMultiplier(atk.element, def.element, data.beats, cfg));
   let defensePower = clashPower(s, other(attacker), def, false, data);
   defensePower *= edge(elementMultiplier(def.element, atk.element, data.beats, cfg));
-  if (def.multiHitBonus && atk.hits > 1) defensePower *= 1 + def.multiHitBonus;
   return { attackPower, defensePower };
-}
-
-/** Chance de o taijutsu quebrar a barreira: (dano × golpes + taijutsu × 0,5)² contra barreira². */
-function guardBreakChance(s: BattleState, attacker: Side, atk: CombatTech, charged: boolean, barrier: CombatTech, data: GameData): number {
-  const taijutsu = attacker === 'player' ? effectiveOffense(s, 'taijutsu', data) : villainOffense(s, 'taijutsu');
-  let breakPower = atk.baseDamage * atk.hits + taijutsu * data.balance.clash.statFactor;
-  if (charged) breakPower *= data.balance.charged.damageMult;
-  const hold = clashPower(s, other(attacker), barrier, false, data);
-  const b = breakPower ** 2;
-  const h = hold ** 2;
-  return b + h > 0 ? b / (b + h) : 0;
 }
 
 /** Prévia de uma reação do jogador ao ataque pendente (a UI mostra as chances). */
 export type ReactionPreview =
   | { kind: 'resist'; fraction: number }
   | { kind: 'substitution'; chance: number; usesLeft: number }
-  | { kind: 'clash'; attackPower: number; defensePower: number; odds: [number, number, number] }
-  | { kind: 'guard'; holdChance: number };
+  | { kind: 'clash'; attackPower: number; defensePower: number; odds: [number, number, number] };
 
 export function reactionPreview(s: BattleState, incoming: IncomingAttack, choice: ReactionChoice, data: GameData): ReactionPreview {
   if (choice === 'resist') {
     const kind: ResistanceKind = incoming.type === 'genjutsu' ? 'mental' : 'physical';
-    return { kind: 'resist', fraction: guardFraction(s, 'player', 'resist', kind, data) };
+    return { kind: 'resist', fraction: guardFraction(s, 'player', 'resist', kind, data, incoming.type) };
   }
   if (choice === 'substitution') {
     return {
@@ -1199,9 +1288,6 @@ export function reactionPreview(s: BattleState, incoming: IncomingAttack, choice
   }
   const atk = incomingTech(s, incoming, data);
   const def = playerCombatTech(s, reactionTechniqueId(choice)!, data);
-  if (incoming.type === 'taijutsu') {
-    return { kind: 'guard', holdChance: 1 - guardBreakChance(s, incoming.attacker, atk, incoming.charged, def, data) };
-  }
   const { attackPower, defensePower } = clashPowers(s, incoming.attacker, atk, incoming.charged, def, data);
   return { kind: 'clash', attackPower, defensePower, odds: clashOdds(attackPower, defensePower, data) };
 }
@@ -1234,29 +1320,64 @@ function wholeTechDamage(s: BattleState, attacker: Side, tech: CombatTech, guard
   return strikeDamage(s, attacker, { ...tech, baseDamage: tech.baseDamage * tech.hits }, guard, 1, extraMult, data).damage;
 }
 
-/** Barreira aguentou: Rotação devolve parte do dano; Muralha de Chamas pode queimar quem bateu. */
-function barrierHolds(
+/** Ergue o escudo de uma barreira em `side` (substitui um escudo anterior). */
+function raiseShield(
   s: BattleState,
-  defender: Side,
-  barrier: CombatTech,
-  attacker: Side,
-  atk: CombatTech,
-  charged: boolean,
-  rng: Rng,
+  side: Side,
+  tech: { id: string; barrier?: number; reflectPct?: number; burnOnBreakAttempt?: number; multiHitBonus?: number },
+  element: Element | null,
+  chakra: number,
   data: GameData,
 ): void {
-  let reflected = 0;
-  if (barrier.reflectPct) {
-    const chargedMult = charged ? data.balance.charged.damageMult : 1;
-    const would = wholeTechDamage(s, attacker, atk, 'resist', chargedMult, data);
-    reflected = Math.max(1, Math.floor(would * barrier.reflectPct));
-  }
-  s.log.push({ type: 'barrierHold', side: defender, techniqueId: barrier.id, reflected });
-  if (reflected > 0) hurt(s, attacker, reflected, data);
-  if (s.status !== 'ongoing') return;
-  if (atk.type === 'taijutsu' && barrier.burnOnBreakAttempt && chance(barrier.burnOnBreakAttempt, rng) && fxOf(s, attacker).burn === 0) {
+  const points = tech.barrier ?? 0;
+  fxOf(s, side).shield = {
+    techniqueId: tech.id,
+    element,
+    points,
+    max: points,
+    turns: data.balance.barrier.turns,
+    round: s.round,
+    ...(tech.reflectPct ? { reflectPct: tech.reflectPct } : {}),
+    ...(tech.burnOnBreakAttempt ? { burnOnTouch: tech.burnOnBreakAttempt } : {}),
+    ...(tech.multiHitBonus ? { multiHitResist: tech.multiHitBonus } : {}),
+  };
+  s.log.push({ type: 'shield', side, techniqueId: tech.id, points, chakra });
+}
+
+/**
+ * Escudo de `owner` recebe o golpe: o dano no escudo é × o encontro de elementos (raio contra terra ×2;
+ * Escudo de Vento aguenta mais contra vários golpes). Devolve o dano que passa para o HP.
+ * Rotação devolve parte do bloqueado; Muralha de Chamas pode queimar quem bate com taijutsu;
+ * Parede d'Água que absorve fogo apaga a queimadura de quem a ergueu.
+ */
+function shieldAbsorb(s: BattleState, owner: Side, damage: number, atk: CombatTech, rng: Rng, data: GameData): number {
+  const fx = fxOf(s, owner);
+  const sh = fx.shield;
+  if (!sh || damage <= 0) return damage;
+  let mult = elementMultiplier(atk.element, sh.element, data.beats, data.balance.elements, true);
+  if (sh.multiHitResist && atk.hits > 1) mult *= 1 - sh.multiHitResist;
+  const load = damage * mult;
+  const absorbed = Math.min(sh.points, Math.ceil(load));
+  sh.points -= absorbed;
+  const passes = Math.max(0, Math.floor((load - absorbed) / mult));
+  s.log.push({ type: 'shieldHit', side: owner, absorbed, left: sh.points, elementMult: mult });
+  const attacker = other(owner);
+  if (sh.element === 'water' && atk.element === 'fire') extinguish(s, owner);
+  if (sh.burnOnTouch && atk.type === 'taijutsu' && fxOf(s, attacker).burn === 0 && chance(sh.burnOnTouch, rng)) {
     igniteBurn(s, attacker, data.balance.status.burn.turns);
   }
+  if (sh.points <= 0) {
+    fx.shield = null;
+    s.log.push({ type: 'shieldBreak', side: owner });
+  }
+  if (sh.reflectPct) {
+    const reflected = Math.floor((damage - passes) * sh.reflectPct);
+    if (reflected > 0) {
+      s.log.push({ type: 'shieldReflect', side: owner, damage: reflected });
+      hurt(s, attacker, reflected, data);
+    }
+  }
+  return passes;
 }
 
 /** Disputa de ninjutsu (fundamentos.md#disputa-de-ninjutsu). */
@@ -1273,14 +1394,14 @@ function resolveClash(
   const cfg = data.balance.clash;
   const { attackPower, defensePower } = clashPowers(s, attacker, atk, charged, def, data);
   const odds = clashOdds(attackPower, defensePower, data);
-  const result = spin(
-    [
-      { label: 'attacker', weight: odds[0], value: 'attacker' as const },
-      { label: 'cancel', weight: odds[1], value: 'cancel' as const },
-      { label: 'defender', weight: odds[2], value: 'defender' as const },
-    ],
-    rng,
-  ).slice.value;
+  const slices = [
+    { label: 'attacker', weight: odds[0], value: 'attacker' as const },
+    { label: 'cancel', weight: odds[1], value: 'cancel' as const },
+    { label: 'defender', weight: odds[2], value: 'defender' as const },
+  ];
+  // Gênio: o jogador fica com o resultado melhor para ele (vencer > anular > perder).
+  const playerRank = { attacker: attacker === 'player' ? 2 : 0, cancel: 1, defender: attacker === 'player' ? 0 : 2 };
+  const result = playerRoll(s, () => spin(slices, rng).slice.value, (r) => playerRank[r]);
   const [winnerPower, loserPower] = result === 'defender' ? [defensePower, attackPower] : [attackPower, defensePower];
   const crushed = result !== 'cancel' && winnerPower >= cfg.crushRatio * loserPower;
   s.log.push({
@@ -1301,25 +1422,22 @@ function resolveClash(
   if (result === 'cancel') return;
 
   const passPct = crushed ? 1 : Math.max(cfg.minPassThrough, 1 - loserPower / winnerPower);
-  if (result === 'defender' && def.barrier !== undefined) {
-    barrierHolds(s, defender, def, attacker, atk, charged, rng, data);
-    return;
-  }
   const [winner, tech, loserTech] = result === 'attacker' ? [attacker, atk, def] : [defender, def, atk];
   const loser = other(winner);
   const fireBonus = tech.element === 'fire' && loserTech.element === 'wind' ? data.balance.elements.fireAbsorbsWind : 1;
   const chargedMult = result === 'attacker' && charged ? data.balance.charged.damageMult : 1;
   const amount = wholeTechDamage(s, winner, tech, 'passive', passPct * fireBonus * chargedMult, data);
   s.log.push({ type: 'clashHit', target: loser, techniqueId: tech.id, damage: amount, passPct });
-  hurt(s, loser, amount, data);
+  hurt(s, loser, shieldAbsorb(s, loser, amount, tech, rng, data), data);
   if (s.status !== 'ongoing') return;
-  applyElementalHit(s, loser, tech.element, 'hit', data);
+  if (s.status !== 'ongoing') return;
+  applyElementalHit(s, loser, tech.element, 'hit', data, rng);
   if (tech.onHit) applyOnHit(s, loser, tech, rng, data);
 }
 
 /**
  * Aplica a reação de quem recebe o ataque. Devolve se o golpe ainda vai acontecer (e com qual guarda)
- * ou se a reação já resolveu tudo (esquiva, barreira, disputa).
+ * ou se a reação já resolveu tudo (esquiva, disputa).
  */
 function performReaction(
   s: BattleState,
@@ -1336,36 +1454,21 @@ function performReaction(
     s.log.push({ type: 'reaction', side: defender, kind: choice, techniqueId: null, chakra: 0 });
     return { kind: 'strike', guard: choice };
   }
-  // Substituição não gasta ação; disputa e barreira gastam a próxima.
+  // Substituição não gasta ação; a disputa gasta a próxima.
   if (choice === 'substitution') {
     const cost = data.balance.substitution.chakraCost;
     spendChakra(s, defender, cost);
     fx.substitutionsUsed++;
     s.log.push({ type: 'reaction', side: defender, kind: 'substitution', techniqueId: null, chakra: cost });
     const p = substitutionChance(s, defender, data);
-    const success = chance(p, rng);
+    const success = defender === 'player' ? playerRoll(s, () => chance(p, rng), (ok) => (ok ? 1 : 0)) : chance(p, rng);
     s.log.push({ type: 'substitutionRoll', side: defender, chance: p, success });
     return success ? { kind: 'resolved' } : { kind: 'strike', guard: 'passive' };
   }
   fx.owesAction = true;
   const def = defenderTech(s, defender, reactionTechniqueId(choice)!, data);
   spendChakra(s, defender, def.chakraCost);
-  s.log.push({
-    type: 'reaction',
-    side: defender,
-    kind: def.barrier !== undefined ? 'barrier' : 'clash',
-    techniqueId: def.id,
-    chakra: def.chakraCost,
-  });
-  if (atk.type === 'taijutsu') {
-    // Quebra de guarda: só barreira responde a taijutsu.
-    const p = guardBreakChance(s, attacker, atk, charged, def, data);
-    const broken = chance(p, rng);
-    s.log.push({ type: 'guardBreak', attacker, techniqueId: atk.id, barrierId: def.id, breakChance: p, broken });
-    if (broken) return { kind: 'strike', guard: 'passive' };
-    barrierHolds(s, defender, def, attacker, atk, charged, rng, data);
-    return { kind: 'resolved' };
-  }
+  s.log.push({ type: 'reaction', side: defender, kind: 'clash', techniqueId: def.id, chakra: def.chakraCost });
   resolveClash(s, attacker, atk, charged, def, rng, data);
   return { kind: 'resolved' };
 }
@@ -1395,7 +1498,9 @@ export function playRound(
   if (!availableActions(prev, data).includes(action)) throw new Error(`Ação indisponível: ${action}`);
   if (ex.focus && !canFocus(prev)) throw new Error('Foco indisponível');
   if (ex.clones && !canClones(prev, action, data)) throw new Error('Clones indisponíveis');
-  if (ex.fear && !canFearVariant(prev, action, data)) throw new Error('Pavor só com o Sharingan ativo');
+  if (ex.dojutsu && !canDojutsuExtra(prev, action, data)) throw new Error('Dōjutsu indisponível');
+  if (ex.genius && !canGenius(prev, data)) throw new Error('Gênio indisponível');
+  if (ex.fear && !canFearVariant(prev, action, data) && !ex.dojutsu) throw new Error('Pavor só com o Sharingan ativo');
 
   const s = structuredClone(prev);
   s.round++;
@@ -1422,6 +1527,12 @@ export function playRound(
     s.playerFx.focusUsed++;
     s.playerFx.focusArmed = true;
     s.log.push({ type: 'focus' });
+  }
+  if (ex.dojutsu) activateDojutsu(s, data);
+  if (ex.genius) {
+    s.playerFx.geniusUsed++;
+    s.playerFx.geniusArmed = true;
+    s.log.push({ type: 'geniusArmed' });
   }
   if (ex.clones) {
     const cost = data.balance.shadowClones.chakraCost;
@@ -1655,14 +1766,36 @@ function consumeSkip(s: BattleState, side: Side, data: GameData): boolean {
   } else if (fx.debilitated > 0) {
     fx.debilitated--;
     reason = 'prison';
+  } else if (fx.possessed > 0) {
+    fx.possessed--;
+    reason = 'possession';
   } else {
     return false;
   }
-  if (fx.paralyzed === 0 && fx.debilitated === 0 && fx.asleep === 0) {
+  if (!isControlled(fx)) {
     fx.debilitateImmunity = data.balance.debilitated.immunityActions;
   }
   s.log.push({ type: 'skip', side, reason });
+  if (reason === 'possession') possessedSelfHit(s, side, data);
   return true;
+}
+
+/** Possuído: golpeia a si mesmo com a técnica de dano mais forte, contra a própria resistência física passiva. */
+function possessedSelfHit(s: BattleState, side: Side, data: GameData): void {
+  let best: CombatTech | null = null;
+  if (side === 'villain') {
+    for (const t of s.villain.def.techniques) {
+      if (t.baseDamage <= 0 || t.barrier !== undefined || t.healPct || t.type === 'genjutsu') continue;
+      const c = villainCombatTech(s, t);
+      if (!best || c.baseDamage * c.hits > best.baseDamage * best.hits) best = c;
+    }
+  } else {
+    best = playerCombatTech(s, BASIC_TAIJUTSU, data);
+  }
+  if (!best) return;
+  const damage = Math.floor(selfHitDamage(s, side, { ...best, baseDamage: best.baseDamage * best.hits }, data) * data.balance.status.possession.selfDamageMult);
+  s.log.push({ type: 'possessed', side, techniqueId: best.id, damage });
+  if (damage > 0) hurt(s, side, damage, data);
 }
 
 /** Fim da vez do lutador: conta a anti-trava, o atordoamento, o pavor e a confusão. */
@@ -1673,14 +1806,22 @@ function endTurn(fx: StatusFx, acted: boolean): void {
   if (fx.confused > 0) fx.confused--;
 }
 
-function applyDebilitate(s: BattleState, target: Side, turns: number, kind: DebilitateKind): void {
+/**
+ * Tira a vez do alvo. Com `rng`, rola antes a tenacidade (controles sem rolagem própria, como a
+ * paralisia do crítico de raio); os genjutsu já a contam na chance de acerto. Pegou: soma tenacidade.
+ */
+function applyDebilitate(s: BattleState, target: Side, turns: number, kind: DebilitateKind, data: GameData, rng?: Rng): void {
   const fx = fxOf(s, target);
-  if (fx.debilitateImmunity > 0) {
+  if (fx.debilitateImmunity > 0 || (rng && fx.tenacity > 0 && !chance(controlChanceMult(fx), rng))) {
     s.log.push({ type: 'debilitateResisted', target });
     return;
   }
+  // Só um controle novo soma tenacidade (renovar um que ainda está valendo não soma de novo).
+  const cfg = data.balance.control;
+  if (!isControlled(fx)) fx.tenacity = Math.min(cfg.maxTenacity, fx.tenacity + cfg.tenacityPerControl);
   if (kind === 'prison') fx.debilitated = Math.max(fx.debilitated, turns);
   else if (kind === 'sleep') fx.asleep = Math.max(fx.asleep, turns);
+  else if (kind === 'possession') fx.possessed = Math.max(fx.possessed, turns);
   else fx.paralyzed = Math.max(fx.paralyzed, turns);
   s.log.push({ type: 'debilitate', target, turns, kind });
 }
@@ -1690,10 +1831,13 @@ function applyMental(s: BattleState, target: Side, effect: MentalEffect, turns: 
   const fx = fxOf(s, target);
   switch (effect) {
     case 'prison':
-      applyDebilitate(s, target, turns, 'prison');
+      applyDebilitate(s, target, turns, 'prison', data);
       return;
     case 'sleep':
-      applyDebilitate(s, target, turns + data.balance.status.sleepExtraTurns, 'sleep');
+      applyDebilitate(s, target, turns + data.balance.status.sleepExtraTurns, 'sleep', data);
+      return;
+    case 'possession':
+      applyDebilitate(s, target, turns, 'possession', data);
       return;
     case 'fear':
       fx.feared = Math.max(fx.feared, turns);
@@ -1713,7 +1857,7 @@ function applyMental(s: BattleState, target: Side, effect: MentalEffect, turns: 
  * de fogo queima. Queimando, todo acerto de fogo prolonga; depois de queimar uma vez, um acerto de
  * fogo comum reacende.
  */
-function applyElementalHit(s: BattleState, target: Side, element: Element | null, outcome: HitOutcome, data: GameData): void {
+function applyElementalHit(s: BattleState, target: Side, element: Element | null, outcome: HitOutcome, data: GameData, rng: Rng): void {
   if (!element || outcome === 'miss') return;
   const fx = fxOf(s, target);
   const cfg = data.balance.status;
@@ -1727,7 +1871,7 @@ function applyElementalHit(s: BattleState, target: Side, element: Element | null
     return;
   }
   if (outcome !== 'crit') return;
-  if (element === 'lightning') applyDebilitate(s, target, cfg.paralysis.turns, 'paralysis');
+  if (element === 'lightning') applyDebilitate(s, target, cfg.paralysis.turns, 'paralysis', data, rng);
   else applyStun(s, target, data);
 }
 
@@ -1794,6 +1938,7 @@ function clearNegatives(fx: StatusFx): void {
   fx.debilitated = 0;
   fx.asleep = 0;
   fx.paralyzed = 0;
+  fx.possessed = 0;
 }
 
 /** Manto ativo: paga a rodada com chakra (desde a seguinte à ativação); sem chakra, se desfaz. */
@@ -1818,6 +1963,8 @@ function startOfRound(s: BattleState, data: GameData): void {
   const { balance } = data;
 
   if (s.round === 1) {
+    const start = v.def.startingShield ? v.def.techniques.find((t) => t.id === v.def.startingShield) : undefined;
+    if (start) raiseShield(s, 'villain', start, villainTechElement(v.def, start), 0, data);
     if (vPassive?.kind === 'mist') {
       v.mistTurns = vPassive.turns;
       s.log.push({ type: 'mist', turns: vPassive.turns });
@@ -1911,6 +2058,22 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
   if (!tickStatus(s, 'villain', rng, data)) return;
   if (!tickStatus(s, 'player', rng, data)) return;
 
+  // Escudos duram `barrier.turns` rodadas a partir da seguinte à que foram erguidos.
+  for (const side of ['player', 'villain'] as Side[]) {
+    const f = fxOf(s, side);
+    if (!f.shield || f.shield.round === s.round) continue;
+    f.shield.turns--;
+    if (f.shield.turns <= 0) {
+      f.shield = null;
+      s.log.push({ type: 'shieldEnd', side });
+    }
+  }
+
+  // Tenacidade cai a cada rodada em que o lutador não está controlado.
+  for (const f of [v.fx, fx]) {
+    if (f.tenacity > 0 && !isControlled(f)) f.tenacity = Math.max(0, f.tenacity - data.balance.control.decayPerRound);
+  }
+
   if (v.mistTurns > 0) {
     v.mistTurns--;
     if (v.mistTurns === 0) s.log.push({ type: 'mistEnd' });
@@ -1977,12 +2140,15 @@ function playerTurn(s: BattleState, action: PlayerAction, ex: RoundExtras, rng: 
   const itemId = actionItemId(action);
   if (techId) {
     const tech = leveledTechnique(p, techId, data);
-    if (tech.state) {
+    if (isBarrier(tech)) {
+      p.chakra -= tech.chakraCost;
+      raiseShield(s, 'player', tech, playerTechnique(p, techId, data).element, tech.chakraCost, data);
+    } else if (tech.state) {
       p.chakra -= tech.chakraCost;
       fx.armorTurns = balance.states[tech.state].turns;
       fx.armorRound = s.round;
       s.log.push({ type: 'armor', techniqueId: tech.id, chakra: tech.chakraCost });
-    } else if (tech.mental) {
+    } else if (tech.mental || isIllusion(tech)) {
       playerMentalTechnique(s, techId, Boolean(ex.fear), rng, data);
     } else {
       playerAttack(s, techId, rng, data);
@@ -1997,13 +2163,7 @@ function playerTurn(s: BattleState, action: PlayerAction, ex: RoundExtras, rng: 
     fx.stance = true;
     s.log.push({ type: 'stance' });
   } else if (action === 'dojutsu') {
-    if (!p.dojutsu) throw new Error('O jogador não tem dōjutsu');
-    const cost = balance.dojutsu[p.dojutsu].activationCost;
-    p.chakra -= cost;
-    fx.dojutsuActive = true;
-    fx.dojutsuTurns = balance.dojutsu.duration;
-    fx.dojutsuRound = s.round;
-    s.log.push({ type: 'dojutsu', dojutsu: p.dojutsu, stage: sharinganStage(p, data), chakra: cost });
+    activateDojutsu(s, data);
   } else if (action === 'gates') {
     // Abrir os portões gasta o turno (não é golpe); o bônus vale a partir da próxima rodada.
     const gates = gatesToOpen(p, data);
@@ -2031,6 +2191,19 @@ function playerTurn(s: BattleState, action: PlayerAction, ex: RoundExtras, rng: 
     s.log.push({ type: 'medical', healed: heal(s, 'player', medicalHealPct(p, data)), chakra: tech.chakraCost });
   }
   endTurn(fx, true);
+}
+
+/** Ativa o dōjutsu: paga a ativação e conta a duração a partir da rodada seguinte. */
+function activateDojutsu(s: BattleState, data: GameData): void {
+  const p = s.player;
+  const fx = s.playerFx;
+  if (!p.dojutsu) throw new Error('O jogador não tem dōjutsu');
+  const cost = data.balance.dojutsu[p.dojutsu].activationCost;
+  p.chakra -= cost;
+  fx.dojutsuActive = true;
+  fx.dojutsuTurns = data.balance.dojutsu.duration;
+  fx.dojutsuRound = s.round;
+  s.log.push({ type: 'dojutsu', dojutsu: p.dojutsu, stage: sharinganStage(p, data), chakra: cost });
 }
 
 function useItem(s: BattleState, item: ConsumableId, data: GameData): void {
@@ -2088,8 +2261,8 @@ function selfHitDamage(s: BattleState, side: Side, tech: CombatTech, data: GameD
 }
 
 /**
- * Genjutsu (ou Imitação de Sombra): não causa dano nem consome o crítico garantido; se acertar,
- * aplica o efeito mental. Com o Sharingan, o Uchiha pode trocar o efeito por Pavor.
+ * Genjutsu (ou Imitação de Sombra): não tem crítico; se acertar, aplica o efeito mental. Ilusão de dano
+ * (Uchiha) fere com a fórmula do genjutsu. Com o Sharingan, o Uchiha pode trocar o efeito por Pavor.
  * A única reação do vilão é Resistir (com a resistência mental; física contra a sombra).
  */
 function playerMentalTechnique(s: BattleState, techId: string, fear: boolean, rng: Rng, data: GameData): void {
@@ -2103,21 +2276,48 @@ function playerMentalTechnique(s: BattleState, techId: string, fear: boolean, rn
     return;
   }
   const hitP = playerGenjutsuHitChance(s, data, techId);
-  const outcome = rollHit(hitP, 0, rng);
+  const outcome = playerRoll(s, () => rollHit(hitP, 0, rng), (o) => HIT_RANK[o]);
   s.log.push({
     type: 'attack',
     side: 'player',
     techniqueId: tech.id,
     attackType: tech.type,
     outcome,
-    damage: 0,
+    damage: outcome === 'miss' ? 0 : illusionDamage(s, techId, data),
     elementMult: 1,
     hitChance: hitP,
     critChance: 0,
     chakra: tech.chakraCost,
   });
   if (outcome === 'miss') return;
-  applyMental(s, 'villain', fear ? 'fear' : tech.mental!, playerGenjutsuTurns(s, techId, data), data);
+  if (isIllusion(tech)) {
+    // O dano vem antes do efeito: quem acorda com a dor não volta a dormir por ele.
+    hurtVillain(s, illusionDamage(s, techId, data));
+    if (s.status !== 'ongoing') return;
+  }
+  const effect = fear ? 'fear' : tech.mental;
+  if (effect) applyMental(s, 'villain', effect, playerGenjutsuTurns(s, techId, data), data);
+}
+
+/**
+ * Dano da ilusão (Uchiha): base + poder de genjutsu (status efetivo e Sharingan) − resistência mental
+ * usada pelo vilão, × pavor do jogador e vulnerabilidade de quem perdeu a vez. Sem crítico.
+ */
+export function illusionDamage(s: BattleState, techniqueId: string, data: GameData): number {
+  const tech = playerTechnique(s.player, techniqueId, data);
+  if (!isIllusion(tech)) return 0;
+  const sharingan = activeSharingan(s, data)?.genjutsuPower ?? 0;
+  const vulnerable = isControlled(s.villain.fx) ? data.balance.control.vulnerableDamageMult : 1;
+  const fear = s.playerFx.feared > 0 ? data.balance.status.fear.damageMult : 1;
+  return computeDamage({
+    baseDamage: tech.baseDamage,
+    offense: effectiveOffense(s, 'genjutsu', data) + sharingan,
+    resistance: villainResistance(s, 'mental'),
+    fraction: guardFraction(s, 'villain', defaultGuard(s, 'villain'), 'mental', data),
+    elementMult: 1,
+    critMult: 1,
+    extraMult: vulnerable * fear,
+  });
 }
 
 /** Um golpe do jogador contra o vilão. Devolve o resultado e o dano causado. */
@@ -2136,7 +2336,7 @@ function playerStrike(
   const hitP = playerHitChance(s, tech, data);
   const critP = techCritChance(s, tech, hitP, data);
   // Golpes seguintes de um ataque múltiplo repetem o resultado do primeiro.
-  const outcome = rolled ?? rollHit(hitP, critP, rng);
+  const outcome = rolled ?? playerRoll(s, () => rollHit(hitP, critP, rng), (o) => HIT_RANK[o]);
   s.playerFx.focusArmed = false;
   const critMult = outcome === 'crit' ? balance.crit.multiplier : 1;
   const { damage, elementMult } = strikeDamage(s, 'player', tech, guard, critMult, damageFactor, data);
@@ -2153,7 +2353,7 @@ function playerStrike(
     chakra,
   });
   if (outcome === 'miss') return { outcome, dealt: 0 };
-  return { outcome, dealt: hurtVillain(s, damage) };
+  return { outcome, dealt: hurtVillain(s, shieldAbsorb(s, 'villain', damage, tech, rng, data)) };
 }
 
 function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData): void {
@@ -2199,7 +2399,7 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
     // Cobra: um golpe que acerta envenena (ou faz o veneno crescer).
     const bonus = snakePoisonBonus(p, data);
     if (bonus !== null) applyPoison(s, 'villain', bonus, data);
-    applyElementalHit(s, 'villain', tech.element, outcome, data);
+    applyElementalHit(s, 'villain', tech.element, outcome, data, rng);
     applyOnHit(s, 'villain', tech, rng, data);
   }
 
@@ -2223,12 +2423,12 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
 // ---------------------------------------------------------------------------
 // Vilão
 
-/** Técnicas que o vilão pode usar no turno: chakra suficiente, condição de HP (cura); barreiras não. */
+/** Técnicas que o vilão pode usar no turno: chakra suficiente, condição de HP (cura); barreira sem escudo ativo. */
 function villainOptions(s: BattleState): VillainTechnique[] {
   const v = s.villain;
   return v.def.techniques.filter(
     (t) =>
-      t.barrier === undefined &&
+      (!isBarrier(t) || !v.fx.shield) &&
       t.chakraCost <= v.chakra &&
       (t.useBelowHpPct === undefined || v.hp < v.def.hp * t.useBelowHpPct),
   );
@@ -2274,6 +2474,10 @@ function villainAction(s: BattleState, rng: Rng, data: GameData, react?: Reactio
   const tech = villainTech(s, intent.id);
   v.chakra -= tech.chakraCost;
 
+  if (isBarrier(tech)) {
+    raiseShield(s, 'villain', tech, villainTechElement(v.def, tech), tech.chakraCost, data);
+    return false;
+  }
   if (tech.healPct) {
     if (confusionFails(s, 'villain', 0, rng, data)) return false;
     s.log.push({ type: 'villainHeal', techniqueId: tech.id, healed: heal(s, 'villain', tech.healPct) });
@@ -2346,7 +2550,7 @@ function villainGenjutsu(s: BattleState, tech: VillainTechnique, chakra: number,
   const penalty = stunPenalty(s.villain.fx, data) + mindReading;
   const power = villainOffense(s, 'genjutsu');
   const defense = playerMentalDefense(s, data);
-  const hitP = clamp(genjutsuHitChance(power, defense, balance.genjutsuHit) - penalty, 0, 1);
+  const hitP = clamp(genjutsuHitChance(power, defense, balance.genjutsuHit) - penalty, 0, 1) * controlChanceMult(s.playerFx);
   const outcome = rollHit(hitP, 0, rng);
   s.log.push({
     type: 'attack',
@@ -2443,7 +2647,7 @@ function villainStrike(
   });
   if (outcome === 'miss') return outcome;
 
-  hurtPlayer(s, damage, data);
+  hurtPlayer(s, shieldAbsorb(s, 'player', damage, tech, rng, data), data);
   if (s.status !== 'ongoing') return outcome;
   // Cobra do Orochimaru: acertos envenenam.
   if (passive?.kind === 'insane') applyPoison(s, 'player', passive.snakeBonus, data);
@@ -2451,7 +2655,7 @@ function villainStrike(
   const bleedOnHit = (passive?.kind === 'scalpel' && passive.bleedOnHit) || (passive?.kind === 'mist' && v.lastStand);
   const bleedOnCrit = tech.blade === 'sword' || passive?.kind === 'scalpel';
   if (bleedOnHit || (bleedOnCrit && outcome === 'crit')) applyBleed(s, 'player');
-  applyElementalHit(s, 'player', tech.element, outcome, data);
+  applyElementalHit(s, 'player', tech.element, outcome, data, rng);
   return outcome;
 }
 

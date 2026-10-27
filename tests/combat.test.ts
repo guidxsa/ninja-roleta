@@ -3,6 +3,7 @@ import {
   availableActions,
   effectiveOffense,
   gatesToOpen,
+  playerGenjutsuHitChance,
   playRound,
   startBattle,
   type BattleEvent,
@@ -127,10 +128,41 @@ describe('debilitado', () => {
     expect(s1.villain.fx).toMatchObject({ debilitated: 0, debilitateImmunity: 1 });
 
     // Rodada 2: genjutsu acerta mas o vilão resiste; o vilão age e perde a imunidade.
-    const s2 = playRound(s1, 'tech:basicGenjutsu', seq(0.5), gameData);
+    const s2 = playRound(s1, 'tech:basicGenjutsu', seq(0.9), gameData);
     expect(ofType(s2.log, 'debilitateResisted')).toHaveLength(1);
     expect(s2.villain.fx.debilitateImmunity).toBe(0);
     expect(ofType(s2.log, 'attack').filter((a) => a.side === 'villain')).toHaveLength(1);
+  });
+
+  it('tenacidade: controle pego dificulta o próximo e volta ao normal aos poucos', () => {
+    const s0 = withInitiative(startBattle(withGenjutsu(), testVillain({ hp: 500 })));
+    const base = playerGenjutsuHitChance(s0, gameData, 'basicGenjutsu');
+    const s1 = playRound(s0, 'tech:basicGenjutsu', seq(0.9), gameData);
+    // Pegou (+50%) e já caiu 15% no fim da rodada, quando o vilão voltou a agir.
+    expect(s1.villain.fx.tenacity).toBeCloseTo(0.35);
+    expect(playerGenjutsuHitChance(s1, gameData, 'basicGenjutsu')).toBeCloseTo(base * 0.65);
+    let s = s1;
+    for (let i = 0; i < 3; i++) s = playRound(s, 'rest', seq(0.5), gameData);
+    expect(s.villain.fx.tenacity).toBe(0);
+    expect(playerGenjutsuHitChance(s, gameData, 'basicGenjutsu')).toBeCloseTo(base);
+  });
+
+  it('tenacidade: renovar um controle que ainda vale não soma de novo', () => {
+    const s0 = withInitiative(startBattle(withGenjutsu(), testVillain({ hp: 500 })));
+    const jailed = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, debilitated: 2, tenacity: 0.5 } } };
+    const s1 = playRound(jailed, 'tech:basicGenjutsu', seq(0.99), gameData);
+    expect(ofType(s1.log, 'debilitate')).toHaveLength(1);
+    expect(s1.villain.fx.tenacity).toBe(0.5);
+  });
+
+  it('tenacidade também vale para a paralisia do crítico de raio', () => {
+    const lightning: Origin = { lineageId: null, affinity: 'lightning', jinchuuriki: false };
+    const s0 = withInitiative(startBattle(createPlayer(lightning, gameData), testVillain({ hp: 200 })));
+    const tough = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, tenacity: 0.9 } } };
+    // Crítico (0.99), e a tenacidade rola 0.5, acima dos 10% que sobram: resiste.
+    const s1 = playRound(tough, 'tech:spark', seq(0.99, 0.5), gameData);
+    expect(ofType(s1.log, 'debilitateResisted')).toHaveLength(1);
+    expect(ofType(s1.log, 'debilitate')).toHaveLength(0);
   });
 
   it('jogador debilitado perde a ação', () => {
@@ -144,29 +176,29 @@ describe('debilitado', () => {
 describe('passivas', () => {
   const prodigy: Origin = { lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false };
 
-  it('Portões: abrir gasta o turno (sem golpe), chakra e HP; taijutsu ×1,5 por 5 rodadas a partir da seguinte', () => {
+  it('Portões: abrir gasta o turno (sem golpe), chakra e HP; taijutsu ×1,3 por 3 rodadas a partir da seguinte', () => {
     const p = createPlayer(prodigy, gameData);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
     expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'gates', 'rest', 'stance']);
     const s1 = playRound(s0, 'gates', seq(0.5), gameData);
-    // 15% de 130 = 19 de HP; 1º portão custa 5 de chakra.
-    expect(ofType(s1.log, 'gates')).toEqual([{ type: 'gates', stage: 1, hpLost: 19, chakra: 5 }]);
+    // 20% de 110 = 22 de HP; 1º portão custa 5 de chakra.
+    expect(ofType(s1.log, 'gates')).toEqual([{ type: 'gates', stage: 1, hpLost: 22, chakra: 5 }]);
     expect(ofType(s1.log, 'attack').filter((a) => a.side === 'player')).toHaveLength(0);
     expect(s1.player.chakra).toBe(23);
-    expect(s1.playerFx.gatesTurns).toBe(5);
+    expect(s1.playerFx.gatesTurns).toBe(3);
     const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5), gameData);
-    // (8 + 22 − 7) × 1,5 = 34
-    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]).toMatchObject({ side: 'player', damage: 34 });
-    expect(s2.playerFx.gatesTurns).toBe(4);
+    // (8 + 17 − 7) × 1,3 = 23
+    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]).toMatchObject({ side: 'player', damage: 23 });
+    expect(s2.playerFx.gatesTurns).toBe(2);
     expect(availableActions(s2, gameData)).not.toContain('gates');
   });
 
   it('Portões evoluem com o taijutsu: portão maior, mais forte e mais caro', () => {
     const p = createPlayer(prodigy, gameData);
-    expect(gatesToOpen(p, gameData)).toMatchObject({ stage: 1, taijutsuMult: 1.5, chakraCost: 5 });
-    const strong = { ...p, offense: { ...p.offense, taijutsu: 26 } };
-    expect(gatesToOpen(strong, gameData)).toMatchObject({ stage: 2, taijutsuMult: 1.75, chakraCost: 7, hpCostPct: 0.2 });
-    expect(gatesToOpen({ ...p, offense: { ...p.offense, taijutsu: 30 } }, gameData)).toMatchObject({ stage: 3, taijutsuMult: 2 });
+    expect(gatesToOpen(p, gameData)).toMatchObject({ stage: 1, taijutsuMult: 1.3, chakraCost: 5 });
+    const strong = { ...p, offense: { ...p.offense, taijutsu: 22 } };
+    expect(gatesToOpen(strong, gameData)).toMatchObject({ stage: 2, taijutsuMult: 1.5, chakraCost: 7, hpCostPct: 0.25 });
+    expect(gatesToOpen({ ...p, offense: { ...p.offense, taijutsu: 25 } }, gameData)).toMatchObject({ stage: 3, taijutsuMult: 1.7 });
     // Sem chakra para o portão, não abre.
     expect(availableActions(battle({ ...strong, chakra: 6 }, testVillain()), gameData)).not.toContain('gates');
     expect(gatesToOpen(createPlayer(common, gameData), gameData)).toBeNull();
@@ -181,8 +213,8 @@ describe('passivas', () => {
   it('Vitalidade Uzumaki: recupera chakra e HP no início da rodada', () => {
     const p = { ...createPlayer({ lineageId: 'uzumaki', affinity: 'wind', jinchuuriki: false }, gameData), hp: 50, chakra: 5 };
     const s1 = playRound(battle(p, testVillain(), { playerStartsFirst: true }), 'rest', seq(0.01), gameData);
-    // 3% de 120 = 3
-    expect(ofType(s1.log, 'regen')).toEqual([{ type: 'regen', hp: 3, chakra: 1 }]);
+    // 2% de 105 = 2
+    expect(ofType(s1.log, 'regen')).toEqual([{ type: 'regen', hp: 2, chakra: 1 }]);
   });
 
 
@@ -277,11 +309,11 @@ describe('efeitos negativos', () => {
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'paralysis' }]);
   });
 
-  it('atordoamento: crítico de água (ou vento, terra) reduz a chance de acerto das próximas 2 ações do alvo', () => {
+  it('atordoamento: crítico de água (ou vento, terra) tira 20 de acerto das próximas 2 ações do alvo', () => {
     const s0 = withInitiative(startBattle(createPlayer(water, gameData), testVillain()));
     const s1 = playRound(s0, 'tech:waterBullet', seq(0.99, 0.5, 0.5), gameData);
     expect(ofType(s1.log, 'status')).toEqual([{ type: 'status', target: 'villain', kind: 'stun', turns: 2 }]);
-    expect(ofType(s1.log, 'attack').find((a) => a.side === 'villain')!.hitChance).toBeCloseTo(0.75);
+    expect(ofType(s1.log, 'attack').find((a) => a.side === 'villain')!.hitChance).toBeCloseTo(0.65);
     expect(s1.villain.fx.stunned).toBe(1);
   });
 

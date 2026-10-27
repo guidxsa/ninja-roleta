@@ -33,7 +33,9 @@ As regras do jogo vivem em `docs/`. Este arquivo trata só de como trabalhar no 
 
 ## Mudanças de design pendentes
 
-Nenhuma. A rodada "reações e ficha única" (24/10/2026) foi implementada na v0.10.0: ficha única com resistências física e mental, resistência passiva/Resistir/postura, reações (Resistir, Disputa, Barreira, Substituição) com a rodada pausável na interface, disputa de ninjutsu, quebra de guarda, elementos só em encontros, níveis de técnica, barreiras, Armadura de Raio, premium do guru, restauração por nível e no fim do exame, novo Treino e vilões recalibrados. Decisão tomada junto: na disputa, só a vantagem elemental multiplica o poder (a desvantagem não reduz).
+Nenhuma. A rodada "rebalanceamento das origens" (27/10/2026) foi implementada na v0.18.0: 25% de HP e chakra por vitória, controles com tenacidade e vulnerabilidade, barreiras como escudo (ação de turno), ilusões de dano do Uchiha e Sharingan grátis, Possessão do Yamanaka, Gênio do Nara, Determinação mais forte e nerf do prodígio, Akimichi, Inuzuka e Uzumaki. Decisões tomadas junto: o Gênio é ativa com usos por luta (2, +1 nos níveis 4 e 7) e vale nas roletas de combate do jogador; o genjutsu de dano do Uchiha fere de verdade e o do Yamanaka é controle mental com autoferimento; controle em cadeia é contido pela tenacidade (cai por rodada), não por regra de chefe; a meta é não ter origens muito acima ou abaixo das outras.
+
+Observação em aberto (não é mudança de design): na simulação, a fatia "nova técnica" da recompensa vale bem menos que as outras (sem ela, o comum vence ~20 pontos a mais). Vale discutir com o usuário antes de mexer.
 
 Quando o design mudar antes do código, listar aqui o que falta implementar.
 

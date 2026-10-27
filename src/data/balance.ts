@@ -30,7 +30,8 @@ export const balance = {
   penetration: { max: 0.6 },
 
   // Restauração (fundamentos.md): a luta não começa restaurada; HP e chakra seguem entre as lutas.
-  combat: { restoreOnStart: false },
+  // Cada vitória recupera `recoverAfterWinPct` do HP e do chakra máximos (no exame também).
+  combat: { restoreOnStart: false, recoverAfterWinPct: 0.25 },
 
   // Ações universais (tecnicas.md).
   // Concentrar chakra (jogador e vilão): recupera esta fração do chakra máximo (arredonda para baixo, mínimo 1).
@@ -48,6 +49,9 @@ export const balance = {
     lightningArmor: { element: 'lightning' as const, turns: 3, offenseMult: 1.25, resistanceMult: 1.3, speed: 2 },
   },
 
+  // Barreiras (tecnicas.md#barreiras): ação de turno; o escudo dura `turns` rodadas a partir da seguinte.
+  barrier: { turns: 3 },
+
   // Golpe carregado dos vilões: dano × `damageMult`, sem crítico.
   charged: { damageMult: 2 },
 
@@ -56,7 +60,9 @@ export const balance = {
   dojutsu: {
     duration: 5,
     // Sharingan: evolui com o nível (1, 2 e 3 tomoe).
+    // Sharingan: ativar não gasta o turno (escolha grátis da rodada, como os clones).
     sharingan: {
+      freeActivation: true,
       activationCost: 4,
       upkeep: 1,
       readDamageFactor: 0.5,
@@ -67,38 +73,42 @@ export const balance = {
       ],
     },
     // Byakugan: taijutsu não erra, ×`taijutsuMult` e libera o Selo dos Pontos Vitais.
-    byakugan: { activationCost: 3, upkeep: 1, taijutsuMult: 1.1 },
+    byakugan: { freeActivation: false, activationCost: 3, upkeep: 1, taijutsuMult: 1.1 },
   },
 
   // Portões (prodígio do taijutsu): uma vez por luta; abrir gasta o turno e o bônus vale `turns` rodadas
   // a partir da seguinte. Abre o maior portão liberado pelo taijutsu atual.
   gates: {
-    turns: 5,
+    turns: 3,
     stages: [
-      { minTaijutsu: 22, taijutsuMult: 1.5, chakraCost: 5, hpCostPct: 0.15 },
-      { minTaijutsu: 26, taijutsuMult: 1.75, chakraCost: 7, hpCostPct: 0.2 },
-      { minTaijutsu: 30, taijutsuMult: 2, chakraCost: 9, hpCostPct: 0.25 },
+      { minTaijutsu: 17, taijutsuMult: 1.3, chakraCost: 5, hpCostPct: 0.2 },
+      { minTaijutsu: 21, taijutsuMult: 1.5, chakraCost: 7, hpCostPct: 0.25 },
+      { minTaijutsu: 25, taijutsuMult: 1.7, chakraCost: 9, hpCostPct: 0.3 },
     ],
   },
 
   // Passivas e ativas de linhagem (origens.md).
   passives: {
-    determination: { xpBonusPct: 0.1 },
-    heavyBody: { base: 0.8, perHpPct: 0.4 },
+    // Comum: +25% de XP e, a cada nível, +1 no maior status de ataque (empate: tai, nin, gen).
+    determination: { xpBonusPct: 0.25, offensePerLevel: 1 },
+    // Gênio (Nara): vê a próxima ação do vilão e, `uses` vezes por luta (+1 em cada nível de
+    // `extraUseLevels`), arma de graça a próxima roleta dele: gira duas vezes e fica com a melhor.
+    genius: { uses: 2, extraUseLevels: [4, 7] },
+    heavyBody: { base: 0.7, perHpPct: 0.4 },
     mindReading: { villainHitPenalty: 0.1 },
     hive: { chakraDrainPerHit: 2 },
-    duo: { chance: 0.3, damagePct: 0.4 },
+    duo: { chance: 0.25, damagePct: 0.4 },
     genjutsuResistance: { bonus: 6 },
     preciseFist: { penetration: 0.3 },
-    vitality: { chakraPerTurn: 1, hpPctPerTurn: 0.03 },
+    vitality: { chakraPerTurn: 1, hpPctPerTurn: 0.02 },
   },
   expansion: { chakraCost: 6, turns: 3, taijutsuMult: 1.5, speedPenalty: 3 },
-  shadowClones: { chakraCost: 6, hitsMult: 3, damagePct: 0.4 },
+  shadowClones: { chakraCost: 6, hitsMult: 3, damagePct: 0.35 },
 
   // Efeitos (efeitos.md). Valem para jogador e vilões.
   status: {
     paralysis: { turns: 1 },
-    stun: { turns: 2, hitPenalty: 0.1 },
+    stun: { turns: 2, hitPenalty: 0.2 },
     // O n-ésimo tique causa 2^n % do HP máximo, no máximo `maxPct`.
     burn: { turns: 2, extendPerHit: 1, reigniteTurns: 1, maxPct: 0.16 },
     // Tique = `basePct` do HP máximo + bônus da fonte + 1 por tique anterior, no máximo `maxPct`.
@@ -107,14 +117,22 @@ export const balance = {
     bleed: { bladeDamageMult: 1.5 },
     // Efeitos de genjutsu.
     sleepExtraTurns: 1,
-    fear: { damageMult: 0.75 },
-    confusion: { failChance: 0.3, selfHitShare: 0.5 },
-    torment: { chakraPerRound: 4 },
+    fear: { damageMult: 0.65 },
+    confusion: { failChance: 0.4, selfHitShare: 0.5 },
+    torment: { chakraPerRound: 5 },
+    // Possessão (Yamanaka): perde a vez e golpeia a si mesmo com a técnica de dano mais forte, contra a
+    // própria resistência física passiva, × `selfDamageMult`.
+    possession: { selfDamageMult: 1 },
   },
 
 
   // Anti-trava: após sair de um efeito que tira a vez, o alvo age ao menos uma vez antes de perder a vez de novo.
   debilitated: { immunityActions: 1 },
+
+  // Controles (efeitos.md#controles): quem perde a vez (Aprisionado, Sono, Paralisia, Possessão) ganha
+  // tenacidade, que multiplica a chance do próximo controle por (1 − tenacidade). Cai `decayPerRound` por
+  // rodada em que não está controlado. Alvo que perdeu a vez recebe dano × `vulnerableDamageMult`.
+  control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTenacity: 0.9, vulnerableDamageMult: 1.25 },
 
   revive: { initialItems: 1 },
 

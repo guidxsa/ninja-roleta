@@ -1,7 +1,7 @@
 import { playRound, startBattle, type BattleOptions, type BattleState } from '../core/combat';
 import type { GameData } from '../core/gameData';
 import { scaleVillain, type Difficulty } from '../core/difficulty';
-import { canLevelUp, equipTrainingWeights, fullRestore, gainXp, trainingWeightsWin, type PlayerState } from '../core/player';
+import { canLevelUp, equipTrainingWeights, fullRestore, gainXp, recoverAfterWin, trainingWeightsWin, type PlayerState } from '../core/player';
 import {
   applyAkatsuki,
   applyGuru,
@@ -69,9 +69,10 @@ function levelUps(player: PlayerState, data: GameData): PlayerState {
   return p;
 }
 
-/** Ganha o XP do vilão derrotado (e o taijutsu dos pesos de treino) e sobe de nível. */
+/** Vitória: recupera parte do HP e do chakra, ganha o XP do vilão (e o taijutsu dos pesos de treino) e sobe de nível. */
 export function awardXp(player: PlayerState, villain: VillainDef, data: GameData, exam = false): PlayerState {
-  const p = exam ? player : trainingWeightsWin(player, data);
+  const recovered = recoverAfterWin(player, data);
+  const p = exam ? recovered : trainingWeightsWin(recovered, data);
   return levelUps(gainXp(p, villain.xp, data), data);
 }
 

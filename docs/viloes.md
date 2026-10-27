@@ -12,7 +12,8 @@ Fichas dos vilões da campanha: status, moveset, passiva, versão hardcore, comp
 | `physicalRes`, `mentalRes` | Resistência física e mental, igual à do jogador |
 | `critBonus` | Somado aos 5% base de crítico |
 | `techniques` | Fichas de técnica (as mesmas do jogador, com nível), mais o peso no sorteio e, nas de cura, `useBelowHpPct` (ver [tecnicas.md](tecnicas.md)) |
-| `reactions` | Pesos de Resistir, Disputa, Barreira e Substituição (ver "Reações") |
+| `reactions` | Pesos de Resistir, Disputa e Substituição (ver "Reações") |
+| `startingShield` | Barreira (técnica dele) já erguida no início da luta, sem custo |
 | `passive` / `hardcorePassive` | Passiva normal e a do hardcore |
 | `behavior` | Comportamentos especiais (ex.: golpe carregado) |
 | `xp` | XP dado ao ser derrotado (ver [progressao.md](progressao.md)) |
@@ -25,10 +26,11 @@ Fichas dos vilões da campanha: status, moveset, passiva, versão hardcore, comp
 - **Segunda fase**: quando o vilão volta à luta (Haku se sacrifica pelo Zabuza, Gaara vira Shukaku, Orochimaru troca de pele), o chakra volta na mesma fração do HP: se volta com 50% do HP, o chakra sobe para 50% do máximo. Se ele já tinha mais chakra que isso, mantém.
 - **Precisão**: as técnicas dos vilões usam a precisão padrão (85%) e a mesma rolagem de três fatias do jogador ([fundamentos.md](fundamentos.md#rolagem-de-acerto)).
 - **Cura**: técnica médica de vilão cura uma fração do HP máximo sem rolar acerto e só entra no sorteio com o HP abaixo do limite indicado (`useBelowHpPct`).
-- **Intenção**: a próxima ação do vilão é sorteada no fim da rodada anterior. A passiva Estrategista (Nara) mostra essa intenção na tela.
+- **Intenção**: a próxima ação do vilão é sorteada no fim da rodada anterior. A passiva Gênio (Nara) mostra essa intenção na tela.
+- **Barreiras**: são ações. A técnica de barreira entra no sorteio da intenção (pelo peso) só quando o vilão não tem escudo ativo ([fundamentos.md](fundamentos.md#escudos)).
 - **Reações**: ao receber um ataque, o vilão sorteia a reação pelos pesos de `reactions`, só entre as que pode pagar e as que valem contra aquele ataque. Resistir é sempre possível. Na Disputa, a técnica é sorteada pelos pesos normais entre os ninjutsu de ataque que ele pode pagar.
 - **Dificuldade**: multiplica HP, dano base, ataques e resistências (ver [campanha.md](campanha.md#dificuldade)). No hardcore, `passive` vira `hardcorePassive`.
-- **Golpe carregado**: quando sorteia a técnica marcada, o vilão gasta a vez (e o chakra) concentrando e anuncia o golpe; na vez seguinte solta o ataque com dano ×2, que não pode ser crítico. A tela mostra o aviso, e o jogador decide entre postura defensiva, Bomba de fumaça ou esperar para reagir (Substituição, disputa ou barreira; na disputa, o poder do golpe carregado também dobra). Usado pelos vilões marcados abaixo, com a técnica indicada (`behavior.charged`).
+- **Golpe carregado**: quando sorteia a técnica marcada, o vilão gasta a vez (e o chakra) concentrando e anuncia o golpe; na vez seguinte solta o ataque com dano ×2, que não pode ser crítico. A tela mostra o aviso, e o jogador decide entre postura defensiva, Bomba de fumaça ou esperar para reagir (Substituição ou disputa; na disputa, o poder do golpe carregado também dobra) ou erguer um escudo na vez do aviso. Usado pelos vilões marcados abaixo, com a técnica indicada (`behavior.charged`).
 
 ## Status base
 
@@ -56,19 +58,19 @@ O manto do Gaara e a marca da maldição multiplicam o dano ×1,5 e as resistên
 
 Pesos de `reactions` (provisórios). Resistir é o padrão; as outras só entram no sorteio quando valem contra o ataque e o vilão pode pagar. Substituição: 2 usos por luta, como o jogador.
 
-| Vilão | Resistir | Disputa | Barreira | Substituição | Personalidade |
-|---|---|---|---|---|---|
-| Mizuki | 4 | — | — | 1 | Covarde: foge quando dá. |
-| Haku | 2 | 1 | — | 2 | Rápido, esquiva entre os espelhos. |
-| Zabuza | 2 | 2 | — | 1 (clone d'água) | Gosta de trocar jutsu com jutsu. |
-| Genins do exame | 3 | 1 | — | 1 | Genérico. |
-| Gaara | 1 | 1 | 4 (Escudo de Areia) | — | A areia defende sozinha. |
-| Jirobo | 2 | — | 2 (Muralha de Terra) | — | Muralha. |
-| Kidomaru | 2 | 2 | — | 1 | Arqueiro, troca tiros. |
-| Tayuya | 3 | — | — | 1 | Depende do ogro e da flauta. |
-| Sakon | 2 | 1 | — | 2 | Escapa pelo corpo do irmão. |
-| Kabuto | 2 | 1 | — | 3 | Médico calculista. |
-| Orochimaru | 2 | 2 | — | 2 (troca de pele) | Escorregadio. |
+| Vilão | Resistir | Disputa | Substituição | Personalidade |
+|---|---|---|---|---|
+| Mizuki | 4 | — | 1 | Covarde: foge quando dá. |
+| Haku | 2 | 1 | 2 | Rápido, esquiva entre os espelhos. |
+| Zabuza | 2 | 2 | 1 (clone d'água) | Gosta de trocar jutsu com jutsu. |
+| Genins do exame | 3 | 1 | 1 | Genérico. |
+| Gaara | 2 | 1 | — | A areia defende sozinha: começa com o Escudo de Areia e o ergue de novo quando cai. |
+| Jirobo | 1 | — | — | Muralha: ergue a Muralha de Terra como ação. |
+| Kidomaru | 2 | 2 | 1 | Arqueiro, troca tiros. |
+| Tayuya | 3 | — | 1 | Depende do ogro e da flauta. |
+| Sakon | 2 | 1 | 2 | Escapa pelo corpo do irmão. |
+| Kabuto | 2 | 1 | 3 | Médico calculista. |
+| Orochimaru | 2 | 2 | 2 (troca de pele) | Escorregadio. |
 
 Os genins do exame têm nomes próprios no jogo (não são do universo original). O Gaara foi aliviado de 160 de HP por ser o gargalo da campanha. O XP segue a curva planejada em [progressao.md](progressao.md#curva-planejada).
 
@@ -90,13 +92,13 @@ Nomes em português são sugestões para a tela; o `id` é o do código. "Chance
 | Genin do Som | Golpe de Kunai (`kunaiStrike`) | Taijutsu | 8 | 0 | 3 (75%) | Cortante |
 | Genin da Folha | Golpe de Palma (`palmStrike`) | Taijutsu | 10 | 0 | 3 (75%) | — |
 | Genin da Folha | Bola de Fogo (`fireballVillain`) | Ninjutsu | 9 | 4 | 1 (25%) | — |
-| Gaara | Caixão de Areia (`sandCoffin`) | Ninjutsu | 11 | 4 | 3 (50%) | — |
-| Gaara | Tsunami de Areia (`sandTsunami`) | Ninjutsu | 17 | 8 | 1 (17%) | Golpe carregado |
-| Gaara | Punho de Areia (`sandFist`) | Taijutsu | 8 | 0 | 2 (33%) | Grátis: sem chakra, o Gaara bate em vez de concentrar |
-| Gaara | Escudo de Areia (`sandShield`) | Barreira (terra) | — | 4 | Só reação | Poder de barreira 30. Raio perfura (×2); taijutsu precisa quebrar a guarda. |
-| Jirobo | Prisão de Terra (`earthPrison`) | Ninjutsu | 11 | 5 | 2 (50%) | — |
-| Jirobo | Soco Pesado (`heavyPunch`) | Taijutsu | 10 | 0 | 2 (50%) | — |
-| Jirobo | Muralha de Terra (`earthWall`) | Barreira (terra) | — | 5 | Só reação | Poder de barreira 28 (ver [tecnicas.md](tecnicas.md#barreiras)). |
+| Gaara | Caixão de Areia (`sandCoffin`) | Ninjutsu | 11 | 4 | 3 (38%) | — |
+| Gaara | Tsunami de Areia (`sandTsunami`) | Ninjutsu | 17 | 8 | 1 (12%) | Golpe carregado |
+| Gaara | Punho de Areia (`sandFist`) | Taijutsu | 8 | 0 | 2 (25%) | Grátis: sem chakra, o Gaara bate em vez de concentrar |
+| Gaara | Escudo de Areia (`sandShield`) | Barreira (terra) | — | 4 | 2 (25%, só sem escudo) | Escudo de 30; já começa a luta erguido. Raio fura (×2 no escudo). |
+| Jirobo | Prisão de Terra (`earthPrison`) | Ninjutsu | 11 | 5 | 2 (40%; 50% com escudo) | — |
+| Jirobo | Soco Pesado (`heavyPunch`) | Taijutsu | 10 | 0 | 2 (40%; 50% com escudo) | — |
+| Jirobo | Muralha de Terra (`earthWall`) | Barreira (terra) | — | 5 | 1 (20%, só sem escudo) | Escudo de 28 (ver [tecnicas.md](tecnicas.md#barreiras)). |
 | Kidomaru | Flecha Dourada (`goldenArrow`) | Ninjutsu | 10 | 5 | 2 (50%) | — |
 | Kidomaru | Teia de Aranha (`spiderWeb`) | Taijutsu | 8 | 0 | 2 (50%) | — |
 | Tayuya | Flauta Demoníaca (`demonFlute`) | Genjutsu | 0 | 5 | 1 (33%) | Aprisiona 1 turno base |
@@ -128,7 +130,7 @@ Ordem das lutas no Quarteto do Som: Jirobo, Kidomaru, Tayuya e Sakon.
 ## Observações de balanceamento
 
 - Como a luta não começa mais restaurada, os blocos (Haku e Zabuza, Quarteto) voltam a ser maratonas de HP e chakra. Subir de nível no meio do bloco é o respiro. A simulação precisa conferir se o Quarteto não ficou pesado demais; o ajuste natural é aliviar cada luta do bloco.
-- A Muralha de Terra do Jirobo e o Escudo de Areia do Gaara são a vez do taijutsu e do raio brilharem: o prodígio quebra guarda, o raio perfura.
+- A Muralha de Terra do Jirobo e o Escudo de Areia do Gaara são a vez do raio brilhar: contra terra, o raio causa ×2 no escudo. A água (×0,75) sofre.
 - Sem a cura por rodada, o Kabuto passa a ser uma luta de pressão: o sangramento no crítico pune os golpes cortantes dele mesmo. Respostas naturais: Kit médico, Substituição e Lesma.
 - A Palma Mística devolve ao Kabuto um pouco de sustentação, mas limitada: só abaixo de 50% de HP, cada uso gasta a vez dele e 7 dos 25 de chakra (no máximo 3 curas, 45% do HP, se não usar mais nada). Quem segura o dano para o fim é punido; quem mantém a pressão, não.
 - O Punho de Areia evita que o Gaara perca vezes concentrando chakra quando o manto (que custa chakra) esvazia a reserva. O dano médio por vez cai um pouco (de 21,5 para 18,3, sem contar o golpe carregado), compensando as vezes que ele deixa de perder.

@@ -1,6 +1,6 @@
 # Técnicas
 
-Catálogo de ações de combate: ações universais, reações, técnicas por categoria, níveis de técnica, barreiras, estados elementais, técnicas de linhagem e premium. Os nomes são nomes de trabalho e podem mudar. As fórmulas de reação, disputa e quebra de guarda estão em [fundamentos.md](fundamentos.md#reações).
+Catálogo de ações de combate: ações universais, reações, técnicas por categoria, níveis de técnica, barreiras, estados elementais, técnicas de linhagem e premium. Os nomes são nomes de trabalho e podem mudar. As fórmulas de reação, disputa e escudo estão em [fundamentos.md](fundamentos.md#reações).
 
 ## Regras gerais
 
@@ -22,7 +22,7 @@ Toda técnica tem **níveis** (I, II, III...). Subir o nível de uma técnica a 
   | Categoria | Ganho por nível | Custo por nível |
   |---|---|---|
   | Dano (taijutsu e ninjutsu) | +3 de dano base por golpe | +1 de chakra (técnicas grátis continuam grátis) |
-  | Barreira | +4 de poder de barreira | +1 de chakra |
+  | Barreira | +4 pontos de escudo | +1 de chakra |
   | Genjutsu | +3 de poder | +1 de chakra |
   | Médico | +5% de cura | +1 de chakra |
 
@@ -55,8 +55,8 @@ Toda técnica nos dados tem estes campos. Regra de design: todo ponto forte tem 
 | `efeito` | Efeito e chance no acerto (ver [efeitos.md](efeitos.md)) | — |
 | `prioridade` | Age antes na rodada | não |
 | `blade` | Golpe cortante (espada, kunai etc.) | — |
-| `uso` | `ação` (no turno), `reação` (barreiras) ou os dois (ninjutsu de ataque pode ser usado na disputa) | ninjutsu de ataque: os dois; barreira: reação; demais: ação |
-| `barreira` | Poder de barreira (só técnicas defensivas) | — |
+| `uso` | `ação` (no turno) ou os dois (ninjutsu de ataque também serve na disputa) | ninjutsu de ataque: os dois; demais: ação |
+| `barreira` | Pontos do escudo que a técnica ergue (só técnicas defensivas) | — |
 | `estado` | Estado elemental que a técnica ativa (ver "Estados elementais") | — |
 | `linha` / `nível` | Linha de upgrade e nível atual | nível I |
 | `nívelMínimo` | Nível do personagem em que é aprendida sozinha ou entra na pool | — |
@@ -79,7 +79,6 @@ Resumo; as regras completas estão em [fundamentos.md](fundamentos.md#reações)
 |---|---|---|
 | Resistir | Grátis | 70% da resistência (100% em postura). |
 | Disputa de ninjutsu | Chakra da técnica + próxima ação | Roleta de poder entre os dois jutsus. |
-| Barreira | Chakra da técnica + próxima ação | Disputa contra ninjutsu; quebra de guarda contra taijutsu. |
 | Substituição | 2 de chakra + 1 uso (2 por luta); não gasta ação | Roleta de esquiva pela speed. |
 
 ## Taijutsu
@@ -90,11 +89,11 @@ Resumo; as regras completas estão em [fundamentos.md](fundamentos.md#reações)
 | Impacto Concentrado | Recompensa | 14 | 1 | 3 | 85% | — | Todos |
 | Presas Giratórias | Inicial | 7 | 2 | 3 | 85% | — | Inuzuka |
 | Rolo Colossal | 4 | 24 | 1 | 6 | 80% | 20% de atordoar no acerto | Akimichi |
-| Redemoinho da Folha | 4 | 20 | 1 | 5 | 90% | — | Prodígio |
-| Lótus Primaveril | 7 | 30 | 1 | 9 | 80% | +10% de crítico | Prodígio |
+| Redemoinho da Folha | 4 | 16 | 1 | 5 | 90% | — | Prodígio |
+| Lótus Primaveril | 7 | 25 | 1 | 9 | 80% | +10% de crítico | Prodígio |
 | Selo dos Pontos Vitais | Byakugan | 6 | 1 | 0 | não erra | Drena 6 de chakra do alvo | Hyuuga (só com Byakugan) |
 
-O taijutsu é a resposta às barreiras: contra uma barreira, rola a quebra de guarda ([fundamentos.md](fundamentos.md#quebra-de-guarda)).
+Taijutsu é neutro contra escudos: não tem vantagem nem desvantagem elemental ([fundamentos.md](fundamentos.md#escudos)).
 
 ## Ninjutsu elemental
 
@@ -102,8 +101,8 @@ Cada elemento tem uma identidade:
 
 - **Fogo**: confiável, queima.
 - **Vento**: preciso, críticos e vários golpes.
-- **Raio**: dano alto, erra mais, fura resistência e barreiras de terra.
-- **Terra**: quase não erra, dano menor, atordoa, a melhor barreira.
+- **Raio**: dano alto, erra mais, fura resistência e escudos de terra.
+- **Terra**: quase não erra, dano menor, atordoa, o melhor escudo.
 - **Água**: equilibrado, prioridade.
 
 ### Linhas de ataque
@@ -134,14 +133,14 @@ Cada elemento tem uma **linha de ataque**: a técnica básica do kit inicial é 
 
 ### Barreiras
 
-Ninjutsu defensivo, usado só como **reação** (ver [fundamentos.md](fundamentos.md#reações)). Entram na pool da "nova técnica" a partir do nível 4, no elemento do jogador. Sobem de nível pelo upgrade genérico.
+Ninjutsu defensivo, usado como **ação de turno**: ergue um **escudo** com os pontos da técnica, que absorve dano de taijutsu e ninjutsu por 3 rodadas (regras em [fundamentos.md](fundamentos.md#escudos)). Entram na pool da "nova técnica" a partir do nível 4, no elemento do jogador. Sobem de nível pelo upgrade genérico (+4 pontos).
 
-| Elemento | Técnica | Nível mínimo | Chakra | Poder de barreira | Especial |
+| Elemento | Técnica | Nível mínimo | Chakra | Pontos de escudo | Especial |
 |---|---|---|---|---|---|
-| Terra | Muralha de Terra | 4 | 5 | 28 | A barreira mais forte; raio perfura (×2). |
-| Água | Parede d'Água | 4 | 5 | 24 | Se aguentar um ataque de fogo, apaga a queimadura de quem a ergueu. |
-| Fogo | Muralha de Chamas | 4 | 4 | 20 | Quem tentar quebrar com taijutsu tem 30% de chance de queimar. |
-| Vento | Escudo de Vento | 4 | 4 | 20 | +25% de poder contra técnicas de vários golpes. |
+| Terra | Muralha de Terra | 4 | 5 | 28 | O escudo mais forte; raio fura (×2 no escudo). |
+| Água | Parede d'Água | 4 | 5 | 24 | Se absorver um ataque de fogo, apaga a queimadura de quem a ergueu. |
+| Fogo | Muralha de Chamas | 4 | 4 | 20 | Quem bate nela com taijutsu tem 30% de chance de queimar. |
+| Vento | Escudo de Vento | 4 | 4 | 20 | Técnicas de vários golpes causam 25% a menos no escudo. |
 
 O raio não tem barreira: a resposta defensiva dele é a Armadura de Raio.
 
@@ -162,21 +161,26 @@ Ativar um estado gasta o turno. O manto do jinchuuriki é um estado **neutro** (
 |---|---|---|---|---|---|---|
 | Imitação de Sombra | 0 | 1 | 5 | 80% | Aprisionado (1 turno base; duração pela fórmula do genjutsu usando ninjutsu contra a resistência física) | Nara |
 | Enxame | 5 | 4 | 5 | 85% | Cada golpe drena chakra (Colmeia) | Aburame |
-| Rotação | — | — | 5 | — | Barreira neutra (reação), poder 26. Se aguentar, devolve 50% do dano que o golpe causaria. | Hyuuga (nível 4) |
+| Rotação | — | — | 5 | — | Barreira neutra (ação): escudo de 26 que devolve 50% do dano que bloqueia. | Hyuuga (nível 4) |
 
 ## Genjutsu
 
-Genjutsu não causa dano. Se acertar, aplica um efeito mental (ver [efeitos.md](efeitos.md#efeitos-de-genjutsu)). A única reação contra ele é Resistir, com a resistência mental.
+Se acertar, aplica um efeito mental (ver [efeitos.md](efeitos.md#efeitos-de-genjutsu)). Só as **ilusões de dano** do Uchiha ferem (base + genjutsu − resistência mental). A única reação contra genjutsu é Resistir, com a resistência mental.
 
-| Técnica | Nível mínimo | Chakra | Turnos base | Poder extra | Efeito | Quem |
-|---|---|---|---|---|---|---|
-| Olhar Hipnótico | Inicial | 3 | 1 | 0 | Aprisionado | Uchiha |
-| Transferência de Mente | Inicial | 4 | 1 | +2 | Confusão | Yamanaka |
-| Revoada de Corvos | Recompensa | 4 | 1 | +6 | Aprisionado | Quem usa genjutsu |
-| Canção do Sono | Recompensa | 4 | 2 | 0 | Sono | Quem usa genjutsu |
-| Sussurro Vazio | Recompensa | 5 | 2 | +2 | Tormento | Quem usa genjutsu |
-| Teatro do Pavor | 4 | 5 | 2 | +10 | Pavor | Quem usa genjutsu |
-| Prisão dos Espelhos | 7 | 8 | 2 | +14 | Aprisionado | Quem usa genjutsu |
+| Técnica | Nível mínimo | Chakra | Dano | Turnos base | Poder extra | Efeito | Quem |
+|---|---|---|---|---|---|---|---|
+| Olhar Hipnótico | Inicial | 3 | — | 1 | 0 | Aprisionado | Uchiha |
+| Ilusão da Dor | Inicial | 3 | 15 | — | — | Ilusão de dano | Uchiha |
+| Tsukuyomi | 7 | 9 | 22 | 1 | +6 | Ilusão de dano + Aprisionado; só com o Sharingan | Uchiha |
+| Transferência de Mente | Inicial | 4 | — | 1 | +2 | Possessão (golpeia a si mesmo) | Yamanaka |
+| Revoada de Corvos | Recompensa | 4 | — | 1 | +6 | Aprisionado | Quem usa genjutsu |
+| Canção do Sono | Recompensa | 4 | — | 2 | 0 | Sono | Quem usa genjutsu |
+| Sussurro Vazio | Recompensa | 5 | — | 2 | +2 | Tormento | Quem usa genjutsu |
+| Labirinto Mental | Recompensa | 4 | — | 2 | +2 | Confusão | Quem usa genjutsu |
+| Teatro do Pavor | 4 | 5 | — | 2 | +10 | Pavor | Quem usa genjutsu |
+| Prisão dos Espelhos | 7 | 8 | — | 2 | +14 | Aprisionado | Quem usa genjutsu |
+
+Upgrade genérico das ilusões de dano: +3 de dano e +3 de poder por nível.
 
 "Quem usa genjutsu" = qualquer origem exceto o prodígio, a partir do momento em que tem ao menos uma técnica de genjutsu.
 

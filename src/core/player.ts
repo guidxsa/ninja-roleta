@@ -151,6 +151,22 @@ export function withDifficulty(player: PlayerState, difficulty: Difficulty, data
   return { ...player, growth: { ...data.balance.level.growth[difficulty] } };
 }
 
+/** Vitória: recupera `combat.recoverAfterWinPct` do HP e do chakra máximos (sem passar do máximo). */
+export function recoverAfterWin(player: PlayerState, data: GameData): PlayerState {
+  const pct = data.balance.combat.recoverAfterWinPct;
+  return {
+    ...player,
+    hp: Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * pct)),
+    chakra: Math.min(player.maxChakra, player.chakra + Math.floor(player.maxChakra * pct)),
+  };
+}
+
+/** Maior status de ataque que a origem pode usar (empate: taijutsu, ninjutsu, genjutsu). */
+export function highestOffense(player: PlayerState): AttackType {
+  const types = (['taijutsu', 'ninjutsu', 'genjutsu'] as const).filter((t) => !player.forbiddenAttackTypes.includes(t));
+  return types.reduce((a, b) => (player.offense[b] > player.offense[a] ? b : a));
+}
+
 /** Restaura HP e chakra (subir de nível, fim do exame, Vontade do Fogo). */
 export function fullRestore(player: PlayerState): PlayerState {
   return { ...player, hp: player.maxHp, chakra: player.maxChakra };
@@ -315,7 +331,7 @@ export function xpToNextLevel(level: number, data: GameData): number {
   return cfg.xpBase + cfg.xpGrowth * (level - 1);
 }
 
-/** XP efetivamente ganho de uma fonte (a passiva Determinação soma 10%). */
+/** XP efetivamente ganho de uma fonte (a passiva Determinação soma 25%). */
 export function xpGain(player: PlayerState, amount: number, data: GameData): number {
   const bonus = player.passive === 'determination' ? data.balance.passives.determination.xpBonusPct : 0;
   return Math.floor(amount * (1 + bonus));
@@ -341,8 +357,12 @@ export function applyLevelUp(player: PlayerState, data: GameData): PlayerState {
   const maxHp = player.maxHp + player.growth.hp;
   const maxChakra = player.maxChakra + player.growth.chakra;
   const milestone = data.balance.techniqueUpgrade.milestones.includes(level) ? 1 : 0;
+  // Determinação (comum): o maior status de ataque sobe a cada nível.
+  const offense = { ...player.offense };
+  if (player.passive === 'determination') offense[highestOffense(player)] += data.balance.passives.determination.offensePerLevel;
   const p: PlayerState = {
     ...player,
+    offense,
     level,
     xp: player.xp - xpToNextLevel(player.level, data),
     maxHp,
