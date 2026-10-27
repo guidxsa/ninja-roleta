@@ -2229,7 +2229,6 @@ async function main() {
   document.getElementById('disclaimer')!.textContent = S.ui.disclaimer;
   document.getElementById('sheet-btn')!.innerHTML = icon('scroll');
   document.getElementById('history-btn')!.innerHTML = icon('timer');
-  document.querySelector('.brand .seal')!.innerHTML = clanSymbol(null);
   installTooltips();
 
   for (;;) {
