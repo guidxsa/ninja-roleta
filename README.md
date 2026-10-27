@@ -31,6 +31,7 @@ src/state   histórico de runs (localStorage injetável)
 src/sim     jogador automático e executor de lutas/campanha
 prototype   protótipo jogável (HTML + TS), usa o core real; arte em SVG original (prototype/art.ts)
 public/img  imagens próprias opcionais que substituem os retratos (ver public/img/LEIAME.md)
+public/audio  música de fundo (naruto_theme.mp3), embutida no protótipo pelo build
 scripts     simulate.ts, build-prototype.ts
 tests       testes do core
 ```
@@ -84,3 +85,4 @@ O **v1.0.0** fica para quando o jogo estiver completo para quem joga:
 | v0.16.0 | Botão de modo dia/noite (a escolha fica salva; sem escolha, segue o aparelho). Sons sintetizados no navegador, sem arquivos: cliques da roleta a cada fatia, batida ao parar, som bom, neutro ou ruim conforme o resultado, vitória e derrota. Música de fundo original em escala japonesa, ligada pelo botão de música. |
 | v0.16.1 | Correção: o modo instantâneo virou um botão de ícone (⚡) no cabeçalho e não sobrepõe mais o título; em telas estreitas o título dá lugar só ao selo. |
 | v0.16.2 | A barra superior fica só com os botões (instantâneo, dia/noite, som, música, ficha e histórico), centralizados; o título sai do cabeçalho. |
+| v0.17.0 | Música de fundo trocada pela faixa `public/audio/naruto_theme.mp3`, tocada em loop pelo botão de música; o build embute o MP3 no HTML para o protótipo seguir em um arquivo só e offline. |

@@ -1,5 +1,5 @@
-// Sons e música do protótipo, sintetizados com Web Audio: sem arquivos, funciona offline.
-// A música é uma composição original na escala japonesa "in" (Ré, Mi♭, Sol, Lá, Si♭).
+// Sons do protótipo, sintetizados com Web Audio: sem arquivos, funciona offline.
+// A música de fundo é a faixa public/audio/naruto_theme.mp3, embutida no HTML pelo build.
 // O navegador só libera o áudio depois de um toque; até lá, as chamadas não fazem nada.
 
 export type Mood = 'good' | 'neutral' | 'bad';
@@ -12,7 +12,7 @@ let sfxOn = true;
 let musicOn = false;
 
 const SFX_VOLUME = 0.5;
-const MUSIC_VOLUME = 0.16;
+const MUSIC_VOLUME = 0.35;
 
 const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
@@ -203,84 +203,51 @@ export const defeat = () =>
     taiko(bus, t + 1.15, 0.5);
   });
 
-// ---------------------------------------------------------------------------
-// Música: 8 compassos em 4/4, grade de colcheias, repetindo.
+// Música: a faixa de public/audio/, embutida pelo build em base64 (__MUSIC__) e tocada em loop.
 
-const BPM = 96;
-const EIGHTH = 60 / BPM / 2;
-const BAR = 8;
-/** Melodia da flauta: [nota MIDI ou null = pausa, duração em colcheias]. */
-const MELODY: [number | null, number][] = [
-  [69, 2], [70, 1], [69, 1], [67, 2], [62, 2],
-  [63, 2], [67, 2], [69, 4],
-  [74, 2], [70, 2], [69, 2], [67, 2],
-  [69, 6], [null, 2],
-  [67, 1], [69, 1], [70, 2], [74, 2], [75, 2],
-  [74, 3], [70, 1], [69, 4],
-  [67, 2], [63, 2], [62, 2], [63, 2],
-  [62, 6], [null, 2],
-];
-/** Fundamental de cada compasso (baixo e arpejo do koto). */
-const ROOTS = [38, 39, 34, 33, 31, 34, 39, 38];
-const SCALE = [43, 45, 46, 50, 51, 55, 57, 58, 62, 63, 67];
-const ARP = [0, 2, 4, 2, 1, 3, 4, 2];
-/** Tambor por colcheia: 2 = forte, 1 = leve. */
-const DRUMS = [2, 0, 0, 1, 0, 0, 2, 1];
+declare const __MUSIC__: string;
+const MUSIC: string = typeof __MUSIC__ === 'undefined' ? '' : __MUSIC__;
 
-const NOTES: { step: number; midi: number; len: number }[] = [];
-{
-  let step = 0;
-  for (const [midi, len] of MELODY) {
-    if (midi !== null) NOTES.push({ step, midi, len });
-    step += len;
+let track: Promise<AudioBuffer | null> | null = null;
+let source: AudioBufferSourceNode | null = null;
+
+/** Decodifica a faixa uma vez só, no primeiro uso. */
+function loadTrack(): Promise<AudioBuffer | null> {
+  if (!track) {
+    if (!MUSIC) return (track = Promise.resolve(null));
+    const bin = atob(MUSIC);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    track = ctx!.decodeAudioData(bytes.buffer).catch(() => null);
   }
-}
-const LOOP = ROOTS.length * BAR;
-
-let timer: number | undefined;
-let nextStep = 0;
-let nextTime = 0;
-
-function scheduleStep(step: number, at: number) {
-  const bus = musicBus!;
-  const bar = Math.floor(step / BAR);
-  const inBar = step % BAR;
-  const root = ROOTS[bar]!;
-  if (inBar === 0) tone(bus, hz(root), at, { wave: 'triangle', gain: 0.3, attack: 0.02, decay: EIGHTH * 7, cutoff: 500 });
-  // O koto arpeja a partir da nota da escala mais próxima da fundamental, uma oitava acima.
-  const base = SCALE.findIndex((n) => n >= root + 12);
-  koto(bus, SCALE[Math.min(SCALE.length - 1, base + ARP[inBar]!)]!, at, inBar % 2 ? 0.08 : 0.11, 0.7);
-  if (DRUMS[inBar]) taiko(bus, at, DRUMS[inBar] === 2 ? 0.32 : 0.14);
-  for (const n of NOTES) {
-    if (n.step === step) tone(bus, hz(n.midi), at, { gain: 0.16, attack: 0.07, decay: n.len * EIGHTH, vibrato: 14 });
-  }
+  return track;
 }
 
 function startMusic() {
-  if (!ctx || timer !== undefined) return;
+  if (!ctx || source) return;
   const bus = musicBus!;
   bus.gain.cancelScheduledValues(ctx.currentTime);
   bus.gain.setValueAtTime(bus.gain.value, ctx.currentTime);
   bus.gain.linearRampToValueAtTime(MUSIC_VOLUME, ctx.currentTime + 1);
-  nextStep = 0;
-  nextTime = ctx.currentTime + 0.1;
-  // Agenda um pouco à frente; o relógio do áudio garante o ritmo mesmo se o timer atrasar.
-  timer = window.setInterval(() => {
-    if (!ctx || ctx.state !== 'running') return;
-    if (nextTime < ctx.currentTime) nextTime = ctx.currentTime + 0.05;
-    while (nextTime < ctx.currentTime + 0.25) {
-      scheduleStep(nextStep, nextTime);
-      nextStep = (nextStep + 1) % LOOP;
-      nextTime += EIGHTH;
-    }
-  }, 50);
+  // Marca como tocando já, para toques seguidos não criarem duas faixas enquanto decodifica.
+  const node = ctx.createBufferSource();
+  source = node;
+  void loadTrack().then((buffer) => {
+    if (!buffer || source !== node) return;
+    node.buffer = buffer;
+    node.loop = true;
+    node.connect(bus);
+    node.start();
+  });
 }
 
 function stopMusic() {
-  if (timer !== undefined) window.clearInterval(timer);
-  timer = undefined;
   if (!ctx || !musicBus) return;
+  const node = source;
+  source = null;
+  const end = ctx.currentTime + 0.4;
   musicBus.gain.cancelScheduledValues(ctx.currentTime);
   musicBus.gain.setValueAtTime(musicBus.gain.value, ctx.currentTime);
-  musicBus.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);
+  musicBus.gain.linearRampToValueAtTime(0, end);
+  if (node?.buffer) node.stop(end);
 }
