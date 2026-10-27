@@ -2,7 +2,7 @@
 
 Jogo de browser de sessões curtas, movido a roletas, inspirado no universo ninja de Naruto.
 
-> **Projeto de fã, sem fins lucrativos e sem afiliação oficial.** Naruto e seus personagens são propriedade de seus respectivos donos. Este repositório não usa imagens, músicas, logos ou textos oficiais; os nomes presentes nos dados são nomes de trabalho.
+> **Projeto de fã, sem fins lucrativos e sem afiliação oficial.**
 
 ## Estado atual
 
@@ -76,3 +76,4 @@ O **v1.0.0** fica para quando o jogo estiver completo para quem joga:
 | v0.10.0 | Implementa a v0.9.2: ficha única e fórmula de dano para jogador e vilão, painel de reação no meio da rodada (Resistir, Disputa, Barreira, Substituição), postura defensiva, disputa de ninjutsu e quebra de guarda, elementos só em encontros, linhas de técnica com upgrades à escolha, barreiras, Armadura de Raio, premium do guru, Treino com roleta de destaque, HP carregando entre lutas e vilões recalibrados. |
 | v0.11.0 | Ajustes de vilões e combate: Gaara no hardcore ganha a passiva Monstro (volta como Shukaku com golpes de monstro e manto permanente); marca da maldição com os valores do manto do jinchuuriki; Orochimaru revive até 1/2/3 vezes (fácil/normal/difícil), sem limite no hardcore, sempre com 50% do HP, e no hardcore não sofre crítico. Ataques de vários golpes (e os Espelhos do Haku) rolam acerto, crítico e reação uma vez para todos; Concentrar chakra recupera 15% do chakra máximo; o Foco do guru dá +25% de chance de crítico em vez de crítico garantido; Haku e Zabuza dão recompensa só no fim do bloco; tocar na roleta prossegue como o botão. |
 | v0.12.0 | Substituição não gasta mais ação (continua custando 2 de chakra e 1 dos usos da luta) e pode ser usada mesmo devendo a ação por outra reação. Vale para jogador e vilão. |
+| v0.12.1 | README: aviso de projeto de fã mais curto. |
