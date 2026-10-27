@@ -162,8 +162,16 @@ describe('Substituição', () => {
     const s1 = villainAttacks(player(), fireVillain(), 'substitution', [0.5, 0.4]);
     expect(ofType(s1.log, 'substitutionRoll')).toEqual([{ type: 'substitutionRoll', side: 'player', chance: 0.5, success: true }]);
     expect(s1.player.hp).toBe(100);
-    expect(s1.player.chakra).toBe(28);
+    // 30 − 2, e a concentração da mesma rodada (não perdida) devolve ao máximo.
+    expect(s1.player.chakra).toBe(30);
     expect(s1.playerFx.substitutionsUsed).toBe(1);
+  });
+
+  it('não gasta ação: quem se substitui ainda age na rodada', () => {
+    const s1 = villainAttacks(player(), fireVillain(), 'substitution', [0.5, 0.4]);
+    expect(s1.playerFx.owesAction).toBe(false);
+    expect(ofType(s1.log, 'rest')).toHaveLength(1);
+    expect(ofType(s1.log, 'skip')).toHaveLength(0);
   });
 
   it('falhou: recebe o golpe com a resistência passiva', () => {
@@ -199,9 +207,9 @@ describe('economia das reações', () => {
     const s1 = playRound(withInitiative(startBattle(player('water'), fireVillain())), 'rest', seq(0.5, 0.7, 0.01), gameData, {}, always('clash:waterBullet'));
     expect(s1.playerFx.owesAction).toBe(true);
     expect(availableActions(s1, gameData)).toEqual(['pass']);
-    // Devendo a ação, só pode Resistir.
+    // Devendo a ação, só pode Resistir ou usar a Substituição (que não gasta ação).
     const incoming = { attacker: 'villain' as const, techniqueId: 'blaze', type: 'ninjutsu' as const, element: 'fire' as const, hits: 1, charged: false };
-    expect(playerReactionOptions(s1, incoming, gameData)).toEqual(['resist']);
+    expect(playerReactionOptions(s1, incoming, gameData)).toEqual(['resist', 'substitution']);
     const s2 = playRound(s1, 'pass', seq(0.5, 0.5, 0.01), gameData);
     expect(ofType(s2.log.slice(s1.log.length), 'skip')).toEqual([{ type: 'skip', side: 'player', reason: 'reacted' }]);
     expect(s2.playerFx.owesAction).toBe(false);

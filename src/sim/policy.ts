@@ -109,7 +109,7 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
 
 /**
  * Reação automática: compara o dano evitado (e o contra-ataque da disputa) com o valor da ação que a
- * reação gasta. Substituição só contra golpes pesados. Resistir é grátis e é o padrão.
+ * reação gasta. Substituição não gasta ação, mas tem poucos usos: só contra golpes pesados. Resistir é grátis e é o padrão.
  */
 export function chooseReaction(state: BattleState, incoming: IncomingAttack, options: ReactionChoice[], data: GameData): ReactionChoice {
   const incomingDamage = incomingDamagePreview(state, incoming, data);
@@ -123,7 +123,7 @@ export function chooseReaction(state: BattleState, incoming: IncomingAttack, opt
     let score: number;
     if (prev.kind === 'substitution') {
       if (!heavy) continue;
-      score = prev.chance * incomingDamage - actionValue;
+      score = prev.chance * incomingDamage;
     } else if (prev.kind === 'guard') {
       score = prev.holdChance * incomingDamage - actionValue;
     } else if (prev.kind === 'clash') {

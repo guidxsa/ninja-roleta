@@ -74,10 +74,10 @@ Quem recebe um ataque escolhe uma **reação** antes da rolagem. Vale igual para
 | **Resistir** | Qualquer ataque | Grátis | Usa 70% da resistência. É a reação padrão. |
 | **Disputa de ninjutsu** | Ninjutsu | Chakra da técnica + **a próxima ação** | Lança um ninjutsu contra o outro (ver "Disputa de ninjutsu"). |
 | **Barreira** | Ninjutsu ou taijutsu | Chakra da técnica + **a próxima ação** | Ergue um ninjutsu defensivo. Contra ninjutsu vira disputa; contra taijutsu, o atacante rola a quebra de guarda. |
-| **Substituição** | Taijutsu ou ninjutsu | 2 de chakra + **a próxima ação** + 1 uso da luta | Roleta de esquiva (ver abaixo). |
+| **Substituição** | Taijutsu ou ninjutsu | 2 de chakra + 1 uso da luta (**não gasta ação**) | Roleta de esquiva (ver abaixo). |
 
 - **Contra genjutsu, só Resistir** (com a resistência mental).
-- **A próxima ação**: se quem reage ainda não agiu na rodada, perde a ação desta rodada. Se já agiu, perde a primeira ação da rodada seguinte. Sem ação livre pela frente (já gasta por outra reação), só pode Resistir.
+- **A próxima ação**: se quem reage ainda não agiu na rodada, perde a ação desta rodada. Se já agiu, perde a primeira ação da rodada seguinte. Sem ação livre pela frente (já gasta por outra reação), só pode Resistir ou usar a Substituição.
 - **Sem reação**: quem está Aprisionado, Dormindo ou Paralisado não reage e recebe o golpe com a resistência passiva.
 - Em **Postura defensiva**, Resistir já usa 100%; as outras reações continuam disponíveis.
 - Técnica de vários golpes (e os Espelhos do Haku) recebe **uma reação** para a técnica inteira.
@@ -93,6 +93,7 @@ chance = clamp(50% + (speed_de_quem_reage − speed_do_atacante) × 3%, 25%, 85%
 
 - **Sucesso**: esquiva do ataque inteiro.
 - **Falha**: recebe o golpe com a resistência **passiva**.
+- **Não gasta ação**: quem se substitui age normalmente na rodada (ou na seguinte, se já agiu).
 - **Usos por luta**: 2 (o premium "Mestre da Substituição" do guru dá +1, ver [campanha.md](campanha.md#guru)).
 
 Configuração: `substitution: { chakraCost: 2, baseChance: 0.5, perSpeed: 0.03, min: 0.25, max: 0.85, usesPerFight: 2 }`.

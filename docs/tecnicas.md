@@ -80,7 +80,7 @@ Resumo; as regras completas estão em [fundamentos.md](fundamentos.md#reações)
 | Resistir | Grátis | 70% da resistência (100% em postura). |
 | Disputa de ninjutsu | Chakra da técnica + próxima ação | Roleta de poder entre os dois jutsus. |
 | Barreira | Chakra da técnica + próxima ação | Disputa contra ninjutsu; quebra de guarda contra taijutsu. |
-| Substituição | 2 de chakra + próxima ação + 1 uso (2 por luta) | Roleta de esquiva pela speed. |
+| Substituição | 2 de chakra + 1 uso (2 por luta); não gasta ação | Roleta de esquiva pela speed. |
 
 ## Taijutsu
 

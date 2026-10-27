@@ -1064,13 +1064,14 @@ function canSubstitute(s: BattleState, side: Side, data: GameData): boolean {
 
 /**
  * Reações possíveis do jogador contra o ataque. Vazia = não pode reagir (recebe com a passiva).
- * Genjutsu: só Resistir. Sem ação livre pela frente: só Resistir.
+ * Genjutsu: só Resistir. Sem ação livre pela frente: Resistir ou Substituição (que não gasta ação).
  */
 export function playerReactionOptions(s: BattleState, incoming: IncomingAttack, data: GameData): ReactionChoice[] {
   if (!canReact(s, 'player')) return [];
   const options: ReactionChoice[] = ['resist'];
-  if (incoming.type === 'genjutsu' || s.playerFx.owesAction) return options;
+  if (incoming.type === 'genjutsu') return options;
   if (canSubstitute(s, 'player', data)) options.push('substitution');
+  if (s.playerFx.owesAction) return options;
   for (const tech of knownTechniques(s.player, data)) {
     if (!canUseTechnique(s, tech, data)) continue;
     if (isBarrier(tech)) options.push(barrierReaction(tech.id));
@@ -1097,8 +1098,9 @@ function chooseVillainReaction(s: BattleState, incoming: IncomingAttack, rng: Rn
   if (!canReact(s, 'villain')) return 'passive';
   const v = s.villain;
   const weights = v.def.reactions ?? { resist: 1 };
-  if (incoming.type === 'genjutsu' || v.fx.owesAction) return 'resist';
-  const techs = villainReactionTechs(s, incoming);
+  if (incoming.type === 'genjutsu') return 'resist';
+  // Devendo a ação, só a Substituição (que não gasta ação) continua no sorteio.
+  const techs = v.fx.owesAction ? { clash: [], barrier: [] } : villainReactionTechs(s, incoming);
   const kinds: { label: string; weight: number; value: 'resist' | 'clash' | 'barrier' | 'substitution' }[] = [
     { label: 'resist', weight: weights.resist, value: 'resist' },
   ];
@@ -1329,7 +1331,7 @@ function performReaction(
     s.log.push({ type: 'reaction', side: defender, kind: choice, techniqueId: null, chakra: 0 });
     return { kind: 'strike', guard: choice };
   }
-  fx.owesAction = true;
+  // Substituição não gasta ação; disputa e barreira gastam a próxima.
   if (choice === 'substitution') {
     const cost = data.balance.substitution.chakraCost;
     spendChakra(s, defender, cost);
@@ -1340,6 +1342,7 @@ function performReaction(
     s.log.push({ type: 'substitutionRoll', side: defender, chance: p, success });
     return success ? { kind: 'resolved' } : { kind: 'strike', guard: 'passive' };
   }
+  fx.owesAction = true;
   const def = defenderTech(s, defender, reactionTechniqueId(choice)!, data);
   spendChakra(s, defender, def.chakraCost);
   s.log.push({
