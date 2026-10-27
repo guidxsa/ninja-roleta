@@ -98,6 +98,12 @@ const ICONS: Record<string, string> = {
   slug: '<path d="M2 19c3 0 4-1 7-1h8c3 0 5-2 5-5s-2-5-5-5c-2.6 0-4.6 1.8-5 4.5L9 18" fill="currentColor"/><path d="M14 8 13 3M18 8l1-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
   dice: '<rect x="3" y="3" width="18" height="18" rx="4" fill="currentColor"/><g fill="#0008"><circle cx="8" cy="8" r="1.6"/><circle cx="16" cy="8" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="8" cy="16" r="1.6"/><circle cx="16" cy="16" r="1.6"/></g>',
   swords: '<path d="M4 3l9 9M20 3l-9 9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M7 16l-3 3M17 16l3 3M9 14l-4 4 2 2 4-4M15 14l4 4-2 2-4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>',
+  sun: '<circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="currentColor"/><circle cx="17" cy="5" r="1.2" fill="currentColor"/><circle cx="20.5" cy="9" r=".8" fill="currentColor"/>',
+  soundOn: '<path d="M3 9h4l5-4.5v15L7 15H3z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>',
+  soundOff: '<path d="M3 9h4l5-4.5v15L7 15H3z" fill="currentColor"/><path d="m16 9 6 6M22 9l-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  music: '<path d="M9 18V5l11-2v13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="3" fill="currentColor"/><circle cx="17.5" cy="16" r="3" fill="currentColor"/>',
+  musicOff: '<path d="M9 18V5l11-2v13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linejoin="round" opacity=".55"/><circle cx="6.5" cy="18" r="3" fill="currentColor" opacity=".55"/><circle cx="17.5" cy="16" r="3" fill="currentColor" opacity=".55"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
   info: '<circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 10.5V17" stroke="#000a" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.2" r="1.5" fill="#000a"/>',
 };
 

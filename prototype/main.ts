@@ -112,6 +112,7 @@ import {
   type RunStatus,
 } from '../src/state/runHistory';
 import { clanSymbol, icon, ninjaPortrait, villainPortrait } from './art';
+import { defeat, installAudio, mood, setMusic, setSfx, victory, type Mood } from './audio';
 import {
   conditionChip,
   ELEMENT_COLORS,
@@ -147,17 +148,25 @@ const SETTINGS_KEY = 'proto_settings_v1';
 const DIFFICULTIES = Object.keys(data.balance.difficulty.multipliers) as Difficulty[];
 const DEFAULT_DIFFICULTY: Difficulty = data.balance.difficulty.default;
 /** Preferências do aparelho (não é estado de campanha). A dificuldade é a última escolhida. */
+type Theme = 'light' | 'dark';
 interface Settings {
   instant: boolean;
   difficulty: Difficulty;
+  /** Efeitos sonoros (ligados por padrão). */
+  sfx: boolean;
+  /** Música de fundo (desligada por padrão). */
+  music: boolean;
+  /** Tema escolhido no botão; sem escolha, segue o aparelho. */
+  theme?: Theme;
 }
 const settings: Settings = (() => {
   try {
     const saved = JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}') as Partial<Settings>;
     const difficulty = saved.difficulty && DIFFICULTIES.includes(saved.difficulty) ? saved.difficulty : DEFAULT_DIFFICULTY;
-    return { instant: Boolean(saved.instant), difficulty };
+    const theme = saved.theme === 'light' || saved.theme === 'dark' ? saved.theme : undefined;
+    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), theme };
   } catch {
-    return { instant: false, difficulty: DEFAULT_DIFFICULTY };
+    return { instant: false, difficulty: DEFAULT_DIFFICULTY, sfx: true, music: false };
   }
 })();
 const saveSettings = () => {
@@ -238,6 +247,32 @@ function stageName(stage: Stage): string {
   if (stage.kind === 'exam') return S.stages.exam;
   const names = stage.villains.map(villainName);
   return names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} e ${names.at(-1)}`;
+}
+
+/** Som do resultado: perdas e azares soam mal; o que só vira XP ou não muda nada soa neutro. */
+function effectMood(e: ProgressEffect): Mood {
+  switch (e.kind) {
+    case 'villainFirst':
+    case 'akatsukiTookRevive':
+    case 'guruCharlatan':
+      return 'bad';
+    case 'none':
+    case 'akatsukiUnnoticed':
+    case 'upgradeForfeit':
+    case 'trainingWeights':
+    case 'xp':
+      return 'neutral';
+    case 'bagItem':
+      return e.overflowXp > 0 ? 'neutral' : 'good';
+    default:
+      return 'good';
+  }
+}
+
+/** Mostra o efeito de um passo no fim de `container`, com o som do resultado. */
+function showEffect(container: HTMLElement, e: ProgressEffect) {
+  container.insertAdjacentHTML('beforeend', `<div class="effect pop">${effectText(e)}</div>`);
+  mood(effectMood(e));
 }
 
 function effectText(e: ProgressEffect): string {
@@ -900,7 +935,7 @@ async function eventScreen(stage: Stage): Promise<void> {
     }
   }
   applyStep(step);
-  detail.insertAdjacentHTML('beforeend', `<div class="effect pop">${effectText(step.effect)}</div>`);
+  showEffect(detail, step.effect);
   refreshHud(true);
   const cta = root.querySelector<HTMLElement>('#cta')!;
   cta.innerHTML = `<div class="sticky-cta"><button class="btn primary big" data-choice="go">${icon('swords')} ${S.ui.fight}</button></div>`;
@@ -1429,6 +1464,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   overlay.innerHTML = `<div class="overlay ${won ? 'win' : 'lose'}"><div><h2>${msg}</h2>${xpLine}
     <p class="muted">${S.ui.round(state.round)}</p>
     <button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div></div>`;
+  mood(won ? 'good' : 'bad');
   await choose(overlay);
   return state;
 
@@ -1884,14 +1920,14 @@ async function rewardScreen(title: string, tier: number): Promise<void> {
       const step = await itemFlow(slot);
       applyStep(step);
       steps.push(step);
-      results.insertAdjacentHTML('beforeend', `<div class="effect pop">${effectText(step.effect)}</div>`);
+      showEffect(results, step.effect);
       refreshHud();
     }
   } else {
     const step = applyReward(c.player, reward, tier, rng, data);
     applyStep(step);
     steps.push(step);
-    results.insertAdjacentHTML('beforeend', `<div class="effect pop">${effectText(step.effect)}</div>`);
+    showEffect(results, step.effect);
     refreshHud();
   }
   const cta = root.querySelector<HTMLElement>('#cta')!;
@@ -1947,7 +1983,7 @@ async function upgradeScreen(): Promise<void> {
     slot.innerHTML = '';
   }
   applyStep(step);
-  root.querySelector('#results')!.insertAdjacentHTML('beforeend', `<div class="effect pop">${effectText(step.effect)}</div>`);
+  showEffect(root.querySelector<HTMLElement>('#results')!, step.effect);
   hud.innerHTML = playerPanel(c.player, c.mods);
   hud.firstElementChild?.classList.add('pulse');
   const cta = root.querySelector<HTMLElement>('#cta')!;
@@ -1967,9 +2003,7 @@ async function levelUpScreen(): Promise<void> {
   await sleep(settings.instant ? 0 : 300);
   const step = levelUp(c.player, data);
   applyStep(step);
-  root
-    .querySelector('#results')!
-    .insertAdjacentHTML('beforeend', `<div class="effect pop">${effectText(step.effect)}</div>`);
+  showEffect(root.querySelector<HTMLElement>('#results')!, step.effect);
   hud.innerHTML = playerPanel(c.player, c.mods);
   hud.firstElementChild?.classList.add('pulse');
   const cta = root.querySelector<HTMLElement>('#cta')!;
@@ -1993,6 +2027,7 @@ async function noticeScreen(title: string, text: string): Promise<void> {
 async function endScreen(won: boolean, stoppedAt: string | null): Promise<void> {
   const c = camp!;
   progressDots(won ? campaign.length : c.stageIndex);
+  (won ? victory : defeat)();
   const root = show(
     h(`<div class="screen end ${won ? 'win' : 'lose'}">
       <div class="end-seal">${won ? clanSymbol(c.player.origin.lineageId) : villainPortrait(campaign[c.stageIndex]!.villains[0]!, 'lg')}</div>
@@ -2111,6 +2146,56 @@ async function runCampaign(): Promise<void> {
   await endScreen(true, null);
 }
 
+/** Tema aplicado: o escolhido no botão ou o do aparelho. */
+const deviceTheme = window.matchMedia?.('(prefers-color-scheme: light)');
+const currentTheme = (): Theme => settings.theme ?? (deviceTheme?.matches ? 'light' : 'dark');
+const THEME_COLORS: Record<Theme, string> = { dark: '#10121b', light: '#fbf4e3' };
+
+function applyTheme() {
+  const theme = currentTheme();
+  document.documentElement.dataset.theme = theme;
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', THEME_COLORS[theme]));
+  const btn = document.getElementById('theme-btn')!;
+  // O botão mostra para onde vai: sol à noite, lua de dia.
+  const next = theme === 'dark' ? S.ui.themeDay : S.ui.themeNight;
+  btn.innerHTML = icon(theme === 'dark' ? 'sun' : 'moon');
+  btn.title = next;
+  btn.setAttribute('aria-label', next);
+}
+
+/** Botões do cabeçalho: dia/noite, efeitos sonoros e música. */
+function installHeaderToggles() {
+  applyTheme();
+  deviceTheme?.addEventListener?.('change', applyTheme);
+  document.getElementById('theme-btn')!.addEventListener('click', () => {
+    settings.theme = currentTheme() === 'dark' ? 'light' : 'dark';
+    saveSettings();
+    applyTheme();
+  });
+
+  const toggles = [
+    { id: 'sfx-btn', key: 'sfx', on: 'soundOn', off: 'soundOff', label: S.ui.sfx, apply: setSfx },
+    { id: 'music-btn', key: 'music', on: 'music', off: 'musicOff', label: S.ui.music, apply: setMusic },
+  ] as const;
+  for (const t of toggles) {
+    const btn = document.getElementById(t.id)!;
+    const render = () => {
+      const on = settings[t.key];
+      btn.innerHTML = icon(on ? t.on : t.off);
+      btn.setAttribute('aria-pressed', String(on));
+      btn.title = t.label(on);
+      btn.setAttribute('aria-label', t.label(on));
+    };
+    render();
+    btn.addEventListener('click', () => {
+      settings[t.key] = !settings[t.key];
+      saveSettings();
+      t.apply(settings[t.key]);
+      render();
+    });
+  }
+}
+
 async function main() {
   markAbandonedRuns(storage, new Date(), data.balance.history.maxRuns);
 
@@ -2120,6 +2205,8 @@ async function main() {
     settings.instant = instant.checked;
     saveSettings();
   });
+  installAudio(settings);
+  installHeaderToggles();
   document.getElementById('history-btn')!.addEventListener('click', openHistory);
   document.getElementById('sheet-btn')!.addEventListener('click', openSheet);
   // Botões "Ficha" dentro das telas (painel do jogador, card da luta).

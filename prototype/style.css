@@ -1,5 +1,5 @@
 /*
- * Tema inspirado na vila da Folha. Segue o aparelho:
+ * Tema inspirado na vila da Folha. Segue o aparelho até o jogador escolher no botão (data-theme no <html>):
  * escuro = "noite em Konoha" (índigo, lua, laranja de chakra); claro = "Konoha de dia" (pergaminho, laranja e verde do colete).
  * Paleta: laranja e azul-marinho do uniforme, verde do colete chunin, vermelho dos selos (Uzumaki/Akatsuki), areia e pergaminho.
  */
@@ -55,40 +55,38 @@
   color-scheme: dark;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #f2e7cf;
-    --bg-2: #fbf4e3;
-    --surface: #fffaf0;
-    --surface-2: #f4e8cd;
-    --surface-3: #eadab5;
-    --line: #d8c495;
-    --text: #24190f;
-    --muted: #6f5f48;
-    --accent: #ee6f0b;
-    --accent-2: #f99a3c;
-    --accent-deep: #b04c00;
-    --seal: #b71c1c;
-    --leaf: #557a2a;
-    --foe: #9c1c1c;
-    --hp: #3fa552;
-    --ck: #2167c4;
-    --ck-2: #5a9be6;
-    --xp: #c48a00;
-    --good: #2e8b3e;
-    --bad: #c62828;
-    --gold: #b88600;
-    --jin: #d8401f;
-    --shadow: rgba(92, 60, 20, .32);
-    --shadow-soft: rgba(92, 60, 20, .2);
-    --header-bg: linear-gradient(180deg, rgba(251, 244, 227, .97), rgba(251, 244, 227, .9));
-    --card-bg: linear-gradient(180deg, #fffcf4, #fbf1dc);
-    --log-bg: rgba(255, 250, 238, .92);
-    --log-mine: #1f6b35;
-    --log-theirs: #a32020;
-    --bar-bg: #e3d3ad;
-    color-scheme: light;
-  }
+:root[data-theme='light'] {
+  --bg: #f2e7cf;
+  --bg-2: #fbf4e3;
+  --surface: #fffaf0;
+  --surface-2: #f4e8cd;
+  --surface-3: #eadab5;
+  --line: #d8c495;
+  --text: #24190f;
+  --muted: #6f5f48;
+  --accent: #ee6f0b;
+  --accent-2: #f99a3c;
+  --accent-deep: #b04c00;
+  --seal: #b71c1c;
+  --leaf: #557a2a;
+  --foe: #9c1c1c;
+  --hp: #3fa552;
+  --ck: #2167c4;
+  --ck-2: #5a9be6;
+  --xp: #c48a00;
+  --good: #2e8b3e;
+  --bad: #c62828;
+  --gold: #b88600;
+  --jin: #d8401f;
+  --shadow: rgba(92, 60, 20, .32);
+  --shadow-soft: rgba(92, 60, 20, .2);
+  --header-bg: linear-gradient(180deg, rgba(251, 244, 227, .97), rgba(251, 244, 227, .9));
+  --card-bg: linear-gradient(180deg, #fffcf4, #fbf1dc);
+  --log-bg: rgba(255, 250, 238, .92);
+  --log-mine: #1f6b35;
+  --log-theirs: #a32020;
+  --bar-bg: #e3d3ad;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -121,23 +119,21 @@ body::after {
   left: 0; right: 0; bottom: 0; height: 180px;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 100' preserveAspectRatio='none'%3E%3Cpath d='M0 100V62l40-22 30 14 46-34 38 26 30-12 44 30 40-36 48 28 34-16 50 30v30z' fill='%23070912' fill-opacity='.7'/%3E%3Cpath d='M0 100V78l60-16 50 14 60-20 50 16 70-18 60 18 50-10v38z' fill='%2305060d'/%3E%3C/svg%3E") bottom / 100% 100% no-repeat;
 }
-@media (prefers-color-scheme: light) {
-  body {
-    /* Papel de pergaminho com a espiral da folha bem clara. */
-    background-image:
-      radial-gradient(ellipse 90% 40% at 50% -10%, rgba(238, 111, 11, .16), transparent 70%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cpath d='M40 42a3 3 0 0 1 6 0a6 6 0 0 1-12 0a9 9 0 0 1 18 0C52 34 44 28 36 24l10 3' fill='none' stroke='%237a5a2a' stroke-opacity='.07' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='120' cy='118' r='1.6' fill='%237a5a2a' fill-opacity='.08'/%3E%3C/svg%3E"),
-      linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 70%);
-  }
-  body::before {
-    background: radial-gradient(circle at 40% 40%, #ffd08a, #f7931e 70%);
-    box-shadow: 0 0 80px 30px rgba(247, 147, 30, .18);
-    opacity: .22;
-  }
-  body::after {
-    height: 150px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 100' preserveAspectRatio='none'%3E%3Cpath d='M0 100V62l40-22 30 14 46-34 38 26 30-12 44 30 40-36 48 28 34-16 50 30v30z' fill='%236f9a3e' fill-opacity='.18'/%3E%3Cpath d='M0 100V78l60-16 50 14 60-20 50 16 70-18 60 18 50-10v38z' fill='%23557a2a' fill-opacity='.22'/%3E%3C/svg%3E");
-  }
+[data-theme='light'] body {
+  /* Papel de pergaminho com a espiral da folha bem clara. */
+  background-image:
+    radial-gradient(ellipse 90% 40% at 50% -10%, rgba(238, 111, 11, .16), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cpath d='M40 42a3 3 0 0 1 6 0a6 6 0 0 1-12 0a9 9 0 0 1 18 0C52 34 44 28 36 24l10 3' fill='none' stroke='%237a5a2a' stroke-opacity='.07' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='120' cy='118' r='1.6' fill='%237a5a2a' fill-opacity='.08'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 70%);
+}
+[data-theme='light'] body::before {
+  background: radial-gradient(circle at 40% 40%, #ffd08a, #f7931e 70%);
+  box-shadow: 0 0 80px 30px rgba(247, 147, 30, .18);
+  opacity: .22;
+}
+[data-theme='light'] body::after {
+  height: 150px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 100' preserveAspectRatio='none'%3E%3Cpath d='M0 100V62l40-22 30 14 46-34 38 26 30-12 44 30 40-36 48 28 34-16 50 30v30z' fill='%236f9a3e' fill-opacity='.18'/%3E%3Cpath d='M0 100V78l60-16 50 14 60-20 50 16 70-18 60 18 50-10v38z' fill='%23557a2a' fill-opacity='.22'/%3E%3C/svg%3E");
 }
 
 h1, h2, h3 { margin: 0 0 8px; line-height: 1.15; font-family: var(--font-display); font-weight: 400; letter-spacing: .02em; overflow-wrap: break-word; }
@@ -150,11 +146,9 @@ small, .small { font-size: 12px; }
 .center { text-align: center; }
 .row { display: flex; align-items: center; gap: 8px; }
 .between { justify-content: space-between; }
-@media (prefers-color-scheme: light) {
-  h2 { color: var(--accent-deep); text-shadow: 0 1px 0 #fff8; }
-  .chip.diff-normal { color: var(--accent-deep); }
-  .chip.tier-2 { color: var(--ck); }
-}
+[data-theme='light'] h2 { color: var(--accent-deep); text-shadow: 0 1px 0 #fff8; }
+[data-theme='light'] .chip.diff-normal { color: var(--accent-deep); }
+[data-theme='light'] .chip.tier-2 { color: var(--ck); }
 
 /* Ícones em SVG: seguem a cor do texto, alinhados à linha. */
 .ico { width: 1.15em; height: 1.15em; flex: none; vertical-align: -.2em; display: inline-block; }
@@ -182,6 +176,7 @@ small, .small { font-size: 12px; }
 .seal .ico { width: 22px; height: 22px; }
 .top-actions { display: flex; gap: 6px; align-items: center; }
 .top-actions .btn .ico { width: 20px; height: 20px; }
+.top-actions .btn[aria-pressed='false'] { color: var(--muted); }
 .dots { grid-column: 1 / -1; display: flex; gap: 6px; }
 .dots i { flex: 1; height: 4px; border-radius: 4px; background: var(--surface-3); }
 .dots i.done { background: var(--leaf); }
@@ -719,6 +714,11 @@ button[data-tip] { cursor: pointer; }
 @media (max-width: 440px) {
   .brand small, #instant-label { display: none; }
   .brand { font-size: 15px; }
+  .top-actions { gap: 4px; }
+  .top-actions .btn.small { padding: 4px 7px; }
+}
+@media (max-width: 400px) {
+  .brand b { display: none; }
 }
 @media (max-width: 380px) {
   .stats { grid-template-columns: repeat(3, 1fr); }

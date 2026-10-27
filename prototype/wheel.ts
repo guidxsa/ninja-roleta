@@ -1,4 +1,5 @@
 // Componentes visuais de roleta. O resultado já vem sorteado pelo core; aqui só se anima até ele.
+import { land, spinStart, swish, tick } from './audio';
 
 export interface WheelSlice {
   label: string;
@@ -62,6 +63,30 @@ function spans(slices: { weight: number }[]): [number, number][] {
 function landingPoint([a, b]: [number, number]): number {
   const pad = Math.min((b - a) * 0.2, 0.02);
   return a + pad + Math.random() * Math.max(0, b - a - 2 * pad);
+}
+
+/** Ângulo atual da roleta (0–360), lido da animação em andamento. */
+function currentAngle(svg: SVGElement): number {
+  const m = new DOMMatrixReadOnly(getComputedStyle(svg).transform);
+  return ((Math.atan2(m.b, m.a) * 180) / Math.PI + 360) % 360;
+}
+
+/** Toca o clique cada vez que uma divisória passa pelo ponteiro. Devolve a função que para. */
+function tickOnPegs(svg: SVGElement, ranges: [number, number][]): () => void {
+  const pegs = ranges.filter(([a, b]) => b - a > 0 && b - a < 0.9999).map(([a]) => a * 360);
+  if (pegs.length === 0) return () => {};
+  let prev = currentAngle(svg);
+  let frame = requestAnimationFrame(function step() {
+    const cur = currentAngle(svg);
+    const delta = (cur - prev + 360) % 360;
+    // Gira no sentido horário: o ponto sob o ponteiro (no topo) é −ângulo e vai diminuindo.
+    const from = -prev;
+    const to = from - delta;
+    if (pegs.some((p) => Math.floor((from - p) / 360) !== Math.floor((to - p) / 360))) tick();
+    prev = cur;
+    frame = requestAnimationFrame(step);
+  });
+  return () => cancelAnimationFrame(frame);
 }
 
 export function createWheel(slices: WheelSlice[]): Wheel {
@@ -198,7 +223,13 @@ export function createWheel(slices: WheelSlice[]): Wheel {
       svg.style.transform = `rotate(${target}deg)`;
       // Enquanto gira, tocar na roleta não prossegue (ver o atalho em main.ts).
       el.dataset.spinning = '1';
-      if (ms > 0) await sleep(ms + 80);
+      if (ms > 0) {
+        spinStart();
+        const stop = tickOnPegs(svg, ranges);
+        await sleep(ms + 80);
+        stop();
+      }
+      land(ms === 0);
       delete el.dataset.spinning;
       paths.forEach((path, i) => path.classList.toggle('dim', i !== index));
       items.forEach((li, i) => li.classList.toggle('win', i === index));
@@ -227,12 +258,16 @@ export async function stripRoulette(
   const marker = container.querySelector<HTMLElement>('.strip-marker')!;
   const pos = landingPoint(ranges[index]!) * 100;
   if (ms > 0) {
+    swish();
     marker.style.left = '0%';
     marker.getBoundingClientRect(); // força o layout antes da transição
     marker.style.transition = `left ${ms}ms cubic-bezier(0.2, 0.9, 0.25, 1.15)`;
   }
   marker.style.left = `${pos}%`;
-  if (ms > 0) await sleep(ms);
+  if (ms > 0) {
+    await sleep(ms);
+    land(true);
+  }
   container.querySelectorAll<HTMLElement>('.seg').forEach((seg) => {
     seg.classList.toggle('dim', seg.dataset.i !== `${index}`);
   });
