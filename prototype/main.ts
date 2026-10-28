@@ -5,16 +5,14 @@ import {
   attackPreview,
   attackTechniques,
   availableActions,
-  canClones,
-  canDojutsuExtra,
-  canFearVariant,
+  canFreeActive,
+  freeActiveCost,
+  type FreeActive,
   canFocus,
   canGenius,
   restChakra,
   canUseTechnique,
-  dojutsuActivationCost,
   elementalStateOf,
-  freeDojutsu,
   gatesHpCost,
   gatesToOpen,
   geniusUses,
@@ -30,7 +28,6 @@ import {
   reactionPreview,
   reactionTechniqueId,
   resumeRound,
-  sharinganActive,
   sharinganStage,
   techAction,
   slugHealPct,
@@ -1083,7 +1080,7 @@ function villainPanel(s: BattleState): string {
 
 /** Atributos do vilão na luta (resistências com manto, névoa etc.). */
 function villainLiveStats(s: BattleState): string {
-  const res = (kind: 'physical' | 'mental') => Math.floor(villainResistance(s, kind));
+  const res = (kind: 'physical' | 'mental') => Math.floor(villainResistance(s, kind, data));
   return villainStats(res('physical'), res('mental'), s.villain.def.speed);
 }
 
@@ -1147,7 +1144,6 @@ const ITEM_ICONS: Record<ConsumableId, string> = { soldierPill: 'pill', medKit: 
 
 function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): string {
   const p = s.player;
-  const B = data.balance;
   const A = S.tips.actions;
   let title = S.actions[action] ?? action;
   let sub = '';
@@ -1189,30 +1185,12 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     cls = 'act-item';
     ico = icon(ITEM_ICONS[itemId]);
     tipAttr = tip(it.name, it.desc);
-  } else if (action === 'expansion') {
-    extra = `${S.ui.cost(B.expansion.chakraCost)} · ×${String(B.expansion.taijutsuMult).replace('.', ',')} tai`;
-    tipAttr = tip(S.actives.expansion!.name, S.actives.expansion!.desc);
   } else if (action === 'stance') {
     extra = S.ui.stanceHint;
     tipAttr = tip(title, A.stance);
   } else if (action === 'pass') {
     extra = S.ui.passHint;
     tipAttr = tip(title, A.pass);
-  } else if (action === 'dojutsu' && p.dojutsu) {
-    const stage = sharinganStage(p, data);
-    const d = S.dojutsu[p.dojutsu]!;
-    title = d.name;
-    sub = stage ? S.sharinganStage(stage) : '';
-    extra = `${S.ui.cost(dojutsuActivationCost(p, data) ?? 0)} · −${B.dojutsu[p.dojutsu].upkeep}/rodada`;
-    ico = icon(p.dojutsu);
-    tipAttr = tip(d.name, d.desc);
-  } else if (action === 'gates') {
-    const gates = gatesToOpen(p, data);
-    if (gates) {
-      sub = S.gatesStage(gates.stage);
-      extra = `−${gatesHpCost(p, gates.hpCostPct)} HP · ${S.ui.cost(gates.chakraCost)} · ×${String(gates.taijutsuMult).replace('.', ',')} tai`;
-    }
-    tipAttr = tip(S.actives.gates!.name, S.actives.gates!.desc);
   } else if (action === 'medical') {
     const tech = playerMedical(p, data);
     if (tech) {
@@ -1248,9 +1226,6 @@ function actionList(s: BattleState, tab: ActionTab): PlayerAction[] {
       .map((t) => techAction(t.id));
   }
   const list: PlayerAction[] = [];
-  if (p.dojutsu && !freeDojutsu(p, data) && !s.playerFx.dojutsuActive) list.push('dojutsu');
-  if (p.active === 'gates') list.push('gates');
-  if (p.active === 'expansion' && s.playerFx.expansionTurns === 0) list.push('expansion');
   if (playerMedical(p, data)) list.push('medical');
   list.push('rest', 'stance');
   return list;
@@ -1389,23 +1364,35 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       .join('');
     const toggle = (key: keyof RoundExtras, ico: string, label: string, armedLabel: string, hint: string) =>
       `<button class="btn focus-btn${extras[key] ? ' on' : ''}" data-extra="${key}" aria-pressed="${Boolean(extras[key])}" ${enabled ? '' : 'aria-disabled="true"'}${tip(label, hint)}>${icon(ico)}<span>${extras[key] ? armedLabel : label}<small>${hint}</small></span></button>`;
+    /** Dōjutsu, portões e expansão: ativas grátis (não gastam o turno). */
+    const freeActiveToggle = (st: BattleState, kind: 'dojutsu' | 'gates' | 'expansion'): string => {
+      const p = st.player;
+      const cost = freeActiveCost(st, kind, data);
+      if (cost === null || p.chakra < cost) return '';
+      const mult = (n: number) => `×${String(n).replace('.', ',')} tai`;
+      if (kind === 'dojutsu' && p.dojutsu) {
+        const stage = sharinganStage(p, data);
+        const name = S.dojutsu[p.dojutsu]!.name;
+        const label = S.ui.activeFree(stage ? `${name} (${S.sharinganStage(stage)})` : name, cost);
+        return toggle('dojutsu', p.dojutsu, label, `${name} ✓`, S.ui.activeFreeHint);
+      }
+      if (kind === 'gates') {
+        const gates = gatesToOpen(p, data)!;
+        const hint = `−${gatesHpCost(p, gates.hpCostPct)} HP · ${mult(gates.taijutsuMult)} · ${S.ui.activeFreeHint}`;
+        return toggle('gates', 'gates', S.ui.activeFree(S.gatesStage(gates.stage), cost), `${S.gatesStage(gates.stage)} ✓`, hint);
+      }
+      const cfg = data.balance.expansion;
+      const hint = `${mult(cfg.taijutsuMult)} · speed −${cfg.speedPenalty} · ${S.ui.activeFreeHint}`;
+      return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name} ✓`, hint);
+    };
     const free = [
       canFocus(s) ? toggle('focus', 'focus', S.ui.focus, S.ui.focusArmed, S.ui.focusHint) : '',
       s.player.active === 'shadowClones' && !s.playerFx.clonesArmed && s.player.chakra >= data.balance.shadowClones.chakraCost
         ? toggle('clones', 'clones', `${S.ui.clones} · ${S.ui.cost(data.balance.shadowClones.chakraCost)}`, S.ui.clonesArmed, S.ui.clonesHint)
         : '',
-      s.player.dojutsu && freeDojutsu(s.player, data) && !s.playerFx.dojutsuActive && s.player.chakra >= (dojutsuActivationCost(s.player, data) ?? 0)
-        ? toggle(
-            'dojutsu',
-            s.player.dojutsu,
-            S.ui.dojutsuFree(S.dojutsu[s.player.dojutsu]!.name, dojutsuActivationCost(s.player, data) ?? 0),
-            `${S.dojutsu[s.player.dojutsu]!.name} ✓`,
-            S.ui.dojutsuFreeHint,
-          )
-        : '',
-      sharinganActive(s) || (extras.dojutsu && s.player.dojutsu === 'sharingan')
-        ? toggle('fear', 'fear', S.ui.fearVariant, `${S.ui.fearVariant} ✓`, S.ui.fearHint)
-        : '',
+      freeActiveToggle(s, 'dojutsu'),
+      freeActiveToggle(s, 'gates'),
+      freeActiveToggle(s, 'expansion'),
       canGenius(s, data)
         ? toggle('genius', 'intent', S.ui.genius, S.ui.geniusArmed, S.ui.geniusHint(geniusUses(s.player, data) - s.playerFx.geniusUsed))
         : '',
@@ -1444,20 +1431,17 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     renderActions(state, true);
     const action = await choose<PlayerAction>(actionsEl);
     renderActions(state, false);
-    // Só valem as escolhas grátis que combinam com a ação (ex.: clones precisam de chakra para os dois).
-    const dojutsu = Boolean(extras.dojutsu) && canDojutsuExtra(state, action, data);
+    // Só valem as escolhas grátis que combinam com a ação: cada ativa precisa de chakra para ela, para a
+    // ação e para as que já entraram (na ordem do dōjutsu, portões, expansão e clones).
     const chosen: RoundExtras = {
       focus: Boolean(extras.focus) && canFocus(state),
-      clones: Boolean(extras.clones) && canClones(state, action, data),
-      dojutsu,
       genius: Boolean(extras.genius) && canGenius(state, data),
-      // O Pavor exige o Sharingan ativo (ou ativado junto) e um genjutsu.
-      fear:
-        Boolean(extras.fear) &&
-        (canFearVariant(state, action, data) || (dojutsu && data.techniquesById[actionTechniqueId(action) ?? '']?.type === 'genjutsu')),
     };
+    for (const k of ['dojutsu', 'gates', 'expansion', 'clones'] as FreeActive[]) {
+      chosen[k] = Boolean(extras[k]) && canFreeActive(state, k, action, data, chosen);
+    }
     let next = playRound(state, action, rng, data, chosen);
-    // O foco e o pavor valem só para a jogada; os clones armados ficam no estado da luta.
+    // O foco vale só para a jogada; os clones armados ficam no estado da luta.
     extras = {};
     await animateRound(state, next);
     state = next;

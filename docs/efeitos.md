@@ -12,12 +12,13 @@ Efeitos negativos e mentais que ataques e técnicas aplicam. Valem para jogador 
 
 Controle = efeito que tira a vez: Aprisionado, Sono, Paralisia e Possessão. Valem para jogador e vilão.
 
+- **Duração**: todo controle que pega dura **+1 turno** além do que a fonte dá (genjutsu, Imitação de Sombra, Possessão e paralisia). Vale para jogador e vilão.
 - **Vulnerável**: quem perdeu a vez recebe **dano ×1,25** (taijutsu, ninjutsu, disputa e ilusões de dano).
 - **Tenacidade**: cada controle que pega soma **+50%** de tenacidade no alvo (até 90%). A chance do próximo controle é multiplicada por **(1 − tenacidade)**: um controle logo depois do outro fica muito mais difícil.
 - A tenacidade cai **15% por rodada** em que o alvo não está controlado, até voltar a zero (uns 3 a 4 turnos depois de um controle).
 - No genjutsu e na Imitação de Sombra, a tenacidade entra na chance de acerto mostrada na tela. Na paralisia do crítico de raio, rola-se a tenacidade depois do crítico.
 
-Configuração: `control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTenacity: 0.9, vulnerableDamageMult: 1.25 }`.
+Configuração: `control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTenacity: 0.9, vulnerableDamageMult: 1.25, extraTurns: 1 }`.
 - "Ataque elemental" = ataque com elemento (ninjutsu). Taijutsu é neutro.
 - Além dos críticos, uma técnica pode ter **chance de efeito no acerto** (campo `efeito` da ficha, ver [tecnicas.md](tecnicas.md)).
 
@@ -25,7 +26,7 @@ Configuração: `control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTen
 
 | Efeito | Origem | Duração | Efeito |
 |---|---|---|---|
-| Paralisia | Crítico de raio | 1 vez | Perde a próxima vez. |
+| Paralisia | Crítico de raio | 2 vezes (1 + 1 de controle) | Perde a vez. |
 | Atordoamento | Crítico de vento, terra ou água; algumas técnicas | 2 ações do alvo | −20 na chance de acerto. |
 | Queimadura | Crítico de fogo; algumas técnicas | 2 rodadas | Ver abaixo. |
 | Envenenamento | Cobra (invocação e Orochimaru) | Até curar | Ver abaixo. |
@@ -56,6 +57,8 @@ poder       = genjutsu_do_atacante + poder_da_técnica + 3 × (nível_da_técnic
 turnos      = clamp(turnos_base + floor(max(0, poder − resistência) / 8), 1, 3)
 ```
 
+Controles (Aprisionado, Sono, Possessão) somam **+1 turno** a esse resultado (ver "Controles"); o Sono soma mais 1. Pavor, Confusão e Tormento ficam com os turnos da fórmula.
+
 - O alvo resiste com a **resistência mental** (mais o bônus de Olhos treinados no Uchiha). A única reação possível é Resistir.
 - Jinchuuriki (Demônio interno) é imune a todos.
 - Não tem crítico e não consome o Foco. O Gênio do Nara vale (gira o acerto duas vezes).
@@ -66,12 +69,13 @@ turnos      = clamp(turnos_base + floor(max(0, poder − resistência) / 8), 1, 
 | Aprisionado | Perde a vez. | Controle direto. |
 | Sono | Perde a vez; a duração é +1 turno, mas acorda ao tomar dano. | Preparar um golpe forte. |
 | Possessão | Perde a vez e golpeia a si mesmo com a própria técnica de dano mais forte, contra a própria resistência física passiva. | Controle que fere: quanto mais forte o vilão, mais ele se machuca. |
-| Pavor | O alvo causa 35% menos dano. | Sobreviver a um chefe. |
+| Pavor | O alvo causa 35% menos dano e tem as resistências física e mental ×0,75. | Sobreviver a um chefe e bater mais forte nele. |
 | Confusão | Em cada ação, 40% de chance de falhar; metade dessas falhas acerta a si mesmo com o próprio ataque (contra a própria resistência física passiva). | Aposta de RNG. |
 | Tormento | Perde 5 de chakra no início de cada rodada. | Travar as técnicas do vilão. |
 
 - Pavor e Confusão contam as ações do alvo; Tormento conta rodadas.
 - A Possessão vem da Transferência de Mente (Yamanaka). Configuração: `status.possession: { selfDamageMult: 1 }`.
+- Pavor: `status.fear: { damageMult: 0.65, resistanceMult: 0.75 }`. Vale para jogador e vilão.
 
 ### Ilusões de dano (Uchiha)
 

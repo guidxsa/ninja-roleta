@@ -55,14 +55,13 @@ export const balance = {
   // Golpe carregado dos vilões: dano × `damageMult`, sem crítico.
   charged: { damageMult: 2 },
 
-  // Dōjutsu: ativar gasta o turno e `activationCost`; ativo, custa `upkeep` no fim de cada rodada e se
-  // desliga depois de `duration` rodadas (contadas a partir da seguinte) ou quando falta chakra.
+  // Dōjutsu: ativar é escolha grátis da rodada (não gasta o turno) e custa `activationCost`; ativo, custa
+  // `upkeep` no fim de cada rodada e se desliga depois de `duration` rodadas (contadas a partir da
+  // seguinte) ou quando falta chakra.
   dojutsu: {
     duration: 5,
     // Sharingan: evolui com o nível (1, 2 e 3 tomoe).
-    // Sharingan: ativar não gasta o turno (escolha grátis da rodada, como os clones).
     sharingan: {
-      freeActivation: true,
       activationCost: 4,
       upkeep: 1,
       readDamageFactor: 0.5,
@@ -73,11 +72,11 @@ export const balance = {
       ],
     },
     // Byakugan: taijutsu não erra, ×`taijutsuMult` e libera o Selo dos Pontos Vitais.
-    byakugan: { freeActivation: false, activationCost: 3, upkeep: 1, taijutsuMult: 1.1 },
+    byakugan: { activationCost: 3, upkeep: 1, taijutsuMult: 1.1 },
   },
 
-  // Portões (prodígio do taijutsu): uma vez por luta; abrir gasta o turno e o bônus vale `turns` rodadas
-  // a partir da seguinte. Abre o maior portão liberado pelo taijutsu atual.
+  // Portões (prodígio do taijutsu): uma vez por luta; abrir é escolha grátis e o bônus vale `turns`
+  // rodadas, contando a da abertura. Abre o maior portão liberado pelo taijutsu atual.
   gates: {
     turns: 3,
     stages: [
@@ -102,6 +101,7 @@ export const balance = {
     preciseFist: { penetration: 0.3 },
     vitality: { chakraPerTurn: 1, hpPctPerTurn: 0.02 },
   },
+  // Expansão (Akimichi): escolha grátis; vale `turns` rodadas, contando a da ativação.
   expansion: { chakraCost: 6, turns: 3, taijutsuMult: 1.5, speedPenalty: 3 },
   shadowClones: { chakraCost: 6, hitsMult: 3, damagePct: 0.35 },
 
@@ -117,7 +117,8 @@ export const balance = {
     bleed: { bladeDamageMult: 1.5 },
     // Efeitos de genjutsu.
     sleepExtraTurns: 1,
-    fear: { damageMult: 0.65 },
+    // Pavor: o apavorado causa `damageMult` do dano e tem as resistências × `resistanceMult`.
+    fear: { damageMult: 0.65, resistanceMult: 0.75 },
     confusion: { failChance: 0.4, selfHitShare: 0.5 },
     torment: { chakraPerRound: 5 },
     // Possessão (Yamanaka): perde a vez e golpeia a si mesmo com a técnica de dano mais forte, contra a
@@ -132,7 +133,8 @@ export const balance = {
   // Controles (efeitos.md#controles): quem perde a vez (Aprisionado, Sono, Paralisia, Possessão) ganha
   // tenacidade, que multiplica a chance do próximo controle por (1 − tenacidade). Cai `decayPerRound` por
   // rodada em que não está controlado. Alvo que perdeu a vez recebe dano × `vulnerableDamageMult`.
-  control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTenacity: 0.9, vulnerableDamageMult: 1.25 },
+  // Todo controle que pega dura `extraTurns` a mais (genjutsu, Imitação de Sombra, Possessão e paralisia).
+  control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTenacity: 0.9, vulnerableDamageMult: 1.25, extraTurns: 1 },
 
   revive: { initialItems: 1 },
 

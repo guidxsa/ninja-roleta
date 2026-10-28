@@ -165,9 +165,9 @@ export const ptBR = {
   actives: {
     gates: {
       name: 'Portões',
-      desc: '1×/luta: abrir gasta o turno, chakra e HP; taijutsu mais forte por 3 rodadas. Evoluem com o taijutsu.',
+      desc: 'Grátis, 1×/luta: abrir não gasta o turno, custa chakra e HP; taijutsu mais forte por 3 rodadas (contando a da abertura). Evoluem com o taijutsu.',
     },
-    expansion: { name: 'Expansão', desc: 'Gasta o turno e 6 de chakra: por 3 rodadas, taijutsu ×1,5 e speed −3.' },
+    expansion: { name: 'Expansão', desc: 'Grátis (6 de chakra, não gasta o turno): por 3 rodadas, contando a da ativação, taijutsu ×1,5 e speed −3.' },
     shadowClones: {
       name: 'Clones das Sombras',
       desc: 'Grátis (6 de chakra, não gasta o turno): o próximo ataque vira 3× os golpes, com 35% do dano cada.',
@@ -179,11 +179,11 @@ export const ptBR = {
   dojutsu: {
     sharingan: {
       name: 'Sharingan',
-      desc: 'Ativável de graça, sem gastar o turno (4 ck, −1 ck/rodada, 5 rodadas): +tai/nin/gen e speed, genjutsu mais eficiente e mais forte (pode aplicar Pavor) e chance de ler o movimento (metade do dano). Evolui nos níveis 4 e 7.',
+      desc: 'Ativável de graça, sem gastar o turno (4 ck, −1 ck/rodada, 5 rodadas): +tai/nin/gen e speed, genjutsu mais eficiente e mais forte e chance de ler o movimento (metade do dano). Evolui nos níveis 4 e 7.',
     },
     byakugan: {
       name: 'Byakugan',
-      desc: 'Ativável (3 ck, −1 ck/rodada, 5 rodadas): taijutsu não erra, taijutsu ×1,1 e libera o Selo dos Pontos Vitais (drena chakra do vilão).',
+      desc: 'Ativável de graça, sem gastar o turno (3 ck, −1 ck/rodada, 5 rodadas): taijutsu não erra, taijutsu ×1,1 e libera o Selo dos Pontos Vitais (drena chakra do vilão).',
     },
   } as Record<string, { name: string; desc: string }>,
   sharinganStage: (n: number) => `${n} tomoe`,
@@ -415,8 +415,6 @@ export const ptBR = {
     possessed: 'Possuído',
     tenacity: (pct: number) => `Tenacidade ${pct}%`,
     shieldOn: (points: number, turns: number) => `Escudo ${points} · ${turns}t`,
-    dojutsuFree: (name: string, cost: number) => `${name} · ${cost} ck`,
-    dojutsuFreeHint: 'Grátis: ativa junto com a ação, sem gastar o turno.',
     genius: 'Gênio',
     geniusHint: (left: number) => `Grátis: a próxima roleta gira duas vezes e fica com a melhor (${left} restante(s)).`,
     geniusArmed: 'Gênio armado',
@@ -433,8 +431,8 @@ export const ptBR = {
     clones: 'Clones',
     clonesHint: 'Grátis: o próximo ataque vira 3× os golpes, com 35% do dano.',
     clonesArmed: 'Clones prontos',
-    fearVariant: 'Pavor',
-    fearHint: 'Sharingan: o genjutsu aplica Pavor no lugar do efeito.',
+    activeFree: (name: string, cost: number) => `${name} · ${cost} ck`,
+    activeFreeHint: 'Grátis: ativa junto com a ação, sem gastar o turno.',
     barrierHint: (power: number, reflect: boolean) => `escudo ${power}${reflect ? ' · devolve 50%' : ''} · 3 rodadas`,
     illusionHint: (dmg: number, pct: string, cost: string) => `≈${dmg} de dano mental · ${pct} · ${cost}`,
     armorHint: 'raio no corpo: ataque ×1,25, res. física ×1,3, speed +2 (3t)',
@@ -623,7 +621,7 @@ export const ptBR = {
     armor: 'Armadura de Raio! Raio percorre o corpo (a partir da próxima rodada).',
     armorEnd: 'A Armadura de Raio se desfaz.',
     gates: (stage: string, hp: number, ck: number) =>
-      `${stage} aberto! Perde ${hp} de HP e ${ck} de chakra. Taijutsu mais forte a partir da próxima rodada.`,
+      `${stage} aberto! Perde ${hp} de HP e ${ck} de chakra. Taijutsu mais forte já nesta rodada.`,
     attackMiss: (who: string, tech: string) => `${who} usou ${tech}: errou!`,
     attackHit: (who: string, tech: string, dmg: number, crit: boolean, el: string) =>
       `${who} usou ${tech}: ${crit ? 'CRÍTICO! ' : ''}${dmg} de dano${el}.`,
@@ -641,7 +639,7 @@ export const ptBR = {
       possession: (who: string, turns: number) => `🧠 ${who} foi possuído por ${turns} turno(s): vai golpear a si mesmo.`,
     } as Record<string, (who: string, turns: number) => string>,
     mental: {
-      fear: (who: string, turns: number) => `😱 ${who} está em pavor por ${turns} turno(s): causa menos dano.`,
+      fear: (who: string, turns: number) => `😱 ${who} está em pavor por ${turns} turno(s): causa menos dano e resiste menos.`,
       confusion: (who: string, turns: number) => `🌀 ${who} ficou confuso por ${turns} turno(s).`,
       torment: (who: string, turns: number) => `🕳 ${who} está atormentado por ${turns} rodada(s): perde chakra.`,
     } as Record<string, (who: string, turns: number) => string>,
@@ -659,7 +657,7 @@ export const ptBR = {
       explosiveTag: (n: number) => `Selo explosivo: ${n} de dano!`,
       smokeBomb: () => 'Bomba de fumaça: o próximo ataque erra.',
     } as Record<string, (n: number) => string>,
-    expansion: 'Expansão! Taijutsu mais forte e speed menor por 3 rodadas.',
+    expansion: 'Expansão! Taijutsu mais forte e speed menor por 3 rodadas (já nesta).',
     expansionEnd: 'A expansão se desfaz.',
     clones: 'Clones das Sombras! O próximo ataque vem em triplo.',
     cloakCost: (who: string, n: number) => `O manto consome ${n} de chakra de ${who}.`,
@@ -797,7 +795,7 @@ export const ptBR = {
       tenacity: { name: 'Tenacidade', desc: 'Acabou de ser controlado: o próximo controle tem menos chance. Volta ao normal aos poucos, a cada rodada.' },
       shield: (el: string) => ({ name: 'Escudo', desc: `Absorve dano de taijutsu e ninjutsu antes do HP.${el ? ` Elemento: ${el}.` : ''}` }),
       stunned: (pct: number) => ({ name: 'Atordoado', desc: `−${pct} na chance de acerto por 2 ações.` }),
-      feared: (pct: number) => ({ name: 'Pavor', desc: `Causa ${pct}% menos dano. Conta as ações do alvo.` }),
+      feared: (pct: number, res: number) => ({ name: 'Pavor', desc: `Causa ${pct}% menos dano e tem ${res}% menos resistência física e mental. Conta as ações do alvo.` }),
       confused: (pct: number) => ({
         name: 'Confusão',
         desc: `Em cada ação, ${pct}% de chance de falhar; metade das falhas acerta a si mesmo.`,

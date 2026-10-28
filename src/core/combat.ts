@@ -43,10 +43,7 @@ export type ItemAction = `item:${ConsumableId}`;
 export type PlayerAction =
   | TechniqueAction
   | ItemAction
-  | 'gates'
-  | 'expansion'
   | 'medical'
-  | 'dojutsu'
   | 'rest'
   | 'stance'
   | 'pass';
@@ -105,10 +102,12 @@ export interface RoundExtras {
   focus?: boolean;
   /** Clones das Sombras (Uzumaki): o próximo ataque vira 3× os golpes, com 40% do dano cada. */
   clones?: boolean;
-  /** Sharingan ativo: o genjutsu aplica Pavor em vez do efeito da técnica. */
-  fear?: boolean;
-  /** Ativa o dōjutsu sem gastar o turno (Sharingan). */
+  /** Ativa o dōjutsu (Sharingan, Byakugan). */
   dojutsu?: boolean;
+  /** Abre os portões (prodígio do taijutsu). */
+  gates?: boolean;
+  /** Expansão (Akimichi). */
+  expansion?: boolean;
   /** Gênio (Nara): a próxima roleta do jogador gira duas vezes e fica com a melhor. */
   genius?: boolean;
 }
@@ -208,16 +207,14 @@ export interface PlayerFx extends StatusFx {
   gatesUsed: boolean;
   /** Portão aberto (1, 2, 3...). */
   gatesStage: number;
+  /** Rodadas de portões que faltam (a da abertura conta). */
   gatesTurns: number;
-  /** Rodada em que os portões abriram (a contagem começa na seguinte). */
-  gatesRound: number;
   /** Sharingan/Byakugan ativado. */
   dojutsuActive: boolean;
   dojutsuTurns: number;
   dojutsuRound: number;
-  /** Expansão (Akimichi). */
+  /** Expansão (Akimichi): rodadas que faltam (a da ativação conta). */
   expansionTurns: number;
-  expansionRound: number;
   /** Clones das Sombras armados para o próximo ataque. */
   clonesArmed: boolean;
   /** Armadura de Raio (estado elemental), contada a partir da rodada seguinte à ativação. */
@@ -472,12 +469,10 @@ export function startBattle(
       gatesUsed: false,
       gatesStage: 0,
       gatesTurns: 0,
-      gatesRound: 0,
       dojutsuActive: false,
       dojutsuTurns: 0,
       dojutsuRound: 0,
       expansionTurns: 0,
-      expansionRound: 0,
       clonesArmed: false,
       armorTurns: 0,
       armorRound: 0,
@@ -698,10 +693,46 @@ export function gatesHpCost(player: PlayerState, hpCostPct: number): number {
   return Math.max(0, Math.min(Math.floor(player.maxHp * hpCostPct), player.hp - 1));
 }
 
+/** Ativas de linhagem que são escolhas grátis da rodada (não gastam o turno). */
+export type FreeActive = 'clones' | 'dojutsu' | 'gates' | 'expansion';
+
+/** Chakra que a ativa grátis custa (null = o jogador não a tem ou não pode usá-la agora). */
+export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData): number | null {
+  const p = s.player;
+  const fx = s.playerFx;
+  switch (kind) {
+    case 'clones':
+      return p.active === 'shadowClones' && !fx.clonesArmed ? data.balance.shadowClones.chakraCost : null;
+    case 'dojutsu':
+      return fx.dojutsuActive ? null : dojutsuActivationCost(p, data);
+    case 'gates':
+      return fx.gatesUsed ? null : (gatesToOpen(p, data)?.chakraCost ?? null);
+    case 'expansion':
+      return p.active === 'expansion' && fx.expansionTurns === 0 ? data.balance.expansion.chakraCost : null;
+  }
+}
+
+const FREE_ACTIVES: FreeActive[] = ['dojutsu', 'gates', 'expansion', 'clones'];
+
+/** Chakra das ativas grátis já escolhidas em `ex`. */
+function chosenActivesCost(s: BattleState, ex: RoundExtras, data: GameData): number {
+  return FREE_ACTIVES.reduce((sum, k) => sum + (ex[k] ? (freeActiveCost(s, k, data) ?? 0) : 0), 0);
+}
+
+/**
+ * A ativa grátis pode ser usada junto com esta ação: há chakra para ela, para a ação e para as
+ * outras ativas já escolhidas em `chosen`.
+ */
+export function canFreeActive(s: BattleState, kind: FreeActive, action: PlayerAction, data: GameData, chosen: RoundExtras = {}): boolean {
+  const cost = freeActiveCost(s, kind, data);
+  if (cost === null) return false;
+  const others = chosenActivesCost(s, { ...chosen, [kind]: false }, data);
+  return s.player.chakra >= cost + others + actionCost(s, action, data);
+}
+
 /** Os Clones das Sombras podem ser armados junto com esta ação (chakra para os dois). */
-export function canClones(s: BattleState, action: PlayerAction, data: GameData): boolean {
-  if (s.player.active !== 'shadowClones' || s.playerFx.clonesArmed) return false;
-  return s.player.chakra >= data.balance.shadowClones.chakraCost + actionCost(s, action, data);
+export function canClones(s: BattleState, action: PlayerAction, data: GameData, chosen: RoundExtras = {}): boolean {
+  return canFreeActive(s, 'clones', action, data, chosen);
 }
 
 /** Chakra que a ação gasta. */
@@ -709,18 +740,8 @@ export function actionCost(s: BattleState, action: PlayerAction, data: GameData)
   const p = s.player;
   const techId = actionTechniqueId(action);
   if (techId) return leveledTechnique(p, techId, data).chakraCost;
-  switch (action) {
-    case 'gates':
-      return gatesToOpen(p, data)?.chakraCost ?? 0;
-    case 'expansion':
-      return data.balance.expansion.chakraCost;
-    case 'dojutsu':
-      return dojutsuActivationCost(p, data) ?? 0;
-    case 'medical':
-      return playerMedical(p, data)?.chakraCost ?? 0;
-    default:
-      return 0;
-  }
+  if (action === 'medical') return playerMedical(p, data)?.chakraCost ?? 0;
+  return 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -753,15 +774,20 @@ export function effectiveSpeed(s: BattleState, data: GameData): number {
 }
 
 function expansionActive(s: BattleState): boolean {
-  return s.playerFx.expansionTurns > 0 && s.playerFx.expansionRound !== s.round;
+  return s.playerFx.expansionTurns > 0;
+}
+
+/** Pavor: o lado apavorado tem as resistências multiplicadas por `fear.resistanceMult`. */
+function fearResistanceMult(fx: StatusFx, data: GameData): number {
+  return fx.feared > 0 ? data.balance.status.fear.resistanceMult : 1;
 }
 
 /**
- * Resistência total do jogador (manto ×1,25; Armadura de Raio ×1,3 na física). `ignoreArmor`: o vento
- * ignora o bônus da armadura.
+ * Resistência total do jogador (manto ×1,25; Armadura de Raio ×1,3 na física; pavor). `ignoreArmor`: o
+ * vento ignora o bônus da armadura.
  */
 export function playerResistance(s: BattleState, kind: ResistanceKind, data: GameData, ignoreArmor = false): number {
-  let value = s.player.resistance[kind] * (playerCloak(s, data)?.resistanceMult ?? 1);
+  let value = s.player.resistance[kind] * (playerCloak(s, data)?.resistanceMult ?? 1) * fearResistanceMult(s.playerFx, data);
   if (kind === 'physical' && armorActive(s) && !ignoreArmor) value *= data.balance.states.lightningArmor.resistanceMult;
   return value;
 }
@@ -777,10 +803,10 @@ function villainCloakActive(s: BattleState): boolean {
   return s.villain.fx.cloakTurns > 0 || s.villain.monster;
 }
 
-/** Resistência total do vilão: multiplicador da passiva e manto ativo. */
-export function villainResistance(s: BattleState, kind: ResistanceKind): number {
+/** Resistência total do vilão: multiplicador da passiva, manto ativo e pavor. */
+export function villainResistance(s: BattleState, kind: ResistanceKind, data: GameData): number {
   const cloak = villainCloak(s);
-  const base = s.villain.def.resistance[kind];
+  const base = s.villain.def.resistance[kind] * fearResistanceMult(s.villain.fx, data);
   if (!cloak) return base;
   const active = villainCloakActive(s) ? cloak.cloak.resistanceMult : 1;
   return base * (cloak.resistanceMult?.[kind] ?? 1) * active;
@@ -880,6 +906,15 @@ export function genjutsuTurns(power: number, targetResistance: number, baseTurns
   return Math.min(cfg.maxTurns, Math.max(1, baseTurns + extra));
 }
 
+/**
+ * Duração final do efeito mental que pegou: controles ganham `control.extraTurns` e o Sono, mais
+ * `sleepExtraTurns`. Os outros efeitos ficam com os turnos da fórmula.
+ */
+export function mentalEffectTurns(effect: MentalEffect, turns: number, data: GameData): number {
+  if (!isControlEffect(effect)) return turns;
+  return turns + data.balance.control.extraTurns + (effect === 'sleep' ? data.balance.status.sleepExtraTurns : 0);
+}
+
 /** Status que a técnica mental usa (genjutsu, ou ninjutsu na Imitação de Sombra). */
 function mentalStat(tech: TechniqueDef): AttackType {
   return tech.mentalStat ?? 'genjutsu';
@@ -888,7 +923,7 @@ function mentalStat(tech: TechniqueDef): AttackType {
 /** Resistência que o vilão opõe ao efeito mental: mental contra genjutsu, física contra a Imitação de Sombra. */
 function villainMentalDefense(s: BattleState, tech: TechniqueDef, data: GameData): number {
   const kind: ResistanceKind = mentalStat(tech) === 'genjutsu' ? 'mental' : 'physical';
-  return villainResistance(s, kind) * guardFraction(s, 'villain', defaultGuard(s, 'villain'), kind, data);
+  return villainResistance(s, kind, data) * guardFraction(s, 'villain', defaultGuard(s, 'villain'), kind, data);
 }
 
 /**
@@ -927,7 +962,7 @@ export function playerGenjutsuHitChance(s: BattleState, data: GameData, techniqu
   if (genjutsuImmune(s, 'villain', data)) return 0;
   const cfg = data.balance.genjutsuHit;
   const bonus = activeSharingan(s, data)?.genjutsuHit ?? 0;
-  const defense = villainResistance(s, 'mental') * guardFraction(s, 'villain', defaultGuard(s, 'villain'), 'mental', data);
+  const defense = villainResistance(s, 'mental', data) * guardFraction(s, 'villain', defaultGuard(s, 'villain'), 'mental', data);
   const base = genjutsuHitChance(effectiveOffense(s, 'genjutsu', data), defense, cfg);
   return clamp(base + bonus - stunPenalty(s.playerFx, data), 0, 1) * tenacity;
 }
@@ -954,7 +989,7 @@ function playerDamageMult(s: BattleState, type: AttackType, data: GameData): num
   const p = s.player;
   let mult = 1;
   if (type === 'taijutsu') {
-    if (fx.gatesTurns > 0 && fx.gatesStage > 0 && fx.gatesRound !== s.round) {
+    if (fx.gatesTurns > 0 && fx.gatesStage > 0) {
       mult *= data.balance.gates.stages[fx.gatesStage - 1]!.taijutsuMult;
     }
     if (byakuganActive(s)) mult *= data.balance.dojutsu.byakugan.taijutsuMult;
@@ -988,7 +1023,7 @@ function strikeDamage(
   const elementMult = elementMultiplier(tech.element, state, data.beats, data.balance.elements, true);
   // Vento contra a Armadura de Raio: ignora o bônus de resistência dela.
   const ignoreArmor = defender === 'player' && tech.element === 'wind';
-  const resistance = defender === 'player' ? playerResistance(s, 'physical', data, ignoreArmor) : villainResistance(s, 'physical');
+  const resistance = defender === 'player' ? playerResistance(s, 'physical', data, ignoreArmor) : villainResistance(s, 'physical', data);
   const offense = attacker === 'player' ? effectiveOffense(s, tech.type, data) : villainOffense(s, tech.type);
   const sideMult = attacker === 'player' ? playerDamageMult(s, tech.type, data) : villainDamageMult(s, data);
   // Alvo que perdeu a vez (aprisionado, dormindo, paralisado) recebe mais dano.
@@ -1102,28 +1137,14 @@ function playerRoll<T>(s: BattleState, roll: () => T, rank: (value: T) => number
 
 const HIT_RANK: Record<HitOutcome, number> = { miss: 0, hit: 1, crit: 2 };
 
-/** O Uchiha pode trocar o efeito do genjutsu por Pavor (Sharingan ativo). */
-export function canFearVariant(s: BattleState, action: PlayerAction, data: GameData): boolean {
-  const id = actionTechniqueId(action);
-  return id !== null && sharinganActive(s) && data.techniquesById[id]?.type === 'genjutsu';
-}
-
-/** O dōjutsu do jogador ativa sem gastar o turno (Sharingan). */
-export function freeDojutsu(player: PlayerState, data: GameData): boolean {
-  return player.dojutsu !== null && data.balance.dojutsu[player.dojutsu].freeActivation;
-}
-
-/** O dōjutsu grátis pode ser ativado junto com esta ação (chakra para os dois). */
-export function canDojutsuExtra(s: BattleState, action: PlayerAction, data: GameData): boolean {
-  const p = s.player;
-  if (!freeDojutsu(p, data) || s.playerFx.dojutsuActive) return false;
-  return p.chakra >= (dojutsuActivationCost(p, data) ?? 0) + actionCost(s, action, data);
+/** O dōjutsu pode ser ativado junto com esta ação (chakra para os dois). */
+export function canDojutsuExtra(s: BattleState, action: PlayerAction, data: GameData, chosen: RoundExtras = {}): boolean {
+  return canFreeActive(s, 'dojutsu', action, data, chosen);
 }
 
 export function availableActions(state: BattleState, data: GameData): PlayerAction[] {
   const p = state.player;
   const fx = state.playerFx;
-  const { balance } = data;
   // A ação já foi gasta numa reação: o turno passa.
   if (fx.owesAction) return ['pass'];
   const actions: PlayerAction[] = [];
@@ -1132,11 +1153,6 @@ export function availableActions(state: BattleState, data: GameData): PlayerActi
     if (isBarrier(tech) && fx.shield) continue;
     if (canUseTechnique(state, tech, data)) actions.push(techAction(tech.id));
   }
-  const gates = gatesToOpen(p, data);
-  if (gates && !fx.gatesUsed && p.chakra >= gates.chakraCost) actions.push('gates');
-  if (p.active === 'expansion' && fx.expansionTurns === 0 && p.chakra >= balance.expansion.chakraCost) actions.push('expansion');
-  const dojutsuCost = dojutsuActivationCost(p, data);
-  if (dojutsuCost !== null && !freeDojutsu(p, data) && !fx.dojutsuActive && p.chakra >= dojutsuCost) actions.push('dojutsu');
   const medical = playerMedical(p, data);
   if (medical && p.chakra >= medical.chakraCost && p.hp < p.maxHp) actions.push('medical');
   actions.push('rest', 'stance');
@@ -1479,7 +1495,7 @@ function performReaction(
 /**
  * Joga uma rodada: ordem (iniciativa rolada só na 1ª; prioridade passa na frente), ação de cada lado,
  * efeitos de fim de rodada e a próxima intenção do vilão.
- * `extras`: escolhas grátis (foco, clones, pavor). `true` = só o foco (atalho antigo).
+ * `extras`: escolhas grátis (foco, Gênio e as ativas de linhagem). `true` = só o foco (atalho antigo).
  * `react`: política para a reação do jogador. Com `options.interactive` e sem política, a rodada para
  * em `pending` quando há escolha; continue com `resumeRound`.
  * Pura: devolve um novo estado e não altera `prev`.
@@ -1497,10 +1513,10 @@ export function playRound(
   if (prev.pending) throw new Error('Há uma reação pendente (resumeRound)');
   if (!availableActions(prev, data).includes(action)) throw new Error(`Ação indisponível: ${action}`);
   if (ex.focus && !canFocus(prev)) throw new Error('Foco indisponível');
-  if (ex.clones && !canClones(prev, action, data)) throw new Error('Clones indisponíveis');
-  if (ex.dojutsu && !canDojutsuExtra(prev, action, data)) throw new Error('Dōjutsu indisponível');
+  for (const k of FREE_ACTIVES) {
+    if (ex[k] && !canFreeActive(prev, k, action, data, ex)) throw new Error(`Ativa indisponível: ${k}`);
+  }
   if (ex.genius && !canGenius(prev, data)) throw new Error('Gênio indisponível');
-  if (ex.fear && !canFearVariant(prev, action, data) && !ex.dojutsu) throw new Error('Pavor só com o Sharingan ativo');
 
   const s = structuredClone(prev);
   s.round++;
@@ -1529,6 +1545,8 @@ export function playRound(
     s.log.push({ type: 'focus' });
   }
   if (ex.dojutsu) activateDojutsu(s, data);
+  if (ex.gates) openGates(s, data);
+  if (ex.expansion) activateExpansion(s, data);
   if (ex.genius) {
     s.playerFx.geniusUsed++;
     s.playerFx.geniusArmed = true;
@@ -1581,7 +1599,7 @@ function runPlan(s: BattleState, rng: Rng, data: GameData, react?: ReactionPolic
   while (plan.index < plan.order.length && s.status === 'ongoing') {
     const side = plan.order[plan.index]!;
     if (side === 'player') {
-      playerTurn(s, plan.action, plan.extras, rng, data);
+      playerTurn(s, plan.action, rng, data);
       plan.index++;
       continue;
     }
@@ -1826,15 +1844,16 @@ function applyDebilitate(s: BattleState, target: Side, turns: number, kind: Debi
   s.log.push({ type: 'debilitate', target, turns, kind });
 }
 
-/** Aplica um efeito mental com a duração já calculada (o Sono dura +1 turno). */
-function applyMental(s: BattleState, target: Side, effect: MentalEffect, turns: number, data: GameData): void {
+/** Aplica um efeito mental com os turnos da fórmula (controles e Sono ganham os extras de `mentalEffectTurns`). */
+function applyMental(s: BattleState, target: Side, effect: MentalEffect, formulaTurns: number, data: GameData): void {
   const fx = fxOf(s, target);
+  const turns = mentalEffectTurns(effect, formulaTurns, data);
   switch (effect) {
     case 'prison':
       applyDebilitate(s, target, turns, 'prison', data);
       return;
     case 'sleep':
-      applyDebilitate(s, target, turns + data.balance.status.sleepExtraTurns, 'sleep', data);
+      applyDebilitate(s, target, turns, 'sleep', data);
       return;
     case 'possession':
       applyDebilitate(s, target, turns, 'possession', data);
@@ -1871,7 +1890,7 @@ function applyElementalHit(s: BattleState, target: Side, element: Element | null
     return;
   }
   if (outcome !== 'crit') return;
-  if (element === 'lightning') applyDebilitate(s, target, cfg.paralysis.turns, 'paralysis', data, rng);
+  if (element === 'lightning') applyDebilitate(s, target, cfg.paralysis.turns + data.balance.control.extraTurns, 'paralysis', data, rng);
   else applyStun(s, target, data);
 }
 
@@ -2093,9 +2112,9 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
     }
   }
 
-  // Portões, expansão, Armadura de Raio e dōjutsu contam a partir da rodada seguinte à ativação.
-  if (fx.gatesTurns > 0 && fx.gatesRound !== s.round) fx.gatesTurns--;
-  if (fx.expansionTurns > 0 && fx.expansionRound !== s.round) {
+  // Portões e expansão contam a rodada da ativação (são grátis); Armadura de Raio e dōjutsu, a partir da seguinte.
+  if (fx.gatesTurns > 0) fx.gatesTurns--;
+  if (fx.expansionTurns > 0) {
     fx.expansionTurns--;
     if (fx.expansionTurns === 0) s.log.push({ type: 'expansionEnd' });
   }
@@ -2125,7 +2144,7 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
 // ---------------------------------------------------------------------------
 // Jogador
 
-function playerTurn(s: BattleState, action: PlayerAction, ex: RoundExtras, rng: Rng, data: GameData): void {
+function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameData): void {
   const fx = s.playerFx;
   // A postura vale até o próximo turno do jogador.
   fx.stance = false;
@@ -2149,7 +2168,7 @@ function playerTurn(s: BattleState, action: PlayerAction, ex: RoundExtras, rng: 
       fx.armorRound = s.round;
       s.log.push({ type: 'armor', techniqueId: tech.id, chakra: tech.chakraCost });
     } else if (tech.mental || isIllusion(tech)) {
-      playerMentalTechnique(s, techId, Boolean(ex.fear), rng, data);
+      playerMentalTechnique(s, techId, rng, data);
     } else {
       playerAttack(s, techId, rng, data);
     }
@@ -2162,27 +2181,6 @@ function playerTurn(s: BattleState, action: PlayerAction, ex: RoundExtras, rng: 
   } else if (action === 'stance') {
     fx.stance = true;
     s.log.push({ type: 'stance' });
-  } else if (action === 'dojutsu') {
-    activateDojutsu(s, data);
-  } else if (action === 'gates') {
-    // Abrir os portões gasta o turno (não é golpe); o bônus vale a partir da próxima rodada.
-    const gates = gatesToOpen(p, data);
-    if (!gates) throw new Error('Portões exigem a ativa correspondente');
-    const hpLost = gatesHpCost(p, gates.hpCostPct);
-    p.chakra -= gates.chakraCost;
-    p.hp -= hpLost;
-    fx.gatesUsed = true;
-    fx.gatesStage = gates.stage;
-    fx.gatesTurns = balance.gates.turns;
-    fx.gatesRound = s.round;
-    s.log.push({ type: 'gates', stage: gates.stage, hpLost, chakra: gates.chakraCost });
-    checkPlayerCloak(s, data);
-  } else if (action === 'expansion') {
-    const cfg = balance.expansion;
-    p.chakra -= cfg.chakraCost;
-    fx.expansionTurns = cfg.turns;
-    fx.expansionRound = s.round;
-    s.log.push({ type: 'expansion', chakra: cfg.chakraCost });
   } else if (action === 'medical') {
     // Ninjutsu médico: cura sem rolar acerto.
     const tech = playerMedical(p, data);
@@ -2204,6 +2202,30 @@ function activateDojutsu(s: BattleState, data: GameData): void {
   fx.dojutsuTurns = data.balance.dojutsu.duration;
   fx.dojutsuRound = s.round;
   s.log.push({ type: 'dojutsu', dojutsu: p.dojutsu, stage: sharinganStage(p, data), chakra: cost });
+}
+
+/** Abre os portões (escolha grátis): o bônus já vale nesta rodada, que conta na duração. */
+function openGates(s: BattleState, data: GameData): void {
+  const p = s.player;
+  const fx = s.playerFx;
+  const gates = gatesToOpen(p, data);
+  if (!gates) throw new Error('Portões exigem a ativa correspondente');
+  const hpLost = gatesHpCost(p, gates.hpCostPct);
+  p.chakra -= gates.chakraCost;
+  p.hp -= hpLost;
+  fx.gatesUsed = true;
+  fx.gatesStage = gates.stage;
+  fx.gatesTurns = data.balance.gates.turns;
+  s.log.push({ type: 'gates', stage: gates.stage, hpLost, chakra: gates.chakraCost });
+  checkPlayerCloak(s, data);
+}
+
+/** Expansão (escolha grátis): vale já nesta rodada, que conta na duração. */
+function activateExpansion(s: BattleState, data: GameData): void {
+  const cfg = data.balance.expansion;
+  s.player.chakra -= cfg.chakraCost;
+  s.playerFx.expansionTurns = cfg.turns;
+  s.log.push({ type: 'expansion', chakra: cfg.chakraCost });
 }
 
 function useItem(s: BattleState, item: ConsumableId, data: GameData): void {
@@ -2249,7 +2271,7 @@ function confusionFails(s: BattleState, side: Side, selfDamage: number, rng: Rng
 function selfHitDamage(s: BattleState, side: Side, tech: CombatTech, data: GameData): number {
   if (tech.type === 'genjutsu' || tech.baseDamage <= 0) return 0;
   const offense = side === 'player' ? effectiveOffense(s, tech.type, data) : villainOffense(s, tech.type);
-  const resistance = side === 'player' ? playerResistance(s, 'physical', data) : villainResistance(s, 'physical');
+  const resistance = side === 'player' ? playerResistance(s, 'physical', data) : villainResistance(s, 'physical', data);
   return computeDamage({
     baseDamage: tech.baseDamage,
     offense,
@@ -2262,10 +2284,10 @@ function selfHitDamage(s: BattleState, side: Side, tech: CombatTech, data: GameD
 
 /**
  * Genjutsu (ou Imitação de Sombra): não tem crítico; se acertar, aplica o efeito mental. Ilusão de dano
- * (Uchiha) fere com a fórmula do genjutsu. Com o Sharingan, o Uchiha pode trocar o efeito por Pavor.
+ * (Uchiha) fere com a fórmula do genjutsu.
  * A única reação do vilão é Resistir (com a resistência mental; física contra a sombra).
  */
-function playerMentalTechnique(s: BattleState, techId: string, fear: boolean, rng: Rng, data: GameData): void {
+function playerMentalTechnique(s: BattleState, techId: string, rng: Rng, data: GameData): void {
   const p = s.player;
   const tech = playerTechnique(p, techId, data);
   p.chakra -= tech.chakraCost;
@@ -2295,7 +2317,7 @@ function playerMentalTechnique(s: BattleState, techId: string, fear: boolean, rn
     hurtVillain(s, illusionDamage(s, techId, data));
     if (s.status !== 'ongoing') return;
   }
-  const effect = fear ? 'fear' : tech.mental;
+  const effect = tech.mental;
   if (effect) applyMental(s, 'villain', effect, playerGenjutsuTurns(s, techId, data), data);
 }
 
@@ -2312,7 +2334,7 @@ export function illusionDamage(s: BattleState, techniqueId: string, data: GameDa
   return computeDamage({
     baseDamage: tech.baseDamage,
     offense: effectiveOffense(s, 'genjutsu', data) + sharingan,
-    resistance: villainResistance(s, 'mental'),
+    resistance: villainResistance(s, 'mental', data),
     fraction: guardFraction(s, 'villain', defaultGuard(s, 'villain'), 'mental', data),
     elementMult: 1,
     critMult: 1,

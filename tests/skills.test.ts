@@ -8,6 +8,7 @@ import {
   geniusUses,
   illusionDamage,
   playerGenjutsuHitChance,
+  playerResistance,
   playRound,
   sharinganStage,
   startBattle,
@@ -258,12 +259,24 @@ describe('efeitos de genjutsu', () => {
   it('Sono: perde a vez com +1 turno, mas acorda ao tomar dano', () => {
     const s0 = withInitiative(startBattle(withTech('sleepSong'), testVillain({ hp: 200 })));
     const s1 = playRound(s0, 'tech:sleepSong', seq(0.5), gameData);
-    // 2 turnos base + 1 do sono
-    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 3, kind: 'sleep' }]);
+    // 2 turnos base + 1 do sono + 1 de todo controle
+    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 4, kind: 'sleep' }]);
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'sleep' }]);
     const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(ofType(ofRound(s1, s2), 'wake')).toEqual([{ type: 'wake', side: 'villain' }]);
     expect(s2.villain.fx.asleep).toBe(0);
+  });
+
+  it('Pavor: o apavorado tem 25% menos resistência física e mental', () => {
+    const s0 = withInitiative(startBattle(createPlayer(common, gameData), testVillain({ hp: 200 })));
+    const feared = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, feared: 2 } } };
+    expect(villainResistance(feared, 'physical', gameData)).toBe(7.5);
+    expect(villainResistance(feared, 'mental', gameData)).toBe(7.5);
+    // 8 + 10 − 10 × 0,7 = 11 sem pavor; 8 + 10 − 7,5 × 0,7 = 12 com pavor
+    expect(ofType(playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData).log, 'attack')[0]!.damage).toBe(11);
+    expect(ofType(playRound(feared, 'tech:basicTaijutsu', seq(0.5), gameData).log, 'attack')[0]!.damage).toBe(12);
+    const p = { ...s0, playerFx: { ...s0.playerFx, feared: 2 } };
+    expect(playerResistance(p, 'physical', gameData)).toBe(s0.player.resistance.physical * 0.75);
   });
 
   it('Pavor: o alvo causa 35% menos dano', () => {
@@ -321,8 +334,8 @@ describe('efeitos de genjutsu', () => {
     const s0 = withInitiative(startBattle(createPlayer(clan('nara'), gameData), gaara));
     expect(playerGenjutsuHitChance(s0, gameData, 'shadowImitation')).toBeCloseTo(0.8);
     const s1 = playRound(s0, 'tech:shadowImitation', seq(0.5), gameData);
-    // ninjutsu 13 contra a resistência física usada (5 × 0,7 = 3,5): 1 + floor(9,5 / 8) = 2 turnos
-    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 2, kind: 'prison' }]);
+    // ninjutsu 13 contra a resistência física usada (5 × 0,7 = 3,5): 1 + floor(9,5 / 8) = 2 turnos, +1 de controle
+    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 3, kind: 'prison' }]);
   });
 });
 
@@ -378,13 +391,12 @@ describe('Sharingan (Uchiha)', () => {
     expect(ofType(s2.log, 'movementReading')).toHaveLength(0);
   });
 
-  it('ativo, melhora o acerto do genjutsu e pode trocar o efeito por Pavor', () => {
+  it('ativo, melhora o acerto do genjutsu; cada técnica aplica o próprio efeito (sem modo Pavor)', () => {
     const s0 = startBattle(createPlayer(uchiha, gameData), testVillain({ hp: 200 }), { playerStartsFirst: true });
     expect(playerGenjutsuHitChance(active(s0), gameData)).toBeGreaterThan(playerGenjutsuHitChance(s0, gameData));
-    expect(() => playRound(s0, 'tech:basicGenjutsu', seq(0.5), gameData, { fear: true })).toThrow();
-    const s1 = playRound(active(s0), 'tech:basicGenjutsu', seq(0.5), gameData, { fear: true });
-    expect(ofType(s1.log, 'mental')[0]).toMatchObject({ target: 'villain', effect: 'fear' });
-    expect(s1.villain.fx.debilitated).toBe(0);
+    const s1 = playRound(active(s0), 'tech:basicGenjutsu', seq(0.5), gameData);
+    expect(ofType(s1.log, 'mental')).toHaveLength(0);
+    expect(ofType(s1.log, 'debilitate')[0]).toMatchObject({ target: 'villain', kind: 'prison' });
   });
 
   it('Olhos treinados: o genjutsu do vilão acerta menos o Uchiha (e Leitura mental tira 10 do Yamanaka)', () => {
@@ -425,9 +437,12 @@ describe('Byakugan e Rotação (Hyuuga)', () => {
     expect(s1.villain.chakra).toBe(14);
   });
 
-  it('ativar custa 3 de chakra', () => {
-    const s1 = playRound(startBattle(createPlayer(hyuuga, gameData), testVillain(), { playerStartsFirst: true }), 'dojutsu', seq(0.5), gameData);
+  it('ativar é grátis (não gasta o turno) e custa 3 de chakra; o golpe da rodada já não erra', () => {
+    const s0 = startBattle(createPlayer(hyuuga, gameData), testVillain({ hp: 200 }), { playerStartsFirst: true });
+    expect(availableActions(s0, gameData)).not.toContain('dojutsu');
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.01), gameData, { dojutsu: true });
     expect(ofType(s1.log, 'dojutsu')).toEqual([{ type: 'dojutsu', dojutsu: 'byakugan', stage: 0, chakra: 3 }]);
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'hit', hitChance: 1 });
     expect(s1.player.chakra).toBe(27 - 3 - 1);
   });
 
@@ -452,16 +467,20 @@ describe('passivas e ativas de clã', () => {
     expect(gainXp(createPlayer(uchiha, gameData), 100, gameData).xp).toBe(100);
   });
 
-  it('Expansão (Akimichi): gasta o turno; depois, taijutsu ×1,5 e speed −3; Corpo pesado ×1,1 com HP cheio', () => {
+  it('Expansão (Akimichi): grátis; já na rodada, taijutsu ×1,5 e speed −3, por 3 rodadas; Corpo pesado ×1,1 com HP cheio', () => {
     const p = createPlayer(clan('akimichi'), gameData);
-    const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
-    const s1 = playRound(s0, 'expansion', seq(0.5), gameData);
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 200, techniques: [{ id: 'wait', type: 'taijutsu', baseDamage: 0, chakraCost: 0, weight: 1 }] })));
+    expect(availableActions(s0, gameData)).not.toContain('expansion');
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { expansion: true });
     expect(s1.player.chakra).toBe(28);
-    expect(effectiveSpeed(s1, gameData)).toBe(6);
-    expect(effectiveSpeed({ ...s1, round: s1.round + 1 }, gameData)).toBe(3);
-    const s2 = playRound({ ...s1, player: { ...s1.player, hp: s1.player.maxHp } }, 'tech:basicTaijutsu', seq(0.5), gameData);
     // (8 + 15 − 7) × 1,5 × 1,1 = 26
-    expect(ofType(ofRound(s1, s2), 'attack')[0]).toMatchObject({ side: 'player', damage: 26 });
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', damage: 26 });
+    expect(effectiveSpeed(s1, gameData)).toBe(3);
+    expect(s1.playerFx.expansionTurns).toBe(2);
+    let s = s1;
+    for (let i = 0; i < 2; i++) s = playRound(s, 'stance', seq(0.5), gameData);
+    expect(s.playerFx.expansionTurns).toBe(0);
+    expect(ofType(s.log, 'expansionEnd')).toHaveLength(1);
   });
 
   it('Clones das Sombras (Uzumaki): grátis, o próximo ataque vira 3 golpes de 35%', () => {
@@ -629,7 +648,7 @@ describe('passivas e comportamentos dos vilões', () => {
       const s0 = withInitiative(startBattle(createPlayer(common, gameData), gaara()));
       const s1 = playRound({ ...s0, villain: { ...s0.villain, hp: 55 } }, 'tech:basicTaijutsu', seq(0.5), gameData);
       expect(ofType(s1.log, 'cloak')).toEqual([{ type: 'cloak', side: 'villain' }]);
-      expect(villainResistance(s1, 'physical')).toBe(12.5);
+      expect(villainResistance(s1, 'physical', gameData)).toBe(12.5);
       // (10 − 7) × 1,5 = 4
       expect(ofType(s1.log, 'attack').find((a) => a.side === 'villain')).toMatchObject({ damage: 4 });
       expect(s1.villain.hp).toBe(55 - 11);
@@ -659,10 +678,10 @@ describe('passivas e comportamentos dos vilões', () => {
       expect(s1.villain.monster).toBe(true);
       expect(s1.villain.def.techniques.map((t) => t.id)).toEqual(['shukakuClaw', 'airBullet', 'sandBurial']);
       // Manto permanente: resistências ×1,25 sem pagar chakra e sem acabar.
-      expect(villainResistance(s1, 'physical')).toBe(12.5);
+      expect(villainResistance(s1, 'physical', gameData)).toBe(12.5);
       let s = s1;
       for (let i = 0; i < 8; i++) s = playRound(s, 'stance', seq(0.5), gameData);
-      expect(villainResistance(s, 'physical')).toBe(12.5);
+      expect(villainResistance(s, 'physical', gameData)).toBe(12.5);
       expect(ofType(s.log, 'cloakCost')).toHaveLength(0);
       // Derrotado de novo, morre.
       const end = playRound({ ...s, villain: { ...s.villain, hp: 1 } }, 'tech:basicTaijutsu', seq(0.5), gameData);

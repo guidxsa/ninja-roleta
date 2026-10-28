@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   availableActions,
+  canFreeActive,
   effectiveOffense,
   gatesToOpen,
   playerGenjutsuHitChance,
@@ -120,28 +121,34 @@ describe('Vontade do Fogo', () => {
 });
 
 describe('debilitado', () => {
-  it('genjutsu que acerta faz o alvo perder a próxima ação, depois ele fica imune por uma ação', () => {
+  it('genjutsu que acerta faz o alvo perder 2 ações (1 + 1 de todo controle), depois ele fica imune por uma ação', () => {
     const s0 = withInitiative(startBattle(withGenjutsu(), testVillain()));
     const s1 = playRound(s0, 'tech:basicGenjutsu', seq(0.5), gameData);
-    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 1, kind: 'prison' }]);
+    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 2, kind: 'prison' }]);
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'prison' }]);
-    expect(s1.villain.fx).toMatchObject({ debilitated: 0, debilitateImmunity: 1 });
+    expect(s1.villain.fx).toMatchObject({ debilitated: 1, debilitateImmunity: 0 });
+    const s2 = playRound(s1, 'rest', seq(0.5), gameData);
+    expect(ofType(s2.log.slice(s1.log.length), 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'prison' }]);
+    expect(s2.villain.fx).toMatchObject({ debilitated: 0, debilitateImmunity: 1 });
 
-    // Rodada 2: genjutsu acerta mas o vilão resiste; o vilão age e perde a imunidade.
-    const s2 = playRound(s1, 'tech:basicGenjutsu', seq(0.9), gameData);
-    expect(ofType(s2.log, 'debilitateResisted')).toHaveLength(1);
-    expect(s2.villain.fx.debilitateImmunity).toBe(0);
-    expect(ofType(s2.log, 'attack').filter((a) => a.side === 'villain')).toHaveLength(1);
+    // Rodada 3: genjutsu acerta mas o vilão resiste; o vilão age e perde a imunidade.
+    const s3 = playRound(s2, 'tech:basicGenjutsu', seq(0.9), gameData);
+    expect(ofType(s3.log.slice(s2.log.length), 'debilitateResisted')).toHaveLength(1);
+    expect(s3.villain.fx.debilitateImmunity).toBe(0);
+    expect(ofType(s3.log.slice(s2.log.length), 'attack').filter((a) => a.side === 'villain')).toHaveLength(1);
   });
 
   it('tenacidade: controle pego dificulta o próximo e volta ao normal aos poucos', () => {
     const s0 = withInitiative(startBattle(withGenjutsu(), testVillain({ hp: 500 })));
     const base = playerGenjutsuHitChance(s0, gameData, 'basicGenjutsu');
     const s1 = playRound(s0, 'tech:basicGenjutsu', seq(0.9), gameData);
-    // Pegou (+50%) e já caiu 15% no fim da rodada, quando o vilão voltou a agir.
-    expect(s1.villain.fx.tenacity).toBeCloseTo(0.35);
-    expect(playerGenjutsuHitChance(s1, gameData, 'basicGenjutsu')).toBeCloseTo(base * 0.65);
-    let s = s1;
+    // Pegou (+50%); controlado, ainda não cai.
+    expect(s1.villain.fx.tenacity).toBeCloseTo(0.5);
+    // Na rodada seguinte o controle acaba e a tenacidade cai 15%.
+    const s2 = playRound(s1, 'rest', seq(0.5), gameData);
+    expect(s2.villain.fx.tenacity).toBeCloseTo(0.35);
+    expect(playerGenjutsuHitChance(s2, gameData, 'basicGenjutsu')).toBeCloseTo(base * 0.65);
+    let s = s2;
     for (let i = 0; i < 3; i++) s = playRound(s, 'rest', seq(0.5), gameData);
     expect(s.villain.fx.tenacity).toBe(0);
     expect(playerGenjutsuHitChance(s, gameData, 'basicGenjutsu')).toBeCloseTo(base);
@@ -176,21 +183,22 @@ describe('debilitado', () => {
 describe('passivas', () => {
   const prodigy: Origin = { lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false };
 
-  it('Portões: abrir gasta o turno (sem golpe), chakra e HP; taijutsu ×1,3 por 3 rodadas a partir da seguinte', () => {
+  it('Portões: abrir é grátis (não gasta o turno), custa chakra e HP; taijutsu ×1,3 por 3 rodadas contando a da abertura', () => {
     const p = createPlayer(prodigy, gameData);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
-    expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'gates', 'rest', 'stance']);
-    const s1 = playRound(s0, 'gates', seq(0.5), gameData);
+    expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'rest', 'stance']);
+    expect(canFreeActive(s0, 'gates', 'tech:basicTaijutsu', gameData)).toBe(true);
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { gates: true });
     // 20% de 110 = 22 de HP; 1º portão custa 5 de chakra.
     expect(ofType(s1.log, 'gates')).toEqual([{ type: 'gates', stage: 1, hpLost: 22, chakra: 5 }]);
-    expect(ofType(s1.log, 'attack').filter((a) => a.side === 'player')).toHaveLength(0);
+    // O golpe da mesma rodada já sai com o portão: (8 + 17 − 7) × 1,3 = 23
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', damage: 23 });
     expect(s1.player.chakra).toBe(23);
-    expect(s1.playerFx.gatesTurns).toBe(3);
+    expect(s1.playerFx.gatesTurns).toBe(2);
     const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5), gameData);
-    // (8 + 17 − 7) × 1,3 = 23
     expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]).toMatchObject({ side: 'player', damage: 23 });
-    expect(s2.playerFx.gatesTurns).toBe(2);
-    expect(availableActions(s2, gameData)).not.toContain('gates');
+    expect(s2.playerFx.gatesTurns).toBe(1);
+    expect(canFreeActive(s2, 'gates', 'tech:basicTaijutsu', gameData)).toBe(false);
   });
 
   it('Portões evoluem com o taijutsu: portão maior, mais forte e mais caro', () => {
@@ -200,13 +208,13 @@ describe('passivas', () => {
     expect(gatesToOpen(strong, gameData)).toMatchObject({ stage: 2, taijutsuMult: 1.5, chakraCost: 7, hpCostPct: 0.25 });
     expect(gatesToOpen({ ...p, offense: { ...p.offense, taijutsu: 25 } }, gameData)).toMatchObject({ stage: 3, taijutsuMult: 1.7 });
     // Sem chakra para o portão, não abre.
-    expect(availableActions(battle({ ...strong, chakra: 6 }, testVillain()), gameData)).not.toContain('gates');
+    expect(canFreeActive(battle({ ...strong, chakra: 6 }, testVillain()), 'gates', 'rest', gameData)).toBe(false);
     expect(gatesToOpen(createPlayer(common, gameData), gameData)).toBeNull();
   });
 
   it('Portões nunca deixam o HP abaixo de 1', () => {
     const p = { ...createPlayer(prodigy, gameData), hp: 5 };
-    const s1 = playRound(withInitiative(battle(p, testVillain())), 'gates', seq(0.01), gameData);
+    const s1 = playRound(withInitiative(battle(p, testVillain())), 'rest', seq(0.01), gameData, { gates: true });
     expect(ofType(s1.log, 'gates')).toEqual([{ type: 'gates', stage: 1, hpLost: 4, chakra: 5 }]);
   });
 
@@ -305,7 +313,8 @@ describe('efeitos negativos', () => {
   it('paralisia: crítico de raio faz o alvo perder a vez', () => {
     const s0 = withInitiative(startBattle(createPlayer(lightning, gameData), testVillain({ hp: 200 })));
     const s1 = playRound(s0, 'tech:spark', seq(0.99), gameData);
-    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 1, kind: 'paralysis' }]);
+    // 1 turno de paralisia + 1 de todo controle
+    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 2, kind: 'paralysis' }]);
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'paralysis' }]);
   });
 
@@ -456,23 +465,23 @@ describe('genjutsu: aprisionamento sem dano', () => {
     expect(s1.villain.hp).toBe(50);
   });
 
-  it('os turnos crescem com a vantagem do genjutsu sobre a resistência mental usada pelo alvo, até 3', () => {
+  it('os turnos crescem com a vantagem do genjutsu sobre a resistência mental usada pelo alvo, até 3 (+1 de todo controle)', () => {
     // O vilão resiste: usa 70% da resistência mental (10 → 7).
     const turns = (gen: number, villainMental = 10) =>
       prison(playRound(startBattle(withGen(gen), testVillain({ resistance: { physical: 10, mental: villainMental } }), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData));
-    expect(turns(10)).toBe(1); // vantagem 3
-    expect(turns(15)).toBe(2); // vantagem 8
-    expect(turns(23)).toBe(3); // vantagem 16
-    expect(turns(60)).toBe(3); // teto
-    expect(turns(23, 30)).toBe(1); // alvo resistente: 30 × 0,7 = 21
+    expect(turns(10)).toBe(2); // vantagem 3
+    expect(turns(15)).toBe(3); // vantagem 8
+    expect(turns(23)).toBe(4); // vantagem 16
+    expect(turns(60)).toBe(4); // teto
+    expect(turns(23, 30)).toBe(2); // alvo resistente: 30 × 0,7 = 21
   });
 
   it('técnica e upgrade de genjutsu aumentam o poder de aprisionamento', () => {
     const crow = learnTechnique(withGen(10), 'crowIllusion', gameData); // 10 + 6 = 16 → vantagem 9
-    expect(prison(playRound(startBattle(crow, testVillain(), { playerStartsFirst: true }), 'tech:crowIllusion', seq(0.5), gameData))).toBe(2);
-    expect(prison(playRound(startBattle(withGen(12), testVillain(), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData))).toBe(1);
+    expect(prison(playRound(startBattle(crow, testVillain(), { playerStartsFirst: true }), 'tech:crowIllusion', seq(0.5), gameData))).toBe(3);
+    expect(prison(playRound(startBattle(withGen(12), testVillain(), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData))).toBe(2);
     const upgraded = { ...withGen(12), techniqueLevels: { basicGenjutsu: 1 } }; // 12 + 3 = 15 → vantagem 8
-    expect(prison(playRound(startBattle(upgraded, testVillain(), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData))).toBe(2);
+    expect(prison(playRound(startBattle(upgraded, testVillain(), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData))).toBe(3);
   });
 
   it('não gasta o foco', () => {
@@ -482,7 +491,7 @@ describe('genjutsu: aprisionamento sem dano', () => {
   });
 
   it('o genjutsu do vilão também não causa dano e aprisiona o jogador conforme o genjutsu dele', () => {
-    // Genjutsu 26 contra a resistência mental do jogador resistindo (10 × 0,7 = 7): vantagem 19 → 3 turnos.
+    // Genjutsu 26 contra a resistência mental do jogador resistindo (10 × 0,7 = 7): vantagem 19 → 3 turnos + 1 de controle.
     const v = testVillain({
       offense: { taijutsu: 0, ninjutsu: 0, genjutsu: 26 },
       techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalTurns: 1 }],
@@ -490,7 +499,7 @@ describe('genjutsu: aprisionamento sem dano', () => {
     const s0 = startBattle(withGen(10), v, { villainStartsFirst: true });
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(s1.player.hp).toBe(s0.player.hp);
-    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'player', turns: 3, kind: 'prison' }]);
+    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'player', turns: 4, kind: 'prison' }]);
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'player', reason: 'prison' }]);
   });
 });

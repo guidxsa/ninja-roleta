@@ -70,6 +70,8 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 
 "Ninjutsu básico" = o nível I da linha de ataque do elemento sorteado (ver [tecnicas.md](tecnicas.md#linhas-de-ataque)).
 
+Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação da rodada, sem gastar o turno, se houver chakra para as duas ([fundamentos.md](fundamentos.md)).
+
 ## Detalhe por linhagem
 
 ### Comum
@@ -84,7 +86,7 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 ### Akimichi (expansão)
 
 - **Corpo pesado** (passiva): dano de taijutsu × (0,7 + 0,4 × HP atual / HP máximo). ×1,1 com HP cheio, ×0,7 perto de zero.
-- **Expansão** (ativa): gasta o turno e 6 de chakra. Por 3 rodadas, a partir da seguinte: taijutsu ×1,5 e speed −3. Pode ser usada de novo quando acabar.
+- **Expansão** (ativa): **escolha grátis** (não gasta o turno) que custa 6 de chakra. Por 3 rodadas, contando a da ativação: taijutsu ×1,5 e speed −3. Pode ser usada de novo quando acabar.
 - **Rolo Colossal** (nível 4): taijutsu exclusivo.
 
 ### Yamanaka (mente)
@@ -105,7 +107,7 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 ### Prodígio do taijutsu (estilo Lee)
 
 - **Corpo de ferro** (passiva): contra **taijutsu**, a reação Resistir usa 100% da resistência física (como em postura defensiva). Contra ninjutsu, Resistir normal (70%).
-- **Portões** (ativa): uma vez por luta. Abrir gasta o turno; o bônus vale por 3 rodadas a partir da seguinte. Abre o maior portão liberado pelo taijutsu atual. Custa chakra e HP (nunca abaixo de 1).
+- **Portões** (ativa): uma vez por luta. Abrir é uma **escolha grátis** (não gasta o turno); o bônus vale por 3 rodadas, contando a da abertura. Abre o maior portão liberado pelo taijutsu atual. Custa chakra e HP (nunca abaixo de 1).
 
   | Portão | Taijutsu mínimo | Dano de taijutsu | Chakra | HP |
   |---|---|---|---|---|
@@ -120,7 +122,7 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 
 - **Olhos treinados** (passiva): +6 na resistência mental ao resistir a ilusões.
 - **Ilusão da Dor**: genjutsu de dano do kit inicial (15 de dano base; fere com genjutsu contra a resistência mental). No nível 7, **Tsukuyomi** (só com o Sharingan): 22 de dano e aprisiona.
-- **Sharingan** (ativa, dōjutsu): ativar é uma **escolha grátis** (não gasta o turno, como os Clones) que custa 4 de chakra; manutenção 1 por rodada, dura 5 rodadas ou até faltar chakra. Evolui com o nível.
+- **Sharingan** (ativa, dōjutsu): ativar é uma **escolha grátis** (não gasta o turno) que custa 4 de chakra; manutenção 1 por rodada, dura 5 rodadas ou até faltar chakra. Evolui com o nível.
 
   | Estágio | Nível | Tai/Nin/Gen | Speed | Genjutsu: acerto / poder | Leitura de movimento |
   |---|---|---|---|---|---|
@@ -129,12 +131,12 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
   | 3 tomoe | 7 | +7 | +3 | +20% / +9 | 30% |
 
   Leitura de movimento: chance de reduzir à metade o dano recebido.
-- Com o Sharingan ativo, o genjutsu do Uchiha pode aplicar Pavor em vez do efeito da técnica (escolha do jogador). O poder do Sharingan também soma no dano das ilusões.
+- Cada genjutsu do Uchiha aplica o próprio efeito (não há mais o modo Pavor do Sharingan; o Pavor vem do Teatro do Pavor). O poder do Sharingan soma no dano das ilusões.
 
 ### Hyuuga
 
 - **Punho preciso** (passiva): taijutsu ignora 30% da resistência física do alvo (conta como penetração).
-- **Byakugan** (ativa, dōjutsu): ativar 3, manutenção 1, dura 5 rodadas. Ativo: taijutsu não erra (crítico ainda rola), taijutsu ×1,1 e libera o Selo dos Pontos Vitais.
+- **Byakugan** (ativa, dōjutsu): **escolha grátis** (não gasta o turno); ativar 3, manutenção 1, dura 5 rodadas. Ativo: taijutsu não erra (crítico ainda rola), taijutsu ×1,1 e libera o Selo dos Pontos Vitais.
 - **Rotação** (nível 4): barreira neutra exclusiva: escudo que devolve metade do dano bloqueado (ver [tecnicas.md](tecnicas.md#ninjutsu-de-linhagem)).
 
 ### Uzumaki

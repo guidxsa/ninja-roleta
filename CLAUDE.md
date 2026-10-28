@@ -37,6 +37,8 @@ Nenhuma. A rodada "rebalanceamento das origens" (27/10/2026) foi implementada na
 
 Observação em aberto (não é mudança de design): na simulação, a fatia "nova técnica" da recompensa vale bem menos que as outras (sem ela, o comum vence ~20 pontos a mais). Vale discutir com o usuário antes de mexer.
 
+Observação em aberto (v0.19.0): com as ativas grátis e os controles mais longos, as linhagens com ativa ou controle subiram e o comum (sem ativa) ficou atrás, por exemplo contra o Kabuto (comum 34%, Uchiha 69%, Nara 82%, Yamanaka 98%). Discutir com o usuário antes de compensar.
+
 Quando o design mudar antes do código, listar aqui o que falta implementar.
 
 ## Princípios

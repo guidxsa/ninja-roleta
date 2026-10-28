@@ -155,7 +155,7 @@ export function fxConditions(fx: Fx, bad: 'good' | 'bad'): Condition[] {
   if (fx.possessed > 0) add('genjutsu', S.ui.possessed, bad, St.possessed);
   if (fx.asleep > 0) add('sleep', S.ui.asleep, bad, St.asleep);
   if (fx.stunned > 0) add('stun', S.ui.stunned, bad, St.stunned(pct(B.status.stun.hitPenalty)));
-  if (fx.feared > 0) add('fear', S.ui.feared(fx.feared), bad, St.feared(pct(1 - B.status.fear.damageMult)));
+  if (fx.feared > 0) add('fear', S.ui.feared(fx.feared), bad, St.feared(pct(1 - B.status.fear.damageMult), pct(1 - B.status.fear.resistanceMult)));
   if (fx.confused > 0) add('confusion', S.ui.confused(fx.confused), bad, St.confused(pct(B.status.confusion.failChance)));
   if (fx.tormented > 0) add('torment', S.ui.tormented(fx.tormented), bad, St.tormented(B.status.torment.chakraPerRound));
   if (fx.debilitateImmunity > 0) add('immune', S.ui.immune, '', St.immune);

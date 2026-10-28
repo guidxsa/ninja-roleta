@@ -65,7 +65,7 @@ O Corpo de ferro (prodígio do taijutsu) faz Resistir usar 100% da física, mas 
 - Técnicas com **prioridade** agem antes naquela rodada, mesmo sem a iniciativa. Dois lados com prioridade: vale a iniciativa.
 - Na sua ação, o personagem escolhe:
   - **Técnica** (de uma das categorias do skill set, ver [tecnicas.md](tecnicas.md)).
-  - **Ativa de linhagem** (portões, expansão, Byakugan etc.). Algumas são **escolhas grátis** feitas junto com a ação, sem gastar o turno: Clones das Sombras, Sharingan, Foco e Gênio.
+  - **Ativas de linhagem** (Portões, Expansão, Sharingan, Byakugan, Clones das Sombras) são todas **escolhas grátis**: feitas junto com a ação, sem gastar o turno, desde que haja chakra para a ativa, a ação e as outras ativas da rodada. Foco e Gênio também são grátis.
   - **Ações universais**: Concentrar chakra, Postura defensiva, Usar item (ver [tecnicas.md](tecnicas.md#ações-universais)).
 
 ## Reações

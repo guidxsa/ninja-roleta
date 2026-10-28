@@ -2,16 +2,20 @@ import {
   actionTechniqueId,
   attackPreview,
   availableActions,
+  actionCost,
   canClones,
+  canFreeActive,
   canDojutsuExtra,
   canGenius,
   canFocus,
   dealsDamage,
   illusionDamage,
   isBarrier,
+  isControlled,
   isIllusion,
   incomingDamagePreview,
   itemAction,
+  mentalEffectTurns,
   playerGenjutsuHitChance,
   playerGenjutsuTurns,
   reactionPreview,
@@ -73,22 +77,20 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
   if (barrier) {
     const points = leveledTechnique(p, actionTechniqueId(barrier)!, data).barrier ?? 0;
     const incoming = villainIntentDamage(state, data);
-    if (v.charging && !fx.dodge && points >= incoming * 0.5) return barrier;
+    if (v.charging && !fx.dodge && !isControlled(v.fx) && points >= incoming * 0.5) return barrier;
     if (!v.charging && Math.min(points, incoming * 2.5) > bestAttackValue(state, data) * 1.5 && p.hp < p.maxHp * 0.8) return barrier;
   }
   // Golpe carregado anunciado: Bomba de fumaça, ou postura defensiva (as reações ainda ficam livres).
-  if (v.charging && !fx.dodge) {
+  // Vilão controlado perde a vez: o golpe não sai nesta rodada.
+  if (v.charging && !fx.dodge && !isControlled(v.fx)) {
     if (has(itemAction('smokeBomb'))) return itemAction('smokeBomb');
     return 'stance';
   }
   if (has(itemAction('medKit')) && (fx.bleeding || (fx.poison && fx.poison.ticks >= 2) || fx.burn > 1)) {
     return itemAction('medKit');
   }
-  // Portões, expansão, armadura e dōjutsu gastam o turno: ativa cedo, para aproveitar as rodadas.
-  if (has('gates') && p.hp > p.maxHp * 0.5) return 'gates';
+  // A armadura gasta o turno: ativa cedo, para aproveitar as rodadas. As ativas de linhagem são grátis (chooseExtras).
   if (has('medical') && p.hp < p.maxHp * 0.4) return 'medical';
-  if (has('expansion') && p.chakra >= data.balance.expansion.chakraCost + 4) return 'expansion';
-  if (has('dojutsu') && p.chakra >= data.balance.dojutsu[p.dojutsu!].activationCost + 3) return 'dojutsu';
   const armor = actions.find((a) => techOf(a)?.state);
   if (armor && p.chakra >= techOf(armor)!.chakraCost + 6 && v.hp > v.def.hp * 0.3) return armor;
   if (has(itemAction('soldierPill')) && p.chakra < p.maxChakra * 0.2) return itemAction('soldierPill');
@@ -110,7 +112,7 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
     if (t.mental === 'fear' && v.fx.feared > 0) continue;
     if (t.mental === 'confusion' && v.fx.confused > 0) continue;
     if (t.mental === 'torment' && v.fx.tormented > 0) continue;
-    const turns = playerGenjutsuTurns(state, t.id, data) + (t.mental === 'sleep' ? 1 : 0);
+    const turns = mentalEffectTurns(t.mental, playerGenjutsuTurns(state, t.id, data), data);
     const vulnerable = (data.balance.control.vulnerableDamageMult - 1) * attackNow;
     const perTurn =
       t.mental === 'possession'
@@ -118,7 +120,7 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
         : losesTurn
           ? villainHit + vulnerable
           : t.mental === 'fear'
-            ? villainHit * (1 - st.fear.damageMult)
+            ? villainHit * (1 - st.fear.damageMult) + attackNow * (1 - st.fear.resistanceMult) * 0.5
             : t.mental === 'confusion'
               ? villainHit * st.confusion.failChance * 1.25
               : 1;
@@ -191,7 +193,7 @@ export function chooseReaction(state: BattleState, incoming: IncomingAttack, opt
   return best;
 }
 
-/** Escolhas grátis: foco no primeiro ataque com dano; clones quando sobra chakra; Sharingan cedo. */
+/** Escolhas grátis: foco no primeiro ataque com dano; ativas de linhagem cedo, quando sobra chakra. */
 export function chooseExtras(state: BattleState, action: PlayerAction, data: GameData): RoundExtras {
   const id = actionTechniqueId(action);
   const tech = id ? data.techniquesById[id] : undefined;
@@ -201,12 +203,18 @@ export function chooseExtras(state: BattleState, action: PlayerAction, data: Gam
   let geniusHit = 1;
   if (tech && (tech.mental || isIllusion(tech))) geniusHit = playerGenjutsuHitChance(state, data, tech.id);
   else if (attack) geniusHit = attackPreview(state, tech.id, data).hitChance;
-  return {
+  const ex: RoundExtras = {
     genius: canGenius(state, data) && geniusHit < 0.9,
     focus: attack && canFocus(state),
-    clones: attack && canClones(state, action, data) && p.chakra >= p.maxChakra * 0.5,
-    dojutsu: canDojutsuExtra(state, action, data) && p.chakra >= (p.dojutsu ? data.balance.dojutsu[p.dojutsu].activationCost : 0) + 6,
   };
+  // Ativas grátis, em ordem; cada uma só entra se sobra chakra para ela, a ação e as já escolhidas.
+  const taijutsu = attack && tech.type === 'taijutsu';
+  const reserve = (n: number) => p.chakra >= actionCost(state, action, data) + n;
+  ex.dojutsu = canDojutsuExtra(state, action, data, ex) && reserve((p.dojutsu ? data.balance.dojutsu[p.dojutsu].activationCost : 0) + 3);
+  ex.gates = taijutsu && p.hp > p.maxHp * 0.5 && canFreeActive(state, 'gates', action, data, ex);
+  ex.expansion = taijutsu && canFreeActive(state, 'expansion', action, data, ex) && reserve(data.balance.expansion.chakraCost + 4);
+  ex.clones = attack && canClones(state, action, data, ex) && p.chakra >= p.maxChakra * 0.5;
+  return ex;
 }
 
 /** Compatibilidade: só o foco. */
