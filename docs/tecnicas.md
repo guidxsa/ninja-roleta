@@ -160,7 +160,7 @@ Ativar um estado gasta o turno. O manto do jinchuuriki é um estado **neutro** (
 | Técnica | Dano | Golpes | Chakra | Precisão | Efeito | Quem |
 |---|---|---|---|---|---|---|
 | Imitação de Sombra | 0 | 1 | 5 | 80% | Aprisionado (força base 1; força e fuga pela fórmula do genjutsu, usando ninjutsu contra a resistência física) | Nara |
-| Enxame | 5 | 4 | 5 | 85% | Cada golpe drena chakra (Colmeia) | Aburame |
+| Enxame | 5 | 4 | 5 | 85% | Cada golpe drena chakra e deixa um inseto (Colônia) | Aburame |
 | Rotação | — | — | 5 | — | Barreira neutra (ação): escudo de 26 que devolve 50% do dano que bloqueia. | Hyuuga (nível 4) |
 
 ## Genjutsu

@@ -110,13 +110,23 @@ export interface RoundExtras {
   expansion?: boolean;
   /** Gênio (Nara): a próxima roleta do jogador gira duas vezes e fica com a melhor. */
   genius?: boolean;
+  /** Esforço (comum). */
+  effort?: boolean;
+  /** Fera de quatro patas (Inuzuka). */
+  beast?: boolean;
+  /** Devorar (Aburame): consome os insetos do vilão. */
+  devour?: boolean;
+  /** Transmissão mental (Yamanaka): tenta cancelar o golpe carregado do vilão. */
+  transmission?: boolean;
+  /** Mente no controle (Yamanaka): técnica que o vilão possuído usa em si mesmo nesta rodada. */
+  possession?: string;
 }
 
 export type Side = 'player' | 'villain';
 export type BattleStatus = 'ongoing' | 'won' | 'lost';
 
 /** Por que o lutador perdeu a vez. `reacted` = a ação foi gasta numa reação. */
-export type SkipReason = 'prison' | 'sleep' | 'paralysis' | 'possession' | 'cower' | 'reacted';
+export type SkipReason = 'prison' | 'sleep' | 'paralysis' | 'possession' | 'cower' | 'reacted' | 'disrupted';
 /** Efeitos que aparecem como "status" na luta. */
 export type StatusKind = 'stun' | 'burn' | 'poison' | 'bleed';
 /** Efeitos que tiram a vez (anti-trava). */
@@ -240,6 +250,15 @@ export interface PlayerFx extends StatusFx {
   /** Usos do Gênio nesta luta e se ele está armado para a próxima roleta. */
   geniusUsed: number;
   geniusArmed: boolean;
+  /** Esforço (comum): usos nesta luta e rodadas que faltam (a da ativação conta). */
+  effortUsed: number;
+  effortTurns: number;
+  /** Fera de quatro patas (Inuzuka): rodadas que faltam (a da ativação conta). */
+  beastTurns: number;
+  /** Transmissão mental (Yamanaka): usos nesta luta. */
+  transmissionUsed: number;
+  /** Mente no controle (Yamanaka): técnica escolhida para o vilão possuído usar em si mesmo. */
+  possessionPick: string | null;
 }
 
 /** Próxima ação do vilão, sorteada no fim da rodada anterior (Gênio mostra). */
@@ -267,6 +286,10 @@ export interface VillainState {
   intent: VillainIntent | null;
   /** Golpe carregado anunciado: sai na próxima vez dele. */
   charging: string | null;
+  /** Insetos da Colônia (Aburame) acumulados no vilão. */
+  insects: number;
+  /** Golpe carregado cancelado pela Transmissão mental: perde a próxima vez. */
+  disrupted: boolean;
 }
 
 export interface BattleOptions {
@@ -309,6 +332,12 @@ export type BattleEvent =
   | { type: 'gates'; stage: number; hpLost: number; chakra: number }
   | { type: 'expansion'; chakra: number }
   | { type: 'expansionEnd' }
+  | { type: 'effort'; bonus: number }
+  | { type: 'effortEnd' }
+  | { type: 'beast'; chakra: number }
+  | { type: 'beastEnd' }
+  | { type: 'devour'; insects: number; chakra: number; damage: number }
+  | { type: 'transmission'; chance: number; success: boolean; techniqueId: string }
   | { type: 'clones'; chakra: number }
   | { type: 'armor'; techniqueId: string; chakra: number }
   | { type: 'armorEnd' }
@@ -495,6 +524,11 @@ export function startBattle(
       focusArmed: false,
       geniusUsed: 0,
       geniusArmed: false,
+      effortUsed: 0,
+      effortTurns: 0,
+      beastTurns: 0,
+      transmissionUsed: 0,
+      possessionPick: null,
     },
     villain: {
       def: villain,
@@ -510,6 +544,8 @@ export function startBattle(
       monster: false,
       intent: null,
       charging: null,
+      insects: 0,
+      disrupted: false,
     },
     options: opts,
     initiative: null,
@@ -707,7 +743,7 @@ export function gatesHpCost(player: PlayerState, hpCostPct: number): number {
 }
 
 /** Ativas de linhagem que são escolhas grátis da rodada (não gastam o turno). */
-export type FreeActive = 'clones' | 'dojutsu' | 'gates' | 'expansion';
+export type FreeActive = 'clones' | 'dojutsu' | 'gates' | 'expansion' | 'effort' | 'beast' | 'devour' | 'transmission';
 
 /** Chakra que a ativa grátis custa (null = o jogador não a tem ou não pode usá-la agora). */
 export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData): number | null {
@@ -722,10 +758,27 @@ export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData)
       return fx.gatesUsed ? null : (gatesToOpen(p, data)?.chakraCost ?? null);
     case 'expansion':
       return p.active === 'expansion' && fx.expansionTurns === 0 ? data.balance.expansion.chakraCost : null;
+    case 'effort':
+      return p.active === 'effort' && fx.effortTurns === 0 && fx.effortUsed < activeUses(p, 'effort', data) ? data.balance.effort.chakraCost : null;
+    case 'beast':
+      return p.active === 'beast' && fx.beastTurns === 0 ? data.balance.beast.chakraCost : null;
+    case 'devour':
+      return p.active === 'devour' && s.villain.insects > 0 ? data.balance.devour.chakraCost : null;
+    case 'transmission':
+      return p.active === 'transmission' && s.villain.charging !== null && fx.transmissionUsed < activeUses(p, 'transmission', data)
+        ? data.balance.transmission.chakraCost
+        : null;
   }
 }
 
-const FREE_ACTIVES: FreeActive[] = ['dojutsu', 'gates', 'expansion', 'clones'];
+/** Usos por luta das ativas com limite (Esforço, Transmissão mental): base + 1 por nível de `extraUseLevels` alcançado. */
+export function activeUses(player: PlayerState, kind: 'effort' | 'transmission', data: GameData): number {
+  if (player.active !== kind) return 0;
+  const cfg = data.balance[kind];
+  return cfg.uses + cfg.extraUseLevels.filter((lv) => player.level >= lv).length;
+}
+
+export const FREE_ACTIVES: FreeActive[] = ['dojutsu', 'gates', 'expansion', 'effort', 'beast', 'devour', 'transmission', 'clones'];
 
 /** Chakra das ativas grátis já escolhidas em `ex`. */
 function chosenActivesCost(s: BattleState, ex: RoundExtras, data: GameData): number {
@@ -774,7 +827,8 @@ export function armorActive(s: BattleState): boolean {
 export function effectiveOffense(s: BattleState, type: AttackType, data: GameData): number {
   const base = s.player.offense[type];
   if (s.player.forbiddenAttackTypes.includes(type)) return base;
-  let value = (base + (activeSharingan(s, data)?.statBonus ?? 0)) * (playerCloak(s, data)?.statMult ?? 1);
+  const effort = s.playerFx.effortTurns > 0 ? data.balance.effort.offenseBonus : 0;
+  let value = (base + effort + (activeSharingan(s, data)?.statBonus ?? 0)) * (playerCloak(s, data)?.statMult ?? 1);
   if (type !== 'genjutsu' && armorActive(s)) value *= data.balance.states.lightningArmor.offenseMult;
   return Math.floor(value);
 }
@@ -782,6 +836,7 @@ export function effectiveOffense(s: BattleState, type: AttackType, data: GameDat
 export function effectiveSpeed(s: BattleState, data: GameData): number {
   let value = s.player.speed + (activeSharingan(s, data)?.speed ?? 0);
   if (expansionActive(s)) value -= data.balance.expansion.speedPenalty;
+  if (s.playerFx.beastTurns > 0) value += data.balance.beast.speedBonus;
   if (armorActive(s)) value += data.balance.states.lightningArmor.speed;
   return Math.max(1, Math.floor(value * (playerCloak(s, data)?.statMult ?? 1)));
 }
@@ -1216,7 +1271,13 @@ function spendChakra(s: BattleState, side: Side, amount: number): void {
 
 function canSubstitute(s: BattleState, side: Side, data: GameData): boolean {
   const fx = fxOf(s, side);
-  return chakraOf(s, side) >= data.balance.substitution.chakraCost && fx.substitutionsUsed < substitutionUses(s, side, data);
+  if (chakraOf(s, side) < data.balance.substitution.chakraCost) return false;
+  return dogDecoy(s, side) || fx.substitutionsUsed < substitutionUses(s, side, data);
+}
+
+/** Isca (Inuzuka com a Fera ativa): a Substituição usa o cão e não gasta usos. */
+export function dogDecoy(s: BattleState, side: Side): boolean {
+  return side === 'player' && s.playerFx.beastTurns > 0;
 }
 
 /**
@@ -1499,7 +1560,7 @@ function performReaction(
   if (choice === 'substitution') {
     const cost = data.balance.substitution.chakraCost;
     spendChakra(s, defender, cost);
-    fx.substitutionsUsed++;
+    if (!dogDecoy(s, defender)) fx.substitutionsUsed++;
     s.log.push({ type: 'reaction', side: defender, kind: 'substitution', techniqueId: null, chakra: cost });
     const p = substitutionChance(s, defender, data);
     const success = defender === 'player' ? playerRoll(s, () => chance(p, rng), (ok) => (ok ? 1 : 0)) : chance(p, rng);
@@ -1572,6 +1633,12 @@ export function playRound(
   if (ex.dojutsu) activateDojutsu(s, data);
   if (ex.gates) openGates(s, data);
   if (ex.expansion) activateExpansion(s, data);
+  if (ex.effort) activateEffort(s, data);
+  if (ex.beast) activateBeast(s, data);
+  if (ex.devour) devour(s, data);
+  if (s.status !== 'ongoing') return s;
+  if (ex.transmission) mindTransmission(s, rng, data);
+  s.playerFx.possessionPick = ex.possession ?? null;
   if (ex.genius) {
     s.playerFx.geniusUsed++;
     s.playerFx.geniusArmed = true;
@@ -1793,6 +1860,11 @@ function consumeSkip(s: BattleState, side: Side, rng: Rng, data: GameData): bool
     s.log.push({ type: 'skip', side, reason: 'cower' });
     return true;
   }
+  if (side === 'villain' && s.villain.disrupted) {
+    s.villain.disrupted = false;
+    s.log.push({ type: 'skip', side, reason: 'disrupted' });
+    return true;
+  }
   const fx = fxOf(s, side);
   if (fx.owesAction) {
     fx.owesAction = false;
@@ -1821,15 +1893,27 @@ function consumeSkip(s: BattleState, side: Side, rng: Rng, data: GameData): bool
   return true;
 }
 
-/** Possuído: golpeia a si mesmo com a técnica de dano mais forte, contra a própria resistência física passiva. */
+/** Técnicas de dano que o vilão possuído pode usar em si mesmo (paga o chakra delas). */
+export function possessionOptions(s: BattleState): VillainTechnique[] {
+  return s.villain.def.techniques.filter(
+    (t) => t.baseDamage > 0 && t.barrier === undefined && !t.healPct && t.type !== 'genjutsu' && t.chakraCost <= s.villain.chakra,
+  );
+}
+
+/**
+ * Possuído: golpeia a si mesmo contra a própria resistência física passiva. O vilão usa a técnica que
+ * o Yamanaka escolheu (Mente no controle) ou, sem escolha, a de mais dano; paga o chakra dela.
+ */
 function possessedSelfHit(s: BattleState, side: Side, data: GameData): void {
   let best: CombatTech | null = null;
   if (side === 'villain') {
-    for (const t of s.villain.def.techniques) {
-      if (t.baseDamage <= 0 || t.barrier !== undefined || t.healPct || t.type === 'genjutsu') continue;
+    const options = possessionOptions(s);
+    const picked = options.find((t) => t.id === s.playerFx.possessionPick);
+    for (const t of picked ? [picked] : options) {
       const c = villainCombatTech(s, t);
       if (!best || c.baseDamage * c.hits > best.baseDamage * best.hits) best = c;
     }
+    if (best) s.villain.chakra -= best.chakraCost;
   } else {
     best = playerCombatTech(s, BASIC_TAIJUTSU, data);
   }
@@ -2158,6 +2242,14 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
     fx.expansionTurns--;
     if (fx.expansionTurns === 0) s.log.push({ type: 'expansionEnd' });
   }
+  if (fx.effortTurns > 0) {
+    fx.effortTurns--;
+    if (fx.effortTurns === 0) s.log.push({ type: 'effortEnd' });
+  }
+  if (fx.beastTurns > 0) {
+    fx.beastTurns--;
+    if (fx.beastTurns === 0) s.log.push({ type: 'beastEnd' });
+  }
   if (fx.armorTurns > 0 && fx.armorRound !== s.round) {
     fx.armorTurns--;
     if (fx.armorTurns === 0) s.log.push({ type: 'armorEnd' });
@@ -2266,6 +2358,59 @@ function activateExpansion(s: BattleState, data: GameData): void {
   s.player.chakra -= cfg.chakraCost;
   s.playerFx.expansionTurns = cfg.turns;
   s.log.push({ type: 'expansion', chakra: cfg.chakraCost });
+}
+
+/** Esforço (comum, escolha grátis): +tai/nin/gen já nesta rodada, que conta na duração. */
+function activateEffort(s: BattleState, data: GameData): void {
+  const cfg = data.balance.effort;
+  s.player.chakra -= cfg.chakraCost;
+  s.playerFx.effortUsed++;
+  s.playerFx.effortTurns = cfg.turns;
+  s.log.push({ type: 'effort', bonus: cfg.offenseBonus });
+}
+
+/** Fera de quatro patas (Inuzuka, escolha grátis): vale já nesta rodada, que conta na duração. */
+function activateBeast(s: BattleState, data: GameData): void {
+  const cfg = data.balance.beast;
+  s.player.chakra -= cfg.chakraCost;
+  s.playerFx.beastTurns = cfg.turns;
+  s.log.push({ type: 'beast', chakra: cfg.chakraCost });
+}
+
+/**
+ * Devorar (Aburame, escolha grátis): cada inseto drena `chakraPerInsect` do vilão; os que sobram
+ * com ele sem chakra causam `damagePerInsect` de dano direto (sem resistência).
+ */
+function devour(s: BattleState, data: GameData): void {
+  const cfg = data.balance.devour;
+  const v = s.villain;
+  s.player.chakra -= cfg.chakraCost;
+  const insects = v.insects;
+  v.insects = 0;
+  const chakra = Math.min(v.chakra, insects * cfg.chakraPerInsect);
+  v.chakra -= chakra;
+  const leftover = insects - Math.ceil(chakra / cfg.chakraPerInsect);
+  const damage = leftover * cfg.damagePerInsect;
+  s.log.push({ type: 'devour', insects, chakra, damage });
+  if (damage > 0) hurtVillain(s, damage);
+}
+
+/**
+ * Transmissão mental (Yamanaka, escolha grátis): rola o acerto de genjutsu contra o vilão que carrega
+ * um golpe. Pegou: o golpe se perde (o chakra já foi gasto) e o vilão perde a vez.
+ */
+function mindTransmission(s: BattleState, rng: Rng, data: GameData): void {
+  const v = s.villain;
+  const techniqueId = v.charging!;
+  s.player.chakra -= data.balance.transmission.chakraCost;
+  s.playerFx.transmissionUsed++;
+  const p = playerGenjutsuHitChance(s, data);
+  const success = playerRoll(s, () => chance(p, rng), (ok) => (ok ? 1 : 0));
+  s.log.push({ type: 'transmission', chance: p, success, techniqueId });
+  if (!success) return;
+  v.charging = null;
+  v.intent = null;
+  v.disrupted = true;
 }
 
 function useItem(s: BattleState, item: ConsumableId, data: GameData): void {
@@ -2451,7 +2596,8 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
     rolled = outcome;
     if (s.status !== 'ongoing') return;
     if (outcome === 'miss') break;
-    // Selo dos Pontos Vitais e Colmeia (Aburame): drenam o chakra do vilão.
+    // Selo dos Pontos Vitais e Colônia (Aburame): drenam o chakra do vilão; a Colônia deixa insetos nele.
+    if (p.passive === 'hive') v.insects = Math.min(balance.passives.hive.maxInsects, v.insects + balance.passives.hive.insectsPerHit);
     const drain = (data.techniquesById[techId]?.chakraDrain ?? 0) + (p.passive === 'hive' ? balance.passives.hive.chakraDrainPerHit : 0);
     if (drain > 0) {
       const amount = Math.min(v.chakra, drain);
@@ -2468,7 +2614,7 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
   // Dupla (Inuzuka): depois de um ataque que acerta, o cão pode atacar também.
   if (rolled !== undefined && rolled !== 'miss' && s.status === 'ongoing' && p.passive === 'duo') {
     const cfg = balance.passives.duo;
-    if (chance(cfg.chance, rng)) {
+    if (chance(s.playerFx.beastTurns > 0 ? balance.beast.duoChance : cfg.chance, rng)) {
       const dog: CombatTech = {
         id: DOG_ATTACK,
         type: 'taijutsu',

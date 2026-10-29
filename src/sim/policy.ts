@@ -213,6 +213,11 @@ export function chooseExtras(state: BattleState, action: PlayerAction, data: Gam
   ex.dojutsu = canDojutsuExtra(state, action, data, ex) && reserve((p.dojutsu ? data.balance.dojutsu[p.dojutsu].activationCost : 0) + 3);
   ex.gates = taijutsu && p.hp > p.maxHp * 0.5 && canFreeActive(state, 'gates', action, data, ex);
   ex.expansion = taijutsu && canFreeActive(state, 'expansion', action, data, ex) && reserve(data.balance.expansion.chakraCost + 4);
+  // Esforço e Fera: junto com um ataque. Devorar: com a colônia cheia. Transmissão: contra todo golpe carregado que dá para pegar.
+  ex.effort = attack && canFreeActive(state, 'effort', action, data, ex);
+  ex.beast = attack && canFreeActive(state, 'beast', action, data, ex) && reserve(data.balance.beast.chakraCost + 4);
+  ex.devour = state.villain.insects >= 6 && canFreeActive(state, 'devour', action, data, ex);
+  ex.transmission = canFreeActive(state, 'transmission', action, data, ex) && playerGenjutsuHitChance(state, data) >= 0.4;
   ex.clones = attack && canClones(state, action, data, ex) && p.chakra >= p.maxChakra * 0.5;
   return ex;
 }

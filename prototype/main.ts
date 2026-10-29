@@ -5,9 +5,11 @@ import {
   attackPreview,
   attackTechniques,
   availableActions,
+  activeUses,
   canFreeActive,
+  FREE_ACTIVES,
+  possessionOptions,
   freeActiveCost,
-  type FreeActive,
   canFocus,
   canGenius,
   restChakra,
@@ -231,6 +233,15 @@ const SIDE_COLORS = { player: '#2f80dc', villain: '#c62828', miss: '#6b6f80', hi
 
 const villainName = (id: string) => S.villains[id] ?? id;
 const techName = (id: string) => S.techniques[id] ?? id;
+const ACTIVE_ICON: Record<string, string> = {
+  gates: 'gates',
+  expansion: 'expansion',
+  shadowClones: 'clones',
+  effort: 'weights',
+  beast: 'beast',
+  devour: 'poison',
+  transmission: 'intent',
+};
 /** Chip de elemento com ícone; `withTip` = false dentro de botões (o botão já tem a própria dica). */
 const elChip = (el: Element | null, withTip = true) => elementChip(el, withTip);
 /** Nível de técnica em algarismos romanos (I, II, III...). */
@@ -475,7 +486,7 @@ function passiveItems(p: PlayerState, tag: 'li' | 'p'): string[] {
     const stage = gatesStage(p, data);
     const next = data.balance.gates.stages[stage];
     const gates = p.active === 'gates' ? ` (${stage ? S.gatesStage(stage) : '—'}${next ? ` · ${S.ui.gatesLocked(next.minTaijutsu)}` : ''})` : '';
-    const ico = { gates: 'gates', expansion: 'expansion', shadowClones: 'clones' }[p.active!] ?? 'ninjutsu';
+    const ico = ACTIVE_ICON[p.active!] ?? 'ninjutsu';
     out.push(item(icon(ico), active.name + gates, active.desc));
   }
   if (p.dojutsu) {
@@ -1099,6 +1110,7 @@ function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
     if (v.insaneTimer > 0) add('timer', S.ui.insaneTimer(v.insaneTimer), 'good', St.insaneTimer);
     if (v.lastStand) add('heartbreak', S.ui.lastStand, 'bad', St.lastStand);
     if (v.monster) add('claw', S.ui.monster, 'bad', St.monster);
+    if (v.insects > 0) add('poison', S.ui.insects(v.insects), 'good', St.insects);
     // Golpe carregado: aviso para todos. Gênio (Nara): vê a próxima ação.
     if (v.charging) add('warning', S.ui.charging(techName(v.charging)), 'bad', St.charging);
     else if (s.player.passive === 'genius' && v.intent) {
@@ -1115,6 +1127,8 @@ function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
   }
   if (fx.gatesTurns > 0) add('gates', S.ui.gatesOn(S.gatesStage(fx.gatesStage), fx.gatesTurns), 'good', St.gates);
   if (fx.expansionTurns > 0) add('expansion', S.ui.expansionOn(fx.expansionTurns), 'good', St.expansion);
+  if (fx.effortTurns > 0) add('weights', S.ui.effortOn(fx.effortTurns), 'good', St.effort);
+  if (fx.beastTurns > 0) add('beast', S.ui.beastOn(fx.beastTurns), 'good', St.beast);
   if (fx.clonesArmed) add('clones', S.ui.clonesArmed, 'good', St.clones);
   if (fx.armorTurns > 0) add('armor', S.ui.armorOn(fx.armorTurns), 'good', St.armor);
   if (fx.stance) add('stance', S.ui.stanceOn, 'good', St.stance);
@@ -1387,6 +1401,30 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       const hint = `${mult(cfg.taijutsuMult)} · speed −${cfg.speedPenalty} · ${S.ui.activeFreeHint}`;
       return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name} ✓`, hint);
     };
+    /** Ativas das linhagens que não tinham ativa: Esforço, Fera, Devorar e Transmissão mental. */
+    const lineageActiveToggle = (st: BattleState, kind: 'effort' | 'beast' | 'devour' | 'transmission'): string => {
+      const p = st.player;
+      const cost = freeActiveCost(st, kind, data);
+      if (cost === null || p.chakra < cost) return '';
+      const name = S.actives[kind]!.name;
+      if (kind === 'effort') {
+        const left = activeUses(p, 'effort', data) - st.playerFx.effortUsed;
+        return toggle('effort', 'weights', S.ui.effortFree(left), `${name} ✓`, S.ui.activeFreeHint);
+      }
+      if (kind === 'devour') {
+        const cfg = data.balance.devour;
+        const n = st.villain.insects;
+        const chakra = Math.min(st.villain.chakra, n * cfg.chakraPerInsect);
+        const damage = (n - Math.ceil(chakra / cfg.chakraPerInsect)) * cfg.damagePerInsect;
+        return toggle('devour', 'poison', S.ui.activeFree(`${name} (${n})`, cost), `${name} ✓`, S.ui.devourHint(n, chakra, damage));
+      }
+      if (kind === 'transmission') {
+        const left = activeUses(p, 'transmission', data) - st.playerFx.transmissionUsed;
+        const label = S.ui.transmissionFree(formatPct(playerGenjutsuHitChance(st, data)), cost, left);
+        return toggle('transmission', 'intent', label, `${name} ✓`, S.ui.transmissionHint(techName(st.villain.charging!)));
+      }
+      return toggle('beast', 'beast', S.ui.activeFree(name, cost), `${name} ✓`, S.actives.beast!.desc);
+    };
     const free = [
       canFocus(s) ? toggle('focus', 'focus', S.ui.focus, S.ui.focusArmed, S.ui.focusHint) : '',
       s.player.active === 'shadowClones' && !s.playerFx.clonesArmed && s.player.chakra >= data.balance.shadowClones.chakraCost
@@ -1395,13 +1433,36 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       freeActiveToggle(s, 'dojutsu'),
       freeActiveToggle(s, 'gates'),
       freeActiveToggle(s, 'expansion'),
+      lineageActiveToggle(s, 'effort'),
+      lineageActiveToggle(s, 'beast'),
+      lineageActiveToggle(s, 'devour'),
+      lineageActiveToggle(s, 'transmission'),
       canGenius(s, data)
         ? toggle('genius', 'intent', S.ui.genius, S.ui.geniusArmed, S.ui.geniusHint(geniusUses(s.player, data) - s.playerFx.geniusUsed))
         : '',
     ].join('');
-    actionsEl.innerHTML = `${tabsHtml}${free ? `<div class="free-row">${free}</div>` : ''}<div class="act-grid">${buttons}</div>`;
+    // Mente no controle (Yamanaka): com o vilão possuído, escolhe a técnica que ele usa em si mesmo.
+    const possess =
+      s.player.passive === 'mindReading' && s.villain.fx.possessed
+        ? possessionOptions(s)
+            .map((t) => {
+              const on = extras.possession === t.id;
+              const label = S.ui.possessionOption(techName(t.id), t.baseDamage * (t.hits ?? 1), t.chakraCost);
+              return `<button class="btn focus-btn${on ? ' on' : ''}" data-possess="${t.id}" aria-pressed="${on}" ${enabled ? '' : 'aria-disabled="true"'}${tip(S.passives.mindReading!.name, S.ui.possessionPick)}>${icon('genjutsu')}<span>${label}</span></button>`;
+            })
+            .join('')
+        : '';
+    actionsEl.innerHTML = `${tabsHtml}${free || possess ? `<div class="free-row">${free}${possess}</div>` : ''}<div class="act-grid">${buttons}</div>`;
   };
   actionsEl.addEventListener('click', (e) => {
+    const possess = (e.target as HTMLElement).closest<HTMLElement>('[data-possess]');
+    if (possess && enabledNow && !isOff(possess)) {
+      const id = possess.dataset.possess!;
+      const { possession: _, ...rest } = extras;
+      extras = extras.possession === id ? rest : { ...rest, possession: id };
+      renderActions(current, enabledNow);
+      return;
+    }
     const extra = (e.target as HTMLElement).closest<HTMLElement>('[data-extra]');
     if (extra && enabledNow && !isOff(extra)) {
       const key = extra.dataset.extra as keyof RoundExtras;
@@ -1439,7 +1500,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       focus: Boolean(extras.focus) && canFocus(state),
       genius: Boolean(extras.genius) && canGenius(state, data),
     };
-    for (const k of ['dojutsu', 'gates', 'expansion', 'clones'] as FreeActive[]) {
+    if (extras.possession) chosen.possession = extras.possession;
+    for (const k of FREE_ACTIVES) {
       chosen[k] = Boolean(extras[k]) && canFreeActive(state, k, action, data, chosen);
     }
     let next = playRound(state, action, rng, data, chosen);
@@ -1696,6 +1758,31 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         case 'expansionEnd':
           log(S.log.expansionEnd, 'sys');
+          break;
+        case 'effort':
+          log(S.log.effort(ev.bonus), 'good');
+          break;
+        case 'effortEnd':
+          log(S.log.effortEnd, 'sys');
+          break;
+        case 'beast':
+          disp.pck -= ev.chakra;
+          log(S.log.beast, 'good');
+          break;
+        case 'beastEnd':
+          log(S.log.beastEnd, 'sys');
+          break;
+        case 'devour':
+          disp.pck -= data.balance.devour.chakraCost;
+          disp.vck -= ev.chakra;
+          disp.vhp -= ev.damage;
+          if (ev.chakra > 0) floatNumber(vcard(), `−${ev.chakra} ck`, 'ck');
+          if (ev.damage > 0) floatNumber(vcard(), `−${ev.damage}`, 'dmg');
+          log(S.log.devour(ev.insects, ev.chakra, ev.damage), 'good');
+          break;
+        case 'transmission':
+          disp.pck -= data.balance.transmission.chakraCost;
+          log(S.log.transmission(techName(ev.techniqueId), ev.success), ev.success ? 'good' : 'bad');
           break;
         case 'clones':
           disp.pck -= ev.chakra;

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  activeUses,
   availableActions,
   canDojutsuExtra,
+  canFreeActive,
+  DOG_ATTACK,
   canGenius,
   effectiveOffense,
   effectiveSpeed,
@@ -11,6 +14,7 @@ import {
   playerGenjutsuHitChance,
   playerResistance,
   playRound,
+  possessionOptions,
   sharinganStage,
   startBattle,
   villainResistance,
@@ -545,6 +549,106 @@ describe('passivas e ativas de clã', () => {
     const s1 = playRound(s0, 'rest', seq(0.5, 0.99, 0.0, 0.5), gameData, { genius: true }, () => 'substitution');
     expect(ofType(s1.log, 'genius')).toEqual([{ type: 'genius', results: ['false', 'true'], kept: 'true' }]);
     expect(ofType(s1.log, 'substitutionRoll')[0]).toMatchObject({ success: true });
+  });
+
+  it('Esforço (comum): grátis, +3 em tai/nin/gen já na rodada, por 3 rodadas; 1 uso por luta, +1 nos níveis 4 e 7', () => {
+    const p = createPlayer(common, gameData);
+    expect([1, 4, 7].map((level) => activeUses({ ...p, level }, 'effort', gameData))).toEqual([1, 2, 3]);
+    expect(activeUses(createPlayer(uchiha, gameData), 'effort', gameData)).toBe(0);
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { effort: true });
+    // 8 + (10 + 3) − 7 = 14 (sem o Esforço, 11)
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', damage: 14 });
+    expect(effectiveOffense(s1, 'genjutsu', gameData)).toBe(13);
+    expect(s1.playerFx).toMatchObject({ effortUsed: 1, effortTurns: 2 });
+    let s = s1;
+    for (let i = 0; i < 2; i++) s = playRound(s, 'stance', seq(0.5), gameData);
+    expect(s.playerFx.effortTurns).toBe(0);
+    expect(ofType(s.log, 'effortEnd')).toHaveLength(1);
+    // O único uso do nível 1 já foi.
+    expect(() => playRound(s, 'stance', seq(0.5), gameData, { effort: true })).toThrow();
+  });
+
+  it('Fera de quatro patas (Inuzuka): speed +3, Dupla com 60% e Substituição sem gastar usos', () => {
+    const p = createPlayer(clan('inuzuka'), gameData);
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
+    // Dupla: 0.5 fica abaixo dos 60% (sem a Fera, 25%: o cão não ataca).
+    const plain = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);
+    expect(ofType(plain.log, 'attack').filter((a) => a.techniqueId === DOG_ATTACK)).toHaveLength(0);
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { beast: true });
+    expect(ofType(s1.log, 'attack').filter((a) => a.techniqueId === DOG_ATTACK)).toHaveLength(1);
+    expect(effectiveSpeed(s1, gameData)).toBe(16);
+    expect(s1.playerFx.beastTurns).toBe(2);
+    // Isca: o vilão ataca primeiro e a Substituição só custa chakra.
+    const first = withInitiative(startBattle(p, testVillain()), 'villain');
+    const s2 = playRound(first, 'stance', seq(0.5, 0.0, 0.5), gameData, { beast: true }, () => 'substitution');
+    expect(ofType(s2.log, 'substitutionRoll')).toHaveLength(1);
+    expect(s2.playerFx.substitutionsUsed).toBe(0);
+    expect(s2.player.chakra).toBe(p.maxChakra - 5 - 2);
+  });
+
+  it('Colônia e Devorar (Aburame): cada acerto deixa um inseto; Devorar drena 3 de chakra por inseto e o resto vira dano', () => {
+    const p = createPlayer(clan('aburame'), gameData);
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
+    expect(canFreeActive(s0, 'devour', 'stance', gameData)).toBe(false);
+    const s1 = playRound(s0, 'tech:insectSwarm', seq(0.5, 0.01, 0.5, 0.5, 0.5), gameData);
+    expect(s1.villain.insects).toBe(4);
+    // 4 insetos drenam os 12 de chakra que sobraram: nenhum vira dano.
+    const s2 = playRound(s1, 'stance', seq(0.5), gameData, { devour: true });
+    expect(ofType(ofRound(s1, s2), 'devour')).toEqual([{ type: 'devour', insects: 4, chakra: 12, damage: 0 }]);
+    expect(s2.villain).toMatchObject({ insects: 0, chakra: 0 });
+    expect(s2.player.chakra).toBe(s1.player.chakra - 3);
+    // 10 insetos (teto) contra 3 de chakra: 1 inseto drena, 9 causam 2 de dano cada.
+    const full = { ...s0, villain: { ...s0.villain, insects: 9, chakra: 3 } };
+    const swarm = playRound(full, 'tech:insectSwarm', seq(0.5, 0.01, 0.5, 0.5, 0.5), gameData);
+    expect(swarm.villain.insects).toBe(10);
+    const s3 = playRound({ ...swarm, villain: { ...swarm.villain, chakra: 3 } }, 'stance', seq(0.5), gameData, { devour: true });
+    expect(ofType(ofRound(swarm, s3), 'devour')).toEqual([{ type: 'devour', insects: 10, chakra: 3, damage: 18 }]);
+  });
+
+  it('Transmissão mental (Yamanaka): contra golpe carregado, rola o genjutsu; pegou, o vilão perde o golpe e a vez', () => {
+    const p = createPlayer(clan('yamanaka'), gameData);
+    expect([1, 4, 7].map((level) => activeUses({ ...p, level }, 'transmission', gameData))).toEqual([1, 2, 3]);
+    const s0 = withInitiative(startBattle(p, testVillain({ behavior: { charged: 'punch' } })));
+    expect(canFreeActive(s0, 'transmission', 'stance', gameData)).toBe(false);
+    const charging = { ...s0, villain: { ...s0.villain, charging: 'punch', intent: { kind: 'technique' as const, id: 'punch' } } };
+    expect(canFreeActive(charging, 'transmission', 'stance', gameData)).toBe(true);
+    const ok = playRound(charging, 'stance', seq(0.0, 0.5), gameData, { transmission: true });
+    expect(ofType(ok.log, 'transmission')[0]).toMatchObject({ success: true, techniqueId: 'punch' });
+    expect(ofType(ok.log, 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'disrupted' }]);
+    expect(ofType(ok.log, 'chargeRelease')).toHaveLength(0);
+    expect(ok.player.hp).toBe(ok.player.maxHp);
+    expect(ok.player.chakra).toBe(p.maxChakra - 5);
+    expect(ok.playerFx.transmissionUsed).toBe(1);
+    // Falhou: o golpe carregado sai.
+    const fail = playRound(charging, 'stance', seq(0.99, 0.5), gameData, { transmission: true });
+    expect(ofType(fail.log, 'transmission')[0]).toMatchObject({ success: false });
+    expect(ofType(fail.log, 'chargeRelease')).toHaveLength(1);
+  });
+
+  it('Mente no controle (Yamanaka): na Possessão, o vilão usa a técnica escolhida e paga o chakra dela', () => {
+    const p = createPlayer(clan('yamanaka'), gameData);
+    const v = testVillain({
+      hp: 200,
+      techniques: [
+        { id: 'punch', type: 'taijutsu', baseDamage: 10, chakraCost: 0, weight: 1 },
+        { id: 'blast', type: 'ninjutsu', baseDamage: 20, chakraCost: 6, weight: 1 },
+      ],
+    });
+    const s0 = withInitiative(startBattle(p, v));
+    const possessed = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, possessed: hold() } } };
+    expect(possessionOptions(possessed).map((t) => t.id)).toEqual(['punch', 'blast']);
+    // Sem escolha: a de mais dano, pagando o chakra.
+    const auto = playRound(possessed, 'stance', seq(0.99), gameData);
+    expect(ofType(auto.log, 'possessed')[0]).toMatchObject({ techniqueId: 'blast' });
+    expect(auto.villain.chakra).toBe(20 - 6);
+    // Escolhendo o soco: não gasta chakra.
+    const picked = playRound(possessed, 'stance', seq(0.99), gameData, { possession: 'punch' });
+    expect(ofType(picked.log, 'possessed')[0]).toMatchObject({ techniqueId: 'punch', damage: 6 });
+    expect(picked.villain.chakra).toBe(20);
+    // Sem chakra para a técnica, ela sai das opções.
+    const broke = { ...possessed, villain: { ...possessed.villain, chakra: 3 } };
+    expect(possessionOptions(broke).map((t) => t.id)).toEqual(['punch']);
   });
 });
 

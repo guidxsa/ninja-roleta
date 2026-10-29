@@ -57,12 +57,12 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 
 | Origem | Passiva | Ativa | Kit inicial | Exclusivas | Restrições |
 |---|---|---|---|---|---|
-| Comum | Determinação | — | Punho de Chakra, ninjutsu básico | — | — |
+| Comum | Determinação | Esforço | Punho de Chakra, ninjutsu básico | — | — |
 | Nara | Gênio | — | Punho de Chakra, ninjutsu básico, Imitação de Sombra | Imitação de Sombra | — |
 | Akimichi | Corpo pesado | Expansão | Punho de Chakra, ninjutsu básico | Rolo Colossal (nível 4) | — |
-| Yamanaka | Leitura mental | — | Punho de Chakra, ninjutsu básico, Transferência de Mente | Transferência de Mente | — |
-| Aburame | Colmeia | — | Punho de Chakra, ninjutsu básico, Enxame | Enxame | — |
-| Inuzuka | Dupla | — | Punho de Chakra, ninjutsu básico, Presas Giratórias | Presas Giratórias | — |
+| Yamanaka | Leitura mental, Mente no controle | Transmissão mental | Punho de Chakra, ninjutsu básico, Transferência de Mente | Transferência de Mente | — |
+| Aburame | Colônia | Devorar | Punho de Chakra, ninjutsu básico, Enxame | Enxame | — |
+| Inuzuka | Dupla | Fera de quatro patas | Punho de Chakra, ninjutsu básico, Presas Giratórias | Presas Giratórias | — |
 | Prodígio do taijutsu | Corpo de ferro | Portões | Punho de Chakra | Redemoinho da Folha (4), Lótus Primaveril (7) | Sem ninjutsu, genjutsu e médico |
 | Uchiha | Olhos treinados | Sharingan | Punho de Chakra, Fagulha do Dragão, Olhar Hipnótico, Ilusão da Dor | Ilusões de dano, Tsukuyomi (nível 7) | — |
 | Hyuuga | Punho preciso | Byakugan | Punho de Chakra, ninjutsu básico | Selo dos Pontos Vitais, Rotação (nível 4) | — |
@@ -77,6 +77,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 ### Comum
 
 - **Determinação** (passiva): +25% de XP ganho e, a cada nível, **+1 no maior status de ataque** (empate: taijutsu, ninjutsu, genjutsu). Combina com o nível sem limite: o comum não nasce forte, mas cresce mais rápido.
+- **Esforço** (ativa): escolha grátis, sem custo de chakra. **+3 em taijutsu, ninjutsu e genjutsu** por 3 rodadas, contando a da ativação. **1 uso por luta, +1 nos níveis 4 e 7**: o comum cresce treinando.
 
 ### Nara (sombras)
 
@@ -92,16 +93,20 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 ### Yamanaka (mente)
 
 - **Leitura mental** (passiva): ataques do vilão contra o Yamanaka têm −10 de acerto.
+- **Mente no controle** (passiva): com o vilão possuído, o Yamanaka escolhe qual técnica de dano ele usa em si mesmo, e o vilão **paga o chakra** dela. Sem escolha, ele usa a de mais dano que puder pagar. Técnica que ele não pode pagar não entra nas opções.
+- **Transmissão mental** (ativa): escolha grátis, 5 de chakra. Só contra um **golpe carregado** anunciado: rola o acerto de genjutsu do Yamanaka contra a resistência mental do vilão (como um genjutsu). Se pegar, o golpe se perde (o chakra já foi gasto) e o vilão perde a vez. **1 uso por luta, +1 nos níveis 4 e 7.** Não funciona em quem é imune a genjutsu.
 - **Transferência de Mente**: genjutsu inicial com efeito **Possessão**: o vilão perde a vez golpeando a si mesmo com a própria técnica de dano mais forte ([efeitos.md](efeitos.md#efeitos-de-genjutsu)). É o potencial ofensivo do Yamanaka: quanto mais forte o vilão, mais ele se fere. Junto com o Uchiha, é a única origem que nasce com genjutsu.
 
 ### Aburame (insetos)
 
-- **Colmeia** (passiva): cada golpe que acerta drena 2 de chakra do vilão.
-- **Enxame**: ninjutsu neutro de 4 golpes pequenos. O acerto rola uma vez para os 4 golpes; cada golpe que acerta drena chakra pela Colmeia.
+- **Colônia** (passiva): cada golpe que acerta drena 2 de chakra do vilão e deixa **1 inseto** nele (até 10).
+- **Devorar** (ativa): escolha grátis, 3 de chakra, com ao menos 1 inseto no vilão. Consome todos os insetos: cada um drena **3 de chakra**; os que sobram com o vilão sem chakra causam **2 de dano direto** cada (sem resistência). Vilão sem chakra fica só com as técnicas que não custam chakra.
+- **Enxame**: ninjutsu neutro de 4 golpes pequenos. O acerto rola uma vez para os 4 golpes; cada golpe que acerta drena chakra e deixa um inseto pela Colônia.
 
 ### Inuzuka (parceiro canino)
 
 - **Dupla** (passiva): depois de cada ataque do jogador que acerta, 25% de chance de o cão atacar também (taijutsu, 40% do dano base do ataque, rola acerto próprio).
+- **Fera de quatro patas** (ativa): escolha grátis, 5 de chakra. Por 3 rodadas, contando a da ativação: **speed +3**, a Dupla ataca com **60%** de chance e a Substituição usa o cão como **isca** (custa o chakra, mas não gasta usos). Pode ser usada de novo quando acabar.
 - **Presas Giratórias**: taijutsu inicial de 2 golpes.
 
 ### Prodígio do taijutsu (estilo Lee)

@@ -37,7 +37,9 @@ Nenhuma. A rodada "rebalanceamento das origens" (27/10/2026) foi implementada na
 
 Observação em aberto (não é mudança de design): na simulação, a fatia "nova técnica" da recompensa vale bem menos que as outras (sem ela, o comum vence ~20 pontos a mais). Vale discutir com o usuário antes de mexer.
 
-Observação em aberto (v0.19.0, segue na v0.20.0): com as ativas grátis e os controles mais longos, as linhagens com ativa ou controle subiram e o comum (sem ativa) ficou atrás. Contra o Kabuto, na v0.20.0: comum 33%, Uchiha 80%, Nara 82%, Yamanaka 97%. Discutir com o usuário antes de compensar.
+Observação em aberto (v0.21.0): todas as linhagens têm ativa agora. Na campanha por origem (1000 runs), o comum subiu de 70% para 76% no Médio e de 24% para 30% no Difícil, mas segue no grupo de baixo do Difícil (Akimichi, Aburame e Hyuuga ~48–53%). Na luta isolada de nível 1 contra o Kabuto ele segue em 33%, porque o Esforço só tem 1 uso no nível 1. Discutir com o usuário antes de compensar.
+
+Próxima rodada combinada (aprofundar as linhagens): Uchiha "Cópia", Hyuuga "64 Palmas" e Byakugan contra a névoa e as ilusões, Uzumaki "Selamento", Nara "Sombra costurada", Akimichi "Pílulas do clã", Prodígio com portões de risco, e o "despertar" de cada linhagem nos níveis 4 e 7.
 
 Quando o design mudar antes do código, listar aqui o que falta implementar.
 

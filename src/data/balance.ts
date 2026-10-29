@@ -98,7 +98,8 @@ export const balance = {
     genius: { uses: 2, extraUseLevels: [4, 7] },
     heavyBody: { base: 0.7, perHpPct: 0.4 },
     mindReading: { villainHitPenalty: 0.1 },
-    hive: { chakraDrainPerHit: 2 },
+    // Colônia (Aburame): cada golpe que acerta drena chakra e deixa `insectsPerHit` insetos no vilão (até `maxInsects`).
+    hive: { chakraDrainPerHit: 2, insectsPerHit: 1, maxInsects: 10 },
     duo: { chance: 0.25, damagePct: 0.4 },
     genjutsuResistance: { bonus: 6 },
     preciseFist: { penetration: 0.3 },
@@ -107,6 +108,15 @@ export const balance = {
   // Expansão (Akimichi): escolha grátis; vale `turns` rodadas, contando a da ativação.
   expansion: { chakraCost: 6, turns: 3, taijutsuMult: 1.5, speedPenalty: 3 },
   shadowClones: { chakraCost: 6, hitsMult: 3, damagePct: 0.35 },
+  // Ativas das linhagens sem ativa (origens.md). Todas são escolhas grátis; as com duração contam a rodada da ativação.
+  // Esforço (comum): +`offenseBonus` em tai/nin/gen; `uses` por luta, +1 em cada nível de `extraUseLevels`.
+  effort: { chakraCost: 0, turns: 3, offenseBonus: 3, uses: 1, extraUseLevels: [4, 7] },
+  // Fera de quatro patas (Inuzuka): speed +`speedBonus`, Dupla com `duoChance` e Substituição sem gastar usos.
+  beast: { chakraCost: 5, turns: 3, speedBonus: 3, duoChance: 0.6 },
+  // Devorar (Aburame): cada inseto drena `chakraPerInsect`; os que sobram com o vilão sem chakra causam `damagePerInsect`.
+  devour: { chakraCost: 3, chakraPerInsect: 3, damagePerInsect: 2 },
+  // Transmissão mental (Yamanaka): contra golpe carregado, rola o acerto de genjutsu; pegou, o vilão perde o golpe e a vez.
+  transmission: { chakraCost: 5, uses: 1, extraUseLevels: [4, 7] },
 
   // Efeitos (efeitos.md). Valem para jogador e vilões.
   status: {

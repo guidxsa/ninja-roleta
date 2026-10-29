@@ -17,6 +17,7 @@ export const lineages: LineageDef[] = [
     resistance: { physical: 10, mental: 10 },
     affinity: { kind: 'rolled' },
     passive: 'determination',
+    active: 'effort',
   },
   {
     id: 'nara',
@@ -46,6 +47,7 @@ export const lineages: LineageDef[] = [
     resistance: { physical: 10, mental: 14 },
     affinity: { kind: 'rolled' },
     passive: 'mindReading',
+    active: 'transmission',
     startingTechniques: ['mindTransfer'],
   },
   {
@@ -56,6 +58,7 @@ export const lineages: LineageDef[] = [
     resistance: { physical: 9, mental: 11 },
     affinity: { kind: 'rolled' },
     passive: 'hive',
+    active: 'devour',
     startingTechniques: ['insectSwarm'],
   },
   {
@@ -66,6 +69,7 @@ export const lineages: LineageDef[] = [
     resistance: { physical: 12, mental: 8 },
     affinity: { kind: 'rolled' },
     passive: 'duo',
+    active: 'beast',
     startingTechniques: ['fangOverFang'],
   },
   {
