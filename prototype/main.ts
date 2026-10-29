@@ -6,7 +6,13 @@ import {
   attackTechniques,
   availableActions,
   activeUses,
+  canCopyIncoming,
   canFreeActive,
+  copyChance,
+  copyTarget,
+  forcedGate,
+  forceGatesChance,
+  sealTarget,
   FREE_ACTIVES,
   possessionOptions,
   freeActiveCost,
@@ -71,6 +77,7 @@ import {
 } from '../src/core/player';
 import {
   applyAkatsuki,
+  applyClanLesson,
   applyGuru,
   applyItem,
   applyPremium,
@@ -137,6 +144,10 @@ import { createWheel, formatPct, stripRoulette, type WheelSlice } from './wheel'
 
 // ---------------------------------------------------------------------------
 // Infra
+
+/** Versão do jogo (package.json), embutida pelo build. */
+declare const __VERSION__: string;
+const VERSION = typeof __VERSION__ === 'undefined' ? 'dev' : __VERSION__;
 
 const rng: Rng = () => Math.random();
 
@@ -232,7 +243,11 @@ const TIER_COLORS: Record<LineageTier, string> = { common: '#6b6f80', clan: '#2f
 const SIDE_COLORS = { player: '#2f80dc', villain: '#c62828', miss: '#6b6f80', hit: '#3fae6a', crit: '#e6b91e', foeHit: '#e8742c' };
 
 const villainName = (id: string) => S.villains[id] ?? id;
-const techName = (id: string) => S.techniques[id] ?? id;
+const techName = (id: string): string => {
+  // Cópia (Uchiha): `copy:<vilão>.<técnica>`.
+  if (id.startsWith('copy:')) return `${techName(id.slice(id.indexOf('.') + 1))} (cópia)`;
+  return S.techniques[id] ?? id;
+};
 const ACTIVE_ICON: Record<string, string> = {
   gates: 'gates',
   expansion: 'expansion',
@@ -241,6 +256,7 @@ const ACTIVE_ICON: Record<string, string> = {
   beast: 'beast',
   devour: 'poison',
   transmission: 'intent',
+  seal: 'scroll',
 };
 /** Chip de elemento com ícone; `withTip` = false dentro de botões (o botão já tem a própria dica). */
 const elChip = (el: Element | null, withTip = true) => elementChip(el, withTip);
@@ -342,6 +358,10 @@ function effectText(e: ProgressEffect): string {
       return E.akatsukiWeakened[e.reason]!;
     case 'akatsukiInsight':
       return E.akatsukiInsight(Math.round(e.amount * 100));
+    case 'clanLesson': {
+      const lesson = S.clanLessons[e.lineageId];
+      return E.clanLesson(lesson?.title ?? '', lesson?.bonus ?? '', e.xp);
+    }
     case 'akatsukiUnnoticed':
       return E.akatsukiUnnoticed;
     case 'guruCharlatan':
@@ -493,6 +513,14 @@ function passiveItems(p: PlayerState, tag: 'li' | 'p'): string[] {
     const d = S.dojutsu[p.dojutsu]!;
     const stage = sharinganStage(p, data);
     out.push(item(icon(p.dojutsu), stage ? `${d.name} (${S.sharinganStage(stage)})` : d.name, d.desc));
+  }
+  // Ativas extras do kit: Pílulas do clã (Akimichi) e Cópia (Uchiha).
+  if (p.active === 'expansion') out.push(item(icon('pill'), S.actives.pills!.name, S.actives.pills!.desc));
+  if (p.dojutsu === 'sharingan') out.push(item(icon('sharingan'), S.actives.copy!.name, S.actives.copy!.desc));
+  // Despertar já alcançado (níveis 4 e 7).
+  const awakening = S.awakening[p.origin.lineageId ?? 'common'] ?? {};
+  for (const level of [4, 7]) {
+    if (p.level >= level && awakening[level]) out.push(item(clanSymbol(p.origin.lineageId), S.ui.awakeningTitle(level), awakening[level]!));
   }
   if (p.jinchuuriki) {
     out.push(item(clanSymbol('jinchuuriki'), S.passives.jinchuuriki!.name, S.passives.jinchuuriki!.desc));
@@ -949,6 +977,9 @@ async function eventScreen(stage: Stage): Promise<void> {
       step = applyPremium(c.player, premium.value, data);
       break;
     }
+    case 'clanLesson':
+      step = applyClanLesson(c.player, data);
+      break;
   }
   applyStep(step);
   showEffect(detail, step.effect);
@@ -1111,6 +1142,7 @@ function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
     if (v.lastStand) add('heartbreak', S.ui.lastStand, 'bad', St.lastStand);
     if (v.monster) add('claw', S.ui.monster, 'bad', St.monster);
     if (v.insects > 0) add('poison', S.ui.insects(v.insects), 'good', St.insects);
+    if (v.sealed) add('scroll', S.ui.sealedChip(techName(v.sealed.techniqueId), v.sealed.turns), 'good', St.sealed);
     // Golpe carregado: aviso para todos. Gênio (Nara): vê a próxima ação.
     if (v.charging) add('warning', S.ui.charging(techName(v.charging)), 'bad', St.charging);
     else if (s.player.passive === 'genius' && v.intent) {
@@ -1129,6 +1161,9 @@ function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
   if (fx.expansionTurns > 0) add('expansion', S.ui.expansionOn(fx.expansionTurns), 'good', St.expansion);
   if (fx.effortTurns > 0) add('weights', S.ui.effortOn(fx.effortTurns), 'good', St.effort);
   if (fx.beastTurns > 0) add('beast', S.ui.beastOn(fx.beastTurns), 'good', St.beast);
+  if (fx.pillTurns > 0 && fx.pill) add('pill', S.ui.pillOn(S.pills[fx.pill] ?? fx.pill, fx.pillTurns), 'good', St.pill);
+  if (fx.exhaustedTurns > 0) add('heartbreak', S.ui.exhausted(fx.exhaustedTurns), 'bad', St.exhausted);
+  if (fx.copied) add('sharingan', S.ui.copiedChip(techName(fx.copied)), 'good', St.copied);
   if (fx.clonesArmed) add('clones', S.ui.clonesArmed, 'good', St.clones);
   if (fx.armorTurns > 0) add('armor', S.ui.armorOn(fx.armorTurns), 'good', St.armor);
   if (fx.stance) add('stance', S.ui.stanceOn, 'good', St.stance);
@@ -1401,11 +1436,27 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       const hint = `${mult(cfg.taijutsuMult)} · speed −${cfg.speedPenalty} · ${S.ui.activeFreeHint}`;
       return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name} ✓`, hint);
     };
-    /** Ativas das linhagens que não tinham ativa: Esforço, Fera, Devorar e Transmissão mental. */
-    const lineageActiveToggle = (st: BattleState, kind: 'effort' | 'beast' | 'devour' | 'transmission'): string => {
+    /** Ativas de linhagem com botão próprio (Esforço, Fera, Devorar, Transmissão, Cópia, Selamento, Sombra, Pílulas). */
+    const lineageActiveToggle = (
+      st: BattleState,
+      kind: 'effort' | 'beast' | 'devour' | 'transmission' | 'copy' | 'seal' | 'shadowHold' | 'pills',
+    ): string => {
       const p = st.player;
       const cost = freeActiveCost(st, kind, data);
       if (cost === null || p.chakra < cost) return '';
+      if (kind === 'copy') {
+        const label = S.ui.copyFree(formatPct(copyChance(st, data)), cost);
+        return toggle('copy', 'sharingan', label, `${S.actives.copy!.name} ✓`, S.ui.copyHint(techName(copyTarget(st)!)));
+      }
+      if (kind === 'seal') {
+        const left = activeUses(p, 'seal', data) - st.playerFx.sealUsed;
+        const target = sealTarget(st)!;
+        // O alvo só aparece para quem vê a intenção (Gênio) ou quando é um golpe carregado.
+        const hint = st.villain.charging ? S.ui.sealHint(techName(target)) : S.ui.sealHintHidden;
+        return toggle('seal', 'scroll', S.ui.sealFree(cost, left), `${S.actives.seal!.name} ✓`, hint);
+      }
+      if (kind === 'shadowHold') return toggle('shadowHold', 'prison', S.ui.shadowHoldFree(cost), `${S.ui.shadowHoldFree(cost)} ✓`, S.ui.shadowHoldHint);
+      if (kind === 'pills') return toggle('pills', 'pill', S.ui.pillsFree, `${S.ui.pillsFree} ✓`, S.ui.pillsHint);
       const name = S.actives[kind]!.name;
       if (kind === 'effort') {
         const left = activeUses(p, 'effort', data) - st.playerFx.effortUsed;
@@ -1425,6 +1476,14 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       }
       return toggle('beast', 'beast', S.ui.activeFree(name, cost), `${name} ✓`, S.actives.beast!.desc);
     };
+    /** Forçar os portões (prodígio): só junto com a abertura, se há um portão além do liberado. */
+    const forceGatesToggle = (st: BattleState): string => {
+      if (!extras.gates || !forcedGate(st.player, data)) return '';
+      const next = forcedGate(st.player, data)!;
+      const hint = S.ui.forceGatesHint(S.gatesStage(next.stage), Math.round(data.balance.gates.force.failHpPct * 100));
+      const label = S.ui.forceGates(formatPct(forceGatesChance(st.player, data)));
+      return toggle('forceGates', 'gates', label, `${label} ✓`, hint);
+    };
     const free = [
       canFocus(s) ? toggle('focus', 'focus', S.ui.focus, S.ui.focusArmed, S.ui.focusHint) : '',
       s.player.active === 'shadowClones' && !s.playerFx.clonesArmed && s.player.chakra >= data.balance.shadowClones.chakraCost
@@ -1437,6 +1496,11 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       lineageActiveToggle(s, 'beast'),
       lineageActiveToggle(s, 'devour'),
       lineageActiveToggle(s, 'transmission'),
+      lineageActiveToggle(s, 'copy'),
+      lineageActiveToggle(s, 'seal'),
+      lineageActiveToggle(s, 'shadowHold'),
+      lineageActiveToggle(s, 'pills'),
+      forceGatesToggle(s),
       canGenius(s, data)
         ? toggle('genius', 'intent', S.ui.genius, S.ui.geniusArmed, S.ui.geniusHint(geniusUses(s.player, data) - s.playerFx.geniusUsed))
         : '',
@@ -1480,14 +1544,26 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   if (setup.options.playerStartsFirst) log(S.ui.playerFirst, 'sys');
 
   /** O vilão atacou e há escolha: Resistir em destaque, Substituição, disputa ou barreira. */
-  const chooseReaction = async (s: BattleState, pending: PendingReaction): Promise<ReactionChoice> => {
+  const chooseReaction = async (s: BattleState, pending: PendingReaction): Promise<{ choice: ReactionChoice; copy: boolean }> => {
     const tech = techName(pending.incoming.techniqueId);
     const charged = pending.incoming.charged ? ` <span class="chip bad">${S.ui.charged}</span>` : '';
     const def = s.villain.def.techniques.find((t) => t.id === pending.incoming.techniqueId);
     const techTip = def ? villainTechTip(s.villain.def, def) : '';
+    // Cópia (Uchiha): escolha grátis junto com a reação.
+    let copy = false;
+    const copyBtn = canCopyIncoming(s, data)
+      ? `<div class="free-row"><button class="btn focus-btn" data-copy aria-pressed="false"${tip(S.actives.copy!.name, S.ui.copyReactHint)}>${icon('sharingan')}<span>${S.ui.copyReact(formatPct(copyChance(s, data)), data.balance.copy.chakraCost)}</span></button></div>`
+      : '';
     actionsEl.innerHTML = `<div class="react-box"><div class="react-head">${villainPortrait(s.villain.def.id, 'sm')}<h3><span class="react-tech"${techTip}>${S.ui.reactTitle(villainName(s.villain.def.id), esc(tech))}</span> ${elChip(pending.incoming.element)}${charged}</h3></div>
-      <div class="act-grid">${pending.options.map((o) => reactionButton(s, pending, o)).join('')}</div></div>`;
-    return choose<ReactionChoice>(actionsEl);
+      ${copyBtn}<div class="act-grid">${pending.options.map((o) => reactionButton(s, pending, o)).join('')}</div></div>`;
+    const btn = actionsEl.querySelector<HTMLElement>('[data-copy]');
+    btn?.addEventListener('click', () => {
+      copy = !copy;
+      btn.classList.toggle('on', copy);
+      btn.setAttribute('aria-pressed', String(copy));
+    });
+    const choice = await choose<ReactionChoice>(actionsEl);
+    return { choice, copy };
   };
 
   while (state.status === 'ongoing') {
@@ -1501,9 +1577,11 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       genius: Boolean(extras.genius) && canGenius(state, data),
     };
     if (extras.possession) chosen.possession = extras.possession;
+    chosen.forceGates = Boolean(extras.forceGates);
     for (const k of FREE_ACTIVES) {
       chosen[k] = Boolean(extras[k]) && canFreeActive(state, k, action, data, chosen);
     }
+    chosen.forceGates = Boolean(chosen.gates && chosen.forceGates);
     let next = playRound(state, action, rng, data, chosen);
     // O foco vale só para a jogada; os clones armados ficam no estado da luta.
     extras = {};
@@ -1512,9 +1590,9 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     // A rodada parou esperando a reação do jogador: escolhe e continua (pode parar de novo, ex.: Espelhos).
     while (state.pending) {
       renderBadges(state);
-      const choice = await chooseReaction(state, state.pending);
+      const { choice, copy } = await chooseReaction(state, state.pending);
       renderActions(state, false);
-      next = resumeRound(state, choice, rng, data);
+      next = resumeRound(state, choice, rng, data, undefined, { copy });
       await animateRound(state, next);
       state = next;
     }
@@ -1779,6 +1857,44 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           if (ev.chakra > 0) floatNumber(vcard(), `−${ev.chakra} ck`, 'ck');
           if (ev.damage > 0) floatNumber(vcard(), `−${ev.damage}`, 'dmg');
           log(S.log.devour(ev.insects, ev.chakra, ev.damage), 'good');
+          break;
+        case 'copy':
+          disp.pck -= data.balance.copy.chakraCost;
+          log(S.log.copy(techName(ev.techniqueId), ev.success), ev.success ? 'good' : 'bad');
+          break;
+        case 'seal':
+          disp.pck -= data.balance.seal.chakraCost;
+          log(S.log.seal(techName(ev.techniqueId), ev.turns, ev.charged), 'good');
+          break;
+        case 'sealEnd':
+          log(S.log.sealEnd(techName(ev.techniqueId)), 'sys');
+          break;
+        case 'shadowHold':
+          disp.pck -= ev.chakra;
+          log(S.log.shadowHold(ev.chakra), 'good');
+          break;
+        case 'strangle':
+          disp.vhp -= ev.damage;
+          floatNumber(vcard(), `−${ev.damage}`, 'dmg');
+          log(S.log.strangle(ev.damage), 'good');
+          break;
+        case 'pill':
+          disp.php -= ev.hpLost;
+          log(S.log.pill(S.pills[ev.pill] ?? ev.pill, ev.hpLost), 'good');
+          break;
+        case 'pillEnd':
+          log(S.log.pillEnd(S.pills[ev.pill] ?? ev.pill, ev.exhausted), ev.exhausted ? 'bad' : 'sys');
+          break;
+        case 'exhaustedEnd':
+          log(S.log.exhaustedEnd, 'sys');
+          break;
+        case 'comeback':
+          disp.php += ev.healed;
+          log(S.log.comeback(ev.healed), 'good');
+          break;
+        case 'gatesForce':
+          disp.php -= ev.hpLost;
+          log(S.log.gatesForce(ev.success, ev.hpLost), ev.success ? 'good' : 'bad');
           break;
         case 'transmission':
           disp.pck -= data.balance.transmission.chakraCost;
@@ -2120,6 +2236,13 @@ async function levelUpScreen(): Promise<void> {
   const step = levelUp(c.player, data);
   applyStep(step);
   showEffect(root.querySelector<HTMLElement>('#results')!, step.effect);
+  // Despertar da linhagem nos níveis 4 e 7.
+  const awakening = S.awakening[c.player.origin.lineageId ?? 'common']?.[c.player.level];
+  if (awakening) {
+    root
+      .querySelector<HTMLElement>('#results')!
+      .insertAdjacentHTML('beforeend', `<div class="result-card pop"><h3>${clanSymbol(c.player.origin.lineageId)} ${S.ui.awakeningTitle(c.player.level)}</h3><p>${awakening}</p></div>`);
+  }
   hud.innerHTML = playerPanel(c.player, c.mods);
   hud.firstElementChild?.classList.add('pulse');
   const cta = root.querySelector<HTMLElement>('#cta')!;
@@ -2344,6 +2467,7 @@ async function main() {
     }
   });
   document.getElementById('disclaimer')!.textContent = S.ui.disclaimer;
+  document.getElementById('version')!.textContent = S.ui.version(VERSION);
   document.getElementById('sheet-btn')!.innerHTML = icon('scroll');
   document.getElementById('history-btn')!.innerHTML = icon('timer');
   installTooltips();

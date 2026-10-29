@@ -140,17 +140,17 @@ describe('eventos pré-vilão', () => {
     expect(rollTraining(lee, seq(0.0)).value).toBe('taijutsu');
   });
 
-  it('roleta pré-vilão: invocações, velhinha, ramen, Akatsuki, treino, jokenpô, item e guru', () => {
-    const total = gameData.preFightEvents.reduce((a, e) => a + e.weight, 0);
-    expect(Object.fromEntries(gameData.preFightEvents.map((e) => [e.id, e.weight / total]))).toEqual({
-      summon: 0.1,
-      oldLady: 0.1,
-      ramen: 0.1,
-      akatsuki: 0.1,
-      training: 0.2,
-      jokenpo: 0.2,
-      foundItem: 0.1,
-      guru: 0.1,
+  it('roleta pré-vilão: invocações, velhinha, ramen, Akatsuki, treino, jokenpô, item, guru e lição do clã', () => {
+    expect(Object.fromEntries(gameData.preFightEvents.map((e) => [e.id, e.weight]))).toEqual({
+      summon: 10,
+      oldLady: 10,
+      ramen: 10,
+      akatsuki: 10,
+      training: 20,
+      jokenpo: 20,
+      foundItem: 10,
+      guru: 10,
+      clanLesson: 10,
     });
   });
 

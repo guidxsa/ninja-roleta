@@ -268,7 +268,7 @@ describe('efeitos de genjutsu', () => {
     const strength = 3 + 3 / 8;
     expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', kind: 'sleep', escape: mentalEscapeChance(strength, 1, gameData) }]);
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'sleep' }]);
-    expect(s1.villain.fx.asleep).toEqual({ strength, served: 1 });
+    expect(s1.villain.fx.asleep).toMatchObject({ strength, served: 1 });
     const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(ofType(ofRound(s1, s2), 'wake')).toEqual([{ type: 'wake', side: 'villain' }]);
     expect(s2.villain.fx.asleep).toBeNull();
@@ -495,8 +495,8 @@ describe('passivas e ativas de clã', () => {
     expect(ofType(s.log, 'expansionEnd')).toHaveLength(1);
   });
 
-  it('Clones das Sombras (Uzumaki): grátis, o próximo ataque vira 3 golpes de 35%', () => {
-    const s0 = withInitiative(startBattle(createPlayer(clan('uzumaki', 'wind'), gameData), testVillain({ hp: 200 })));
+  it('Clones das Sombras: grátis, o próximo ataque vira 3 golpes de 35%', () => {
+    const s0 = withInitiative(startBattle({ ...createPlayer(clan('uzumaki', 'wind'), gameData), active: 'shadowClones' as const }, testVillain({ hp: 200 })));
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { clones: true });
     const hits = ofType(s1.log, 'attack').filter((a) => a.side === 'player');
     // (8 + 10 − 7) × 0,35 = 3, três vezes

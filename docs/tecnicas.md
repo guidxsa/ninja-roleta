@@ -162,6 +162,7 @@ Ativar um estado gasta o turno. O manto do jinchuuriki é um estado **neutro** (
 | Imitação de Sombra | 0 | 1 | 5 | 80% | Aprisionado (força base 1; força e fuga pela fórmula do genjutsu, usando ninjutsu contra a resistência física) | Nara |
 | Enxame | 5 | 4 | 5 | 85% | Cada golpe drena chakra e deixa um inseto (Colônia) | Aburame |
 | Rotação | — | — | 5 | — | Barreira neutra (ação): escudo de 26 que devolve 50% do dano que bloqueia. | Hyuuga (nível 4) |
+| Correntes de Chakra | 0 | 1 | 6 | 80% | Aprisionado (força base 1, como a Imitação de Sombra); o vilão preso perde 3 de chakra por vez perdida | Uzumaki (nível 4) |
 
 ## Genjutsu
 

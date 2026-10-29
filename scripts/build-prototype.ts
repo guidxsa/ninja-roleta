@@ -21,6 +21,7 @@ function listImages(dir: string): string[] {
 }
 
 const images = listImages(IMG_DIR);
+const version = (JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }).version;
 const music = existsSync(MUSIC_FILE) ? readFileSync(MUSIC_FILE).toString('base64') : '';
 
 const result = await build({
@@ -30,7 +31,7 @@ const result = await build({
   target: 'es2020',
   write: false,
   charset: 'utf8',
-  define: { __IMAGES__: JSON.stringify(images), __MUSIC__: JSON.stringify(music) },
+  define: { __IMAGES__: JSON.stringify(images), __MUSIC__: JSON.stringify(music), __VERSION__: JSON.stringify(version) },
 });
 
 const js = result.outputFiles[0]!.text.replace(/<\/script/gi, '<\\/script');

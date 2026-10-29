@@ -521,7 +521,7 @@ describe('genjutsu: aprisionamento sem dano', () => {
     expect(s.villain.fx.debilitated).toEqual({ strength: 3, served: 5 });
     // Renovar fica com a força maior e recomeça a contagem.
     const s1 = playRound(s, 'tech:basicGenjutsu', seq(0.5, 0.99), gameData);
-    expect(s1.villain.fx.debilitated).toEqual({ strength: 3, served: 1 });
+    expect(s1.villain.fx.debilitated).toMatchObject({ strength: 3, served: 1 });
   });
 
   it('não gasta o foco', () => {

@@ -1,13 +1,16 @@
 // Tudo o que acontece fora do combate: eventos pré-vilão, jokenpô, itens, encontros, guru, recompensas e nível.
 // Funções puras: recebem o jogador e devolvem um novo, mais a descrição do efeito para a UI.
 import type { AkatsukiOutcome, GuruOutcome, ItemId, PremiumId, RewardId, Weighted } from '../data/events';
+import type { ClanLessonBonus } from '../data/balance';
 import type { GameData } from './gameData';
+import { COMMON_LINEAGE } from './origin';
 import {
   applyLevelUp,
   applyStatStages,
   elementalBasic,
   gainXp,
   grantLevelTechniques,
+  highestOffense,
   knownLine,
   knowsElement,
   learnTechnique,
@@ -79,6 +82,8 @@ export type ProgressEffect =
   /** `learned`: técnicas de nível aprendidas junto com a subida. `upgrades`: upgrade grátis do marco. */
   | { kind: 'levelUp'; level: number; hp: number; chakra: number; learned: string[]; upgrades: number }
   | { kind: 'summonLearned'; animal: SummonAnimal }
+  /** Lição do clã: XP e bônus permanente da linhagem. */
+  | { kind: 'clanLesson'; lineageId: string; xp: number; bonus: ClanLessonBonus }
   | { kind: 'summonLevel'; animal: SummonAnimal; level: number };
 
 export interface Step {
@@ -140,6 +145,32 @@ export function applyTraining(player: PlayerState, stat: TrainingStat, data: Gam
   else p = { ...player, offense: { ...player.offense, [stat]: player.offense[stat] + amount } };
   const xp = xpGain(p, cfg.xp, data);
   return step(gainXp(p, cfg.xp, data), { kind: 'training', stat, amount, xp });
+}
+
+// ---------------------------------------------------------------------------
+// Lição do clã (campanha.md#lição-do-clã)
+
+/** Lição do clã: XP e o bônus permanente da linhagem (status, HP ou chakra máximos). */
+export function applyClanLesson(player: PlayerState, data: GameData): Step {
+  const cfg = data.balance.events.clanLesson;
+  const lineageId = player.origin.lineageId ?? COMMON_LINEAGE;
+  const bonus = cfg.bonus[lineageId] ?? {};
+  const offense = { ...player.offense };
+  offense.taijutsu += bonus.taijutsu ?? 0;
+  offense.ninjutsu += bonus.ninjutsu ?? 0;
+  offense.genjutsu += bonus.genjutsu ?? 0;
+  if (bonus.highestOffense) offense[highestOffense(player)] += bonus.highestOffense;
+  const p: PlayerState = {
+    ...player,
+    offense,
+    speed: player.speed + (bonus.speed ?? 0),
+    maxHp: player.maxHp + (bonus.hp ?? 0),
+    hp: player.hp + (bonus.hp ?? 0),
+    maxChakra: player.maxChakra + (bonus.chakra ?? 0),
+    chakra: player.chakra + (bonus.chakra ?? 0),
+  };
+  const xp = xpGain(p, cfg.xp, data);
+  return step(gainXp(p, cfg.xp, data), { kind: 'clanLesson', lineageId, xp, bonus });
 }
 
 // ---------------------------------------------------------------------------

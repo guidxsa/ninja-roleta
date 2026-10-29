@@ -31,6 +31,7 @@ Antes de cada vilão (uma vez antes de cada bloco) gira uma roleta de eventos. N
 | 20 | Jokenpô com um companheiro | Ver "Jokenpô". |
 | 10 | Achou um item | Gira a roleta de itens ([itens.md](itens.md)). |
 | 10 | Encontro com guru | Ver "Guru". |
+| 10 | Lição do clã | Ver "Lição do clã". |
 
 - Vantagem e desvantagem de ação substituem a roleta de iniciativa na próxima luta contra vilão (no bloco Haku e Zabuza, só na primeira; o exame não consome).
 - Pesos fixos nesta versão.
@@ -61,6 +62,25 @@ O jogador escolhe pedra, papel ou tesoura; o companheiro sorteia (1/3 cada).
 | Vitória | +2 estágios de status |
 | Empate | Nada |
 | Derrota | Desvantagem de ação na próxima luta |
+
+### Lição do clã
+
+Alguém do clã ensina algo: **+40 de XP** e um bônus permanente com a cara da linhagem.
+
+| Linhagem | Lição | Bônus |
+|---|---|---|
+| Comum | Treino até cair | +2 no maior status de ataque |
+| Nara | Shogi com o seu pai | +2 de ninjutsu |
+| Akimichi | Churrasco do clã | +15 de HP máximo |
+| Yamanaka | Floricultura da família | +2 de genjutsu |
+| Aburame | A colmeia cresce | +2 de ninjutsu |
+| Inuzuka | Corrida com o cão | +1 de speed e +1 de taijutsu |
+| Prodígio do taijutsu | Mil flexões ao pôr do sol | +2 de taijutsu |
+| Uchiha | Lição no templo Naka | +2 de genjutsu |
+| Hyuuga | Treino do Punho Gentil | +2 de taijutsu |
+| Uzumaki | Pergaminho dos selos | +5 de chakra máximo |
+
+Configuração: `balance.events.clanLesson`.
 
 ### Akatsuki
 

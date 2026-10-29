@@ -120,6 +120,22 @@ export interface RoundExtras {
   transmission?: boolean;
   /** Mente no controle (Yamanaka): técnica que o vilão possuído usa em si mesmo nesta rodada. */
   possession?: string;
+  /** Cópia (Uchiha, com o Sharingan): tenta copiar a última técnica de dano que o vilão usou. */
+  copy?: boolean;
+  /** Selamento (Uzumaki): sela a próxima técnica do vilão. */
+  seal?: boolean;
+  /** Sombra costurada (Nara): mantém a Imitação de Sombra (a fuga não gira nesta vez). */
+  shadowHold?: boolean;
+  /** Pílulas do clã (Akimichi): gira a roleta das 3 pílulas. */
+  pills?: boolean;
+  /** Junto com os portões: tenta forçar um portão além do liberado (prodígio). */
+  forceGates?: boolean;
+}
+
+/** Escolhas grátis feitas junto com a reação (não gastam a reação). */
+export interface ReactionExtras {
+  /** Cópia (Uchiha): tenta copiar a técnica que está vindo. */
+  copy?: boolean;
 }
 
 export type Side = 'player' | 'villain';
@@ -170,6 +186,11 @@ export interface MentalHold {
   strength: number;
   /** Turnos já cumpridos. */
   served: number;
+  /** Técnica do jogador que aplicou o efeito (Imitação de Sombra, Correntes). */
+  source?: string;
+  /** Sombra costurada: vezes já mantidas e se está mantida nesta vez (a fuga não gira). */
+  maintained?: number;
+  pinned?: boolean;
 }
 
 export interface StatusFx {
@@ -224,7 +245,8 @@ export interface Dodge {
 }
 
 export interface PlayerFx extends StatusFx {
-  gatesUsed: boolean;
+  /** Portões abertos nesta luta. */
+  gatesUsed: number;
   /** Portão aberto (1, 2, 3...). */
   gatesStage: number;
   /** Rodadas de portões que faltam (a da abertura conta). */
@@ -259,6 +281,17 @@ export interface PlayerFx extends StatusFx {
   transmissionUsed: number;
   /** Mente no controle (Yamanaka): técnica escolhida para o vilão possuído usar em si mesmo. */
   possessionPick: string | null;
+  /** Cópia (Uchiha): técnica copiada nesta luta (id `copy:<vilão>.<técnica>`). */
+  copied: string | null;
+  /** Selamento (Uzumaki): usos nesta luta. */
+  sealUsed: number;
+  /** Pílulas do clã (Akimichi): usos, pílula ativa, rodadas dela e da exaustão depois da vermelha. */
+  pillsUsed: number;
+  pill: string | null;
+  pillTurns: number;
+  exhaustedTurns: number;
+  /** Nunca desistir (comum, nível 4): já recuperou HP nesta luta. */
+  comebackUsed: boolean;
 }
 
 /** Próxima ação do vilão, sorteada no fim da rodada anterior (Gênio mostra). */
@@ -290,6 +323,10 @@ export interface VillainState {
   insects: number;
   /** Golpe carregado cancelado pela Transmissão mental: perde a próxima vez. */
   disrupted: boolean;
+  /** Última técnica de taijutsu ou ninjutsu de dano que o vilão usou (alvo da Cópia no turno). */
+  lastTechnique: string | null;
+  /** Técnica selada (Uzumaki): fora da roleta dele por `turns` rodadas. */
+  sealed: { techniqueId: string; turns: number } | null;
 }
 
 export interface BattleOptions {
@@ -338,6 +375,16 @@ export type BattleEvent =
   | { type: 'beastEnd' }
   | { type: 'devour'; insects: number; chakra: number; damage: number }
   | { type: 'transmission'; chance: number; success: boolean; techniqueId: string }
+  | { type: 'copy'; chance: number; success: boolean; techniqueId: string }
+  | { type: 'seal'; techniqueId: string; turns: number; charged: boolean }
+  | { type: 'sealEnd'; techniqueId: string }
+  | { type: 'shadowHold'; chakra: number }
+  | { type: 'strangle'; damage: number }
+  | { type: 'pill'; pill: string; hpLost: number }
+  | { type: 'pillEnd'; pill: string; exhausted: boolean }
+  | { type: 'exhaustedEnd' }
+  | { type: 'comeback'; healed: number }
+  | { type: 'gatesForce'; chance: number; success: boolean; hpLost: number }
   | { type: 'clones'; chakra: number }
   | { type: 'armor'; techniqueId: string; chakra: number }
   | { type: 'armorEnd' }
@@ -383,7 +430,7 @@ export type BattleEvent =
   | { type: 'movementReading'; damageBefore: number; damage: number }
   | { type: 'dojutsu'; dojutsu: DojutsuId; stage: number; chakra: number }
   | { type: 'dojutsuEnd'; dojutsu: DojutsuId; reason: 'time' | 'chakra' }
-  | { type: 'chakraDrain'; amount: number; source: 'seal' | 'hive' }
+  | { type: 'chakraDrain'; amount: number; source: 'seal' | 'hive' | 'chains' }
   /** Perdeu a vez: `turns` na paralisia; nos efeitos mentais, `escape` é a chance de se livrar após o 1º turno. */
   | { type: 'debilitate'; target: Side; kind: DebilitateKind; turns?: number; escape?: number }
   | { type: 'mental'; target: Side; effect: Exclude<MentalEffect, 'prison' | 'sleep' | 'possession'>; escape: number }
@@ -508,7 +555,7 @@ export function startBattle(
     player: opts.restore ? fullRestore(player) : { ...player },
     playerFx: {
       ...newFx(),
-      gatesUsed: false,
+      gatesUsed: 0,
       gatesStage: 0,
       gatesTurns: 0,
       dojutsuActive: false,
@@ -529,6 +576,13 @@ export function startBattle(
       beastTurns: 0,
       transmissionUsed: 0,
       possessionPick: null,
+      copied: null,
+      sealUsed: 0,
+      pillsUsed: 0,
+      pill: null,
+      pillTurns: 0,
+      exhaustedTurns: 0,
+      comebackUsed: false,
     },
     villain: {
       def: villain,
@@ -546,6 +600,8 @@ export function startBattle(
       charging: null,
       insects: 0,
       disrupted: false,
+      lastTechnique: null,
+      sealed: null,
     },
     options: opts,
     initiative: null,
@@ -737,13 +793,42 @@ export function gatesToOpen(player: PlayerState, data: GameData) {
   return stage > 0 ? { stage, ...data.balance.gates.stages[stage - 1]! } : null;
 }
 
+/** Portão que forçar tentaria abrir: um além do liberado (null = não há). */
+export function forcedGate(player: PlayerState, data: GameData) {
+  const stage = gatesStage(player, data);
+  const next = data.balance.gates.stages[stage];
+  return stage > 0 && next ? { stage: stage + 1, ...next } : null;
+}
+
+/** Chance de forçar: 50% + 3% por ponto de taijutsu acima do mínimo do portão forçado (+10% no despertar). */
+export function forceGatesChance(player: PlayerState, data: GameData): number {
+  const next = forcedGate(player, data);
+  if (!next) return 0;
+  const cfg = data.balance.gates.force;
+  const aw = data.balance.awakening.taijutsuProdigy.force;
+  const bonus = awakened(player, aw.level) ? aw.chanceBonus : 0;
+  return clamp(cfg.base + cfg.perPoint * (player.offense.taijutsu - next.minTaijutsu) + bonus, cfg.min, cfg.max);
+}
+
 /** HP que abrir os portões custaria (nunca abaixo de 1). */
 export function gatesHpCost(player: PlayerState, hpCostPct: number): number {
   return Math.max(0, Math.min(Math.floor(player.maxHp * hpCostPct), player.hp - 1));
 }
 
 /** Ativas de linhagem que são escolhas grátis da rodada (não gastam o turno). */
-export type FreeActive = 'clones' | 'dojutsu' | 'gates' | 'expansion' | 'effort' | 'beast' | 'devour' | 'transmission';
+export type FreeActive =
+  | 'clones'
+  | 'dojutsu'
+  | 'gates'
+  | 'expansion'
+  | 'effort'
+  | 'beast'
+  | 'devour'
+  | 'transmission'
+  | 'copy'
+  | 'seal'
+  | 'shadowHold'
+  | 'pills';
 
 /** Chakra que a ativa grátis custa (null = o jogador não a tem ou não pode usá-la agora). */
 export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData): number | null {
@@ -755,13 +840,24 @@ export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData)
     case 'dojutsu':
       return fx.dojutsuActive ? null : dojutsuActivationCost(p, data);
     case 'gates':
-      return fx.gatesUsed ? null : (gatesToOpen(p, data)?.chakraCost ?? null);
+      return fx.gatesUsed >= gatesUses(p, data) ? null : (gatesToOpen(p, data)?.chakraCost ?? null);
     case 'expansion':
       return p.active === 'expansion' && fx.expansionTurns === 0 ? data.balance.expansion.chakraCost : null;
     case 'effort':
       return p.active === 'effort' && fx.effortTurns === 0 && fx.effortUsed < activeUses(p, 'effort', data) ? data.balance.effort.chakraCost : null;
     case 'beast':
-      return p.active === 'beast' && fx.beastTurns === 0 ? data.balance.beast.chakraCost : null;
+      return p.active === 'beast' && fx.beastTurns === 0 ? beastConfig(p, data).chakraCost : null;
+    case 'copy':
+      return copyTarget(s) ? data.balance.copy.chakraCost : null;
+    case 'seal':
+      return p.active === 'seal' && sealTarget(s) && fx.sealUsed < activeUses(p, 'seal', data) ? data.balance.seal.chakraCost : null;
+    case 'shadowHold': {
+      const hold = s.villain.fx.debilitated;
+      if (p.passive !== 'genius' || hold?.source !== 'shadowImitation' || hold.pinned) return null;
+      return data.balance.shadowHold.baseCost + data.balance.shadowHold.perHold * (hold.maintained ?? 0);
+    }
+    case 'pills':
+      return p.active === 'expansion' && fx.pillsUsed < data.balance.pills.usesPerFight && fx.pillTurns === 0 && fx.exhaustedTurns === 0 ? 0 : null;
     case 'devour':
       return p.active === 'devour' && s.villain.insects > 0 ? data.balance.devour.chakraCost : null;
     case 'transmission':
@@ -771,14 +867,86 @@ export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData)
   }
 }
 
-/** Usos por luta das ativas com limite (Esforço, Transmissão mental): base + 1 por nível de `extraUseLevels` alcançado. */
-export function activeUses(player: PlayerState, kind: 'effort' | 'transmission', data: GameData): number {
+/** Usos por luta das ativas com limite (Esforço, Transmissão mental, Selamento). */
+export function activeUses(player: PlayerState, kind: 'effort' | 'transmission' | 'seal', data: GameData): number {
   if (player.active !== kind) return 0;
+  if (kind === 'seal') {
+    const aw = data.balance.awakening.uzumaki.seal;
+    return data.balance.seal.uses + (awakened(player, aw.level) ? aw.extraUses : 0);
+  }
   const cfg = data.balance[kind];
   return cfg.uses + cfg.extraUseLevels.filter((lv) => player.level >= lv).length;
 }
 
-export const FREE_ACTIVES: FreeActive[] = ['dojutsu', 'gates', 'expansion', 'effort', 'beast', 'devour', 'transmission', 'clones'];
+/** Leitura mental (Yamanaka): acerto a menos dos ataques do vilão (−10; −15 no despertar do nível 4). */
+export function mindReadingPenalty(player: PlayerState, data: GameData): number {
+  if (player.passive !== 'mindReading') return 0;
+  const aw = data.balance.awakening.yamanaka.mindReading;
+  return awakened(player, aw.level) ? aw.villainHitPenalty : data.balance.passives.mindReading.villainHitPenalty;
+}
+
+/** Despertar (origens.md#despertar): a linhagem já chegou ao nível do despertar. */
+export function awakened(player: PlayerState, level: number): boolean {
+  return player.level >= level;
+}
+
+/** Esforço do comum: +3 por 3 rodadas; no despertar do nível 7, +5 por 4. */
+function effortConfig(player: PlayerState, data: GameData): { offenseBonus: number; turns: number } {
+  const aw = data.balance.awakening.common.effort;
+  return awakened(player, aw.level) ? aw : data.balance.effort;
+}
+
+/** Fera de quatro patas: no despertar do nível 7, mais barata e mais longa. */
+function beastConfig(player: PlayerState, data: GameData): { chakraCost: number; turns: number } {
+  const aw = data.balance.awakening.inuzuka.beast;
+  return awakened(player, aw.level) ? aw : data.balance.beast;
+}
+
+/** Usos dos portões por luta: 1; 2 no despertar do nível 7 do prodígio. */
+export function gatesUses(player: PlayerState, data: GameData): number {
+  const aw = data.balance.awakening.taijutsuProdigy.gates;
+  return awakened(player, aw.level) ? aw.usesPerFight : data.balance.gates.usesPerFight;
+}
+
+/** Id da ficha copiável de uma técnica de vilão. */
+export function copyTechniqueId(villainId: string, techniqueId: string): string {
+  return `copy:${villainId}.${techniqueId}`;
+}
+
+/** Técnica que a Cópia no turno copiaria agora (null = sem Sharingan, nada para copiar ou já copiada). */
+export function copyTarget(s: BattleState): string | null {
+  if (!sharinganActive(s) || !s.villain.lastTechnique) return null;
+  const id = copyTechniqueId(s.villain.def.id, s.villain.lastTechnique);
+  return id === s.playerFx.copied ? null : id;
+}
+
+/** Chance da Cópia: a do estágio do Sharingan (50%, 65%, 80%). */
+export function copyChance(s: BattleState, data: GameData): number {
+  return activeSharingan(s, data)?.copyChance ?? 0;
+}
+
+/** Técnica que o Selamento selaria agora: o golpe carregado ou a próxima técnica sorteada. */
+export function sealTarget(s: BattleState): string | null {
+  const v = s.villain;
+  if (v.sealed) return null;
+  if (v.charging) return v.charging;
+  return v.intent?.kind === 'technique' ? v.intent.id : null;
+}
+
+export const FREE_ACTIVES: FreeActive[] = [
+  'dojutsu',
+  'gates',
+  'expansion',
+  'pills',
+  'effort',
+  'beast',
+  'devour',
+  'transmission',
+  'copy',
+  'seal',
+  'shadowHold',
+  'clones',
+];
 
 /** Chakra das ativas grátis já escolhidas em `ex`. */
 function chosenActivesCost(s: BattleState, ex: RoundExtras, data: GameData): number {
@@ -827,7 +995,7 @@ export function armorActive(s: BattleState): boolean {
 export function effectiveOffense(s: BattleState, type: AttackType, data: GameData): number {
   const base = s.player.offense[type];
   if (s.player.forbiddenAttackTypes.includes(type)) return base;
-  const effort = s.playerFx.effortTurns > 0 ? data.balance.effort.offenseBonus : 0;
+  const effort = s.playerFx.effortTurns > 0 ? effortConfig(s.player, data).offenseBonus : 0;
   let value = (base + effort + (activeSharingan(s, data)?.statBonus ?? 0)) * (playerCloak(s, data)?.statMult ?? 1);
   if (type !== 'genjutsu' && armorActive(s)) value *= data.balance.states.lightningArmor.offenseMult;
   return Math.floor(value);
@@ -835,14 +1003,23 @@ export function effectiveOffense(s: BattleState, type: AttackType, data: GameDat
 
 export function effectiveSpeed(s: BattleState, data: GameData): number {
   let value = s.player.speed + (activeSharingan(s, data)?.speed ?? 0);
-  if (expansionActive(s)) value -= data.balance.expansion.speedPenalty;
+  if (expansionActive(s) && !awakened(s.player, data.balance.awakening.akimichi.expansion.level)) value -= data.balance.expansion.speedPenalty;
   if (s.playerFx.beastTurns > 0) value += data.balance.beast.speedBonus;
+  const pill = activePill(s, data);
+  if (pill) value += pill.speed;
+  if (s.playerFx.exhaustedTurns > 0) value -= data.balance.pills.exhausted.speedPenalty;
   if (armorActive(s)) value += data.balance.states.lightningArmor.speed;
   return Math.max(1, Math.floor(value * (playerCloak(s, data)?.statMult ?? 1)));
 }
 
 function expansionActive(s: BattleState): boolean {
   return s.playerFx.expansionTurns > 0;
+}
+
+/** Pílula do clã ativa (Akimichi). */
+function activePill(s: BattleState, data: GameData) {
+  const fx = s.playerFx;
+  return fx.pillTurns > 0 && fx.pill ? (data.balance.pills.options.find((o) => o.id === fx.pill) ?? null) : null;
 }
 
 /** Pavor: o lado apavorado tem as resistências multiplicadas por `fear.resistanceMult`. */
@@ -857,6 +1034,7 @@ function fearResistanceMult(fx: StatusFx, data: GameData): number {
 export function playerResistance(s: BattleState, kind: ResistanceKind, data: GameData, ignoreArmor = false): number {
   let value = s.player.resistance[kind] * (playerCloak(s, data)?.resistanceMult ?? 1) * fearResistanceMult(s.playerFx, data);
   if (kind === 'physical' && armorActive(s) && !ignoreArmor) value *= data.balance.states.lightningArmor.resistanceMult;
+  if (kind === 'physical') value += activePill(s, data)?.physical ?? 0;
   return value;
 }
 
@@ -1027,7 +1205,10 @@ export function playerGenjutsuPower(s: BattleState, techniqueId: string, data: G
 export function playerMentalStrength(s: BattleState, techniqueId: string, data: GameData): number {
   const tech = playerTechnique(s.player, techniqueId, data);
   const power = playerGenjutsuPower(s, techniqueId, data);
-  return mentalStrength(power, villainMentalDefense(s, tech, data), tech.mentalStrength ?? 1, tech.mental ?? 'prison', data);
+  // Despertar do nível 4 do Nara: Imitação de Sombra com +1 de força.
+  const aw = data.balance.awakening.nara.shadow;
+  const bonus = techniqueId === 'shadowImitation' && awakened(s.player, aw.level) ? aw.strengthBonus : 0;
+  return mentalStrength(power, villainMentalDefense(s, tech, data), (tech.mentalStrength ?? 1) + bonus, tech.mental ?? 'prison', data);
 }
 
 /** Chance de o efeito mental do jogador pegar (0 contra alvo imune a genjutsu). */
@@ -1076,8 +1257,13 @@ function playerDamageMult(s: BattleState, type: AttackType, data: GameData): num
     if (expansionActive(s)) mult *= data.balance.expansion.taijutsuMult;
     if (p.passive === 'heavyBody') {
       const cfg = data.balance.passives.heavyBody;
-      mult *= cfg.base + cfg.perHpPct * (p.hp / p.maxHp);
+      const aw = data.balance.awakening.akimichi.heavyBody;
+      const body = cfg.base + cfg.perHpPct * (p.hp / p.maxHp);
+      mult *= awakened(p, aw.level) ? Math.max(aw.minMult, body) : body;
     }
+    const pill = activePill(s, data);
+    if (pill) mult *= pill.taijutsuMult;
+    if (fx.exhaustedTurns > 0) mult *= data.balance.pills.exhausted.taijutsuMult;
   }
   if (fx.feared) mult *= data.balance.status.fear.damageMult;
   return mult;
@@ -1140,7 +1326,8 @@ function playerHitChance(s: BattleState, tech: CombatTech, data: GameData): numb
   if (tech.type === 'taijutsu' && byakuganActive(s)) return 1;
   let hit = hitChance(tech.accuracy, -stunPenalty(s.playerFx, data), data.balance.hit);
   const passive = s.villain.def.passive;
-  if (passive?.kind === 'mist' && s.villain.mistTurns > 0) hit = 1 - (1 - hit) * passive.evasionMult;
+  // O Byakugan enxerga através da névoa.
+  if (passive?.kind === 'mist' && s.villain.mistTurns > 0 && !byakuganActive(s)) hit = 1 - (1 - hit) * passive.evasionMult;
   return clamp(hit, data.balance.hit.min, data.balance.hit.max);
 }
 
@@ -1233,6 +1420,9 @@ export function availableActions(state: BattleState, data: GameData): PlayerActi
     if (isBarrier(tech) && fx.shield) continue;
     if (canUseTechnique(state, tech, data)) actions.push(techAction(tech.id));
   }
+  // Técnica copiada pelo Sharingan: vale até o fim da luta.
+  const copied = fx.copied ? data.techniquesById[fx.copied] : undefined;
+  if (copied && canUseTechnique(state, copied, data)) actions.push(techAction(copied.id));
   const medical = playerMedical(p, data);
   if (medical && p.chakra >= medical.chakraCost && p.hp < p.maxHp) actions.push('medical');
   actions.push('rest', 'stance');
@@ -1631,13 +1821,17 @@ export function playRound(
     s.log.push({ type: 'focus' });
   }
   if (ex.dojutsu) activateDojutsu(s, data);
-  if (ex.gates) openGates(s, data);
+  if (ex.gates) openGates(s, Boolean(ex.forceGates), rng, data);
+  if (ex.pills) takePill(s, rng, data);
   if (ex.expansion) activateExpansion(s, data);
   if (ex.effort) activateEffort(s, data);
   if (ex.beast) activateBeast(s, data);
   if (ex.devour) devour(s, data);
   if (s.status !== 'ongoing') return s;
   if (ex.transmission) mindTransmission(s, rng, data);
+  if (ex.copy) attemptCopy(s, copyTarget(s)!, rng, data);
+  if (ex.seal) sealTechnique(s, data);
+  if (ex.shadowHold) holdShadow(s, data);
   s.playerFx.possessionPick = ex.possession ?? null;
   if (ex.genius) {
     s.playerFx.geniusUsed++;
@@ -1673,12 +1867,22 @@ export function playRound(
 }
 
 /** Continua a rodada parada com a reação escolhida pelo jogador. Pura. */
-export function resumeRound(prev: BattleState, choice: ReactionChoice, rng: Rng, data: GameData, react?: ReactionPolicy): BattleState {
+export function resumeRound(
+  prev: BattleState,
+  choice: ReactionChoice,
+  rng: Rng,
+  data: GameData,
+  react?: ReactionPolicy,
+  extras: ReactionExtras = {},
+): BattleState {
   const pending = prev.pending;
   if (!pending || !prev.plan) throw new Error('Nenhuma reação pendente');
   if (!pending.options.includes(choice)) throw new Error(`Reação indisponível: ${choice}`);
+  if (extras.copy && !canCopyIncoming(prev, data)) throw new Error('Cópia indisponível');
   const s = structuredClone(prev);
   s.pending = null;
+  // Cópia na reação (Uchiha): não gasta a reação.
+  if (extras.copy) attemptCopy(s, copyTechniqueId(s.villain.def.id, pending.incoming.techniqueId), rng, data);
   resolveVillainAttack(s, villainTech(s, pending.incoming.techniqueId), pending.incoming.charged, pending.chakra, choice, rng, data);
   s.plan!.villainActions++;
   runPlan(s, rng, data, react);
@@ -1838,8 +2042,21 @@ function hurtPlayer(s: BattleState, amount: number, data: GameData): number {
   p.hp -= dealt;
   if (dealt > 0) wakeUp(s, 'player');
   if (p.hp === 0) handleKnockout(s);
-  else checkPlayerCloak(s, data);
+  else {
+    checkPlayerCloak(s, data);
+    checkComeback(s, data);
+  }
   return dealt;
+}
+
+/** Nunca desistir (comum, nível 4): na 1ª vez na luta abaixo de 25% do HP, recupera 15% do HP. */
+function checkComeback(s: BattleState, data: GameData): void {
+  const p = s.player;
+  const cfg = data.balance.awakening.common.comeback;
+  if (p.passive !== 'determination' || !awakened(p, cfg.level) || s.playerFx.comebackUsed) return;
+  if (p.hp <= 0 || p.hp >= p.maxHp * cfg.hpBelowPct) return;
+  s.playerFx.comebackUsed = true;
+  s.log.push({ type: 'comeback', healed: heal(s, 'player', cfg.healPct) });
 }
 
 /** Manto de chakra: uma vez por luta, ao cair abaixo do limiar de HP. */
@@ -1886,6 +2103,8 @@ function consumeSkip(s: BattleState, side: Side, rng: Rng, data: GameData): bool
   }
   s.log.push({ type: 'skip', side, reason });
   if (reason === 'possession') possessedSelfHit(s, side, data);
+  if (reason === 'prison' && side === 'villain') heldVillainEffects(s, data);
+  if (s.status !== 'ongoing') return true;
   if (reason !== 'paralysis') serveMental(s, side, MENTAL_SLOT[reason], rng, data);
   if (!isControlled(fx)) {
     fx.debilitateImmunity = data.balance.debilitated.immunityActions;
@@ -1918,7 +2137,11 @@ function possessedSelfHit(s: BattleState, side: Side, data: GameData): void {
     best = playerCombatTech(s, BASIC_TAIJUTSU, data);
   }
   if (!best) return;
-  const damage = Math.floor(selfHitDamage(s, side, { ...best, baseDamage: best.baseDamage * best.hits }, data) * data.balance.status.possession.selfDamageMult);
+  const aw = data.balance.awakening.yamanaka.possession;
+  const yamanaka = side === 'villain' && s.player.passive === 'mindReading' && awakened(s.player, aw.level) ? aw.selfDamageMult : 1;
+  const damage = Math.floor(
+    selfHitDamage(s, side, { ...best, baseDamage: best.baseDamage * best.hits }, data) * data.balance.status.possession.selfDamageMult * yamanaka,
+  );
   s.log.push({ type: 'possessed', side, techniqueId: best.id, damage });
   if (damage > 0) hurt(s, side, damage, data);
 }
@@ -1949,6 +2172,11 @@ function serveMental(s: BattleState, side: Side, slot: MentalSlot, rng: Rng, dat
   const hold = fx[slot];
   if (!hold) return;
   hold.served++;
+  // Sombra costurada: mantida nesta vez, a fuga não gira.
+  if (hold.pinned) {
+    hold.pinned = false;
+    return;
+  }
   if (!chance(mentalEscapeChance(hold.strength, hold.served, data), rng)) return;
   fx[slot] = null;
   const effect = (Object.keys(MENTAL_SLOT) as MentalEffect[]).find((e) => MENTAL_SLOT[e] === slot)!;
@@ -1956,8 +2184,8 @@ function serveMental(s: BattleState, side: Side, slot: MentalSlot, rng: Rng, dat
 }
 
 /** Põe (ou renova) o efeito mental: fica a força maior e a contagem recomeça. */
-function holdMental(fx: StatusFx, slot: MentalSlot, strength: number): MentalHold {
-  const hold = { strength: Math.max(strength, fx[slot]?.strength ?? 0), served: 0 };
+function holdMental(fx: StatusFx, slot: MentalSlot, strength: number, source?: string): MentalHold {
+  const hold: MentalHold = { strength: Math.max(strength, fx[slot]?.strength ?? 0), served: 0, ...(source ? { source } : {}) };
   fx[slot] = hold;
   return hold;
 }
@@ -1967,7 +2195,7 @@ function holdMental(fx: StatusFx, slot: MentalSlot, strength: number): MentalHol
  * tenacidade (controles sem rolagem própria, como a paralisia do crítico de raio); os genjutsu já a
  * contam na chance de acerto. Pegou: soma tenacidade.
  */
-function applyDebilitate(s: BattleState, target: Side, amount: number, kind: DebilitateKind, data: GameData, rng?: Rng): void {
+function applyDebilitate(s: BattleState, target: Side, amount: number, kind: DebilitateKind, data: GameData, rng?: Rng, source?: string): void {
   const fx = fxOf(s, target);
   if (fx.debilitateImmunity > 0 || (rng && fx.tenacity > 0 && !chance(controlChanceMult(fx), rng))) {
     s.log.push({ type: 'debilitateResisted', target });
@@ -1981,14 +2209,14 @@ function applyDebilitate(s: BattleState, target: Side, amount: number, kind: Deb
     s.log.push({ type: 'debilitate', target, kind, turns: amount });
     return;
   }
-  const hold = holdMental(fx, MENTAL_SLOT[kind], amount);
+  const hold = holdMental(fx, MENTAL_SLOT[kind], amount, source);
   s.log.push({ type: 'debilitate', target, kind, escape: mentalEscapeChance(hold.strength, 1, data) });
 }
 
 /** Aplica um efeito mental com a força calculada (`mentalStrength`). */
-function applyMental(s: BattleState, target: Side, effect: MentalEffect, strength: number, data: GameData): void {
+function applyMental(s: BattleState, target: Side, effect: MentalEffect, strength: number, data: GameData, source?: string): void {
   if (effect === 'prison' || effect === 'sleep' || effect === 'possession') {
-    applyDebilitate(s, target, strength, effect, data);
+    applyDebilitate(s, target, strength, effect, data, undefined, source);
     return;
   }
   const hold = holdMental(fxOf(s, target), MENTAL_SLOT[effect], strength);
@@ -2130,7 +2358,8 @@ function startOfRound(s: BattleState, rng: Rng, data: GameData): void {
   if (s.round === 1 && vPassive?.kind === 'cloak' && vPassive.fromStart) activateCloak(s, 'villain', vPassive.cloak);
 
   if (p.passive === 'vitality') {
-    const cfg = balance.passives.vitality;
+    const aw = balance.awakening.uzumaki.vitality;
+    const cfg = awakened(p, aw.level) ? aw : balance.passives.vitality;
     const hp = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * cfg.hpPctPerTurn));
     const chakra = Math.min(p.maxChakra - p.chakra, cfg.chakraPerTurn);
     if (hp > 0 || chakra > 0) {
@@ -2250,6 +2479,25 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
     fx.beastTurns--;
     if (fx.beastTurns === 0) s.log.push({ type: 'beastEnd' });
   }
+  if (fx.exhaustedTurns > 0) {
+    fx.exhaustedTurns--;
+    if (fx.exhaustedTurns === 0) s.log.push({ type: 'exhaustedEnd' });
+  }
+  if (fx.pillTurns > 0) {
+    fx.pillTurns--;
+    if (fx.pillTurns === 0) {
+      const pill = data.balance.pills.options.find((o) => o.id === fx.pill);
+      fx.exhaustedTurns = pill?.exhaustTurns ?? 0;
+      s.log.push({ type: 'pillEnd', pill: fx.pill ?? '', exhausted: fx.exhaustedTurns > 0 });
+    }
+  }
+  if (v.sealed) {
+    v.sealed.turns--;
+    if (v.sealed.turns <= 0) {
+      s.log.push({ type: 'sealEnd', techniqueId: v.sealed.techniqueId });
+      v.sealed = null;
+    }
+  }
   if (fx.armorTurns > 0 && fx.armorRound !== s.round) {
     fx.armorTurns--;
     if (fx.armorTurns === 0) s.log.push({ type: 'armorEnd' });
@@ -2331,21 +2579,34 @@ function activateDojutsu(s: BattleState, data: GameData): void {
   const cost = data.balance.dojutsu[p.dojutsu].activationCost;
   p.chakra -= cost;
   fx.dojutsuActive = true;
-  fx.dojutsuTurns = data.balance.dojutsu.duration;
+  const aw = data.balance.awakening.hyuuga.byakugan;
+  fx.dojutsuTurns = p.dojutsu === 'byakugan' && awakened(p, aw.level) ? aw.duration : data.balance.dojutsu.duration;
   fx.dojutsuRound = s.round;
   s.log.push({ type: 'dojutsu', dojutsu: p.dojutsu, stage: sharinganStage(p, data), chakra: cost });
 }
 
 /** Abre os portões (escolha grátis): o bônus já vale nesta rodada, que conta na duração. */
-function openGates(s: BattleState, data: GameData): void {
+function openGates(s: BattleState, force: boolean, rng: Rng, data: GameData): void {
   const p = s.player;
   const fx = s.playerFx;
-  const gates = gatesToOpen(p, data);
+  let gates = gatesToOpen(p, data);
   if (!gates) throw new Error('Portões exigem a ativa correspondente');
+  // Forçar: a roleta de risco abre um portão além do liberado; falhando, abre o liberado e fere.
+  const forced = force ? forcedGate(p, data) : null;
+  let extraHp = 0;
+  if (forced) {
+    const chance = forceGatesChance(p, data);
+    const success = playerRoll(s, () => (rng() < chance ? 1 : 0), (v) => v) === 1;
+    if (success) gates = forced;
+    else extraHp = Math.floor(p.maxHp * data.balance.gates.force.failHpPct);
+    const hpLost = Math.max(0, Math.min(extraHp, p.hp - 1));
+    p.hp -= hpLost;
+    s.log.push({ type: 'gatesForce', chance, success, hpLost });
+  }
   const hpLost = gatesHpCost(p, gates.hpCostPct);
   p.chakra -= gates.chakraCost;
   p.hp -= hpLost;
-  fx.gatesUsed = true;
+  fx.gatesUsed++;
   fx.gatesStage = gates.stage;
   fx.gatesTurns = data.balance.gates.turns;
   s.log.push({ type: 'gates', stage: gates.stage, hpLost, chakra: gates.chakraCost });
@@ -2362,8 +2623,8 @@ function activateExpansion(s: BattleState, data: GameData): void {
 
 /** Esforço (comum, escolha grátis): +tai/nin/gen já nesta rodada, que conta na duração. */
 function activateEffort(s: BattleState, data: GameData): void {
-  const cfg = data.balance.effort;
-  s.player.chakra -= cfg.chakraCost;
+  const cfg = effortConfig(s.player, data);
+  s.player.chakra -= data.balance.effort.chakraCost;
   s.playerFx.effortUsed++;
   s.playerFx.effortTurns = cfg.turns;
   s.log.push({ type: 'effort', bonus: cfg.offenseBonus });
@@ -2371,7 +2632,7 @@ function activateEffort(s: BattleState, data: GameData): void {
 
 /** Fera de quatro patas (Inuzuka, escolha grátis): vale já nesta rodada, que conta na duração. */
 function activateBeast(s: BattleState, data: GameData): void {
-  const cfg = data.balance.beast;
+  const cfg = beastConfig(s.player, data);
   s.player.chakra -= cfg.chakraCost;
   s.playerFx.beastTurns = cfg.turns;
   s.log.push({ type: 'beast', chakra: cfg.chakraCost });
@@ -2382,7 +2643,8 @@ function activateBeast(s: BattleState, data: GameData): void {
  * com ele sem chakra causam `damagePerInsect` de dano direto (sem resistência).
  */
 function devour(s: BattleState, data: GameData): void {
-  const cfg = data.balance.devour;
+  const aw = data.balance.awakening.aburame.devour;
+  const cfg = awakened(s.player, aw.level) ? { ...data.balance.devour, ...aw } : data.balance.devour;
   const v = s.villain;
   s.player.chakra -= cfg.chakraCost;
   const insects = v.insects;
@@ -2411,6 +2673,88 @@ function mindTransmission(s: BattleState, rng: Rng, data: GameData): void {
   v.charging = null;
   v.intent = null;
   v.disrupted = true;
+}
+
+/** A Cópia pode ser feita junto com a reação: Sharingan ativo, chakra e técnica copiável vindo. */
+export function canCopyIncoming(s: BattleState, data: GameData): boolean {
+  const incoming = s.pending?.incoming;
+  if (!incoming || incoming.attacker !== 'villain' || !sharinganActive(s)) return false;
+  const id = copyTechniqueId(s.villain.def.id, incoming.techniqueId);
+  return Boolean(data.techniquesById[id]) && id !== s.playerFx.copied && s.player.chakra >= data.balance.copy.chakraCost;
+}
+
+/** Cópia (Uchiha): paga o chakra e gira a chance do Sharingan; pegou, a técnica fica até o fim da luta. */
+function attemptCopy(s: BattleState, techniqueId: string, rng: Rng, data: GameData): void {
+  s.player.chakra -= data.balance.copy.chakraCost;
+  const p = copyChance(s, data);
+  const success = playerRoll(s, () => chance(p, rng), (ok) => (ok ? 1 : 0));
+  s.log.push({ type: 'copy', chance: p, success, techniqueId });
+  if (success) s.playerFx.copied = techniqueId;
+}
+
+/** Selamento (Uzumaki): a técnica sai da roleta do vilão; um golpe carregado selado se perde. */
+function sealTechnique(s: BattleState, data: GameData): void {
+  const v = s.villain;
+  const techniqueId = sealTarget(s)!;
+  const aw = data.balance.awakening.uzumaki.seal;
+  const turns = awakened(s.player, aw.level) ? aw.turns : data.balance.seal.turns;
+  s.player.chakra -= data.balance.seal.chakraCost;
+  s.playerFx.sealUsed++;
+  const charged = v.charging === techniqueId;
+  v.charging = null;
+  v.sealed = { techniqueId, turns };
+  // Sem a técnica selada, o vilão sorteia outra ação.
+  v.intent = null;
+  s.log.push({ type: 'seal', techniqueId, turns, charged });
+}
+
+/** Sombra costurada (Nara): paga e prende a sombra nesta vez (a fuga não gira). */
+function holdShadow(s: BattleState, data: GameData): void {
+  const hold = s.villain.fx.debilitated!;
+  const cfg = data.balance.shadowHold;
+  const cost = cfg.baseCost + cfg.perHold * (hold.maintained ?? 0);
+  s.player.chakra -= cost;
+  hold.maintained = (hold.maintained ?? 0) + 1;
+  hold.pinned = true;
+  s.log.push({ type: 'shadowHold', chakra: cost });
+}
+
+/**
+ * Vilão preso que perde a vez: Correntes de Chakra drenam o chakra dele; a sombra mantida estrangula
+ * (Nara, nível 7).
+ */
+function heldVillainEffects(s: BattleState, data: GameData): void {
+  const v = s.villain;
+  const hold = v.fx.debilitated;
+  if (!hold?.source) return;
+  const drain = data.techniquesById[hold.source]?.holdChakraDrain ?? 0;
+  if (drain > 0) {
+    const amount = Math.min(v.chakra, drain);
+    v.chakra -= amount;
+    if (amount > 0) s.log.push({ type: 'chakraDrain', amount, source: 'chains' });
+  }
+  const aw = data.balance.awakening.nara.strangle;
+  if (hold.source === 'shadowImitation' && hold.pinned && awakened(s.player, aw.level)) {
+    const damage = Math.floor(v.def.hp * aw.hpPct);
+    s.log.push({ type: 'strangle', damage });
+    hurtVillain(s, damage);
+  }
+}
+
+/** Pílulas do clã (Akimichi): roleta pura das 3 pílulas; paga o HP (nunca abaixo de 1). */
+function takePill(s: BattleState, rng: Rng, data: GameData): void {
+  const cfg = data.balance.pills;
+  const p = s.player;
+  const pill = spin(
+    cfg.options.map((o) => ({ label: o.id, weight: o.weight, value: o })),
+    rng,
+  ).slice.value;
+  const hpLost = Math.max(0, Math.min(Math.floor(p.maxHp * pill.hpCostPct), p.hp - 1));
+  p.hp -= hpLost;
+  s.playerFx.pillsUsed++;
+  s.playerFx.pill = pill.id;
+  s.playerFx.pillTurns = cfg.turns;
+  s.log.push({ type: 'pill', pill: pill.id, hpLost });
 }
 
 function useItem(s: BattleState, item: ConsumableId, data: GameData): void {
@@ -2503,7 +2847,7 @@ function playerMentalTechnique(s: BattleState, techId: string, rng: Rng, data: G
     if (s.status !== 'ongoing') return;
   }
   const effect = tech.mental;
-  if (effect) applyMental(s, 'villain', effect, playerMentalStrength(s, techId, data), data);
+  if (effect) applyMental(s, 'villain', effect, playerMentalStrength(s, techId, data), data, techId);
 }
 
 /**
@@ -2597,7 +2941,13 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
     if (s.status !== 'ongoing') return;
     if (outcome === 'miss') break;
     // Selo dos Pontos Vitais e Colônia (Aburame): drenam o chakra do vilão; a Colônia deixa insetos nele.
-    if (p.passive === 'hive') v.insects = Math.min(balance.passives.hive.maxInsects, v.insects + balance.passives.hive.insectsPerHit);
+    if (p.passive === 'hive') {
+      const aw = balance.awakening.aburame.colony;
+      const awake = awakened(p, aw.level);
+      const max = awake ? aw.maxInsects : balance.passives.hive.maxInsects;
+      const add = awake && techId === 'insectSwarm' ? aw.swarmInsectsPerHit : balance.passives.hive.insectsPerHit;
+      v.insects = Math.min(max, v.insects + add);
+    }
     const drain = (data.techniquesById[techId]?.chakraDrain ?? 0) + (p.passive === 'hive' ? balance.passives.hive.chakraDrainPerHit : 0);
     if (drain > 0) {
       const amount = Math.min(v.chakra, drain);
@@ -2619,7 +2969,7 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
         id: DOG_ATTACK,
         type: 'taijutsu',
         element: null,
-        baseDamage: Math.floor(tech.baseDamage * cfg.damagePct),
+        baseDamage: Math.floor(tech.baseDamage * (awakened(p, balance.awakening.inuzuka.duo.level) ? balance.awakening.inuzuka.duo.damagePct : cfg.damagePct)),
         hits: 1,
         chakraCost: 0,
       };
@@ -2636,6 +2986,7 @@ function villainOptions(s: BattleState): VillainTechnique[] {
   const v = s.villain;
   return v.def.techniques.filter(
     (t) =>
+      t.id !== v.sealed?.techniqueId &&
       (!isBarrier(t) || !v.fx.shield) &&
       t.chakraCost <= v.chakra &&
       (t.useBelowHpPct === undefined || v.hp < v.def.hp * t.useBelowHpPct),
@@ -2714,6 +3065,7 @@ function villainAttack(
 ): boolean {
   const fx = s.playerFx;
   const combat = villainCombatTech(s, tech);
+  if ((tech.type === 'taijutsu' || tech.type === 'ninjutsu') && tech.baseDamage > 0) s.villain.lastTechnique = tech.id;
 
   if (confusionFails(s, 'villain', selfHitDamage(s, 'villain', combat, data), rng, data)) return false;
   s.log.push({ type: 'declare', side: 'villain', techniqueId: tech.id, attackType: tech.type, element: combat.element, chakra });
@@ -2754,8 +3106,10 @@ function villainGenjutsu(s: BattleState, tech: VillainTechnique, chakra: number,
     return;
   }
   s.log.push({ type: 'reaction', side: 'player', kind: canReact(s, 'player') ? 'resist' : 'passive', techniqueId: null, chakra: 0 });
-  const mindReading = s.player.passive === 'mindReading' ? balance.passives.mindReading.villainHitPenalty : 0;
-  const penalty = stunPenalty(s.villain.fx, data) + mindReading;
+  const mindReading = mindReadingPenalty(s.player, data);
+  // O Byakugan vê através das ilusões.
+  const byakugan = byakuganActive(s) ? balance.dojutsu.byakugan.genjutsuHitPenalty : 0;
+  const penalty = stunPenalty(s.villain.fx, data) + mindReading + byakugan;
   const power = villainOffense(s, 'genjutsu');
   const defense = playerMentalDefense(s, data);
   const hitP = clamp(genjutsuHitChance(power, defense, balance.genjutsuHit) - penalty, 0, 1) * controlChanceMult(s.playerFx);
@@ -2812,7 +3166,7 @@ function villainStrike(
   const fx = s.playerFx;
   const passive = v.def.passive;
 
-  const mindReading = p.passive === 'mindReading' ? balance.passives.mindReading.villainHitPenalty : 0;
+  const mindReading = mindReadingPenalty(p, data);
   const penalty = stunPenalty(v.fx, data) + mindReading;
   const hitP = hitChance(tech.accuracy, -penalty, balance.hit);
   const scalpelCrit = passive?.kind === 'scalpel' ? passive.critBonus : 0;

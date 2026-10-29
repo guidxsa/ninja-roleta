@@ -39,7 +39,7 @@ export type PassiveKind =
   | 'vitality';
 
 /** Ativa de linhagem (gasta ou não o turno; parâmetros em `balance`). */
-export type ActiveKind = 'gates' | 'expansion' | 'shadowClones' | 'effort' | 'beast' | 'devour' | 'transmission';
+export type ActiveKind = 'gates' | 'expansion' | 'shadowClones' | 'effort' | 'beast' | 'devour' | 'transmission' | 'seal';
 
 export type AffinityRule =
   | { kind: 'rolled' }
@@ -144,6 +144,10 @@ export interface TechniqueDef {
   requiresDojutsu?: DojutsuId;
   /** Ao acertar, drena esta quantidade do chakra do vilão. */
   chakraDrain?: number;
+  /** Controle que drena: o vilão preso por esta técnica perde este chakra a cada vez perdida (Correntes). */
+  holdChakraDrain?: number;
+  /** Técnica copiada de um vilão pelo Sharingan (só existe na luta em que foi copiada). */
+  copied?: boolean;
 }
 
 export interface VillainTechnique {

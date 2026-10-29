@@ -73,6 +73,8 @@ export const ptBR = {
     fangOverFang: 'Presas Giratórias',
     humanBoulder: 'Rolo Colossal',
     chakraBlockStrike: 'Selo dos Pontos Vitais',
+    sixtyFourPalms: '64 Palmas',
+    chakraChains: 'Correntes de Chakra',
     whirlwindCombo: 'Redemoinho da Folha',
     hiddenLotus: 'Lótus Primaveril',
     rotation: 'Rotação',
@@ -140,7 +142,7 @@ export const ptBR = {
     determination: { name: 'Determinação', desc: '+25% de XP ganho e, a cada nível, +1 no seu maior status de ataque.' },
     genius: {
       name: 'Gênio',
-      desc: 'Você vê a próxima ação do vilão. 2×/luta (+1 nos níveis 4 e 7), de graça: a sua próxima roleta gira duas vezes e fica com a melhor.',
+      desc: 'Você vê a próxima ação do vilão. 2×/luta (+1 nos níveis 4 e 7), de graça: a sua próxima roleta gira duas vezes e fica com a melhor. Sombra costurada: com o vilão preso pela sombra, pague chakra (3, 4, 5...) para a fuga dele não girar naquela vez.',
     },
     heavyBody: { name: 'Corpo pesado', desc: 'Taijutsu ×1,1 com HP cheio, caindo até ×0,7 perto de zero.' },
     mindReading: {
@@ -152,7 +154,7 @@ export const ptBR = {
     ironBody: { name: 'Corpo de ferro', desc: 'Contra taijutsu, Resistir usa 100% da resistência física. Não usa ninjutsu nem genjutsu.' },
     genjutsuResistance: { name: 'Olhos treinados', desc: '+6 na resistência mental contra ilusões.' },
     preciseFist: { name: 'Punho preciso', desc: 'Taijutsu ignora 30% da resistência física do alvo.' },
-    vitality: { name: 'Vitalidade Uzumaki', desc: 'Recupera 1 de chakra e 2% do HP por rodada.' },
+    vitality: { name: 'Vitalidade Uzumaki', desc: 'Recupera 1 de chakra e 2% do HP por rodada (2 de chakra no nível 7).' },
     jinchuuriki: {
       name: 'Manto de chakra',
       desc: '1×/luta, abaixo de 50% de HP: status ×1,5, resistências ×1,25 e regenera 5% do HP por até 5 rodadas, pagando 10% do chakra máximo por rodada.',
@@ -187,6 +189,18 @@ export const ptBR = {
       name: 'Devorar',
       desc: 'Grátis (3 de chakra, não gasta o turno): os insetos da Colônia devoram o vilão. Cada inseto drena 3 de chakra; com o vilão sem chakra, cada inseto que sobra causa 2 de dano direto.',
     },
+    seal: {
+      name: 'Selamento',
+      desc: 'Grátis (6 de chakra, não gasta o turno), 1×/luta (+1 no nível 7): sela a próxima técnica do vilão, que sai da roleta dele por 2 rodadas (3 no nível 7). Um golpe carregado selado se perde.',
+    },
+    pills: {
+      name: 'Pílulas do clã',
+      desc: 'Grátis, 1×/luta: gira a roleta das 3 pílulas. Verde (50%): taijutsu ×1,3, −10% HP. Amarela (35%): taijutsu ×1,6 e res. física +3, −20% HP. Vermelha (15%): taijutsu ×2 e speed +3, −30% HP, e fica exausto por 2 rodadas quando acaba. Duram 3 rodadas.',
+    },
+    copy: {
+      name: 'Cópia',
+      desc: 'Com o Sharingan, grátis (3 de chakra): no turno, copia a última técnica de dano do vilão; na reação, a que está vindo. Chance de 50%, 65% ou 80% (tomoe). A cópia fica até o fim da luta (uma por vez).',
+    },
     transmission: {
       name: 'Transmissão mental',
       desc: 'Grátis (5 de chakra, não gasta o turno), 1×/luta (+1 nos níveis 4 e 7): contra um golpe carregado, rola o acerto do genjutsu. Se pegar, o vilão perde o golpe e a vez.',
@@ -198,14 +212,41 @@ export const ptBR = {
   dojutsu: {
     sharingan: {
       name: 'Sharingan',
-      desc: 'Ativável de graça, sem gastar o turno (4 ck, −1 ck/rodada, 5 rodadas): +tai/nin/gen e speed, genjutsu mais eficiente e mais forte e chance de ler o movimento (metade do dano). Evolui nos níveis 4 e 7.',
+      desc: 'Ativável de graça, sem gastar o turno (4 ck, −1 ck/rodada, 5 rodadas): +tai/nin/gen e speed, genjutsu mais eficiente e mais forte e chance de ler o movimento (metade do dano). Libera a Cópia. Evolui nos níveis 4 e 7.',
     },
     byakugan: {
       name: 'Byakugan',
-      desc: 'Ativável de graça, sem gastar o turno (3 ck, −1 ck/rodada, 5 rodadas): taijutsu não erra, taijutsu ×1,1 e libera o Selo dos Pontos Vitais (drena chakra do vilão).',
+      desc: 'Ativável de graça, sem gastar o turno (3 ck, −1 ck/rodada, 5 rodadas; 7 no nível 4): taijutsu não erra, taijutsu ×1,1, enxerga através da névoa, o genjutsu do vilão tem −20 de acerto contra você e libera o Selo dos Pontos Vitais (e as 64 Palmas no nível 7).',
     },
   } as Record<string, { name: string; desc: string }>,
   sharinganStage: (n: number) => `${n} tomoe`,
+  pills: { green: 'Pílula verde', yellow: 'Pílula amarela', red: 'Pílula vermelha' } as Record<string, string>,
+  /** Lição do clã: título por linhagem e texto do bônus. */
+  clanLessons: {
+    common: { title: 'Treino até cair', bonus: '+2 no seu maior ataque' },
+    nara: { title: 'Shogi com o seu pai', bonus: '+2 de ninjutsu' },
+    akimichi: { title: 'Churrasco do clã', bonus: '+15 de HP máximo' },
+    yamanaka: { title: 'Floricultura da família', bonus: '+2 de genjutsu' },
+    aburame: { title: 'A colmeia cresce', bonus: '+2 de ninjutsu' },
+    inuzuka: { title: 'Corrida com o cão', bonus: '+1 de speed e +1 de taijutsu' },
+    taijutsuProdigy: { title: 'Mil flexões ao pôr do sol', bonus: '+2 de taijutsu' },
+    uchiha: { title: 'Lição no templo Naka', bonus: '+2 de genjutsu' },
+    hyuuga: { title: 'Treino do Punho Gentil', bonus: '+2 de taijutsu' },
+    uzumaki: { title: 'Pergaminho dos selos', bonus: '+5 de chakra máximo' },
+  } as Record<string, { title: string; bonus: string }>,
+  /** Despertar (origens.md#despertar): o que cada linhagem ganha nos níveis 4 e 7. */
+  awakening: {
+    common: { 4: 'Nunca desistir: na 1ª vez na luta abaixo de 25% do HP, recupera 15% do HP.', 7: 'Esforço supremo: o Esforço dá +5 e dura 4 rodadas.' },
+    nara: { 4: 'A Imitação de Sombra ganha +1 de força.', 7: 'Estrangulamento: a sombra mantida tira 5% do HP máximo do vilão por vez.' },
+    akimichi: { 4: 'Corpo pesado nunca abaixo de ×0,8 (e o Rolo Colossal).', 7: 'A Expansão não reduz mais a speed.' },
+    yamanaka: { 4: 'Leitura mental: os ataques do vilão têm −15 de acerto (e +1 uso da Transmissão).', 7: 'Na Possessão, o vilão se fere ×1,25 (e +1 uso da Transmissão).' },
+    aburame: { 4: 'A Colônia guarda até 15 insetos e o Enxame deixa 2 por golpe.', 7: 'O Devorar drena 4 de chakra e causa 3 de dano por inseto.' },
+    inuzuka: { 4: 'O cão da Dupla bate com 60% do dano.', 7: 'A Fera custa 3 de chakra e dura 4 rodadas.' },
+    taijutsuProdigy: { 4: 'Forçar os portões: +10% de chance (e o Redemoinho da Folha).', 7: 'Portões: 2 usos por luta (e o Lótus Primaveril).' },
+    uchiha: { 4: 'Sharingan de 2 tomoe: mais forte e cópia com 65%.', 7: 'Sharingan de 3 tomoe: cópia com 80% e o Tsukuyomi.' },
+    hyuuga: { 4: 'O Byakugan dura 7 rodadas (e a Rotação).', 7: '64 Palmas: 4 golpes que fecham pontos de chakra.' },
+    uzumaki: { 4: 'Correntes de Chakra: prendem e drenam o chakra do vilão.', 7: 'Selamento com +1 uso e 3 rodadas; Vitalidade com 2 de chakra por rodada.' },
+  } as Record<string, Record<number, string>>,
   /** Passivas únicas dos vilões (o manto usa a variante: beast ou curseMark). */
   villainPassives: {
     trickster: {
@@ -253,6 +294,7 @@ export const ptBR = {
     jokenpo: { name: 'Jokenpô', desc: 'Um companheiro de vila te desafia.' },
     foundItem: { name: 'Achou um item', desc: 'Gire a roleta de itens.' },
     guru: { name: 'Encontro com guru', desc: 'Um velho sábio (?) quer te ensinar algo.' },
+    clanLesson: { name: 'Lição do clã', desc: 'Alguém do seu clã tem algo a ensinar.' },
   } as Record<string, { name: string; desc: string }>,
   items: {
     revive: 'Vontade do Fogo',
@@ -448,6 +490,25 @@ export const ptBR = {
     intentRest: 'concentrar chakra',
     expansionOn: (n: number) => `Expansão ${n}t`,
     effortOn: (n: number) => `Esforço ${n}t`,
+    copyFree: (pct: string, cost: number) => `Cópia · ${pct} · ${cost} ck`,
+    copyHint: (tech: string) => `Tenta copiar ${tech} até o fim da luta. Não gasta o turno.`,
+    copyReact: (pct: string, cost: number) => `Copiar também · ${pct} · ${cost} ck`,
+    copyReactHint: 'Tenta copiar a técnica que está vindo. Não gasta a reação.',
+    copiedChip: (tech: string) => `Cópia: ${tech}`,
+    sealFree: (cost: number, left: number) => `Selamento · ${cost} ck · ${left}×`,
+    sealHint: (tech: string) => `Sela ${tech}: sai da roleta do vilão por algumas rodadas. Não gasta o turno.`,
+    sealHintHidden: 'Sela a próxima técnica do vilão: sai da roleta dele por algumas rodadas. Não gasta o turno.',
+    sealedChip: (tech: string, n: number) => `Selado: ${tech} ${n}t`,
+    shadowHoldFree: (cost: number) => `Manter a sombra · ${cost} ck`,
+    shadowHoldHint: 'Nesta vez a fuga do vilão não gira. O custo sobe a cada vez seguida.',
+    pillsFree: 'Pílulas do clã',
+    pillsHint: 'Roleta: verde (50%), amarela (35%) ou vermelha (15%). Não gasta o turno.',
+    pillOn: (name: string, n: number) => `${name} ${n}t`,
+    exhausted: (n: number) => `Exausto ${n}t`,
+    forceGates: (pct: string) => `Forçar portão · ${pct}`,
+    forceGatesHint: (gate: string, hp: number) => `Tenta abrir o ${gate}. Falhando, abre o liberado e perde mais ${hp}% do HP.`,
+    awakeningTitle: (level: number) => `Despertar do nível ${level}`,
+    version: (v: string) => `v${v}`,
     effortFree: (left: number) => `Esforço · ${left}×`,
     beastOn: (n: number) => `Fera ${n}t`,
     insects: (n: number) => `Insetos ${n}`,
@@ -588,6 +649,7 @@ export const ptBR = {
     bagFull: (name: string, xp: number) => `Bolsa cheia de ${name}: virou ${xp} de XP.`,
     coin: (n: number) => `Moeda viciada! Você tem ${n}: use para girar de novo uma roleta.`,
     trainingWeights: 'Pesos de treino!',
+    clanLesson: (title: string, bonus: string, xp: number) => `${title}: ${bonus} e +${xp} de XP.`,
     secondaryElement: (el: string) => `Elemento secundário: ${el}!`,
     secondaryElementTech: (el: string, tech: string) => `Elemento secundário: ${el}! Aprendeu ${tech}.`,
     akatsukiTookRevive: {
@@ -701,6 +763,17 @@ export const ptBR = {
     effortEnd: 'O esforço passa.',
     beast: 'Fera de quatro patas! Speed maior, o cão ataca mais e serve de isca na Substituição.',
     beastEnd: 'A fera volta ao normal.',
+    copy: (tech: string, ok: boolean) => (ok ? `👁 Sharingan: você copiou ${tech}!` : `👁 Sharingan: a cópia de ${tech} falhou.`),
+    seal: (tech: string, turns: number, charged: boolean) =>
+      `🔒 Selamento: ${tech} fica selado por ${turns} rodadas${charged ? ' e o golpe carregado se perde' : ''}!`,
+    sealEnd: (tech: string) => `O selo de ${tech} se desfaz.`,
+    shadowHold: (n: number) => `Sombra costurada: você mantém a sombra (${n} ck).`,
+    strangle: (n: number) => `Estrangulamento da sombra: ${n} de dano!`,
+    pill: (name: string, hp: number) => `💊 ${name}! Taijutsu mais forte por 3 rodadas (−${hp} HP).`,
+    pillEnd: (name: string, exhausted: boolean) => (exhausted ? `O efeito da ${name} passa: você fica exausto.` : `O efeito da ${name} passa.`),
+    exhaustedEnd: 'A exaustão passa.',
+    comeback: (n: number) => `Nunca desistir! Você recupera ${n} de HP.`,
+    gatesForce: (ok: boolean, hp: number) => (ok ? 'Você força mais um portão!' : `O portão não cede: −${hp} HP.`),
     devour: (insects: number, chakra: number, damage: number) =>
       `🐛 Devorar: ${insects} inseto(s) drenam ${chakra} de chakra${damage ? ` e causam ${damage} de dano` : ''}.`,
     transmission: (tech: string, ok: boolean) =>
@@ -741,6 +814,7 @@ export const ptBR = {
     chakraDrain: {
       seal: (n: number) => `Selo dos Pontos Vitais: o vilão perde ${n} de chakra.`,
       hive: (n: number) => `Colônia: o vilão perde ${n} de chakra.`,
+      chains: (n: number) => `Correntes de Chakra: o vilão preso perde ${n} de chakra.`,
     } as Record<string, (n: number) => string>,
     mist: (n: number) => `🌫 Uma névoa densa cobre o campo (${n} rodadas): mais difícil acertar.`,
     mistEnd: 'A névoa se dissipa.',
@@ -871,6 +945,10 @@ export const ptBR = {
       expansion: { name: 'Expansão', desc: 'Taijutsu ×1,5 e speed −3 enquanto durar.' },
       effort: { name: 'Esforço', desc: '+3 em taijutsu, ninjutsu e genjutsu enquanto durar.' },
       beast: { name: 'Fera de quatro patas', desc: 'Speed +3, Dupla com 60% de chance e Substituição sem gastar usos.' },
+      pill: { name: 'Pílula do clã', desc: 'Taijutsu mais forte enquanto durar.' },
+      exhausted: { name: 'Exausto', desc: 'Taijutsu ×0,5 e speed −3 enquanto durar.' },
+      sealed: { name: 'Selamento', desc: 'A técnica selada não entra na roleta do vilão enquanto durar.' },
+      copied: { name: 'Cópia', desc: 'Técnica copiada pelo Sharingan: está entre as suas técnicas até o fim da luta.' },
       insects: { name: 'Insetos', desc: 'Insetos da Colônia no vilão. O Devorar os consome: chakra drenado ou dano.' },
       clones: { name: 'Clones prontos', desc: 'O próximo ataque vira 3× os golpes, com 35% do dano cada.' },
       armor: { name: 'Armadura de Raio', desc: 'Ataque ×1,25, resistência física ×1,3 e speed +2.' },

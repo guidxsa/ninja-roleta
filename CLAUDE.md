@@ -37,9 +37,9 @@ Nenhuma. A rodada "rebalanceamento das origens" (27/10/2026) foi implementada na
 
 Observação em aberto (não é mudança de design): na simulação, a fatia "nova técnica" da recompensa vale bem menos que as outras (sem ela, o comum vence ~20 pontos a mais). Vale discutir com o usuário antes de mexer.
 
-Observação em aberto (v0.21.0): todas as linhagens têm ativa agora. Na campanha por origem (1000 runs), o comum subiu de 70% para 76% no Médio e de 24% para 30% no Difícil, mas segue no grupo de baixo do Difícil (Akimichi, Aburame e Hyuuga ~48–53%). Na luta isolada de nível 1 contra o Kabuto ele segue em 33%, porque o Esforço só tem 1 uso no nível 1. Discutir com o usuário antes de compensar.
+Observação em aberto (v0.22.0): campanha por origem (1000 runs, seed 2) no Médio de 74% (prodígio) a 89% (Uzumaki) e no Difícil de 32% (Uchiha) a 58% (Aburame). Prodígio e Uchiha seguem no grupo de baixo; a Lição do clã deixou a campanha um pouco mais fácil para todos. Discutir com o usuário antes de compensar.
 
-Próxima rodada combinada (aprofundar as linhagens): Uchiha "Cópia", Hyuuga "64 Palmas" e Byakugan contra a névoa e as ilusões, Uzumaki "Selamento", Nara "Sombra costurada", Akimichi "Pílulas do clã", Prodígio com portões de risco, e o "despertar" de cada linhagem nos níveis 4 e 7.
+Próxima versão combinada (v0.23.0): Clones das Sombras como premium do guru (ataque principal com 100% do dano e 2 clones com 35%, +1 clone por nível da premium), Corpo Cintilante (talento: age primeiro na 1ª rodada; nível 2 +2 speed), guru sorteia 2 premium e o jogador escolhe 1 (charlatão 20%), e o Sapo vira dano verdadeiro de 6% do HP máximo do vilão por ataque que acerta (+2% por nível), uma vez por ataque.
 
 Quando o design mudar antes do código, listar aqui o que falta implementar.
 

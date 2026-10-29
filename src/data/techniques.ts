@@ -78,6 +78,10 @@ export const lineageTechniques: TechniqueDef[] = [
   { id: BASIC_TAIJUTSU, type: 'taijutsu', element: null, baseDamage: 8, chakraCost: 0, accuracy: 0.9 },
   { id: 'fangOverFang', type: 'taijutsu', element: null, baseDamage: 7, hits: 2, chakraCost: 3, lineages: ['inuzuka'] },
   // Selo dos Pontos Vitais (Hyuuga): só com o Byakugan ativo, não erra e drena o chakra do vilão.
+  // 64 Palmas (Hyuuga, nível 7): com o Byakugan; cada golpe que acerta fecha um ponto de chakra (drena).
+  { id: 'sixtyFourPalms', type: 'taijutsu', element: null, baseDamage: 6, hits: 4, chakraCost: 8, accuracy: 1, requiresDojutsu: 'byakugan', chakraDrain: 3, minLevel: 7, lineages: ['hyuuga'] },
+  // Correntes de Chakra (Uzumaki, nível 4): prende como a Sombra e drena o chakra do preso.
+  { id: 'chakraChains', type: 'ninjutsu', element: null, baseDamage: 0, chakraCost: 6, accuracy: 0.8, mental: 'prison', mentalStrength: 1, mentalPower: 0, mentalStat: 'ninjutsu', holdChakraDrain: 3, minLevel: 4, lineages: ['uzumaki'] },
   { id: 'chakraBlockStrike', type: 'taijutsu', element: null, baseDamage: 6, chakraCost: 0, accuracy: 1, requiresDojutsu: 'byakugan', chakraDrain: 6, lineages: ['hyuuga'] },
   // Imitação de Sombra (Nara): ninjutsu sem dano que aprisiona, usando ninjutsu na fórmula do genjutsu.
   { id: 'shadowImitation', type: 'ninjutsu', element: null, baseDamage: 0, chakraCost: 5, accuracy: 0.8, mental: 'prison', mentalStrength: 1, mentalPower: 0, mentalStat: 'ninjutsu', lineages: ['nara'] },

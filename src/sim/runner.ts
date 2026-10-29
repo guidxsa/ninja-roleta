@@ -4,6 +4,7 @@ import { scaleVillain, type Difficulty } from '../core/difficulty';
 import { canLevelUp, equipTrainingWeights, fullRestore, gainXp, recoverAfterWin, trainingWeightsWin, type PlayerState } from '../core/player';
 import {
   applyAkatsuki,
+  applyClanLesson,
   applyGuru,
   applyItem,
   applyReward,
@@ -141,6 +142,8 @@ function autoEvent(player: PlayerState, rng: Rng, data: GameData): Step {
       return applyAkatsuki(player, rollAkatsuki(player, rng, data).value, data);
     case 'guru':
       return applyGuru(player, rollGuru(player, rng, data).value, rng, data);
+    case 'clanLesson':
+      return applyClanLesson(player, data);
   }
 }
 

@@ -7,6 +7,7 @@ import {
   canFreeActive,
   canDojutsuExtra,
   canGenius,
+  copyTarget,
   canFocus,
   dealsDamage,
   illusionDamage,
@@ -16,6 +17,9 @@ import {
   incomingDamagePreview,
   itemAction,
   expectedMentalTurns,
+  forceGatesChance,
+  freeActiveCost,
+  sealTarget,
   playerGenjutsuHitChance,
   playerMentalStrength,
   reactionPreview,
@@ -211,13 +215,31 @@ export function chooseExtras(state: BattleState, action: PlayerAction, data: Gam
   const taijutsu = attack && tech.type === 'taijutsu';
   const reserve = (n: number) => p.chakra >= actionCost(state, action, data) + n;
   ex.dojutsu = canDojutsuExtra(state, action, data, ex) && reserve((p.dojutsu ? data.balance.dojutsu[p.dojutsu].activationCost : 0) + 3);
-  ex.gates = taijutsu && p.hp > p.maxHp * 0.5 && canFreeActive(state, 'gates', action, data, ex);
+  ex.gates = taijutsu && p.hp > p.maxHp * (state.playerFx.gatesUsed > 0 ? 0.7 : 0.5) && canFreeActive(state, 'gates', action, data, ex);
   ex.expansion = taijutsu && canFreeActive(state, 'expansion', action, data, ex) && reserve(data.balance.expansion.chakraCost + 4);
   // Esforço e Fera: junto com um ataque. Devorar: com a colônia cheia. Transmissão: contra todo golpe carregado que dá para pegar.
   ex.effort = attack && canFreeActive(state, 'effort', action, data, ex);
   ex.beast = attack && canFreeActive(state, 'beast', action, data, ex) && reserve(data.balance.beast.chakraCost + 4);
   ex.devour = state.villain.insects >= 6 && canFreeActive(state, 'devour', action, data, ex);
   ex.transmission = canFreeActive(state, 'transmission', action, data, ex) && playerGenjutsuHitChance(state, data) >= 0.4;
+  // Pílulas e portões forçados: com HP de sobra. Cópia: sempre que der. Selamento: no golpe carregado ou na técnica
+  // mais forte do vilão. Sombra costurada: se sobra chakra depois.
+  ex.pills = taijutsu && p.hp > p.maxHp * 0.5 && canFreeActive(state, 'pills', action, data, ex);
+  ex.forceGates = Boolean(ex.gates) && p.hp > p.maxHp * 0.6 && forceGatesChance(p, data) >= 0.6;
+  // Cópia: só sem cópia ou se a técnica nova bate mais que a atual.
+  const copyPower = (id: string | null) => {
+    const t = id ? data.techniquesById[id] : undefined;
+    return t ? t.baseDamage * (t.hits ?? 1) : 0;
+  };
+  const target = copyTarget(state);
+  ex.copy =
+    canFreeActive(state, 'copy', action, data, ex) && copyPower(target) > copyPower(state.playerFx.copied) && reserve(data.balance.copy.chakraCost + 3);
+  const sealed = sealTarget(state);
+  const strongest = Math.max(...state.villain.def.techniques.map((t) => t.baseDamage * (t.hits ?? 1)));
+  const targetDamage = sealed ? (state.villain.def.techniques.find((t) => t.id === sealed)?.baseDamage ?? 0) : 0;
+  ex.seal = canFreeActive(state, 'seal', action, data, ex) && (state.villain.charging !== null || targetDamage >= strongest);
+  const holdCost = freeActiveCost(state, 'shadowHold', data);
+  ex.shadowHold = holdCost !== null && canFreeActive(state, 'shadowHold', action, data, ex) && reserve(holdCost + 5);
   ex.clones = attack && canClones(state, action, data, ex) && p.chakra >= p.maxChakra * 0.5;
   return ex;
 }

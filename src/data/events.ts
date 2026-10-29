@@ -10,7 +10,8 @@ export type PreFightEventId =
   | 'training'
   | 'jokenpo'
   | 'foundItem'
-  | 'guru';
+  | 'guru'
+  | 'clanLesson';
 
 export type ItemId =
   | 'revive'
@@ -49,6 +50,7 @@ export const preFightEvents: Weighted<PreFightEventId>[] = [
   { id: 'jokenpo', weight: 20 },
   { id: 'foundItem', weight: 10 },
   { id: 'guru', weight: 10 },
+  { id: 'clanLesson', weight: 10 },
 ];
 
 /** Roleta de itens ("Achou um item" e a fatia de itens da recompensa). */

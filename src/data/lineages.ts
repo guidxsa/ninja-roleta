@@ -114,7 +114,7 @@ export const lineages: LineageDef[] = [
     resistance: { physical: 12, mental: 8 },
     affinity: { kind: 'rolled' },
     passive: 'vitality',
-    active: 'shadowClones',
+    active: 'seal',
   },
 ];
 

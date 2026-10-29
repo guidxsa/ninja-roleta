@@ -152,11 +152,11 @@ describe('criação do jogador', () => {
     expect(p.techniques).toContain('chakraBlockStrike');
   });
 
-  it('Uzumaki: muita vitalidade e chakra, Clones das Sombras', () => {
+  it('Uzumaki: muita vitalidade e chakra, Selamento', () => {
     const p = createPlayer({ lineageId: 'uzumaki', affinity: 'wind', jinchuuriki: false }, gameData);
     expect(p.maxHp).toBe(105);
     expect(p.maxChakra).toBe(35);
-    expect(p.active).toBe('shadowClones');
+    expect(p.active).toBe('seal');
   });
 
   it('prodígio do taijutsu: nin/gen zerados e técnicas proibidas', () => {

@@ -1,6 +1,17 @@
 // Todos os números de balanceamento. Valores provisórios: ajustar com `npm run sim`.
 // O design de cada regra está em docs/ (o arquivo indicado em cada bloco).
 
+/** Bônus permanente da Lição do clã. */
+export interface ClanLessonBonus {
+  taijutsu?: number;
+  ninjutsu?: number;
+  genjutsu?: number;
+  highestOffense?: number;
+  speed?: number;
+  hp?: number;
+  chakra?: number;
+}
+
 export const balance = {
   origin: {
     // Jinchuuriki: roleta independente da linhagem (origens.md). Os pesos das linhagens ficam em lineages.ts.
@@ -69,13 +80,14 @@ export const balance = {
       upkeep: 1,
       readDamageFactor: 0.5,
       stages: [
-        { minLevel: 1, statBonus: 3, speed: 1, genjutsuHit: 0.1, genjutsuPower: 3, readChance: 0.2 },
-        { minLevel: 4, statBonus: 5, speed: 2, genjutsuHit: 0.15, genjutsuPower: 6, readChance: 0.25 },
-        { minLevel: 7, statBonus: 7, speed: 3, genjutsuHit: 0.2, genjutsuPower: 9, readChance: 0.3 },
+        { minLevel: 1, statBonus: 3, speed: 1, genjutsuHit: 0.1, genjutsuPower: 3, readChance: 0.2, copyChance: 0.5 },
+        { minLevel: 4, statBonus: 5, speed: 2, genjutsuHit: 0.15, genjutsuPower: 6, readChance: 0.25, copyChance: 0.65 },
+        { minLevel: 7, statBonus: 7, speed: 3, genjutsuHit: 0.2, genjutsuPower: 9, readChance: 0.3, copyChance: 0.8 },
       ],
     },
     // Byakugan: taijutsu não erra, ×`taijutsuMult` e libera o Selo dos Pontos Vitais.
-    byakugan: { activationCost: 3, upkeep: 1, taijutsuMult: 1.1 },
+    // Byakugan: também ignora a evasão da névoa e tira `genjutsuHitPenalty` do acerto do genjutsu do vilão.
+    byakugan: { activationCost: 3, upkeep: 1, taijutsuMult: 1.1, genjutsuHitPenalty: 0.2 },
   },
 
   // Portões (prodígio do taijutsu): uma vez por luta; abrir é escolha grátis e o bônus vale `turns`
@@ -86,7 +98,12 @@ export const balance = {
       { minTaijutsu: 17, taijutsuMult: 1.3, chakraCost: 5, hpCostPct: 0.2 },
       { minTaijutsu: 21, taijutsuMult: 1.5, chakraCost: 7, hpCostPct: 0.25 },
       { minTaijutsu: 25, taijutsuMult: 1.7, chakraCost: 9, hpCostPct: 0.3 },
+      { minTaijutsu: 29, taijutsuMult: 1.9, chakraCost: 11, hpCostPct: 0.35 },
     ],
+    // Forçar: tenta abrir um portão além do liberado. Chance = `base` + `perPoint` × (taijutsu − mínimo do
+    // portão forçado), entre `min` e `max`. Falhou: abre o liberado e fere mais `failHpPct` do HP máximo.
+    force: { base: 0.5, perPoint: 0.03, min: 0.2, max: 0.8, failHpPct: 0.1 },
+    usesPerFight: 1,
   },
 
   // Passivas e ativas de linhagem (origens.md).
@@ -117,6 +134,36 @@ export const balance = {
   devour: { chakraCost: 3, chakraPerInsect: 3, damagePerInsect: 2 },
   // Transmissão mental (Yamanaka): contra golpe carregado, rola o acerto de genjutsu; pegou, o vilão perde o golpe e a vez.
   transmission: { chakraCost: 5, uses: 1, extraUseLevels: [4, 7] },
+  // Cópia (Uchiha, com o Sharingan): cada tentativa custa `chakraCost`; a chance vem do estágio do Sharingan.
+  copy: { chakraCost: 3 },
+  // Selamento (Uzumaki): a próxima técnica do vilão sai da roleta dele por `turns` rodadas.
+  seal: { chakraCost: 6, uses: 1, turns: 2 },
+  // Sombra costurada (Nara): manter a Imitação de Sombra custa `baseCost` + `perHold` por vez já mantida.
+  shadowHold: { baseCost: 3, perHold: 1 },
+  // Pílulas do clã (Akimichi): 1×/luta, roleta pura. Valem `turns` rodadas, contando a da ativação.
+  pills: {
+    usesPerFight: 1,
+    turns: 3,
+    options: [
+      { id: 'green', weight: 50, taijutsuMult: 1.3, physical: 0, speed: 0, hpCostPct: 0.1, exhaustTurns: 0 },
+      { id: 'yellow', weight: 35, taijutsuMult: 1.6, physical: 3, speed: 0, hpCostPct: 0.2, exhaustTurns: 0 },
+      { id: 'red', weight: 15, taijutsuMult: 2, physical: 0, speed: 3, hpCostPct: 0.3, exhaustTurns: 2 },
+    ],
+    // Exausto (depois da pílula vermelha): taijutsu × `taijutsuMult` e speed − `speedPenalty`.
+    exhausted: { taijutsuMult: 0.5, speedPenalty: 3 },
+  },
+  // Despertar (origens.md#despertar): melhoras de cada linhagem nos níveis 4 e 7.
+  awakening: {
+    common: { comeback: { level: 4, hpBelowPct: 0.25, healPct: 0.15 }, effort: { level: 7, offenseBonus: 5, turns: 4 } },
+    nara: { shadow: { level: 4, strengthBonus: 1 }, strangle: { level: 7, hpPct: 0.05 } },
+    akimichi: { heavyBody: { level: 4, minMult: 0.8 }, expansion: { level: 7 } },
+    yamanaka: { mindReading: { level: 4, villainHitPenalty: 0.15 }, possession: { level: 7, selfDamageMult: 1.25 } },
+    aburame: { colony: { level: 4, maxInsects: 15, swarmInsectsPerHit: 2 }, devour: { level: 7, chakraPerInsect: 4, damagePerInsect: 3 } },
+    inuzuka: { duo: { level: 4, damagePct: 0.6 }, beast: { level: 7, chakraCost: 3, turns: 4 } },
+    taijutsuProdigy: { force: { level: 4, chanceBonus: 0.1 }, gates: { level: 7, usesPerFight: 2 } },
+    hyuuga: { byakugan: { level: 4, duration: 7 } },
+    uzumaki: { seal: { level: 7, extraUses: 1, turns: 3 }, vitality: { level: 7, chakraPerTurn: 2, hpPctPerTurn: 0.02 } },
+  },
 
   // Efeitos (efeitos.md). Valem para jogador e vilões.
   status: {
@@ -205,6 +252,23 @@ export const balance = {
     // Sem Vontade do Fogo para perder: perde esta fração do HP e do chakra que tem (HP nunca abaixo de 1).
     akatsukiNoReviveHpPct: 0.5,
     akatsukiNoReviveChakraPct: 0.5,
+    // Lição do clã (campanha.md#lição-do-clã): XP e um bônus permanente com a cara da linhagem.
+    // `highestOffense`: soma no maior status de ataque (comum).
+    clanLesson: {
+      xp: 40,
+      bonus: {
+        common: { highestOffense: 2 },
+        nara: { ninjutsu: 2 },
+        akimichi: { hp: 15 },
+        yamanaka: { genjutsu: 2 },
+        aburame: { ninjutsu: 2 },
+        inuzuka: { speed: 1, taijutsu: 1 },
+        taijutsuProdigy: { taijutsu: 2 },
+        uchiha: { genjutsu: 2 },
+        hyuuga: { taijutsu: 2 },
+        uzumaki: { chakra: 5 },
+      } as Record<string, ClanLessonBonus>,
+    },
   },
 
   // Guru (campanha.md#guru): premium sorteada por peso do perfil. Palma Curativa pesa chakra máximo ÷ divisor.
