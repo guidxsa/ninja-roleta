@@ -3,8 +3,12 @@ import {
   availableActions,
   canFreeActive,
   effectiveOffense,
+  expectedMentalTurns,
   gatesToOpen,
+  mentalEscapeChance,
+  mentalStrength,
   playerGenjutsuHitChance,
+  playerMentalStrength,
   playRound,
   startBattle,
   type BattleEvent,
@@ -16,7 +20,7 @@ import type { Origin } from '../src/core/types';
 import { gameData } from '../src/data/index';
 import { villains } from '../src/data/villains';
 import { runBattle, MAX_ROUNDS } from '../src/sim/runner';
-import { battle, seq, testVillain, withInitiative } from './helpers';
+import { battle, hold, seq, testVillain, withInitiative } from './helpers';
 
 const common: Origin = { lineageId: null, affinity: 'fire', jinchuuriki: false };
 /** Comum que usa genjutsu (para testar o aprisionamento sem depender do Uchiha). */
@@ -26,6 +30,7 @@ const withGenjutsu = () => {
 };
 const ofType = <T extends BattleEvent['type']>(log: BattleEvent[], type: T) =>
   log.filter((e): e is Extract<BattleEvent, { type: T }> => e.type === type);
+const ofRound = (prev: BattleState, next: BattleState) => next.log.slice(prev.log.length);
 
 describe('rodada básica', () => {
   it('emboscada: jogador age primeiro e pode vencer na hora', () => {
@@ -121,15 +126,18 @@ describe('Vontade do Fogo', () => {
 });
 
 describe('debilitado', () => {
-  it('genjutsu que acerta faz o alvo perder 2 ações (1 + 1 de todo controle), depois ele fica imune por uma ação', () => {
+  it('genjutsu que acerta tira a 1ª ação com certeza; depois o alvo gira para se livrar e fica imune por uma ação', () => {
     const s0 = withInitiative(startBattle(withGenjutsu(), testVillain()));
-    const s1 = playRound(s0, 'tech:basicGenjutsu', seq(0.5), gameData);
-    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 2, kind: 'prison' }]);
+    // Acerta (0.5) e, depois da vez perdida, a fuga falha (0.99).
+    const s1 = playRound(s0, 'tech:basicGenjutsu', seq(0.5, 0.99), gameData);
+    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', kind: 'prison', escape: expect.any(Number) }]);
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'prison' }]);
-    expect(s1.villain.fx).toMatchObject({ debilitated: 1, debilitateImmunity: 0 });
-    const s2 = playRound(s1, 'rest', seq(0.5), gameData);
-    expect(ofType(s2.log.slice(s1.log.length), 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'prison' }]);
-    expect(s2.villain.fx).toMatchObject({ debilitated: 0, debilitateImmunity: 1 });
+    expect(s1.villain.fx).toMatchObject({ debilitated: { served: 1 }, debilitateImmunity: 0 });
+    // Perde a 2ª vez e se livra (0.0).
+    const s2 = playRound(s1, 'rest', seq(0.0), gameData);
+    expect(ofType(ofRound(s1, s2), 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'prison' }]);
+    expect(ofType(ofRound(s1, s2), 'mentalBroken')).toEqual([{ type: 'mentalBroken', side: 'villain', effect: 'prison' }]);
+    expect(s2.villain.fx).toMatchObject({ debilitated: null, debilitateImmunity: 1 });
 
     // Rodada 3: genjutsu acerta mas o vilão resiste; o vilão age e perde a imunidade.
     const s3 = playRound(s2, 'tech:basicGenjutsu', seq(0.9), gameData);
@@ -144,8 +152,8 @@ describe('debilitado', () => {
     const s1 = playRound(s0, 'tech:basicGenjutsu', seq(0.9), gameData);
     // Pegou (+50%); controlado, ainda não cai.
     expect(s1.villain.fx.tenacity).toBeCloseTo(0.5);
-    // Na rodada seguinte o controle acaba e a tenacidade cai 15%.
-    const s2 = playRound(s1, 'rest', seq(0.5), gameData);
+    // Na rodada seguinte o alvo se livra (0.0) e a tenacidade cai 15%.
+    const s2 = playRound(s1, 'rest', seq(0.0), gameData);
     expect(s2.villain.fx.tenacity).toBeCloseTo(0.35);
     expect(playerGenjutsuHitChance(s2, gameData, 'basicGenjutsu')).toBeCloseTo(base * 0.65);
     let s = s2;
@@ -156,7 +164,7 @@ describe('debilitado', () => {
 
   it('tenacidade: renovar um controle que ainda vale não soma de novo', () => {
     const s0 = withInitiative(startBattle(withGenjutsu(), testVillain({ hp: 500 })));
-    const jailed = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, debilitated: 2, tenacity: 0.5 } } };
+    const jailed = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, debilitated: hold(), tenacity: 0.5 } } };
     const s1 = playRound(jailed, 'tech:basicGenjutsu', seq(0.99), gameData);
     expect(ofType(s1.log, 'debilitate')).toHaveLength(1);
     expect(s1.villain.fx.tenacity).toBe(0.5);
@@ -174,7 +182,7 @@ describe('debilitado', () => {
 
   it('jogador debilitado perde a ação', () => {
     const s0 = startBattle(createPlayer(common, gameData), testVillain());
-    const s1 = playRound({ ...s0, playerFx: { ...s0.playerFx, debilitated: 1 } }, 'tech:basicTaijutsu', seq(0.9, 0.5, 0.5), gameData);
+    const s1 = playRound({ ...s0, playerFx: { ...s0.playerFx, debilitated: hold() } }, 'tech:basicTaijutsu', seq(0.9, 0.5, 0.5), gameData);
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'player', reason: 'prison' }]);
     expect(s1.player.chakra).toBe(30);
   });
@@ -285,11 +293,11 @@ describe('jinchuuriki: manto de chakra e demônio interno', () => {
   it('demônio interno: imune a genjutsu', () => {
     const v = testVillain({
       offense: { taijutsu: 0, ninjutsu: 0, genjutsu: 26 },
-      techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalTurns: 1 }],
+      techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalStrength: 1 }],
     });
     const s1 = playRound(withInitiative(startBattle(createPlayer(jin, gameData), v), 'villain'), 'rest', seq(0.5), gameData);
     expect(ofType(s1.log, 'genjutsuImmune')).toEqual([{ type: 'genjutsuImmune', target: 'player' }]);
-    expect(s1.playerFx.debilitated).toBe(0);
+    expect(s1.playerFx.debilitated).toBeNull();
   });
 });
 
@@ -456,7 +464,8 @@ describe('genjutsu: aprisionamento sem dano', () => {
     const p = withGenjutsu();
     return { ...p, offense: { ...p.offense, genjutsu } };
   };
-  const prison = (s: ReturnType<typeof playRound>) => ofType(s.log, 'debilitate')[0]?.turns;
+  const escape = (s: ReturnType<typeof playRound>) => ofType(s.log, 'debilitate')[0]?.escape;
+  const cfg = gameData.balance.mentalHold;
 
   it('não causa dano: o vilão só perde a vez', () => {
     const s0 = startBattle(withGen(10), testVillain(), { playerStartsFirst: true });
@@ -465,23 +474,54 @@ describe('genjutsu: aprisionamento sem dano', () => {
     expect(s1.villain.hp).toBe(50);
   });
 
-  it('os turnos crescem com a vantagem do genjutsu sobre a resistência mental usada pelo alvo, até 3 (+1 de todo controle)', () => {
-    // O vilão resiste: usa 70% da resistência mental (10 → 7).
-    const turns = (gen: number, villainMental = 10) =>
-      prison(playRound(startBattle(withGen(gen), testVillain({ resistance: { physical: 10, mental: villainMental } }), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData));
-    expect(turns(10)).toBe(2); // vantagem 3
-    expect(turns(15)).toBe(3); // vantagem 8
-    expect(turns(23)).toBe(4); // vantagem 16
-    expect(turns(60)).toBe(4); // teto
-    expect(turns(23, 30)).toBe(2); // alvo resistente: 30 × 0,7 = 21
+  it('a força cresce com a vantagem do genjutsu sobre a resistência mental usada pelo alvo e baixa a fuga, sem teto', () => {
+    // O vilão resiste: usa 70% da resistência mental (10 → 7). Força = 1 + vantagem / 8.
+    const first = (gen: number, villainMental = 10) =>
+      escape(playRound(startBattle(withGen(gen), testVillain({ resistance: { physical: 10, mental: villainMental } }), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData));
+    const expected = (advantage: number) => Math.max(cfg.escapeMin, cfg.escapeBase - cfg.escapePerStrength * (advantage / 8));
+    expect(first(10)).toBeCloseTo(expected(3));
+    expect(first(15)).toBeCloseTo(expected(8));
+    expect(first(23)).toBeCloseTo(expected(16));
+    expect(first(60)).toBeCloseTo(cfg.escapeMin); // piso da fuga
+    expect(first(23, 30)).toBeCloseTo(expected(2)); // alvo resistente: 30 × 0,7 = 21
+    expect(mentalStrength(23, 7, 1, 'prison', gameData)).toBe(3);
+    expect(mentalStrength(60, 7, 1, 'prison', gameData)).toBeCloseTo(1 + 53 / 8);
   });
 
-  it('técnica e upgrade de genjutsu aumentam o poder de aprisionamento', () => {
+  it('técnica e upgrade de genjutsu aumentam a força do aprisionamento', () => {
     const crow = learnTechnique(withGen(10), 'crowIllusion', gameData); // 10 + 6 = 16 → vantagem 9
-    expect(prison(playRound(startBattle(crow, testVillain(), { playerStartsFirst: true }), 'tech:crowIllusion', seq(0.5), gameData))).toBe(3);
-    expect(prison(playRound(startBattle(withGen(12), testVillain(), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData))).toBe(2);
+    const strength = (p: ReturnType<typeof withGen>, id: string) => playerMentalStrength(startBattle(p, testVillain()), id, gameData);
+    expect(strength(crow, 'crowIllusion')).toBeCloseTo(1 + 9 / 8);
+    expect(strength(withGen(12), 'basicGenjutsu')).toBeCloseTo(1 + 5 / 8);
     const upgraded = { ...withGen(12), techniqueLevels: { basicGenjutsu: 1 } }; // 12 + 3 = 15 → vantagem 8
-    expect(prison(playRound(startBattle(upgraded, testVillain(), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData))).toBe(3);
+    expect(strength(upgraded, 'basicGenjutsu')).toBeCloseTo(2);
+    expect(escape(playRound(startBattle(upgraded, testVillain(), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData))).toBeCloseTo(
+      mentalEscapeChance(2, 1, gameData),
+    );
+  });
+
+  it('fuga: a 1ª chance cai com a força e cresce com o quadrado dos turnos, mais devagar quanto mais forte, até 100%', () => {
+    const e = (strength: number, served: number) => mentalEscapeChance(strength, served, gameData);
+    expect(e(1, 1)).toBeCloseTo(cfg.escapeBase);
+    expect(e(2, 1)).toBeCloseTo(cfg.escapeBase - cfg.escapePerStrength);
+    expect(e(1, 2) - e(1, 1)).toBeCloseTo(cfg.escapeGrowth);
+    expect(e(1, 3) - e(1, 1)).toBeCloseTo(4 * cfg.escapeGrowth);
+    expect(e(2, 3) - e(2, 1)).toBeCloseTo((4 * cfg.escapeGrowth) / 2);
+    // Sempre chega a 100%, mesmo com força muito alta.
+    expect(e(10, 50)).toBe(1);
+    expect(expectedMentalTurns(2, gameData)).toBeGreaterThan(expectedMentalTurns(1, gameData));
+    expect(expectedMentalTurns(1, gameData)).toBeGreaterThan(1);
+  });
+
+  it('sem teto de turnos: um controle forte que não gira a fuga segue valendo', () => {
+    const s0 = withInitiative(startBattle(withGen(10), testVillain({ hp: 500 })));
+    let s: BattleState = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, debilitated: hold(3) } } };
+    for (let i = 0; i < 5; i++) s = playRound(s, 'rest', seq(0.99), gameData);
+    expect(ofType(s.log, 'skip')).toHaveLength(5);
+    expect(s.villain.fx.debilitated).toEqual({ strength: 3, served: 5 });
+    // Renovar fica com a força maior e recomeça a contagem.
+    const s1 = playRound(s, 'tech:basicGenjutsu', seq(0.5, 0.99), gameData);
+    expect(s1.villain.fx.debilitated).toEqual({ strength: 3, served: 1 });
   });
 
   it('não gasta o foco', () => {
@@ -491,15 +531,15 @@ describe('genjutsu: aprisionamento sem dano', () => {
   });
 
   it('o genjutsu do vilão também não causa dano e aprisiona o jogador conforme o genjutsu dele', () => {
-    // Genjutsu 26 contra a resistência mental do jogador resistindo (10 × 0,7 = 7): vantagem 19 → 3 turnos + 1 de controle.
+    // Genjutsu 26 contra a resistência mental do jogador resistindo (10 × 0,7 = 7): vantagem 19 → força 3,375, fuga no piso.
     const v = testVillain({
       offense: { taijutsu: 0, ninjutsu: 0, genjutsu: 26 },
-      techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalTurns: 1 }],
+      techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalStrength: 1 }],
     });
     const s0 = startBattle(withGen(10), v, { villainStartsFirst: true });
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(s1.player.hp).toBe(s0.player.hp);
-    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'player', turns: 4, kind: 'prison' }]);
+    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'player', kind: 'prison', escape: cfg.escapeMin }]);
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'player', reason: 'prison' }]);
   });
 });

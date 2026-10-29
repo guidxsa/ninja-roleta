@@ -109,9 +109,9 @@ export interface TechniqueDef {
    * é uma ilusão de dano (Uchiha): base + genjutsu − resistência mental usada pelo alvo.
    */
   mental?: MentalEffect;
-  /** Turnos base do efeito mental. */
-  mentalTurns?: number;
-  /** Poder extra somado ao status do usuário no cálculo dos turnos. */
+  /** Força base do efeito mental (efeitos.md#duração-dos-efeitos-mentais). */
+  mentalStrength?: number;
+  /** Poder extra somado ao status do usuário no cálculo da força. */
   mentalPower?: number;
   /** Status usado no lugar do genjutsu na rolagem e na duração (Imitação de Sombra: ninjutsu). */
   mentalStat?: AttackType;
@@ -161,7 +161,7 @@ export interface VillainTechnique {
   element?: Element | null;
   /** Omitido = `balance.hit.defaultAccuracy`. */
   accuracy?: number;
-  mentalTurns?: number;
+  mentalStrength?: number;
   blade?: BladeKind;
   /** Técnica médica: cura esta fração do HP máximo, sem rolar acerto. */
   healPct?: number;

@@ -159,7 +159,7 @@ Ativar um estado gasta o turno. O manto do jinchuuriki é um estado **neutro** (
 
 | Técnica | Dano | Golpes | Chakra | Precisão | Efeito | Quem |
 |---|---|---|---|---|---|---|
-| Imitação de Sombra | 0 | 1 | 5 | 80% | Aprisionado (1 turno base; duração pela fórmula do genjutsu usando ninjutsu contra a resistência física) | Nara |
+| Imitação de Sombra | 0 | 1 | 5 | 80% | Aprisionado (força base 1; força e fuga pela fórmula do genjutsu, usando ninjutsu contra a resistência física) | Nara |
 | Enxame | 5 | 4 | 5 | 85% | Cada golpe drena chakra (Colmeia) | Aburame |
 | Rotação | — | — | 5 | — | Barreira neutra (ação): escudo de 26 que devolve 50% do dano que bloqueia. | Hyuuga (nível 4) |
 
@@ -167,7 +167,7 @@ Ativar um estado gasta o turno. O manto do jinchuuriki é um estado **neutro** (
 
 Se acertar, aplica um efeito mental (ver [efeitos.md](efeitos.md#efeitos-de-genjutsu)). Só as **ilusões de dano** do Uchiha ferem (base + genjutsu − resistência mental). A única reação contra genjutsu é Resistir, com a resistência mental.
 
-| Técnica | Nível mínimo | Chakra | Dano | Turnos base | Poder extra | Efeito | Quem |
+| Técnica | Nível mínimo | Chakra | Dano | Força base | Poder extra | Efeito | Quem |
 |---|---|---|---|---|---|---|---|
 | Olhar Hipnótico | Inicial | 3 | — | 1 | 0 | Aprisionado | Uchiha |
 | Ilusão da Dor | Inicial | 3 | 15 | — | — | Ilusão de dano | Uchiha |

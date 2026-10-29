@@ -12,13 +12,13 @@ Efeitos negativos e mentais que ataques e técnicas aplicam. Valem para jogador 
 
 Controle = efeito que tira a vez: Aprisionado, Sono, Paralisia e Possessão. Valem para jogador e vilão.
 
-- **Duração**: todo controle que pega dura **+1 turno** além do que a fonte dá (genjutsu, Imitação de Sombra, Possessão e paralisia). Vale para jogador e vilão.
+- **Duração**: os controles mentais (Aprisionado, Sono, Possessão) duram pela **roleta de fuga** (ver [Duração dos efeitos mentais](#duração-dos-efeitos-mentais)). A Paralisia dura 2 vezes fixas.
 - **Vulnerável**: quem perdeu a vez recebe **dano ×1,25** (taijutsu, ninjutsu, disputa e ilusões de dano).
 - **Tenacidade**: cada controle que pega soma **+50%** de tenacidade no alvo (até 90%). A chance do próximo controle é multiplicada por **(1 − tenacidade)**: um controle logo depois do outro fica muito mais difícil.
 - A tenacidade cai **15% por rodada** em que o alvo não está controlado, até voltar a zero (uns 3 a 4 turnos depois de um controle).
 - No genjutsu e na Imitação de Sombra, a tenacidade entra na chance de acerto mostrada na tela. Na paralisia do crítico de raio, rola-se a tenacidade depois do crítico.
 
-Configuração: `control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTenacity: 0.9, vulnerableDamageMult: 1.25, extraTurns: 1 }`.
+Configuração: `control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTenacity: 0.9, vulnerableDamageMult: 1.25 }`.
 - "Ataque elemental" = ataque com elemento (ninjutsu). Taijutsu é neutro.
 - Além dos críticos, uma técnica pode ter **chance de efeito no acerto** (campo `efeito` da ficha, ver [tecnicas.md](tecnicas.md)).
 
@@ -26,7 +26,7 @@ Configuração: `control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTen
 
 | Efeito | Origem | Duração | Efeito |
 |---|---|---|---|
-| Paralisia | Crítico de raio | 2 vezes (1 + 1 de controle) | Perde a vez. |
+| Paralisia | Crítico de raio | 2 vezes | Perde a vez. |
 | Atordoamento | Crítico de vento, terra ou água; algumas técnicas | 2 ações do alvo | −20 na chance de acerto. |
 | Queimadura | Crítico de fogo; algumas técnicas | 2 rodadas | Ver abaixo. |
 | Envenenamento | Cobra (invocação e Orochimaru) | Até curar | Ver abaixo. |
@@ -48,16 +48,38 @@ Configuração: `control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTen
 
 ## Efeitos de genjutsu
 
-Todos os efeitos mentais usam a mesma rolagem e a mesma fórmula de duração. Só as **ilusões de dano** do Uchiha ferem (ver abaixo).
+Todos os efeitos mentais usam a mesma rolagem e a mesma fórmula de força. Só as **ilusões de dano** do Uchiha ferem (ver abaixo).
 
 ```
 resistência = resistência_mental_do_alvo × fração_da_situação   (40%, 70% ou 100%, ver fundamentos)
 acerto      = genjutsuHit(genjutsu_do_atacante, resistência)
 poder       = genjutsu_do_atacante + poder_da_técnica + 3 × (nível_da_técnica − 1)
-turnos      = clamp(turnos_base + floor(max(0, poder − resistência) / 8), 1, 3)
+força       = força_base + max(0, poder − resistência) / 8      (sem arredondar; o Sono soma +1)
 ```
 
-Controles (Aprisionado, Sono, Possessão) somam **+1 turno** a esse resultado (ver "Controles"); o Sono soma mais 1. Pavor, Confusão e Tormento ficam com os turnos da fórmula.
+### Duração dos efeitos mentais
+
+Nenhum efeito mental sem dano tem turnos fixos nem teto de turnos: Aprisionado, Sono, Possessão, Pavor, Confusão e Tormento duram pela **roleta de fuga**.
+
+- O 1º turno é garantido.
+- Depois de cada turno cumprido (k = 1, 2, 3...), o alvo gira a roleta para se livrar:
+
+  ```
+  fuga_inicial = clamp(0,35 − 0,15 × (força − 1), 5%, 100%)
+  fuga(k)      = min(100%, fuga_inicial + (0,1 / força) × (k − 1)²)
+  ```
+
+- A força pesa duas vezes: baixa a chance de sair logo e faz a chance crescer mais devagar. Como a chance cresce com o quadrado dos turnos, ela sempre chega a 100%: ninguém fica preso para sempre.
+- Turno = a unidade de cada efeito: vez perdida (Aprisionado, Sono, Possessão), ação do alvo (Pavor, Confusão) ou rodada (Tormento).
+- Renovar um efeito que ainda vale fica com a força maior e recomeça a contagem.
+
+| Força | Fuga depois do 1º, 2º, 3º, 4º, 5º turno | Duração média |
+|---|---|---|
+| 1 | 35%, 45%, 75%, 100% | 2,1 turnos |
+| 2 | 20%, 25%, 40%, 65%, 100% | 2,9 turnos |
+| 3 | 5%, 8%, 18%, 35%, 58% (88% no 6º) | 4,2 turnos |
+
+Configuração: `mentalHold: { pointsPerStrength: 8, escapeBase: 0.35, escapePerStrength: 0.15, escapeMin: 0.05, escapeGrowth: 0.1 }` e `status.sleepStrengthBonus: 1`.
 
 - O alvo resiste com a **resistência mental** (mais o bônus de Olhos treinados no Uchiha). A única reação possível é Resistir.
 - Jinchuuriki (Demônio interno) é imune a todos.
@@ -67,13 +89,13 @@ Controles (Aprisionado, Sono, Possessão) somam **+1 turno** a esse resultado (v
 | Efeito | O que faz | Uso tático |
 |---|---|---|
 | Aprisionado | Perde a vez. | Controle direto. |
-| Sono | Perde a vez; a duração é +1 turno, mas acorda ao tomar dano. | Preparar um golpe forte. |
+| Sono | Perde a vez; tem +1 de força, mas acorda ao tomar dano. | Preparar um golpe forte. |
 | Possessão | Perde a vez e golpeia a si mesmo com a própria técnica de dano mais forte, contra a própria resistência física passiva. | Controle que fere: quanto mais forte o vilão, mais ele se machuca. |
 | Pavor | O alvo causa 35% menos dano e tem as resistências física e mental ×0,75. | Sobreviver a um chefe e bater mais forte nele. |
 | Confusão | Em cada ação, 40% de chance de falhar; metade dessas falhas acerta a si mesmo com o próprio ataque (contra a própria resistência física passiva). | Aposta de RNG. |
 | Tormento | Perde 5 de chakra no início de cada rodada. | Travar as técnicas do vilão. |
 
-- Pavor e Confusão contam as ações do alvo; Tormento conta rodadas.
+- Pavor e Confusão giram a fuga a cada ação do alvo; Tormento, a cada rodada.
 - A Possessão vem da Transferência de Mente (Yamanaka). Configuração: `status.possession: { selfDamageMult: 1 }`.
 - Pavor: `status.fear: { damageMult: 0.65, resistanceMult: 0.75 }`. Vale para jogador e vilão.
 

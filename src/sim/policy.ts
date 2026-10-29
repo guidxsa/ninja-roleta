@@ -15,9 +15,9 @@ import {
   isIllusion,
   incomingDamagePreview,
   itemAction,
-  mentalEffectTurns,
+  expectedMentalTurns,
   playerGenjutsuHitChance,
-  playerGenjutsuTurns,
+  playerMentalStrength,
   reactionPreview,
   reactionTechniqueId,
   type BattleState,
@@ -98,7 +98,7 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
 
   // Efeitos mentais: valor em dano equivalente (o dano do vilão evitado, o que ele se fere e o bônus
   // no próximo golpe contra quem perdeu a vez), comparado com o dano do melhor ataque deste turno.
-  const canDebilitate = v.fx.debilitated === 0 && v.fx.asleep === 0 && v.fx.possessed === 0 && v.fx.debilitateImmunity === 0;
+  const canDebilitate = !v.fx.debilitated && !v.fx.asleep && !v.fx.possessed && v.fx.debilitateImmunity === 0;
   const villainHit = Math.max(villainIntentDamage(state, data), 6);
   const attackNow = bestAttackValue(state, data);
   const st = data.balance.status;
@@ -109,10 +109,10 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
     if (!t?.mental || isIllusion(t)) continue;
     const losesTurn = t.mental === 'prison' || t.mental === 'sleep' || t.mental === 'possession';
     if (losesTurn && !canDebilitate) continue;
-    if (t.mental === 'fear' && v.fx.feared > 0) continue;
-    if (t.mental === 'confusion' && v.fx.confused > 0) continue;
-    if (t.mental === 'torment' && v.fx.tormented > 0) continue;
-    const turns = mentalEffectTurns(t.mental, playerGenjutsuTurns(state, t.id, data), data);
+    if (t.mental === 'fear' && v.fx.feared) continue;
+    if (t.mental === 'confusion' && v.fx.confused) continue;
+    if (t.mental === 'torment' && v.fx.tormented) continue;
+    const turns = expectedMentalTurns(playerMentalStrength(state, t.id, data), data);
     const vulnerable = (data.balance.control.vulnerableDamageMult - 1) * attackNow;
     const perTurn =
       t.mental === 'possession'

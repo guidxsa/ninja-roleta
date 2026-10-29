@@ -1,4 +1,4 @@
-import { startBattle, type BattleOptions, type BattleState, type Side } from '../src/core/combat';
+import { startBattle, type BattleOptions, type BattleState, type MentalHold, type Side } from '../src/core/combat';
 import type { PlayerState } from '../src/core/player';
 import type { Rng } from '../src/core/rng';
 import type { VillainDef } from '../src/core/types';
@@ -7,6 +7,11 @@ import type { VillainDef } from '../src/core/types';
 export function seq(...values: number[]): Rng {
   let i = 0;
   return () => values[Math.min(i++, values.length - 1)]!;
+}
+
+/** Efeito mental valendo, para montar estados de teste. */
+export function hold(strength = 1, served = 0): MentalHold {
+  return { strength, served };
 }
 
 /** Fixa a iniciativa da luta (sem gastar um número do rng com a rolagem da 1ª rodada). */

@@ -15,9 +15,12 @@ export const balance = {
   hit: { defaultAccuracy: 0.85, min: 0.05, max: 1 },
   // Genjutsu do atacante vs. resistência mental usada pelo alvo.
   genjutsuHit: { base: 0.6, perPoint: 0.02, min: 0.2, max: 0.9 },
-  // Efeitos mentais: turnos = turnos base da técnica + 1 a cada `pointsPerExtraTurn` de vantagem
-  // (poder do atacante − resistência mental usada pelo alvo), entre 1 e `maxTurns`.
-  genjutsuPrison: { pointsPerExtraTurn: 8, maxTurns: 3 },
+  // Efeitos mentais sem dano (efeitos.md#duração-dos-efeitos-mentais): força = força base da técnica +
+  // vantagem / `pointsPerStrength` (poder do atacante − resistência usada pelo alvo), sem arredondar.
+  // O 1º turno é garantido; depois de cada turno cumprido (k), o alvo gira para se livrar com
+  // min(1, fuga_inicial + `escapeGrowth` / força × (k − 1)²), em que
+  // fuga_inicial = clamp(`escapeBase` − `escapePerStrength` × (força − 1), `escapeMin`, 1). Sem teto de turnos.
+  mentalHold: { pointsPerStrength: 8, escapeBase: 0.35, escapePerStrength: 0.15, escapeMin: 0.05, escapeGrowth: 0.1 },
 
   // Crítico: 5% + diferencial_de_dano_% + bônus da técnica, no máximo 50% e nunca acima do acerto.
   crit: { baseChance: 0.05, multiplier: 2, max: 0.5 },
@@ -107,7 +110,7 @@ export const balance = {
 
   // Efeitos (efeitos.md). Valem para jogador e vilões.
   status: {
-    paralysis: { turns: 1 },
+    paralysis: { turns: 2 },
     stun: { turns: 2, hitPenalty: 0.2 },
     // O n-ésimo tique causa 2^n % do HP máximo, no máximo `maxPct`.
     burn: { turns: 2, extendPerHit: 1, reigniteTurns: 1, maxPct: 0.16 },
@@ -115,8 +118,8 @@ export const balance = {
     // Teste de cura depois de cada tique a partir de `cureFromTick`. Acerto em alvo envenenado soma `hitBonus`.
     poison: { basePct: 0.01, growthPerTick: 1, maxPct: 0.3, cureChance: 0.4, cureFromTick: 2, hitBonus: 1 },
     bleed: { bladeDamageMult: 1.5 },
-    // Efeitos de genjutsu.
-    sleepExtraTurns: 1,
+    // Efeitos de genjutsu. O Sono soma força ao efeito.
+    sleepStrengthBonus: 1,
     // Pavor: o apavorado causa `damageMult` do dano e tem as resistências × `resistanceMult`.
     fear: { damageMult: 0.65, resistanceMult: 0.75 },
     confusion: { failChance: 0.4, selfHitShare: 0.5 },
@@ -133,8 +136,7 @@ export const balance = {
   // Controles (efeitos.md#controles): quem perde a vez (Aprisionado, Sono, Paralisia, Possessão) ganha
   // tenacidade, que multiplica a chance do próximo controle por (1 − tenacidade). Cai `decayPerRound` por
   // rodada em que não está controlado. Alvo que perdeu a vez recebe dano × `vulnerableDamageMult`.
-  // Todo controle que pega dura `extraTurns` a mais (genjutsu, Imitação de Sombra, Possessão e paralisia).
-  control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTenacity: 0.9, vulnerableDamageMult: 1.25, extraTurns: 1 },
+  control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTenacity: 0.9, vulnerableDamageMult: 1.25 },
 
   revive: { initialItems: 1 },
 

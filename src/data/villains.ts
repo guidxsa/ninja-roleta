@@ -101,7 +101,7 @@ export const villains: VillainDef[] = [
     critBonus: 0.03,
     xp: 60,
     techniques: [
-      { id: 'soundWave', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalTurns: 1 },
+      { id: 'soundWave', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalStrength: 1 },
       { id: 'kunaiStrike', type: 'taijutsu', baseDamage: 8, chakraCost: 0, weight: 3, blade: 'cutting' },
     ],
   },
@@ -213,7 +213,7 @@ export const villains: VillainDef[] = [
     critBonus: 0.02,
     xp: 60,
     techniques: [
-      { id: 'demonFlute', type: 'genjutsu', baseDamage: 0, chakraCost: 5, weight: 1, mentalTurns: 1 },
+      { id: 'demonFlute', type: 'genjutsu', baseDamage: 0, chakraCost: 5, weight: 1, mentalStrength: 1 },
       { id: 'summonedOgre', type: 'taijutsu', baseDamage: 11, chakraCost: 0, weight: 2 },
     ],
     passive: curseMark,
@@ -274,7 +274,7 @@ export const villains: VillainDef[] = [
     techniques: [
       { id: 'hiddenSnakes', type: 'ninjutsu', baseDamage: 14, chakraCost: 5, weight: 3 },
       { id: 'grassSword', type: 'taijutsu', baseDamage: 12, chakraCost: 0, weight: 2, blade: 'sword' },
-      { id: 'killingIntent', type: 'genjutsu', baseDamage: 0, chakraCost: 6, weight: 1, mentalTurns: 1 },
+      { id: 'killingIntent', type: 'genjutsu', baseDamage: 0, chakraCost: 6, weight: 1, mentalStrength: 1 },
     ],
     behavior: { charged: 'hiddenSnakes' },
     // Insano: acertos envenenam (bônus 1). Abaixo de 50% de HP, precisa ser derrotado em 5 rodadas,

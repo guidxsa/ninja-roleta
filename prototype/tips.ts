@@ -1,5 +1,5 @@
 // Textos das dicas: monta a descrição de técnicas, elementos, condições e passivas a partir dos dados.
-import { playerTechnique, type BattleState } from '../src/core/combat';
+import { mentalEscapeChance, playerTechnique, type BattleState, type MentalHold } from '../src/core/combat';
 import { techniqueLevel, techniqueSlot, type PlayerState } from '../src/core/player';
 import type { Element, TechniqueDef, VillainDef, VillainTechnique } from '../src/core/types';
 import { BEATS } from '../src/data/elements';
@@ -74,7 +74,7 @@ export function playerTechTip(p: PlayerState, id: string): string {
     t.priority && T.priority,
     t.blade && T.blade[t.blade],
     t.type === 'genjutsu' && deals && T.illusion,
-    t.mental && T.mental(T.mentalNames[t.mental]!, t.mentalTurns ?? 1),
+    t.mental && T.mental(T.mentalNames[t.mental]!, t.mentalStrength ?? 1),
     t.mentalStat && T.shadow,
     t.barrier !== undefined && T.barrier(t.barrier),
     t.reflectPct && T.reflect(pct(t.reflectPct)),
@@ -104,7 +104,7 @@ export function villainTechTip(def: VillainDef, t: VillainTechnique): string {
     `<i>${kindLine(t.type, t.healPct !== undefined ? 'medical' : t.type, el)}</i>`,
     deals && T.damage(t.baseDamage, t.hits ?? 1),
     deals && T.accuracy(pct(t.accuracy ?? B.hit.defaultAccuracy)),
-    t.type === 'genjutsu' && T.mental(T.mentalNames.prison!, t.mentalTurns ?? 1),
+    t.type === 'genjutsu' && T.mental(T.mentalNames.prison!, t.mentalStrength ?? 1),
     t.blade && T.blade[t.blade],
     t.barrier !== undefined && T.barrier(t.barrier),
     t.healPct !== undefined && T.villainHeal(pct(t.healPct)),
@@ -150,14 +150,16 @@ export function fxConditions(fx: Fx, bad: 'good' | 'bad'): Condition[] {
   const out: Condition[] = [];
   const add = (iconName: string, label: string, tone: Condition['tone'], t: { name: string; desc: string }) =>
     out.push({ icon: iconName, label, tone, ...t });
-  if (fx.debilitated > 0) add('prison', S.ui.debilitated, bad, St.prison);
+  // Efeito mental: mostra a chance de se livrar depois do próximo turno.
+  const escape = (h: MentalHold) => pct(mentalEscapeChance(h.strength, h.served + 1, data));
+  if (fx.debilitated) add('prison', S.ui.debilitated(escape(fx.debilitated)), bad, St.prison);
   if (fx.paralyzed > 0) add('lightning', S.ui.paralyzed, bad, St.paralyzed);
-  if (fx.possessed > 0) add('genjutsu', S.ui.possessed, bad, St.possessed);
-  if (fx.asleep > 0) add('sleep', S.ui.asleep, bad, St.asleep);
+  if (fx.possessed) add('genjutsu', S.ui.possessed(escape(fx.possessed)), bad, St.possessed);
+  if (fx.asleep) add('sleep', S.ui.asleep(escape(fx.asleep)), bad, St.asleep);
   if (fx.stunned > 0) add('stun', S.ui.stunned, bad, St.stunned(pct(B.status.stun.hitPenalty)));
-  if (fx.feared > 0) add('fear', S.ui.feared(fx.feared), bad, St.feared(pct(1 - B.status.fear.damageMult), pct(1 - B.status.fear.resistanceMult)));
-  if (fx.confused > 0) add('confusion', S.ui.confused(fx.confused), bad, St.confused(pct(B.status.confusion.failChance)));
-  if (fx.tormented > 0) add('torment', S.ui.tormented(fx.tormented), bad, St.tormented(B.status.torment.chakraPerRound));
+  if (fx.feared) add('fear', S.ui.feared(escape(fx.feared)), bad, St.feared(pct(1 - B.status.fear.damageMult), pct(1 - B.status.fear.resistanceMult)));
+  if (fx.confused) add('confusion', S.ui.confused(escape(fx.confused)), bad, St.confused(pct(B.status.confusion.failChance)));
+  if (fx.tormented) add('torment', S.ui.tormented(escape(fx.tormented)), bad, St.tormented(B.status.torment.chakraPerRound));
   if (fx.debilitateImmunity > 0) add('immune', S.ui.immune, '', St.immune);
   else if (fx.tenacity > 0) add('immune', S.ui.tenacity(pct(fx.tenacity)), '', St.tenacity);
   if (fx.shield) {

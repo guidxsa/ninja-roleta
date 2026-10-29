@@ -15,7 +15,7 @@ import { createPlayer, learnTechnique, type PlayerState } from '../src/core/play
 import type { Origin, VillainTechnique } from '../src/core/types';
 import { gameData } from '../src/data/index';
 import { villainsById } from '../src/data/villains';
-import { seq, testVillain, withInitiative } from './helpers';
+import { hold, seq, testVillain, withInitiative } from './helpers';
 
 const ofType = <T extends BattleEvent['type']>(log: BattleEvent[], type: T) =>
   log.filter((e): e is Extract<BattleEvent, { type: T }> => e.type === type);
@@ -234,7 +234,7 @@ describe('economia das reações', () => {
 
   it('aprisionado não reage: recebe com a resistência passiva', () => {
     const s0 = withInitiative(startBattle(player(), testVillain()), 'villain');
-    const jailed = { ...s0, playerFx: { ...s0.playerFx, debilitated: 1 } };
+    const jailed = { ...s0, playerFx: { ...s0.playerFx, debilitated: hold() } };
     const s1 = playRound(jailed, 'rest', seq(0.5, 0.5), gameData, {}, always('substitution'));
     expect(ofType(s1.log, 'reaction')[0]).toMatchObject({ side: 'player', kind: 'passive' });
     // (10 − 10 × 0,4) × 1,25 (perdeu a vez: vulnerável) = 7 (resistindo seriam 3)

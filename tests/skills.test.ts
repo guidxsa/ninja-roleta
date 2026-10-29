@@ -7,6 +7,7 @@ import {
   effectiveSpeed,
   geniusUses,
   illusionDamage,
+  mentalEscapeChance,
   playerGenjutsuHitChance,
   playerResistance,
   playRound,
@@ -22,7 +23,7 @@ import type { Origin, VillainPassive } from '../src/core/types';
 import { gameData } from '../src/data/index';
 import { levelTechniques, lineageTechniques, lineTechniques, premiumTechniques, techniquesById } from '../src/data/techniques';
 import { villainsById } from '../src/data/villains';
-import { battle, seq, testVillain, withInitiative } from './helpers';
+import { battle, hold, seq, testVillain, withInitiative } from './helpers';
 
 const common: Origin = { lineageId: null, affinity: 'fire', jinchuuriki: false };
 const uchiha: Origin = { lineageId: 'uchiha', affinity: 'fire', jinchuuriki: false };
@@ -225,7 +226,7 @@ describe('ações universais e itens', () => {
   it('a esquiva da Bomba de fumaça dura até o fim da próxima rodada se nenhum ataque vier', () => {
     const p = { ...createPlayer(common, gameData), bag: { soldierPill: 0, medKit: 0, explosiveTag: 0, smokeBomb: 1 } };
     const s0 = withInitiative(startBattle(p, testVillain()));
-    const stunned = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, debilitated: 2 } } };
+    const stunned = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, debilitated: hold(1) } } };
     const s1 = playRound(stunned, 'item:smokeBomb', seq(0.5), gameData);
     expect(s1.playerFx.dodge).not.toBeNull();
     const s2 = playRound(s1, 'rest', seq(0.5), gameData);
@@ -256,32 +257,34 @@ describe('efeitos de genjutsu', () => {
     return { ...p, techniques: [...p.techniques, id] };
   };
 
-  it('Sono: perde a vez com +1 turno, mas acorda ao tomar dano', () => {
+  it('Sono: perde a vez com +1 de força, mas acorda ao tomar dano', () => {
     const s0 = withInitiative(startBattle(withTech('sleepSong'), testVillain({ hp: 200 })));
-    const s1 = playRound(s0, 'tech:sleepSong', seq(0.5), gameData);
-    // 2 turnos base + 1 do sono + 1 de todo controle
-    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 4, kind: 'sleep' }]);
+    const s1 = playRound(s0, 'tech:sleepSong', seq(0.5, 0.99), gameData);
+    // Força base 2 + 1 do sono + vantagem 3 (genjutsu 10 contra 7) / 8.
+    const strength = 3 + 3 / 8;
+    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', kind: 'sleep', escape: mentalEscapeChance(strength, 1, gameData) }]);
     expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'sleep' }]);
+    expect(s1.villain.fx.asleep).toEqual({ strength, served: 1 });
     const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(ofType(ofRound(s1, s2), 'wake')).toEqual([{ type: 'wake', side: 'villain' }]);
-    expect(s2.villain.fx.asleep).toBe(0);
+    expect(s2.villain.fx.asleep).toBeNull();
   });
 
   it('Pavor: o apavorado tem 25% menos resistência física e mental', () => {
     const s0 = withInitiative(startBattle(createPlayer(common, gameData), testVillain({ hp: 200 })));
-    const feared = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, feared: 2 } } };
+    const feared = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, feared: hold() } } };
     expect(villainResistance(feared, 'physical', gameData)).toBe(7.5);
     expect(villainResistance(feared, 'mental', gameData)).toBe(7.5);
     // 8 + 10 − 10 × 0,7 = 11 sem pavor; 8 + 10 − 7,5 × 0,7 = 12 com pavor
     expect(ofType(playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData).log, 'attack')[0]!.damage).toBe(11);
     expect(ofType(playRound(feared, 'tech:basicTaijutsu', seq(0.5), gameData).log, 'attack')[0]!.damage).toBe(12);
-    const p = { ...s0, playerFx: { ...s0.playerFx, feared: 2 } };
+    const p = { ...s0, playerFx: { ...s0.playerFx, feared: hold() } };
     expect(playerResistance(p, 'physical', gameData)).toBe(s0.player.resistance.physical * 0.75);
   });
 
   it('Pavor: o alvo causa 35% menos dano', () => {
     const s0 = withInitiative(startBattle(createPlayer(common, gameData), testVillain({ techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 20, chakraCost: 0, weight: 1 }] })), 'villain');
-    const feared = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, feared: 2 } } };
+    const feared = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, feared: hold() } } };
     // (20 − 7) × 0,65 = 8 (sem pavor: 13)
     expect(ofType(playRound(feared, 'rest', seq(0.5), gameData).log, 'attack')[0]!.damage).toBe(8);
     expect(ofType(playRound(s0, 'rest', seq(0.5), gameData).log, 'attack')[0]!.damage).toBe(13);
@@ -289,7 +292,7 @@ describe('efeitos de genjutsu', () => {
 
   it('Confusão: 40% de falhar; metade das falhas acerta o próprio lutador', () => {
     const s0 = withInitiative(startBattle(createPlayer(common, gameData), testVillain()), 'villain');
-    const confused = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, confused: 2 } } };
+    const confused = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, confused: hold() } } };
     // técnica, falha (0.0 < 40%), acerta a si mesmo (0.0 < 50%): 10 − 10 × 0,4 (a própria resistência passiva) = 6
     const s1 = playRound(confused, 'rest', seq(0.5, 0.0, 0.0), gameData);
     expect(ofType(s1.log, 'confusionFail')).toEqual([{ type: 'confusionFail', side: 'villain', selfHit: 6 }]);
@@ -299,11 +302,16 @@ describe('efeitos de genjutsu', () => {
 
   it('Tormento: o alvo perde 5 de chakra no início de cada rodada', () => {
     const s0 = withInitiative(startBattle(createPlayer(common, gameData), testVillain()));
-    const tormented = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, tormented: 2 } } };
-    const s1 = playRound(tormented, 'rest', seq(0.5), gameData);
+    const tormented = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, tormented: hold() } } };
+    const s1 = playRound(tormented, 'rest', seq(0.99), gameData);
     expect(ofType(s1.log, 'torment')).toEqual([{ type: 'torment', side: 'villain', chakra: 5 }]);
     expect(s1.villain.chakra).toBe(15);
-    expect(s1.villain.fx.tormented).toBe(1);
+    expect(s1.villain.fx.tormented).toEqual({ strength: 1, served: 1 });
+    // Na rodada seguinte perde de novo e se livra (0.0).
+    const s2 = playRound(s1, 'rest', seq(0.0), gameData);
+    expect(ofType(ofRound(s1, s2), 'torment')).toHaveLength(1);
+    expect(ofType(ofRound(s1, s2), 'mentalBroken')).toEqual([{ type: 'mentalBroken', side: 'villain', effect: 'torment' }]);
+    expect(s2.villain.fx.tormented).toBeNull();
   });
 
   it('Transferência de Mente (Yamanaka): possessão; o vilão perde a vez golpeando a si mesmo', () => {
@@ -334,8 +342,8 @@ describe('efeitos de genjutsu', () => {
     const s0 = withInitiative(startBattle(createPlayer(clan('nara'), gameData), gaara));
     expect(playerGenjutsuHitChance(s0, gameData, 'shadowImitation')).toBeCloseTo(0.8);
     const s1 = playRound(s0, 'tech:shadowImitation', seq(0.5), gameData);
-    // ninjutsu 13 contra a resistência física usada (5 × 0,7 = 3,5): 1 + floor(9,5 / 8) = 2 turnos, +1 de controle
-    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', turns: 3, kind: 'prison' }]);
+    // ninjutsu 13 contra a resistência física usada (5 × 0,7 = 3,5): força 1 + 9,5 / 8
+    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', kind: 'prison', escape: mentalEscapeChance(1 + 9.5 / 8, 1, gameData) }]);
   });
 });
 
@@ -402,7 +410,7 @@ describe('Sharingan (Uchiha)', () => {
   it('Olhos treinados: o genjutsu do vilão acerta menos o Uchiha (e Leitura mental tira 10 do Yamanaka)', () => {
     const v = testVillain({
       offense: { taijutsu: 0, ninjutsu: 0, genjutsu: 20 },
-      techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalTurns: 1 }],
+      techniques: [{ id: 'illusion', type: 'genjutsu', baseDamage: 0, chakraCost: 4, weight: 1, mentalStrength: 1 }],
     });
     const chance = (o: Origin) =>
       ofType(playRound(startBattle(createPlayer(o, gameData), v, { villainStartsFirst: true }), 'rest', seq(0.99), gameData).log, 'attack')[0]!
@@ -666,7 +674,7 @@ describe('passivas e comportamentos dos vilões', () => {
       expect(playerGenjutsuHitChance(s0, gameData)).toBe(0);
       const s1 = playRound(s0, 'tech:basicGenjutsu', seq(0.5), gameData);
       expect(ofType(s1.log, 'genjutsuImmune')).toEqual([{ type: 'genjutsuImmune', target: 'villain' }]);
-      expect(s1.villain.fx.debilitated).toBe(0);
+      expect(s1.villain.fx.debilitated).toBeNull();
     });
 
     it('Gaara no hardcore (Monstro): derrotado pela 1ª vez, volta como Shukaku com 50% do HP e golpes de monstro', () => {

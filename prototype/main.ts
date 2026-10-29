@@ -21,7 +21,8 @@ import {
   isIllusion,
   itemAction,
   playerGenjutsuHitChance,
-  playerGenjutsuTurns,
+  playerMentalStrength,
+  mentalEscapeChance,
   playerMedical,
   playerTechnique,
   playRound,
@@ -445,7 +446,7 @@ function techniqueRows(p: PlayerState): string {
       const tech = playerTechnique(p, t.id, data);
       let info: string;
       if (slot === 'medical') info = S.ui.heal(Math.round(medicalHealPct(p, data) * 100));
-      else if (t.mental) info = S.ui.prisonTurns(t.mentalTurns ?? 1);
+      else if (t.mental) info = S.ui.mentalStrength(t.mentalStrength ?? 1);
       else if (tech.barrier !== undefined) info = S.ui.barrierHint(tech.barrier, Boolean(t.reflectPct));
       else if (t.state) info = S.ui.armorHint;
       else info = `${tech.baseDamage}${(t.hits ?? 1) > 1 ? `×${t.hits}` : ''} dano · ${Math.round((t.accuracy ?? data.balance.hit.defaultAccuracy) * 100)}%`;
@@ -1164,9 +1165,10 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     tipAttr = playerTechTip(p, techId);
     if (isIllusion(tech)) {
       extra = S.ui.illusionHint(illusionDamage(s, techId, data), formatPct(playerGenjutsuHitChance(s, data, techId)), S.ui.cost(tech.chakraCost));
-      if (tech.mental) sub = S.ui.prisonTurns(playerGenjutsuTurns(s, techId, data));
+      if (tech.mental) sub = S.ui.mentalEscape(formatPct(mentalEscapeChance(playerMentalStrength(s, techId, data), 1, data)));
     } else if (tech.mental) {
-      extra = `${S.ui.prisonTurns(playerGenjutsuTurns(s, techId, data))} · ${formatPct(playerGenjutsuHitChance(s, data, techId))} · ${S.ui.cost(tech.chakraCost)}`;
+      const escape = formatPct(mentalEscapeChance(playerMentalStrength(s, techId, data), 1, data));
+      extra = `${S.ui.mentalEscape(escape)} · ${formatPct(playerGenjutsuHitChance(s, data, techId))} · ${S.ui.cost(tech.chakraCost)}`;
     } else if (tech.barrier !== undefined) {
       extra = `${S.ui.barrierHint(tech.barrier, Boolean(tech.reflectPct))} · ${S.ui.cost(tech.chakraCost)}`;
     } else if (tech.state) {
@@ -1548,7 +1550,10 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           log(S.log.torment(who(ev.side), ev.chakra), ev.side === 'villain' ? 'good' : 'bad');
           break;
         case 'mental':
-          log(S.log.mental[ev.effect]!(who(ev.target), ev.turns), ev.target === 'villain' ? 'good' : 'bad');
+          log(S.log.mental[ev.effect]!(who(ev.target), Math.round(ev.escape * 100)), ev.target === 'villain' ? 'good' : 'bad');
+          break;
+        case 'mentalBroken':
+          log(S.log.mentalBroken[ev.effect]!(who(ev.side)), ev.side === 'villain' ? 'bad' : 'good');
           break;
         case 'dodge':
           floatNumber(pcard, '💨', 'miss');
@@ -1769,7 +1774,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         }
         case 'debilitate':
-          log(S.log.debilitate[ev.kind]!(who(ev.target), ev.turns), ev.target === 'villain' ? 'good' : 'bad');
+          log(S.log.debilitate[ev.kind]!(who(ev.target), ev.turns ?? Math.round((ev.escape ?? 0) * 100)), ev.target === 'villain' ? 'good' : 'bad');
           break;
         case 'genjutsuImmune':
           log(S.log.genjutsuImmune(who(ev.target)), 'sys');

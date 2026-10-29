@@ -152,15 +152,25 @@ export interface ShieldState {
 }
 
 /** Estado de luta comum ao jogador e ao vilão. */
+/**
+ * Efeito mental valendo (efeitos.md#duração-dos-efeitos-mentais): não tem turnos fixos. Depois de cada
+ * turno cumprido, o alvo gira para se livrar com uma chance que cresce com `served` e cai com `strength`.
+ */
+export interface MentalHold {
+  strength: number;
+  /** Turnos já cumpridos. */
+  served: number;
+}
+
 export interface StatusFx {
-  /** Ações que o lutador ainda vai perder aprisionado. */
-  debilitated: number;
-  /** Ações que o lutador ainda vai perder dormindo (acorda ao tomar dano). */
-  asleep: number;
+  /** Aprisionado: perde a vez. */
+  debilitated: MentalHold | null;
+  /** Dormindo: perde a vez e acorda ao tomar dano. */
+  asleep: MentalHold | null;
   /** Ações que o lutador ainda vai perder paralisado (crítico de raio). */
   paralyzed: number;
-  /** Ações que o lutador ainda vai perder possuído (Yamanaka): golpeia a si mesmo. */
-  possessed: number;
+  /** Possuído (Yamanaka): perde a vez golpeando a si mesmo. */
+  possessed: MentalHold | null;
   /** Ações que o lutador precisa fazer antes de poder perder a vez de novo. */
   debilitateImmunity: number;
   /** Tenacidade (0 a 1): a chance do próximo controle × (1 − tenacidade). Sobe ao ser controlado e cai por rodada. */
@@ -176,12 +186,12 @@ export interface StatusFx {
   poison: PoisonState | null;
   /** Sangramento: dura a luta toda. */
   bleeding: boolean;
-  /** Pavor: próximas ações com menos dano. */
-  feared: number;
-  /** Confusão: próximas ações com chance de falhar (e de acertar a si mesmo). */
-  confused: number;
+  /** Pavor: ações com menos dano e menos resistência. */
+  feared: MentalHold | null;
+  /** Confusão: ações com chance de falhar (e de acertar a si mesmo). */
+  confused: MentalHold | null;
   /** Tormento: rodadas perdendo chakra no início. */
-  tormented: number;
+  tormented: MentalHold | null;
   /** Rodadas restantes do manto (jinchuuriki, marca da maldição). */
   cloakTurns: number;
   cloakUsed: boolean;
@@ -345,8 +355,11 @@ export type BattleEvent =
   | { type: 'dojutsu'; dojutsu: DojutsuId; stage: number; chakra: number }
   | { type: 'dojutsuEnd'; dojutsu: DojutsuId; reason: 'time' | 'chakra' }
   | { type: 'chakraDrain'; amount: number; source: 'seal' | 'hive' }
-  | { type: 'debilitate'; target: Side; turns: number; kind: DebilitateKind }
-  | { type: 'mental'; target: Side; effect: Exclude<MentalEffect, 'prison' | 'sleep' | 'possession'>; turns: number }
+  /** Perdeu a vez: `turns` na paralisia; nos efeitos mentais, `escape` é a chance de se livrar após o 1º turno. */
+  | { type: 'debilitate'; target: Side; kind: DebilitateKind; turns?: number; escape?: number }
+  | { type: 'mental'; target: Side; effect: Exclude<MentalEffect, 'prison' | 'sleep' | 'possession'>; escape: number }
+  /** O alvo se livrou do efeito mental na roleta de fuga. */
+  | { type: 'mentalBroken'; side: Side; effect: MentalEffect }
   /** Possuído: perdeu a vez golpeando a si mesmo com a própria técnica. */
   | { type: 'possessed'; side: Side; techniqueId: string; damage: number }
   | { type: 'debilitateResisted'; target: Side }
@@ -416,10 +429,10 @@ export const EXPLOSIVE_TAG = 'explosiveTag';
 
 function newFx(): StatusFx {
   return {
-    debilitated: 0,
-    asleep: 0,
+    debilitated: null,
+    asleep: null,
     paralyzed: 0,
-    possessed: 0,
+    possessed: null,
     debilitateImmunity: 0,
     tenacity: 0,
     stunned: 0,
@@ -428,9 +441,9 @@ function newFx(): StatusFx {
     burnUnlocked: false,
     poison: null,
     bleeding: false,
-    feared: 0,
-    confused: 0,
-    tormented: 0,
+    feared: null,
+    confused: null,
+    tormented: null,
     cloakTurns: 0,
     cloakUsed: false,
     guaranteedCrit: false,
@@ -779,7 +792,7 @@ function expansionActive(s: BattleState): boolean {
 
 /** Pavor: o lado apavorado tem as resistências multiplicadas por `fear.resistanceMult`. */
 function fearResistanceMult(fx: StatusFx, data: GameData): number {
-  return fx.feared > 0 ? data.balance.status.fear.resistanceMult : 1;
+  return fx.feared ? data.balance.status.fear.resistanceMult : 1;
 }
 
 /**
@@ -825,7 +838,7 @@ function villainDamageMult(s: BattleState, data: GameData): number {
   if (passive?.kind === 'cloak' && villainCloakActive(s)) mult *= passive.cloak.statMult;
   if (passive?.kind === 'mirrors') mult *= passive.damageMult;
   if (passive?.kind === 'mist' && passive.lastStand && v.lastStand) mult *= passive.lastStand.damageMult;
-  if (v.fx.feared > 0) mult *= data.balance.status.fear.damageMult;
+  if (v.fx.feared) mult *= data.balance.status.fear.damageMult;
   return mult;
 }
 
@@ -843,7 +856,7 @@ export function genjutsuImmune(s: BattleState, target: Side, data: GameData): bo
 
 /** Perde a vez agora (aprisionado, dormindo ou paralisado): recebe o golpe com dano extra. */
 export function isControlled(fx: StatusFx): boolean {
-  return fx.debilitated > 0 || fx.asleep > 0 || fx.paralyzed > 0 || fx.possessed > 0;
+  return fx.debilitated !== null || fx.asleep !== null || fx.paralyzed > 0 || fx.possessed !== null;
 }
 
 /** Multiplicador da chance de um controle contra o alvo: 1 − tenacidade. */
@@ -897,22 +910,33 @@ function defaultGuard(s: BattleState, side: Side): Guard {
 // Efeitos mentais (genjutsu e Imitação de Sombra)
 
 /**
- * Turnos de um efeito mental que acerta: turnos base da técnica + 1 a cada `pointsPerExtraTurn`
- * de vantagem do poder do atacante sobre a resistência usada pelo alvo, entre 1 e o teto.
+ * Força de um efeito mental que acerta: força base da técnica + a vantagem do poder do atacante sobre a
+ * resistência usada pelo alvo, a cada `pointsPerStrength` (sem arredondar). O Sono soma `sleepStrengthBonus`.
  */
-export function genjutsuTurns(power: number, targetResistance: number, baseTurns: number, data: GameData): number {
-  const cfg = data.balance.genjutsuPrison;
-  const extra = Math.floor(Math.max(0, power - targetResistance) / cfg.pointsPerExtraTurn);
-  return Math.min(cfg.maxTurns, Math.max(1, baseTurns + extra));
+export function mentalStrength(power: number, targetResistance: number, baseStrength: number, effect: MentalEffect, data: GameData): number {
+  const sleep = effect === 'sleep' ? data.balance.status.sleepStrengthBonus : 0;
+  return baseStrength + Math.max(0, power - targetResistance) / data.balance.mentalHold.pointsPerStrength + sleep;
 }
 
 /**
- * Duração final do efeito mental que pegou: controles ganham `control.extraTurns` e o Sono, mais
- * `sleepExtraTurns`. Os outros efeitos ficam com os turnos da fórmula.
+ * Chance de se livrar depois do `served`-ésimo turno cumprido (1, 2, 3...): a inicial cai com a força e
+ * cresce com o quadrado dos turnos, mais devagar quanto mais forte. Sempre chega a 100%.
  */
-export function mentalEffectTurns(effect: MentalEffect, turns: number, data: GameData): number {
-  if (!isControlEffect(effect)) return turns;
-  return turns + data.balance.control.extraTurns + (effect === 'sleep' ? data.balance.status.sleepExtraTurns : 0);
+export function mentalEscapeChance(strength: number, served: number, data: GameData): number {
+  const cfg = data.balance.mentalHold;
+  const initial = clamp(cfg.escapeBase - cfg.escapePerStrength * (strength - 1), cfg.escapeMin, 1);
+  return Math.min(1, initial + (cfg.escapeGrowth / Math.max(1, strength)) * (served - 1) ** 2);
+}
+
+/** Duração média (em turnos) de um efeito mental com essa força. */
+export function expectedMentalTurns(strength: number, data: GameData): number {
+  let stays = 1;
+  let total = 0;
+  for (let served = 1; stays > 1e-9; served++) {
+    total += stays;
+    stays *= 1 - mentalEscapeChance(strength, served, data);
+  }
+  return total;
 }
 
 /** Status que a técnica mental usa (genjutsu, ou ninjutsu na Imitação de Sombra). */
@@ -944,10 +968,11 @@ export function playerGenjutsuPower(s: BattleState, techniqueId: string, data: G
   return effectiveOffense(s, stat, data) + (tech.mentalPower ?? 0) + sharingan;
 }
 
-/** Turnos do efeito mental do jogador no vilão, se acertar. */
-export function playerGenjutsuTurns(s: BattleState, techniqueId: string, data: GameData): number {
+/** Força do efeito mental do jogador no vilão, se acertar. */
+export function playerMentalStrength(s: BattleState, techniqueId: string, data: GameData): number {
   const tech = playerTechnique(s.player, techniqueId, data);
-  return genjutsuTurns(playerGenjutsuPower(s, techniqueId, data), villainMentalDefense(s, tech, data), tech.mentalTurns ?? 1, data);
+  const power = playerGenjutsuPower(s, techniqueId, data);
+  return mentalStrength(power, villainMentalDefense(s, tech, data), tech.mentalStrength ?? 1, tech.mental ?? 'prison', data);
 }
 
 /** Chance de o efeito mental do jogador pegar (0 contra alvo imune a genjutsu). */
@@ -999,7 +1024,7 @@ function playerDamageMult(s: BattleState, type: AttackType, data: GameData): num
       mult *= cfg.base + cfg.perHpPct * (p.hp / p.maxHp);
     }
   }
-  if (fx.feared > 0) mult *= data.balance.status.fear.damageMult;
+  if (fx.feared) mult *= data.balance.status.fear.damageMult;
   return mult;
 }
 
@@ -1522,7 +1547,7 @@ export function playRound(
   s.round++;
   s.log.push({ type: 'round', round: s.round });
 
-  startOfRound(s, data);
+  startOfRound(s, rng, data);
   if (s.status !== 'ongoing') return s;
 
   // Vantagem/desvantagem de ação substitui a roleta de iniciativa: define quem ataca primeiro na luta.
@@ -1606,9 +1631,9 @@ function runPlan(s: BattleState, rng: Rng, data: GameData, react?: ReactionPolic
     const v = s.villain;
     if (!plan.villainStarted) {
       plan.villainStarted = true;
-      if (consumeSkip(s, 'villain', data)) {
+      if (consumeSkip(s, 'villain', rng, data)) {
         v.intent = null;
-        endTurn(v.fx, false);
+        endTurn(s, 'villain', false, rng, data);
         plan.index++;
         continue;
       }
@@ -1617,7 +1642,7 @@ function runPlan(s: BattleState, rng: Rng, data: GameData, react?: ReactionPolic
       if (villainAction(s, rng, data, react)) return;
       plan.villainActions++;
     }
-    endTurn(v.fx, true);
+    endTurn(s, 'villain', true, rng, data);
     plan.index++;
   }
   if (s.status === 'ongoing') endOfRound(s, rng, data);
@@ -1647,8 +1672,8 @@ function chance(p: number, rng: Rng): boolean {
 /** Quem dorme acorda ao tomar dano. */
 function wakeUp(s: BattleState, side: Side): void {
   const fx = fxOf(s, side);
-  if (fx.asleep > 0) {
-    fx.asleep = 0;
+  if (fx.asleep) {
+    fx.asleep = null;
     s.log.push({ type: 'wake', side });
   }
 }
@@ -1762,7 +1787,7 @@ function checkPlayerCloak(s: BattleState, data: GameData): void {
  * Perde a vez (acovardado, reação já gasta, paralisado, dormindo ou aprisionado).
  * Devolve true se perdeu a vez.
  */
-function consumeSkip(s: BattleState, side: Side, data: GameData): boolean {
+function consumeSkip(s: BattleState, side: Side, rng: Rng, data: GameData): boolean {
   if (side === 'villain' && s.villain.cowering) {
     s.villain.cowering = false;
     s.log.push({ type: 'skip', side, reason: 'cower' });
@@ -1778,23 +1803,21 @@ function consumeSkip(s: BattleState, side: Side, data: GameData): boolean {
   if (fx.paralyzed > 0) {
     fx.paralyzed--;
     reason = 'paralysis';
-  } else if (fx.asleep > 0) {
-    fx.asleep--;
+  } else if (fx.asleep) {
     reason = 'sleep';
-  } else if (fx.debilitated > 0) {
-    fx.debilitated--;
+  } else if (fx.debilitated) {
     reason = 'prison';
-  } else if (fx.possessed > 0) {
-    fx.possessed--;
+  } else if (fx.possessed) {
     reason = 'possession';
   } else {
     return false;
   }
+  s.log.push({ type: 'skip', side, reason });
+  if (reason === 'possession') possessedSelfHit(s, side, data);
+  if (reason !== 'paralysis') serveMental(s, side, MENTAL_SLOT[reason], rng, data);
   if (!isControlled(fx)) {
     fx.debilitateImmunity = data.balance.debilitated.immunityActions;
   }
-  s.log.push({ type: 'skip', side, reason });
-  if (reason === 'possession') possessedSelfHit(s, side, data);
   return true;
 }
 
@@ -1816,19 +1839,51 @@ function possessedSelfHit(s: BattleState, side: Side, data: GameData): void {
   if (damage > 0) hurt(s, side, damage, data);
 }
 
-/** Fim da vez do lutador: conta a anti-trava, o atordoamento, o pavor e a confusão. */
-function endTurn(fx: StatusFx, acted: boolean): void {
+/** Fim da vez do lutador: conta a anti-trava e o atordoamento; o pavor e a confusão giram a fuga. */
+function endTurn(s: BattleState, side: Side, acted: boolean, rng: Rng, data: GameData): void {
+  const fx = fxOf(s, side);
   if (acted && fx.debilitateImmunity > 0) fx.debilitateImmunity--;
   if (fx.stunned > 0) fx.stunned--;
-  if (fx.feared > 0) fx.feared--;
-  if (fx.confused > 0) fx.confused--;
+  serveMental(s, side, 'feared', rng, data);
+  serveMental(s, side, 'confused', rng, data);
+}
+
+type MentalSlot = 'debilitated' | 'asleep' | 'possessed' | 'feared' | 'confused' | 'tormented';
+
+const MENTAL_SLOT: Record<MentalEffect, MentalSlot> = {
+  prison: 'debilitated',
+  sleep: 'asleep',
+  possession: 'possessed',
+  fear: 'feared',
+  confusion: 'confused',
+  torment: 'tormented',
+};
+
+/** O efeito mental cumpriu mais um turno: o alvo gira a roleta para se livrar. */
+function serveMental(s: BattleState, side: Side, slot: MentalSlot, rng: Rng, data: GameData): void {
+  const fx = fxOf(s, side);
+  const hold = fx[slot];
+  if (!hold) return;
+  hold.served++;
+  if (!chance(mentalEscapeChance(hold.strength, hold.served, data), rng)) return;
+  fx[slot] = null;
+  const effect = (Object.keys(MENTAL_SLOT) as MentalEffect[]).find((e) => MENTAL_SLOT[e] === slot)!;
+  s.log.push({ type: 'mentalBroken', side, effect });
+}
+
+/** Põe (ou renova) o efeito mental: fica a força maior e a contagem recomeça. */
+function holdMental(fx: StatusFx, slot: MentalSlot, strength: number): MentalHold {
+  const hold = { strength: Math.max(strength, fx[slot]?.strength ?? 0), served: 0 };
+  fx[slot] = hold;
+  return hold;
 }
 
 /**
- * Tira a vez do alvo. Com `rng`, rola antes a tenacidade (controles sem rolagem própria, como a
- * paralisia do crítico de raio); os genjutsu já a contam na chance de acerto. Pegou: soma tenacidade.
+ * Tira a vez do alvo. `amount` = turnos na paralisia, força nos efeitos mentais. Com `rng`, rola antes a
+ * tenacidade (controles sem rolagem própria, como a paralisia do crítico de raio); os genjutsu já a
+ * contam na chance de acerto. Pegou: soma tenacidade.
  */
-function applyDebilitate(s: BattleState, target: Side, turns: number, kind: DebilitateKind, data: GameData, rng?: Rng): void {
+function applyDebilitate(s: BattleState, target: Side, amount: number, kind: DebilitateKind, data: GameData, rng?: Rng): void {
   const fx = fxOf(s, target);
   if (fx.debilitateImmunity > 0 || (rng && fx.tenacity > 0 && !chance(controlChanceMult(fx), rng))) {
     s.log.push({ type: 'debilitateResisted', target });
@@ -1837,38 +1892,23 @@ function applyDebilitate(s: BattleState, target: Side, turns: number, kind: Debi
   // Só um controle novo soma tenacidade (renovar um que ainda está valendo não soma de novo).
   const cfg = data.balance.control;
   if (!isControlled(fx)) fx.tenacity = Math.min(cfg.maxTenacity, fx.tenacity + cfg.tenacityPerControl);
-  if (kind === 'prison') fx.debilitated = Math.max(fx.debilitated, turns);
-  else if (kind === 'sleep') fx.asleep = Math.max(fx.asleep, turns);
-  else if (kind === 'possession') fx.possessed = Math.max(fx.possessed, turns);
-  else fx.paralyzed = Math.max(fx.paralyzed, turns);
-  s.log.push({ type: 'debilitate', target, turns, kind });
+  if (kind === 'paralysis') {
+    fx.paralyzed = Math.max(fx.paralyzed, amount);
+    s.log.push({ type: 'debilitate', target, kind, turns: amount });
+    return;
+  }
+  const hold = holdMental(fx, MENTAL_SLOT[kind], amount);
+  s.log.push({ type: 'debilitate', target, kind, escape: mentalEscapeChance(hold.strength, 1, data) });
 }
 
-/** Aplica um efeito mental com os turnos da fórmula (controles e Sono ganham os extras de `mentalEffectTurns`). */
-function applyMental(s: BattleState, target: Side, effect: MentalEffect, formulaTurns: number, data: GameData): void {
-  const fx = fxOf(s, target);
-  const turns = mentalEffectTurns(effect, formulaTurns, data);
-  switch (effect) {
-    case 'prison':
-      applyDebilitate(s, target, turns, 'prison', data);
-      return;
-    case 'sleep':
-      applyDebilitate(s, target, turns, 'sleep', data);
-      return;
-    case 'possession':
-      applyDebilitate(s, target, turns, 'possession', data);
-      return;
-    case 'fear':
-      fx.feared = Math.max(fx.feared, turns);
-      break;
-    case 'confusion':
-      fx.confused = Math.max(fx.confused, turns);
-      break;
-    case 'torment':
-      fx.tormented = Math.max(fx.tormented, turns);
-      break;
+/** Aplica um efeito mental com a força calculada (`mentalStrength`). */
+function applyMental(s: BattleState, target: Side, effect: MentalEffect, strength: number, data: GameData): void {
+  if (effect === 'prison' || effect === 'sleep' || effect === 'possession') {
+    applyDebilitate(s, target, strength, effect, data);
+    return;
   }
-  s.log.push({ type: 'mental', target, effect, turns });
+  const hold = holdMental(fxOf(s, target), MENTAL_SLOT[effect], strength);
+  s.log.push({ type: 'mental', target, effect, escape: mentalEscapeChance(hold.strength, 1, data) });
 }
 
 /**
@@ -1890,7 +1930,7 @@ function applyElementalHit(s: BattleState, target: Side, element: Element | null
     return;
   }
   if (outcome !== 'crit') return;
-  if (element === 'lightning') applyDebilitate(s, target, cfg.paralysis.turns + data.balance.control.extraTurns, 'paralysis', data, rng);
+  if (element === 'lightning') applyDebilitate(s, target, cfg.paralysis.turns, 'paralysis', data, rng);
   else applyStun(s, target, data);
 }
 
@@ -1951,13 +1991,13 @@ function clearNegatives(fx: StatusFx): void {
   fx.burnTicks = 0;
   fx.bleeding = false;
   fx.stunned = 0;
-  fx.feared = 0;
-  fx.confused = 0;
-  fx.tormented = 0;
-  fx.debilitated = 0;
-  fx.asleep = 0;
+  fx.feared = null;
+  fx.confused = null;
+  fx.tormented = null;
+  fx.debilitated = null;
+  fx.asleep = null;
   fx.paralyzed = 0;
-  fx.possessed = 0;
+  fx.possessed = null;
 }
 
 /** Manto ativo: paga a rodada com chakra (desde a seguinte à ativação); sem chakra, se desfaz. */
@@ -1975,7 +2015,7 @@ function payCloak(s: BattleState, side: Side, cloak: CloakDef): void {
   s.log.push({ type: 'cloakCost', side, chakra: cost });
 }
 
-function startOfRound(s: BattleState, data: GameData): void {
+function startOfRound(s: BattleState, rng: Rng, data: GameData): void {
   const p = s.player;
   const v = s.villain;
   const vPassive = v.def.passive;
@@ -1993,11 +2033,11 @@ function startOfRound(s: BattleState, data: GameData): void {
   // Tormento: perde chakra no início da rodada.
   for (const side of ['player', 'villain'] as Side[]) {
     const fx = fxOf(s, side);
-    if (fx.tormented <= 0) continue;
-    fx.tormented--;
+    if (!fx.tormented) continue;
     const lost = Math.min(chakraOf(s, side), balance.status.torment.chakraPerRound);
     spendChakra(s, side, lost);
     s.log.push({ type: 'torment', side, chakra: lost });
+    serveMental(s, side, 'tormented', rng, data);
   }
 
   // Mantos já ativos pagam a rodada; quem desperta agora só paga a partir da próxima.
@@ -2148,8 +2188,8 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
   const fx = s.playerFx;
   // A postura vale até o próximo turno do jogador.
   fx.stance = false;
-  if (consumeSkip(s, 'player', data)) {
-    endTurn(fx, false);
+  if (consumeSkip(s, 'player', rng, data)) {
+    endTurn(s, 'player', false, rng, data);
     return;
   }
   const p = s.player;
@@ -2188,7 +2228,7 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
     p.chakra -= tech.chakraCost;
     s.log.push({ type: 'medical', healed: heal(s, 'player', medicalHealPct(p, data)), chakra: tech.chakraCost });
   }
-  endTurn(fx, true);
+  endTurn(s, 'player', true, rng, data);
 }
 
 /** Ativa o dōjutsu: paga a ativação e conta a duração a partir da rodada seguinte. */
@@ -2260,7 +2300,7 @@ function useItem(s: BattleState, item: ConsumableId, data: GameData): void {
 function confusionFails(s: BattleState, side: Side, selfDamage: number, rng: Rng, data: GameData): boolean {
   const fx = fxOf(s, side);
   const cfg = data.balance.status.confusion;
-  if (fx.confused <= 0 || !chance(cfg.failChance, rng)) return false;
+  if (!fx.confused || !chance(cfg.failChance, rng)) return false;
   const selfHit = selfDamage > 0 && chance(cfg.selfHitShare, rng) ? selfDamage : 0;
   s.log.push({ type: 'confusionFail', side, selfHit });
   if (selfHit > 0) hurt(s, side, selfHit, data);
@@ -2318,7 +2358,7 @@ function playerMentalTechnique(s: BattleState, techId: string, rng: Rng, data: G
     if (s.status !== 'ongoing') return;
   }
   const effect = tech.mental;
-  if (effect) applyMental(s, 'villain', effect, playerGenjutsuTurns(s, techId, data), data);
+  if (effect) applyMental(s, 'villain', effect, playerMentalStrength(s, techId, data), data);
 }
 
 /**
@@ -2330,7 +2370,7 @@ export function illusionDamage(s: BattleState, techniqueId: string, data: GameDa
   if (!isIllusion(tech)) return 0;
   const sharingan = activeSharingan(s, data)?.genjutsuPower ?? 0;
   const vulnerable = isControlled(s.villain.fx) ? data.balance.control.vulnerableDamageMult : 1;
-  const fear = s.playerFx.feared > 0 ? data.balance.status.fear.damageMult : 1;
+  const fear = s.playerFx.feared ? data.balance.status.fear.damageMult : 1;
   return computeDamage({
     baseDamage: tech.baseDamage,
     offense: effectiveOffense(s, 'genjutsu', data) + sharingan,
@@ -2586,7 +2626,7 @@ function villainGenjutsu(s: BattleState, tech: VillainTechnique, chakra: number,
     critChance: 0,
     chakra,
   });
-  if (outcome !== 'miss') applyMental(s, 'player', 'prison', genjutsuTurns(power, defense, tech.mentalTurns ?? 1, data), data);
+  if (outcome !== 'miss') applyMental(s, 'player', 'prison', mentalStrength(power, defense, tech.mentalStrength ?? 1, 'prison', data), data);
 }
 
 /** Resolve o ataque do vilão com a reação do jogador já escolhida. */

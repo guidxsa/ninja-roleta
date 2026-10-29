@@ -88,7 +88,7 @@ Nomes em português são sugestões para a tela; o `id` é o do código. "Chance
 | Zabuza | Projétil do Dragão d'Água (`waterDragonBullet`) | Ninjutsu | 11 | 5 | 2 (40%) | — |
 | Genin da Areia | Rajada do Leque (`fanGust`) | Ninjutsu | 9 | 4 | 2 (50%) | — |
 | Genin da Areia | Golpe de Kunai (`kunaiStrike`) | Taijutsu | 8 | 0 | 2 (50%) | Cortante |
-| Genin do Som | Onda Sonora (`soundWave`) | Genjutsu | 0 | 4 | 1 (25%) | Aprisiona 1 turno base |
+| Genin do Som | Onda Sonora (`soundWave`) | Genjutsu | 0 | 4 | 1 (25%) | Aprisiona (força base 1) |
 | Genin do Som | Golpe de Kunai (`kunaiStrike`) | Taijutsu | 8 | 0 | 3 (75%) | Cortante |
 | Genin da Folha | Golpe de Palma (`palmStrike`) | Taijutsu | 10 | 0 | 3 (75%) | — |
 | Genin da Folha | Bola de Fogo (`fireballVillain`) | Ninjutsu | 9 | 4 | 1 (25%) | — |
@@ -101,7 +101,7 @@ Nomes em português são sugestões para a tela; o `id` é o do código. "Chance
 | Jirobo | Muralha de Terra (`earthWall`) | Barreira (terra) | — | 5 | 1 (20%, só sem escudo) | Escudo de 28 (ver [tecnicas.md](tecnicas.md#barreiras)). |
 | Kidomaru | Flecha Dourada (`goldenArrow`) | Ninjutsu | 10 | 5 | 2 (50%) | — |
 | Kidomaru | Teia de Aranha (`spiderWeb`) | Taijutsu | 8 | 0 | 2 (50%) | — |
-| Tayuya | Flauta Demoníaca (`demonFlute`) | Genjutsu | 0 | 5 | 1 (33%) | Aprisiona 1 turno base |
+| Tayuya | Flauta Demoníaca (`demonFlute`) | Genjutsu | 0 | 5 | 1 (33%) | Aprisiona (força base 1) |
 | Tayuya | Ogro Invocado (`summonedOgre`) | Taijutsu | 11 | 0 | 2 (67%) | — |
 | Sakon | Golpe Gêmeo (`twinStrike`) | Taijutsu | 9 | 0 | 3 (75%) | Golpe carregado |
 | Sakon | Corpo Parasita (`parasiteBody`) | Ninjutsu | 9 | 4 | 1 (25%) | — |
@@ -110,7 +110,7 @@ Nomes em português são sugestões para a tela; o `id` é o do código. "Chance
 | Kabuto | Palma Mística (`mysticPalm`) | Médico | — | 7 | 2 (33%, só abaixo de 50% de HP) | Cura 15% do HP máximo, sem rolar acerto |
 | Orochimaru | Serpentes Ocultas (`hiddenSnakes`) | Ninjutsu | 14 | 5 | 3 (50%) | Golpe carregado |
 | Orochimaru | Espada da Grama (`grassSword`) | Taijutsu | 12 | 0 | 2 (33%) | Espada (sangra no crítico) |
-| Orochimaru | Intenção Assassina (`killingIntent`) | Genjutsu | 0 | 6 | 1 (17%) | Aprisiona 1 turno base |
+| Orochimaru | Intenção Assassina (`killingIntent`) | Genjutsu | 0 | 6 | 1 (17%) | Aprisiona (força base 1) |
 
 Ordem das lutas no Quarteto do Som: Jirobo, Kidomaru, Tayuya e Sakon.
 
