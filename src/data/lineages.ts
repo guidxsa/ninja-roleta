@@ -27,7 +27,7 @@ export const lineages: LineageDef[] = [
     resistance: { physical: 10, mental: 10 },
     affinity: { kind: 'rolled' },
     passive: 'genius',
-    startingTechniques: ['shadowImitation'],
+    startingTechniques: ['shadowImitation', 'shadowStrangle'],
   },
   {
     id: 'akimichi',

@@ -125,7 +125,7 @@ describe('criação do jogador', () => {
   it('kits de clã: Imitação de Sombra, Transferência de Mente, Enxame e Presas Giratórias', () => {
     const kit = (id: string) =>
       knownTechniques(createPlayer({ lineageId: id, affinity: 'earth', jinchuuriki: false }, gameData), gameData).map((t) => t.id);
-    expect(kit('nara')).toEqual(['basicTaijutsu', 'rockFist', 'shadowImitation']);
+    expect(kit('nara')).toEqual(['basicTaijutsu', 'rockFist', 'shadowImitation', 'shadowStrangle']);
     expect(kit('akimichi')).toEqual(['basicTaijutsu', 'rockFist']);
     expect(kit('yamanaka')).toEqual(['basicTaijutsu', 'rockFist', 'mindTransfer']);
     expect(kit('aburame')).toEqual(['basicTaijutsu', 'rockFist', 'insectSwarm', 'insectDevour']);

@@ -106,30 +106,46 @@ describe('Uzumaki: Selamento e Correntes de Chakra', () => {
   });
 });
 
-describe('Nara: Sombra costurada', () => {
-  it('mantida, a fuga não gira; o custo sobe a cada vez; no nível 7 a sombra estrangula', () => {
+describe('Nara: Enforcamento por Sombra', () => {
+  const holdOn = (s: BattleState, strength = 1): BattleState => ({
+    ...s,
+    villain: { ...s.villain, fx: { ...s.villain.fx, debilitated: { strength, served: 0, source: 'shadowImitation' } } },
+  });
+
+  it('só com o vilão preso pela sombra; dano = força × 6 + ninjutsu − resistência passiva, × vulnerável; não solta', () => {
     const p = createPlayer(clan('nara'), gameData);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
-    const held = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, debilitated: { strength: 1, served: 0, source: 'shadowImitation' } } } };
-    // 0.0 libertaria o vilão, mas a sombra mantida não deixa a fuga girar.
-    const s1 = playRound(held, 'stance', seq(0.0), gameData, { shadowHold: true });
-    expect(ofType(s1.log, 'mentalBroken')).toHaveLength(0);
-    expect(s1.villain.fx.debilitated).toMatchObject({ served: 1, maintained: 1, pinned: false });
-    expect(s1.player.chakra).toBe(held.player.chakra - 3);
-    const s2 = playRound(s1, 'stance', seq(0.0), gameData, { shadowHold: true });
-    expect(ofType(ofRound(s1, s2), 'shadowHold')).toEqual([{ type: 'shadowHold', chakra: 4 }]);
-    // Nível 7: 5% de 200 = 10 por vez mantida.
-    const s7 = withInitiative(startBattle(at(p, 7), testVillain({ hp: 200 })));
-    const h7 = { ...s7, villain: { ...s7.villain, fx: { ...s7.villain.fx, debilitated: { strength: 1, served: 0, source: 'shadowImitation' } } } };
-    const r7 = playRound(h7, 'stance', seq(0.0), gameData, { shadowHold: true });
-    expect(ofType(r7.log, 'strangle')).toEqual([{ type: 'strangle', damage: 10 }]);
-    expect(r7.villain.hp).toBe(190);
+    expect(availableActions(s0, gameData)).not.toContain('tech:shadowStrangle');
+    const held = holdOn(s0);
+    expect(availableActions(held, gameData)).toContain('tech:shadowStrangle');
+    // (6 + 13 − 10 × 0,4) × 1,25 = 18; a fuga (0.99) não pega.
+    const s1 = playRound(held, 'tech:shadowStrangle', seq(0.99), gameData);
+    expect(ofType(s1.log, 'strangle')).toEqual([{ type: 'strangle', damage: 18 }]);
+    expect(s1.villain.hp).toBe(182);
+    expect(s1.player.chakra).toBe(held.player.chakra - 5);
+    expect(s1.villain.fx.debilitated).toMatchObject({ source: 'shadowImitation', served: 1 });
+    // Força 2: (12 + 13 − 4) × 1,25 = 26.
+    expect(ofType(playRound(holdOn(s0, 2), 'tech:shadowStrangle', seq(0.99), gameData).log, 'strangle')[0]!.damage).toBe(26);
+  });
+
+  it('no nível 7, +1 de força no Enforcamento', () => {
+    const p = createPlayer(clan('nara'), gameData);
+    const s7 = holdOn(withInitiative(startBattle(at(p, 7), testVillain({ hp: 200 }))));
+    expect(ofType(playRound(s7, 'tech:shadowStrangle', seq(0.99), gameData).log, 'strangle')[0]!.damage).toBe(26);
   });
 });
 
 describe('Akimichi: Pílulas do clã', () => {
-  it('roleta pura: verde ×1,3; vermelha ×2 e deixa exausto quando acaba', () => {
+  it('só a partir do nível 7', () => {
     const p = createPlayer(clan('akimichi'), gameData);
+    const s6 = withInitiative(startBattle(at(p, 6), testVillain()));
+    expect(() => playRound(s6, 'stance', seq(0.5), gameData, { pills: true })).toThrow();
+    const s7 = withInitiative(startBattle(at(p, 7), testVillain()));
+    expect(playRound(s7, 'stance', seq(0.0), gameData, { pills: true }).playerFx.pill).toBe('green');
+  });
+
+  it('roleta pura: verde ×1,3; vermelha ×2 e deixa exausto quando acaba', () => {
+    const p = at(createPlayer(clan('akimichi'), gameData), 7);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 300, techniques: [{ ...punch, baseDamage: 0 }] })));
     const plain = ofType(playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData).log, 'attack')[0]!.damage;
     const green = playRound(s0, 'tech:basicTaijutsu', seq(0.0, 0.5), gameData, { pills: true });

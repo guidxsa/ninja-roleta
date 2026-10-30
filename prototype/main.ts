@@ -16,6 +16,7 @@ import {
   freeActiveCost,
   previewExtras,
   devourPreview,
+  shadowStrangleDamage,
   techniqueCost,
   type FreeActive,
   canFocus,
@@ -469,6 +470,7 @@ function techniqueRows(p: PlayerState): string {
       else if (tech.barrier !== undefined) info = S.ui.barrierHint(tech.barrier, Boolean(t.reflectPct));
       else if (t.state) info = S.ui.armorHint;
       else if (t.devour) info = S.ui.devourInfo;
+      else if (t.shadowStrangle) info = S.ui.strangleInfo;
       else info = S.ui.techLine(tech.baseDamage, t.hits ?? 1, Math.round((t.accuracy ?? data.balance.hit.defaultAccuracy) * 100));
       if (t.chakraDrain) info += ` · ${S.ui.drain(t.chakraDrain)}`;
       if (t.requiresDojutsu) info += ` · ${S.ui.requires(S.dojutsu[t.requiresDojutsu]!.name)}`;
@@ -1238,7 +1240,9 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     tipAttr = playerTechTip(p, techId);
     if (tech.devour) {
       const prev = devourPreview(s, data);
-      extra = `${S.ui.devourHint(prev.insects, prev.chakra, prev.damage)} · ${S.ui.cost(techniqueCost(s, tech, data))}`;
+      extra = `${S.ui.devourHint(prev.insects, Math.round(prev.pct * 1000) / 10, prev.damage)} · ${S.ui.cost(techniqueCost(s, tech, data))}`;
+    } else if (tech.shadowStrangle) {
+      extra = `${S.ui.strangleHint(shadowStrangleDamage(s, data))} · ${S.ui.cost(tech.chakraCost)}`;
     } else if (isIllusion(tech)) {
       extra = `${S.ui.techLine(tech.baseDamage, 1, null)} · ${S.ui.cost(tech.chakraCost)}`;
       if (tech.mental) sub = S.ui.mentalStrength(tech.mentalStrength ?? 1);
@@ -1472,10 +1476,10 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       const hint = `${S.ui.expansionHint} · ${S.ui.activeFreeHint}`;
       return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name} ✓`, hint);
     };
-    /** Ativas de linhagem com botão próprio (Esforço, Fera, Devorar, Transmissão, Cópia, Selamento, Sombra, Pílulas). */
+    /** Ativas de linhagem com botão próprio (Esforço, Fera, Praga, Transmissão, Cópia, Selamento, Pílulas). */
     const lineageActiveToggle = (
       st: BattleState,
-      kind: 'effort' | 'beast' | 'plague' | 'transmission' | 'copy' | 'seal' | 'shadowHold' | 'pills',
+      kind: 'effort' | 'beast' | 'plague' | 'transmission' | 'copy' | 'seal' | 'pills',
     ): string => {
       const p = st.player;
       const cost = freeActiveCost(st, kind, data);
@@ -1491,7 +1495,6 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         const hint = st.villain.charging ? S.ui.sealHint(techName(target)) : S.ui.sealHintHidden;
         return toggle('seal', 'scroll', S.ui.sealFree(cost, left), `${S.actives.seal!.name} ✓`, hint);
       }
-      if (kind === 'shadowHold') return toggle('shadowHold', 'prison', S.ui.shadowHoldFree(cost), `${S.ui.shadowHoldFree(cost)} ✓`, S.ui.shadowHoldHint);
       if (kind === 'pills') return toggle('pills', 'pill', S.ui.pillsFree, `${S.ui.pillsFree} ✓`, S.ui.pillsHint);
       const name = S.actives[kind]!.name;
       if (kind === 'effort') {
@@ -1528,7 +1531,6 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       lineageActiveToggle(s, 'transmission'),
       lineageActiveToggle(lit, 'copy'),
       lineageActiveToggle(s, 'seal'),
-      lineageActiveToggle(s, 'shadowHold'),
       lineageActiveToggle(s, 'pills'),
       forceGatesToggle(s),
       canGenius(s, data)
@@ -1891,11 +1893,9 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           log(S.log.plagueEnd, 'sys');
           break;
         case 'devour':
-          disp.vck -= ev.chakra;
           disp.vhp -= ev.damage;
-          if (ev.chakra > 0) floatNumber(vcard(), `−${ev.chakra} ck`, 'ck');
           if (ev.damage > 0) floatNumber(vcard(), `−${ev.damage}`, 'dmg');
-          log(S.log.devour(ev.insects, ev.chakra, ev.damage), 'good');
+          log(S.log.devour(ev.insects, ev.damage), 'good');
           break;
         case 'copy':
           disp.pck -= data.balance.copy.chakraCost;
@@ -1907,10 +1907,6 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         case 'sealEnd':
           log(S.log.sealEnd(techName(ev.techniqueId)), 'sys');
-          break;
-        case 'shadowHold':
-          disp.pck -= ev.chakra;
-          log(S.log.shadowHold(ev.chakra), 'good');
           break;
         case 'toad':
           disp.vhp -= ev.damage;

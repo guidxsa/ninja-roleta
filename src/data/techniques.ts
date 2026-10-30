@@ -30,8 +30,8 @@ export const lineTechniques: TechniqueDef[] = [
   { id: 'earthDragon', type: 'ninjutsu', element: 'earth', baseDamage: 32, chakraCost: 9, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.25 }, line: 'earth', lineLevel: 3 },
   { id: 'greatWaterfall', type: 'ninjutsu', element: 'water', baseDamage: 33, chakraCost: 10, priority: true, line: 'water', lineLevel: 3 },
 
-  { id: 'insectSwarm2', type: 'ninjutsu', element: null, baseDamage: 6, hits: 3, chakraCost: 6, line: 'swarm', lineLevel: 2, lineages: ['aburame'] },
-  { id: 'insectSwarm3', type: 'ninjutsu', element: null, baseDamage: 8, hits: 4, chakraCost: 7, line: 'swarm', lineLevel: 3, lineages: ['aburame'] },
+  { id: 'insectSwarm2', type: 'ninjutsu', element: null, baseDamage: 1, fixedDamage: 1, hits: 4, chakraCost: 6, line: 'swarm', lineLevel: 2, lineages: ['aburame'] },
+  { id: 'insectSwarm3', type: 'ninjutsu', element: null, baseDamage: 1, fixedDamage: 1, hits: 6, chakraCost: 7, line: 'swarm', lineLevel: 3, lineages: ['aburame'] },
 
   { id: 'rasengan2', type: 'ninjutsu', element: null, baseDamage: 34, chakraCost: 10, clashBonus: 0.25, premium: true, line: 'rasengan', lineLevel: 2 },
   { id: 'rasengan3', type: 'ninjutsu', element: null, baseDamage: 44, chakraCost: 13, clashBonus: 0.25, premium: true, line: 'rasengan', lineLevel: 3 },
@@ -88,8 +88,10 @@ export const lineageTechniques: TechniqueDef[] = [
   { id: 'chakraBlockStrike', type: 'taijutsu', element: null, baseDamage: 6, chakraCost: 0, accuracy: 1, requiresDojutsu: 'byakugan', chakraDrain: 6, lineages: ['hyuuga'] },
   // Imitação de Sombra (Nara): ninjutsu sem dano que aprisiona, usando ninjutsu na fórmula do genjutsu.
   { id: 'shadowImitation', type: 'ninjutsu', element: null, baseDamage: 0, chakraCost: 5, accuracy: 0.8, mental: 'prison', mentalStrength: 1, mentalPower: 0, mentalStat: 'ninjutsu', lineages: ['nara'] },
-  // Enxame (Aburame): golpes pequenos; cada acerto prende um inseto da Colônia no vilão. Sobe em linha (+golpes).
-  { id: 'insectSwarm', type: 'ninjutsu', element: null, baseDamage: 4, hits: 2, chakraCost: 5, line: 'swarm', lineLevel: 1, lineages: ['aburame'] },
+  // Enforcamento por Sombra (Nara): só com o vilão preso pela Imitação de Sombra; dano pela força do controle.
+  { id: 'shadowStrangle', type: 'ninjutsu', element: null, baseDamage: 0, chakraCost: 5, accuracy: 1, shadowStrangle: true, lineages: ['nara'] },
+  // Enxame (Aburame): 1 de dano fixo por golpe; cada acerto prende um inseto da Colônia no vilão. Sobe em linha (+2 golpes).
+  { id: 'insectSwarm', type: 'ninjutsu', element: null, baseDamage: 1, fixedDamage: 1, hits: 2, chakraCost: 5, line: 'swarm', lineLevel: 1, lineages: ['aburame'] },
   // Devorar (Aburame): consome os insetos presos; custo pelo número de insetos, sem rolar acerto.
   { id: 'insectDevour', type: 'ninjutsu', element: null, baseDamage: 0, chakraCost: 0, devour: true, lineages: ['aburame'] },
   { id: 'basicGenjutsu', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 3, mental: 'prison', mentalStrength: 1, mentalPower: 0, lineages: ['uchiha'] },

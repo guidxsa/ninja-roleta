@@ -10,7 +10,10 @@ import {
   copyTarget,
   canFocus,
   dealsDamage,
+  devourPct,
   devourPreview,
+  maxInsects,
+  shadowStrangleDamage,
   illusionDamage,
   isBarrier,
   isControlled,
@@ -19,7 +22,6 @@ import {
   itemAction,
   expectedMentalTurns,
   forceGatesChance,
-  freeActiveCost,
   sealTarget,
   playerGenjutsuHitChance,
   playerMentalStrength,
@@ -146,10 +148,18 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
     if (!t || (!dealsDamage(t) && !isIllusion(t) && !t.devour)) continue;
     let score: number;
     if (t.devour) {
-      // Devorar: dano direto mais o chakra negado ao vilão; só com a colônia cheia.
+      // Devorar: dano direto; com a colônia perto do teto ou quando já derruba o vilão.
       const prev = devourPreview(state, data);
-      if (prev.insects < 6) continue;
-      score = prev.damage + prev.chakra * 0.6;
+      if (prev.insects < Math.min(8, maxInsects(state, data)) && prev.damage < v.hp) continue;
+      score = prev.damage;
+    } else if (t.shadowStrangle) {
+      score = shadowStrangleDamage(state, data);
+    } else if (t.line === 'swarm' && state.player.passive === 'hive') {
+      // Enxame: vale pelos insetos que prende (o dano que eles darão no Devorar), até o teto.
+      const prev = attackPreview(state, t.id, data);
+      const perHit = data.balance.passives.hive.insectsPerHit * (state.playerFx.plagueTurns > 0 ? data.balance.plague.mult : 1);
+      const added = Math.min(maxInsects(state, data) - v.insects, prev.hitChance * prev.hits * perHit);
+      score = prev.damage * prev.hitChance * prev.hits + added * devourPct(state, data) * v.def.hp;
     } else if (isIllusion(t)) {
       score = illusionValue(state, t.id, data);
       // Ilusão que também controla (Tsukuyomi) vale mais se o vilão ainda pode perder a vez.
@@ -229,7 +239,7 @@ export function chooseExtras(state: BattleState, action: PlayerAction, data: Gam
   ex.plague = attack && tech.line === 'swarm' && canFreeActive(state, 'plague', action, data, ex) && reserve(data.balance.plague.chakraCost + 4);
   ex.transmission = canFreeActive(state, 'transmission', action, data, ex) && playerGenjutsuHitChance(state, data) >= 0.4;
   // Pílulas e portões forçados: com HP de sobra. Cópia: sempre que der. Selamento: no golpe carregado ou na técnica
-  // mais forte do vilão. Sombra costurada: se sobra chakra depois.
+  // mais forte do vilão.
   ex.pills = taijutsu && p.hp > p.maxHp * 0.5 && canFreeActive(state, 'pills', action, data, ex);
   ex.forceGates = Boolean(ex.gates) && p.hp > p.maxHp * 0.6 && forceGatesChance(p, data) >= 0.6;
   // Cópia: só sem cópia ou se a técnica nova bate mais que a atual.
@@ -244,8 +254,6 @@ export function chooseExtras(state: BattleState, action: PlayerAction, data: Gam
   const strongest = Math.max(...state.villain.def.techniques.map((t) => t.baseDamage * (t.hits ?? 1)));
   const targetDamage = sealed ? (state.villain.def.techniques.find((t) => t.id === sealed)?.baseDamage ?? 0) : 0;
   ex.seal = canFreeActive(state, 'seal', action, data, ex) && (state.villain.charging !== null || targetDamage >= strongest);
-  const holdCost = freeActiveCost(state, 'shadowHold', data);
-  ex.shadowHold = holdCost !== null && canFreeActive(state, 'shadowHold', action, data, ex) && reserve(holdCost + 5);
   ex.clones = attack && canClones(state, action, data, ex) && p.chakra >= p.maxChakra * 0.5;
   return ex;
 }

@@ -124,8 +124,6 @@ export interface RoundExtras {
   copy?: boolean;
   /** Selamento (Uzumaki): sela a próxima técnica do vilão. */
   seal?: boolean;
-  /** Sombra costurada (Nara): mantém a Imitação de Sombra (a fuga não gira nesta vez). */
-  shadowHold?: boolean;
   /** Pílulas do clã (Akimichi): gira a roleta das 3 pílulas. */
   pills?: boolean;
   /** Junto com os portões: tenta forçar um portão além do liberado (prodígio). */
@@ -188,9 +186,6 @@ export interface MentalHold {
   served: number;
   /** Técnica do jogador que aplicou o efeito (Imitação de Sombra, Correntes). */
   source?: string;
-  /** Sombra costurada: vezes já mantidas e se está mantida nesta vez (a fuga não gira). */
-  maintained?: number;
-  pinned?: boolean;
 }
 
 export interface StatusFx {
@@ -381,12 +376,11 @@ export type BattleEvent =
   | { type: 'beastEnd' }
   | { type: 'plague'; chakra: number }
   | { type: 'plagueEnd'; insects: number }
-  | { type: 'devour'; insects: number; chakra: number; damage: number }
+  | { type: 'devour'; insects: number; pct: number; damage: number }
   | { type: 'transmission'; chance: number; success: boolean; techniqueId: string }
   | { type: 'copy'; chance: number; success: boolean; techniqueId: string }
   | { type: 'seal'; techniqueId: string; turns: number; charged: boolean }
   | { type: 'sealEnd'; techniqueId: string }
-  | { type: 'shadowHold'; chakra: number }
   | { type: 'strangle'; damage: number }
   | { type: 'toad'; damage: number }
   | { type: 'glimmer' }
@@ -733,6 +727,7 @@ interface CombatTech {
   onHit?: { effect: HitEffect; chance: number };
   blade?: BladeKind;
   clashBonus?: number;
+  fixedDamage?: number;
 }
 
 function playerCombatTech(s: BattleState, techniqueId: string, data: GameData): CombatTech {
@@ -848,7 +843,6 @@ export type FreeActive =
   | 'transmission'
   | 'copy'
   | 'seal'
-  | 'shadowHold'
   | 'pills';
 
 /** Chakra que a ativa grátis custa (null = o jogador não a tem ou não pode usá-la agora). */
@@ -872,13 +866,8 @@ export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData)
       return copyTarget(s, data) ? data.balance.copy.chakraCost : null;
     case 'seal':
       return p.active === 'seal' && sealTarget(s) && fx.sealUsed < activeUses(p, 'seal', data) ? data.balance.seal.chakraCost : null;
-    case 'shadowHold': {
-      const hold = s.villain.fx.debilitated;
-      if (p.passive !== 'genius' || hold?.source !== 'shadowImitation' || hold.pinned) return null;
-      return data.balance.shadowHold.baseCost + data.balance.shadowHold.perHold * (hold.maintained ?? 0);
-    }
     case 'pills':
-      return p.active === 'expansion' && fx.pillsUsed < data.balance.pills.usesPerFight && fx.pillTurns === 0 && fx.exhaustedTurns === 0 ? 0 : null;
+      return p.active === 'expansion' && awakened(p, data.balance.pills.minLevel) && fx.pillsUsed < data.balance.pills.usesPerFight && fx.pillTurns === 0 && fx.exhaustedTurns === 0 ? 0 : null;
     case 'plague':
       return p.active === 'plague' && fx.plagueTurns === 0 && fx.plagueUsed < activeUses(p, 'plague', data) ? data.balance.plague.chakraCost : null;
     case 'transmission':
@@ -991,7 +980,6 @@ export const FREE_ACTIVES: FreeActive[] = [
   'transmission',
   'copy',
   'seal',
-  'shadowHold',
   'clones',
 ];
 
@@ -1366,6 +1354,8 @@ function strikeDamage(
   data: GameData,
 ): { damage: number; elementMult: number } {
   const defender = other(attacker);
+  // Dano fixo (Enxame): ignora status, resistência, crítico e multiplicadores.
+  if (tech.fixedDamage !== undefined) return { damage: tech.fixedDamage, elementMult: 1 };
   const state = elementalStateOf(s, defender, data);
   const elementMult = elementMultiplier(tech.element, state, data.beats, data.balance.elements, true);
   // Vento contra a Armadura de Raio: ignora o bônus de resistência dela.
@@ -1433,9 +1423,9 @@ export function playerMedical(player: PlayerState, data: GameData): TechniqueDef
   return tech ? leveledTechnique(player, tech.id, data) : null;
 }
 
-/** Chakra que a técnica custa agora: com upgrades; o Devorar custa por inseto preso no vilão. */
+/** Chakra que a técnica custa agora: com upgrades; o Devorar custa 1 a cada 2 insetos presos no vilão. */
 export function techniqueCost(s: BattleState, tech: TechniqueDef, data?: GameData): number {
-  if (tech.devour) return s.villain.insects * (data ? devourConfig(s.player, data).chakraCostPerInsect : 1);
+  if (tech.devour) return Math.ceil(s.villain.insects / (data ? data.balance.devour.insectsPerChakra : 2));
   return data ? leveledTechnique(s.player, tech.id, data).chakraCost : tech.chakraCost;
 }
 
@@ -1445,6 +1435,7 @@ export function canUseTechnique(s: BattleState, tech: TechniqueDef, data?: GameD
   if (p.forbiddenAttackTypes.includes(tech.type)) return false;
   if (tech.requiresDojutsu && !(s.playerFx.dojutsuActive && p.dojutsu === tech.requiresDojutsu)) return false;
   if (tech.devour && s.villain.insects === 0) return false;
+  if (tech.shadowStrangle && !shadowHeld(s)) return false;
   const cost = techniqueCost(s, tech, data);
   return cost === 0 || p.chakra >= cost;
 }
@@ -1936,7 +1927,6 @@ export function playRound(
   if (ex.transmission) mindTransmission(s, rng, data);
   if (ex.copy) attemptCopy(s, copyTarget(s)!, rng, data);
   if (ex.seal) sealTechnique(s, data);
-  if (ex.shadowHold) holdShadow(s, data);
   s.playerFx.possessionPick = ex.possession ?? null;
   if (ex.genius) {
     s.playerFx.geniusUsed++;
@@ -2283,11 +2273,6 @@ function serveMental(s: BattleState, side: Side, slot: MentalSlot, rng: Rng, dat
   const hold = fx[slot];
   if (!hold) return;
   hold.served++;
-  // Sombra costurada: mantida nesta vez, a fuga não gira.
-  if (hold.pinned) {
-    hold.pinned = false;
-    return;
-  }
   if (!chance(mentalEscapeChance(hold.strength, hold.served, data), rng)) return;
   fx[slot] = null;
   const effect = (Object.keys(MENTAL_SLOT) as MentalEffect[]).find((e) => MENTAL_SLOT[e] === slot)!;
@@ -2666,6 +2651,9 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
     if (tech.devour) {
       devour(s, data);
       if (s.status !== 'ongoing') return;
+    } else if (tech.shadowStrangle) {
+      shadowStrangle(s, tech, data);
+      if (s.status !== 'ongoing') return;
     } else if (isBarrier(tech)) {
       payChakra(p, tech.chakraCost);
       raiseShield(s, 'player', tech, playerTechnique(p, techId, data).element, tech.chakraCost, data);
@@ -2775,32 +2763,31 @@ function activatePlague(s: BattleState, data: GameData): void {
   s.log.push({ type: 'plague', chakra: cfg.chakraCost });
 }
 
-/** Devorar com o despertar do nível 7 aplicado. */
-export function devourConfig(player: PlayerState, data: GameData): { chakraCostPerInsect: number; chakraPerInsect: number; damagePerInsect: number } {
-  const aw = data.balance.awakening.aburame.devour;
-  return awakened(player, aw.level) ? { ...data.balance.devour, ...aw } : data.balance.devour;
-}
-
-/** Devorar: chakra drenado e dano direto que os insetos presos causariam agora. */
-export function devourPreview(s: BattleState, data: GameData): { insects: number; chakra: number; damage: number } {
-  const cfg = devourConfig(s.player, data);
-  const insects = s.villain.insects;
-  const chakra = Math.min(s.villain.chakra, insects * cfg.chakraPerInsect);
-  const leftover = insects - Math.ceil(chakra / cfg.chakraPerInsect);
-  return { insects, chakra, damage: leftover * cfg.damagePerInsect };
-}
-
 /**
- * Devorar (Aburame, técnica de ninjutsu): paga 1 de chakra por inseto; cada inseto drena `chakraPerInsect` do
- * vilão e os que sobram com ele sem chakra causam `damagePerInsect` de dano direto (sem resistência).
+ * Devorar: % do HP máximo do vilão por inseto, pelo maior degrau da razão ninjutsu base do Aburame ÷
+ * resistência física do vilão (+`pctBonus` no despertar do nível 7).
  */
+export function devourPct(s: BattleState, data: GameData): number {
+  const resistance = s.villain.def.resistance.physical;
+  const ratio = resistance > 0 ? s.player.offense.ninjutsu / resistance : Infinity;
+  const pct = data.balance.devour.table.reduce((best, step) => (ratio >= step.ratio ? Math.max(best, step.pct) : best), 0);
+  const aw = data.balance.awakening.aburame.devour;
+  return pct + (awakened(s.player, aw.level) ? aw.pctBonus : 0);
+}
+
+/** Devorar: dano direto que os insetos presos causariam agora. */
+export function devourPreview(s: BattleState, data: GameData): { insects: number; pct: number; damage: number } {
+  const insects = s.villain.insects;
+  const pct = devourPct(s, data);
+  return { insects, pct, damage: Math.floor(pct * insects * s.villain.def.hp) };
+}
+
+/** Devorar (Aburame, técnica de ninjutsu): consome os insetos presos e causa dano direto (sem resistência). */
 function devour(s: BattleState, data: GameData): void {
-  const v = s.villain;
-  const { insects, chakra, damage } = devourPreview(s, data);
+  const { insects, pct, damage } = devourPreview(s, data);
   payChakra(s.player, techniqueCost(s, data.techniquesById[DEVOUR]!, data));
-  v.insects = 0;
-  v.chakra -= chakra;
-  s.log.push({ type: 'devour', insects, chakra, damage });
+  s.villain.insects = 0;
+  s.log.push({ type: 'devour', insects, pct, damage });
   if (damage > 0) hurtVillain(s, damage);
 }
 
@@ -2855,21 +2842,39 @@ function sealTechnique(s: BattleState, data: GameData): void {
   s.log.push({ type: 'seal', techniqueId, turns, charged });
 }
 
-/** Sombra costurada (Nara): paga e prende a sombra nesta vez (a fuga não gira). */
-function holdShadow(s: BattleState, data: GameData): void {
-  const hold = s.villain.fx.debilitated!;
-  const cfg = data.balance.shadowHold;
-  const cost = cfg.baseCost + cfg.perHold * (hold.maintained ?? 0);
-  s.player.chakra -= cost;
-  hold.maintained = (hold.maintained ?? 0) + 1;
-  hold.pinned = true;
-  s.log.push({ type: 'shadowHold', chakra: cost });
+/** O vilão está preso pela Imitação de Sombra (libera o Enforcamento). */
+export function shadowHeld(s: BattleState): boolean {
+  return s.villain.fx.debilitated?.source === 'shadowImitation';
 }
 
 /**
- * Vilão preso que perde a vez: Correntes de Chakra drenam o chakra dele; a sombra mantida estrangula
- * (Nara, nível 7).
+ * Enforcamento por Sombra (Nara): força do controle × `damagePerStrength` + ninjutsu − resistência física
+ * usada pelo vilão (+1 de força no despertar do nível 7). Sem acerto nem crítico; o vilão segue preso.
  */
+export function shadowStrangleDamage(s: BattleState, data: GameData): number {
+  const hold = s.villain.fx.debilitated;
+  if (!hold || !shadowHeld(s)) return 0;
+  const aw = data.balance.awakening.nara.strangle;
+  const strength = hold.strength + (awakened(s.player, aw.level) ? aw.strengthBonus : 0);
+  return computeDamage({
+    baseDamage: Math.floor(strength * data.balance.shadowStrangle.damagePerStrength),
+    offense: effectiveOffense(s, 'ninjutsu', data),
+    resistance: villainResistance(s, 'physical', data),
+    fraction: guardFraction(s, 'villain', defaultGuard(s, 'villain'), 'physical', data, 'ninjutsu'),
+    elementMult: 1,
+    critMult: 1,
+    extraMult: playerDamageMult(s, 'ninjutsu', data) * data.balance.control.vulnerableDamageMult,
+  });
+}
+
+function shadowStrangle(s: BattleState, tech: TechniqueDef, data: GameData): void {
+  const damage = shadowStrangleDamage(s, data);
+  payChakra(s.player, tech.chakraCost);
+  s.log.push({ type: 'strangle', damage });
+  hurtVillain(s, damage);
+}
+
+/** Vilão preso que perde a vez: Correntes de Chakra drenam o chakra dele. */
 function heldVillainEffects(s: BattleState, data: GameData): void {
   const v = s.villain;
   const hold = v.fx.debilitated;
@@ -2879,12 +2884,6 @@ function heldVillainEffects(s: BattleState, data: GameData): void {
     const amount = Math.min(v.chakra, drain);
     v.chakra -= amount;
     if (amount > 0) s.log.push({ type: 'chakraDrain', amount, source: 'chains' });
-  }
-  const aw = data.balance.awakening.nara.strangle;
-  if (hold.source === 'shadowImitation' && hold.pinned && awakened(s.player, aw.level)) {
-    const damage = Math.floor(v.def.hp * aw.hpPct);
-    s.log.push({ type: 'strangle', damage });
-    hurtVillain(s, damage);
   }
 }
 

@@ -66,8 +66,11 @@ export function playerTechTip(p: PlayerState, id: string): string {
   const deals = t.baseDamage > 0;
   const body = lines([
     `<i>${kindLine(t.type, slot, t.element)} · ${T.level(roman(techniqueLevel(p, id, data)))}</i>`,
-    deals && T.damage(t.baseDamage, t.hits ?? 1),
-    (deals || t.mental) && !t.mentalStat && t.type !== 'genjutsu' && T.accuracy(pct(t.accuracy ?? B.hit.defaultAccuracy)),
+    deals && t.fixedDamage === undefined && T.damage(t.baseDamage, t.hits ?? 1),
+    t.fixedDamage !== undefined && T.fixedDamage(t.fixedDamage),
+    t.shadowStrangle && T.strangle,
+    t.devour && T.devour,
+    (deals || t.mental) && !t.shadowStrangle && !t.mentalStat && t.type !== 'genjutsu' && T.accuracy(pct(t.accuracy ?? B.hit.defaultAccuracy)),
     t.mentalStat && T.accuracy(pct(t.accuracy ?? B.hit.defaultAccuracy)),
     t.critBonus && T.critBonus,
     t.penetration && T.penetration,
