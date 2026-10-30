@@ -16,6 +16,8 @@ import {
   FREE_ACTIVES,
   possessionOptions,
   freeActiveCost,
+  previewExtras,
+  type FreeActive,
   canFocus,
   canGenius,
   restChakra,
@@ -1262,7 +1264,8 @@ type ActionTab = AttackType | 'special' | 'items';
 
 /** Abas de categoria que o jogador usa (tai, nin, gen), a de ações especiais e a da bolsa. */
 function actionTabs(s: BattleState): ActionTab[] {
-  const types = (['taijutsu', 'ninjutsu', 'genjutsu'] as AttackType[]).filter((t) => canUseType(s.player, t, data));
+  const copiedType = s.playerFx.copied ? data.techniquesById[s.playerFx.copied]?.type : undefined;
+  const types = (['taijutsu', 'ninjutsu', 'genjutsu'] as AttackType[]).filter((t) => canUseType(s.player, t, data) || t === copiedType);
   const items = CONSUMABLES.some((id) => s.player.bag[id] > 0);
   return [...types, 'special', ...(items ? (['items'] as const) : [])];
 }
@@ -1272,9 +1275,13 @@ function actionList(s: BattleState, tab: ActionTab): PlayerAction[] {
   const p = s.player;
   if (tab === 'items') return CONSUMABLES.filter((id) => p.bag[id] > 0).map(itemAction);
   if (tab !== 'special') {
-    return attackTechniques(p, data)
+    const list = attackTechniques(p, data)
       .filter((t) => t.type === tab && (!t.requiresDojutsu || canUseTechnique(s, { ...t, chakraCost: 0 })))
       .map((t) => techAction(t.id));
+    // Técnica copiada pelo Sharingan: fica na aba do tipo dela até o fim da luta.
+    const copied = s.playerFx.copied ? data.techniquesById[s.playerFx.copied] : undefined;
+    if (copied?.type === tab) list.push(techAction(copied.id));
+    return list;
   }
   const list: PlayerAction[] = [];
   if (playerMedical(p, data)) list.push('medical');
@@ -1304,7 +1311,7 @@ function reactionButton(s: BattleState, pending: PendingReaction, choice: Reacti
         cls: 'react act-substitution',
         ico: icon('substitution'),
         title: S.ui.reactSubstitution,
-        extra: S.ui.reactSubstitutionHint(pct(prev.chance), prev.usesLeft),
+        extra: S.ui.reactSubstitutionHint(pct(prev.chance), prev.usesLeft, prev.decoy),
         tip: tip(S.ui.reactSubstitution, A.substitution),
       });
     case 'clash': {
@@ -1393,13 +1400,17 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   const renderActions = (s: BattleState, enabled: boolean) => {
     current = s;
     enabledNow = enabled;
-    const avail = availableActions(s, data);
+    // Ações e números como ficam com as escolhas grátis já marcadas (ex.: Sharingan aceso libera o Tsukuyomi).
+    const view = previewExtras(s, extras, data);
+    // A Cópia só depende do Sharingan: vale com ele aceso nesta mesma rodada.
+    const lit = extras.dojutsu ? previewExtras(s, { dojutsu: true }, data) : s;
+    const avail = availableActions(view, data);
     // A ação já foi gasta numa reação: só o botão de passar a vez.
     if (avail.length === 1 && avail[0] === 'pass') {
       actionsEl.innerHTML = `<div class="act-grid">${actionButton(s, 'pass', enabled)}</div>`;
       return;
     }
-    const tabs = actionTabs(s);
+    const tabs = actionTabs(view);
     if (!tabs.includes(tab)) tab = tabs[0]!;
     const tabLabel = (t: ActionTab) => (t === 'special' ? S.ui.special : t === 'items' ? S.ui.bag : S.actions[t]);
     const tabIcon = (t: ActionTab) => icon(t === 'special' ? 'swords' : t === 'items' ? 'item' : t);
@@ -1410,16 +1421,18 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     const tabsHtml = `<div class="act-tabs" role="tablist">${tabs
       .map((t) => `<button class="act-tab tab-${t}${t === tab ? ' on' : ''}" role="tab" aria-selected="${t === tab}" data-tab="${t}"${tabTip(t)}>${tabIcon(t)}<span>${tabLabel(t)}</span></button>`)
       .join('')}</div>`;
-    const buttons = actionList(s, tab)
-      .map((a) => actionButton(s, a, enabled && avail.includes(a)))
+    const buttons = actionList(view, tab)
+      .map((a) => actionButton(view, a, enabled && avail.includes(a)))
       .join('');
     const toggle = (key: keyof RoundExtras, ico: string, label: string, armedLabel: string, hint: string) =>
       `<button class="btn focus-btn${extras[key] ? ' on' : ''}" data-extra="${key}" aria-pressed="${Boolean(extras[key])}" ${enabled ? '' : 'aria-disabled="true"'}${tip(label, hint)}>${icon(ico)}<span>${extras[key] ? armedLabel : label}<small>${hint}</small></span></button>`;
     /** Dōjutsu, portões e expansão: ativas grátis (não gastam o turno). */
+    /** A ativa aparece se há chakra para ela junto com as outras já marcadas (ou se já está marcada). */
+    const affordable = (st: BattleState, kind: FreeActive): boolean => Boolean(extras[kind]) || canFreeActive(st, kind, 'pass', data, extras);
     const freeActiveToggle = (st: BattleState, kind: 'dojutsu' | 'gates' | 'expansion'): string => {
       const p = st.player;
       const cost = freeActiveCost(st, kind, data);
-      if (cost === null || p.chakra < cost) return '';
+      if (cost === null || !affordable(st, kind)) return '';
       const mult = (n: number) => `×${String(n).replace('.', ',')} tai`;
       if (kind === 'dojutsu' && p.dojutsu) {
         const stage = sharinganStage(p, data);
@@ -1443,7 +1456,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     ): string => {
       const p = st.player;
       const cost = freeActiveCost(st, kind, data);
-      if (cost === null || p.chakra < cost) return '';
+      if (cost === null || !affordable(st, kind)) return '';
       if (kind === 'copy') {
         const label = S.ui.copyFree(formatPct(copyChance(st, data)), cost);
         return toggle('copy', 'sharingan', label, `${S.actives.copy!.name} ✓`, S.ui.copyHint(techName(copyTarget(st)!)));
@@ -1496,7 +1509,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       lineageActiveToggle(s, 'beast'),
       lineageActiveToggle(s, 'devour'),
       lineageActiveToggle(s, 'transmission'),
-      lineageActiveToggle(s, 'copy'),
+      lineageActiveToggle(lit, 'copy'),
       lineageActiveToggle(s, 'seal'),
       lineageActiveToggle(s, 'shadowHold'),
       lineageActiveToggle(s, 'pills'),
@@ -1531,6 +1544,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     if (extra && enabledNow && !isOff(extra)) {
       const key = extra.dataset.extra as keyof RoundExtras;
       extras = { ...extras, [key]: !extras[key] };
+      // Sem o Sharingan, a Cópia marcada nesta rodada cai junto.
+      if (key === 'dojutsu' && !extras.dojutsu && !freeActiveCost(current, 'copy', data)) extras.copy = false;
       renderActions(current, enabledNow);
       return;
     }
@@ -1579,7 +1594,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     if (extras.possession) chosen.possession = extras.possession;
     chosen.forceGates = Boolean(extras.forceGates);
     for (const k of FREE_ACTIVES) {
-      chosen[k] = Boolean(extras[k]) && canFreeActive(state, k, action, data, chosen);
+      const base = k === 'copy' && chosen.dojutsu ? previewExtras(state, { dojutsu: true }, data) : state;
+      chosen[k] = Boolean(extras[k]) && canFreeActive(base, k, action, data, chosen);
     }
     chosen.forceGates = Boolean(chosen.gates && chosen.forceGates);
     let next = playRound(state, action, rng, data, chosen);

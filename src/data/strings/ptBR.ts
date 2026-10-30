@@ -538,7 +538,8 @@ export const ptBR = {
     reactResist: 'Resistir',
     reactResistHint: (pct: number, dmg: number) => `grátis · usa ${pct}% da resistência · ≈${dmg} de dano`,
     reactSubstitution: 'Substituição',
-    reactSubstitutionHint: (pct: number, left: number) => `${pct}% de esquivar · ${left} uso(s) · não gasta ação`,
+    reactSubstitutionHint: (pct: number, left: number, decoy: boolean) =>
+      `${pct}% de esquivar · ${decoy ? 'o cão serve de isca (não gasta uso)' : `${left} uso(s)`} · não gasta ação`,
     reactClash: (tech: string) => `Disputar: ${tech}`,
     reactClashHint: (win: number, cancel: number, lose: number) => `${win}% vence · ${cancel}% anula · ${lose}% perde · gasta a próxima ação`,
 

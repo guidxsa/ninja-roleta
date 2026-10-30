@@ -201,7 +201,7 @@ describe('Substituição', () => {
   it('+3% por ponto de speed a favor, entre 25% e 85%; 2 usos por luta', () => {
     const s0 = withInitiative(startBattle({ ...player(), speed: 20 }, fireVillain()), 'villain');
     const incoming = { attacker: 'villain' as const, techniqueId: 'blaze', type: 'ninjutsu' as const, element: 'fire' as const, hits: 1, charged: false };
-    expect(reactionPreview(s0, incoming, 'substitution', gameData)).toEqual({ kind: 'substitution', chance: 0.8, usesLeft: 2 });
+    expect(reactionPreview(s0, incoming, 'substitution', gameData)).toEqual({ kind: 'substitution', chance: 0.8, usesLeft: 2, decoy: false });
     const fast = withInitiative(startBattle({ ...player(), speed: 40 }, fireVillain()), 'villain');
     expect(reactionPreview(fast, incoming, 'substitution', gameData)).toMatchObject({ chance: 0.85 });
     const used = { ...s0, playerFx: { ...s0.playerFx, substitutionsUsed: 2 } };

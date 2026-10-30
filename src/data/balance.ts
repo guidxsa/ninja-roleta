@@ -129,7 +129,7 @@ export const balance = {
   // Esforço (comum): +`offenseBonus` em tai/nin/gen; `uses` por luta, +1 em cada nível de `extraUseLevels`.
   effort: { chakraCost: 0, turns: 3, offenseBonus: 3, uses: 1, extraUseLevels: [4, 7] },
   // Fera de quatro patas (Inuzuka): speed +`speedBonus`, Dupla com `duoChance` e Substituição sem gastar usos.
-  beast: { chakraCost: 5, turns: 3, speedBonus: 3, duoChance: 0.6 },
+  beast: { chakraCost: 5, turns: 3, speedBonus: 3, duoChance: 0.6, uses: 1, extraUseLevels: [7] },
   // Devorar (Aburame): cada inseto drena `chakraPerInsect`; os que sobram com o vilão sem chakra causam `damagePerInsect`.
   devour: { chakraCost: 3, chakraPerInsect: 3, damagePerInsect: 2 },
   // Transmissão mental (Yamanaka): contra golpe carregado, rola o acerto de genjutsu; pegou, o vilão perde o golpe e a vez.

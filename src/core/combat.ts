@@ -274,6 +274,8 @@ export interface PlayerFx extends StatusFx {
   geniusArmed: boolean;
   /** Esforço (comum): usos nesta luta e rodadas que faltam (a da ativação conta). */
   effortUsed: number;
+  /** Fera de quatro patas já ativada nesta luta (limite de `activeUses`). */
+  beastUsed: number;
   effortTurns: number;
   /** Fera de quatro patas (Inuzuka): rodadas que faltam (a da ativação conta). */
   beastTurns: number;
@@ -572,6 +574,7 @@ export function startBattle(
       geniusUsed: 0,
       geniusArmed: false,
       effortUsed: 0,
+      beastUsed: 0,
       effortTurns: 0,
       beastTurns: 0,
       transmissionUsed: 0,
@@ -846,9 +849,9 @@ export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData)
     case 'effort':
       return p.active === 'effort' && fx.effortTurns === 0 && fx.effortUsed < activeUses(p, 'effort', data) ? data.balance.effort.chakraCost : null;
     case 'beast':
-      return p.active === 'beast' && fx.beastTurns === 0 ? beastConfig(p, data).chakraCost : null;
+      return p.active === 'beast' && fx.beastTurns === 0 && fx.beastUsed < activeUses(p, 'beast', data) ? beastConfig(p, data).chakraCost : null;
     case 'copy':
-      return copyTarget(s) ? data.balance.copy.chakraCost : null;
+      return copyTarget(s, data) ? data.balance.copy.chakraCost : null;
     case 'seal':
       return p.active === 'seal' && sealTarget(s) && fx.sealUsed < activeUses(p, 'seal', data) ? data.balance.seal.chakraCost : null;
     case 'shadowHold': {
@@ -867,8 +870,8 @@ export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData)
   }
 }
 
-/** Usos por luta das ativas com limite (Esforço, Transmissão mental, Selamento). */
-export function activeUses(player: PlayerState, kind: 'effort' | 'transmission' | 'seal', data: GameData): number {
+/** Usos por luta das ativas com limite (Esforço, Fera, Transmissão mental, Selamento). */
+export function activeUses(player: PlayerState, kind: 'effort' | 'beast' | 'transmission' | 'seal', data: GameData): number {
   if (player.active !== kind) return 0;
   if (kind === 'seal') {
     const aw = data.balance.awakening.uzumaki.seal;
@@ -914,9 +917,10 @@ export function copyTechniqueId(villainId: string, techniqueId: string): string 
 }
 
 /** Técnica que a Cópia no turno copiaria agora (null = sem Sharingan, nada para copiar ou já copiada). */
-export function copyTarget(s: BattleState): string | null {
+export function copyTarget(s: BattleState, data?: GameData): string | null {
   if (!sharinganActive(s) || !s.villain.lastTechnique) return null;
   const id = copyTechniqueId(s.villain.def.id, s.villain.lastTechnique);
+  if (data && !data.techniquesById[id]) return null;
   return id === s.playerFx.copied ? null : id;
 }
 
@@ -962,6 +966,42 @@ export function canFreeActive(s: BattleState, kind: FreeActive, action: PlayerAc
   if (cost === null) return false;
   const others = chosenActivesCost(s, { ...chosen, [kind]: false }, data);
   return s.player.chakra >= cost + others + actionCost(s, action, data);
+}
+
+/**
+ * Estado como fica depois das escolhas grátis da rodada, para a interface mostrar ações e números
+ * atualizados antes de confirmar (ex.: Tsukuyomi no turno em que o Sharingan acende). Aplica só o que
+ * é certo: ativações e seus custos. O que gira roleta (cópia, transmissão, pílula, forçar portões) só
+ * paga o chakra. Pura.
+ */
+export function previewExtras(s: BattleState, ex: RoundExtras, data: GameData): BattleState {
+  const v = structuredClone(s);
+  const costs = FREE_ACTIVES.map((k) => [k, ex[k] ? freeActiveCost(s, k, data) : null] as const);
+  if (ex.focus && canFocus(s)) v.playerFx.focusArmed = true;
+  if (ex.genius && canGenius(s, data)) v.playerFx.geniusArmed = true;
+  for (const [k, cost] of costs) {
+    if (cost === null) continue;
+    if (k === 'dojutsu') activateDojutsu(v, data);
+    else if (k === 'gates') openGates(v, false, () => 0, data);
+    else if (k === 'expansion') activateExpansion(v, data);
+    else if (k === 'effort') activateEffort(v, data);
+    else if (k === 'beast') activateBeast(v, data);
+    else {
+      payChakra(v.player, cost);
+      if (k === 'clones') v.playerFx.clonesArmed = true;
+    }
+  }
+  // A cópia depende do Sharingan, que pode acender nesta mesma rodada.
+  if (ex.copy && freeActiveCost(s, 'copy', data) === null) {
+    const cost = freeActiveCost(v, 'copy', data);
+    if (cost !== null) payChakra(v.player, cost);
+  }
+  return v;
+}
+
+/** Só o dōjutsu escolhido aplicado: é o que a cópia e as técnicas de dōjutsu exigem. */
+function withDojutsu(s: BattleState, ex: RoundExtras, data: GameData): BattleState {
+  return ex.dojutsu && freeActiveCost(s, 'dojutsu', data) !== null ? previewExtras(s, { dojutsu: true }, data) : s;
 }
 
 /** Os Clones das Sombras podem ser armados junto com esta ação (chakra para os dois). */
@@ -1358,7 +1398,7 @@ export function canUseTechnique(s: BattleState, tech: TechniqueDef, data?: GameD
   if (p.forbiddenAttackTypes.includes(tech.type)) return false;
   if (tech.requiresDojutsu && !(s.playerFx.dojutsuActive && p.dojutsu === tech.requiresDojutsu)) return false;
   const cost = data ? leveledTechnique(p, tech.id, data).chakraCost : tech.chakraCost;
-  return p.chakra >= cost;
+  return cost === 0 || p.chakra >= cost;
 }
 
 /** Chakra que Concentrar chakra recupera: 15% do chakra máximo (mínimo 1). Vale para o jogador e o vilão. */
@@ -1455,13 +1495,28 @@ function chakraOf(s: BattleState, side: Side): number {
 }
 
 function spendChakra(s: BattleState, side: Side, amount: number): void {
-  if (side === 'player') s.player.chakra -= amount;
-  else s.villain.chakra -= amount;
+  if (side === 'player') payChakra(s.player, amount);
+  else s.villain.chakra = Math.max(0, s.villain.chakra - amount);
+}
+
+/** Paga chakra do jogador sem deixá-lo negativo. */
+function payChakra(p: PlayerState, amount: number): void {
+  p.chakra = Math.max(0, p.chakra - amount);
+}
+
+/**
+ * Chakra que o jogador já comprometeu com a ação da rodada que ainda não aconteceu. Reações no turno
+ * do vilão (Substituição, Cópia) não podem gastá-lo, senão a ação fica sem chakra.
+ */
+function reservedChakra(s: BattleState, side: Side, data: GameData): number {
+  const plan = s.plan;
+  if (side !== 'player' || !plan || plan.order.indexOf('player') < plan.index) return 0;
+  return actionCost(s, plan.action, data);
 }
 
 function canSubstitute(s: BattleState, side: Side, data: GameData): boolean {
   const fx = fxOf(s, side);
-  if (chakraOf(s, side) < data.balance.substitution.chakraCost) return false;
+  if (chakraOf(s, side) < data.balance.substitution.chakraCost + reservedChakra(s, side, data)) return false;
   return dogDecoy(s, side) || fx.substitutionsUsed < substitutionUses(s, side, data);
 }
 
@@ -1480,7 +1535,8 @@ export function playerReactionOptions(s: BattleState, incoming: IncomingAttack, 
   if (incoming.type === 'genjutsu') return options;
   if (canSubstitute(s, 'player', data)) options.push('substitution');
   if (s.playerFx.owesAction) return options;
-  for (const tech of knownTechniques(s.player, data)) {
+  const copied = s.playerFx.copied ? data.techniquesById[s.playerFx.copied] : undefined;
+  for (const tech of copied ? [...knownTechniques(s.player, data), copied] : knownTechniques(s.player, data)) {
     if (!canUseTechnique(s, tech, data)) continue;
     if (incoming.type === 'ninjutsu' && tech.type === 'ninjutsu' && dealsDamage(tech)) options.push(clashReaction(tech.id));
   }
@@ -1563,7 +1619,7 @@ function clashPowers(
 /** Prévia de uma reação do jogador ao ataque pendente (a UI mostra as chances). */
 export type ReactionPreview =
   | { kind: 'resist'; fraction: number }
-  | { kind: 'substitution'; chance: number; usesLeft: number }
+  | { kind: 'substitution'; chance: number; usesLeft: number; decoy: boolean }
   | { kind: 'clash'; attackPower: number; defensePower: number; odds: [number, number, number] };
 
 export function reactionPreview(s: BattleState, incoming: IncomingAttack, choice: ReactionChoice, data: GameData): ReactionPreview {
@@ -1576,6 +1632,7 @@ export function reactionPreview(s: BattleState, incoming: IncomingAttack, choice
       kind: 'substitution',
       chance: substitutionChance(s, 'player', data),
       usesLeft: substitutionUses(s, 'player', data) - s.playerFx.substitutionsUsed,
+      decoy: dogDecoy(s, 'player'),
     };
   }
   const atk = incomingTech(s, incoming, data);
@@ -1787,10 +1844,13 @@ export function playRound(
   const ex: RoundExtras = typeof extras === 'boolean' ? { focus: extras } : extras;
   if (prev.status !== 'ongoing') throw new Error('A luta já terminou');
   if (prev.pending) throw new Error('Há uma reação pendente (resumeRound)');
-  if (!availableActions(prev, data).includes(action)) throw new Error(`Ação indisponível: ${action}`);
+  // O dōjutsu acende antes da ação: técnicas que o exigem e a Cópia valem já nesta rodada.
+  const lit = withDojutsu(prev, ex, data);
+  if (!availableActions(lit, data).includes(action)) throw new Error(`Ação indisponível: ${action}`);
   if (ex.focus && !canFocus(prev)) throw new Error('Foco indisponível');
   for (const k of FREE_ACTIVES) {
-    if (ex[k] && !canFreeActive(prev, k, action, data, ex)) throw new Error(`Ativa indisponível: ${k}`);
+    const base = k === 'copy' ? lit : prev;
+    if (ex[k] && !canFreeActive(base, k, action, data, ex)) throw new Error(`Ativa indisponível: ${k}`);
   }
   if (ex.genius && !canGenius(prev, data)) throw new Error('Gênio indisponível');
 
@@ -2540,10 +2600,10 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
   if (techId) {
     const tech = leveledTechnique(p, techId, data);
     if (isBarrier(tech)) {
-      p.chakra -= tech.chakraCost;
+      payChakra(p, tech.chakraCost);
       raiseShield(s, 'player', tech, playerTechnique(p, techId, data).element, tech.chakraCost, data);
     } else if (tech.state) {
-      p.chakra -= tech.chakraCost;
+      payChakra(p, tech.chakraCost);
       fx.armorTurns = balance.states[tech.state].turns;
       fx.armorRound = s.round;
       s.log.push({ type: 'armor', techniqueId: tech.id, chakra: tech.chakraCost });
@@ -2565,7 +2625,7 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
     // Ninjutsu médico: cura sem rolar acerto.
     const tech = playerMedical(p, data);
     if (!tech) throw new Error('O jogador não sabe ninjutsu médico');
-    p.chakra -= tech.chakraCost;
+    payChakra(p, tech.chakraCost);
     s.log.push({ type: 'medical', healed: heal(s, 'player', medicalHealPct(p, data)), chakra: tech.chakraCost });
   }
   endTurn(s, 'player', true, rng, data);
@@ -2634,6 +2694,7 @@ function activateEffort(s: BattleState, data: GameData): void {
 function activateBeast(s: BattleState, data: GameData): void {
   const cfg = beastConfig(s.player, data);
   s.player.chakra -= cfg.chakraCost;
+  s.playerFx.beastUsed++;
   s.playerFx.beastTurns = cfg.turns;
   s.log.push({ type: 'beast', chakra: cfg.chakraCost });
 }
@@ -2680,12 +2741,12 @@ export function canCopyIncoming(s: BattleState, data: GameData): boolean {
   const incoming = s.pending?.incoming;
   if (!incoming || incoming.attacker !== 'villain' || !sharinganActive(s)) return false;
   const id = copyTechniqueId(s.villain.def.id, incoming.techniqueId);
-  return Boolean(data.techniquesById[id]) && id !== s.playerFx.copied && s.player.chakra >= data.balance.copy.chakraCost;
+  return Boolean(data.techniquesById[id]) && id !== s.playerFx.copied && s.player.chakra >= data.balance.copy.chakraCost + reservedChakra(s, 'player', data);
 }
 
 /** Cópia (Uchiha): paga o chakra e gira a chance do Sharingan; pegou, a técnica fica até o fim da luta. */
 function attemptCopy(s: BattleState, techniqueId: string, rng: Rng, data: GameData): void {
-  s.player.chakra -= data.balance.copy.chakraCost;
+  payChakra(s.player, data.balance.copy.chakraCost);
   const p = copyChance(s, data);
   const success = playerRoll(s, () => chance(p, rng), (ok) => (ok ? 1 : 0));
   s.log.push({ type: 'copy', chance: p, success, techniqueId });
@@ -2819,7 +2880,7 @@ function selfHitDamage(s: BattleState, side: Side, tech: CombatTech, data: GameD
 function playerMentalTechnique(s: BattleState, techId: string, rng: Rng, data: GameData): void {
   const p = s.player;
   const tech = playerTechnique(p, techId, data);
-  p.chakra -= tech.chakraCost;
+  payChakra(p, tech.chakraCost);
   if (confusionFails(s, 'player', 0, rng, data)) return;
   s.log.push({ type: 'declare', side: 'player', techniqueId: tech.id, attackType: tech.type, element: tech.element, chakra: tech.chakraCost });
   if (tech.type === 'genjutsu' && genjutsuImmune(s, 'villain', data)) {
@@ -2913,7 +2974,7 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
   const v = s.villain;
   const fx = s.playerFx;
   const base = playerCombatTech(s, techId, data);
-  p.chakra -= base.chakraCost;
+  payChakra(p, base.chakraCost);
 
   if (confusionFails(s, 'player', selfHitDamage(s, 'player', base, data), rng, data)) return;
 

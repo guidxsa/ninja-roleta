@@ -65,7 +65,7 @@ O Corpo de ferro (prodígio do taijutsu) faz Resistir usar 100% da física, mas 
 - Técnicas com **prioridade** agem antes naquela rodada, mesmo sem a iniciativa. Dois lados com prioridade: vale a iniciativa.
 - Na sua ação, o personagem escolhe:
   - **Técnica** (de uma das categorias do skill set, ver [tecnicas.md](tecnicas.md)).
-  - **Ativas de linhagem** (Portões, Expansão, Pílulas do clã, Sharingan, Cópia, Byakugan, Esforço, Fera de quatro patas, Devorar, Transmissão mental, Selamento, Sombra costurada) são todas **escolhas grátis**: feitas junto com a ação, sem gastar o turno, desde que haja chakra para a ativa, a ação e as outras ativas da rodada. Foco e Gênio também são grátis.
+  - **Ativas de linhagem** (Portões, Expansão, Pílulas do clã, Sharingan, Cópia, Byakugan, Esforço, Fera de quatro patas, Devorar, Transmissão mental, Selamento, Sombra costurada) são todas **escolhas grátis**: feitas junto com a ação, sem gastar o turno, desde que haja chakra para a ativa, a ação e as outras ativas da rodada. Foco e Gênio também são grátis. O que a ativa liga já vale para a ação da mesma rodada: com o Sharingan aceso agora, dá para usar o Tsukuyomi ou a Cópia nesse turno.
   - **Ações universais**: Concentrar chakra, Postura defensiva, Usar item (ver [tecnicas.md](tecnicas.md#ações-universais)).
 
 ## Reações
@@ -98,6 +98,7 @@ chance = clamp(50% + (speed_de_quem_reage − speed_do_atacante) × 3%, 25%, 85%
 - **Sucesso**: esquiva do ataque inteiro.
 - **Falha**: recebe o golpe com a resistência **passiva**.
 - **Não gasta ação**: quem se substitui age normalmente na rodada (ou na seguinte, se já agiu).
+- **Chakra reservado**: reagir no turno do vilão (Substituição, Cópia) não pode gastar o chakra da ação que o jogador escolheu e ainda vai fazer. O chakra nunca fica negativo, e técnicas de custo 0 (como o Taijutsu básico) estão sempre disponíveis.
 - **Usos por luta**: 2 (o premium "Mestre da Substituição" do guru dá +1, ver [campanha.md](campanha.md#guru)).
 - O Gênio do Nara vale na roleta da Substituição dele (gira duas vezes, fica com a melhor).
 

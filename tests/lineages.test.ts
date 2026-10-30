@@ -9,6 +9,7 @@ import {
   forceGatesChance,
   gatesUses,
   playRound,
+  previewExtras,
   resumeRound,
   startBattle,
   type BattleEvent,
@@ -224,5 +225,49 @@ describe('despertar e Lição do clã', () => {
       common.offense.taijutsu + common.offense.ninjutsu + common.offense.genjutsu + 2,
     );
     expect(c.player.xp).toBe(50); // +25% da Determinação
+  });
+});
+
+describe('Correções da v0.22.1', () => {
+  it('Tsukuyomi e Cópia valem na mesma rodada em que o Sharingan acende', () => {
+    const p = { ...at(createPlayer(clan('uchiha', 'fire'), gameData), 7) };
+    const withTsukuyomi = { ...p, techniques: [...p.techniques, 'tsukuyomi'] };
+    const s0 = withInitiative(startBattle(withTsukuyomi, testVillain({ id: 'mizuki', hp: 200, techniques: [shuriken] })));
+    expect(availableActions(s0, gameData)).not.toContain('tech:tsukuyomi');
+    expect(availableActions(previewExtras(s0, { dojutsu: true }, gameData), gameData)).toContain('tech:tsukuyomi');
+    expect(() => playRound(s0, 'tech:tsukuyomi', seq(0.5), gameData, { dojutsu: true })).not.toThrow();
+    // Cópia junto com a ativação do Sharingan.
+    const seen = { ...s0, villain: { ...s0.villain, lastTechnique: 'giantShuriken' } };
+    const s1 = playRound(seen, 'stance', seq(0.0, 0.5), gameData, { dojutsu: true, copy: true });
+    expect(s1.playerFx.copied).toBe(copyTechniqueId('mizuki', 'giantShuriken'));
+  });
+
+  it('a prévia das ativas mostra o dano com o bônus já aplicado', () => {
+    const p = createPlayer(clan('akimichi'), gameData);
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
+    const before = attackPreview(s0, 'basicTaijutsu', gameData).damage;
+    const after = attackPreview(previewExtras(s0, { expansion: true }, gameData), 'basicTaijutsu', gameData).damage;
+    expect(after).toBeGreaterThan(before);
+  });
+
+  it('reação no turno do vilão não gasta o chakra reservado para a ação; o chakra nunca fica negativo', () => {
+    const p = createPlayer(clan('aburame'), gameData);
+    const start = (chakra: number) =>
+      startBattle({ ...p, chakra }, testVillain({ techniques: [punch] }), { interactive: true, villainStartsFirst: true });
+    // Enxame custa 5 e a Substituição 2: com 6 não dá para os dois.
+    expect(playRound(start(6), 'tech:insectSwarm', seq(0.5), gameData).pending?.options ?? []).not.toContain('substitution');
+    expect(playRound(start(7), 'tech:insectSwarm', seq(0.5), gameData).pending?.options).toContain('substitution');
+    // Taijutsu básico (custo 0) sempre disponível, mesmo sem chakra.
+    const empty = withInitiative(startBattle({ ...p, chakra: 0 }, testVillain()));
+    expect(availableActions(empty, gameData)).toContain('tech:basicTaijutsu');
+  });
+
+  it('Fera de quatro patas: 1 uso por luta (2 no nível 7), então a isca não é infinita', () => {
+    const p = createPlayer(clan('inuzuka'), gameData);
+    expect(activeUses(p, 'beast', gameData)).toBe(1);
+    expect(activeUses(at(p, 7), 'beast', gameData)).toBe(2);
+    let s = playRound(withInitiative(startBattle(p, testVillain({ hp: 500 }))), 'stance', seq(0.5), gameData, { beast: true });
+    while (s.playerFx.beastTurns > 0) s = playRound(s, 'stance', seq(0.5), gameData);
+    expect(() => playRound(s, 'stance', seq(0.5), gameData, { beast: true })).toThrow();
   });
 });

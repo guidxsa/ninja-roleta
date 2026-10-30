@@ -114,7 +114,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 ### Inuzuka (parceiro canino)
 
 - **Dupla** (passiva): depois de cada ataque do jogador que acerta, 25% de chance de o cão atacar também (taijutsu, 40% do dano base do ataque, rola acerto próprio).
-- **Fera de quatro patas** (ativa): escolha grátis, 5 de chakra. Por 3 rodadas, contando a da ativação: **speed +3**, a Dupla ataca com **60%** de chance e a Substituição usa o cão como **isca** (custa o chakra, mas não gasta usos). Pode ser usada de novo quando acabar.
+- **Fera de quatro patas** (ativa): escolha grátis, 5 de chakra. Por 3 rodadas, contando a da ativação: **speed +3**, a Dupla ataca com **60%** de chance e a Substituição usa o cão como **isca** (custa o chakra, mas não gasta usos). **1 uso por luta** (+1 no nível 7).
 - **Presas Giratórias**: taijutsu inicial de 2 golpes.
 
 ### Prodígio do taijutsu (estilo Lee)
