@@ -104,13 +104,14 @@ import {
   type Roll,
   type Step,
 } from '../src/core/progression';
-import type { Rng } from '../src/core/rng';
+import { buildLabPlayer, labLearnable, labOrigin, parseLabParams, type LabConfig } from '../src/core/lab';
+import { createRng, type Rng } from '../src/core/rng';
 import type { AttackType, ConsumableId, Element, LineageTier, Origin, SummonAnimal } from '../src/core/types';
 import { CONSUMABLES, type RewardId } from '../src/data/events';
 import { campaign, type Stage } from '../src/data/campaign';
 import { gameData as data } from '../src/data/index';
 import { ptBR as S } from '../src/data/strings/ptBR';
-import { villainsById } from '../src/data/villains';
+import { villains, villainsById } from '../src/data/villains';
 import {
   isHardcoreUnlocked,
   loadRuns,
@@ -145,7 +146,9 @@ import { createWheel, stripRoulette, type WheelSlice } from './wheel';
 declare const __VERSION__: string;
 const VERSION = typeof __VERSION__ === 'undefined' ? 'dev' : __VERSION__;
 
-const rng: Rng = () => Math.random();
+/** `?teste` abre o laboratório; `?seed=N` fixa as roletas (reproduz uma run ou um bug). */
+const LAB = parseLabParams(window.location.search);
+const rng: Rng = LAB.seed !== null ? createRng(LAB.seed) : () => Math.random();
 
 const storage: KeyValueStorage = (() => {
   try {
@@ -397,7 +400,8 @@ let camp: Campaign | null = null;
 const NO_MODS: NextFightMods = { villainStartsFirst: false, playerStartsFirst: false };
 
 function track(patch: { status?: RunStatus; furthestStage?: number; difficulty?: Difficulty }) {
-  if (!camp) return;
+  // Runs do laboratório não entram no histórico.
+  if (!camp || LAB.lab) return;
   updateRun(storage, camp.runId, { ...patch, revivesUsed: camp.player.revivesUsed }, new Date(), data.balance.history.maxRuns);
 }
 
@@ -2361,9 +2365,138 @@ function openHistory() {
 // ---------------------------------------------------------------------------
 // Fluxo da campanha
 
-async function runCampaign(): Promise<void> {
+// ---------------------------------------------------------------------------
+// Tela: laboratório (modo de teste, `?teste`)
+
+const LAB_KEY = 'proto_lab_v1';
+type LabTarget = { kind: 'fight'; villainId: string } | { kind: 'campaign'; from: number };
+/** Última montagem do laboratório (preferência do aparelho, não é campanha). */
+interface LabSaved {
+  config: LabConfig;
+  villainId: string;
+  stage: number;
+}
+
+function loadLab(): LabSaved {
+  const fallback: LabSaved = {
+    config: { lineageId: 'common', affinity: 'fire', jinchuuriki: false, difficulty: DEFAULT_DIFFICULTY, level: 1, techniques: [], bag: {} },
+    villainId: villains[0]!.id,
+    stage: 0,
+  };
+  try {
+    const raw = storage.getItem(LAB_KEY);
+    const saved = (raw ? JSON.parse(raw) : {}) as Partial<LabSaved>;
+    const merged = { ...fallback, ...saved, config: { ...fallback.config, ...saved.config } };
+    // Dados que mudaram de versão (linhagem ou vilão removido) voltam ao padrão.
+    if (!data.lineages.some((l) => l.id === merged.config.lineageId)) merged.config.lineageId = fallback.config.lineageId;
+    if (!villainsById[merged.villainId]) merged.villainId = fallback.villainId;
+    if (!campaign[merged.stage]) merged.stage = 0;
+    return merged;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveLab(saved: LabSaved) {
+  try {
+    storage.setItem(LAB_KEY, JSON.stringify(saved));
+  } catch {
+    /* conveniência */
+  }
+}
+
+/** Monta a ficha à mão e escolhe o destino. Deixa `camp` com a ficha montada (a Ficha funciona). */
+async function labScreen(): Promise<LabTarget> {
+  const saved = loadLab();
+  const cfg = saved.config;
+  const opt = (value: string, label: string, selected: boolean) =>
+    `<option value="${esc(value)}"${selected ? ' selected' : ''}>${esc(label)}</option>`;
+  const root = show(
+    h(`<div class="screen lab">
+      <h2>${S.lab.title}</h2>
+      <p class="muted small center">${S.lab.intro}</p>
+      <section class="lab-box"><h3>${S.lab.origin}</h3>
+        <label>${S.lab.lineage}<select name="lineage">${data.lineages.map((l) => opt(l.id, S.lineages[l.id] ?? l.id, l.id === cfg.lineageId)).join('')}</select></label>
+        <label>${S.lab.affinity}<select name="affinity">${(Object.keys(data.elementWeights) as Element[]).map((e) => opt(e, S.elements[e], e === cfg.affinity)).join('')}</select></label>
+        <label>${S.lab.difficulty}<select name="difficulty">${DIFFICULTIES.map((d) => opt(d, S.difficulty[d].name, d === cfg.difficulty)).join('')}</select></label>
+        <label>${S.lab.level}<input type="number" name="level" min="1" max="20" inputmode="numeric" value="${cfg.level}"></label>
+        <label class="lab-check"><input type="checkbox" name="jin"${cfg.jinchuuriki ? ' checked' : ''}> ${S.lab.jinchuuriki}</label>
+      </section>
+      <div id="lab-preview"></div>
+      <section class="lab-box"><h3>${S.lab.techniques}</h3><div id="lab-techs" class="lab-techs"></div></section>
+      <section class="lab-box"><h3>${S.lab.bag}</h3>
+        ${CONSUMABLES.map((id) => `<label>${S.consumables[id]!.name}<input type="number" name="bag-${id}" min="0" max="${data.balance.items.bagMax}" inputmode="numeric" value="${cfg.bag[id] ?? 0}"></label>`).join('')}
+      </section>
+      <section class="lab-box"><h3>${S.lab.destination}</h3>
+        <label>${S.lab.villain}<select name="villain">${villains.map((v) => opt(v.id, villainName(v.id), v.id === saved.villainId)).join('')}</select></label>
+        <button class="btn primary" data-go="fight">${icon('swords')} ${S.lab.fight}</button>
+        <label>${S.lab.stage}<select name="stage">${campaign.map((st, i) => opt(String(i), `${i + 1}. ${stageName(st)}`, i === saved.stage)).join('')}</select></label>
+        <button class="btn" data-go="campaign">${S.lab.campaign}</button>
+      </section>
+    </div>`),
+  );
+  const field = (name: string) => root.querySelector<HTMLInputElement>(`[name="${name}"]`)!;
+  const read = (): LabSaved => ({
+    config: {
+      lineageId: field('lineage').value,
+      affinity: field('affinity').value as Element,
+      jinchuuriki: field('jin').checked,
+      difficulty: field('difficulty').value as Difficulty,
+      level: Math.max(1, Math.floor(Number(field('level').value)) || 1),
+      techniques: [...root.querySelectorAll<HTMLInputElement>('[name="tech"]:checked')].map((i) => i.value),
+      bag: Object.fromEntries(CONSUMABLES.map((id) => [id, Number(field(`bag-${id}`).value) || 0])),
+    },
+    villainId: field('villain').value,
+    stage: Number(field('stage').value),
+  });
+  const render = () => {
+    const current = read();
+    const c = current.config;
+    field('affinity').disabled = lineageOf(c.lineageId, data).affinity.kind !== 'rolled';
+    const player = buildLabPlayer(c, data);
+    // As opções de técnica dependem da origem e do nível, não das extras já marcadas.
+    const learnable = labLearnable(buildLabPlayer({ ...c, techniques: [] }, data), data);
+    root.querySelector<HTMLElement>('#lab-techs')!.innerHTML = learnable.length
+      ? learnable
+          .map(
+            (t) =>
+              `<label class="lab-check"><input type="checkbox" name="tech" value="${t.id}"${c.techniques.includes(t.id) ? ' checked' : ''}> ${esc(techName(t.id))}${elChip(t.element === 'affinity' ? player.affinity : t.element, false)}</label>`,
+          )
+          .join('')
+      : `<p class="muted small">${S.lab.noTechniques}</p>`;
+    camp = { runId: 'lab', origin: labOrigin(c, data), player, difficulty: c.difficulty, stageIndex: current.stage, mods: { ...NO_MODS } };
+    root.querySelector<HTMLElement>('#lab-preview')!.innerHTML = playerPanel(player);
+    saveLab(current);
+  };
+  render();
+  root.addEventListener('change', render);
+  return new Promise((resolve) => {
+    root.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-go]');
+      if (!btn) return;
+      render();
+      const s = read();
+      resolve(btn.dataset.go === 'fight' ? { kind: 'fight', villainId: s.villainId } : { kind: 'campaign', from: s.stage });
+    });
+  });
+}
+
+/** Uma volta do laboratório: monta, resolve os upgrades de marco, luta ou joga a campanha e volta. */
+async function labFlow(): Promise<void> {
+  progressDots(-1);
+  const target = await labScreen();
+  await levelUps();
+  if (target.kind === 'fight') {
+    const name = villainName(target.villainId);
+    await battleScreen({ villainId: target.villainId, options: {}, label: S.lab.fightLabel(esc(name)), exam: false });
+    return;
+  }
+  await runCampaign(target.from);
+}
+
+async function runCampaign(from = 0): Promise<void> {
   const c = camp!;
-  for (let i = 0; i < campaign.length; i++) {
+  for (let i = from; i < campaign.length; i++) {
     const stage = campaign[i]!;
     c.stageIndex = i;
     track({ furthestStage: i });
@@ -2515,6 +2648,9 @@ async function main() {
   document.getElementById('history-btn')!.innerHTML = icon('timer');
   installTooltips();
 
+  if (LAB.lab) document.getElementById('version')!.textContent += ` · ${S.lab.badge}`;
+  if (LAB.seed !== null) document.getElementById('version')!.textContent += ` · ${S.lab.seed(LAB.seed)}`;
+  if (LAB.lab) for (;;) await labFlow();
   for (;;) {
     await originScreen();
     await runCampaign();

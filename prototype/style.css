@@ -206,6 +206,21 @@ footer { padding: 12px 16px 20px; color: var(--muted); text-align: center; max-w
 .toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
 .toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
 
+/* Laboratório (modo de teste) */
+.lab-box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
+.lab-box h3 { font-size: 15px; color: var(--muted); margin: 0; }
+.lab-box label { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.lab-box select, .lab-box input[type='number'] {
+  min-height: 40px; min-width: 0; max-width: 60%; padding: 6px 8px; border-radius: 10px;
+  background: var(--surface-2); color: var(--text); border: 1px solid var(--line); font: inherit;
+}
+.lab-box input[type='number'] { width: 80px; }
+.lab-box select:disabled { opacity: 0.5; }
+.lab-box .btn { min-height: 44px; }
+.lab-box label.lab-check { justify-content: flex-start; cursor: pointer; }
+.lab-check input { width: 20px; height: 20px; accent-color: var(--accent); }
+.lab-techs { display: flex; flex-direction: column; gap: 6px; }
+
 /* Dificuldade */
 .difficulty-box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px 6px; margin-bottom: 10px; }
 .difficulty-box h3 { font-size: 15px; color: var(--muted); }

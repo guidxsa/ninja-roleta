@@ -994,6 +994,28 @@ export const ptBR = {
     },
     hint: 'Segure o dedo (ou passe o mouse) sobre técnicas, selos e condições para ver o que fazem.',
   },
+  /** Laboratório (modo de teste, `?teste`). */
+  lab: {
+    title: 'Laboratório',
+    intro: 'Modo de teste: monte a ficha e escolha a luta. Nada daqui entra no histórico.',
+    badge: 'teste',
+    seed: (n: number) => `seed ${n}`,
+    origin: 'Origem',
+    lineage: 'Linhagem',
+    affinity: 'Afinidade',
+    jinchuuriki: 'Jinchuuriki',
+    difficulty: 'Dificuldade',
+    level: 'Nível',
+    techniques: 'Técnicas extras',
+    noTechniques: 'Nenhuma técnica a mais para esta origem.',
+    bag: 'Bolsa',
+    destination: 'Destino',
+    villain: 'Vilão',
+    stage: 'Etapa',
+    fight: 'Luta avulsa',
+    campaign: 'Começar na etapa',
+    fightLabel: (name: string) => `Laboratório · ${name}`,
+  },
 };
 
 export type Strings = typeof ptBR;

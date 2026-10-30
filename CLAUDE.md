@@ -39,6 +39,10 @@ Observação em aberto (não é mudança de design): na simulação, a fatia "no
 
 Observação em aberto (v0.26.0): campanha por origem (1000 runs, seed 2) no Médio de 77% (Uchiha, prodígio) a 88% (Hyuuga, Uzumaki), fora o Aburame, que caiu de 57% (v0.25.0) para 45% (Difícil 13%) com o Enxame de dano fixo e o Devorar em % do HP máximo. O usuário testou a v0.25.0 à mão e achou o Aburame forte demais; o bot ainda subestima o Aburame (heurística simples para quando devorar e para a Praga). Não compensar pela simulação sem conversar; melhorar o bot do Aburame é o próximo passo para medir de verdade.
 
+Roteiro de contas e progresso (combinado em 30/10/2026; a fase 1, o Laboratório `?teste` com `?seed=`, foi implementada na v0.27.0):
+- **Fase 2, perfil local**: conquistas, histórico com estatísticas por origem e desbloqueios/personalização, em `localStorage` no padrão de `src/state/runHistory.ts`. A run continua só em memória (F5 reseta).
+- **Fase 3, contas opcionais**: só para sincronizar o perfil local; o jogo segue jogável offline e sem conta. Usar um serviço com login pronto (Supabase ou Firebase, a decidir), nunca guardar senha. Pede política de privacidade (LGPD) e revisar o princípio "Sem backend".
+
 Quando o design mudar antes do código, listar aqui o que falta implementar.
 
 ## Princípios

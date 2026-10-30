@@ -21,6 +21,15 @@ npm run sim:origens -- --runs 300          # campanha completa por origem, com e
 npm run proto                              # gera dist/prototipo.html (abre direto no navegador, funciona offline)
 ```
 
+## Modo de teste
+
+Dois parâmetros na URL do protótipo, para testar e reproduzir bugs:
+
+- `?seed=42`: fixa as roletas. A mesma seed dá a mesma sequência de sorteios.
+- `?teste`: abre o **Laboratório** no lugar da roleta de origem. Ali se monta a ficha à mão (linhagem, afinidade, jinchuuriki, dificuldade, nível, técnicas extras e bolsa) e se escolhe uma luta avulsa contra qualquer vilão ou uma etapa da campanha para começar. A última montagem fica salva no aparelho. Runs do laboratório não entram no histórico.
+
+Os dois combinam: https://guidxsa.github.io/ninja-roleta/?teste&seed=42
+
 ## Estrutura
 
 ```
@@ -96,3 +105,4 @@ O **v1.0.0** fica para quando o jogo estiver completo para quem joga:
 | v0.24.0 | Aburame refeito: Enxame de golpes pequenos que prendem insetos (2 golpes de 4; +2 golpes e +1 de dano por nível), Colônia que drena 1 de chakra por inseto no fim de cada rodada, nova ativa Praga (dobra insetos e o teto por 3 rodadas) e Devorar como técnica de ninjutsu que custa 1 de chakra por inseto. Akimichi: Rolo Colossal com dano 20; Corpo pesado pela razão de peso (HP máximo) contra o vilão, só bônus, até ×1,3; Expansão aumenta o peso e libera até ×1,5. O ataque básico passa a se chamar Taijutsu básico, e os nomes taijutsu/ninjutsu/genjutsu aparecem por extenso. Menos contas na tela: as roletas e as dicas não mostram porcentagens, as técnicas mostram dano base e precisão base, e as descrições ficaram em palavras. Campanha por origem no Médio: 77%–88% (Aburame de 86% para 80%). |
 | v0.25.0 | Aburame mais fraco: Enxame com 2 golpes de 4 (+2 de dano e +1 golpe por nível) e status de volta ao original. Ataques de vários golpes rolam acerto e crítico em cada golpe (um erro não para os seguintes), para o jogador e os vilões. Quem vence uma disputa com técnica de vários golpes agora bate todos os golpes, não só o primeiro. Passivas e itens com textos de habilidade; passivas que juntam várias mecânicas aparecem separadas; no card da luta, chips das passivas e dica com tudo ao passar no nome da linhagem; jinchuuriki formatado como na ficha. |
 | v0.26.0 | Rebalanceamento de Nara, Aburame e Akimichi. Nara: sai a Sombra costurada e entra o Enforcamento por Sombra, ninjutsu do kit que só funciona com o vilão preso pela Imitação de Sombra e causa força do controle × 6 + ninjutsu − resistência física (não erra e não solta; +1 de força no nível 7). Aburame: Enxame com 1 de dano fixo por golpe e +2 golpes por nível (2/4/6), só para aplicar insetos; Devorar causa de 1% a 3% do HP máximo do vilão por inseto pela razão ninjutsu base ÷ resistência física (+0,5% no nível 7), sem drenar chakra e custando 1 de chakra a cada 2 insetos. Akimichi: Pílulas do clã só a partir do nível 7. |
+| v0.27.0 | Modo de teste: `?seed=N` fixa as roletas (reproduz uma run ou um bug) e `?teste` abre o Laboratório, onde se monta a ficha à mão (linhagem, afinidade, jinchuuriki, dificuldade, nível, técnicas extras e bolsa) e se escolhe uma luta avulsa contra qualquer vilão ou a etapa da campanha onde começar. Runs do laboratório não entram no histórico. Roteiro de conquistas, perfil local e contas opcionais registrado no CLAUDE.md. |
