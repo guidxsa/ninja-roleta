@@ -100,7 +100,7 @@ export type ReactionPolicy = (s: BattleState, incoming: IncomingAttack, options:
 export interface RoundExtras {
   /** Foco do guru: o próximo ataque é crítico garantido. */
   focus?: boolean;
-  /** Clones das Sombras (Uzumaki): o próximo ataque vira 3× os golpes, com 40% do dano cada. */
+  /** Clones das Sombras (premium do guru): o próximo ataque ganha clones que repetem os golpes com 35% do dano. */
   clones?: boolean;
   /** Ativa o dōjutsu (Sharingan, Byakugan). */
   dojutsu?: boolean;
@@ -382,6 +382,8 @@ export type BattleEvent =
   | { type: 'sealEnd'; techniqueId: string }
   | { type: 'shadowHold'; chakra: number }
   | { type: 'strangle'; damage: number }
+  | { type: 'toad'; damage: number }
+  | { type: 'glimmer' }
   | { type: 'pill'; pill: string; hpLost: number }
   | { type: 'pillEnd'; pill: string; exhausted: boolean }
   | { type: 'exhaustedEnd' }
@@ -624,12 +626,17 @@ function summonBonus(player: PlayerState, animal: SummonAnimal): number | null {
   return player.summon?.animal === animal ? player.summon.level - 1 : null;
 }
 
-/** Sapo: penetração na resistência do alvo. */
-export function toadPenetration(player: PlayerState, data: GameData): number {
+/** Sapo: fração do HP máximo do vilão causada como dano verdadeiro por ataque que acerta. 0 = não tem sapo. */
+export function toadDamagePct(player: PlayerState, data: GameData): number {
   const extra = summonBonus(player, 'toad');
   if (extra === null) return 0;
   const cfg = data.balance.summon.toad;
-  return cfg.penetration + cfg.penetrationPerLevel * extra;
+  return cfg.trueDamagePct + cfg.trueDamagePctPerLevel * extra;
+}
+
+/** Sapo: dano verdadeiro (ignora resistência e escudo) num vilão com este HP máximo. */
+export function toadTrueDamage(player: PlayerState, villainMaxHp: number, data: GameData): number {
+  return Math.floor(villainMaxHp * toadDamagePct(player, data));
 }
 
 /** Cobra: bônus inicial do envenenamento aplicado. null = não tem cobra. */
@@ -839,7 +846,7 @@ export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData)
   const fx = s.playerFx;
   switch (kind) {
     case 'clones':
-      return p.active === 'shadowClones' && !fx.clonesArmed ? data.balance.shadowClones.chakraCost : null;
+      return p.shadowClonesLevel > 0 && !fx.clonesArmed ? data.balance.shadowClones.chakraCost : null;
     case 'dojutsu':
       return fx.dojutsuActive ? null : dojutsuActivationCost(p, data);
     case 'gates':
@@ -1002,6 +1009,11 @@ export function previewExtras(s: BattleState, ex: RoundExtras, data: GameData): 
 /** Só o dōjutsu escolhido aplicado: é o que a cópia e as técnicas de dōjutsu exigem. */
 function withDojutsu(s: BattleState, ex: RoundExtras, data: GameData): BattleState {
   return ex.dojutsu && freeActiveCost(s, 'dojutsu', data) !== null ? previewExtras(s, { dojutsu: true }, data) : s;
+}
+
+/** Clones que os Clones das Sombras criam: 2 no nível 1, +1 por nível. 0 = não sabe. */
+export function shadowClonesCount(player: PlayerState, data: GameData): number {
+  return player.shadowClonesLevel > 0 ? data.balance.shadowClones.baseClones + player.shadowClonesLevel - 1 : 0;
 }
 
 /** Os Clones das Sombras podem ser armados junto com esta ação (chakra para os dois). */
@@ -1271,9 +1283,9 @@ export function playerGenjutsuHitChance(s: BattleState, data: GameData, techniqu
 // ---------------------------------------------------------------------------
 // Dano
 
-/** Penetração do golpe do jogador: técnica, sapo e Punho preciso (taijutsu), com teto. */
+/** Penetração do golpe do jogador: técnica e Punho preciso (taijutsu), com teto. */
 function playerPenetration(s: BattleState, tech: CombatTech, data: GameData): number {
-  let pen = (tech.penetration ?? 0) + toadPenetration(s.player, data);
+  let pen = tech.penetration ?? 0;
   if (tech.type === 'taijutsu' && s.player.passive === 'preciseFist') pen += data.balance.passives.preciseFist.penetration;
   return Math.min(pen, data.balance.penetration.max);
 }
@@ -1912,6 +1924,12 @@ export function playRound(
   if (priority && !playerFirst) {
     playerFirst = true;
     s.log.push({ type: 'priority', side: 'player' });
+  }
+  // Corpo Cintilante: age primeiro na 1ª rodada (a iniciativa sorteada vale da 2ª em diante). Perde para o castigo
+  // de evento que faz o vilão começar.
+  if (!playerFirst && s.round === 1 && s.player.glimmerLevel > 0 && !s.options.villainStartsFirst) {
+    playerFirst = true;
+    s.log.push({ type: 'glimmer' });
   }
 
   s.plan = {
@@ -2978,26 +2996,29 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
 
   if (confusionFails(s, 'player', selfHitDamage(s, 'player', base, data), rng, data)) return;
 
-  // Clones das Sombras: o ataque vira 3× os golpes, cada um com 40% do dano.
+  // Clones das Sombras: o ataque principal sai inteiro e cada clone repete os golpes com 35% do dano.
   let tech = base;
-  let factor = 1;
+  let clones = 0;
   if (fx.clonesArmed) {
     fx.clonesArmed = false;
-    tech = { ...base, hits: base.hits * balance.shadowClones.hitsMult };
-    factor = balance.shadowClones.damagePct;
+    clones = shadowClonesCount(p, data);
+    tech = { ...base, hits: base.hits * (1 + clones) };
   }
+  const cloneFactor = balance.shadowClones.damagePct;
+  const factorAt = (i: number) => (i < base.hits ? 1 : cloneFactor);
 
   s.log.push({ type: 'declare', side: 'player', techniqueId: tech.id, attackType: tech.type, element: tech.element, chakra: tech.chakraCost });
-  // Reação do vilão: disputa e barreira usam a técnica inteira (com os clones já aplicados).
+  // Reação do vilão: disputa e barreira usam a técnica inteira (com os clones já aplicados, dano médio por golpe).
   const incoming: IncomingAttack = { attacker: 'player', techniqueId: tech.id, type: tech.type, element: tech.element, hits: tech.hits, charged: false };
-  const reactionTech = factor === 1 ? tech : { ...tech, baseDamage: Math.max(1, Math.floor(tech.baseDamage * factor)) };
+  const avgFactor = (1 + clones * cloneFactor) / (1 + clones);
+  const reactionTech = clones === 0 ? tech : { ...tech, baseDamage: Math.max(1, Math.floor(tech.baseDamage * avgFactor)) };
   const reaction = performReaction(s, 'player', reactionTech, false, chooseVillainReaction(s, incoming, rng, data), rng, data);
   if (reaction.kind === 'resolved' || s.status !== 'ongoing') return;
 
   // Ataque múltiplo: acerto e crítico rolam uma vez, no primeiro golpe, e valem para todos.
   let rolled: HitOutcome | undefined;
   for (let i = 0; i < tech.hits && s.status === 'ongoing'; i++) {
-    const { outcome } = playerStrike(s, tech, tech.id, factor, i === 0 ? tech.chakraCost : 0, reaction.guard, rng, data, rolled);
+    const { outcome } = playerStrike(s, tech, tech.id, factorAt(i), i === 0 ? tech.chakraCost : 0, reaction.guard, rng, data, rolled);
     rolled = outcome;
     if (s.status !== 'ongoing') return;
     if (outcome === 'miss') break;
@@ -3020,6 +3041,16 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
     if (bonus !== null) applyPoison(s, 'villain', bonus, data);
     applyElementalHit(s, 'villain', tech.element, outcome, data, rng);
     applyOnHit(s, 'villain', tech, rng, data);
+  }
+
+  // Sapo: um ataque que acerta (vários golpes ou clones contam uma vez) causa dano verdadeiro.
+  if (rolled !== undefined && rolled !== 'miss' && s.status === 'ongoing') {
+    const damage = toadTrueDamage(p, v.def.hp, data);
+    if (damage > 0) {
+      s.log.push({ type: 'toad', damage });
+      hurtVillain(s, damage);
+      if (s.status !== 'ongoing') return;
+    }
   }
 
   // Dupla (Inuzuka): depois de um ataque que acerta, o cão pode atacar também.

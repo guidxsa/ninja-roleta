@@ -77,6 +77,10 @@ export interface PlayerState {
   focusUses: number;
   /** Mestre da Substituição (premium do guru): usos extras de Substituição por luta. */
   substitutionBonus: number;
+  /** Clones das Sombras (premium do guru): nível; 0 = não sabe. */
+  shadowClonesLevel: number;
+  /** Corpo Cintilante (premium do guru): nível; 0 = não tem. */
+  glimmerLevel: number;
   revives: number;
   revivesUsed: number;
 }
@@ -139,6 +143,8 @@ export function createPlayer(
       jinchuuriki: origin.jinchuuriki,
       focusUses: 0,
       substitutionBonus: 0,
+      shadowClonesLevel: 0,
+      glimmerLevel: 0,
       revives: balance.revive.initialItems,
       revivesUsed: 0,
     },

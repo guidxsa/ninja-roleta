@@ -95,10 +95,10 @@ Nunca causa game over. Sem Vontade do Fogo para perder, perde metade do HP e do 
 
 | Chance | Resultado |
 |---|---|
-| 30% | Charlatão: desvantagem de ação na próxima luta. |
-| 70% | Ensina uma **premium** ([tecnicas.md](tecnicas.md#premium-guru)): técnicas e talentos sem elemento. |
+| 20% | Charlatão: desvantagem de ação na próxima luta. |
+| 80% | Ensina uma **premium** ([tecnicas.md](tecnicas.md#premium-guru)): técnicas e talentos sem elemento. |
 
-A premium é sorteada numa roleta ponderada pelo perfil do jogador:
+O guru gira a roleta das premium, ponderada pelo perfil do jogador, **duas vezes sem repetir** e o jogador **escolhe 1** das duas (se só houver uma para ensinar, é ela):
 
 | Premium | Peso |
 |---|---|
@@ -106,9 +106,11 @@ A premium é sorteada numa roleta ponderada pelo perfil do jogador:
 | Palma Curativa | Chakra máximo ÷ 3 |
 | Foco | Taijutsu |
 | Mestre da Substituição | Speed |
+| Clones das Sombras | Ninjutsu |
+| Corpo Cintilante | Speed |
 
-- Já tendo a premium sorteada, o guru ensina o próximo nível dela. Premium sem nível para subir, ou proibida pela origem (Rasengan e Palma Curativa para o prodígio), some da roleta.
-- Futuro: mais premium (Clone das Sombras, selos etc.).
+- Já tendo a premium sorteada, o guru ensina o próximo nível dela. Premium sem nível para subir, ou proibida pela origem (Rasengan, Palma Curativa e Clones das Sombras para o prodígio), some da roleta.
+- Futuro: mais premium (selos etc.).
 
 ## Invocações
 
@@ -116,11 +118,11 @@ O encontro sorteia um animal, que passa a acompanhar o jogador como **passiva** 
 
 | Animal | Papel | Efeito | Por nível |
 |---|---|---|---|
-| Sapo | Dano contra chefes | Penetração de 25% na resistência física do alvo | +10% de penetração |
+| Sapo | Dano contra chefes | Cada ataque que acerta causa **dano verdadeiro** (ignora resistência e escudo) de 6% do HP máximo do vilão, uma vez por ataque (vários golpes ou clones contam uma vez) | +2% do HP máximo |
 | Cobra | Veneno | Acerto em alvo não envenenado aplica envenenamento (bônus inicial 2) | +2 de bônus inicial |
 | Lesma | Sustentação | Cura 3% do HP máximo no início de cada rodada | +1% de cura e +10% na chance de curar envenenamento |
 
-Regras do veneno em [efeitos.md](efeitos.md#envenenamento). A penetração soma com outras fontes até o teto de 60%.
+Regras do veneno em [efeitos.md](efeitos.md#envenenamento). O sapo não vale em ilusões, na disputa nem no golpe do cão do Inuzuka.
 
 ## Exame chunin
 

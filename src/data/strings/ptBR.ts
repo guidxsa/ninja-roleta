@@ -165,6 +165,8 @@ export const ptBR = {
   talents: {
     focus: { name: 'Foco', desc: (n: number) => `${n}×/luta: +25% de chance de crítico no próximo ataque.` },
     substitution: { name: 'Mestre da Substituição', desc: (n: number) => `+${n} uso(s) de Substituição por luta.` },
+    shadowClones: { name: 'Clones das Sombras', desc: (n: number) => `Nível ${n}: arme os clones e o próximo ataque ganha ${n + 1} clones.` },
+    glimmer: { name: 'Corpo Cintilante', desc: (n: number) => `Você sempre age primeiro na 1ª rodada${n >= 2 ? ' e é mais rápido' : ''}.` },
   },
   /** Ativas de linhagem. */
   actives: {
@@ -175,7 +177,7 @@ export const ptBR = {
     expansion: { name: 'Expansão', desc: 'Grátis (6 de chakra, não gasta o turno): por 3 rodadas, contando a da ativação, taijutsu ×1,5 e speed −3.' },
     shadowClones: {
       name: 'Clones das Sombras',
-      desc: 'Grátis (6 de chakra, não gasta o turno): o próximo ataque vira 3× os golpes, com 35% do dano cada.',
+      desc: 'Grátis (6 de chakra, não gasta o turno): o próximo ataque sai inteiro e os clones repetem os golpes, com 35% do dano cada.',
     },
     effort: {
       name: 'Esforço',
@@ -332,6 +334,8 @@ export const ptBR = {
     medical: 'Palma Curativa',
     focus: 'Foco',
     substitution: 'Mestre da Substituição',
+    shadowClones: 'Clones das Sombras',
+    glimmer: 'Corpo Cintilante',
   } as Record<string, string>,
   /** Status da roleta de destaque do treino. */
   trainingStats: {
@@ -343,13 +347,13 @@ export const ptBR = {
     speed: 'Speed',
   } as Record<string, string>,
   summons: {
-    toad: { name: 'Sapo', desc: 'Passiva: seus golpes ignoram parte da resistência do alvo.' },
+    toad: { name: 'Sapo', desc: 'Passiva: cada ataque seu que acerta causa um dano extra que ignora defesa, maior contra vilões fortes.' },
     snake: { name: 'Cobra', desc: 'Passiva: acertos envenenam o alvo (o veneno cresce a cada rodada).' },
     slug: { name: 'Lesma', desc: 'Passiva: cura uma parte do HP a cada rodada.' },
   } as Record<string, { name: string; desc: string }>,
   /** Efeito atual da invocação, com o valor do nível. */
   summonEffects: {
-    toad: (pct: number) => `penetração ${pct}%`,
+    toad: (pct: number) => `+${pct}% do HP do vilão por ataque`,
     snake: (n: number) => `veneno +${n}`,
     slug: (pct: number) => `+${pct}% HP/rodada`,
   } as Record<string, (n: number) => string>,
@@ -518,7 +522,7 @@ export const ptBR = {
     possessionPick: 'Mente no controle: escolha a técnica que o vilão usa em si mesmo (ele paga o chakra).',
     possessionOption: (tech: string, damage: number, cost: number) => `${tech} · ${damage} dano · ${cost} ck`,
     clones: 'Clones',
-    clonesHint: 'Grátis: o próximo ataque vira 3× os golpes, com 35% do dano.',
+    clonesHint: 'Grátis: o próximo ataque sai inteiro e os clones repetem os golpes com 35% do dano.',
     clonesArmed: 'Clones prontos',
     activeFree: (name: string, cost: number) => `${name} · ${cost} ck`,
     activeFreeHint: 'Grátis: ativa junto com a ação, sem gastar o turno.',
@@ -552,6 +556,7 @@ export const ptBR = {
     coinReroll: (n: number) => `🪙 Moeda viciada (${n}): girar de novo`,
     keepResult: 'Ficar com este',
     chooseReward: 'Escolha 1 recompensa',
+    choosePremium: 'Escolha o que o guru vai ensinar',
     weightsEquip: 'Equipar pesos',
     weightsKeep: 'Guardar',
     weightsAsk: 'Equipar agora? −2 de speed; cada vitória contra vilão dá +1 de taijutsu. Tirar depois devolve o speed e dá +3 extra.',
@@ -779,7 +784,9 @@ export const ptBR = {
       `🐛 Devorar: ${insects} inseto(s) drenam ${chakra} de chakra${damage ? ` e causam ${damage} de dano` : ''}.`,
     transmission: (tech: string, ok: boolean) =>
       ok ? `🧠 Transmissão mental: ${tech} foi cancelado!` : `🧠 Transmissão mental: o vilão resiste e segue com ${tech}.`,
-    clones: 'Clones das Sombras! O próximo ataque vem em triplo.',
+    clones: 'Clones das Sombras! O próximo ataque vem com os clones.',
+    toad: (n: number) => `🐸 O sapo ataca junto: ${n} de dano!`,
+    glimmer: 'Corpo Cintilante: você age primeiro nesta rodada.',
     cloakCost: (who: string, n: number) => `O manto consome ${n} de chakra de ${who}.`,
     cloakFade: (who: string) => `Sem chakra: o manto de ${who} se desfaz.`,
     villainHeal: (who: string, tech: string, n: number) => `${who} usa ${tech}: +${n} HP.`,
@@ -951,7 +958,7 @@ export const ptBR = {
       sealed: { name: 'Selamento', desc: 'A técnica selada não entra na roleta do vilão enquanto durar.' },
       copied: { name: 'Cópia', desc: 'Técnica copiada pelo Sharingan: está entre as suas técnicas até o fim da luta.' },
       insects: { name: 'Insetos', desc: 'Insetos da Colônia no vilão. O Devorar os consome: chakra drenado ou dano.' },
-      clones: { name: 'Clones prontos', desc: 'O próximo ataque vira 3× os golpes, com 35% do dano cada.' },
+      clones: { name: 'Clones prontos', desc: 'O próximo ataque sai inteiro e os clones repetem os golpes com 35% do dano.' },
       armor: { name: 'Armadura de Raio', desc: 'Ataque ×1,25, resistência física ×1,3 e speed +2.' },
       stance: { name: 'Postura defensiva', desc: 'Resistir usa 100% da resistência até o seu próximo turno.' },
       dodge: { name: 'Esquiva', desc: 'Chance de escapar do próximo ataque.' },

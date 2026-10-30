@@ -195,6 +195,8 @@ Técnicas e talentos **sem elemento** que só o guru ensina. O guru oferece a qu
 | Palma Curativa (ninjutsu médico) | Médico | Cura 20% do HP máximo, chakra 4, sem rolar acerto. Indisponível com HP cheio. | +5% de cura, +1 de chakra | Todos, menos o prodígio |
 | Foco | Talento | Uma vez por luta, um botão grátis (não gasta o turno) soma +25% à chance de crítico do próximo ataque. | +1 uso por luta (até 3) | Todos |
 | Mestre da Substituição | Talento | +1 uso de Substituição por luta. | +1 uso por luta (até 3) | Todos |
+| Clones das Sombras | Talento (ninjutsu) | Escolha grátis, 6 de chakra (não gasta o turno): o próximo ataque sai com **100%** do dano e **2 clones** repetem os golpes com **35%** do dano cada. Acerto, crítico e reação são rolados uma vez para tudo. | +1 clone (até o nível 3, dentro do teto pelo nível do personagem) | Quem usa ninjutsu |
+| Corpo Cintilante | Talento | Age primeiro na **1ª rodada** de cada luta (a iniciativa sorteada vale da 2ª em diante). Perde para a desvantagem de ação de evento. | Nível 2: **+2 de speed** (até o nível 2) | Todos |
 
 Os níveis das premium respeitam o teto pelo nível do personagem: no nível 1, o guru não ensina o Rasengan II.
 

@@ -20,6 +20,7 @@ import {
   rewardItemSpins,
   rollAkatsuki,
   rollGuru,
+  rollPremiumChoices,
   rollItem,
   rollReward,
   rollRewardChoices,
@@ -31,7 +32,7 @@ import {
 } from '../core/progression';
 import type { Rng } from '../core/rng';
 import type { VillainDef } from '../core/types';
-import type { RewardId } from '../data/events';
+import type { PremiumId, RewardId } from '../data/events';
 import type { Stage } from '../data/campaign';
 import { chooseExtras, choosePlayerAction, chooseReaction, chooseUpgradeTarget } from './policy';
 
@@ -98,6 +99,16 @@ export interface CampaignResult {
 // Escolhas automáticas fora do combate (simulação com progressão).
 
 /** Ordem de preferência na recompensa lendária (o jogador escolhe 1 de 3). */
+/** Escolha automática entre as premium oferecidas pelo guru. */
+const PREMIUM_PREFERENCE: PremiumId[] = ['rasengan', 'shadowClones', 'focus', 'glimmer', 'substitution', 'medical'];
+
+function autoGuru(player: PlayerState, rng: Rng, data: GameData): Step {
+  const outcome = rollGuru(player, rng, data).value;
+  if (outcome === 'charlatan') return applyGuru(player, outcome, null, data);
+  const choices = rollPremiumChoices(player, rng, data).map((r) => r.value);
+  return applyGuru(player, outcome, PREMIUM_PREFERENCE.find((id) => choices.includes(id)) ?? choices[0]!, data);
+}
+
 const REWARD_PREFERENCE: RewardId[] = ['newTechnique', 'stages', 'secondaryElement', 'item', 'xp', 'resistance', 'critBonus'];
 
 function autoItem(player: PlayerState, rng: Rng, data: GameData): Step {
@@ -141,7 +152,7 @@ function autoEvent(player: PlayerState, rng: Rng, data: GameData): Step {
     case 'akatsuki':
       return applyAkatsuki(player, rollAkatsuki(player, rng, data).value, data);
     case 'guru':
-      return applyGuru(player, rollGuru(player, rng, data).value, rng, data);
+      return autoGuru(player, rng, data);
     case 'clanLesson':
       return applyClanLesson(player, data);
   }

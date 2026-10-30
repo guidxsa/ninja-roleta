@@ -124,7 +124,9 @@ export const balance = {
   },
   // Expansão (Akimichi): escolha grátis; vale `turns` rodadas, contando a da ativação.
   expansion: { chakraCost: 6, turns: 3, taijutsuMult: 1.5, speedPenalty: 3 },
-  shadowClones: { chakraCost: 6, hitsMult: 3, damagePct: 0.35 },
+  // Clones das Sombras (premium do guru): o ataque principal sai inteiro e cada clone repete os golpes com
+  // `damagePct` do dano. Clones = baseClones + (nível − 1).
+  shadowClones: { chakraCost: 6, damagePct: 0.35, baseClones: 2 },
   // Ativas das linhagens sem ativa (origens.md). Todas são escolhas grátis; as com duração contam a rodada da ativação.
   // Esforço (comum): +`offenseBonus` em tai/nin/gen; `uses` por luta, +1 em cada nível de `extraUseLevels`.
   effort: { chakraCost: 0, turns: 3, offenseBonus: 3, uses: 1, extraUseLevels: [4, 7] },
@@ -219,7 +221,8 @@ export const balance = {
 
   // Invocações (campanha.md). "Por nível" conta a partir do nível 2.
   summon: {
-    toad: { penetration: 0.25, penetrationPerLevel: 0.1 },
+    // Sapo: dano verdadeiro (ignora resistência e escudo) de uma fração do HP máximo do vilão, uma vez por ataque que acerta.
+    toad: { trueDamagePct: 0.06, trueDamagePctPerLevel: 0.02 },
     snake: { poisonBonus: 2, poisonBonusPerLevel: 2 },
     slug: { healPct: 0.03, healPctPerLevel: 0.01, cureChancePerLevel: 0.1 },
   },
@@ -274,7 +277,19 @@ export const balance = {
   // Guru (campanha.md#guru): premium sorteada por peso do perfil. Palma Curativa pesa chakra máximo ÷ divisor.
   // Foco e Mestre da Substituição: +1 uso por luta a cada vez, até maxLevel. O foco soma `focusCritBonus`
   // à chance de crítico do próximo ataque (ainda limitada pelo teto do crítico e pela chance de acerto).
-  guru: { medicalChakraDivisor: 3, focusMaxLevel: 3, substitutionMaxLevel: 3, focusCritBonus: 0.25 },
+  // Clones das Sombras: até `clonesMaxLevel`, sem passar do teto de nível de técnica do personagem.
+  // Corpo Cintilante: age primeiro na 1ª rodada; o nível 2 dá +`glimmerSpeedBonus` de speed.
+  // O guru sorteia `premiumChoices` premium diferentes e o jogador escolhe 1.
+  guru: {
+    medicalChakraDivisor: 3,
+    focusMaxLevel: 3,
+    substitutionMaxLevel: 3,
+    focusCritBonus: 0.25,
+    clonesMaxLevel: 3,
+    glimmerMaxLevel: 2,
+    glimmerSpeedBonus: 2,
+    premiumChoices: 2,
+  },
 
   // Itens e bolsa (itens.md).
   items: {

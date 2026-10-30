@@ -167,7 +167,7 @@ Identidade: resistência e selos.
 - **Vitalidade** (passiva): recupera 1 de chakra e 2% do HP máximo no início de cada rodada (2 de chakra no nível 7).
 - **Selamento** (ativa): escolha grátis, 6 de chakra, **1 uso por luta** (+1 no nível 7). Sela a próxima técnica do vilão (a sorteada para a próxima ação ou o golpe carregado): ela **sai da roleta dele por 2 rodadas** (3 no nível 7) e ele sorteia outra ação. Um golpe carregado selado se perde (o chakra já foi gasto).
 - **Correntes de Chakra** (nível 4): ninjutsu exclusivo que prende como a Imitação de Sombra (ninjutsu contra a resistência física, força base 1). O vilão preso pelas correntes perde **3 de chakra** a cada vez perdida.
-- Os Clones das Sombras saíram do kit do Uzumaki e vão virar premium do guru.
+- Os Clones das Sombras saíram do kit do Uzumaki e viraram premium do guru ([tecnicas.md](tecnicas.md#premium-guru)).
 
 ## Despertar
 

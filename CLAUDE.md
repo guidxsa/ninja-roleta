@@ -39,7 +39,7 @@ Observação em aberto (não é mudança de design): na simulação, a fatia "no
 
 Observação em aberto (v0.22.0): campanha por origem (1000 runs, seed 2) no Médio de 74% (prodígio) a 89% (Uzumaki) e no Difícil de 32% (Uchiha) a 58% (Aburame). Prodígio e Uchiha seguem no grupo de baixo; a Lição do clã deixou a campanha um pouco mais fácil para todos. Discutir com o usuário antes de compensar.
 
-Próxima versão combinada (v0.23.0): Clones das Sombras como premium do guru (ataque principal com 100% do dano e 2 clones com 35%, +1 clone por nível da premium), Corpo Cintilante (talento: age primeiro na 1ª rodada; nível 2 +2 speed), guru sorteia 2 premium e o jogador escolhe 1 (charlatão 20%), e o Sapo vira dano verdadeiro de 6% do HP máximo do vilão por ataque que acerta (+2% por nível), uma vez por ataque.
+Próxima versão combinada (v0.24.0): Aburame (Enxame 4×2 que prende insetos, +1 de dano e +2 golpes por nível; Colônia drena 1 de chakra por inseto no fim da rodada; ativa Praga dobra insetos por acerto e teto; Devorar vira técnica de ninjutsu com custo por inseto), Akimichi (Rolo Colossal 20; Corpo Pesado por tabela de peso = HP máximo contra o do vilão, só buff, com teto; Expansão aumenta o peso e o teto), "Taijutsu básico" como nome do ataque básico, nomes completos de taijutsu/ninjutsu/genjutsu, e menos contas na tela (sem % nas roletas e nas dicas; técnicas com dano base e precisão base; descrições qualitativas).
 
 Quando o design mudar antes do código, listar aqui o que falta implementar.
 

@@ -16,6 +16,7 @@ import {
   learnTechnique,
   lineageAllows,
   techniqueLevel,
+  techniqueTier,
   upgradableTechniques,
   upgradeTechnique,
   xpGain,
@@ -377,11 +378,27 @@ export function premiumPool(player: PlayerState, data: GameData): Weighted<Premi
   }
   if (player.focusUses < cfg.focusMaxLevel) pool.push({ id: 'focus', weight: player.offense.taijutsu });
   if (player.substitutionBonus < cfg.substitutionMaxLevel) pool.push({ id: 'substitution', weight: player.speed });
+  if (player.shadowClonesLevel < Math.min(cfg.clonesMaxLevel, techniqueTier(player, data)) && !player.forbiddenAttackTypes.includes('ninjutsu')) {
+    pool.push({ id: 'shadowClones', weight: player.offense.ninjutsu });
+  }
+  if (player.glimmerLevel < cfg.glimmerMaxLevel) pool.push({ id: 'glimmer', weight: player.speed });
   return pool.map((w) => ({ ...w, weight: Math.max(1, w.weight) }));
 }
 
 export function rollPremium(player: PlayerState, rng: Rng, data: GameData): Roll<PremiumId> {
   return rollWeighted(premiumPool(player, data), rng);
+}
+
+/** O guru oferece `premiumChoices` premium diferentes (menos, se não houver tantas); o jogador escolhe 1. */
+export function rollPremiumChoices(player: PlayerState, rng: Rng, data: GameData): Roll<PremiumId>[] {
+  let pool = premiumPool(player, data);
+  const rolls: Roll<PremiumId>[] = [];
+  while (rolls.length < data.balance.guru.premiumChoices && pool.length > 0) {
+    const roll = rollWeighted(pool, rng);
+    rolls.push(roll);
+    pool = pool.filter((w) => w.id !== roll.value);
+  }
+  return rolls;
 }
 
 /** Ensina a premium: técnica nova, o próximo nível dela, ou +1 uso por luta (Foco, Substituição). */
@@ -393,6 +410,16 @@ export function applyPremium(player: PlayerState, premium: PremiumId, data: Game
   if (premium === 'substitution') {
     const level = player.substitutionBonus + 1;
     return step({ ...player, substitutionBonus: level }, { kind: 'guruPremium', premium, techniqueId: null, level });
+  }
+  if (premium === 'shadowClones') {
+    const level = player.shadowClonesLevel + 1;
+    return step({ ...player, shadowClonesLevel: level }, { kind: 'guruPremium', premium, techniqueId: null, level });
+  }
+  if (premium === 'glimmer') {
+    const level = player.glimmerLevel + 1;
+    // Nível 2: speed a mais, para sempre.
+    const speed = level === 2 ? player.speed + data.balance.guru.glimmerSpeedBonus : player.speed;
+    return step({ ...player, glimmerLevel: level, speed }, { kind: 'guruPremium', premium, techniqueId: null, level });
   }
   const id = premium === 'rasengan' ? RASENGAN : MEDICAL;
   const tech = data.techniquesById[id]!;
@@ -418,12 +445,12 @@ export function rollGuru(player: PlayerState, rng: Rng, data: GameData): Roll<Gu
   return rollWeighted(guruPool(player, data), rng);
 }
 
-/** Guru: charlatão (desvantagem de ação) ou uma premium sorteada pelo perfil. */
-export function applyGuru(player: PlayerState, outcome: GuruOutcome, rng: Rng, data: GameData): Step {
-  if (outcome === 'charlatan') {
+/** Guru: charlatão (desvantagem de ação) ou a premium escolhida entre as oferecidas (`rollPremiumChoices`). */
+export function applyGuru(player: PlayerState, outcome: GuruOutcome, premium: PremiumId | null, data: GameData): Step {
+  if (outcome === 'charlatan' || premium === null) {
     return step(player, { kind: 'guruCharlatan' }, { villainStartsFirst: true, playerStartsFirst: false });
   }
-  return applyPremium(player, rollPremium(player, rng, data).value, data);
+  return applyPremium(player, premium, data);
 }
 
 export function rollSummonAnimal(rng: Rng, data: GameData): Roll<SummonAnimal> {

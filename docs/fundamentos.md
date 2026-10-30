@@ -63,6 +63,7 @@ O Corpo de ferro (prodígio do taijutsu) faz Resistir usar 100% da física, mas 
   Vantagem ou desvantagem de ação (eventos) substitui essa roleta na próxima luta contra vilão.
 - Cada rodada tem **uma ação de cada lado**, na ordem da iniciativa.
 - Técnicas com **prioridade** agem antes naquela rodada, mesmo sem a iniciativa. Dois lados com prioridade: vale a iniciativa.
+- **Corpo Cintilante** (premium do guru, [tecnicas.md](tecnicas.md#premium-guru)): o jogador age primeiro na 1ª rodada, sem mudar a iniciativa sorteada.
 - Na sua ação, o personagem escolhe:
   - **Técnica** (de uma das categorias do skill set, ver [tecnicas.md](tecnicas.md)).
   - **Ativas de linhagem** (Portões, Expansão, Pílulas do clã, Sharingan, Cópia, Byakugan, Esforço, Fera de quatro patas, Devorar, Transmissão mental, Selamento, Sombra costurada) são todas **escolhas grátis**: feitas junto com a ação, sem gastar o turno, desde que haja chakra para a ativa, a ação e as outras ativas da rodada. Foco e Gênio também são grátis. O que a ativa liga já vale para a ação da mesma rodada: com o Sharingan aceso agora, dá para usar o Tsukuyomi ou a Cópia nesse turno.
@@ -138,7 +139,7 @@ dano              = max(1, bruto × mult_crítico × mult_elemento × outros_mul
 ```
 
 - `bônus_de_dano`: ferramenta ninja e similares.
-- `penetração`: da técnica, do sapo, da passiva Hyuuga. Somam, com teto de 60%.
+- `penetração`: da técnica e da passiva Hyuuga. Somam, com teto de 60%.
 - `mult_elemento`: só quando há um encontro de elementos (ver "Elementos"); senão ×1.
 - `outros_mult`: portões, manto, expansão, pavor, resultado da disputa, alvo que perdeu a vez (×1,25) etc.
 - Técnicas de vários golpes descontam a defesa em cada golpe.

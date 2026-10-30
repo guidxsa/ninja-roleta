@@ -44,7 +44,7 @@ import {
   slugHealPct,
   snakePoisonBonus,
   startBattle,
-  toadPenetration,
+  toadDamagePct,
   villainResistance,
   type BattleOptions,
   type BattleState,
@@ -97,7 +97,7 @@ import {
   rollAkatsuki,
   rollGuru,
   rollItem,
-  rollPremium,
+  rollPremiumChoices,
   rollReward,
   rollRewardChoices,
   rollSummonAnimal,
@@ -253,7 +253,6 @@ const techName = (id: string): string => {
 const ACTIVE_ICON: Record<string, string> = {
   gates: 'gates',
   expansion: 'expansion',
-  shadowClones: 'clones',
   effort: 'weights',
   beast: 'beast',
   devour: 'poison',
@@ -530,6 +529,8 @@ function passiveItems(p: PlayerState, tag: 'li' | 'p'): string[] {
   }
   if (p.focusUses > 0) out.push(item(icon('focus'), S.talents.focus.name, S.talents.focus.desc(p.focusUses)));
   if (p.substitutionBonus > 0) out.push(item(icon('substitution'), S.talents.substitution.name, S.talents.substitution.desc(p.substitutionBonus)));
+  if (p.shadowClonesLevel > 0) out.push(item(icon('clones'), S.talents.shadowClones.name, S.talents.shadowClones.desc(p.shadowClonesLevel)));
+  if (p.glimmerLevel > 0) out.push(item(icon('amuletSpeed'), S.talents.glimmer.name, S.talents.glimmer.desc(p.glimmerLevel)));
   if (p.pendingUpgrades > 0) out.push(item(icon('scroll'), S.ui.upgradeTitle, S.ui.upgradesPending(p.pendingUpgrades)));
   return out;
 }
@@ -538,7 +539,7 @@ function passiveItems(p: PlayerState, tag: 'li' | 'p'): string[] {
 function summonEffect(p: PlayerState): string {
   if (!p.summon) return '';
   const fx = S.summonEffects[p.summon.animal]!;
-  if (p.summon.animal === 'toad') return fx(Math.round(toadPenetration(p, data) * 100));
+  if (p.summon.animal === 'toad') return fx(Math.round(toadDamagePct(p, data) * 100));
   if (p.summon.animal === 'snake') return fx(snakePoisonBonus(p, data) ?? 0);
   return fx(Math.round(slugHealPct(p, data) * 100));
 }
@@ -969,14 +970,26 @@ async function eventScreen(stage: Stage): Promise<void> {
       const out = rollGuru(c.player, rng, data);
       await bigWheel(slot, S.roulettes.guru, rollSlices(out, (id) => S.guru[id]!), out.index);
       if (out.value === 'charlatan') {
-        step = applyGuru(c.player, out.value, rng, data);
+        step = applyGuru(c.player, out.value, null, data);
         break;
       }
-      // Premium: segunda roleta, ponderada pelo perfil do jogador.
-      await sleep(settings.instant ? 0 : 300);
-      const premium = rollPremium(c.player, rng, data);
-      await bigWheel(slot, S.roulettes.premium, rollSlices(premium, (id) => S.premiums[id] ?? id), premium.index);
-      step = applyPremium(c.player, premium.value, data);
+      // Premium: o guru gira a roleta do perfil algumas vezes (sem repetir) e o jogador escolhe 1.
+      const choices = rollPremiumChoices(c.player, rng, data);
+      for (let i = 0; i < choices.length; i++) {
+        const r = choices[i]!;
+        await sleep(settings.instant ? 0 : 300);
+        await bigWheel(slot, `${S.roulettes.premium} · ${S.ui.spinOf(i + 1, choices.length)}`, rollSlices(r, (id) => S.premiums[id] ?? id), r.index);
+      }
+      let premium = choices[0]!.value;
+      if (choices.length > 1) {
+        await sleep(settings.instant ? 0 : 300);
+        const box = h(`<div class="wheel-box"><h3>${S.ui.choosePremium}</h3><div class="act-grid">${choices
+          .map((r, i) => `<button class="btn" data-choice="${i}">${S.premiums[r.value] ?? r.value}</button>`)
+          .join('')}</div></div>`);
+        slot.replaceChildren(box);
+        premium = choices[Number(await choose(box))]!.value;
+      }
+      step = applyPremium(c.player, premium, data);
       break;
     }
     case 'clanLesson':
@@ -1499,7 +1512,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     };
     const free = [
       canFocus(s) ? toggle('focus', 'focus', S.ui.focus, S.ui.focusArmed, S.ui.focusHint) : '',
-      s.player.active === 'shadowClones' && !s.playerFx.clonesArmed && s.player.chakra >= data.balance.shadowClones.chakraCost
+      freeActiveCost(s, 'clones', data) !== null && affordable(s, 'clones')
         ? toggle('clones', 'clones', `${S.ui.clones} · ${S.ui.cost(data.balance.shadowClones.chakraCost)}`, S.ui.clonesArmed, S.ui.clonesHint)
         : '',
       freeActiveToggle(s, 'dojutsu'),
@@ -1888,6 +1901,14 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'shadowHold':
           disp.pck -= ev.chakra;
           log(S.log.shadowHold(ev.chakra), 'good');
+          break;
+        case 'toad':
+          disp.vhp -= ev.damage;
+          floatNumber(vcard(), `−${ev.damage}`, 'dmg');
+          log(S.log.toad(ev.damage), 'good');
+          break;
+        case 'glimmer':
+          log(S.log.glimmer, 'good');
           break;
         case 'strangle':
           disp.vhp -= ev.damage;

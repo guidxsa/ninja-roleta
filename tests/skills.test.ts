@@ -22,7 +22,7 @@ import {
   type BattleState,
 } from '../src/core/combat';
 import { applyLevelUp, createPlayer, gainXp, learnTechnique, upgradeTechnique, type PlayerState } from '../src/core/player';
-import { chooseUpgrade, learnableTechniques, levelUp } from '../src/core/progression';
+import { applyPremium, chooseUpgrade, learnableTechniques, levelUp } from '../src/core/progression';
 import type { Origin, VillainPassive } from '../src/core/types';
 import { gameData } from '../src/data/index';
 import { levelTechniques, lineageTechniques, lineTechniques, premiumTechniques, techniquesById } from '../src/data/techniques';
@@ -162,16 +162,26 @@ describe('ficha de técnica', () => {
     expect(hit('earth', 'rockFist')).toBeCloseTo(0.95);
   });
 
-  it('penetração: a técnica e o sapo ignoram parte da resistência, até 60%', () => {
+  it('penetração: a técnica ignora parte da resistência; o sapo não dá mais penetração', () => {
     const p = createPlayer({ lineageId: null, affinity: 'lightning', jinchuuriki: false }, gameData);
     const v = testVillain({ hp: 200 });
     const dmg = (pl: PlayerState) => ofType(playRound(withInitiative(startBattle(pl, v)), 'tech:spark', seq(0.5), gameData).log, 'attack')[0]!.damage;
     // Faísca: 13 + 10 − 10 × 0,7 × 0,9 = 16
     expect(dmg(p)).toBe(16);
-    // Com o sapo (25%): 13 + 10 − 7 × 0,65 = 18
-    expect(dmg({ ...p, summon: { animal: 'toad', level: 1 } })).toBe(18);
-    // Sapo nível 9 passaria de 60%: fica no teto, 13 + 10 − 7 × 0,4 = 20
-    expect(dmg({ ...p, summon: { animal: 'toad', level: 9 } })).toBe(20);
+    expect(dmg({ ...p, summon: { animal: 'toad', level: 1 } })).toBe(16);
+  });
+
+  it('sapo: um ataque que acerta causa dano verdadeiro uma vez, mesmo com vários golpes; errar não dá nada', () => {
+    const p = { ...createPlayer(clan('aburame'), gameData), summon: { animal: 'toad' as const, level: 1 } };
+    const v = testVillain({ hp: 200 });
+    // Enxame (vários golpes) que acerta: 6% de 200 = 12, uma vez só.
+    const hit = playRound(withInitiative(startBattle(p, v)), 'tech:insectSwarm', seq(0.5), gameData);
+    expect(ofType(hit.log, 'toad')).toEqual([{ type: 'toad', damage: 12 }]);
+    const miss = playRound(withInitiative(startBattle(p, v)), 'tech:insectSwarm', seq(0.01), gameData);
+    expect(ofType(miss.log, 'toad')).toHaveLength(0);
+    // Nível 3: 10% = 20.
+    const lv3 = playRound(withInitiative(startBattle({ ...p, summon: { animal: 'toad', level: 3 } }, v)), 'tech:basicTaijutsu', seq(0.5), gameData);
+    expect(ofType(lv3.log, 'toad')).toEqual([{ type: 'toad', damage: 20 }]);
   });
 
   it('efeito no acerto: Muralha Esmagadora tem 15% de atordoar', () => {
@@ -495,13 +505,34 @@ describe('passivas e ativas de clã', () => {
     expect(ofType(s.log, 'expansionEnd')).toHaveLength(1);
   });
 
-  it('Clones das Sombras: grátis, o próximo ataque vira 3 golpes de 35%', () => {
-    const s0 = withInitiative(startBattle({ ...createPlayer(clan('uzumaki', 'wind'), gameData), active: 'shadowClones' as const }, testVillain({ hp: 200 })));
-    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { clones: true });
-    const hits = ofType(s1.log, 'attack').filter((a) => a.side === 'player');
-    // (8 + 10 − 7) × 0,35 = 3, três vezes
-    expect(hits.map((a) => a.damage)).toEqual([3, 3, 3]);
-    expect(s1.player.chakra).toBe(35 - 6);
+  it('Clones das Sombras (premium): o ataque principal sai inteiro e cada clone bate com 35%; +1 clone por nível', () => {
+    const base = createPlayer(clan('uzumaki', 'wind'), gameData);
+    const s0 = withInitiative(startBattle(base, testVillain({ hp: 200 })));
+    expect(() => playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { clones: true })).toThrow();
+    const hitsOf = (level: number) => {
+      const s = withInitiative(startBattle({ ...base, shadowClonesLevel: level }, testVillain({ hp: 200 })));
+      const s1 = playRound(s, 'tech:basicTaijutsu', seq(0.5), gameData, { clones: true });
+      expect(s1.player.chakra).toBe(base.maxChakra - 6);
+      return ofType(s1.log, 'attack').filter((a) => a.side === 'player').map((a) => a.damage);
+    };
+    // 8 + 10 − 7 = 11 no principal; 11 × 0,35 = 3 em cada clone.
+    expect(hitsOf(1)).toEqual([11, 3, 3]);
+    expect(hitsOf(2)).toEqual([11, 3, 3, 3]);
+  });
+
+  it('Corpo Cintilante (premium): age primeiro na 1ª rodada; o castigo de evento vence; nível 2 dá +2 de speed', () => {
+    const base = { ...createPlayer(clan('uzumaki', 'wind'), gameData), glimmerLevel: 1 };
+    const s0 = withInitiative(startBattle(base, testVillain({ hp: 200 })), 'villain');
+    const r1 = playRound(s0, 'stance', seq(0.5), gameData);
+    expect(ofType(r1.log, 'glimmer')).toHaveLength(1);
+    expect(r1.initiative).toBe('villain');
+    const r2 = playRound(r1, 'stance', seq(0.5), gameData);
+    expect(ofType(r2.log.slice(r1.log.length), 'glimmer')).toHaveLength(0);
+    const late = playRound(startBattle(base, testVillain({ hp: 200 }), { villainStartsFirst: true }), 'stance', seq(0.5), gameData);
+    expect(ofType(late.log, 'glimmer')).toHaveLength(0);
+    const lv0 = createPlayer(clan('uzumaki', 'wind'), gameData);
+    const lv2 = applyPremium(applyPremium(lv0, 'glimmer', gameData).player, 'glimmer', gameData).player;
+    expect([lv2.glimmerLevel, lv2.speed]).toEqual([2, lv0.speed + 2]);
   });
 
   it('Dupla (Inuzuka): depois de um acerto, 25% de o cão atacar também', () => {

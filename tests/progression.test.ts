@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { availableActions, playerTechnique, playRound, slugHealPct, startBattle, toadPenetration, type BattleEvent } from '../src/core/combat';
+import { availableActions, playerTechnique, playRound, slugHealPct, startBattle, toadDamagePct, type BattleEvent } from '../src/core/combat';
 import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
   applyLevelUp,
@@ -18,6 +18,7 @@ import {
 import {
   applyAkatsuki,
   applyGuru,
+  rollPremiumChoices,
   applyItem,
   applyPremium,
   applyReward,
@@ -294,17 +295,28 @@ describe('encontros', () => {
     expect(applyAkatsuki({ ...took.player, hp: 1 }, 'hunted', gameData).player.hp).toBe(1);
   });
 
-  it('guru: charlatão dá desvantagem de ação; a premium é sorteada pelo perfil', () => {
+  it('guru: 20% de charlatão; a premium é sorteada pelo perfil, 2 opções diferentes, e o jogador escolhe', () => {
     const p = createPlayer(common, gameData);
-    expect(applyGuru(p, 'charlatan', seq(0.5), gameData).mods).toEqual({ villainStartsFirst: true, playerStartsFirst: false });
-    // Pesos: Rasengan = ninjutsu, Palma Curativa = chakra ÷ 3, Foco = taijutsu, Substituição = speed.
+    expect(gameData.guruOutcomes).toEqual([
+      { id: 'charlatan', weight: 20 },
+      { id: 'premium', weight: 80 },
+    ]);
+    expect(applyGuru(p, 'charlatan', null, gameData).mods).toEqual({ villainStartsFirst: true, playerStartsFirst: false });
+    // Pesos: Rasengan e Clones = ninjutsu, Palma Curativa = chakra ÷ 3, Foco = taijutsu,
+    // Substituição e Corpo Cintilante = speed.
     expect(premiumPool(p, gameData)).toEqual([
       { id: 'rasengan', weight: 10 },
       { id: 'medical', weight: 10 },
       { id: 'focus', weight: 10 },
       { id: 'substitution', weight: 10 },
+      { id: 'shadowClones', weight: 10 },
+      { id: 'glimmer', weight: 10 },
     ]);
-    const rasengan = applyGuru(p, 'premium', seq(0.0), gameData);
+    expect(rollPremiumChoices(p, seq(0.0, 0.0), gameData).map((r) => r.value)).toEqual(['rasengan', 'medical']);
+    // Só uma premium para ensinar: só uma opção.
+    const one = { ...p, forbiddenAttackTypes: ['ninjutsu' as const], focusUses: 3, substitutionBonus: 3 };
+    expect(rollPremiumChoices(one, seq(0.0, 0.0), gameData).map((r) => r.value)).toEqual(['glimmer']);
+    const rasengan = applyGuru(p, 'premium', 'rasengan', gameData);
     expect(rasengan.effect).toEqual({ kind: 'guruPremium', premium: 'rasengan', techniqueId: 'rasengan', level: 1 });
     expect(rasengan.player.techniques).toContain('rasengan');
     // Nível 1: o Rasengan II passa do teto, então ele some da roleta.
@@ -326,8 +338,8 @@ describe('encontros', () => {
 
   it('guru: o prodígio só recebe talentos; sem nada para ensinar, só sobra o charlatão', () => {
     const p = createPlayer(prodigy, gameData);
-    expect(premiumPool(p, gameData).map((w) => w.id)).toEqual(['focus', 'substitution']);
-    const maxed = { ...p, focusUses: 3, substitutionBonus: 3 };
+    expect(premiumPool(p, gameData).map((w) => w.id)).toEqual(['focus', 'substitution', 'glimmer']);
+    const maxed = { ...p, focusUses: 3, substitutionBonus: 3, glimmerLevel: 2 };
     expect(guruPool(maxed, gameData).map((o) => o.id)).toEqual(['charlatan']);
   });
 
@@ -384,10 +396,10 @@ describe('invocações (passivas)', () => {
     expect(availableActions(startBattle(p, testVillain()), gameData)).toEqual(['tech:basicTaijutsu', 'tech:fireSpark', 'rest', 'stance']);
   });
 
-  it('sapo: penetração de 25%, +10% por nível', () => {
+  it('sapo: dano verdadeiro de 6% do HP máximo do vilão por ataque que acerta, +2% por nível', () => {
     const lv1 = applySummonEncounter(createPlayer(common, gameData), 'toad').player;
-    expect(toadPenetration(lv1, gameData)).toBeCloseTo(0.25);
-    expect(toadPenetration(applySummonEncounter(lv1, 'toad').player, gameData)).toBeCloseTo(0.35);
+    expect(toadDamagePct(lv1, gameData)).toBeCloseTo(0.06);
+    expect(toadDamagePct(applySummonEncounter(lv1, 'toad').player, gameData)).toBeCloseTo(0.08);
   });
 
   // Rng depois do ataque do jogador: técnica do vilão, acerto do vilão, (teste de cura), próxima intenção.

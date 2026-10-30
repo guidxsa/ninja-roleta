@@ -39,7 +39,7 @@ export type PassiveKind =
   | 'vitality';
 
 /** Ativa de linhagem (gasta ou não o turno; parâmetros em `balance`). */
-export type ActiveKind = 'gates' | 'expansion' | 'shadowClones' | 'effort' | 'beast' | 'devour' | 'transmission' | 'seal';
+export type ActiveKind = 'gates' | 'expansion' | 'effort' | 'beast' | 'devour' | 'transmission' | 'seal';
 
 export type AffinityRule =
   | { kind: 'rolled' }

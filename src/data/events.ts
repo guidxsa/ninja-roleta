@@ -31,7 +31,7 @@ export type AkatsukiOutcome = 'hunted' | 'unnoticed' | 'insight' | 'meddled';
 export type GuruOutcome = 'charlatan' | 'premium';
 
 /** Premium do guru: técnicas e talentos sem elemento. */
-export type PremiumId = 'rasengan' | 'medical' | 'focus' | 'substitution';
+export type PremiumId = 'rasengan' | 'medical' | 'focus' | 'substitution' | 'shadowClones' | 'glimmer';
 
 export type RewardId = 'stages' | 'newTechnique' | 'xp' | 'item' | 'resistance' | 'critBonus' | 'secondaryElement';
 
@@ -84,8 +84,8 @@ export const akatsukiOutcomes: { jinchuuriki: Weighted<AkatsukiOutcome>[]; other
 
 /** Sem premium para ensinar, a fatia some. A premium é sorteada depois, pelo perfil do jogador. */
 export const guruOutcomes: Weighted<GuruOutcome>[] = [
-  { id: 'charlatan', weight: 30 },
-  { id: 'premium', weight: 70 },
+  { id: 'charlatan', weight: 20 },
+  { id: 'premium', weight: 80 },
 ];
 
 export const summonAnimals: Weighted<SummonAnimal>[] = [
