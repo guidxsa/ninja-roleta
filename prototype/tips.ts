@@ -31,7 +31,8 @@ export const ELEMENT_ICON: Record<Element, string> = {
   water: 'water',
 };
 
-const lines = (parts: unknown[]) =>
+/** Corpo de dica com uma linha por parte (partes vazias ou falsas somem). */
+export const lines = (parts: unknown[]) =>
   parts
     .filter((p): p is string => typeof p === 'string' && p.length > 0)
     .map((p) => `<span class="tip-line">${p}</span>`)

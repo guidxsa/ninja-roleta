@@ -40,7 +40,7 @@ Na simulação, os pontos não valem o mesmo na prática: genjutsu e resistênci
 | Nara | 10 | 13 | 8 | 10 | 10 | 9 | 105 | 32 | Rolada | 91 |
 | Akimichi | 15 | 8 | 5 | 14 | 6 | 6 | 145 | 34 | Rolada | 88,5 |
 | Yamanaka | 10 | 9 | 15 | 10 | 14 | 10 | 110 | 30 | Rolada | 99 |
-| Aburame | 8 | 16 | 6 | 9 | 11 | 8 | 110 | 34 | Rolada | 90 |
+| Aburame | 8 | 12 | 10 | 9 | 11 | 8 | 110 | 34 | Rolada | 90 |
 | Inuzuka | 14 | 8 | 6 | 12 | 8 | 13 | 95 | 24 | Rolada | 89 |
 | Prodígio do taijutsu | 17 | 0 | 0 | 11 | 9 | 12 | 110 | 28 | Nenhuma | 80 |
 | Uchiha | 12 | 9 | 12 | 10 | 10 | 10 | 105 | 26 | Fogo (fixa) | 91,5 |
@@ -120,7 +120,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 ### Aburame (insetos)
 
 - **Colônia** (passiva): cada golpe do **Enxame** que acerta prende **1 inseto** no vilão (até 10). No **fim de cada rodada**, cada inseto preso drena **1 de chakra** do vilão. Outros ataques não prendem insetos.
-- **Enxame**: ninjutsu neutro de golpes pequenos, em linha própria: I com 2 golpes de 4 (3 de chakra), II com 4 golpes de 5 (4 de chakra), III com 6 golpes de 6 (5 de chakra). O acerto rola uma vez para todos os golpes. Não drena chakra por si só.
+- **Enxame**: ninjutsu neutro de golpes pequenos, em linha própria: I com 2 golpes de 4 (5 de chakra), II com 3 golpes de 6 (6 de chakra), III com 4 golpes de 8 (7 de chakra): +2 de dano e +1 golpe por nível. Cada golpe rola o próprio acerto. Não drena chakra por si só.
 - **Praga** (ativa): escolha grátis, 6 de chakra, **1 uso por luta** (+1 no nível 7). Por 3 rodadas, contando a da ativação, o Enxame prende **2 insetos por acerto** e o teto de insetos **dobra**. Quando acaba, o excesso cai para o teto normal.
 - **Devorar**: técnica de ninjutsu do kit (gasta o turno), com ao menos 1 inseto no vilão. Custa **1 de chakra por inseto** e não rola acerto. Consome todos os insetos: cada um drena **3 de chakra**; os que sobram com o vilão sem chakra causam **2 de dano direto** cada (sem resistência). Vilão sem chakra fica só com as técnicas que não custam chakra.
 

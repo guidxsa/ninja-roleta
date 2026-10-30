@@ -47,7 +47,7 @@ Toda técnica nos dados tem estes campos. Regra de design: todo ponto forte tem 
 | `categoria` | taijutsu, ninjutsu, genjutsu, médico | — |
 | `elemento` | Um dos 5 ou neutro | neutro |
 | `dano` | Dano base por golpe | — |
-| `golpes` | Quantos golpes; o acerto e o crítico rolam uma vez para todos | 1 |
+| `golpes` | Quantos golpes; cada golpe rola o próprio acerto e crítico | 1 |
 | `custo` | Chakra | 0 |
 | `precisão` | Chance de acerto | 85% |
 | `bônusCrítico` | Somado à chance de crítico | 0 |
@@ -160,7 +160,7 @@ Ativar um estado gasta o turno. O manto do jinchuuriki é um estado **neutro** (
 | Técnica | Dano | Golpes | Chakra | Precisão | Efeito | Quem |
 |---|---|---|---|---|---|---|
 | Imitação de Sombra | 0 | 1 | 5 | 80% | Aprisionado (força base 1; força e fuga pela fórmula do genjutsu, usando ninjutsu contra a resistência física) | Nara |
-| Enxame | 4 | 2 | 3 | 85% | Cada golpe que acerta prende um inseto (Colônia). Linha: II 5×4 (4 de chakra), III 6×6 (5 de chakra) | Aburame |
+| Enxame | 4 | 2 | 5 | 85% | Cada golpe que acerta prende um inseto (Colônia). Linha: II 6×3 (6 de chakra), III 8×4 (7 de chakra) | Aburame |
 | Devorar | — | — | 1 por inseto | — | Consome os insetos: drena chakra e o que sobra vira dano direto ([origens.md](origens.md#aburame-insetos)) | Aburame |
 | Rotação | — | — | 5 | — | Barreira neutra (ação): escudo de 26 que devolve 50% do dano que bloqueia. | Hyuuga (nível 4) |
 | Correntes de Chakra | 0 | 1 | 6 | 80% | Aprisionado (força base 1, como a Imitação de Sombra); o vilão preso perde 3 de chakra por vez perdida | Uzumaki (nível 4) |
@@ -196,7 +196,7 @@ Técnicas e talentos **sem elemento** que só o guru ensina. O guru oferece a qu
 | Palma Curativa (ninjutsu médico) | Médico | Cura 20% do HP máximo, chakra 4, sem rolar acerto. Indisponível com HP cheio. | +5% de cura, +1 de chakra | Todos, menos o prodígio |
 | Foco | Talento | Uma vez por luta, um botão grátis (não gasta o turno) soma +25% à chance de crítico do próximo ataque. | +1 uso por luta (até 3) | Todos |
 | Mestre da Substituição | Talento | +1 uso de Substituição por luta. | +1 uso por luta (até 3) | Todos |
-| Clones das Sombras | Talento (ninjutsu) | Escolha grátis, 6 de chakra (não gasta o turno): o próximo ataque sai com **100%** do dano e **2 clones** repetem os golpes com **35%** do dano cada. Acerto, crítico e reação são rolados uma vez para tudo. | +1 clone (até o nível 3, dentro do teto pelo nível do personagem) | Quem usa ninjutsu |
+| Clones das Sombras | Talento (ninjutsu) | Escolha grátis, 6 de chakra (não gasta o turno): o próximo ataque sai com **100%** do dano e **2 clones** repetem os golpes com **35%** do dano cada. A reação é uma só; cada golpe rola o próprio acerto e crítico. | +1 clone (até o nível 3, dentro do teto pelo nível do personagem) | Quem usa ninjutsu |
 | Corpo Cintilante | Talento | Age primeiro na **1ª rodada** de cada luta (a iniciativa sorteada vale da 2ª em diante). Perde para a desvantagem de ação de evento. | Nível 2: **+2 de speed** (até o nível 2) | Todos |
 
 Os níveis das premium respeitam o teto pelo nível do personagem: no nível 1, o guru não ensina o Rasengan II.

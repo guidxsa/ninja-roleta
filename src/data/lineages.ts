@@ -54,7 +54,7 @@ export const lineages: LineageDef[] = [
     id: 'aburame',
     tier: 'clan',
     weight: 8,
-    stats: { taijutsu: 8, ninjutsu: 16, genjutsu: 6, speed: 8, hp: 110, chakra: 34 },
+    stats: { taijutsu: 8, ninjutsu: 12, genjutsu: 10, speed: 8, hp: 110, chakra: 34 },
     resistance: { physical: 9, mental: 11 },
     affinity: { kind: 'rolled' },
     passive: 'hive',

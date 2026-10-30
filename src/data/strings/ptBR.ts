@@ -141,74 +141,97 @@ export const ptBR = {
     grassSword: 'Espada da grama',
     killingIntent: 'Intenção assassina',
   } as Record<string, string>,
+  /** Passiva de cada origem: nome e o texto inteiro (as partes estão em `passiveTraits`). */
   passives: {
-    determination: { name: 'Determinação', desc: 'Você ganha mais XP e, a cada nível, o seu maior status de ataque sobe.' },
+    determination: { name: 'Determinação', desc: 'Quem não tem clã treina dobrado. Ganha mais XP, e a cada nível o seu melhor status de ataque cresce.' },
     genius: {
       name: 'Gênio',
-      desc: 'Você vê a próxima ação do vilão. Algumas vezes por luta (mais nos níveis 4 e 7), de graça: a sua próxima roleta gira duas vezes e fica com a melhor. Sombra costurada: com o vilão preso pela sombra, pague chakra (cada vez mais) para ele não escapar naquela vez.',
+      desc: 'Um Nara pensa várias jogadas à frente: vê a próxima ação do vilão, gira a roleta duas vezes algumas vezes por luta e mantém a sombra pagando chakra.',
     },
-    heavyBody: { name: 'Corpo pesado', desc: 'Quanto mais pesado você for em relação ao vilão (pelo HP máximo), mais forte o seu taijutsu.' },
-    mindReading: {
-      name: 'Leitura mental',
-      desc: 'Os ataques do vilão erram mais contra você. Mente no controle: na Possessão, você escolhe a técnica que o vilão usa em si mesmo (ele paga o chakra).',
+    heavyBody: { name: 'Corpo pesado', desc: 'O peso do clã vira força: quanto mais pesado você for em relação ao vilão, mais forte o seu taijutsu. Nunca enfraquece.' },
+    mindReading: { name: 'Leitura mental', desc: 'O Yamanaka lê as intenções do inimigo: o vilão erra mais contra você e, possuído, usa a técnica que você escolher.' },
+    hive: {
+      name: 'Colônia',
+      desc: 'Insetos vivem no corpo do Aburame. Cada golpe do Enxame que acerta deixa um inseto preso no inimigo, e no fim de cada rodada os insetos sugam o chakra dele.',
     },
-    hive: { name: 'Colônia', desc: 'Cada golpe do Enxame que acerta prende um inseto no vilão. No fim de cada rodada, os insetos presos drenam o chakra dele. O Devorar consome os insetos.' },
-    duo: { name: 'Dupla', desc: 'Depois de um ataque que acerta, o cão pode atacar também.' },
-    ironBody: { name: 'Corpo de ferro', desc: 'Contra taijutsu, Resistir usa toda a resistência física. Não usa ninjutsu nem genjutsu.' },
-    genjutsuResistance: { name: 'Olhos treinados', desc: 'Resistência mental maior contra ilusões.' },
-    preciseFist: { name: 'Punho preciso', desc: 'O taijutsu ignora parte da resistência física do alvo.' },
-    vitality: { name: 'Vitalidade Uzumaki', desc: 'Recupera um pouco de chakra e de HP a cada rodada (mais chakra no nível 7).' },
+    duo: { name: 'Dupla', desc: 'Ninja e cão lutam juntos: depois de um ataque que acerta, o cão pode atacar também.' },
+    ironBody: { name: 'Corpo de ferro', desc: 'Anos de treino endureceram o corpo: contra taijutsu, Resistir usa toda a resistência física. Não usa ninjutsu nem genjutsu.' },
+    genjutsuResistance: { name: 'Olhos treinados', desc: 'Olhos acostumados a ilusões: resistência mental maior contra genjutsu.' },
+    preciseFist: { name: 'Punho preciso', desc: 'O Punho Gentil acerta os pontos de chakra: o taijutsu ignora parte da resistência física do alvo.' },
+    vitality: { name: 'Vitalidade Uzumaki', desc: 'A força vital do clã regenera um pouco de HP e de chakra a cada rodada (mais chakra no nível 7).' },
     jinchuuriki: {
       name: 'Manto de chakra',
-      desc: '1×/luta, com menos de metade do HP: o manto deixa você muito mais forte e resistente e regenera HP por até 5 rodadas, consumindo chakra a cada rodada.',
+      desc: 'O demônio selado desperta quando você fica com menos de metade do HP: uma vez por luta, por até 5 rodadas, você fica muito mais forte e resistente e regenera HP, consumindo chakra.',
     },
-    innerDemon: { name: 'Demônio interno', desc: 'Imune a genjutsu.' },
+    innerDemon: { name: 'Demônio interno', desc: 'A fera selada protege a sua mente: imune a genjutsu.' },
   } as Record<string, { name: string; desc: string }>,
-  /** Talentos premium do guru (com o número de usos por luta). */
+  /** Passivas que juntam mais de uma mecânica, separadas para a ficha e o card (as outras usam `passives`). */
+  passiveTraits: {
+    genius: [
+      { name: 'Gênio', desc: 'Algumas vezes por luta, de graça: a sua próxima roleta gira duas vezes e fica com o melhor resultado. Mais usos nos níveis 4 e 7.' },
+      { name: 'Visão estratégica', desc: 'Um Nara pensa várias jogadas à frente: você sempre vê qual será a próxima ação do vilão.' },
+      { name: 'Sombra costurada', desc: 'Com o vilão preso pela Imitação de Sombra, pague chakra para ele não escapar naquela vez. Cada vez seguida custa mais.' },
+    ],
+    mindReading: [
+      { name: 'Leitura mental', desc: 'O Yamanaka lê as intenções do inimigo: os ataques do vilão erram mais contra você.' },
+      { name: 'Mente no controle', desc: 'Com o vilão possuído, você escolhe a técnica que ele usa contra si mesmo, e ele paga o chakra dela.' },
+    ],
+    ironBody: [
+      { name: 'Corpo de ferro', desc: 'Anos de treino endureceram o corpo: contra taijutsu, Resistir usa toda a resistência física.' },
+      { name: 'Só taijutsu', desc: 'O prodígio não usa ninjutsu, genjutsu nem ninjutsu médico.' },
+    ],
+  } as Record<string, { name: string; desc: string }[]>,
+  /** Talentos premium do guru (com o nível ou os usos por luta). */
   talents: {
-    focus: { name: 'Foco', desc: (n: number) => `${n}×/luta: mais chance de crítico no próximo ataque.` },
-    substitution: { name: 'Mestre da Substituição', desc: (n: number) => `+${n} uso(s) de Substituição por luta.` },
-    shadowClones: { name: 'Clones das Sombras', desc: (n: number) => `Nível ${n}: arme os clones e o próximo ataque ganha ${n + 1} clones.` },
-    glimmer: { name: 'Corpo Cintilante', desc: (n: number) => `Você sempre age primeiro na 1ª rodada${n >= 2 ? ' e é mais rápido' : ''}.` },
+    focus: { name: 'Foco', desc: (n: number) => `Concentração antes do golpe. ${n}×/luta, de graça: mais chance de crítico no próximo ataque.` },
+    substitution: { name: 'Mestre da Substituição', desc: (n: number) => `Troca de lugar com um tronco num piscar de olhos: +${n} uso(s) de Substituição por luta.` },
+    shadowClones: {
+      name: 'Clones das Sombras',
+      desc: (n: number) => `Nível ${n}. Arme os clones (6 de chakra, de graça): o próximo ataque sai inteiro e ${n + 1} clones repetem os golpes com uma parte do dano.`,
+    },
+    glimmer: { name: 'Corpo Cintilante', desc: (n: number) => `Rápido como um relâmpago: você sempre age primeiro na 1ª rodada${n >= 2 ? ' e tem mais speed' : ''}.` },
   },
   /** Ativas de linhagem. */
   actives: {
     gates: {
       name: 'Portões',
-      desc: 'Grátis, 1×/luta: abrir não gasta o turno, custa chakra e HP; taijutsu mais forte por 3 rodadas (contando a da abertura). Evoluem com o taijutsu.',
+      desc: 'O prodígio força o corpo além do limite. Grátis, 1×/luta, sem gastar o turno: abrir custa chakra e HP e deixa o taijutsu muito mais forte por 3 rodadas, contando a da abertura. Portões mais altos pedem mais taijutsu.',
     },
-    expansion: { name: 'Expansão', desc: 'Grátis, não gasta o turno: por algumas rodadas você fica bem mais pesado e o Corpo pesado pode passar do limite normal, mas fica mais lento.' },
+    expansion: {
+      name: 'Expansão',
+      desc: 'O corpo do Akimichi cresce até virar uma montanha. Grátis (6 de chakra), sem gastar o turno: por 3 rodadas você fica bem mais pesado e o Corpo pesado passa do limite normal, mas fica mais lento.',
+    },
     shadowClones: {
       name: 'Clones das Sombras',
-      desc: 'Grátis (6 de chakra, não gasta o turno): o próximo ataque sai inteiro e os clones repetem os golpes com uma parte do dano.',
+      desc: 'Grátis (6 de chakra), sem gastar o turno: o próximo ataque sai inteiro e os clones repetem os golpes com uma parte do dano.',
     },
     effort: {
       name: 'Esforço',
-      desc: 'Grátis (sem chakra, não gasta o turno), 1×/luta (+1 nos níveis 4 e 7): taijutsu, ninjutsu e genjutsu mais fortes por 3 rodadas, contando a da ativação.',
+      desc: 'Força de vontade no limite. Grátis e sem chakra, sem gastar o turno, 1×/luta (+1 nos níveis 4 e 7): taijutsu, ninjutsu e genjutsu mais fortes por 3 rodadas, contando a da ativação.',
     },
     beast: {
       name: 'Fera de quatro patas',
-      desc: 'Grátis (5 de chakra, não gasta o turno), 1×/luta (+1 no nível 7): por 3 rodadas, contando a da ativação, você fica mais rápido, o cão ataca mais vezes e a Substituição usa o cão como isca (não gasta usos).',
+      desc: 'Ninja e cão viram feras. Grátis (5 de chakra), sem gastar o turno, 1×/luta (+1 no nível 7): por 3 rodadas você fica mais rápido, o cão ataca mais vezes e serve de isca na Substituição (que não gasta uso).',
     },
     plague: {
       name: 'Praga',
-      desc: 'Grátis, não gasta o turno, 1×/luta (+1 no nível 7): por algumas rodadas, o Enxame prende o dobro de insetos e o vilão aguenta o dobro de insetos presos.',
+      desc: 'A colônia se espalha pelo inimigo. Grátis (6 de chakra), sem gastar o turno, 1×/luta (+1 no nível 7): por 3 rodadas o Enxame prende o dobro de insetos e o vilão aguenta o dobro presos. Quando acaba, o excesso some.',
     },
     seal: {
       name: 'Selamento',
-      desc: 'Grátis (6 de chakra, não gasta o turno), 1×/luta (+1 no nível 7): sela a próxima técnica do vilão, que sai da roleta dele por 2 rodadas (3 no nível 7). Um golpe carregado selado se perde.',
+      desc: 'O Uzumaki sela o que vem pela frente. Grátis (6 de chakra), sem gastar o turno, 1×/luta (+1 no nível 7): a próxima técnica do vilão sai da roleta dele por algumas rodadas. Um golpe carregado selado se perde.',
     },
     pills: {
       name: 'Pílulas do clã',
-      desc: 'Grátis, 1×/luta: gira a roleta das 3 pílulas; todas fortalecem o taijutsu por 3 rodadas e custam HP. Verde (a mais comum): um pouco mais forte. Amarela: bem mais forte e mais resistente. Vermelha (a mais rara): muito mais forte e mais rápida, mas deixa exausto quando acaba.',
+      desc: 'As pílulas secretas trocam HP por força. Grátis, 1×/luta: gira a roleta das 3 pílulas, que fortalecem o taijutsu por 3 rodadas. Verde, a mais comum: um pouco mais forte. Amarela: bem mais forte e resistente. Vermelha, a mais rara: muito mais forte e rápida, mas deixa exausto quando acaba.',
     },
     copy: {
       name: 'Cópia',
-      desc: 'Com o Sharingan, grátis (3 de chakra): no turno, copia a última técnica de dano do vilão; na reação, a que está vindo. A chance sobe com os tomoe. A cópia fica até o fim da luta (uma por vez).',
+      desc: 'O Sharingan grava o que vê. Com ele aceso, grátis (3 de chakra): no turno, tenta copiar a última técnica de dano do vilão; na reação, a que está vindo. A chance sobe com os tomoe, e a cópia fica até o fim da luta (uma por vez).',
     },
     transmission: {
       name: 'Transmissão mental',
-      desc: 'Grátis (5 de chakra, não gasta o turno), 1×/luta (+1 nos níveis 4 e 7): contra um golpe carregado, rola o acerto do genjutsu. Se pegar, o vilão perde o golpe e a vez.',
+      desc: 'O Yamanaka invade a mente no meio da concentração. Grátis (5 de chakra), sem gastar o turno, 1×/luta (+1 nos níveis 4 e 7): contra um golpe carregado, tenta pegar o vilão com o genjutsu; se pegar, ele perde o golpe e a vez.',
     },
   } as Record<string, { name: string; desc: string }>,
   /** Portão aberto pelo prodígio, pelo estágio (1, 2, 3). */
@@ -217,11 +240,11 @@ export const ptBR = {
   dojutsu: {
     sharingan: {
       name: 'Sharingan',
-      desc: 'Ativável de graça, sem gastar o turno (4 ck, −1 ck/rodada, 5 rodadas): taijutsu, ninjutsu, genjutsu e speed maiores, genjutsu mais eficiente e chance de ler o movimento (toma menos dano). Libera a Cópia. Evolui nos níveis 4 e 7.',
+      desc: 'O olho que vê através de tudo. Acende de graça, sem gastar o turno (4 de chakra e 1 por rodada, até 5 rodadas): taijutsu, ninjutsu, genjutsu e speed maiores, genjutsu mais certeiro e chance de ler o movimento do vilão (toma menos dano). Libera a Cópia e evolui nos níveis 4 e 7.',
     },
     byakugan: {
       name: 'Byakugan',
-      desc: 'Ativável de graça, sem gastar o turno (3 ck, −1 ck/rodada, 5 rodadas; 7 no nível 4): taijutsu não erra e fica mais forte, enxerga através da névoa, o genjutsu do vilão erra mais contra você e libera o Selo dos Pontos Vitais (e as 64 Palmas no nível 7).',
+      desc: 'O olho que enxerga os pontos de chakra. Acende de graça, sem gastar o turno (3 de chakra e 1 por rodada, até 5 rodadas; 7 no nível 4): o taijutsu não erra e fica mais forte, você enxerga através da névoa, o genjutsu do vilão erra mais e libera o Selo dos Pontos Vitais (e as 64 Palmas no nível 7).',
     },
   } as Record<string, { name: string; desc: string }>,
   sharinganStage: (n: number) => `${n} tomoe`,
@@ -317,10 +340,10 @@ export const ptBR = {
   } as Record<string, string>,
   /** Consumíveis na luta (ação "Usar item"). */
   consumables: {
-    soldierPill: { name: 'Pílula de soldado', desc: 'recupera bastante chakra' },
+    soldierPill: { name: 'Pílula de soldado', desc: 'devolve bastante chakra' },
     medKit: { name: 'Kit médico', desc: 'limpa os efeitos negativos' },
-    explosiveTag: { name: 'Selo explosivo', desc: 'dano que ignora a resistência' },
-    smokeBomb: { name: 'Bomba de fumaça', desc: 'esquiva garantida' },
+    explosiveTag: { name: 'Selo explosivo', desc: 'explode e ignora a resistência' },
+    smokeBomb: { name: 'Bomba de fumaça', desc: 'o próximo ataque erra' },
   } as Record<string, { name: string; desc: string }>,
   akatsuki: {
     hunted: 'Caçado',
@@ -350,9 +373,9 @@ export const ptBR = {
     speed: 'Speed',
   } as Record<string, string>,
   summons: {
-    toad: { name: 'Sapo', desc: 'Passiva: cada ataque seu que acerta causa um dano extra que ignora defesa, maior contra vilões fortes.' },
-    snake: { name: 'Cobra', desc: 'Passiva: acertos envenenam o alvo (o veneno cresce a cada rodada).' },
-    slug: { name: 'Lesma', desc: 'Passiva: cura uma parte do HP a cada rodada.' },
+    toad: { name: 'Sapo', desc: 'Contrato com os sapos: cada ataque seu que acerta traz um golpe do sapo, que ignora a defesa e pesa mais contra vilões fortes.' },
+    snake: { name: 'Cobra', desc: 'Contrato com as cobras: seus acertos envenenam, e o veneno piora a cada rodada.' },
+    slug: { name: 'Lesma', desc: 'Contrato com as lesmas: cura um pouco de HP a cada rodada e ajuda a curar o veneno.' },
   } as Record<string, { name: string; desc: string }>,
   /** Efeito atual da invocação, com o valor do nível. */
   summonEffects: {
@@ -623,17 +646,17 @@ export const ptBR = {
   },
   /** Itens que o jogador carrega, como aparecem na bolsa ninja da ficha. */
   bag: {
-    revive: { name: 'Vontade do Fogo', desc: 'Ao cair, volta com HP e chakra cheios.' },
-    coin: { name: 'Moeda viciada', desc: 'Fora de combate, gira de novo uma roleta (evento, item ou recompensa).' },
+    revive: { name: 'Vontade do Fogo', desc: 'A chama da Folha não se apaga: ao cair, você volta com HP e chakra cheios.' },
+    coin: { name: 'Moeda viciada', desc: 'Uma segunda chance no bolso: fora de combate, gira de novo uma roleta de evento, item ou recompensa.' },
     weights: {
       name: 'Pesos de treino',
-      desc: { equipped: 'Equipados: −2 de speed; +1 de taijutsu por vitória.', stored: 'Guardados.', removed: 'Tirados.' } as Record<string, string>,
+      desc: { equipped: 'Pesam no corpo: menos speed, mas cada vitória dá +1 de taijutsu.', stored: 'Guardados na bolsa.', removed: 'Tirados: o corpo fica leve de novo.' } as Record<string, string>,
     },
-    ninjaTool: { name: 'Ferramenta ninja', desc: (n: number) => `+${n} de dano base em todos os ataques.` },
+    ninjaTool: { name: 'Ferramenta ninja', desc: (n: number) => `Kunais e shurikens afiados: +${n} de dano base em todos os ataques.` },
     summon: { name: 'Contrato', desc: (animal: string) => `Invocação: ${animal}.` },
-    speedAmulet: { name: 'Amuleto de velocidade', desc: (n: number) => `Speed +${n}.` },
-    resistanceAmulet: { name: 'Amuleto de resistência', desc: (n: number) => `${n} amuleto(s): +2 numa resistência cada.` },
-    scrolls: { name: 'Upgrades', desc: (n: number) => `${n} nível(is) de upgrade genérico nas técnicas.` },
+    speedAmulet: { name: 'Amuleto de velocidade', desc: (n: number) => `Deixa os passos leves: speed +${n}.` },
+    resistanceAmulet: { name: 'Amuleto de resistência', desc: (n: number) => `${n} amuleto(s), cada um fortalecendo uma resistência.` },
+    scrolls: { name: 'Upgrades', desc: (n: number) => `${n} nível(is) de upgrade aplicados nas técnicas.` },
   },
   effects: {
     none: 'Nada muda.',
@@ -879,7 +902,7 @@ export const ptBR = {
     noElement: 'Sem afinidade elemental: só técnicas neutras.',
     // Ficha de técnica.
     techKind: (type: string, element: string) => (element ? `${type} de ${element}` : type),
-    damage: (dmg: number, hits: number) => (hits > 1 ? `${hits} golpes de ${dmg} de dano (uma rolagem para todos).` : `${dmg} de dano base.`),
+    damage: (dmg: number, hits: number) => (hits > 1 ? `${hits} golpes de ${dmg} de dano base (cada golpe rola o próprio acerto).` : `${dmg} de dano base.`),
     accuracy: (n: number) => (n >= 100 ? 'Não erra.' : `Precisão base ${n}.`),
     critBonus: 'Mais chance de crítico.',
     penetration: 'Ignora parte da resistência do alvo.',

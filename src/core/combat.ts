@@ -1712,10 +1712,6 @@ function hurt(s: BattleState, side: Side, amount: number, data: GameData): numbe
   return side === 'player' ? hurtPlayer(s, amount, data) : hurtVillain(s, amount);
 }
 
-/** Dano da técnica inteira (todos os golpes de uma vez), usado quando ela vence uma disputa ou é refletida. */
-function wholeTechDamage(s: BattleState, attacker: Side, tech: CombatTech, guard: Guard, extraMult: number, data: GameData): number {
-  return strikeDamage(s, attacker, { ...tech, baseDamage: tech.baseDamage * tech.hits }, guard, 1, extraMult, data).damage;
-}
 
 /** Ergue o escudo de uma barreira em `side` (substitui um escudo anterior). */
 function raiseShield(
@@ -1823,13 +1819,15 @@ function resolveClash(
   const loser = other(winner);
   const fireBonus = tech.element === 'fire' && loserTech.element === 'wind' ? data.balance.elements.fireAbsorbsWind : 1;
   const chargedMult = result === 'attacker' && charged ? data.balance.charged.damageMult : 1;
-  const amount = wholeTechDamage(s, winner, tech, 'passive', passPct * fireBonus * chargedMult, data);
-  s.log.push({ type: 'clashHit', target: loser, techniqueId: tech.id, damage: amount, passPct });
-  hurt(s, loser, shieldAbsorb(s, loser, amount, tech, rng, data), data);
-  if (s.status !== 'ongoing') return;
-  if (s.status !== 'ongoing') return;
-  applyElementalHit(s, loser, tech.element, 'hit', data, rng);
-  if (tech.onHit) applyOnHit(s, loser, tech, rng, data);
+  // Vencedor com vários golpes bate cada golpe (sem rolar acerto: a disputa já decidiu).
+  for (let i = 0; i < tech.hits; i++) {
+    const amount = strikeDamage(s, winner, tech, 'passive', 1, passPct * fireBonus * chargedMult, data).damage;
+    s.log.push({ type: 'clashHit', target: loser, techniqueId: tech.id, damage: amount, passPct });
+    hurt(s, loser, shieldAbsorb(s, loser, amount, tech, rng, data), data);
+    if (s.status !== 'ongoing') return;
+    applyElementalHit(s, loser, tech.element, 'hit', data, rng);
+    if (tech.onHit) applyOnHit(s, loser, tech, rng, data);
+  }
 }
 
 /**
@@ -3030,13 +3028,11 @@ function playerStrike(
   guard: Guard,
   rng: Rng,
   data: GameData,
-  rolled?: HitOutcome,
 ): { outcome: HitOutcome; dealt: number } {
   const { balance } = data;
   const hitP = playerHitChance(s, tech, data);
   const critP = techCritChance(s, tech, hitP, data);
-  // Golpes seguintes de um ataque múltiplo repetem o resultado do primeiro.
-  const outcome = rolled ?? playerRoll(s, () => rollHit(hitP, critP, rng), (o) => HIT_RANK[o]);
+  const outcome = playerRoll(s, () => rollHit(hitP, critP, rng), (o) => HIT_RANK[o]);
   s.playerFx.focusArmed = false;
   const critMult = outcome === 'crit' ? balance.crit.multiplier : 1;
   const { damage, elementMult } = strikeDamage(s, 'player', tech, guard, critMult, damageFactor, data);
@@ -3085,13 +3081,13 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
   const reaction = performReaction(s, 'player', reactionTech, false, chooseVillainReaction(s, incoming, rng, data), rng, data);
   if (reaction.kind === 'resolved' || s.status !== 'ongoing') return;
 
-  // Ataque múltiplo: acerto e crítico rolam uma vez, no primeiro golpe, e valem para todos.
-  let rolled: HitOutcome | undefined;
+  // Ataque múltiplo: cada golpe rola o próprio acerto e crítico; um erro não para os seguintes.
+  let anyHit = false;
   for (let i = 0; i < tech.hits && s.status === 'ongoing'; i++) {
-    const { outcome } = playerStrike(s, tech, tech.id, factorAt(i), i === 0 ? tech.chakraCost : 0, reaction.guard, rng, data, rolled);
-    rolled = outcome;
+    const { outcome } = playerStrike(s, tech, tech.id, factorAt(i), i === 0 ? tech.chakraCost : 0, reaction.guard, rng, data);
     if (s.status !== 'ongoing') return;
-    if (outcome === 'miss') break;
+    if (outcome === 'miss') continue;
+    anyHit = true;
     // Colônia (Aburame): cada golpe do Enxame que acerta prende insetos no vilão (o dobro com a Praga).
     if (p.passive === 'hive' && data.techniquesById[techId]?.line === 'swarm') {
       const add = balance.passives.hive.insectsPerHit * (fx.plagueTurns > 0 ? balance.plague.mult : 1);
@@ -3111,8 +3107,8 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
     applyOnHit(s, 'villain', tech, rng, data);
   }
 
-  // Sapo: um ataque que acerta (vários golpes ou clones contam uma vez) causa dano verdadeiro.
-  if (rolled !== undefined && rolled !== 'miss' && s.status === 'ongoing') {
+  // Sapo: um ataque com ao menos um golpe que acerta (vários golpes ou clones contam uma vez) causa dano verdadeiro.
+  if (anyHit && s.status === 'ongoing') {
     const damage = toadTrueDamage(p, v.def.hp, data);
     if (damage > 0) {
       s.log.push({ type: 'toad', damage });
@@ -3122,7 +3118,7 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
   }
 
   // Dupla (Inuzuka): depois de um ataque que acerta, o cão pode atacar também.
-  if (rolled !== undefined && rolled !== 'miss' && s.status === 'ongoing' && p.passive === 'duo') {
+  if (anyHit && s.status === 'ongoing' && p.passive === 'duo') {
     const cfg = balance.passives.duo;
     if (chance(s.playerFx.beastTurns > 0 ? balance.beast.duoChance : cfg.chance, rng)) {
       const dog: CombatTech = {
@@ -3302,11 +3298,9 @@ function resolveVillainAttack(
   const combat = villainCombatTech(s, tech);
   const reaction = performReaction(s, 'villain', combat, charged, choice, rng, data);
   if (reaction.kind === 'resolved' || s.status !== 'ongoing') return;
-  // Ataque múltiplo: acerto e crítico rolam uma vez, no primeiro golpe, e valem para todos.
-  let rolled: HitOutcome | undefined;
+  // Ataque múltiplo: cada golpe rola o próprio acerto e crítico; um erro não para os seguintes.
   for (let i = 0; i < combat.hits && s.status === 'ongoing'; i++) {
-    rolled = villainStrike(s, combat, charged, i === 0 ? chakra : 0, reaction.guard, rng, data, rolled);
-    if (rolled === 'miss') break;
+    villainStrike(s, combat, charged, i === 0 ? chakra : 0, reaction.guard, rng, data);
   }
 }
 
@@ -3318,7 +3312,6 @@ function villainStrike(
   guard: Guard,
   rng: Rng,
   data: GameData,
-  rolled?: HitOutcome,
 ): HitOutcome {
   const v = s.villain;
   const { balance } = data;
@@ -3333,9 +3326,7 @@ function villainStrike(
   // Golpe carregado não pode ser crítico.
   const critP = charged ? 0 : critChance(v.def.critBonus + scalpelCrit, balance.crit, hitP);
   let outcome: HitOutcome;
-  if (rolled) {
-    outcome = rolled;
-  } else if (v.fx.guaranteedCrit && !charged) {
+  if (v.fx.guaranteedCrit && !charged) {
     v.fx.guaranteedCrit = false;
     s.log.push({ type: 'guaranteedCrit', side: 'villain' });
     outcome = 'crit';

@@ -73,6 +73,16 @@ describe('disputa de ninjutsu', () => {
     expect(s1.player.hp).toBe(85);
   });
 
+  it('técnica de vários golpes que vence a disputa bate todos os golpes, não só o primeiro', () => {
+    const volley: VillainTechnique = { id: 'volley', type: 'ninjutsu', baseDamage: 12, hits: 3, chakraCost: 6, weight: 1 };
+    const s1 = villainAttacks(player('water'), fireVillain({ techniques: [volley] }), 'clash:waterBullet', [0.5, 0.1]);
+    expect(ofType(s1.log, 'clash')[0]!.result).toBe('attacker');
+    const hits = ofType(s1.log, 'clashHit');
+    expect(hits).toHaveLength(3);
+    expect(hits.every((h) => h.target === 'player' && h.damage === hits[0]!.damage)).toBe(true);
+    expect(s1.player.hp).toBe(100 - 3 * hits[0]!.damage);
+  });
+
   it('esmagadora: com o dobro do poder, o dano passa inteiro', () => {
     const tiny: VillainTechnique = { id: 'spit', type: 'ninjutsu', baseDamage: 2, chakraCost: 1, weight: 1 };
     const p = learnTechnique(player('fire'), 'rasengan', gameData);

@@ -136,37 +136,42 @@ describe('skill set por categoria, técnicas de nível e linhas', () => {
 });
 
 describe('ficha de técnica', () => {
-  it('golpes: acerto rola uma vez e vale para todos (Enxame do Aburame, 2 golpes; cada acerto prende um inseto)', () => {
+  it('golpes: cada golpe rola o próprio acerto (Enxame do Aburame, 2 golpes; cada acerto prende um inseto)', () => {
     const p = createPlayer(clan('aburame'), gameData);
-    const s1 = playRound(withInitiative(startBattle(p, testVillain())), 'tech:insectSwarm', seq(0.5, 0.01, 0.5, 0.5, 0.5), gameData);
+    const s1 = playRound(withInitiative(startBattle(p, testVillain())), 'tech:insectSwarm', seq(0.5, 0.5, 0.01, 0.5, 0.5), gameData);
     const hits = ofType(s1.log, 'attack').filter((a) => a.side === 'player');
     expect(hits.map((a) => a.outcome)).toEqual(['hit', 'hit']);
-    // 4 + 16 − 7 = 13 por golpe
-    expect(hits.map((a) => a.damage)).toEqual([13, 13]);
+    // 4 + 12 − 7 = 9 por golpe
+    expect(hits.map((a) => a.damage)).toEqual([9, 9]);
     expect(s1.villain.insects).toBe(2);
     // O Enxame não drena; a Colônia drena 1 por inseto no fim da rodada.
     expect(ofType(s1.log, 'chakraDrain')).toEqual([{ type: 'chakraDrain', amount: 2, source: 'hive' }]);
   });
 
-  it('Enxame sobe em linha: II com 5 de dano e 4 golpes, III com 6 de dano e 6 golpes', () => {
+  it('Enxame sobe em linha: +2 de dano e +1 golpe por nível (II 6×3, III 8×4)', () => {
     const p = { ...createPlayer(clan('aburame'), gameData), level: 7 };
     const two = upgradeTechnique(p, 'insectSwarm', gameData);
     expect(two.techniques).toContain('insectSwarm2');
     const three = upgradeTechnique(two, 'insectSwarm2', gameData);
     expect(three.techniques).toContain('insectSwarm3');
     expect([techniquesById.insectSwarm2, techniquesById.insectSwarm3].map((t) => [t!.baseDamage, t!.hits])).toEqual([
-      [5, 4],
-      [6, 6],
+      [6, 3],
+      [8, 4],
     ]);
   });
 
-  it('golpes: um erro no primeiro erra o ataque inteiro, e um crítico vale para todos', () => {
+  it('golpes: um erro não para os golpes seguintes; acerto e crítico rolam em cada golpe', () => {
     const p = createPlayer(clan('aburame'), gameData);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
-    const miss = ofType(playRound(s0, 'tech:insectSwarm', seq(0.01), gameData).log, 'attack').filter((a) => a.side === 'player');
-    expect(miss.map((a) => a.outcome)).toEqual(['miss']);
-    const crit = ofType(playRound(s0, 'tech:insectSwarm', seq(0.999), gameData).log, 'attack').filter((a) => a.side === 'player');
-    expect(crit.map((a) => a.outcome)).toEqual(['crit', 'crit']);
+    const outcomes = (rng: ReturnType<typeof seq>) =>
+      ofType(playRound(s0, 'tech:insectSwarm', rng, gameData).log, 'attack')
+        .filter((a) => a.side === 'player')
+        .map((a) => a.outcome);
+    expect(outcomes(seq(0.01))).toEqual(['miss', 'miss']);
+    // O primeiro erra e o segundo acerta: o inseto entra mesmo assim.
+    expect(outcomes(seq(0.01, 0.5))).toEqual(['miss', 'hit']);
+    expect(playRound(s0, 'tech:insectSwarm', seq(0.01, 0.5), gameData).villain.insects).toBe(1);
+    expect(outcomes(seq(0.999, 0.5))).toEqual(['crit', 'hit']);
   });
 
   it('precisão: cada técnica tem a sua (Faísca 80%, Punho de Rocha 95%)', () => {
@@ -671,7 +676,7 @@ describe('passivas e ativas de clã', () => {
     const p = createPlayer(clan('aburame'), gameData);
     expect([1, 7].map((level) => activeUses({ ...p, level }, 'plague', gameData))).toEqual([1, 2]);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 500, chakra: 0 })));
-    const s1 = playRound({ ...s0, villain: { ...s0.villain, insects: 9 } }, 'tech:insectSwarm', seq(0.5, 0.01, 0.5), gameData, { plague: true });
+    const s1 = playRound({ ...s0, villain: { ...s0.villain, insects: 9 } }, 'tech:insectSwarm', seq(0.5, 0.5, 0.01, 0.5), gameData, { plague: true });
     // 2 golpes × 2 insetos, acima do teto normal de 10.
     expect(s1.villain.insects).toBe(13);
     let s = s1;
@@ -773,7 +778,7 @@ describe('passivas e comportamentos dos vilões', () => {
     ]);
   });
 
-  it('Espelhos (Haku): as duas ações são um ataque só (uma reação, um acerto, um crítico)', () => {
+  it('Espelhos (Haku): as duas ações são um ataque só (uma reação; cada golpe rola o próprio acerto)', () => {
     const v = testVillain({
       hp: 200,
       passive: villainsById.haku!.passive,
@@ -784,7 +789,7 @@ describe('passivas e comportamentos dos vilões', () => {
     expect(ofType(s1.log, 'declare').filter((d) => d.side === 'villain')).toHaveLength(1);
     expect(ofType(s1.log, 'reaction').filter((r) => r.side === 'player')).toHaveLength(1);
     const miss = playRound(s0, 'rest', seq(0.01), gameData);
-    expect(ofType(miss.log, 'attack').map((a) => a.outcome)).toEqual(['miss']);
+    expect(ofType(miss.log, 'attack').map((a) => a.outcome)).toEqual(['miss', 'miss']);
   });
 
   it('Névoa oculta (Zabuza): começa na névoa, a chance de erro do jogador cresce 50% por 4 rodadas', () => {

@@ -122,6 +122,7 @@ import {
 import { clanSymbol, icon, ninjaPortrait, villainPortrait } from './art';
 import { defeat, installAudio, mood, setMusic, setSfx, victory, type Mood } from './audio';
 import {
+  lines,
   conditionChip,
   ELEMENT_COLORS,
   ELEMENT_ICON,
@@ -478,47 +479,72 @@ function techniqueRows(p: PlayerState): string {
     .join('');
 }
 
+interface PassiveEntry {
+  ico: string;
+  name: string;
+  desc: string;
+}
+
+/** Passiva da origem (uma entrada por mecânica, quando ela junta várias) e as do jinchuuriki. */
+function passiveTraitEntries(p: PlayerState): PassiveEntry[] {
+  const passive = S.passives[p.passive];
+  const traits = S.passiveTraits[p.passive] ?? (passive ? [passive] : []);
+  const out: PassiveEntry[] = traits.map((t) => ({ ico: clanSymbol(p.origin.lineageId), ...t }));
+  if (p.jinchuuriki) {
+    out.push({ ico: clanSymbol('jinchuuriki'), ...S.passives.jinchuuriki! });
+    out.push({ ico: icon('genjutsuImmune'), ...S.passives.innerDemon! });
+  }
+  return out;
+}
+
+/** Selo compacto de passiva, com a descrição na dica. */
+function passiveChip(e: PassiveEntry): string {
+  return `<span class="chip passive-chip"${tip(e.name, e.desc)}>${e.ico}${e.name}</span>`;
+}
+
+/** Dica do nome da linhagem: passivas, ativas, dōjutsu, despertar e talentos, um por linha. */
+function lineageTip(p: PlayerState): string {
+  return tip(originLabel(p.origin), lines(passiveEntries(p).map((e) => `<b>${e.name}</b> · ${e.desc}`)));
+}
+
 /**
  * Passivas e dōjutsu do jogador. `li`: linha completa (ficha); `p`: selo compacto com a descrição na dica (painéis).
  */
 function passiveItems(p: PlayerState, tag: 'li' | 'p'): string[] {
-  const item = (ico: string, name: string, desc: string) =>
-    tag === 'li'
-      ? `<li${tip(name, desc)}><span class="pi-ico">${ico}</span><span><b>${name}</b> · ${desc}</span></li>`
-      : `<span class="chip passive-chip"${tip(name, desc)}>${ico}${name}</span>`;
-  const out: string[] = [];
-  const passive = S.passives[p.passive];
-  if (passive) out.push(item(clanSymbol(p.origin.lineageId), passive.name, passive.desc));
+  return passiveEntries(p).map((e) =>
+    tag === 'li' ? `<li${tip(e.name, e.desc)}><span class="pi-ico">${e.ico}</span><span><b>${e.name}</b> · ${e.desc}</span></li>` : passiveChip(e),
+  );
+}
+
+function passiveEntries(p: PlayerState): PassiveEntry[] {
+  const out: PassiveEntry[] = passiveTraitEntries(p);
+  const item = (ico: string, name: string, desc: string) => out.push({ ico, name, desc });
   const active = p.active ? S.actives[p.active] : null;
   if (active) {
     const stage = gatesStage(p, data);
     const next = data.balance.gates.stages[stage];
     const gates = p.active === 'gates' ? ` (${stage ? S.gatesStage(stage) : '—'}${next ? ` · ${S.ui.gatesLocked(next.minTaijutsu)}` : ''})` : '';
     const ico = ACTIVE_ICON[p.active!] ?? 'ninjutsu';
-    out.push(item(icon(ico), active.name + gates, active.desc));
+    item(icon(ico), active.name + gates, active.desc);
   }
   if (p.dojutsu) {
     const d = S.dojutsu[p.dojutsu]!;
     const stage = sharinganStage(p, data);
-    out.push(item(icon(p.dojutsu), stage ? `${d.name} (${S.sharinganStage(stage)})` : d.name, d.desc));
+    item(icon(p.dojutsu), stage ? `${d.name} (${S.sharinganStage(stage)})` : d.name, d.desc);
   }
   // Ativas extras do kit: Pílulas do clã (Akimichi) e Cópia (Uchiha).
-  if (p.active === 'expansion') out.push(item(icon('pill'), S.actives.pills!.name, S.actives.pills!.desc));
-  if (p.dojutsu === 'sharingan') out.push(item(icon('sharingan'), S.actives.copy!.name, S.actives.copy!.desc));
+  if (p.active === 'expansion') item(icon('pill'), S.actives.pills!.name, S.actives.pills!.desc);
+  if (p.dojutsu === 'sharingan') item(icon('sharingan'), S.actives.copy!.name, S.actives.copy!.desc);
   // Despertar já alcançado (níveis 4 e 7).
   const awakening = S.awakening[p.origin.lineageId ?? 'common'] ?? {};
   for (const level of [4, 7]) {
-    if (p.level >= level && awakening[level]) out.push(item(clanSymbol(p.origin.lineageId), S.ui.awakeningTitle(level), awakening[level]!));
+    if (p.level >= level && awakening[level]) item(clanSymbol(p.origin.lineageId), S.ui.awakeningTitle(level), awakening[level]!);
   }
-  if (p.jinchuuriki) {
-    out.push(item(clanSymbol('jinchuuriki'), S.passives.jinchuuriki!.name, S.passives.jinchuuriki!.desc));
-    out.push(item(icon('genjutsuImmune'), S.passives.innerDemon!.name, S.passives.innerDemon!.desc));
-  }
-  if (p.focusUses > 0) out.push(item(icon('focus'), S.talents.focus.name, S.talents.focus.desc(p.focusUses)));
-  if (p.substitutionBonus > 0) out.push(item(icon('substitution'), S.talents.substitution.name, S.talents.substitution.desc(p.substitutionBonus)));
-  if (p.shadowClonesLevel > 0) out.push(item(icon('clones'), S.talents.shadowClones.name, S.talents.shadowClones.desc(p.shadowClonesLevel)));
-  if (p.glimmerLevel > 0) out.push(item(icon('amuletSpeed'), S.talents.glimmer.name, S.talents.glimmer.desc(p.glimmerLevel)));
-  if (p.pendingUpgrades > 0) out.push(item(icon('scroll'), S.ui.upgradeTitle, S.ui.upgradesPending(p.pendingUpgrades)));
+  if (p.focusUses > 0) item(icon('focus'), S.talents.focus.name, S.talents.focus.desc(p.focusUses));
+  if (p.substitutionBonus > 0) item(icon('substitution'), S.talents.substitution.name, S.talents.substitution.desc(p.substitutionBonus));
+  if (p.shadowClonesLevel > 0) item(icon('clones'), S.talents.shadowClones.name, S.talents.shadowClones.desc(p.shadowClonesLevel));
+  if (p.glimmerLevel > 0) item(icon('amuletSpeed'), S.talents.glimmer.name, S.talents.glimmer.desc(p.glimmerLevel));
+  if (p.pendingUpgrades > 0) item(icon('scroll'), S.ui.upgradeTitle, S.ui.upgradesPending(p.pendingUpgrades));
   return out;
 }
 
@@ -544,9 +570,9 @@ function diffChip(d: Difficulty): string {
 }
 
 function jinChip(p: PlayerState): string {
-  return p.jinchuuriki
-    ? `<span class="chip jin"${tip(S.passives.jinchuuriki!.name, S.passives.jinchuuriki!.desc)}>${clanSymbol('jinchuuriki')}${S.origin.jinchuuriki}</span>`
-    : '';
+  if (!p.jinchuuriki) return '';
+  const body = lines([S.passives.jinchuuriki!, S.passives.innerDemon!].map((t) => `<b>${t.name}</b> · ${t.desc}`));
+  return `<span class="chip jin"${tip(S.origin.jinchuuriki, body)}>${clanSymbol('jinchuuriki')}${S.origin.jinchuuriki}</span>`;
 }
 
 function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
@@ -556,7 +582,7 @@ function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
     <div class="panel-head">
       ${avatar(p)}
       <div class="panel-id">
-        <b class="name">${originLabel(p.origin)}</b>
+        <b class="name"${lineageTip(p)}>${originLabel(p.origin)}</b>
         <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${p.affinity ? elChip(p.affinity) : `<span class="chip"${tip(S.ui.noAffinity, S.tips.noElement)}>${S.ui.noAffinity}</span>`}${jinChip(p)}${camp ? diffChip(camp.difficulty) : ''}</div>
       </div>
       <button class="btn small sheet-btn" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button>
@@ -1357,11 +1383,12 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       <div id="dice" class="dice"></div>
       <ol id="log" class="log"></ol>
       <section class="card player-mini" id="pcard">
-        <div class="panel-head">${avatar(c.player)}<div class="panel-id"><b class="name">${S.ui.you} · ${originLabel(c.origin)}</b>
+        <div class="panel-head">${avatar(c.player)}<div class="panel-id"><b class="name"${lineageTip(c.player)}>${S.ui.you} · ${originLabel(c.origin)}</b>
           <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elChip(c.player.affinity)}${jinChip(c.player)}</div></div>
           <button class="btn small sheet-btn" data-sheet aria-label="${S.ui.sheet}">${icon('scroll')}</button></div>
         ${bar('hp', state.player.hp, state.player.maxHp)}
         ${bar('ck', state.player.chakra, state.player.maxChakra)}
+        <div class="passive-row">${passiveTraitEntries(c.player).map(passiveChip).join('')}</div>
         <div class="badges" id="pbadges"></div>
       </section>
       <div id="actions" class="actions"></div>

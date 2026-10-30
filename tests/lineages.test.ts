@@ -254,9 +254,9 @@ describe('Correções da v0.22.1', () => {
     const p = createPlayer(clan('aburame'), gameData);
     const start = (chakra: number) =>
       startBattle({ ...p, chakra }, testVillain({ techniques: [punch] }), { interactive: true, villainStartsFirst: true });
-    // Enxame custa 3 e a Substituição 2: com 4 não dá para os dois.
-    expect(playRound(start(4), 'tech:insectSwarm', seq(0.5), gameData).pending?.options ?? []).not.toContain('substitution');
-    expect(playRound(start(5), 'tech:insectSwarm', seq(0.5), gameData).pending?.options).toContain('substitution');
+    // Enxame custa 5 e a Substituição 2: com 6 não dá para os dois.
+    expect(playRound(start(6), 'tech:insectSwarm', seq(0.5), gameData).pending?.options ?? []).not.toContain('substitution');
+    expect(playRound(start(7), 'tech:insectSwarm', seq(0.5), gameData).pending?.options).toContain('substitution');
     // Taijutsu básico (custo 0) sempre disponível, mesmo sem chakra.
     const empty = withInitiative(startBattle({ ...p, chakra: 0 }, testVillain()));
     expect(availableActions(empty, gameData)).toContain('tech:basicTaijutsu');

@@ -123,7 +123,7 @@ senão               → erro (dano 0)
 
 - Precisão padrão de uma técnica: **85%**. Cada técnica tem a sua (ver a ficha em [tecnicas.md](tecnicas.md)).
 - Penalidades comuns: Atordoado −10, passiva Yamanaka −10 nos ataques do vilão. A névoa do Zabuza multiplica a chance de **erro** por 1,5.
-- Técnicas com vários golpes rolam acerto e crítico **uma vez**, no começo, e o resultado vale para todos os golpes: erra tudo, acerta tudo ou critica tudo.
+- Técnicas com vários golpes rolam acerto e crítico **em cada golpe**: um golpe que erra não impede os seguintes. A reação do alvo acontece uma vez só, antes dos golpes. O que vale "por ataque que acerta" (sapo, cão do Inuzuka) conta se ao menos um golpe acertou. Vale para o jogador, os clones e os vilões (Espelhos do Haku).
 - Genjutsu usa uma rolagem própria (ver [efeitos.md](efeitos.md#efeitos-de-genjutsu)) e não tem crítico.
 - O **Foco** (guru) soma +25% à chance de crítico do próximo ataque, ainda limitada a 50% e à chance de acerto.
 - O **Gênio** (Nara) gira a roleta duas vezes e fica com o melhor resultado (crítico > acerto > erro).
@@ -187,6 +187,7 @@ peso_anular   = 0,5 × poder_atacante × poder_defensor
 - Se o **defensor** vence, é um contra-ataque: o jutsu dele atinge o atacante.
 - O Gênio do Nara vale na roleta da disputa (fica com o resultado melhor para ele).
 - O dano que passa pela disputa não rola acerto nem crítico. Os efeitos de chance no acerto (queimar, atordoar) rolam normalmente.
+- Vencedor com **vários golpes** bate **cada golpe** com a parte que passa (o status de ataque e a resistência contam em cada golpe), não um golpe só.
 - Na tela: um cabo de guerra com a cor de cada elemento e a fatia de anulação no meio.
 
 Exemplo (Ninjutsu 10 dos dois lados): Projétil d'Água I (11 + 5 = 16, ×1,5 por vantagem = **24**) contra Inferno da Fênix III (34 + 5 = **39**). Água vence em ~22%, anulam em ~18%, fogo vence em ~59%. A vantagem elemental pesa, mas não transforma um jutsu básico num grande.
