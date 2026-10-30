@@ -36,7 +36,7 @@ Fichas dos vilões da campanha: status, moveset, passiva, versão hardcore, comp
 
 Calibrados na simulação para que o dano médio fique perto do da v0.9: o ataque de cada tipo saiu do `baseDamage` das técnicas (novo dano base = antigo + 1 − ataque do tipo, e depois +1 no ataque de taijutsu e ninjutsu para compensar as reações). A resistência física fica uns 15% acima da antiga defesa de taijutsu; a mental, na antiga defesa de genjutsu ÷ 0,7 (o jogador quase sempre Resiste, a 70%).
 
-| # | Vilão | Elemento | HP | Chakra | Speed | Tai | Nin | Gen | Res. física | Res. mental | Crítico extra | XP |
+| # | Vilão | Elemento | HP | Chakra | Speed | Taijutsu | Ninjutsu | Genjutsu | Res. física | Res. mental | Crítico extra | XP |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Mizuki | Vento | 70 | 10 | 9 | 7 | 5 | 3 | 8 | 9 | — | 100 |
 | 2a | Haku | Água | 80 | 18 | 14 | 7 | 9 | 6 | 8 | 13 | +5% | 125 |

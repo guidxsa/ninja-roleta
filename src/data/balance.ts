@@ -108,32 +108,53 @@ export const balance = {
 
   // Passivas e ativas de linhagem (origens.md).
   passives: {
-    // Comum: +25% de XP e, a cada nível, +1 no maior status de ataque (empate: tai, nin, gen).
+    // Comum: +25% de XP e, a cada nível, +1 no maior status de ataque (empate: taijutsu, ninjutsu, genjutsu).
     determination: { xpBonusPct: 0.25, offensePerLevel: 1 },
     // Gênio (Nara): vê a próxima ação do vilão e, `uses` vezes por luta (+1 em cada nível de
     // `extraUseLevels`), arma de graça a próxima roleta dele: gira duas vezes e fica com a melhor.
     genius: { uses: 2, extraUseLevels: [4, 7] },
-    heavyBody: { base: 0.7, perHpPct: 0.4 },
+    // Corpo pesado (Akimichi): peso = HP máximo (não muda com o HP atual). Pela razão peso do Akimichi ÷ HP máximo
+    // do vilão, o taijutsu ganha o multiplicador do maior degrau alcançado (nunca menos que ×1). A Expansão libera
+    // os degraus de `expansionTable` acima do teto normal.
+    heavyBody: {
+      table: [
+        { ratio: 1, mult: 1.05 },
+        { ratio: 1.25, mult: 1.1 },
+        { ratio: 1.5, mult: 1.2 },
+        { ratio: 2, mult: 1.3 },
+      ],
+      expansionTable: [
+        { ratio: 2.5, mult: 1.4 },
+        { ratio: 3, mult: 1.5 },
+      ],
+    },
     mindReading: { villainHitPenalty: 0.1 },
-    // Colônia (Aburame): cada golpe que acerta drena chakra e deixa `insectsPerHit` insetos no vilão (até `maxInsects`).
-    hive: { chakraDrainPerHit: 2, insectsPerHit: 1, maxInsects: 10 },
+    // Colônia (Aburame): cada golpe do Enxame que acerta deixa `insectsPerHit` insetos no vilão (até `maxInsects`);
+    // no fim de cada rodada, cada inseto preso drena `chakraPerInsect` de chakra do vilão.
+    hive: { insectsPerHit: 1, maxInsects: 10, chakraPerInsect: 1 },
     duo: { chance: 0.25, damagePct: 0.4 },
     genjutsuResistance: { bonus: 6 },
     preciseFist: { penetration: 0.3 },
     vitality: { chakraPerTurn: 1, hpPctPerTurn: 0.02 },
   },
   // Expansão (Akimichi): escolha grátis; vale `turns` rodadas, contando a da ativação.
-  expansion: { chakraCost: 6, turns: 3, taijutsuMult: 1.5, speedPenalty: 3 },
+  // Expansão (Akimichi): multiplica o peso do Corpo pesado (sem mudar o HP) e libera os degraus acima do teto.
+  expansion: { chakraCost: 6, turns: 3, weightMult: 1.5, speedPenalty: 3 },
   // Clones das Sombras (premium do guru): o ataque principal sai inteiro e cada clone repete os golpes com
   // `damagePct` do dano. Clones = baseClones + (nível − 1).
   shadowClones: { chakraCost: 6, damagePct: 0.35, baseClones: 2 },
   // Ativas das linhagens sem ativa (origens.md). Todas são escolhas grátis; as com duração contam a rodada da ativação.
-  // Esforço (comum): +`offenseBonus` em tai/nin/gen; `uses` por luta, +1 em cada nível de `extraUseLevels`.
+  // Esforço (comum): +`offenseBonus` em taijutsu/ninjutsu/genjutsu; `uses` por luta, +1 em cada nível de `extraUseLevels`.
   effort: { chakraCost: 0, turns: 3, offenseBonus: 3, uses: 1, extraUseLevels: [4, 7] },
   // Fera de quatro patas (Inuzuka): speed +`speedBonus`, Dupla com `duoChance` e Substituição sem gastar usos.
   beast: { chakraCost: 5, turns: 3, speedBonus: 3, duoChance: 0.6, uses: 1, extraUseLevels: [7] },
   // Devorar (Aburame): cada inseto drena `chakraPerInsect`; os que sobram com o vilão sem chakra causam `damagePerInsect`.
-  devour: { chakraCost: 3, chakraPerInsect: 3, damagePerInsect: 2 },
+  // Praga (Aburame, ativa grátis): por `turns` rodadas (contando a da ativação), os insetos por acerto e o teto
+  // de insetos são multiplicados por `mult`. Ao acabar, o excesso cai para o teto normal.
+  plague: { chakraCost: 6, turns: 3, mult: 2, uses: 1, extraUseLevels: [7] },
+  // Devorar (Aburame, técnica de ninjutsu): custa `chakraCostPerInsect` por inseto; cada inseto drena
+  // `chakraPerInsect` do vilão e os que sobram com ele sem chakra causam `damagePerInsect` de dano direto.
+  devour: { chakraCostPerInsect: 1, chakraPerInsect: 3, damagePerInsect: 2 },
   // Transmissão mental (Yamanaka): contra golpe carregado, rola o acerto de genjutsu; pegou, o vilão perde o golpe e a vez.
   transmission: { chakraCost: 5, uses: 1, extraUseLevels: [4, 7] },
   // Cópia (Uchiha, com o Sharingan): cada tentativa custa `chakraCost`; a chance vem do estágio do Sharingan.
@@ -158,9 +179,9 @@ export const balance = {
   awakening: {
     common: { comeback: { level: 4, hpBelowPct: 0.25, healPct: 0.15 }, effort: { level: 7, offenseBonus: 5, turns: 4 } },
     nara: { shadow: { level: 4, strengthBonus: 1 }, strangle: { level: 7, hpPct: 0.05 } },
-    akimichi: { heavyBody: { level: 4, minMult: 0.8 }, expansion: { level: 7 } },
+    akimichi: { heavyBody: { level: 4, weightMult: 1.1 }, expansion: { level: 7 } },
     yamanaka: { mindReading: { level: 4, villainHitPenalty: 0.15 }, possession: { level: 7, selfDamageMult: 1.25 } },
-    aburame: { colony: { level: 4, maxInsects: 15, swarmInsectsPerHit: 2 }, devour: { level: 7, chakraPerInsect: 4, damagePerInsect: 3 } },
+    aburame: { colony: { level: 4, maxInsects: 15 }, devour: { level: 7, chakraPerInsect: 4, damagePerInsect: 3 } },
     inuzuka: { duo: { level: 4, damagePct: 0.6 }, beast: { level: 7, chakraCost: 3, turns: 4 } },
     taijutsuProdigy: { force: { level: 4, chanceBonus: 0.1 }, gates: { level: 7, usesPerFight: 2 } },
     hyuuga: { byakugan: { level: 4, duration: 7 } },
@@ -199,7 +220,7 @@ export const balance = {
 
   revive: { initialItems: 1 },
 
-  // 1 estágio de status: +1 em tai/nin/gen/speed e nas resistências; HP e chakra máximos iguais a uma subida de nível.
+  // 1 estágio de status: +1 em taijutsu/ninjutsu/genjutsu/speed e nas resistências; HP e chakra máximos iguais a uma subida de nível.
   statStage: { taijutsu: 1, ninjutsu: 1, genjutsu: 1, speed: 1, physical: 1, mental: 1 },
 
   // Níveis de técnica (tecnicas.md#níveis-de-técnica). Teto = 1 + floor((nível do personagem − 1) / levelsPerTier):

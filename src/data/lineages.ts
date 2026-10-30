@@ -3,10 +3,10 @@ import type { LineageDef } from '../core/types';
 
 // Origens (docs/origens.md). Textos visíveis ficam em strings/ptBR.ts.
 // Uma roleta só: comum 30%, clãs 40% (8 cada), raras 30%.
-// Status iniciais absolutos com o orçamento de referência de 90 pontos: tai/nin/gen e as resistências valem 1,
+// Status iniciais absolutos com o orçamento de referência de 90 pontos: taijutsu/ninjutsu/genjutsu e as resistências valem 1,
 // speed 1,5, 10 de HP valem 1 e 2 de chakra valem 1. Exceções calibradas na simulação (v0.18): Nara, Yamanaka e
 // Uchiha acima (genjutsu e resistência mental valem menos na prática); prodígio, Akimichi, Inuzuka e Uzumaki abaixo.
-// Kit inicial de todos: Punho de Chakra e o ninjutsu básico do elemento (se a origem usa ninjutsu).
+// Kit inicial de todos: Taijutsu básico e o ninjutsu básico do elemento (se a origem usa ninjutsu).
 
 export const lineages: LineageDef[] = [
   {
@@ -54,12 +54,12 @@ export const lineages: LineageDef[] = [
     id: 'aburame',
     tier: 'clan',
     weight: 8,
-    stats: { taijutsu: 8, ninjutsu: 12, genjutsu: 10, speed: 8, hp: 110, chakra: 34 },
+    stats: { taijutsu: 8, ninjutsu: 16, genjutsu: 6, speed: 8, hp: 110, chakra: 34 },
     resistance: { physical: 9, mental: 11 },
     affinity: { kind: 'rolled' },
     passive: 'hive',
-    active: 'devour',
-    startingTechniques: ['insectSwarm'],
+    active: 'plague',
+    startingTechniques: ['insectSwarm', 'insectDevour'],
   },
   {
     id: 'inuzuka',

@@ -4,6 +4,8 @@ Regras centrais que valem para todo combate: ficha de status, roleta, restauraç
 
 ## Roleta e RNG
 
+Na tela, as roletas e as dicas não mostram porcentagens nem contas: as técnicas mostram **dano base** e **precisão base**, e os efeitos são descritos em palavras. Os números ficam nestes docs e em `balance`.
+
 - Toda decisão aleatória passa por uma **roleta**: uma lista de fatias (rótulo, peso, efeito) e um `rng()` injetável que devolve a fatia sorteada.
 - A roleta é visível por padrão (animação). Configuração para desligar: modo "resultado instantâneo".
 - Funções do `core` nunca chamam `Math.random`; recebem o `rng`, para testes com seed.
@@ -66,7 +68,7 @@ O Corpo de ferro (prodígio do taijutsu) faz Resistir usar 100% da física, mas 
 - **Corpo Cintilante** (premium do guru, [tecnicas.md](tecnicas.md#premium-guru)): o jogador age primeiro na 1ª rodada, sem mudar a iniciativa sorteada.
 - Na sua ação, o personagem escolhe:
   - **Técnica** (de uma das categorias do skill set, ver [tecnicas.md](tecnicas.md)).
-  - **Ativas de linhagem** (Portões, Expansão, Pílulas do clã, Sharingan, Cópia, Byakugan, Esforço, Fera de quatro patas, Devorar, Transmissão mental, Selamento, Sombra costurada) são todas **escolhas grátis**: feitas junto com a ação, sem gastar o turno, desde que haja chakra para a ativa, a ação e as outras ativas da rodada. Foco e Gênio também são grátis. O que a ativa liga já vale para a ação da mesma rodada: com o Sharingan aceso agora, dá para usar o Tsukuyomi ou a Cópia nesse turno.
+  - **Ativas de linhagem** (Portões, Expansão, Pílulas do clã, Sharingan, Cópia, Byakugan, Esforço, Fera de quatro patas, Praga, Transmissão mental, Selamento, Sombra costurada) são todas **escolhas grátis**: feitas junto com a ação, sem gastar o turno, desde que haja chakra para a ativa, a ação e as outras ativas da rodada. Foco e Gênio também são grátis. O que a ativa liga já vale para a ação da mesma rodada: com o Sharingan aceso agora, dá para usar o Tsukuyomi ou a Cópia nesse turno.
   - **Ações universais**: Concentrar chakra, Postura defensiva, Usar item (ver [tecnicas.md](tecnicas.md#ações-universais)).
 
 ## Reações

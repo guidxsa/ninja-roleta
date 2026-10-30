@@ -5,7 +5,7 @@ import type { TechniqueDef } from '../core/types';
 // Ficha: dano por golpe, golpes, chakra, precisão (padrão 85%), bônus de crítico, penetração,
 // efeito no acerto e prioridade. Todo ponto forte tem um custo.
 
-// Punho de Chakra (`BASIC_TAIJUTSU`): todo personagem nasce com ele.
+// Taijutsu básico (`BASIC_TAIJUTSU`): todo personagem nasce com ele.
 
 /** Nível I das linhas elementais de ataque: kit inicial da afinidade. */
 const elementalBasics: TechniqueDef[] = [
@@ -29,6 +29,9 @@ export const lineTechniques: TechniqueDef[] = [
   { id: 'lightningBlade', type: 'ninjutsu', element: 'lightning', baseDamage: 38, chakraCost: 11, accuracy: 0.7, penetration: 0.3, line: 'lightning', lineLevel: 3 },
   { id: 'earthDragon', type: 'ninjutsu', element: 'earth', baseDamage: 32, chakraCost: 9, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.25 }, line: 'earth', lineLevel: 3 },
   { id: 'greatWaterfall', type: 'ninjutsu', element: 'water', baseDamage: 33, chakraCost: 10, priority: true, line: 'water', lineLevel: 3 },
+
+  { id: 'insectSwarm2', type: 'ninjutsu', element: null, baseDamage: 5, hits: 4, chakraCost: 4, line: 'swarm', lineLevel: 2, lineages: ['aburame'] },
+  { id: 'insectSwarm3', type: 'ninjutsu', element: null, baseDamage: 6, hits: 6, chakraCost: 5, line: 'swarm', lineLevel: 3, lineages: ['aburame'] },
 
   { id: 'rasengan2', type: 'ninjutsu', element: null, baseDamage: 34, chakraCost: 10, clashBonus: 0.25, premium: true, line: 'rasengan', lineLevel: 2 },
   { id: 'rasengan3', type: 'ninjutsu', element: null, baseDamage: 44, chakraCost: 13, clashBonus: 0.25, premium: true, line: 'rasengan', lineLevel: 3 },
@@ -63,7 +66,7 @@ export const premiumTechniques: TechniqueDef[] = [
 export const levelTechniques: TechniqueDef[] = [
   { id: 'whirlwindCombo', type: 'taijutsu', element: null, baseDamage: 16, chakraCost: 5, accuracy: 0.9, minLevel: 4, lineages: ['taijutsuProdigy'] },
   { id: 'hiddenLotus', type: 'taijutsu', element: null, baseDamage: 25, chakraCost: 9, accuracy: 0.8, critBonus: 0.1, minLevel: 7, lineages: ['taijutsuProdigy'] },
-  { id: 'humanBoulder', type: 'taijutsu', element: null, baseDamage: 24, chakraCost: 6, accuracy: 0.8, onHit: { effect: 'stun', chance: 0.2 }, minLevel: 4, lineages: ['akimichi'] },
+  { id: 'humanBoulder', type: 'taijutsu', element: null, baseDamage: 20, chakraCost: 6, accuracy: 0.8, onHit: { effect: 'stun', chance: 0.2 }, minLevel: 4, lineages: ['akimichi'] },
   // Rotação (Hyuuga): barreira neutra; se aguentar, devolve metade do dano.
   { id: 'rotation', type: 'ninjutsu', element: null, baseDamage: 0, chakraCost: 5, barrier: 26, reflectPct: 0.5, minLevel: 4, lineages: ['hyuuga'] },
 
@@ -85,8 +88,10 @@ export const lineageTechniques: TechniqueDef[] = [
   { id: 'chakraBlockStrike', type: 'taijutsu', element: null, baseDamage: 6, chakraCost: 0, accuracy: 1, requiresDojutsu: 'byakugan', chakraDrain: 6, lineages: ['hyuuga'] },
   // Imitação de Sombra (Nara): ninjutsu sem dano que aprisiona, usando ninjutsu na fórmula do genjutsu.
   { id: 'shadowImitation', type: 'ninjutsu', element: null, baseDamage: 0, chakraCost: 5, accuracy: 0.8, mental: 'prison', mentalStrength: 1, mentalPower: 0, mentalStat: 'ninjutsu', lineages: ['nara'] },
-  // Enxame (Aburame): 4 golpes pequenos; cada acerto drena chakra pela Colmeia.
-  { id: 'insectSwarm', type: 'ninjutsu', element: null, baseDamage: 5, hits: 4, chakraCost: 5, lineages: ['aburame'] },
+  // Enxame (Aburame): golpes pequenos; cada acerto prende um inseto da Colônia no vilão. Sobe em linha (+golpes).
+  { id: 'insectSwarm', type: 'ninjutsu', element: null, baseDamage: 4, hits: 2, chakraCost: 3, line: 'swarm', lineLevel: 1, lineages: ['aburame'] },
+  // Devorar (Aburame): consome os insetos presos; custo pelo número de insetos, sem rolar acerto.
+  { id: 'insectDevour', type: 'ninjutsu', element: null, baseDamage: 0, chakraCost: 0, devour: true, lineages: ['aburame'] },
   { id: 'basicGenjutsu', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 3, mental: 'prison', mentalStrength: 1, mentalPower: 0, lineages: ['uchiha'] },
   // Ilusão da Dor (Uchiha): genjutsu que fere de verdade (base + genjutsu − resistência mental usada).
   { id: 'painIllusion', type: 'genjutsu', element: null, baseDamage: 15, chakraCost: 3, lineages: ['uchiha'] },

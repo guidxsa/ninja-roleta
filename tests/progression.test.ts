@@ -201,7 +201,7 @@ describe('itens', () => {
     // Nível 1: teto no nível I, nada sobe. O upgrade vira XP (30, com a Determinação: 37).
     expect(upgradeOptions(step.player, gameData)).toEqual([]);
     expect(forfeitUpgrade(step.player, gameData)).toMatchObject({ player: { pendingUpgrades: 0, xp: 37 }, effect: { kind: 'upgradeForfeit', xp: 37 } });
-    // Nível 4: o Punho de Chakra sobe genericamente (+3 de dano; continua grátis).
+    // Nível 4: o Taijutsu básico sobe genericamente (+3 de dano; continua grátis).
     const lv4 = { ...step.player, level: 4 };
     expect(upgradeOptions(lv4, gameData)).toEqual(['basicTaijutsu', 'fireSpark']);
     const up = chooseUpgrade(lv4, 'basicTaijutsu', gameData);
@@ -560,8 +560,8 @@ describe('nível e XP', () => {
     const p = { ...createPlayer(common, gameData), xp: 100 };
     const up = applyLevelUp(p, gameData);
     expect(up.offense).toEqual({ taijutsu: 11, ninjutsu: 10, genjutsu: 10 });
-    const nin = applyLevelUp({ ...p, offense: { taijutsu: 10, ninjutsu: 13, genjutsu: 12 } }, gameData);
-    expect(nin.offense).toEqual({ taijutsu: 10, ninjutsu: 14, genjutsu: 12 });
+    const ninjutsuUp = applyLevelUp({ ...p, offense: { taijutsu: 10, ninjutsu: 13, genjutsu: 12 } }, gameData);
+    expect(ninjutsuUp.offense).toEqual({ taijutsu: 10, ninjutsu: 14, genjutsu: 12 });
   });
 
   it('vitória recupera 25% do HP e do chakra máximos, sem passar do máximo', () => {

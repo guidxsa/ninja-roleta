@@ -105,7 +105,7 @@ export function createPlayer(
   let maxChakra = st.chakra;
   if (origin.jinchuuriki) maxChakra = Math.floor(maxChakra * (1 + balance.jinchuuriki.chakraBonusPct));
 
-  // Kit: Punho de Chakra, ninjutsu básico do elemento (se usa ninjutsu) e as técnicas da linhagem.
+  // Kit: Taijutsu básico, ninjutsu básico do elemento (se usa ninjutsu) e as técnicas da linhagem.
   const kit = [BASIC_TAIJUTSU];
   const basic = origin.affinity && !forbidden.includes('ninjutsu') ? elementalBasic(origin.affinity, data) : undefined;
   if (basic) kit.push(basic.id);
@@ -285,7 +285,7 @@ export function nextLineTechnique(tech: TechniqueDef, data: GameData): Technique
 
 /** Estados elementais não sobem; linhas sobem até o último nível; o resto, até o teto. */
 function canUpgrade(player: PlayerState, tech: TechniqueDef, data: GameData): boolean {
-  if (tech.state || player.forbiddenAttackTypes.includes(tech.type)) return false;
+  if (tech.state || tech.devour || player.forbiddenAttackTypes.includes(tech.type)) return false;
   if (techniqueLevel(player, tech.id, data) + 1 > techniqueTier(player, data)) return false;
   return tech.line ? nextLineTechnique(tech, data) !== null : true;
 }

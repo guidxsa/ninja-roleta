@@ -39,7 +39,7 @@ export type PassiveKind =
   | 'vitality';
 
 /** Ativa de linhagem (gasta ou não o turno; parâmetros em `balance`). */
-export type ActiveKind = 'gates' | 'expansion' | 'effort' | 'beast' | 'devour' | 'transmission' | 'seal';
+export type ActiveKind = 'gates' | 'expansion' | 'effort' | 'beast' | 'plague' | 'transmission' | 'seal';
 
 export type AffinityRule =
   | { kind: 'rolled' }
@@ -65,7 +65,7 @@ export interface LineageDef {
   active?: ActiveKind;
   /** Tipos de técnica que a linhagem não pode usar nem aprender. */
   forbiddenAttackTypes?: AttackType[];
-  /** Kit inicial além do Punho de Chakra e do ninjutsu básico do elemento. */
+  /** Kit inicial além do Taijutsu básico e do ninjutsu básico do elemento. */
   startingTechniques?: string[];
   dojutsu?: DojutsuId;
 }
@@ -146,6 +146,8 @@ export interface TechniqueDef {
   chakraDrain?: number;
   /** Controle que drena: o vilão preso por esta técnica perde este chakra a cada vez perdida (Correntes). */
   holdChakraDrain?: number;
+  /** Devorar (Aburame): consome os insetos presos no vilão; o custo depende de quantos são. */
+  devour?: boolean;
   /** Técnica copiada de um vilão pelo Sharingan (só existe na luta em que foi copiada). */
   copied?: boolean;
 }
@@ -210,7 +212,7 @@ export interface VillainDef {
 /** Manto: abaixo do limiar de HP, uma vez por luta, por alguns turnos (jinchuuriki, marca da maldição). */
 export interface CloakDef {
   hpThresholdPct: number;
-  /** Multiplica tai/nin/gen e speed (jogador) ou o dano (vilão) enquanto ativo. */
+  /** Multiplica taijutsu/ninjutsu/genjutsu e speed (jogador) ou o dano (vilão) enquanto ativo. */
   statMult: number;
   /** Multiplica as resistências enquanto ativo. */
   resistanceMult: number;

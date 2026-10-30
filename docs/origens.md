@@ -30,17 +30,17 @@ Total: 30% comum, 40% clã, 30% rara.
 
 ## Status iniciais
 
-O ponto de partida é um **orçamento de 90 pontos**: 70 em status mais **20 em resistências**. Conversão: tai, nin, gen e as duas resistências valem 1 ponto; speed vale 1,5; 10 de HP vale 1; 2 de chakra valem 1.
+O ponto de partida é um **orçamento de 90 pontos**: 70 em status mais **20 em resistências**. Conversão: taijutsu, ninjutsu, genjutsu e as duas resistências valem 1 ponto; speed vale 1,5; 10 de HP vale 1; 2 de chakra valem 1.
 
 Na simulação, os pontos não valem o mesmo na prática: genjutsu e resistência mental pesam menos que corpo e HP. Por isso a v0.18 recalibrou algumas origens fora do orçamento (coluna "Pontos"), para que nenhuma fique muito acima ou abaixo das outras.
 
-| Origem | Tai | Nin | Gen | Res. física | Res. mental | Speed | HP | Chakra | Afinidade | Pontos |
+| Origem | Taijutsu | Ninjutsu | Genjutsu | Res. física | Res. mental | Speed | HP | Chakra | Afinidade | Pontos |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Comum | 10 | 10 | 10 | 10 | 10 | 10 | 100 | 30 | Rolada | 90 |
 | Nara | 10 | 13 | 8 | 10 | 10 | 9 | 105 | 32 | Rolada | 91 |
 | Akimichi | 15 | 8 | 5 | 14 | 6 | 6 | 145 | 34 | Rolada | 88,5 |
 | Yamanaka | 10 | 9 | 15 | 10 | 14 | 10 | 110 | 30 | Rolada | 99 |
-| Aburame | 8 | 12 | 10 | 9 | 11 | 8 | 110 | 34 | Rolada | 90 |
+| Aburame | 8 | 16 | 6 | 9 | 11 | 8 | 110 | 34 | Rolada | 90 |
 | Inuzuka | 14 | 8 | 6 | 12 | 8 | 13 | 95 | 24 | Rolada | 89 |
 | Prodígio do taijutsu | 17 | 0 | 0 | 11 | 9 | 12 | 110 | 28 | Nenhuma | 80 |
 | Uchiha | 12 | 9 | 12 | 10 | 10 | 10 | 105 | 26 | Fogo (fixa) | 91,5 |
@@ -57,16 +57,16 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 
 | Origem | Passiva | Ativa | Kit inicial | Exclusivas | Restrições |
 |---|---|---|---|---|---|
-| Comum | Determinação | Esforço | Punho de Chakra, ninjutsu básico | — | — |
-| Nara | Gênio, Sombra costurada | — | Punho de Chakra, ninjutsu básico, Imitação de Sombra | Imitação de Sombra | — |
-| Akimichi | Corpo pesado | Expansão, Pílulas do clã | Punho de Chakra, ninjutsu básico | Rolo Colossal (nível 4) | — |
-| Yamanaka | Leitura mental, Mente no controle | Transmissão mental | Punho de Chakra, ninjutsu básico, Transferência de Mente | Transferência de Mente | — |
-| Aburame | Colônia | Devorar | Punho de Chakra, ninjutsu básico, Enxame | Enxame | — |
-| Inuzuka | Dupla | Fera de quatro patas | Punho de Chakra, ninjutsu básico, Presas Giratórias | Presas Giratórias | — |
-| Prodígio do taijutsu | Corpo de ferro | Portões (com Forçar) | Punho de Chakra | Redemoinho da Folha (4), Lótus Primaveril (7) | Sem ninjutsu, genjutsu e médico |
-| Uchiha | Olhos treinados | Sharingan, Cópia | Punho de Chakra, Fagulha do Dragão, Olhar Hipnótico, Ilusão da Dor | Ilusões de dano, Tsukuyomi (nível 7) | — |
-| Hyuuga | Punho preciso | Byakugan | Punho de Chakra, ninjutsu básico | Selo dos Pontos Vitais, Rotação (nível 4), 64 Palmas (nível 7) | — |
-| Uzumaki | Vitalidade | Selamento | Punho de Chakra, ninjutsu básico | Correntes de Chakra (nível 4) | — |
+| Comum | Determinação | Esforço | Taijutsu básico, ninjutsu básico | — | — |
+| Nara | Gênio, Sombra costurada | — | Taijutsu básico, ninjutsu básico, Imitação de Sombra | Imitação de Sombra | — |
+| Akimichi | Corpo pesado | Expansão, Pílulas do clã | Taijutsu básico, ninjutsu básico | Rolo Colossal (nível 4) | — |
+| Yamanaka | Leitura mental, Mente no controle | Transmissão mental | Taijutsu básico, ninjutsu básico, Transferência de Mente | Transferência de Mente | — |
+| Aburame | Colônia | Praga | Taijutsu básico, ninjutsu básico, Enxame, Devorar | Enxame, Devorar | — |
+| Inuzuka | Dupla | Fera de quatro patas | Taijutsu básico, ninjutsu básico, Presas Giratórias | Presas Giratórias | — |
+| Prodígio do taijutsu | Corpo de ferro | Portões (com Forçar) | Taijutsu básico | Redemoinho da Folha (4), Lótus Primaveril (7) | Sem ninjutsu, genjutsu e médico |
+| Uchiha | Olhos treinados | Sharingan, Cópia | Taijutsu básico, Fagulha do Dragão, Olhar Hipnótico, Ilusão da Dor | Ilusões de dano, Tsukuyomi (nível 7) | — |
+| Hyuuga | Punho preciso | Byakugan | Taijutsu básico, ninjutsu básico | Selo dos Pontos Vitais, Rotação (nível 4), 64 Palmas (nível 7) | — |
+| Uzumaki | Vitalidade | Selamento | Taijutsu básico, ninjutsu básico | Correntes de Chakra (nível 4) | — |
 
 "Ninjutsu básico" = o nível I da linha de ataque do elemento sorteado (ver [tecnicas.md](tecnicas.md#linhas-de-ataque)).
 
@@ -87,9 +87,21 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 
 ### Akimichi (expansão)
 
-- **Corpo pesado** (passiva): dano de taijutsu × (0,7 + 0,4 × HP atual / HP máximo). ×1,1 com HP cheio, ×0,7 perto de zero.
-- **Expansão** (ativa): **escolha grátis** (não gasta o turno) que custa 6 de chakra. Por 3 rodadas, contando a da ativação: taijutsu ×1,5 e speed −3. Pode ser usada de novo quando acabar.
-- **Rolo Colossal** (nível 4): taijutsu exclusivo.
+- **Peso**: o HP máximo do Akimichi (o HP atual não pesa). Mudar o peso não muda o HP.
+- **Corpo pesado** (passiva): o taijutsu ganha um multiplicador pela **razão de peso** = peso do Akimichi ÷ HP máximo do vilão. Só bônus, nunca debuff:
+
+  | Razão | Taijutsu |
+  |---|---|
+  | abaixo de 1 | ×1 |
+  | 1 | ×1,05 |
+  | 1,25 | ×1,1 |
+  | 1,5 | ×1,2 |
+  | 2 | ×1,3 (teto normal) |
+  | 2,5 (só na Expansão) | ×1,4 |
+  | 3 (só na Expansão) | ×1,5 |
+
+- **Expansão** (ativa): **escolha grátis** (não gasta o turno) que custa 6 de chakra. Por 3 rodadas, contando a da ativação: **peso ×1,5** e libera os degraus do Corpo pesado acima do teto normal; speed −3. Pode ser usada de novo quando acabar.
+- **Rolo Colossal** (nível 4): taijutsu exclusivo (dano 20).
 - **Pílulas do clã** (ativa): escolha grátis, sem chakra, **1 vez por luta**. Gira uma roleta pura das 3 pílulas; o efeito vale 3 rodadas, contando a da ativação, e multiplica junto com a Expansão. O HP pago nunca deixa abaixo de 1.
 
   | Pílula | Chance | Efeito | Custo |
@@ -107,9 +119,10 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 
 ### Aburame (insetos)
 
-- **Colônia** (passiva): cada golpe que acerta drena 2 de chakra do vilão e deixa **1 inseto** nele (até 10).
-- **Devorar** (ativa): escolha grátis, 3 de chakra, com ao menos 1 inseto no vilão. Consome todos os insetos: cada um drena **3 de chakra**; os que sobram com o vilão sem chakra causam **2 de dano direto** cada (sem resistência). Vilão sem chakra fica só com as técnicas que não custam chakra.
-- **Enxame**: ninjutsu neutro de 4 golpes pequenos. O acerto rola uma vez para os 4 golpes; cada golpe que acerta drena chakra e deixa um inseto pela Colônia.
+- **Colônia** (passiva): cada golpe do **Enxame** que acerta prende **1 inseto** no vilão (até 10). No **fim de cada rodada**, cada inseto preso drena **1 de chakra** do vilão. Outros ataques não prendem insetos.
+- **Enxame**: ninjutsu neutro de golpes pequenos, em linha própria: I com 2 golpes de 4 (3 de chakra), II com 4 golpes de 5 (4 de chakra), III com 6 golpes de 6 (5 de chakra). O acerto rola uma vez para todos os golpes. Não drena chakra por si só.
+- **Praga** (ativa): escolha grátis, 6 de chakra, **1 uso por luta** (+1 no nível 7). Por 3 rodadas, contando a da ativação, o Enxame prende **2 insetos por acerto** e o teto de insetos **dobra**. Quando acaba, o excesso cai para o teto normal.
+- **Devorar**: técnica de ninjutsu do kit (gasta o turno), com ao menos 1 inseto no vilão. Custa **1 de chakra por inseto** e não rola acerto. Consome todos os insetos: cada um drena **3 de chakra**; os que sobram com o vilão sem chakra causam **2 de dano direto** cada (sem resistência). Vilão sem chakra fica só com as técnicas que não custam chakra.
 
 ### Inuzuka (parceiro canino)
 
@@ -140,7 +153,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 - **Ilusão da Dor**: genjutsu de dano do kit inicial (15 de dano base; fere com genjutsu contra a resistência mental). No nível 7, **Tsukuyomi** (só com o Sharingan): 22 de dano e aprisiona.
 - **Sharingan** (ativa, dōjutsu): ativar é uma **escolha grátis** (não gasta o turno) que custa 4 de chakra; manutenção 1 por rodada, dura 5 rodadas ou até faltar chakra. Evolui com o nível.
 
-  | Estágio | Nível | Tai/Nin/Gen | Speed | Genjutsu: acerto / poder | Leitura de movimento |
+  | Estágio | Nível | Taijutsu/Ninjutsu/Genjutsu | Speed | Genjutsu: acerto / poder | Leitura de movimento |
   |---|---|---|---|---|---|
   | 1 tomoe | 1 | +3 | +1 | +10% / +3 | 20% |
   | 2 tomoe | 4 | +5 | +2 | +15% / +6 | 25% |
@@ -177,9 +190,9 @@ Nos níveis 4 e 7, cada linhagem desperta: a tela da subida de nível mostra o q
 |---|---|---|
 | Comum | **Nunca desistir**: na 1ª vez na luta em que o HP cai abaixo de 25%, recupera 15% do HP máximo. | **Esforço supremo**: o Esforço dá +5 e dura 4 rodadas. |
 | Nara | A Imitação de Sombra ganha +1 de força. | **Estrangulamento**: a cada vez mantida pela Sombra costurada, o vilão perde 5% do HP máximo. |
-| Akimichi | Corpo pesado nunca abaixo de ×0,8; Rolo Colossal. | A Expansão não reduz mais a speed. |
+| Akimichi | Peso +10%; Rolo Colossal. | A Expansão não reduz mais a speed. |
 | Yamanaka | Leitura mental: −15 de acerto nos ataques do vilão; +1 uso da Transmissão. | Na Possessão, o vilão se fere ×1,25; +1 uso da Transmissão. |
-| Aburame | A Colônia guarda até 15 insetos e o Enxame deixa 2 por golpe. | O Devorar drena 4 de chakra e causa 3 de dano por inseto. |
+| Aburame | O vilão aguenta até 15 insetos presos. | O Devorar drena 4 de chakra e causa 3 de dano por inseto; Praga com +1 uso. |
 | Inuzuka | O cão da Dupla bate com 60% do dano base. | A Fera custa 3 de chakra e dura 4 rodadas. |
 | Prodígio do taijutsu | Forçar os portões: +10% de chance; Redemoinho da Folha. | Portões: 2 usos por luta; Lótus Primaveril. |
 | Uchiha | Sharingan de 2 tomoe (Cópia com 65%). | Sharingan de 3 tomoe (Cópia com 80%) e Tsukuyomi. |
@@ -192,7 +205,7 @@ Configuração: `balance.awakening`.
 
 - **Chakra máximo +100%.**
 - **Manto de chakra**: uma vez por luta, ao ficar abaixo de 50% do HP (inclusive no início da rodada).
-  - Dura até 5 rodadas: tai, nin, gen e speed ×1,5, resistências ×1,25, e regenera 5% do HP máximo no início de cada rodada.
+  - Dura até 5 rodadas: taijutsu, ninjutsu, genjutsu e speed ×1,5, resistências ×1,25, e regenera 5% do HP máximo no início de cada rodada.
   - **Custo: 10% do chakra máximo por rodada.** Sem chakra para pagar a rodada, o manto se desfaz. Não há recoil.
 - **Demônio interno**: imune a genjutsu.
 - O Gaara usa o mesmo manto (ver [viloes.md](viloes.md)).

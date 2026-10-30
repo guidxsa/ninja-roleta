@@ -2,7 +2,7 @@ import type { CloakDef, VillainDef } from '../core/types';
 import { balance } from './balance';
 
 // Fichas dos vilões (docs/viloes.md). Nomes de trabalho e valores provisórios.
-// Mesma ficha do jogador: ataques (tai/nin/gen) e resistências física e mental. O dano de uma técnica é
+// Mesma ficha do jogador: ataques (taijutsu/ninjutsu/genjutsu) e resistências física e mental. O dano de uma técnica é
 // base + ataque do tipo − resistência usada pelo jogador, igual ao do jogador.
 // Vilões também gastam chakra: taijutsu é grátis; ninjutsu e genjutsu custam. Sem chakra para
 // nenhuma técnica, o vilão perde a vez concentrando chakra.

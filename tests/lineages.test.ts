@@ -134,9 +134,9 @@ describe('Akimichi: Pílulas do clã', () => {
     const plain = ofType(playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData).log, 'attack')[0]!.damage;
     const green = playRound(s0, 'tech:basicTaijutsu', seq(0.0, 0.5), gameData, { pills: true });
     expect(ofType(green.log, 'pill')).toEqual([{ type: 'pill', pill: 'green', hpLost: Math.floor(p.maxHp * 0.1) }]);
-    // (8 + 15 − 7) = 16: sem pílula × 1,1 (Corpo pesado, HP cheio) = 17; com a verde, × 1,3 × 1,06 (HP 131/145) = 22.
-    expect(plain).toBe(17);
-    expect(ofType(green.log, 'attack')[0]!.damage).toBe(22);
+    // (8 + 15 − 7) = 16 (vilão de 300 de HP: mais leve que ele, sem Corpo pesado); com a verde, × 1,3 = 20.
+    expect(plain).toBe(16);
+    expect(ofType(green.log, 'attack')[0]!.damage).toBe(20);
     expect(() => playRound(green, 'stance', seq(0.5), gameData, { pills: true })).toThrow();
     let red = playRound(s0, 'stance', seq(0.99), gameData, { pills: true });
     expect(red.playerFx.pill).toBe('red');
@@ -244,7 +244,7 @@ describe('Correções da v0.22.1', () => {
 
   it('a prévia das ativas mostra o dano com o bônus já aplicado', () => {
     const p = createPlayer(clan('akimichi'), gameData);
-    const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
+    const s0 = withInitiative(startBattle(p, testVillain()));
     const before = attackPreview(s0, 'basicTaijutsu', gameData).damage;
     const after = attackPreview(previewExtras(s0, { expansion: true }, gameData), 'basicTaijutsu', gameData).damage;
     expect(after).toBeGreaterThan(before);
@@ -254,9 +254,9 @@ describe('Correções da v0.22.1', () => {
     const p = createPlayer(clan('aburame'), gameData);
     const start = (chakra: number) =>
       startBattle({ ...p, chakra }, testVillain({ techniques: [punch] }), { interactive: true, villainStartsFirst: true });
-    // Enxame custa 5 e a Substituição 2: com 6 não dá para os dois.
-    expect(playRound(start(6), 'tech:insectSwarm', seq(0.5), gameData).pending?.options ?? []).not.toContain('substitution');
-    expect(playRound(start(7), 'tech:insectSwarm', seq(0.5), gameData).pending?.options).toContain('substitution');
+    // Enxame custa 3 e a Substituição 2: com 4 não dá para os dois.
+    expect(playRound(start(4), 'tech:insectSwarm', seq(0.5), gameData).pending?.options ?? []).not.toContain('substitution');
+    expect(playRound(start(5), 'tech:insectSwarm', seq(0.5), gameData).pending?.options).toContain('substitution');
     // Taijutsu básico (custo 0) sempre disponível, mesmo sem chakra.
     const empty = withInitiative(startBattle({ ...p, chakra: 0 }, testVillain()));
     expect(availableActions(empty, gameData)).toContain('tech:basicTaijutsu');

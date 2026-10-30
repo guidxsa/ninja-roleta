@@ -25,7 +25,7 @@ const archetypes: { label: string; origin: Origin }[] = [
   { label: 'Comum + Jinch.', origin: { lineageId: null, affinity: 'fire', jinchuuriki: true } },
   { label: 'Uchiha', origin: { lineageId: 'uchiha', affinity: 'fire', jinchuuriki: false } },
   { label: 'Hyuuga (Água)', origin: { lineageId: 'hyuuga', affinity: 'water', jinchuuriki: false } },
-  { label: 'Prodígio tai.', origin: { lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false } },
+  { label: 'Prodígio do taijutsu', origin: { lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false } },
   { label: 'Uzumaki (Vento)', origin: { lineageId: 'uzumaki', affinity: 'wind', jinchuuriki: false } },
   { label: 'Nara (Terra)', origin: { lineageId: 'nara', affinity: 'earth', jinchuuriki: false } },
   { label: 'Akimichi (Terra)', origin: { lineageId: 'akimichi', affinity: 'earth', jinchuuriki: false } },

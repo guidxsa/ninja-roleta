@@ -10,6 +10,7 @@ import {
   copyTarget,
   canFocus,
   dealsDamage,
+  devourPreview,
   illusionDamage,
   isBarrier,
   isControlled,
@@ -142,9 +143,14 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
   let bestScore = 0;
   for (const a of actions) {
     const t = techOf(a);
-    if (!t || (!dealsDamage(t) && !isIllusion(t))) continue;
+    if (!t || (!dealsDamage(t) && !isIllusion(t) && !t.devour)) continue;
     let score: number;
-    if (isIllusion(t)) {
+    if (t.devour) {
+      // Devorar: dano direto mais o chakra negado ao vilão; só com a colônia cheia.
+      const prev = devourPreview(state, data);
+      if (prev.insects < 6) continue;
+      score = prev.damage + prev.chakra * 0.6;
+    } else if (isIllusion(t)) {
       score = illusionValue(state, t.id, data);
       // Ilusão que também controla (Tsukuyomi) vale mais se o vilão ainda pode perder a vez.
       if (t.mental && canDebilitate) score *= 1.3;
@@ -154,7 +160,7 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
     }
     if (t.chakraDrain && villainNeedsChakra && v.chakra > 0) score *= 1.5;
     // Guarda um pouco de chakra: técnicas caras só se valerem a mais.
-    score -= t.chakraCost * 0.5;
+    score -= actionCost(state, a, data) * 0.5;
     if (score > bestScore) {
       best = a;
       bestScore = score;
@@ -220,7 +226,7 @@ export function chooseExtras(state: BattleState, action: PlayerAction, data: Gam
   // Esforço e Fera: junto com um ataque. Devorar: com a colônia cheia. Transmissão: contra todo golpe carregado que dá para pegar.
   ex.effort = attack && canFreeActive(state, 'effort', action, data, ex);
   ex.beast = attack && canFreeActive(state, 'beast', action, data, ex) && reserve(data.balance.beast.chakraCost + 4);
-  ex.devour = state.villain.insects >= 6 && canFreeActive(state, 'devour', action, data, ex);
+  ex.plague = attack && tech.line === 'swarm' && canFreeActive(state, 'plague', action, data, ex) && reserve(data.balance.plague.chakraCost + 4);
   ex.transmission = canFreeActive(state, 'transmission', action, data, ex) && playerGenjutsuHitChance(state, data) >= 0.4;
   // Pílulas e portões forçados: com HP de sobra. Cópia: sempre que der. Selamento: no golpe carregado ou na técnica
   // mais forte do vilão. Sombra costurada: se sobra chakra depois.

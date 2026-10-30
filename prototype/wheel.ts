@@ -40,12 +40,6 @@ function arcPath(a0: number, a1: number): string {
   return `M ${C} ${C} L ${x0} ${y0} A ${R} ${R} 0 ${large} 1 ${x1} ${y1} Z`;
 }
 
-export function formatPct(fraction: number): string {
-  const pct = Math.round(fraction * 1000) / 10;
-  if (fraction > 0 && pct < 1) return '<1%';
-  return `${pct < 10 && pct % 1 !== 0 ? pct.toFixed(1).replace('.', ',') : Math.round(pct)}%`;
-}
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Faixas [início, fim) de cada fatia, em frações de 0 a 1. */
@@ -182,7 +176,7 @@ export function createWheel(slices: WheelSlice[]): Wheel {
   const items = slices.map((s, i) => {
     const [f0, f1] = ranges[i]!;
     const li = document.createElement('li');
-    li.innerHTML = `<i class="${s.icon ? 'has-ico' : ''}" style="--c:${s.color}">${s.icon ?? ''}</i><span></span><b>${formatPct(f1 - f0)}</b>`;
+    li.innerHTML = `<i class="${s.icon ? 'has-ico' : ''}" style="--c:${s.color}">${s.icon ?? ''}</i><span></span>`;
     li.querySelector('span')!.textContent = s.label;
     if (f1 - f0 <= 0) li.classList.add('zero');
     legend.appendChild(li);
@@ -250,7 +244,7 @@ export async function stripRoulette(
     .map((s, i) => {
       const [a, b] = ranges[i]!;
       if (b - a <= 0) return '';
-      const label = b - a >= 0.12 ? `${s.label} ${formatPct(b - a)}` : '';
+      const label = b - a >= 0.12 ? s.label : '';
       return `<div class="seg" data-i="${i}" style="flex-basis:${(b - a) * 100}%;background:${s.color}"><span>${label}</span></div>`;
     })
     .join('');

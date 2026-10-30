@@ -37,9 +37,7 @@ Nenhuma. A rodada "rebalanceamento das origens" (27/10/2026) foi implementada na
 
 Observação em aberto (não é mudança de design): na simulação, a fatia "nova técnica" da recompensa vale bem menos que as outras (sem ela, o comum vence ~20 pontos a mais). Vale discutir com o usuário antes de mexer.
 
-Observação em aberto (v0.22.0): campanha por origem (1000 runs, seed 2) no Médio de 74% (prodígio) a 89% (Uzumaki) e no Difícil de 32% (Uchiha) a 58% (Aburame). Prodígio e Uchiha seguem no grupo de baixo; a Lição do clã deixou a campanha um pouco mais fácil para todos. Discutir com o usuário antes de compensar.
-
-Próxima versão combinada (v0.24.0): Aburame (Enxame 4×2 que prende insetos, +1 de dano e +2 golpes por nível; Colônia drena 1 de chakra por inseto no fim da rodada; ativa Praga dobra insetos por acerto e teto; Devorar vira técnica de ninjutsu com custo por inseto), Akimichi (Rolo Colossal 20; Corpo Pesado por tabela de peso = HP máximo contra o do vilão, só buff, com teto; Expansão aumenta o peso e o teto), "Taijutsu básico" como nome do ataque básico, nomes completos de taijutsu/ninjutsu/genjutsu, e menos contas na tela (sem % nas roletas e nas dicas; técnicas com dano base e precisão base; descrições qualitativas).
+Observação em aberto (v0.24.0): campanha por origem (1000 runs, seed 2) no Médio de 77% (prodígio, Uchiha) a 88% (Hyuuga) e no Difícil de 33% (prodígio, Uchiha) a 57% (Hyuuga). Prodígio e Uchiha seguem no grupo de baixo. Para o nerf do Aburame não passar do ponto (58% no Médio sem compensação), o ninjutsu dele foi de 12 para 16 e o genjutsu de 10 para 6, e o Enxame ficou mais barato (3/4/5 de chakra). Discutir com o usuário antes de compensar mais.
 
 Quando o design mudar antes do código, listar aqui o que falta implementar.
 

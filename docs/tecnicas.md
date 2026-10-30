@@ -85,10 +85,10 @@ Resumo; as regras completas estão em [fundamentos.md](fundamentos.md#reações)
 
 | Técnica | Nível mínimo | Dano | Golpes | Chakra | Precisão | Especial | Quem |
 |---|---|---|---|---|---|---|---|
-| Punho de Chakra | Inicial | 8 | 1 | 0 | 90% | — | Todos |
+| Taijutsu básico | Inicial | 8 | 1 | 0 | 90% | — | Todos |
 | Impacto Concentrado | Recompensa | 14 | 1 | 3 | 85% | — | Todos |
 | Presas Giratórias | Inicial | 7 | 2 | 3 | 85% | — | Inuzuka |
-| Rolo Colossal | 4 | 24 | 1 | 6 | 80% | 20% de atordoar no acerto | Akimichi |
+| Rolo Colossal | 4 | 20 | 1 | 6 | 80% | 20% de atordoar no acerto | Akimichi |
 | Redemoinho da Folha | 4 | 16 | 1 | 5 | 90% | — | Prodígio |
 | Lótus Primaveril | 7 | 25 | 1 | 9 | 80% | +10% de crítico | Prodígio |
 | Selo dos Pontos Vitais | Byakugan | 6 | 1 | 0 | não erra | Drena 6 de chakra do alvo | Hyuuga (só com Byakugan) |
@@ -160,7 +160,8 @@ Ativar um estado gasta o turno. O manto do jinchuuriki é um estado **neutro** (
 | Técnica | Dano | Golpes | Chakra | Precisão | Efeito | Quem |
 |---|---|---|---|---|---|---|
 | Imitação de Sombra | 0 | 1 | 5 | 80% | Aprisionado (força base 1; força e fuga pela fórmula do genjutsu, usando ninjutsu contra a resistência física) | Nara |
-| Enxame | 5 | 4 | 5 | 85% | Cada golpe drena chakra e deixa um inseto (Colônia) | Aburame |
+| Enxame | 4 | 2 | 3 | 85% | Cada golpe que acerta prende um inseto (Colônia). Linha: II 5×4 (4 de chakra), III 6×6 (5 de chakra) | Aburame |
+| Devorar | — | — | 1 por inseto | — | Consome os insetos: drena chakra e o que sobra vira dano direto ([origens.md](origens.md#aburame-insetos)) | Aburame |
 | Rotação | — | — | 5 | — | Barreira neutra (ação): escudo de 26 que devolve 50% do dano que bloqueia. | Hyuuga (nível 4) |
 | Correntes de Chakra | 0 | 1 | 6 | 80% | Aprisionado (força base 1, como a Imitação de Sombra); o vilão preso perde 3 de chakra por vez perdida | Uzumaki (nível 4) |
 

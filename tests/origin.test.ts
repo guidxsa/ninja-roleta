@@ -74,7 +74,7 @@ describe('rolagem de origem', () => {
 });
 
 describe('criação do jogador', () => {
-  /** Orçamento de status: tai/nin/gen 1, speed 1,5, 10 de HP = 1, 2 de chakra = 1. */
+  /** Orçamento de status: taijutsu/ninjutsu/genjutsu 1, speed 1,5, 10 de HP = 1, 2 de chakra = 1. */
   const budget = (s: Stats) => s.taijutsu + s.ninjutsu + s.genjutsu + s.speed * 1.5 + s.hp / 10 + s.chakra / 2;
 
   it('orçamento de 90 pontos (70 + 20 em resistências), com as exceções de balanceamento', () => {
@@ -115,7 +115,7 @@ describe('criação do jogador', () => {
     expect(res('yamanaka').mental).toBeGreaterThan(res('yamanaka').physical);
   });
 
-  it('comum começa com Punho de Chakra e o ninjutsu básico do elemento, sem genjutsu', () => {
+  it('comum começa com Taijutsu básico e o ninjutsu básico do elemento, sem genjutsu', () => {
     const p = createPlayer({ lineageId: null, affinity: 'water', jinchuuriki: false }, gameData);
     expect(knownTechniques(p, gameData).map((t) => t.id)).toEqual(['basicTaijutsu', 'waterBullet']);
     expect(canUseType(p, 'genjutsu', gameData)).toBe(false);
@@ -128,7 +128,7 @@ describe('criação do jogador', () => {
     expect(kit('nara')).toEqual(['basicTaijutsu', 'rockFist', 'shadowImitation']);
     expect(kit('akimichi')).toEqual(['basicTaijutsu', 'rockFist']);
     expect(kit('yamanaka')).toEqual(['basicTaijutsu', 'rockFist', 'mindTransfer']);
-    expect(kit('aburame')).toEqual(['basicTaijutsu', 'rockFist', 'insectSwarm']);
+    expect(kit('aburame')).toEqual(['basicTaijutsu', 'rockFist', 'insectSwarm', 'insectDevour']);
     expect(kit('inuzuka')).toEqual(['basicTaijutsu', 'fangOverFang', 'rockFist']);
   });
 
@@ -159,7 +159,7 @@ describe('criação do jogador', () => {
     expect(p.active).toBe('seal');
   });
 
-  it('prodígio do taijutsu: nin/gen zerados e técnicas proibidas', () => {
+  it('prodígio do taijutsu: ninjutsu/genjutsu zerados e técnicas proibidas', () => {
     const p = createPlayer({ lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false }, gameData);
     expect(p.offense).toEqual({ taijutsu: 17, ninjutsu: 0, genjutsu: 0 });
     expect(p.maxHp).toBe(110);

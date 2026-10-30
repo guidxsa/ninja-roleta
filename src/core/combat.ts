@@ -114,8 +114,8 @@ export interface RoundExtras {
   effort?: boolean;
   /** Fera de quatro patas (Inuzuka). */
   beast?: boolean;
-  /** Devorar (Aburame): consome os insetos do vilão. */
-  devour?: boolean;
+  /** Praga (Aburame): dobra os insetos por acerto e o teto por algumas rodadas. */
+  plague?: boolean;
   /** Transmissão mental (Yamanaka): tenta cancelar o golpe carregado do vilão. */
   transmission?: boolean;
   /** Mente no controle (Yamanaka): técnica que o vilão possuído usa em si mesmo nesta rodada. */
@@ -279,6 +279,10 @@ export interface PlayerFx extends StatusFx {
   effortTurns: number;
   /** Fera de quatro patas (Inuzuka): rodadas que faltam (a da ativação conta). */
   beastTurns: number;
+  /** Praga (Aburame): rodadas que faltam (a da ativação conta). */
+  plagueTurns: number;
+  /** Praga já ativada nesta luta. */
+  plagueUsed: number;
   /** Transmissão mental (Yamanaka): usos nesta luta. */
   transmissionUsed: number;
   /** Mente no controle (Yamanaka): técnica escolhida para o vilão possuído usar em si mesmo. */
@@ -375,6 +379,8 @@ export type BattleEvent =
   | { type: 'effortEnd' }
   | { type: 'beast'; chakra: number }
   | { type: 'beastEnd' }
+  | { type: 'plague'; chakra: number }
+  | { type: 'plagueEnd'; insects: number }
   | { type: 'devour'; insects: number; chakra: number; damage: number }
   | { type: 'transmission'; chance: number; success: boolean; techniqueId: string }
   | { type: 'copy'; chance: number; success: boolean; techniqueId: string }
@@ -504,6 +510,8 @@ export interface BattleState {
 
 /** Id usado no log para o ataque do cão (Dupla, Inuzuka). */
 export const DOG_ATTACK = 'dogAttack';
+/** Devorar (Aburame): técnica de kit que consome os insetos. */
+export const DEVOUR = 'insectDevour';
 /** Id usado no log para o Selo explosivo. */
 export const EXPLOSIVE_TAG = 'explosiveTag';
 
@@ -579,6 +587,8 @@ export function startBattle(
       beastUsed: 0,
       effortTurns: 0,
       beastTurns: 0,
+      plagueTurns: 0,
+      plagueUsed: 0,
       transmissionUsed: 0,
       possessionPick: null,
       copied: null,
@@ -685,6 +695,7 @@ export function playerTechnique(
 export function dealsDamage(tech: TechniqueDef): boolean {
   return (
     tech.type !== 'genjutsu' &&
+    !tech.devour &&
     techniqueSlot(tech) !== 'medical' &&
     !tech.mental &&
     tech.barrier === undefined &&
@@ -702,7 +713,7 @@ export function isBarrier(tech: { barrier?: number }): boolean {
   return tech.barrier !== undefined;
 }
 
-/** Técnicas de ação do skill set (tai, nin e gen, inclusive barreiras), na ordem das categorias. Médico fica de fora. */
+/** Técnicas de ação do skill set (taijutsu, ninjutsu e genjutsu, inclusive barreiras), na ordem das categorias. Médico fica de fora. */
 export function attackTechniques(player: PlayerState, data: GameData): TechniqueDef[] {
   return knownTechniques(player, data).filter((t) => techniqueSlot(t) !== 'medical');
 }
@@ -833,7 +844,7 @@ export type FreeActive =
   | 'expansion'
   | 'effort'
   | 'beast'
-  | 'devour'
+  | 'plague'
   | 'transmission'
   | 'copy'
   | 'seal'
@@ -868,8 +879,8 @@ export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData)
     }
     case 'pills':
       return p.active === 'expansion' && fx.pillsUsed < data.balance.pills.usesPerFight && fx.pillTurns === 0 && fx.exhaustedTurns === 0 ? 0 : null;
-    case 'devour':
-      return p.active === 'devour' && s.villain.insects > 0 ? data.balance.devour.chakraCost : null;
+    case 'plague':
+      return p.active === 'plague' && fx.plagueTurns === 0 && fx.plagueUsed < activeUses(p, 'plague', data) ? data.balance.plague.chakraCost : null;
     case 'transmission':
       return p.active === 'transmission' && s.villain.charging !== null && fx.transmissionUsed < activeUses(p, 'transmission', data)
         ? data.balance.transmission.chakraCost
@@ -877,8 +888,8 @@ export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData)
   }
 }
 
-/** Usos por luta das ativas com limite (Esforço, Fera, Transmissão mental, Selamento). */
-export function activeUses(player: PlayerState, kind: 'effort' | 'beast' | 'transmission' | 'seal', data: GameData): number {
+/** Usos por luta das ativas com limite (Esforço, Fera, Praga, Transmissão mental, Selamento). */
+export function activeUses(player: PlayerState, kind: 'effort' | 'beast' | 'plague' | 'transmission' | 'seal', data: GameData): number {
   if (player.active !== kind) return 0;
   if (kind === 'seal') {
     const aw = data.balance.awakening.uzumaki.seal;
@@ -893,6 +904,31 @@ export function mindReadingPenalty(player: PlayerState, data: GameData): number 
   if (player.passive !== 'mindReading') return 0;
   const aw = data.balance.awakening.yamanaka.mindReading;
   return awakened(player, aw.level) ? aw.villainHitPenalty : data.balance.passives.mindReading.villainHitPenalty;
+}
+
+/** Teto de insetos no vilão: 10 (15 no despertar do nível 4), o dobro durante a Praga. */
+export function maxInsects(s: BattleState, data: GameData): number {
+  const aw = data.balance.awakening.aburame.colony;
+  const max = awakened(s.player, aw.level) ? aw.maxInsects : data.balance.passives.hive.maxInsects;
+  return s.playerFx.plagueTurns > 0 ? max * data.balance.plague.mult : max;
+}
+
+/** Peso do Akimichi: HP máximo (+10% no despertar do nível 4), ×1,5 na Expansão. Não muda o HP. */
+export function playerWeight(s: BattleState, data: GameData): number {
+  const p = s.player;
+  const aw = data.balance.awakening.akimichi.heavyBody;
+  let weight = p.maxHp * (awakened(p, aw.level) ? aw.weightMult : 1);
+  if (expansionActive(s)) weight *= data.balance.expansion.weightMult;
+  return weight;
+}
+
+/** Corpo pesado: multiplicador do taijutsu pela razão de peso contra o vilão (1 = sem bônus; nunca debuff). */
+export function heavyBodyMult(s: BattleState, data: GameData): number {
+  if (s.player.passive !== 'heavyBody') return 1;
+  const cfg = data.balance.passives.heavyBody;
+  const ratio = playerWeight(s, data) / s.villain.def.hp;
+  const steps = expansionActive(s) ? [...cfg.table, ...cfg.expansionTable] : cfg.table;
+  return steps.reduce((best, step) => (ratio >= step.ratio ? Math.max(best, step.mult) : best), 1);
 }
 
 /** Despertar (origens.md#despertar): a linhagem já chegou ao nível do despertar. */
@@ -951,7 +987,7 @@ export const FREE_ACTIVES: FreeActive[] = [
   'pills',
   'effort',
   'beast',
-  'devour',
+  'plague',
   'transmission',
   'copy',
   'seal',
@@ -1025,7 +1061,7 @@ export function canClones(s: BattleState, action: PlayerAction, data: GameData, 
 export function actionCost(s: BattleState, action: PlayerAction, data: GameData): number {
   const p = s.player;
   const techId = actionTechniqueId(action);
-  if (techId) return leveledTechnique(p, techId, data).chakraCost;
+  if (techId) return techniqueCost(s, data.techniquesById[techId]!, data);
   if (action === 'medical') return playerMedical(p, data)?.chakraCost ?? 0;
   return 0;
 }
@@ -1033,7 +1069,7 @@ export function actionCost(s: BattleState, action: PlayerAction, data: GameData)
 // ---------------------------------------------------------------------------
 // Atributos efetivos na luta
 
-/** Manto do jinchuuriki ativo no jogador (multiplica tai/nin/gen, speed e as resistências). */
+/** Manto do jinchuuriki ativo no jogador (multiplica taijutsu/ninjutsu/genjutsu, speed e as resistências). */
 function playerCloak(s: BattleState, data: GameData): CloakDef | null {
   return s.player.jinchuuriki && s.playerFx.cloakTurns > 0 ? data.balance.jinchuuriki.cloak : null;
 }
@@ -1299,20 +1335,13 @@ function villainPenetration(s: BattleState, data: GameData): number {
 /** Multiplicadores de dano do jogador: portões, Byakugan, expansão, corpo pesado e pavor. */
 function playerDamageMult(s: BattleState, type: AttackType, data: GameData): number {
   const fx = s.playerFx;
-  const p = s.player;
   let mult = 1;
   if (type === 'taijutsu') {
     if (fx.gatesTurns > 0 && fx.gatesStage > 0) {
       mult *= data.balance.gates.stages[fx.gatesStage - 1]!.taijutsuMult;
     }
     if (byakuganActive(s)) mult *= data.balance.dojutsu.byakugan.taijutsuMult;
-    if (expansionActive(s)) mult *= data.balance.expansion.taijutsuMult;
-    if (p.passive === 'heavyBody') {
-      const cfg = data.balance.passives.heavyBody;
-      const aw = data.balance.awakening.akimichi.heavyBody;
-      const body = cfg.base + cfg.perHpPct * (p.hp / p.maxHp);
-      mult *= awakened(p, aw.level) ? Math.max(aw.minMult, body) : body;
-    }
+    mult *= heavyBodyMult(s, data);
     const pill = activePill(s, data);
     if (pill) mult *= pill.taijutsuMult;
     if (fx.exhaustedTurns > 0) mult *= data.balance.pills.exhausted.taijutsuMult;
@@ -1404,12 +1433,19 @@ export function playerMedical(player: PlayerState, data: GameData): TechniqueDef
   return tech ? leveledTechnique(player, tech.id, data) : null;
 }
 
+/** Chakra que a técnica custa agora: com upgrades; o Devorar custa por inseto preso no vilão. */
+export function techniqueCost(s: BattleState, tech: TechniqueDef, data?: GameData): number {
+  if (tech.devour) return s.villain.insects * (data ? devourConfig(s.player, data).chakraCostPerInsect : 1);
+  return data ? leveledTechnique(s.player, tech.id, data).chakraCost : tech.chakraCost;
+}
+
 /** A técnica pode ser usada agora (dōjutsu exigido ativo e chakra suficiente, com upgrades). */
 export function canUseTechnique(s: BattleState, tech: TechniqueDef, data?: GameData): boolean {
   const p = s.player;
   if (p.forbiddenAttackTypes.includes(tech.type)) return false;
   if (tech.requiresDojutsu && !(s.playerFx.dojutsuActive && p.dojutsu === tech.requiresDojutsu)) return false;
-  const cost = data ? leveledTechnique(p, tech.id, data).chakraCost : tech.chakraCost;
+  if (tech.devour && s.villain.insects === 0) return false;
+  const cost = techniqueCost(s, tech, data);
   return cost === 0 || p.chakra >= cost;
 }
 
@@ -1898,8 +1934,7 @@ export function playRound(
   if (ex.expansion) activateExpansion(s, data);
   if (ex.effort) activateEffort(s, data);
   if (ex.beast) activateBeast(s, data);
-  if (ex.devour) devour(s, data);
-  if (s.status !== 'ongoing') return s;
+  if (ex.plague) activatePlague(s, data);
   if (ex.transmission) mindTransmission(s, rng, data);
   if (ex.copy) attemptCopy(s, copyTarget(s)!, rng, data);
   if (ex.seal) sealTechnique(s, data);
@@ -2557,6 +2592,19 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
     fx.beastTurns--;
     if (fx.beastTurns === 0) s.log.push({ type: 'beastEnd' });
   }
+  // Colônia: cada inseto preso drena chakra do vilão no fim da rodada.
+  if (v.insects > 0 && v.chakra > 0) {
+    const amount = Math.min(v.chakra, v.insects * data.balance.passives.hive.chakraPerInsect);
+    v.chakra -= amount;
+    s.log.push({ type: 'chakraDrain', amount, source: 'hive' });
+  }
+  if (fx.plagueTurns > 0) {
+    fx.plagueTurns--;
+    if (fx.plagueTurns === 0) {
+      v.insects = Math.min(v.insects, maxInsects(s, data));
+      s.log.push({ type: 'plagueEnd', insects: v.insects });
+    }
+  }
   if (fx.exhaustedTurns > 0) {
     fx.exhaustedTurns--;
     if (fx.exhaustedTurns === 0) s.log.push({ type: 'exhaustedEnd' });
@@ -2617,7 +2665,10 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
   const itemId = actionItemId(action);
   if (techId) {
     const tech = leveledTechnique(p, techId, data);
-    if (isBarrier(tech)) {
+    if (tech.devour) {
+      devour(s, data);
+      if (s.status !== 'ongoing') return;
+    } else if (isBarrier(tech)) {
       payChakra(p, tech.chakraCost);
       raiseShield(s, 'player', tech, playerTechnique(p, techId, data).element, tech.chakraCost, data);
     } else if (tech.state) {
@@ -2699,7 +2750,7 @@ function activateExpansion(s: BattleState, data: GameData): void {
   s.log.push({ type: 'expansion', chakra: cfg.chakraCost });
 }
 
-/** Esforço (comum, escolha grátis): +tai/nin/gen já nesta rodada, que conta na duração. */
+/** Esforço (comum, escolha grátis): +taijutsu/ninjutsu/genjutsu já nesta rodada, que conta na duração. */
 function activateEffort(s: BattleState, data: GameData): void {
   const cfg = effortConfig(s.player, data);
   s.player.chakra -= data.balance.effort.chakraCost;
@@ -2717,21 +2768,40 @@ function activateBeast(s: BattleState, data: GameData): void {
   s.log.push({ type: 'beast', chakra: cfg.chakraCost });
 }
 
+/** Praga (Aburame, escolha grátis): vale já nesta rodada, que conta na duração. */
+function activatePlague(s: BattleState, data: GameData): void {
+  const cfg = data.balance.plague;
+  s.player.chakra -= cfg.chakraCost;
+  s.playerFx.plagueUsed++;
+  s.playerFx.plagueTurns = cfg.turns;
+  s.log.push({ type: 'plague', chakra: cfg.chakraCost });
+}
+
+/** Devorar com o despertar do nível 7 aplicado. */
+export function devourConfig(player: PlayerState, data: GameData): { chakraCostPerInsect: number; chakraPerInsect: number; damagePerInsect: number } {
+  const aw = data.balance.awakening.aburame.devour;
+  return awakened(player, aw.level) ? { ...data.balance.devour, ...aw } : data.balance.devour;
+}
+
+/** Devorar: chakra drenado e dano direto que os insetos presos causariam agora. */
+export function devourPreview(s: BattleState, data: GameData): { insects: number; chakra: number; damage: number } {
+  const cfg = devourConfig(s.player, data);
+  const insects = s.villain.insects;
+  const chakra = Math.min(s.villain.chakra, insects * cfg.chakraPerInsect);
+  const leftover = insects - Math.ceil(chakra / cfg.chakraPerInsect);
+  return { insects, chakra, damage: leftover * cfg.damagePerInsect };
+}
+
 /**
- * Devorar (Aburame, escolha grátis): cada inseto drena `chakraPerInsect` do vilão; os que sobram
- * com ele sem chakra causam `damagePerInsect` de dano direto (sem resistência).
+ * Devorar (Aburame, técnica de ninjutsu): paga 1 de chakra por inseto; cada inseto drena `chakraPerInsect` do
+ * vilão e os que sobram com ele sem chakra causam `damagePerInsect` de dano direto (sem resistência).
  */
 function devour(s: BattleState, data: GameData): void {
-  const aw = data.balance.awakening.aburame.devour;
-  const cfg = awakened(s.player, aw.level) ? { ...data.balance.devour, ...aw } : data.balance.devour;
   const v = s.villain;
-  s.player.chakra -= cfg.chakraCost;
-  const insects = v.insects;
+  const { insects, chakra, damage } = devourPreview(s, data);
+  payChakra(s.player, techniqueCost(s, data.techniquesById[DEVOUR]!, data));
   v.insects = 0;
-  const chakra = Math.min(v.chakra, insects * cfg.chakraPerInsect);
   v.chakra -= chakra;
-  const leftover = insects - Math.ceil(chakra / cfg.chakraPerInsect);
-  const damage = leftover * cfg.damagePerInsect;
   s.log.push({ type: 'devour', insects, chakra, damage });
   if (damage > 0) hurtVillain(s, damage);
 }
@@ -3022,19 +3092,17 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
     rolled = outcome;
     if (s.status !== 'ongoing') return;
     if (outcome === 'miss') break;
-    // Selo dos Pontos Vitais e Colônia (Aburame): drenam o chakra do vilão; a Colônia deixa insetos nele.
-    if (p.passive === 'hive') {
-      const aw = balance.awakening.aburame.colony;
-      const awake = awakened(p, aw.level);
-      const max = awake ? aw.maxInsects : balance.passives.hive.maxInsects;
-      const add = awake && techId === 'insectSwarm' ? aw.swarmInsectsPerHit : balance.passives.hive.insectsPerHit;
-      v.insects = Math.min(max, v.insects + add);
+    // Colônia (Aburame): cada golpe do Enxame que acerta prende insetos no vilão (o dobro com a Praga).
+    if (p.passive === 'hive' && data.techniquesById[techId]?.line === 'swarm') {
+      const add = balance.passives.hive.insectsPerHit * (fx.plagueTurns > 0 ? balance.plague.mult : 1);
+      v.insects = Math.min(maxInsects(s, data), v.insects + add);
     }
-    const drain = (data.techniquesById[techId]?.chakraDrain ?? 0) + (p.passive === 'hive' ? balance.passives.hive.chakraDrainPerHit : 0);
+    // Selo dos Pontos Vitais e 64 Palmas: drenam o chakra do vilão.
+    const drain = data.techniquesById[techId]?.chakraDrain ?? 0;
     if (drain > 0) {
       const amount = Math.min(v.chakra, drain);
       v.chakra -= amount;
-      if (amount > 0) s.log.push({ type: 'chakraDrain', amount, source: data.techniquesById[techId]?.chakraDrain ? 'seal' : 'hive' });
+      if (amount > 0) s.log.push({ type: 'chakraDrain', amount, source: 'seal' });
     }
     // Cobra: um golpe que acerta envenena (ou faz o veneno crescer).
     const bonus = snakePoisonBonus(p, data);

@@ -8,6 +8,7 @@ import {
   canGenius,
   effectiveOffense,
   effectiveSpeed,
+  heavyBodyMult,
   geniusUses,
   illusionDamage,
   mentalEscapeChance,
@@ -51,7 +52,7 @@ const active = (s: BattleState): BattleState => ({
 });
 
 describe('skill set por categoria, técnicas de nível e linhas', () => {
-  it('técnicas de nível com dano batem mais e custam mais que o Punho de Chakra', () => {
+  it('técnicas de nível com dano batem mais e custam mais que o Taijutsu básico', () => {
     for (const t of levelTechniques.filter((t) => t.baseDamage > 0)) {
       const basic = techniquesById.basicTaijutsu!;
       expect(t.baseDamage * (t.hits ?? 1)).toBeGreaterThan(basic.baseDamage * (basic.hits ?? 1));
@@ -125,7 +126,7 @@ describe('skill set por categoria, técnicas de nível e linhas', () => {
     }
   });
 
-  it('Impacto Concentrado gasta chakra e bate mais forte que o Punho de Chakra', () => {
+  it('Impacto Concentrado gasta chakra e bate mais forte que o Taijutsu básico', () => {
     const p = learnTechnique(createPlayer(common, gameData), 'empoweredTaijutsu', gameData);
     const s1 = playRound(startBattle(p, testVillain({ hp: 200 }), { playerStartsFirst: true }), 'tech:empoweredTaijutsu', seq(0.5), gameData);
     // 14 + 10 − 7 = 17, contra 11 do básico
@@ -135,15 +136,28 @@ describe('skill set por categoria, técnicas de nível e linhas', () => {
 });
 
 describe('ficha de técnica', () => {
-  it('golpes: acerto rola uma vez e vale para todos (Enxame do Aburame, 4 golpes; a Colmeia drena 2 por acerto)', () => {
+  it('golpes: acerto rola uma vez e vale para todos (Enxame do Aburame, 2 golpes; cada acerto prende um inseto)', () => {
     const p = createPlayer(clan('aburame'), gameData);
     const s1 = playRound(withInitiative(startBattle(p, testVillain())), 'tech:insectSwarm', seq(0.5, 0.01, 0.5, 0.5, 0.5), gameData);
     const hits = ofType(s1.log, 'attack').filter((a) => a.side === 'player');
-    expect(hits.map((a) => a.outcome)).toEqual(['hit', 'hit', 'hit', 'hit']);
-    // 5 + 12 − 7 = 10 por golpe
-    expect(hits.map((a) => a.damage)).toEqual([10, 10, 10, 10]);
-    expect(ofType(s1.log, 'chakraDrain')).toHaveLength(4);
-    expect(s1.villain.chakra).toBe(20 - 8);
+    expect(hits.map((a) => a.outcome)).toEqual(['hit', 'hit']);
+    // 4 + 16 − 7 = 13 por golpe
+    expect(hits.map((a) => a.damage)).toEqual([13, 13]);
+    expect(s1.villain.insects).toBe(2);
+    // O Enxame não drena; a Colônia drena 1 por inseto no fim da rodada.
+    expect(ofType(s1.log, 'chakraDrain')).toEqual([{ type: 'chakraDrain', amount: 2, source: 'hive' }]);
+  });
+
+  it('Enxame sobe em linha: II com 5 de dano e 4 golpes, III com 6 de dano e 6 golpes', () => {
+    const p = { ...createPlayer(clan('aburame'), gameData), level: 7 };
+    const two = upgradeTechnique(p, 'insectSwarm', gameData);
+    expect(two.techniques).toContain('insectSwarm2');
+    const three = upgradeTechnique(two, 'insectSwarm2', gameData);
+    expect(three.techniques).toContain('insectSwarm3');
+    expect([techniquesById.insectSwarm2, techniquesById.insectSwarm3].map((t) => [t!.baseDamage, t!.hits])).toEqual([
+      [5, 4],
+      [6, 6],
+    ]);
   });
 
   it('golpes: um erro no primeiro erra o ataque inteiro, e um crítico vale para todos', () => {
@@ -152,7 +166,7 @@ describe('ficha de técnica', () => {
     const miss = ofType(playRound(s0, 'tech:insectSwarm', seq(0.01), gameData).log, 'attack').filter((a) => a.side === 'player');
     expect(miss.map((a) => a.outcome)).toEqual(['miss']);
     const crit = ofType(playRound(s0, 'tech:insectSwarm', seq(0.999), gameData).log, 'attack').filter((a) => a.side === 'player');
-    expect(crit.map((a) => a.outcome)).toEqual(['crit', 'crit', 'crit', 'crit']);
+    expect(crit.map((a) => a.outcome)).toEqual(['crit', 'crit']);
   });
 
   it('precisão: cada técnica tem a sua (Faísca 80%, Punho de Rocha 95%)', () => {
@@ -202,9 +216,9 @@ describe('ficha de técnica', () => {
   });
 
   it('a resistência física reduz taijutsu e ninjutsu; o ataque não dá defesa', () => {
-    const nin = testVillain({ techniques: [{ id: 'blast', type: 'ninjutsu', baseDamage: 20, chakraCost: 0, weight: 1 }], element: 'fire' });
+    const ninjutsuVillain = testVillain({ techniques: [{ id: 'blast', type: 'ninjutsu', baseDamage: 20, chakraCost: 0, weight: 1 }], element: 'fire' });
     const taken = (p: PlayerState) =>
-      ofType(playRound(withInitiative(startBattle(p, nin), 'villain'), 'rest', seq(0.5), gameData).log, 'attack')[0]!.damage;
+      ofType(playRound(withInitiative(startBattle(p, ninjutsuVillain), 'villain'), 'rest', seq(0.5), gameData).log, 'attack')[0]!.damage;
     // comum: 20 − 10 × 0,7 = 13, com qualquer ninjutsu
     const c = createPlayer({ lineageId: null, affinity: 'earth', jinchuuriki: false }, gameData);
     expect(taken(c)).toBe(13);
@@ -212,8 +226,8 @@ describe('ficha de técnica', () => {
     // Corpo de ferro (prodígio) não vale contra ninjutsu: 20 − 11 × 0,7 = 12
     expect(taken(createPlayer(prodigy, gameData))).toBe(12);
     // Contra taijutsu, Resistir usa 100% da física: 20 − 11 = 9
-    const tai = testVillain({ techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 20, chakraCost: 0, weight: 1 }] });
-    const s = playRound(withInitiative(startBattle(createPlayer(prodigy, gameData), tai), 'villain'), 'rest', seq(0.5), gameData);
+    const taijutsuVillain = testVillain({ techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 20, chakraCost: 0, weight: 1 }] });
+    const s = playRound(withInitiative(startBattle(createPlayer(prodigy, gameData), taijutsuVillain), 'villain'), 'rest', seq(0.5), gameData);
     expect(ofType(s.log, 'attack')[0]!.damage).toBe(9);
   });
 });
@@ -489,14 +503,28 @@ describe('passivas e ativas de clã', () => {
     expect(gainXp(createPlayer(uchiha, gameData), 100, gameData).xp).toBe(100);
   });
 
-  it('Expansão (Akimichi): grátis; já na rodada, taijutsu ×1,5 e speed −3, por 3 rodadas; Corpo pesado ×1,1 com HP cheio', () => {
+  it('Corpo pesado (Akimichi): taijutsu pela razão de peso (HP máximo) contra o vilão, só bônus, com teto ×1,3', () => {
     const p = createPlayer(clan('akimichi'), gameData);
-    const s0 = withInitiative(startBattle(p, testVillain({ hp: 200, techniques: [{ id: 'wait', type: 'taijutsu', baseDamage: 0, chakraCost: 0, weight: 1 }] })));
+    const mult = (hp: number) => heavyBodyMult(startBattle(p, testVillain({ hp })), gameData);
+    // Akimichi com 145 de HP máximo.
+    expect([300, 145, 116, 96, 72, 40].map(mult)).toEqual([1, 1.05, 1.1, 1.2, 1.3, 1.3]);
+    // O HP atual não pesa.
+    expect(heavyBodyMult(startBattle({ ...p, hp: 10 }, testVillain({ hp: 72 })), gameData)).toBe(1.3);
+    // Despertar do nível 4: +10% de peso (159,5 contra 116 → 1,375).
+    expect(heavyBodyMult(startBattle({ ...p, level: 4 }, testVillain({ hp: 116 })), gameData)).toBe(1.1);
+    expect(heavyBodyMult(startBattle({ ...p, level: 4 }, testVillain({ hp: 106 })), gameData)).toBe(1.2);
+  });
+
+  it('Expansão (Akimichi): grátis; peso ×1,5 e degraus acima do teto, speed −3, por 3 rodadas', () => {
+    const p = createPlayer(clan('akimichi'), gameData);
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 70, techniques: [{ id: 'wait', type: 'taijutsu', baseDamage: 0, chakraCost: 0, weight: 1 }] })));
     expect(availableActions(s0, gameData)).not.toContain('expansion');
+    // Sem a Expansão: 145 ÷ 70 = 2,07 → ×1,3: (8 + 15 − 7) × 1,3 = 20.
+    expect(ofType(playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData).log, 'attack')[0]).toMatchObject({ damage: 20 });
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { expansion: true });
     expect(s1.player.chakra).toBe(28);
-    // (8 + 15 − 7) × 1,5 × 1,1 = 26
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', damage: 26 });
+    // Com ela: 217,5 ÷ 70 = 3,1 → ×1,5: 16 × 1,5 = 24.
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', damage: 24 });
     expect(effectiveSpeed(s1, gameData)).toBe(3);
     expect(s1.playerFx.expansionTurns).toBe(2);
     let s = s1;
@@ -582,7 +610,7 @@ describe('passivas e ativas de clã', () => {
     expect(ofType(s1.log, 'substitutionRoll')[0]).toMatchObject({ success: true });
   });
 
-  it('Esforço (comum): grátis, +3 em tai/nin/gen já na rodada, por 3 rodadas; 1 uso por luta, +1 nos níveis 4 e 7', () => {
+  it('Esforço (comum): grátis, +3 em taijutsu/ninjutsu/genjutsu já na rodada, por 3 rodadas; 1 uso por luta, +1 nos níveis 4 e 7', () => {
     const p = createPlayer(common, gameData);
     expect([1, 4, 7].map((level) => activeUses({ ...p, level }, 'effort', gameData))).toEqual([1, 2, 3]);
     expect(activeUses(createPlayer(uchiha, gameData), 'effort', gameData)).toBe(0);
@@ -618,23 +646,38 @@ describe('passivas e ativas de clã', () => {
     expect(s2.player.chakra).toBe(p.maxChakra - 5 - 2);
   });
 
-  it('Colônia e Devorar (Aburame): cada acerto deixa um inseto; Devorar drena 3 de chakra por inseto e o resto vira dano', () => {
+  it('Colônia e Devorar (Aburame): só o Enxame prende insetos; Devorar é ninjutsu, custa 1 por inseto, drena 3 por inseto e o resto vira dano', () => {
     const p = createPlayer(clan('aburame'), gameData);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
-    expect(canFreeActive(s0, 'devour', 'stance', gameData)).toBe(false);
-    const s1 = playRound(s0, 'tech:insectSwarm', seq(0.5, 0.01, 0.5, 0.5, 0.5), gameData);
-    expect(s1.villain.insects).toBe(4);
-    // 4 insetos drenam os 12 de chakra que sobraram: nenhum vira dano.
-    const s2 = playRound(s1, 'stance', seq(0.5), gameData, { devour: true });
-    expect(ofType(ofRound(s1, s2), 'devour')).toEqual([{ type: 'devour', insects: 4, chakra: 12, damage: 0 }]);
-    expect(s2.villain).toMatchObject({ insects: 0, chakra: 0 });
-    expect(s2.player.chakra).toBe(s1.player.chakra - 3);
+    expect(availableActions(s0, gameData)).not.toContain('tech:insectDevour');
+    // Outro ataque que acerta não prende inseto.
+    expect(playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData).villain.insects).toBe(0);
+    // 4 insetos drenam 12 de chakra: nenhum vira dano; custa 4.
+    const four = { ...s0, villain: { ...s0.villain, insects: 4, chakra: 12 } };
+    expect(availableActions(four, gameData)).toContain('tech:insectDevour');
+    const s2 = playRound(four, 'tech:insectDevour', seq(0.5), gameData);
+    expect(ofType(s2.log, 'devour')).toEqual([{ type: 'devour', insects: 4, chakra: 12, damage: 0 }]);
+    expect(s2.villain.insects).toBe(0);
+    expect(s2.player.chakra).toBe(p.maxChakra - 4);
     // 10 insetos (teto) contra 3 de chakra: 1 inseto drena, 9 causam 2 de dano cada.
     const full = { ...s0, villain: { ...s0.villain, insects: 9, chakra: 3 } };
     const swarm = playRound(full, 'tech:insectSwarm', seq(0.5, 0.01, 0.5, 0.5, 0.5), gameData);
     expect(swarm.villain.insects).toBe(10);
-    const s3 = playRound({ ...swarm, villain: { ...swarm.villain, chakra: 3 } }, 'stance', seq(0.5), gameData, { devour: true });
+    const s3 = playRound({ ...swarm, villain: { ...swarm.villain, chakra: 3 } }, 'tech:insectDevour', seq(0.5), gameData);
     expect(ofType(ofRound(swarm, s3), 'devour')).toEqual([{ type: 'devour', insects: 10, chakra: 3, damage: 18 }]);
+  });
+
+  it('Praga (Aburame): dobra insetos por acerto e o teto; ao acabar, o excesso cai; 1 uso por luta (+1 no nível 7)', () => {
+    const p = createPlayer(clan('aburame'), gameData);
+    expect([1, 7].map((level) => activeUses({ ...p, level }, 'plague', gameData))).toEqual([1, 2]);
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 500, chakra: 0 })));
+    const s1 = playRound({ ...s0, villain: { ...s0.villain, insects: 9 } }, 'tech:insectSwarm', seq(0.5, 0.01, 0.5), gameData, { plague: true });
+    // 2 golpes × 2 insetos, acima do teto normal de 10.
+    expect(s1.villain.insects).toBe(13);
+    let s = s1;
+    while (s.playerFx.plagueTurns > 0) s = playRound(s, 'stance', seq(0.5), gameData);
+    expect(s.villain.insects).toBe(10);
+    expect(() => playRound(s, 'stance', seq(0.5), gameData, { plague: true })).toThrow();
   });
 
   it('Transmissão mental (Yamanaka): contra golpe carregado, rola o genjutsu; pegou, o vilão perde o golpe e a vez', () => {
@@ -749,7 +792,7 @@ describe('passivas e comportamentos dos vilões', () => {
     let s = withInitiative(startBattle(createPlayer(common, gameData), v));
     s = playRound(s, 'tech:basicTaijutsu', seq(0.5, 0.5, 0.01), gameData);
     expect(ofType(s.log, 'mist')).toEqual([{ type: 'mist', turns: 4 }]);
-    // Punho de Chakra: erro de 10% vira 15%
+    // Taijutsu básico: erro de 10% vira 15%
     expect(ofType(s.log, 'attack')[0]!.hitChance).toBeCloseTo(0.85);
     for (let i = 0; i < 3; i++) s = playRound(s, 'rest', seq(0.5, 0.01), gameData);
     expect(ofType(s.log, 'mistEnd')).toHaveLength(1);

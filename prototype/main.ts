@@ -8,15 +8,15 @@ import {
   activeUses,
   canCopyIncoming,
   canFreeActive,
-  copyChance,
   copyTarget,
   forcedGate,
-  forceGatesChance,
   sealTarget,
   FREE_ACTIVES,
   possessionOptions,
   freeActiveCost,
   previewExtras,
+  devourPreview,
+  techniqueCost,
   type FreeActive,
   canFocus,
   canGenius,
@@ -26,13 +26,8 @@ import {
   gatesHpCost,
   gatesToOpen,
   geniusUses,
-  illusionDamage,
-  incomingDamagePreview,
   isIllusion,
   itemAction,
-  playerGenjutsuHitChance,
-  playerMentalStrength,
-  mentalEscapeChance,
   playerMedical,
   playerTechnique,
   playRound,
@@ -41,10 +36,7 @@ import {
   resumeRound,
   sharinganStage,
   techAction,
-  slugHealPct,
-  snakePoisonBonus,
   startBattle,
-  toadDamagePct,
   villainResistance,
   type BattleOptions,
   type BattleState,
@@ -142,7 +134,7 @@ import {
   type Condition,
 } from './tips';
 import { installTooltips, tip } from './tooltip';
-import { createWheel, formatPct, stripRoulette, type WheelSlice } from './wheel';
+import { createWheel, stripRoulette, type WheelSlice } from './wheel';
 
 // ---------------------------------------------------------------------------
 // Infra
@@ -255,7 +247,7 @@ const ACTIVE_ICON: Record<string, string> = {
   expansion: 'expansion',
   effort: 'weights',
   beast: 'beast',
-  devour: 'poison',
+  plague: 'poison',
   transmission: 'intent',
   seal: 'scroll',
 };
@@ -336,7 +328,7 @@ function effectText(e: ProgressEffect): string {
     case 'speed':
       return E.speed(e.amount);
     case 'critBonus':
-      return E.critBonus(Math.round(e.amount * 100));
+      return E.critBonus;
     case 'newTechnique': {
       const head = e.techniqueId ? E.newTechnique(techName(e.techniqueId)) : E.newTechniqueUpgradesOnly;
       return head + (e.upgrades > 0 ? E.upgrades(e.upgrades) : '');
@@ -358,7 +350,7 @@ function effectText(e: ProgressEffect): string {
     case 'akatsukiWeakened':
       return E.akatsukiWeakened[e.reason]!;
     case 'akatsukiInsight':
-      return E.akatsukiInsight(Math.round(e.amount * 100));
+      return E.akatsukiInsight;
     case 'clanLesson': {
       const lesson = S.clanLessons[e.lineageId];
       return E.clanLesson(lesson?.title ?? '', lesson?.bonus ?? '', e.xp);
@@ -437,14 +429,8 @@ function modChips(mods: NextFightMods): string {
 
 /** Caixa de status com a dica do que ele faz. */
 function statBox(key: keyof typeof S.stats, value: string | number): string {
-  const B = data.balance;
   const T = S.tips.stats;
-  const desc =
-    key === 'physical'
-      ? T.physical(Math.round(B.resistance.passive * 100), Math.round(B.resistance.resist * 100), Math.round(B.resistance.stance * 100))
-      : key === 'crit'
-        ? T.crit(B.crit.multiplier)
-        : T[key];
+  const desc = T[key];
   return `<div${tip(S.stats[key], desc)}><small>${S.stats[key]}</small><b>${value}</b></div>`;
 }
 
@@ -477,11 +463,12 @@ function techniqueRows(p: PlayerState): string {
       const slot = techniqueSlot(t);
       const tech = playerTechnique(p, t.id, data);
       let info: string;
-      if (slot === 'medical') info = S.ui.heal(Math.round(medicalHealPct(p, data) * 100));
+      if (slot === 'medical') info = S.ui.heal;
       else if (t.mental) info = S.ui.mentalStrength(t.mentalStrength ?? 1);
       else if (tech.barrier !== undefined) info = S.ui.barrierHint(tech.barrier, Boolean(t.reflectPct));
       else if (t.state) info = S.ui.armorHint;
-      else info = `${tech.baseDamage}${(t.hits ?? 1) > 1 ? `×${t.hits}` : ''} dano · ${Math.round((t.accuracy ?? data.balance.hit.defaultAccuracy) * 100)}%`;
+      else if (t.devour) info = S.ui.devourInfo;
+      else info = S.ui.techLine(tech.baseDamage, t.hits ?? 1, Math.round((t.accuracy ?? data.balance.hit.defaultAccuracy) * 100));
       if (t.chakraDrain) info += ` · ${S.ui.drain(t.chakraDrain)}`;
       if (t.requiresDojutsu) info += ` · ${S.ui.requires(S.dojutsu[t.requiresDojutsu]!.name)}`;
       const lvl = ` <span class="lvl">${roman(techniqueLevel(p, t.id, data))}</span>`;
@@ -538,10 +525,7 @@ function passiveItems(p: PlayerState, tag: 'li' | 'p'): string[] {
 /** Valor atual do efeito passivo da invocação (para o inventário). */
 function summonEffect(p: PlayerState): string {
   if (!p.summon) return '';
-  const fx = S.summonEffects[p.summon.animal]!;
-  if (p.summon.animal === 'toad') return fx(Math.round(toadDamagePct(p, data) * 100));
-  if (p.summon.animal === 'snake') return fx(snakePoisonBonus(p, data) ?? 0);
-  return fx(Math.round(slugHealPct(p, data) * 100));
+  return S.summonEffects[p.summon.animal]!(p.summon.level);
 }
 
 /** Retrato do ninja (desenho da linhagem ou imagem própria em img/ninja/) com o selo do clã. */
@@ -657,7 +641,7 @@ function sheetHtml(c: Campaign): string {
       <h3 class="sheet-title">${S.ui.attributes}</h3>
       <div class="attrs">
         ${statBox('taijutsu', p.offense.taijutsu)}${statBox('ninjutsu', p.offense.ninjutsu)}${statBox('genjutsu', p.offense.genjutsu)}${statBox('speed', p.speed)}
-        ${statBox('physical', p.resistance.physical)}${statBox('mental', p.resistance.mental)}${statBox('crit', formatPct(crit))}${statBox('hp', p.maxHp)}${statBox('chakra', p.maxChakra)}
+        ${statBox('physical', p.resistance.physical)}${statBox('mental', p.resistance.mental)}${statBox('crit', S.ui.critTier(crit))}${statBox('hp', p.maxHp)}${statBox('chakra', p.maxChakra)}
       </div>
       <h3 class="sheet-title">${S.ui.bag}</h3>
       <ul class="bag">${bagSlots(p)}</ul>
@@ -1097,9 +1081,7 @@ function villainKit(v: VillainDefT): string {
 function villainStats(phys: number, mental: number, speed: number): string {
   const pill = (key: 'physical' | 'mental' | 'speed', ico: string, v: number) => {
     const T = S.tips.stats;
-    const B = data.balance.resistance;
-    const desc =
-      key === 'physical' ? T.physical(Math.round(B.passive * 100), Math.round(B.resist * 100), Math.round(B.stance * 100)) : T[key];
+    const desc = T[key];
     return `<span class="stat-pill"${tip(S.stats[key], desc)}>${icon(ico)}<small>${S.stats[key]}</small><b>${v}</b></span>`;
   };
   return `<div class="stat-pills">${pill('physical', 'barrier', phys)}${pill('mental', 'genjutsu', mental)}${pill('speed', 'dodge', speed)}</div>`;
@@ -1176,13 +1158,14 @@ function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
   if (fx.expansionTurns > 0) add('expansion', S.ui.expansionOn(fx.expansionTurns), 'good', St.expansion);
   if (fx.effortTurns > 0) add('weights', S.ui.effortOn(fx.effortTurns), 'good', St.effort);
   if (fx.beastTurns > 0) add('beast', S.ui.beastOn(fx.beastTurns), 'good', St.beast);
+  if (fx.plagueTurns > 0) add('poison', S.ui.plagueOn(fx.plagueTurns), 'good', St.plague);
   if (fx.pillTurns > 0 && fx.pill) add('pill', S.ui.pillOn(S.pills[fx.pill] ?? fx.pill, fx.pillTurns), 'good', St.pill);
   if (fx.exhaustedTurns > 0) add('heartbreak', S.ui.exhausted(fx.exhaustedTurns), 'bad', St.exhausted);
   if (fx.copied) add('sharingan', S.ui.copiedChip(techName(fx.copied)), 'good', St.copied);
   if (fx.clonesArmed) add('clones', S.ui.clonesArmed, 'good', St.clones);
   if (fx.armorTurns > 0) add('armor', S.ui.armorOn(fx.armorTurns), 'good', St.armor);
   if (fx.stance) add('stance', S.ui.stanceOn, 'good', St.stance);
-  if (fx.dodge) add('dodge', S.ui.dodge(Math.round(fx.dodge.chance * 100)), 'good', St.dodge);
+  if (fx.dodge) add('dodge', S.ui.dodge, 'good', St.dodge);
   add('willOfFire', `×${s.player.revives}`, '', St.revives);
   return out.map(conditionChip).join('');
 }
@@ -1227,21 +1210,24 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     style = look.style;
     ico = techIcon(p, techId);
     tipAttr = playerTechTip(p, techId);
-    if (isIllusion(tech)) {
-      extra = S.ui.illusionHint(illusionDamage(s, techId, data), formatPct(playerGenjutsuHitChance(s, data, techId)), S.ui.cost(tech.chakraCost));
-      if (tech.mental) sub = S.ui.mentalEscape(formatPct(mentalEscapeChance(playerMentalStrength(s, techId, data), 1, data)));
+    if (tech.devour) {
+      const prev = devourPreview(s, data);
+      extra = `${S.ui.devourHint(prev.insects, prev.chakra, prev.damage)} · ${S.ui.cost(techniqueCost(s, tech, data))}`;
+    } else if (isIllusion(tech)) {
+      extra = `${S.ui.techLine(tech.baseDamage, 1, null)} · ${S.ui.cost(tech.chakraCost)}`;
+      if (tech.mental) sub = S.ui.mentalStrength(tech.mentalStrength ?? 1);
     } else if (tech.mental) {
-      const escape = formatPct(mentalEscapeChance(playerMentalStrength(s, techId, data), 1, data));
-      extra = `${S.ui.mentalEscape(escape)} · ${formatPct(playerGenjutsuHitChance(s, data, techId))} · ${S.ui.cost(tech.chakraCost)}`;
+      extra = `${S.ui.mentalStrength(tech.mentalStrength ?? 1)} · ${S.ui.cost(tech.chakraCost)}`;
     } else if (tech.barrier !== undefined) {
       extra = `${S.ui.barrierHint(tech.barrier, Boolean(tech.reflectPct))} · ${S.ui.cost(tech.chakraCost)}`;
     } else if (tech.state) {
       extra = `${S.ui.armorHint} · ${S.ui.cost(tech.chakraCost)}`;
     } else {
+      // Dano base e precisão base da técnica; a vantagem elemental aparece só como seta.
       const prev = attackPreview(s, techId, data);
       const elMark = prev.elementMult > 1 ? ` <span class="adv">${S.ui.advantage}</span>` : prev.elementMult < 1 ? ` <span class="dis">${S.ui.disadvantage}</span>` : '';
-      const hits = prev.hits > 1 ? `×${prev.hits}` : '';
-      extra = `≈${prev.damage}${hits}${elMark} · ${formatPct(prev.hitChance)} · ${S.ui.cost(tech.chakraCost)}`;
+      const accuracy = Math.round((tech.accuracy ?? data.balance.hit.defaultAccuracy) * 100);
+      extra = `${S.ui.techLine(tech.baseDamage, prev.hits, accuracy)}${elMark} · ${S.ui.cost(tech.chakraCost)}`;
     }
     if (tech.chakraDrain) sub = S.ui.drain(tech.chakraDrain);
   } else if (itemId) {
@@ -1275,7 +1261,7 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
 
 type ActionTab = AttackType | 'special' | 'items';
 
-/** Abas de categoria que o jogador usa (tai, nin, gen), a de ações especiais e a da bolsa. */
+/** Abas de categoria que o jogador usa (taijutsu, ninjutsu, genjutsu), a de ações especiais e a da bolsa. */
 function actionTabs(s: BattleState): ActionTab[] {
   const copiedType = s.playerFx.copied ? data.techniquesById[s.playerFx.copied]?.type : undefined;
   const types = (['taijutsu', 'ninjutsu', 'genjutsu'] as AttackType[]).filter((t) => canUseType(s.player, t, data) || t === copiedType);
@@ -1305,7 +1291,6 @@ function actionList(s: BattleState, tab: ActionTab): PlayerAction[] {
 /** Painel de reação: Resistir em destaque, com as chances de cada outra opção. */
 function reactionButton(s: BattleState, pending: PendingReaction, choice: ReactionChoice): string {
   const prev = reactionPreview(s, pending.incoming, choice, data);
-  const pct = (x: number) => Math.round(x * 100);
   const A = S.tips.actions;
   switch (prev.kind) {
     case 'resist':
@@ -1315,7 +1300,7 @@ function reactionButton(s: BattleState, pending: PendingReaction, choice: Reacti
         primary: true,
         ico: icon('stance'),
         title: S.ui.reactResist,
-        extra: S.ui.reactResistHint(pct(prev.fraction), incomingDamagePreview(s, pending.incoming, data)),
+        extra: S.ui.reactResistHint,
         tip: tip(S.ui.reactResist, A.resist),
       });
     case 'substitution':
@@ -1324,7 +1309,7 @@ function reactionButton(s: BattleState, pending: PendingReaction, choice: Reacti
         cls: 'react act-substitution',
         ico: icon('substitution'),
         title: S.ui.reactSubstitution,
-        extra: S.ui.reactSubstitutionHint(pct(prev.chance), prev.usesLeft, prev.decoy),
+        extra: S.ui.reactSubstitutionHint(prev.usesLeft, prev.decoy),
         tip: tip(S.ui.reactSubstitution, A.substitution),
       });
     case 'clash': {
@@ -1332,14 +1317,14 @@ function reactionButton(s: BattleState, pending: PendingReaction, choice: Reacti
       const tech = playerTechnique(s.player, id, data);
       const look = techLook(tech.type, tech.element);
       const title = S.ui.reactClash(esc(techName(id)));
-      const [lose, cancel, win] = prev.odds;
+      const [lose, , win] = prev.odds;
       return actionCell({
         choice,
         cls: `react ${look.cls}`,
         style: look.style,
         ico: techIcon(s.player, id),
         title,
-        extra: `${S.ui.reactClashHint(pct(win), pct(cancel), pct(lose))} · ${S.ui.cost(tech.chakraCost)}`,
+        extra: `${S.ui.reactClashHint(win > lose + 0.1 ? 'good' : lose > win + 0.1 ? 'bad' : 'even')} · ${S.ui.cost(tech.chakraCost)}`,
         tip: tip(title, A.clash),
       });
     }
@@ -1446,7 +1431,6 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       const p = st.player;
       const cost = freeActiveCost(st, kind, data);
       if (cost === null || !affordable(st, kind)) return '';
-      const mult = (n: number) => `×${String(n).replace('.', ',')} tai`;
       if (kind === 'dojutsu' && p.dojutsu) {
         const stage = sharinganStage(p, data);
         const name = S.dojutsu[p.dojutsu]!.name;
@@ -1455,23 +1439,22 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       }
       if (kind === 'gates') {
         const gates = gatesToOpen(p, data)!;
-        const hint = `−${gatesHpCost(p, gates.hpCostPct)} HP · ${mult(gates.taijutsuMult)} · ${S.ui.activeFreeHint}`;
+        const hint = `−${gatesHpCost(p, gates.hpCostPct)} HP · ${S.ui.activeFreeHint}`;
         return toggle('gates', 'gates', S.ui.activeFree(S.gatesStage(gates.stage), cost), `${S.gatesStage(gates.stage)} ✓`, hint);
       }
-      const cfg = data.balance.expansion;
-      const hint = `${mult(cfg.taijutsuMult)} · speed −${cfg.speedPenalty} · ${S.ui.activeFreeHint}`;
+      const hint = `${S.ui.expansionHint} · ${S.ui.activeFreeHint}`;
       return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name} ✓`, hint);
     };
     /** Ativas de linhagem com botão próprio (Esforço, Fera, Devorar, Transmissão, Cópia, Selamento, Sombra, Pílulas). */
     const lineageActiveToggle = (
       st: BattleState,
-      kind: 'effort' | 'beast' | 'devour' | 'transmission' | 'copy' | 'seal' | 'shadowHold' | 'pills',
+      kind: 'effort' | 'beast' | 'plague' | 'transmission' | 'copy' | 'seal' | 'shadowHold' | 'pills',
     ): string => {
       const p = st.player;
       const cost = freeActiveCost(st, kind, data);
       if (cost === null || !affordable(st, kind)) return '';
       if (kind === 'copy') {
-        const label = S.ui.copyFree(formatPct(copyChance(st, data)), cost);
+        const label = S.ui.copyFree(cost);
         return toggle('copy', 'sharingan', label, `${S.actives.copy!.name} ✓`, S.ui.copyHint(techName(copyTarget(st)!)));
       }
       if (kind === 'seal') {
@@ -1488,16 +1471,10 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         const left = activeUses(p, 'effort', data) - st.playerFx.effortUsed;
         return toggle('effort', 'weights', S.ui.effortFree(left), `${name} ✓`, S.ui.activeFreeHint);
       }
-      if (kind === 'devour') {
-        const cfg = data.balance.devour;
-        const n = st.villain.insects;
-        const chakra = Math.min(st.villain.chakra, n * cfg.chakraPerInsect);
-        const damage = (n - Math.ceil(chakra / cfg.chakraPerInsect)) * cfg.damagePerInsect;
-        return toggle('devour', 'poison', S.ui.activeFree(`${name} (${n})`, cost), `${name} ✓`, S.ui.devourHint(n, chakra, damage));
-      }
+      if (kind === 'plague') return toggle('plague', 'poison', S.ui.activeFree(name, cost), `${name} ✓`, S.actives.plague!.desc);
       if (kind === 'transmission') {
         const left = activeUses(p, 'transmission', data) - st.playerFx.transmissionUsed;
-        const label = S.ui.transmissionFree(formatPct(playerGenjutsuHitChance(st, data)), cost, left);
+        const label = S.ui.transmissionFree(cost, left);
         return toggle('transmission', 'intent', label, `${name} ✓`, S.ui.transmissionHint(techName(st.villain.charging!)));
       }
       return toggle('beast', 'beast', S.ui.activeFree(name, cost), `${name} ✓`, S.actives.beast!.desc);
@@ -1506,8 +1483,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     const forceGatesToggle = (st: BattleState): string => {
       if (!extras.gates || !forcedGate(st.player, data)) return '';
       const next = forcedGate(st.player, data)!;
-      const hint = S.ui.forceGatesHint(S.gatesStage(next.stage), Math.round(data.balance.gates.force.failHpPct * 100));
-      const label = S.ui.forceGates(formatPct(forceGatesChance(st.player, data)));
+      const hint = S.ui.forceGatesHint(S.gatesStage(next.stage));
+      const label = S.ui.forceGates;
       return toggle('forceGates', 'gates', label, `${label} ✓`, hint);
     };
     const free = [
@@ -1520,7 +1497,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       freeActiveToggle(s, 'expansion'),
       lineageActiveToggle(s, 'effort'),
       lineageActiveToggle(s, 'beast'),
-      lineageActiveToggle(s, 'devour'),
+      lineageActiveToggle(s, 'plague'),
       lineageActiveToggle(s, 'transmission'),
       lineageActiveToggle(lit, 'copy'),
       lineageActiveToggle(s, 'seal'),
@@ -1580,7 +1557,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     // Cópia (Uchiha): escolha grátis junto com a reação.
     let copy = false;
     const copyBtn = canCopyIncoming(s, data)
-      ? `<div class="free-row"><button class="btn focus-btn" data-copy aria-pressed="false"${tip(S.actives.copy!.name, S.ui.copyReactHint)}>${icon('sharingan')}<span>${S.ui.copyReact(formatPct(copyChance(s, data)), data.balance.copy.chakraCost)}</span></button></div>`
+      ? `<div class="free-row"><button class="btn focus-btn" data-copy aria-pressed="false"${tip(S.actives.copy!.name, S.ui.copyReactHint)}>${icon('sharingan')}<span>${S.ui.copyReact(data.balance.copy.chakraCost)}</span></button></div>`
       : '';
     actionsEl.innerHTML = `<div class="react-box"><div class="react-head">${villainPortrait(s.villain.def.id, 'sm')}<h3><span class="react-tech"${techTip}>${S.ui.reactTitle(villainName(s.villain.def.id), esc(tech))}</span> ${elChip(pending.incoming.element)}${charged}</h3></div>
       ${copyBtn}<div class="act-grid">${pending.options.map((o) => reactionButton(s, pending, o)).join('')}</div></div>`;
@@ -1719,7 +1696,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           log(S.log.torment(who(ev.side), ev.chakra), ev.side === 'villain' ? 'good' : 'bad');
           break;
         case 'mental':
-          log(S.log.mental[ev.effect]!(who(ev.target), Math.round(ev.escape * 100)), ev.target === 'villain' ? 'good' : 'bad');
+          log(S.log.mental[ev.effect]!(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad');
           break;
         case 'mentalBroken':
           log(S.log.mentalBroken[ev.effect]!(who(ev.side)), ev.side === 'villain' ? 'bad' : 'good');
@@ -1867,7 +1844,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           log(S.log.expansionEnd, 'sys');
           break;
         case 'effort':
-          log(S.log.effort(ev.bonus), 'good');
+          log(S.log.effort, 'good');
           break;
         case 'effortEnd':
           log(S.log.effortEnd, 'sys');
@@ -1879,8 +1856,14 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'beastEnd':
           log(S.log.beastEnd, 'sys');
           break;
+        case 'plague':
+          disp.pck -= ev.chakra;
+          log(S.log.plague, 'good');
+          break;
+        case 'plagueEnd':
+          log(S.log.plagueEnd, 'sys');
+          break;
         case 'devour':
-          disp.pck -= data.balance.devour.chakraCost;
           disp.vck -= ev.chakra;
           disp.vhp -= ev.damage;
           if (ev.chakra > 0) floatNumber(vcard(), `−${ev.chakra} ck`, 'ck');
@@ -2014,7 +1997,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         }
         case 'debilitate':
-          log(S.log.debilitate[ev.kind]!(who(ev.target), ev.turns ?? Math.round((ev.escape ?? 0) * 100)), ev.target === 'villain' ? 'good' : 'bad');
+          log(S.log.debilitate[ev.kind]!(who(ev.target), ev.turns ?? 0), ev.target === 'villain' ? 'good' : 'bad');
           break;
         case 'genjutsuImmune':
           log(S.log.genjutsuImmune(who(ev.target)), 'sys');

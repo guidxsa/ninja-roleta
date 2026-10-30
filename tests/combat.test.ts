@@ -476,8 +476,8 @@ describe('genjutsu: aprisionamento sem dano', () => {
 
   it('a força cresce com a vantagem do genjutsu sobre a resistência mental usada pelo alvo e baixa a fuga, sem teto', () => {
     // O vilão resiste: usa 70% da resistência mental (10 → 7). Força = 1 + vantagem / 8.
-    const first = (gen: number, villainMental = 10) =>
-      escape(playRound(startBattle(withGen(gen), testVillain({ resistance: { physical: 10, mental: villainMental } }), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData));
+    const first = (genjutsu: number, villainMental = 10) =>
+      escape(playRound(startBattle(withGen(genjutsu), testVillain({ resistance: { physical: 10, mental: villainMental } }), { playerStartsFirst: true }), 'tech:basicGenjutsu', seq(0.5), gameData));
     const expected = (advantage: number) => Math.max(cfg.escapeMin, cfg.escapeBase - cfg.escapePerStrength * (advantage / 8));
     expect(first(10)).toBeCloseTo(expected(3));
     expect(first(15)).toBeCloseTo(expected(8));
