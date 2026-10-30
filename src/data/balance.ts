@@ -148,23 +148,35 @@ export const balance = {
   effort: { chakraCost: 0, turns: 3, offenseBonus: 3, uses: 1, extraUseLevels: [4, 7] },
   // Fera de quatro patas (Inuzuka): speed +`speedBonus`, Dupla com `duoChance` e Substituição sem gastar usos.
   beast: { chakraCost: 5, turns: 3, speedBonus: 3, duoChance: 0.6, uses: 1, extraUseLevels: [7] },
-  // Devorar (Aburame): cada inseto drena `chakraPerInsect`; os que sobram com o vilão sem chakra causam `damagePerInsect`.
   // Praga (Aburame, ativa grátis): por `turns` rodadas (contando a da ativação), os insetos por acerto e o teto
   // de insetos são multiplicados por `mult`. Ao acabar, o excesso cai para o teto normal.
   plague: { chakraCost: 6, turns: 3, mult: 2, uses: 1, extraUseLevels: [7] },
-  // Devorar (Aburame, técnica de ninjutsu): custa `chakraCostPerInsect` por inseto; cada inseto drena
-  // `chakraPerInsect` do vilão e os que sobram com ele sem chakra causam `damagePerInsect` de dano direto.
-  devour: { chakraCostPerInsect: 1, chakraPerInsect: 3, damagePerInsect: 2 },
+  // Devorar (Aburame, técnica de ninjutsu): custa 1 de chakra a cada `insectsPerChakra` insetos (para cima). Pela
+  // razão ninjutsu base do Aburame ÷ resistência física do vilão, o maior degrau alcançado dá `pct` do HP máximo do
+  // vilão por inseto, como dano direto (sem resistência).
+  devour: {
+    insectsPerChakra: 2,
+    table: [
+      { ratio: 0, pct: 0.01 },
+      { ratio: 0.75, pct: 0.015 },
+      { ratio: 1, pct: 0.02 },
+      { ratio: 1.25, pct: 0.025 },
+      { ratio: 1.5, pct: 0.03 },
+    ],
+  },
   // Transmissão mental (Yamanaka): contra golpe carregado, rola o acerto de genjutsu; pegou, o vilão perde o golpe e a vez.
   transmission: { chakraCost: 5, uses: 1, extraUseLevels: [4, 7] },
   // Cópia (Uchiha, com o Sharingan): cada tentativa custa `chakraCost`; a chance vem do estágio do Sharingan.
   copy: { chakraCost: 3 },
   // Selamento (Uzumaki): a próxima técnica do vilão sai da roleta dele por `turns` rodadas.
   seal: { chakraCost: 6, uses: 1, turns: 2 },
-  // Sombra costurada (Nara): manter a Imitação de Sombra custa `baseCost` + `perHold` por vez já mantida.
-  shadowHold: { baseCost: 3, perHold: 1 },
-  // Pílulas do clã (Akimichi): 1×/luta, roleta pura. Valem `turns` rodadas, contando a da ativação.
+  // Enforcamento por Sombra (Nara, técnica de ninjutsu com o vilão preso pela Imitação de Sombra): dano =
+  // força do controle × `damagePerStrength` + ninjutsu − resistência física usada pelo vilão. Sem acerto nem crítico.
+  shadowStrangle: { damagePerStrength: 6 },
+  // Pílulas do clã (Akimichi): liberadas no nível `minLevel`; 1×/luta, roleta pura. Valem `turns` rodadas,
+  // contando a da ativação.
   pills: {
+    minLevel: 7,
     usesPerFight: 1,
     turns: 3,
     options: [
@@ -178,10 +190,10 @@ export const balance = {
   // Despertar (origens.md#despertar): melhoras de cada linhagem nos níveis 4 e 7.
   awakening: {
     common: { comeback: { level: 4, hpBelowPct: 0.25, healPct: 0.15 }, effort: { level: 7, offenseBonus: 5, turns: 4 } },
-    nara: { shadow: { level: 4, strengthBonus: 1 }, strangle: { level: 7, hpPct: 0.05 } },
+    nara: { shadow: { level: 4, strengthBonus: 1 }, strangle: { level: 7, strengthBonus: 1 } },
     akimichi: { heavyBody: { level: 4, weightMult: 1.1 }, expansion: { level: 7 } },
     yamanaka: { mindReading: { level: 4, villainHitPenalty: 0.15 }, possession: { level: 7, selfDamageMult: 1.25 } },
-    aburame: { colony: { level: 4, maxInsects: 15 }, devour: { level: 7, chakraPerInsect: 4, damagePerInsect: 3 } },
+    aburame: { colony: { level: 4, maxInsects: 15 }, devour: { level: 7, pctBonus: 0.005 } },
     inuzuka: { duo: { level: 4, damagePct: 0.6 }, beast: { level: 7, chakraCost: 3, turns: 4 } },
     taijutsuProdigy: { force: { level: 4, chanceBonus: 0.1 }, gates: { level: 7, usesPerFight: 2 } },
     hyuuga: { byakugan: { level: 4, duration: 7 } },

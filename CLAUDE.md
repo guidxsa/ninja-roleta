@@ -37,7 +37,7 @@ Nenhuma. A rodada "rebalanceamento das origens" (27/10/2026) foi implementada na
 
 Observação em aberto (não é mudança de design): na simulação, a fatia "nova técnica" da recompensa vale bem menos que as outras (sem ela, o comum vence ~20 pontos a mais). Vale discutir com o usuário antes de mexer.
 
-Observação em aberto (v0.25.0): campanha por origem (1000 runs, seed 2) no Médio de 75% (Uchiha) a 89% (Hyuuga), fora o Aburame, que ficou em 57% (Difícil 16%). O usuário testou à mão e achou o Aburame forte demais; por isso a compensação de status foi desfeita, sabendo que o bot da simulação subestima o Aburame (não usa bem a Praga nem o Devorar com o vilão sem chakra). Não compensar pela simulação sem conversar; melhorar o bot do Aburame é o próximo passo para medir de verdade.
+Observação em aberto (v0.26.0): campanha por origem (1000 runs, seed 2) no Médio de 77% (Uchiha, prodígio) a 88% (Hyuuga, Uzumaki), fora o Aburame, que caiu de 57% (v0.25.0) para 45% (Difícil 13%) com o Enxame de dano fixo e o Devorar em % do HP máximo. O usuário testou a v0.25.0 à mão e achou o Aburame forte demais; o bot ainda subestima o Aburame (heurística simples para quando devorar e para a Praga). Não compensar pela simulação sem conversar; melhorar o bot do Aburame é o próximo passo para medir de verdade.
 
 Quando o design mudar antes do código, listar aqui o que falta implementar.
 

@@ -160,8 +160,9 @@ Ativar um estado gasta o turno. O manto do jinchuuriki é um estado **neutro** (
 | Técnica | Dano | Golpes | Chakra | Precisão | Efeito | Quem |
 |---|---|---|---|---|---|---|
 | Imitação de Sombra | 0 | 1 | 5 | 80% | Aprisionado (força base 1; força e fuga pela fórmula do genjutsu, usando ninjutsu contra a resistência física) | Nara |
-| Enxame | 4 | 2 | 5 | 85% | Cada golpe que acerta prende um inseto (Colônia). Linha: II 6×3 (6 de chakra), III 8×4 (7 de chakra) | Aburame |
-| Devorar | — | — | 1 por inseto | — | Consome os insetos: drena chakra e o que sobra vira dano direto ([origens.md](origens.md#aburame-insetos)) | Aburame |
+| Enforcamento por Sombra | força × 6 | 1 | 5 | não rola | Só com o vilão preso pela Imitação de Sombra; ninjutsu contra a resistência física, sem crítico; não solta o vilão ([origens.md](origens.md#nara-sombras)) | Nara |
+| Enxame | 1 fixo | 2 | 5 | 85% | Dano fixo (sem status nem resistência); cada golpe que acerta prende um inseto (Colônia). Linha: II 4 golpes (6 de chakra), III 6 golpes (7 de chakra) | Aburame |
+| Devorar | — | — | 1 a cada 2 insetos | — | Consome os insetos: dano direto em % do HP máximo do vilão por inseto ([origens.md](origens.md#aburame-insetos)) | Aburame |
 | Rotação | — | — | 5 | — | Barreira neutra (ação): escudo de 26 que devolve 50% do dano que bloqueia. | Hyuuga (nível 4) |
 | Correntes de Chakra | 0 | 1 | 6 | 80% | Aprisionado (força base 1, como a Imitação de Sombra); o vilão preso perde 3 de chakra por vez perdida | Uzumaki (nível 4) |
 

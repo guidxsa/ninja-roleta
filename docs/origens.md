@@ -58,8 +58,8 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 | Origem | Passiva | Ativa | Kit inicial | Exclusivas | Restrições |
 |---|---|---|---|---|---|
 | Comum | Determinação | Esforço | Taijutsu básico, ninjutsu básico | — | — |
-| Nara | Gênio, Sombra costurada | — | Taijutsu básico, ninjutsu básico, Imitação de Sombra | Imitação de Sombra | — |
-| Akimichi | Corpo pesado | Expansão, Pílulas do clã | Taijutsu básico, ninjutsu básico | Rolo Colossal (nível 4) | — |
+| Nara | Gênio | — | Taijutsu básico, ninjutsu básico, Imitação de Sombra, Enforcamento por Sombra | Imitação de Sombra, Enforcamento por Sombra | — |
+| Akimichi | Corpo pesado | Expansão, Pílulas do clã (nível 7) | Taijutsu básico, ninjutsu básico | Rolo Colossal (nível 4) | — |
 | Yamanaka | Leitura mental, Mente no controle | Transmissão mental | Taijutsu básico, ninjutsu básico, Transferência de Mente | Transferência de Mente | — |
 | Aburame | Colônia | Praga | Taijutsu básico, ninjutsu básico, Enxame, Devorar | Enxame, Devorar | — |
 | Inuzuka | Dupla | Fera de quatro patas | Taijutsu básico, ninjutsu básico, Presas Giratórias | Presas Giratórias | — |
@@ -83,7 +83,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 
 - **Gênio** (passiva com usos): a tela mostra a próxima ação do vilão antes de o jogador escolher a sua. E, **2 vezes por luta (+1 nos níveis 4 e 7)**, uma escolha grátis (não gasta o turno) arma a próxima roleta do Nara: ela gira duas vezes e fica com o melhor resultado. Vale para acerto (de golpes, genjutsu e Imitação de Sombra), Substituição e disputa.
 - **Imitação de Sombra**: ninjutsu sem dano que prende o alvo (efeito Aprisionado). Por ser ninjutsu, funciona contra quem é imune a genjutsu (Gaara).
-- **Sombra costurada**: com o vilão preso pela Imitação de Sombra, uma escolha grátis **mantém a sombra**: naquela vez, a roleta de fuga dele não gira ([efeitos.md](efeitos.md#duração-dos-efeitos-mentais)). Custa **3 de chakra, +1 a cada vez já mantida** (3, 4, 5...). Não soma tenacidade (não é um controle novo). Controle longo, mas caro.
+- **Enforcamento por Sombra**: ninjutsu do kit (gasta o turno), só com o vilão **preso pela Imitação de Sombra**. Custa 5 de chakra, não rola acerto e não tem crítico. Dano = **força do controle × 6 + ninjutsu − resistência física usada pelo vilão** (a passiva, já que ele perdeu a vez), × a vulnerabilidade de quem está controlado. Não solta o vilão: a roleta de fuga dele gira normalmente ([efeitos.md](efeitos.md#duração-dos-efeitos-mentais)). A força do controle é a da Imitação de Sombra que prendeu (+1 no nível 4).
 
 ### Akimichi (expansão)
 
@@ -102,7 +102,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 
 - **Expansão** (ativa): **escolha grátis** (não gasta o turno) que custa 6 de chakra. Por 3 rodadas, contando a da ativação: **peso ×1,5** e libera os degraus do Corpo pesado acima do teto normal; speed −3. Pode ser usada de novo quando acabar.
 - **Rolo Colossal** (nível 4): taijutsu exclusivo (dano 20).
-- **Pílulas do clã** (ativa): escolha grátis, sem chakra, **1 vez por luta**. Gira uma roleta pura das 3 pílulas; o efeito vale 3 rodadas, contando a da ativação, e multiplica junto com a Expansão. O HP pago nunca deixa abaixo de 1.
+- **Pílulas do clã** (ativa, a partir do **nível 7**): escolha grátis, sem chakra, **1 vez por luta**. Gira uma roleta pura das 3 pílulas; o efeito vale 3 rodadas, contando a da ativação, e multiplica junto com a Expansão. O HP pago nunca deixa abaixo de 1.
 
   | Pílula | Chance | Efeito | Custo |
   |---|---|---|---|
@@ -120,9 +120,19 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 ### Aburame (insetos)
 
 - **Colônia** (passiva): cada golpe do **Enxame** que acerta prende **1 inseto** no vilão (até 10). No **fim de cada rodada**, cada inseto preso drena **1 de chakra** do vilão. Outros ataques não prendem insetos.
-- **Enxame**: ninjutsu neutro de golpes pequenos, em linha própria: I com 2 golpes de 4 (5 de chakra), II com 3 golpes de 6 (6 de chakra), III com 4 golpes de 8 (7 de chakra): +2 de dano e +1 golpe por nível. Cada golpe rola o próprio acerto. Não drena chakra por si só.
+- **Enxame**: ninjutsu neutro que aplica insetos, em linha própria: I com 2 golpes (5 de chakra), II com 4 golpes (6 de chakra), III com 6 golpes (7 de chakra): +2 golpes por nível. Cada golpe rola o próprio acerto e causa **1 de dano fixo** (sem status, resistência nem crítico). Não drena chakra por si só.
 - **Praga** (ativa): escolha grátis, 6 de chakra, **1 uso por luta** (+1 no nível 7). Por 3 rodadas, contando a da ativação, o Enxame prende **2 insetos por acerto** e o teto de insetos **dobra**. Quando acaba, o excesso cai para o teto normal.
-- **Devorar**: técnica de ninjutsu do kit (gasta o turno), com ao menos 1 inseto no vilão. Custa **1 de chakra por inseto** e não rola acerto. Consome todos os insetos: cada um drena **3 de chakra**; os que sobram com o vilão sem chakra causam **2 de dano direto** cada (sem resistência). Vilão sem chakra fica só com as técnicas que não custam chakra.
+- **Devorar**: técnica de ninjutsu do kit (gasta o turno), com ao menos 1 inseto no vilão. Custa **1 de chakra a cada 2 insetos** (arredonda para cima) e não rola acerto. Consome todos os insetos e causa **dano direto** (sem resistência) = % por inseto × insetos × HP máximo do vilão, arredondado para baixo. A % vem da **razão** = ninjutsu base do Aburame (sem bônus temporários) ÷ resistência física do vilão, pelo maior degrau alcançado:
+
+  | Razão | Dano por inseto |
+  |---|---|
+  | abaixo de 0,75 | 1% do HP máximo |
+  | 0,75 | 1,5% |
+  | 1 | 2% |
+  | 1,25 | 2,5% |
+  | 1,5 | 3% |
+
+  O HP máximo do vilão não muda. O Devorar não drena chakra (quem drena é a Colônia, no fim da rodada).
 
 ### Inuzuka (parceiro canino)
 
@@ -189,10 +199,10 @@ Nos níveis 4 e 7, cada linhagem desperta: a tela da subida de nível mostra o q
 | Linhagem | Nível 4 | Nível 7 |
 |---|---|---|
 | Comum | **Nunca desistir**: na 1ª vez na luta em que o HP cai abaixo de 25%, recupera 15% do HP máximo. | **Esforço supremo**: o Esforço dá +5 e dura 4 rodadas. |
-| Nara | A Imitação de Sombra ganha +1 de força. | **Estrangulamento**: a cada vez mantida pela Sombra costurada, o vilão perde 5% do HP máximo. |
-| Akimichi | Peso +10%; Rolo Colossal. | A Expansão não reduz mais a speed. |
+| Nara | A Imitação de Sombra ganha +1 de força. | O Enforcamento por Sombra soma +1 de força do controle no dano. |
+| Akimichi | Peso +10%; Rolo Colossal. | Pílulas do clã; a Expansão não reduz mais a speed. |
 | Yamanaka | Leitura mental: −15 de acerto nos ataques do vilão; +1 uso da Transmissão. | Na Possessão, o vilão se fere ×1,25; +1 uso da Transmissão. |
-| Aburame | O vilão aguenta até 15 insetos presos. | O Devorar drena 4 de chakra e causa 3 de dano por inseto; Praga com +1 uso. |
+| Aburame | O vilão aguenta até 15 insetos presos. | O Devorar causa +0,5% do HP máximo por inseto; Praga com +1 uso. |
 | Inuzuka | O cão da Dupla bate com 60% do dano base. | A Fera custa 3 de chakra e dura 4 rodadas. |
 | Prodígio do taijutsu | Forçar os portões: +10% de chance; Redemoinho da Folha. | Portões: 2 usos por luta; Lótus Primaveril. |
 | Uchiha | Sharingan de 2 tomoe (Cópia com 65%). | Sharingan de 3 tomoe (Cópia com 80%) e Tsukuyomi. |

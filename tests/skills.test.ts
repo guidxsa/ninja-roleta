@@ -21,6 +21,7 @@ import {
   villainResistance,
   type BattleEvent,
   type BattleState,
+  devourPreview,
 } from '../src/core/combat';
 import { applyLevelUp, createPlayer, gainXp, learnTechnique, upgradeTechnique, type PlayerState } from '../src/core/player';
 import { applyPremium, chooseUpgrade, learnableTechniques, levelUp } from '../src/core/progression';
@@ -29,6 +30,7 @@ import { gameData } from '../src/data/index';
 import { levelTechniques, lineageTechniques, lineTechniques, premiumTechniques, techniquesById } from '../src/data/techniques';
 import { villainsById } from '../src/data/villains';
 import { battle, hold, seq, testVillain, withInitiative } from './helpers';
+const at = (p: PlayerState, level: number): PlayerState => ({ ...p, level });
 
 const common: Origin = { lineageId: null, affinity: 'fire', jinchuuriki: false };
 const uchiha: Origin = { lineageId: 'uchiha', affinity: 'fire', jinchuuriki: false };
@@ -141,22 +143,22 @@ describe('ficha de técnica', () => {
     const s1 = playRound(withInitiative(startBattle(p, testVillain())), 'tech:insectSwarm', seq(0.5, 0.5, 0.01, 0.5, 0.5), gameData);
     const hits = ofType(s1.log, 'attack').filter((a) => a.side === 'player');
     expect(hits.map((a) => a.outcome)).toEqual(['hit', 'hit']);
-    // 4 + 12 − 7 = 9 por golpe
-    expect(hits.map((a) => a.damage)).toEqual([9, 9]);
+    // Dano fixo de 1 por golpe.
+    expect(hits.map((a) => a.damage)).toEqual([1, 1]);
     expect(s1.villain.insects).toBe(2);
     // O Enxame não drena; a Colônia drena 1 por inseto no fim da rodada.
     expect(ofType(s1.log, 'chakraDrain')).toEqual([{ type: 'chakraDrain', amount: 2, source: 'hive' }]);
   });
 
-  it('Enxame sobe em linha: +2 de dano e +1 golpe por nível (II 6×3, III 8×4)', () => {
+  it('Enxame sobe em linha: +2 golpes por nível (II 4 golpes, III 6), sempre 1 de dano fixo', () => {
     const p = { ...createPlayer(clan('aburame'), gameData), level: 7 };
     const two = upgradeTechnique(p, 'insectSwarm', gameData);
     expect(two.techniques).toContain('insectSwarm2');
     const three = upgradeTechnique(two, 'insectSwarm2', gameData);
     expect(three.techniques).toContain('insectSwarm3');
-    expect([techniquesById.insectSwarm2, techniquesById.insectSwarm3].map((t) => [t!.baseDamage, t!.hits])).toEqual([
-      [6, 3],
-      [8, 4],
+    expect([techniquesById.insectSwarm2, techniquesById.insectSwarm3].map((t) => [t!.fixedDamage, t!.hits])).toEqual([
+      [1, 4],
+      [1, 6],
     ]);
   });
 
@@ -651,25 +653,36 @@ describe('passivas e ativas de clã', () => {
     expect(s2.player.chakra).toBe(p.maxChakra - 5 - 2);
   });
 
-  it('Colônia e Devorar (Aburame): só o Enxame prende insetos; Devorar é ninjutsu, custa 1 por inseto, drena 3 por inseto e o resto vira dano', () => {
+  it('Colônia e Enxame (Aburame): só o Enxame prende insetos; cada golpe causa 1 de dano fixo; 2/4/6 golpes', () => {
     const p = createPlayer(clan('aburame'), gameData);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
     expect(availableActions(s0, gameData)).not.toContain('tech:insectDevour');
     // Outro ataque que acerta não prende inseto.
     expect(playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData).villain.insects).toBe(0);
-    // 4 insetos drenam 12 de chakra: nenhum vira dano; custa 4.
-    const four = { ...s0, villain: { ...s0.villain, insects: 4, chakra: 12 } };
-    expect(availableActions(four, gameData)).toContain('tech:insectDevour');
-    const s2 = playRound(four, 'tech:insectDevour', seq(0.5), gameData);
-    expect(ofType(s2.log, 'devour')).toEqual([{ type: 'devour', insects: 4, chakra: 12, damage: 0 }]);
-    expect(s2.villain.insects).toBe(0);
-    expect(s2.player.chakra).toBe(p.maxChakra - 4);
-    // 10 insetos (teto) contra 3 de chakra: 1 inseto drena, 9 causam 2 de dano cada.
-    const full = { ...s0, villain: { ...s0.villain, insects: 9, chakra: 3 } };
-    const swarm = playRound(full, 'tech:insectSwarm', seq(0.5, 0.01, 0.5, 0.5, 0.5), gameData);
-    expect(swarm.villain.insects).toBe(10);
-    const s3 = playRound({ ...swarm, villain: { ...swarm.villain, chakra: 3 } }, 'tech:insectDevour', seq(0.5), gameData);
-    expect(ofType(ofRound(swarm, s3), 'devour')).toEqual([{ type: 'devour', insects: 10, chakra: 3, damage: 18 }]);
+    const swarm = playRound(s0, 'tech:insectSwarm', seq(0.5), gameData);
+    expect(ofType(swarm.log, 'attack').filter((a) => a.side === 'player').map((a) => a.damage)).toEqual([1, 1]);
+    expect(swarm.villain.insects).toBe(2);
+    expect(['insectSwarm', 'insectSwarm2', 'insectSwarm3'].map((id) => gameData.techniquesById[id]!.hits)).toEqual([2, 4, 6]);
+  });
+
+  it('Devorar (Aburame): % do HP máximo por inseto pela razão ninjutsu ÷ resistência física; 1 ck a cada 2 insetos', () => {
+    const p = createPlayer(clan('aburame'), gameData);
+    // Ninjutsu 12 ÷ resistência 10 = 1,2: 2% por inseto. 5 insetos × 2% × 200 = 20; custa 3; não drena chakra.
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
+    const five = { ...s0, villain: { ...s0.villain, insects: 5 } };
+    expect(availableActions(five, gameData)).toContain('tech:insectDevour');
+    const s1 = playRound(five, 'tech:insectDevour', seq(0.5), gameData);
+    expect(ofType(s1.log, 'devour')).toEqual([{ type: 'devour', insects: 5, pct: 0.02, damage: 20 }]);
+    expect([s1.villain.insects, s1.villain.chakra, s1.villain.hp]).toEqual([0, 20, 180]);
+    expect(s1.player.chakra).toBe(p.maxChakra - 3);
+    // Degraus: resistência 8 (1,5) → 3%; 13 (0,92) → 1,5%; 20 (0,6) → 1%.
+    const pctAt = (physical: number, level = 1) => {
+      const s = withInitiative(startBattle(at(p, level), testVillain({ hp: 200, resistance: { physical, mental: 10 } })));
+      return devourPreview({ ...s, villain: { ...s.villain, insects: 10 } }, gameData);
+    };
+    expect([8, 13, 20].map((r) => pctAt(r).damage)).toEqual([60, 30, 20]);
+    // Nível 7: +0,5% por inseto.
+    expect(pctAt(8, 7).damage).toBe(70);
   });
 
   it('Praga (Aburame): dobra insetos por acerto e o teto; ao acabar, o excesso cai; 1 uso por luta (+1 no nível 7)', () => {

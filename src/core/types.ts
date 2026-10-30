@@ -148,6 +148,10 @@ export interface TechniqueDef {
   holdChakraDrain?: number;
   /** Devorar (Aburame): consome os insetos presos no vilão; o custo depende de quantos são. */
   devour?: boolean;
+  /** Enforcamento por Sombra (Nara): só com o vilão preso pela Imitação de Sombra; dano pela força do controle. */
+  shadowStrangle?: boolean;
+  /** Dano fixo por golpe: ignora status, resistência, crítico e multiplicadores (Enxame). */
+  fixedDamage?: number;
   /** Técnica copiada de um vilão pelo Sharingan (só existe na luta em que foi copiada). */
   copied?: boolean;
 }
