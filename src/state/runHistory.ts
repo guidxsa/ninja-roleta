@@ -16,6 +16,8 @@ export interface RunRecord {
   revivesUsed: number;
   /** Ausente nos registros antigos (antes da escolha de dificuldade). */
   difficulty?: Difficulty;
+  /** Seed das roletas da run (`?seed=` repete). Ausente nos registros antigos. */
+  seed?: number;
 }
 
 /** Subconjunto do `localStorage` usado aqui (injetável nos testes). */
@@ -45,7 +47,7 @@ function saveRuns(storage: KeyValueStorage, runs: RunRecord[], maxRuns: number):
 /** Mais recente primeiro. */
 export function startRun(
   storage: KeyValueStorage,
-  run: { id: string; origin: Origin; now: Date },
+  run: { id: string; origin: Origin; now: Date; seed?: number },
   maxRuns: number,
 ): RunRecord {
   const record: RunRecord = {
@@ -56,6 +58,7 @@ export function startRun(
     status: 'inProgress',
     furthestStage: 0,
     revivesUsed: 0,
+    ...(run.seed !== undefined ? { seed: run.seed } : {}),
   };
   saveRuns(storage, [record, ...loadRuns(storage)], maxRuns);
   return record;

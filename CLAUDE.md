@@ -33,7 +33,37 @@ As regras do jogo vivem em `docs/`. Este arquivo trata só de como trabalhar no 
 
 ## Mudanças de design pendentes
 
-Nenhuma. A rodada "rebalanceamento das origens" (27/10/2026) foi implementada na v0.18.0: 25% de HP e chakra por vitória, controles com tenacidade e vulnerabilidade, barreiras como escudo (ação de turno), ilusões de dano do Uchiha e Sharingan grátis, Possessão do Yamanaka, Gênio do Nara, Determinação mais forte e nerf do prodígio, Akimichi, Inuzuka e Uzumaki. Decisões tomadas junto: o Gênio é ativa com usos por luta (2, +1 nos níveis 4 e 7) e vale nas roletas de combate do jogador; o genjutsu de dano do Uchiha fere de verdade e o do Yamanaka é controle mental com autoferimento; controle em cadeia é contido pela tenacidade (cai por rodada), não por regra de chefe; a meta é não ter origens muito acima ou abaixo das outras.
+Combinado em 31/10/2026 (brainstorm com o usuário). Os números são rascunho: a simulação decide e o usuário faz o ajuste fino. Cada frente vira uma versão própria.
+
+1. **Conquistas + Livro Bingo (v0.29.0)**: início da Fase 2. `runStats` puro lendo o log da luta e os eventos; conquistas como dados (marcos, sorte e azar, estilo e "segredos" escondidos com easter eggs de lore, ex.: Uzumaki + jinchuuriki + vento = "Uzumaki Naruto"); `profile_v1` com conquistas e contadores por vilão; tela Perfil com abas (Histórico, Conquistas, Livro Bingo, Origens). Os easter eggs que dependem dos itens 2 e 3 entram junto com eles.
+2. **Reforma elemental (v0.30.0)**:
+   - roleta de **quantidade de elementos** no sorteio (Comum 1/2/3 = 50/35/15; Uchiha fogo + 35% de um extra; clãs 0/1/2 = 30/55/15; prodígio 0), com `affinity` + `secondaryElements` virando `elements[]`;
+   - **não se aprende elemento novo na run** (a fatia "Elemento secundário" sai e o peso vai para "Nova técnica");
+   - **potencial elemental**: pleno (Comum, Senju, o fogo do Uchiha) começa com o básico e chega ao III; parcial (clãs, Hyuuga, Uzumaki, o elemento extra do Uchiha) **não começa com o básico** e só chega ao II;
+   - o Treino ganha a escolha "foco elemental";
+   - **kekkei genkai de natureza** só para o grupo pleno com um par, por roleta (25%): Gelo (água + vento), Areia (terra + vento), Lava (fogo + terra), Tempestade (raio + água), Vapor (fogo + água), Explosão (terra + raio). Contam como o pai mais vantajoso no encontro de elementos.
+   - **Madeira** é exclusiva do Senju com terra + água (roleta de 30%).
+3. **Origem Senju** (lendária, peso 3): status no formato do Uzumaki, um degrau acima (tai 11, nin 11, gen 6, res. 12/10, speed 10, HP 125, chakra 40). Passivas: **Herdeiro do fundador** (+1 Vontade do Fogo) e **Força vital** (na 1ª vez abaixo de 30% do HP, 4% do HP máximo por rodada por 3 rodadas; curas recebidas +25%). Despertar: no nível 4, 5% por rodada e +2 de chakra por rodada; no nível 7, 2 vezes por luta. O Mokuton prende, drena e desfaz o manto de chakra.
+4. **Nova distribuição de status das origens pela lore** (o usuário faz o ajuste fino; o total fica perto do atual, menos o Senju):
+
+   | Origem | Tai | Nin | Gen | Res. fís. | Res. ment. | Speed | HP | Chakra | Pontos |
+   |---|---|---|---|---|---|---|---|---|---|
+   | Comum | 10 | 10 | 10 | 10 | 10 | 10 | 100 | 30 | 90 |
+   | Nara | 7 | 14 | 9 | 9 | 12 | 9 | 100 | 34 | 91,5 |
+   | Akimichi | 15 | 7 | 4 | 14 | 7 | 6 | 150 | 34 | 88 |
+   | Yamanaka | 8 | 9 | 16 | 8 | 15 | 10 | 100 | 32 | 97 |
+   | Aburame | 7 | 13 | 8 | 11 | 12 | 8 | 105 | 38 | 92,5 |
+   | Inuzuka | 14 | 7 | 5 | 12 | 7 | 14 | 100 | 24 | 88 |
+   | Prodígio | 18 | 0 | 0 | 12 | 8 | 13 | 110 | 22 | 79,5 |
+   | Uchiha | 11 | 11 | 13 | 9 | 11 | 11 | 100 | 28 | 95,5 |
+   | Hyuuga | 15 | 6 | 6 | 11 | 10 | 12 | 100 | 28 | 90 |
+   | Uzumaki | 10 | 10 | 5 | 12 | 9 | 9 | 120 | 38 | 90,5 |
+   | Senju | 11 | 11 | 6 | 12 | 10 | 10 | 125 | 40 | 97,5 |
+
+5. **Kits de linhagem (v0.31+)**: com o básico elemental fora dos kits dedicados, cada origem precisa de 2 ataques próprios no nível 1 e técnicas novas nos níveis 4 e 7. Começa pelo **prodígio**: Folha Furacão no nível 1, Pesos de treino (tirar = +3 de speed e +2 de taijutsu), Lótus Primária presa aos Portões (4), Punho Bêbado com roleta de dano (4), Lótus Oculta com o 3º portão (7). As outras origens vêm uma por vez, depois dos comentários do usuário.
+
+Última rodada concluída: "rebalanceamento das origens"
+ (27/10/2026) foi implementada na v0.18.0: 25% de HP e chakra por vitória, controles com tenacidade e vulnerabilidade, barreiras como escudo (ação de turno), ilusões de dano do Uchiha e Sharingan grátis, Possessão do Yamanaka, Gênio do Nara, Determinação mais forte e nerf do prodígio, Akimichi, Inuzuka e Uzumaki. Decisões tomadas junto: o Gênio é ativa com usos por luta (2, +1 nos níveis 4 e 7) e vale nas roletas de combate do jogador; o genjutsu de dano do Uchiha fere de verdade e o do Yamanaka é controle mental com autoferimento; controle em cadeia é contido pela tenacidade (cai por rodada), não por regra de chefe; a meta é não ter origens muito acima ou abaixo das outras.
 
 Observação em aberto (não é mudança de design): na simulação, a fatia "nova técnica" da recompensa vale bem menos que as outras (sem ela, o comum vence ~20 pontos a mais). Vale discutir com o usuário antes de mexer.
 

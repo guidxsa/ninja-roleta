@@ -22,6 +22,13 @@ const origin = { lineageId: null, affinity: 'fire' as const, jinchuuriki: false 
 const now = new Date('2026-10-21T12:00:00Z');
 
 describe('histórico de runs', () => {
+  it('guarda a seed da run quando há uma', () => {
+    const st = memoryStorage();
+    startRun(st, { id: 'a', origin, now, seed: 42 }, 100);
+    startRun(st, { id: 'b', origin, now }, 100);
+    expect(loadRuns(st).map((r) => r.seed)).toEqual([undefined, 42]);
+  });
+
   it('grava a run como em andamento, mais recente primeiro', () => {
     const st = memoryStorage();
     startRun(st, { id: 'a', origin, now }, 100);

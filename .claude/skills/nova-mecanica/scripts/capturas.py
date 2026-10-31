@@ -35,7 +35,15 @@ TELAS = {
               "for(let i=0;i<8&&!document.querySelector('.react-box');i++){"
               "document.querySelector('[data-tab=special]')?.click();await w(100);"
               "document.querySelector('#actions [data-choice=rest]:not([disabled])')?.click();await w(1500);}",
+    # Abre o Reportar no meio da luta, depois de uma rodada.
+    "reportar": "document.querySelector('[data-choice=start]').click();await w(400);"
+                "document.querySelector('[data-choice=go]').click();await w(1500);"
+                "document.querySelector('#cta [data-choice=go]')?.click();await w(800);"
+                "document.querySelector('[data-tab=special]')?.click();await w(100);"
+                "document.querySelector('#actions [data-choice=rest]:not([disabled])')?.click();await w(1500);"
+                "document.getElementById('report-btn').click();await w(200);",
 }
+
 
 
 def browser() -> str:

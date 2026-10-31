@@ -158,6 +158,12 @@ Escolhida na tela de origem; fica salva como preferência do aparelho e no hist�
 ## Histórico de runs
 
 - `localStorage`, chave versionada (`runs_v1`), separada do estado da campanha (que vive só em memória; F5 reseta a run).
-- Registro: data e hora, origem (linhagem, afinidade, jinchuuriki), dificuldade, resultado (vitória, derrota, abandonada ou re-roll), até qual vilão chegou, nível final e Vontades do Fogo usadas.
+- Registro: data e hora, origem (linhagem, afinidade, jinchuuriki), dificuldade, resultado (vitória, derrota, abandonada ou re-roll), até qual vilão chegou, nível final, Vontades do Fogo usadas e a **seed**.
 - Ao iniciar a run, grava um registro "em andamento" e atualiza a cada vilão. Ao abrir a página, qualquer registro "em andamento" vira "abandonada".
 - Re-rolls ficam ocultos por padrão na tela de histórico. Limite: últimas 100 runs.
+
+## Seed, Reportar e Compartilhar
+
+- **Seed**: toda run (e cada re-roll) sorteia uma seed, e todas as roletas da run saem dela. Abrir o jogo com `?seed=N` repete as roletas da primeira run da página; as escolhas do jogador também precisam ser as mesmas para repetir a run inteira.
+- **Reportar** (botão no cabeçalho): nota opcional + relatório para copiar e mandar ao desenvolvedor: versão, seed, link com `?seed=`, origem, etapa, ficha, estado da luta e as últimas 30 linhas do log.
+- **Compartilhar** (fim da run): resumo para colar no grupo, com o caminho em emojis (✅ vitória, 💀 derrota; no exame, 🥇 e ❌), quem derrotou o jogador, as Vontades usadas e a seed. No celular, abre o menu de compartilhar; sem ele, copia.

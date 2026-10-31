@@ -105,7 +105,10 @@ import {
   type Step,
 } from '../src/core/progression';
 import { buildLabPlayer, LAB_STAT_KEYS, labLearnable, labOrigin, labStatsOf, parseLabParams, type LabConfig } from '../src/core/lab';
+import { buildReport, type ReportBattle } from '../src/core/report';
 import { createRng, type Rng } from '../src/core/rng';
+import { buildShareText, type TrailEntry } from '../src/core/share';
+
 import type { AttackType, ConsumableId, Element, LineageTier, Origin, SummonAnimal } from '../src/core/types';
 import { CONSUMABLES, type RewardId } from '../src/data/events';
 import { campaign, type Stage } from '../src/data/campaign';
@@ -148,7 +151,21 @@ const VERSION = typeof __VERSION__ === 'undefined' ? 'dev' : __VERSION__;
 
 /** `?teste` abre o laboratório; `?seed=N` fixa as roletas (reproduz uma run ou um bug). */
 const LAB = parseLabParams(window.location.search);
-const rng: Rng = LAB.seed !== null ? createRng(LAB.seed) : () => Math.random();
+/** Sem `?seed=`, cada run sorteia a própria seed (`nextRunSeed`), para o Reportar e o Compartilhar. */
+let rng: Rng = LAB.seed !== null ? createRng(LAB.seed) : () => Math.random();
+let labSeedUsed = false;
+
+/** Seed da run que começa agora. Com `?seed=`, só a primeira run da página repete a seed. */
+function nextRunSeed(): number | null {
+  if (LAB.seed !== null) {
+    const seed = labSeedUsed ? null : LAB.seed;
+    labSeedUsed = true;
+    return seed;
+  }
+  const seed = Math.floor(Math.random() * 2 ** 31);
+  rng = createRng(seed);
+  return seed;
+}
 
 const storage: KeyValueStorage = (() => {
   try {
@@ -394,6 +411,10 @@ interface Campaign {
   difficulty: Difficulty;
   stageIndex: number;
   mods: NextFightMods;
+  /** Seed das roletas (null quando não dá para repetir). */
+  seed: number | null;
+  /** Resultado de cada etapa jogada, para o Compartilhar. */
+  trail: TrailEntry[];
 }
 
 let camp: Campaign | null = null;
@@ -645,6 +666,8 @@ function bagSlots(p: PlayerState): string {
 
 /** Durante a luta, o jogador "vivo" está no estado da batalha, não na campanha. */
 let battlePlayer: (() => PlayerState) | null = null;
+/** Durante a luta, o estado dela para o Reportar. */
+let battleReport: (() => ReportBattle) | null = null;
 
 function sheetHtml(c: Campaign): string {
   const p = battlePlayer?.() ?? c.player;
@@ -839,6 +862,7 @@ function stepResultText(step: OriginStep): string {
 async function originScreen(): Promise<void> {
   progressDots(-1);
   for (;;) {
+    const seed = nextRunSeed();
     const roll = rollOrigin(rng, data);
     const runId = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
     // Hardcore bloqueado (ainda não venceu no Difícil): cai para a dificuldade padrão.
@@ -852,6 +876,8 @@ async function originScreen(): Promise<void> {
       difficulty: settings.difficulty,
       stageIndex: 0,
       mods: { ...NO_MODS },
+      seed,
+      trail: [],
     };
 
     const root = show(
@@ -865,7 +891,7 @@ async function originScreen(): Promise<void> {
       await sleep(settings.instant ? 0 : 500);
     }
     // Só registra depois das roletas: o histórico não pode revelar a origem antes da animação.
-    startRun(storage, { id: runId, origin: roll.origin, now: new Date() }, data.balance.history.maxRuns);
+    startRun(storage, { id: runId, origin: roll.origin, now: new Date(), ...(seed !== null ? { seed } : {}) }, data.balance.history.maxRuns);
     slot.innerHTML = playerPanel(player);
     const after = root.querySelector<HTMLElement>('#after')!;
     after.innerHTML = `<div class="difficulty-box">
@@ -1383,6 +1409,16 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   // A interface escolhe a reação do jogador: a rodada para quando há mais de uma opção.
   let state = startBattle(c.player, villain, { ...setup.options, interactive: true }, data, rng);
   battlePlayer = () => state.player;
+  battleReport = () => ({
+    villain: villainName(setup.villainId),
+    round: state.round,
+    hp: state.villain.hp,
+    maxHp: state.villain.def.hp,
+    chakra: state.villain.chakra,
+    maxChakra: state.villain.def.chakra,
+    // O log da tela tem o mais recente em cima.
+    log: [...logEl.querySelectorAll('li')].map((li) => li.textContent ?? '').reverse(),
+  });
 
   const root = show(
     h(`<div class="screen battle">
@@ -1640,6 +1676,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
 
   // Resultado
   battlePlayer = null;
+  battleReport = null;
   const overlay = root.querySelector<HTMLElement>('#overlay')!;
   const won = state.status === 'won';
   const msg = won ? S.ui.battleWon : setup.exam ? S.ui.examLost : S.ui.battleLost;
@@ -2322,10 +2359,141 @@ async function endScreen(won: boolean, stoppedAt: string | null): Promise<void> 
       <p class="center muted">${S.ui.revivesUsed(c.player.revivesUsed)}</p>
       ${stageTrail(won ? campaign.length : c.stageIndex)}
       ${playerPanel(c.player)}
-      <div class="sticky-cta"><button class="btn primary big" data-choice="new">${icon('dice')} ${S.ui.newRun}</button></div>
+      <div class="sticky-cta actions-row">
+        <button class="btn big" data-share>${icon('share')} ${S.share.button}</button>
+        <button class="btn primary big" data-choice="new">${icon('dice')} ${S.ui.newRun}</button>
+      </div>
     </div>`),
   );
+  root.querySelector('[data-share]')!.addEventListener('click', () => void shareRun(c, won, stoppedAt));
   await choose(root);
+}
+
+/** Compartilha o resumo da run (menu do celular) ou copia para colar no grupo. */
+async function shareRun(c: Campaign, won: boolean, stoppedAt: string | null) {
+  const text = buildShareText(
+    {
+      version: VERSION,
+      difficulty: S.difficulty[c.difficulty].name,
+      origin: originText(c.origin),
+      level: c.player.level,
+      trail: c.trail,
+      won,
+      fallenTo: stoppedAt,
+      revivesUsed: c.player.revivesUsed,
+      seed: c.seed,
+    },
+    S.share,
+  );
+  if (navigator.share) {
+    try {
+      await navigator.share({ text });
+      return;
+    } catch (e) {
+      // Cancelado pelo jogador: não faz nada. Outro erro: cai para copiar.
+      if ((e as Error).name === 'AbortError') return;
+    }
+  }
+  toast((await copyText(text)) ? S.share.copied : S.share.failed);
+}
+
+/** Origem por extenso: linhagem, afinidade e jinchuuriki. */
+function originText(o: Origin): string {
+  return `${originLabel(o)}${o.affinity ? ` (${S.elements[o.affinity]})` : ''}${o.jinchuuriki ? ` · ${S.origin.jinchuuriki}` : ''}`;
+}
+
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Aviso curto sobre a tela, que some sozinho. */
+function toast(text: string) {
+  const el = h(`<div class="toast pop" role="status">${esc(text)}</div>`);
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+
+/** Modal do Reportar: nota opcional, prévia do texto e botão de copiar. */
+function openReport() {
+  const c = camp;
+
+  const p = battlePlayer?.() ?? c?.player ?? null;
+  const battle = battleReport?.() ?? null;
+  const st = S.stats;
+  const textFor = (note: string) =>
+    buildReport(
+      {
+        version: VERSION,
+        date: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
+        seed: c?.seed ?? null,
+        link: c && c.seed !== null ? `${location.origin}${location.pathname}?seed=${c.seed}` : null,
+        note,
+        device: navigator.userAgent.slice(0, 160),
+        run:
+          c && p
+            ? {
+                origin: originText(c.origin),
+                difficulty: S.difficulty[c.difficulty].name,
+                stage: campaign[c.stageIndex] ? `${c.stageIndex + 1}. ${stageName(campaign[c.stageIndex]!)}` : '—',
+                level: p.level,
+                revivesUsed: p.revivesUsed,
+                hp: p.hp,
+                maxHp: p.maxHp,
+                chakra: p.chakra,
+                maxChakra: p.maxChakra,
+                stats: [
+                  [st.taijutsu, p.offense.taijutsu],
+                  [st.ninjutsu, p.offense.ninjutsu],
+                  [st.genjutsu, p.offense.genjutsu],
+                  [st.physical, p.resistance.physical],
+                  [st.mental, p.resistance.mental],
+                  [st.speed, p.speed],
+                  [st.crit, `+${Math.round(p.critBonus * 100)}%`],
+                ],
+                techniques: p.techniques.map((id) => {
+                  const lv = p.techniqueLevels[id] ?? 0;
+                  return lv > 0 ? `${techName(id)} +${lv}` : techName(id);
+                }),
+                bag: (Object.entries(p.bag) as [ConsumableId, number][])
+                  .filter(([, n]) => n > 0)
+                  .map(([id, n]) => `${S.consumables[id]?.name ?? id} ×${n}`),
+                summon: p.summon ? `${S.summons[p.summon.animal]!.name} ${p.summon.level}` : null,
+              }
+            : null,
+        battle,
+      },
+      S.report.fields,
+    );
+  const R = S.report;
+  const overlay = h(`<div class="modal"><div class="modal-body report">
+    <div class="row between"><h2>${R.title}</h2><button class="btn small" data-close>✕</button></div>
+    <p class="muted small">${R.intro}</p>
+    <textarea class="report-note" rows="3" placeholder="${esc(R.notePlaceholder)}"></textarea>
+    <textarea class="report-text" rows="10" readonly></textarea>
+    <button class="btn primary big" data-copy>${R.copy}</button></div></div>`);
+  const note = overlay.querySelector<HTMLTextAreaElement>('.report-note')!;
+  const out = overlay.querySelector<HTMLTextAreaElement>('.report-text')!;
+  const render = () => (out.value = textFor(note.value));
+  render();
+  note.addEventListener('input', render);
+  overlay.querySelector('[data-copy]')!.addEventListener('click', async () => {
+    if (await copyText(out.value)) {
+      toast(R.copied);
+      return;
+    }
+    out.focus();
+    out.select();
+    toast(R.failed);
+  });
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) overlay.remove();
+  });
+  document.body.appendChild(overlay);
 }
 
 function openHistory() {
@@ -2473,7 +2641,16 @@ async function labScreen(): Promise<LabTarget> {
           )
           .join('')
       : `<p class="muted small">${S.lab.noTechniques}</p>`;
-    camp = { runId: 'lab', origin: labOrigin(c, data), player, difficulty: c.difficulty, stageIndex: current.stage, mods: { ...NO_MODS } };
+    camp = {
+      runId: 'lab',
+      origin: labOrigin(c, data),
+      player,
+      difficulty: c.difficulty,
+      stageIndex: current.stage,
+      mods: { ...NO_MODS },
+      seed: LAB.seed,
+      trail: [],
+    };
     root.querySelector<HTMLElement>('#lab-preview')!.innerHTML = playerPanel(player);
     saveLab(current);
   };
@@ -2515,6 +2692,8 @@ async function runCampaign(from = 0): Promise<void> {
     c.stageIndex = i;
     track({ furthestStage: i });
     await mapScreen();
+    const entry: TrailEntry = { name: stageName(stage), exam: stage.kind === 'exam', results: [] };
+    c.trail.push(entry);
 
     if (stage.kind === 'exam') {
       // HP e chakra seguem entre as lutas; perder não gasta a Vontade do Fogo nem encerra a run
@@ -2528,6 +2707,7 @@ async function runCampaign(from = 0): Promise<void> {
           exam: true,
         });
         c.player = result.player;
+        entry.results.push(result.status === 'won' ? 'win' : 'loss');
         if (result.status === 'won') {
           wins++;
           c.player = recoverAfterWin(c.player, data);
@@ -2559,6 +2739,7 @@ async function runCampaign(from = 0): Promise<void> {
       });
       if (first) c.mods = { ...NO_MODS };
       c.player = result.player;
+      entry.results.push(result.status === 'won' ? 'win' : 'loss');
       if (result.status !== 'won') {
         track({ status: 'defeat' });
         await endScreen(false, villainName(stage.villains[j]!));
@@ -2633,6 +2814,7 @@ async function main() {
   installAudio(settings);
   installHeaderToggles();
   document.getElementById('history-btn')!.addEventListener('click', openHistory);
+  document.getElementById('report-btn')!.addEventListener('click', openReport);
   document.getElementById('sheet-btn')!.addEventListener('click', openSheet);
   // Botões "Ficha" dentro das telas (painel do jogador, card da luta).
   document.addEventListener('click', (e) => {
@@ -2660,6 +2842,8 @@ async function main() {
   document.getElementById('version')!.textContent = S.ui.version(VERSION);
   document.getElementById('sheet-btn')!.innerHTML = icon('scroll');
   document.getElementById('history-btn')!.innerHTML = icon('timer');
+  document.getElementById('report-btn')!.innerHTML = icon('flag');
+
   installTooltips();
 
   if (LAB.lab) document.getElementById('version')!.textContent += ` · ${S.lab.badge}`;

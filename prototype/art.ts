@@ -104,7 +104,10 @@ const ICONS: Record<string, string> = {
   soundOff: '<path d="M3 9h4l5-4.5v15L7 15H3z" fill="currentColor"/><path d="m16 9 6 6M22 9l-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
   music: '<path d="M9 18V5l11-2v13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="3" fill="currentColor"/><circle cx="17.5" cy="16" r="3" fill="currentColor"/>',
   musicOff: '<path d="M9 18V5l11-2v13" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linejoin="round" opacity=".55"/><circle cx="6.5" cy="18" r="3" fill="currentColor" opacity=".55"/><circle cx="17.5" cy="16" r="3" fill="currentColor" opacity=".55"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
-  info: '<circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 10.5V17" stroke="#000a" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.2" r="1.5" fill="#000a"/>',
+  flag: '<path d="M5 22V3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/><path d="M6 3.5h12l-2.5 4.5L18 12.5H6z" fill="currentColor"/>',
+  share: '<g fill="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/></g><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4" stroke="currentColor" stroke-width="2" fill="none"/>',
+  info: 
+'<circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 10.5V17" stroke="#000a" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.2" r="1.5" fill="#000a"/>',
 };
 
 export function icon(name: string, cls = ''): string {
