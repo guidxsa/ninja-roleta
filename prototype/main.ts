@@ -104,7 +104,7 @@ import {
   type Roll,
   type Step,
 } from '../src/core/progression';
-import { buildLabPlayer, labLearnable, labOrigin, parseLabParams, type LabConfig } from '../src/core/lab';
+import { buildLabPlayer, LAB_STAT_KEYS, labLearnable, labOrigin, labStatsOf, parseLabParams, type LabConfig } from '../src/core/lab';
 import { createRng, type Rng } from '../src/core/rng';
 import type { AttackType, ConsumableId, Element, LineageTier, Origin, SummonAnimal } from '../src/core/types';
 import { CONSUMABLES, type RewardId } from '../src/data/events';
@@ -2422,6 +2422,11 @@ async function labScreen(): Promise<LabTarget> {
         <label>${S.lab.level}<input type="number" name="level" min="1" max="20" inputmode="numeric" value="${cfg.level}"></label>
         <label class="lab-check"><input type="checkbox" name="jin"${cfg.jinchuuriki ? ' checked' : ''}> ${S.lab.jinchuuriki}</label>
       </section>
+      <section class="lab-box"><h3>${S.lab.stats}</h3>
+        <p class="muted small">${S.lab.statsHint}</p>
+        ${LAB_STAT_KEYS.map((k) => `<label>${S.stats[k]}<input type="number" name="stat-${k}" min="0" inputmode="numeric" value="${cfg.stats?.[k] ?? ''}"></label>`).join('')}
+        <button class="btn" data-stats-reset>${S.lab.statsReset}</button>
+      </section>
       <div id="lab-preview"></div>
       <section class="lab-box"><h3>${S.lab.techniques}</h3><div id="lab-techs" class="lab-techs"></div></section>
       <section class="lab-box"><h3>${S.lab.bag}</h3>
@@ -2445,6 +2450,8 @@ async function labScreen(): Promise<LabTarget> {
       level: Math.max(1, Math.floor(Number(field('level').value)) || 1),
       techniques: [...root.querySelectorAll<HTMLInputElement>('[name="tech"]:checked')].map((i) => i.value),
       bag: Object.fromEntries(CONSUMABLES.map((id) => [id, Number(field(`bag-${id}`).value) || 0])),
+      // Só os status escritos; em branco segue a ficha montada.
+      stats: Object.fromEntries(LAB_STAT_KEYS.filter((k) => field(`stat-${k}`).value.trim() !== '').map((k) => [k, Number(field(`stat-${k}`).value)])),
     },
     villainId: field('villain').value,
     stage: Number(field('stage').value),
@@ -2454,6 +2461,8 @@ async function labScreen(): Promise<LabTarget> {
     const c = current.config;
     field('affinity').disabled = lineageOf(c.lineageId, data).affinity.kind !== 'rolled';
     const player = buildLabPlayer(c, data);
+    const auto = labStatsOf(buildLabPlayer({ ...c, stats: {} }, data));
+    for (const k of LAB_STAT_KEYS) field(`stat-${k}`).placeholder = String(auto[k]);
     // As opções de técnica dependem da origem e do nível, não das extras já marcadas.
     const learnable = labLearnable(buildLabPlayer({ ...c, techniques: [] }, data), data);
     root.querySelector<HTMLElement>('#lab-techs')!.innerHTML = learnable.length
@@ -2472,6 +2481,11 @@ async function labScreen(): Promise<LabTarget> {
   root.addEventListener('change', render);
   return new Promise((resolve) => {
     root.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('[data-stats-reset]')) {
+        for (const k of LAB_STAT_KEYS) field(`stat-${k}`).value = '';
+        render();
+        return;
+      }
       const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-go]');
       if (!btn) return;
       render();

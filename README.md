@@ -26,7 +26,7 @@ npm run proto                              # gera dist/prototipo.html (abre dire
 Dois parâmetros na URL do protótipo, para testar e reproduzir bugs:
 
 - `?seed=42`: fixa as roletas. A mesma seed dá a mesma sequência de sorteios.
-- `?teste`: abre o **Laboratório** no lugar da roleta de origem. Ali se monta a ficha à mão (linhagem, afinidade, jinchuuriki, dificuldade, nível, técnicas extras e bolsa) e se escolhe uma luta avulsa contra qualquer vilão ou uma etapa da campanha para começar. A última montagem fica salva no aparelho. Runs do laboratório não entram no histórico.
+- `?teste`: abre o **Laboratório** no lugar da roleta de origem. Ali se monta a ficha à mão (linhagem, afinidade, jinchuuriki, dificuldade, nível, status, técnicas extras e bolsa) e se escolhe uma luta avulsa contra qualquer vilão ou uma etapa da campanha para começar. A última montagem fica salva no aparelho. Runs do laboratório não entram no histórico.
 
 Os dois combinam: https://guidxsa.github.io/ninja-roleta/?teste&seed=42
 
@@ -55,8 +55,8 @@ MIT. Veja o arquivo [LICENSE](LICENSE).
 
 O jogo está em **0.x** (protótipo) e ainda longe do 1.0. Depois do `v0.9.0` vem o `v0.10.0`, depois `v0.11.0` e assim por diante; o número do meio pode passar de 9 quantas vezes for preciso.
 
-- **Minor** (`v0.10.0` → `v0.11.0`): mecânica nova, mudança de regra, tela nova.
-- **Patch** (`v0.10.0` → `v0.10.1`): correção de bug, ajuste só de números, texto ou documentação.
+- **Minor** (`v0.10.0` → `v0.11.0`): muda como se joga ou traz um sistema novo: mecânica, regra, origem ou vilão refeito, rebalanceamento de fórmulas, tela ou modo novo.
+- **Patch** (`v0.10.0` → `v0.10.1`): ajuste ou complemento do que já existe: correção de bug, números, texto, documentação, polimento de interface, uma opção a mais numa tela ou na ferramenta de teste.
 
 O **v1.0.0** fica para quando o jogo estiver completo para quem joga:
 
@@ -106,3 +106,4 @@ O **v1.0.0** fica para quando o jogo estiver completo para quem joga:
 | v0.25.0 | Aburame mais fraco: Enxame com 2 golpes de 4 (+2 de dano e +1 golpe por nível) e status de volta ao original. Ataques de vários golpes rolam acerto e crítico em cada golpe (um erro não para os seguintes), para o jogador e os vilões. Quem vence uma disputa com técnica de vários golpes agora bate todos os golpes, não só o primeiro. Passivas e itens com textos de habilidade; passivas que juntam várias mecânicas aparecem separadas; no card da luta, chips das passivas e dica com tudo ao passar no nome da linhagem; jinchuuriki formatado como na ficha. |
 | v0.26.0 | Rebalanceamento de Nara, Aburame e Akimichi. Nara: sai a Sombra costurada e entra o Enforcamento por Sombra, ninjutsu do kit que só funciona com o vilão preso pela Imitação de Sombra e causa força do controle × 6 + ninjutsu − resistência física (não erra e não solta; +1 de força no nível 7). Aburame: Enxame com 1 de dano fixo por golpe e +2 golpes por nível (2/4/6), só para aplicar insetos; Devorar causa de 1% a 3% do HP máximo do vilão por inseto pela razão ninjutsu base ÷ resistência física (+0,5% no nível 7), sem drenar chakra e custando 1 de chakra a cada 2 insetos. Akimichi: Pílulas do clã só a partir do nível 7. |
 | v0.27.0 | Modo de teste: `?seed=N` fixa as roletas (reproduz uma run ou um bug) e `?teste` abre o Laboratório, onde se monta a ficha à mão (linhagem, afinidade, jinchuuriki, dificuldade, nível, técnicas extras e bolsa) e se escolhe uma luta avulsa contra qualquer vilão ou a etapa da campanha onde começar. Runs do laboratório não entram no histórico. Roteiro de conquistas, perfil local e contas opcionais registrado no CLAUDE.md. |
+| v0.27.1 | Laboratório: status editáveis (HP e chakra máximos, taijutsu, ninjutsu, genjutsu, speed e resistências); campo em branco segue a ficha montada, que aparece como dica. Versionamento: ajustes e complementos do que já existe sobem patch, não minor. |

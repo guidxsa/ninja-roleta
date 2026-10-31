@@ -19,6 +19,44 @@ export interface LabConfig {
   /** Técnicas extras; as que a origem não pode aprender são ignoradas. */
   techniques: string[];
   bag: Partial<Bag>;
+  /** Status escritos à mão; o que faltar fica como a ficha montada. Opcional (montagens antigas). */
+  stats?: LabStats;
+}
+
+/** Status que o laboratório deixa sobrescrever. HP e chakra são os máximos (a luta começa cheia). */
+export type LabStatKey = 'hp' | 'chakra' | 'taijutsu' | 'ninjutsu' | 'genjutsu' | 'speed' | 'physical' | 'mental';
+export type LabStats = Partial<Record<LabStatKey, number>>;
+export const LAB_STAT_KEYS: LabStatKey[] = ['hp', 'chakra', 'taijutsu', 'ninjutsu', 'genjutsu', 'speed', 'physical', 'mental'];
+
+/** Valor atual de cada status sobrescrevível da ficha. */
+export function labStatsOf(player: PlayerState): Record<LabStatKey, number> {
+  return {
+    hp: player.maxHp,
+    chakra: player.maxChakra,
+    ...player.offense,
+    speed: player.speed,
+    ...player.resistance,
+  };
+}
+
+/** Aplica os status escritos à mão (inteiros; HP e chakra máximos ≥ 1, o resto ≥ 0), com HP e chakra cheios. */
+export function applyLabStats(player: PlayerState, stats: LabStats): PlayerState {
+  const v = (key: LabStatKey, current: number, min = 0) => {
+    const n = stats[key];
+    return n === undefined || !Number.isFinite(n) ? current : Math.max(min, Math.floor(n));
+  };
+  const maxHp = v('hp', player.maxHp, 1);
+  const maxChakra = v('chakra', player.maxChakra, 1);
+  return {
+    ...player,
+    maxHp,
+    hp: maxHp,
+    maxChakra,
+    chakra: maxChakra,
+    offense: { taijutsu: v('taijutsu', player.offense.taijutsu), ninjutsu: v('ninjutsu', player.offense.ninjutsu), genjutsu: v('genjutsu', player.offense.genjutsu) },
+    speed: v('speed', player.speed),
+    resistance: { physical: v('physical', player.resistance.physical), mental: v('mental', player.resistance.mental) },
+  };
 }
 
 export interface LabParams {
@@ -61,7 +99,8 @@ export function labLearnable(player: PlayerState, data: GameData): TechniqueDef[
 
 /**
  * Ficha do laboratório: cria o jogador, sobe os níveis (como na campanha, com as técnicas de nível e
- * os upgrades de marco pendentes), ensina as técnicas extras e enche a bolsa (até `items.bagMax`).
+ * os upgrades de marco pendentes), ensina as técnicas extras, enche a bolsa (até `items.bagMax`) e aplica
+ * os status escritos à mão.
  */
 export function buildLabPlayer(config: LabConfig, data: GameData): PlayerState {
   let p = createPlayer(labOrigin(config, data), data, config.difficulty);
@@ -79,5 +118,5 @@ export function buildLabPlayer(config: LabConfig, data: GameData): PlayerState {
   for (const id of Object.keys(EMPTY_BAG) as (keyof Bag)[]) {
     bag[id] = Math.min(bagMax, Math.max(0, Math.floor(config.bag[id] ?? 0)));
   }
-  return { ...p, bag };
+  return applyLabStats({ ...p, bag }, config.stats ?? {});
 }

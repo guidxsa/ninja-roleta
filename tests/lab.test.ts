@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildLabPlayer, labLearnable, labOrigin, parseLabParams, type LabConfig } from '../src/core/lab';
+import { applyLabStats, buildLabPlayer, labLearnable, labStatsOf, labOrigin, parseLabParams, type LabConfig } from '../src/core/lab';
 import { createPlayer } from '../src/core/player';
 import { gameData as data } from '../src/data/index';
 
@@ -63,6 +63,26 @@ describe('buildLabPlayer', () => {
   it('enche a bolsa até o limite', () => {
     const p = buildLabPlayer({ ...base, bag: { soldierPill: 2, medKit: 99, smokeBomb: -1 } }, data);
     expect(p.bag).toEqual({ soldierPill: 2, medKit: data.balance.items.bagMax, explosiveTag: 0, smokeBomb: 0 });
+  });
+});
+
+describe('status à mão', () => {
+  it('sobrescreve só o que foi escrito, com HP e chakra cheios', () => {
+    const auto = buildLabPlayer({ ...base, level: 4 }, data);
+    const p = buildLabPlayer({ ...base, level: 4, stats: { hp: 300, chakra: 80, ninjutsu: 25, speed: 12, mental: 9 } }, data);
+    expect(labStatsOf(p)).toEqual({ ...labStatsOf(auto), hp: 300, chakra: 80, ninjutsu: 25, speed: 12, mental: 9 });
+    expect(p.hp).toBe(300);
+    expect(p.chakra).toBe(80);
+    expect(p.level).toBe(4);
+  });
+
+  it('arredonda para baixo e respeita os mínimos', () => {
+    const p = applyLabStats(createPlayer(labOrigin(base, data), data), { hp: 0, chakra: -5, taijutsu: 7.9, physical: -2, speed: NaN });
+    expect(p.maxHp).toBe(1);
+    expect(p.maxChakra).toBe(1);
+    expect(p.offense.taijutsu).toBe(7);
+    expect(p.resistance.physical).toBe(0);
+    expect(p.speed).toBe(createPlayer(labOrigin(base, data), data).speed);
   });
 });
 

@@ -1,6 +1,6 @@
 ---
 name: lancar-versao
-description: Fecha uma versão do Ninja Roleta - testa, commita, faz push e sobe a tag vX.Y.Z no GitHub. Use sempre que terminar uma funcionalidade, mecânica, ajuste de balanceamento ou correção neste projeto (inclusive ao fim da skill nova-mecanica), sem esperar o usuário pedir "commita" - ele quer que toda versão nova seja publicada assim por padrão. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github" ou "faz a tag".
+description: Fecha uma versão do Ninja Roleta - testa, commita, faz push e sobe a tag vX.Y.Z no GitHub. Use sempre que terminar uma funcionalidade, mecânica, ajuste de balanceamento ou correção neste projeto (inclusive ao fim da skill nova-mecanica), sem esperar o usuário pedir "commita" - ele quer que toda versão nova seja publicada assim por padrão. Escolhe sozinha o tamanho do salto pelo peso da mudança: ajustes e complementos pequenos sobem patch (v0.27.0 → v0.27.1), não minor. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github" ou "faz a tag".
 ---
 
 # Lançar versão (Ninja Roleta)
@@ -14,9 +14,11 @@ Repositório: `origin` → https://github.com/guidxsa/ninja-roleta, branch `mast
 O histórico de versões fica na tabela **Histórico de versões** do `README.md`, e cada versão publicada tem uma tag (`git tag -l`).
 
 - Se o README já tem uma linha nova cuja versão ainda não virou tag, use essa versão.
-- Se não tem, crie a linha, subindo a partir da última tag pelas regras da seção **Versionamento** do `README.md`:
-  - **minor** (`v0.9.0` → `v0.10.0`, `v0.10.0` → `v0.11.0`): funcionalidade ou mecânica nova, mudança de regra, tela nova;
-  - **patch** (`v0.10.0` → `v0.10.1`): correção de bug, ajuste só de números, texto, documentação.
+- Se não tem, crie a linha, subindo a partir da última tag pelas regras da seção **Versionamento** do `README.md`. O salto segue o **peso** da mudança, não o fato de ter código novo; o usuário não quer que um ajuste pequeno pese como um update grande:
+  - **patch** (`v0.27.0` → `v0.27.1`): ajuste ou complemento de algo que já existe. Um campo ou opção a mais numa tela existente, melhoria em ferramenta de teste ou de desenvolvimento, polimento de interface, correção de bug, ajuste só de números, texto, documentação. Exemplos do histórico: v0.16.1 (botão no cabeçalho), v0.16.2 (barra superior), v0.22.1 (correções), v0.27.1 (status editáveis no Laboratório).
+  - **minor** (`v0.26.0` → `v0.27.0`): muda como se joga ou traz um sistema novo. Mecânica ou regra nova, origem ou vilão refeito, rebalanceamento que mexe em fórmulas, tela ou modo novo. Exemplos: v0.18.0 (rebalanceamento das origens), v0.25.0 (cada golpe rola), v0.27.0 (Laboratório e seed).
+  - Na dúvida, pergunte a si mesmo: "quem joga sente diferença na partida, ou ganhou algo novo para fazer?" Se não, é patch. Vários patches seguidos (v0.16.1, v0.16.2...) são normais.
+  - Se o usuário disser o número ou o tipo ("é só um patch", "isso é versão nova"), vale o que ele disse.
 - O jogo fica em 0.x: depois de `v0.9.0` vem `v0.10.0`, nunca `v1.0.0`. **Nunca suba o major** (`v1.0.0`) por conta própria, nem que o trabalho pareça grande; isso só acontece quando o usuário pedir.
 - Compare versões numericamente (`git tag -l --sort=v:refname`), não em ordem alfabética: `v0.10.0` é maior que `v0.9.0`.
 - Se o trabalho pendente junta mais de uma versão do README sem tag (ex.: v0.4.0 e v0.5.0 nos mesmos arquivos), não tente separar: publique como a versão mais alta e mencione as duas no commit.
