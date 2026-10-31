@@ -22,6 +22,7 @@ As regras do jogo vivem em `docs/`. Este arquivo trata só de como trabalhar no 
 | [docs/progressao.md](docs/progressao.md) | XP, níveis, estágios de status, marcos |
 | [docs/campanha.md](docs/campanha.md) | Ordem, eventos, encontros, invocações, exame, dificuldade, histórico |
 | [docs/itens.md](docs/itens.md) | Itens, bolsa e roleta de recompensa |
+| [docs/perfil.md](docs/perfil.md) | Perfil local: conquistas, Livro Bingo e estatísticas por origem |
 
 ### Regras para os docs
 
@@ -35,7 +36,7 @@ As regras do jogo vivem em `docs/`. Este arquivo trata só de como trabalhar no 
 
 Combinado em 31/10/2026 (brainstorm com o usuário). Os números são rascunho: a simulação decide e o usuário faz o ajuste fino. Cada frente vira uma versão própria.
 
-1. **Conquistas + Livro Bingo (v0.29.0)**: início da Fase 2. `runStats` puro lendo o log da luta e os eventos; conquistas como dados (marcos, sorte e azar, estilo e "segredos" escondidos com easter eggs de lore, ex.: Uzumaki + jinchuuriki + vento = "Uzumaki Naruto"); `profile_v1` com conquistas e contadores por vilão; tela Perfil com abas (Histórico, Conquistas, Livro Bingo, Origens). Os easter eggs que dependem dos itens 2 e 3 entram junto com eles.
+1. **Segredos que dependem da reforma** (entram com os itens 2 e 3, ver [docs/perfil.md](docs/perfil.md)): Vingador (Uchiha com raio), Espelhos de gelo (vencer o Haku com Gelo), Areia que protege (Areia + jinchuuriki), Princesa das Lesmas (Senju + lesma + Palma Curativa), Deus dos Shinobi (Senju com Madeira vence), Segundo Hokage (Senju com água principal vence), Domador de bijuu (desfazer o manto do Gaara com Madeira; o campo `cloakSuppressed` do resumo da luta já existe). As conquistas por origem passam a incluir o Senju (Mestre dos clãs vira 11).
 2. **Reforma elemental (v0.30.0)**:
    - roleta de **quantidade de elementos** no sorteio (Comum 1/2/3 = 50/35/15; Uchiha fogo + 35% de um extra; clãs 0/1/2 = 30/55/15; prodígio 0), com `affinity` + `secondaryElements` virando `elements[]`;
    - **não se aprende elemento novo na run** (a fatia "Elemento secundário" sai e o peso vai para "Nova técnica");
@@ -70,7 +71,8 @@ Observação em aberto (não é mudança de design): na simulação, a fatia "no
 Observação em aberto (v0.26.0): campanha por origem (1000 runs, seed 2) no Médio de 77% (Uchiha, prodígio) a 88% (Hyuuga, Uzumaki), fora o Aburame, que caiu de 57% (v0.25.0) para 45% (Difícil 13%) com o Enxame de dano fixo e o Devorar em % do HP máximo. O usuário testou a v0.25.0 à mão e achou o Aburame forte demais; o bot ainda subestima o Aburame (heurística simples para quando devorar e para a Praga). Não compensar pela simulação sem conversar; melhorar o bot do Aburame é o próximo passo para medir de verdade.
 
 Roteiro de contas e progresso (combinado em 30/10/2026; a fase 1, o Laboratório `?teste` com `?seed=`, foi implementada na v0.27.0):
-- **Fase 2, perfil local**: conquistas, histórico com estatísticas por origem e desbloqueios/personalização, em `localStorage` no padrão de `src/state/runHistory.ts`. A run continua só em memória (F5 reseta).
+- **Fase 2, perfil local**: conquistas, Livro Bingo e estatísticas por origem implementados na v0.29.0 (`profile_v1`, [docs/perfil.md](docs/perfil.md)); falta desbloqueios/personalização (títulos, skins da roleta, nome do ninja; só cosméticos). A run continua só em memória (F5 reseta).
+
 - **Fase 3, contas opcionais**: só para sincronizar o perfil local; o jogo segue jogável offline e sem conta. Usar um serviço com login pronto (Supabase ou Firebase, a decidir), nunca guardar senha. Pede política de privacidade (LGPD) e revisar o princípio "Sem backend".
 
 Quando o design mudar antes do código, listar aqui o que falta implementar.

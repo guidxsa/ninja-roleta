@@ -105,7 +105,9 @@ import {
   type Step,
 } from '../src/core/progression';
 import { buildLabPlayer, LAB_STAT_KEYS, labLearnable, labOrigin, labStatsOf, parseLabParams, type LabConfig } from '../src/core/lab';
+import { newAchievements, type AchievementCategory } from '../src/core/achievements';
 import { buildReport, type ReportBattle } from '../src/core/report';
+import { addEffect, addFight, addJokenpo, addPreEvent, emptyRunStats, summarizeFight, type RunStats } from '../src/core/runStats';
 import { createRng, type Rng } from '../src/core/rng';
 import { buildShareText, type TrailEntry } from '../src/core/share';
 
@@ -115,6 +117,17 @@ import { campaign, type Stage } from '../src/data/campaign';
 import { gameData as data } from '../src/data/index';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { villains, villainsById } from '../src/data/villains';
+import { achievements } from '../src/data/achievements';
+import {
+  achievementsFromHistory,
+  killedByCounts,
+  loadProfile,
+  originRecords,
+  recordFight,
+  saveProfile,
+  unlockAchievements,
+  type Profile,
+} from '../src/state/profile';
 import {
   isHardcoreUnlocked,
   loadRuns,
@@ -415,12 +428,57 @@ interface Campaign {
   seed: number | null;
   /** Resultado de cada etapa jogada, para o Compartilhar. */
   trail: TrailEntry[];
+  /** Estatísticas da run, para as conquistas. */
+  stats: RunStats;
 }
 
 let camp: Campaign | null = null;
 const NO_MODS: NextFightMods = { villainStartsFirst: false, playerStartsFirst: false };
 
+// ---------------------------------------------------------------------------
+// Perfil: conquistas e Livro Bingo (localStorage)
+
+let profile: Profile = loadProfile(storage);
+
+/** Na primeira vez, libera os marcos que o histórico já prova (sem aviso). */
+function backfillProfile() {
+  if (profile.backfilled) return;
+  profile = { ...unlockAchievements(profile, achievementsFromHistory(loadRuns(storage)), new Date()), backfilled: true };
+  saveProfile(storage, profile);
+}
+
+/** Uma luta da campanha: entra nas estatísticas da run e no Livro Bingo. */
+function noteFight(villainId: string, exam: boolean, battle: BattleState) {
+  if (!camp || LAB.lab) return;
+  const fight = summarizeFight(villainId, exam, battle);
+  camp.stats = addFight(camp.stats, fight);
+  profile = recordFight(profile, fight);
+  saveProfile(storage, profile);
+  checkAchievements('inProgress', null);
+}
+
+/** Libera as conquistas novas e avisa cada uma. O laboratório não conta. */
+function checkAchievements(result: 'inProgress' | 'victory' | 'defeat', fallenTo: string | null) {
+  if (!camp || LAB.lab) return;
+  const ids = newAchievements(achievements, {
+    stats: camp.stats,
+    origin: camp.origin,
+    difficulty: camp.difficulty,
+    level: camp.player.level,
+    summon: camp.player.summon,
+    result,
+    fallenTo,
+    killedBy: killedByCounts(profile),
+    unlocked: new Set(Object.keys(profile.achievements)),
+  });
+  if (ids.length === 0) return;
+  profile = unlockAchievements(profile, ids, new Date());
+  saveProfile(storage, profile);
+  ids.forEach((id, i) => setTimeout(() => toast(S.achievements.unlocked(S.achievements.list[id]?.name ?? id)), i * 2800));
+}
+
 function track(patch: { status?: RunStatus; furthestStage?: number; difficulty?: Difficulty }) {
+
   // Runs do laboratório não entram no histórico.
   if (!camp || LAB.lab) return;
   updateRun(storage, camp.runId, { ...patch, revivesUsed: camp.player.revivesUsed }, new Date(), data.balance.history.maxRuns);
@@ -878,6 +936,7 @@ async function originScreen(): Promise<void> {
       mods: { ...NO_MODS },
       seed,
       trail: [],
+      stats: emptyRunStats(),
     };
 
     const root = show(
@@ -922,6 +981,7 @@ async function originScreen(): Promise<void> {
     const choice = await choose<'reroll' | 'start'>(after);
     if (choice === 'start') {
       track({ difficulty: camp.difficulty });
+      checkAchievements('inProgress', null);
       return;
     }
     track({ status: 'reroll', difficulty: camp.difficulty });
@@ -1039,6 +1099,9 @@ async function eventScreen(stage: Stage): Promise<void> {
       break;
   }
   applyStep(step);
+  c.stats = addEffect(addPreEvent(c.stats, roll.value), step.effect);
+  if ('result' in step) c.stats = addJokenpo(c.stats, (step as { result: 'win' | 'draw' | 'loss' }).result);
+  checkAchievements('inProgress', null);
   showEffect(detail, step.effect);
   refreshHud(true);
   const cta = root.querySelector<HTMLElement>('#cta')!;
@@ -2496,13 +2559,95 @@ function openReport() {
   document.body.appendChild(overlay);
 }
 
-function openHistory() {
+type ProfileTab = 'history' | 'achievements' | 'bingo' | 'origins';
+const PROFILE_TABS: ProfileTab[] = ['history', 'achievements', 'bingo', 'origins'];
+
+/** Perfil: histórico, conquistas, Livro Bingo e estatísticas por origem, em abas. */
+function openProfile(tab: ProfileTab = 'history') {
+  const P = S.profile;
+  const overlay = h(`<div class="modal"><div class="modal-body profile">
+    <div class="row between"><h2>${P.title}</h2><button class="btn small" data-close>✕</button></div>
+    <div class="act-tabs profile-tabs">${PROFILE_TABS.map((t) => `<button class="act-tab" data-tab="${t}"><span>${P.tabs[t]}</span></button>`).join('')}</div>
+    <div class="profile-body"></div></div></div>`);
+  const body = overlay.querySelector<HTMLElement>('.profile-body')!;
+  const select = (t: ProfileTab) => {
+    overlay.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.tab === t));
+    body.replaceChildren();
+    if (t === 'history') historyTab(body);
+    else body.innerHTML = t === 'achievements' ? achievementsTab() : t === 'bingo' ? bingoTab() : originsTab();
+  };
+  overlay.querySelector('.profile-tabs')!.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-tab]');
+    if (b) select(b.dataset.tab as ProfileTab);
+  });
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) overlay.remove();
+  });
+  select(tab);
+  document.body.appendChild(overlay);
+}
+
+function achievementsTab(): string {
+  const A = S.achievements;
+  const unlocked = new Set(Object.keys(profile.achievements));
+  const cats: AchievementCategory[] = ['milestone', 'luck', 'style', 'secret'];
+  const got = achievements.filter((a) => unlocked.has(a.id)).length;
+  return `<p class="muted small center">${A.count(got, achievements.length)}</p>${cats
+    .map((cat) => {
+      const list = achievements.filter((a) => a.category === cat);
+      const n = list.filter((a) => unlocked.has(a.id)).length;
+      return `<h3 class="ach-cat">${A.categories[cat]} <small class="muted">${A.progress(n, list.length)}</small></h3><ul class="ach-list">${list
+        .map((a) => {
+          const on = unlocked.has(a.id);
+          const txt = !on && a.hidden ? { name: A.hiddenName, desc: A.hiddenDesc } : A.list[a.id] ?? { name: a.id, desc: '' };
+          const prog = !on && a.progress ? ` <small class="muted">${A.progress(...a.progress(unlocked))}</small>` : '';
+          return `<li class="ach ${on ? 'on' : 'off'}"><span class="ach-ico">${on ? '🏅' : '🔒'}</span><span><b>${txt.name}</b>${prog}<small>${txt.desc}</small></span></li>`;
+        })
+        .join('')}</ul>`;
+    })
+    .join('')}`;
+}
+
+function bingoTab(): string {
+  const P = S.profile;
+  return `<p class="muted small">${P.bingoIntro}</p><ul class="bingo">${villains
+    .map((v) => {
+      const r = profile.villains[v.id];
+      if (!r || r.faced === 0) {
+        return `<li class="bingo-card unknown">${villainPortrait(v.id, 'sm')}<span><b>${P.unknownVillain}</b></span></li>`;
+      }
+      const lines = [P.faced(r.faced), P.defeated(r.defeated), r.killedYou ? P.killedYou(r.killedYou) : '']
+        .filter(Boolean)
+        .join(' · ');
+      return `<li class="bingo-card">${villainPortrait(v.id, 'sm')}<span><b>${villainName(v.id)}</b><small>${lines}</small>
+        <small class="muted">${P.bestHit(r.bestHit)} · ${P.worstHit(r.worstHit)}</small></span></li>`;
+    })
+    .join('')}</ul>`;
+}
+
+function originsTab(): string {
+  const P = S.profile;
+  const rec = originRecords(loadRuns(storage));
+  return `<p class="muted small">${P.originsIntro}</p><ul class="history">${data.lineages
+    .map((l) => {
+      const r = rec[l.id];
+      const name = l.id === 'common' ? S.origin.common : S.lineages[l.id] ?? l.id;
+      if (!r) return `<li><div class="row between"><b>${name}</b><small class="muted">${P.neverPlayed}</small></div></li>`;
+      const pct = Math.round((r.wins / r.runs) * 100);
+      const stage = campaign[r.furthestStage];
+      const far = r.wins > 0 ? S.ui.runStatus.victory : stage ? P.furthest(stageName(stage)) : '';
+      return `<li><div class="row between"><b>${name}</b><b>${P.winRate(pct)}</b></div>
+        <small class="muted">${P.originLine(r.runs, r.wins)} · ${far}</small></li>`;
+    })
+    .join('')}</ul>`;
+}
+
+function historyTab(container: HTMLElement) {
   const runs = loadRuns(storage);
-  const overlay = h(`<div class="modal"><div class="modal-body">
-    <div class="row between"><h2>${S.ui.history}</h2><button class="btn small" data-close>✕</button></div>
-    <label class="toggle"><input type="checkbox" id="show-rerolls"> ${S.ui.showRerolls}</label>
-    <ul class="history"></ul></div></div>`);
-  const list = overlay.querySelector<HTMLElement>('.history')!;
+  container.innerHTML = `<label class="toggle"><input type="checkbox" id="show-rerolls"> ${S.ui.showRerolls}</label>
+    <ul class="history"></ul>`;
+  const list = container.querySelector<HTMLElement>('.history')!;
+
   const render = (withRerolls: boolean) => {
     const shown = runs.filter((r) => withRerolls || r.status !== 'reroll');
     list.innerHTML = shown.length
@@ -2521,13 +2666,9 @@ function openHistory() {
       : `<li class="muted">${S.ui.historyEmpty}</li>`;
   };
   render(false);
-  overlay.querySelector<HTMLInputElement>('#show-rerolls')!.addEventListener('change', (e) => {
+  container.querySelector<HTMLInputElement>('#show-rerolls')!.addEventListener('change', (e) => {
     render((e.target as HTMLInputElement).checked);
   });
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) overlay.remove();
-  });
-  document.body.appendChild(overlay);
 }
 
 // ---------------------------------------------------------------------------
@@ -2650,6 +2791,7 @@ async function labScreen(): Promise<LabTarget> {
       mods: { ...NO_MODS },
       seed: LAB.seed,
       trail: [],
+      stats: emptyRunStats(),
     };
     root.querySelector<HTMLElement>('#lab-preview')!.innerHTML = playerPanel(player);
     saveLab(current);
@@ -2708,6 +2850,7 @@ async function runCampaign(from = 0): Promise<void> {
         });
         c.player = result.player;
         entry.results.push(result.status === 'won' ? 'win' : 'loss');
+        noteFight(stage.villains[j]!, true, result);
         if (result.status === 'won') {
           wins++;
           c.player = recoverAfterWin(c.player, data);
@@ -2740,8 +2883,10 @@ async function runCampaign(from = 0): Promise<void> {
       if (first) c.mods = { ...NO_MODS };
       c.player = result.player;
       entry.results.push(result.status === 'won' ? 'win' : 'loss');
+      noteFight(stage.villains[j]!, false, result);
       if (result.status !== 'won') {
         track({ status: 'defeat' });
+        checkAchievements('defeat', stage.villains[j]!);
         await endScreen(false, villainName(stage.villains[j]!));
         return;
       }
@@ -2754,6 +2899,7 @@ async function runCampaign(from = 0): Promise<void> {
     }
   }
   track({ status: 'victory', furthestStage: campaign.length - 1 });
+  checkAchievements('victory', null);
   await endScreen(true, null);
 }
 
@@ -2810,10 +2956,12 @@ function installHeaderToggles() {
 
 async function main() {
   markAbandonedRuns(storage, new Date(), data.balance.history.maxRuns);
+  backfillProfile();
+
 
   installAudio(settings);
   installHeaderToggles();
-  document.getElementById('history-btn')!.addEventListener('click', openHistory);
+  document.getElementById('history-btn')!.addEventListener('click', () => openProfile());
   document.getElementById('report-btn')!.addEventListener('click', openReport);
   document.getElementById('sheet-btn')!.addEventListener('click', openSheet);
   // Botões "Ficha" dentro das telas (painel do jogador, card da luta).

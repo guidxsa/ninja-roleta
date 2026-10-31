@@ -35,7 +35,13 @@ TELAS = {
               "for(let i=0;i<8&&!document.querySelector('.react-box');i++){"
               "document.querySelector('[data-tab=special]')?.click();await w(100);"
               "document.querySelector('#actions [data-choice=rest]:not([disabled])')?.click();await w(1500);}",
+    # Perfil: abas de conquistas e Livro Bingo.
+    "conquistas": "document.getElementById('history-btn').click();await w(100);"
+                  "document.querySelector('[data-tab=achievements]').click();await w(100);",
+    "bingo": "document.getElementById('history-btn').click();await w(100);"
+             "document.querySelector('[data-tab=bingo]').click();await w(100);",
     # Abre o Reportar no meio da luta, depois de uma rodada.
+
     "reportar": "document.querySelector('[data-choice=start]').click();await w(400);"
                 "document.querySelector('[data-choice=go]').click();await w(1500);"
                 "document.querySelector('#cta [data-choice=go]')?.click();await w(800);"

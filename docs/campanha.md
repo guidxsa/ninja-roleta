@@ -161,6 +161,8 @@ Escolhida na tela de origem; fica salva como preferência do aparelho e no hist�
 - Registro: data e hora, origem (linhagem, afinidade, jinchuuriki), dificuldade, resultado (vitória, derrota, abandonada ou re-roll), até qual vilão chegou, nível final, Vontades do Fogo usadas e a **seed**.
 - Ao iniciar a run, grava um registro "em andamento" e atualiza a cada vilão. Ao abrir a página, qualquer registro "em andamento" vira "abandonada".
 - Re-rolls ficam ocultos por padrão na tela de histórico. Limite: últimas 100 runs.
+- O histórico é a primeira aba da tela Perfil, junto com conquistas, Livro Bingo e origens ([perfil.md](perfil.md)).
+
 
 ## Seed, Reportar e Compartilhar
 

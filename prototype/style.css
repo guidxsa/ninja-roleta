@@ -623,7 +623,20 @@ button[data-tip] { cursor: pointer; }
 .history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .history li { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
 
+/* Perfil: abas, conquistas e Livro Bingo */
+.profile-tabs { position: sticky; top: -16px; background: var(--surface); z-index: 1; padding-top: 4px; }
+.profile-body { display: flex; flex-direction: column; gap: 8px; }
+.ach-cat { margin: 8px 0 0; font-size: 15px; }
+.ach-list, .bingo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ach, .bingo-card { display: flex; gap: 10px; align-items: center; background: var(--surface-2); border-radius: 10px; padding: 8px 10px; }
+.ach > span:last-child, .bingo-card > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ach.off { opacity: .6; }
+.ach-ico { font-size: 22px; flex: none; }
+.bingo-card .portrait { flex: none; width: 44px; height: 44px; }
+.bingo-card.unknown .portrait { filter: brightness(0); opacity: .55; }
+
 /* Reportar */
+
 .report textarea {
   width: 100%; box-sizing: border-box; background: var(--surface-2); color: inherit; border: 1px solid var(--line);
   border-radius: 10px; padding: 8px 10px; font: inherit; resize: vertical;
