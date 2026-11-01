@@ -148,10 +148,10 @@ Escolhida na tela de origem; fica salva como preferência do aparelho e no hist�
 
 | Dificuldade | Força dos vilões (HP, ataques e resistências) |
 |---|---|
-| Fácil | 85% |
-| Médio | 100% |
-| Difícil | 115% |
-| Hardcore | 125% + passivas hardcore |
+| Fácil | 90% |
+| Médio | 110% |
+| Difícil | 125% |
+| Hardcore | 135% + passivas hardcore |
 
 - O hardcore só é liberado depois de uma vitória no difícil (consulta o histórico).
 - A dificuldade também define o ganho por nível ([progressao.md](progressao.md)).

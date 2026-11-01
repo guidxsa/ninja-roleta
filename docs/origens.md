@@ -136,7 +136,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
   - cada golpe do **Enxame** que acerta prende insetos no vilão: **2 por acerto**, +1 a cada 5 de ninjutsu base a partir de 15 (tabela abaixo). O **crítico** do Enxame prende o dobro naquele golpe. Outros ataques não prendem insetos;
   - o Enxame que **vence uma disputa de ninjutsu** (atacando ou defendendo) também prende, um lote por golpe que passa (a disputa não rola crítico);
   - o **teto** de insetos no vilão vem do nível do Enxame: **10 / 15 / 20** (Enxame, Enxame Voraz, Nuvem de Insetos). Acima do teto não entra inseto novo;
-  - no **fim de cada rodada**, a cada **2 insetos**, **1 de chakra** do vilão vai para o Aburame (até o máximo dele). O que o vilão não tinha para pagar vira **dano direto: 1 a cada 3 de chakra que faltou** (para baixo);
+  - no **fim de cada rodada**, a cada **5 insetos** (para baixo), **1 de chakra** do vilão vai para o Aburame (até o máximo dele). O que o vilão não tinha para pagar vira **dano direto: 1 a cada 3 de chakra que faltou** (para baixo);
   - **rodada sem nenhum acerto do Enxame**: depois da Colônia, o vilão se livra de **2 insetos**. Para acumular muito, o Enxame precisa continuar batendo.
 
   | Ninjutsu base | Insetos por acerto |
@@ -177,7 +177,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 
 - **Olhos treinados** (passiva): +6 na resistência mental ao resistir a ilusões.
 - **Kit**: Olhar Hipnótico (prende) e Ilusão da Dor (ilusão de dano, que fere com genjutsu contra a resistência mental). No nível 7, Tsukuyomi (só com o Sharingan). Fichas em [tecnicas.md](tecnicas.md#técnicas-de-linhagem).
-- **Sharingan** (ativa, dōjutsu): ativar é uma **escolha grátis** (não gasta o turno) que custa 4 de chakra; manutenção 1 por rodada, dura 5 rodadas ou até faltar chakra. Evolui com o nível.
+- **Sharingan** (ativa, dōjutsu): ativar é uma **escolha grátis** (não gasta o turno) que custa 4 de chakra; manutenção 2 por rodada, dura 5 rodadas ou até faltar chakra. Evolui com o nível.
 
   | Estágio | Nível | Taijutsu/Ninjutsu/Genjutsu | Speed | Genjutsu: acerto / poder | Leitura de movimento |
   |---|---|---|---|---|---|
@@ -195,7 +195,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 ### Hyuuga
 
 - **Punho preciso** (passiva): taijutsu ignora 30% da resistência física do alvo (conta como penetração).
-- **Byakugan** (ativa, dōjutsu): **escolha grátis** (não gasta o turno); ativar 3, manutenção 1, dura 5 rodadas (7 a partir do nível 4). Ativo: taijutsu não erra (crítico ainda rola), taijutsu ×1,1, **ignora a evasão da névoa** do Zabuza, o **genjutsu do vilão tem −20 de acerto** contra o Hyuuga e libera o Selo dos Pontos Vitais e as 64 Palmas. Não tem limite de usos por luta: só o chakra limita.
+- **Byakugan** (ativa, dōjutsu): **escolha grátis** (não gasta o turno); ativar 3, manutenção 2, dura 5 rodadas (7 a partir do nível 4). Ativo: taijutsu não erra (crítico ainda rola), taijutsu ×1,1, **ignora a evasão da névoa** do Zabuza, o **genjutsu do vilão tem −20 de acerto** contra o Hyuuga e libera o Selo dos Pontos Vitais e as 64 Palmas. Não tem limite de usos por luta: só o chakra limita.
 
 - **Kit**: Selo dos Pontos Vitais (só com o Byakugan), Rotação no nível 4 (barreira que devolve metade do dano bloqueado; não precisa do Byakugan) e 64 Palmas no nível 7 (só com o Byakugan). Fichas em [tecnicas.md](tecnicas.md#técnicas-de-linhagem).
 

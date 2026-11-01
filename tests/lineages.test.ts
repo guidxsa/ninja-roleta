@@ -43,8 +43,8 @@ describe('Cópia (Uchiha)', () => {
     const s1 = playRound(seen, 'stance', seq(0.0, 0.5), gameData, { copy: true });
     expect(ofType(s1.log, 'copy')).toEqual([{ type: 'copy', chance: 0.5, success: true, techniqueId: copyId }]);
     expect(s1.playerFx.copied).toBe(copyId);
-    // 3 da Cópia e 1 da manutenção do Sharingan.
-    expect(s1.player.chakra).toBe(seen.player.chakra - 3 - 1);
+    // 3 da Cópia e 2 da manutenção do Sharingan.
+    expect(s1.player.chakra).toBe(seen.player.chakra - 3 - 2);
     expect(availableActions(s1, gameData)).toContain(`tech:${copyId}`);
     // Usa com os próprios status: 11 + (11 + 3 do Sharingan) − 7 = 18.
     const s2 = playRound(s1, `tech:${copyId}`, seq(0.5), gameData);

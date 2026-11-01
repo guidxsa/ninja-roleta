@@ -79,7 +79,7 @@ export const balance = {
     // Sharingan: evolui com o nível (1, 2 e 3 tomoe).
     sharingan: {
       activationCost: 4,
-      upkeep: 1,
+      upkeep: 2,
       readDamageFactor: 0.5,
       stages: [
         { minLevel: 1, statBonus: 3, speed: 1, genjutsuHit: 0.1, genjutsuPower: 3, readChance: 0.2, copyChance: 0.5 },
@@ -89,7 +89,7 @@ export const balance = {
     },
     // Byakugan: taijutsu não erra, ×`taijutsuMult` e libera o Selo dos Pontos Vitais.
     // Byakugan: também ignora a evasão da névoa e tira `genjutsuHitPenalty` do acerto do genjutsu do vilão.
-    byakugan: { activationCost: 3, upkeep: 1, taijutsuMult: 1.1, genjutsuHitPenalty: 0.2 },
+    byakugan: { activationCost: 3, upkeep: 2, taijutsuMult: 1.1, genjutsuHitPenalty: 0.2 },
   },
 
   // Portões (prodígio do taijutsu): uma vez por luta; abrir é escolha grátis e o bônus vale `turns`
@@ -142,7 +142,7 @@ export const balance = {
       ninjutsuStep: 5,
       critMult: 2,
       maxInsectsByLevel: [10, 15, 20],
-      insectsPerChakra: 2,
+      insectsPerChakra: 5,
       burnPerMissingChakra: 3,
       shedPerRound: 2,
     },
@@ -294,7 +294,7 @@ export const balance = {
   // Dificuldade (campanha.md): multiplica HP, dano base, ataques e resistências dos vilões.
   difficulty: {
     default: 'normal' as const,
-    multipliers: { easy: 0.85, normal: 1, hard: 1.15, hardcore: 1.25 },
+    multipliers: { easy: 0.9, normal: 1.1, hard: 1.25, hardcore: 1.35 },
     hardcoreUnlockedBy: 'hard' as const,
   },
 

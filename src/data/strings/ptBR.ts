@@ -158,7 +158,7 @@ export const ptBR = {
     mindReading: { name: 'Leitura mental', desc: 'O Yamanaka lê as intenções do inimigo: o vilão erra mais contra você e, possuído, usa a técnica que você escolher.' },
     hive: {
       name: 'Colônia',
-      desc: 'Insetos vivem no corpo do Aburame. Cada golpe do Enxame que acerta prende insetos no inimigo (2, mais com ninjutsu alto; o dobro no crítico). No fim de cada rodada, a cada 2 insetos 1 de chakra dele vem para você; sem chakra para sugar, os insetos roem o HP. Rodada sem acerto do Enxame: ele se livra de 2.',
+      desc: 'Insetos vivem no corpo do Aburame. Cada golpe do Enxame que acerta prende insetos no inimigo (2, mais com ninjutsu alto; o dobro no crítico). No fim de cada rodada, a cada 5 insetos 1 de chakra dele vem para você; sem chakra para sugar, os insetos roem o HP. Rodada sem acerto do Enxame: ele se livra de 2.',
     },
     duo: { name: 'Dupla', desc: 'Ninja e cão lutam juntos: depois de um ataque que acerta, o cão pode atacar também.' },
     ironBody: { name: 'Corpo de ferro', desc: 'Anos de treino endureceram o corpo: contra taijutsu, Resistir usa toda a resistência física. Não usa ninjutsu nem genjutsu.' },
@@ -246,11 +246,11 @@ export const ptBR = {
   dojutsu: {
     sharingan: {
       name: 'Sharingan',
-      desc: 'O olho que vê através de tudo. Acende de graça, sem gastar o turno (4 de chakra e 1 por rodada, até 5 rodadas): taijutsu, ninjutsu, genjutsu e speed maiores, genjutsu mais certeiro e chance de ler o movimento do vilão (toma menos dano). Libera a Cópia e evolui nos níveis 4 e 7.',
+      desc: 'O olho que vê através de tudo. Acende de graça, sem gastar o turno (4 de chakra e 2 por rodada, até 5 rodadas): taijutsu, ninjutsu, genjutsu e speed maiores, genjutsu mais certeiro e chance de ler o movimento do vilão (toma menos dano). Libera a Cópia e evolui nos níveis 4 e 7.',
     },
     byakugan: {
       name: 'Byakugan',
-      desc: 'O olho que enxerga os pontos de chakra. Acende de graça, sem gastar o turno (3 de chakra e 1 por rodada, até 5 rodadas; 7 no nível 4): o taijutsu não erra e fica mais forte, você enxerga através da névoa, o genjutsu do vilão erra mais e libera o Selo dos Pontos Vitais (e as 64 Palmas no nível 7).',
+      desc: 'O olho que enxerga os pontos de chakra. Acende de graça, sem gastar o turno (3 de chakra e 2 por rodada, até 5 rodadas; 7 no nível 4): o taijutsu não erra e fica mais forte, você enxerga através da névoa, o genjutsu do vilão erra mais e libera o Selo dos Pontos Vitais (e as 64 Palmas no nível 7).',
     },
   } as Record<string, { name: string; desc: string }>,
   sharinganStage: (n: number) => `${n} tomoe`,
@@ -400,7 +400,7 @@ export const ptBR = {
   rewardTiers: ['', 'comum', 'rara', 'lendária'],
   difficulty: {
     easy: { name: 'Fácil', desc: 'Vilões mais fracos.' },
-    normal: { name: 'Médio', desc: 'A força original dos vilões.' },
+    normal: { name: 'Médio', desc: 'O desafio padrão.' },
     hard: { name: 'Difícil', desc: 'Vilões mais fortes.' },
     hardcore: { name: 'Hardcore', desc: 'Vilões bem mais fortes e passivas mais cruéis.' },
   },

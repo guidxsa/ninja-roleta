@@ -148,8 +148,8 @@ describe('ficha de técnica', () => {
     // Dano fixo de 1 por golpe.
     expect(hits.map((a) => a.damage)).toEqual([1, 1]);
     expect(s1.villain.insects).toBe(4);
-    // O Enxame não drena; a Colônia suga 1 a cada 2 insetos no fim da rodada, para o Aburame.
-    expect(ofType(s1.log, 'chakraDrain')).toEqual([{ type: 'chakraDrain', amount: 2, source: 'hive', gained: 2 }]);
+    // O Enxame não drena; a Colônia só suga a partir de 5 insetos (1 a cada 5): com 4, nada.
+    expect(ofType(s1.log, 'chakraDrain')).toEqual([]);
   });
 
   it('Enxame sobe em linha: +2 golpes por nível (II 4 golpes, III 6), sempre 1 de dano fixo', () => {
@@ -402,7 +402,7 @@ describe('Sharingan (Uchiha)', () => {
     expect(ofType(s1.log, 'stance')).toHaveLength(1);
     expect(s1.playerFx.dojutsuActive).toBe(true);
     expect(s1.playerFx.dojutsuTurns).toBe(5); // a contagem começa na rodada seguinte
-    expect(s1.player.chakra).toBe(28 - 4 - 1); // ativação + manutenção
+    expect(s1.player.chakra).toBe(28 - 4 - 2); // ativação + manutenção
     expect(effectiveOffense(s1, 'taijutsu', gameData)).toBe(11 + 3);
     expect(canDojutsuExtra(s1, 'stance', gameData)).toBe(false);
     // O ataque maior não dá defesa: 10 − 9 (postura, resistência física do Uchiha) = 1.
@@ -489,7 +489,7 @@ describe('Byakugan e Rotação (Hyuuga)', () => {
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.01), gameData, { dojutsu: true });
     expect(ofType(s1.log, 'dojutsu')).toEqual([{ type: 'dojutsu', dojutsu: 'byakugan', stage: 0, chakra: 3 }]);
     expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'hit', hitChance: 1 });
-    expect(s1.player.chakra).toBe(28 - 3 - 1);
+    expect(s1.player.chakra).toBe(28 - 3 - 2);
   });
 
   it('Rotação: barreira neutra; o escudo absorve e devolve metade do dano bloqueado', () => {
@@ -724,19 +724,22 @@ describe('passivas e ativas de clã', () => {
     expect([p, two, three].map(cap)).toEqual([10, 15, 20]);
   });
 
-  it('Colônia: suga 1 de chakra a cada 2 insetos para o Aburame; sem chakra no vilão, 1 de dano a cada 3 que faltaram', () => {
+  it('Colônia: suga 1 de chakra a cada 5 insetos para o Aburame; sem chakra no vilão, 1 de dano a cada 3 que faltaram', () => {
     const p = { ...createPlayer(clan('aburame'), gameData), chakra: 10 };
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200, chakra: 0 })));
-    // 10 insetos querem 5 de chakra; o vilão não tem nada: 5 que faltaram viram 1 de dano.
-    const s1 = playRound({ ...s0, villain: { ...s0.villain, insects: 10 } }, 'stance', seq(0.5), gameData);
+    // 15 insetos querem 3 de chakra; o vilão não tem nada: 3 que faltaram viram 1 de dano.
+    const s1 = playRound({ ...s0, villain: { ...s0.villain, insects: 15 } }, 'stance', seq(0.5), gameData);
     expect(ofType(s1.log, 'chakraDrain')).toEqual([]);
     expect(ofType(s1.log, 'hiveBurn')).toEqual([{ type: 'hiveBurn', damage: 1 }]);
     // Rodada sem acerto do Enxame: 2 insetos se soltam (depois da Colônia).
-    expect(ofType(s1.log, 'insectsShed')).toEqual([{ type: 'insectsShed', insects: 2, left: 8 }]);
-    // Com chakra: 3 de 20 vão para o Aburame (10 + 1 da regeneração + 3).
-    const s2 = playRound({ ...withInitiative(startBattle(p, testVillain({ hp: 200 }))), villain: { ...s0.villain, chakra: 20, insects: 6 } }, 'stance', seq(0.5), gameData);
-    expect(ofType(s2.log, 'chakraDrain')).toEqual([{ type: 'chakraDrain', amount: 3, source: 'hive', gained: 3 }]);
-    expect(s2.player.chakra).toBe(14);
+    expect(ofType(s1.log, 'insectsShed')).toEqual([{ type: 'insectsShed', insects: 2, left: 13 }]);
+    // Com chakra: 10 insetos levam 2 de 20 para o Aburame (10 + 1 da regeneração + 2); 4 insetos não levam nada.
+    const withChakra = (insects: number) =>
+      playRound({ ...withInitiative(startBattle(p, testVillain({ hp: 200 }))), villain: { ...s0.villain, chakra: 20, insects } }, 'stance', seq(0.5), gameData);
+    const s2 = withChakra(10);
+    expect(ofType(s2.log, 'chakraDrain')).toEqual([{ type: 'chakraDrain', amount: 2, source: 'hive', gained: 2 }]);
+    expect(s2.player.chakra).toBe(13);
+    expect(ofType(withChakra(4).log, 'chakraDrain')).toEqual([]);
   });
 
   it('Transmissão mental (Yamanaka): contra golpe carregado, rola o genjutsu; pegou, o vilão perde o golpe e a vez', () => {

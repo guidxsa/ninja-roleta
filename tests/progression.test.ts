@@ -678,21 +678,19 @@ describe('dificuldade', () => {
     resistance: { physical: 10, mental: 8 },
   });
 
-  it('médio mantém o vilão original', () => {
-    expect(scaleVillain(v, 'normal', gameData)).toBe(v);
-  });
-
-  it('fácil (85%), difícil (115%) e hardcore (125%) escalam HP, dano base, ataques e resistências', () => {
+  it('fácil (90%), médio (110%), difícil (125%) e hardcore (135%) escalam HP, dano base, ataques e resistências', () => {
     const easy = scaleVillain(v, 'easy', gameData);
-    expect(easy.hp).toBe(85);
+    expect(easy.hp).toBe(90);
     // Ataque zerado continua zerado.
     expect(easy.offense).toEqual({ taijutsu: 3, ninjutsu: 0, genjutsu: 5 });
-    expect(easy.resistance).toEqual({ physical: 8, mental: 6 });
-    expect(easy.techniques[0]!.baseDamage).toBe(8);
+    expect(easy.resistance).toEqual({ physical: 9, mental: 7 });
+    expect(easy.techniques[0]!.baseDamage).toBe(9);
+    const normal = scaleVillain(v, 'normal', gameData);
+    expect([normal.hp, normal.techniques[0]!.baseDamage]).toEqual([110, 11]);
     const hard = scaleVillain(v, 'hard', gameData);
-    expect(hard.hp).toBe(114);
-    expect(hard.techniques[0]!.baseDamage).toBe(11);
-    expect(scaleVillain(v, 'hardcore', gameData).techniques[0]!.baseDamage).toBe(12);
+    expect(hard.hp).toBe(125);
+    expect(hard.techniques[0]!.baseDamage).toBe(12);
+    expect(scaleVillain(v, 'hardcore', gameData).techniques[0]!.baseDamage).toBe(13);
   });
 
   it('hardcore troca as passivas dos vilões pelas versões hardcore', () => {
@@ -717,7 +715,7 @@ describe('dificuldade', () => {
     const passive = scaleVillain(villainsById.gaara!, 'hardcore', gameData).passive;
     const base = villainsById.gaara!.hardcorePassive;
     if (passive?.kind !== 'cloak' || base?.kind !== 'cloak') throw new Error('manto esperado');
-    expect(passive.monster!.techniques[0]!.baseDamage).toBe(Math.floor(base.monster!.techniques[0]!.baseDamage * 1.25));
+    expect(passive.monster!.techniques[0]!.baseDamage).toBe(Math.floor(base.monster!.techniques[0]!.baseDamage * 1.35));
   });
 
   it('speed, chakra e XP não mudam', () => {
