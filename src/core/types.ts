@@ -42,6 +42,18 @@ export type PassiveKind =
 /** Ativa de linhagem (gasta ou não o turno; parâmetros em `balance`). */
 export type ActiveKind = 'gates' | 'expansion' | 'effort' | 'beast' | 'plague' | 'transmission' | 'seal';
 
+/** Kekkei genkai de natureza: dois elementos-pai fundidos (docs/fundamentos.md#kekkei-genkai). */
+export type KekkeiGenkaiId = 'ice' | 'sand' | 'lava' | 'storm' | 'steam' | 'explosion' | 'wood';
+
+export interface KekkeiGenkaiDef {
+  id: KekkeiGenkaiId;
+  parents: [Element, Element];
+  /** Chance na roleta do sorteio, para quem tem os dois pais. */
+  chance: number;
+  /** Só estas linhagens (a Madeira é do Senju); sem o campo, quem tem potencial pleno. */
+  lineages?: string[];
+}
+
 /** Elementos da origem: quantos (roleta) e se algum vem fixo (docs/origens.md#sorteio). */
 export interface ElementRule {
   /** Elemento que a origem sempre tem; é o principal. */
@@ -89,7 +101,7 @@ export type TechniqueElement = Element | null | 'affinity';
 /** Efeitos que tiram a vez, atrapalham ou drenam (efeitos.md). */
 export type MentalEffect = 'prison' | 'sleep' | 'fear' | 'confusion' | 'torment' | 'possession';
 /** Efeitos físicos aplicáveis por chance no acerto. */
-export type HitEffect = 'stun' | 'burn';
+export type HitEffect = 'stun' | 'burn' | 'freeze' | 'poison';
 
 /** Golpe com lâmina: o crítico de espada causa sangramento; quem sangra toma mais dano de lâminas. */
 export type BladeKind = 'sword' | 'cutting';
@@ -155,6 +167,20 @@ export interface TechniqueDef {
   lineages?: string[];
   /** Só pode ser usada com este dōjutsu ativado. */
   requiresDojutsu?: DojutsuId;
+  /** Técnica de kekkei genkai: só para quem a tem; no encontro de elementos conta como o pai mais vantajoso. */
+  kekkeiGenkai?: KekkeiGenkaiId;
+  /** Multiplica o dano no escudo (Lava derrete). */
+  shieldMult?: number;
+  /** O golpe passa pelo escudo (Explosão). */
+  ignoreShield?: boolean;
+  /** Cura o atacante em parte do dano causado (Madeira). */
+  lifestealPct?: number;
+  /** Esmaga quem está preso por esta técnica (Funeral do Deserto; o Enforcamento usa a Imitação de Sombra). */
+  strangleHold?: string;
+  /** Força do controle × este fator vira dano base (no lugar de `shadowStrangle.damagePerStrength`). */
+  strangleFactor?: number;
+  /** Ação que ergue a Armadura de Vapor (quem bate com taijutsu se queima). */
+  steamArmor?: boolean;
   /** Ao acertar, drena esta quantidade do chakra do vilão. */
   chakraDrain?: number;
   /** Controle que drena: o vilão preso por esta técnica perde este chakra a cada vez perdida (Correntes). */
@@ -289,6 +315,8 @@ export interface Origin {
   /** Elementos dominados, o principal primeiro (vazio = nenhum). */
   elements: Element[];
   jinchuuriki: boolean;
+  /** Kekkei genkai sorteada (ausente nos registros antigos). */
+  kekkeiGenkai?: KekkeiGenkaiId | null;
 
 }
 

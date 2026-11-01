@@ -1,9 +1,9 @@
 import type { GameData } from './gameData';
 import type { Rng } from './rng';
 import { chanceSlices, spin, type Slice } from './roulette';
-import type { Element, LineageDef, Origin } from './types';
+import type { Element, KekkeiGenkaiId, LineageDef, Origin } from './types';
 
-export type OriginStepKind = 'lineage' | 'elementCount' | 'element' | 'jinchuuriki';
+export type OriginStepKind = 'lineage' | 'elementCount' | 'element' | 'kekkeiGenkai' | 'jinchuuriki';
 
 /** Uma roleta girada na criação, com as fatias e o resultado, para a UI animar. */
 export interface OriginStep {
@@ -64,6 +64,36 @@ export function rollElements(lineage: LineageDef, rng: Rng, data: GameData): { e
   return { elements, steps };
 }
 
+/** Kekkei genkai possíveis: os dois pais entre os elementos e potencial pleno (a Madeira só para o Senju). */
+export function kekkeiGenkaiCandidates(lineage: LineageDef, elements: Element[], data: GameData) {
+  const full = lineage.elementalPotential === 'full' || lineage.elementalPotential === 'fixedOnly';
+  return data.kekkeiGenkai.filter(
+    (k) => full && k.parents.every((e) => elements.includes(e)) && (!k.lineages || k.lineages.includes(lineage.id)),
+  );
+}
+
+/**
+ * Roleta da kekkei genkai: uma fatia por candidata (a chance dividida entre elas) e o resto para "nenhuma".
+ * Sem candidata, não gira.
+ */
+export function rollKekkeiGenkai(
+  lineage: LineageDef,
+  elements: Element[],
+  rng: Rng,
+  data: GameData,
+): { kekkeiGenkai: KekkeiGenkaiId | null; steps: OriginStep[] } {
+  const candidates = kekkeiGenkaiCandidates(lineage, elements, data);
+  if (candidates.length === 0) return { kekkeiGenkai: null, steps: [] };
+  const total = Math.max(...candidates.map((k) => k.chance));
+  const slices = [
+    ...candidates.map((k) => ({ label: k.id, weight: total / candidates.length, value: k.id as string })),
+    { label: 'none', weight: 1 - total, value: 'none' },
+  ];
+  const kgStep = step('kekkeiGenkai', slices, rng);
+  const value = stepValue(kgStep);
+  return { kekkeiGenkai: value === 'none' ? null : (value as KekkeiGenkaiId), steps: [kgStep] };
+}
+
 /**
  * Sequência de rolagens da origem:
  * 1. linhagem: uma roleta só, com os níveis comum, clã e rara;
@@ -83,6 +113,8 @@ export function rollOrigin(rng: Rng, data: GameData): OriginRoll {
   const lineage = lineageOf(stepValue(lineageStep), data);
   const rolled = rollElements(lineage, rng, data);
   steps.push(...rolled.steps);
+  const kg = rollKekkeiGenkai(lineage, rolled.elements, rng, data);
+  steps.push(...kg.steps);
 
   const jinStep = step(
     'jinchuuriki',
@@ -96,6 +128,7 @@ export function rollOrigin(rng: Rng, data: GameData): OriginRoll {
       lineageId: lineage.id === COMMON_LINEAGE ? null : lineage.id,
       elements: rolled.elements,
       jinchuuriki: stepValue(jinStep) === 'yes',
+      kekkeiGenkai: kg.kekkeiGenkai,
     },
     steps,
   };

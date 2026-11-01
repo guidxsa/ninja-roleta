@@ -64,6 +64,7 @@ export const premiumTechniques: TechniqueDef[] = [
 
 /** Aprendidas sozinhas ao atingir `minLevel`, se a origem, a categoria e o elemento permitirem. */
 export const levelTechniques: TechniqueDef[] = [
+  // Kekkei genkai do nível 4 entram pelo índice de dados (ver `src/data/index.ts`).
   { id: 'whirlwindCombo', type: 'taijutsu', element: null, baseDamage: 16, chakraCost: 5, accuracy: 0.9, minLevel: 4, lineages: ['taijutsuProdigy'] },
   { id: 'hiddenLotus', type: 'taijutsu', element: null, baseDamage: 25, chakraCost: 9, accuracy: 0.8, critBonus: 0.1, minLevel: 7, lineages: ['taijutsuProdigy'] },
   { id: 'humanBoulder', type: 'taijutsu', element: null, baseDamage: 20, chakraCost: 6, accuracy: 0.8, onHit: { effect: 'stun', chance: 0.2 }, minLevel: 4, lineages: ['akimichi'] },
@@ -107,7 +108,52 @@ export const lineageTechniques: TechniqueDef[] = [
 ];
 
 
+/** Kekkei genkai (v0.33): linhas I/II/III (a I vem no kit) e técnicas extras (kit e nível 4). */
+export const kekkeiGenkaiTechniques: TechniqueDef[] = [
+  // Gelo: precisão e controle (congela).
+  { id: 'iceNeedles', type: 'ninjutsu', element: null, kekkeiGenkai: 'ice', baseDamage: 6, hits: 3, chakraCost: 3, accuracy: 0.9, onHit: { effect: 'freeze', chance: 0.2 }, line: 'ice', lineLevel: 1 },
+  { id: 'iceSpears', type: 'ninjutsu', element: null, kekkeiGenkai: 'ice', baseDamage: 8, hits: 3, chakraCost: 6, accuracy: 0.9, onHit: { effect: 'freeze', chance: 0.25 }, line: 'ice', lineLevel: 2 },
+  { id: 'iceStorm', type: 'ninjutsu', element: null, kekkeiGenkai: 'ice', baseDamage: 9, hits: 4, chakraCost: 10, accuracy: 0.9, onHit: { effect: 'freeze', chance: 0.3 }, line: 'ice', lineLevel: 3 },
+  // Areia: defesa e prisão.
+  { id: 'sandShuriken', type: 'ninjutsu', element: null, kekkeiGenkai: 'sand', baseDamage: 12, chakraCost: 3, accuracy: 0.95, line: 'sand', lineLevel: 1 },
+  { id: 'sandWave', type: 'ninjutsu', element: null, kekkeiGenkai: 'sand', baseDamage: 24, chakraCost: 6, accuracy: 0.95, line: 'sand', lineLevel: 2 },
+  { id: 'sandStorm', type: 'ninjutsu', element: null, kekkeiGenkai: 'sand', baseDamage: 34, chakraCost: 10, accuracy: 0.9, line: 'sand', lineLevel: 3 },
+  // Lava: dano bruto, queima e derrete escudos.
+  { id: 'lavaBubble', type: 'ninjutsu', element: null, kekkeiGenkai: 'lava', baseDamage: 15, chakraCost: 3, onHit: { effect: 'burn', chance: 0.25 }, shieldMult: 1.5, line: 'lava', lineLevel: 1 },
+  { id: 'lavaRiver', type: 'ninjutsu', element: null, kekkeiGenkai: 'lava', baseDamage: 26, chakraCost: 7, onHit: { effect: 'burn', chance: 0.3 }, shieldMult: 1.5, line: 'lava', lineLevel: 2 },
+  { id: 'eruption', type: 'ninjutsu', element: null, kekkeiGenkai: 'lava', baseDamage: 36, chakraCost: 11, accuracy: 0.8, onHit: { effect: 'burn', chance: 0.35 }, shieldMult: 1.5, line: 'lava', lineLevel: 3 },
+  // Tempestade: rajada precisa (vários golpes, prioridade e penetração).
+  { id: 'stormLaser', type: 'ninjutsu', element: null, kekkeiGenkai: 'storm', baseDamage: 7, hits: 2, chakraCost: 3, priority: true, penetration: 0.15, line: 'storm', lineLevel: 1 },
+  { id: 'stormBeams', type: 'ninjutsu', element: null, kekkeiGenkai: 'storm', baseDamage: 9, hits: 3, chakraCost: 7, priority: true, penetration: 0.2, line: 'storm', lineLevel: 2 },
+  { id: 'stormDragon', type: 'ninjutsu', element: null, kekkeiGenkai: 'storm', baseDamage: 10, hits: 4, chakraCost: 11, priority: true, penetration: 0.25, line: 'storm', lineLevel: 3 },
+  // Vapor: corrosão (envenena).
+  { id: 'acidMist', type: 'ninjutsu', element: null, kekkeiGenkai: 'steam', baseDamage: 10, chakraCost: 3, accuracy: 0.9, onHit: { effect: 'poison', chance: 0.2 }, line: 'steam', lineLevel: 1 },
+  { id: 'boilingMist', type: 'ninjutsu', element: null, kekkeiGenkai: 'steam', baseDamage: 18, chakraCost: 6, accuracy: 0.9, onHit: { effect: 'poison', chance: 0.25 }, line: 'steam', lineLevel: 2 },
+  { id: 'scaldingCloud', type: 'ninjutsu', element: null, kekkeiGenkai: 'steam', baseDamage: 28, chakraCost: 10, accuracy: 0.9, onHit: { effect: 'poison', chance: 0.3 }, line: 'steam', lineLevel: 3 },
+  // Explosão: tudo ou nada (erra muito, passa pelo escudo).
+  { id: 'clayBomb', type: 'ninjutsu', element: null, kekkeiGenkai: 'explosion', baseDamage: 20, chakraCost: 4, accuracy: 0.7, ignoreShield: true, line: 'explosion', lineLevel: 1 },
+  { id: 'clayDragon', type: 'ninjutsu', element: null, kekkeiGenkai: 'explosion', baseDamage: 32, chakraCost: 8, accuracy: 0.65, ignoreShield: true, line: 'explosion', lineLevel: 2 },
+  { id: 'clayDetonation', type: 'ninjutsu', element: null, kekkeiGenkai: 'explosion', baseDamage: 44, chakraCost: 12, accuracy: 0.6, ignoreShield: true, line: 'explosion', lineLevel: 3 },
+  // Madeira (Senju): prende, drena e cura.
+  { id: 'woodRoots', type: 'ninjutsu', element: null, kekkeiGenkai: 'wood', baseDamage: 10, chakraCost: 3, accuracy: 0.9, lifestealPct: 0.5, line: 'wood', lineLevel: 1 },
+  { id: 'woodStakes', type: 'ninjutsu', element: null, kekkeiGenkai: 'wood', baseDamage: 22, chakraCost: 6, accuracy: 0.9, lifestealPct: 0.5, line: 'wood', lineLevel: 2 },
+  { id: 'forestBirth', type: 'ninjutsu', element: null, kekkeiGenkai: 'wood', baseDamage: 9, hits: 4, chakraCost: 10, accuracy: 0.9, chakraDrain: 2, line: 'wood', lineLevel: 3 },
+  // Kit extra: prisões (como a Imitação de Sombra).
+  { id: 'kgSandCoffin', type: 'ninjutsu', element: null, kekkeiGenkai: 'sand', baseDamage: 0, chakraCost: 5, accuracy: 0.8, mental: 'prison', mentalStrength: 1, mentalPower: 0, mentalStat: 'ninjutsu' },
+  { id: 'kgWoodPrison', type: 'ninjutsu', element: null, kekkeiGenkai: 'wood', baseDamage: 0, chakraCost: 5, accuracy: 0.8, mental: 'prison', mentalStrength: 1, mentalPower: 0, mentalStat: 'ninjutsu' },
+];
+
+/** Kekkei genkai, nível 4: aprendidas sozinhas por quem tem a kekkei genkai. */
+export const kekkeiGenkaiLevelTechniques: TechniqueDef[] = [
+  { id: 'kgIceMirrors', type: 'ninjutsu', element: null, kekkeiGenkai: 'ice', baseDamage: 0, chakraCost: 5, barrier: 24, reflectPct: 0.3, minLevel: 4 },
+  { id: 'sandFuneral', type: 'ninjutsu', element: null, kekkeiGenkai: 'sand', baseDamage: 0, chakraCost: 6, accuracy: 1, shadowStrangle: true, strangleHold: 'kgSandCoffin', strangleFactor: 7, minLevel: 4 },
+  { id: 'steamArmor', type: 'ninjutsu', element: null, kekkeiGenkai: 'steam', baseDamage: 0, chakraCost: 6, steamArmor: true, minLevel: 4 },
+  { id: 'woodWall', type: 'ninjutsu', element: null, kekkeiGenkai: 'wood', baseDamage: 0, chakraCost: 5, barrier: 30, minLevel: 4 },
+];
+
 export const allTechniques: TechniqueDef[] = [
+  ...kekkeiGenkaiTechniques,
+  ...kekkeiGenkaiLevelTechniques,
   ...lineageTechniques,
   ...techniques,
   ...lineTechniques,

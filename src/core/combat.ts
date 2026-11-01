@@ -143,7 +143,7 @@ export type BattleStatus = 'ongoing' | 'won' | 'lost';
 /** Por que o lutador perdeu a vez. `reacted` = a ação foi gasta numa reação. */
 export type SkipReason = 'prison' | 'sleep' | 'paralysis' | 'possession' | 'cower' | 'reacted' | 'disrupted';
 /** Efeitos que aparecem como "status" na luta. */
-export type StatusKind = 'stun' | 'burn' | 'poison' | 'bleed';
+export type StatusKind = 'stun' | 'burn' | 'poison' | 'bleed' | 'freeze';
 /** Efeitos que tiram a vez (anti-trava). */
 export type DebilitateKind = 'prison' | 'sleep' | 'paralysis' | 'possession';
 
@@ -204,6 +204,8 @@ export interface StatusFx {
   tenacity: number;
   /** Próximas ações com a chance de acerto reduzida. */
   stunned: number;
+  /** Congelado (Gelo): ações que ainda erram mais e com menos speed. */
+  frozen: number;
   /** Rodadas de queimadura restantes. */
   burn: number;
   /** Tiques da queimadura atual (o próximo causa 2^(tiques+1) %). Zera ao apagar. */
@@ -257,6 +259,8 @@ export interface PlayerFx extends StatusFx {
   clonesArmed: boolean;
   /** Armadura de Raio (estado elemental), contada a partir da rodada seguinte à ativação. */
   armorTurns: number;
+  /** Armadura de Vapor (kekkei genkai): rodadas restantes. */
+  steamArmorTurns: number;
   armorRound: number;
   /** Postura defensiva: Resistir usa 100% até o próximo turno do jogador. */
   stance: boolean;
@@ -401,6 +405,16 @@ export type BattleEvent =
   | { type: 'clones'; chakra: number }
   | { type: 'armor'; techniqueId: string; chakra: number }
   | { type: 'armorEnd' }
+  | { type: 'steamArmor'; chakra: number }
+  | { type: 'steamArmorEnd' }
+  /** Armadura de Vapor: quem bateu com taijutsu se queimou. */
+  | { type: 'steamBurn'; damage: number }
+  /** Madeira: cura parte do dano causado. */
+  | { type: 'lifesteal'; hp: number }
+  /** Madeira: desfaz o manto de chakra do vilão. */
+  | { type: 'cloakSuppressed' }
+  /** Areia: escudo do início da luta. */
+  | { type: 'sandShield'; points: number }
   /** Quem ataca anuncia a técnica antes da reação do outro lado. */
   | { type: 'declare'; side: Side; techniqueId: string; attackType: AttackType; element: Element | null; chakra: number }
   | { type: 'reaction'; side: Side; kind: ReactionKind; techniqueId: string | null; chakra: number }
@@ -534,6 +548,7 @@ function newFx(): StatusFx {
     debilitateImmunity: 0,
     tenacity: 0,
     stunned: 0,
+    frozen: 0,
     burn: 0,
     burnTicks: 0,
     burnUnlocked: false,
@@ -586,6 +601,7 @@ export function startBattle(
       expansionTurns: 0,
       clonesArmed: false,
       armorTurns: 0,
+      steamArmorTurns: 0,
       armorRound: 0,
       stance: false,
       dodge: null,
@@ -747,11 +763,23 @@ interface CombatTech {
   blade?: BladeKind;
   clashBonus?: number;
   fixedDamage?: number;
+  /** Kekkei genkai: no encontro de elementos conta como o pai mais vantajoso. */
+  parents?: Element[];
+  shieldMult?: number;
+  ignoreShield?: boolean;
 }
 
 function playerCombatTech(s: BattleState, techniqueId: string, data: GameData): CombatTech {
   const t = playerTechnique(s.player, techniqueId, data);
-  return { ...t, hits: t.hits ?? 1 };
+  const parents = t.kekkeiGenkai ? data.kekkeiGenkai.find((k) => k.id === t.kekkeiGenkai)?.parents : undefined;
+  return { ...t, hits: t.hits ?? 1, ...(parents ? { parents } : {}) };
+}
+
+/** Multiplicador do encontro de elementos; a kekkei genkai usa o pai mais vantajoso. */
+function techElementMult(atk: CombatTech, defense: Element | null, data: GameData, solid = false): number {
+  const cfg = data.balance.elements;
+  if (!atk.parents) return elementMultiplier(atk.element, defense, data.beats, cfg, solid);
+  return Math.max(...atk.parents.map((e) => elementMultiplier(e, defense, data.beats, cfg, solid)));
 }
 
 /** Elemento de uma técnica do vilão: o dele, salvo indicação; taijutsu é neutro. */
@@ -1125,7 +1153,13 @@ export function effectiveSpeed(s: BattleState, data: GameData): number {
   if (pill) value += pill.speed;
   if (s.playerFx.exhaustedTurns > 0) value -= data.balance.pills.exhausted.speedPenalty;
   if (armorActive(s)) value += data.balance.states.lightningArmor.speed;
+  if (s.playerFx.frozen > 0) value -= data.balance.kekkeiGenkai.freeze.speed;
   return Math.max(1, Math.floor(value * (playerCloak(s, data)?.statMult ?? 1)));
+}
+
+/** Speed do vilão (o Gelo congela e reduz). */
+function villainSpeedOf(s: BattleState, data: GameData): number {
+  return Math.max(1, s.villain.def.speed - (s.villain.fx.frozen > 0 ? data.balance.kekkeiGenkai.freeze.speed : 0));
 }
 
 function expansionActive(s: BattleState): boolean {
@@ -1219,7 +1253,7 @@ export function isControlEffect(effect: MentalEffect): boolean {
 }
 
 function stunPenalty(fx: StatusFx, data: GameData): number {
-  return fx.stunned > 0 ? data.balance.status.stun.hitPenalty : 0;
+  return (fx.stunned > 0 ? data.balance.status.stun.hitPenalty : 0) + (fx.frozen > 0 ? data.balance.kekkeiGenkai.freeze.hitPenalty : 0);
 }
 
 /** O lutador pode reagir: não está aprisionado, dormindo, paralisado nem acovardado. */
@@ -1397,7 +1431,7 @@ function strikeDamage(
   // Dano fixo (Enxame): ignora status, resistência, crítico e multiplicadores.
   if (tech.fixedDamage !== undefined) return { damage: tech.fixedDamage, elementMult: 1 };
   const state = elementalStateOf(s, defender, data);
-  const elementMult = elementMultiplier(tech.element, state, data.beats, data.balance.elements, true);
+  const elementMult = techElementMult(tech, state, data, true);
   // Vento contra a Armadura de Raio: ignora o bônus de resistência dela.
   const ignoreArmor = defender === 'player' && tech.element === 'wind';
   const resistance = defender === 'player' ? playerResistance(s, 'physical', data, ignoreArmor) : villainResistance(s, 'physical', data);
@@ -1475,7 +1509,7 @@ export function canUseTechnique(s: BattleState, tech: TechniqueDef, data?: GameD
   if (p.forbiddenAttackTypes.includes(tech.type)) return false;
   if (tech.requiresDojutsu && !(s.playerFx.dojutsuActive && p.dojutsu === tech.requiresDojutsu)) return false;
   if (tech.devour && s.villain.insects === 0) return false;
-  if (tech.shadowStrangle && !shadowHeld(s)) return false;
+  if (tech.shadowStrangle && !heldBy(s, tech.strangleHold ?? 'shadowImitation')) return false;
   const cost = techniqueCost(s, tech, data);
   return cost === 0 || p.chakra >= cost;
 }
@@ -1564,7 +1598,7 @@ export function substitutionUses(s: BattleState, side: Side, data: GameData): nu
 export function substitutionChance(s: BattleState, side: Side, data: GameData): number {
   const cfg = data.balance.substitution;
   const playerSpeed = effectiveSpeed(s, data);
-  const villainSpeed = s.villain.def.speed;
+  const villainSpeed = villainSpeedOf(s, data);
   const diff = side === 'player' ? playerSpeed - villainSpeed : villainSpeed - playerSpeed;
   return clamp(cfg.baseChance + diff * cfg.perSpeed, cfg.min, cfg.max);
 }
@@ -1686,12 +1720,11 @@ function clashPowers(
   def: CombatTech,
   data: GameData,
 ): { attackPower: number; defensePower: number } {
-  const cfg = data.balance.elements;
   const edge = (mult: number) => Math.max(1, mult);
   let attackPower = clashPower(s, attacker, atk, charged, data);
-  attackPower *= edge(elementMultiplier(atk.element, def.element, data.beats, cfg));
+  attackPower *= edge(techElementMult(atk, def.element, data));
   let defensePower = clashPower(s, other(attacker), def, false, data);
-  defensePower *= edge(elementMultiplier(def.element, atk.element, data.beats, cfg));
+  defensePower *= edge(techElementMult(def, atk.element, data));
   return { attackPower, defensePower };
 }
 
@@ -1778,7 +1811,9 @@ function shieldAbsorb(s: BattleState, owner: Side, damage: number, atk: CombatTe
   const fx = fxOf(s, owner);
   const sh = fx.shield;
   if (!sh || damage <= 0) return damage;
-  let mult = elementMultiplier(atk.element, sh.element, data.beats, data.balance.elements, true);
+  // Explosão: passa direto pelo escudo.
+  if (atk.ignoreShield) return damage;
+  let mult = techElementMult(atk, sh.element, data, true) * (atk.shieldMult ?? 1);
   if (sh.multiHitResist && atk.hits > 1) mult *= 1 - sh.multiHitResist;
   const load = damage * mult;
   const absorbed = Math.min(sh.points, Math.ceil(load));
@@ -1951,8 +1986,8 @@ export function playRound(
     s.log.push({ type: 'late' });
   } else if (s.initiative === null) {
     const speed = effectiveSpeed(s, data);
-    const c = initiativeChance(speed, s.villain.def.speed);
-    s.initiative = rollInitiative(speed, s.villain.def.speed, rng) === 'a' ? 'player' : 'villain';
+    const c = initiativeChance(speed, villainSpeedOf(s, data));
+    s.initiative = rollInitiative(speed, villainSpeedOf(s, data), rng) === 'a' ? 'player' : 'villain';
     s.log.push({ type: 'initiative', first: s.initiative, playerChance: c });
   }
 
@@ -2310,6 +2345,7 @@ function endTurn(s: BattleState, side: Side, acted: boolean, rng: Rng, data: Gam
   const fx = fxOf(s, side);
   if (acted && fx.debilitateImmunity > 0) fx.debilitateImmunity--;
   if (fx.stunned > 0) fx.stunned--;
+  if (fx.frozen > 0) fx.frozen--;
   serveMental(s, side, 'feared', rng, data);
   serveMental(s, side, 'confused', rng, data);
 }
@@ -2408,6 +2444,13 @@ function igniteBurn(s: BattleState, target: Side, turns: number): void {
   s.log.push({ type: 'status', target, kind: 'burn', turns });
 }
 
+/** Gelo: congela por algumas ações (acerta menos e fica mais lento). */
+function applyFreeze(s: BattleState, target: Side, data: GameData): void {
+  const fx = fxOf(s, target);
+  fx.frozen = Math.max(fx.frozen, data.balance.kekkeiGenkai.freeze.turns);
+  s.log.push({ type: 'status', target, kind: 'freeze', turns: fx.frozen });
+}
+
 function applyStun(s: BattleState, target: Side, data: GameData): void {
   const fx = fxOf(s, target);
   fx.stunned = Math.max(fx.stunned, data.balance.status.stun.turns);
@@ -2418,6 +2461,8 @@ function applyStun(s: BattleState, target: Side, data: GameData): void {
 function applyOnHit(s: BattleState, target: Side, tech: { onHit?: { effect: HitEffect; chance: number } }, rng: Rng, data: GameData): void {
   if (!tech.onHit || !chance(tech.onHit.chance, rng)) return;
   if (tech.onHit.effect === 'stun') applyStun(s, target, data);
+  else if (tech.onHit.effect === 'freeze') applyFreeze(s, target, data);
+  else if (tech.onHit.effect === 'poison') applyPoison(s, target, 0, data);
   else if (fxOf(s, target).burn === 0) igniteBurn(s, target, data.balance.status.burn.turns);
 }
 
@@ -2489,6 +2534,11 @@ function startOfRound(s: BattleState, rng: Rng, data: GameData): void {
   const vPassive = v.def.passive;
   const { balance } = data;
 
+  if (s.round === 1 && p.kekkeiGenkai === 'sand') {
+    const points = Math.floor(p.maxHp * balance.kekkeiGenkai.sandShieldPct);
+    raiseShield(s, 'player', { id: 'sandShield', barrier: points }, null, 0, data);
+    s.log.push({ type: 'sandShield', points });
+  }
   if (s.round === 1) {
     const start = v.def.startingShield ? v.def.techniques.find((t) => t.id === v.def.startingShield) : undefined;
     if (start) raiseShield(s, 'villain', start, villainTechElement(v.def, start), 0, data);
@@ -2708,6 +2758,10 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
     fx.armorTurns--;
     if (fx.armorTurns === 0) s.log.push({ type: 'armorEnd' });
   }
+  if (fx.steamArmorTurns > 0) {
+    fx.steamArmorTurns--;
+    if (fx.steamArmorTurns === 0) s.log.push({ type: 'steamArmorEnd' });
+  }
   if (fx.dojutsuActive && p.dojutsu) {
     if (fx.dojutsuRound !== s.round) fx.dojutsuTurns--;
     const upkeep = data.balance.dojutsu[p.dojutsu].upkeep;
@@ -2754,6 +2808,10 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
     } else if (isBarrier(tech)) {
       payChakra(p, tech.chakraCost);
       raiseShield(s, 'player', tech, playerTechnique(p, techId, data).element, tech.chakraCost, data);
+    } else if (tech.steamArmor) {
+      payChakra(p, tech.chakraCost);
+      fx.steamArmorTurns = balance.kekkeiGenkai.steamArmor.turns;
+      s.log.push({ type: 'steamArmor', chakra: tech.chakraCost });
     } else if (tech.state) {
       payChakra(p, tech.chakraCost);
       fx.armorTurns = balance.states[tech.state].turns;
@@ -2961,20 +3019,27 @@ function sealTechnique(s: BattleState, data: GameData): void {
 
 /** O vilão está preso pela Imitação de Sombra (libera o Enforcamento). */
 export function shadowHeld(s: BattleState): boolean {
-  return s.villain.fx.debilitated?.source === 'shadowImitation';
+  return heldBy(s, 'shadowImitation');
+}
+
+/** O vilão está preso pela técnica `source`. */
+export function heldBy(s: BattleState, source: string): boolean {
+  return s.villain.fx.debilitated?.source === source;
 }
 
 /**
  * Enforcamento por Sombra (Nara): força do controle × `damagePerStrength` + ninjutsu − resistência física
  * usada pelo vilão (+1 de força no despertar do nível 7). Sem acerto nem crítico; o vilão segue preso.
  */
-export function shadowStrangleDamage(s: BattleState, data: GameData): number {
+export function shadowStrangleDamage(s: BattleState, data: GameData, tech?: TechniqueDef): number {
+  const source = tech?.strangleHold ?? 'shadowImitation';
   const hold = s.villain.fx.debilitated;
-  if (!hold || !shadowHeld(s)) return 0;
+  if (!hold || !heldBy(s, source)) return 0;
   const aw = data.balance.awakening.nara.strangle;
-  const strength = hold.strength + (awakened(s.player, aw.level) ? aw.strengthBonus : 0);
+  const naraBonus = source === 'shadowImitation' && awakened(s.player, aw.level) ? aw.strengthBonus : 0;
+  const strength = hold.strength + naraBonus;
   return computeDamage({
-    baseDamage: Math.floor(strength * data.balance.shadowStrangle.damagePerStrength),
+    baseDamage: Math.floor(strength * (tech?.strangleFactor ?? data.balance.shadowStrangle.damagePerStrength)),
     offense: effectiveOffense(s, 'ninjutsu', data),
     resistance: villainResistance(s, 'physical', data),
     fraction: guardFraction(s, 'villain', defaultGuard(s, 'villain'), 'physical', data, 'ninjutsu'),
@@ -2985,7 +3050,7 @@ export function shadowStrangleDamage(s: BattleState, data: GameData): number {
 }
 
 function shadowStrangle(s: BattleState, tech: TechniqueDef, data: GameData): void {
-  const damage = shadowStrangleDamage(s, data);
+  const damage = shadowStrangleDamage(s, data, tech);
   payChakra(s.player, tech.chakraCost);
   s.log.push({ type: 'strangle', damage });
   hurtVillain(s, damage);
@@ -3200,10 +3265,11 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
   // Ataque múltiplo: cada golpe rola o próprio acerto e crítico; um erro não para os seguintes.
   let anyHit = false;
   for (let i = 0; i < tech.hits && s.status === 'ongoing'; i++) {
-    const { outcome } = playerStrike(s, tech, tech.id, factorAt(i), i === 0 ? tech.chakraCost : 0, reaction.guard, rng, data);
+    const { outcome, dealt } = playerStrike(s, tech, tech.id, factorAt(i), i === 0 ? tech.chakraCost : 0, reaction.guard, rng, data);
     if (s.status !== 'ongoing') return;
     if (outcome === 'miss') continue;
     anyHit = true;
+    kekkeiGenkaiHit(s, techId, dealt, data);
     // Colônia (Aburame): cada golpe do Enxame que acerta prende insetos no vilão (o dobro no crítico e na Praga).
     if (p.passive === 'hive' && data.techniquesById[techId]?.line === 'swarm') addInsects(s, insectsPerHit(s, outcome === 'crit', data), data);
     // Selo dos Pontos Vitais e 64 Palmas: drenam o chakra do vilão.
@@ -3473,8 +3539,19 @@ function villainStrike(
   });
   if (outcome === 'miss') return outcome;
 
-  hurtPlayer(s, shieldAbsorb(s, 'player', damage, tech, rng, data), data);
+  const taken = hurtPlayer(s, shieldAbsorb(s, 'player', damage, tech, rng, data), data);
   if (s.status !== 'ongoing') return outcome;
+  // Armadura de Vapor: quem bate com taijutsu se queima.
+  if (fx.steamArmorTurns > 0 && tech.type === 'taijutsu') {
+    // Mínimo 1 quando o golpe causou dano.
+    const hitDamage = Math.max(taken, damage);
+    const burned = hitDamage > 0 ? Math.max(1, Math.floor(hitDamage * data.balance.kekkeiGenkai.steamArmor.reflectPct)) : 0;
+    if (burned > 0) {
+      s.log.push({ type: 'steamBurn', damage: burned });
+      hurtVillain(s, burned);
+      if (s.status !== 'ongoing') return outcome;
+    }
+  }
   // Cobra do Orochimaru: acertos envenenam.
   if (passive?.kind === 'insane') applyPoison(s, 'player', passive.snakeBonus, data);
   // Sangramento: crítico de espada ou do bisturi, ou todo acerto (Kabuto no hardcore, último suspiro do Zabuza).
@@ -3483,6 +3560,22 @@ function villainStrike(
   if (bleedOnHit || (bleedOnCrit && outcome === 'crit')) applyBleed(s, 'player');
   applyElementalHit(s, 'player', tech.element, outcome, data, rng);
   return outcome;
+}
+
+/** Madeira: cura parte do dano causado e desfaz o manto de chakra do vilão. */
+function kekkeiGenkaiHit(s: BattleState, techId: string, dealt: number, data: GameData): void {
+  const tech = data.techniquesById[techId];
+  if (!tech?.kekkeiGenkai) return;
+  const steal = Math.floor(dealt * (tech.lifestealPct ?? 0));
+  if (steal > 0) {
+    const healed = Math.min(s.player.maxHp - s.player.hp, steal);
+    s.player.hp += healed;
+    if (healed > 0) s.log.push({ type: 'lifesteal', hp: healed });
+  }
+  if (tech.kekkeiGenkai === 'wood' && s.villain.fx.cloakTurns > 0) {
+    s.villain.fx.cloakTurns = 0;
+    s.log.push({ type: 'cloakSuppressed' });
+  }
 }
 
 /** HP 0: usa a Vontade do Fogo (restauração total, limpa os efeitos negativos) ou encerra a luta. */

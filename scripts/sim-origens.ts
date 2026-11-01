@@ -2,7 +2,7 @@
 // Mede como cada linhagem atravessa a campanha completa, com eventos e recompensas automáticos.
 // `--bare` simula sem eventos nem recompensas (só XP e nível).
 import type { Difficulty } from '../src/core/difficulty';
-import { COMMON_LINEAGE, rollElements } from '../src/core/origin';
+import { COMMON_LINEAGE, rollElements, rollKekkeiGenkai } from '../src/core/origin';
 
 import { createPlayer } from '../src/core/player';
 import { createRng } from '../src/core/rng';
@@ -30,7 +30,10 @@ const origins = gameData.lineages.map((l) => ({
   make: (): Origin => ({
     lineageId: l.id === COMMON_LINEAGE ? null : l.id,
     // Elementos pela roleta da origem (quantidade e quais), como no jogo.
-    elements: rollElements(l, rng, gameData).elements,
+    ...(() => {
+      const elements = rollElements(l, rng, gameData).elements;
+      return { elements, kekkeiGenkai: rollKekkeiGenkai(l, elements, rng, gameData).kekkeiGenkai };
+    })(),
     jinchuuriki: false,
   }),
 }));

@@ -1,21 +1,7 @@
 import type { Difficulty } from './difficulty';
 import type { GameData } from './gameData';
 import { lineageOf } from './origin';
-import type {
-  ActiveKind,
-  AttackStats,
-  AttackType,
-  ConsumableId,
-  DojutsuId,
-  Element,
-  Origin,
-  PassiveKind,
-  Resistances,
-  SummonState,
-  TechniqueDef,
-  TechniqueElement,
-  TechniqueSlot,
-} from './types';
+import type { ActiveKind, AttackStats, AttackType, ConsumableId, DojutsuId, Element, KekkeiGenkaiId, Origin, PassiveKind, Resistances, SummonState, TechniqueDef, TechniqueElement, TechniqueSlot } from './types';
 
 /** Quantos amuletos de cada tipo o jogador carrega. */
 export interface Amulets {
@@ -48,6 +34,8 @@ export interface PlayerState {
   speed: number;
   /** Elementos dominados, o principal primeiro (vem da origem; não se aprende elemento novo na run). */
   elements: Element[];
+  /** Kekkei genkai da origem (null = nenhuma). */
+  kekkeiGenkai: KekkeiGenkaiId | null;
   /** diferencial_de_dano_%: somado à chance base de crítico. */
   critBonus: number;
   /** Skill set: todas as técnicas conhecidas (kit inicial, nível, recompensa), várias por categoria. */
@@ -112,6 +100,9 @@ export function createPlayer(
   const basic = primary && fullPotential && !forbidden.includes('ninjutsu') ? elementalBasic(primary, data) : undefined;
   if (basic) kit.push(basic.id);
   kit.push(...(lineage.startingTechniques ?? []));
+  // Kekkei genkai: o nível I da linha e as técnicas extras do kit (prisões de Areia e Madeira).
+  const kg = origin.kekkeiGenkai ?? null;
+  if (kg) kit.push(...Object.values(data.techniquesById).filter((t) => t.kekkeiGenkai === kg && !t.minLevel && (t.lineLevel ?? 1) === 1).map((t) => t.id));
 
   return grantLevelTechniques(
     {
@@ -127,6 +118,7 @@ export function createPlayer(
       resistance: { ...lineage.resistance },
       speed: st.speed,
       elements: [...origin.elements],
+      kekkeiGenkai: kg,
       critBonus: 0,
       techniques: kit,
       techniqueLevels: {},
@@ -234,8 +226,9 @@ export function pendingLevelTechniques(player: PlayerState, data: GameData): str
     .map((t) => t.id);
 }
 
-/** Técnica exclusiva de linhagem só serve a quem é dela. */
+/** Técnica exclusiva de linhagem só serve a quem é dela; a de kekkei genkai, a quem a tem. */
 export function lineageAllows(player: PlayerState, tech: TechniqueDef): boolean {
+  if (tech.kekkeiGenkai && player.kekkeiGenkai !== tech.kekkeiGenkai) return false;
   return !tech.lineages || (player.origin.lineageId !== null && tech.lineages.includes(player.origin.lineageId));
 }
 

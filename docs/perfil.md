@@ -72,6 +72,11 @@ A tela **Perfil** (botão 📜 no cabeçalho) tem quatro abas: Histórico, Conqu
 | Hokage | Vencer o Hardcore com a origem Comum |
 | Segundo Hokage | Vencer como Senju com água como elemento principal |
 | Princesa das Lesmas | Senju com a invocação de lesma e a Palma Curativa |
+| Vingador | Uchiha com raio |
+| Espelhos de gelo | Vencer o Haku com o Elemento Gelo |
+| Areia que protege | Elemento Areia e jinchuuriki |
+| Deus dos Shinobi | Vencer a campanha como Senju com o Elemento Madeira |
+| Domador de bijuu | Desfazer o manto do Gaara com a Madeira |
 | Demônio da Névoa | Cair para o Zabuza 5 vezes (somando todas as runs) |
 
 Dano sofrido conta golpes, disputas, queimadura, veneno e autoferimento. Os segredos ligados à reforma elemental e ao Senju (ver "Mudanças de design pendentes" no `CLAUDE.md`) entram junto com eles.

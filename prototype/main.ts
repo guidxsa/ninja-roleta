@@ -670,7 +670,7 @@ function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
       ${avatar(p)}
       <div class="panel-id">
         <b class="name"${lineageTip(p)}>${originLabel(p.origin)}</b>
-        <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${elementChips(p.elements)}${jinChip(p)}${camp ? diffChip(camp.difficulty) : ''}</div>
+        <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${elementChips(p.elements, p.kekkeiGenkai)}${jinChip(p)}${camp ? diffChip(camp.difficulty) : ''}</div>
       </div>
       <button class="btn small sheet-btn" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button>
     </div>
@@ -884,9 +884,11 @@ function rollSlices<T extends string>(roll: Roll<T>, label: (id: T) => string, c
 /** Cores da roleta de quantidade de elementos (0 a 3). */
 const COUNT_COLORS = ['#8a8f9c', '#4f8fd6', '#9b59d0', '#e0a422'];
 
-/** Chips de todos os elementos, o principal primeiro (ou "sem elemento"). */
-function elementChips(elements: Element[]): string {
-  return elements.length ? elements.map((e) => elChip(e)).join('') : `<span class="chip"${tip(S.ui.noAffinity, S.tips.noElement)}>${S.ui.noAffinity}</span>`;
+/** Chips de todos os elementos, o principal primeiro (ou "sem elemento"), e da kekkei genkai. */
+function elementChips(elements: Element[], kg: string | null = null): string {
+  const els = elements.length ? elements.map((e) => elChip(e)).join('') : `<span class="chip"${tip(S.ui.noAffinity, S.tips.noElement)}>${S.ui.noAffinity}</span>`;
+  const k = kg ? S.kekkeiGenkai[kg] : null;
+  return k ? `${els}<span class="chip kg-chip"${tip(k.name, k.desc)}>✦ ${k.name}</span>` : els;
 }
 
 function originStepSlices(step: OriginStep): WheelSlice[] {
@@ -904,6 +906,8 @@ function originStepSlices(step: OriginStep): WheelSlice[] {
         const el = s.value as Element;
         return { label: S.elements[el], weight: s.weight, color: ELEMENT_COLORS[el], icon: icon(ELEMENT_ICON[el]) };
       }
+      case 'kekkeiGenkai':
+        return { label: S.kekkeiGenkai[s.value]?.name ?? s.value, weight: s.weight, color: s.value === 'none' ? TIER_COLORS.common : TIER_COLORS.legendary };
       case 'elementCount': {
         const n = Number(s.value);
         return { label: S.ui.elementCount(n), weight: s.weight, color: COUNT_COLORS[n] ?? TIER_COLORS.common };
@@ -928,6 +932,8 @@ function stepResultText(step: OriginStep): string {
       return `${icon(ELEMENT_ICON[v as Element])}${S.elements[v as Element]}`;
     case 'elementCount':
       return S.ui.elementCount(Number(v));
+    case 'kekkeiGenkai':
+      return v === 'none' ? `${S.roulettes.kekkeiGenkai} ${S.kekkeiGenkai.none!.name}` : `✦ ${S.kekkeiGenkai[v]?.name ?? v}`;
     case 'jinchuuriki':
       return v === 'yes' ? `${clanSymbol('jinchuuriki')}${S.origin.jinchuuriki}` : `${S.origin.jinchuuriki}: ${S.sliceLabels.no}`;
   }
@@ -1522,7 +1528,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       <ol id="log" class="log"></ol>
       <section class="card player-mini" id="pcard">
         <div class="panel-head">${avatar(c.player)}<div class="panel-id"><b class="name"${lineageTip(c.player)}>${S.ui.you} · ${originLabel(c.origin)}</b>
-          <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elementChips(c.player.elements)}${jinChip(c.player)}</div></div>
+          <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elementChips(c.player.elements, c.player.kekkeiGenkai)}${jinChip(c.player)}</div></div>
           <button class="btn small sheet-btn" data-sheet aria-label="${S.ui.sheet}">${icon('scroll')}</button></div>
         ${bar('hp', state.player.hp, state.player.maxHp)}
         ${bar('ck', state.player.chakra, state.player.maxChakra)}
@@ -1991,6 +1997,29 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         case 'armorEnd':
           log(S.log.armorEnd, 'sys');
+          break;
+        case 'steamArmor':
+          disp.pck -= ev.chakra;
+          log(S.log.steamArmor, 'good');
+          break;
+        case 'steamArmorEnd':
+          log(S.log.steamArmorEnd, 'sys');
+          break;
+        case 'steamBurn':
+          disp.vhp -= ev.damage;
+          floatNumber(vcard(), `−${ev.damage}`, 'dmg');
+          log(S.log.steamBurn(ev.damage), 'good');
+          break;
+        case 'lifesteal':
+          disp.php += ev.hp;
+          floatNumber(pcard, `+${ev.hp}`, 'heal');
+          log(S.log.lifesteal(ev.hp), 'good');
+          break;
+        case 'cloakSuppressed':
+          log(S.log.cloakSuppressed, 'good');
+          break;
+        case 'sandShield':
+          log(S.log.sandShield(ev.points), 'good');
           break;
         case 'item':
           if (ev.item === 'soldierPill') disp.pck += ev.amount;
@@ -2523,7 +2552,8 @@ async function shareRun(c: Campaign, won: boolean, stoppedAt: string | null) {
 
 /** Origem por extenso: linhagem, afinidade e jinchuuriki. */
 function originText(o: Origin): string {
-  return `${originLabel(o)}${o.elements.length ? ` (${o.elements.map((e) => S.elements[e]).join(', ')})` : ''}${o.jinchuuriki ? ` · ${S.origin.jinchuuriki}` : ''}`;
+  const kg = o.kekkeiGenkai ? ` · ${S.kekkeiGenkai[o.kekkeiGenkai]?.name}` : '';
+  return `${originLabel(o)}${o.elements.length ? ` (${o.elements.map((e) => S.elements[e]).join(', ')})` : ''}${kg}${o.jinchuuriki ? ` · ${S.origin.jinchuuriki}` : ''}`;
 }
 
 async function copyText(text: string): Promise<boolean> {

@@ -12,7 +12,7 @@ describe('rolagem de origem', () => {
   it('comum: roleta da quantidade (1, 2 ou 3) e um giro por elemento, sem repetir', () => {
     // 0.2 → comum; 0.0 → 1 elemento; 0.0 → fogo; 0.99 → não jinchuuriki
     const { origin, steps } = rollOrigin(seq(0.2, 0.0, 0.0, 0.99), gameData);
-    expect(origin).toEqual({ lineageId: null, elements: ['fire'], jinchuuriki: false });
+    expect(origin).toEqual({ lineageId: null, elements: ['fire'], jinchuuriki: false, kekkeiGenkai: null });
     expect(steps.map((s) => s.kind)).toEqual(['lineage', 'elementCount', 'element', 'jinchuuriki']);
     expect(steps[1]!.slices.map((s) => [s.value, s.weight])).toEqual([['1', 50], ['2', 35], ['3', 15]]);
     // 0.99 → 3 elementos; cada giro tira o já sorteado da roleta.
@@ -42,7 +42,7 @@ describe('rolagem de origem', () => {
 
   it('Uchiha sempre tem fogo (o principal); a roleta só decide se vem um segundo', () => {
     const { origin, steps } = rollOrigin(seq(0.8, 0.0, 0.0), gameData);
-    expect(origin).toEqual({ lineageId: 'uchiha', elements: ['fire'], jinchuuriki: true });
+    expect(origin).toEqual({ lineageId: 'uchiha', elements: ['fire'], jinchuuriki: true, kekkeiGenkai: null });
     expect(steps.map((s) => s.kind)).toEqual(['lineage', 'elementCount', 'jinchuuriki']);
     const two = rollOrigin(seq(0.8, 0.99, 0.0, 0.99), gameData);
     expect(two.origin.elements).toEqual(['fire', 'wind']);
@@ -57,10 +57,10 @@ describe('rolagem de origem', () => {
 
   it('clãs e raras de kit dedicado: 0, 1 ou 2 elementos (30/55/15)', () => {
     const none = rollOrigin(seq(0.32, 0.0, 0.99), gameData);
-    expect(none.origin).toEqual({ lineageId: 'nara', elements: [], jinchuuriki: false });
+    expect(none.origin).toEqual({ lineageId: 'nara', elements: [], jinchuuriki: false, kekkeiGenkai: null });
     expect(none.steps[1]!.slices.map((s) => [s.value, s.weight])).toEqual([['0', 30], ['1', 55], ['2', 15]]);
     const { origin } = rollOrigin(seq(0.95, 0.5, 0.99, 0.99), gameData);
-    expect(origin).toEqual({ lineageId: 'uzumaki', elements: ['water'], jinchuuriki: false });
+    expect(origin).toEqual({ lineageId: 'uzumaki', elements: ['water'], jinchuuriki: false, kekkeiGenkai: null });
   });
 
   it('frequências batem com a configuração', () => {

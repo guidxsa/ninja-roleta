@@ -7,7 +7,8 @@ A origem do personagem é sorteada no início da run: linhagem, elementos e jinc
 1. **Roleta de linhagem**: uma roleta só, com quatro níveis de raridade (a cor da fatia indica o nível).
 2. **Quantidade de elementos**: roleta pelos pesos da origem (tabela abaixo). Não gira quando só há uma quantidade possível.
 3. **Elementos**: um giro por elemento, sem repetir (cada giro tira o já sorteado; os 5 elementos têm o mesmo peso). O **primeiro** é o **elemento principal**. O elemento fixo da origem (o fogo do Uchiha) entra primeiro e conta na quantidade.
-4. **Jinchuuriki**: roleta independente, **10%**. Acumula com qualquer linhagem.
+4. **Kekkei genkai**: quem tem potencial pleno (Comum, Senju; o Uchiha com fogo e um segundo elemento) e os dois elementos-pai de uma kekkei genkai gira a roleta dela ([fundamentos.md](fundamentos.md#kekkei-genkai)). Sem par, não gira.
+5. **Jinchuuriki**: roleta independente, **10%**. Acumula com qualquer linhagem.
 
 | Nível | Linhagem | Peso |
 |---|---|---|
@@ -218,7 +219,7 @@ Identidade: o clã do fundador. Muita vida e muito chakra, como o Uzumaki, mas p
 
 - **Herdeiro do fundador** (passiva): começa a run com **+1 Vontade do Fogo** (campo `extraRevives`).
 - **Força vital** (passiva): na 1ª vez na luta em que o HP cai abaixo de **30%**, regenera **4% do HP máximo** no início de cada rodada durante **3 rodadas**. Toda **cura recebida** (Palma Curativa, Lesma, Nunca desistir, manto, itens de cura) rende **+25%**.
-- Futuro: o **Elemento Madeira** (Senju com terra e água, por roleta) entra com as kekkei genkai.
+- **Elemento Madeira**: só o Senju com terra e água pode tê-lo (roleta de 30%; [fundamentos.md](fundamentos.md#kekkei-genkai)).
 
 ## Despertar
 

@@ -238,6 +238,25 @@ Futuro: estado **Molhado** (acertos de água) que deixa o alvo vulnerável a rai
 - Os críticos elementais continuam aplicando os efeitos de [efeitos.md](efeitos.md) (queimadura, paralisia, atordoamento).
 - Na tela, todo ataque e toda intenção do vilão mostram o **ícone e a cor do elemento**.
 
+## Kekkei genkai
+
+Dois elementos-pai fundidos numa natureza nova. Sai no sorteio da origem ([origens.md](origens.md#sorteio)) para quem tem **potencial elemental pleno** e os **dois pais** entre os elementos, por uma roleta: as candidatas dividem a chance entre si e o resto é "nenhuma". A Madeira é exclusiva do Senju.
+
+| Kekkei genkai | Pais | Chance | Identidade |
+|---|---|---|---|
+| Gelo | Água + vento | 25% | Precisão e controle: congela |
+| Areia | Terra + vento | 25% | Defesa: escudo no início de cada luta; prende e esmaga |
+| Lava | Fogo + terra | 25% | Dano bruto: queima e derrete escudos (×1,5 no escudo) |
+| Tempestade | Raio + água | 25% | Rajadas de vários golpes, prioridade e penetração |
+| Vapor | Fogo + água | 25% | Corrosão: envenena; armadura que queima quem bate com taijutsu |
+| Explosão | Terra + raio | 25% | Tudo ou nada: dano altíssimo, erra muito, passa pelo escudo |
+| Madeira (Senju) | Terra + água | 30% | Prende, cura com o dano e desfaz o manto de chakra |
+
+- Quem tem a kekkei genkai começa com o nível I da linha dela (e a prisão, na Areia e na Madeira); a técnica do nível 4 entra sozinha. As fichas estão em [tecnicas.md](tecnicas.md#kekkei-genkai).
+- As técnicas de kekkei genkai não têm elemento próprio: **no encontro de elementos** (disputa, escudo, estado) contam como o **pai mais vantajoso** naquele encontro.
+- **Areia**: no início de cada luta, um escudo de **10% do HP máximo**.
+- **Madeira**: cada golpe cura **50% do dano causado**; um acerto num vilão com **manto de chakra** (Gaara) desfaz o manto.
+
 ## Chakra
 
 - Ninjutsu, genjutsu, ativas, reações (menos Resistir) e algumas técnicas de taijutsu custam chakra. Sem chakra suficiente, a ação fica indisponível.

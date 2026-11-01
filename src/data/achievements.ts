@@ -105,6 +105,11 @@ export const achievements: AchievementDef[] = [
   { id: 'thatBody', category: 'secret', hidden: true, check: (c) => is(c, 'uchiha') && c.summon?.animal === 'snake' },
   { id: 'hokage', category: 'secret', hidden: true, check: (c) => won(c) && is(c, 'common') && c.difficulty === 'hardcore' },
   { id: 'secondHokage', category: 'secret', hidden: true, check: (c) => won(c) && is(c, 'senju') && c.origin.elements[0] === 'water' },
+  { id: 'avenger', category: 'secret', hidden: true, check: (c) => is(c, 'uchiha') && c.origin.elements.includes('lightning') },
+  { id: 'iceMirrors', category: 'secret', hidden: true, check: (c) => c.origin.kekkeiGenkai === 'ice' && anyFight(c, (x) => x.won && x.villainId === 'haku') },
+  { id: 'sandGuard', category: 'secret', hidden: true, check: (c) => c.origin.kekkeiGenkai === 'sand' && c.origin.jinchuuriki },
+  { id: 'godOfShinobi', category: 'secret', hidden: true, check: (c) => won(c) && is(c, 'senju') && c.origin.kekkeiGenkai === 'wood' },
+  { id: 'bijuuTamer', category: 'secret', hidden: true, check: (c) => anyFight(c, (x) => x.villainId === 'gaara' && x.cloakSuppressed) },
   {
     id: 'slugPrincess',
     category: 'secret',

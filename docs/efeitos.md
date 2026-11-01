@@ -32,6 +32,14 @@ Configuração: `control: { tenacityPerControl: 0.5, decayPerRound: 0.15, maxTen
 | Envenenamento | Cobra (invocação e Orochimaru) | Até curar | Ver abaixo. |
 | Sangramento | Crítico de espada (`blade: 'sword'`) | Luta inteira | Golpes cortantes causam ×1,5 de dano. |
 
+### Congelado (Gelo)
+
+O acerto das técnicas de Gelo tem chance de congelar o alvo por **2 ações**: **−10 de acerto** e **−3 de speed**. Não acumula; congelar de novo renova a duração.
+
+### Veneno no acerto (Vapor)
+
+As técnicas de Vapor têm chance de envenenar no acerto (ou fazer o veneno crescer, se o alvo já estiver envenenado), pelas regras de [Envenenamento](#envenenamento).
+
 ### Queimadura
 
 - No fim de cada rodada, o n-ésimo tique causa 2^n % do HP máximo (2%, 4%, 8%, 16%), no máximo 16%.

@@ -208,6 +208,42 @@ Técnicas exclusivas de uma origem (campo `lineages`), de todas as categorias. "
 
 - Upgrade genérico das ilusões de dano do Uchiha: +3 de dano e +3 de poder por nível.
 
+## Kekkei genkai
+
+Técnicas de quem tem uma kekkei genkai ([fundamentos.md](fundamentos.md#kekkei-genkai)). O nível I vem no kit; II e III são upgrades da linha (teto pelo nível do personagem); a do nível 4 entra sozinha. Todas são ninjutsu; no encontro de elementos contam como o pai mais vantajoso.
+
+| Kekkei genkai | Técnica | Quando | Dano | Golpes | Chakra | Precisão | Efeito |
+|---|---|---|---|---|---|---|---|
+| Gelo | Agulhas de Gelo | I (kit) | 6 | 3 | 3 | 90% | 20% de congelar no acerto |
+| Gelo | Lanças de Gelo | II | 8 | 3 | 6 | 90% | 25% de congelar |
+| Gelo | Tempestade de Gelo | III | 9 | 4 | 10 | 90% | 30% de congelar |
+| Gelo | Espelhos de Gelo Demoníacos | 4 | — | — | 5 | — | Barreira de 24 que devolve 30% do dano bloqueado |
+| Areia | Shuriken de Areia | I (kit) | 12 | 1 | 3 | 95% | — |
+| Areia | Onda de Areia | II | 24 | 1 | 6 | 95% | — |
+| Areia | Tsunami do Deserto | III | 34 | 1 | 10 | 90% | — |
+| Areia | Caixão do Deserto | Kit | — | 1 | 5 | 80% | Aprisionado (como a Imitação de Sombra) |
+| Areia | Funeral do Deserto | 4 | força × 7 + ninjutsu | 1 | 6 | não rola | Só com o vilão preso pelo Caixão do Deserto (como o Enforcamento) |
+| Lava | Bolha de Lava | I (kit) | 15 | 1 | 3 | 85% | 25% de queimar; ×1,5 no escudo |
+| Lava | Rio de Lava | II | 26 | 1 | 7 | 85% | 30% de queimar; ×1,5 no escudo |
+| Lava | Erupção | III | 36 | 1 | 11 | 80% | 35% de queimar; ×1,5 no escudo |
+| Tempestade | Laser da Tempestade | I (kit) | 7 | 2 | 3 | 85% | Prioridade; penetração 15% |
+| Tempestade | Feixes da Tempestade | II | 9 | 3 | 7 | 85% | Prioridade; penetração 20% |
+| Tempestade | Dragão da Tempestade | III | 10 | 4 | 11 | 85% | Prioridade; penetração 25% |
+| Vapor | Névoa Ácida | I (kit) | 10 | 1 | 3 | 90% | 20% de envenenar |
+| Vapor | Névoa Fervente | II | 18 | 1 | 6 | 90% | 25% de envenenar |
+| Vapor | Nuvem Escaldante | III | 28 | 1 | 10 | 90% | 30% de envenenar |
+| Vapor | Armadura de Vapor | 4 | — | — | 6 | — | Ação: por 3 rodadas, quem bate com taijutsu leva 20% do dano de volta (mínimo 1) |
+| Explosão | Argila Explosiva | I (kit) | 20 | 1 | 4 | 70% | Passa pelo escudo |
+| Explosão | Dragão de Argila | II | 32 | 1 | 8 | 65% | Passa pelo escudo |
+| Explosão | Detonação Suprema | III | 44 | 1 | 12 | 60% | Passa pelo escudo |
+| Madeira | Raízes Agarradoras | I (kit) | 10 | 1 | 3 | 90% | Cura 50% do dano causado |
+| Madeira | Estacas de Madeira | II | 22 | 1 | 6 | 90% | Cura 50% do dano causado |
+| Madeira | Nascimento da Floresta | III | 9 | 4 | 10 | 90% | Cada acerto drena 2 de chakra |
+| Madeira | Prisão de Madeira | Kit | — | 1 | 5 | 80% | Aprisionado (como a Imitação de Sombra) |
+| Madeira | Muralha de Madeira | 4 | — | — | 5 | — | Barreira de 30 |
+
+Toda técnica de Madeira que acerta desfaz o manto de chakra do vilão.
+
 ## Golpes derivados
 
 Golpes que aparecem no log sem serem técnicas do skill set.

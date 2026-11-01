@@ -50,6 +50,14 @@ export const balance = {
   // Ações universais (tecnicas.md).
   // Concentrar chakra (jogador e vilão): recupera esta fração do chakra máximo (arredonda para baixo, mínimo 1).
   rest: { chakraPct: 0.15 },
+  // Kekkei genkai (v0.33): Gelo congela (−`hitPenalty` de acerto e −`speed` por `turns` rodadas); Areia começa cada
+  // luta com escudo de `sandShieldPct` do HP máximo; Armadura de Vapor dura `turns` e devolve `reflectPct` do
+  // dano de taijutsu recebido.
+  kekkeiGenkai: {
+    freeze: { turns: 2, hitPenalty: 0.1, speed: 3 },
+    sandShieldPct: 0.1,
+    steamArmor: { turns: 3, reflectPct: 0.2 },
+  },
   // Força vital (Senju): na 1ª vez abaixo de `hpBelowPct` do HP, regenera `hpPctPerTurn` por `turns` rodadas;
   // curas recebidas rendem ×`healMult`.
   vitalForce: { hpBelowPct: 0.3, hpPctPerTurn: 0.04, turns: 3, healMult: 1.25 },

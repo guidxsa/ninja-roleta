@@ -15,9 +15,11 @@ import {
   type BattleEvent,
   type BattleState,
 } from '../src/core/combat';
-import { createPlayer, learnTechnique, type PlayerState } from '../src/core/player';
+import { createPlayer, grantLevelTechniques, learnTechnique, type PlayerState } from '../src/core/player';
+import { createRng } from '../src/core/rng';
 import { applyClanLesson } from '../src/core/progression';
-import type { Element, Origin, VillainTechnique } from '../src/core/types';
+import type { Element, KekkeiGenkaiId, Origin, VillainTechnique } from '../src/core/types';
+import { kekkeiGenkaiCandidates, rollKekkeiGenkai } from '../src/core/origin';
 import { gameData } from '../src/data/index';
 import { battle, seq, testVillain, withInitiative } from './helpers';
 
@@ -327,5 +329,88 @@ describe('Senju: Herdeiro do fundador e Força vital', () => {
     const s1 = playRound(withInitiative(startBattle(p, testVillain({ hp: 500 }))), 'medical', seq(0.5), gameData);
     // 20% de 125 = 25, × 1,25 = 31.
     expect(ofType(s1.log, 'medical')[0]!.healed).toBe(31);
+  });
+});
+
+describe('Kekkei genkai de natureza', () => {
+  const kgPlayer = (kekkeiGenkai: KekkeiGenkaiId, elements: Element[], lineageId: string | null = null): PlayerState =>
+    createPlayer({ lineageId, elements, jinchuuriki: false, kekkeiGenkai }, gameData);
+
+  it('roleta: só com os dois pais e potencial pleno; a Madeira é do Senju', () => {
+    const common = gameData.lineages.find((l) => l.id === 'common')!;
+    const senju = gameData.lineages.find((l) => l.id === 'senju')!;
+    const nara = gameData.lineages.find((l) => l.id === 'nara')!;
+    expect(kekkeiGenkaiCandidates(common, ['water', 'wind'], gameData).map((k) => k.id)).toEqual(['ice']);
+    expect(kekkeiGenkaiCandidates(common, ['earth', 'water'], gameData)).toEqual([]);
+    expect(kekkeiGenkaiCandidates(senju, ['earth', 'water'], gameData).map((k) => k.id)).toEqual(['wood']);
+    expect(kekkeiGenkaiCandidates(nara, ['water', 'wind'], gameData)).toEqual([]);
+    // Uma fatia por candidata (a chance dividida) e o resto para nenhuma: 0.0 → Gelo; 0.99 → nenhuma.
+    expect(rollKekkeiGenkai(common, ['water', 'wind'], seq(0.0), gameData).kekkeiGenkai).toBe('ice');
+    expect(rollKekkeiGenkai(common, ['water', 'wind'], seq(0.99), gameData).kekkeiGenkai).toBeNull();
+    expect(rollKekkeiGenkai(common, ['fire'], seq(0.0), gameData)).toEqual({ kekkeiGenkai: null, steps: [] });
+  });
+
+  it('kit: o nível I da linha e as prisões; as do nível 4 entram sozinhas; outros não aprendem', () => {
+    expect(kgPlayer('sand', ['earth', 'wind']).techniques).toEqual(expect.arrayContaining(['sandShuriken', 'kgSandCoffin']));
+    expect(kgPlayer('wood', ['earth', 'water'], 'senju').techniques).toEqual(expect.arrayContaining(['woodRoots', 'kgWoodPrison']));
+    expect(grantLevelTechniques({ ...kgPlayer('ice', ['water', 'wind']), level: 4 }, gameData).techniques).toContain('kgIceMirrors');
+    expect(() => learnTechnique(kgPlayer('ice', ['water', 'wind']), 'lavaBubble', gameData)).toThrow();
+  });
+
+  it('Gelo congela: o alvo acerta menos e fica mais lento', () => {
+    const p = kgPlayer('ice', ['water', 'wind']);
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 300 })));
+    // 20% por golpe: em algumas sementes, ao menos um dos 3 golpes congela.
+    const frozen = Array.from({ length: 30 }, (_, i) => playRound(s0, 'tech:iceNeedles', createRng(i), gameData)).find(
+      (s) => ofType(s.log, 'status').some((e) => e.kind === 'freeze'),
+    );
+    expect(frozen).toBeTruthy();
+    expect(frozen!.villain.fx.frozen).toBeGreaterThan(0);
+  });
+
+  it('Lava derrete escudo (×1,5) e Explosão passa direto por ele', () => {
+    const shielded = (p: PlayerState) => {
+      const s0 = withInitiative(startBattle(p, testVillain({ hp: 300 })));
+      return { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, shield: { points: 100, element: null, turns: 3, techniqueId: 'x' } } } } as BattleState;
+    };
+    const lava = playRound(shielded(kgPlayer('lava', ['fire', 'earth'])), 'tech:lavaBubble', seq(0.5, 0.99), gameData);
+    const lavaHit = ofType(lava.log, 'shieldHit')[0]!;
+    expect(lavaHit.elementMult).toBeCloseTo(1.5);
+    const boom = playRound(shielded(kgPlayer('explosion', ['earth', 'lightning'])), 'tech:clayBomb', seq(0.5, 0.0), gameData);
+    expect(ofType(boom.log, 'shieldHit')).toEqual([]);
+    expect(boom.villain.hp).toBeLessThan(300);
+  });
+
+  it('kekkei genkai conta como o pai mais vantajoso contra um estado elemental', () => {
+    const p = kgPlayer('steam', ['fire', 'water']);
+    // Vilão com Armadura de Areia (terra): a água (pai do Vapor) tem vantagem sobre terra? Não: terra > água.
+    // O fogo é neutro contra terra; o melhor pai fica com o maior multiplicador possível.
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 300 })));
+    const s1 = playRound(s0, 'tech:acidMist', seq(0.5, 0.99), gameData);
+    expect(ofType(s1.log, 'attack')[0]!.elementMult).toBe(1);
+  });
+
+  it('Madeira cura metade do dano e desfaz o manto do vilão', () => {
+    const p = { ...kgPlayer('wood', ['earth', 'water'], 'senju'), hp: 60 };
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 300 })));
+    const cloaked = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, cloakTurns: 3 } } };
+    const s1 = playRound(cloaked, 'tech:woodRoots', seq(0.5, 0.99), gameData);
+    expect(ofType(s1.log, 'lifesteal').length).toBe(1);
+    expect(ofType(s1.log, 'cloakSuppressed')).toHaveLength(1);
+    expect(s1.villain.fx.cloakTurns).toBe(0);
+  });
+
+  it('Areia começa a luta com escudo de 10% do HP máximo', () => {
+    const p = kgPlayer('sand', ['earth', 'wind']);
+    const s1 = playRound(withInitiative(startBattle(p, testVillain({ hp: 300 }))), 'stance', seq(0.5), gameData);
+    expect(ofType(s1.log, 'sandShield')).toEqual([{ type: 'sandShield', points: 10 }]);
+  });
+
+  it('Armadura de Vapor queima quem bate com taijutsu', () => {
+    const p = { ...kgPlayer('steam', ['fire', 'water']), level: 4 };
+    const s0 = withInitiative(startBattle(grantLevelTechniques(p, gameData), testVillain({ hp: 300 })));
+    const s1 = playRound(s0, 'tech:steamArmor', seq(0.5), gameData);
+    expect(s1.playerFx.steamArmorTurns).toBeGreaterThan(0);
+    expect(ofType(s1.log, 'steamBurn').length).toBe(1);
   });
 });

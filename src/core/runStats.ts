@@ -123,6 +123,7 @@ export function summarizeFight(villainId: string, exam: boolean, battle: BattleS
     if (e.type === 'revive') s.revivesUsed++;
     if (e.type === 'gates') s.maxGate = Math.max(s.maxGate, e.stage);
     if (e.type === 'pill' && e.pill === 'red') s.redPill = true;
+    if (e.type === 'cloakSuppressed') s.cloakSuppressed = true;
   }
   s.devourFinish = s.won && lastPlayerDamage === 'devour';
   return s;
