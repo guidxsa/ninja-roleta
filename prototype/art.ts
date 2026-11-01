@@ -158,6 +158,9 @@ const CLANS: Record<string, string> = {
     '<g fill="#c0392b"><ellipse cx="12" cy="16" rx="5.2" ry="4.5"/><ellipse cx="5" cy="10.5" rx="2.2" ry="2.8"/><ellipse cx="9.3" cy="6" rx="2.2" ry="2.9"/><ellipse cx="14.7" cy="6" rx="2.2" ry="2.9"/><ellipse cx="19" cy="10.5" rx="2.2" ry="2.8"/></g>',
   // Uzumaki: redemoinho.
   uzumaki: `<circle cx="12" cy="12" r="10.5" fill="#d1232a"/><path d="${spiral(12, 12, 4, 1.05).d}" fill="none" stroke="#fff3e6" stroke-width="1.8" stroke-linecap="round"/>`,
+  // Senju: folha com o broto da árvore.
+  senju:
+    '<path d="M12 2.5c5 3 7.5 7.5 7.5 11.5a7.5 7.5 0 0 1-15 0C4.5 10 7 5.5 12 2.5z" fill="#2fa36b"/><path d="M12 21V9M12 14l-3.5-3M12 12l3-2.5" stroke="#eaf7ee" stroke-width="1.6" stroke-linecap="round" fill="none"/>',
   // Prodígio do taijutsu: lótus verde.
   taijutsuProdigy:
     '<g fill="#3fa34d"><path d="M12 3c2.6 3 2.6 9 0 13-2.6-4-2.6-10 0-13z"/><path d="M3 9c4 .4 7.5 3.8 9 7.5-4 .5-8-3-9-7.5zM21 9c-4 .4-7.5 3.8-9 7.5 4 .5 8-3 9-7.5z" opacity=".85"/></g><path d="M5 19.5c4 1.6 10 1.6 14 0" stroke="#2c7a37" stroke-width="2" fill="none" stroke-linecap="round"/>',
@@ -183,6 +186,7 @@ export const CLAN_COLORS: Record<string, string> = {
   inuzuka: '#c0392b',
   uzumaki: '#e2482f',
   taijutsuProdigy: '#3fa34d',
+  senju: '#2fa36b',
 };
 
 // ---------------------------------------------------------------------------
@@ -398,6 +402,7 @@ const NINJA_OUTFIT: Record<string, { outfit: string; hair: string; collar?: stri
   aburame: { outfit: '#5a6a5a', hair: '#2a2a22', collar: '#4a584a' },
   inuzuka: { outfit: '#5a5a62', hair: '#4a3420' },
   uzumaki: { outfit: '#f07a1a', hair: '#e8b33a' },
+  senju: { outfit: '#2d6e4e', hair: '#3b2a1e' },
   taijutsuProdigy: { outfit: '#3f8a3c', hair: '#121214' },
 };
 

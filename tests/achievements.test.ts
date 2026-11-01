@@ -159,7 +159,7 @@ describe('conquistas', () => {
     expect(got).toContain(winAchievementId('hyuuga'));
     expect(got).toContain('clanMaster');
     const clan = achievements.find((a) => a.id === 'clanMaster')!;
-    expect(clan.progress!(new Set(others))).toEqual([9, 10]);
+    expect(clan.progress!(new Set(others))).toEqual([10, 11]);
   });
 
   it('exame 3/3 dá Chunin; 0/3 e vencer dá Reprovado, mas vivo', () => {

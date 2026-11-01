@@ -288,3 +288,44 @@ describe('Correções da v0.22.1', () => {
     expect(() => playRound(s, 'stance', seq(0.5), gameData, { beast: true })).toThrow();
   });
 });
+
+describe('Senju: Herdeiro do fundador e Força vital', () => {
+  const senju = (): PlayerState => createPlayer({ lineageId: 'senju', elements: ['earth', 'water'], jinchuuriki: false }, gameData);
+
+  it('começa com +1 Vontade do Fogo, status pela lore e o básico do elemento principal', () => {
+    const p = senju();
+    expect(p.revives).toBe(2);
+    expect([p.maxHp, p.maxChakra, p.offense.taijutsu, p.offense.ninjutsu]).toEqual([125, 40, 11, 11]);
+    expect(p.techniques).toContain('rockFist');
+  });
+
+  it('abaixo de 30% do HP, desperta e regenera 4% por rodada durante 3 rodadas; 1 vez por luta', () => {
+    const p = { ...senju(), hp: 40 };
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 500, techniques: [{ id: 'hit', type: 'taijutsu', baseDamage: 20, chakraCost: 0, weight: 1 }] }), {}));
+    // O golpe do vilão derruba abaixo de 30% (37,5): desperta.
+    let s = playRound(s0, 'stance', seq(0.5), gameData);
+    expect(ofType(s.log, 'vitalForce')).toEqual([{ type: 'vitalForce', hp: 0, chakra: 0, start: true }]);
+    expect(s.playerFx.vitalForceTurns).toBe(3);
+    const before = s.player.hp;
+    s = playRound(s, 'stance', seq(0.5), gameData);
+    const regen = ofType(ofRound(s0, s), 'vitalForce').filter((e) => !e.start);
+    expect(regen[0]).toMatchObject({ hp: 5, chakra: 0 }); // 4% de 125
+    expect(s.player.hp).toBeLessThanOrEqual(before + 5);
+    expect(s.playerFx.vitalForceUsed).toBe(1);
+  });
+
+  it('no nível 7, desperta 2 vezes por luta; no 4, cura 5% e devolve 2 de chakra', () => {
+    const p = { ...senju(), level: 7 };
+    const s0 = withInitiative(startBattle(p, testVillain({ hp: 500 })));
+    const awake = { ...s0, playerFx: { ...s0.playerFx, vitalForceTurns: 1 }, player: { ...s0.player, hp: 30, chakra: 10 } };
+    const s1 = playRound(awake, 'stance', seq(0.5), gameData);
+    expect(ofType(s1.log, 'vitalForce').find((e) => !e.start)).toMatchObject({ hp: 6, chakra: 2 }); // 5% de 125
+  });
+
+  it('cura recebida rende 25% a mais (Palma Curativa)', () => {
+    const p = learnTechnique({ ...senju(), hp: 50 }, 'medicalNinjutsu', gameData);
+    const s1 = playRound(withInitiative(startBattle(p, testVillain({ hp: 500 }))), 'medical', seq(0.5), gameData);
+    // 20% de 125 = 25, × 1,25 = 31.
+    expect(ofType(s1.log, 'medical')[0]!.healed).toBe(31);
+  });
+});

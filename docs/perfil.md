@@ -24,8 +24,8 @@ A tela **Perfil** (botão 📜 no cabeçalho) tem quatro abas: Histórico, Conqu
 | Sem medo do escuro | Vencer no Difícil (ou no Hardcore) |
 | Lenda | Vencer no Hardcore |
 | Monstro interno | Vencer como jinchuuriki |
-| Uma por origem (10) | Vencer com cada origem |
-| Mestre dos clãs | Vencer com as 10 origens (mostra o progresso) |
+| Uma por origem (11) | Vencer com cada origem |
+| Mestre dos clãs | Vencer com as 11 origens (mostra o progresso) |
 
 ### Sorte e azar
 
@@ -70,6 +70,8 @@ A tela **Perfil** (botão 📜 no cabeçalho) tem quatro abas: Histórico, Conqu
 | Ero-sennin | Sapo no nível 3 |
 | Quero esse corpo | Uchiha com a invocação de cobra |
 | Hokage | Vencer o Hardcore com a origem Comum |
+| Segundo Hokage | Vencer como Senju com água como elemento principal |
+| Princesa das Lesmas | Senju com a invocação de lesma e a Palma Curativa |
 | Demônio da Névoa | Cair para o Zabuza 5 vezes (somando todas as runs) |
 
 Dano sofrido conta golpes, disputas, queimadura, veneno e autoferimento. Os segredos ligados à reforma elemental e ao Senju (ver "Mudanças de design pendentes" no `CLAUDE.md`) entram junto com eles.

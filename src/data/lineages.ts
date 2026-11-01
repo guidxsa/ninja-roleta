@@ -131,6 +131,18 @@ export const lineages: LineageDef[] = [
     active: 'seal',
     startingTechniques: ['explosiveSeal'],
   },
+  {
+    // Senju (lendária): vida e chakra como o Uzumaki, um degrau acima; domina qualquer elemento.
+    id: 'senju',
+    tier: 'legendary',
+    weight: 3,
+    stats: { taijutsu: 11, ninjutsu: 11, genjutsu: 6, speed: 10, hp: 125, chakra: 40 },
+    resistance: { physical: 12, mental: 10 },
+    elements: { countWeights: [0, 40, 40, 20] },
+    elementalPotential: 'full',
+    passive: 'vitalForce',
+    extraRevives: 1,
+  },
 ];
 
 export const lineagesById: Record<string, LineageDef> = Object.fromEntries(lineages.map((l) => [l.id, l]));

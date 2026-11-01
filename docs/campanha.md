@@ -80,6 +80,7 @@ Alguém do clã ensina algo: **+40 de XP** e um bônus permanente com a cara da 
 | Uchiha | Lição no templo Naka | +2 de genjutsu |
 | Hyuuga | Treino do Punho Gentil | +2 de taijutsu |
 | Uzumaki | Pergaminho dos selos | +5 de chakra máximo |
+| Senju | Sementes do fundador | +15 de HP máximo |
 
 Configuração: `balance.events.clanLesson`.
 

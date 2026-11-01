@@ -13,6 +13,7 @@ export const ORIGIN_ACHIEVEMENT_LINEAGES = [
   'uchiha',
   'hyuuga',
   'uzumaki',
+  'senju',
 ] as const;
 
 /** Chefes que contam para "Intocável". */
@@ -103,5 +104,12 @@ export const achievements: AchievementDef[] = [
   { id: 'pervySage', category: 'secret', hidden: true, check: (c) => c.summon?.animal === 'toad' && c.summon.level >= 3 },
   { id: 'thatBody', category: 'secret', hidden: true, check: (c) => is(c, 'uchiha') && c.summon?.animal === 'snake' },
   { id: 'hokage', category: 'secret', hidden: true, check: (c) => won(c) && is(c, 'common') && c.difficulty === 'hardcore' },
+  { id: 'secondHokage', category: 'secret', hidden: true, check: (c) => won(c) && is(c, 'senju') && c.origin.elements[0] === 'water' },
+  {
+    id: 'slugPrincess',
+    category: 'secret',
+    hidden: true,
+    check: (c) => is(c, 'senju') && c.summon?.animal === 'slug' && c.stats.premiums.includes('medical'),
+  },
   { id: 'mistDemon', category: 'secret', hidden: true, check: (c) => (c.killedBy.zabuza ?? 0) >= 5 },
 ];

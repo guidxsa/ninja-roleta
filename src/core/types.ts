@@ -36,7 +36,8 @@ export type PassiveKind =
   | 'ironBody'
   | 'genjutsuResistance'
   | 'preciseFist'
-  | 'vitality';
+  | 'vitality'
+  | 'vitalForce';
 
 /** Ativa de linhagem (gasta ou não o turno; parâmetros em `balance`). */
 export type ActiveKind = 'gates' | 'expansion' | 'effort' | 'beast' | 'plague' | 'transmission' | 'seal';
@@ -59,7 +60,7 @@ export type ElementalPotential = 'full' | 'fixedOnly' | 'partial' | 'none';
 export type DojutsuId = 'sharingan' | 'byakugan';
 
 /** Nível de raridade na roleta de linhagem (a cor da fatia). */
-export type LineageTier = 'common' | 'clan' | 'rare';
+export type LineageTier = 'common' | 'clan' | 'rare' | 'legendary';
 
 export interface LineageDef {
   id: string;
@@ -78,6 +79,8 @@ export interface LineageDef {
   /** Kit inicial além do Taijutsu básico (e do ninjutsu básico do elemento principal, no potencial pleno). */
   startingTechniques?: string[];
   dojutsu?: DojutsuId;
+  /** Vontades do Fogo a mais no início da run (Herdeiro do fundador, Senju). */
+  extraRevives?: number;
 }
 
 /** `'affinity'` = usa o elemento principal do jogador. */

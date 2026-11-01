@@ -50,6 +50,9 @@ export const balance = {
   // Ações universais (tecnicas.md).
   // Concentrar chakra (jogador e vilão): recupera esta fração do chakra máximo (arredonda para baixo, mínimo 1).
   rest: { chakraPct: 0.15 },
+  // Força vital (Senju): na 1ª vez abaixo de `hpBelowPct` do HP, regenera `hpPctPerTurn` por `turns` rodadas;
+  // curas recebidas rendem ×`healMult`.
+  vitalForce: { hpBelowPct: 0.3, hpPctPerTurn: 0.04, turns: 3, healMult: 1.25 },
   // Regeneração passiva (v0.31): todos recuperam `pct` do chakra máximo (mínimo `min`) no início de cada rodada.
   chakraRegen: { pct: 0.05, min: 1 },
   // Reação Substituição: chance = base + (speed de quem reage − speed do atacante) × perSpeed, entre min e max.
@@ -223,6 +226,8 @@ export const balance = {
     taijutsuProdigy: { force: { level: 4, chanceBonus: 0.1 }, gates: { level: 7, usesPerFight: 2 } },
     hyuuga: { byakugan: { level: 4, duration: 7 } },
     uzumaki: { seal: { level: 7, extraUses: 1, turns: 3 }, vitality: { level: 7, chakraPerTurn: 2, hpPctPerTurn: 0.02 } },
+    // Senju: nível 4, a Força vital cura mais e devolve chakra; nível 7, dispara 2 vezes por luta.
+    senju: { vitalForce: { level: 4, hpPctPerTurn: 0.05, chakraPerTurn: 2 }, extraUse: { level: 7, uses: 2 } },
   },
 
   // Efeitos (efeitos.md). Valem para jogador e vilões.
@@ -333,6 +338,7 @@ export const balance = {
         uchiha: { genjutsu: 2 },
         hyuuga: { taijutsu: 2 },
         uzumaki: { chakra: 5 },
+        senju: { hp: 15 },
       } as Record<string, ClanLessonBonus>,
     },
   },

@@ -21,18 +21,21 @@ describe('rolagem de origem', () => {
     expect(three.steps.filter((s) => s.kind === 'element').map((s) => s.slices.length)).toEqual([5, 4, 3]);
   });
 
-  it('uma roleta só: comum 30%, clãs 40% e raras 30%', () => {
+  it('uma roleta só: comum 30, clãs 40, raras 30 e lendária 3 (de 103)', () => {
     const { steps } = rollOrigin(seq(0.2, 0.0, 0.99), gameData);
     const lineage = steps[0]!;
     const total = lineage.slices.reduce((a, s) => a + s.weight, 0);
     const share = (ids: string[]) =>
       lineage.slices.filter((s) => ids.includes(s.value)).reduce((a, s) => a + s.weight, 0) / total;
-    expect(share(['common'])).toBeCloseTo(0.3);
-    expect(share(['nara', 'akimichi', 'yamanaka', 'aburame', 'inuzuka'])).toBeCloseTo(0.4);
-    expect(share(['taijutsuProdigy', 'uchiha', 'hyuuga', 'uzumaki'])).toBeCloseTo(0.3);
+    expect(total).toBe(103);
+    expect(share(['common'])).toBeCloseTo(30 / 103);
+    expect(share(['nara', 'akimichi', 'yamanaka', 'aburame', 'inuzuka'])).toBeCloseTo(40 / 103);
+    expect(share(['taijutsuProdigy', 'uchiha', 'hyuuga', 'uzumaki'])).toBeCloseTo(30 / 103);
+    expect(share(['senju'])).toBeCloseTo(3 / 103);
     // Os níveis batem com o peso de cada fatia nos dados.
     for (const l of gameData.lineages) {
-      const tier = l.id === 'common' ? 'common' : ['taijutsuProdigy', 'uchiha', 'hyuuga', 'uzumaki'].includes(l.id) ? 'rare' : 'clan';
+      const tier =
+        l.id === 'common' ? 'common' : l.id === 'senju' ? 'legendary' : ['taijutsuProdigy', 'uchiha', 'hyuuga', 'uzumaki'].includes(l.id) ? 'rare' : 'clan';
       expect(l.tier).toBe(tier);
     }
   });
@@ -70,7 +73,7 @@ describe('rolagem de origem', () => {
       if (!origin.lineageId) common++;
       if (origin.jinchuuriki) jin++;
     }
-    expect(common / n).toBeCloseTo(0.3, 1);
+    expect(common / n).toBeCloseTo(30 / 103, 1);
     expect(jin / n).toBeCloseTo(0.1, 1);
   });
 
@@ -97,6 +100,7 @@ describe('criação do jogador', () => {
       uchiha: [75.5, 20],
       hyuuga: [69, 21],
       uzumaki: [69.5, 21],
+      senju: [75.5, 22],
     };
     for (const l of gameData.lineages) {
       expect([l.id, budget(l.stats), l.resistance.physical + l.resistance.mental]).toEqual([l.id, ...expected[l.id]!]);

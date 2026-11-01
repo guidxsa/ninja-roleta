@@ -4,7 +4,7 @@ A origem do personagem é sorteada no início da run: linhagem, elementos e jinc
 
 ## Sorteio
 
-1. **Roleta de linhagem**: uma roleta só, com três níveis de raridade (a cor da fatia indica o nível).
+1. **Roleta de linhagem**: uma roleta só, com quatro níveis de raridade (a cor da fatia indica o nível).
 2. **Quantidade de elementos**: roleta pelos pesos da origem (tabela abaixo). Não gira quando só há uma quantidade possível.
 3. **Elementos**: um giro por elemento, sem repetir (cada giro tira o já sorteado; os 5 elementos têm o mesmo peso). O **primeiro** é o **elemento principal**. O elemento fixo da origem (o fogo do Uchiha) entra primeiro e conta na quantidade.
 4. **Jinchuuriki**: roleta independente, **10%**. Acumula com qualquer linhagem.
@@ -21,8 +21,9 @@ A origem do personagem é sorteada no início da run: linhagem, elementos e jinc
 | Rara | Uchiha | 7 |
 | Rara | Hyuuga | 7 |
 | Rara | Uzumaki | 7 |
+| Lendária | Senju | 3 |
 
-Total: 30% comum, 40% clã, 30% rara.
+Total 103: comum 30, clãs 40, raras 30 e lendária 3 (cerca de 29%, 39%, 29% e 3%).
 
 ### Elementos e potencial elemental
 
@@ -31,6 +32,7 @@ Não se aprende elemento novo durante a run: os elementos são os do sorteio. O 
 | Origem | 0 elementos | 1 | 2 | 3 | Potencial | Começa com o básico do principal? |
 |---|---|---|---|---|---|---|
 | Comum | — | 50 | 35 | 15 | **Pleno** em todos (até III; IV no nível 10) | Sim |
+| Senju | — | 40 | 40 | 20 | **Pleno** em todos | Sim |
 | Uchiha | — | 65 (só fogo) | 35 (fogo + 1) | — | **Pleno** no fogo; **parcial** no outro | Sim (Fagulha do Dragão) |
 | Nara, Akimichi, Yamanaka, Aburame, Inuzuka, Hyuuga, Uzumaki | 30 | 55 | 15 | — | **Parcial** (até o nível de técnica II) | Não |
 | Prodígio do taijutsu | sempre 0 | — | — | — | Nenhum | — |
@@ -60,6 +62,7 @@ Referência: **90 pontos**, cerca de 70 em status e 20 em resistências. Convers
 | Uchiha | 11 | 11 | 13 | 9 | 11 | 11 | 100 | 28 | 95,5 | Talento em tudo, olhos treinados |
 | Hyuuga | 15 | 6 | 6 | 11 | 10 | 12 | 100 | 28 | 90 | Punho Gentil, precisão e reflexo |
 | Uzumaki | 10 | 10 | 5 | 12 | 9 | 9 | 120 | 38 | 90,5 | Vitalidade e chakra enormes; péssimo em genjutsu |
+| Senju | 11 | 11 | 6 | 12 | 10 | 10 | 125 | 40 | 97,5 | Como o Uzumaki, um degrau acima: forte de propósito (e raro) |
 
 Lógica das resistências (provisória): clãs de corpo (Akimichi, Inuzuka, Uzumaki) puxam para a física; clãs de mente e ilusão (Yamanaka) puxam para a mental. O prodígio tem a mental mais baixa que a física: é um alvo natural de genjutsu, como na série.
 
@@ -81,6 +84,7 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 | Uchiha | Olhos treinados | Sharingan, Cópia | Taijutsu básico, Fagulha do Dragão, Olhar Hipnótico, Ilusão da Dor | Ilusões de dano, Tsukuyomi (nível 7) | — |
 | Hyuuga | Punho preciso | Byakugan | Taijutsu básico, Selo dos Pontos Vitais (só com o Byakugan) | Selo dos Pontos Vitais, Rotação (nível 4), 64 Palmas (nível 7) | — |
 | Uzumaki | Vitalidade | Selamento | Taijutsu básico, Etiqueta Explosiva | Etiqueta Explosiva, Correntes de Chakra (nível 4) | — |
+| Senju | Herdeiro do fundador, Força vital | — | Taijutsu básico, básico do elemento principal | — (o kit dele é o elemento) | — |
 
 "Básico do elemento principal" = o nível I da linha de ataque do primeiro elemento sorteado ([tecnicas.md](tecnicas.md#linhas-de-ataque)); só no potencial pleno.
 
@@ -208,6 +212,14 @@ Identidade: resistência e selos.
 - **Correntes de Chakra** (nível 4): prende como a Imitação de Sombra e drena 3 de chakra do vilão a cada vez perdida ([tecnicas.md](tecnicas.md#técnicas-de-linhagem)).
 - Os Clones das Sombras saíram do kit do Uzumaki e viraram premium do guru ([tecnicas.md](tecnicas.md#premium-guru)).
 
+### Senju
+
+Identidade: o clã do fundador. Muita vida e muito chakra, como o Uzumaki, mas por outro caminho: o Uzumaki regenera um pouco o tempo todo e controla com selos; o Senju aguenta mais, volta da beira da morte e domina qualquer elemento (potencial pleno). Origem forte de propósito e, por isso, lendária e rara.
+
+- **Herdeiro do fundador** (passiva): começa a run com **+1 Vontade do Fogo** (campo `extraRevives`).
+- **Força vital** (passiva): na 1ª vez na luta em que o HP cai abaixo de **30%**, regenera **4% do HP máximo** no início de cada rodada durante **3 rodadas**. Toda **cura recebida** (Palma Curativa, Lesma, Nunca desistir, manto, itens de cura) rende **+25%**.
+- Futuro: o **Elemento Madeira** (Senju com terra e água, por roleta) entra com as kekkei genkai.
+
 ## Despertar
 
 Nos níveis 4 e 7, cada linhagem desperta: a tela da subida de nível mostra o que mudou, e a ficha lista o despertar já alcançado. Onde a linhagem já ganhava algo nesses níveis (tomoe, técnicas de nível, usos extras), isso faz parte do despertar.
@@ -224,6 +236,7 @@ Nos níveis 4 e 7, cada linhagem desperta: a tela da subida de nível mostra o q
 | Uchiha | Sharingan de 2 tomoe (Cópia com 65%). | Sharingan de 3 tomoe (Cópia com 80%) e Tsukuyomi. |
 | Hyuuga | O Byakugan dura 7 rodadas; Rotação. | 64 Palmas. |
 | Uzumaki | Correntes de Chakra. | Selamento com +1 uso e 3 rodadas; Vitalidade com 2 de chakra por rodada. |
+| Senju | A Força vital cura 5% por rodada e devolve 2 de chakra por rodada. | A Força vital pode despertar 2 vezes por luta. |
 
 Configuração: `balance.awakening`.
 

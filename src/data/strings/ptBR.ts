@@ -19,8 +19,9 @@ export const ptBR = {
     hyuuga: 'Hyuuga',
     taijutsuProdigy: 'Prodígio do taijutsu',
     uzumaki: 'Uzumaki',
+    senju: 'Senju',
   } as Record<string, string>,
-  lineageTiers: { common: 'Comum', clan: 'Clã', rare: 'Rara' } as Record<string, string>,
+  lineageTiers: { common: 'Comum', clan: 'Clã', rare: 'Rara', legendary: 'Lendária' } as Record<string, string>,
   origin: {
     common: 'Comum',
     jinchuuriki: 'Jinchuuriki',
@@ -165,6 +166,10 @@ export const ptBR = {
     genjutsuResistance: { name: 'Olhos treinados', desc: 'Olhos acostumados a ilusões: resistência mental maior contra genjutsu.' },
     preciseFist: { name: 'Punho preciso', desc: 'O Punho Gentil acerta os pontos de chakra: o taijutsu ignora parte da resistência física do alvo.' },
     vitality: { name: 'Vitalidade Uzumaki', desc: 'A força vital do clã regenera um pouco de HP e de chakra a cada rodada (mais chakra no nível 7).' },
+    vitalForce: {
+      name: 'Força vital',
+      desc: 'Herdeiro do fundador: começa a run com +1 Vontade do Fogo. Na 1ª vez na luta abaixo de 30% do HP, regenera 4% do HP por rodada durante 3 rodadas (2 vezes por luta no nível 7). Toda cura recebida rende 25% a mais.',
+    },
     jinchuuriki: {
       name: 'Manto de chakra',
       desc: 'O demônio selado desperta quando você fica com menos de metade do HP: uma vez por luta, por até 5 rodadas, você fica muito mais forte e resistente e regenera HP, consumindo chakra.',
@@ -267,6 +272,7 @@ export const ptBR = {
     uchiha: { title: 'Lição no templo Naka', bonus: '+2 de genjutsu' },
     hyuuga: { title: 'Treino do Punho Gentil', bonus: '+2 de taijutsu' },
     uzumaki: { title: 'Pergaminho dos selos', bonus: '+5 de chakra máximo' },
+    senju: { title: 'Sementes do fundador', bonus: '+15 de HP máximo' },
   } as Record<string, { title: string; bonus: string }>,
   /** Despertar (origens.md#despertar): o que cada linhagem ganha nos níveis 4 e 7. */
   awakening: {
@@ -280,6 +286,7 @@ export const ptBR = {
     uchiha: { 4: 'Sharingan de 2 tomoe: mais forte e copia com mais facilidade.', 7: 'Sharingan de 3 tomoe: copia ainda mais fácil, e o Tsukuyomi.' },
     hyuuga: { 4: 'O Byakugan dura 7 rodadas (e a Rotação).', 7: '64 Palmas: 4 golpes que fecham pontos de chakra.' },
     uzumaki: { 4: 'Correntes de Chakra: prendem e drenam o chakra do vilão.', 7: 'Selamento com +1 uso e 3 rodadas; Vitalidade com 2 de chakra por rodada.' },
+    senju: { 4: 'A Força vital cura 5% por rodada e devolve 2 de chakra.', 7: 'A Força vital pode despertar 2 vezes por luta.' },
   } as Record<string, Record<number, string>>,
   /** Passivas únicas dos vilões (o manto usa a variante: beast ou curseMark). */
   villainPassives: {
@@ -823,6 +830,8 @@ export const ptBR = {
     exhaustedEnd: 'A exaustão passa.',
     comeback: (n: number) => `Nunca desistir! Você recupera ${n} de HP.`,
     gatesForce: (ok: boolean, hp: number) => (ok ? 'Você força mais um portão!' : `O portão não cede: −${hp} HP.`),
+    vitalForce: 'Força vital! O corpo Senju começa a se regenerar.',
+    vitalForceRegen: (hp: number, chakra: number) => `Força vital: +${hp} de HP${chakra > 0 ? ` e +${chakra} de chakra` : ''}.`,
     devour: (insects: number, damage: number, chakra: number, kept: number) =>
       `🐛 Devorar: ${insects} inseto(s) causam ${damage} de dano e sugam ${chakra} de chakra; ${kept} continuam no vilão.`,
     transmission: (tech: string, ok: boolean) =>
@@ -1094,6 +1103,7 @@ export const ptBR = {
       win_uchiha: { name: 'Orgulho do clã', desc: 'Vença a campanha como Uchiha.' },
       win_hyuuga: { name: 'Olhos que tudo veem', desc: 'Vença a campanha como Hyuuga.' },
       win_uzumaki: { name: 'Redemoinho', desc: 'Vença a campanha como Uzumaki.' },
+      win_senju: { name: 'Vontade do fundador', desc: 'Vença a campanha como Senju.' },
       clanMaster: { name: 'Mestre dos clãs', desc: 'Vença a campanha com todas as origens.' },
       closeCall: { name: 'Por um fio', desc: 'Vença uma luta com 5% do HP ou menos.' },
       coldFeet: { name: 'Pé frio', desc: 'Perca o jokenpô 3 vezes na mesma run.' },
@@ -1124,6 +1134,8 @@ export const ptBR = {
       pervySage: { name: 'Ero-sennin', desc: 'Tenha o sapo no nível 3.' },
       thatBody: { name: 'Quero esse corpo', desc: 'Seja um Uchiha com a invocação de cobra.' },
       hokage: { name: 'Hokage', desc: 'Vença o Hardcore com a origem Comum.' },
+      secondHokage: { name: 'Segundo Hokage', desc: 'Vença a campanha como Senju com água como elemento principal.' },
+      slugPrincess: { name: 'Princesa das Lesmas', desc: 'Seja um Senju com a lesma e a Palma Curativa.' },
       mistDemon: { name: 'Demônio da Névoa', desc: 'Caia para o Zabuza 5 vezes (no total).' },
     } as Record<string, { name: string; desc: string }>,
   },

@@ -270,7 +270,7 @@ function show(el: HTMLElement): HTMLElement {
 
 /** Fatias das roletas: laranja, verde do colete, azul do chakra, vermelho, areia, roxo, verde-água e marinho. */
 const PALETTE = ['#f28c28', '#6f9a3e', '#2f80dc', '#c62828', '#d4a253', '#8e5bb5', '#2a9d8f', '#3d4f8a'];
-const TIER_COLORS: Record<LineageTier, string> = { common: '#6b6f80', clan: '#2f80dc', rare: '#e8a21c' };
+const TIER_COLORS: Record<LineageTier, string> = { common: '#6b6f80', clan: '#2f80dc', rare: '#e8a21c', legendary: '#2fa36b' };
 const SIDE_COLORS = { player: '#2f80dc', villain: '#c62828', miss: '#6b6f80', hit: '#3fae6a', crit: '#e6b91e', foeHit: '#e8742c' };
 
 const villainName = (id: string) => S.villains[id] ?? id;
@@ -2026,6 +2026,16 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         case 'plagueEnd':
           log(S.log.plagueEnd, 'sys');
+          break;
+        case 'vitalForce':
+          if (ev.start) {
+            log(S.log.vitalForce, 'good');
+            break;
+          }
+          disp.php += ev.hp;
+          disp.pck += ev.chakra;
+          if (ev.hp > 0) floatNumber(pcard, `+${ev.hp}`, 'heal');
+          log(S.log.vitalForceRegen(ev.hp, ev.chakra), 'good');
           break;
         case 'devour':
           disp.vhp -= ev.damage;

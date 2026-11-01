@@ -146,7 +146,7 @@ export function createPlayer(
       substitutionBonus: 0,
       shadowClonesLevel: 0,
       glimmerLevel: 0,
-      revives: balance.revive.initialItems,
+      revives: balance.revive.initialItems + (lineage.extraRevives ?? 0),
       revivesUsed: 0,
     },
     data,

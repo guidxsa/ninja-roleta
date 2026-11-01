@@ -296,6 +296,9 @@ export interface PlayerFx extends StatusFx {
   exhaustedTurns: number;
   /** Nunca desistir (comum, nível 4): já recuperou HP nesta luta. */
   comebackUsed: boolean;
+  /** Força vital (Senju): rodadas restantes de regeneração e vezes usada na luta. */
+  vitalForceTurns: number;
+  vitalForceUsed: number;
 }
 
 /** Próxima ação do vilão, sorteada no fim da rodada anterior (Gênio mostra). */
@@ -392,6 +395,8 @@ export type BattleEvent =
   | { type: 'pillEnd'; pill: string; exhausted: boolean }
   | { type: 'exhaustedEnd' }
   | { type: 'comeback'; healed: number }
+  /** Força vital (Senju): despertou (`turns`) ou regenerou na rodada (`hp`, `chakra`). */
+  | { type: 'vitalForce'; hp: number; chakra: number; start: boolean }
   | { type: 'gatesForce'; chance: number; success: boolean; hpLost: number }
   | { type: 'clones'; chakra: number }
   | { type: 'armor'; techniqueId: string; chakra: number }
@@ -604,6 +609,8 @@ export function startBattle(
       pillTurns: 0,
       exhaustedTurns: 0,
       comebackUsed: false,
+      vitalForceTurns: 0,
+      vitalForceUsed: 0,
     },
     villain: {
       def: villain,
@@ -2183,6 +2190,7 @@ function hurtPlayer(s: BattleState, amount: number, data: GameData): number {
   else {
     checkPlayerCloak(s, data);
     checkComeback(s, data);
+    checkVitalForce(s, data);
   }
   return dealt;
 }
@@ -2194,7 +2202,20 @@ function checkComeback(s: BattleState, data: GameData): void {
   if (p.passive !== 'determination' || !awakened(p, cfg.level) || s.playerFx.comebackUsed) return;
   if (p.hp <= 0 || p.hp >= p.maxHp * cfg.hpBelowPct) return;
   s.playerFx.comebackUsed = true;
-  s.log.push({ type: 'comeback', healed: heal(s, 'player', cfg.healPct) });
+  s.log.push({ type: 'comeback', healed: heal(s, 'player', cfg.healPct, data) });
+}
+
+/** Força vital (Senju): na 1ª vez (2ª no nível 7) abaixo do limiar de HP, começa a regenerar por algumas rodadas. */
+function checkVitalForce(s: BattleState, data: GameData): void {
+  const p = s.player;
+  if (p.passive !== 'vitalForce' || s.playerFx.vitalForceTurns > 0) return;
+  const cfg = data.balance.vitalForce;
+  const extra = data.balance.awakening.senju.extraUse;
+  const uses = awakened(p, extra.level) ? extra.uses : 1;
+  if (s.playerFx.vitalForceUsed >= uses || p.hp <= 0 || p.hp >= p.maxHp * cfg.hpBelowPct) return;
+  s.playerFx.vitalForceUsed++;
+  s.playerFx.vitalForceTurns = cfg.turns;
+  s.log.push({ type: 'vitalForce', hp: 0, chakra: 0, start: true });
 }
 
 /** Manto de chakra: uma vez por luta, ao cair abaixo do limiar de HP. */
@@ -2419,10 +2440,12 @@ function applyBleed(s: BattleState, target: Side): void {
   s.log.push({ type: 'status', target, kind: 'bleed', turns: 0 });
 }
 
-function heal(s: BattleState, side: Side, pct: number): number {
+function heal(s: BattleState, side: Side, pct: number, data?: GameData): number {
   const max = maxHpOf(s, side);
   const hp = side === 'player' ? s.player.hp : s.villain.hp;
-  const amount = Math.min(max - hp, Math.floor(max * pct));
+  // Força vital (Senju): toda cura recebida rende mais.
+  const mult = side === 'player' && s.player.passive === 'vitalForce' && data ? data.balance.vitalForce.healMult : 1;
+  const amount = Math.min(max - hp, Math.floor(max * pct * mult));
   if (amount <= 0) return 0;
   if (side === 'player') s.player.hp += amount;
   else s.villain.hp += amount;
@@ -2500,6 +2523,17 @@ function startOfRound(s: BattleState, rng: Rng, data: GameData): void {
     s.log.push({ type: 'chakraRegen', side, amount });
   }
 
+  // Força vital (Senju): regenera enquanto durar (mais e com chakra no despertar do nível 4).
+  if (s.playerFx.vitalForceTurns > 0) {
+    const aw = balance.awakening.senju.vitalForce;
+    const up = awakened(p, aw.level);
+    const hp = heal(s, 'player', up ? aw.hpPctPerTurn : balance.vitalForce.hpPctPerTurn);
+    const chakra = up ? Math.min(p.maxChakra - p.chakra, aw.chakraPerTurn) : 0;
+    p.chakra += chakra;
+    s.playerFx.vitalForceTurns--;
+    s.log.push({ type: 'vitalForce', hp, chakra, start: false });
+  }
+
   if (p.passive === 'vitality') {
     const aw = balance.awakening.uzumaki.vitality;
     const cfg = awakened(p, aw.level) ? aw : balance.passives.vitality;
@@ -2515,12 +2549,12 @@ function startOfRound(s: BattleState, rng: Rng, data: GameData): void {
   checkPlayerCloak(s, data);
   const slugPct = slugHealPct(p, data);
   if (slugPct > 0) {
-    const hp = heal(s, 'player', slugPct);
+    const hp = heal(s, 'player', slugPct, data);
     if (hp > 0) s.log.push({ type: 'summonRegen', hp });
   }
   const cloak = playerCloak(s, data);
   if (cloak) {
-    const hp = heal(s, 'player', cloak.regenPct);
+    const hp = heal(s, 'player', cloak.regenPct, data);
     if (hp > 0) s.log.push({ type: 'cloakRegen', side: 'player', hp });
   }
   if (vPassive?.kind === 'cloak' && v.fx.cloakTurns > 0) {
@@ -2744,7 +2778,7 @@ function playerTurn(s: BattleState, action: PlayerAction, rng: Rng, data: GameDa
     const tech = playerMedical(p, data);
     if (!tech) throw new Error('O jogador não sabe ninjutsu médico');
     payChakra(p, tech.chakraCost);
-    s.log.push({ type: 'medical', healed: heal(s, 'player', medicalHealPct(p, data)), chakra: tech.chakraCost });
+    s.log.push({ type: 'medical', healed: heal(s, 'player', medicalHealPct(p, data), data), chakra: tech.chakraCost });
   }
   endTurn(s, 'player', true, rng, data);
 }
