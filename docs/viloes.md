@@ -84,8 +84,9 @@ Nomes em português são sugestões para a tela; o `id` é o do código. "Chance
 | Mizuki | Shuriken Gigante (`giantShuriken`) | Taijutsu | 11 | 0 | 1 (25%) | Cortante |
 | Haku | Agulhas Senbon (`senbon`) | Taijutsu | 7 | 0 | 3 (60%) | — |
 | Haku | Espelhos de Gelo (`iceMirrors`) | Ninjutsu | 8 | 5 | 2 (40%) | — |
-| Zabuza | Golpe do Espadão (`cleaverSwing`) | Taijutsu | 9 | 0 | 3 (60%) | Espada (sangra no crítico); golpe carregado |
-| Zabuza | Projétil do Dragão d'Água (`waterDragonBullet`) | Ninjutsu | 11 | 5 | 2 (40%) | — |
+| Zabuza | Golpe de Espadão (`cleaverSwing`) | Taijutsu | 9 | 0 | 3 (60%) | Espada (sangra no crítico); golpe carregado |
+| Zabuza | Projétil do Dragão de Água (`waterDragonBullet`) |
+ Ninjutsu | 11 | 5 | 2 (40%) | — |
 | Genin da Areia | Rajada do Leque (`fanGust`) | Ninjutsu | 9 | 4 | 2 (50%) | — |
 | Genin da Areia | Golpe de Kunai (`kunaiStrike`) | Taijutsu | 8 | 0 | 2 (50%) | Cortante |
 | Genin do Som | Onda Sonora (`soundWave`) | Genjutsu | 0 | 4 | 1 (25%) | Aprisiona (força base 1) |

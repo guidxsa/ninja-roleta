@@ -51,9 +51,13 @@ A tabela abaixo usa só o XP dos vilões e do exame. As fatias de XP das roletas
 
 | Nível | O que destrava |
 |---|---|
-| 4 | Teto de técnica no nível II e **1 upgrade grátis**; barreiras entram na pool; Sharingan com 2 tomoe; Rotação (Hyuuga); Rolo Colossal (Akimichi); Redemoinho da Folha (prodígio) |
-| 7 | Teto no nível III e **1 upgrade grátis**; Armadura de Raio entra na pool; Sharingan com 3 tomoe; Lótus Primaveril (prodígio) |
+| 4 | Teto de técnica no nível II e **1 upgrade grátis**; barreiras entram na pool; quem usa genjutsu aprende o Teatro do Pavor |
+| 7 | Teto no nível III e **1 upgrade grátis**; Armadura de Raio entra na pool; quem usa genjutsu aprende a Prisão dos Espelhos |
+
 | 10 | Teto no nível IV (reservado) e **1 upgrade grátis** |
+
+- O que cada origem ganha nos níveis 4 e 7 (despertar, dōjutsu, técnicas exclusivas) está em [origens.md](origens.md#despertar); a coluna "Quando" de [tecnicas.md](tecnicas.md#técnicas-de-linhagem) diz em que nível cada técnica exclusiva chega.
+
 
 - Técnicas de nível só são aprendidas se a origem permitir a categoria e o jogador dominar o elemento.
 - A linha elemental não sobe sozinha: o upgrade grátis do marco é escolhido pelo jogador (ver [tecnicas.md](tecnicas.md#níveis-de-técnica)).

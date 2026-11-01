@@ -82,8 +82,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 ### Nara (sombras)
 
 - **Gênio** (passiva com usos): a tela mostra a próxima ação do vilão antes de o jogador escolher a sua. E, **2 vezes por luta (+1 nos níveis 4 e 7)**, uma escolha grátis (não gasta o turno) arma a próxima roleta do Nara: ela gira duas vezes e fica com o melhor resultado. Vale para acerto (de golpes, genjutsu e Imitação de Sombra), Substituição e disputa.
-- **Imitação de Sombra**: ninjutsu sem dano que prende o alvo (efeito Aprisionado). Por ser ninjutsu, funciona contra quem é imune a genjutsu (Gaara).
-- **Enforcamento por Sombra**: ninjutsu do kit (gasta o turno), só com o vilão **preso pela Imitação de Sombra**. Custa 5 de chakra, não rola acerto e não tem crítico. Dano = **força do controle × 6 + ninjutsu − resistência física usada pelo vilão** (a passiva, já que ele perdeu a vez), × a vulnerabilidade de quem está controlado. Não solta o vilão: a roleta de fuga dele gira normalmente ([efeitos.md](efeitos.md#duração-dos-efeitos-mentais)). A força do controle é a da Imitação de Sombra que prendeu (+1 no nível 4).
+- **Kit**: Imitação de Sombra (prende, e por ser ninjutsu pega até quem é imune a genjutsu, como o Gaara) e Enforcamento por Sombra (dano só contra o vilão preso). Fichas em [tecnicas.md](tecnicas.md#técnicas-de-linhagem).
 
 ### Akimichi (expansão)
 
@@ -101,7 +100,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
   | 3 (só na Expansão) | ×1,5 |
 
 - **Expansão** (ativa): **escolha grátis** (não gasta o turno) que custa 6 de chakra. Por 3 rodadas, contando a da ativação: **peso ×1,5** e libera os degraus do Corpo pesado acima do teto normal; speed −3. Pode ser usada de novo quando acabar.
-- **Rolo Colossal** (nível 4): taijutsu exclusivo (dano 20).
+- **Rolo Colossal** (nível 4): taijutsu exclusivo ([tecnicas.md](tecnicas.md#técnicas-de-linhagem)).
 - **Pílulas do clã** (ativa, a partir do **nível 7**): escolha grátis, sem chakra, **1 vez por luta**. Gira uma roleta pura das 3 pílulas; o efeito vale 3 rodadas, contando a da ativação, e multiplica junto com a Expansão. O HP pago nunca deixa abaixo de 1.
 
   | Pílula | Chance | Efeito | Custo |
@@ -115,30 +114,20 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 - **Leitura mental** (passiva): ataques do vilão contra o Yamanaka têm −10 de acerto.
 - **Mente no controle** (passiva): com o vilão possuído, o Yamanaka escolhe qual técnica de dano ele usa em si mesmo, e o vilão **paga o chakra** dela. Sem escolha, ele usa a de mais dano que puder pagar. Técnica que ele não pode pagar não entra nas opções.
 - **Transmissão mental** (ativa): escolha grátis, 5 de chakra. Só contra um **golpe carregado** anunciado: rola o acerto de genjutsu do Yamanaka contra a resistência mental do vilão (como um genjutsu). Se pegar, o golpe se perde (o chakra já foi gasto) e o vilão perde a vez. **1 uso por luta, +1 nos níveis 4 e 7.** Não funciona em quem é imune a genjutsu.
-- **Transferência de Mente**: genjutsu inicial com efeito **Possessão**: o vilão perde a vez golpeando a si mesmo com a própria técnica de dano mais forte ([efeitos.md](efeitos.md#efeitos-de-genjutsu)). É o potencial ofensivo do Yamanaka: quanto mais forte o vilão, mais ele se fere. Junto com o Uchiha, é a única origem que nasce com genjutsu.
+- **Transferência de Mente** (kit, [tecnicas.md](tecnicas.md#técnicas-de-linhagem)): a Possessão faz o vilão perder a vez golpeando a si mesmo com a própria técnica de dano mais forte. É o potencial ofensivo do Yamanaka: quanto mais forte o vilão, mais ele se fere. Junto com o Uchiha, é a única origem que nasce com genjutsu.
 
 ### Aburame (insetos)
 
 - **Colônia** (passiva): cada golpe do **Enxame** que acerta prende **1 inseto** no vilão (até 10). No **fim de cada rodada**, cada inseto preso drena **1 de chakra** do vilão. Outros ataques não prendem insetos.
-- **Enxame**: ninjutsu neutro que aplica insetos, em linha própria: I com 2 golpes (5 de chakra), II com 4 golpes (6 de chakra), III com 6 golpes (7 de chakra): +2 golpes por nível. Cada golpe rola o próprio acerto e causa **1 de dano fixo** (sem status, resistência nem crítico). Não drena chakra por si só.
+- **Kit**: Enxame (prende os insetos, em linha própria) e Devorar (consome os insetos). Fichas e a tabela de dano do Devorar em [tecnicas.md](tecnicas.md#técnicas-de-linhagem).
 - **Praga** (ativa): escolha grátis, 6 de chakra, **1 uso por luta** (+1 no nível 7). Por 3 rodadas, contando a da ativação, o Enxame prende **2 insetos por acerto** e o teto de insetos **dobra**. Quando acaba, o excesso cai para o teto normal.
-- **Devorar**: técnica de ninjutsu do kit (gasta o turno), com ao menos 1 inseto no vilão. Custa **1 de chakra a cada 2 insetos** (arredonda para cima) e não rola acerto. Consome todos os insetos e causa **dano direto** (sem resistência) = % por inseto × insetos × HP máximo do vilão, arredondado para baixo. A % vem da **razão** = ninjutsu base do Aburame (sem bônus temporários) ÷ resistência física do vilão, pelo maior degrau alcançado:
-
-  | Razão | Dano por inseto |
-  |---|---|
-  | abaixo de 0,75 | 1% do HP máximo |
-  | 0,75 | 1,5% |
-  | 1 | 2% |
-  | 1,25 | 2,5% |
-  | 1,5 | 3% |
-
-  O HP máximo do vilão não muda. O Devorar não drena chakra (quem drena é a Colônia, no fim da rodada).
+- O Devorar não drena chakra: quem drena é a Colônia, no fim da rodada. O HP máximo do vilão não muda.
 
 ### Inuzuka (parceiro canino)
 
 - **Dupla** (passiva): depois de cada ataque do jogador que acerta, 25% de chance de o cão atacar também (taijutsu, 40% do dano base do ataque, rola acerto próprio).
 - **Fera de quatro patas** (ativa): escolha grátis, 5 de chakra. Por 3 rodadas, contando a da ativação: **speed +3**, a Dupla ataca com **60%** de chance e a Substituição usa o cão como **isca** (custa o chakra, mas não gasta usos). **1 uso por luta** (+1 no nível 7).
-- **Presas Giratórias**: taijutsu inicial de 2 golpes.
+- **Presas Giratórias** (kit): taijutsu de 2 golpes ([tecnicas.md](tecnicas.md#técnicas-de-linhagem)).
 
 ### Prodígio do taijutsu (estilo Lee)
 
@@ -160,7 +149,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 ### Uchiha
 
 - **Olhos treinados** (passiva): +6 na resistência mental ao resistir a ilusões.
-- **Ilusão da Dor**: genjutsu de dano do kit inicial (15 de dano base; fere com genjutsu contra a resistência mental). No nível 7, **Tsukuyomi** (só com o Sharingan): 22 de dano e aprisiona.
+- **Kit**: Olhar Hipnótico (prende) e Ilusão da Dor (ilusão de dano, que fere com genjutsu contra a resistência mental). No nível 7, Tsukuyomi (só com o Sharingan). Fichas em [tecnicas.md](tecnicas.md#técnicas-de-linhagem).
 - **Sharingan** (ativa, dōjutsu): ativar é uma **escolha grátis** (não gasta o turno) que custa 4 de chakra; manutenção 1 por rodada, dura 5 rodadas ou até faltar chakra. Evolui com o nível.
 
   | Estágio | Nível | Taijutsu/Ninjutsu/Genjutsu | Speed | Genjutsu: acerto / poder | Leitura de movimento |
@@ -179,9 +168,9 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 ### Hyuuga
 
 - **Punho preciso** (passiva): taijutsu ignora 30% da resistência física do alvo (conta como penetração).
-- **Byakugan** (ativa, dōjutsu): **escolha grátis** (não gasta o turno); ativar 3, manutenção 1, dura 5 rodadas (7 a partir do nível 4). Ativo: taijutsu não erra (crítico ainda rola), taijutsu ×1,1, **ignora a evasão da névoa** do Zabuza, o **genjutsu do vilão tem −20 de acerto** contra o Hyuuga e libera o Selo dos Pontos Vitais.
-- **Rotação** (nível 4): barreira neutra exclusiva: escudo que devolve metade do dano bloqueado (ver [tecnicas.md](tecnicas.md#ninjutsu-de-linhagem)).
-- **64 Palmas** (nível 7, só com o Byakugan): taijutsu de 4 golpes; cada golpe que acerta fecha um ponto de chakra e drena 3 do vilão.
+- **Byakugan** (ativa, dōjutsu): **escolha grátis** (não gasta o turno); ativar 3, manutenção 1, dura 5 rodadas (7 a partir do nível 4). Ativo: taijutsu não erra (crítico ainda rola), taijutsu ×1,1, **ignora a evasão da névoa** do Zabuza, o **genjutsu do vilão tem −20 de acerto** contra o Hyuuga e libera o Selo dos Pontos Vitais e as 64 Palmas. Não tem limite de usos por luta: só o chakra limita.
+
+- **Kit**: Selo dos Pontos Vitais (só com o Byakugan), Rotação no nível 4 (barreira que devolve metade do dano bloqueado; não precisa do Byakugan) e 64 Palmas no nível 7 (só com o Byakugan). Fichas em [tecnicas.md](tecnicas.md#técnicas-de-linhagem).
 
 ### Uzumaki
 
@@ -189,7 +178,7 @@ Identidade: resistência e selos.
 
 - **Vitalidade** (passiva): recupera 1 de chakra e 2% do HP máximo no início de cada rodada (2 de chakra no nível 7).
 - **Selamento** (ativa): escolha grátis, 6 de chakra, **1 uso por luta** (+1 no nível 7). Sela a próxima técnica do vilão (a sorteada para a próxima ação ou o golpe carregado): ela **sai da roleta dele por 2 rodadas** (3 no nível 7) e ele sorteia outra ação. Um golpe carregado selado se perde (o chakra já foi gasto).
-- **Correntes de Chakra** (nível 4): ninjutsu exclusivo que prende como a Imitação de Sombra (ninjutsu contra a resistência física, força base 1). O vilão preso pelas correntes perde **3 de chakra** a cada vez perdida.
+- **Correntes de Chakra** (nível 4): prende como a Imitação de Sombra e drena 3 de chakra do vilão a cada vez perdida ([tecnicas.md](tecnicas.md#técnicas-de-linhagem)).
 - Os Clones das Sombras saíram do kit do Uzumaki e viraram premium do guru ([tecnicas.md](tecnicas.md#premium-guru)).
 
 ## Despertar

@@ -30,6 +30,7 @@ As regras do jogo vivem em `docs/`. Este arquivo trata só de como trabalhar no 
 - Ao mudar uma regra ou um número no código, atualizar o doc correspondente no mesmo commit.
 - Se o código e o doc divergirem e não estiver listado em "Mudanças de design pendentes", perguntar antes de escolher um lado.
 - Cada regra é descrita em **um** arquivo; os outros apontam com link.
+- `tests/docs.test.ts` confere que toda técnica do jogador está em `docs/tecnicas.md` e toda técnica de vilão em `docs/viloes.md`. Técnica nova sem linha no doc quebra o teste.
 - Futuro: um script que gera as tabelas numéricas dos docs a partir dos dados.
 
 ## Mudanças de design pendentes
@@ -61,12 +62,15 @@ Combinado em 31/10/2026 (brainstorm com o usuário). Os números são rascunho: 
    | Uzumaki | 10 | 10 | 5 | 12 | 9 | 9 | 120 | 38 | 90,5 |
    | Senju | 11 | 11 | 6 | 12 | 10 | 10 | 125 | 40 | 97,5 |
 
-5. **Kits de linhagem (v0.31+)**: com o básico elemental fora dos kits dedicados, cada origem precisa de 2 ataques próprios no nível 1 e técnicas novas nos níveis 4 e 7. Começa pelo **prodígio**: Folha Furacão no nível 1, Pesos de treino (tirar = +3 de speed e +2 de taijutsu), Lótus Primária presa aos Portões (4), Punho Bêbado com roleta de dano (4), Lótus Oculta com o 3º portão (7). As outras origens vêm uma por vez, depois dos comentários do usuário.
+5. **Ordem e decisões da revisão (31/10/2026)**: v0.30.0 reforma elemental + status por lore + **ataques de nível 1** de quem fica sem o básico (Mão Expandida do Akimichi, Etiqueta Explosiva do Uzumaki, Pétalas Ilusórias do Yamanaka, Sombra Cortante do Nara); v0.31.0 Senju; v0.32.0 kekkei genkai **com a mecânica nova completa** (congelar, escudo de areia, derreter escudo, armadura de vapor, ignorar escudo, roubo de vida, desfazer o manto) + Madeira + segredos do item 1; v0.33.0 kit do prodígio (Folha Furacão no nível 1, Pesos de treino como ativa, Lótus Primária presa aos Portões no nível 4, Punho Bêbado no nível 4, Lótus Oculta com o 3º portão no nível 7; confirmar com o usuário antes). A quantidade de elementos é por roleta.
+6. **Hyuuga**: sem técnica nova no nível 1. O kit é taijutsu básico + Selo dos Pontos Vitais (só com o Byakugan); a identidade é abrir o olho. A **Palma do Vácuo** (taijutsu de distância, só com o Byakugan) fica para uma futura **árvore de talentos por linhagem** (escolhas de técnica ao subir de nível), a desenhar junto com os kits de níveis 4/7 das outras origens.
 
 Última rodada concluída: "rebalanceamento das origens"
  (27/10/2026) foi implementada na v0.18.0: 25% de HP e chakra por vitória, controles com tenacidade e vulnerabilidade, barreiras como escudo (ação de turno), ilusões de dano do Uchiha e Sharingan grátis, Possessão do Yamanaka, Gênio do Nara, Determinação mais forte e nerf do prodígio, Akimichi, Inuzuka e Uzumaki. Decisões tomadas junto: o Gênio é ativa com usos por luta (2, +1 nos níveis 4 e 7) e vale nas roletas de combate do jogador; o genjutsu de dano do Uchiha fere de verdade e o do Yamanaka é controle mental com autoferimento; controle em cadeia é contido pela tenacidade (cai por rodada), não por regra de chefe; a meta é não ter origens muito acima ou abaixo das outras.
 
 Observação em aberto (não é mudança de design): na simulação, a fatia "nova técnica" da recompensa vale bem menos que as outras (sem ela, o comum vence ~20 pontos a mais). Vale discutir com o usuário antes de mexer.
+
+Alvo da simulação (31/10/2026): o bot joga pior que um humano, sobretudo nas origens de kit complexo. Alvo do bot no **Médio: 60–70%**; Aburame, Nara, Yamanaka e Uchiha **50–60%**. Ajustes para chegar no alvo são propostos ao usuário com a tabela de antes e depois, nunca aplicados sozinhos.
 
 Observação em aberto (v0.26.0): campanha por origem (1000 runs, seed 2) no Médio de 77% (Uchiha, prodígio) a 88% (Hyuuga, Uzumaki), fora o Aburame, que caiu de 57% (v0.25.0) para 45% (Difícil 13%) com o Enxame de dano fixo e o Devorar em % do HP máximo. O usuário testou a v0.25.0 à mão e achou o Aburame forte demais; o bot ainda subestima o Aburame (heurística simples para quando devorar e para a Praga). Não compensar pela simulação sem conversar; melhorar o bot do Aburame é o próximo passo para medir de verdade.
 

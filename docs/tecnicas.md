@@ -87,11 +87,8 @@ Resumo; as regras completas estão em [fundamentos.md](fundamentos.md#reações)
 |---|---|---|---|---|---|---|---|
 | Taijutsu básico | Inicial | 8 | 1 | 0 | 90% | — | Todos |
 | Impacto Concentrado | Recompensa | 14 | 1 | 3 | 85% | — | Todos |
-| Presas Giratórias | Inicial | 7 | 2 | 3 | 85% | — | Inuzuka |
-| Rolo Colossal | 4 | 20 | 1 | 6 | 80% | 20% de atordoar no acerto | Akimichi |
-| Redemoinho da Folha | 4 | 16 | 1 | 5 | 90% | — | Prodígio |
-| Lótus Primaveril | 7 | 25 | 1 | 9 | 80% | +10% de crítico | Prodígio |
-| Selo dos Pontos Vitais | Byakugan | 6 | 1 | 0 | não erra | Drena 6 de chakra do alvo | Hyuuga (só com Byakugan) |
+
+Os taijutsu exclusivos de cada origem estão em [Técnicas de linhagem](#técnicas-de-linhagem).
 
 Taijutsu é neutro contra escudos: não tem vantagem nem desvantagem elemental ([fundamentos.md](fundamentos.md#escudos)).
 
@@ -155,16 +152,55 @@ Técnicas que deixam um **elemento ativo** no corpo de quem as usa. Enquanto o e
 
 Ativar um estado gasta o turno. O manto do jinchuuriki é um estado **neutro** (não conta como encontro).
 
-## Ninjutsu de linhagem
+## Técnicas de linhagem
 
-| Técnica | Dano | Golpes | Chakra | Precisão | Efeito | Quem |
-|---|---|---|---|---|---|---|
-| Imitação de Sombra | 0 | 1 | 5 | 80% | Aprisionado (força base 1; força e fuga pela fórmula do genjutsu, usando ninjutsu contra a resistência física) | Nara |
-| Enforcamento por Sombra | força × 6 | 1 | 5 | não rola | Só com o vilão preso pela Imitação de Sombra; ninjutsu contra a resistência física, sem crítico; não solta o vilão ([origens.md](origens.md#nara-sombras)) | Nara |
-| Enxame | 1 fixo | 2 | 5 | 85% | Dano fixo (sem status nem resistência); cada golpe que acerta prende um inseto (Colônia). Linha: II 4 golpes (6 de chakra), III 6 golpes (7 de chakra) | Aburame |
-| Devorar | — | — | 1 a cada 2 insetos | — | Consome os insetos: dano direto em % do HP máximo do vilão por inseto ([origens.md](origens.md#aburame-insetos)) | Aburame |
-| Rotação | — | — | 5 | — | Barreira neutra (ação): escudo de 26 que devolve 50% do dano que bloqueia. | Hyuuga (nível 4) |
-| Correntes de Chakra | 0 | 1 | 6 | 80% | Aprisionado (força base 1, como a Imitação de Sombra); o vilão preso perde 3 de chakra por vez perdida | Uzumaki (nível 4) |
+Técnicas exclusivas de uma origem (campo `lineages`), de todas as categorias. "Inicial" = kit da origem; um número = aprendida sozinha ao chegar a esse nível. Passivas, ativas e despertar estão em [origens.md](origens.md); aqui fica a ficha de cada técnica.
+
+| Origem | Técnica | Categoria | Quando | Dano | Golpes | Chakra | Precisão | Efeito e requisito |
+|---|---|---|---|---|---|---|---|---|
+| Nara | Imitação de Sombra | Ninjutsu | Inicial | — | 1 | 5 | 80% | Aprisionado (força base 1; força e fuga pela fórmula do genjutsu, com ninjutsu contra a resistência física). Por ser ninjutsu, pega quem é imune a genjutsu |
+| Nara | Enforcamento por Sombra | Ninjutsu | Inicial | Ver abaixo | 1 | 5 | não rola | Só com o vilão preso pela Imitação de Sombra |
+| Akimichi | Rolo Colossal | Taijutsu | 4 | 20 | 1 | 6 | 80% | 20% de atordoar no acerto |
+| Yamanaka | Transferência de Mente | Genjutsu | Inicial | — | — | 4 | — | Possessão: o vilão perde a vez golpeando a si mesmo (força base 1, poder +2; ver [efeitos.md](efeitos.md#efeitos-de-genjutsu)) |
+| Aburame | Enxame | Ninjutsu | Inicial | 1 fixo | 2 | 5 | 85% | Cada golpe que acerta prende 1 inseto (Colônia) |
+| Aburame | Enxame Voraz (Enxame II) | Ninjutsu | Upgrade | 1 fixo | 4 | 6 | 85% | Idem |
+| Aburame | Nuvem de Insetos (Enxame III) | Ninjutsu | Upgrade | 1 fixo | 6 | 7 | 85% | Idem |
+| Aburame | Devorar | Ninjutsu | Inicial | Ver abaixo | — | 1 a cada 2 insetos | não rola | Com ao menos 1 inseto no vilão |
+| Inuzuka | Presas Giratórias | Taijutsu | Inicial | 7 | 2 | 3 | 85% | — |
+| Prodígio | Redemoinho da Folha | Taijutsu | 4 | 16 | 1 | 5 | 90% | — |
+| Prodígio | Lótus Primaveril | Taijutsu | 7 | 25 | 1 | 9 | 80% | +10% de crítico |
+| Uchiha | Olhar Hipnótico | Genjutsu | Inicial | — | — | 3 | — | Aprisionado (força base 1, poder 0) |
+| Uchiha | Ilusão da Dor | Genjutsu | Inicial | 15 | 1 | 3 | — | Ilusão de dano ([efeitos.md](efeitos.md#ilusões-de-dano-uchiha)) |
+| Uchiha | Tsukuyomi | Genjutsu | 7, só com o Sharingan | 22 | 1 | 9 | — | Ilusão de dano + Aprisionado (força base 1, poder +6) |
+| Hyuuga | Selo dos Pontos Vitais | Taijutsu | Inicial, só com o Byakugan | 6 | 1 | 0 | não erra | Drena 6 de chakra do alvo |
+| Hyuuga | Rotação | Ninjutsu (barreira) | 4 | — | — | 5 | — | Escudo de 26 que devolve 50% do dano que bloqueia (ação de turno) |
+| Hyuuga | 64 Palmas | Taijutsu | 7, só com o Byakugan | 6 | 4 | 8 | não erra | Cada golpe que acerta drena 3 de chakra do alvo |
+| Uzumaki | Correntes de Chakra | Ninjutsu | 4 | — | 1 | 6 | 80% | Aprisionado (força base 1, como a Imitação de Sombra); o vilão preso perde 3 de chakra a cada vez perdida |
+
+- **Enforcamento por Sombra**: gasta o turno, não rola acerto e não tem crítico. Dano = **força do controle × 6 + ninjutsu − resistência física passiva do vilão** (ele perdeu a vez), × a vulnerabilidade de quem está controlado. Não solta o vilão: a roleta de fuga dele gira normalmente ([efeitos.md](efeitos.md#duração-dos-efeitos-mentais)). A força é a da Imitação de Sombra que prendeu (+1 no nível 4); no nível 7, o dano soma +1 de força ([origens.md](origens.md#despertar)).
+
+- **Enxame**: ninjutsu neutro; cada golpe rola o próprio acerto e causa **1 de dano fixo** (sem status, resistência nem crítico). Sobe pela própria linha (+2 golpes por nível). Não drena chakra por si só (quem drena é a Colônia).
+- **Devorar**: gasta o turno, custa 1 de chakra a cada 2 insetos (arredonda para cima) e não rola acerto. Consome todos os insetos e causa **dano direto** (sem resistência) = % por inseto × insetos × HP máximo do vilão, arredondado para baixo. A % vem da razão **ninjutsu base do Aburame (sem bônus temporários) ÷ resistência física do vilão**, pelo maior degrau alcançado:
+
+  | Razão | Dano por inseto |
+  |---|---|
+  | abaixo de 0,75 | 1% do HP máximo |
+  | 0,75 | 1,5% |
+  | 1 | 2% |
+  | 1,25 | 2,5% |
+  | 1,5 | 3% |
+
+- Upgrade genérico das ilusões de dano do Uchiha: +3 de dano e +3 de poder por nível.
+
+## Golpes derivados
+
+Golpes que aparecem no log sem serem técnicas do skill set.
+
+| Golpe | De onde vem | Regra |
+|---|---|---|
+| Ataque do cão | Dupla (Inuzuka) | Taijutsu com 40% do dano base do ataque que acertou (60% no nível 4), acerto próprio ([origens.md](origens.md#inuzuka-parceiro-canino)) |
+| Selo explosivo | Consumível da bolsa | 15 de dano que ignora a resistência e o escudo, sem rolar acerto e sem reação ([itens.md](itens.md)) |
+
 
 ## Genjutsu
 
@@ -172,10 +208,6 @@ Se acertar, aplica um efeito mental (ver [efeitos.md](efeitos.md#efeitos-de-genj
 
 | Técnica | Nível mínimo | Chakra | Dano | Força base | Poder extra | Efeito | Quem |
 |---|---|---|---|---|---|---|---|
-| Olhar Hipnótico | Inicial | 3 | — | 1 | 0 | Aprisionado | Uchiha |
-| Ilusão da Dor | Inicial | 3 | 15 | — | — | Ilusão de dano | Uchiha |
-| Tsukuyomi | 7 | 9 | 22 | 1 | +6 | Ilusão de dano + Aprisionado; só com o Sharingan | Uchiha |
-| Transferência de Mente | Inicial | 4 | — | 1 | +2 | Possessão (golpeia a si mesmo) | Yamanaka |
 | Revoada de Corvos | Recompensa | 4 | — | 1 | +6 | Aprisionado | Quem usa genjutsu |
 | Canção do Sono | Recompensa | 4 | — | 2 | 0 | Sono | Quem usa genjutsu |
 | Sussurro Vazio | Recompensa | 5 | — | 2 | +2 | Tormento | Quem usa genjutsu |
@@ -183,9 +215,10 @@ Se acertar, aplica um efeito mental (ver [efeitos.md](efeitos.md#efeitos-de-genj
 | Teatro do Pavor | 4 | 5 | — | 2 | +10 | Pavor | Quem usa genjutsu |
 | Prisão dos Espelhos | 7 | 8 | — | 2 | +14 | Aprisionado | Quem usa genjutsu |
 
-Upgrade genérico das ilusões de dano: +3 de dano e +3 de poder por nível.
+Os genjutsu exclusivos (Uchiha e Yamanaka) estão em [Técnicas de linhagem](#técnicas-de-linhagem).
 
-"Quem usa genjutsu" = qualquer origem exceto o prodígio, a partir do momento em que tem ao menos uma técnica de genjutsu.
+"Quem usa genjutsu"
+ = qualquer origem exceto o prodígio, a partir do momento em que tem ao menos uma técnica de genjutsu.
 
 ## Premium (guru)
 
