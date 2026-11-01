@@ -136,8 +136,8 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
   - cada golpe do **Enxame** que acerta prende insetos no vilão: **2 por acerto**, +1 a cada 5 de ninjutsu base a partir de 15 (tabela abaixo). O **crítico** do Enxame prende o dobro naquele golpe. Outros ataques não prendem insetos;
   - o Enxame que **vence uma disputa de ninjutsu** (atacando ou defendendo) também prende, um lote por golpe que passa (a disputa não rola crítico);
   - o **teto** de insetos no vilão vem do nível do Enxame: **10 / 15 / 20** (Enxame, Enxame Voraz, Nuvem de Insetos). Acima do teto não entra inseto novo;
-  - no **fim de cada rodada**, a cada **5 insetos** (para baixo), **1 de chakra** do vilão vai para o Aburame (até o máximo dele). O que o vilão não tinha para pagar vira **dano direto: 1 a cada 3 de chakra que faltou** (para baixo);
-  - **rodada sem nenhum acerto do Enxame**: depois da Colônia, o vilão se livra de **2 insetos**. Para acumular muito, o Enxame precisa continuar batendo.
+  - no **fim de cada rodada**, os insetos **roem 1 de HP a cada 2** (para baixo, dano direto, **até 6 por rodada**) e **sugam 1 de chakra a cada 5** do vilão para o Aburame (para baixo, **até 3 por rodada**; só o que o vilão tem, até o máximo do Aburame);
+  - **rodada sem nenhum acerto do Enxame nem Devorar**: depois da Colônia, o vilão se livra de **2 insetos**. Para acumular muito, o Enxame precisa continuar batendo.
 
   | Ninjutsu base | Insetos por acerto |
   |---|---|

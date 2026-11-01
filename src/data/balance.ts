@@ -133,17 +133,19 @@ export const balance = {
     mindReading: { villainHitPenalty: 0.1 },
     // Colônia (Aburame, v0.31): cada golpe do Enxame que acerta deixa `insectsPerHit` insetos no vilão, +1 a cada
     // `ninjutsuStep` de ninjutsu base a partir de `ninjutsuFrom` (o crítico e a Praga dobram). O teto vem do nível do
-    // Enxame (`maxInsectsByLevel`, I/II/III). No fim da rodada, drena 1 de chakra a cada `insectsPerChakra` insetos
-    // para o Aburame; o que o vilão não tinha vira dano (1 a cada `burnPerMissingChakra` que faltou). Rodada sem
-    // acerto do Enxame: o vilão se livra de `shedPerRound` insetos.
+    // Enxame (`maxInsectsByLevel`, I/II/III). No fim da rodada (v0.31.3), os insetos causam 1 de dano a cada
+    // `insectsPerDamage` (até `maxDamagePerRound`) e sugam 1 de chakra a cada `insectsPerChakra` para o Aburame (até
+    // `maxChakraPerRound`). Rodada sem acerto do Enxame (nem Devorar): o vilão se livra de `shedPerRound` insetos.
     hive: {
       insectsPerHit: 2,
       ninjutsuFrom: 15,
       ninjutsuStep: 5,
       critMult: 2,
       maxInsectsByLevel: [10, 15, 20],
+      insectsPerDamage: 2,
+      maxDamagePerRound: 6,
       insectsPerChakra: 5,
-      burnPerMissingChakra: 3,
+      maxChakraPerRound: 3,
       shedPerRound: 2,
     },
     duo: { chance: 0.25, damagePct: 0.4 },
@@ -303,7 +305,8 @@ export const balance = {
   // Dificuldade (campanha.md): multiplica HP, dano base, ataques e resistências dos vilões.
   difficulty: {
     default: 'normal' as const,
-    multipliers: { easy: 0.9, normal: 1.1, hard: 1.25, hardcore: 1.35 },
+    // Hardcore com a mesma força do Difícil: a diferença são as passivas hardcore dos vilões.
+    multipliers: { easy: 0.9, normal: 1.1, hard: 1.25, hardcore: 1.25 },
     hardcoreUnlockedBy: 'hard' as const,
   },
 

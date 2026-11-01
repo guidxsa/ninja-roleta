@@ -440,7 +440,7 @@ export type BattleEvent =
   | { type: 'dojutsuEnd'; dojutsu: DojutsuId; reason: 'time' | 'chakra' }
   /** `gained`: quanto voltou para o Aburame (Colônia). */
   | { type: 'chakraDrain'; amount: number; source: 'seal' | 'hive' | 'chains'; gained?: number }
-  /** Colônia sem chakra para sugar: o que faltou vira dano. */
+  /** Colônia: os insetos roem o HP do vilão no fim da rodada. */
   | { type: 'hiveBurn'; damage: number }
   /** Rodada sem acerto do Enxame: o vilão se livra de insetos. */
   | { type: 'insectsShed'; insects: number; left: number }
@@ -2622,21 +2622,20 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
     fx.beastTurns--;
     if (fx.beastTurns === 0) s.log.push({ type: 'beastEnd' });
   }
-  // Colônia: no fim da rodada, 1 de chakra a cada 2 insetos vai do vilão para o Aburame; o que faltou vira dano.
+  // Colônia: no fim da rodada, os insetos sugam chakra do vilão para o Aburame e roem o HP dele (com teto por rodada).
   if (v.insects > 0 && s.player.passive === 'hive') {
     const hive = data.balance.passives.hive;
-    const want = Math.floor(v.insects / hive.insectsPerChakra);
-    const amount = Math.min(v.chakra, want);
+    const amount = Math.min(v.chakra, hive.maxChakraPerRound, Math.floor(v.insects / hive.insectsPerChakra));
     if (amount > 0) {
       v.chakra -= amount;
       const gained = Math.min(s.player.maxChakra - s.player.chakra, amount);
       s.player.chakra += gained;
       s.log.push({ type: 'chakraDrain', amount, source: 'hive', gained });
     }
-    const burn = Math.floor((want - amount) / hive.burnPerMissingChakra);
-    if (burn > 0) {
-      s.log.push({ type: 'hiveBurn', damage: burn });
-      hurtVillain(s, burn);
+    const bite = Math.min(hive.maxDamagePerRound, Math.floor(v.insects / hive.insectsPerDamage));
+    if (bite > 0) {
+      s.log.push({ type: 'hiveBurn', damage: bite });
+      hurtVillain(s, bite);
       if (s.status !== 'ongoing') return;
     }
   }
@@ -2866,6 +2865,8 @@ function devour(s: BattleState, data: GameData): void {
   const { insects, pct, damage, kept, chakra } = devourPreview(s, data);
   payChakra(s.player, techniqueCost(s, data.techniquesById[DEVOUR]!, data));
   s.villain.insects = kept;
+  // O Devorar conta como ataque da colônia: os insetos que ficam não se soltam nesta rodada.
+  s.playerFx.swarmHit = true;
   s.villain.chakra -= chakra;
   const gained = Math.min(s.player.maxChakra - s.player.chakra, chakra);
   s.player.chakra += gained;

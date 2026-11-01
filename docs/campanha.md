@@ -151,7 +151,7 @@ Escolhida na tela de origem; fica salva como preferência do aparelho e no hist�
 | Fácil | 90% |
 | Médio | 110% |
 | Difícil | 125% |
-| Hardcore | 135% + passivas hardcore |
+| Hardcore | 125% (como o Difícil) + passivas hardcore |
 
 - O hardcore só é liberado depois de uma vitória no difícil (consulta o histórico).
 - A dificuldade também define o ganho por nível ([progressao.md](progressao.md)).

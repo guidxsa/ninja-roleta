@@ -145,22 +145,22 @@ describe('ficha de técnica', () => {
     const s1 = playRound(withInitiative(startBattle(p, testVillain())), 'tech:insectSwarm', seq(0.5, 0.5, 0.01, 0.5, 0.5), gameData);
     const hits = ofType(s1.log, 'attack').filter((a) => a.side === 'player');
     expect(hits.map((a) => a.outcome)).toEqual(['hit', 'hit']);
-    // Dano fixo de 1 por golpe.
-    expect(hits.map((a) => a.damage)).toEqual([1, 1]);
+    // Dano fixo de 4 por golpe.
+    expect(hits.map((a) => a.damage)).toEqual([4, 4]);
     expect(s1.villain.insects).toBe(4);
     // O Enxame não drena; a Colônia só suga a partir de 5 insetos (1 a cada 5): com 4, nada.
     expect(ofType(s1.log, 'chakraDrain')).toEqual([]);
   });
 
-  it('Enxame sobe em linha: +2 golpes por nível (II 4 golpes, III 6), sempre 1 de dano fixo', () => {
+  it('Enxame sobe em linha: +2 golpes por nível (II 4 golpes, III 6), sempre 4 de dano fixo', () => {
     const p = { ...createPlayer(clan('aburame'), gameData), level: 7 };
     const two = upgradeTechnique(p, 'insectSwarm', gameData);
     expect(two.techniques).toContain('insectSwarm2');
     const three = upgradeTechnique(two, 'insectSwarm2', gameData);
     expect(three.techniques).toContain('insectSwarm3');
     expect([techniquesById.insectSwarm2, techniquesById.insectSwarm3].map((t) => [t!.fixedDamage, t!.hits])).toEqual([
-      [1, 4],
-      [1, 6],
+      [4, 4],
+      [4, 6],
     ]);
   });
 
@@ -656,14 +656,14 @@ describe('passivas e ativas de clã', () => {
     expect(s2.player.chakra).toBe(p.maxChakra - 5 - 2);
   });
 
-  it('Colônia e Enxame (Aburame): só o Enxame prende insetos; cada golpe causa 1 de dano fixo; 2/4/6 golpes', () => {
+  it('Colônia e Enxame (Aburame): só o Enxame prende insetos; cada golpe causa 4 de dano fixo; 2/4/6 golpes', () => {
     const p = createPlayer(clan('aburame'), gameData);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
     expect(availableActions(s0, gameData)).not.toContain('tech:insectDevour');
     // Outro ataque que acerta não prende inseto.
     expect(playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData).villain.insects).toBe(0);
     const swarm = playRound(s0, 'tech:insectSwarm', seq(0.5), gameData);
-    expect(ofType(swarm.log, 'attack').filter((a) => a.side === 'player').map((a) => a.damage)).toEqual([1, 1]);
+    expect(ofType(swarm.log, 'attack').filter((a) => a.side === 'player').map((a) => a.damage)).toEqual([4, 4]);
     expect(swarm.villain.insects).toBe(4);
     expect(['insectSwarm', 'insectSwarm2', 'insectSwarm3'].map((id) => gameData.techniquesById[id]!.hits)).toEqual([2, 4, 6]);
   });
@@ -677,8 +677,8 @@ describe('passivas e ativas de clã', () => {
     expect(availableActions(six, gameData)).toContain('tech:insectDevour');
     const s1 = playRound(six, 'tech:insectDevour', seq(0.5), gameData);
     expect(ofType(s1.log, 'devour')).toEqual([{ type: 'devour', insects: 6, pct: 0.0125, damage: 15, kept: 2, chakra: 2, gained: 2 }]);
-    // Os 2 que ficaram se soltam no fim da rodada (o Enxame não acertou).
-    expect([s1.villain.insects, s1.villain.chakra, s1.villain.hp]).toEqual([0, 18, 185]);
+    // O Devorar conta como ataque da colônia: os 2 que ficaram não se soltam e roem 1 de HP no fim da rodada.
+    expect([s1.villain.insects, s1.villain.chakra, s1.villain.hp]).toEqual([2, 18, 184]);
     expect(s1.player.chakra).toBe(p.maxChakra - 3 + 2);
     // 10 insetos: ficam 4 e suga 20%; o chakra sugado não passa do que o vilão tem.
     const ten = { ...s0, villain: { ...s0.villain, insects: 10 } };
@@ -731,13 +731,13 @@ describe('passivas e ativas de clã', () => {
     expect([p, two, three].map(cap)).toEqual([10, 15, 20]);
   });
 
-  it('Colônia: suga 1 de chakra a cada 5 insetos para o Aburame; sem chakra no vilão, 1 de dano a cada 3 que faltaram', () => {
+  it('Colônia: roe 1 de HP a cada 2 insetos (até 6) e suga 1 de chakra a cada 5 para o Aburame (até 3)', () => {
     const p = { ...createPlayer(clan('aburame'), gameData), chakra: 10 };
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200, chakra: 0 })));
-    // 15 insetos querem 3 de chakra; o vilão não tem nada: 3 que faltaram viram 1 de dano.
+    // 15 insetos: 7 de dano, no teto de 6; o vilão sem chakra não perde nada.
     const s1 = playRound({ ...s0, villain: { ...s0.villain, insects: 15 } }, 'stance', seq(0.5), gameData);
     expect(ofType(s1.log, 'chakraDrain')).toEqual([]);
-    expect(ofType(s1.log, 'hiveBurn')).toEqual([{ type: 'hiveBurn', damage: 1 }]);
+    expect(ofType(s1.log, 'hiveBurn')).toEqual([{ type: 'hiveBurn', damage: 6 }]);
     // Rodada sem acerto do Enxame: 2 insetos se soltam (depois da Colônia).
     expect(ofType(s1.log, 'insectsShed')).toEqual([{ type: 'insectsShed', insects: 2, left: 13 }]);
     // Com chakra: 10 insetos levam 2 de 20 para o Aburame (10 + 1 da regeneração + 2); 4 insetos não levam nada.
@@ -746,7 +746,13 @@ describe('passivas e ativas de clã', () => {
     const s2 = withChakra(10);
     expect(ofType(s2.log, 'chakraDrain')).toEqual([{ type: 'chakraDrain', amount: 2, source: 'hive', gained: 2 }]);
     expect(s2.player.chakra).toBe(13);
-    expect(ofType(withChakra(4).log, 'chakraDrain')).toEqual([]);
+    expect(ofType(s2.log, 'hiveBurn')).toEqual([{ type: 'hiveBurn', damage: 5 }]);
+    const four = withChakra(4);
+    expect([ofType(four.log, 'chakraDrain'), ofType(four.log, 'hiveBurn')]).toEqual([[], [{ type: 'hiveBurn', damage: 2 }]]);
+    // 20 insetos: 4 de chakra e 10 de dano, nos tetos de 3 e 6.
+    const twenty = withChakra(20);
+    expect(ofType(twenty.log, 'chakraDrain')[0]).toMatchObject({ amount: 3 });
+    expect(ofType(twenty.log, 'hiveBurn')).toEqual([{ type: 'hiveBurn', damage: 6 }]);
   });
 
   it('Transmissão mental (Yamanaka): contra golpe carregado, rola o genjutsu; pegou, o vilão perde o golpe e a vez', () => {

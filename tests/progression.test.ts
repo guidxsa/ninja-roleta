@@ -678,7 +678,7 @@ describe('dificuldade', () => {
     resistance: { physical: 10, mental: 8 },
   });
 
-  it('fácil (90%), médio (110%), difícil (125%) e hardcore (135%) escalam HP, dano base, ataques e resistências', () => {
+  it('fácil (90%), médio (110%), difícil e hardcore (125%) escalam HP, dano base, ataques e resistências', () => {
     const easy = scaleVillain(v, 'easy', gameData);
     expect(easy.hp).toBe(90);
     // Ataque zerado continua zerado.
@@ -690,7 +690,8 @@ describe('dificuldade', () => {
     const hard = scaleVillain(v, 'hard', gameData);
     expect(hard.hp).toBe(125);
     expect(hard.techniques[0]!.baseDamage).toBe(12);
-    expect(scaleVillain(v, 'hardcore', gameData).techniques[0]!.baseDamage).toBe(13);
+    // O hardcore tem a força do difícil; a diferença são as passivas.
+    expect(scaleVillain(v, 'hardcore', gameData).techniques[0]!.baseDamage).toBe(12);
   });
 
   it('hardcore troca as passivas dos vilões pelas versões hardcore', () => {
@@ -715,7 +716,7 @@ describe('dificuldade', () => {
     const passive = scaleVillain(villainsById.gaara!, 'hardcore', gameData).passive;
     const base = villainsById.gaara!.hardcorePassive;
     if (passive?.kind !== 'cloak' || base?.kind !== 'cloak') throw new Error('manto esperado');
-    expect(passive.monster!.techniques[0]!.baseDamage).toBe(Math.floor(base.monster!.techniques[0]!.baseDamage * 1.35));
+    expect(passive.monster!.techniques[0]!.baseDamage).toBe(Math.floor(base.monster!.techniques[0]!.baseDamage * 1.25));
   });
 
   it('speed, chakra e XP não mudam', () => {
