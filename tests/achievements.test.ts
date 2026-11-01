@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { newAchievements, type AchievementContext } from '../src/core/achievements';
 import type { BattleEvent, BattleState } from '../src/core/combat';
+import type { Origin } from '../src/core/types';
 import { addEffect, addJokenpo, addPreEvent, emptyRunStats, summarizeFight, type FightSummary } from '../src/core/runStats';
 import { achievements, ORIGIN_ACHIEVEMENT_LINEAGES, winAchievementId } from '../src/data/achievements';
 import { ptBR as S } from '../src/data/strings/ptBR';
@@ -59,7 +60,7 @@ function fight(over: Partial<FightSummary> = {}): FightSummary {
 function ctx(over: Partial<AchievementContext> = {}): AchievementContext {
   return {
     stats: emptyRunStats(),
-    origin: { lineageId: null, affinity: 'fire', jinchuuriki: false },
+    origin: { lineageId: null, elements: ['fire'], jinchuuriki: false },
     difficulty: 'normal',
     level: 1,
     summon: null,
@@ -141,19 +142,19 @@ describe('conquistas', () => {
   });
 
   it('Uzumaki Naruto sai logo no sorteio; Dattebayo só vencendo', () => {
-    const naruto = { lineageId: 'uzumaki', affinity: 'wind' as const, jinchuuriki: true };
+    const naruto: Origin = { lineageId: 'uzumaki', elements: ['wind'], jinchuuriki: true };
     expect(newAchievements(achievements, ctx({ origin: naruto }))).toEqual(['narutoUzumaki']);
     const end = newAchievements(achievements, ctx({ origin: naruto, result: 'victory', unlocked: new Set(['narutoUzumaki']) }));
     expect(end).toContain('dattebayo');
     expect(end).toContain(winAchievementId('uzumaki'));
-    expect(newAchievements(achievements, ctx({ origin: { ...naruto, affinity: 'fire' } }))).toEqual([]);
+    expect(newAchievements(achievements, ctx({ origin: { ...naruto, elements: ['fire', 'earth'] } }))).toEqual([]);
   });
 
   it('Mestre dos clãs sai na mesma checagem da última origem que faltava', () => {
     const others = ORIGIN_ACHIEVEMENT_LINEAGES.filter((l) => l !== 'hyuuga').map(winAchievementId);
     const got = newAchievements(
       achievements,
-      ctx({ origin: { lineageId: 'hyuuga', affinity: 'earth', jinchuuriki: false }, result: 'victory', unlocked: new Set(others) }),
+      ctx({ origin: { lineageId: 'hyuuga', elements: ['earth'], jinchuuriki: false }, result: 'victory', unlocked: new Set(others) }),
     );
     expect(got).toContain(winAchievementId('hyuuga'));
     expect(got).toContain('clanMaster');
@@ -183,7 +184,7 @@ describe('conquistas', () => {
   });
 
   it('Pura força: prodígio vence sem abrir portões', () => {
-    const prodigy = { lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false };
+    const prodigy = { lineageId: 'taijutsuProdigy', elements: [], jinchuuriki: false };
     expect(newAchievements(achievements, ctx({ origin: prodigy, result: 'victory', stats: withFights(fight()) }))).toContain('pureStrength');
     expect(
       newAchievements(achievements, ctx({ origin: prodigy, result: 'victory', stats: withFights(fight({ maxGate: 1 })) })),
@@ -204,7 +205,7 @@ const run = (over: Partial<RunRecord>): RunRecord => ({
   id: 'r',
   startedAt: '',
   updatedAt: '',
-  origin: { lineageId: null, affinity: 'fire', jinchuuriki: false },
+  origin: { lineageId: null, elements: ['fire'], jinchuuriki: false },
   status: 'defeat',
   furthestStage: 0,
   revivesUsed: 0,
@@ -236,8 +237,8 @@ describe('perfil', () => {
   it('libera os marcos que o histórico já prova', () => {
     const ids = achievementsFromHistory([
       run({ status: 'victory', difficulty: 'hardcore', furthestStage: 6 }),
-      run({ status: 'defeat', furthestStage: 2, origin: { lineageId: 'nara', affinity: 'water', jinchuuriki: true } }),
-      run({ status: 'reroll', origin: { lineageId: 'uchiha', affinity: 'fire', jinchuuriki: false } }),
+      run({ status: 'defeat', furthestStage: 2, origin: { lineageId: 'nara', elements: ['water'], jinchuuriki: true } }),
+      run({ status: 'reroll', origin: { lineageId: 'uchiha', elements: ['fire'], jinchuuriki: false } }),
     ]);
     expect(ids.sort()).toEqual(['genin', 'hokage', 'leafNinja', 'legend', 'noFear', winAchievementId('common')].sort());
   });

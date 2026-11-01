@@ -40,15 +40,15 @@ Gira depois de cada vilão ou bloco derrotado. A raridade define a força de cad
 | Fatia | Peso | Comum | Rara | Lendária |
 |---|---|---|---|---|
 | Estágio de status | 20 | +1 | +2 | +3 |
-| Nova técnica | 20 | Técnica da pool (ou 1 upgrade) | Técnica + 1 upgrade | Técnica + 2 upgrades |
+| Nova técnica | 25 | Técnica da pool (ou 1 upgrade) | Técnica + 1 upgrade | Técnica + 2 upgrades |
 | XP | 20 | +60 | +120 | +200 |
 | Roleta de itens | 15 | 1 giro | 2 giros | 3 giros |
 | Resistência | 10 | +2 | +4 | +6 |
 | Crítico | 10 | +2% | +4% | +6% |
-| Elemento secundário | 5 | Um elemento | Um elemento | Um elemento + técnica básica dele |
 
 - **Lendária**: a roleta gira 3 vezes e o jogador escolhe 1 dos resultados.
-- Fatias impossíveis somem (ex.: elemento secundário para quem já tem um, ou para o prodígio; nova técnica sem nada para aprender).
+- Fatias impossíveis somem (ex.: nova técnica sem nada para aprender nem subir).
+- Não há fatia de elemento: os elementos vêm só do sorteio da origem ([origens.md](origens.md#elementos-e-potencial-elemental)). A antiga fatia "Elemento secundário" (peso 5) saiu na v0.30 e o peso foi para "Nova técnica".
 - A pool de técnicas respeita a origem e o elemento (ver [tecnicas.md](tecnicas.md)) e não tem as premium (só o guru ensina). Sem técnica nova para aprender, a "nova técnica" vira upgrade.
 - **Resistência**: os pontos são distribuídos um a um por roleta entre física e mental (50% cada).
 

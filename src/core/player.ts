@@ -46,8 +46,8 @@ export interface PlayerState {
   /** Resistência física e mental (mesma ficha dos vilões). */
   resistance: Resistances;
   speed: number;
-  affinity: Element | null;
-  secondaryElements: Element[];
+  /** Elementos dominados, o principal primeiro (vem da origem; não se aprende elemento novo na run). */
+  elements: Element[];
   /** diferencial_de_dano_%: somado à chance base de crítico. */
   critBonus: number;
   /** Skill set: todas as técnicas conhecidas (kit inicial, nível, recompensa), várias por categoria. */
@@ -105,9 +105,11 @@ export function createPlayer(
   let maxChakra = st.chakra;
   if (origin.jinchuuriki) maxChakra = Math.floor(maxChakra * (1 + balance.jinchuuriki.chakraBonusPct));
 
-  // Kit: Taijutsu básico, ninjutsu básico do elemento (se usa ninjutsu) e as técnicas da linhagem.
+  // Kit: Taijutsu básico, o básico do elemento principal (só no potencial pleno) e as técnicas da linhagem.
   const kit = [BASIC_TAIJUTSU];
-  const basic = origin.affinity && !forbidden.includes('ninjutsu') ? elementalBasic(origin.affinity, data) : undefined;
+  const primary = origin.elements[0];
+  const fullPotential = lineage.elementalPotential === 'full' || lineage.elementalPotential === 'fixedOnly';
+  const basic = primary && fullPotential && !forbidden.includes('ninjutsu') ? elementalBasic(primary, data) : undefined;
   if (basic) kit.push(basic.id);
   kit.push(...(lineage.startingTechniques ?? []));
 
@@ -124,8 +126,7 @@ export function createPlayer(
       offense: { taijutsu: st.taijutsu, ninjutsu: st.ninjutsu, genjutsu: st.genjutsu },
       resistance: { ...lineage.resistance },
       speed: st.speed,
-      affinity: origin.affinity,
-      secondaryElements: [],
+      elements: [...origin.elements],
       critBonus: 0,
       techniques: kit,
       techniqueLevels: {},
@@ -227,7 +228,7 @@ export function pendingLevelTechniques(player: PlayerState, data: GameData): str
         !player.forbiddenAttackTypes.includes(t.type) &&
         // Genjutsu de nível só para quem já usa genjutsu; as exclusivas de linhagem valem sempre.
         (t.type !== 'genjutsu' || canUseType(player, 'genjutsu', data)) &&
-        knowsElement(player, t.element) &&
+        elementAllows(player, t, data) &&
         lineageAllows(player, t),
     )
     .map((t) => t.id);
@@ -244,11 +245,56 @@ export function grantLevelTechniques(player: PlayerState, data: GameData): Playe
   return ids.length ? { ...player, techniques: [...player.techniques, ...ids] } : player;
 }
 
-/** Técnica sem elemento (ou da afinidade) serve a qualquer um; elemental exige dominar o elemento. */
+/** Elemento principal (o primeiro da origem); null = nenhum. */
+export function primaryElement(player: { elements: Element[] }): Element | null {
+  return player.elements[0] ?? null;
+}
+
+/** Técnica sem elemento (ou do elemento principal) serve a qualquer um; elemental exige dominar o elemento. */
 export function knowsElement(player: PlayerState, element: TechniqueElement): boolean {
   if (element === null || element === 'affinity') return true;
-  return player.affinity === element || player.secondaryElements.includes(element);
+  return player.elements.includes(element);
 }
+
+/**
+ * Até que nível de técnica a origem leva as técnicas de um elemento (docs/tecnicas.md#níveis-de-técnica):
+ * 0 sem o elemento ou sem potencial; sem teto próprio no pleno (e no fixo do Uchiha); `partialCap` no resto.
+ */
+export function elementCap(player: PlayerState, element: Element, data: GameData): number {
+  if (!player.elements.includes(element)) return 0;
+  const lineage = lineageOf(player.origin.lineageId, data);
+  switch (lineage.elementalPotential) {
+    case 'none':
+      return 0;
+    case 'full':
+      return Infinity;
+    case 'fixedOnly':
+      return element === lineage.elements.fixed ? Infinity : data.balance.elementalPotential.partialCap;
+    case 'partial':
+      return data.balance.elementalPotential.partialCap;
+  }
+}
+
+/** Elemento da técnica (o `'affinity'` vira o principal; null = sem elemento). */
+function techElement(player: PlayerState, tech: TechniqueDef): Element | null {
+  return tech.element === 'affinity' ? primaryElement(player) : tech.element;
+}
+
+/** Nível de técnica correspondente a um nível do personagem (I do 1, II do 4, III do 7...). */
+function tierAt(level: number, data: GameData): number {
+  return 1 + Math.floor((level - 1) / data.balance.techniqueUpgrade.levelsPerTier);
+}
+
+/**
+ * Técnica elemental: exige o elemento e um teto que alcance o nível dela (a barreira do nível 4 pede II,
+ * a Armadura de Raio do nível 7 pede III). Sem elemento, sempre pode.
+ */
+export function elementAllows(player: PlayerState, tech: TechniqueDef, data: GameData): boolean {
+  const element = techElement(player, tech);
+  if (element === null) return tech.element !== 'affinity';
+  return elementCap(player, element, data) >= tierAt(tech.minLevel ?? 1, data);
+}
+
 
 /** Fração do HP máximo que o ninjutsu médico cura, com os upgrades. 0 = não sabe. */
 export function medicalHealPct(player: PlayerState, data: GameData): number {
@@ -286,8 +332,13 @@ export function nextLineTechnique(tech: TechniqueDef, data: GameData): Technique
 /** Estados elementais não sobem; linhas sobem até o último nível; o resto, até o teto. */
 function canUpgrade(player: PlayerState, tech: TechniqueDef, data: GameData): boolean {
   if (tech.state || tech.devour || player.forbiddenAttackTypes.includes(tech.type)) return false;
-  if (techniqueLevel(player, tech.id, data) + 1 > techniqueTier(player, data)) return false;
+  const next = techniqueLevel(player, tech.id, data) + 1;
+  if (next > techniqueTier(player, data)) return false;
+  // Teto elemental da origem (potencial parcial para no II).
+  const element = techElement(player, tech);
+  if (element !== null && next > elementCap(player, element, data)) return false;
   return tech.line ? nextLineTechnique(tech, data) !== null : true;
+
 }
 
 /** Técnicas do skill set que podem subir um nível agora. */

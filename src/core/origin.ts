@@ -3,7 +3,7 @@ import type { Rng } from './rng';
 import { chanceSlices, spin, type Slice } from './roulette';
 import type { Element, LineageDef, Origin } from './types';
 
-export type OriginStepKind = 'lineage' | 'affinity' | 'jinchuuriki';
+export type OriginStepKind = 'lineage' | 'elementCount' | 'element' | 'jinchuuriki';
 
 /** Uma roleta girada na criação, com as fatias e o resultado, para a UI animar. */
 export interface OriginStep {
@@ -37,9 +37,37 @@ function stepValue(s: OriginStep): string {
 }
 
 /**
+ * Elementos da origem: a quantidade (roleta, se houver mais de uma possível) e depois um giro por elemento,
+ * sem repetir. O elemento fixo da linhagem entra primeiro e conta na quantidade.
+ */
+export function rollElements(lineage: LineageDef, rng: Rng, data: GameData): { elements: Element[]; steps: OriginStep[] } {
+  const steps: OriginStep[] = [];
+  const rule = lineage.elements;
+  const counts = rule.countWeights.map((weight, n) => ({ label: String(n), weight, value: String(n) })).filter((s) => s.weight > 0);
+  let count = Number(counts[0]?.value ?? 0);
+  if (counts.length > 1) {
+    const countStep = step('elementCount', counts, rng);
+    steps.push(countStep);
+    count = Number(stepValue(countStep));
+  }
+  const elements: Element[] = rule.fixed ? [rule.fixed] : [];
+  while (elements.length < count) {
+    const pool = (Object.keys(data.elementWeights) as Element[]).filter((e) => !elements.includes(e));
+    const elementStep = step(
+      'element',
+      pool.map((e) => ({ label: e, weight: data.elementWeights[e], value: e })),
+      rng,
+    );
+    steps.push(elementStep);
+    elements.push(stepValue(elementStep) as Element);
+  }
+  return { elements, steps };
+}
+
+/**
  * Sequência de rolagens da origem:
  * 1. linhagem: uma roleta só, com os níveis comum, clã e rara;
- * 2. afinidade, se a linhagem não tem afinidade fixa (nem é o prodígio, que não tem nenhuma);
+ * 2. quantidade de elementos e cada elemento (`rollElements`);
  * 3. jinchuuriki, independente das anteriores.
  */
 export function rollOrigin(rng: Rng, data: GameData): OriginRoll {
@@ -53,22 +81,8 @@ export function rollOrigin(rng: Rng, data: GameData): OriginRoll {
   steps.push(lineageStep);
 
   const lineage = lineageOf(stepValue(lineageStep), data);
-  let affinity: Element | null = null;
-  if (lineage.affinity.kind === 'fixed') {
-    affinity = lineage.affinity.element;
-  } else if (lineage.affinity.kind === 'rolled') {
-    const affinityStep = step(
-      'affinity',
-      (Object.keys(data.elementWeights) as Element[]).map((e) => ({
-        label: e,
-        weight: data.elementWeights[e],
-        value: e,
-      })),
-      rng,
-    );
-    steps.push(affinityStep);
-    affinity = stepValue(affinityStep) as Element;
-  }
+  const rolled = rollElements(lineage, rng, data);
+  steps.push(...rolled.steps);
 
   const jinStep = step(
     'jinchuuriki',
@@ -80,7 +94,7 @@ export function rollOrigin(rng: Rng, data: GameData): OriginRoll {
   return {
     origin: {
       lineageId: lineage.id === COMMON_LINEAGE ? null : lineage.id,
-      affinity,
+      elements: rolled.elements,
       jinchuuriki: stepValue(jinStep) === 'yes',
     },
     steps,

@@ -11,8 +11,8 @@ import type { Element, Origin, TechniqueDef } from './types';
 export interface LabConfig {
   /** Id da linhagem nos dados (`common` = origem comum). */
   lineageId: string;
-  /** Usada só quando a linhagem sorteia a afinidade. */
-  affinity: Element | null;
+  /** Elementos escolhidos (o principal primeiro); o fixo da linhagem entra sozinho. */
+  elements: Element[];
   jinchuuriki: boolean;
   difficulty: Difficulty;
   level: number;
@@ -73,14 +73,20 @@ export function parseLabParams(search: string): LabParams {
   return { lab: params.has('teste'), seed };
 }
 
-/** Origem válida para a linhagem: afinidade fixa ou nenhuma vencem a escolhida. */
+/**
+ * Origem válida para a linhagem: o fixo entra primeiro, sem repetir, até a quantidade máxima da roleta.
+ * Quem nunca fica sem elemento (comum, Uchiha) recebe o primeiro elemento se a lista vier vazia.
+ */
 export function labOrigin(config: LabConfig, data: GameData): Origin {
   const lineage = lineageOf(config.lineageId, data);
-  const rule = lineage.affinity;
-  const firstElement = Object.keys(data.elementWeights)[0] as Element;
-  const affinity = rule.kind === 'fixed' ? rule.element : rule.kind === 'none' ? null : (config.affinity ?? firstElement);
-  return { lineageId: lineage.id === 'common' ? null : lineage.id, affinity, jinchuuriki: config.jinchuuriki };
+  const rule = lineage.elements;
+  const max = rule.countWeights.length - 1;
+  const chosen = [...(rule.fixed ? [rule.fixed] : []), ...config.elements];
+  let elements = chosen.filter((e, i) => chosen.indexOf(e) === i).slice(0, max);
+  if (elements.length === 0 && max > 0 && (rule.countWeights[0] ?? 0) === 0) elements = [Object.keys(data.elementWeights)[0] as Element];
+  return { lineageId: lineage.id === 'common' ? null : lineage.id, elements, jinchuuriki: config.jinchuuriki };
 }
+
 
 /**
  * Técnicas que esta ficha ainda pode aprender, inclusive as premium e as de nível, sem olhar o nível

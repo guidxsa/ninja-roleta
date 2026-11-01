@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { VillainTechnique } from '../src/core/types';
-import { gameData } from '../src/data/index';
+import { techniquesById } from '../src/data/techniques';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { villains } from '../src/data/villains';
 
@@ -14,7 +14,7 @@ const has = (text: string, name: string) => text.toLowerCase().includes(name.toL
 describe('docs batem com os dados', () => {
   it('toda técnica do jogador aparece em docs/tecnicas.md', () => {
     const text = doc('tecnicas.md');
-    const missing = gameData.techniques.map((t) => nameOf(t.id)).filter((n) => !has(text, n));
+    const missing = Object.keys(techniquesById).map(nameOf).filter((n) => !has(text, n));
     expect(missing).toEqual([]);
   });
 

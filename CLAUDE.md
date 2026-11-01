@@ -37,32 +37,10 @@ As regras do jogo vivem em `docs/`. Este arquivo trata só de como trabalhar no 
 
 Combinado em 31/10/2026 (brainstorm com o usuário). Os números são rascunho: a simulação decide e o usuário faz o ajuste fino. Cada frente vira uma versão própria.
 
-1. **Segredos que dependem da reforma** (entram com os itens 2 e 3, ver [docs/perfil.md](docs/perfil.md)): Vingador (Uchiha com raio), Espelhos de gelo (vencer o Haku com Gelo), Areia que protege (Areia + jinchuuriki), Princesa das Lesmas (Senju + lesma + Palma Curativa), Deus dos Shinobi (Senju com Madeira vence), Segundo Hokage (Senju com água principal vence), Domador de bijuu (desfazer o manto do Gaara com Madeira; o campo `cloakSuppressed` do resumo da luta já existe). As conquistas por origem passam a incluir o Senju (Mestre dos clãs vira 11).
-2. **Reforma elemental (v0.30.0)**:
-   - roleta de **quantidade de elementos** no sorteio (Comum 1/2/3 = 50/35/15; Uchiha fogo + 35% de um extra; clãs 0/1/2 = 30/55/15; prodígio 0), com `affinity` + `secondaryElements` virando `elements[]`;
-   - **não se aprende elemento novo na run** (a fatia "Elemento secundário" sai e o peso vai para "Nova técnica");
-   - **potencial elemental**: pleno (Comum, Senju, o fogo do Uchiha) começa com o básico e chega ao III; parcial (clãs, Hyuuga, Uzumaki, o elemento extra do Uchiha) **não começa com o básico** e só chega ao II;
-   - o Treino ganha a escolha "foco elemental";
-   - **kekkei genkai de natureza** só para o grupo pleno com um par, por roleta (25%): Gelo (água + vento), Areia (terra + vento), Lava (fogo + terra), Tempestade (raio + água), Vapor (fogo + água), Explosão (terra + raio). Contam como o pai mais vantajoso no encontro de elementos.
-   - **Madeira** é exclusiva do Senju com terra + água (roleta de 30%).
-3. **Origem Senju** (lendária, peso 3): status no formato do Uzumaki, um degrau acima (tai 11, nin 11, gen 6, res. 12/10, speed 10, HP 125, chakra 40). Passivas: **Herdeiro do fundador** (+1 Vontade do Fogo) e **Força vital** (na 1ª vez abaixo de 30% do HP, 4% do HP máximo por rodada por 3 rodadas; curas recebidas +25%). Despertar: no nível 4, 5% por rodada e +2 de chakra por rodada; no nível 7, 2 vezes por luta. O Mokuton prende, drena e desfaz o manto de chakra.
-4. **Nova distribuição de status das origens pela lore** (o usuário faz o ajuste fino; o total fica perto do atual, menos o Senju):
-
-   | Origem | Tai | Nin | Gen | Res. fís. | Res. ment. | Speed | HP | Chakra | Pontos |
-   |---|---|---|---|---|---|---|---|---|---|
-   | Comum | 10 | 10 | 10 | 10 | 10 | 10 | 100 | 30 | 90 |
-   | Nara | 7 | 14 | 9 | 9 | 12 | 9 | 100 | 34 | 91,5 |
-   | Akimichi | 15 | 7 | 4 | 14 | 7 | 6 | 150 | 34 | 88 |
-   | Yamanaka | 8 | 9 | 16 | 8 | 15 | 10 | 100 | 32 | 97 |
-   | Aburame | 7 | 13 | 8 | 11 | 12 | 8 | 105 | 38 | 92,5 |
-   | Inuzuka | 14 | 7 | 5 | 12 | 7 | 14 | 100 | 24 | 88 |
-   | Prodígio | 18 | 0 | 0 | 12 | 8 | 13 | 110 | 22 | 79,5 |
-   | Uchiha | 11 | 11 | 13 | 9 | 11 | 11 | 100 | 28 | 95,5 |
-   | Hyuuga | 15 | 6 | 6 | 11 | 10 | 12 | 100 | 28 | 90 |
-   | Uzumaki | 10 | 10 | 5 | 12 | 9 | 9 | 120 | 38 | 90,5 |
-   | Senju | 11 | 11 | 6 | 12 | 10 | 10 | 125 | 40 | 97,5 |
-
-5. **Ordem e decisões da revisão (31/10/2026)**: v0.30.0 reforma elemental + status por lore + **ataques de nível 1** de quem fica sem o básico (Mão Expandida do Akimichi, Etiqueta Explosiva do Uzumaki, Pétalas Ilusórias do Yamanaka, Sombra Cortante do Nara); v0.31.0 Senju; v0.32.0 kekkei genkai **com a mecânica nova completa** (congelar, escudo de areia, derreter escudo, armadura de vapor, ignorar escudo, roubo de vida, desfazer o manto) + Madeira + segredos do item 1; v0.33.0 kit do prodígio (Folha Furacão no nível 1, Pesos de treino como ativa, Lótus Primária presa aos Portões no nível 4, Punho Bêbado no nível 4, Lótus Oculta com o 3º portão no nível 7; confirmar com o usuário antes). A quantidade de elementos é por roleta.
+1. **Segredos que dependem das próximas versões** (entram com os itens 2 e 3, ver [docs/perfil.md](docs/perfil.md)): Vingador (Uchiha com raio), Espelhos de gelo (vencer o Haku com Gelo), Areia que protege (Areia + jinchuuriki), Princesa das Lesmas (Senju + lesma + Palma Curativa), Deus dos Shinobi (Senju com Madeira vence), Segundo Hokage (Senju com água principal vence), Domador de bijuu (desfazer o manto do Gaara com Madeira; o campo `cloakSuppressed` do resumo da luta já existe). As conquistas por origem passam a incluir o Senju (Mestre dos clãs vira 11).
+2. **Kekkei genkai de natureza (v0.32.0)**: só para o potencial pleno com um par de elementos, por roleta (25%): Gelo (água + vento), Areia (terra + vento), Lava (fogo + terra), Tempestade (raio + água), Vapor (fogo + água), Explosão (terra + raio). Contam como o pai mais vantajoso no encontro de elementos. **Madeira** é exclusiva do Senju com terra + água (roleta de 30%). A reforma elemental em si (quantidade de elementos, potencial, foco do Treino) saiu na v0.30.0.
+3. **Origem Senju** (lendária, peso 3, potencial elemental pleno, quantidade 1/2/3 = 40/40/20): status no formato do Uzumaki, um degrau acima (tai 11, nin 11, gen 6, res. 12/10, speed 10, HP 125, chakra 40; 97,5 pontos). Passivas: **Herdeiro do fundador** (+1 Vontade do Fogo) e **Força vital** (na 1ª vez abaixo de 30% do HP, 4% do HP máximo por rodada por 3 rodadas; curas recebidas +25%). Despertar: no nível 4, 5% por rodada e +2 de chakra por rodada; no nível 7, 2 vezes por luta. O Mokuton prende, drena e desfaz o manto de chakra.
+5. **Ordem e decisões da revisão (31/10/2026)**: v0.30.0 (feita) reforma elemental + status por lore + ataques de nível 1; v0.31.0 Senju; v0.32.0 kekkei genkai **com a mecânica nova completa** (congelar, escudo de areia, derreter escudo, armadura de vapor, ignorar escudo, roubo de vida, desfazer o manto) + Madeira + segredos do item 1; v0.33.0 kit do prodígio (Folha Furacão no nível 1, Pesos de treino como ativa, Lótus Primária presa aos Portões no nível 4, Punho Bêbado no nível 4, Lótus Oculta com o 3º portão no nível 7; confirmar com o usuário antes). A quantidade de elementos é por roleta.
 6. **Hyuuga**: sem técnica nova no nível 1. O kit é taijutsu básico + Selo dos Pontos Vitais (só com o Byakugan); a identidade é abrir o olho. A **Palma do Vácuo** (taijutsu de distância, só com o Byakugan) fica para uma futura **árvore de talentos por linhagem** (escolhas de técnica ao subir de nível), a desenhar junto com os kits de níveis 4/7 das outras origens.
 
 Última rodada concluída: "rebalanceamento das origens"
@@ -72,7 +50,7 @@ Observação em aberto (não é mudança de design): na simulação, a fatia "no
 
 Alvo da simulação (31/10/2026): o bot joga pior que um humano, sobretudo nas origens de kit complexo. Alvo do bot no **Médio: 60–70%**; Aburame, Nara, Yamanaka e Uchiha **50–60%**. Ajustes para chegar no alvo são propostos ao usuário com a tabela de antes e depois, nunca aplicados sozinhos.
 
-Observação em aberto (v0.26.0): campanha por origem (1000 runs, seed 2) no Médio de 77% (Uchiha, prodígio) a 88% (Hyuuga, Uzumaki), fora o Aburame, que caiu de 57% (v0.25.0) para 45% (Difícil 13%) com o Enxame de dano fixo e o Devorar em % do HP máximo. O usuário testou a v0.25.0 à mão e achou o Aburame forte demais; o bot ainda subestima o Aburame (heurística simples para quando devorar e para a Praga). Não compensar pela simulação sem conversar; melhorar o bot do Aburame é o próximo passo para medir de verdade.
+Observação em aberto (v0.30.0): campanha por origem (1000 runs, seed 2), Médio, antes → depois da reforma elemental e dos status por lore: Comum 86 → 85%, Nara 85 → 70%, Akimichi 87 → 82%, Yamanaka 84 → 77%, Aburame 45 → **30%**, Inuzuka 84 → 82%, prodígio 77 → 82%, Uchiha 77 → 71%, Hyuuga 88 → 86%, Uzumaki 88 → 85%. Difícil: de 28% (Nara, Uchiha) a 54% (Uzumaki); Aburame 13 → 4%. Comparado ao alvo (60–70%; kits complexos 50–60%): Nara e Uchiha já estão perto; Comum, Hyuuga, Uzumaki, Akimichi, Inuzuka e prodígio seguem acima; o Aburame ficou bem abaixo (o bot ainda o subestima, mas 30% é longe demais). Nada foi compensado: o próximo passo é propor ao usuário (Aburame primeiro, e depois se o Médio sobe a força dos vilões ou se mexe por origem).
 
 Roteiro de contas e progresso (combinado em 30/10/2026; a fase 1, o Laboratório `?teste` com `?seed=`, foi implementada na v0.27.0):
 - **Fase 2, perfil local**: conquistas, Livro Bingo e estatísticas por origem implementados na v0.29.0 (`profile_v1`, [docs/perfil.md](docs/perfil.md)); falta desbloqueios/personalização (títulos, skins da roleta, nome do ninja; só cosméticos). A run continua só em memória (F5 reseta).

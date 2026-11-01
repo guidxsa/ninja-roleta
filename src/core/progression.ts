@@ -9,10 +9,9 @@ import {
   applyStatStages,
   elementalBasic,
   gainXp,
-  grantLevelTechniques,
   highestOffense,
   knownLine,
-  knowsElement,
+  elementAllows,
   learnTechnique,
   lineageAllows,
   techniqueLevel,
@@ -72,7 +71,8 @@ export type ProgressEffect =
   | { kind: 'trainingWeights' }
   /** `techniqueId` null: sem técnica para aprender, a recompensa virou só upgrades. */
   | { kind: 'newTechnique'; techniqueId: string | null; upgrades: number }
-  | { kind: 'secondaryElement'; element: Element; techniqueId: string | null }
+  /** Foco elemental do Treino: aprendeu o básico (`from` null) ou subiu a linha do elemento. */
+  | { kind: 'trainingFocus'; element: Element; from: string | null; techniqueId: string; xp: number }
   | { kind: 'akatsukiTookRevive'; reason: AkatsukiReason }
   | { kind: 'akatsukiWeakened'; reason: AkatsukiReason }
   | { kind: 'akatsukiInsight'; amount: number }
@@ -146,6 +146,33 @@ export function applyTraining(player: PlayerState, stat: TrainingStat, data: Gam
   else p = { ...player, offense: { ...player.offense, [stat]: player.offense[stat] + amount } };
   const xp = xpGain(p, cfg.xp, data);
   return step(gainXp(p, cfg.xp, data), { kind: 'training', stat, amount, xp });
+}
+
+/** O que o foco elemental faz num elemento: aprende o básico ou sobe a linha (null = nada a ensinar). */
+function focusTarget(player: PlayerState, element: Element, data: GameData): { learn: string } | { upgrade: string } | null {
+  const basic = elementalBasic(element, data);
+  if (!basic?.line || player.forbiddenAttackTypes.includes('ninjutsu')) return null;
+  const known = knownLine(player, basic.line, data);
+  if (!known) return elementAllows(player, basic, data) ? { learn: basic.id } : null;
+  return upgradableTechniques(player, data).includes(known.id) ? { upgrade: known.id } : null;
+}
+
+/** Treino, foco elemental (campanha.md#treino): os elementos em que o treino ainda ensina algo. */
+export function trainingFocusOptions(player: PlayerState, data: GameData): Element[] {
+  return player.elements.filter((e) => focusTarget(player, e, data) !== null);
+}
+
+/** Treino com foco elemental: o XP do treino e, no lugar do destaque, o básico do elemento ou +1 nível na linha dele. */
+export function applyTrainingFocus(player: PlayerState, element: Element, data: GameData): Step {
+  const target = focusTarget(player, element, data);
+  if (!target) throw new Error(`Nada a treinar no elemento ${element}`);
+  const cfg = data.balance.events.training;
+  const learned = 'learn' in target;
+  const p = learned ? learnTechnique(player, target.learn, data) : upgradeTechnique(player, target.upgrade, data);
+  const line = elementalBasic(element, data)!.line!;
+  const techniqueId = knownLine(p, line, data)!.id;
+  const xp = xpGain(p, cfg.xp, data);
+  return step(gainXp(p, cfg.xp, data), { kind: 'trainingFocus', element, from: learned ? null : target.upgrade, techniqueId, xp });
 }
 
 // ---------------------------------------------------------------------------
@@ -520,27 +547,16 @@ export function learnableTechniques(player: PlayerState, data: GameData): string
         !player.forbiddenAttackTypes.includes(t.type) &&
         !player.techniques.includes(t.id) &&
         !(t.line && knownLine(player, t.line, data)) &&
-        knowsElement(player, t.element) &&
+        elementAllows(player, t, data) &&
         lineageAllows(player, t),
     )
     .map((t) => t.id);
 }
 
-/** Elementos que o jogador pode ganhar como secundário (nenhum para o prodígio ou quem já tem um). */
-export function secondaryElementOptions(player: PlayerState, data: GameData): Element[] {
-  if (player.secondaryElements.length > 0 || player.affinity === null || player.forbiddenAttackTypes.includes('ninjutsu')) {
-    return [];
-  }
-  return (Object.keys(data.elementWeights) as Element[]).filter((e) => e !== player.affinity);
-}
-
-/** Pool filtrada: fatias impossíveis somem (técnica sem nada para aprender nem subir, elemento secundário). */
+/** Pool filtrada: fatias impossíveis somem (técnica sem nada para aprender nem subir). */
 export function rewardPool(player: PlayerState, data: GameData): Weighted<RewardId>[] {
   const canLearn = learnableTechniques(player, data).length > 0 || upgradableTechniques(player, data).length > 0;
-  const canElement = secondaryElementOptions(player, data).length > 0;
-  return data.rewards.filter(
-    (r) => (r.id !== 'newTechnique' || canLearn) && (r.id !== 'secondaryElement' || canElement),
-  );
+  return data.rewards.filter((r) => r.id !== 'newTechnique' || canLearn);
 }
 
 export function rollReward(player: PlayerState, rng: Rng, data: GameData): Roll<RewardId> {
@@ -604,21 +620,6 @@ export function applyReward(
     case 'critBonus': {
       const amount = cfg.critBonus[i]!;
       return step({ ...player, critBonus: player.critBonus + amount }, { kind: 'critBonus', amount });
-    }
-    case 'secondaryElement': {
-      const options = secondaryElementOptions(player, data);
-      if (options.length === 0) throw new Error('Sem elemento secundário possível');
-      const element = pickOne(options, rng);
-      let p: PlayerState = { ...player, secondaryElements: [...player.secondaryElements, element] };
-      // Lendária: aprende também a técnica básica do elemento.
-      let techniqueId: string | null = null;
-      const basic = tier >= 3 ? elementalBasic(element, data) : undefined;
-      if (basic) {
-        p = learnTechnique(p, basic.id, data);
-        techniqueId = basic.id;
-      }
-      // O elemento novo pode liberar técnicas de nível já alcançado.
-      return step(grantLevelTechniques(p, data), { kind: 'secondaryElement', element, techniqueId });
     }
   }
 }

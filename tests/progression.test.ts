@@ -6,12 +6,15 @@ import {
   applyStatStages,
   canLevelUp,
   createPlayer,
+  elementCap,
   equipTrainingWeights,
   gainXp,
   learnTechnique,
   recoverAfterWin,
   removeTrainingWeights,
   trainingWeightsWin,
+  upgradableTechniques,
+  upgradeTechnique,
   withDifficulty,
   xpToNextLevel,
 } from '../src/core/player';
@@ -25,6 +28,8 @@ import {
   applySimpleEvent,
   applySummonEncounter,
   applyTraining,
+  applyTrainingFocus,
+  trainingFocusOptions,
   chooseUpgrade,
   examRecover,
   forfeitUpgrade,
@@ -50,9 +55,9 @@ import { gameData } from '../src/data/index';
 import { villainsById } from '../src/data/villains';
 import { battle, seq, testVillain, withInitiative } from './helpers';
 
-const common: Origin = { lineageId: null, affinity: 'fire', jinchuuriki: false };
-const uchiha: Origin = { lineageId: 'uchiha', affinity: 'fire', jinchuuriki: false };
-const prodigy: Origin = { lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false };
+const common: Origin = { lineageId: null, elements: ['fire'], jinchuuriki: false };
+const uchiha: Origin = { lineageId: 'uchiha', elements: ['fire'], jinchuuriki: false };
+const prodigy: Origin = { lineageId: 'taijutsuProdigy', elements: [], jinchuuriki: false };
 const ofType = <T extends BattleEvent['type']>(log: BattleEvent[], type: T) =>
   log.filter((e): e is Extract<BattleEvent, { type: T }> => e.type === type);
 
@@ -105,7 +110,7 @@ describe('estágios de status', () => {
 
   it('prodígio do taijutsu: ninjutsu e genjutsu continuam zerados', () => {
     const up = applyStatStages(createPlayer(prodigy, gameData), 1, gameData);
-    expect(up.offense).toEqual({ taijutsu: 18, ninjutsu: 0, genjutsu: 0 });
+    expect(up.offense).toEqual({ taijutsu: 19, ninjutsu: 0, genjutsu: 0 });
   });
 });
 
@@ -126,14 +131,31 @@ describe('eventos pré-vilão', () => {
     expect(applyTraining(p, 'mental', gameData).player.resistance.mental).toBe(13);
   });
 
+  it('treino com foco elemental: aprende o básico ou sobe a linha, dentro dos tetos', () => {
+    // Clã sem o básico: o foco ensina o nível I.
+    const hyuuga = createPlayer({ lineageId: 'hyuuga', elements: ['water'], jinchuuriki: false }, gameData);
+    expect(trainingFocusOptions(hyuuga, gameData)).toEqual(['water']);
+    const learned = applyTrainingFocus(hyuuga, 'water', gameData);
+    expect(learned.effect).toEqual({ kind: 'trainingFocus', element: 'water', from: null, techniqueId: 'waterBullet', xp: 60 });
+    expect(learned.player.techniques).toContain('waterBullet');
+    // No nível 1, o teto de técnica (I) segura a linha: nada mais a treinar.
+    expect(trainingFocusOptions(learned.player, gameData)).toEqual([]);
+    // No nível 4, sobe para o II; o parcial para aí.
+    const up = applyTrainingFocus({ ...learned.player, level: 4 }, 'water', gameData);
+    expect(up.effect).toMatchObject({ from: 'waterBullet', techniqueId: 'waterShark' });
+    expect(trainingFocusOptions({ ...up.player, level: 7 }, gameData)).toEqual([]);
+    // Sem elemento, nada de foco.
+    expect(trainingFocusOptions(createPlayer({ lineageId: 'nara', elements: [], jinchuuriki: false }, gameData), gameData)).toEqual([]);
+  });
+
   it('treino: a roleta de destaque pesa pelos próprios status; status zerado não entra', () => {
-    const akimichi = createPlayer({ lineageId: 'akimichi', affinity: 'earth', jinchuuriki: false }, gameData);
+    const akimichi = createPlayer({ lineageId: 'akimichi', elements: ['earth'], jinchuuriki: false }, gameData);
     expect(Object.fromEntries(trainingPool(akimichi).map((w) => [w.id, w.weight]))).toEqual({
       taijutsu: 15,
-      ninjutsu: 8,
-      genjutsu: 5,
+      ninjutsu: 7,
+      genjutsu: 4,
       physical: 14,
-      mental: 6,
+      mental: 7,
       speed: 6,
     });
     const lee = createPlayer(prodigy, gameData);
@@ -487,7 +509,7 @@ describe('ninjutsu médico', () => {
 });
 
 describe('técnicas elementais respeitam o elemento do jogador', () => {
-  const lightning: Origin = { lineageId: null, affinity: 'lightning', jinchuuriki: false };
+  const lightning: Origin = { lineageId: null, elements: ['lightning'], jinchuuriki: false };
   const basics = ['fireSpark', 'windBlade', 'spark', 'rockFist', 'waterBullet'];
 
   it('um ninja de raio nunca aprende técnica de água pela recompensa "nova técnica"', () => {
@@ -508,15 +530,39 @@ describe('técnicas elementais respeitam o elemento do jogador', () => {
     const lightning1 = createPlayer(lightning, gameData);
     expect(learnableTechniques(lightning1, gameData)).not.toContain('lightningArmor');
     expect(learnableTechniques({ ...lightning1, level: 7 }, gameData)).toContain('lightningArmor');
-    const earth4 = { ...createPlayer({ lineageId: null, affinity: 'earth', jinchuuriki: false }, gameData), level: 4 };
+    const earth4 = { ...createPlayer({ lineageId: null, elements: ['earth'], jinchuuriki: false }, gameData), level: 4 };
     const pool = learnableTechniques(earth4, gameData);
     expect(pool).toContain('earthWall');
     expect(pool).not.toContain('waterWall');
   });
 
-  it('elemento secundário libera as técnicas dele', () => {
-    const p = { ...createPlayer(lightning, gameData), secondaryElements: ['water' as const] };
+  it('um segundo elemento da origem libera as técnicas dele (o básico não vem no kit)', () => {
+    const p = createPlayer({ lineageId: null, elements: ['lightning', 'water'], jinchuuriki: false }, gameData);
+    expect(p.techniques).toContain('spark');
     expect(learnableTechniques(p, gameData).filter((id) => basics.includes(id))).toEqual(['waterBullet']);
+  });
+
+  it('potencial parcial: clã aprende o básico do elemento, sobe até o II e não chega na Armadura de Raio', () => {
+    const nara = createPlayer({ lineageId: 'nara', elements: ['lightning'], jinchuuriki: false }, gameData);
+    expect(nara.techniques).not.toContain('spark');
+    expect(learnableTechniques(nara, gameData)).toContain('spark');
+    const at7 = { ...learnTechnique(nara, 'spark', gameData), level: 7 };
+    expect(upgradableTechniques(at7, gameData)).toContain('spark');
+    const two = upgradeTechnique(at7, 'spark', gameData);
+    expect(two.techniques).toContain('lightningCurrent');
+    expect(upgradableTechniques(two, gameData)).not.toContain('lightningCurrent');
+    expect(learnableTechniques(two, gameData)).not.toContain('lightningArmor');
+    // A barreira do nível 4 (nível de técnica II) cabe no parcial.
+    const earth = { ...createPlayer({ lineageId: 'hyuuga', elements: ['earth'], jinchuuriki: false }, gameData), level: 4 };
+    expect(learnableTechniques(earth, gameData)).toContain('earthWall');
+  });
+
+  it('Uchiha: o fogo vai até o III; o segundo elemento para no II', () => {
+    const u = { ...createPlayer({ lineageId: 'uchiha', elements: ['fire', 'water'], jinchuuriki: false }, gameData), level: 7 };
+    expect(elementCap(u, 'fire', gameData)).toBe(Infinity);
+    expect(elementCap(u, 'water', gameData)).toBe(2);
+    expect(elementCap(u, 'earth', gameData)).toBe(0);
+    expect(elementCap({ ...createPlayer(lightning, gameData) }, 'lightning', gameData)).toBe(Infinity);
   });
 
   it('learnTechnique recusa técnica de elemento que o jogador não domina', () => {
@@ -686,23 +732,22 @@ describe('recompensas por raridade', () => {
   it('roleta de recompensa com os pesos do design', () => {
     expect(Object.fromEntries(gameData.rewards.map((r) => [r.id, r.weight]))).toEqual({
       stages: 20,
-      newTechnique: 20,
+      newTechnique: 25,
       xp: 20,
       item: 15,
       resistance: 10,
       critBonus: 10,
-      secondaryElement: 5,
     });
   });
 
   it('comum, rara e lendária: estágios, XP, resistência, crítico e giros de item', () => {
-    expect(applyReward(p, 'stages', 3, seq(0.5), gameData).player.speed).toBe(13);
+    expect(applyReward(p, 'stages', 3, seq(0.5), gameData).player.speed).toBe(14);
     expect(applyReward(p, 'xp', 1, seq(0.5), gameData).player.xp).toBe(60);
     expect(applyReward(p, 'xp', 2, seq(0.5), gameData).player.xp).toBe(120);
     expect(applyReward(p, 'xp', 3, seq(0.5), gameData).player.xp).toBe(200);
-    // Rara: 4 pontos, um a um entre física e mental (0.5 → mental). Uchiha: mental 10 → 14.
+    // Rara: 4 pontos, um a um entre física e mental (0.5 → mental). Uchiha: mental 11 → 15.
     expect(applyReward(p, 'resistance', 2, seq(0.5), gameData)).toMatchObject({
-      player: { resistance: { physical: 10, mental: 14 } },
+      player: { resistance: { physical: 9, mental: 15 } },
       effect: { kind: 'resistance', physical: 0, mental: 4 },
     });
     expect(applyReward(p, 'resistance', 1, seq(0.0, 0.5), gameData).effect).toEqual({ kind: 'resistance', physical: 1, mental: 1 });
@@ -726,16 +771,8 @@ describe('recompensas por raridade', () => {
     expect(step.player.pendingUpgrades).toBe(1);
   });
 
-  it('elemento secundário: um elemento; na lendária, também a técnica básica dele', () => {
-    const one = applyReward(p, 'secondaryElement', 1, seq(0.0), gameData);
-    expect(one.effect).toEqual({ kind: 'secondaryElement', element: 'wind', techniqueId: null });
-    expect(one.player.secondaryElements).toEqual(['wind']);
-    const legendary = applyReward(p, 'secondaryElement', 3, seq(0.0), gameData);
-    expect(legendary.effect).toEqual({ kind: 'secondaryElement', element: 'wind', techniqueId: 'windBlade' });
-    expect(legendary.player.techniques).toContain('windBlade');
-    // Quem já tem um, ou o prodígio, não recebe a fatia.
-    expect(rewardPool(one.player, gameData).map((r) => r.id)).not.toContain('secondaryElement');
-    expect(rewardPool(createPlayer(prodigy, gameData), gameData).map((r) => r.id)).not.toContain('secondaryElement');
+  it('não existe mais elemento novo na run: a fatia saiu da roleta de recompensa', () => {
+    expect(rewardPool(p, gameData).map((r) => r.id)).not.toContain('secondaryElement');
   });
 
   it('lendária: gira 3 vezes para o jogador escolher 1', () => {

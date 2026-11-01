@@ -11,6 +11,7 @@ import {
   applySimpleEvent,
   applySummonEncounter,
   applyTraining,
+  applyTrainingFocus,
   chooseUpgrade,
   examRecover,
   forfeitUpgrade,
@@ -27,6 +28,8 @@ import {
   rollSummonAnimal,
   rollTraining,
   rollWeighted,
+  trainingFocusOptions,
+
   type NextFightMods,
   type Step,
 } from '../core/progression';
@@ -109,7 +112,7 @@ function autoGuru(player: PlayerState, rng: Rng, data: GameData): Step {
   return applyGuru(player, outcome, PREMIUM_PREFERENCE.find((id) => choices.includes(id)) ?? choices[0]!, data);
 }
 
-const REWARD_PREFERENCE: RewardId[] = ['newTechnique', 'stages', 'secondaryElement', 'item', 'xp', 'resistance', 'critBonus'];
+const REWARD_PREFERENCE: RewardId[] = ['newTechnique', 'stages', 'item', 'xp', 'resistance', 'critBonus'];
 
 function autoItem(player: PlayerState, rng: Rng, data: GameData): Step {
   const item = rollItem(player, rng, data);
@@ -141,8 +144,11 @@ function autoEvent(player: PlayerState, rng: Rng, data: GameData): Step {
     case 'oldLady':
     case 'ramen':
       return applySimpleEvent(player, ev);
-    case 'training':
-      return applyTraining(player, rollTraining(player, rng).value, data);
+    case 'training': {
+      // Foco elemental quando ele ensina algo (o primeiro elemento que ainda cresce); senão, o destaque.
+      const focus = trainingFocusOptions(player, data)[0];
+      return focus ? applyTrainingFocus(player, focus, data) : applyTraining(player, rollTraining(player, rng).value, data);
+    }
     case 'jokenpo':
       return playJokenpo(player, HANDS[0]!, rng, data);
     case 'foundItem':

@@ -1,5 +1,6 @@
 import type { Difficulty } from '../core/difficulty';
-import type { Origin } from '../core/types';
+import type { Element, Origin } from '../core/types';
+
 
 export const RUNS_STORAGE_KEY = 'runs_v1';
 
@@ -30,10 +31,18 @@ export function loadRuns(storage: KeyValueStorage): RunRecord[] {
   try {
     const raw = storage.getItem(RUNS_STORAGE_KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? (parsed as RunRecord[]) : [];
+    return Array.isArray(parsed) ? (parsed as RunRecord[]).map(migrateOrigin) : [];
   } catch {
     return [];
   }
+}
+
+/** Registros de antes da v0.30 guardam `affinity` (um elemento ou null) no lugar de `elements`. */
+function migrateOrigin(run: RunRecord): RunRecord {
+  const o = run.origin as Origin & { affinity?: Element | null };
+  if (Array.isArray(o.elements)) return run;
+  const { affinity, ...rest } = o;
+  return { ...run, origin: { ...rest, elements: affinity ? [affinity] : [] } };
 }
 
 function saveRuns(storage: KeyValueStorage, runs: RunRecord[], maxRuns: number): void {

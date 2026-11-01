@@ -31,7 +31,7 @@ const anyFight = (c: AchievementContext, f: (x: FightSummary) => boolean) => fig
 const sum = (c: AchievementContext, f: (x: FightSummary) => number) => fights(c).reduce((a, x) => a + f(x), 0);
 const examFights = (c: AchievementContext) => fights(c).filter((x) => x.exam);
 const closeWin = (x: FightSummary) => x.won && x.hpPctEnd > 0 && x.hpPctEnd <= CLOSE_CALL_HP;
-const isNaruto = (c: AchievementContext) => is(c, 'uzumaki') && c.origin.jinchuuriki && c.origin.affinity === 'wind';
+const isNaruto = (c: AchievementContext) => is(c, 'uzumaki') && c.origin.jinchuuriki && c.origin.elements.includes('wind');
 
 const originWins: AchievementDef[] = ORIGIN_ACHIEVEMENT_LINEAGES.map((lineage) => ({
   id: winAchievementId(lineage),

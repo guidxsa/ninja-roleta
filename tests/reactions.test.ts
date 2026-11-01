@@ -12,15 +12,15 @@ import {
   type ReactionChoice,
 } from '../src/core/combat';
 import { createPlayer, learnTechnique, type PlayerState } from '../src/core/player';
-import type { Origin, VillainTechnique } from '../src/core/types';
+import type { Element, Origin, VillainTechnique } from '../src/core/types';
 import { gameData } from '../src/data/index';
 import { villainsById } from '../src/data/villains';
 import { hold, seq, testVillain, withInitiative } from './helpers';
 
 const ofType = <T extends BattleEvent['type']>(log: BattleEvent[], type: T) =>
   log.filter((e): e is Extract<BattleEvent, { type: T }> => e.type === type);
-const origin = (affinity: Origin['affinity'], lineageId: string | null = null): Origin => ({ lineageId, affinity, jinchuuriki: false });
-const player = (affinity: Origin['affinity'] = 'water') => createPlayer(origin(affinity), gameData);
+const origin = (element: Element | null, lineageId: string | null = null): Origin => ({ lineageId, elements: element ? [element] : [], jinchuuriki: false });
+const player = (element: Element | null = 'water') => createPlayer(origin(element), gameData);
 const always = (choice: ReactionChoice) => () => choice;
 const ofRound = (before: BattleState, after: BattleState) => after.log.slice(before.log.length);
 

@@ -5,7 +5,7 @@ import { gameData as data } from '../src/data/index';
 
 const base: LabConfig = {
   lineageId: 'common',
-  affinity: 'water',
+  elements: ['water'],
   jinchuuriki: false,
   difficulty: 'normal',
   level: 1,
@@ -28,9 +28,13 @@ describe('parseLabParams', () => {
 
 describe('labOrigin', () => {
   it('afinidade fixa e nenhuma vencem a escolhida', () => {
-    expect(labOrigin({ ...base, lineageId: 'uchiha' }, data).affinity).toBe('fire');
-    expect(labOrigin({ ...base, lineageId: 'taijutsuProdigy' }, data).affinity).toBeNull();
-    expect(labOrigin({ ...base, lineageId: 'nara' }, data)).toEqual({ lineageId: 'nara', affinity: 'water', jinchuuriki: false });
+    expect(labOrigin({ ...base, lineageId: 'uchiha' }, data).elements).toEqual(['fire', 'water']);
+    expect(labOrigin({ ...base, lineageId: 'taijutsuProdigy' }, data).elements).toEqual([]);
+    // Corta na quantidade máxima da origem e não repete; o comum nunca fica sem elemento.
+    expect(labOrigin({ ...base, lineageId: 'nara', elements: ['fire', 'water', 'earth'] }, data).elements).toEqual(['fire', 'water']);
+    expect(labOrigin({ ...base, elements: [] }, data).elements).toEqual(['fire']);
+    expect(labOrigin({ ...base, lineageId: 'nara', elements: [] }, data).elements).toEqual([]);
+    expect(labOrigin({ ...base, lineageId: 'nara' }, data)).toEqual({ lineageId: 'nara', elements: ['water'], jinchuuriki: false });
   });
 
   it('comum vira lineageId null', () => {

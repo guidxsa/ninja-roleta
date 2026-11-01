@@ -1,12 +1,13 @@
 # Origens
 
-A origem do personagem é sorteada no início da run: linhagem, afinidade elemental e jinchuuriki. Ela define os status iniciais, as técnicas de partida e as habilidades exclusivas.
+A origem do personagem é sorteada no início da run: linhagem, elementos e jinchuuriki. Ela define os status iniciais, as técnicas de partida e as habilidades exclusivas.
 
 ## Sorteio
 
 1. **Roleta de linhagem**: uma roleta só, com três níveis de raridade (a cor da fatia indica o nível).
-2. **Afinidade**: se a linhagem não tem afinidade fixa, rola um dos 5 elementos (pesos iguais).
-3. **Jinchuuriki**: roleta independente, **10%**. Acumula com qualquer linhagem.
+2. **Quantidade de elementos**: roleta pelos pesos da origem (tabela abaixo). Não gira quando só há uma quantidade possível.
+3. **Elementos**: um giro por elemento, sem repetir (cada giro tira o já sorteado; os 5 elementos têm o mesmo peso). O **primeiro** é o **elemento principal**. O elemento fixo da origem (o fogo do Uchiha) entra primeiro e conta na quantidade.
+4. **Jinchuuriki**: roleta independente, **10%**. Acumula com qualquer linhagem.
 
 | Nível | Linhagem | Peso |
 |---|---|---|
@@ -23,6 +24,21 @@ A origem do personagem é sorteada no início da run: linhagem, afinidade elemen
 
 Total: 30% comum, 40% clã, 30% rara.
 
+### Elementos e potencial elemental
+
+Não se aprende elemento novo durante a run: os elementos são os do sorteio. O **potencial elemental** diz até onde a origem leva as técnicas dos seus elementos ([tecnicas.md](tecnicas.md#níveis-de-técnica)).
+
+| Origem | 0 elementos | 1 | 2 | 3 | Potencial | Começa com o básico do principal? |
+|---|---|---|---|---|---|---|
+| Comum | — | 50 | 35 | 15 | **Pleno** em todos (até III; IV no nível 10) | Sim |
+| Uchiha | — | 65 (só fogo) | 35 (fogo + 1) | — | **Pleno** no fogo; **parcial** no outro | Sim (Fagulha do Dragão) |
+| Nara, Akimichi, Yamanaka, Aburame, Inuzuka, Hyuuga, Uzumaki | 30 | 55 | 15 | — | **Parcial** (até o nível de técnica II) | Não |
+| Prodígio do taijutsu | sempre 0 | — | — | — | Nenhum | — |
+
+- **Pleno**: as linhas elementais sobem até o teto do nível do personagem.
+- **Parcial**: o nível I vem pela recompensa "nova técnica" ou pelo foco elemental do Treino ([campanha.md](campanha.md#treino)), e a linha para no **II**. A barreira do elemento (nível 4) entra; a Armadura de Raio (nível 7) não. O potencial dessas origens está no kit da linhagem.
+- Com vários elementos, os upgrades se dividem entre as linhas: quem tem 3 elementos demora mais para levar cada um ao topo.
+
 ### Re-roll
 
 - Infinito, só na tela de origem, antes da primeira luta.
@@ -30,22 +46,20 @@ Total: 30% comum, 40% clã, 30% rara.
 
 ## Status iniciais
 
-O ponto de partida é um **orçamento de 90 pontos**: 70 em status mais **20 em resistências**. Conversão: taijutsu, ninjutsu, genjutsu e as duas resistências valem 1 ponto; speed vale 1,5; 10 de HP vale 1; 2 de chakra valem 1.
+Referência: **90 pontos**, cerca de 70 em status e 20 em resistências. Conversão: taijutsu, ninjutsu, genjutsu e as duas resistências valem 1 ponto; speed vale 1,5; 10 de HP vale 1; 2 de chakra valem 1. A distribuição segue a lore (v0.30), com o total perto de 90; a coluna "Pontos" mostra quanto cada origem fica acima ou abaixo.
 
-Na simulação, os pontos não valem o mesmo na prática: genjutsu e resistência mental pesam menos que corpo e HP. Por isso a v0.18 recalibrou algumas origens fora do orçamento (coluna "Pontos"), para que nenhuma fique muito acima ou abaixo das outras.
-
-| Origem | Taijutsu | Ninjutsu | Genjutsu | Res. física | Res. mental | Speed | HP | Chakra | Afinidade | Pontos |
+| Origem | Taijutsu | Ninjutsu | Genjutsu | Res. física | Res. mental | Speed | HP | Chakra | Pontos | Leitura da lore |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Comum | 10 | 10 | 10 | 10 | 10 | 10 | 100 | 30 | Rolada | 90 |
-| Nara | 10 | 13 | 8 | 10 | 10 | 9 | 105 | 32 | Rolada | 91 |
-| Akimichi | 15 | 8 | 5 | 14 | 6 | 6 | 145 | 34 | Rolada | 88,5 |
-| Yamanaka | 10 | 9 | 15 | 10 | 14 | 10 | 110 | 30 | Rolada | 99 |
-| Aburame | 8 | 12 | 10 | 9 | 11 | 8 | 110 | 34 | Rolada | 90 |
-| Inuzuka | 14 | 8 | 6 | 12 | 8 | 13 | 95 | 24 | Rolada | 89 |
-| Prodígio do taijutsu | 17 | 0 | 0 | 11 | 9 | 12 | 110 | 28 | Nenhuma | 80 |
-| Uchiha | 12 | 9 | 12 | 10 | 10 | 10 | 105 | 26 | Fogo (fixa) | 91,5 |
-| Hyuuga | 16 | 6 | 8 | 11 | 9 | 11 | 100 | 27 | Rolada | 90 |
-| Uzumaki | 10 | 11 | 6 | 12 | 8 | 9 | 105 | 35 | Rolada | 88,5 |
+| Comum | 10 | 10 | 10 | 10 | 10 | 10 | 100 | 30 | 90 | Sem dom, sem defeito: a régua |
+| Nara | 7 | 14 | 9 | 9 | 12 | 9 | 100 | 34 | 91,5 | Cabeça e sombras; corpo preguiçoso |
+| Akimichi | 15 | 7 | 4 | 14 | 7 | 6 | 150 | 34 | 88 | Massa, vida e força; lento e fácil de iludir |
+| Yamanaka | 8 | 9 | 16 | 8 | 15 | 10 | 100 | 32 | 97 | Mente forte, corpo frágil |
+| Aburame | 7 | 13 | 8 | 11 | 12 | 8 | 105 | 38 | 92,5 | Reserva grande de chakra, calmo e defensivo |
+| Inuzuka | 14 | 7 | 5 | 12 | 7 | 14 | 100 | 24 | 88 | Selvagem e rápido; pouco chakra |
+| Prodígio do taijutsu | 18 | 0 | 0 | 12 | 8 | 13 | 110 | 22 | 79,5 | Só corpo; quase sem chakra |
+| Uchiha | 11 | 11 | 13 | 9 | 11 | 11 | 100 | 28 | 95,5 | Talento em tudo, olhos treinados |
+| Hyuuga | 15 | 6 | 6 | 11 | 10 | 12 | 100 | 28 | 90 | Punho Gentil, precisão e reflexo |
+| Uzumaki | 10 | 10 | 5 | 12 | 9 | 9 | 120 | 38 | 90,5 | Vitalidade e chakra enormes; péssimo em genjutsu |
 
 Lógica das resistências (provisória): clãs de corpo (Akimichi, Inuzuka, Uzumaki) puxam para a física; clãs de mente e ilusão (Yamanaka) puxam para a mental. O prodígio tem a mental mais baixa que a física: é um alvo natural de genjutsu, como na série.
 
@@ -57,18 +71,18 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 
 | Origem | Passiva | Ativa | Kit inicial | Exclusivas | Restrições |
 |---|---|---|---|---|---|
-| Comum | Determinação | Esforço | Taijutsu básico, ninjutsu básico | — | — |
-| Nara | Gênio | — | Taijutsu básico, ninjutsu básico, Imitação de Sombra, Enforcamento por Sombra | Imitação de Sombra, Enforcamento por Sombra | — |
-| Akimichi | Corpo pesado | Expansão, Pílulas do clã (nível 7) | Taijutsu básico, ninjutsu básico | Rolo Colossal (nível 4) | — |
-| Yamanaka | Leitura mental, Mente no controle | Transmissão mental | Taijutsu básico, ninjutsu básico, Transferência de Mente | Transferência de Mente | — |
-| Aburame | Colônia | Praga | Taijutsu básico, ninjutsu básico, Enxame, Devorar | Enxame, Devorar | — |
-| Inuzuka | Dupla | Fera de quatro patas | Taijutsu básico, ninjutsu básico, Presas Giratórias | Presas Giratórias | — |
+| Comum | Determinação | Esforço | Taijutsu básico, básico do elemento principal | — | — |
+| Nara | Gênio | — | Taijutsu básico, Imitação de Sombra, Enforcamento por Sombra, Sombra Cortante | Imitação de Sombra, Enforcamento por Sombra, Sombra Cortante | — |
+| Akimichi | Corpo pesado | Expansão, Pílulas do clã (nível 7) | Taijutsu básico, Mão Expandida | Mão Expandida, Rolo Colossal (nível 4) | — |
+| Yamanaka | Leitura mental, Mente no controle | Transmissão mental | Taijutsu básico, Transferência de Mente, Pétalas Ilusórias | Transferência de Mente, Pétalas Ilusórias | — |
+| Aburame | Colônia | Praga | Taijutsu básico, Enxame, Devorar | Enxame, Devorar | — |
+| Inuzuka | Dupla | Fera de quatro patas | Taijutsu básico, Presas Giratórias | Presas Giratórias | — |
 | Prodígio do taijutsu | Corpo de ferro | Portões (com Forçar) | Taijutsu básico | Redemoinho da Folha (4), Lótus Primaveril (7) | Sem ninjutsu, genjutsu e médico |
 | Uchiha | Olhos treinados | Sharingan, Cópia | Taijutsu básico, Fagulha do Dragão, Olhar Hipnótico, Ilusão da Dor | Ilusões de dano, Tsukuyomi (nível 7) | — |
-| Hyuuga | Punho preciso | Byakugan | Taijutsu básico, ninjutsu básico | Selo dos Pontos Vitais, Rotação (nível 4), 64 Palmas (nível 7) | — |
-| Uzumaki | Vitalidade | Selamento | Taijutsu básico, ninjutsu básico | Correntes de Chakra (nível 4) | — |
+| Hyuuga | Punho preciso | Byakugan | Taijutsu básico, Selo dos Pontos Vitais (só com o Byakugan) | Selo dos Pontos Vitais, Rotação (nível 4), 64 Palmas (nível 7) | — |
+| Uzumaki | Vitalidade | Selamento | Taijutsu básico, Etiqueta Explosiva | Etiqueta Explosiva, Correntes de Chakra (nível 4) | — |
 
-"Ninjutsu básico" = o nível I da linha de ataque do elemento sorteado (ver [tecnicas.md](tecnicas.md#linhas-de-ataque)).
+"Básico do elemento principal" = o nível I da linha de ataque do primeiro elemento sorteado ([tecnicas.md](tecnicas.md#linhas-de-ataque)); só no potencial pleno.
 
 Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação da rodada, sem gastar o turno, se houver chakra para as duas ([fundamentos.md](fundamentos.md)).
 

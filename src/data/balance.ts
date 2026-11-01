@@ -232,6 +232,10 @@ export const balance = {
 
   revive: { initialItems: 1 },
 
+  // Reforma elemental (v0.30): no potencial parcial, as linhas elementais param no nível de técnica `partialCap` (II).
+  elementalPotential: { partialCap: 2 },
+
+
   // 1 estágio de status: +1 em taijutsu/ninjutsu/genjutsu/speed e nas resistências; HP e chakra máximos iguais a uma subida de nível.
   statStage: { taijutsu: 1, ninjutsu: 1, genjutsu: 1, speed: 1, physical: 1, mental: 1 },
 

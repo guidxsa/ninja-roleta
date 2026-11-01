@@ -80,6 +80,7 @@ import {
   applySimpleEvent,
   applySummonEncounter,
   applyTraining,
+  applyTrainingFocus,
   chooseUpgrade,
   examRecover,
   forfeitUpgrade,
@@ -95,6 +96,7 @@ import {
   rollRewardChoices,
   rollSummonAnimal,
   rollTraining,
+  trainingFocusOptions,
   rollWeighted,
   spendCoin,
   upgradeOptions,
@@ -376,10 +378,10 @@ function effectText(e: ProgressEffect): string {
       return E.coin(e.coins);
     case 'trainingWeights':
       return E.trainingWeights;
-    case 'secondaryElement':
-      return e.techniqueId
-        ? E.secondaryElementTech(S.elements[e.element], techName(e.techniqueId))
-        : E.secondaryElement(S.elements[e.element]);
+    case 'trainingFocus':
+      return e.from
+        ? E.trainingFocusUp(S.elements[e.element], techName(e.techniqueId), e.xp)
+        : E.trainingFocusLearn(S.elements[e.element], techName(e.techniqueId), e.xp);
     case 'akatsukiTookRevive':
       return E.akatsukiTookRevive[e.reason]!;
     case 'akatsukiWeakened':
@@ -668,7 +670,7 @@ function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
       ${avatar(p)}
       <div class="panel-id">
         <b class="name"${lineageTip(p)}>${originLabel(p.origin)}</b>
-        <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${p.affinity ? elChip(p.affinity) : `<span class="chip"${tip(S.ui.noAffinity, S.tips.noElement)}>${S.ui.noAffinity}</span>`}${jinChip(p)}${camp ? diffChip(camp.difficulty) : ''}</div>
+        <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${elementChips(p.elements)}${jinChip(p)}${camp ? diffChip(camp.difficulty) : ''}</div>
       </div>
       <button class="btn small sheet-btn" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button>
     </div>
@@ -736,7 +738,7 @@ function sheetHtml(c: Campaign): string {
       ? `<li><span class="pi-ico">${icon(SUMMON_ICONS[p.summon.animal])}</span><span><b>${S.summons[p.summon.animal]!.name}</b> · ${S.summons[p.summon.animal]!.desc}</span></li>`
       : '',
   ].join('');
-  const elements = [p.affinity, ...p.secondaryElements].filter((e): e is Element => Boolean(e));
+  const elements = p.elements;
   const nextFight = c.mods.villainStartsFirst || c.mods.playerStartsFirst;
   return `
     <div class="scroll-paper">
@@ -879,6 +881,14 @@ function rollSlices<T extends string>(roll: Roll<T>, label: (id: T) => string, c
 // ---------------------------------------------------------------------------
 // Tela: origem
 
+/** Cores da roleta de quantidade de elementos (0 a 3). */
+const COUNT_COLORS = ['#8a8f9c', '#4f8fd6', '#9b59d0', '#e0a422'];
+
+/** Chips de todos os elementos, o principal primeiro (ou "sem elemento"). */
+function elementChips(elements: Element[]): string {
+  return elements.length ? elements.map((e) => elChip(e)).join('') : `<span class="chip"${tip(S.ui.noAffinity, S.tips.noElement)}>${S.ui.noAffinity}</span>`;
+}
+
 function originStepSlices(step: OriginStep): WheelSlice[] {
   const L = S.sliceLabels;
   return step.slices.map((s) => {
@@ -890,9 +900,13 @@ function originStepSlices(step: OriginStep): WheelSlice[] {
           color: s.value === 'yes' ? '#e2482f' : TIER_COLORS.common,
           icon: s.value === 'yes' ? clanSymbol('jinchuuriki') : undefined,
         };
-      case 'affinity': {
+      case 'element': {
         const el = s.value as Element;
         return { label: S.elements[el], weight: s.weight, color: ELEMENT_COLORS[el], icon: icon(ELEMENT_ICON[el]) };
+      }
+      case 'elementCount': {
+        const n = Number(s.value);
+        return { label: S.ui.elementCount(n), weight: s.weight, color: COUNT_COLORS[n] ?? TIER_COLORS.common };
       }
       case 'lineage': {
         // A cor da fatia indica o nível: comum, clã ou rara.
@@ -910,8 +924,10 @@ function stepResultText(step: OriginStep): string {
       const tier = lineageOf(v, data).tier;
       return `${clanSymbol(v)}${S.lineages[v] ?? v}${tier === 'common' ? '' : ` · ${S.lineageTiers[tier]}`}`;
     }
-    case 'affinity':
+    case 'element':
       return `${icon(ELEMENT_ICON[v as Element])}${S.elements[v as Element]}`;
+    case 'elementCount':
+      return S.ui.elementCount(Number(v));
     case 'jinchuuriki':
       return v === 'yes' ? `${clanSymbol('jinchuuriki')}${S.origin.jinchuuriki}` : `${S.origin.jinchuuriki}: ${S.sliceLabels.no}`;
   }
@@ -1047,7 +1063,22 @@ async function eventScreen(stage: Stage): Promise<void> {
       step = applySimpleEvent(c.player, roll.value);
       break;
     case 'training': {
-      // XP garantido; a roleta escolhe o status em destaque (pesos = os próprios status).
+      // XP garantido. Com elemento que ainda cresce, o jogador escolhe: destaque de status ou foco elemental.
+      const focus = trainingFocusOptions(c.player, data);
+      let pick = 'highlight';
+      if (focus.length > 0) {
+        const box = h(`<div class="wheel-box"><h3>${S.ui.trainingChoice}</h3><div class="act-grid">
+          <button class="btn" data-choice="highlight">${S.ui.trainingHighlight}</button>
+          ${focus.map((el) => `<button class="btn" data-choice="${el}">${icon(ELEMENT_ICON[el])} ${S.ui.trainingFocus(S.elements[el])}</button>`).join('')}
+        </div></div>`);
+        slot.replaceChildren(box);
+        pick = await choose<string>(box);
+      }
+      if (pick !== 'highlight') {
+        step = applyTrainingFocus(c.player, pick as Element, data);
+        break;
+      }
+      // A roleta escolhe o status em destaque (pesos = os próprios status).
       const out = rollTraining(c.player, rng);
       await bigWheel(slot, S.roulettes.training, rollSlices(out, (id) => S.trainingStats[id] ?? id), out.index);
       step = applyTraining(c.player, out.value, data);
@@ -1491,7 +1522,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       <ol id="log" class="log"></ol>
       <section class="card player-mini" id="pcard">
         <div class="panel-head">${avatar(c.player)}<div class="panel-id"><b class="name"${lineageTip(c.player)}>${S.ui.you} · ${originLabel(c.origin)}</b>
-          <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elChip(c.player.affinity)}${jinChip(c.player)}</div></div>
+          <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elementChips(c.player.elements)}${jinChip(c.player)}</div></div>
           <button class="btn small sheet-btn" data-sheet aria-label="${S.ui.sheet}">${icon('scroll')}</button></div>
         ${bar('hp', state.player.hp, state.player.maxHp)}
         ${bar('ck', state.player.chakra, state.player.maxChakra)}
@@ -2462,7 +2493,7 @@ async function shareRun(c: Campaign, won: boolean, stoppedAt: string | null) {
 
 /** Origem por extenso: linhagem, afinidade e jinchuuriki. */
 function originText(o: Origin): string {
-  return `${originLabel(o)}${o.affinity ? ` (${S.elements[o.affinity]})` : ''}${o.jinchuuriki ? ` · ${S.origin.jinchuuriki}` : ''}`;
+  return `${originLabel(o)}${o.elements.length ? ` (${o.elements.map((e) => S.elements[e]).join(', ')})` : ''}${o.jinchuuriki ? ` · ${S.origin.jinchuuriki}` : ''}`;
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -2655,7 +2686,8 @@ function historyTab(container: HTMLElement) {
           .map((r) => {
             const date = new Date(r.startedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
             const o = r.origin;
-            const origin = `${originLabel(o)}${o.affinity ? ` · ${S.elements[o.affinity]}` : ''}${o.jinchuuriki ? ` · ${S.origin.jinchuuriki}` : ''}`;
+            const origin = `${originLabel(o)}${o.elements.map((e) => ` · ${S.elements[e]}`).join('')}${o.jinchuuriki ? ` · ${S.origin.jinchuuriki}` : ''}`;
+
             const stage = campaign[r.furthestStage];
             const reached = r.status !== 'victory' && r.status !== 'reroll' && stage ? ` · ${S.ui.reachedStage(stageName(stage))}` : '';
             const diff = r.difficulty ? ` ${diffChip(r.difficulty)}` : '';
@@ -2688,7 +2720,7 @@ interface LabSaved {
 
 function loadLab(): LabSaved {
   const fallback: LabSaved = {
-    config: { lineageId: 'common', affinity: 'fire', jinchuuriki: false, difficulty: DEFAULT_DIFFICULTY, level: 1, techniques: [], bag: {} },
+    config: { lineageId: 'common', elements: ['fire'], jinchuuriki: false, difficulty: DEFAULT_DIFFICULTY, level: 1, techniques: [], bag: {} },
     villainId: villains[0]!.id,
     stage: 0,
   };
@@ -2696,6 +2728,9 @@ function loadLab(): LabSaved {
     const raw = storage.getItem(LAB_KEY);
     const saved = (raw ? JSON.parse(raw) : {}) as Partial<LabSaved>;
     const merged = { ...fallback, ...saved, config: { ...fallback.config, ...saved.config } };
+    // Montagens de antes da v0.30 guardam `affinity` no lugar de `elements`.
+    const old = saved.config as { affinity?: Element | null } | undefined;
+    if (!Array.isArray(merged.config.elements)) merged.config.elements = old?.affinity ? [old.affinity] : [];
     // Dados que mudaram de versão (linhagem ou vilão removido) voltam ao padrão.
     if (!data.lineages.some((l) => l.id === merged.config.lineageId)) merged.config.lineageId = fallback.config.lineageId;
     if (!villainsById[merged.villainId]) merged.villainId = fallback.villainId;
@@ -2714,7 +2749,10 @@ function saveLab(saved: LabSaved) {
   }
 }
 
+const ALL_ELEMENTS = Object.keys(data.elementWeights) as Element[];
+
 /** Monta a ficha à mão e escolhe o destino. Deixa `camp` com a ficha montada (a Ficha funciona). */
+
 async function labScreen(): Promise<LabTarget> {
   const saved = loadLab();
   const cfg = saved.config;
@@ -2726,7 +2764,9 @@ async function labScreen(): Promise<LabTarget> {
       <p class="muted small center">${S.lab.intro}</p>
       <section class="lab-box"><h3>${S.lab.origin}</h3>
         <label>${S.lab.lineage}<select name="lineage">${data.lineages.map((l) => opt(l.id, S.lineages[l.id] ?? l.id, l.id === cfg.lineageId)).join('')}</select></label>
-        <label>${S.lab.affinity}<select name="affinity">${(Object.keys(data.elementWeights) as Element[]).map((e) => opt(e, S.elements[e], e === cfg.affinity)).join('')}</select></label>
+        <label>${S.lab.primary}<select name="primary">${opt('', S.lab.noElement, cfg.elements.length === 0)}${ALL_ELEMENTS.map((e) => opt(e, S.elements[e], e === cfg.elements[0])).join('')}</select></label>
+        <div class="lab-elements"><span>${S.lab.elements}</span>${ALL_ELEMENTS.map((e) => `<label class="lab-check"><input type="checkbox" name="extra-el" value="${e}"${cfg.elements.slice(1).includes(e) ? ' checked' : ''}> ${S.elements[e]}</label>`).join('')}</div>
+        <p class="muted small">${S.lab.elementsHint}</p>
         <label>${S.lab.difficulty}<select name="difficulty">${DIFFICULTIES.map((d) => opt(d, S.difficulty[d].name, d === cfg.difficulty)).join('')}</select></label>
         <label>${S.lab.level}<input type="number" name="level" min="1" max="20" inputmode="numeric" value="${cfg.level}"></label>
         <label class="lab-check"><input type="checkbox" name="jin"${cfg.jinchuuriki ? ' checked' : ''}> ${S.lab.jinchuuriki}</label>
@@ -2753,7 +2793,10 @@ async function labScreen(): Promise<LabTarget> {
   const read = (): LabSaved => ({
     config: {
       lineageId: field('lineage').value,
-      affinity: field('affinity').value as Element,
+      elements: [
+        ...(field('primary').value ? [field('primary').value as Element] : []),
+        ...[...root.querySelectorAll<HTMLInputElement>('[name="extra-el"]:checked')].map((i) => i.value as Element),
+      ],
       jinchuuriki: field('jin').checked,
       difficulty: field('difficulty').value as Difficulty,
       level: Math.max(1, Math.floor(Number(field('level').value)) || 1),
@@ -2768,7 +2811,10 @@ async function labScreen(): Promise<LabTarget> {
   const render = () => {
     const current = read();
     const c = current.config;
-    field('affinity').disabled = lineageOf(c.lineageId, data).affinity.kind !== 'rolled';
+    const elementRule = lineageOf(c.lineageId, data).elements;
+    const noChoice = elementRule.countWeights.length <= 1 || (elementRule.fixed !== undefined && elementRule.countWeights.length <= 2);
+    field('primary').disabled = noChoice || elementRule.fixed !== undefined;
+    root.querySelectorAll<HTMLInputElement>('[name="extra-el"]').forEach((i) => (i.disabled = noChoice));
     const player = buildLabPlayer(c, data);
     const auto = labStatsOf(buildLabPlayer({ ...c, stats: {} }, data));
     for (const k of LAB_STAT_KEYS) field(`stat-${k}`).placeholder = String(auto[k]);
@@ -2778,7 +2824,7 @@ async function labScreen(): Promise<LabTarget> {
       ? learnable
           .map(
             (t) =>
-              `<label class="lab-check"><input type="checkbox" name="tech" value="${t.id}"${c.techniques.includes(t.id) ? ' checked' : ''}> ${esc(techName(t.id))}${elChip(t.element === 'affinity' ? player.affinity : t.element, false)}</label>`,
+              `<label class="lab-check"><input type="checkbox" name="tech" value="${t.id}"${c.techniques.includes(t.id) ? ' checked' : ''}> ${esc(techName(t.id))}${elChip(t.element === 'affinity' ? (player.elements[0] ?? null) : t.element, false)}</label>`,
           )
           .join('')
       : `<p class="muted small">${S.lab.noTechniques}</p>`;

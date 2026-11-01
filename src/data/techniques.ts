@@ -99,7 +99,13 @@ export const lineageTechniques: TechniqueDef[] = [
   { id: 'painIllusion', type: 'genjutsu', element: null, baseDamage: 15, chakraCost: 3, lineages: ['uchiha'] },
   // Transferência de Mente (Yamanaka): possessão; o alvo perde a vez golpeando a si mesmo.
   { id: 'mindTransfer', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 4, mental: 'possession', mentalStrength: 1, mentalPower: 2, lineages: ['yamanaka'] },
+  // Ataques de nível 1 de quem não começa com o básico elemental (v0.30).
+  { id: 'shadowSlash', type: 'ninjutsu', element: null, baseDamage: 10, chakraCost: 3, accuracy: 0.85, lineages: ['nara'] },
+  { id: 'expandedHand', type: 'taijutsu', element: null, baseDamage: 10, chakraCost: 2, accuracy: 0.85, lineages: ['akimichi'] },
+  { id: 'petalIllusion', type: 'genjutsu', element: null, baseDamage: 0, chakraCost: 3, mental: 'confusion', mentalStrength: 1, mentalPower: 0, lineages: ['yamanaka'] },
+  { id: 'explosiveSeal', type: 'ninjutsu', element: null, baseDamage: 12, chakraCost: 3, accuracy: 0.85, penetration: 0.5, lineages: ['uzumaki'] },
 ];
+
 
 export const allTechniques: TechniqueDef[] = [
   ...lineageTechniques,

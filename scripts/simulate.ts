@@ -21,17 +21,17 @@ const seed = arg('seed', 1);
 const rng = createRng(seed);
 
 const archetypes: { label: string; origin: Origin }[] = [
-  { label: 'Comum (Fogo)', origin: { lineageId: null, affinity: 'fire', jinchuuriki: false } },
-  { label: 'Comum + Jinch.', origin: { lineageId: null, affinity: 'fire', jinchuuriki: true } },
-  { label: 'Uchiha', origin: { lineageId: 'uchiha', affinity: 'fire', jinchuuriki: false } },
-  { label: 'Hyuuga (Água)', origin: { lineageId: 'hyuuga', affinity: 'water', jinchuuriki: false } },
-  { label: 'Prodígio do taijutsu', origin: { lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false } },
-  { label: 'Uzumaki (Vento)', origin: { lineageId: 'uzumaki', affinity: 'wind', jinchuuriki: false } },
-  { label: 'Nara (Terra)', origin: { lineageId: 'nara', affinity: 'earth', jinchuuriki: false } },
-  { label: 'Akimichi (Terra)', origin: { lineageId: 'akimichi', affinity: 'earth', jinchuuriki: false } },
-  { label: 'Yamanaka (Água)', origin: { lineageId: 'yamanaka', affinity: 'water', jinchuuriki: false } },
-  { label: 'Aburame (Raio)', origin: { lineageId: 'aburame', affinity: 'lightning', jinchuuriki: false } },
-  { label: 'Inuzuka (Vento)', origin: { lineageId: 'inuzuka', affinity: 'wind', jinchuuriki: false } },
+  { label: 'Comum (Fogo)', origin: { lineageId: null, elements: ['fire'], jinchuuriki: false } },
+  { label: 'Comum + Jinch.', origin: { lineageId: null, elements: ['fire'], jinchuuriki: true } },
+  { label: 'Uchiha', origin: { lineageId: 'uchiha', elements: ['fire'], jinchuuriki: false } },
+  { label: 'Hyuuga (Água)', origin: { lineageId: 'hyuuga', elements: ['water'], jinchuuriki: false } },
+  { label: 'Prodígio do taijutsu', origin: { lineageId: 'taijutsuProdigy', elements: [], jinchuuriki: false } },
+  { label: 'Uzumaki (Vento)', origin: { lineageId: 'uzumaki', elements: ['wind'], jinchuuriki: false } },
+  { label: 'Nara (Terra)', origin: { lineageId: 'nara', elements: ['earth'], jinchuuriki: false } },
+  { label: 'Akimichi (Terra)', origin: { lineageId: 'akimichi', elements: ['earth'], jinchuuriki: false } },
+  { label: 'Yamanaka (Água)', origin: { lineageId: 'yamanaka', elements: ['water'], jinchuuriki: false } },
+  { label: 'Aburame (Raio)', origin: { lineageId: 'aburame', elements: ['lightning'], jinchuuriki: false } },
+  { label: 'Inuzuka (Vento)', origin: { lineageId: 'inuzuka', elements: ['wind'], jinchuuriki: false } },
 ];
 
 const pad = (s: string, n: number) => s.padEnd(n);

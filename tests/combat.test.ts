@@ -22,7 +22,7 @@ import { villains } from '../src/data/villains';
 import { runBattle, MAX_ROUNDS } from '../src/sim/runner';
 import { battle, hold, seq, testVillain, withInitiative } from './helpers';
 
-const common: Origin = { lineageId: null, affinity: 'fire', jinchuuriki: false };
+const common: Origin = { lineageId: null, elements: ['fire'], jinchuuriki: false };
 /** Comum que usa genjutsu (para testar o aprisionamento sem depender do Uchiha). */
 const withGenjutsu = () => {
   const p = createPlayer(common, gameData);
@@ -61,7 +61,7 @@ describe('rodada básica', () => {
   });
 
   it('contra um estado elemental no corpo (Armadura de Areia), o encontro de elementos conta', () => {
-    const lightning = createPlayer({ lineageId: null, affinity: 'lightning', jinchuuriki: false }, gameData);
+    const lightning = createPlayer({ lineageId: null, elements: ['lightning'], jinchuuriki: false }, gameData);
     const s0 = startBattle(lightning, testVillain({ elementalState: 'earth', hp: 200 }), { playerStartsFirst: true });
     const s1 = playRound(s0, 'tech:spark', seq(0.5), gameData);
     // Faísca contra terra sólida: raio perfura (×2). (13 + 10 − 7 × 0,9) × 2 = 33
@@ -171,7 +171,7 @@ describe('debilitado', () => {
   });
 
   it('tenacidade também vale para a paralisia do crítico de raio', () => {
-    const lightning: Origin = { lineageId: null, affinity: 'lightning', jinchuuriki: false };
+    const lightning: Origin = { lineageId: null, elements: ['lightning'], jinchuuriki: false };
     const s0 = withInitiative(startBattle(createPlayer(lightning, gameData), testVillain({ hp: 200 })));
     const tough = { ...s0, villain: { ...s0.villain, fx: { ...s0.villain.fx, tenacity: 0.9 } } };
     // Crítico (0.99), e a tenacidade rola 0.5, acima dos 10% que sobram: resiste.
@@ -189,7 +189,7 @@ describe('debilitado', () => {
 });
 
 describe('passivas', () => {
-  const prodigy: Origin = { lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false };
+  const prodigy: Origin = { lineageId: 'taijutsuProdigy', elements: [], jinchuuriki: false };
 
   it('Portões: abrir é grátis (não gasta o turno), custa chakra e HP; taijutsu ×1,3 por 3 rodadas contando a da abertura', () => {
     const p = createPlayer(prodigy, gameData);
@@ -199,12 +199,12 @@ describe('passivas', () => {
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { gates: true });
     // 20% de 110 = 22 de HP; 1º portão custa 5 de chakra.
     expect(ofType(s1.log, 'gates')).toEqual([{ type: 'gates', stage: 1, hpLost: 22, chakra: 5 }]);
-    // O golpe da mesma rodada já sai com o portão: (8 + 17 − 7) × 1,3 = 23
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', damage: 23 });
-    expect(s1.player.chakra).toBe(23);
+    // O golpe da mesma rodada já sai com o portão: (8 + 18 − 7) × 1,3 = 24
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', damage: 24 });
+    expect(s1.player.chakra).toBe(17);
     expect(s1.playerFx.gatesTurns).toBe(2);
     const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5), gameData);
-    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]).toMatchObject({ side: 'player', damage: 23 });
+    expect(ofType(s2.log.slice(s1.log.length), 'attack')[0]).toMatchObject({ side: 'player', damage: 24 });
     expect(s2.playerFx.gatesTurns).toBe(1);
     expect(canFreeActive(s2, 'gates', 'tech:basicTaijutsu', gameData)).toBe(false);
   });
@@ -227,7 +227,7 @@ describe('passivas', () => {
   });
 
   it('Vitalidade Uzumaki: recupera chakra e HP no início da rodada', () => {
-    const p = { ...createPlayer({ lineageId: 'uzumaki', affinity: 'wind', jinchuuriki: false }, gameData), hp: 50, chakra: 5 };
+    const p = { ...createPlayer({ lineageId: 'uzumaki', elements: ['wind'], jinchuuriki: false }, gameData), hp: 50, chakra: 5 };
     const s1 = playRound(battle(p, testVillain(), { playerStartsFirst: true }), 'rest', seq(0.01), gameData);
     // 2% de 105 = 2
     expect(ofType(s1.log, 'regen')).toEqual([{ type: 'regen', hp: 2, chakra: 1 }]);
@@ -235,15 +235,15 @@ describe('passivas', () => {
 
 
   it('Punho preciso: taijutsu ignora 30% da resistência física do vilão', () => {
-    const p = createPlayer({ lineageId: 'hyuuga', affinity: 'water', jinchuuriki: false }, gameData);
+    const p = createPlayer({ lineageId: 'hyuuga', elements: ['water'], jinchuuriki: false }, gameData);
     const s1 = playRound(startBattle(p, testVillain(), { playerStartsFirst: true }), 'tech:basicTaijutsu', seq(0.5), gameData);
-    // 8 + 16 − 10 × 0,7 × 0,7 = 19
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ damage: 19 });
+    // 8 + 15 − 10 × 0,7 × 0,7 = 18
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ damage: 18 });
   });
 });
 
 describe('jinchuuriki: manto de chakra e demônio interno', () => {
-  const jin: Origin = { lineageId: null, affinity: 'fire', jinchuuriki: true };
+  const jin: Origin = { lineageId: null, elements: ['fire'], jinchuuriki: true };
 
   it('abaixo de 50% de HP: status ×1,5 e regenera 5% por rodada, sem recoil', () => {
     const p = { ...createPlayer(jin, gameData), hp: 52 };
@@ -315,8 +315,8 @@ describe('iniciativa', () => {
 });
 
 describe('efeitos negativos', () => {
-  const lightning: Origin = { lineageId: null, affinity: 'lightning', jinchuuriki: false };
-  const water: Origin = { lineageId: null, affinity: 'water', jinchuuriki: false };
+  const lightning: Origin = { lineageId: null, elements: ['lightning'], jinchuuriki: false };
+  const water: Origin = { lineageId: null, elements: ['water'], jinchuuriki: false };
 
   it('paralisia: crítico de raio faz o alvo perder a vez', () => {
     const s0 = withInitiative(startBattle(createPlayer(lightning, gameData), testVillain({ hp: 200 })));

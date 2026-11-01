@@ -33,7 +33,7 @@ export type GuruOutcome = 'charlatan' | 'premium';
 /** Premium do guru: técnicas e talentos sem elemento. */
 export type PremiumId = 'rasengan' | 'medical' | 'focus' | 'substitution' | 'shadowClones' | 'glimmer';
 
-export type RewardId = 'stages' | 'newTechnique' | 'xp' | 'item' | 'resistance' | 'critBonus' | 'secondaryElement';
+export type RewardId = 'stages' | 'newTechnique' | 'xp' | 'item' | 'resistance' | 'critBonus';
 
 export interface Weighted<T> {
   id: T;
@@ -97,10 +97,9 @@ export const summonAnimals: Weighted<SummonAnimal>[] = [
 /** Roleta de recompensa após cada vilão ou bloco. A raridade define a força de cada fatia. */
 export const rewards: Weighted<RewardId>[] = [
   { id: 'stages', weight: 20 },
-  { id: 'newTechnique', weight: 20 },
+  { id: 'newTechnique', weight: 25 },
   { id: 'xp', weight: 20 },
   { id: 'item', weight: 15 },
   { id: 'resistance', weight: 10 },
   { id: 'critBonus', weight: 10 },
-  { id: 'secondaryElement', weight: 5 },
 ];

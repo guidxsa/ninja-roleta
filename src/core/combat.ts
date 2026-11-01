@@ -678,7 +678,7 @@ export function playerTechnique(
   data: GameData,
 ): TechniqueDef & { element: Element | null } {
   const tech = leveledTechnique(player, techniqueId, data);
-  const element = tech.type === 'taijutsu' ? null : tech.element === 'affinity' ? player.affinity : tech.element;
+  const element = tech.type === 'taijutsu' ? null : tech.element === 'affinity' ? (player.elements[0] ?? null) : tech.element;
   if (isIllusion(tech)) return { ...tech, element: null };
   if (!dealsDamage(tech)) return { ...tech, element, baseDamage: 0 };
   const baseDamage = tech.baseDamage + player.ninjaToolLevel * data.balance.ninjaTool.baseDamagePerLevel;

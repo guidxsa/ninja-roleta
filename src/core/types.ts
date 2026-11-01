@@ -41,10 +41,19 @@ export type PassiveKind =
 /** Ativa de linhagem (gasta ou não o turno; parâmetros em `balance`). */
 export type ActiveKind = 'gates' | 'expansion' | 'effort' | 'beast' | 'plague' | 'transmission' | 'seal';
 
-export type AffinityRule =
-  | { kind: 'rolled' }
-  | { kind: 'fixed'; element: Element }
-  | { kind: 'none' };
+/** Elementos da origem: quantos (roleta) e se algum vem fixo (docs/origens.md#sorteio). */
+export interface ElementRule {
+  /** Elemento que a origem sempre tem; é o principal. */
+  fixed?: Element;
+  /** Peso de cada quantidade total de elementos (índice = quantidade, o fixo conta). */
+  countWeights: number[];
+}
+
+/**
+ * Até onde a origem leva as linhas elementais: `full` sem teto próprio, `fixedOnly` só o elemento fixo
+ * sem teto (os outros como `partial`), `partial` até `balance.elements.partialCap`, `none` nenhum.
+ */
+export type ElementalPotential = 'full' | 'fixedOnly' | 'partial' | 'none';
 
 /** Técnica ocular ativável em batalha (parâmetros em `balance.dojutsu`). */
 export type DojutsuId = 'sharingan' | 'byakugan';
@@ -60,17 +69,18 @@ export interface LineageDef {
   /** Status iniciais absolutos (orçamento de 90 pontos com as resistências, ver docs/origens.md). */
   stats: Stats;
   resistance: Resistances;
-  affinity: AffinityRule;
+  elements: ElementRule;
+  elementalPotential: ElementalPotential;
   passive: PassiveKind;
   active?: ActiveKind;
   /** Tipos de técnica que a linhagem não pode usar nem aprender. */
   forbiddenAttackTypes?: AttackType[];
-  /** Kit inicial além do Taijutsu básico e do ninjutsu básico do elemento. */
+  /** Kit inicial além do Taijutsu básico (e do ninjutsu básico do elemento principal, no potencial pleno). */
   startingTechniques?: string[];
   dojutsu?: DojutsuId;
 }
 
-/** `'affinity'` = usa a afinidade de chakra do jogador. */
+/** `'affinity'` = usa o elemento principal do jogador. */
 export type TechniqueElement = Element | null | 'affinity';
 
 /** Efeitos que tiram a vez, atrapalham ou drenam (efeitos.md). */
@@ -273,8 +283,10 @@ export type VillainPassive =
 export interface Origin {
   /** null = comum. */
   lineageId: string | null;
-  affinity: Element | null;
+  /** Elementos dominados, o principal primeiro (vazio = nenhum). */
+  elements: Element[];
   jinchuuriki: boolean;
+
 }
 
 export type SummonAnimal = 'toad' | 'snake' | 'slug';

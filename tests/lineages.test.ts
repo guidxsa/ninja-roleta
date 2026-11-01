@@ -15,16 +15,16 @@ import {
   type BattleEvent,
   type BattleState,
 } from '../src/core/combat';
-import { createPlayer, type PlayerState } from '../src/core/player';
+import { createPlayer, learnTechnique, type PlayerState } from '../src/core/player';
 import { applyClanLesson } from '../src/core/progression';
-import type { Origin, VillainTechnique } from '../src/core/types';
+import type { Element, Origin, VillainTechnique } from '../src/core/types';
 import { gameData } from '../src/data/index';
 import { battle, seq, testVillain, withInitiative } from './helpers';
 
 const ofType = <T extends BattleEvent['type']>(log: BattleEvent[], type: T) =>
   log.filter((e): e is Extract<BattleEvent, { type: T }> => e.type === type);
 const ofRound = (prev: BattleState, next: BattleState) => next.log.slice(prev.log.length);
-const clan = (id: string | null, affinity: Origin['affinity'] = 'earth'): Origin => ({ lineageId: id, affinity, jinchuuriki: false });
+const clan = (id: string | null, element: Element | null = 'earth'): Origin => ({ lineageId: id, elements: element ? [element] : [], jinchuuriki: false });
 const at = (p: PlayerState, level: number): PlayerState => ({ ...p, level });
 const withDojutsu = (s: BattleState): BattleState => ({ ...s, playerFx: { ...s.playerFx, dojutsuActive: true, dojutsuTurns: 5 } });
 const shuriken: VillainTechnique = { id: 'giantShuriken', type: 'taijutsu', baseDamage: 11, chakraCost: 0, weight: 1 };
@@ -46,9 +46,9 @@ describe('Cópia (Uchiha)', () => {
     // 3 da Cópia e 1 da manutenção do Sharingan.
     expect(s1.player.chakra).toBe(seen.player.chakra - 3 - 1);
     expect(availableActions(s1, gameData)).toContain(`tech:${copyId}`);
-    // Usa com os próprios status: 11 + (12 + 3 do Sharingan) − 7 = 19.
+    // Usa com os próprios status: 11 + (11 + 3 do Sharingan) − 7 = 18.
     const s2 = playRound(s1, `tech:${copyId}`, seq(0.5), gameData);
-    expect(ofType(ofRound(s1, s2), 'attack').find((a) => a.side === 'player')).toMatchObject({ techniqueId: copyId, damage: 19 });
+    expect(ofType(ofRound(s1, s2), 'attack').find((a) => a.side === 'player')).toMatchObject({ techniqueId: copyId, damage: 18 });
   });
 
   it('na reação: copia a técnica que está vindo sem gastar a reação; a chance sobe com os tomoe', () => {
@@ -118,20 +118,20 @@ describe('Nara: Enforcamento por Sombra', () => {
     expect(availableActions(s0, gameData)).not.toContain('tech:shadowStrangle');
     const held = holdOn(s0);
     expect(availableActions(held, gameData)).toContain('tech:shadowStrangle');
-    // (6 + 13 − 10 × 0,4) × 1,25 = 18; a fuga (0.99) não pega.
+    // (6 + 14 − 10 × 0,4) × 1,25 = 20; a fuga (0.99) não pega.
     const s1 = playRound(held, 'tech:shadowStrangle', seq(0.99), gameData);
-    expect(ofType(s1.log, 'strangle')).toEqual([{ type: 'strangle', damage: 18 }]);
-    expect(s1.villain.hp).toBe(182);
+    expect(ofType(s1.log, 'strangle')).toEqual([{ type: 'strangle', damage: 20 }]);
+    expect(s1.villain.hp).toBe(180);
     expect(s1.player.chakra).toBe(held.player.chakra - 5);
     expect(s1.villain.fx.debilitated).toMatchObject({ source: 'shadowImitation', served: 1 });
-    // Força 2: (12 + 13 − 4) × 1,25 = 26.
-    expect(ofType(playRound(holdOn(s0, 2), 'tech:shadowStrangle', seq(0.99), gameData).log, 'strangle')[0]!.damage).toBe(26);
+    // Força 2: (12 + 14 − 4) × 1,25 = 27.
+    expect(ofType(playRound(holdOn(s0, 2), 'tech:shadowStrangle', seq(0.99), gameData).log, 'strangle')[0]!.damage).toBe(27);
   });
 
   it('no nível 7, +1 de força no Enforcamento', () => {
     const p = createPlayer(clan('nara'), gameData);
     const s7 = holdOn(withInitiative(startBattle(at(p, 7), testVillain({ hp: 200 }))));
-    expect(ofType(playRound(s7, 'tech:shadowStrangle', seq(0.99), gameData).log, 'strangle')[0]!.damage).toBe(26);
+    expect(ofType(playRound(s7, 'tech:shadowStrangle', seq(0.99), gameData).log, 'strangle')[0]!.damage).toBe(27);
   });
 });
 
@@ -165,9 +165,9 @@ describe('Akimichi: Pílulas do clã', () => {
 describe('Prodígio: forçar os portões', () => {
   it('a roleta de risco abre um portão além do liberado; falhando, abre o liberado e fere', () => {
     const p = createPlayer(clan('taijutsuProdigy', null), gameData);
-    // 50% + 3% × (17 − 21) = 38%
-    expect(forceGatesChance(p, gameData)).toBeCloseTo(0.38);
-    expect(forceGatesChance(at(p, 4), gameData)).toBeCloseTo(0.48);
+    // 50% + 3% × (18 − 21) = 41%
+    expect(forceGatesChance(p, gameData)).toBeCloseTo(0.41);
+    expect(forceGatesChance(at(p, 4), gameData)).toBeCloseTo(0.51);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 300 })));
     const ok = playRound(s0, 'stance', seq(0.0), gameData, { gates: true, forceGates: true });
     expect(ofType(ok.log, 'gatesForce')[0]).toMatchObject({ success: true, hpLost: 0 });
@@ -182,7 +182,8 @@ describe('Prodígio: forçar os portões', () => {
 
 describe('Hyuuga: Byakugan e 64 Palmas', () => {
   it('o Byakugan ignora a névoa e tira 20 do acerto do genjutsu do vilão; dura 7 rodadas no nível 4', () => {
-    const p = createPlayer(clan('hyuuga', 'water'), gameData);
+    // O Hyuuga não começa com o básico elemental: aprende para comparar o ninjutsu.
+    const p = learnTechnique(createPlayer(clan('hyuuga', 'water'), gameData), 'waterBullet', gameData);
     const mist = withInitiative(startBattle(p, testVillain({ hp: 500, passive: { kind: 'mist', turns: 4, evasionMult: 1.5 } })));
     const misty = { ...mist, villain: { ...mist.villain, mistTurns: 4 } };
     const ninjutsu = p.techniques.find((t) => gameData.techniquesById[t]!.type === 'ninjutsu' && gameData.techniquesById[t]!.baseDamage > 0)!;

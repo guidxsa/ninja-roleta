@@ -7,7 +7,7 @@ Catálogo de ações de combate: ações universais, reações, técnicas por ca
 - Cada personagem tem um **skill set por categoria**: taijutsu, ninjutsu, genjutsu e ninjutsu médico. Pode ter várias técnicas em cada uma e escolhe qual usar no turno (uma aba por categoria).
 - Aprender uma técnica **soma** ao skill set.
 - Formas de aprender: kit inicial da origem ([origens.md](origens.md)), técnicas de nível (automáticas ao atingir o nível), roleta de recompensa ("nova técnica") e, para as premium, o guru ([campanha.md](campanha.md#guru)).
-- Técnicas elementais só no próprio elemento (afinidade ou secundário).
+- Técnicas elementais só nos elementos do jogador (os do sorteio; não se aprende elemento novo na run), até o potencial elemental da origem ([origens.md](origens.md#elementos-e-potencial-elemental)).
 - O campo `lineages` restringe técnicas exclusivas.
 - Vilões usam as mesmas fichas de técnica (ver [viloes.md](viloes.md)).
 
@@ -16,6 +16,7 @@ Catálogo de ações de combate: ações universais, reações, técnicas por ca
 Toda técnica tem **níveis** (I, II, III...). Subir o nível de uma técnica a deixa mais forte e mais cara, **sem ocupar um espaço novo** no skill set. Aprender técnicas diferentes continua possível.
 
 - **Teto pelo nível do personagem**: nível I a partir do 1, II a partir do 4, III a partir do 7, IV a partir do 10 (reservado).
+- **Teto pelo potencial elemental**: nas técnicas de elemento vale também o teto da origem. No potencial **parcial**, o teto é o **II** (`balance.elementalPotential.partialCap`), e uma técnica elemental que chega num nível do personagem acima disso (a Armadura de Raio, do nível 7) não entra. No pleno, só o teto do nível vale.
 - **Linhas com nome próprio**: as técnicas elementais de ataque mudam de nome e de ficha a cada nível (ver "Ninjutsu elemental").
 - **Upgrade genérico** (técnicas sem linha própria), por nível acima do I:
 
@@ -125,7 +126,7 @@ Cada elemento tem uma **linha de ataque**: a técnica básica do kit inicial é 
 | Água | III | Maremoto do Abismo | 33 | 1 | 10 | 85% | Prioridade |
 
 - Nível IV de cada linha: reservado para o marco do nível 10.
-- A linha de um elemento secundário entra na pool da "nova técnica" no nível I (a recompensa lendária de elemento já a ensina).
+- A linha de um elemento que o jogador tem e ainda não aprendeu (o segundo e o terceiro elementos, ou o principal das origens de potencial parcial) entra na pool da "nova técnica" no nível I. O foco elemental do Treino também a ensina ([campanha.md](campanha.md#treino)).
 - Os críticos elementais continuam aplicando os efeitos de [efeitos.md](efeitos.md) (queimadura, paralisia, atordoamento).
 
 ### Barreiras
@@ -147,7 +148,7 @@ Técnicas que deixam um **elemento ativo** no corpo de quem as usa. Enquanto o e
 
 | Técnica | Elemento | Nível mínimo | Chakra | Duração | Efeito | Quem |
 |---|---|---|---|---|---|---|
-| Armadura de Raio | Raio | 7 | 8 | 3 rodadas, a partir da seguinte | Ataque de taijutsu e ninjutsu ×1,25, resistência física ×1,3, speed +2. Vento ignora o bônus de resistência. | Afinidade raio |
+| Armadura de Raio | Raio | 7 | 8 | 3 rodadas, a partir da seguinte | Ataque de taijutsu e ninjutsu ×1,25, resistência física ×1,3, speed +2. Vento ignora o bônus de resistência. | Quem tem raio com potencial pleno |
 | Armadura de Areia | Terra | — | — | Luta inteira | Ver [viloes.md](viloes.md) (Gaara). Raio perfura (×2). | Gaara |
 
 Ativar um estado gasta o turno. O manto do jinchuuriki é um estado **neutro** (não conta como encontro).
@@ -160,8 +161,11 @@ Técnicas exclusivas de uma origem (campo `lineages`), de todas as categorias. "
 |---|---|---|---|---|---|---|---|---|
 | Nara | Imitação de Sombra | Ninjutsu | Inicial | — | 1 | 5 | 80% | Aprisionado (força base 1; força e fuga pela fórmula do genjutsu, com ninjutsu contra a resistência física). Por ser ninjutsu, pega quem é imune a genjutsu |
 | Nara | Enforcamento por Sombra | Ninjutsu | Inicial | Ver abaixo | 1 | 5 | não rola | Só com o vilão preso pela Imitação de Sombra |
+| Nara | Sombra Cortante | Ninjutsu | Inicial | 10 | 1 | 3 | 85% | — |
+| Akimichi | Mão Expandida | Taijutsu | Inicial | 10 | 1 | 2 | 85% | O Corpo pesado multiplica, como em todo taijutsu |
 | Akimichi | Rolo Colossal | Taijutsu | 4 | 20 | 1 | 6 | 80% | 20% de atordoar no acerto |
 | Yamanaka | Transferência de Mente | Genjutsu | Inicial | — | — | 4 | — | Possessão: o vilão perde a vez golpeando a si mesmo (força base 1, poder +2; ver [efeitos.md](efeitos.md#efeitos-de-genjutsu)) |
+| Yamanaka | Pétalas Ilusórias | Genjutsu | Inicial | — | — | 3 | — | Confusão (força base 1, poder 0) |
 | Aburame | Enxame | Ninjutsu | Inicial | 1 fixo | 2 | 5 | 85% | Cada golpe que acerta prende 1 inseto (Colônia) |
 | Aburame | Enxame Voraz (Enxame II) | Ninjutsu | Upgrade | 1 fixo | 4 | 6 | 85% | Idem |
 | Aburame | Nuvem de Insetos (Enxame III) | Ninjutsu | Upgrade | 1 fixo | 6 | 7 | 85% | Idem |
@@ -175,6 +179,7 @@ Técnicas exclusivas de uma origem (campo `lineages`), de todas as categorias. "
 | Hyuuga | Selo dos Pontos Vitais | Taijutsu | Inicial, só com o Byakugan | 6 | 1 | 0 | não erra | Drena 6 de chakra do alvo |
 | Hyuuga | Rotação | Ninjutsu (barreira) | 4 | — | — | 5 | — | Escudo de 26 que devolve 50% do dano que bloqueia (ação de turno) |
 | Hyuuga | 64 Palmas | Taijutsu | 7, só com o Byakugan | 6 | 4 | 8 | não erra | Cada golpe que acerta drena 3 de chakra do alvo |
+| Uzumaki | Etiqueta Explosiva | Ninjutsu | Inicial | 12 | 1 | 3 | 85% | Selo neutro, penetração 50% |
 | Uzumaki | Correntes de Chakra | Ninjutsu | 4 | — | 1 | 6 | 80% | Aprisionado (força base 1, como a Imitação de Sombra); o vilão preso perde 3 de chakra a cada vez perdida |
 
 - **Enforcamento por Sombra**: gasta o turno, não rola acerto e não tem crítico. Dano = **força do controle × 6 + ninjutsu − resistência física passiva do vilão** (ele perdeu a vez), × a vulnerabilidade de quem está controlado. Não solta o vilão: a roleta de fuga dele gira normalmente ([efeitos.md](efeitos.md#duração-dos-efeitos-mentais)). A força é a da Imitação de Sombra que prendeu (+1 no nível 4); no nível 7, o dano soma +1 de força ([origens.md](origens.md#despertar)).

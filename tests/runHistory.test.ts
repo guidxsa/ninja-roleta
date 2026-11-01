@@ -8,6 +8,7 @@ import {
   updateRun,
   type KeyValueStorage,
 } from '../src/state/runHistory';
+import type { Origin } from '../src/core/types';
 
 function memoryStorage(): KeyValueStorage & { data: Map<string, string> } {
   const data = new Map<string, string>();
@@ -18,10 +19,26 @@ function memoryStorage(): KeyValueStorage & { data: Map<string, string> } {
   };
 }
 
-const origin = { lineageId: null, affinity: 'fire' as const, jinchuuriki: false };
+const origin: Origin = { lineageId: null, elements: ['fire'], jinchuuriki: false };
 const now = new Date('2026-10-21T12:00:00Z');
 
 describe('histórico de runs', () => {
+  it('registro de antes da v0.30 (afinidade única) vira lista de elementos', () => {
+    const st = memoryStorage();
+    const old = { id: 'x', startedAt: '', updatedAt: '', status: 'defeat', furthestStage: 1, revivesUsed: 0 };
+    st.setItem(
+      RUNS_STORAGE_KEY,
+      JSON.stringify([
+        { ...old, origin: { lineageId: 'nara', affinity: 'water', jinchuuriki: false } },
+        { ...old, id: 'y', origin: { lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false } },
+      ]),
+    );
+    expect(loadRuns(st).map((r) => r.origin)).toEqual([
+      { lineageId: 'nara', elements: ['water'], jinchuuriki: false },
+      { lineageId: 'taijutsuProdigy', elements: [], jinchuuriki: false },
+    ]);
+  });
+
   it('guarda a seed da run quando há uma', () => {
     const st = memoryStorage();
     startRun(st, { id: 'a', origin, now, seed: 42 }, 100);

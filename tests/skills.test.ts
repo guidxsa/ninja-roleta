@@ -25,18 +25,18 @@ import {
 } from '../src/core/combat';
 import { applyLevelUp, createPlayer, gainXp, learnTechnique, upgradeTechnique, type PlayerState } from '../src/core/player';
 import { applyPremium, chooseUpgrade, learnableTechniques, levelUp } from '../src/core/progression';
-import type { Origin, VillainPassive } from '../src/core/types';
+import type { Element, Origin, VillainPassive } from '../src/core/types';
 import { gameData } from '../src/data/index';
 import { levelTechniques, lineageTechniques, lineTechniques, premiumTechniques, techniquesById } from '../src/data/techniques';
 import { villainsById } from '../src/data/villains';
 import { battle, hold, seq, testVillain, withInitiative } from './helpers';
 const at = (p: PlayerState, level: number): PlayerState => ({ ...p, level });
 
-const common: Origin = { lineageId: null, affinity: 'fire', jinchuuriki: false };
-const uchiha: Origin = { lineageId: 'uchiha', affinity: 'fire', jinchuuriki: false };
-const hyuuga: Origin = { lineageId: 'hyuuga', affinity: 'water', jinchuuriki: false };
-const prodigy: Origin = { lineageId: 'taijutsuProdigy', affinity: null, jinchuuriki: false };
-const clan = (id: string, affinity: Origin['affinity'] = 'earth'): Origin => ({ lineageId: id, affinity, jinchuuriki: false });
+const common: Origin = { lineageId: null, elements: ['fire'], jinchuuriki: false };
+const uchiha: Origin = { lineageId: 'uchiha', elements: ['fire'], jinchuuriki: false };
+const hyuuga: Origin = { lineageId: 'hyuuga', elements: ['water'], jinchuuriki: false };
+const prodigy: Origin = { lineageId: 'taijutsuProdigy', elements: [], jinchuuriki: false };
+const clan = (id: string, element: Element | null = 'earth'): Origin => ({ lineageId: id, elements: element ? [element] : [], jinchuuriki: false });
 
 const ofType = <T extends BattleEvent['type']>(log: BattleEvent[], type: T) =>
   log.filter((e): e is Extract<BattleEvent, { type: T }> => e.type === type);
@@ -177,14 +177,14 @@ describe('ficha de técnica', () => {
   });
 
   it('precisão: cada técnica tem a sua (Faísca 80%, Punho de Rocha 95%)', () => {
-    const hit = (affinity: Origin['affinity'], id: string) =>
-      ofType(playRound(withInitiative(startBattle(createPlayer({ lineageId: null, affinity, jinchuuriki: false }, gameData), testVillain({ hp: 200 }))), `tech:${id}`, seq(0.5), gameData).log, 'attack')[0]!.hitChance;
+    const hit = (element: Element, id: string) =>
+      ofType(playRound(withInitiative(startBattle(createPlayer({ lineageId: null, elements: [element], jinchuuriki: false }, gameData), testVillain({ hp: 200 }))), `tech:${id}`, seq(0.5), gameData).log, 'attack')[0]!.hitChance;
     expect(hit('lightning', 'spark')).toBeCloseTo(0.8);
     expect(hit('earth', 'rockFist')).toBeCloseTo(0.95);
   });
 
   it('penetração: a técnica ignora parte da resistência; o sapo não dá mais penetração', () => {
-    const p = createPlayer({ lineageId: null, affinity: 'lightning', jinchuuriki: false }, gameData);
+    const p = createPlayer({ lineageId: null, elements: ['lightning'], jinchuuriki: false }, gameData);
     const v = testVillain({ hp: 200 });
     const dmg = (pl: PlayerState) => ofType(playRound(withInitiative(startBattle(pl, v)), 'tech:spark', seq(0.5), gameData).log, 'attack')[0]!.damage;
     // Faísca: 13 + 10 − 10 × 0,7 × 0,9 = 16
@@ -206,7 +206,7 @@ describe('ficha de técnica', () => {
   });
 
   it('efeito no acerto: Muralha Esmagadora tem 15% de atordoar', () => {
-    const earth = toLevel(createPlayer({ lineageId: null, affinity: 'earth', jinchuuriki: false }, gameData), 4);
+    const earth = toLevel(createPlayer({ lineageId: null, elements: ['earth'], jinchuuriki: false }, gameData), 4);
     const p = upgradeTechnique(earth, 'rockFist', gameData);
     const s1 = playRound(withInitiative(startBattle(p, testVillain({ hp: 200 }))), 'tech:earthSpear', seq(0.5, 0.0, 0.5), gameData);
     expect(ofType(s1.log, 'status')).toEqual([{ type: 'status', target: 'villain', kind: 'stun', turns: 2 }]);
@@ -215,7 +215,7 @@ describe('ficha de técnica', () => {
   });
 
   it('prioridade: Torrente Serpente age antes mesmo sem a iniciativa', () => {
-    const water = toLevel(createPlayer({ lineageId: null, affinity: 'water', jinchuuriki: false }, gameData), 4);
+    const water = toLevel(createPlayer({ lineageId: null, elements: ['water'], jinchuuriki: false }, gameData), 4);
     const p = upgradeTechnique(water, 'waterBullet', gameData);
     const s1 = playRound(withInitiative(startBattle(p, testVillain({ hp: 200 })), 'villain'), 'tech:waterShark', seq(0.5), gameData);
     expect(ofType(s1.log, 'priority')).toHaveLength(1);
@@ -227,15 +227,15 @@ describe('ficha de técnica', () => {
     const taken = (p: PlayerState) =>
       ofType(playRound(withInitiative(startBattle(p, ninjutsuVillain), 'villain'), 'rest', seq(0.5), gameData).log, 'attack')[0]!.damage;
     // comum: 20 − 10 × 0,7 = 13, com qualquer ninjutsu
-    const c = createPlayer({ lineageId: null, affinity: 'earth', jinchuuriki: false }, gameData);
+    const c = createPlayer({ lineageId: null, elements: ['earth'], jinchuuriki: false }, gameData);
     expect(taken(c)).toBe(13);
     expect(taken({ ...c, offense: { ...c.offense, ninjutsu: 0 } })).toBe(13);
-    // Corpo de ferro (prodígio) não vale contra ninjutsu: 20 − 11 × 0,7 = 12
-    expect(taken(createPlayer(prodigy, gameData))).toBe(12);
-    // Contra taijutsu, Resistir usa 100% da física: 20 − 11 = 9
+    // Corpo de ferro (prodígio) não vale contra ninjutsu: 20 − 12 × 0,7 = 11
+    expect(taken(createPlayer(prodigy, gameData))).toBe(11);
+    // Contra taijutsu, Resistir usa 100% da física: 20 − 12 = 8
     const taijutsuVillain = testVillain({ techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 20, chakraCost: 0, weight: 1 }] });
     const s = playRound(withInitiative(startBattle(createPlayer(prodigy, gameData), taijutsuVillain), 'villain'), 'rest', seq(0.5), gameData);
-    expect(ofType(s.log, 'attack')[0]!.damage).toBe(9);
+    expect(ofType(s.log, 'attack')[0]!.damage).toBe(8);
   });
 });
 
@@ -361,12 +361,12 @@ describe('efeitos de genjutsu', () => {
 
   it('Ilusão da Dor (Uchiha): fere com genjutsu contra a resistência mental, sem reação além de Resistir', () => {
     const s0 = withInitiative(startBattle(createPlayer(uchiha, gameData), testVillain({ hp: 200 })));
-    expect(illusionDamage(s0, 'painIllusion', gameData)).toBe(20); // 15 + 12 − 10 × 0,7
+    expect(illusionDamage(s0, 'painIllusion', gameData)).toBe(21); // 15 + 13 − 10 × 0,7
     const s1 = playRound(s0, 'tech:painIllusion', seq(0.9), gameData);
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', techniqueId: 'painIllusion', damage: 20, outcome: 'hit' });
-    expect(s1.villain.hp).toBe(180);
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', techniqueId: 'painIllusion', damage: 21, outcome: 'hit' });
+    expect(s1.villain.hp).toBe(179);
     // Com o Sharingan: +3 de genjutsu e +3 de poder.
-    expect(illusionDamage(active(s0), 'painIllusion', gameData)).toBe(26);
+    expect(illusionDamage(active(s0), 'painIllusion', gameData)).toBe(27);
     // Contra imune a genjutsu (Gaara), não pega.
     const gaara = withInitiative(startBattle(createPlayer(uchiha, gameData), testVillain({ passive: villainsById.gaara!.passive })));
     expect(ofType(playRound(gaara, 'tech:painIllusion', seq(0.9), gameData).log, 'genjutsuImmune')).toHaveLength(1);
@@ -377,8 +377,8 @@ describe('efeitos de genjutsu', () => {
     const s0 = withInitiative(startBattle(createPlayer(clan('nara'), gameData), gaara));
     expect(playerGenjutsuHitChance(s0, gameData, 'shadowImitation')).toBeCloseTo(0.8);
     const s1 = playRound(s0, 'tech:shadowImitation', seq(0.5), gameData);
-    // ninjutsu 13 contra a resistência física usada (5 × 0,7 = 3,5): força 1 + 9,5 / 8
-    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', kind: 'prison', escape: mentalEscapeChance(1 + 9.5 / 8, 1, gameData) }]);
+    // ninjutsu 14 contra a resistência física usada (5 × 0,7 = 3,5): força 1 + 10,5 / 8
+    expect(ofType(s1.log, 'debilitate')).toEqual([{ type: 'debilitate', target: 'villain', kind: 'prison', escape: mentalEscapeChance(1 + 10.5 / 8, 1, gameData) }]);
   });
 });
 
@@ -400,10 +400,10 @@ describe('Sharingan (Uchiha)', () => {
     expect(ofType(s1.log, 'stance')).toHaveLength(1);
     expect(s1.playerFx.dojutsuActive).toBe(true);
     expect(s1.playerFx.dojutsuTurns).toBe(5); // a contagem começa na rodada seguinte
-    expect(s1.player.chakra).toBe(26 - 4 - 1); // ativação + manutenção
-    expect(effectiveOffense(s1, 'taijutsu', gameData)).toBe(12 + 3);
+    expect(s1.player.chakra).toBe(28 - 4 - 1); // ativação + manutenção
+    expect(effectiveOffense(s1, 'taijutsu', gameData)).toBe(11 + 3);
     expect(canDojutsuExtra(s1, 'stance', gameData)).toBe(false);
-    // O ataque maior não dá defesa: 10 − 10 (postura, resistência física do Uchiha) = 0 → mínimo 1.
+    // O ataque maior não dá defesa: 10 − 9 (postura, resistência física do Uchiha) = 1.
     expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'villain', damage: 1 });
   });
 
@@ -452,8 +452,8 @@ describe('Sharingan (Uchiha)', () => {
         .hitChance;
     // A defesa é a resistência mental resistindo (70%).
     expect(chance(common)).toBeCloseTo(0.86); // 0.6 + (20 − 7) × 0.02
-    expect(chance(uchiha)).toBeCloseTo(0.74); // 0.6 + (20 − (7 + 6)) × 0.02
-    expect(chance(clan('yamanaka'))).toBeCloseTo(0.704); // 0.6 + (20 − 9,8) × 0.02 − 0.1
+    expect(chance(uchiha)).toBeCloseTo(0.726); // 0.6 + (20 − (7,7 + 6)) × 0.02
+    expect(chance(clan('yamanaka'))).toBeCloseTo(0.69); // 0.6 + (20 − 10,5) × 0.02 − 0.1
   });
 });
 
@@ -462,12 +462,12 @@ describe('Byakugan e Rotação (Hyuuga)', () => {
     const s0 = startBattle(createPlayer(hyuuga, gameData), testVillain({ hp: 200 }), { playerStartsFirst: true });
     expect(ofType(playRound(s0, 'tech:basicTaijutsu', seq(0.01), gameData).log, 'attack')[0]).toMatchObject({ outcome: 'miss' });
     const s1 = playRound(active(s0), 'tech:basicTaijutsu', seq(0.01), gameData);
-    // (8 + 16 − 10 × 0,7 × 0,7) × 1,1 = 21
-    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ outcome: 'hit', hitChance: 1, damage: 21 });
+    // (8 + 15 − 10 × 0,7 × 0,7) × 1,1 = 19
+    expect(ofType(s1.log, 'attack')[0]).toMatchObject({ outcome: 'hit', hitChance: 1, damage: 19 });
   });
 
   it('ativo, o ninjutsu continua podendo errar', () => {
-    const s0 = startBattle(createPlayer(hyuuga, gameData), testVillain({ hp: 200 }), { playerStartsFirst: true });
+    const s0 = startBattle(learnTechnique(createPlayer(hyuuga, gameData), 'waterBullet', gameData), testVillain({ hp: 200 }), { playerStartsFirst: true });
     expect(ofType(playRound(active(s0), 'tech:waterBullet', seq(0.01), gameData).log, 'attack')[0]).toMatchObject({ outcome: 'miss' });
   });
 
@@ -486,7 +486,7 @@ describe('Byakugan e Rotação (Hyuuga)', () => {
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.01), gameData, { dojutsu: true });
     expect(ofType(s1.log, 'dojutsu')).toEqual([{ type: 'dojutsu', dojutsu: 'byakugan', stage: 0, chakra: 3 }]);
     expect(ofType(s1.log, 'attack')[0]).toMatchObject({ side: 'player', outcome: 'hit', hitChance: 1 });
-    expect(s1.player.chakra).toBe(27 - 3 - 1);
+    expect(s1.player.chakra).toBe(28 - 3 - 1);
   });
 
   it('Rotação: barreira neutra; o escudo absorve e devolve metade do dano bloqueado', () => {
@@ -643,7 +643,7 @@ describe('passivas e ativas de clã', () => {
     expect(ofType(plain.log, 'attack').filter((a) => a.techniqueId === DOG_ATTACK)).toHaveLength(0);
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { beast: true });
     expect(ofType(s1.log, 'attack').filter((a) => a.techniqueId === DOG_ATTACK)).toHaveLength(1);
-    expect(effectiveSpeed(s1, gameData)).toBe(16);
+    expect(effectiveSpeed(s1, gameData)).toBe(17);
     expect(s1.playerFx.beastTurns).toBe(2);
     // Isca: o vilão ataca primeiro e a Substituição só custa chakra.
     const first = withInitiative(startBattle(p, testVillain()), 'villain');
@@ -667,20 +667,20 @@ describe('passivas e ativas de clã', () => {
 
   it('Devorar (Aburame): % do HP máximo por inseto pela razão ninjutsu ÷ resistência física; 1 ck a cada 2 insetos', () => {
     const p = createPlayer(clan('aburame'), gameData);
-    // Ninjutsu 12 ÷ resistência 10 = 1,2: 2% por inseto. 5 insetos × 2% × 200 = 20; custa 3; não drena chakra.
+    // Ninjutsu 13 ÷ resistência 10 = 1,3: 2,5% por inseto. 5 insetos × 2,5% × 200 = 25; custa 3; não drena chakra.
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
     const five = { ...s0, villain: { ...s0.villain, insects: 5 } };
     expect(availableActions(five, gameData)).toContain('tech:insectDevour');
     const s1 = playRound(five, 'tech:insectDevour', seq(0.5), gameData);
-    expect(ofType(s1.log, 'devour')).toEqual([{ type: 'devour', insects: 5, pct: 0.02, damage: 20 }]);
-    expect([s1.villain.insects, s1.villain.chakra, s1.villain.hp]).toEqual([0, 20, 180]);
+    expect(ofType(s1.log, 'devour')).toEqual([{ type: 'devour', insects: 5, pct: 0.025, damage: 25 }]);
+    expect([s1.villain.insects, s1.villain.chakra, s1.villain.hp]).toEqual([0, 20, 175]);
     expect(s1.player.chakra).toBe(p.maxChakra - 3);
-    // Degraus: resistência 8 (1,5) → 3%; 13 (0,92) → 1,5%; 20 (0,6) → 1%.
+    // Degraus: resistência 8 (1,6) → 3%; 13 (1) → 2%; 20 (0,65) → 1%.
     const pctAt = (physical: number, level = 1) => {
       const s = withInitiative(startBattle(at(p, level), testVillain({ hp: 200, resistance: { physical, mental: 10 } })));
       return devourPreview({ ...s, villain: { ...s.villain, insects: 10 } }, gameData);
     };
-    expect([8, 13, 20].map((r) => pctAt(r).damage)).toEqual([60, 30, 20]);
+    expect([8, 13, 20].map((r) => pctAt(r).damage)).toEqual([60, 40, 20]);
     // Nível 7: +0,5% por inseto.
     expect(pctAt(8, 7).damage).toBe(70);
   });

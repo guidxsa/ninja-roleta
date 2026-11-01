@@ -234,7 +234,7 @@ Ciclo de vantagem: **fogo > vento > raio > terra > água > fogo**. Taijutsu e t�
 
 Futuro: estado **Molhado** (acertos de água) que deixa o alvo vulnerável a raio.
 
-- Técnicas elementais só podem ser aprendidas no próprio elemento (afinidade ou elemento secundário).
+- Técnicas elementais só podem ser aprendidas nos elementos do jogador, até o potencial elemental da origem ([origens.md](origens.md#elementos-e-potencial-elemental)).
 - Os críticos elementais continuam aplicando os efeitos de [efeitos.md](efeitos.md) (queimadura, paralisia, atordoamento).
 - Na tela, todo ataque e toda intenção do vilão mostram o **ícone e a cor do elemento**.
 

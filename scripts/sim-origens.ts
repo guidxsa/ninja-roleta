@@ -2,10 +2,11 @@
 // Mede como cada linhagem atravessa a campanha completa, com eventos e recompensas automáticos.
 // `--bare` simula sem eventos nem recompensas (só XP e nível).
 import type { Difficulty } from '../src/core/difficulty';
-import { COMMON_LINEAGE } from '../src/core/origin';
+import { COMMON_LINEAGE, rollElements } from '../src/core/origin';
+
 import { createPlayer } from '../src/core/player';
 import { createRng } from '../src/core/rng';
-import type { Element, Origin } from '../src/core/types';
+import type { Origin } from '../src/core/types';
 import { campaign } from '../src/data/campaign';
 import { gameData } from '../src/data/index';
 import { ptBR } from '../src/data/strings/ptBR';
@@ -21,15 +22,15 @@ function arg(name: string, fallback: number): number {
 const runs = arg('runs', 300);
 const rng = createRng(arg('seed', 1));
 const progression = !process.argv.includes('--bare');
-const elements = Object.keys(gameData.elementWeights) as Element[];
 
 // Uma linha por origem dos dados (a roleta inteira), com o peso dela.
 const totalWeight = gameData.lineages.reduce((a, l) => a + l.weight, 0);
 const origins = gameData.lineages.map((l) => ({
   label: `${ptBR.lineages[l.id] ?? l.id} (${Math.round((l.weight / totalWeight) * 100)}%)`,
-  make: (i: number): Origin => ({
+  make: (): Origin => ({
     lineageId: l.id === COMMON_LINEAGE ? null : l.id,
-    affinity: l.affinity.kind === 'fixed' ? l.affinity.element : l.affinity.kind === 'none' ? null : elements[i % 5]!,
+    // Elementos pela roleta da origem (quantidade e quais), como no jogo.
+    elements: rollElements(l, rng, gameData).elements,
     jinchuuriki: false,
   }),
 }));
@@ -46,7 +47,7 @@ for (const o of origins) {
     let wins = 0;
     const stops = new Map<string, number>();
     for (let i = 0; i < runs; i++) {
-      const r = runCampaign(createPlayer(o.make(i), gameData, d), campaign, villainsById, rng, gameData, d, { progression });
+      const r = runCampaign(createPlayer(o.make(), gameData, d), campaign, villainsById, rng, gameData, d, { progression });
       if (r.won) wins++;
       else stops.set(r.villainReached!, (stops.get(r.villainReached!) ?? 0) + 1);
     }
