@@ -81,7 +81,7 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 | Yamanaka | Leitura mental, Mente no controle | Transmissão mental | Taijutsu básico, Transferência de Mente, Pétalas Ilusórias | Transferência de Mente, Pétalas Ilusórias | — |
 | Aburame | Colônia | Praga | Taijutsu básico, Enxame, Devorar | Enxame, Devorar | — |
 | Inuzuka | Dupla | Fera de quatro patas | Taijutsu básico, Presas Giratórias | Presas Giratórias | — |
-| Prodígio do taijutsu | Corpo de ferro | Portões (com Forçar), Punho Bêbado (nível 4) | Taijutsu básico, Folha Furacão | Folha Furacão, Lótus Primária (4), Lótus Oculta (7) | Sem ninjutsu, genjutsu e médico |
+| Prodígio do taijutsu | Juventude | Portões (com Forçar), Punho Bêbado (nível 4) | Taijutsu básico, Folha Furacão | Folha Furacão, Lótus Primária (4), Lótus Oculta (7) | Sem ninjutsu, genjutsu e médico |
 | Uchiha | Olhos treinados | Sharingan, Cópia | Taijutsu básico, Fagulha do Dragão, Olhar Hipnótico, Ilusão da Dor | Ilusões de dano, Tsukuyomi (nível 7) | — |
 | Hyuuga | Punho preciso | Byakugan | Taijutsu básico, Selo dos Pontos Vitais (só com o Byakugan) | Selo dos Pontos Vitais, Rotação (nível 4), 64 Palmas (nível 7) | — |
 | Uzumaki | Vitalidade | Selamento | Taijutsu básico, Etiqueta Explosiva | Etiqueta Explosiva, Correntes de Chakra (nível 4) | — |
@@ -163,7 +163,8 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 
 ### Prodígio do taijutsu (estilo Lee)
 
-- **Corpo de ferro** (passiva): contra **taijutsu**, a reação Resistir usa 100% da resistência física (como em postura defensiva). Contra ninjutsu, Resistir normal (70%).
+- **Juventude** (passiva): **+5% de chance de crítico**, sempre.
+- **Taijutsu concentrado**: o taijutsu do prodígio cresce pela **metade**. Ganhos de 2 ou mais arredondam para cima (destaque do Treino +3 → +2; Lição do clã +2 → +1); os estágios de status (+1) dão **+1 de taijutsu a cada 2 estágios**; na roleta de destaque do Treino, o taijutsu pesa metade do valor.
 - **Portões** (ativa): uma vez por luta (2 no nível 7). Abrir é uma **escolha grátis** (não gasta o turno); o bônus vale por 3 rodadas, contando a da abertura. Abre o maior portão liberado pelo taijutsu atual. Custa chakra e HP (nunca abaixo de 1).
 
   | Portão | Taijutsu mínimo | Dano de taijutsu | Chakra | HP |
@@ -176,7 +177,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 - **Forçar os portões**: junto com a abertura, o jogador pode tentar abrir **um portão além do liberado**, numa roleta de risco. Chance = **50% + 3% por ponto de taijutsu acima do mínimo do portão forçado** (abaixo dele, a chance cai), entre 20% e 80% (+10% no nível 4). Abriu: paga o custo do portão forçado. Falhou: abre o liberado e perde mais **10% do HP máximo**.
 
 - **Kit**: Folha Furacão (nível 1); **Lótus Primária** (nível 4, só com um portão aberto) e **Lótus Oculta** (nível 7, só com o 3º portão ou acima). Fichas em [tecnicas.md](tecnicas.md#técnicas-de-linhagem).
-- **Punho Bêbado** (ativa, a partir do nível 4): escolha grátis, sem chakra, **1 vez por luta**. Por 3 rodadas, contando a da ativação, cada golpe de taijutsu que acerta gira uma roleta de dano (**×0,5, ×1, ×1,5 ou ×2**, pesos iguais) e a **Substituição não custa chakra**.
+- **Punho Bêbado** (ativa, a partir do nível 4): escolha grátis, sem chakra, **1 vez por luta**. Por 3 rodadas, contando a da ativação, cada golpe de taijutsu que acerta gira uma roleta de dano (**×0,5, ×1 ou ×1,5**, pesos iguais), mas os golpes de taijutsu têm **−10 de acerto**.
 - Nunca aprende ninjutsu, genjutsu ou ninjutsu médico; a roleta de recompensas é filtrada.
 - Sem ninjutsu, não disputa nem ergue barreiras. Responde a ninjutsu com Resistir ou Substituição; contra escudos, o taijutsu é neutro ([fundamentos.md](fundamentos.md#escudos)).
 

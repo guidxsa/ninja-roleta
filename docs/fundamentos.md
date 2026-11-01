@@ -40,7 +40,6 @@ A resistência total (física ou mental) é usada numa fração que depende da s
 
 Configuração: `combat.resistance: { passive: 0.4, resist: 0.7, stance: 1.0 }`.
 
-O Corpo de ferro (prodígio do taijutsu) faz Resistir usar 100% da física, mas só contra taijutsu ([origens.md](origens.md#prodígio-do-taijutsu-estilo-lee)).
 
 ## Restauração
 

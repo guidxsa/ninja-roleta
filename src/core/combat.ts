@@ -1289,15 +1289,14 @@ export function guardFraction(
   s: BattleState,
   side: Side,
   guard: Guard,
-  kind: ResistanceKind,
+  _kind: ResistanceKind,
   data: GameData,
-  attackType?: AttackType,
+  _attackType?: AttackType,
 ): number {
   const cfg = data.balance.resistance;
   if (guard === 'passive') return cfg.passive;
   if (side === 'player') {
     if (s.playerFx.stance) return cfg.stance;
-    if (kind === 'physical' && attackType === 'taijutsu' && s.player.passive === 'ironBody') return cfg.stance;
   }
   return cfg.resist;
 }
@@ -1487,7 +1486,8 @@ export interface AttackPreview {
 /** Chance de acerto do jogador: precisão − atordoamento; névoa aumenta o erro; Byakugan: taijutsu não erra. */
 function playerHitChance(s: BattleState, tech: CombatTech, data: GameData): number {
   if (tech.type === 'taijutsu' && byakuganActive(s)) return 1;
-  let hit = hitChance(tech.accuracy, -stunPenalty(s.playerFx, data), data.balance.hit);
+  const drunk = s.playerFx.drunkenTurns > 0 && tech.type === 'taijutsu' ? data.balance.drunkenFist.hitPenalty : 0;
+  let hit = hitChance(tech.accuracy, -stunPenalty(s.playerFx, data) - drunk, data.balance.hit);
   const passive = s.villain.def.passive;
   // O Byakugan enxerga através da névoa.
   if (passive?.kind === 'mist' && s.villain.mistTurns > 0 && !byakuganActive(s)) hit = 1 - (1 - hit) * passive.evasionMult;
@@ -1646,9 +1646,9 @@ function reservedChakra(s: BattleState, side: Side, data: GameData): number {
   return actionCost(s, plan.action, data);
 }
 
-/** Chakra da Substituição (grátis no Punho Bêbado). */
-function substitutionCost(s: BattleState, side: Side, data: GameData): number {
-  return side === 'player' && s.playerFx.drunkenTurns > 0 ? 0 : data.balance.substitution.chakraCost;
+/** Chakra da Substituição. */
+function substitutionCost(_s: BattleState, _side: Side, data: GameData): number {
+  return data.balance.substitution.chakraCost;
 }
 
 function canSubstitute(s: BattleState, side: Side, data: GameData): boolean {
@@ -2183,8 +2183,8 @@ function villainDown(s: BattleState): void {
   if (passive?.kind === 'trickster' && !v.tricksterUsed) {
     v.tricksterUsed = true;
     v.hp = 1;
+    // Sobrevive com 1 de HP e segue lutando (no hardcore, o próximo ataque é crítico garantido).
     if (passive.counterCrit) v.fx.guaranteedCrit = true;
-    else v.cowering = true;
     s.log.push({ type: 'trickster', counterCrit: Boolean(passive.counterCrit) });
     return;
   }

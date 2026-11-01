@@ -1085,7 +1085,7 @@ async function eventScreen(stage: Stage): Promise<void> {
         break;
       }
       // A roleta escolhe o status em destaque (pesos = os próprios status).
-      const out = rollTraining(c.player, rng);
+      const out = rollTraining(c.player, rng, data);
       await bigWheel(slot, S.roulettes.training, rollSlices(out, (id) => S.trainingStats[id] ?? id), out.index);
       step = applyTraining(c.player, out.value, data);
       break;

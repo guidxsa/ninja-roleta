@@ -27,6 +27,7 @@ import {
   applyReward,
   applySimpleEvent,
   applySummonEncounter,
+  applyClanLesson,
   applyTraining,
   applyTrainingFocus,
   trainingFocusOptions,
@@ -108,9 +109,18 @@ describe('estágios de status', () => {
     expect([hard.maxHp, hard.maxChakra]).toEqual([106, 31]);
   });
 
-  it('prodígio do taijutsu: ninjutsu e genjutsu continuam zerados', () => {
-    const up = applyStatStages(createPlayer(prodigy, gameData), 1, gameData);
-    expect(up.offense).toEqual({ taijutsu: 19, ninjutsu: 0, genjutsu: 0 });
+  it('prodígio do taijutsu: ninjutsu e genjutsu continuam zerados; taijutsu +1 a cada 2 estágios', () => {
+    const one = applyStatStages(createPlayer(prodigy, gameData), 1, gameData);
+    expect(one.offense).toEqual({ taijutsu: 18, ninjutsu: 0, genjutsu: 0 });
+    expect(applyStatStages(one, 1, gameData).offense.taijutsu).toBe(19);
+    expect(applyStatStages(createPlayer(prodigy, gameData), 2, gameData).offense.taijutsu).toBe(19);
+  });
+
+  it('prodígio: Treino em taijutsu +2 (metade de 3, para cima) e o taijutsu pesa metade na roleta', () => {
+    const lee = createPlayer(prodigy, gameData);
+    expect(applyTraining(lee, 'taijutsu', gameData).player.offense.taijutsu).toBe(20);
+    expect(trainingPool(lee, gameData).find((w) => w.id === 'taijutsu')!.weight).toBe(9);
+    expect(applyClanLesson(lee, gameData).player.offense.taijutsu).toBe(19);
   });
 });
 

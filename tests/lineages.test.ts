@@ -430,13 +430,14 @@ describe('Prodígio: Folha Furacão, Lótus com portões e Punho Bêbado', () =>
     expect(availableActions(open3, gameData)).toContain('tech:hiddenLotus');
   });
 
-  it('Punho Bêbado (nível 4): grátis, 1×/luta, roleta de dano nos golpes e Substituição sem chakra', () => {
+  it('Punho Bêbado (nível 4): grátis, 1×/luta, roleta de dano ×0,5/×1/×1,5 e −10 de acerto', () => {
     expect(freeActiveCost(withInitiative(startBattle(prodigy(1), testVillain())), 'drunkenFist', gameData)).toBeNull();
     const s0 = withInitiative(startBattle(prodigy(4), testVillain({ hp: 300 })));
     expect(freeActiveCost(s0, 'drunkenFist', gameData)).toBe(0);
-    // 0.99 na roleta: ×2.
+    // 0.99 na roleta: ×1,5.
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5, 0.99), gameData, { drunkenFist: true });
-    expect(ofType(s1.log, 'drunkenRoll')).toEqual([{ type: 'drunkenRoll', mult: 2 }]);
+    expect(ofType(s1.log, 'drunkenRoll')).toEqual([{ type: 'drunkenRoll', mult: 1.5 }]);
+    expect(ofType(s1.log, 'attack')[0]!.hitChance).toBeCloseTo(0.8); // 90% − 10
     expect(s1.playerFx.drunkenTurns).toBe(2);
     expect(freeActiveCost(s1, 'drunkenFist', gameData)).toBeNull();
   });

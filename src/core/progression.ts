@@ -3,7 +3,7 @@
 import type { AkatsukiOutcome, GuruOutcome, ItemId, PremiumId, RewardId, Weighted } from '../data/events';
 import type { ClanLessonBonus } from '../data/balance';
 import type { GameData } from './gameData';
-import { COMMON_LINEAGE } from './origin';
+import { COMMON_LINEAGE, lineageOf } from './origin';
 import {
   applyLevelUp,
   applyStatStages,
@@ -15,6 +15,7 @@ import {
   learnTechnique,
   lineageAllows,
   techniqueLevel,
+  taijutsuGain,
   techniqueTier,
   upgradableTechniques,
   upgradeTechnique,
@@ -121,25 +122,28 @@ export function applySimpleEvent(player: PlayerState, id: SimpleEventId): Step {
 export type TrainingStat = 'taijutsu' | 'ninjutsu' | 'genjutsu' | 'physical' | 'mental' | 'speed';
 export const TRAINING_STATS: readonly TrainingStat[] = ['taijutsu', 'ninjutsu', 'genjutsu', 'physical', 'mental', 'speed'];
 
-function trainingValue(player: PlayerState, stat: TrainingStat): number {
+function trainingValue(player: PlayerState, stat: TrainingStat, data?: GameData): number {
   if (stat === 'speed') return player.speed;
   if (stat === 'physical' || stat === 'mental') return player.resistance[stat];
+  // Prodígio: o taijutsu pesa pelo crescimento reduzido (metade).
+  if (stat === 'taijutsu' && data) return Math.round(player.offense.taijutsu * (lineageOf(player.origin.lineageId, data).taijutsuGrowth ?? 1));
   return player.offense[stat];
 }
 
 /** Fatias do destaque: os pesos são os próprios status (status zerado não entra). */
-export function trainingPool(player: PlayerState): Weighted<TrainingStat>[] {
-  return TRAINING_STATS.map((id) => ({ id, weight: trainingValue(player, id) })).filter((w) => w.weight > 0);
+export function trainingPool(player: PlayerState, data?: GameData): Weighted<TrainingStat>[] {
+  return TRAINING_STATS.map((id) => ({ id, weight: trainingValue(player, id, data) })).filter((w) => w.weight > 0);
 }
 
-export function rollTraining(player: PlayerState, rng: Rng): Roll<TrainingStat> {
-  return rollWeighted(trainingPool(player), rng);
+export function rollTraining(player: PlayerState, rng: Rng, data?: GameData): Roll<TrainingStat> {
+  return rollWeighted(trainingPool(player, data), rng);
 }
 
 /** Treino: XP garantido e +3 no status em destaque (speed +2). */
 export function applyTraining(player: PlayerState, stat: TrainingStat, data: GameData): Step {
   const cfg = data.balance.events.training;
-  const amount = stat === 'speed' ? cfg.speedHighlight : cfg.highlight;
+  const base = stat === 'speed' ? cfg.speedHighlight : cfg.highlight;
+  const amount = stat === 'taijutsu' ? taijutsuGain(player, base, data).gain : base;
   let p: PlayerState;
   if (stat === 'speed') p = { ...player, speed: player.speed + amount };
   else if (stat === 'physical' || stat === 'mental') p = { ...player, resistance: { ...player.resistance, [stat]: player.resistance[stat] + amount } };
@@ -184,7 +188,7 @@ export function applyClanLesson(player: PlayerState, data: GameData): Step {
   const lineageId = player.origin.lineageId ?? COMMON_LINEAGE;
   const bonus = cfg.bonus[lineageId] ?? {};
   const offense = { ...player.offense };
-  offense.taijutsu += bonus.taijutsu ?? 0;
+  offense.taijutsu += taijutsuGain(player, bonus.taijutsu ?? 0, data).gain;
   offense.ninjutsu += bonus.ninjutsu ?? 0;
   offense.genjutsu += bonus.genjutsu ?? 0;
   if (bonus.highestOffense) offense[highestOffense(player)] += bonus.highestOffense;

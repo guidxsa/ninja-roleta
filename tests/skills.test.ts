@@ -232,12 +232,11 @@ describe('ficha de técnica', () => {
     const c = createPlayer({ lineageId: null, elements: ['earth'], jinchuuriki: false }, gameData);
     expect(taken(c)).toBe(13);
     expect(taken({ ...c, offense: { ...c.offense, ninjutsu: 0 } })).toBe(13);
-    // Corpo de ferro (prodígio) não vale contra ninjutsu: 20 − 12 × 0,7 = 11
+    // Prodígio (sem o Corpo de ferro desde a v0.34.2): Resistir normal, 20 − 12 × 0,7 = 11, contra ninjutsu e taijutsu.
     expect(taken(createPlayer(prodigy, gameData))).toBe(11);
-    // Contra taijutsu, Resistir usa 100% da física: 20 − 12 = 8
     const taijutsuVillain = testVillain({ techniques: [{ id: 'punch', type: 'taijutsu', baseDamage: 20, chakraCost: 0, weight: 1 }] });
     const s = playRound(withInitiative(startBattle(createPlayer(prodigy, gameData), taijutsuVillain), 'villain'), 'rest', seq(0.5), gameData);
-    expect(ofType(s.log, 'attack')[0]!.damage).toBe(8);
+    expect(ofType(s.log, 'attack')[0]!.damage).toBe(11);
   });
 });
 
@@ -816,13 +815,13 @@ describe('passivas e comportamentos dos vilões', () => {
     expect(charged).toEqual(['zabuza', 'gaara', 'sakon', 'orochimaru']);
   });
 
-  it('Enganador (Mizuki): sobrevive ao primeiro golpe fatal com 1 de HP e se acovarda', () => {
+  it('Enganador (Mizuki): sobrevive ao primeiro golpe fatal com 1 de HP e segue lutando', () => {
     const s0 = withInitiative(startBattle(createPlayer(common, gameData), testVillain({ hp: 10, passive: { kind: 'trickster' } })));
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData);
     expect(s1.status).toBe('ongoing');
     expect(s1.villain.hp).toBe(1);
     expect(ofType(s1.log, 'trickster')).toEqual([{ type: 'trickster', counterCrit: false }]);
-    expect(ofType(s1.log, 'skip')).toEqual([{ type: 'skip', side: 'villain', reason: 'cower' }]);
+    expect(ofType(s1.log, 'skip')).toEqual([]);
     expect(playRound(s1, 'tech:basicTaijutsu', seq(0.5), gameData).status).toBe('won');
   });
 

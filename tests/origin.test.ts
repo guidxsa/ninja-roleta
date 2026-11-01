@@ -178,7 +178,8 @@ describe('criação do jogador', () => {
     expect(p.maxHp).toBe(110);
     expect(p.maxChakra).toBe(22);
     expect(p.speed).toBe(13);
-    expect(p.passive).toBe('ironBody');
+    expect(p.passive).toBe('youth');
+    expect(p.critBonus).toBeCloseTo(0.05);
     expect(p.active).toBe('gates');
     expect(() => learnTechnique(p, 'fireSpark', gameData)).toThrow();
     expect(() => learnTechnique(p, 'medicalNinjutsu', gameData)).toThrow();

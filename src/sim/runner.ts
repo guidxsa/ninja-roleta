@@ -147,7 +147,7 @@ function autoEvent(player: PlayerState, rng: Rng, data: GameData): Step {
     case 'training': {
       // Foco elemental quando ele ensina algo (o primeiro elemento que ainda cresce); senão, o destaque.
       const focus = trainingFocusOptions(player, data)[0];
-      return focus ? applyTrainingFocus(player, focus, data) : applyTraining(player, rollTraining(player, rng).value, data);
+      return focus ? applyTrainingFocus(player, focus, data) : applyTraining(player, rollTraining(player, rng, data).value, data);
     }
     case 'jokenpo':
       return playJokenpo(player, HANDS[0]!, rng, data);

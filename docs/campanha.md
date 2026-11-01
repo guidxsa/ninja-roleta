@@ -76,7 +76,7 @@ Alguém do clã ensina algo: **+40 de XP** e um bônus permanente com a cara da 
 | Yamanaka | Floricultura da família | +2 de genjutsu |
 | Aburame | A colmeia cresce | +2 de ninjutsu |
 | Inuzuka | Corrida com o cão | +1 de speed e +1 de taijutsu |
-| Prodígio do taijutsu | Mil flexões ao pôr do sol | +2 de taijutsu |
+| Prodígio do taijutsu | Mil flexões ao pôr do sol | +2 de taijutsu (vira +1 pelo taijutsu concentrado) |
 | Uchiha | Lição no templo Naka | +2 de genjutsu |
 | Hyuuga | Treino do Punho Gentil | +2 de taijutsu |
 | Uzumaki | Pergaminho dos selos | +5 de chakra máximo |

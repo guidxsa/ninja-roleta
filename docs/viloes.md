@@ -45,11 +45,11 @@ Calibrados na simulação para que o dano médio fique perto do da v0.9: o ataqu
 | 3b | Genin do Som (exame) | Raio | 85 | 12 | 12 | 8 | 7 | 8 | 10 | 16 | +3% | 60 |
 | 3c | Genin da Folha (exame) | Fogo | 100 | 12 | 12 | 9 | 8 | 5 | 14 | 13 | +3% | 60 |
 | 4 | Gaara | Terra | 140 | 36 | 9 | 8 | 11 | 6 | 14 | 14 | +2% | 200 |
-| 5a | Jirobo | Terra | 70 | 15 | 8 | 10 | 8 | 4 | 15 | 11 | — | 60 |
-| 5b | Kidomaru | Raio | 65 | 16 | 12 | 8 | 10 | 6 | 12 | 14 | +5% | 60 |
-| 5c | Tayuya | Vento | 60 | 16 | 11 | 7 | 7 | 11 | 9 | 20 | +2% | 60 |
-| 5d | Sakon | Vento | 75 | 14 | 12 | 10 | 8 | 6 | 14 | 14 | +3% | 60 |
-| 6 | Kabuto | Terra | 150 | 25 | 13 | 10 | 10 | 10 | 15 | 19 | +5% | 250 |
+| 5a | Jirobo | Terra | 95 | 15 | 8 | 12 | 10 | 4 | 17 | 12 | — | 60 |
+| 5b | Kidomaru | Raio | 90 | 16 | 12 | 10 | 12 | 6 | 13 | 15 | +5% | 60 |
+| 5c | Tayuya | Vento | 85 | 16 | 11 | 7 | 9 | 13 | 10 | 20 | +2% | 60 |
+| 5d | Sakon | Vento | 100 | 14 | 12 | 12 | 10 | 6 | 15 | 15 | +3% | 60 |
+| 6 | Kabuto | Terra | 180 | 25 | 13 | 12 | 12 | 12 | 17 | 20 | +5% | 250 |
 | 7 | Orochimaru | Vento | 220 | 40 | 14 | 12 | 12 | 13 | 18 | 23 | +5% | 300 |
 
 O manto do Gaara e a marca da maldição multiplicam o dano ×1,5 e as resistências ×1,25.
@@ -119,7 +119,7 @@ Ordem das lutas no Quarteto do Som: Jirobo, Kidomaru, Tayuya e Sakon.
 
 | Vilão | Passiva | Efeito | Hardcore |
 |---|---|---|---|
-| Mizuki | Enganador | Sobrevive ao primeiro golpe fatal com 1 de HP, mas se acovarda e perde a próxima vez. | No lugar de se acovardar, o próximo ataque dele é crítico garantido. |
+| Mizuki | Enganador | Sobrevive ao primeiro golpe fatal com 1 de HP e continua lutando. | Sobrevive e o próximo ataque dele é crítico garantido. |
 | Haku | Espelhos | Cada ataque vale por 2 golpes com 60% do dano. Como toda técnica de vários golpes, é uma reação, um acerto e um crítico para os dois. | Os 2 golpes com 100% do dano. |
 | Zabuza | Demônio da névoa oculta | Começa na névoa por 4 rodadas: a chance de erro do jogador ×1,5 (o Byakugan ignora). | Ao tomar o golpe fatal, Haku se sacrifica: volta com 50% do HP (e o chakra em 50% do máximo), 10% mais forte e fazendo sangrar em todos os golpes. |
 | Genins do exame | — | Sem passiva. | — |

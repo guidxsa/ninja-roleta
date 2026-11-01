@@ -201,7 +201,7 @@ export const ptBR = {
       desc: 'Insetos vivem no corpo do Aburame. Cada golpe do Enxame que acerta prende insetos no inimigo (2, mais com ninjutsu alto; o dobro no crítico). No fim de cada rodada, os insetos roem 1 de HP a cada 2 (até 6) e sugam 1 de chakra a cada 5 para você (até 3). Rodada sem acerto do Enxame nem Devorar: ele se livra de 2.',
     },
     duo: { name: 'Dupla', desc: 'Ninja e cão lutam juntos: depois de um ataque que acerta, o cão pode atacar também.' },
-    ironBody: { name: 'Corpo de ferro', desc: 'Anos de treino endureceram o corpo: contra taijutsu, Resistir usa toda a resistência física. Não usa ninjutsu nem genjutsu.' },
+    youth: { name: 'Juventude', desc: 'O fogo da juventude: +5% de chance de crítico, sempre. Não usa ninjutsu nem genjutsu.' },
     genjutsuResistance: { name: 'Olhos treinados', desc: 'Olhos acostumados a ilusões: resistência mental maior contra genjutsu.' },
     preciseFist: { name: 'Punho preciso', desc: 'O Punho Gentil acerta os pontos de chakra: o taijutsu ignora parte da resistência física do alvo.' },
     vitality: { name: 'Vitalidade Uzumaki', desc: 'A força vital do clã regenera um pouco de HP e de chakra a cada rodada (mais chakra no nível 7).' },
@@ -226,8 +226,8 @@ export const ptBR = {
       { name: 'Leitura mental', desc: 'O Yamanaka lê as intenções do inimigo: os ataques do vilão erram mais contra você.' },
       { name: 'Mente no controle', desc: 'Com o vilão possuído, você escolhe a técnica que ele usa contra si mesmo, e ele paga o chakra dela.' },
     ],
-    ironBody: [
-      { name: 'Corpo de ferro', desc: 'Anos de treino endureceram o corpo: contra taijutsu, Resistir usa toda a resistência física.' },
+    youth: [
+      { name: 'Juventude', desc: 'O fogo da juventude: +5% de chance de crítico, sempre. O taijutsu, já concentrado, cresce pela metade.' },
       { name: 'Só taijutsu', desc: 'O prodígio não usa ninjutsu, genjutsu nem ninjutsu médico.' },
     ],
   } as Record<string, { name: string; desc: string }[]>,
@@ -265,7 +265,7 @@ export const ptBR = {
     },
     drunkenFist: {
       name: 'Punho Bêbado',
-      desc: 'Grátis, sem gastar o turno, 1×/luta (a partir do nível 4): por 3 rodadas, cada golpe de taijutsu que acerta gira uma roleta de dano (×0,5, ×1, ×1,5 ou ×2), e a Substituição não custa chakra.',
+      desc: 'Grátis, sem gastar o turno, 1×/luta (a partir do nível 4): por 3 rodadas, cada golpe de taijutsu que acerta gira uma roleta de dano (×0,5, ×1 ou ×1,5), mas os golpes acertam 10 a menos.',
     },
     plague: {
       name: 'Praga',
@@ -335,7 +335,7 @@ export const ptBR = {
   villainPassives: {
     trickster: {
       name: 'Enganador',
-      desc: 'Sobrevive ao primeiro golpe fatal, mas se acovarda e perde a vez.',
+      desc: 'Sobrevive ao primeiro golpe fatal com 1 de HP e continua lutando.',
       hardcore: 'Sobrevive ao primeiro golpe fatal e revida com crítico garantido.',
     },
     mirrors: {

@@ -91,7 +91,9 @@ export const lineages: LineageDef[] = [
     resistance: { physical: 12, mental: 8 },
     elements: { countWeights: [1] },
     elementalPotential: 'none',
-    passive: 'ironBody',
+    passive: 'youth',
+    // O taijutsu dele já é concentrado: cresce pela metade.
+    taijutsuGrowth: 0.5,
     active: 'gates',
     startingTechniques: ['leafHurricane'],
     forbiddenAttackTypes: ['ninjutsu', 'genjutsu'],

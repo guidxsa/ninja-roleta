@@ -33,7 +33,7 @@ export type PassiveKind =
   | 'mindReading'
   | 'hive'
   | 'duo'
-  | 'ironBody'
+  | 'youth'
   | 'genjutsuResistance'
   | 'preciseFist'
   | 'vitality'
@@ -91,6 +91,8 @@ export interface LineageDef {
   /** Kit inicial além do Taijutsu básico (e do ninjutsu básico do elemento principal, no potencial pleno). */
   startingTechniques?: string[];
   dojutsu?: DojutsuId;
+  /** Fração do taijutsu que a origem ganha em estágios, Treino e Lição (prodígio: 0,5). */
+  taijutsuGrowth?: number;
   /** Vontades do Fogo a mais no início da run (Herdeiro do fundador, Senju). */
   extraRevives?: number;
 }

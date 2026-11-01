@@ -36,6 +36,8 @@ export interface PlayerState {
   elements: Element[];
   /** Kekkei genkai da origem (null = nenhuma). */
   kekkeiGenkai: KekkeiGenkaiId | null;
+  /** Meio ponto de taijutsu guardado (origem com crescimento reduzido, prodígio). */
+  taijutsuCarry: number;
   /** diferencial_de_dano_%: somado à chance base de crítico. */
   critBonus: number;
   /** Skill set: todas as técnicas conhecidas (kit inicial, nível, recompensa), várias por categoria. */
@@ -119,7 +121,8 @@ export function createPlayer(
       speed: st.speed,
       elements: [...origin.elements],
       kekkeiGenkai: kg,
-      critBonus: 0,
+      critBonus: lineage.passive === 'youth' ? balance.passives.youth.critBonus : 0,
+      taijutsuCarry: 0,
       techniques: kit,
       techniqueLevels: {},
       pendingUpgrades: 0,
@@ -429,15 +432,36 @@ export function applyLevelUp(player: PlayerState, data: GameData): PlayerState {
  * que numa subida de nível, sem restaurar. Tipos proibidos pela origem (ex.: ninjutsu do prodígio do
  * taijutsu) continuam zerados.
  */
+/**
+ * Ganho de taijutsu pela origem: no prodígio (`taijutsuGrowth` 0,5), ganhos de 2 ou mais caem pela metade
+ * arredondando para cima; ganhos de 1 guardam meio ponto e viram +1 a cada dois.
+ */
+export function taijutsuGain(player: PlayerState, amount: number, data: GameData): { gain: number; carry: number } {
+  const mult = lineageOf(player.origin.lineageId, data).taijutsuGrowth ?? 1;
+  const carry = player.taijutsuCarry ?? 0;
+  if (mult === 1 || amount <= 0) return { gain: amount, carry };
+  if (amount >= 2) return { gain: Math.ceil(amount * mult), carry };
+  const total = carry + amount * mult;
+  const gain = Math.floor(total);
+  return { gain, carry: total - gain };
+}
+
 export function applyStatStages(player: PlayerState, n: number, data: GameData): PlayerState {
   const st = data.balance.statStage;
   const offense = { ...player.offense };
+  let taijutsuCarry = player.taijutsuCarry ?? 0;
   for (const type of ['taijutsu', 'ninjutsu', 'genjutsu'] as const) {
-    if (!player.forbiddenAttackTypes.includes(type)) offense[type] += st[type] * n;
+    if (player.forbiddenAttackTypes.includes(type)) continue;
+    if (type === 'taijutsu') {
+      const t = taijutsuGain(player, st.taijutsu * n, data);
+      offense.taijutsu += t.gain;
+      taijutsuCarry = t.carry;
+    } else offense[type] += st[type] * n;
   }
   return {
     ...player,
     offense,
+    taijutsuCarry,
     resistance: {
       physical: player.resistance.physical + st.physical * n,
       mental: player.resistance.mental + st.mental * n,
