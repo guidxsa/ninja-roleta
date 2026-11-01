@@ -99,10 +99,10 @@ describe('skill set por categoria, técnicas de nível e linhas', () => {
     const common7 = toLevel(createPlayer(common, gameData), 7);
     expect(common7.techniques).toEqual(['basicTaijutsu', 'fireSpark']);
     expect(common7.pendingUpgrades).toBe(2);
-    expect(toLevel(createPlayer(prodigy, gameData), 7).techniques).toEqual(['basicTaijutsu', 'whirlwindCombo', 'hiddenLotus']);
+    expect(toLevel(createPlayer(prodigy, gameData), 7).techniques).toEqual(['basicTaijutsu', 'leafHurricane', 'primaryLotus', 'hiddenLotus']);
     const hyuuga7 = toLevel(createPlayer(hyuuga, gameData), 7).techniques;
     expect(hyuuga7).toContain('rotation');
-    expect(hyuuga7).not.toContain('whirlwindCombo');
+    expect(hyuuga7).not.toContain('primaryLotus');
     expect(toLevel(createPlayer(clan('akimichi'), gameData), 4).techniques).toContain('humanBoulder');
     expect(() => learnTechnique(createPlayer(hyuuga, gameData), 'hiddenLotus', gameData)).toThrow();
   });

@@ -196,7 +196,7 @@ describe('passivas', () => {
   it('Portões: abrir é grátis (não gasta o turno), custa chakra e HP; taijutsu ×1,3 por 3 rodadas contando a da abertura', () => {
     const p = createPlayer(prodigy, gameData);
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
-    expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'rest', 'stance']);
+    expect(availableActions(s0, gameData)).toEqual(['tech:basicTaijutsu', 'tech:leafHurricane', 'rest', 'stance']);
     expect(canFreeActive(s0, 'gates', 'tech:basicTaijutsu', gameData)).toBe(true);
     const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5), gameData, { gates: true });
     // 20% de 110 = 22 de HP; 1º portão custa 5 de chakra.

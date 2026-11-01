@@ -1619,7 +1619,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     /** Ativas de linhagem com botão próprio (Esforço, Fera, Praga, Transmissão, Cópia, Selamento, Pílulas). */
     const lineageActiveToggle = (
       st: BattleState,
-      kind: 'effort' | 'beast' | 'plague' | 'transmission' | 'copy' | 'seal' | 'pills',
+      kind: 'effort' | 'beast' | 'plague' | 'drunkenFist' | 'transmission' | 'copy' | 'seal' | 'pills',
     ): string => {
       const p = st.player;
       const cost = freeActiveCost(st, kind, data);
@@ -1642,6 +1642,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         return toggle('effort', 'weights', S.ui.effortFree(left), `${name} ✓`, S.ui.activeFreeHint);
       }
       if (kind === 'plague') return toggle('plague', 'poison', S.ui.activeFree(name, cost), `${name} ✓`, S.actives.plague!.desc);
+      if (kind === 'drunkenFist') return toggle('drunkenFist', 'dice', S.ui.activeFree(name, cost), `${name} ✓`, S.actives.drunkenFist!.desc);
       if (kind === 'transmission') {
         const left = activeUses(p, 'transmission', data) - st.playerFx.transmissionUsed;
         const label = S.ui.transmissionFree(cost, left);
@@ -1668,6 +1669,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       lineageActiveToggle(s, 'effort'),
       lineageActiveToggle(s, 'beast'),
       lineageActiveToggle(s, 'plague'),
+      lineageActiveToggle(s, 'drunkenFist'),
       lineageActiveToggle(s, 'transmission'),
       lineageActiveToggle(lit, 'copy'),
       lineageActiveToggle(s, 'seal'),
@@ -2001,6 +2003,15 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'steamArmor':
           disp.pck -= ev.chakra;
           log(S.log.steamArmor, 'good');
+          break;
+        case 'drunkenFist':
+          log(S.log.drunkenFist, 'good');
+          break;
+        case 'drunkenFistEnd':
+          log(S.log.drunkenFistEnd, 'sys');
+          break;
+        case 'drunkenRoll':
+          log(S.log.drunkenRoll(ev.mult), ev.mult >= 1 ? 'good' : 'bad');
           break;
         case 'steamArmorEnd':
           log(S.log.steamArmorEnd, 'sys');

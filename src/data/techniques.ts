@@ -65,8 +65,9 @@ export const premiumTechniques: TechniqueDef[] = [
 /** Aprendidas sozinhas ao atingir `minLevel`, se a origem, a categoria e o elemento permitirem. */
 export const levelTechniques: TechniqueDef[] = [
   // Kekkei genkai do nível 4 entram pelo índice de dados (ver `src/data/index.ts`).
-  { id: 'whirlwindCombo', type: 'taijutsu', element: null, baseDamage: 16, chakraCost: 5, accuracy: 0.9, minLevel: 4, lineages: ['taijutsuProdigy'] },
-  { id: 'hiddenLotus', type: 'taijutsu', element: null, baseDamage: 25, chakraCost: 9, accuracy: 0.8, critBonus: 0.1, minLevel: 7, lineages: ['taijutsuProdigy'] },
+  // Prodígio (v0.34): as Lótus só saem com os portões abertos.
+  { id: 'primaryLotus', type: 'taijutsu', element: null, baseDamage: 22, chakraCost: 6, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.25 }, requiresGate: 1, minLevel: 4, lineages: ['taijutsuProdigy'] },
+  { id: 'hiddenLotus', type: 'taijutsu', element: null, baseDamage: 8, hits: 5, chakraCost: 10, accuracy: 0.85, requiresGate: 3, minLevel: 7, lineages: ['taijutsuProdigy'] },
   { id: 'humanBoulder', type: 'taijutsu', element: null, baseDamage: 20, chakraCost: 6, accuracy: 0.8, onHit: { effect: 'stun', chance: 0.2 }, minLevel: 4, lineages: ['akimichi'] },
   // Rotação (Hyuuga): barreira neutra; se aguentar, devolve metade do dano.
   { id: 'rotation', type: 'ninjutsu', element: null, baseDamage: 0, chakraCost: 5, barrier: 26, reflectPct: 0.5, minLevel: 4, lineages: ['hyuuga'] },
@@ -81,6 +82,8 @@ export const levelTechniques: TechniqueDef[] = [
 export const lineageTechniques: TechniqueDef[] = [
   { id: BASIC_TAIJUTSU, type: 'taijutsu', element: null, baseDamage: 8, chakraCost: 0, accuracy: 0.9 },
   { id: 'fangOverFang', type: 'taijutsu', element: null, baseDamage: 7, hits: 2, chakraCost: 3, lineages: ['inuzuka'] },
+  // Folha Furacão (prodígio): o segundo ataque do nível 1.
+  { id: 'leafHurricane', type: 'taijutsu', element: null, baseDamage: 9, hits: 2, chakraCost: 2, accuracy: 0.9, lineages: ['taijutsuProdigy'] },
   // Selo dos Pontos Vitais (Hyuuga): só com o Byakugan ativo, não erra e drena o chakra do vilão.
   // 64 Palmas (Hyuuga, nível 7): com o Byakugan; cada golpe que acerta fecha um ponto de chakra (drena).
   { id: 'sixtyFourPalms', type: 'taijutsu', element: null, baseDamage: 6, hits: 4, chakraCost: 8, accuracy: 1, requiresDojutsu: 'byakugan', chakraDrain: 3, minLevel: 7, lineages: ['hyuuga'] },

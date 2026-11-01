@@ -175,6 +175,9 @@ export const balance = {
   effort: { chakraCost: 0, turns: 3, offenseBonus: 3, uses: 1, extraUseLevels: [4, 7] },
   // Fera de quatro patas (Inuzuka): speed +`speedBonus`, Dupla com `duoChance` e Substituição sem gastar usos.
   beast: { chakraCost: 5, turns: 3, speedBonus: 3, duoChance: 0.6, uses: 1, extraUseLevels: [7] },
+  // Punho Bêbado (prodígio, a partir do `level`): grátis, 1×/luta, por `turns` rodadas cada golpe de taijutsu gira uma
+  // roleta de dano (`mults`, pesos iguais) e a Substituição não custa chakra.
+  drunkenFist: { level: 4, turns: 3, uses: 1, mults: [0.5, 1, 1.5, 2] },
   // Praga (Aburame, ativa grátis): por `turns` rodadas (contando a da ativação), os insetos por acerto e o teto
   // de insetos são multiplicados por `mult`. Ao acabar, o excesso fica, mas não entra inseto novo até baixar do teto.
   plague: { chakraCost: 6, turns: 3, mult: 2, uses: 1, extraUseLevels: [7] },

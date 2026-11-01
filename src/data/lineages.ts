@@ -93,6 +93,7 @@ export const lineages: LineageDef[] = [
     elementalPotential: 'none',
     passive: 'ironBody',
     active: 'gates',
+    startingTechniques: ['leafHurricane'],
     forbiddenAttackTypes: ['ninjutsu', 'genjutsu'],
   },
   {

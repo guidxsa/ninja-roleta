@@ -179,6 +179,8 @@ export interface TechniqueDef {
   strangleHold?: string;
   /** Força do controle × este fator vira dano base (no lugar de `shadowStrangle.damagePerStrength`). */
   strangleFactor?: number;
+  /** Só com um portão aberto deste estágio ou acima (Lótus do prodígio). */
+  requiresGate?: number;
   /** Ação que ergue a Armadura de Vapor (quem bate com taijutsu se queima). */
   steamArmor?: boolean;
   /** Ao acertar, drena esta quantidade do chakra do vilão. */

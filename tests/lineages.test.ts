@@ -3,6 +3,7 @@ import {
   activeUses,
   attackPreview,
   availableActions,
+  freeActiveCost,
   canCopyIncoming,
   copyTechniqueId,
   effectiveOffense,
@@ -412,5 +413,31 @@ describe('Kekkei genkai de natureza', () => {
     const s1 = playRound(s0, 'tech:steamArmor', seq(0.5), gameData);
     expect(s1.playerFx.steamArmorTurns).toBeGreaterThan(0);
     expect(ofType(s1.log, 'steamBurn').length).toBe(1);
+  });
+});
+
+describe('Prodígio: Folha Furacão, Lótus com portões e Punho Bêbado', () => {
+  const prodigy = (level = 1): PlayerState =>
+    grantLevelTechniques({ ...createPlayer({ lineageId: 'taijutsuProdigy', elements: [], jinchuuriki: false }, gameData), level }, gameData);
+
+  it('as Lótus só saem com o portão aberto (a Oculta, do 3º em diante)', () => {
+    const s0 = withInitiative(startBattle(prodigy(7), testVillain({ hp: 300 })));
+    expect(availableActions(s0, gameData)).not.toContain('tech:primaryLotus');
+    const open1 = { ...s0, playerFx: { ...s0.playerFx, gatesTurns: 2, gatesStage: 1 } };
+    expect(availableActions(open1, gameData)).toContain('tech:primaryLotus');
+    expect(availableActions(open1, gameData)).not.toContain('tech:hiddenLotus');
+    const open3 = { ...s0, playerFx: { ...s0.playerFx, gatesTurns: 2, gatesStage: 3 } };
+    expect(availableActions(open3, gameData)).toContain('tech:hiddenLotus');
+  });
+
+  it('Punho Bêbado (nível 4): grátis, 1×/luta, roleta de dano nos golpes e Substituição sem chakra', () => {
+    expect(freeActiveCost(withInitiative(startBattle(prodigy(1), testVillain())), 'drunkenFist', gameData)).toBeNull();
+    const s0 = withInitiative(startBattle(prodigy(4), testVillain({ hp: 300 })));
+    expect(freeActiveCost(s0, 'drunkenFist', gameData)).toBe(0);
+    // 0.99 na roleta: ×2.
+    const s1 = playRound(s0, 'tech:basicTaijutsu', seq(0.5, 0.99), gameData, { drunkenFist: true });
+    expect(ofType(s1.log, 'drunkenRoll')).toEqual([{ type: 'drunkenRoll', mult: 2 }]);
+    expect(s1.playerFx.drunkenTurns).toBe(2);
+    expect(freeActiveCost(s1, 'drunkenFist', gameData)).toBeNull();
   });
 });

@@ -171,8 +171,9 @@ Técnicas exclusivas de uma origem (campo `lineages`), de todas as categorias. "
 | Aburame | Nuvem de Insetos (Enxame III) | Ninjutsu | Upgrade | 4 fixo | 6 | 7 | 85% | Idem; teto de 20 |
 | Aburame | Devorar | Ninjutsu | Inicial | Ver abaixo | — | 1 a cada 2 insetos | não rola | Com ao menos 1 inseto no vilão; suga chakra e deixa 40% dos insetos |
 | Inuzuka | Presas Giratórias | Taijutsu | Inicial | 7 | 2 | 3 | 85% | — |
-| Prodígio | Redemoinho da Folha | Taijutsu | 4 | 16 | 1 | 5 | 90% | — |
-| Prodígio | Lótus Primaveril | Taijutsu | 7 | 25 | 1 | 9 | 80% | +10% de crítico |
+| Prodígio | Folha Furacão | Taijutsu | Inicial | 9 | 2 | 2 | 90% | — |
+| Prodígio | Lótus Primária | Taijutsu | 4, só com um portão aberto | 22 | 1 | 6 | 85% | 25% de atordoar no acerto |
+| Prodígio | Lótus Oculta | Taijutsu | 7, só com o 3º portão ou acima | 8 | 5 | 10 | 85% | — |
 | Uchiha | Olhar Hipnótico | Genjutsu | Inicial | — | — | 3 | — | Aprisionado (força base 1, poder 0) |
 | Uchiha | Ilusão da Dor | Genjutsu | Inicial | 15 | 1 | 3 | — | Ilusão de dano ([efeitos.md](efeitos.md#ilusões-de-dano-uchiha)) |
 | Uchiha | Tsukuyomi | Genjutsu | 7, só com o Sharingan | 22 | 1 | 9 | — | Ilusão de dano + Aprisionado (força base 1, poder +6) |

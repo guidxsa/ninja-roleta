@@ -182,8 +182,8 @@ describe('criação do jogador', () => {
     expect(p.active).toBe('gates');
     expect(() => learnTechnique(p, 'fireSpark', gameData)).toThrow();
     expect(() => learnTechnique(p, 'medicalNinjutsu', gameData)).toThrow();
-    expect(learnTechnique(p, 'empoweredTaijutsu', gameData).techniques).toEqual(['basicTaijutsu', 'empoweredTaijutsu']);
-    expect(knownTechniques(p, gameData).map((t) => t.id)).toEqual(['basicTaijutsu']);
+    expect(learnTechnique(p, 'empoweredTaijutsu', gameData).techniques).toEqual(['basicTaijutsu', 'leafHurricane', 'empoweredTaijutsu']);
+    expect(knownTechniques(p, gameData).map((t) => t.id)).toEqual(['basicTaijutsu', 'leafHurricane']);
   });
 
   it('jinchuuriki dobra o chakra e acumula com linhagem', () => {

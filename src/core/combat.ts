@@ -117,6 +117,8 @@ export interface RoundExtras {
   beast?: boolean;
   /** Praga (Aburame): dobra os insetos por acerto e o teto por algumas rodadas. */
   plague?: boolean;
+  /** Punho Bêbado (prodígio): roleta de dano nos golpes e Substituição grátis. */
+  drunkenFist?: boolean;
   /** Transmissão mental (Yamanaka): tenta cancelar o golpe carregado do vilão. */
   transmission?: boolean;
   /** Mente no controle (Yamanaka): técnica que o vilão possuído usa em si mesmo nesta rodada. */
@@ -281,6 +283,9 @@ export interface PlayerFx extends StatusFx {
   beastTurns: number;
   /** Praga (Aburame): rodadas que faltam (a da ativação conta). */
   plagueTurns: number;
+  /** Punho Bêbado (prodígio): rodadas restantes e usos na luta. */
+  drunkenTurns: number;
+  drunkenUsed: number;
   /** Algum golpe do Enxame acertou nesta rodada (os insetos não se soltam). */
   swarmHit: boolean;
   /** Praga já ativada nesta luta. */
@@ -385,6 +390,10 @@ export type BattleEvent =
   | { type: 'beast'; chakra: number }
   | { type: 'beastEnd' }
   | { type: 'plague'; chakra: number }
+  | { type: 'drunkenFist' }
+  | { type: 'drunkenFistEnd' }
+  /** Punho Bêbado: o multiplicador de dano que a roleta deu ao golpe. */
+  | { type: 'drunkenRoll'; mult: number }
   | { type: 'plagueEnd'; insects: number }
   /** `kept`: insetos que continuam no vilão; `chakra`: absorvido do vilão; `gained`: o que entrou no Aburame. */
   | { type: 'devour'; insects: number; pct: number; damage: number; kept: number; chakra: number; gained: number }
@@ -616,6 +625,8 @@ export function startBattle(
       plagueTurns: 0,
       swarmHit: false,
       plagueUsed: 0,
+      drunkenTurns: 0,
+      drunkenUsed: 0,
       transmissionUsed: 0,
       possessionPick: null,
       copied: null,
@@ -887,6 +898,7 @@ export type FreeActive =
   | 'effort'
   | 'beast'
   | 'plague'
+  | 'drunkenFist'
   | 'transmission'
   | 'copy'
   | 'seal'
@@ -917,6 +929,10 @@ export function freeActiveCost(s: BattleState, kind: FreeActive, data: GameData)
       return p.active === 'expansion' && awakened(p, data.balance.pills.minLevel) && fx.pillsUsed < data.balance.pills.usesPerFight && fx.pillTurns === 0 && fx.exhaustedTurns === 0 ? 0 : null;
     case 'plague':
       return p.active === 'plague' && fx.plagueTurns === 0 && fx.plagueUsed < activeUses(p, 'plague', data) ? data.balance.plague.chakraCost : null;
+    case 'drunkenFist': {
+      const cfg = data.balance.drunkenFist;
+      return p.active === 'gates' && awakened(p, cfg.level) && fx.drunkenTurns === 0 && fx.drunkenUsed < cfg.uses ? 0 : null;
+    }
     case 'transmission':
       return p.active === 'transmission' && s.villain.charging !== null && fx.transmissionUsed < activeUses(p, 'transmission', data)
         ? data.balance.transmission.chakraCost
@@ -1045,6 +1061,7 @@ export const FREE_ACTIVES: FreeActive[] = [
   'effort',
   'beast',
   'plague',
+  'drunkenFist',
   'transmission',
   'copy',
   'seal',
@@ -1085,6 +1102,7 @@ export function previewExtras(s: BattleState, ex: RoundExtras, data: GameData): 
     else if (k === 'expansion') activateExpansion(v, data);
     else if (k === 'effort') activateEffort(v, data);
     else if (k === 'beast') activateBeast(v, data);
+    else if (k === 'drunkenFist') activateDrunkenFist(v, data);
     else {
       payChakra(v.player, cost);
       if (k === 'clones') v.playerFx.clonesArmed = true;
@@ -1509,6 +1527,7 @@ export function canUseTechnique(s: BattleState, tech: TechniqueDef, data?: GameD
   if (p.forbiddenAttackTypes.includes(tech.type)) return false;
   if (tech.requiresDojutsu && !(s.playerFx.dojutsuActive && p.dojutsu === tech.requiresDojutsu)) return false;
   if (tech.devour && s.villain.insects === 0) return false;
+  if (tech.requiresGate && !(s.playerFx.gatesTurns > 0 && s.playerFx.gatesStage >= tech.requiresGate)) return false;
   if (tech.shadowStrangle && !heldBy(s, tech.strangleHold ?? 'shadowImitation')) return false;
   const cost = techniqueCost(s, tech, data);
   return cost === 0 || p.chakra >= cost;
@@ -1627,9 +1646,14 @@ function reservedChakra(s: BattleState, side: Side, data: GameData): number {
   return actionCost(s, plan.action, data);
 }
 
+/** Chakra da Substituição (grátis no Punho Bêbado). */
+function substitutionCost(s: BattleState, side: Side, data: GameData): number {
+  return side === 'player' && s.playerFx.drunkenTurns > 0 ? 0 : data.balance.substitution.chakraCost;
+}
+
 function canSubstitute(s: BattleState, side: Side, data: GameData): boolean {
   const fx = fxOf(s, side);
-  if (chakraOf(s, side) < data.balance.substitution.chakraCost + reservedChakra(s, side, data)) return false;
+  if (chakraOf(s, side) < substitutionCost(s, side, data) + reservedChakra(s, side, data)) return false;
   return dogDecoy(s, side) || fx.substitutionsUsed < substitutionUses(s, side, data);
 }
 
@@ -1921,7 +1945,7 @@ function performReaction(
   }
   // Substituição não gasta ação; a disputa gasta a próxima.
   if (choice === 'substitution') {
-    const cost = data.balance.substitution.chakraCost;
+    const cost = substitutionCost(s, defender, data);
     spendChakra(s, defender, cost);
     if (!dogDecoy(s, defender)) fx.substitutionsUsed++;
     s.log.push({ type: 'reaction', side: defender, kind: 'substitution', techniqueId: null, chakra: cost });
@@ -2003,6 +2027,7 @@ export function playRound(
   if (ex.effort) activateEffort(s, data);
   if (ex.beast) activateBeast(s, data);
   if (ex.plague) activatePlague(s, data);
+  if (ex.drunkenFist) activateDrunkenFist(s, data);
   if (ex.transmission) mindTransmission(s, rng, data);
   if (ex.copy) attemptCopy(s, copyTarget(s)!, rng, data);
   if (ex.seal) sealTechnique(s, data);
@@ -2730,6 +2755,10 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
     s.log.push({ type: 'insectsShed', insects: shed, left: v.insects });
   }
   fx.swarmHit = false;
+  if (fx.drunkenTurns > 0) {
+    fx.drunkenTurns--;
+    if (fx.drunkenTurns === 0) s.log.push({ type: 'drunkenFistEnd' });
+  }
   // Fim da Praga: o excesso fica (só não entra inseto novo acima do teto normal).
   if (fx.plagueTurns > 0) {
     fx.plagueTurns--;
@@ -2907,6 +2936,13 @@ function activateBeast(s: BattleState, data: GameData): void {
   s.playerFx.beastUsed++;
   s.playerFx.beastTurns = cfg.turns;
   s.log.push({ type: 'beast', chakra: cfg.chakraCost });
+}
+
+/** Punho Bêbado (prodígio, escolha grátis): vale já nesta rodada, que conta na duração. */
+function activateDrunkenFist(s: BattleState, data: GameData): void {
+  s.playerFx.drunkenUsed++;
+  s.playerFx.drunkenTurns = data.balance.drunkenFist.turns;
+  s.log.push({ type: 'drunkenFist' });
 }
 
 /** Praga (Aburame, escolha grátis): vale já nesta rodada, que conta na duração. */
@@ -3216,7 +3252,14 @@ function playerStrike(
   const outcome = playerRoll(s, () => rollHit(hitP, critP, rng), (o) => HIT_RANK[o]);
   s.playerFx.focusArmed = false;
   const critMult = outcome === 'crit' ? balance.crit.multiplier : 1;
-  const { damage, elementMult } = strikeDamage(s, 'player', tech, guard, critMult, damageFactor, data);
+  // Punho Bêbado: cada golpe de taijutsu que acerta gira a roleta de dano.
+  let drunk = 1;
+  if (outcome !== 'miss' && s.playerFx.drunkenTurns > 0 && tech.type === 'taijutsu') {
+    const mults = balance.drunkenFist.mults;
+    drunk = mults[Math.min(mults.length - 1, Math.floor(rng() * mults.length))]!;
+    s.log.push({ type: 'drunkenRoll', mult: drunk });
+  }
+  const { damage, elementMult } = strikeDamage(s, 'player', tech, guard, critMult, damageFactor * drunk, data);
   s.log.push({
     type: 'attack',
     side: 'player',
