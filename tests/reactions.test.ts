@@ -73,6 +73,15 @@ describe('disputa de ninjutsu', () => {
     expect(s1.player.hp).toBe(85);
   });
 
+  it('Enxame que vence a disputa prende insetos (bug da v0.30)', () => {
+    const poke: VillainTechnique = { id: 'poke', type: 'ninjutsu', baseDamage: 2, chakraCost: 1, weight: 1 };
+    const aburame = createPlayer(origin(null, 'aburame'), gameData);
+    const s1 = villainAttacks(aburame, testVillain({ hp: 200, chakra: 40, techniques: [poke] }), 'clash:insectSwarm', [0.5, 0.99]);
+    expect(ofType(s1.log, 'clash')[0]!.result).toBe('defender');
+    // 2 golpes do Enxame passam, 2 insetos cada.
+    expect(s1.villain.insects).toBe(4);
+  });
+
   it('técnica de vários golpes que vence a disputa bate todos os golpes, não só o primeiro', () => {
     const volley: VillainTechnique = { id: 'volley', type: 'ninjutsu', baseDamage: 12, hits: 3, chakraCost: 6, weight: 1 };
     const s1 = villainAttacks(player('water'), fireVillain({ techniques: [volley] }), 'clash:waterBullet', [0.5, 0.1]);

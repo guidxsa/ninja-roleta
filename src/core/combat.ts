@@ -7,6 +7,7 @@ import {
   BASIC_TAIJUTSU,
   fullRestore,
   gatesStage,
+  knownLine,
   knownTechniques,
   leveledTechnique,
   medicalHealPct,
@@ -276,6 +277,8 @@ export interface PlayerFx extends StatusFx {
   beastTurns: number;
   /** Praga (Aburame): rodadas que faltam (a da ativação conta). */
   plagueTurns: number;
+  /** Algum golpe do Enxame acertou nesta rodada (os insetos não se soltam). */
+  swarmHit: boolean;
   /** Praga já ativada nesta luta. */
   plagueUsed: number;
   /** Transmissão mental (Yamanaka): usos nesta luta. */
@@ -434,7 +437,14 @@ export type BattleEvent =
   | { type: 'movementReading'; damageBefore: number; damage: number }
   | { type: 'dojutsu'; dojutsu: DojutsuId; stage: number; chakra: number }
   | { type: 'dojutsuEnd'; dojutsu: DojutsuId; reason: 'time' | 'chakra' }
-  | { type: 'chakraDrain'; amount: number; source: 'seal' | 'hive' | 'chains' }
+  /** `gained`: quanto voltou para o Aburame (Colônia). */
+  | { type: 'chakraDrain'; amount: number; source: 'seal' | 'hive' | 'chains'; gained?: number }
+  /** Colônia sem chakra para sugar: o que faltou vira dano. */
+  | { type: 'hiveBurn'; damage: number }
+  /** Rodada sem acerto do Enxame: o vilão se livra de insetos. */
+  | { type: 'insectsShed'; insects: number; left: number }
+  /** Regeneração passiva de chakra no início da rodada. */
+  | { type: 'chakraRegen'; side: Side; amount: number }
   /** Perdeu a vez: `turns` na paralisia; nos efeitos mentais, `escape` é a chance de se livrar após o 1º turno. */
   | { type: 'debilitate'; target: Side; kind: DebilitateKind; turns?: number; escape?: number }
   | { type: 'mental'; target: Side; effect: Exclude<MentalEffect, 'prison' | 'sleep' | 'possession'>; escape: number }
@@ -582,6 +592,7 @@ export function startBattle(
       effortTurns: 0,
       beastTurns: 0,
       plagueTurns: 0,
+      swarmHit: false,
       plagueUsed: 0,
       transmissionUsed: 0,
       possessionPick: null,
@@ -895,11 +906,32 @@ export function mindReadingPenalty(player: PlayerState, data: GameData): number 
   return awakened(player, aw.level) ? aw.villainHitPenalty : data.balance.passives.mindReading.villainHitPenalty;
 }
 
-/** Teto de insetos no vilão: 10 (15 no despertar do nível 4), o dobro durante a Praga. */
+/** Teto de insetos no vilão pelo nível do Enxame que o Aburame conhece (I/II/III); o dobro durante a Praga. */
 export function maxInsects(s: BattleState, data: GameData): number {
-  const aw = data.balance.awakening.aburame.colony;
-  const max = awakened(s.player, aw.level) ? aw.maxInsects : data.balance.passives.hive.maxInsects;
+  const cfg = data.balance.passives.hive;
+  const swarm = knownLine(s.player, 'swarm', data);
+  const level = Math.min(swarm?.lineLevel ?? 1, cfg.maxInsectsByLevel.length);
+  const max = cfg.maxInsectsByLevel[level - 1]!;
   return s.playerFx.plagueTurns > 0 ? max * data.balance.plague.mult : max;
+}
+
+/**
+ * Insetos que um golpe do Enxame prende: `insectsPerHit` (+1 a cada `ninjutsuStep` de ninjutsu base a partir de
+ * `ninjutsuFrom`), ×2 no crítico e ×2 na Praga.
+ */
+export function insectsPerHit(s: BattleState, crit: boolean, data: GameData): number {
+  const cfg = data.balance.passives.hive;
+  const extra = Math.max(0, Math.floor((s.player.offense.ninjutsu - cfg.ninjutsuFrom) / cfg.ninjutsuStep) + 1);
+  const base = cfg.insectsPerHit + extra;
+  return base * (crit ? cfg.critMult : 1) * (s.playerFx.plagueTurns > 0 ? data.balance.plague.mult : 1);
+}
+
+/** Prende insetos no vilão: acima do teto (sobra da Praga) não entra mais, mas também não cai. */
+function addInsects(s: BattleState, n: number, data: GameData): void {
+  const v = s.villain;
+  const cap = maxInsects(s, data);
+  if (v.insects < cap) v.insects = Math.min(cap, v.insects + n);
+  s.playerFx.swarmHit = true;
 }
 
 /** Peso do Akimichi: HP máximo (+10% no despertar do nível 4), ×1,5 na Expansão. Não muda o HP. */
@@ -1816,6 +1848,10 @@ function resolveClash(
     s.log.push({ type: 'clashHit', target: loser, techniqueId: tech.id, damage: amount, passPct });
     hurt(s, loser, shieldAbsorb(s, loser, amount, tech, rng, data), data);
     if (s.status !== 'ongoing') return;
+    // Enxame que vence a disputa (atacando ou defendendo): cada golpe que passa prende insetos (sem crítico).
+    if (winner === 'player' && s.player.passive === 'hive' && data.techniquesById[tech.id]?.line === 'swarm') {
+      addInsects(s, insectsPerHit(s, false, data), data);
+    }
     applyElementalHit(s, loser, tech.element, 'hit', data, rng);
     if (tech.onHit) applyOnHit(s, loser, tech, rng, data);
   }
@@ -2453,6 +2489,16 @@ function startOfRound(s: BattleState, rng: Rng, data: GameData): void {
   if (vPassive?.kind === 'cloak') payCloak(s, 'villain', vPassive.cloak);
   if (s.round === 1 && vPassive?.kind === 'cloak' && vPassive.fromStart) activateCloak(s, 'villain', vPassive.cloak);
 
+  // Regeneração passiva de chakra: todos, no início de cada rodada (a Vitalidade soma por cima).
+  for (const side of ['player', 'villain'] as Side[]) {
+    const max = side === 'player' ? p.maxChakra : v.def.chakra;
+    const amount = Math.min(max - chakraOf(s, side), Math.max(balance.chakraRegen.min, Math.floor(max * balance.chakraRegen.pct)));
+    if (amount <= 0) continue;
+    if (side === 'player') p.chakra += amount;
+    else v.chakra += amount;
+    s.log.push({ type: 'chakraRegen', side, amount });
+  }
+
   if (p.passive === 'vitality') {
     const aw = balance.awakening.uzumaki.vitality;
     const cfg = awakened(p, aw.level) ? aw : balance.passives.vitality;
@@ -2575,18 +2621,35 @@ function endOfRound(s: BattleState, rng: Rng, data: GameData): void {
     fx.beastTurns--;
     if (fx.beastTurns === 0) s.log.push({ type: 'beastEnd' });
   }
-  // Colônia: cada inseto preso drena chakra do vilão no fim da rodada.
-  if (v.insects > 0 && v.chakra > 0) {
-    const amount = Math.min(v.chakra, v.insects * data.balance.passives.hive.chakraPerInsect);
-    v.chakra -= amount;
-    s.log.push({ type: 'chakraDrain', amount, source: 'hive' });
+  // Colônia: no fim da rodada, 1 de chakra a cada 2 insetos vai do vilão para o Aburame; o que faltou vira dano.
+  if (v.insects > 0 && s.player.passive === 'hive') {
+    const hive = data.balance.passives.hive;
+    const want = Math.floor(v.insects / hive.insectsPerChakra);
+    const amount = Math.min(v.chakra, want);
+    if (amount > 0) {
+      v.chakra -= amount;
+      const gained = Math.min(s.player.maxChakra - s.player.chakra, amount);
+      s.player.chakra += gained;
+      s.log.push({ type: 'chakraDrain', amount, source: 'hive', gained });
+    }
+    const burn = Math.floor((want - amount) / hive.burnPerMissingChakra);
+    if (burn > 0) {
+      s.log.push({ type: 'hiveBurn', damage: burn });
+      hurtVillain(s, burn);
+      if (s.status !== 'ongoing') return;
+    }
   }
+  // Rodada sem acerto do Enxame: o vilão se livra de alguns insetos.
+  if (v.insects > 0 && !fx.swarmHit) {
+    const shed = Math.min(v.insects, data.balance.passives.hive.shedPerRound);
+    v.insects -= shed;
+    s.log.push({ type: 'insectsShed', insects: shed, left: v.insects });
+  }
+  fx.swarmHit = false;
+  // Fim da Praga: o excesso fica (só não entra inseto novo acima do teto normal).
   if (fx.plagueTurns > 0) {
     fx.plagueTurns--;
-    if (fx.plagueTurns === 0) {
-      v.insects = Math.min(v.insects, maxInsects(s, data));
-      s.log.push({ type: 'plagueEnd', insects: v.insects });
-    }
+    if (fx.plagueTurns === 0) s.log.push({ type: 'plagueEnd', insects: v.insects });
   }
   if (fx.exhaustedTurns > 0) {
     fx.exhaustedTurns--;
@@ -2772,7 +2835,7 @@ export function devourPct(s: BattleState, data: GameData): number {
   const ratio = resistance > 0 ? s.player.offense.ninjutsu / resistance : Infinity;
   const pct = data.balance.devour.table.reduce((best, step) => (ratio >= step.ratio ? Math.max(best, step.pct) : best), 0);
   const aw = data.balance.awakening.aburame.devour;
-  return pct + (awakened(s.player, aw.level) ? aw.pctBonus : 0);
+  return pct + aw.levels.filter((level) => awakened(s.player, level)).length * aw.pctBonus;
 }
 
 /** Devorar: dano direto que os insetos presos causariam agora. */
@@ -3087,11 +3150,8 @@ function playerAttack(s: BattleState, techId: string, rng: Rng, data: GameData):
     if (s.status !== 'ongoing') return;
     if (outcome === 'miss') continue;
     anyHit = true;
-    // Colônia (Aburame): cada golpe do Enxame que acerta prende insetos no vilão (o dobro com a Praga).
-    if (p.passive === 'hive' && data.techniquesById[techId]?.line === 'swarm') {
-      const add = balance.passives.hive.insectsPerHit * (fx.plagueTurns > 0 ? balance.plague.mult : 1);
-      v.insects = Math.min(maxInsects(s, data), v.insects + add);
-    }
+    // Colônia (Aburame): cada golpe do Enxame que acerta prende insetos no vilão (o dobro no crítico e na Praga).
+    if (p.passive === 'hive' && data.techniquesById[techId]?.line === 'swarm') addInsects(s, insectsPerHit(s, outcome === 'crit', data), data);
     // Selo dos Pontos Vitais e 64 Palmas: drenam o chakra do vilão.
     const drain = data.techniquesById[techId]?.chakraDrain ?? 0;
     if (drain > 0) {

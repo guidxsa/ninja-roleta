@@ -1,7 +1,9 @@
 import { startBattle, type BattleOptions, type BattleState, type MentalHold, type Side } from '../src/core/combat';
 import type { PlayerState } from '../src/core/player';
 import type { Rng } from '../src/core/rng';
+import type { GameData } from '../src/core/gameData';
 import type { VillainDef } from '../src/core/types';
+import { gameData } from '../src/data/index';
 
 /** RNG que devolve os valores dados em sequência (e repete o último). */
 export function seq(...values: number[]): Rng {
@@ -43,3 +45,6 @@ export function testVillain(overrides: Partial<VillainDef> = {}): VillainDef {
 export function battle(player: PlayerState, villain: VillainDef, options: Partial<BattleOptions> = {}): BattleState {
   return startBattle(player, villain, { restore: false, ...options });
 }
+
+/** Dados do jogo sem a regeneração passiva de chakra (para isolar outra mecânica de chakra). */
+export const noRegen: GameData = { ...gameData, balance: { ...gameData.balance, chakraRegen: { pct: 0, min: 0 } } };

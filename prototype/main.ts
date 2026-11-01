@@ -2268,7 +2268,24 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'chakraDrain':
           disp.vck -= ev.amount;
           floatNumber(vcard(), `−${ev.amount} ck`, 'ck');
-          log(S.log.chakraDrain[ev.source]!(ev.amount), 'good');
+          if (ev.gained) {
+            disp.pck += ev.gained;
+            floatNumber(pcard, `+${ev.gained} ck`, 'ck');
+          }
+          log(ev.source === 'hive' ? S.log.hiveDrain(ev.amount, ev.gained ?? 0) : S.log.chakraDrain[ev.source]!(ev.amount), 'good');
+          break;
+        case 'hiveBurn':
+          disp.vhp -= ev.damage;
+          floatNumber(vcard(), `−${ev.damage}`, 'dmg');
+          log(S.log.hiveBurn(ev.damage), 'good');
+          break;
+        case 'insectsShed':
+          log(S.log.insectsShed(ev.insects, ev.left), 'bad');
+          break;
+        case 'chakraRegen':
+          // Silenciosa no log: só a barra sobe.
+          if (ev.side === 'player') disp.pck += ev.amount;
+          else disp.vck += ev.amount;
           break;
         case 'end':
           log(ev.status === 'won' ? S.log.won : S.log.lost, ev.status === 'won' ? 'good' : 'bad');

@@ -158,7 +158,7 @@ export const ptBR = {
     mindReading: { name: 'Leitura mental', desc: 'O Yamanaka lê as intenções do inimigo: o vilão erra mais contra você e, possuído, usa a técnica que você escolher.' },
     hive: {
       name: 'Colônia',
-      desc: 'Insetos vivem no corpo do Aburame. Cada golpe do Enxame que acerta deixa um inseto preso no inimigo, e no fim de cada rodada os insetos sugam o chakra dele.',
+      desc: 'Insetos vivem no corpo do Aburame. Cada golpe do Enxame que acerta prende insetos no inimigo (2, mais com ninjutsu alto; o dobro no crítico). No fim de cada rodada, a cada 2 insetos 1 de chakra dele vem para você; sem chakra para sugar, os insetos roem o HP. Rodada sem acerto do Enxame: ele se livra de 2.',
     },
     duo: { name: 'Dupla', desc: 'Ninja e cão lutam juntos: depois de um ataque que acerta, o cão pode atacar também.' },
     ironBody: { name: 'Corpo de ferro', desc: 'Anos de treino endureceram o corpo: contra taijutsu, Resistir usa toda a resistência física. Não usa ninjutsu nem genjutsu.' },
@@ -221,7 +221,7 @@ export const ptBR = {
     },
     plague: {
       name: 'Praga',
-      desc: 'A colônia se espalha pelo inimigo. Grátis (6 de chakra), sem gastar o turno, 1×/luta (+1 no nível 7): por 3 rodadas o Enxame prende o dobro de insetos e o vilão aguenta o dobro presos. Quando acaba, o excesso some.',
+      desc: 'A colônia se espalha pelo inimigo. Grátis (6 de chakra), sem gastar o turno, 1×/luta (+1 no nível 7): por 3 rodadas o Enxame prende o dobro de insetos e o vilão aguenta o dobro presos. Quando acaba, o excesso fica, mas não entra inseto novo até baixar do teto.',
     },
     seal: {
       name: 'Selamento',
@@ -274,7 +274,7 @@ export const ptBR = {
     nara: { 4: 'A Imitação de Sombra ganha +1 de força.', 7: 'O Enforcamento por Sombra aperta mais: +1 de força no dano.' },
     akimichi: { 4: 'Você fica mais pesado: o Corpo pesado rende mais (e o Rolo Colossal).', 7: 'Pílulas do clã liberadas; a Expansão não reduz mais a speed.' },
     yamanaka: { 4: 'Leitura mental mais forte: o vilão erra ainda mais (e +1 uso da Transmissão).', 7: 'Na Possessão, o vilão se fere mais (e +1 uso da Transmissão).' },
-    aburame: { 4: 'O vilão aguenta mais insetos presos.', 7: 'O Devorar causa mais dano por inseto (e +1 uso da Praga).' },
+    aburame: { 4: 'O Devorar causa mais dano por inseto.', 7: 'O Devorar causa ainda mais dano por inseto (e +1 uso da Praga).' },
     inuzuka: { 4: 'O cão da Dupla bate mais forte.', 7: 'A Fera fica mais barata, dura 4 rodadas e ganha +1 uso.' },
     taijutsuProdigy: { 4: 'Forçar os portões dá certo com mais frequência (e o Redemoinho da Folha).', 7: 'Portões: 2 usos por luta (e o Lótus Primaveril).' },
     uchiha: { 4: 'Sharingan de 2 tomoe: mais forte e copia com mais facilidade.', 7: 'Sharingan de 3 tomoe: copia ainda mais fácil, e o Tsukuyomi.' },
@@ -811,7 +811,7 @@ export const ptBR = {
     beast: 'Fera de quatro patas! Speed maior, o cão ataca mais e serve de isca na Substituição.',
     beastEnd: 'A fera volta ao normal.',
     plague: 'Praga! Os insetos se multiplicam.',
-    plagueEnd: 'A praga passa: os insetos voltam ao normal.',
+    plagueEnd: 'A praga passa: os insetos que sobraram ficam, mas não entram novos até baixar do teto.',
     copy: (tech: string, ok: boolean) => (ok ? `👁 Sharingan: você copiou ${tech}!` : `👁 Sharingan: a cópia de ${tech} falhou.`),
     seal: (tech: string, turns: number, charged: boolean) =>
       `🔒 Selamento: ${tech} fica selado por ${turns} rodadas${charged ? ' e o golpe carregado se perde' : ''}!`,
@@ -862,9 +862,11 @@ export const ptBR = {
     } as Record<string, (name: string) => string>,
     chakraDrain: {
       seal: (n: number) => `Selo dos Pontos Vitais: o vilão perde ${n} de chakra.`,
-      hive: (n: number) => `Colônia: o vilão perde ${n} de chakra.`,
       chains: (n: number) => `Correntes de Chakra: o vilão preso perde ${n} de chakra.`,
     } as Record<string, (n: number) => string>,
+    hiveDrain: (n: number, gained: number) => `🐛 Colônia: os insetos sugam ${n} de chakra do vilão${gained > 0 ? ` (+${gained} para você)` : ''}.`,
+    hiveBurn: (n: number) => `🐛 Colônia: sem chakra para sugar, os insetos roem ${n} de HP do vilão.`,
+    insectsShed: (n: number, left: number) => `O vilão se livra de ${n} inseto(s) (sobram ${left}).`,
     mist: (n: number) => `🌫 Uma névoa densa cobre o campo (${n} rodadas): mais difícil acertar.`,
     mistEnd: 'A névoa se dissipa.',
     trickster: (who: string, counter: boolean) =>
@@ -935,7 +937,7 @@ export const ptBR = {
     illusion: 'Ilusão de dano: base + genjutsu − resistência mental do alvo. Não tem crítico.',
     shadow: 'Usa ninjutsu no lugar de genjutsu e a resistência física do alvo: funciona até em jinchuuriki.',
     strangle: 'Só com o vilão preso pela Imitação de Sombra. Dano: força do controle × 6 + ninjutsu − resistência física do alvo. Não erra, não tem crítico e não solta o vilão.',
-    devour: 'Consome os insetos presos. Cada inseto causa uma % do HP máximo do vilão (de 1% a 3%), maior quanto mais o seu ninjutsu supera a resistência física dele. Custa 1 de chakra a cada 2 insetos.',
+    devour: 'Consome os insetos presos. Cada inseto causa uma % do HP máximo do vilão (de 0,5% a 1,5%), maior quanto mais o seu ninjutsu supera a resistência física dele. Custa 1 de chakra a cada 2 insetos.',
     fixedDamage: (n: number) => `Dano fixo de ${n} por golpe: ignora status e resistência. Cada acerto prende insetos.`,
     barrier: (power: number) => `Gasta o turno e ergue um escudo de ${power}: absorve dano de taijutsu e ninjutsu por 3 rodadas. O elemento do golpe pesa no escudo.`,
     reflect: 'Devolve parte do dano bloqueado.',
@@ -993,7 +995,7 @@ export const ptBR = {
       exhausted: { name: 'Exausto', desc: 'Taijutsu mais fraco e mais lento enquanto durar.' },
       sealed: { name: 'Selamento', desc: 'A técnica selada não entra na roleta do vilão enquanto durar.' },
       copied: { name: 'Cópia', desc: 'Técnica copiada pelo Sharingan: está entre as suas técnicas até o fim da luta.' },
-      insects: { name: 'Insetos', desc: 'Insetos da Colônia no vilão: sugam chakra no fim de cada rodada. O Devorar os consome e causa dano.' },
+      insects: { name: 'Insetos', desc: 'Insetos da Colônia no vilão: sugam chakra para você no fim de cada rodada (ou roem HP, sem chakra). O teto sobe com o nível do Enxame (10/15/20). O Devorar os consome e causa dano.' },
       clones: { name: 'Clones prontos', desc: 'O próximo ataque sai inteiro e os clones repetem os golpes com uma parte do dano.' },
       armor: { name: 'Armadura de Raio', desc: 'Mais ataque, resistência física e speed.' },
       stance: { name: 'Postura defensiva', desc: 'Resistir usa toda a resistência até o seu próximo turno.' },

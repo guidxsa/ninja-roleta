@@ -132,9 +132,22 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 
 ### Aburame (insetos)
 
-- **Colônia** (passiva): cada golpe do **Enxame** que acerta prende **1 inseto** no vilão (até 10). No **fim de cada rodada**, cada inseto preso drena **1 de chakra** do vilão. Outros ataques não prendem insetos.
+- **Colônia** (passiva):
+  - cada golpe do **Enxame** que acerta prende insetos no vilão: **2 por acerto**, +1 a cada 5 de ninjutsu base a partir de 15 (tabela abaixo). O **crítico** do Enxame prende o dobro naquele golpe. Outros ataques não prendem insetos;
+  - o Enxame que **vence uma disputa de ninjutsu** (atacando ou defendendo) também prende, um lote por golpe que passa (a disputa não rola crítico);
+  - o **teto** de insetos no vilão vem do nível do Enxame: **10 / 15 / 20** (Enxame, Enxame Voraz, Nuvem de Insetos). Acima do teto não entra inseto novo;
+  - no **fim de cada rodada**, a cada **2 insetos**, **1 de chakra** do vilão vai para o Aburame (até o máximo dele). O que o vilão não tinha para pagar vira **dano direto: 1 a cada 3 de chakra que faltou** (para baixo);
+  - **rodada sem nenhum acerto do Enxame**: depois da Colônia, o vilão se livra de **2 insetos**. Para acumular muito, o Enxame precisa continuar batendo.
+
+  | Ninjutsu base | Insetos por acerto |
+  |---|---|
+  | até 14 | 2 |
+  | 15 a 19 | 3 |
+  | 20 a 24 | 4 |
+  | 25 ou mais | 5 |
+
 - **Kit**: Enxame (prende os insetos, em linha própria) e Devorar (consome os insetos). Fichas e a tabela de dano do Devorar em [tecnicas.md](tecnicas.md#técnicas-de-linhagem).
-- **Praga** (ativa): escolha grátis, 6 de chakra, **1 uso por luta** (+1 no nível 7). Por 3 rodadas, contando a da ativação, o Enxame prende **2 insetos por acerto** e o teto de insetos **dobra**. Quando acaba, o excesso cai para o teto normal.
+- **Praga** (ativa): escolha grátis, 6 de chakra, **1 uso por luta** (+1 no nível 7). Por 3 rodadas, contando a da ativação, o Enxame prende o **dobro de insetos** por acerto (×4 num crítico) e o teto **dobra** (20 / 30 / 40). Quando acaba, os insetos acima do teto normal **ficam**, mas não entra inseto novo até o vilão baixar do teto (o Devorar consome tudo).
 - O Devorar não drena chakra: quem drena é a Colônia, no fim da rodada. O HP máximo do vilão não muda.
 
 ### Inuzuka (parceiro canino)
@@ -205,7 +218,7 @@ Nos níveis 4 e 7, cada linhagem desperta: a tela da subida de nível mostra o q
 | Nara | A Imitação de Sombra ganha +1 de força. | O Enforcamento por Sombra soma +1 de força do controle no dano. |
 | Akimichi | Peso +10%; Rolo Colossal. | Pílulas do clã; a Expansão não reduz mais a speed. |
 | Yamanaka | Leitura mental: −15 de acerto nos ataques do vilão; +1 uso da Transmissão. | Na Possessão, o vilão se fere ×1,25; +1 uso da Transmissão. |
-| Aburame | O vilão aguenta até 15 insetos presos. | O Devorar causa +0,5% do HP máximo por inseto; Praga com +1 uso. |
+| Aburame | O Devorar causa +0,25% do HP máximo por inseto. | Mais +0,25% por inseto no Devorar (+0,5% no total); Praga com +1 uso. |
 | Inuzuka | O cão da Dupla bate com 60% do dano base. | A Fera custa 3 de chakra e dura 4 rodadas. |
 | Prodígio do taijutsu | Forçar os portões: +10% de chance; Redemoinho da Folha. | Portões: 2 usos por luta; Lótus Primaveril. |
 | Uchiha | Sharingan de 2 tomoe (Cópia com 65%). | Sharingan de 3 tomoe (Cópia com 80%) e Tsukuyomi. |

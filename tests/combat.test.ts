@@ -83,12 +83,14 @@ describe('rodada básica', () => {
     expect(() => playRound(s0, 'tech:empoweredTaijutsu', seq(0.5), gameData)).toThrow();
     expect(() => playRound(s0, 'tech:fireSpark', seq(0.5), gameData)).toThrow();
     const s1 = playRound(s0, 'rest', seq(0.1, 0.01, 0.01), gameData);
-    expect(s1.player.chakra).toBe(Math.floor(p.maxChakra * 0.15));
+    // Regeneração (+1, 5% de 30) no início da rodada e +15% do Concentrar.
+    expect(s1.player.chakra).toBe(1 + Math.floor(p.maxChakra * 0.15));
   });
 
   it('concentrar chakra recupera 15% do chakra máximo, sem passar do máximo', () => {
     const p = { ...createPlayer(common, gameData), maxChakra: 60, chakra: 0 };
-    expect(playRound(battle(p, testVillain()), 'rest', seq(0.5), gameData).player.chakra).toBe(9);
+    // +3 da regeneração (5% de 60) e +9 do Concentrar.
+    expect(playRound(battle(p, testVillain()), 'rest', seq(0.5), gameData).player.chakra).toBe(12);
     const full = playRound(battle({ ...p, chakra: 55 }, testVillain()), 'rest', seq(0.5), gameData);
     expect(full.player.chakra).toBe(60);
   });
@@ -266,7 +268,8 @@ describe('jinchuuriki: manto de chakra e demônio interno', () => {
     expect(ofType(s1.log, 'cloakCost')).toHaveLength(0);
     const s2 = playRound(s1, 'tech:basicTaijutsu', seq(0.5, 0.5, 0.01), gameData);
     expect(ofType(s2.log, 'cloakCost')).toEqual([{ type: 'cloakCost', side: 'player', chakra: 6 }]);
-    expect(s2.player.chakra).toBe(54);
+    // +3 da regeneração e −6 do manto.
+    expect(s2.player.chakra).toBe(57);
   });
 
   it('sem chakra para pagar a rodada, o manto se desfaz', () => {
@@ -421,7 +424,8 @@ describe('chakra dos vilões', () => {
     const s0 = startBattle(createPlayer(common, gameData), testVillain({ ...caster(), chakra: 20 }));
     const s1 = playRound({ ...s0, villain: { ...s0.villain, chakra: 1 } }, 'rest', seq(0.9, 0.01, 0.01), gameData);
     expect(ofType(s1.log, 'villainRest')).toEqual([{ type: 'villainRest', chakra: 3 }]);
-    expect(s1.villain.chakra).toBe(4);
+    // 1 + 1 da regeneração + 3 do Concentrar.
+    expect(s1.villain.chakra).toBe(5);
     expect(ofType(s1.log, 'attack').filter((a) => a.side === 'villain')).toHaveLength(0);
   });
 
@@ -429,7 +433,8 @@ describe('chakra dos vilões', () => {
     const s0 = startBattle(createPlayer(common, gameData), caster());
     const s1 = playRound({ ...s0, villain: { ...s0.villain, chakra: 1 } }, 'rest', seq(0.9, 0.01, 0.01), gameData);
     expect(ofType(s1.log, 'villainRest')).toEqual([{ type: 'villainRest', chakra: 1 }]);
-    expect(s1.villain.chakra).toBe(2);
+    // 1 + 1 da regeneração + 1 do Concentrar.
+    expect(s1.villain.chakra).toBe(3);
     expect(ofType(s1.log, 'attack').filter((a) => a.side === 'villain')).toHaveLength(0);
   });
 

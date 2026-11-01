@@ -50,6 +50,8 @@ export const balance = {
   // Ações universais (tecnicas.md).
   // Concentrar chakra (jogador e vilão): recupera esta fração do chakra máximo (arredonda para baixo, mínimo 1).
   rest: { chakraPct: 0.15 },
+  // Regeneração passiva (v0.31): todos recuperam `pct` do chakra máximo (mínimo `min`) no início de cada rodada.
+  chakraRegen: { pct: 0.05, min: 1 },
   // Reação Substituição: chance = base + (speed de quem reage − speed do atacante) × perSpeed, entre min e max.
   substitution: { chakraCost: 2, baseChance: 0.5, perSpeed: 0.03, min: 0.25, max: 0.85, usesPerFight: 2 },
 
@@ -129,9 +131,21 @@ export const balance = {
       ],
     },
     mindReading: { villainHitPenalty: 0.1 },
-    // Colônia (Aburame): cada golpe do Enxame que acerta deixa `insectsPerHit` insetos no vilão (até `maxInsects`);
-    // no fim de cada rodada, cada inseto preso drena `chakraPerInsect` de chakra do vilão.
-    hive: { insectsPerHit: 1, maxInsects: 10, chakraPerInsect: 1 },
+    // Colônia (Aburame, v0.31): cada golpe do Enxame que acerta deixa `insectsPerHit` insetos no vilão, +1 a cada
+    // `ninjutsuStep` de ninjutsu base a partir de `ninjutsuFrom` (o crítico e a Praga dobram). O teto vem do nível do
+    // Enxame (`maxInsectsByLevel`, I/II/III). No fim da rodada, drena 1 de chakra a cada `insectsPerChakra` insetos
+    // para o Aburame; o que o vilão não tinha vira dano (1 a cada `burnPerMissingChakra` que faltou). Rodada sem
+    // acerto do Enxame: o vilão se livra de `shedPerRound` insetos.
+    hive: {
+      insectsPerHit: 2,
+      ninjutsuFrom: 15,
+      ninjutsuStep: 5,
+      critMult: 2,
+      maxInsectsByLevel: [10, 15, 20],
+      insectsPerChakra: 2,
+      burnPerMissingChakra: 3,
+      shedPerRound: 2,
+    },
     duo: { chance: 0.25, damagePct: 0.4 },
     genjutsuResistance: { bonus: 6 },
     preciseFist: { penetration: 0.3 },
@@ -149,7 +163,7 @@ export const balance = {
   // Fera de quatro patas (Inuzuka): speed +`speedBonus`, Dupla com `duoChance` e Substituição sem gastar usos.
   beast: { chakraCost: 5, turns: 3, speedBonus: 3, duoChance: 0.6, uses: 1, extraUseLevels: [7] },
   // Praga (Aburame, ativa grátis): por `turns` rodadas (contando a da ativação), os insetos por acerto e o teto
-  // de insetos são multiplicados por `mult`. Ao acabar, o excesso cai para o teto normal.
+  // de insetos são multiplicados por `mult`. Ao acabar, o excesso fica, mas não entra inseto novo até baixar do teto.
   plague: { chakraCost: 6, turns: 3, mult: 2, uses: 1, extraUseLevels: [7] },
   // Devorar (Aburame, técnica de ninjutsu): custa 1 de chakra a cada `insectsPerChakra` insetos (para cima). Pela
   // razão ninjutsu base do Aburame ÷ resistência física do vilão, o maior degrau alcançado dá `pct` do HP máximo do
@@ -157,11 +171,11 @@ export const balance = {
   devour: {
     insectsPerChakra: 2,
     table: [
-      { ratio: 0, pct: 0.01 },
-      { ratio: 0.75, pct: 0.015 },
-      { ratio: 1, pct: 0.02 },
-      { ratio: 1.25, pct: 0.025 },
-      { ratio: 1.5, pct: 0.03 },
+      { ratio: 0, pct: 0.005 },
+      { ratio: 0.75, pct: 0.0075 },
+      { ratio: 1, pct: 0.01 },
+      { ratio: 1.25, pct: 0.0125 },
+      { ratio: 1.5, pct: 0.015 },
     ],
   },
   // Transmissão mental (Yamanaka): contra golpe carregado, rola o acerto de genjutsu; pegou, o vilão perde o golpe e a vez.
@@ -193,7 +207,7 @@ export const balance = {
     nara: { shadow: { level: 4, strengthBonus: 1 }, strangle: { level: 7, strengthBonus: 1 } },
     akimichi: { heavyBody: { level: 4, weightMult: 1.1 }, expansion: { level: 7 } },
     yamanaka: { mindReading: { level: 4, villainHitPenalty: 0.15 }, possession: { level: 7, selfDamageMult: 1.25 } },
-    aburame: { colony: { level: 4, maxInsects: 15 }, devour: { level: 7, pctBonus: 0.005 } },
+    aburame: { devour: { levels: [4, 7], pctBonus: 0.0025 } },
     inuzuka: { duo: { level: 4, damagePct: 0.6 }, beast: { level: 7, chakraCost: 3, turns: 4 } },
     taijutsuProdigy: { force: { level: 4, chanceBonus: 0.1 }, gates: { level: 7, usesPerFight: 2 } },
     hyuuga: { byakugan: { level: 4, duration: 7 } },

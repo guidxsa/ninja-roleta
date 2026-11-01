@@ -166,9 +166,9 @@ Técnicas exclusivas de uma origem (campo `lineages`), de todas as categorias. "
 | Akimichi | Rolo Colossal | Taijutsu | 4 | 20 | 1 | 6 | 80% | 20% de atordoar no acerto |
 | Yamanaka | Transferência de Mente | Genjutsu | Inicial | — | — | 4 | — | Possessão: o vilão perde a vez golpeando a si mesmo (força base 1, poder +2; ver [efeitos.md](efeitos.md#efeitos-de-genjutsu)) |
 | Yamanaka | Pétalas Ilusórias | Genjutsu | Inicial | — | — | 3 | — | Confusão (força base 1, poder 0) |
-| Aburame | Enxame | Ninjutsu | Inicial | 1 fixo | 2 | 5 | 85% | Cada golpe que acerta prende 1 inseto (Colônia) |
-| Aburame | Enxame Voraz (Enxame II) | Ninjutsu | Upgrade | 1 fixo | 4 | 6 | 85% | Idem |
-| Aburame | Nuvem de Insetos (Enxame III) | Ninjutsu | Upgrade | 1 fixo | 6 | 7 | 85% | Idem |
+| Aburame | Enxame | Ninjutsu | Inicial | 1 fixo | 2 | 5 | 85% | Cada golpe que acerta prende insetos (Colônia); teto de 10 insetos |
+| Aburame | Enxame Voraz (Enxame II) | Ninjutsu | Upgrade | 1 fixo | 4 | 6 | 85% | Idem; teto de 15 |
+| Aburame | Nuvem de Insetos (Enxame III) | Ninjutsu | Upgrade | 1 fixo | 6 | 7 | 85% | Idem; teto de 20 |
 | Aburame | Devorar | Ninjutsu | Inicial | Ver abaixo | — | 1 a cada 2 insetos | não rola | Com ao menos 1 inseto no vilão |
 | Inuzuka | Presas Giratórias | Taijutsu | Inicial | 7 | 2 | 3 | 85% | — |
 | Prodígio | Redemoinho da Folha | Taijutsu | 4 | 16 | 1 | 5 | 90% | — |
@@ -184,16 +184,18 @@ Técnicas exclusivas de uma origem (campo `lineages`), de todas as categorias. "
 
 - **Enforcamento por Sombra**: gasta o turno, não rola acerto e não tem crítico. Dano = **força do controle × 6 + ninjutsu − resistência física passiva do vilão** (ele perdeu a vez), × a vulnerabilidade de quem está controlado. Não solta o vilão: a roleta de fuga dele gira normalmente ([efeitos.md](efeitos.md#duração-dos-efeitos-mentais)). A força é a da Imitação de Sombra que prendeu (+1 no nível 4); no nível 7, o dano soma +1 de força ([origens.md](origens.md#despertar)).
 
-- **Enxame**: ninjutsu neutro; cada golpe rola o próprio acerto e causa **1 de dano fixo** (sem status, resistência nem crítico). Sobe pela própria linha (+2 golpes por nível). Não drena chakra por si só (quem drena é a Colônia).
+- **Enxame**: ninjutsu neutro; cada golpe rola o próprio acerto e causa **1 de dano fixo** (sem status nem resistência; o crítico não muda o dano, mas **dobra os insetos** daquele golpe). Sobe pela própria linha (+2 golpes por nível), e o nível dele define o **teto de insetos** (10 / 15 / 20). Quantos insetos cada acerto prende, a disputa e a Colônia estão em [origens.md](origens.md#aburame-insetos). Não drena chakra por si só (quem drena é a Colônia).
 - **Devorar**: gasta o turno, custa 1 de chakra a cada 2 insetos (arredonda para cima) e não rola acerto. Consome todos os insetos e causa **dano direto** (sem resistência) = % por inseto × insetos × HP máximo do vilão, arredondado para baixo. A % vem da razão **ninjutsu base do Aburame (sem bônus temporários) ÷ resistência física do vilão**, pelo maior degrau alcançado:
 
   | Razão | Dano por inseto |
   |---|---|
-  | abaixo de 0,75 | 1% do HP máximo |
-  | 0,75 | 1,5% |
-  | 1 | 2% |
-  | 1,25 | 2,5% |
-  | 1,5 | 3% |
+  | abaixo de 0,75 | 0,5% do HP máximo |
+  | 0,75 | 0,75% |
+  | 1 | 1% |
+  | 1,25 | 1,25% |
+  | 1,5 | 1,5% |
+
+  Sem teto de dano: quem limita é o teto de insetos. O despertar soma +0,25% por inseto no nível 4 e mais +0,25% no 7.
 
 - Upgrade genérico das ilusões de dano do Uchiha: +3 de dano e +3 de poder por nível.
 

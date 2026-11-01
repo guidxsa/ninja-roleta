@@ -12,6 +12,7 @@ import {
   dealsDamage,
   devourPct,
   devourPreview,
+  insectsPerHit,
   maxInsects,
   shadowStrangleDamage,
   illusionDamage,
@@ -148,18 +149,19 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
     if (!t || (!dealsDamage(t) && !isIllusion(t) && !t.devour)) continue;
     let score: number;
     if (t.devour) {
-      // Devorar: dano direto; com a colônia perto do teto ou quando já derruba o vilão.
+      // Devorar: dano direto; com a colônia no teto (o Enxame já não prende mais) ou quando já derruba o vilão.
       const prev = devourPreview(state, data);
-      if (prev.insects < Math.min(8, maxInsects(state, data)) && prev.damage < v.hp) continue;
+      if (prev.insects < maxInsects(state, data) && prev.damage < v.hp) continue;
       score = prev.damage;
     } else if (t.shadowStrangle) {
       score = shadowStrangleDamage(state, data);
     } else if (t.line === 'swarm' && state.player.passive === 'hive') {
-      // Enxame: vale pelos insetos que prende (o dano que eles darão no Devorar), até o teto.
+      // Enxame: vale pelos insetos que prende (o dano que eles darão no Devorar), até o teto, e pelos que segura
+      // (rodada sem acerto do Enxame solta insetos).
       const prev = attackPreview(state, t.id, data);
-      const perHit = data.balance.passives.hive.insectsPerHit * (state.playerFx.plagueTurns > 0 ? data.balance.plague.mult : 1);
-      const added = Math.min(maxInsects(state, data) - v.insects, prev.hitChance * prev.hits * perHit);
-      score = prev.damage * prev.hitChance * prev.hits + added * devourPct(state, data) * v.def.hp;
+      const added = Math.max(0, Math.min(maxInsects(state, data) - v.insects, prev.hitChance * prev.hits * insectsPerHit(state, false, data)));
+      const kept = Math.min(v.insects, data.balance.passives.hive.shedPerRound);
+      score = prev.damage * prev.hitChance * prev.hits + (added + kept) * devourPct(state, data) * v.def.hp;
     } else if (isIllusion(t)) {
       score = illusionValue(state, t.id, data);
       // Ilusão que também controla (Tsukuyomi) vale mais se o vilão ainda pode perder a vez.
