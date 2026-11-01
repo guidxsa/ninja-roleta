@@ -168,8 +168,17 @@ export const balance = {
   // Devorar (Aburame, técnica de ninjutsu): custa 1 de chakra a cada `insectsPerChakra` insetos (para cima). Pela
   // razão ninjutsu base do Aburame ÷ resistência física do vilão, o maior degrau alcançado dá `pct` do HP máximo do
   // vilão por inseto, como dano direto (sem resistência).
+  // v0.31.2: o dano usa todos os insetos; depois, `keepPct` deles continua no vilão. Absorve do chakra máximo do
+  // vilão o `pct` do maior degrau de insetos usados alcançado (`chakraTable`), para o Aburame.
   devour: {
     insectsPerChakra: 2,
+    keepPct: 0.4,
+    chakraTable: [
+      { insects: 1, pct: 0.05 },
+      { insects: 4, pct: 0.1 },
+      { insects: 7, pct: 0.15 },
+      { insects: 10, pct: 0.2 },
+    ],
     table: [
       { ratio: 0, pct: 0.005 },
       { ratio: 0.75, pct: 0.0075 },

@@ -549,7 +549,8 @@ export const ptBR = {
     effortFree: (left: number) => `Esforço · ${left}×`,
     beastOn: (n: number) => `Fera ${n}t`,
     insects: (n: number) => `Insetos ${n}`,
-    devourHint: (insects: number, pct: number, damage: number) => `${insects} inseto(s) × ${pct}%: ${damage} de dano`,
+    devourHint: (insects: number, pct: number, damage: number, chakra: number, kept: number) =>
+      `${insects} inseto(s) × ${pct}%: ${damage} de dano, +${chakra} de chakra; ficam ${kept}`,
     strangleHint: (damage: number) => `${damage} de dano · não erra`,
     strangleInfo: 'só com o vilão preso pela sombra',
     plagueOn: (n: number) => `Praga ${n}t`,
@@ -822,7 +823,8 @@ export const ptBR = {
     exhaustedEnd: 'A exaustão passa.',
     comeback: (n: number) => `Nunca desistir! Você recupera ${n} de HP.`,
     gatesForce: (ok: boolean, hp: number) => (ok ? 'Você força mais um portão!' : `O portão não cede: −${hp} HP.`),
-    devour: (insects: number, damage: number) => `🐛 Devorar: ${insects} inseto(s) causam ${damage} de dano.`,
+    devour: (insects: number, damage: number, chakra: number, kept: number) =>
+      `🐛 Devorar: ${insects} inseto(s) causam ${damage} de dano e sugam ${chakra} de chakra; ${kept} continuam no vilão.`,
     transmission: (tech: string, ok: boolean) =>
       ok ? `🧠 Transmissão mental: ${tech} foi cancelado!` : `🧠 Transmissão mental: o vilão resiste e segue com ${tech}.`,
     clones: 'Clones das Sombras! O próximo ataque vem com os clones.',
@@ -937,7 +939,7 @@ export const ptBR = {
     illusion: 'Ilusão de dano: base + genjutsu − resistência mental do alvo. Não tem crítico.',
     shadow: 'Usa ninjutsu no lugar de genjutsu e a resistência física do alvo: funciona até em jinchuuriki.',
     strangle: 'Só com o vilão preso pela Imitação de Sombra. Dano: força do controle × 6 + ninjutsu − resistência física do alvo. Não erra, não tem crítico e não solta o vilão.',
-    devour: 'Consome os insetos presos. Cada inseto causa uma % do HP máximo do vilão (de 0,5% a 1,5%), maior quanto mais o seu ninjutsu supera a resistência física dele. Custa 1 de chakra a cada 2 insetos.',
+    devour: 'Usa todos os insetos presos: cada um causa uma % do HP máximo do vilão (de 0,5% a 1,5%), maior quanto mais o seu ninjutsu supera a resistência física dele. Suga do chakra máximo do vilão 5% a 20% (mais insetos, mais chakra) para você. Depois, 40% dos insetos continuam no vilão. Custa 1 de chakra a cada 2 insetos.',
     fixedDamage: (n: number) => `Dano fixo de ${n} por golpe: ignora status e resistência. Cada acerto prende insetos.`,
     barrier: (power: number) => `Gasta o turno e ergue um escudo de ${power}: absorve dano de taijutsu e ninjutsu por 3 rodadas. O elemento do golpe pesa no escudo.`,
     reflect: 'Devolve parte do dano bloqueado.',

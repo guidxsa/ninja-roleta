@@ -670,14 +670,21 @@ describe('passivas e ativas de clã', () => {
 
   it('Devorar (Aburame): % do HP máximo por inseto pela razão ninjutsu ÷ resistência física; 1 ck a cada 2 insetos', () => {
     const p = createPlayer(clan('aburame'), gameData);
-    // Ninjutsu 13 ÷ resistência 10 = 1,3: 1,25% por inseto. 6 insetos × 1,25% × 200 = 15; custa 3; não drena chakra.
+    // Ninjutsu 13 ÷ resistência 10 = 1,3: 1,25% por inseto. 6 insetos × 1,25% × 200 = 15; custa 3.
+    // Usa os 6, ficam 2 (40%) e suga 10% do chakra máximo do vilão (2 de 20) para o Aburame.
     const s0 = withInitiative(startBattle(p, testVillain({ hp: 200 })));
     const six = { ...s0, villain: { ...s0.villain, insects: 6 } };
     expect(availableActions(six, gameData)).toContain('tech:insectDevour');
     const s1 = playRound(six, 'tech:insectDevour', seq(0.5), gameData);
-    expect(ofType(s1.log, 'devour')).toEqual([{ type: 'devour', insects: 6, pct: 0.0125, damage: 15 }]);
-    expect([s1.villain.insects, s1.villain.chakra, s1.villain.hp]).toEqual([0, 20, 185]);
-    expect(s1.player.chakra).toBe(p.maxChakra - 3);
+    expect(ofType(s1.log, 'devour')).toEqual([{ type: 'devour', insects: 6, pct: 0.0125, damage: 15, kept: 2, chakra: 2, gained: 2 }]);
+    // Os 2 que ficaram se soltam no fim da rodada (o Enxame não acertou).
+    expect([s1.villain.insects, s1.villain.chakra, s1.villain.hp]).toEqual([0, 18, 185]);
+    expect(s1.player.chakra).toBe(p.maxChakra - 3 + 2);
+    // 10 insetos: ficam 4 e suga 20%; o chakra sugado não passa do que o vilão tem.
+    const ten = { ...s0, villain: { ...s0.villain, insects: 10 } };
+    expect(devourPreview(ten, gameData)).toMatchObject({ insects: 10, kept: 4, chakra: 4 });
+    expect(devourPreview({ ...ten, villain: { ...ten.villain, chakra: 1 } }, gameData).chakra).toBe(1);
+    expect([1, 3, 4, 7, 9, 10, 20].map((n) => devourPreview({ ...s0, villain: { ...s0.villain, insects: n } }, gameData).chakra)).toEqual([1, 1, 2, 3, 3, 4, 4]);
     // Degraus: resistência 8 (1,6) → 1,5%; 13 (1) → 1%; 20 (0,65) → 0,5%. Sem teto de dano: quem limita são os insetos.
     const pctAt = (physical: number, level = 1) => {
       const s = withInitiative(startBattle(at(p, level), testVillain({ hp: 200, resistance: { physical, mental: 10 } })));

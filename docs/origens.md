@@ -148,7 +148,7 @@ Toda **ativa** de linhagem é uma **escolha grátis**: ativa junto com a ação 
 
 - **Kit**: Enxame (prende os insetos, em linha própria) e Devorar (consome os insetos). Fichas e a tabela de dano do Devorar em [tecnicas.md](tecnicas.md#técnicas-de-linhagem).
 - **Praga** (ativa): escolha grátis, 6 de chakra, **1 uso por luta** (+1 no nível 7). Por 3 rodadas, contando a da ativação, o Enxame prende o **dobro de insetos** por acerto (×4 num crítico) e o teto **dobra** (20 / 30 / 40). Quando acaba, os insetos acima do teto normal **ficam**, mas não entra inseto novo até o vilão baixar do teto (o Devorar consome tudo).
-- O Devorar não drena chakra: quem drena é a Colônia, no fim da rodada. O HP máximo do vilão não muda.
+- O Devorar usa todos os insetos, suga chakra do vilão e deixa 40% deles presos ([tecnicas.md](tecnicas.md#técnicas-de-linhagem)). O HP máximo do vilão não muda.
 
 ### Inuzuka (parceiro canino)
 

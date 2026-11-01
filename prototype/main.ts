@@ -1364,7 +1364,7 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     tipAttr = playerTechTip(p, techId);
     if (tech.devour) {
       const prev = devourPreview(s, data);
-      extra = `${S.ui.devourHint(prev.insects, Math.round(prev.pct * 1000) / 10, prev.damage)} · ${S.ui.cost(techniqueCost(s, tech, data))}`;
+      extra = `${S.ui.devourHint(prev.insects, Math.round(prev.pct * 1000) / 10, prev.damage, prev.chakra, prev.kept)} · ${S.ui.cost(techniqueCost(s, tech, data))}`;
     } else if (tech.shadowStrangle) {
       extra = `${S.ui.strangleHint(shadowStrangleDamage(s, data))} · ${S.ui.cost(tech.chakraCost)}`;
     } else if (isIllusion(tech)) {
@@ -2030,7 +2030,10 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'devour':
           disp.vhp -= ev.damage;
           if (ev.damage > 0) floatNumber(vcard(), `−${ev.damage}`, 'dmg');
-          log(S.log.devour(ev.insects, ev.damage), 'good');
+          disp.vck -= ev.chakra;
+          disp.pck += ev.gained;
+          if (ev.gained > 0) floatNumber(pcard, `+${ev.gained} ck`, 'ck');
+          log(S.log.devour(ev.insects, ev.damage, ev.chakra, ev.kept), 'good');
           break;
         case 'copy':
           disp.pck -= data.balance.copy.chakraCost;

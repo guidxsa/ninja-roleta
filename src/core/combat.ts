@@ -379,7 +379,8 @@ export type BattleEvent =
   | { type: 'beastEnd' }
   | { type: 'plague'; chakra: number }
   | { type: 'plagueEnd'; insects: number }
-  | { type: 'devour'; insects: number; pct: number; damage: number }
+  /** `kept`: insetos que continuam no vilão; `chakra`: absorvido do vilão; `gained`: o que entrou no Aburame. */
+  | { type: 'devour'; insects: number; pct: number; damage: number; kept: number; chakra: number; gained: number }
   | { type: 'transmission'; chance: number; success: boolean; techniqueId: string }
   | { type: 'copy'; chance: number; success: boolean; techniqueId: string }
   | { type: 'seal'; techniqueId: string; turns: number; charged: boolean }
@@ -2839,18 +2840,36 @@ export function devourPct(s: BattleState, data: GameData): number {
 }
 
 /** Devorar: dano direto que os insetos presos causariam agora. */
-export function devourPreview(s: BattleState, data: GameData): { insects: number; pct: number; damage: number } {
+export function devourPreview(
+  s: BattleState,
+  data: GameData,
+): { insects: number; pct: number; damage: number; kept: number; chakra: number } {
+  const cfg = data.balance.devour;
   const insects = s.villain.insects;
   const pct = devourPct(s, data);
-  return { insects, pct, damage: Math.floor(pct * insects * s.villain.def.hp) };
+  const chakraPct = cfg.chakraTable.reduce((best, step) => (insects >= step.insects ? Math.max(best, step.pct) : best), 0);
+  return {
+    insects,
+    pct,
+    damage: Math.floor(pct * insects * s.villain.def.hp),
+    kept: Math.floor(insects * cfg.keepPct),
+    // Só sai o chakra que o vilão tem.
+    chakra: Math.min(s.villain.chakra, Math.floor(s.villain.def.chakra * chakraPct)),
+  };
 }
 
-/** Devorar (Aburame, técnica de ninjutsu): consome os insetos presos e causa dano direto (sem resistência). */
+/**
+ * Devorar (Aburame, técnica de ninjutsu): o dano direto (sem resistência) usa todos os insetos presos; depois,
+ * `keepPct` deles continua no vilão. Absorve chakra do vilão para o Aburame pela quantidade de insetos usados.
+ */
 function devour(s: BattleState, data: GameData): void {
-  const { insects, pct, damage } = devourPreview(s, data);
+  const { insects, pct, damage, kept, chakra } = devourPreview(s, data);
   payChakra(s.player, techniqueCost(s, data.techniquesById[DEVOUR]!, data));
-  s.villain.insects = 0;
-  s.log.push({ type: 'devour', insects, pct, damage });
+  s.villain.insects = kept;
+  s.villain.chakra -= chakra;
+  const gained = Math.min(s.player.maxChakra - s.player.chakra, chakra);
+  s.player.chakra += gained;
+  s.log.push({ type: 'devour', insects, pct, damage, kept, chakra, gained });
   if (damage > 0) hurtVillain(s, damage);
 }
 

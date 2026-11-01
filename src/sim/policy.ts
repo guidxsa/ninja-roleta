@@ -149,10 +149,13 @@ export function choosePlayerAction(state: BattleState, data: GameData): PlayerAc
     if (!t || (!dealsDamage(t) && !isIllusion(t) && !t.devour)) continue;
     let score: number;
     if (t.devour) {
-      // Devorar: dano direto; com a colônia no teto (o Enxame já não prende mais) ou quando já derruba o vilão.
+      // Devorar: dano direto + chakra sugado; no teto (o Enxame já não prende mais), quando derruba o vilão ou
+      // quando falta chakra para o Enxame (o Devorar devolve chakra e mantém 40% dos insetos).
       const prev = devourPreview(state, data);
-      if (prev.insects < maxInsects(state, data) && prev.damage < v.hp) continue;
-      score = prev.damage;
+      const swarmCost = data.techniquesById['insectSwarm']!.chakraCost;
+      const starving = state.player.chakra < swarmCost && prev.chakra > 0;
+      if (prev.insects < maxInsects(state, data) && prev.damage < v.hp && !starving) continue;
+      score = prev.damage + prev.chakra;
     } else if (t.shadowStrangle) {
       score = shadowStrangleDamage(state, data);
     } else if (t.line === 'swarm' && state.player.passive === 'hive') {

@@ -91,7 +91,7 @@ describe('resumo da luta', () => {
           { type: 'gates', stage: 2, hpLost: 10, chakra: 5 },
           { type: 'pill', pill: 'red', hpLost: 30 },
           { type: 'item', item: 'medKit', amount: 0 },
-          { type: 'devour', insects: 5, pct: 0.02, damage: 20 },
+          { type: 'devour', insects: 5, pct: 0.02, damage: 20, kept: 2, chakra: 0, gained: 0 },
           { type: 'end', status: 'won' },
         ],
         'won',
@@ -115,7 +115,7 @@ describe('resumo da luta', () => {
   });
 
   it('o Devorar só conta como golpe final se foi o último dano e a luta foi ganha', () => {
-    const log: BattleEvent[] = [{ type: 'devour', insects: 2, pct: 0.02, damage: 4 }, attack('player', 8)];
+    const log: BattleEvent[] = [{ type: 'devour', insects: 2, pct: 0.02, damage: 4, kept: 0, chakra: 0, gained: 0 }, attack('player', 8)];
     expect(summarizeFight('x', false, battle(log, 'won')).devourFinish).toBe(false);
     expect(summarizeFight('x', false, battle([log[0]!], 'lost')).devourFinish).toBe(false);
   });
