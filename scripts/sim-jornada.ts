@@ -8,6 +8,10 @@ import {
   battleSetup,
   buy,
   canBuy,
+  chooseNode,
+  choosingNode,
+  newGenericRun,
+  nodeChoices,
   buyTalent,
   chooseBossRelic,
   currentStop,
@@ -23,7 +27,6 @@ import {
   spendItem,
   stopRng,
   talentContext,
-  HERO,
   type JRun,
 } from '../src/core/jornada/run';
 import { canBuyTalent } from '../src/core/jornada/talents';
@@ -61,26 +64,40 @@ function fight(run: JRun, rng: Rng): JRun {
 function spendTalents(run: JRun): JRun {
   for (;;) {
     const ctx = talentContext(run, unlocked);
-    const node = [...data.talents].sort((a, b) => a.cost - b.cost).find((n) => canBuyTalent(n, data.talents, ctx));
+    const node = [...data.talents].sort((a, b) => a.cost - b.cost).find((n) => n.owner === run.hero && canBuyTalent(n, data.talents, ctx));
     if (!node) return run;
     run = buyTalent(run, node.id, unlocked, data);
   }
 }
 
-function play(seed: number, difficulty: Difficulty): { run: JRun; stop: string } {
+type Mode = 'canon' | 'generic';
+
+/** Caminho no mapa: descanso quando ferido, elite com HP alto, senão o que vier (luta e desconhecido antes). */
+function pickNode(run: JRun, rng: Rng): string {
+  const sheet = memberSheet(run, run.hero, data);
+  const hp = (run.members[run.hero]?.hp ?? sheet.maxHp) / sheet.maxHp;
+  const score = (k: string) => (k === 'rest' ? (hp < 0.6 ? 5 : 0) : k === 'elite' ? (hp > 0.8 ? 3 : -2) : k === 'treasure' ? 4 : k === 'shop' ? (run.ryo >= 60 ? 2 : 0) : 1) + rng();
+  return [...nodeChoices(run)].sort((a, b) => score(b.kind) - score(a.kind))[0]!.id;
+}
+
+function play(seed: number, difficulty: Difficulty, mode: Mode): { run: JRun; stop: string } {
   const rng = createRng(seed);
-  let run = newRun(seed, difficulty, data);
+  let run = mode === 'canon' ? newRun(seed, difficulty, data) : newGenericRun(seed, difficulty, 'common', data);
   let guard = 0;
   while (run.status === 'inProgress') {
-    if (++guard > 200) throw new Error('run sem fim');
+    if (++guard > 400) throw new Error('run sem fim');
     run = spendTalents(run);
     if (run.bossChoice) {
       run = chooseBossRelic(run, run.bossChoice[0]!, data);
       continue;
     }
+    if (choosingNode(run)) {
+      run = chooseNode(run, pickNode(run, rng));
+      continue;
+    }
     const stop = currentStop(run, data)!;
     if (stop.kind === 'event') {
-      const opt = eventOptions(data.events[stop.event]!, run.flags)[0]!;
+      const opt = eventOptions(data.events[stop.event]!, run.flags, run.ryo)[0]!;
       run = resolveEvent(run, opt.id, rng() < 0.6, data).run;
     } else if (stop.kind === 'shop') {
       const offer = shopOffer(run, data);
@@ -89,29 +106,29 @@ function play(seed: number, difficulty: Difficulty): { run: JRun; stop: string }
       if (canBuy(run, { kind: 'item', ...kit }, data)) run = buy(run, { kind: 'item', ...kit }, data);
       run = leaveStop(run, data);
     } else if (stop.kind === 'rest') {
-      const hero = memberSheet(run, HERO, data);
-      run = rest(run, (run.members[HERO]?.hp ?? hero.maxHp) < hero.maxHp * 0.7 ? 'heal' : 'train', data);
+      const hero = memberSheet(run, run.hero, data);
+      run = rest(run, (run.members[run.hero]?.hp ?? hero.maxHp) < hero.maxHp * 0.7 ? 'heal' : 'train', data);
     } else if (stop.kind === 'treasure') {
       const id = openTreasure(run, data);
       run = leaveStop(id ? gainRelic(run, id, data) : run, data);
     } else {
       run = fight(run, rng);
-      if (run.status === 'defeat') return { run, stop: `${run.stageIndex + 1}:${stop.id}` };
+      if (run.status === 'defeat') return { run, stop: `${run.stageIndex + 1}:${mode === 'canon' ? stop.id : stop.kind}` };
     }
   }
   return { run, stop: 'vitória' };
 }
 
-for (const d of DIFFS) {
+for (const mode of ['canon', 'generic'] as Mode[]) for (const d of DIFFS) {
   const stops = new Map<string, number>();
   let wins = 0;
   let levels = 0;
   for (let i = 0; i < RUNS; i++) {
-    const { run, stop } = play(SEED * 100003 + i, d);
+    const { run, stop } = play(SEED * 100003 + i, d, mode);
     if (run.status === 'victory') wins++;
     levels += run.level;
     stops.set(stop, (stops.get(stop) ?? 0) + 1);
   }
   const top = [...stops.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, n]) => `${k} ${Math.round((n / RUNS) * 100)}%`);
-  console.log(`${d.padEnd(8)} vitória ${Math.round((wins / RUNS) * 100)}% · nível médio ${(levels / RUNS).toFixed(1)} · ${top.join(' · ')}`);
+  console.log(`${mode.padEnd(8)} ${d.padEnd(8)} vitória ${Math.round((wins / RUNS) * 100)}% · nível médio ${(levels / RUNS).toFixed(1)} · ${top.join(' · ')}`);
 }

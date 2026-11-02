@@ -105,7 +105,63 @@ export const characters: CharacterDef[] = [
   },
 ];
 
-export const charactersById: Record<string, CharacterDef> = Object.fromEntries(characters.map((c) => [c.id, c]));
+/** Protagonistas e suportes das runs genéricas (docs/jornada/classes.md). O elemento é sorteado na run. */
+export const genericCharacters: CharacterDef[] = [
+  {
+    id: 'commonNinja',
+    hp: 100,
+    chakra: 30,
+    speed: 11,
+    offense: { taijutsu: 9, ninjutsu: 9, genjutsu: 4 },
+    resistance: { physical: 7, mental: 6 },
+    element: null,
+    techniques: ['jStrike', 'jShuriken', 'jKunai', 'jBunshin'],
+    ai: 'striker',
+    growth: g(8, 3, 0.5, 0.9, 1, 0.3, 0.6, 0.5),
+    portrait: 'ninja:common',
+  },
+  {
+    id: 'prodigy',
+    hp: 115,
+    chakra: 12,
+    speed: 13,
+    offense: { taijutsu: 12, ninjutsu: 0, genjutsu: 0 },
+    resistance: { physical: 8, mental: 5 },
+    element: null,
+    techniques: ['jStrike', 'jLeafWhirlwind', 'jShuriken', 'jGates'],
+    ai: 'striker',
+    growth: g(9, 1, 0.6, 1.2, 0, 0, 0.7, 0.4),
+    portrait: 'ninja:taijutsuProdigy',
+  },
+  {
+    id: 'leafGeninA',
+    hp: 95,
+    chakra: 24,
+    speed: 11,
+    offense: { taijutsu: 10, ninjutsu: 10, genjutsu: 3 },
+    resistance: { physical: 6, mental: 5 },
+    element: null,
+    techniques: ['jKunai', 'jShuriken'],
+    ai: 'striker',
+    growth: g(6, 2, 0.4, 0.8, 0.8, 0.2, 0.5, 0.4),
+    portrait: 'ninja:common',
+  },
+  {
+    id: 'leafGeninB',
+    hp: 90,
+    chakra: 26,
+    speed: 10,
+    offense: { taijutsu: 8, ninjutsu: 10, genjutsu: 6 },
+    resistance: { physical: 5, mental: 7 },
+    element: null,
+    techniques: ['jKunai', 'jWireTrap', 'jRelease'],
+    ai: 'tactician',
+    growth: g(6, 2, 0.4, 0.7, 0.8, 0.4, 0.4, 0.5),
+    portrait: 'ninja:grass',
+  },
+];
+
+export const charactersById: Record<string, CharacterDef> = Object.fromEntries([...characters, ...genericCharacters].map((c) => [c.id, c]));
 
 /** Técnicas que um aliado ganha ao chegar num estágio (o Sasuke aprende o Chidori no exame). */
 export const stageTechniques: Record<string, Record<number, string[]>> = {

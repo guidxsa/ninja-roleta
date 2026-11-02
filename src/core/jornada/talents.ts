@@ -1,5 +1,6 @@
 // Árvore de talentos (docs/jornada/talentos.md): reinicia a cada run; alguns nós liberam pelo estágio da
 // história e outros só depois de um objetivo da conta (uma conquista).
+import type { Element } from '../types';
 import type { FighterMods } from './types';
 
 export interface TalentNode {
@@ -15,7 +16,11 @@ export interface TalentNode {
   /** Conquista da conta que libera o nó de vez. */
   account?: string;
   learn?: string;
+  /** Técnica aprendida conforme o elemento sorteado do protagonista (ramo Elemento do Comum). */
+  learnByElement?: Partial<Record<Element, string>>;
   mods?: Partial<FighterMods>;
+  /** XP ganho × este valor (Determinação). */
+  xpMult?: number;
 }
 
 export interface TalentContext {

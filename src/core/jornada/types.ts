@@ -7,6 +7,15 @@ export type TeamSide = 'ally' | 'enemy';
 /** Efeitos com duração em turnos de quem sofre (docs/jornada/combate.md#efeitos). */
 export type JEffect = 'stun' | 'burn' | 'poison' | 'chakraBlock';
 
+/** Bônus temporário em quem usa: dano, acerto, esquiva e penetração por `turns` turnos dele. */
+export interface Boost {
+  damageMult?: number;
+  accuracy?: number;
+  evasion?: number;
+  penetration?: number;
+  turns: number;
+}
+
 /** Quem a técnica atinge. `allEnemies`: todos os adversários de pé. */
 export type JTarget = 'enemy' | 'allEnemies' | 'ally' | 'self';
 
@@ -41,6 +50,8 @@ export interface JTechnique {
   cooldown?: number;
   /** Ativa de classe: não ocupa espaço no moveset (docs/jornada/combate.md#moveset). */
   active?: boolean;
+  /** Fortalecimento em quem usa por alguns turnos (Portões, Sharingan, Byakugan). */
+  boost?: Boost;
 }
 
 /** Como um lutador automático escolhe a ação (docs/jornada/personagens.md). */
@@ -141,6 +152,8 @@ export interface Fighter {
   survivedOnce: boolean;
   /** A passiva de fúria já disparou (só para o log). */
   enraged: boolean;
+  /** Fortalecimento ativo (uma técnica de boost por vez; usar de novo renova). */
+  boost: (Boost & { techId: string }) | null;
 }
 
 /** Como a luta se vence (docs/jornada/canonica.md#vitórias-especiais). */
@@ -175,6 +188,7 @@ export type JEvent =
   | { type: 'guard'; uid: string }
   | { type: 'rest'; uid: string; chakra: number }
   | { type: 'enrage'; uid: string }
+  | { type: 'boost'; uid: string; techId: string; turns: number }
   | { type: 'end'; status: BattleStatus };
 
 export interface JBattle {

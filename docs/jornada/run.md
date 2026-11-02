@@ -5,7 +5,7 @@ Estrutura de uma run: tipos de run, paradas, eventos e minijogos, dificuldade e 
 ## Tipos de run
 
 - **Canônica** (implementada na v0.35.0): a história do Naruto, **linear**, sem escolha de caminho. Estágios, paradas e confrontos em [canonica.md](canonica.md).
-- **Genérica** (rascunho, não implementada): é a que aproveita o mapa ramificado, a parada "desconhecido", as classes e os encontros variados (ver abaixo).
+- **Genérica** (implementada na v0.36.0): mapa ramificado, parada "desconhecido", classes e encontros variados ([generica.md](generica.md)).
 
 ## Paradas
 
@@ -52,10 +52,13 @@ Recompensas interativas no lugar da roleta visual. Ganhar dá o prêmio do event
 - Uma luta em andamento não é salva: o F5 volta para o começo da parada.
 - Começar uma nova jornada apaga a salva; terminar (vitória ou derrota) também.
 
-## Mapa ramificado (runs genéricas)
+## Mapa ramificado
 
-Rascunho, ainda não implementado:
+Das runs genéricas ([generica.md](generica.md)), implementado na v0.36.0 (`src/core/jornada/map.ts`).
 
-- Cada estágio é um mapa com 3 começos e caminhos que às vezes seguem retos e às vezes se ramificam. Depois de cada parada, o jogador escolhe a próxima entre as ligadas à atual.
-- Tesouro um por rota, perto do meio; descanso antes do chefe; chefe fixo no fim, o mesmo em qualquer caminho.
-- Encontros diferentes dos da canônica, com a mesma dificuldade.
+- Cada estágio é um mapa de **12 linhas** em 4 colunas, de baixo para cima: a linha 0 tem **3 começos**; as linhas do meio têm 2 a 4 nós; a última é o **chefe**, ligado a todos.
+- Cada nó liga a 1 ou 2 nós da linha de cima (a coluna mais próxima); todo nó é alcançável e tem saída. Depois de cada parada, o jogador escolhe a próxima entre as ligadas à atual.
+- Regras de linha: a linha 0 só tem lutas; a linha 6 só tesouros (um por rota); a penúltima só descansos; elite a partir da linha 2; descanso a partir da linha 3; mercador nunca logo depois de mercador.
+- Pesos dos outros nós: luta 45, desconhecido 22, elite 12, mercador 8, descanso 8.
+- **Desconhecido**: ao entrar, vira evento (50%), luta (30%), mercador (10%) ou tesouro (10%).
+- Na tela, os nós feitos ficam marcados, os que dá para escolher pulsam e o chefe sorteado aparece no topo com o retrato.

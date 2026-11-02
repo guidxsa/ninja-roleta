@@ -1,4 +1,4 @@
-# Árvore de talentos do Naruto
+# Árvores de talentos
 
 > Implementada na v0.35.0 ([README.md](README.md)). Dados em `src/data/jornada/talents.ts`.
 
@@ -22,3 +22,39 @@ Três ramos de quatro nós. Cada nó pede o anterior do mesmo ramo e custa ponto
 | Rasengan | Domínio do Rasengan | 2 | Rasengan: +25% de dano, 2 de chakra a menos |
 | Rasengan | Foco | 2 | +10% de crítico |
 | Rasengan | Ōdama Rasengan | 3 | Aprende a Ōdama (conta: vencer a run canônica) |
+
+## Comum (runs genéricas)
+
+O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.md#sorteio-do-elemento)).
+
+| Ramo | Nó | Custo | Efeito |
+|---|---|---|---|
+| Elemento | Nível II | 1 | Aprende o nível II do elemento (Bola de Fogo, Rajada, Corrente elétrica, Lança de terra, Tubarão de água) |
+| Elemento | Afinidade | 2 | +15% de dano de ninjutsu |
+| Elemento | Nível III | 2 | Aprende o nível III (Grande Labareda, Esfera de vácuo, Lâmina de raio, Dragão de terra, Cachoeira) |
+| Elemento | Mestre do elemento | 3 | Técnicas custam 2 de chakra a menos; +5% de crítico |
+| Ferramentas | Kunai afiada | 1 | +2 de dano no taijutsu |
+| Ferramentas | Selo explosivo | 2 | Aprende o Selo explosivo (todos os inimigos) |
+| Ferramentas | Armadilha de fios | 2 | Aprende a Armadilha de fios |
+| Ferramentas | Substituição | 3 | Esquiva 10%; o Bunshin cria 1 clone a mais |
+| Determinação | Determinação | 1 | +25% de XP |
+| Determinação | Garra | 2 | +25% de dano abaixo da metade do HP |
+| Determinação | Esforço | 2 | +10% de dano |
+| Determinação | Vontade do Fogo | 3 | Uma vez por luta fica com 1 de HP; recupera 2% do HP por rodada |
+
+## Prodígio (runs genéricas)
+
+| Ramo | Nó | Custo | Efeito |
+|---|---|---|---|
+| Portões | Quinto portão | 1 | Ativa nova: dano ×1,6 e +10% de acerto por 3 turnos, paga 15% do HP |
+| Portões | Corpo treinado | 2 | Começa as lutas com escudo de 10% do HP |
+| Portões | Lótus Primária | 2 | Aprende a Lótus Primária |
+| Portões | Lótus Oculta | 3 | Aprende a Lótus Oculta (4 golpes, paga 15% do HP) |
+| Juventude | Juventude | 1 | +5% de crítico e de acerto |
+| Juventude | Furacão da Folha | 2 | Aprende o Furacão da Folha |
+| Juventude | Punho Bêbado | 2 | Aprende o Punho Bêbado (3 golpes, crítico alto) |
+| Juventude | Primavera | 3 | +10% de dano; recupera 2% do HP por rodada |
+| Treino | Pesos fora | 1 | Esquiva 5% |
+| Treino | Entrada dinâmica | 2 | Aprende a Entrada dinâmica |
+| Treino | Mestre do taijutsu | 2 | +15% de dano de taijutsu |
+| Treino | Resistência | 3 | Uma vez por luta fica com 1 de HP |

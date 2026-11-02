@@ -82,4 +82,66 @@ export const events: EventDef[] = [
   },
 ];
 
-export const eventsById: Record<string, EventDef> = Object.fromEntries(events.map((e) => [e.id, e]));
+/** Eventos das runs genéricas (docs/jornada/generica.md#eventos), sorteados pelo desconhecido. */
+export const genericEvents: EventDef[] = [
+  {
+    id: 'gOldLady',
+    options: [
+      { id: 'help', effects: [{ kind: 'flag', id: 'helpedOldLady' }, { kind: 'item', id: 'hpKit', n: 1 }] },
+      { id: 'ignore', effects: [{ kind: 'ryo', n: 15 }] },
+    ],
+  },
+  {
+    id: 'gRamen',
+    options: [
+      { id: 'eat', cost: 15, effects: [{ kind: 'healTeam', pct: 0.6 }] },
+      { id: 'grateful', requires: 'helpedOldLady', effects: [{ kind: 'healTeam', pct: 0.6 }] },
+      { id: 'skip', effects: [{ kind: 'xp', n: 20 }] },
+    ],
+  },
+  {
+    id: 'gTraining',
+    options: [
+      { id: 'seals', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }, { kind: 'xp', n: 30 }], onLose: [{ kind: 'xp', n: 30 }] },
+      { id: 'spar', effects: [{ kind: 'xp', n: 60 }, { kind: 'hurtTeam', pct: 0.15 }] },
+    ],
+  },
+  {
+    id: 'gJokenpo',
+    options: [
+      { id: 'play', minigame: 'jokenpo', effects: [{ kind: 'relic', tier: 'rare' }], onLose: [{ kind: 'ryo', n: 10 }] },
+      { id: 'decline', effects: [{ kind: 'ryo', n: 20 }] },
+    ],
+  },
+  {
+    id: 'gGuru',
+    options: [
+      { id: 'pay', cost: 40, effects: [{ kind: 'talent', n: 2 }] },
+      { id: 'test', minigame: 'memory', effects: [{ kind: 'talent', n: 1 }], onLose: [] },
+      { id: 'leave', effects: [] },
+    ],
+  },
+  {
+    id: 'gAkatsuki',
+    options: [
+      { id: 'hide', minigame: 'memory', effects: [{ kind: 'ryo', n: 40 }, { kind: 'flag', id: 'hidFromAkatsuki' }], onLose: [{ kind: 'hurtTeam', pct: 0.3 }] },
+      { id: 'run', effects: [{ kind: 'hurtTeam', pct: 0.15 }] },
+    ],
+  },
+  {
+    id: 'gFoundItem',
+    options: [
+      { id: 'pills', effects: [{ kind: 'item', id: 'reviveKit', n: 1 }] },
+      { id: 'scroll', effects: [{ kind: 'xp', n: 50 }] },
+    ],
+  },
+  {
+    id: 'gSummon',
+    options: [
+      { id: 'contract', minigame: 'seals', effects: [{ kind: 'relic', tier: 'rare' }], onLose: [{ kind: 'hurtTeam', pct: 0.1 }] },
+      { id: 'share', effects: [{ kind: 'maxStat', who: 'team', stat: 'hp', n: 6 }] },
+    ],
+  },
+];
+
+export const eventsById: Record<string, EventDef> = Object.fromEntries([...events, ...genericEvents].map((e) => [e.id, e]));

@@ -3,7 +3,7 @@ import type { JornadaBalance } from '../../data/jornada/balance';
 import type { Element } from '../types';
 import type { EventDef } from './events';
 import type { RelicDef } from './relics';
-import type { StageDef } from './trail';
+import type { GenericDef, StageDef } from './trail';
 import type { TalentNode } from './talents';
 import type { CharacterDef, EnemyDef, JTechnique } from './types';
 
@@ -22,4 +22,7 @@ export interface JornadaData {
   talents: TalentNode[];
   relics: RelicDef[];
   events: Record<string, EventDef>;
+  /** Linha de técnicas de cada elemento (níveis I, II e III) para o Comum e os suportes genéricos. */
+  elementLines: Record<Element, readonly [string, string, string]>;
+  generic: GenericDef;
 }

@@ -11,6 +11,8 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Mizuki | 65 | 10 | 9 | 7/5/3 | 6/6 | vento | brute | Kunai, Shuriken gigante | — |
 | Kakashi | 170 | 40 | 15 | 11/11/9 | 9/9 | raio | tactician | Chute, Mil Anos de Morte, Decapitação | — |
 | Capanga | 38 | 0 | 7 | 6/0/0 | 3/2 | — | brute | Porrete, Katana | — |
+| Bandido | 42 | 0 | 9 | 7/0/0 | 3/3 | — | brute | Emboscada, Porrete | — |
+| Ninja renegado | 70 | 18 | 11 | 9/9/4 | 6/5 | — | striker | Kunai, Golpe traiçoeiro | — |
 | Renegado da Névoa | 55 | 14 | 10 | 6/8/2 | 5/4 | água | striker | Kunai, Projétil de água | — |
 | Gōzu | 62 | 8 | 11 | 8/3/0 | 5/4 | água | brute | Garra envenenada, Corrente | — |
 | Meizu | 62 | 8 | 11 | 8/3/0 | 5/4 | água | brute | Garra envenenada, Corrente | — |
@@ -43,6 +45,8 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Técnica | Tipo | Elemento | Alvo | Dano | Chakra | Precisão | Extra |
 |---|---|---|---|---|---|---|---|
 | Porrete | Taijutsu | — | um inimigo | 7 | 0 | 85% | — |
+| Emboscada | Taijutsu | — | um inimigo | 6 | 0 | 80% | 2 golpes |
+| Golpe traiçoeiro | Ninjutsu | — | um inimigo | 13 | 3 | 85% | veneno 25% |
 | Katana | Taijutsu | — | um inimigo | 10 | 0 | 75% | — |
 | Kunai | Taijutsu | — | um inimigo | 8 | 0 | 90% | — |
 | Shuriken gigante | Taijutsu | — | um inimigo | 13 | 0 | 75% | — |

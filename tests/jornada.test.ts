@@ -12,18 +12,25 @@ import {
   type BattleSetup,
   type FighterSeed,
 } from '../src/core/jornada/battle';
+import { eventOptions } from '../src/core/jornada/events';
+import { generateMap, reachable } from '../src/core/jornada/map';
 import { checkSequence, jokenpo, memoryDeck, sealSequence } from '../src/core/jornada/minigames';
+import { newJornadaAchievements } from '../src/data/jornada/achievements';
 import {
   battleSetup,
   buy,
   buyTalent,
   chooseBossRelic,
+  chooseNode,
+  choosingNode,
   currentStop,
   finishFight,
   heroMovable,
   leaveStop,
   memberSheet,
+  newGenericRun,
   newRun,
+  nodeChoices,
   resolveEvent,
   rest,
   setMoveset,
@@ -197,8 +204,9 @@ describe('trilha da run canônica', () => {
   });
 });
 
+const won = (b: JBattle): JBattle => ({ ...b, status: 'won' });
+
 describe('run da Jornada', () => {
-  const won = (b: JBattle): JBattle => ({ ...b, status: 'won' });
   const lost = (b: JBattle): JBattle => ({ ...b, status: 'lost' });
 
   it('vencer dá ryō, XP e avança a parada', () => {
@@ -326,6 +334,117 @@ describe('run da Jornada', () => {
     // Save de antes da Tigela ganha a relíquia ao carregar.
     saveJornada(storage, { ...run, relics: ['goggles'] });
     expect(loadJornada(storage)!.relics).toEqual(['ichirakuBowl', 'goggles']);
+  });
+});
+
+describe('runs genéricas', () => {
+  it('o mapa tem 3 começos, todo nó é alcançável, tem saída e todo caminho chega ao chefe', () => {
+    for (let s = 0; s < 30; s++) {
+      const map = generateMap(createRng(s), data);
+      const rows = data.j.map.rows;
+      expect(map.nodes.filter((n) => n.row === 0)).toHaveLength(3);
+      expect(reachable(map).size).toBe(map.nodes.length);
+      for (const n of map.nodes) {
+        if (n.kind === 'boss') continue;
+        expect(n.next.length, n.id).toBeGreaterThan(0);
+        for (const id of n.next) expect(map.nodes.find((x) => x.id === id)!.row).toBe(n.row + 1);
+      }
+      expect(map.nodes.filter((n) => n.kind === 'boss').map((n) => n.row)).toEqual([rows - 1]);
+      // Regras de linha.
+      for (const n of map.nodes) {
+        if (n.row === 0) expect(n.kind).toBe('fight');
+        if (n.row === data.j.map.treasureRow) expect(n.kind).toBe('treasure');
+        if (n.row === rows - 2) expect(n.kind).toBe('rest');
+        if (n.row < data.j.map.eliteFromRow) expect(n.kind).not.toBe('elite');
+      }
+    }
+  });
+
+  it('o Comum sem elemento vira prodígio; com elemento, aprende o nível I', () => {
+    const kinds = new Set<string>();
+    for (let s = 0; s < 80; s++) {
+      const run = newGenericRun(s, 'normal', 'common', data);
+      kinds.add(run.hero);
+      const el = run.elements[run.hero];
+      if (run.hero === 'prodigy') expect(el).toBeNull();
+      else expect(run.moveset).toContain(data.elementLines[el!][0]);
+      for (const id of run.supports) expect(run.elements[id]).not.toBeNull();
+    }
+    expect(kinds).toEqual(new Set(['commonNinja', 'prodigy']));
+  });
+
+  it('escolher nó, lutar e avançar até o mapa do próximo estágio', () => {
+    let run = newGenericRun(3, 'easy', 'common', data);
+    expect(choosingNode(run)).toBe(true);
+    expect(() => chooseNode(run, 'n5-0')).toThrow();
+    let guard = 0;
+    while (run.stageIndex === 0 && run.status === 'inProgress' && guard++ < 50) {
+      if (run.bossChoice) {
+        run = chooseBossRelic(run, run.bossChoice[0]!, data);
+        continue;
+      }
+      if (choosingNode(run)) {
+        run = chooseNode(run, nodeChoices(run)[0]!.id);
+        continue;
+      }
+      const stop = currentStop(run, data)!;
+      if (isFight(stop)) run = finishFight(run, won(startBattle(battleSetup(run, data), data, createRng(1))), data).run;
+      else if (stop.kind === 'event') run = resolveEvent(run, eventOptions(data.events[stop.event]!, run.flags, run.ryo)[0]!.id, true, data).run;
+      else if (stop.kind === 'rest') run = rest(run, 'heal', data);
+      else run = leaveStop(run, data);
+    }
+    expect(run.stageIndex).toBe(1);
+    expect(run.path).toEqual([]);
+    expect(choosingNode(run)).toBe(true);
+    expect(run.map!.nodes.some((n) => n.kind === 'boss')).toBe(true);
+  });
+
+  it('os suportes genéricos lutam com o elemento sorteado', () => {
+    let run = newGenericRun(5, 'normal', 'common', data);
+    run = chooseNode(run, nodeChoices(run)[0]!.id);
+    const setup = battleSetup(run, data);
+    expect(setup.allies.map((a) => a.defId)).toEqual([run.hero, 'leafGeninA', 'leafGeninB']);
+    expect(setup.allies[1]!.element).toBe(run.elements.leafGeninA);
+    expect(setup.allies[1]!.techniques).toContain(data.elementLines[run.elements.leafGeninA!][0]);
+  });
+
+  it('o ramo Elemento ensina a técnica do elemento sorteado', () => {
+    const run = { ...newGenericRun(1, 'normal', 'common', data), hero: 'commonNinja', elements: { commonNinja: 'water' as const }, talentPoints: 5 };
+    const next = buyTalent(run, 'tElement2', new Set(), data);
+    expect(next.learned).toContain('jWaterShark');
+  });
+
+  it('save da genérica vai e volta; save antigo carrega como canônica', () => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const run = newGenericRun(9, 'normal', 'common', data);
+    saveJornada(storage, run);
+    expect(loadJornada(storage)).toEqual(run);
+    const old = JSON.parse(JSON.stringify(newRun(2, 'normal', data)));
+    for (const k of ['mode', 'hero', 'classId', 'elements', 'supports', 'map', 'nodeId', 'path', 'bossPlan']) delete old[k];
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+    const loaded = loadJornada(storage)!;
+    expect([loaded.mode, loaded.hero]).toEqual(['canon', 'naruto']);
+  });
+
+  it('desbloqueios: Uchiha com Comum de fogo e Hyuuga com prodígio, fora do Fácil', () => {
+    const base = { ...newGenericRun(1, 'normal', 'common', data), status: 'victory' as const };
+    const fire = { ...base, hero: 'commonNinja', elements: { commonNinja: 'fire' as const } };
+    expect(newJornadaAchievements(fire, new Set())).toEqual(expect.arrayContaining(['j_genericWin', 'j_unlockUchiha']));
+    expect(newJornadaAchievements({ ...fire, difficulty: 'easy' }, new Set())).not.toContain('j_unlockUchiha');
+    const prodigy = { ...base, hero: 'prodigy', elements: { prodigy: null } };
+    expect(newJornadaAchievements(prodigy, new Set())).toContain('j_unlockHyuuga');
+    expect(newJornadaAchievements(prodigy, new Set())).not.toContain('j_canonWin');
+  });
+
+  it('Portões fortalecem o dano por alguns turnos', () => {
+    const me = hero({ techniques: ['jStrike', 'jGates'] });
+    let b = startBattle(setup({ allies: [me], enemies: [dummy({ hp: 999, maxHp: 999 })] }), data, fixed(0.5));
+    const plain = hitDamage(b.fighters[0]!, b.fighters[1]!, data.techniques.jStrike!, data);
+    b = playerAct(b, { kind: 'tech', techId: 'jGates', target: 'a0' }, data, fixed(0.5));
+    expect(b.fighters[0]!.boost?.damageMult).toBe(1.3);
+    expect(hitDamage(b.fighters[0]!, b.fighters[1]!, data.techniques.jStrike!, data)).toBe(Math.floor((8 + 10 - 3) * 1.3));
+    expect(plain).toBe(15);
   });
 });
 

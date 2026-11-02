@@ -16,7 +16,9 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     if (run?.version !== 1 || run.status !== 'inProgress' || typeof run.stageIndex !== 'number') return null;
     // Runs salvas antes da v0.35.1 não tinham a relíquia inicial.
     const relics = run.relics.includes(STARTER_RELIC) ? run.relics : [STARTER_RELIC, ...run.relics];
-    return { ...run, cleared: run.cleared ?? [], relics };
+    // Runs de antes das genéricas (v0.36.0) são canônicas.
+    const legacy = { mode: 'canon' as const, hero: 'naruto', classId: 'naruto', elements: {}, supports: [], map: null, nodeId: null, path: [], bossPlan: [] };
+    return { ...legacy, ...run, cleared: run.cleared ?? [], relics };
   } catch {
     return null;
   }

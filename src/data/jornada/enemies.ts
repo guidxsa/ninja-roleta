@@ -34,6 +34,8 @@ export const enemies: EnemyDef[] = [
   e('mizuki', 65, 10, 9, [7, 5, 3], [6, 6], 'wind', ['jeKunai', 'jeGiantShuriken'], 'brute', 'villain:mizuki'),
   e('kakashi', 170, 40, 15, [11, 11, 9], [9, 9], 'lightning', ['jeKakashiKick', 'jeThousandYears', 'jeHeadHunter'], 'tactician', 'ninja:kakashi'),
   e('gatoThug', 38, 0, 7, [6, 0, 0], [3, 2], null, ['jeClub', 'jeKatana'], 'brute', 'ninja:thug'),
+  e('bandit', 42, 0, 9, [7, 0, 0], [3, 3], null, ['jeAmbush', 'jeClub'], 'brute', 'ninja:thug'),
+  e('missingNin', 70, 18, 11, [9, 9, 4], [6, 5], null, ['jeKunai', 'jeMissingStrike'], 'striker', 'ninja:mist'),
   e('mistRogue', 55, 14, 10, [6, 8, 2], [5, 4], 'water', ['jeKunai', 'jeWaterBullet'], 'striker', 'ninja:mist'),
   e('gozu', 62, 8, 11, [8, 3, 0], [5, 4], 'water', ['jeChainClaw', 'jeChainSweep'], 'brute', 'ninja:mist'),
   e('meizu', 62, 8, 11, [8, 3, 0], [5, 4], 'water', ['jeChainClaw', 'jeChainSweep'], 'brute', 'ninja:mist'),

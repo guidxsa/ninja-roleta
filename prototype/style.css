@@ -934,6 +934,44 @@ button[data-tip] { cursor: pointer; }
 .jhud-member > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .jhud-member b { font-size: 13px; }
 
+/* Runs genéricas: classes, revelação do elemento e mapa ramificado. */
+.jclasses { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.jclass { text-align: left; padding: 10px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer; }
+.jclass b { display: block; font-size: 14px; }
+.jclass small { display: block; font-size: 11px; color: var(--muted); }
+.jclass[aria-pressed='true'] { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+.jclass.off { opacity: .55; cursor: default; }
+.jreveal .portrait-lg { width: 120px; height: 120px; }
+.jmap-wrap { display: flex; flex-direction: column; gap: 6px; }
+.jmap-boss { margin: 0; text-align: center; font-family: var(--font-display); color: var(--seal); }
+.jmap { position: relative; width: 100%; border-radius: var(--radius); background: color-mix(in srgb, var(--paper) 35%, transparent); border: 1px dashed var(--line); }
+.jmap-lines { position: absolute; inset: 0; pointer-events: none; }
+.jmap-lines line { stroke: var(--line); stroke-width: 2; stroke-dasharray: 4 4; }
+.jmap-lines line.walked { stroke: var(--accent); stroke-dasharray: none; stroke-width: 3; }
+.jnode-map {
+  position: absolute; transform: translate(-50%, -50%); width: 42px; height: 42px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center; border: 2px solid var(--line); background: var(--surface); color: var(--text); font: inherit; cursor: default;
+}
+.jnode-map .ico { width: 20px; height: 20px; }
+.jnode-map .portrait-sm { width: 36px; height: 36px; border-radius: 50%; }
+.jnode-map.k-elite { border-color: var(--gold); }
+.jnode-map.k-boss { width: 56px; height: 56px; border-color: var(--seal); border-width: 3px; }
+.jnode-map.k-rest { border-color: var(--leaf); }
+.jnode-map.k-treasure { border-color: var(--gold); color: var(--gold); }
+.jnode-map.done { background: var(--leaf); color: #fff; border-color: var(--leaf); }
+.jnode-map.idle { opacity: .6; }
+.jnode-map.choice { cursor: pointer; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); animation: pulse 1.2s infinite; opacity: 1; }
+.jq { font-family: var(--font-display); font-size: 20px; line-height: 1; color: var(--accent-deep); }
+.jlegend .jq { font-size: 14px; }
+.jmap-side { display: flex; flex-direction: column; gap: 6px; }
+.jmap-side .jabandon { align-self: center; }
+.mg { max-width: 520px; margin: 0 auto; width: 100%; }
+@media (min-width: 900px) {
+  .jtrail-screen.jmap-screen { grid-template-areas: 'head head' 'side trail'; grid-template-rows: auto 1fr; }
+  .jtrail-screen.jmap-screen > .jmap-side { grid-area: side; position: sticky; top: 76px; }
+  .jtrail-screen.jmap-screen > .jtrail { grid-area: trail; }
+}
+
 /* A ficha é do Roleta: some na Jornada. */
 body.mode-jornada #sheet-btn { display: none; }
 

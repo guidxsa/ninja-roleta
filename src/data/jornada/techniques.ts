@@ -50,9 +50,40 @@ export const allyTechniques: JTechnique[] = [
   { id: 'jSandShuriken', type: 'ninjutsu', element: 'earth', target: 'allEnemies', baseDamage: 8, chakraCost: 5 },
 ];
 
+/** Linhas elementais (níveis I, II e III) do Comum e dos suportes genéricos (docs/jornada/personagens.md). */
+export const elementalTechniques: JTechnique[] = [
+  { id: 'jFireSpark', type: 'ninjutsu', element: 'fire', target: 'enemy', baseDamage: 11, chakraCost: 2, onHit: { effect: 'burn', chance: 0.15 } },
+  { id: 'jGreatBlaze', type: 'ninjutsu', element: 'fire', target: 'allEnemies', baseDamage: 15, chakraCost: 10, accuracy: 0.85, onHit: { effect: 'burn', chance: 0.3 } },
+  { id: 'jWindBlade', type: 'ninjutsu', element: 'wind', target: 'enemy', baseDamage: 10, chakraCost: 2, accuracy: 0.9, critBonus: 0.05 },
+  { id: 'jGale', type: 'ninjutsu', element: 'wind', target: 'enemy', baseDamage: 9, hits: 2, chakraCost: 5, critBonus: 0.1 },
+  { id: 'jVacuumSphere', type: 'ninjutsu', element: 'wind', target: 'allEnemies', baseDamage: 7, hits: 2, chakraCost: 10, critBonus: 0.1 },
+  { id: 'jSpark', type: 'ninjutsu', element: 'lightning', target: 'enemy', baseDamage: 12, chakraCost: 2, accuracy: 0.8, penetration: 0.1 },
+  { id: 'jLightningCurrent', type: 'ninjutsu', element: 'lightning', target: 'enemy', baseDamage: 20, chakraCost: 6, accuracy: 0.8, penetration: 0.2, onHit: { effect: 'stun', chance: 0.15, turns: 1 } },
+  { id: 'jLightningBlade', type: 'ninjutsu', element: 'lightning', target: 'enemy', baseDamage: 32, chakraCost: 11, accuracy: 0.75, penetration: 0.3 },
+  { id: 'jRockFist', type: 'ninjutsu', element: 'earth', target: 'enemy', baseDamage: 9, chakraCost: 2, accuracy: 0.95 },
+  { id: 'jEarthSpear', type: 'ninjutsu', element: 'earth', target: 'enemy', baseDamage: 17, chakraCost: 5, accuracy: 0.95, onHit: { effect: 'stun', chance: 0.2, turns: 1 } },
+  { id: 'jEarthDragon', type: 'ninjutsu', element: 'earth', target: 'allEnemies', baseDamage: 13, chakraCost: 9, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.15, turns: 1 } },
+  { id: 'jWaterBullet', type: 'ninjutsu', element: 'water', target: 'enemy', baseDamage: 10, chakraCost: 2, accuracy: 0.9 },
+  { id: 'jWaterShark', type: 'ninjutsu', element: 'water', target: 'enemy', baseDamage: 18, chakraCost: 5, accuracy: 0.9 },
+  { id: 'jWaterfall', type: 'ninjutsu', element: 'water', target: 'allEnemies', baseDamage: 14, chakraCost: 9, accuracy: 0.9 },
+];
+
+/** Comum e prodígio das runs genéricas (docs/jornada/classes.md). */
+export const classTechniques: JTechnique[] = [
+  { id: 'jBunshin', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, clones: 1, active: true },
+  { id: 'jExplosiveTag', type: 'taijutsu', element: null, target: 'allEnemies', baseDamage: 11, chakraCost: 4, accuracy: 0.85, cooldown: 2 },
+  { id: 'jGates', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.08, boost: { damageMult: 1.3, turns: 3 }, active: true, cooldown: 4 },
+  { id: 'jGatesHigh', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.15, boost: { damageMult: 1.6, accuracy: 0.1, turns: 3 }, active: true, cooldown: 5 },
+  { id: 'jDynamicEntry', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 15, chakraCost: 0, accuracy: 0.9, critBonus: 0.1, cooldown: 2 },
+  { id: 'jHiddenLotus', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, hits: 4, chakraCost: 0, hpCostPct: 0.15, accuracy: 0.85, cooldown: 4 },
+  { id: 'jDrunkenFist', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 3, chakraCost: 0, accuracy: 0.75, critBonus: 0.15 },
+];
+
 /** Dos inimigos (fichas em data/jornada/enemies.ts). */
 export const enemyTechniques: JTechnique[] = [
   { id: 'jeClub', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, chakraCost: 0, accuracy: 0.85 },
+  { id: 'jeAmbush', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 6, hits: 2, chakraCost: 0, accuracy: 0.8 },
+  { id: 'jeMissingStrike', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 13, chakraCost: 3, accuracy: 0.85, onHit: { effect: 'poison', chance: 0.25 } },
   { id: 'jeKatana', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 10, chakraCost: 0, accuracy: 0.75 },
   { id: 'jeKunai', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 8, chakraCost: 0, accuracy: 0.9 },
   { id: 'jeGiantShuriken', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 13, chakraCost: 0, accuracy: 0.75 },
@@ -118,5 +149,14 @@ export const enemyTechniques: JTechnique[] = [
   { id: 'jeDragonFlame', type: 'ninjutsu', element: 'fire', target: 'allEnemies', baseDamage: 14, chakraCost: 9, onHit: { effect: 'burn', chance: 0.3 }, cooldown: 2 },
 ];
 
-export const jTechniques: JTechnique[] = [...allyTechniques, ...enemyTechniques];
+export const jTechniques: JTechnique[] = [...allyTechniques, ...elementalTechniques, ...classTechniques, ...enemyTechniques];
+
+/** Linha de cada elemento: níveis I, II e III. A Bola de Fogo é a do Sasuke. */
+export const elementLines = {
+  fire: ['jFireSpark', 'jFireball', 'jGreatBlaze'],
+  wind: ['jWindBlade', 'jGale', 'jVacuumSphere'],
+  lightning: ['jSpark', 'jLightningCurrent', 'jLightningBlade'],
+  earth: ['jRockFist', 'jEarthSpear', 'jEarthDragon'],
+  water: ['jWaterBullet', 'jWaterShark', 'jWaterfall'],
+} as const satisfies Record<string, readonly [string, string, string]>;
 export const jTechniquesById: Record<string, JTechnique> = Object.fromEntries(jTechniques.map((t) => [t.id, t]));

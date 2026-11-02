@@ -5,7 +5,7 @@ import { techniquesById } from '../src/data/techniques';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { villains } from '../src/data/villains';
 import { enemies } from '../src/data/jornada/enemies';
-import { allyTechniques, enemyTechniques } from '../src/data/jornada/techniques';
+import { allyTechniques, classTechniques, elementalTechniques, enemyTechniques } from '../src/data/jornada/techniques';
 
 /** Os docs são o design: toda técnica dos dados precisa estar no catálogo certo (CLAUDE.md). */
 const doc = (name: string) => readFileSync(new URL(`../docs/${name}`, import.meta.url), 'utf8');
@@ -36,7 +36,7 @@ describe('docs batem com os dados', () => {
     const allies = doc('jornada/personagens.md');
     const foes = doc('jornada/inimigos.md');
     const missing = [
-      ...allyTechniques.map((t) => J.techniques[t.id] ?? t.id).filter((n) => !has(allies, n)),
+      ...[...allyTechniques, ...elementalTechniques, ...classTechniques].map((t) => J.techniques[t.id] ?? t.id).filter((n) => !has(allies, n)),
       ...enemyTechniques.map((t) => J.techniques[t.id] ?? t.id).filter((n) => !has(foes, n)),
       ...enemies.map((e) => J.names[e.id] ?? e.id).filter((n) => !has(foes, n)),
     ];

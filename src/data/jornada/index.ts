@@ -8,7 +8,8 @@ import { eventsById } from './events';
 import { relics } from './relics';
 import { stages } from './stages';
 import { talents } from './talents';
-import { jTechniquesById } from './techniques';
+import { generic } from './generic';
+import { elementLines, jTechniquesById } from './techniques';
 
 export const jornadaData: JornadaData = {
   base: { hit: balance.hit, crit: balance.crit, penetration: balance.penetration, difficulty: balance.difficulty },
@@ -22,4 +23,6 @@ export const jornadaData: JornadaData = {
   talents,
   relics,
   events: eventsById,
+  elementLines,
+  generic,
 };

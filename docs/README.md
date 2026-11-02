@@ -4,7 +4,7 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 
 - **[base/](base/)**: regras usadas pelos dois modos (hoje implementadas no Roleta; a Jornada herda).
 - **[roleta/](roleta/)**: o que é só do modo Roleta.
-- **[jornada/](jornada/README.md)**: o modo Jornada (run canônica implementada; runs genéricas em rascunho).
+- **[jornada/](jornada/README.md)**: o modo Jornada (run canônica e runs genéricas).
 
 | Arquivo | Conteúdo |
 |---|---|
@@ -23,7 +23,8 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 | [jornada/combate.md](jornada/combate.md) | Combate de equipe, ordem, ações, efeitos, levantar, bolsa, moveset, interface |
 | [jornada/personagens.md](jornada/personagens.md) | Fichas, técnicas e comportamento dos aliados |
 | [jornada/inimigos.md](jornada/inimigos.md) | Fichas e técnicas dos inimigos |
-| [jornada/talentos.md](jornada/talentos.md) | Árvore de talentos do Naruto |
+| [jornada/talentos.md](jornada/talentos.md) | Árvores de talentos (Naruto, Comum, prodígio) |
 | [jornada/progressao.md](jornada/progressao.md) | XP, nível, recompensas, entre lutas |
 | [jornada/reliquias.md](jornada/reliquias.md) | Relíquias: tiers, de onde vêm, catálogo |
-| [jornada/classes.md](jornada/classes.md) | Classes das runs genéricas (rascunho) |
+| [jornada/generica.md](jornada/generica.md) | Runs genéricas: estrutura, pools por estágio, chefes, eventos |
+| [jornada/classes.md](jornada/classes.md) | Classes, sorteio do elemento, desbloqueios, ativas, suportes genéricos |

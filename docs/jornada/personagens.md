@@ -15,14 +15,19 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 | Tsunade | 140 | 40 | 12 | 15/12/6 | 10/8 | terra | healer | Soco da Tsunade, Palma mística, Golpe |
 | Rock Lee | 115 | 10 | 15 | 14/0/0 | 9/5 | — | striker | Redemoinho da Folha, Furacão da Folha, Lótus Primária |
 | Gaara | 130 | 40 | 10 | 6/14/4 | 12/8 | terra | guardian | Escudo de areia, Caixão de areia, Shuriken de areia |
+| Ninja da Folha | 100 | 30 | 11 | 9/9/4 | 7/6 | — | striker | Golpe, Shuriken, Kunai, Bunshin |
+| Prodígio do taijutsu | 115 | 12 | 13 | 12/0/0 | 8/5 | — | striker | Golpe, Redemoinho da Folha, Shuriken, Portões |
+| Daichi | 95 | 24 | 11 | 10/10/3 | 6/5 | — | striker | Kunai, Shuriken |
+| Hana | 90 | 26 | 10 | 8/10/6 | 5/7 | — | tactician | Kunai, Armadilha de fios, Kai (libertar) |
 
 - O Sasuke aprende o **Chidori** ao chegar no exame chunin (estágio 2).
 - As técnicas novas do Naruto vêm da árvore de talentos ([talentos.md](talentos.md)).
 - No mangá, antes do timeskip, a Sakura ainda não é médica: o papel dela é tático (soltar aliado preso, levantar quem caiu, armadilhas).
+- Runs genéricas ([classes.md](classes.md)): o Ninja da Folha (Comum) e os suportes Daichi e Hana usam o elemento sorteado na run e ganham a técnica de nível I dele; o prodígio é o Comum que saiu sem elemento.
 
 ## Comportamento
 
-Os suportes e os inimigos usam o mesmo motor de decisão. Antes de atacar, todo lutador usa escudo próprio quando está ferido, cria clones quando não tem, e às vezes usa um controle sem dano (35%).
+Os suportes e os inimigos usam o mesmo motor de decisão. Antes de atacar, todo lutador usa escudo próprio quando está ferido, ativa um fortalecimento quando não tem (60%), cria clones quando não tem, e às vezes usa um controle sem dano (35%).
 
 | IA | Comportamento |
 |---|---|
@@ -35,6 +40,8 @@ Os suportes e os inimigos usam o mesmo motor de decisão. Antes de atacar, todo 
 Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segunda vale pelo menos 85% da primeira.
 
 ## Técnicas
+
+### Run canônica
 
 | Técnica | Tipo | Elemento | Alvo | Dano | Chakra | Precisão | Extra |
 |---|---|---|---|---|---|---|---|
@@ -66,3 +73,36 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 | Escudo de areia | Ninjutsu | terra | um aliado | — | 5 | 85% | escudo 25% do HP de quem usa; espera 2 |
 | Caixão de areia | Ninjutsu | terra | um inimigo | 20 | 7 | 85% | atordoar 30% (1 t) |
 | Shuriken de areia | Ninjutsu | terra | todos os inimigos | 8 | 5 | 85% | — |
+
+### Linhas elementais (runs genéricas)
+
+Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talentos.md](talentos.md)).
+
+| Técnica | Tipo | Elemento | Alvo | Dano | Chakra | Precisão | Extra |
+|---|---|---|---|---|---|---|---|
+| Faísca de fogo | Ninjutsu | fogo | um inimigo | 11 | 2 | 85% | queimar 15% |
+| Grande Labareda | Ninjutsu | fogo | todos os inimigos | 15 | 10 | 85% | queimar 30% |
+| Lâmina de vento | Ninjutsu | vento | um inimigo | 10 | 2 | 90% | +5% crítico |
+| Rajada | Ninjutsu | vento | um inimigo | 9 | 5 | 85% | 2 golpes; +10% crítico |
+| Esfera de vácuo | Ninjutsu | vento | todos os inimigos | 7 | 10 | 85% | 2 golpes; +10% crítico |
+| Faísca elétrica | Ninjutsu | raio | um inimigo | 12 | 2 | 80% | penetração 10% |
+| Corrente elétrica | Ninjutsu | raio | um inimigo | 20 | 6 | 80% | penetração 20%; atordoar 15% (1 t) |
+| Lâmina de raio | Ninjutsu | raio | um inimigo | 32 | 11 | 75% | penetração 30% |
+| Punho de pedra | Ninjutsu | terra | um inimigo | 9 | 2 | 95% | — |
+| Lança de terra | Ninjutsu | terra | um inimigo | 17 | 5 | 95% | atordoar 20% (1 t) |
+| Dragão de terra | Ninjutsu | terra | todos os inimigos | 13 | 9 | 90% | atordoar 15% (1 t) |
+| Projétil de água | Ninjutsu | água | um inimigo | 10 | 2 | 90% | — |
+| Tubarão de água | Ninjutsu | água | um inimigo | 18 | 5 | 90% | — |
+| Cachoeira | Ninjutsu | água | todos os inimigos | 14 | 9 | 90% | — |
+
+### Comum e prodígio
+
+| Técnica | Tipo | Elemento | Alvo | Dano | Chakra | Precisão | Extra |
+|---|---|---|---|---|---|---|---|
+| Bunshin | Ninjutsu | — | em si | — | 3 | 85% | 1 clones; ativa de classe |
+| Selo explosivo | Taijutsu | — | todos os inimigos | 11 | 4 | 85% | espera 2 |
+| Portões | Taijutsu | — | em si | — | 0 | 85% | custa 8% do HP; espera 4; fortalece 3 turnos (dano ×1.3); ativa de classe |
+| Quinto portão | Taijutsu | — | em si | — | 0 | 85% | custa 15% do HP; espera 5; fortalece 3 turnos (dano ×1.6) (+10% acerto); ativa de classe |
+| Entrada dinâmica | Taijutsu | — | um inimigo | 15 | 0 | 90% | +10% crítico; espera 2 |
+| Lótus Oculta | Taijutsu | — | um inimigo | 12 | 0 | 85% | 4 golpes; custa 15% do HP; espera 4 |
+| Punho Bêbado | Taijutsu | — | um inimigo | 7 | 0 | 75% | 3 golpes; +15% crítico |

@@ -1,6 +1,6 @@
 # Jornada
 
-> **Run canônica implementada na v0.35.0.** As runs genéricas (mapa ramificado, classes) ainda são rascunho; as pendências estão no fim.
+> **Run canônica implementada na v0.35.0; runs genéricas com Comum e prodígio na v0.36.0.** Uchiha e Hyuuga vêm na v0.37.0; as pendências estão no fim.
 
 O jogo tem dois modos, escolhidos na tela inicial:
 
@@ -14,10 +14,11 @@ O jogo tem dois modos, escolhidos na tela inicial:
 | [combate.md](combate.md) | Combate de equipe, ordem, ações, efeitos, levantar, bolsa, moveset, interface |
 | [personagens.md](personagens.md) | Fichas, técnicas e comportamento automático dos aliados |
 | [inimigos.md](inimigos.md) | Fichas e técnicas dos inimigos |
-| [talentos.md](talentos.md) | Árvore de talentos do Naruto |
+| [talentos.md](talentos.md) | Árvores de talentos (Naruto, Comum, prodígio) |
 | [progressao.md](progressao.md) | XP, nível, recompensas, entre lutas |
 | [reliquias.md](reliquias.md) | Relíquias: tiers, de onde vêm, catálogo |
-| [classes.md](classes.md) | Classes das runs genéricas (rascunho) |
+| [generica.md](generica.md) | Runs genéricas: estrutura, pools por estágio, chefes, eventos |
+| [classes.md](classes.md) | Classes, sorteio do elemento, desbloqueios, ativas, suportes genéricos |
 
 ## Pilares
 
@@ -31,13 +32,13 @@ O jogo tem dois modos, escolhidos na tela inicial:
 ## Tipos de run
 
 - **Canônica do Naruto**: liberada desde o início, linear, com os confrontos do mangá ([canonica.md](canonica.md)).
-- **Genéricas**: protagonista de uma classe de origem ([classes.md](classes.md)), mapa ramificado, encontros diferentes com a mesma dificuldade; suportes são ninjas das classes genéricas (no começo, 2 Comuns). Ainda não implementadas.
+- **Genéricas**: protagonista de uma classe de origem com o elemento sorteado ([classes.md](classes.md)), mapa ramificado, encontros diferentes com a mesma dificuldade; suportes genéricos (2 Comuns, Daichi e Hana) ([generica.md](generica.md)).
 - Um personagem nunca é protagonista e suporte na mesma run.
 
 ## Perfil e conquistas
 
 - O perfil é um só para os dois modos ([perfil.md](../base/perfil.md)); a aba Conquistas tem a categoria Jornada.
-- Conquistas da Jornada: Sino na mão, Ponte do Naruto, Coração de chunin, Vale do Fim (libera a Ōdama Rasengan), Hokage um dia (libera o Hardcore da Jornada), Lenda de Konoha, Ninguém fica para trás, Gama-chan gordo, Colecionador e uma secreta.
+- Conquistas da Jornada: Sino na mão, Ponte do Naruto, Coração de chunin, Vale do Fim (libera a Ōdama Rasengan), Hokage um dia (libera o Hardcore da Jornada), Lenda de Konoha, Ninguém fica para trás, Gama-chan gordo, Colecionador, Caminho próprio (vencer uma genérica), Chama do clã (libera o Uchiha), Olhos abertos (libera o Hyuuga) e uma secreta.
 - Como a Jornada tem progressão permanente, é o modo que mais justifica contas para sincronizar o perfil (fase 3 do roteiro no CLAUDE.md).
 
 ## Simulação
@@ -49,13 +50,11 @@ O jogo tem dois modos, escolhidos na tela inicial:
 1. ~~Combate de equipe no core~~ (v0.35.0).
 2. ~~Run canônica do Naruto completa, com a tela de batalha nova~~ (v0.35.0).
 3. Sprites dos personagens e vilões (a tela já tem as poses prontas).
-4. Runs genéricas: mapa ramificado, desconhecido, classes (Comum, prodígio, Uchiha, Hyuuga) com suas árvores, suportes genéricos.
+4. ~~Runs genéricas: mapa ramificado, desconhecido, Comum e prodígio, suportes genéricos~~ (v0.36.0).
+5. Uchiha e Hyuuga com árvores, desbloqueios e easter eggs (v0.37.0).
 
 ## Pendências
 
 - Alvo de vitória do bot na Jornada (v0.35.1: Médio 78%, Difícil 6%).
-- Como o Comum "vem sem elementos" nas runs genéricas (sorteio ou escolha) para virar prodígio.
-- Tamanho das runs genéricas: quantos estágios e quantas paradas por mapa.
-- Chefes, elites e encontros das runs genéricas.
-- Versão suporte de cada classe.
+- Versão suporte das classes liberadas (Uchiha, Hyuuga, prodígio).
 - Nomes das paradas com sabor ninja.

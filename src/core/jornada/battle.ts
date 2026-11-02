@@ -72,7 +72,7 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
 }
 
 /** Lutador pronto para entrar (sem uid e lado: `startBattle` define). */
-export type FighterSeed = Omit<Fighter, 'uid' | 'side' | 'effects' | 'shield' | 'clones' | 'down' | 'guarding' | 'cooldowns' | 'survivedOnce' | 'enraged'>;
+export type FighterSeed = Omit<Fighter, 'uid' | 'side' | 'effects' | 'shield' | 'clones' | 'down' | 'guarding' | 'cooldowns' | 'survivedOnce' | 'enraged' | 'boost'>;
 
 export interface BattleSetup {
   allies: FighterSeed[];
@@ -120,6 +120,7 @@ function enter(seed: FighterSeed, side: TeamSide, index: number): Fighter {
     cooldowns: {},
     survivedOnce: false,
     enraged: false,
+    boost: null,
   };
 }
 
@@ -185,6 +186,7 @@ function attackerMult(f: Fighter, tech: JTechnique): number {
   let mult = m.damageMult * (m.typeDamageMult[tech.type] ?? 1) * (m.techDamageMult[tech.id] ?? 1);
   if (f.hp < f.maxHp * 0.5) mult *= m.lowHpDamageMult;
   if (f.passive?.kind === 'enrage' && f.hp <= f.maxHp * f.passive.atPct) mult *= f.passive.damageMult;
+  if (f.boost?.damageMult) mult *= f.boost.damageMult;
   return mult;
 }
 
@@ -198,7 +200,7 @@ export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data
     offense: user.offense[tech.type],
     resistance: target.resistance[resistanceKind(tech.type)],
     fraction: target.guarding ? j.guardFraction : j.resistanceFraction,
-    penetration: Math.min(data.base.penetration.max, tech.penetration ?? 0),
+    penetration: Math.min(data.base.penetration.max, (tech.penetration ?? 0) + (user.boost?.penetration ?? 0)),
     elementMult: elementMult(tech, target, data),
     critMult: crit ? data.base.crit.multiplier : 1,
     extraMult: attackerMult(user, tech),
@@ -211,7 +213,9 @@ export function hitsOf(user: Fighter, tech: JTechnique): number {
 }
 
 export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique, data: JornadaData): number {
-  return hitChance(tech.accuracy, user.mods.accuracyBonus - target.mods.evasion, data.base.hit);
+  const acc = user.mods.accuracyBonus + (user.boost?.accuracy ?? 0);
+  const eva = target.mods.evasion + (target.boost?.evasion ?? 0);
+  return hitChance(tech.accuracy, acc - eva, data.base.hit);
 }
 
 // ---------------------------------------------------------------------------
@@ -290,6 +294,7 @@ function startTurn(s: JBattle, f: Fighter, data: JornadaData): boolean {
 /** Fim do turno: efeitos e esperas descontam uma rodada. */
 function endTurn(s: JBattle, f: Fighter): void {
   f.effects = f.effects.map((e) => ({ ...e, turns: e.turns - 1 })).filter((e) => e.turns > 0);
+  if (f.boost && --f.boost.turns <= 0) f.boost = null;
   for (const id of Object.keys(f.cooldowns)) {
     f.cooldowns[id] = Math.max(0, f.cooldowns[id]! - 1);
     if (f.cooldowns[id] === 0) delete f.cooldowns[id];
@@ -406,6 +411,11 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
   if (tech.cooldown) f.cooldowns[tech.id] = tech.cooldown + 1;
   s.log.push({ type: 'tech', uid: f.uid, techId: tech.id, targets: targets.map((t) => t.uid) });
 
+  if (tech.boost) {
+    // O turno em que ativa conta: +1 para durar os turnos seguintes.
+    f.boost = { ...tech.boost, turns: tech.boost.turns + 1, techId: tech.id };
+    s.log.push({ type: 'boost', uid: f.uid, techId: tech.id, turns: tech.boost.turns });
+  }
   if (tech.clones) {
     f.clones = Math.min(j.maxClones, f.clones + tech.clones + f.mods.extraClones);
     s.log.push({ type: 'clones', uid: f.uid, total: f.clones });
@@ -490,6 +500,7 @@ function applyHpLoss(s: JBattle, t: Fighter, amount: number): void {
   t.clones = 0;
   t.shield = 0;
   t.guarding = false;
+  t.boost = null;
   s.log.push({ type: 'down', target: t.uid });
   checkEnd(s);
 }

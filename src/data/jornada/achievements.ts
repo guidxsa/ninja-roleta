@@ -9,7 +9,9 @@ export interface JornadaAchievement {
   check: (run: JRun) => boolean;
 }
 
-const won = (r: JRun) => r.status === 'victory';
+const won = (r: JRun) => r.status === 'victory' && r.mode === 'canon';
+const wonGeneric = (r: JRun) => r.status === 'victory' && r.mode === 'generic';
+const notEasy = (r: JRun) => r.difficulty !== 'easy';
 const hard = (r: JRun) => r.difficulty === 'hard' || r.difficulty === 'hardcore';
 
 export const jornadaAchievements: JornadaAchievement[] = [
@@ -22,6 +24,10 @@ export const jornadaAchievements: JornadaAchievement[] = [
   { id: 'j_noneLeftBehind', check: (r) => won(r) && r.stats.alliesLost === 0 },
   { id: 'j_rich', check: (r) => r.ryo >= 200 },
   { id: 'j_collector', check: (r) => r.relics.length >= 8 },
+  { id: 'j_genericWin', check: wonGeneric },
+  // Desbloqueios de classe (docs/jornada/classes.md#desbloqueios).
+  { id: 'j_unlockUchiha', check: (r) => wonGeneric(r) && notEasy(r) && r.hero === 'commonNinja' && r.elements[r.hero] === 'fire' },
+  { id: 'j_unlockHyuuga', check: (r) => wonGeneric(r) && notEasy(r) && r.hero === 'prodigy' },
   { id: 'j_sexy', hidden: true, check: (r) => r.cleared.includes('valley') && r.moveset.includes('jSexyJutsu') },
 ];
 

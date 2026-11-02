@@ -84,6 +84,9 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
   // Defesa própria: escudo quando está ferido, clones quando não tem.
   const selfShield = tech((t) => t.target === 'self' && Boolean(t.shieldPct));
   if (selfShield && f.shield === 0 && f.hp < f.maxHp * 0.6) return { kind: 'tech', techId: selfShield.id, target: f.uid };
+  // Fortalecimento (Portões, Sharingan) quando não tem um ativo.
+  const selfBoost = tech((t) => t.target === 'self' && Boolean(t.boost));
+  if (selfBoost && !f.boost && foes.length && rng() < 0.6) return { kind: 'tech', techId: selfBoost.id, target: f.uid };
   const selfClones = tech((t) => t.target === 'self' && Boolean(t.clones));
   if (selfClones && f.clones === 0) return { kind: 'tech', techId: selfClones.id, target: f.uid };
   // Inimigo que cura o próprio time (Kabuto) com aliado ferido.
