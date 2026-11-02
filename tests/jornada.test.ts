@@ -35,6 +35,7 @@ import {
   rest,
   setMoveset,
   shopOffer,
+  talentContext,
   HERO,
   type JRun,
 } from '../src/core/jornada/run';
@@ -403,9 +404,11 @@ describe('runs genéricas', () => {
     let run = newGenericRun(5, 'normal', 'common', data);
     run = chooseNode(run, nodeChoices(run)[0]!.id);
     const setup = battleSetup(run, data);
-    expect(setup.allies.map((a) => a.defId)).toEqual([run.hero, 'leafGeninA', 'leafGeninB']);
-    expect(setup.allies[1]!.element).toBe(run.elements.leafGeninA);
-    expect(setup.allies[1]!.techniques).toContain(data.elementLines[run.elements.leafGeninA!][0]);
+    expect(setup.allies[0]!.defId).toBe(run.hero);
+    expect(setup.allies.slice(1).map((a) => a.defId).sort()).toEqual(['leafGeninA', 'leafGeninB']);
+    const genin = setup.allies.find((a) => a.defId === 'leafGeninA')!;
+    expect(genin.element).toBe(run.elements.leafGeninA);
+    expect(genin.techniques).toContain(data.elementLines[run.elements.leafGeninA!][0]);
   });
 
   it('o ramo Elemento ensina a técnica do elemento sorteado', () => {
@@ -435,6 +438,54 @@ describe('runs genéricas', () => {
     const prodigy = { ...base, hero: 'prodigy', elements: { prodigy: null } };
     expect(newJornadaAchievements(prodigy, new Set())).toContain('j_unlockHyuuga');
     expect(newJornadaAchievements(prodigy, new Set())).not.toContain('j_canonWin');
+  });
+
+  it('Uchiha: fogo fixo e segundo elemento diferente; Hyuuga sempre com elemento', () => {
+    const seconds = new Set<string | null>();
+    for (let s = 0; s < 60; s++) {
+      const u = newGenericRun(s, 'normal', 'uchiha', data);
+      expect([u.hero, u.elements[u.hero]]).toEqual(['uchihaNinja', 'fire']);
+      expect(u.secondElement).not.toBe('fire');
+      seconds.add(u.secondElement);
+      if (u.secondElement) expect(heroMovable(u, data)).toContain(data.elementLines[u.secondElement][0]);
+      const h = newGenericRun(s, 'normal', 'hyuuga', data);
+      expect(h.hero).toBe('hyuugaNinja');
+      expect(h.elements[h.hero]).not.toBeNull();
+    }
+    expect(seconds.has(null)).toBe(true);
+    expect(seconds.has('lightning')).toBe(true);
+  });
+
+  it('classes liberadas trazem a versão suporte para o sorteio de parceiros', () => {
+    const none = new Set<string>();
+    const all = new Set(['j_unlockUchiha', 'j_unlockHyuuga']);
+    for (let s = 0; s < 20; s++) expect(newGenericRun(s, 'normal', 'common', data, none).supports.sort()).toEqual(['leafGeninA', 'leafGeninB']);
+    const seen = new Set<string>();
+    for (let s = 0; s < 60; s++) {
+      const r = newGenericRun(s, 'normal', 'uchiha', data, all);
+      expect(r.supports).toHaveLength(2);
+      expect(r.supports).not.toContain('uchihaGenin');
+      r.supports.forEach((id) => seen.add(id));
+      if (r.supports.includes('hyuugaGenin')) expect(r.elements.hyuugaGenin).not.toBeNull();
+    }
+    expect(seen.has('hyuugaGenin')).toBe(true);
+  });
+
+  it('easter egg: o ramo Raio só existe com raio, e o Chidori libera o ramo do Sasuke', () => {
+    const base = { ...newGenericRun(1, 'normal', 'uchiha', data), talentPoints: 20 };
+    const node = (id: string) => data.talents.find((t) => t.id === id)!;
+    const noLightning = { ...base, secondElement: 'water' as const };
+    expect(talentState(node('tChidoriU'), data.talents, talentContext(noLightning, new Set()))).toBe('hidden');
+    const lightning = { ...base, secondElement: 'lightning' as const };
+    expect(talentState(node('tChidoriU'), data.talents, talentContext(lightning, new Set()))).toBe('available');
+    expect(talentState(node('tLionU'), data.talents, talentContext(lightning, new Set()))).toBe('accountLocked');
+    const learned = buyTalent(lightning, 'tChidoriU', new Set(), data);
+    expect(newJornadaAchievements(learned, new Set())).toContain('j_sasukeEgg');
+    expect(talentState(node('tLionU'), data.talents, talentContext(learned, new Set(['j_sasukeEgg'])))).toBe('available');
+  });
+
+  it('o visual escolhido fica na run', () => {
+    expect(newGenericRun(1, 'normal', 'uchiha', data, new Set(), 'sasuke').skin).toBe('sasuke');
   });
 
   it('Portões fortalecem o dano por alguns turnos', () => {

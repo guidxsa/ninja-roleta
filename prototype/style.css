@@ -829,7 +829,9 @@ button[data-tip] { cursor: pointer; }
 .jchest .ico { width: 72px; height: 72px; color: var(--gold); animation: pop .5s ease-out; }
 
 .jmodal { max-height: 86vh; overflow-y: auto; }
-.jtree { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.jtree { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
+.jskin { align-self: center; }
+.jskin[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
 .jbranch { display: flex; flex-direction: column; gap: 6px; }
 .jbranch h3 { margin: 4px 0; text-align: center; font-size: 15px; }
 .jnode { text-align: left; padding: 8px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; }

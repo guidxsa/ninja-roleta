@@ -7,6 +7,7 @@ Três ramos de quatro nós. Cada nó pede o anterior do mesmo ramo e custa ponto
 - **Ramos canônicos** abrem pelo estágio da história: Kyuubi depois do Haku (estágio 2), Rasengan quando o Jiraiya ensina (estágio 3).
 - **Nós da conta** ficam liberados de vez por um objetivo: a Ōdama Rasengan pede a conquista *Vale do Fim* (vencer a run canônica).
 - O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
+- Nós que só existem com um elemento (ramo Raio do Uchiha) ficam escondidos para quem não tem o elemento.
 
 | Ramo | Nó | Custo | Efeito |
 |---|---|---|---|
@@ -58,3 +59,44 @@ O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.m
 | Treino | Entrada dinâmica | 2 | Aprende a Entrada dinâmica |
 | Treino | Mestre do taijutsu | 2 | +15% de dano de taijutsu |
 | Treino | Resistência | 3 | Uma vez por luta fica com 1 de HP |
+
+## Uchiha (runs genéricas)
+
+| Ramo | Nó | Custo | Efeito |
+|---|---|---|---|
+| Sharingan | 3 tomoe | 1 | Ativa nova: +20% de acerto, +25% de esquiva e +10% de dano por 4 turnos |
+| Sharingan | Olhar copiador | 2 | +5% de crítico e de acerto |
+| Sharingan | Previsão | 2 | Esquiva 7% |
+| Sharingan | Fluxo do Sharingan | 3 | +10% de dano; recupera 2% do HP por rodada |
+| Fogo | Flor de Fênix | 1 | Aprende a Flor de Fênix |
+| Fogo | Chama do clã | 2 | +15% de dano de ninjutsu |
+| Fogo | Grande Labareda | 2 | Aprende a Grande Labareda |
+| Fogo | Mestre do fogo | 3 | Técnicas custam 2 de chakra a menos |
+| Ilusões | Ilusão dos corvos | 1 | Aprende a Ilusão dos corvos |
+| Ilusões | Mestre das ilusões | 2 | +20% de dano de genjutsu |
+| Ilusões | Olhar do medo | 2 | +5% de acerto e de crítico |
+| Ilusões | Tsukuyomi | 3 | Aprende o Tsukuyomi |
+| Raio (só com raio) | Chidori | 2 | Aprende o Chidori; libera o easter egg do Sasuke ([classes.md](classes.md#easter-eggs)) |
+| Sasuke (conta) | Combo do Leão | 1 | Aprende o Combo do Leão |
+| Sasuke (conta) | Lâmina de raio | 2 | Aprende a Lâmina de raio |
+| Sasuke (conta) | Vingador | 2 | +25% de dano abaixo da metade do HP |
+| Sasuke (conta) | Selo amaldiçoado | 3 | Ativa: dano ×1,4 por 3 turnos, paga 10% do HP |
+
+## Hyuuga (runs genéricas)
+
+A Palma do Vácuo, que estava pendente desde o Roleta, entra no ramo Rotação.
+
+| Ramo | Nó | Custo | Efeito |
+|---|---|---|---|
+| Byakugan | Visão ampla | 1 | +5% de acerto; Byakugan custa 1 de chakra a menos |
+| Byakugan | Pontos vitais | 2 | +10% de crítico |
+| Byakugan | Byakugan desperto | 2 | Ativa nova: não erra, +30% de penetração e +15% de dano por 4 turnos |
+| Byakugan | Olhos que tudo veem | 3 | Esquiva 10% |
+| Punho Suave | Punho Suave | 1 | +10% de dano de taijutsu |
+| Punho Suave | 64 Palmas | 2 | Aprende as 64 Palmas |
+| Punho Suave | Tenketsu | 2 | Palma Suave: +30% de dano |
+| Punho Suave | 128 Palmas | 3 | Aprende as 128 Palmas |
+| Rotação | Rotação | 1 | Aprende a Rotação (escudo) |
+| Rotação | Postura do clã | 2 | Começa as lutas com escudo de 10% do HP |
+| Rotação | Palma do Vácuo | 2 | Aprende a Palma do Vácuo |
+| Rotação | Paredão de vácuo | 3 | Aprende o Paredão de vácuo (todos os inimigos) |

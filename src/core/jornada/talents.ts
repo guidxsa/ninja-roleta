@@ -21,6 +21,8 @@ export interface TalentNode {
   mods?: Partial<FighterMods>;
   /** XP ganho × este valor (Determinação). */
   xpMult?: number;
+  /** Só existe para quem tem este elemento (principal ou segundo): fica escondido sem ele. */
+  requiresElement?: Element;
 }
 
 export interface TalentContext {
@@ -29,11 +31,14 @@ export interface TalentContext {
   stageIndex: number;
   /** Conquistas liberadas no perfil. */
   unlocked: ReadonlySet<string>;
+  /** Elementos do protagonista (principal e segundo). */
+  elements?: readonly (Element | null)[];
 }
 
-export type TalentState = 'owned' | 'available' | 'noPoints' | 'locked' | 'stageLocked' | 'accountLocked';
+export type TalentState = 'owned' | 'available' | 'noPoints' | 'locked' | 'stageLocked' | 'accountLocked' | 'hidden';
 
 export function talentState(node: TalentNode, nodes: readonly TalentNode[], ctx: TalentContext): TalentState {
+  if (node.requiresElement && !ctx.elements?.includes(node.requiresElement)) return 'hidden';
   if (ctx.owned.includes(node.id)) return 'owned';
   if (node.account && !ctx.unlocked.has(node.account)) return 'accountLocked';
   if (node.fromStage !== undefined && ctx.stageIndex < node.fromStage) return 'stageLocked';

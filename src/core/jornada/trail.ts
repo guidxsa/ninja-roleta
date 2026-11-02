@@ -44,8 +44,12 @@ export interface ClassDef {
   noElementHero?: string;
   /** Elemento fixo (Uchiha: fogo); sem ele, o elemento é sorteado (pode sair nenhum). */
   fixedElement?: Element;
+  /** Sorteia um segundo elemento (pode sair nenhum), diferente do fixo. */
+  secondElement?: boolean;
   /** Conquista que libera a classe (sem o campo, liberada desde o início). */
   unlock?: string;
+  /** Versão suporte da classe: entra no sorteio de suportes quando a classe está liberada. */
+  support?: string;
 }
 
 /** Estágio de uma run genérica: pools sorteados no mapa (mesma dificuldade da canônica). */

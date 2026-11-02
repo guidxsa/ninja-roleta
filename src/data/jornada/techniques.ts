@@ -77,6 +77,23 @@ export const classTechniques: JTechnique[] = [
   { id: 'jDynamicEntry', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 15, chakraCost: 0, accuracy: 0.9, critBonus: 0.1, cooldown: 2 },
   { id: 'jHiddenLotus', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, hits: 4, chakraCost: 0, hpCostPct: 0.15, accuracy: 0.85, cooldown: 4 },
   { id: 'jDrunkenFist', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 3, chakraCost: 0, accuracy: 0.75, critBonus: 0.15 },
+
+  // Uchiha (v0.37.0)
+  { id: 'jSharingan', type: 'genjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, boost: { accuracy: 0.15, evasion: 0.15, turns: 3 }, active: true, cooldown: 4 },
+  { id: 'jSharingan3', type: 'genjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 4, boost: { accuracy: 0.2, evasion: 0.25, damageMult: 1.1, turns: 4 }, active: true, cooldown: 4 },
+  { id: 'jCrowIllusion', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 12, chakraCost: 4, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.25, turns: 1 } },
+  { id: 'jTsukuyomi', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 30, chakraCost: 12, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.5, turns: 1 }, cooldown: 4 },
+  { id: 'jCursedSeal', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.1, boost: { damageMult: 1.4, turns: 3 }, active: true, cooldown: 5 },
+
+  // Hyuuga (v0.37.0)
+  { id: 'jByakugan', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, boost: { accuracy: 1, penetration: 0.2, turns: 3 }, active: true, cooldown: 4 },
+  { id: 'jByakugan2', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 4, boost: { accuracy: 1, penetration: 0.3, damageMult: 1.15, turns: 4 }, active: true, cooldown: 4 },
+  { id: 'jGentlePalm', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 10, chakraCost: 0, accuracy: 0.95, penetration: 0.2, onHit: { effect: 'chakraBlock', chance: 0.3 } },
+  { id: 'jSixtyFourPalms', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 5, hits: 4, chakraCost: 8, accuracy: 0.95, penetration: 0.3, onHit: { effect: 'chakraBlock', chance: 0.5, turns: 3 }, cooldown: 3 },
+  { id: 'jHundredTwentyEight', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 4, hits: 8, chakraCost: 12, accuracy: 0.95, penetration: 0.3, onHit: { effect: 'chakraBlock', chance: 0.6, turns: 3 }, cooldown: 4 },
+  { id: 'jRotation', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 4, shieldPct: 0.25, cooldown: 3 },
+  { id: 'jVacuumPalm', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 16, chakraCost: 4, accuracy: 0.9, penetration: 0.2 },
+  { id: 'jVacuumWall', type: 'taijutsu', element: null, target: 'allEnemies', baseDamage: 12, chakraCost: 8, accuracy: 0.9, cooldown: 2 },
 ];
 
 /** Dos inimigos (fichas em data/jornada/enemies.ts). */

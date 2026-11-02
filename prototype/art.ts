@@ -415,6 +415,8 @@ const NINJA_OUTFIT: Record<string, { outfit: string; hair: string; collar?: stri
   grass: { outfit: '#5c7a2c', hair: '#3a2a1e', band: 'none' },
   rain: { outfit: '#55607a', hair: '#2a2f3a', band: 'none' },
   akamaru: { outfit: '#efe9dd', hair: '#efe9dd', band: 'none' },
+  // Personalização do Uchiha (easter egg do Sasuke).
+  sasuke: { outfit: '#1c2f5c', hair: '#141a2b', collar: '#22386b' },
 };
 
 /** Retrato do jogador: imagem própria (img/ninja/<linhagem>.webp ou img/ninja/ninja.webp) ou o desenho. */

@@ -70,7 +70,9 @@ function spendTalents(run: JRun): JRun {
   }
 }
 
-type Mode = 'canon' | 'generic';
+/** Canônica ou genérica com a classe ('generic:uchiha'). */
+type Mode = string;
+const UNLOCKED = new Set(['j_unlockUchiha', 'j_unlockHyuuga']);
 
 /** Caminho no mapa: descanso quando ferido, elite com HP alto, senão o que vier (luta e desconhecido antes). */
 function pickNode(run: JRun, rng: Rng): string {
@@ -82,7 +84,7 @@ function pickNode(run: JRun, rng: Rng): string {
 
 function play(seed: number, difficulty: Difficulty, mode: Mode): { run: JRun; stop: string } {
   const rng = createRng(seed);
-  let run = mode === 'canon' ? newRun(seed, difficulty, data) : newGenericRun(seed, difficulty, 'common', data);
+  let run = mode === 'canon' ? newRun(seed, difficulty, data) : newGenericRun(seed, difficulty, mode.split(':')[1]!, data, UNLOCKED);
   let guard = 0;
   while (run.status === 'inProgress') {
     if (++guard > 400) throw new Error('run sem fim');
@@ -119,7 +121,7 @@ function play(seed: number, difficulty: Difficulty, mode: Mode): { run: JRun; st
   return { run, stop: 'vitória' };
 }
 
-for (const mode of ['canon', 'generic'] as Mode[]) for (const d of DIFFS) {
+for (const mode of ['canon', 'generic:common', 'generic:uchiha', 'generic:hyuuga']) for (const d of DIFFS) {
   const stops = new Map<string, number>();
   let wins = 0;
   let levels = 0;
@@ -130,5 +132,5 @@ for (const mode of ['canon', 'generic'] as Mode[]) for (const d of DIFFS) {
     stops.set(stop, (stops.get(stop) ?? 0) + 1);
   }
   const top = [...stops.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, n]) => `${k} ${Math.round((n / RUNS) * 100)}%`);
-  console.log(`${mode.padEnd(8)} ${d.padEnd(8)} vitória ${Math.round((wins / RUNS) * 100)}% · nível médio ${(levels / RUNS).toFixed(1)} · ${top.join(' · ')}`);
+  console.log(`${mode.padEnd(15)} ${d.padEnd(8)} vitória ${Math.round((wins / RUNS) * 100)}% · nível médio ${(levels / RUNS).toFixed(1)} · ${top.join(' · ')}`);
 }

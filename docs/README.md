@@ -23,7 +23,7 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 | [jornada/combate.md](jornada/combate.md) | Combate de equipe, ordem, ações, efeitos, levantar, bolsa, moveset, interface |
 | [jornada/personagens.md](jornada/personagens.md) | Fichas, técnicas e comportamento dos aliados |
 | [jornada/inimigos.md](jornada/inimigos.md) | Fichas e técnicas dos inimigos |
-| [jornada/talentos.md](jornada/talentos.md) | Árvores de talentos (Naruto, Comum, prodígio) |
+| [jornada/talentos.md](jornada/talentos.md) | Árvores de talentos (Naruto, Comum, prodígio, Uchiha, Hyuuga) |
 | [jornada/progressao.md](jornada/progressao.md) | XP, nível, recompensas, entre lutas |
 | [jornada/reliquias.md](jornada/reliquias.md) | Relíquias: tiers, de onde vêm, catálogo |
 | [jornada/generica.md](jornada/generica.md) | Runs genéricas: estrutura, pools por estágio, chefes, eventos |

@@ -28,6 +28,10 @@ export const jornadaAchievements: JornadaAchievement[] = [
   // Desbloqueios de classe (docs/jornada/classes.md#desbloqueios).
   { id: 'j_unlockUchiha', check: (r) => wonGeneric(r) && notEasy(r) && r.hero === 'commonNinja' && r.elements[r.hero] === 'fire' },
   { id: 'j_unlockHyuuga', check: (r) => wonGeneric(r) && notEasy(r) && r.hero === 'prodigy' },
+  { id: 'j_winUchiha', check: (r) => wonGeneric(r) && r.hero === 'uchihaNinja' },
+  { id: 'j_winHyuuga', check: (r) => wonGeneric(r) && r.hero === 'hyuugaNinja' },
+  // Easter egg: Uchiha com raio que aprende o Chidori libera o visual e o ramo do Sasuke (docs/jornada/classes.md#easter-eggs).
+  { id: 'j_sasukeEgg', hidden: true, check: (r) => r.hero === 'uchihaNinja' && r.secondElement === 'lightning' && r.learned.includes('jChidori') },
   { id: 'j_sexy', hidden: true, check: (r) => r.cleared.includes('valley') && r.moveset.includes('jSexyJutsu') },
 ];
 

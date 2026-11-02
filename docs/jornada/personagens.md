@@ -19,6 +19,10 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 | Prodígio do taijutsu | 115 | 12 | 13 | 12/0/0 | 8/5 | — | striker | Golpe, Redemoinho da Folha, Shuriken, Portões |
 | Daichi | 95 | 24 | 11 | 10/10/3 | 6/5 | — | striker | Kunai, Shuriken |
 | Hana | 90 | 26 | 10 | 8/10/6 | 5/7 | — | tactician | Kunai, Armadilha de fios, Kai (libertar) |
+| Ninja Uchiha | 105 | 32 | 12 | 10/12/8 | 7/8 | fogo | striker | Golpe, Shuriken, Bola de Fogo, Sharingan |
+| Ninja Hyuuga | 105 | 26 | 12 | 12/6/4 | 8/7 | — | striker | Golpe, Palma Suave, Shuriken, Byakugan |
+| Ren Uchiha | 85 | 26 | 12 | 8/10/7 | 5/7 | fogo | striker | Kunai, Ilusão dos corvos |
+| Mio Hyuuga | 95 | 22 | 11 | 10/5/4 | 7/6 | — | guardian | Palma Suave, Rotação, Kunai |
 
 - O Sasuke aprende o **Chidori** ao chegar no exame chunin (estágio 2).
 - As técnicas novas do Naruto vêm da árvore de talentos ([talentos.md](talentos.md)).
@@ -95,7 +99,7 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 | Tubarão de água | Ninjutsu | água | um inimigo | 18 | 5 | 90% | — |
 | Cachoeira | Ninjutsu | água | todos os inimigos | 14 | 9 | 90% | — |
 
-### Comum e prodígio
+### Classes das runs genéricas (Comum, prodígio, Uchiha, Hyuuga)
 
 | Técnica | Tipo | Elemento | Alvo | Dano | Chakra | Precisão | Extra |
 |---|---|---|---|---|---|---|---|
@@ -106,3 +110,16 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 | Entrada dinâmica | Taijutsu | — | um inimigo | 15 | 0 | 90% | +10% crítico; espera 2 |
 | Lótus Oculta | Taijutsu | — | um inimigo | 12 | 0 | 85% | 4 golpes; custa 15% do HP; espera 4 |
 | Punho Bêbado | Taijutsu | — | um inimigo | 7 | 0 | 75% | 3 golpes; +15% crítico |
+| Sharingan | Genjutsu | — | em si | — | 3 | 85% | espera 4; fortalece 3 turnos (+15% acerto); ativa de classe |
+| Sharingan de 3 tomoe | Genjutsu | — | em si | — | 4 | 85% | espera 4; fortalece 4 turnos (dano ×1.1) (+20% acerto); ativa de classe |
+| Ilusão dos corvos | Genjutsu | — | um inimigo | 12 | 4 | 85% | atordoar 25% (1 t) |
+| Tsukuyomi | Genjutsu | — | um inimigo | 30 | 12 | 85% | atordoar 50% (1 t); espera 4 |
+| Selo amaldiçoado | Ninjutsu | — | em si | — | 0 | 85% | custa 10% do HP; espera 5; fortalece 3 turnos (dano ×1.4); ativa de classe |
+| Byakugan | Taijutsu | — | em si | — | 3 | 85% | espera 4; fortalece 3 turnos (+100% acerto); ativa de classe |
+| Byakugan desperto | Taijutsu | — | em si | — | 4 | 85% | espera 4; fortalece 4 turnos (dano ×1.15) (+100% acerto); ativa de classe |
+| Palma Suave | Taijutsu | — | um inimigo | 10 | 0 | 95% | penetração 20%; bloqueio de chakra 30% |
+| 64 Palmas | Taijutsu | — | um inimigo | 5 | 8 | 95% | 4 golpes; penetração 30%; bloqueio de chakra 50% (3 t); espera 3 |
+| 128 Palmas | Taijutsu | — | um inimigo | 4 | 12 | 95% | 8 golpes; penetração 30%; bloqueio de chakra 60% (3 t); espera 4 |
+| Rotação | Taijutsu | — | em si | — | 4 | 85% | escudo 25% do HP de quem usa; espera 3 |
+| Palma do Vácuo | Taijutsu | — | um inimigo | 16 | 4 | 90% | penetração 20% |
+| Paredão de vácuo | Taijutsu | — | todos os inimigos | 12 | 8 | 90% | espera 2 |

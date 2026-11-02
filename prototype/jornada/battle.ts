@@ -34,8 +34,11 @@ const B = J.battle;
 export const fighterName = (f: { defId: string }) => J.names[f.defId] ?? f.defId;
 export const techName = (id: string) => J.techniques[id] ?? id;
 
+/** Visual do protagonista desta luta (personalização da run). */
+let heroSkin: string | null = null;
+
 function portraitOf(f: Fighter, data: JornadaData): string {
-  const spec = data.characters[f.defId]?.portrait ?? data.enemies[f.defId]?.portrait ?? 'ninja:common';
+  const spec = f.protagonist && heroSkin ? `ninja:${heroSkin}` : (data.characters[f.defId]?.portrait ?? data.enemies[f.defId]?.portrait ?? 'ninja:common');
   return fighterPortrait(f.defId, spec, 'md');
 }
 
@@ -145,6 +148,7 @@ export async function jornadaBattle(
   goal: string | null,
 ): Promise<BattleResult> {
   let run = run0;
+  heroSkin = run0.skin;
   let state = startBattle(setup, data, rng);
   const root = show(
     h(`<div class="screen jbattle scene-${scene}">

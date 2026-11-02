@@ -6,7 +6,12 @@ import type { GenericDef } from '../../core/jornada/trail';
 const EVENTS = ['gOldLady', 'gRamen', 'gTraining', 'gJokenpo', 'gGuru', 'gAkatsuki', 'gFoundItem', 'gSummon'];
 
 export const generic: GenericDef = {
-  classes: [{ id: 'common', hero: 'commonNinja', noElementHero: 'prodigy' }],
+  classes: [
+    { id: 'common', hero: 'commonNinja', noElementHero: 'prodigy' },
+    // Uchiha: fogo fixo e um segundo elemento sorteado (pode sair nenhum).
+    { id: 'uchiha', hero: 'uchihaNinja', fixedElement: 'fire', secondElement: true, unlock: 'j_unlockUchiha', support: 'uchihaGenin' },
+    { id: 'hyuuga', hero: 'hyuugaNinja', unlock: 'j_unlockHyuuga', support: 'hyuugaGenin' },
+  ],
   supports: ['leafGeninA', 'leafGeninB'],
   stages: [
     {

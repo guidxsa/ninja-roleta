@@ -33,6 +33,10 @@ export interface JRun {
   classId: string;
   /** Elemento sorteado por personagem (genérica: protagonista e suportes). */
   elements: Record<string, Element | null>;
+  /** Genérica: segundo elemento do protagonista (Uchiha). */
+  secondElement: Element | null;
+  /** Visual do protagonista (personalização liberada por easter egg, ex.: "sasuke"). */
+  skin: string | null;
   /** Genérica: suportes das lutas comuns. */
   supports: string[];
   /** Genérica: mapa do estágio atual. */
@@ -84,6 +88,8 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     hero,
     classId: hero,
     elements: {},
+    secondElement: null,
+    skin: null,
     supports: [],
     map: null,
     nodeId: null,
@@ -132,7 +138,18 @@ export function drawElement(rng: Rng, data: JornadaData, allowNone: boolean): El
  * Run genérica (docs/jornada/generica.md): sorteia o elemento do protagonista (o Comum sem elemento vira
  * prodígio) e o dos suportes, o chefe de cada estágio e o mapa do estágio 1.
  */
-export function newGenericRun(seed: number, difficulty: Difficulty, classId: string, data: JornadaData): JRun {
+/**
+ * `unlocked`: conquistas do perfil (as classes liberadas trazem a versão suporte para o sorteio de parceiros).
+ * `skin`: visual escolhido na tela de início (só quando liberado).
+ */
+export function newGenericRun(
+  seed: number,
+  difficulty: Difficulty,
+  classId: string,
+  data: JornadaData,
+  unlocked: ReadonlySet<string> = new Set(),
+  skin: string | null = null,
+): JRun {
   const cls = data.generic.classes.find((c) => c.id === classId);
   if (!cls) throw new Error(`classe desconhecida: ${classId}`);
   const rng = createRng(seed ^ 0x5bd1e995);
@@ -141,9 +158,19 @@ export function newGenericRun(seed: number, difficulty: Difficulty, classId: str
   const run = baseRun(seed, difficulty, hero, data);
   run.mode = 'generic';
   run.classId = classId;
-  run.supports = [...data.generic.supports];
+  if (cls.secondElement) {
+    let second = drawElement(rng, data, true);
+    while (second === element) second = drawElement(rng, data, true);
+    run.secondElement = second;
+  }
+  run.skin = skin;
+  // Parceiros: os 2 Comuns, mais as versões suporte das classes liberadas (sem repetir a própria classe).
+  const extra = data.generic.classes.filter((c) => c.support && c.id !== classId && (!c.unlock || unlocked.has(c.unlock))).map((c) => c.support!);
+  const pool = [...data.generic.supports, ...extra];
+  run.supports = [];
+  while (run.supports.length < 2 && pool.length) run.supports.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]!);
   run.elements = { [hero]: element };
-  for (const id of run.supports) run.elements[id] = drawElement(rng, data, false);
+  for (const id of run.supports) run.elements[id] = data.characters[id]!.element ?? drawElement(rng, data, false);
   run.bossPlan = data.generic.stages.map((s) => Math.floor(rng() * s.bosses.length));
   run.map = generateMap(rng, data);
   // O nível I do elemento entra no moveset.
@@ -273,9 +300,10 @@ function elementBasic(run: JRun, id: string, data: JornadaData): string[] {
   return el ? [data.elementLines[el][0]] : [];
 }
 
-/** Técnicas que o protagonista conhece (kit inicial + elemento + talentos). */
+/** Técnicas que o protagonista conhece (kit inicial + elemento + segundo elemento + talentos). */
 export function heroKnown(run: JRun, data: JornadaData): string[] {
-  return [...new Set([...data.characters[run.hero]!.techniques, ...elementBasic(run, run.hero, data), ...run.learned])];
+  const second = run.secondElement ? [data.elementLines[run.secondElement][0]] : [];
+  return [...new Set([...data.characters[run.hero]!.techniques, ...elementBasic(run, run.hero, data), ...second, ...run.learned])];
 }
 
 /** Ativas de classe do protagonista (área separada do moveset). */
@@ -629,7 +657,7 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
 // Talentos e moveset
 
 export function talentContext(run: JRun, unlocked: ReadonlySet<string>): TalentContext {
-  return { owned: run.talents, points: run.talentPoints, stageIndex: run.stageIndex, unlocked };
+  return { owned: run.talents, points: run.talentPoints, stageIndex: run.stageIndex, unlocked, elements: [run.elements[run.hero] ?? null, run.secondElement] };
 }
 
 /** Técnica que o nó ensina nesta run (fixa ou pelo elemento do protagonista). */

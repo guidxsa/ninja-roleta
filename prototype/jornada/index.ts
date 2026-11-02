@@ -79,7 +79,8 @@ const STOP_ICONS: Record<string, string> = {
 const stopName = (s: StopDef) =>
   J.stops[s.id] ?? (isFight(s) ? [...new Set(s.enemies.map((e) => J.names[e] ?? e))].join(' e ') : J.stopKinds[s.kind] ?? s.id);
 const stageName = (run: JRun) => J.stages[stageId(run, data)] ?? '';
-const portraitSpec = (id: string) => data.characters[id]?.portrait ?? 'ninja:common';
+const portraitSpec = (id: string, run?: JRun) =>
+  run?.skin && id === run.hero ? `ninja:${run.skin}` : (data.characters[id]?.portrait ?? 'ninja:common');
 /** Nome com o elemento sorteado (genérica): "Daichi (Fogo)". */
 function memberName(run: JRun, id: string): string {
   const el = run.mode === 'generic' ? elementOf(run, id, data) : null;
@@ -160,6 +161,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
             <b>${open ? '' : '🔒 '}${G.classes[id]!.name}</b><small>${note}</small></button>`;
         })
         .join('')}</div>
+      ${host.unlocked().has('j_sasukeEgg') ? `<button class="btn small jskin" data-skin aria-pressed="false">${G.skinSasuke}</button>` : ''}
       <button class="btn big" data-choice="generic">${icon('dice')} ${G.start}</button>
       <button class="btn small" data-choice="back">${J.start.back}</button>
     </div>`),
@@ -172,6 +174,12 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
     root.querySelectorAll('[data-diff]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
   });
   let classId = 'common';
+  let skin: string | null = null;
+  root.querySelector('[data-skin]')?.addEventListener('click', (e) => {
+    const b = e.currentTarget as HTMLElement;
+    skin = skin ? null : 'sasuke';
+    b.setAttribute('aria-pressed', String(Boolean(skin)));
+  });
   root.querySelector('.jclasses')!.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-class]');
     if (!b || b.getAttribute('aria-disabled') === 'true') return;
@@ -186,7 +194,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
       if (saved && !window.confirm(J.start.overwrite)) continue;
       clearJornada(host.storage);
       if (c === 'new') return newRun(host.nextSeed(), diff, data);
-      const run = newGenericRun(host.nextSeed(), diff, classId, data);
+      const run = newGenericRun(host.nextSeed(), diff, classId, data, host.unlocked(), classId === 'uchiha' ? skin : null);
       await revealScreen(host, run);
       return run;
     }
@@ -199,9 +207,10 @@ async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
   const [a, b] = run.supports.map((id) => memberName(run, id));
   const root = show(
     h(`<div class="screen jreveal"><h2>${G.revealTitle}</h2>
-      <div class="jstart-face pop">${fighterPortrait(run.hero, portraitSpec(run.hero), 'lg')}</div>
+      <div class="jstart-face pop">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'lg')}</div>
       <h3 class="center">${J.names[run.hero]}</h3>
       <p class="center">${el ? `${icon(el)} ${G.revealElement(S.elements[el])}` : G.revealProdigy}</p>
+      ${run.classId === 'uchiha' ? `<p class="center">${run.secondElement ? `${icon(run.secondElement)} ${G.revealSecond(S.elements[run.secondElement])}` : G.revealNoSecond}</p>` : ''}
       <p class="center muted">${G.revealTeam(a ?? '', b ?? '')}</p>
       <button class="btn primary big" data-choice="ok">${U.continue}</button></div>`),
   );
@@ -216,7 +225,7 @@ function hud(run: JRun): string {
   const need = xpToNext(run.level, data);
   const bag = (['hpKit', 'chakraKit', 'reviveKit'] as const).filter((id) => run.bag[id] > 0).map((id) => `${J.items[id]!.name} ×${run.bag[id]}`);
   return `<section class="card jhud">
-    <div class="jhud-top">${fighterPortrait(run.hero, portraitSpec(run.hero), 'sm')}<b>${J.names[run.hero]}</b>
+    <div class="jhud-top">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}<b>${J.names[run.hero]}</b>
       <span class="chip lvl-chip">${U.level(run.level)}</span><span class="chip">${icon('coin')} ${U.ryo(run.ryo)}</span>
       ${run.willOfFire ? `<span class="chip jin">${icon('willOfFire')} ${run.willOfFire}</span>` : ''}</div>
     <div class="bar bar-xp"><div class="fill" style="width:${Math.min(100, (run.xp / need) * 100)}%"></div><span>${U.xp(run.xp, need)}</span></div>
@@ -225,7 +234,7 @@ function hud(run: JRun): string {
       .map((id) => {
         const st = memberState(run, id, data);
         const sh = memberSheet(run, id, data);
-        return `<div class="jhud-member">${fighterPortrait(id, portraitSpec(id), 'sm')}<div><b>${memberName(run, id)}</b>
+        return `<div class="jhud-member">${fighterPortrait(id, portraitSpec(id, run), 'sm')}<div><b>${memberName(run, id)}</b>
           <div class="bar bar-hp jbar"><div class="fill" style="width:${(st.hp / sh.maxHp) * 100}%"></div><span>${st.hp}/${sh.maxHp}</span></div>
           <div class="bar bar-ck jbar"><div class="fill" style="width:${(st.chakra / sh.maxChakra) * 100}%"></div></div></div></div>`;
       })
@@ -525,8 +534,9 @@ function talentsModal(host: JornadaHost, run0: JRun): Promise<JRun> {
     el.querySelector('.jmodal')!.innerHTML = `<div class="row between"><h2>${T.title}</h2><button class="btn small" data-close>✕</button></div>
       <p class="center"><span class="chip lvl-chip">${T.points(run.talentPoints)}</span></p>
       <div class="jtree">${branchesOf(run.hero, data.talents)
+        .filter((br) => data.talents.some((n) => n.owner === run.hero && n.branch === br && talentState(n, data.talents, ctx) !== 'hidden'))
         .map(
-          (br) => `<div class="jbranch"><h3>${T.branches[br]}</h3>${data.talents
+          (br) => `<div class="jbranch"><h3>${data.talents.filter((n) => n.owner === run.hero && n.branch === br).every((n) => talentState(n, data.talents, ctx) === 'accountLocked') ? '???' : T.branches[br]}</h3>${data.talents
             .filter((n) => n.owner === run.hero && n.branch === br)
             .map((n) => {
               const st = talentState(n, data.talents, ctx);
@@ -620,7 +630,7 @@ async function endScreen(host: JornadaHost, run: JRun): Promise<void> {
   const stop = currentStop(run, data);
   host.mood(won ? 'good' : 'bad');
   const root = show(h(`<div class="screen jend ${won ? 'win' : 'lose'}"><h2>${won ? U.victoryTitle : U.defeatTitle}</h2>
-    <div class="jstart-face">${fighterPortrait(run.hero, portraitSpec(run.hero), 'md')}</div>
+    <div class="jstart-face">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'md')}</div>
     <p class="center">${won ? U.runWon : U.runLost(stop ? stopName(stop) : '')}</p>
     <p class="center muted">${U.runStats(run.stats.fights, run.stats.wins, run.level)}</p>
     ${run.relics.length ? run.relics.map((id) => relicCard(id)).join('') : ''}
