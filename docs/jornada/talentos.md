@@ -1,0 +1,24 @@
+# Árvore de talentos do Naruto
+
+> Implementada na v0.35.0 ([README.md](README.md)). Dados em `src/data/jornada/talents.ts`.
+
+Três ramos de quatro nós. Cada nó pede o anterior do mesmo ramo e custa pontos de talento ([progressao.md](progressao.md)). A árvore **reinicia a cada run**.
+
+- **Ramos canônicos** abrem pelo estágio da história: Kyuubi depois do Haku (estágio 2), Rasengan quando o Jiraiya ensina (estágio 3).
+- **Nós da conta** ficam liberados de vez por um objetivo: a Ōdama Rasengan pede a conquista *Vale do Fim* (vencer a run canônica).
+- O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
+
+| Ramo | Nó | Custo | Efeito |
+|---|---|---|---|
+| Clones | Multiclones | 1 | Kage Bunshin cria 1 clone a mais |
+| Clones | Rendan Uzumaki | 2 | Aprende o Rendan: 1 golpe + 1 por clone (até +3) |
+| Clones | Guarda de clones | 2 | Começa toda luta com 1 clone; +2 de dano no taijutsu |
+| Clones | Mil Clones | 3 | Aprende o Tajū Kage Bunshin: 2 golpes em todos os inimigos e 3 clones |
+| Kyuubi | Chakra da raposa | 1 | Recupera 3% do HP por rodada |
+| Kyuubi | Manto da Kyuubi | 2 | Ativa de classe: paga 8% do HP, ganha escudo de 20% |
+| Kyuubi | Explosão de chakra | 2 | Aprende a Explosão (todos os inimigos); +20% de dano abaixo da metade do HP |
+| Kyuubi | Fúria da Kyuubi | 3 | Uma vez por luta fica com 1 de HP em vez de cair; +10% de dano com HP baixo |
+| Rasengan | Rasengan | 1 | Aprende o Rasengan |
+| Rasengan | Domínio do Rasengan | 2 | Rasengan: +25% de dano, 2 de chakra a menos |
+| Rasengan | Foco | 2 | +10% de crítico |
+| Rasengan | Ōdama Rasengan | 3 | Aprende a Ōdama (conta: vencer a run canônica) |

@@ -392,7 +392,7 @@ export function villainPortrait(id: string, size: 'sm' | 'md' | 'lg' = 'md'): st
 }
 
 /** Cores do traje padrão do ninja por linhagem. */
-const NINJA_OUTFIT: Record<string, { outfit: string; hair: string; collar?: string }> = {
+const NINJA_OUTFIT: Record<string, { outfit: string; hair: string; collar?: string; band?: 'leaf' | 'mist' | 'sand' | 'sound' | 'none' }> = {
   common: { outfit: '#2c3a5c', hair: '#3a2a1e' },
   uchiha: { outfit: '#1f2a44', hair: '#15161c', collar: '#1a2236' },
   hyuuga: { outfit: '#d8d2e6', hair: '#2a2430' },
@@ -404,6 +404,17 @@ const NINJA_OUTFIT: Record<string, { outfit: string; hair: string; collar?: stri
   uzumaki: { outfit: '#f07a1a', hair: '#e8b33a' },
   senju: { outfit: '#2d6e4e', hair: '#3b2a1e' },
   taijutsuProdigy: { outfit: '#3f8a3c', hair: '#121214' },
+  // Personagens da Jornada sem desenho próprio (variações do ninja padrão).
+  sakura: { outfit: '#c0392b', hair: '#f29ab8' },
+  kakashi: { outfit: '#4f6b3a', hair: '#d9dde3', collar: '#3d5530' },
+  jiraiya: { outfit: '#8a2f2a', hair: '#eceff1' },
+  tsunade: { outfit: '#3f7a4f', hair: '#f0cf6a' },
+  kimimaro: { outfit: '#d9d4c7', hair: '#f4f4f4', band: 'sound' },
+  thug: { outfit: '#6b5a44', hair: '#2a1d14', band: 'none' },
+  mist: { outfit: '#4a6a80', hair: '#1d2a33', band: 'mist' },
+  grass: { outfit: '#5c7a2c', hair: '#3a2a1e', band: 'none' },
+  rain: { outfit: '#55607a', hair: '#2a2f3a', band: 'none' },
+  akamaru: { outfit: '#efe9dd', hair: '#efe9dd', band: 'none' },
 };
 
 /** Retrato do jogador: imagem própria (img/ninja/<linhagem>.webp ou img/ninja/ninja.webp) ou o desenho. */
@@ -423,6 +434,17 @@ export function ninjaPortrait(lineageId: string | null, jinchuuriki: boolean, si
     head({ eyeColor: key === 'hyuuga' ? '#cfc8e8' : key === 'uchiha' ? '#15161c' : '#2a4a7a', mouth: 'smirk' }) +
     marks +
     `<path d="M30 46l-5-12 8 1-1-11 8 5 3-11 6 8 5-9 3 10 8-5-1 11 8-1-5 12c-4-8-11-12-19-12s-14 4-18 14z" fill="${look.hair}"/>` +
-    headband('leaf', '#24324f');
+    (look.band === 'none' ? '' : headband(look.band ?? 'leaf', '#24324f'));
   return `<span class="portrait portrait-${size} ninja-portrait">${svg(art, '0 0 100 100', 'art')}</span>`;
+}
+
+/**
+ * Retrato de um lutador da Jornada: imagem própria (img/jornada/<id>.webp) ou a arte já existente
+ * indicada nos dados (`villain:<id>` ou `ninja:<chave>`).
+ */
+export function fighterPortrait(defId: string, spec: string, size: 'sm' | 'md' | 'lg' = 'md'): string {
+  const img = customImage('jornada', defId);
+  if (img) return `<span class="portrait portrait-${size}"><img src="${img}" alt=""></span>`;
+  const [kind, key = ''] = spec.split(':');
+  return kind === 'villain' ? villainPortrait(key, size) : ninjaPortrait(key, defId === 'naruto', size);
 }

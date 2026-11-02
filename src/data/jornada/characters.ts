@@ -1,0 +1,113 @@
+import type { CharacterDef } from '../../core/jornada/types';
+
+// Personagens jogáveis e aliados da run canônica (docs/jornada/personagens.md). Ficha no nível 1;
+// os aliados sobem de nível junto com o Naruto. Valores provisórios.
+
+const g = (hp: number, chakra: number, speed: number, tai: number, nin: number, gen: number, phys: number, ment: number) => ({
+  hp,
+  chakra,
+  speed,
+  offense: { taijutsu: tai, ninjutsu: nin, genjutsu: gen },
+  resistance: { physical: phys, mental: ment },
+});
+
+export const characters: CharacterDef[] = [
+  {
+    id: 'naruto',
+    hp: 110,
+    chakra: 30,
+    speed: 10,
+    offense: { taijutsu: 9, ninjutsu: 8, genjutsu: 3 },
+    resistance: { physical: 7, mental: 5 },
+    element: 'wind',
+    techniques: ['jStrike', 'jShuriken', 'jSexyJutsu', 'jKageBunshin'],
+    ai: 'striker',
+    growth: g(9, 3, 0.5, 1, 1, 0.3, 0.6, 0.5),
+    portrait: 'ninja:uzumaki',
+  },
+  {
+    id: 'sasuke',
+    hp: 90,
+    chakra: 28,
+    speed: 13,
+    offense: { taijutsu: 10, ninjutsu: 10, genjutsu: 5 },
+    resistance: { physical: 6, mental: 7 },
+    element: 'fire',
+    techniques: ['jStrike', 'jShuriken', 'jFireball', 'jLionBarrage'],
+    ai: 'striker',
+    growth: g(7, 3, 0.6, 1, 1.1, 0.4, 0.5, 0.5),
+    portrait: 'ninja:uchiha',
+  },
+  {
+    id: 'sakura',
+    hp: 80,
+    chakra: 26,
+    speed: 10,
+    offense: { taijutsu: 7, ninjutsu: 6, genjutsu: 8 },
+    resistance: { physical: 5, mental: 9 },
+    element: 'earth',
+    techniques: ['jKunai', 'jShuriken', 'jWireTrap', 'jRelease'],
+    ai: 'tactician',
+    growth: g(6, 3, 0.4, 0.7, 0.6, 0.9, 0.4, 0.7),
+    portrait: 'ninja:sakura',
+  },
+  {
+    id: 'jiraiya',
+    hp: 150,
+    chakra: 40,
+    speed: 12,
+    offense: { taijutsu: 13, ninjutsu: 14, genjutsu: 8 },
+    resistance: { physical: 10, mental: 9 },
+    element: 'fire',
+    techniques: ['jSanninStrike', 'jToadOil', 'jNeedleJizo'],
+    ai: 'striker',
+    growth: g(6, 2, 0.3, 0.6, 0.7, 0.3, 0.5, 0.4),
+    portrait: 'ninja:jiraiya',
+  },
+  {
+    id: 'tsunade',
+    hp: 140,
+    chakra: 40,
+    speed: 12,
+    offense: { taijutsu: 15, ninjutsu: 12, genjutsu: 6 },
+    resistance: { physical: 10, mental: 8 },
+    element: 'earth',
+    techniques: ['jTsunadePunch', 'jMysticPalm', 'jStrike'],
+    ai: 'healer',
+    growth: g(6, 2, 0.3, 0.7, 0.6, 0.2, 0.5, 0.4),
+    portrait: 'ninja:tsunade',
+  },
+  {
+    id: 'lee',
+    hp: 115,
+    chakra: 10,
+    speed: 15,
+    offense: { taijutsu: 14, ninjutsu: 0, genjutsu: 0 },
+    resistance: { physical: 9, mental: 5 },
+    element: null,
+    techniques: ['jLeafWhirlwind', 'jLeafHurricane', 'jPrimaryLotus'],
+    ai: 'striker',
+    growth: g(8, 1, 0.6, 1.3, 0, 0, 0.6, 0.4),
+    portrait: 'ninja:taijutsuProdigy',
+  },
+  {
+    id: 'gaaraAlly',
+    hp: 130,
+    chakra: 40,
+    speed: 10,
+    offense: { taijutsu: 6, ninjutsu: 14, genjutsu: 4 },
+    resistance: { physical: 12, mental: 8 },
+    element: 'earth',
+    techniques: ['jSandShieldAlly', 'jSandCoffinAlly', 'jSandShuriken'],
+    ai: 'guardian',
+    growth: g(7, 3, 0.3, 0.3, 1.1, 0.2, 0.7, 0.4),
+    portrait: 'villain:gaara',
+  },
+];
+
+export const charactersById: Record<string, CharacterDef> = Object.fromEntries(characters.map((c) => [c.id, c]));
+
+/** Técnicas que um aliado ganha ao chegar num estágio (o Sasuke aprende o Chidori no exame). */
+export const stageTechniques: Record<string, Record<number, string[]>> = {
+  sasuke: { 1: ['jChidori'] },
+};

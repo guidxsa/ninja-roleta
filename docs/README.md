@@ -4,7 +4,7 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 
 - **[base/](base/)**: regras usadas pelos dois modos (hoje implementadas no Roleta; a Jornada herda).
 - **[roleta/](roleta/)**: o que é só do modo Roleta.
-- **[jornada/](jornada/README.md)**: o modo Jornada (rascunho, não implementado).
+- **[jornada/](jornada/README.md)**: o modo Jornada (run canônica implementada; runs genéricas em rascunho).
 
 | Arquivo | Conteúdo |
 |---|---|
@@ -17,9 +17,13 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 | [base/perfil.md](base/perfil.md) | Perfil local: conquistas, Livro Bingo e estatísticas por origem |
 | [roleta/campanha.md](roleta/campanha.md) | Ordem, eventos, encontros, invocações, exame, dificuldade, histórico |
 | [roleta/itens.md](roleta/itens.md) | Itens, bolsa e roleta de recompensa |
-| [jornada/README.md](jornada/README.md) | Visão geral, pilares, modos de run, ordem de construção, pendências |
-| [jornada/run.md](jornada/run.md) | Estágios, mapa, paradas, eventos e minijogos, dificuldade, salvamento |
-| [jornada/combate.md](jornada/combate.md) | Combate de equipe, alvos, levantar quem caiu, moveset |
-| [jornada/classes.md](jornada/classes.md) | Classes, desbloqueios, easter eggs, versão suporte |
-| [jornada/progressao.md](jornada/progressao.md) | XP, pontos e árvore de talentos |
-| [jornada/reliquias.md](jornada/reliquias.md) | Relíquias: tiers, de onde vêm |
+| [jornada/README.md](jornada/README.md) | Visão geral, pilares, tipos de run, simulação, ordem de construção, pendências |
+| [jornada/canonica.md](jornada/canonica.md) | Run canônica: estágios, paradas, quem luta, vitórias especiais, eventos |
+| [jornada/run.md](jornada/run.md) | Tipos de run, paradas, eventos e minijogos, dificuldade, salvamento, mapa ramificado |
+| [jornada/combate.md](jornada/combate.md) | Combate de equipe, ordem, ações, efeitos, levantar, bolsa, moveset, interface |
+| [jornada/personagens.md](jornada/personagens.md) | Fichas, técnicas e comportamento dos aliados |
+| [jornada/inimigos.md](jornada/inimigos.md) | Fichas e técnicas dos inimigos |
+| [jornada/talentos.md](jornada/talentos.md) | Árvore de talentos do Naruto |
+| [jornada/progressao.md](jornada/progressao.md) | XP, nível, recompensas, entre lutas |
+| [jornada/reliquias.md](jornada/reliquias.md) | Relíquias: tiers, de onde vêm, catálogo |
+| [jornada/classes.md](jornada/classes.md) | Classes das runs genéricas (rascunho) |

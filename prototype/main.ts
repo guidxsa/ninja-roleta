@@ -47,6 +47,7 @@ import {
   type RoundExtras,
 } from '../src/core/combat';
 import { critChance, hitSlices } from '../src/core/hit';
+import { choose, esc, h, isOff, show, sleep } from './dom';
 import { lineageOf, rollOrigin, type OriginStep } from '../src/core/origin';
 import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
@@ -155,6 +156,9 @@ import {
   type Condition,
 } from './tips';
 import { installTooltips, tip } from './tooltip';
+import { runJornada } from './jornada';
+import { jornadaAchievements } from '../src/data/jornada/achievements';
+import type { JornadaHost } from './jornada/host';
 import { createWheel, stripRoulette, type WheelSlice } from './wheel';
 
 // ---------------------------------------------------------------------------
@@ -232,38 +236,6 @@ const pace = {
   beat: () => (settings.instant ? 140 : 480),
 };
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const esc = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
-
-function h(html: string): HTMLElement {
-  const t = document.createElement('template');
-  t.innerHTML = html.trim();
-  return t.content.firstElementChild as HTMLElement;
-}
-
-/** Botão desligado. As células de ação usam `aria-disabled` (e não `disabled`) para a dica abrir mesmo assim. */
-const isOff = (btn: HTMLElement) => (btn as HTMLButtonElement).disabled || btn.getAttribute('aria-disabled') === 'true';
-
-/** Espera um clique em qualquer `[data-choice]` dentro de `root` e devolve o valor. */
-function choose<T extends string>(root: HTMLElement): Promise<T> {
-  return new Promise((resolve) => {
-    const onClick = (e: Event) => {
-      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-choice]');
-      if (!btn || !root.contains(btn) || isOff(btn)) return;
-      root.removeEventListener('click', onClick);
-      resolve(btn.dataset.choice as T);
-    };
-    root.addEventListener('click', onClick);
-  });
-}
-
-const screen = document.getElementById('screen')!;
-function show(el: HTMLElement): HTMLElement {
-  screen.replaceChildren(el);
-  window.scrollTo({ top: 0 });
-  return el;
-}
 
 // ---------------------------------------------------------------------------
 // Textos e cores
@@ -2707,7 +2679,21 @@ function achievementsTab(): string {
         })
         .join('')}</ul>`;
     })
-    .join('')}`;
+    .join('')}${jornadaAchievementsSection(unlocked)}`;
+}
+
+/** Conquistas da Jornada: mesma aba, categoria própria (docs/base/perfil.md#categorias). */
+function jornadaAchievementsSection(unlocked: ReadonlySet<string>): string {
+  const A = S.achievements;
+  const JA = S.jornada.achievements;
+  const n = jornadaAchievements.filter((a) => unlocked.has(a.id)).length;
+  return `<h3 class="ach-cat">${JA.category} <small class="muted">${A.progress(n, jornadaAchievements.length)}</small></h3><ul class="ach-list">${jornadaAchievements
+    .map((a) => {
+      const on = unlocked.has(a.id);
+      const txt = !on && a.hidden ? { name: A.hiddenName, desc: A.hiddenDesc } : JA.list[a.id] ?? { name: a.id, desc: '' };
+      return `<li class="ach ${on ? 'on' : 'off'}"><span class="ach-ico">${on ? '🏅' : '🔒'}</span><span><b>${txt.name}</b><small>${txt.desc}</small></span></li>`;
+    })
+    .join('')}</ul>`;
 }
 
 function bingoTab(): string {
@@ -3115,9 +3101,47 @@ async function main() {
   if (LAB.seed !== null) document.getElementById('version')!.textContent += ` · ${S.lab.seed(LAB.seed)}`;
   if (LAB.lab) for (;;) await labFlow();
   for (;;) {
+    if ((await modeScreen()) === 'jornada') {
+      await runJornada(jornadaHost);
+      continue;
+    }
     await originScreen();
     await runCampaign();
   }
 }
+
+/** Tela inicial: Roleta (rápido, tudo na sorte) ou Jornada (lento, com controle). */
+async function modeScreen(): Promise<'roleta' | 'jornada'> {
+  const M = S.jornada.modes;
+  document.getElementById('dots')!.innerHTML = '';
+  const root = show(
+    h(`<div class="screen jmodes"><h2>${M.title}</h2>
+      <button class="jmode" data-choice="roleta">${icon('dice')}<span><b>${M.roleta.name}</b><small>${M.roleta.desc}</small></span></button>
+      <button class="jmode" data-choice="jornada">${icon('scroll')}<span><b>${M.jornada.name}</b><small>${M.jornada.desc}</small></span></button>
+    </div>`),
+  );
+  return choose<'roleta' | 'jornada'>(root);
+}
+
+/** O que a Jornada usa do protótipo: armazenamento, preferências, perfil e som. */
+const jornadaHost: JornadaHost = {
+  storage,
+  instant: () => settings.instant,
+  nextSeed: () => nextRunSeed() ?? Math.floor(Math.random() * 2 ** 31),
+  unlocked: () => new Set(Object.keys(profile.achievements)),
+  unlock: (ids) => {
+    if (!ids.length || LAB.lab) return;
+    profile = unlockAchievements(profile, ids, new Date());
+    saveProfile(storage, profile);
+    const name = (id: string) => S.jornada.achievements.list[id]?.name ?? S.achievements.list[id]?.name ?? id;
+    ids.forEach((id, i) => setTimeout(() => toast(S.achievements.unlocked(name(id))), i * 2800));
+  },
+  difficulty: () => settings.difficulty,
+  setDifficulty: (d) => {
+    settings.difficulty = d;
+    saveSettings();
+  },
+  mood,
+};
 
 void main();

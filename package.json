@@ -1,6 +1,6 @@
 {
   "name": "ninja-roleta",
-  "version": "0.34.2",
+  "version": "0.35.0",
   "private": true,
   "description": "Jogo de browser de fã, inspirado no universo ninja, movido a roletas. Sem fins lucrativos.",
   "license": "MIT",
@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "sim": "tsx scripts/simulate.ts",
     "sim:origens": "tsx scripts/sim-origens.ts",
+    "sim:jornada": "tsx scripts/sim-jornada.ts",
     "proto": "tsx scripts/build-prototype.ts"
   },
   "devDependencies": {

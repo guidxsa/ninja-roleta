@@ -770,3 +770,167 @@ button[data-tip] { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .wheel, .strip-marker, .bar .fill { transition: none !important; }
 }
+
+/* ===========================================================================
+ * Jornada (docs/jornada/): tela de modo, trilha, tela de batalha dedicada e telas da run.
+ * As poses dos lutadores (lunge/hit/down) são classes: um spritesheet entra depois sem mudar o código.
+ */
+.jmodes .jmode, .jpick {
+  display: flex; gap: 14px; align-items: center; width: 100%; text-align: left; padding: 16px; cursor: pointer;
+  border-radius: var(--radius); border: 2px solid var(--line); background: var(--card-bg); color: var(--text); font: inherit;
+}
+.jmodes .jmode .ico { width: 40px; height: 40px; color: var(--accent); flex: none; }
+.jmode b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.jmode small, .jrelic small, .jnode small, .jmove small { display: block; color: var(--muted); }
+.jmode:active, .jpick:active { transform: translateY(2px); }
+.jpick { padding: 0; border: 0; background: none; }
+.jmode-card { display: flex; gap: 12px; align-items: center; }
+.jmode-card.off { opacity: .55; }
+.jmode-card h3 { margin: 0 0 4px; }
+.jstart-face { display: flex; justify-content: center; }
+.badge { background: var(--seal); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 12px; }
+.pre { white-space: pre-line; }
+
+.jhud { display: flex; flex-direction: column; gap: 6px; }
+.jhud-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.jhud-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.jtrail { list-style: none; margin: 0; padding: 0 0 0 10px; display: flex; flex-direction: column; gap: 2px; border-left: 3px dashed var(--line); }
+.jstop { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; margin-left: -18px; }
+.jstop-ico { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--line); font-size: 14px; }
+.jstop-ico .ico { width: 16px; height: 16px; }
+.jstop-txt b { display: block; font-size: 14px; }
+.jstop-txt small { color: var(--muted); font-size: 12px; }
+.jstop.done { opacity: .5; }
+.jstop.done .jstop-ico { background: var(--leaf); color: #fff; border-color: var(--leaf); }
+.jstop.here { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.jstop.here .jstop-ico { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); animation: pulse 1.4s infinite; }
+.jstop.k-boss .jstop-ico { border-color: var(--seal); }
+.jstop.k-elite .jstop-ico { border-color: var(--gold); }
+.jstop.k-story .jstop-ico { border-color: var(--ck); }
+.jlegend { font-size: 13px; color: var(--muted); }
+.jlegend ul { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 4px; }
+.jlegend .ico { width: 14px; height: 14px; vertical-align: -2px; }
+.jb-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+.jb-head span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jtrail-screen .sticky-cta { background: linear-gradient(180deg, transparent, var(--bg) 24%); padding: 18px 0 8px; }
+.jteam { display: flex; align-items: center; gap: 4px; justify-content: center; margin: 0 0 6px; }
+.jabandon { display: block; margin: 6px auto 0; opacity: .7; }
+.joptions { display: flex; flex-direction: column; gap: 8px; }
+
+.jrelic { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); margin-bottom: 6px; }
+.jrelic-ico { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 10px; background: var(--surface-3); }
+.jrelic-ico .ico { width: 20px; height: 20px; }
+.jrelic-txt { flex: 1; min-width: 0; }
+.jrelic.tier-rare { border-color: var(--ck); }
+.jrelic.tier-rare .jrelic-ico { color: var(--ck-2); }
+.jrelic.tier-legendary { border-color: var(--gold); box-shadow: 0 0 12px color-mix(in srgb, var(--gold) 30%, transparent); }
+.jrelic.tier-legendary .jrelic-ico { color: var(--gold); }
+.jchest { display: grid; place-items: center; padding: 24px; }
+.jchest .ico { width: 72px; height: 72px; color: var(--gold); animation: pop .5s ease-out; }
+
+.jmodal { max-height: 86vh; overflow-y: auto; }
+.jtree { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.jbranch { display: flex; flex-direction: column; gap: 6px; }
+.jbranch h3 { margin: 4px 0; text-align: center; font-size: 15px; }
+.jnode { text-align: left; padding: 8px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; }
+.jnode b { display: block; font-size: 13px; }
+.jnode small { font-size: 11px; }
+.jnode .jnode-state { margin-top: 4px; font-weight: 700; }
+.jnode.st-owned { border-color: var(--leaf); background: color-mix(in srgb, var(--leaf) 20%, var(--surface-2)); }
+.jnode.st-available { border-color: var(--accent); }
+.jnode.st-available .jnode-state { color: var(--accent-2); }
+.jnode.st-locked, .jnode.st-stageLocked, .jnode.st-accountLocked, .jnode.st-noPoints { opacity: .55; cursor: default; }
+.jmoves-pick { display: grid; gap: 6px; }
+
+/* Minijogos */
+.mg { text-align: center; }
+.mg-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.mg-card { aspect-ratio: 3 / 4; border-radius: 10px; border: 2px solid var(--line); background: linear-gradient(135deg, var(--navy), var(--surface-3)); color: var(--text); font: inherit; display: grid; place-items: center; cursor: pointer; }
+.mg-card.up { background: var(--paper); color: var(--paper-ink); }
+.mg-card.match { border-color: var(--leaf); opacity: .7; }
+.seal-glyph { font-size: 26px; line-height: 1; display: block; }
+.mg-card small { font-size: 10px; color: inherit; opacity: .75; }
+.mg-seq { min-height: 70px; display: flex; justify-content: center; align-items: center; gap: 6px; }
+.mg-show { display: grid; place-items: center; width: 70px; height: 70px; border-radius: 12px; background: var(--paper); color: var(--paper-ink); animation: pop .3s ease-out; }
+.mg-typed { font-size: 22px; }
+.mg-duel { display: flex; justify-content: center; gap: 16px; font-size: 40px; min-height: 52px; align-items: center; }
+.big-hand { font-size: 32px; min-width: 72px; }
+.center-row { justify-content: center; }
+.mg-result { font-family: var(--font-display); font-size: 22px; }
+.mg-result.good { color: var(--good); }
+.mg-result.bad { color: var(--bad); }
+
+/* Tela de batalha */
+.jbattle { position: relative; gap: 8px; padding: 8px; border-radius: var(--radius); min-height: calc(100vh - 140px); background: var(--scene, var(--bg-2)); overflow: hidden; }
+.jbattle.scene-forest { --scene: linear-gradient(180deg, #16301f 0%, #1f3d2a 45%, #2b2418 100%); }
+.jbattle.scene-arena { --scene: linear-gradient(180deg, #2a2236 0%, #3a2d24 55%, #4a3a26 100%); }
+.jbattle.scene-valley { --scene: linear-gradient(180deg, #1a2440 0%, #2a3a52 50%, #22303a 100%); }
+:root[data-theme="light"] .jbattle.scene-forest { --scene: linear-gradient(180deg, #cfe3c4, #a9c99a 55%, #c9b48a); }
+:root[data-theme="light"] .jbattle.scene-arena { --scene: linear-gradient(180deg, #e8dcc8, #d8c3a0 55%, #c7a978); }
+:root[data-theme="light"] .jbattle.scene-valley { --scene: linear-gradient(180deg, #c8d6ee, #a9bfd9 55%, #9fb3b8); }
+.jb-goal { margin: 0; text-align: center; font-size: 13px; padding: 4px 8px; border-radius: 8px; background: color-mix(in srgb, var(--gold) 22%, transparent); }
+.jb-side { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.jf {
+  position: relative; flex: 1 1 0; min-width: 0; max-width: 150px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px; border-radius: 12px; background: color-mix(in srgb, var(--surface) 82%, transparent); border: 2px solid var(--line);
+  color: var(--text); font: inherit; cursor: default; transition: transform .2s, opacity .3s, filter .3s;
+}
+.jf.enemy { border-color: color-mix(in srgb, var(--seal) 60%, var(--line)); }
+.jf.hero { border-color: var(--accent); }
+.jf.acting { box-shadow: 0 0 0 3px var(--accent-2), 0 0 18px color-mix(in srgb, var(--accent) 60%, transparent); }
+.jf.targetable { cursor: pointer; animation: pulse 1.1s infinite; border-color: var(--accent-2); }
+.jf.down { filter: grayscale(1); opacity: .5; }
+.jf-art { position: relative; display: block; }
+.jf-art .portrait-md { width: 58px; height: 58px; }
+.jf-info { width: 100%; display: flex; flex-direction: column; gap: 3px; }
+.jf-name { font-size: 12px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jbar { height: 13px; }
+.jbar.bar-ck { height: 9px; }
+.jbar span { font-size: 10px; line-height: 13px; }
+.jbar.bar-ck span { display: none; }
+.jf-chips { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; min-height: 16px; }
+.jchip { font-size: 10px; padding: 0 4px; border-radius: 6px; background: var(--surface-3); }
+.jchip.bad { background: color-mix(in srgb, var(--bad) 30%, var(--surface-3)); }
+.jchip.good { background: color-mix(in srgb, var(--good) 25%, var(--surface-3)); }
+.jchip .ico { width: 10px; height: 10px; }
+.jf-floats { position: absolute; inset: 0; pointer-events: none; display: flex; justify-content: center; }
+.jfloat { position: absolute; top: 4px; font-weight: 800; font-size: 16px; text-shadow: 0 2px 0 #000; animation: floatUp 1s ease-out forwards; white-space: nowrap; }
+.jfloat .ico { width: 16px; height: 16px; }
+.jfloat.dmg { color: #ff8a7a; }
+.jfloat.crit { color: var(--gold); font-size: 22px; }
+.jfloat.heal { color: var(--good); }
+.jfloat.ck { color: var(--ck-2); }
+.jfloat.shield, .jfloat.fx { color: #e9e3ff; font-size: 13px; }
+.jfloat.miss { color: var(--muted); font-size: 13px; }
+.jf.lunge-up { animation: lungeUp .42s ease-out; }
+.jf.lunge-down { animation: lungeDown .42s ease-out; }
+.jf.hit { animation: shake .4s; }
+.jf.hit .jf-art { filter: brightness(2) drop-shadow(0 0 6px var(--glow, #fff)); }
+@keyframes lungeUp { 40% { transform: translateY(-16px) scale(1.06); } }
+@keyframes lungeDown { 40% { transform: translateY(16px) scale(1.06); } }
+.jb-banner { min-height: 30px; display: flex; justify-content: center; align-items: center; }
+.jb-banner span { font-family: var(--font-display); font-size: 17px; color: var(--c, var(--text)); text-shadow: 0 2px 0 var(--shadow); padding: 2px 10px; border-radius: 8px; background: color-mix(in srgb, var(--shadow) 40%, transparent); }
+.jb-banner.show span { animation: pop .3s ease-out; }
+.jb-log { width: 100%; text-align: left; font: inherit; font-size: 12px; color: var(--muted); background: var(--log-bg); border: 1px solid var(--line); border-radius: 10px; padding: 4px 8px; max-height: 40px; overflow: hidden; cursor: pointer; }
+.jb-log.open { max-height: 220px; overflow-y: auto; }
+.jb-log .jl { display: block; }
+.jb-menu { display: flex; flex-direction: column; gap: 6px; }
+.jb-prompt { margin: 0; text-align: center; font-size: 13px; color: var(--accent-2); }
+.jb-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.jmove { display: flex; align-items: center; gap: 8px; text-align: left; padding: 8px; min-height: 54px; border-left: 4px solid var(--c, var(--line)); }
+.jmove.on { box-shadow: inset 0 0 0 2px var(--accent); }
+.jmove-ico { width: 26px; height: 26px; flex: none; display: grid; place-items: center; color: var(--c); }
+.jmove-ico .ico { width: 22px; height: 22px; }
+.jmove-txt { min-width: 0; }
+.jmove-txt b { display: block; font-size: 14px; }
+.jmove-txt small { font-size: 11px; }
+.jb-extra { display: flex; flex-wrap: wrap; gap: 6px; }
+.jb-extra .jmove { flex: 1 1 100%; }
+.jb-extra .jx { flex: 1 1 0; justify-content: center; }
+.jb-intro { position: absolute; inset: 0; display: grid; place-items: center; z-index: 4; background: var(--paper); color: var(--paper-ink); animation: scrollAway .9s ease-in forwards; font-family: var(--font-display); font-size: 26px; text-align: center; padding: 20px; }
+@keyframes scrollAway { 0%, 55% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); } }
+.jend.win h2 { color: var(--good); }
+.jend.lose h2 { color: var(--bad); }
+@media (prefers-reduced-motion: reduce) {
+  .jf, .jfloat, .jb-intro { animation: none !important; transition: none !important; }
+}

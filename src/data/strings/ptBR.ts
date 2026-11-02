@@ -1,6 +1,8 @@
 // Todos os textos visíveis do jogo. Para traduzir, criar outro arquivo com as mesmas chaves.
+import { jornadaPtBR } from './jornada';
 
 export const ptBR = {
+  jornada: jornadaPtBR,
   elements: {
     fire: 'Fogo',
     wind: 'Vento',

@@ -11,6 +11,10 @@ A tela **Perfil** (botão 📜 no cabeçalho) tem quatro abas: Histórico, Conqu
 - Na primeira abertura do jogo com o perfil, os marcos que o histórico já prova (vitórias por origem, dificuldade, jinchuuriki, ter passado do Mizuki) são liberados sem aviso.
 - Conquistas escondidas aparecem como "???" até alguém conseguir.
 
+## Categorias
+
+O perfil é um só para os dois modos. A aba Conquistas mostra as do Roleta (Marcos, Sorte e azar, Estilo, Segredos) e, por último, a categoria **Jornada** ([jornada/README.md](../jornada/README.md#perfil-e-conquistas)). As conquistas da Jornada são checadas a cada parada e no fim da run, e algumas liberam coisas de vez (a Ōdama Rasengan, o Hardcore da Jornada).
+
 ## Conquistas
 
 ### Marcos
