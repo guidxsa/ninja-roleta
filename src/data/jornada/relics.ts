@@ -3,6 +3,8 @@ import type { RelicDef } from '../../core/jornada/relics';
 // Relíquias (docs/jornada/reliquias.md). Comuns, raras e lendárias; o chefe oferece 3 lendárias.
 
 export const relics: RelicDef[] = [
+  // Inicial: toda run começa com ela; recupera a equipe depois de cada vitória.
+  { id: 'ichirakuBowl', tier: 'starter', afterWinHealPct: 0.25 },
   // Comuns
   { id: 'goggles', tier: 'common', mods: { accuracyBonus: 0.05 } },
   { id: 'leafHeadband', tier: 'common', stats: { hp: 10 } },

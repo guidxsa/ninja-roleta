@@ -67,7 +67,7 @@ export function newRun(seed: number, difficulty: Difficulty, data: JornadaData):
     talents: [],
     learned: [],
     moveset: hero.techniques.filter((id) => !data.techniques[id]?.active).slice(0, MOVESET_SIZE),
-    relics: [],
+    relics: data.relics.filter((r) => r.tier === 'starter').map((r) => r.id),
     bag,
     willOfFire: data.j.run.willOfFire[difficulty] ?? 0,
     members: {},
@@ -280,7 +280,11 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   }
   run.stats.wins++;
   run.cleared.push(stop.id);
-  const rec = data.j.run.recoverAfterWinPct + relicDefs(run, data).reduce((a, r) => a + (r.afterWinHealPct ?? 0), 0);
+  // A recuperação vem das relíquias (a Tigela do Ichiraku, inicial, e o Cupom) e vale para a equipe do
+  // estágio inteira: quem lutou e terminou de pé e quem ficou de fora desta luta.
+  const rec = relicDefs(run, data).reduce((a, r) => a + (r.afterWinHealPct ?? 0), 0);
+  const fought = new Set(results.map((r) => r.defId));
+  healAll(run, rec, data, membersSeen(run, data).filter((id) => !fought.has(id)));
   for (const r of results) {
     const sheet = memberSheet(run, r.defId, data);
     if (r.down) {
@@ -299,6 +303,8 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   run.talentPoints += reward.talent;
   const levelUps = gainXp(run, reward.xp, data);
   if (stop.kind === 'boss') {
+    // Estágio vencido: toda a equipe volta cheia, inclusive quem caiu.
+    healAll(run, 1, data, membersSeen(run, data));
     run.bossChoice = rollRelics(data.relics.filter((r) => r.tier === 'legendary'), run.relics, { common: 0, rare: 0, legendary: 1 }, data.j.relics.bossChoices, stopRng(run, 7));
     if (!run.bossChoice.length) run.bossChoice = null;
   }
@@ -373,7 +379,7 @@ export function shopOffer(run: JRun, data: JornadaData): ShopOffer {
   const price = (n: number) => Math.floor(n * off);
   const ids = rollRelics(data.relics, run.relics, data.j.relics.shopWeights, s.relics, stopRng(run, 5));
   return {
-    relics: ids.map((id) => ({ id, price: price(data.j.relics.price[data.relics.find((r) => r.id === id)!.tier as RelicTier]) })),
+    relics: ids.map((id) => ({ id, price: price(data.j.relics.price[data.relics.find((r) => r.id === id)!.tier as Exclude<RelicTier, 'starter'>]) })),
     consumables: CONSUMABLES.map((id) => ({ id, price: price(s.consumablePrice[id]!) })),
     training: price(s.trainingPrice),
     treatment: price(s.treatmentPrice),

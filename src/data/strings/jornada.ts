@@ -266,8 +266,9 @@ export const jornadaPtBR = {
   },
 
   relics: {
-    tiers: { common: 'Comum', rare: 'Rara', legendary: 'Lendária' } as Record<string, string>,
+    tiers: { starter: 'Inicial', common: 'Comum', rare: 'Rara', legendary: 'Lendária' } as Record<string, string>,
     list: {
+      ichirakuBowl: { name: 'Tigela do Ichiraku', desc: 'Inicial. Cada vitória recupera 25% do HP e do chakra de toda a equipe.' },
       goggles: { name: 'Óculos do Naruto', desc: '+5% de acerto.' },
       leafHeadband: { name: 'Bandana da Folha', desc: '+10 de HP máximo do Naruto.' },
       frogWallet: { name: 'Gama-chan', desc: '+25% de ryō.' },
@@ -397,6 +398,12 @@ export const jornadaPtBR = {
     abandon: 'Abandonar jornada',
     abandonConfirm: 'Abandonar a jornada? A run salva será apagada.',
     team: 'Equipe',
+    tipTarget: 'Alvo',
+    tipAccuracy: 'Precisão',
+    tipEffects: 'Efeitos',
+    tipPassive: (pct: number, mult: number) => `Fúria: abaixo de ${pct}% do HP, dano ×${mult}.`,
+    tipStartShield: (pct: number) => `Começa a luta com escudo de ${pct}% do HP.`,
+    tipNoEffects: 'Sem efeitos.',
     solo: 'Sozinho',
     continue: 'Continuar',
     leave: 'Sair',

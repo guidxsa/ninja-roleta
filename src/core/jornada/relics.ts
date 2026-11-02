@@ -2,7 +2,8 @@
 import type { Rng } from '../rng';
 import type { ConsumableId, FighterMods } from './types';
 
-export type RelicTier = 'common' | 'rare' | 'legendary';
+/** `starter`: começa em toda run e nunca sai em sorteio (Tigela do Ichiraku). */
+export type RelicTier = 'starter' | 'common' | 'rare' | 'legendary';
 
 export interface RelicDef {
   id: string;
@@ -25,13 +26,13 @@ export interface RelicDef {
   grant?: { items?: Partial<Record<ConsumableId, number>>; willOfFire?: number };
 }
 
-export type Weights = Record<RelicTier, number>;
+export type Weights = Record<Exclude<RelicTier, 'starter'>, number>;
 
 /** Sorteia uma relíquia que a run ainda não tem, pela raridade (sem roleta na tela). */
 export function rollRelic(relics: readonly RelicDef[], owned: readonly string[], weights: Weights, rng: Rng, exclude: readonly string[] = []): string | null {
-  const pool = relics.filter((r) => !owned.includes(r.id) && !exclude.includes(r.id));
+  const pool = relics.filter((r) => r.tier !== 'starter' && !owned.includes(r.id) && !exclude.includes(r.id));
   if (!pool.length) return null;
-  const tiers = (Object.keys(weights) as RelicTier[]).filter((t) => weights[t] > 0 && pool.some((r) => r.tier === t));
+  const tiers = (Object.keys(weights) as (keyof Weights)[]).filter((t) => weights[t] > 0 && pool.some((r) => r.tier === t));
   const total = tiers.reduce((a, t) => a + weights[t], 0);
   let x = rng() * total;
   let tier = tiers[tiers.length - 1]!;

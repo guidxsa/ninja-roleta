@@ -3,7 +3,7 @@
 > Implementadas na v0.35.0 ([README.md](README.md)). Dados em `src/data/jornada/relics.ts`.
 
 - Dão **vantagens passivas** para a run toda ou **recursos** na hora (kits, Vontade do Fogo).
-- Três tiers: comum, rara e lendária. Uma run não repete relíquia.
+- Tiers: **inicial** (toda run começa com ela, nunca sai em sorteio), comum, rara e lendária. Uma run não repete relíquia.
 - De onde vêm:
   - **Tesouro**: sorteio escondido (comum 40, rara 50, lendária 10).
   - **Mercador**: 3 à venda, sorteadas (comum 60, rara 35, lendária 5), por 40/80/150 ryō.
@@ -13,11 +13,12 @@
 
 | Relíquia | Tier | Efeito |
 |---|---|---|
+| Tigela do Ichiraku | Inicial | Cada vitória recupera 25% do HP e do chakra de toda a equipe do estágio (quem lutou e terminou de pé e quem ficou de fora) |
 | Óculos do Naruto | Comum | +5% de acerto |
 | Bandana da Folha | Comum | +10 de HP máximo do Naruto |
 | Gama-chan | Comum | +25% de ryō |
 | Bolsa de kunai | Comum | +2 de dano no taijutsu do Naruto |
-| Cupom do Ichiraku | Comum | Cada vitória cura 10% a mais da equipe |
+| Cupom do Ichiraku | Comum | Cada vitória recupera 10% a mais (soma com a Tigela) |
 | Pesos de treino | Comum | +2 de speed do Naruto |
 | Pílulas de soldado | Comum | +6 de chakra máximo do Naruto |
 | Kit médico | Comum | Na hora: 2 kits de HP e 1 de chakra |

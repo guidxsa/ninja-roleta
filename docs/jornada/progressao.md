@@ -19,7 +19,8 @@
 
 ## Entre lutas
 
-- HP e chakra seguem de uma luta para a outra. Cada vitória devolve 25% do HP e do chakra máximos de quem terminou de pé.
+- HP e chakra seguem de uma luta para a outra. A recuperação depois da vitória vem das relíquias: a **Tigela do Ichiraku**, que toda run tem, devolve 25% do HP e do chakra máximos de toda a equipe do estágio, inclusive quem ficou de fora da luta ([reliquias.md](reliquias.md)).
+- **Estágio vencido** (o chefe caiu): toda a equipe volta com HP e chakra cheios, inclusive quem caiu.
 - Aliado que caiu volta para a próxima luta com 30% do HP.
 - Quem nunca lutou entra cheio.
 

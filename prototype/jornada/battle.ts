@@ -24,7 +24,8 @@ import { ptBR as S } from '../../src/data/strings/ptBR';
 import { fighterPortrait, icon } from '../art';
 import { swish, land } from '../audio';
 import { esc, h, show, sleep } from '../dom';
-import { ELEMENT_COLORS } from '../tips';
+import { ELEMENT_COLORS, lines } from '../tips';
+import { tip } from '../tooltip';
 import type { JornadaHost } from './host';
 
 const J = S.jornada;
@@ -44,6 +45,53 @@ function miniBar(kind: 'hp' | 'ck', cur: number, max: number): string {
   return `<div class="bar bar-${kind} jbar${low}" data-bar="${kind}"><div class="fill" style="width:${pct}%"></div><span>${Math.max(0, Math.round(cur))}/${max}</span></div>`;
 }
 
+const pct = (n: number) => `${Math.round(n * 100)}%`;
+
+/** Dica completa de uma técnica (passar o mouse ou segurar o dedo). `f` mostra custo e golpes reais. */
+export function techTip(tech: JTechnique, f?: Fighter): string {
+  const U = J.ui;
+  const hits = f ? hitsOf(f, tech) : (tech.hits ?? 1);
+  const cost = f ? techniqueCost(f, tech) : tech.chakraCost;
+  const effect = tech.onHit
+    ? `${J.effectIcons[tech.onHit.effect]} ${J.effects[tech.onHit.effect]} ${pct(tech.onHit.chance)}${tech.onHit.turns ? ` (${tech.onHit.turns} t)` : ''}`
+    : '';
+  const body = lines([
+    `${J.types[tech.type]}${tech.element ? ` · ${S.elements[tech.element]}` : ''}${tech.active ? ` · ${U.actives}` : ''}`,
+    `${U.tipTarget}: ${J.targets[tech.target]}`,
+    tech.baseDamage > 0 ? `${B.damage(tech.baseDamage)}${hits > 1 ? ` · ${B.hits(hits)}` : ''}${tech.hitsPerClone ? ` (+${tech.hitsPerClone}/clone, até +${tech.maxCloneHits})` : ''}` : '',
+    tech.baseDamage > 0 || tech.onHit ? `${U.tipAccuracy}: ${pct(tech.accuracy ?? 0.85)}` : '',
+    tech.critBonus ? `+${pct(tech.critBonus)} crítico` : '',
+    tech.penetration ? `penetração ${pct(tech.penetration)}` : '',
+    effect,
+    tech.healPct ? `cura ${pct(tech.healPct)} do HP` : '',
+    tech.shieldPct ? `${B.shield} escudo ${pct(tech.shieldPct)} do HP de quem usa` : '',
+    tech.cleanse ? `tira ${J.effects.stun} e ${J.effects.chakraBlock}` : '',
+    tech.clones ? `${B.clones} ${tech.clones} clones` : '',
+    cost ? B.chakra(cost) : '',
+    tech.hpCostPct && f ? B.hpCost(hpCost(f, tech)) : tech.hpCostPct ? `${pct(tech.hpCostPct)} do HP` : '',
+    tech.cooldown ? B.cooldown(tech.cooldown) : '',
+  ]);
+  return tip(techName(tech.id), body);
+}
+
+function fighterTip(f: Fighter): string {
+  const U = J.ui;
+  const effects = f.effects.map((e) => `${J.effectIcons[e.kind]} ${J.effects[e.kind]} (${e.turns})`);
+  const passive =
+    f.passive?.kind === 'enrage' ? U.tipPassive(Math.round(f.passive.atPct * 100), f.passive.damageMult) : f.passive?.kind === 'startShieldPct' ? U.tipStartShield(Math.round(f.passive.pct * 100)) : '';
+  const body = lines([
+    `HP ${f.hp}/${f.maxHp}${f.maxChakra ? ` · chakra ${f.chakra}/${f.maxChakra}` : ''}`,
+    f.element ? S.elements[f.element] : '',
+    f.protagonist ? '' : J.ai[f.ai] ?? '',
+    passive,
+    f.shield ? `${B.shield} ${f.shield}` : '',
+    f.clones ? `${B.clones} ${f.clones}` : '',
+    effects.length ? `${U.tipEffects}: ${effects.join(', ')}` : '',
+    f.techniques.map((id) => techName(id)).join(' · '),
+  ]);
+  return tip(fighterName(f), body);
+}
+
 function statusChips(f: Fighter): string {
   const chips = f.effects.map((e) => `<span class="jchip bad" title="${J.effects[e.kind]}">${J.effectIcons[e.kind]}${e.turns}</span>`);
   if (f.shield > 0) chips.push(`<span class="jchip good">${B.shield}${f.shield}</span>`);
@@ -53,7 +101,7 @@ function statusChips(f: Fighter): string {
 }
 
 function fighterCard(f: Fighter, data: JornadaData): string {
-  return `<button class="jf ${f.side}${f.down ? ' down' : ''}${f.protagonist ? ' hero' : ''}" data-uid="${f.uid}" type="button">
+  return `<button class="jf ${f.side}${f.down ? ' down' : ''}${f.protagonist ? ' hero' : ''}" data-uid="${f.uid}" type="button"${fighterTip(f)}>
     <span class="jf-art">${portraitOf(f, data)}<span class="jf-floats"></span></span>
     <span class="jf-info"><b class="jf-name">${esc(fighterName(f))}</b>
       ${miniBar('hp', f.hp, f.maxHp)}${f.maxChakra > 0 ? miniBar('ck', f.chakra, f.maxChakra) : ''}
@@ -75,7 +123,7 @@ function techButton(f: Fighter, tech: JTechnique): string {
     blocked ? (blocked === 'cooldown' ? B.cooldown(f.cooldowns[tech.id]!) : B.blocked[blocked]) : '',
   ].filter(Boolean);
   const color = tech.element ? ELEMENT_COLORS[tech.element] : `var(--t-${tech.type})`;
-  return `<button class="btn jmove" data-tech="${tech.id}" ${blocked ? 'aria-disabled="true"' : ''} style="--c:${color}">
+  return `<button class="btn jmove" data-tech="${tech.id}" ${blocked ? 'aria-disabled="true"' : ''} style="--c:${color}"${techTip(tech, f)}>
     <span class="jmove-ico">${icon(tech.element ?? tech.type)}</span>
     <span class="jmove-txt"><b>${techName(tech.id)}</b><small>${bits.join(' · ')}</small></span></button>`;
 }
@@ -309,10 +357,10 @@ export async function jornadaBattle(
       menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
         <div class="jb-moves">${moves.map((t) => techButton(me, t)).join('')}</div>
         <div class="jb-extra">${actives.map((t) => techButton(me, t)).join('')}
-          <button class="btn small jx" data-act="guard" title="${B.guardDesc}">${icon('stance')} ${B.guard}</button>
-          <button class="btn small jx" data-act="rest" title="${B.restDesc}">${icon('rest')} ${B.rest}</button>
-          <button class="btn small jx" data-act="revive" title="${B.reviveDesc}" ${fallen.length ? '' : 'aria-disabled="true"'}>${icon('willOfFire')} ${B.revive}</button>
-          <button class="btn small jx" data-act="bag" title="${B.bagDesc}" ${items.length && !state.itemUsed ? '' : 'aria-disabled="true"'}>${icon('kit')} ${B.bag}</button>
+          <button class="btn small jx" data-act="guard" ${tip(B.guard, B.guardDesc)}>${icon('stance')} ${B.guard}</button>
+          <button class="btn small jx" data-act="rest" ${tip(B.rest, B.restDesc)}>${icon('rest')} ${B.rest}</button>
+          <button class="btn small jx" data-act="revive" ${tip(B.revive, B.reviveDesc)} ${fallen.length ? '' : 'aria-disabled="true"'}>${icon('willOfFire')} ${B.revive}</button>
+          <button class="btn small jx" data-act="bag" ${tip(B.bag, B.bagDesc)} ${items.length && !state.itemUsed ? '' : 'aria-disabled="true"'}>${icon('kit')} ${B.bag}</button>
         </div>`;
       const pick = await new Promise<HTMLElement>((resolve) => {
         const onClick = (ev: Event) => {

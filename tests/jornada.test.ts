@@ -278,6 +278,42 @@ describe('run da Jornada', () => {
     expect(shopOffer({ ...tazuna, stopIndex: 6 }, data).training).toBe(Math.floor(data.j.shop.trainingPrice * 0.8));
   });
 
+  it('toda run começa com a Tigela do Ichiraku, que nunca sai em sorteio', () => {
+    const run = newRun(1, 'normal', data);
+    expect(run.relics).toEqual(['ichirakuBowl']);
+    for (let s = 0; s < 40; s++) {
+      const r = { ...newRun(s, 'normal', data), stopIndex: 6, ryo: 999 };
+      expect(shopOffer(r, data).relics.map((x) => x.id)).not.toContain('ichirakuBowl');
+    }
+  });
+
+  it('a vitória recupera 25% da equipe do estágio, inclusive quem não lutou', () => {
+    // Capangas (parada 4): Naruto, Sasuke e Sakura. Depois, o Haku: só Naruto e Sasuke lutam.
+    const base = { ...newRun(1, 'normal', data), stopIndex: 3 };
+    const hurt: JRun = { ...base, members: { naruto: { hp: 20, chakra: 5 }, sasuke: { hp: 20, chakra: 5 }, sakura: { hp: 20, chakra: 5 } } };
+    const b = startBattle(battleSetup(hurt, data), data, createRng(1));
+    const { run } = finishFight(hurt, won(b), data);
+    const sasuke = memberSheet(run, 'sasuke', data);
+    expect(run.members.sasuke!.hp).toBe(Math.min(sasuke.maxHp, 20 + Math.floor(sasuke.maxHp * 0.25)));
+    // Naruto × Kiba (estágio 2): o Naruto luta sozinho, e a Sakura, fora da luta, também recupera.
+    const kiba: JRun = { ...hurt, stageIndex: 1, stopIndex: 5 };
+    expect(currentStop(kiba, data)!.id).toBe('kiba');
+    const res = finishFight(kiba, won(startBattle(battleSetup(kiba, data), data, createRng(1))), data).run;
+    const sakura = memberSheet(res, 'sakura', data);
+    expect(res.members.sakura!.hp).toBe(Math.min(sakura.maxHp, 20 + Math.floor(sakura.maxHp * 0.25)));
+  });
+
+  it('vencer o chefe deixa toda a equipe cheia, inclusive quem caiu', () => {
+    const run: JRun = { ...newRun(1, 'normal', data), stopIndex: data.stages[0]!.stops.length - 1, members: { naruto: { hp: 3, chakra: 0 }, sakura: { hp: 1, chakra: 0 } } };
+    const b = startBattle(battleSetup(run, data), data, createRng(1));
+    const fallen = { ...won(b), fighters: b.fighters.map((f) => (f.defId === 'sasuke' ? { ...f, hp: 0, down: true } : f)) };
+    const { run: next } = finishFight(run, fallen, data);
+    for (const id of ['naruto', 'sasuke', 'sakura']) {
+      const sheet = memberSheet(next, id, data);
+      expect(next.members[id]).toEqual({ hp: sheet.maxHp, chakra: sheet.maxChakra });
+    }
+  });
+
   it('salva e carrega a run', () => {
     const mem = new Map<string, string>();
     const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
@@ -287,6 +323,9 @@ describe('run da Jornada', () => {
     saveJornada(storage, { ...run, status: 'victory' });
     expect(mem.get(JORNADA_SAVE_KEY)).toBe('');
     expect(loadJornada(storage)).toBeNull();
+    // Save de antes da Tigela ganha a relíquia ao carregar.
+    saveJornada(storage, { ...run, relics: ['goggles'] });
+    expect(loadJornada(storage)!.relics).toEqual(['ichirakuBowl', 'goggles']);
   });
 });
 

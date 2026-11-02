@@ -6,6 +6,7 @@ import type { KeyValueStorage } from './runHistory';
 // começo da parada.
 
 export const JORNADA_SAVE_KEY = 'jornada_run_v1';
+const STARTER_RELIC = 'ichirakuBowl';
 
 export function loadJornada(storage: KeyValueStorage): JRun | null {
   try {
@@ -13,7 +14,9 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     if (!raw) return null;
     const run = JSON.parse(raw) as JRun;
     if (run?.version !== 1 || run.status !== 'inProgress' || typeof run.stageIndex !== 'number') return null;
-    return { ...run, cleared: run.cleared ?? [] };
+    // Runs salvas antes da v0.35.1 não tinham a relíquia inicial.
+    const relics = run.relics.includes(STARTER_RELIC) ? run.relics : [STARTER_RELIC, ...run.relics];
+    return { ...run, cleared: run.cleared ?? [], relics };
   } catch {
     return null;
   }

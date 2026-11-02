@@ -53,7 +53,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 
 ## Pendências
 
-- Alvo de vitória do bot na Jornada (hoje, Médio ~74%, Difícil ~5%).
+- Alvo de vitória do bot na Jornada (v0.35.1: Médio 78%, Difícil 6%).
 - Como o Comum "vem sem elementos" nas runs genéricas (sorteio ou escolha) para virar prodígio.
 - Tamanho das runs genéricas: quantos estágios e quantas paradas por mapa.
 - Chefes, elites e encontros das runs genéricas.

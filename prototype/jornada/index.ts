@@ -15,6 +15,7 @@ import {
   heroActives,
   heroMovable,
   leaveStop,
+  membersSeen,
   memberSheet,
   memberState,
   newRun,
@@ -39,7 +40,9 @@ import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clearJornada, loadJornada, saveJornada } from '../../src/state/jornadaSave';
 import { fighterPortrait, icon } from '../art';
 import { choose, esc, h, show, sleep } from '../dom';
-import { jornadaBattle, techName } from './battle';
+import { lines } from '../tips';
+import { tip } from '../tooltip';
+import { jornadaBattle, techName, techTip } from './battle';
 import type { JornadaHost } from './host';
 import { playMinigame } from './minigames';
 
@@ -73,6 +76,16 @@ function relicCard(id: string, extra = ''): string {
 // Entrada
 
 export async function runJornada(host: JornadaHost): Promise<void> {
+  // Layout próprio (mais largo no PC) e sem o botão Ficha, que é do Roleta.
+  document.body.classList.add('mode-jornada');
+  try {
+    await jornadaLoop(host);
+  } finally {
+    document.body.classList.remove('mode-jornada');
+  }
+}
+
+async function jornadaLoop(host: JornadaHost): Promise<void> {
   let run = await startScreen(host);
   if (!run) return;
   host.unlock(newJornadaAchievements(run, host.unlocked()));
@@ -146,11 +159,20 @@ function hud(run: JRun): string {
       <span class="chip lvl-chip">${U.level(run.level)}</span><span class="chip">${icon('coin')} ${U.ryo(run.ryo)}</span>
       ${run.willOfFire ? `<span class="chip jin">${icon('willOfFire')} ${run.willOfFire}</span>` : ''}</div>
     <div class="bar bar-xp"><div class="fill" style="width:${Math.min(100, (run.xp / need) * 100)}%"></div><span>${U.xp(run.xp, need)}</span></div>
-    <div class="bar bar-hp jbar"><div class="fill" style="width:${(hero.hp / sheet.maxHp) * 100}%"></div><span>${hero.hp}/${sheet.maxHp}</span></div>
+    <div class="jhud-team">${membersSeen(run, data)
+      .filter((id) => id === HERO || currentStage(run, data).team.includes(id))
+      .map((id) => {
+        const st = id === HERO ? hero : memberState(run, id, data);
+        const sh = id === HERO ? sheet : memberSheet(run, id, data);
+        return `<div class="jhud-member">${fighterPortrait(id, data.characters[id]!.portrait, 'sm')}<div><b>${J.names[id]}</b>
+          <div class="bar bar-hp jbar"><div class="fill" style="width:${(st.hp / sh.maxHp) * 100}%"></div><span>${st.hp}/${sh.maxHp}</span></div>
+          <div class="bar bar-ck jbar"><div class="fill" style="width:${(st.chakra / sh.maxChakra) * 100}%"></div></div></div></div>`;
+      })
+      .join('')}</div>
     <div class="jhud-actions">
       <button class="btn small" data-open="talents">${icon('scroll')} ${U.talentsBtn}${run.talentPoints ? ` <span class="badge">${run.talentPoints}</span>` : ''}</button>
       <button class="btn small" data-open="moveset">${icon('swords')} ${U.movesetBtn}</button>
-      <button class="btn small" data-open="relics">${icon('item')} ${run.relics.length}</button>
+      <button class="btn small" data-open="relics"${tip(U.relicsTitle, lines(run.relics.map(relicName)))}>${icon('item')} ${run.relics.length}</button>
     </div>
     ${bag.length ? `<p class="muted small">${U.bagTitle}: ${bag.join(' · ')}</p>` : ''}
   </section>`;
@@ -403,7 +425,7 @@ function movesetModal(run: JRun): Promise<JRun> {
       <div class="jmoves-pick">${known
         .map((id) => {
           const t = data.techniques[id]!;
-          return `<button class="btn jmove${picked.has(id) ? ' on' : ''}" data-move="${id}" aria-pressed="${picked.has(id)}"><span class="jmove-ico">${icon(t.element ?? t.type)}</span>
+          return `<button class="btn jmove${picked.has(id) ? ' on' : ''}" data-move="${id}" aria-pressed="${picked.has(id)}"${techTip(t)}><span class="jmove-ico">${icon(t.element ?? t.type)}</span>
             <span class="jmove-txt"><b>${techName(id)}</b><small>${t.baseDamage ? J.battle.damage(t.baseDamage) : ''}${t.chakraCost ? ` · ${J.battle.chakra(t.chakraCost)}` : ''} · ${J.targets[t.target]}</small></span></button>`;
         })
         .join('')}</div>

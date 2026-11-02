@@ -31,7 +31,6 @@ export const jornadaBalance = {
 
   // Entre lutas (docs/jornada/run.md).
   run: {
-    recoverAfterWinPct: 0.25,
     // Aliado que caiu na luta volta para a próxima com esta fração do HP.
     downedAllyReturnPct: 0.3,
     restHealPct: 0.4,
