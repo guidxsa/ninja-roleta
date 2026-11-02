@@ -1,13 +1,13 @@
 import type { CloakDef, VillainDef } from '../core/types';
 import { balance } from './balance';
 
-// Fichas dos vilões (docs/viloes.md). Nomes de trabalho e valores provisórios.
+// Fichas dos vilões (docs/base/viloes.md). Nomes de trabalho e valores provisórios.
 // Mesma ficha do jogador: ataques (taijutsu/ninjutsu/genjutsu) e resistências física e mental. O dano de uma técnica é
 // base + ataque do tipo − resistência usada pelo jogador, igual ao do jogador.
 // Vilões também gastam chakra: taijutsu é grátis; ninjutsu e genjutsu custam. Sem chakra para
 // nenhuma técnica, o vilão perde a vez concentrando chakra.
 // `reactions`: pesos de Resistir, Disputa e Substituição. Barreiras são ações (entram no sorteio sem escudo ativo).
-// `xp`: curva planejada em docs/progressao.md.
+// `xp`: curva planejada em docs/base/progressao.md.
 // `passive`/`hardcorePassive`: passiva única; a versão hardcore substitui a normal nesse modo.
 // `behavior.charged`: golpe carregado (anuncia numa vez, solta ×2 sem crítico na seguinte).
 

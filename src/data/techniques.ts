@@ -1,7 +1,7 @@
 import { BASIC_TAIJUTSU } from '../core/player';
 import type { TechniqueDef } from '../core/types';
 
-// Catálogo de técnicas (docs/tecnicas.md). Nomes visíveis em strings/ptBR.ts.
+// Catálogo de técnicas (docs/base/tecnicas.md). Nomes visíveis em strings/ptBR.ts.
 // Ficha: dano por golpe, golpes, chakra, precisão (padrão 85%), bônus de crítico, penetração,
 // efeito no acerto e prioridade. Todo ponto forte tem um custo.
 

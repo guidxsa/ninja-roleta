@@ -1,6 +1,6 @@
 import type { ConsumableId, SummonAnimal } from '../core/types';
 
-// Roletas fora do combate (docs/campanha.md e docs/itens.md). Textos visíveis ficam em strings/ptBR.ts.
+// Roletas fora do combate (docs/roleta/campanha.md e docs/roleta/itens.md). Textos visíveis ficam em strings/ptBR.ts.
 
 export type PreFightEventId =
   | 'summon'

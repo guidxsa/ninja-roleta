@@ -48,7 +48,7 @@ Configuração: `combat.resistance: { passive: 0.4, resist: 0.7, stance: 1.0 }`.
 - **Cada vitória recupera 25%** do HP e do chakra máximos (sem passar do máximo), inclusive as vitórias do exame.
 - **Restauram tudo** (HP, chakra e efeitos negativos):
   - **subir de nível**;
-  - **o fim do exame chunin**, qualquer que seja o resultado (ver [campanha.md](campanha.md#exame-chunin));
+  - **o fim do exame chunin**, qualquer que seja o resultado (ver [campanha.md](../roleta/campanha.md#exame-chunin));
   - a Vontade do Fogo (ver abaixo).
 - **O fim de cada luta limpa os efeitos negativos** (queimadura, veneno, sangramento etc.), mas não devolve HP nem chakra.
 - Dentro da luta, só restauram parcialmente: técnicas de cura, consumíveis, passivas de regeneração, invocações e Concentrar chakra.
@@ -101,7 +101,7 @@ chance = clamp(50% + (speed_de_quem_reage − speed_do_atacante) × 3%, 25%, 85%
 - **Falha**: recebe o golpe com a resistência **passiva**.
 - **Não gasta ação**: quem se substitui age normalmente na rodada (ou na seguinte, se já agiu).
 - **Chakra reservado**: reagir no turno do vilão (Substituição, Cópia) não pode gastar o chakra da ação que o jogador escolheu e ainda vai fazer. O chakra nunca fica negativo, e técnicas de custo 0 (como o Taijutsu básico) estão sempre disponíveis.
-- **Usos por luta**: 2 (o premium "Mestre da Substituição" do guru dá +1, ver [campanha.md](campanha.md#guru)).
+- **Usos por luta**: 2 (o premium "Mestre da Substituição" do guru dá +1, ver [campanha.md](../roleta/campanha.md#guru)).
 - O Gênio do Nara vale na roleta da Substituição dele (gira duas vezes, fica com a melhor).
 
 Configuração: `substitution: { chakraCost: 2, baseChance: 0.5, perSpeed: 0.03, min: 0.25, max: 0.85, usesPerFight: 2 }`.
@@ -268,5 +268,5 @@ Dois elementos-pai fundidos numa natureza nova. Sai no sorteio da origem ([orige
 ## Vontade do Fogo (revive)
 
 - Ao chegar a 0 de HP com uma Vontade do Fogo, ela é consumida e o jogador volta à luta com HP e chakra cheios e sem efeitos negativos.
-- Sem nenhuma: fim da run. No exame chunin a derrota não consome o item nem encerra a run (ver [campanha.md](campanha.md#exame-chunin)).
-- Como conseguir: [itens.md](itens.md).
+- Sem nenhuma: fim da run. No exame chunin a derrota não consome o item nem encerra a run (ver [campanha.md](../roleta/campanha.md#exame-chunin)).
+- Como conseguir: [itens.md](../roleta/itens.md).

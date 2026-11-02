@@ -12,8 +12,8 @@ Estrutura de uma run: ordem dos confrontos, eventos entre eles, encontros, invoc
 6. Kabuto
 7. Orochimaru (chefe final)
 
-- HP e chakra seguem de uma luta para a outra, inclusive dentro dos blocos. Cada vitória devolve 25% do HP e do chakra máximos; só restauram tudo ao subir de nível, ao fim do exame chunin e pela Vontade do Fogo (ver [fundamentos.md](fundamentos.md#restauração)).
-- Fichas dos vilões: [viloes.md](viloes.md).
+- HP e chakra seguem de uma luta para a outra, inclusive dentro dos blocos. Cada vitória devolve 25% do HP e do chakra máximos; só restauram tudo ao subir de nível, ao fim do exame chunin e pela Vontade do Fogo (ver [fundamentos.md](../base/fundamentos.md#restauração)).
+- Fichas dos vilões: [viloes.md](../base/viloes.md).
 - Um bloco com vários vilões (Haku e Zabuza, Quarteto do Som) conta como **um grupo**: a roleta de recompensa só gira depois do confronto final (ver [itens.md](itens.md#raridade-por-confronto)). XP e subida de nível continuam depois de cada luta.
 - Combate em grupo fica fora do escopo inicial.
 
@@ -39,7 +39,7 @@ Antes de cada vilão (uma vez antes de cada bloco) gira uma roleta de eventos. N
 ### Treino
 
 1. **+60 de XP, garantido** (é um treino).
-2. **Escolha**, quando algum elemento do jogador ainda pode crescer: **destaque de status** (a roleta abaixo) ou **foco elemental** num desses elementos. O foco ensina o nível I da linha do elemento (se ainda não tem) ou sobe a linha em +1 nível, dentro do teto do nível do personagem e do potencial da origem ([origens.md](origens.md#elementos-e-potencial-elemental)). Sem elemento que cresça, vai direto para o destaque.
+2. **Escolha**, quando algum elemento do jogador ainda pode crescer: **destaque de status** (a roleta abaixo) ou **foco elemental** num desses elementos. O foco ensina o nível I da linha do elemento (se ainda não tem) ou sobe a linha em +1 nível, dentro do teto do nível do personagem e do potencial da origem ([origens.md](../base/origens.md#elementos-e-potencial-elemental)). Sem elemento que cresça, vai direto para o destaque.
 3. **Roleta de destaque**: "você se destacou em...". A fatia sorteada ganha **+3** (speed ganha +2).
 
 | Fatia | Peso |
@@ -98,7 +98,7 @@ Nunca causa game over. Sem Vontade do Fogo para perder, perde metade do HP e do 
 | Chance | Resultado |
 |---|---|
 | 20% | Charlatão: desvantagem de ação na próxima luta. |
-| 80% | Ensina uma **premium** ([tecnicas.md](tecnicas.md#premium-guru)): técnicas e talentos sem elemento. |
+| 80% | Ensina uma **premium** ([tecnicas.md](../base/tecnicas.md#premium-guru)): técnicas e talentos sem elemento. |
 
 O guru gira a roleta das premium, ponderada pelo perfil do jogador, **duas vezes sem repetir** e o jogador **escolhe 1** das duas (se só houver uma para ensinar, é ela):
 
@@ -124,7 +124,7 @@ O encontro sorteia um animal, que passa a acompanhar o jogador como **passiva** 
 | Cobra | Veneno | Acerto em alvo não envenenado aplica envenenamento (bônus inicial 2) | +2 de bônus inicial |
 | Lesma | Sustentação | Cura 3% do HP máximo no início de cada rodada | +1% de cura e +10% na chance de curar envenenamento |
 
-Regras do veneno em [efeitos.md](efeitos.md#envenenamento). O sapo não vale em ilusões, na disputa nem no golpe do cão do Inuzuka.
+Regras do veneno em [efeitos.md](../base/efeitos.md#envenenamento). O sapo não vale em ilusões, na disputa nem no golpe do cão do Inuzuka.
 
 ## Exame chunin
 
@@ -155,7 +155,7 @@ Escolhida na tela de origem; fica salva como preferência do aparelho e no hist�
 | Hardcore | 125% (como o Difícil) + passivas hardcore |
 
 - O hardcore só é liberado depois de uma vitória no difícil (consulta o histórico).
-- A dificuldade também define o ganho por nível ([progressao.md](progressao.md)).
+- A dificuldade também define o ganho por nível ([progressao.md](../base/progressao.md)).
 
 ## Histórico de runs
 
@@ -163,7 +163,7 @@ Escolhida na tela de origem; fica salva como preferência do aparelho e no hist�
 - Registro: data e hora, origem (linhagem, elementos, jinchuuriki), dificuldade, resultado (vitória, derrota, abandonada ou re-roll), até qual vilão chegou, nível final, Vontades do Fogo usadas e a **seed**.
 - Ao iniciar a run, grava um registro "em andamento" e atualiza a cada vilão. Ao abrir a página, qualquer registro "em andamento" vira "abandonada".
 - Re-rolls ficam ocultos por padrão na tela de histórico. Limite: últimas 100 runs.
-- O histórico é a primeira aba da tela Perfil, junto com conquistas, Livro Bingo e origens ([perfil.md](perfil.md)).
+- O histórico é a primeira aba da tela Perfil, junto com conquistas, Livro Bingo e origens ([perfil.md](../base/perfil.md)).
 
 
 ## Seed, Reportar e Compartilhar

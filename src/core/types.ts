@@ -42,7 +42,7 @@ export type PassiveKind =
 /** Ativa de linhagem (gasta ou não o turno; parâmetros em `balance`). */
 export type ActiveKind = 'gates' | 'expansion' | 'effort' | 'beast' | 'plague' | 'transmission' | 'seal';
 
-/** Kekkei genkai de natureza: dois elementos-pai fundidos (docs/fundamentos.md#kekkei-genkai). */
+/** Kekkei genkai de natureza: dois elementos-pai fundidos (docs/base/fundamentos.md#kekkei-genkai). */
 export type KekkeiGenkaiId = 'ice' | 'sand' | 'lava' | 'storm' | 'steam' | 'explosion' | 'wood';
 
 export interface KekkeiGenkaiDef {
@@ -54,7 +54,7 @@ export interface KekkeiGenkaiDef {
   lineages?: string[];
 }
 
-/** Elementos da origem: quantos (roleta) e se algum vem fixo (docs/origens.md#sorteio). */
+/** Elementos da origem: quantos (roleta) e se algum vem fixo (docs/base/origens.md#sorteio). */
 export interface ElementRule {
   /** Elemento que a origem sempre tem; é o principal. */
   fixed?: Element;
@@ -79,7 +79,7 @@ export interface LineageDef {
   tier: LineageTier;
   /** Peso na roleta de linhagem (uma roleta só, com todos os níveis). */
   weight: number;
-  /** Status iniciais absolutos (orçamento de 90 pontos com as resistências, ver docs/origens.md). */
+  /** Status iniciais absolutos (orçamento de 90 pontos com as resistências, ver docs/base/origens.md). */
   stats: Stats;
   resistance: Resistances;
   elements: ElementRule;

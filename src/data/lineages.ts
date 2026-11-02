@@ -1,13 +1,13 @@
 import { COMMON_LINEAGE } from '../core/origin';
 import type { ElementRule, LineageDef } from '../core/types';
 
-// Origens (docs/origens.md). Textos visíveis ficam em strings/ptBR.ts.
+// Origens (docs/base/origens.md). Textos visíveis ficam em strings/ptBR.ts.
 // Uma roleta só: comum 30%, clãs 40% (8 cada), raras 30%.
 // Status iniciais absolutos com o orçamento de referência de 90 pontos: taijutsu/ninjutsu/genjutsu e as resistências valem 1,
 // speed 1,5, 10 de HP valem 1 e 2 de chakra valem 1. Distribuição pela lore (v0.30), com o total perto de 90. Kit inicial: Taijutsu básico; o ninjutsu básico do elemento principal só no potencial
 // pleno (Comum e o fogo do Uchiha). As origens com kit dedicado começam com as técnicas da linhagem.
 
-/** Clãs e raras com kit dedicado: podem não ter elemento nenhum (docs/origens.md#sorteio). */
+/** Clãs e raras com kit dedicado: podem não ter elemento nenhum (docs/base/origens.md#sorteio). */
 const CLAN_ELEMENTS: ElementRule = { countWeights: [30, 55, 15] };
 
 

@@ -27,7 +27,7 @@ Como o personagem cresce durante a run: XP, níveis, estágios de status e marco
 |---|---|
 | Vilão derrotado | Campo `xp` de cada vilão (ver [viloes.md](viloes.md)) |
 | Luta do exame chunin | 60 por vitória (derrota não dá XP) |
-| Evento Treino | +60, garantido ([campanha.md](campanha.md#treino)) |
+| Evento Treino | +60, garantido ([campanha.md](../roleta/campanha.md#treino)) |
 | Roleta de recompensa, fatia XP | Comum +60, raro +120, lendário +200 |
 | Pergaminho de experiência (roleta de itens) | +100 |
 | Passiva Determinação (comum) | +25% sobre todo XP ganho (e +1 no maior status de ataque a cada nível, ver [origens.md](origens.md#comum)) |
@@ -67,4 +67,4 @@ A tabela abaixo usa só o XP dos vilões e do exame. As fatias de XP das roletas
 Unidade de melhoria usada por eventos e recompensas. 1 estágio = **+1 em taijutsu, ninjutsu, genjutsu, resistência física, resistência mental e speed**, mais HP e chakra máximos iguais a uma subida de nível na dificuldade atual. Não restaura HP nem chakra.
 
 - O prodígio do taijutsu continua com ninjutsu e genjutsu zerados (o estágio não os afeta).
-- Fontes: vitória no jokenpô (+2), roleta de recompensa. O Treino dá XP e um destaque num status só ([campanha.md](campanha.md#treino)).
+- Fontes: vitória no jokenpô (+2), roleta de recompensa. O Treino dá XP e um destaque num status só ([campanha.md](../roleta/campanha.md#treino)).

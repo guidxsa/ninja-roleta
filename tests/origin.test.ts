@@ -87,7 +87,7 @@ describe('criação do jogador', () => {
   /** Orçamento de status: taijutsu/ninjutsu/genjutsu 1, speed 1,5, 10 de HP = 1, 2 de chakra = 1. */
   const budget = (s: Stats) => s.taijutsu + s.ninjutsu + s.genjutsu + s.speed * 1.5 + s.hp / 10 + s.chakra / 2;
 
-  it('status pela lore, com o total perto de 90 (docs/origens.md#status-iniciais)', () => {
+  it('status pela lore, com o total perto de 90 (docs/base/origens.md#status-iniciais)', () => {
     // [pontos dos status, soma das resistências]
     const expected: Record<string, [number, number]> = {
       common: [70, 20],

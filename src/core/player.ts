@@ -253,7 +253,7 @@ export function knowsElement(player: PlayerState, element: TechniqueElement): bo
 }
 
 /**
- * Até que nível de técnica a origem leva as técnicas de um elemento (docs/tecnicas.md#níveis-de-técnica):
+ * Até que nível de técnica a origem leva as técnicas de um elemento (docs/base/tecnicas.md#níveis-de-técnica):
  * 0 sem o elemento ou sem potencial; sem teto próprio no pleno (e no fixo do Uchiha); `partialCap` no resto.
  */
 export function elementCap(player: PlayerState, element: Element, data: GameData): number {

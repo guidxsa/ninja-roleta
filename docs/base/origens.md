@@ -39,7 +39,7 @@ Não se aprende elemento novo durante a run: os elementos são os do sorteio. O 
 | Prodígio do taijutsu | sempre 0 | — | — | — | Nenhum | — |
 
 - **Pleno**: as linhas elementais sobem até o teto do nível do personagem.
-- **Parcial**: o nível I vem pela recompensa "nova técnica" ou pelo foco elemental do Treino ([campanha.md](campanha.md#treino)), e a linha para no **II**. A barreira do elemento (nível 4) entra; a Armadura de Raio (nível 7) não. O potencial dessas origens está no kit da linhagem.
+- **Parcial**: o nível I vem pela recompensa "nova técnica" ou pelo foco elemental do Treino ([campanha.md](../roleta/campanha.md#treino)), e a linha para no **II**. A barreira do elemento (nível 4) entra; a Armadura de Raio (nível 7) não. O potencial dessas origens está no kit da linhagem.
 - Com vários elementos, os upgrades se dividem entre as linhas: quem tem 3 elementos demora mais para levar cada um ao topo.
 
 ### Re-roll

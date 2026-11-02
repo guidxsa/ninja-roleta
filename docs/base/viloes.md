@@ -29,7 +29,7 @@ Fichas dos vilões da campanha: status, moveset, passiva, versão hardcore, comp
 - **Intenção**: a próxima ação do vilão é sorteada no fim da rodada anterior. A passiva Gênio (Nara) mostra essa intenção na tela.
 - **Barreiras**: são ações. A técnica de barreira entra no sorteio da intenção (pelo peso) só quando o vilão não tem escudo ativo ([fundamentos.md](fundamentos.md#escudos)).
 - **Reações**: ao receber um ataque, o vilão sorteia a reação pelos pesos de `reactions`, só entre as que pode pagar e as que valem contra aquele ataque. Resistir é sempre possível. Na Disputa, a técnica é sorteada pelos pesos normais entre os ninjutsu de ataque que ele pode pagar.
-- **Dificuldade**: multiplica HP, dano base, ataques e resistências (ver [campanha.md](campanha.md#dificuldade)). No hardcore, `passive` vira `hardcorePassive`.
+- **Dificuldade**: multiplica HP, dano base, ataques e resistências (ver [campanha.md](../roleta/campanha.md#dificuldade)). No hardcore, `passive` vira `hardcorePassive`.
 - **Golpe carregado**: quando sorteia a técnica marcada, o vilão gasta a vez (e o chakra) concentrando e anuncia o golpe; na vez seguinte solta o ataque com dano ×2, que não pode ser crítico. A tela mostra o aviso, e o jogador decide entre postura defensiva, Bomba de fumaça ou esperar para reagir (Substituição ou disputa; na disputa, o poder do golpe carregado também dobra) ou erguer um escudo na vez do aviso. Usado pelos vilões marcados abaixo, com a técnica indicada (`behavior.charged`).
 
 ## Status base

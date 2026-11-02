@@ -1,6 +1,6 @@
 # Perfil
 
-O que fica salvo no aparelho entre as runs: conquistas, Livro Bingo e estatísticas por origem. A run continua só em memória (F5 reseta); o perfil vive no `localStorage` (`profile_v1`), ao lado do histórico de runs ([campanha.md](campanha.md#histórico-de-runs)).
+O que fica salvo no aparelho entre as runs: conquistas, Livro Bingo e estatísticas por origem. A run continua só em memória (F5 reseta); o perfil vive no `localStorage` (`profile_v1`), ao lado do histórico de runs ([campanha.md](../roleta/campanha.md#histórico-de-runs)).
 
 A tela **Perfil** (botão 📜 no cabeçalho) tem quatro abas: Histórico, Conquistas, Livro Bingo e Origens.
 

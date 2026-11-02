@@ -6,7 +6,7 @@ Catálogo de ações de combate: ações universais, reações, técnicas por ca
 
 - Cada personagem tem um **skill set por categoria**: taijutsu, ninjutsu, genjutsu e ninjutsu médico. Pode ter várias técnicas em cada uma e escolhe qual usar no turno (uma aba por categoria).
 - Aprender uma técnica **soma** ao skill set.
-- Formas de aprender: kit inicial da origem ([origens.md](origens.md)), técnicas de nível (automáticas ao atingir o nível), roleta de recompensa ("nova técnica") e, para as premium, o guru ([campanha.md](campanha.md#guru)).
+- Formas de aprender: kit inicial da origem ([origens.md](origens.md)), técnicas de nível (automáticas ao atingir o nível), roleta de recompensa ("nova técnica") e, para as premium, o guru ([campanha.md](../roleta/campanha.md#guru)).
 - Técnicas elementais só nos elementos do jogador (os do sorteio; não se aprende elemento novo na run), até o potencial elemental da origem ([origens.md](origens.md#elementos-e-potencial-elemental)).
 - O campo `lineages` restringe técnicas exclusivas.
 - Vilões usam as mesmas fichas de técnica (ver [viloes.md](viloes.md)).
@@ -32,8 +32,8 @@ Toda técnica tem **níveis** (I, II, III...). Subir o nível de uma técnica a 
   | Fonte | Efeito |
   |---|---|
   | Marco de nível (4, 7, 10) | Sobe o teto e dá **1 upgrade grátis** à escolha do jogador |
-  | Pergaminho de técnica | +1 nível numa técnica à escolha ([itens.md](itens.md)) |
-  | Roleta de recompensa, "nova técnica" | Técnica nova; sem técnica nova para aprender, vira upgrade. Rara e lendária somam upgrades ([itens.md](itens.md#roleta-de-recompensa)) |
+  | Pergaminho de técnica | +1 nível numa técnica à escolha ([itens.md](../roleta/itens.md)) |
+  | Roleta de recompensa, "nova técnica" | Técnica nova; sem técnica nova para aprender, vira upgrade. Rara e lendária somam upgrades ([itens.md](../roleta/itens.md#roleta-de-recompensa)) |
   | Guru | Premium nova, ou o próximo nível de uma premium que já tem |
 
 - Sem técnica abaixo do teto para subir, o upgrade vira 30 de XP.
@@ -70,7 +70,7 @@ Toda técnica nos dados tem estes campos. Regra de design: todo ponto forte tem 
 |---|---|---|
 | Concentrar chakra | Turno | Recupera 15% do chakra máximo. |
 | Postura defensiva | Turno | Até o seu próximo turno, Resistir usa 100% da resistência (física e mental). As outras reações continuam disponíveis. |
-| Usar item | Turno | Usa um consumível da bolsa (ver [itens.md](itens.md)). |
+| Usar item | Turno | Usa um consumível da bolsa (ver [itens.md](../roleta/itens.md)). |
 
 ## Reações
 
@@ -126,7 +126,7 @@ Cada elemento tem uma **linha de ataque**: a técnica básica do kit inicial é 
 | Água | III | Maremoto do Abismo | 33 | 1 | 10 | 85% | Prioridade |
 
 - Nível IV de cada linha: reservado para o marco do nível 10.
-- A linha de um elemento que o jogador tem e ainda não aprendeu (o segundo e o terceiro elementos, ou o principal das origens de potencial parcial) entra na pool da "nova técnica" no nível I. O foco elemental do Treino também a ensina ([campanha.md](campanha.md#treino)).
+- A linha de um elemento que o jogador tem e ainda não aprendeu (o segundo e o terceiro elementos, ou o principal das origens de potencial parcial) entra na pool da "nova técnica" no nível I. O foco elemental do Treino também a ensina ([campanha.md](../roleta/campanha.md#treino)).
 - Os críticos elementais continuam aplicando os efeitos de [efeitos.md](efeitos.md) (queimadura, paralisia, atordoamento).
 
 ### Barreiras
@@ -252,7 +252,7 @@ Golpes que aparecem no log sem serem técnicas do skill set.
 | Golpe | De onde vem | Regra |
 |---|---|---|
 | Ataque do cão | Dupla (Inuzuka) | Taijutsu com 40% do dano base do ataque que acertou (60% no nível 4), acerto próprio ([origens.md](origens.md#inuzuka-parceiro-canino)) |
-| Selo explosivo | Consumível da bolsa | 15 de dano que ignora a resistência e o escudo, sem rolar acerto e sem reação ([itens.md](itens.md)) |
+| Selo explosivo | Consumível da bolsa | 15 de dano que ignora a resistência e o escudo, sem rolar acerto e sem reação ([itens.md](../roleta/itens.md)) |
 
 
 ## Genjutsu
@@ -275,7 +275,7 @@ Os genjutsu exclusivos (Uchiha e Yamanaka) estão em [Técnicas de linhagem](#t�
 
 ## Premium (guru)
 
-Técnicas e talentos **sem elemento** que só o guru ensina. O guru oferece a que mais combina com o perfil do jogador (ver [campanha.md](campanha.md#guru)). Saem da pool da "nova técnica".
+Técnicas e talentos **sem elemento** que só o guru ensina. O guru oferece a que mais combina com o perfil do jogador (ver [campanha.md](../roleta/campanha.md#guru)). Saem da pool da "nova técnica".
 
 | Premium | Tipo | Nível I | Por nível | Quem |
 |---|---|---|---|---|

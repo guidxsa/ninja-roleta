@@ -1,6 +1,6 @@
 import type { KekkeiGenkaiDef } from '../core/types';
 
-// Kekkei genkai de natureza (docs/fundamentos.md#kekkei-genkai). Saem no sorteio da origem para quem tem
+// Kekkei genkai de natureza (docs/base/fundamentos.md#kekkei-genkai). Saem no sorteio da origem para quem tem
 // potencial elemental pleno e os dois elementos-pai; a Madeira é exclusiva do Senju. Textos em strings/ptBR.ts.
 export const kekkeiGenkai: KekkeiGenkaiDef[] = [
   { id: 'ice', parents: ['water', 'wind'], chance: 0.25 },

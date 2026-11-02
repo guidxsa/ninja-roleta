@@ -8,9 +8,9 @@ Usada no evento "Achou um item" e nas fatias de item da roleta de recompensa.
 
 | Item | Peso | Tipo | Efeito |
 |---|---|---|---|
-| Vontade do Fogo | 10 | Permanente, acumula | +1 revive (ver [fundamentos.md](fundamentos.md#vontade-do-fogo-revive)). |
+| Vontade do Fogo | 10 | Permanente, acumula | +1 revive (ver [fundamentos.md](../base/fundamentos.md#vontade-do-fogo-revive)). |
 | Ferramenta ninja | 12 | Único, evolui | +1 de dano base em todos os ataques; se sair de novo, +1 nível. |
-| Pergaminho de técnica | 13 | Imediato | +1 nível numa técnica à escolha, respeitando o teto (ver [tecnicas.md](tecnicas.md#níveis-de-técnica)). Sem técnica para subir, vira 30 de XP. |
+| Pergaminho de técnica | 13 | Imediato | +1 nível numa técnica à escolha, respeitando o teto (ver [tecnicas.md](../base/tecnicas.md#níveis-de-técnica)). Sem técnica para subir, vira 30 de XP. |
 | Amuleto de resistência | 10 | Permanente, acumula | +2 numa resistência sorteada (física ou mental, 50% cada). |
 | Amuleto de velocidade | 10 | Permanente, acumula | Speed +1. |
 | Pergaminho de experiência | 10 | Imediato | +100 de XP. |
@@ -48,8 +48,8 @@ Gira depois de cada vilão ou bloco derrotado. A raridade define a força de cad
 
 - **Lendária**: a roleta gira 3 vezes e o jogador escolhe 1 dos resultados.
 - Fatias impossíveis somem (ex.: nova técnica sem nada para aprender nem subir).
-- Não há fatia de elemento: os elementos vêm só do sorteio da origem ([origens.md](origens.md#elementos-e-potencial-elemental)). A antiga fatia "Elemento secundário" (peso 5) saiu na v0.30 e o peso foi para "Nova técnica".
-- A pool de técnicas respeita a origem e o elemento (ver [tecnicas.md](tecnicas.md)) e não tem as premium (só o guru ensina). Sem técnica nova para aprender, a "nova técnica" vira upgrade.
+- Não há fatia de elemento: os elementos vêm só do sorteio da origem ([origens.md](../base/origens.md#elementos-e-potencial-elemental)). A antiga fatia "Elemento secundário" (peso 5) saiu na v0.30 e o peso foi para "Nova técnica".
+- A pool de técnicas respeita a origem e o elemento (ver [tecnicas.md](../base/tecnicas.md)) e não tem as premium (só o guru ensina). Sem técnica nova para aprender, a "nova técnica" vira upgrade.
 - **Resistência**: os pontos são distribuídos um a um por roleta entre física e mental (50% cada).
 
 ### Raridade por confronto

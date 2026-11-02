@@ -10,20 +10,13 @@ Inspiração de UX: um site de "roleta" de Pokémon (https://pokemon-roulette.ze
 
 ## Documentação do jogo
 
-As regras do jogo vivem em `docs/`. Este arquivo trata só de como trabalhar no projeto.
+As regras do jogo vivem em `docs/`, em três pastas; o índice completo está em [docs/README.md](docs/README.md). Este arquivo trata só de como trabalhar no projeto.
 
-| Arquivo | Conteúdo |
+| Pasta | Conteúdo |
 |---|---|
-| [docs/fundamentos.md](docs/fundamentos.md) | Status, roleta, restauração, iniciativa, acerto, dano, elementos, chakra, Vontade do Fogo |
-| [docs/origens.md](docs/origens.md) | Sorteio de origem, status iniciais, linhagens, habilidades, jinchuuriki |
-| [docs/tecnicas.md](docs/tecnicas.md) | Ficha padrão, ações universais, catálogo de técnicas |
-| [docs/efeitos.md](docs/efeitos.md) | Efeitos negativos e efeitos de genjutsu |
-| [docs/viloes.md](docs/viloes.md) | Fichas, passivas e comportamentos dos vilões |
-| [docs/progressao.md](docs/progressao.md) | XP, níveis, estágios de status, marcos |
-| [docs/campanha.md](docs/campanha.md) | Ordem, eventos, encontros, invocações, exame, dificuldade, histórico |
-| [docs/itens.md](docs/itens.md) | Itens, bolsa e roleta de recompensa |
-| [docs/perfil.md](docs/perfil.md) | Perfil local: conquistas, Livro Bingo e estatísticas por origem |
-| [docs/jornada.md](docs/jornada.md) | Modo Jornada: rascunho de design, não implementado |
+| [docs/base/](docs/README.md) | Regras dos dois modos: fundamentos, origens, técnicas, efeitos, vilões, progressão, perfil (hoje implementadas no Roleta; a Jornada herda) |
+| [docs/roleta/](docs/README.md) | Só do Roleta: campanha e itens |
+| [docs/jornada/](docs/jornada/README.md) | Só da Jornada (rascunho, não implementado): run, combate de equipe, classes, progressão, relíquias |
 
 ### Regras para os docs
 
@@ -31,7 +24,8 @@ As regras do jogo vivem em `docs/`. Este arquivo trata só de como trabalhar no 
 - Ao mudar uma regra ou um número no código, atualizar o doc correspondente no mesmo commit.
 - Se o código e o doc divergirem e não estiver listado em "Mudanças de design pendentes", perguntar antes de escolher um lado.
 - Cada regra é descrita em **um** arquivo; os outros apontam com link.
-- `tests/docs.test.ts` confere que toda técnica do jogador está em `docs/tecnicas.md` e toda técnica de vilão em `docs/viloes.md`. Técnica nova sem linha no doc quebra o teste.
+- Regra usada pelos dois modos fica em `docs/base/`; regra de um modo só, na pasta dele. A Jornada só descreve o que muda em relação à base.
+- `tests/docs.test.ts` confere que toda técnica do jogador está em `docs/base/tecnicas.md` e toda técnica de vilão em `docs/base/viloes.md`. Técnica nova sem linha no doc quebra o teste.
 - Futuro: um script que gera as tabelas numéricas dos docs a partir dos dados.
 
 ## Mudanças de design pendentes
@@ -40,7 +34,7 @@ Combinado em 31/10/2026 (brainstorm com o usuário). Os números são rascunho: 
 
 5. **Kit do prodígio (v0.34.0, feito em parte)**: entraram Folha Furacão (nível 1), Lótus Primária presa aos Portões (nível 4), Punho Bêbado (nível 4) e Lótus Oculta com o 3º portão (nível 7); a Lótus Primaveril e o Redemoinho saíram. **Ficou de fora: Pesos de treino como ativa do prodígio** (+3 de speed e +2 de taijutsu ao tirar), porque conflita com o item Pesos de treino que já existe; decidir com o usuário como os dois convivem. Os kits de níveis 4/7 das outras origens ficam para a árvore de talentos da Jornada (item 7); o combate rico vai para lá, e o Roleta será simplificado (item 8).
 6. **Hyuuga**: sem técnica nova no nível 1. O kit é taijutsu básico + Selo dos Pontos Vitais (só com o Byakugan); a identidade é abrir o olho. A **Palma do Vácuo** (taijutsu de distância, só com o Byakugan) fica para a **árvore de talentos da Jornada** (item 7).
-7. **Modo Jornada (combinado em 01/11/2026, só design)**: segundo modo, roguelike de mapa, lento e com controle. Herda o combate atual, adaptado para equipe (até 3 contra 3, só o protagonista é controlado). Run canônica do Naruto (com Sasuke e Sakura) e runs genéricas com as classes Comum, prodígio, Uchiha e Hyuuga; árvore de talentos por classe, relíquias com tiers, ryō, run salva no aparelho, sorte pesando menos e sem roleta visual. Tudo em [docs/jornada.md](docs/jornada.md), com as pendências.
+7. **Modo Jornada (combinado em 01/11/2026, só design)**: segundo modo, roguelike de mapa, lento e com controle. Herda o combate atual, adaptado para equipe (até 3 contra 3, só o protagonista é controlado). Run canônica do Naruto (com Sasuke e Sakura) e runs genéricas com as classes Comum, prodígio, Uchiha e Hyuuga; árvore de talentos por classe, relíquias com tiers, ryō, run salva no aparelho, sorte pesando menos e sem roleta visual. Tudo em [docs/jornada/README.md](docs/jornada/README.md), com as pendências.
 8. **Roleta enxuto**: o modo atual vira o rápido, para sessões curtas: run mais curta e um combate refeito, extremamente simples e bem mais na sorte. O combate atual migra para a Jornada. Detalhar com o usuário antes de mexer.
 
 Última rodada concluída: "rebalanceamento das origens"
@@ -53,7 +47,7 @@ Alvo da simulação (31/10/2026): o bot joga pior que um humano, sobretudo nas o
 Observação em aberto (v0.31.1): vilões 90/110/125/135% (Fácil/Médio/Difícil/Hardcore), manutenção dos dōjutsu 2 e Colônia 1 de chakra a cada 5 insetos. Campanha por origem (1000 runs, seed 2), Médio v0.31.0 → v0.31.1: Comum 87 → 73%, Nara 90 → 78%, Akimichi 88 → 73%, Yamanaka 86 → 73%, Aburame 57 → **30%**, Inuzuka 86 → 72%, prodígio 84 → 70%, Uchiha 79 → 61%, Hyuuga 84 → 70%, Uzumaki 90 → 81%. Difícil: de 17% (Uchiha) a 38% (Yamanaka, Uzumaki); Aburame 4%. Quase todas chegaram perto do alvo (60–70%); Nara (78%) e Uzumaki (81%) seguem acima, e o Aburame voltou a ficar bem abaixo (a Colônia mais fraca tirou o chakra que sustentava o Devorar). Nada foi compensado: decidir com o usuário. v0.31.2 (Devorar usa todos os insetos, deixa 40% presos e suga 5–20% do chakra máximo do vilão; bot devora também quando falta chakra para o Enxame): Aburame 30 → 37% no Médio, 4 → 6% no Difícil; as outras origens não mudam. Continua abaixo do alvo de kit complexo (50–60%); o usuário testou o Hardcore à mão e achou complicado. Próximo passo combinado: testar à mão antes de mexer de novo. v0.31.3 (Colônia passiva: 1 de dano a cada 2 insetos, até 6, e 1 de chakra a cada 5, até 3, por rodada; Enxame com 4 de dano fixo; Devorar não deixa os insetos se soltarem; Hardcore com a força do Difícil, 125%): Aburame 37 → 73% no Médio, 6 → 31% no Difícil, 0 → 4% no Hardcore. O Hardcore das outras origens subiu para 1–11% (era 0–7%). O Aburame agora está acima do alvo de kit complexo (50–60%), junto com Comum, Akimichi, Inuzuka e Yamanaka; Nara (78%) e Uzumaki (80%) seguem os mais altos. Consultar o usuário antes de mexer. v0.32.0 (Senju): 93% no Médio, 51% no Difícil, 12% no Hardcore, o mais forte de propósito, mas 1 ponto acima do teto combinado (~92%). A alavanca combinada é tirar a cura +25% da Força vital; não foi aplicada (consultar). v0.33.0 (kekkei genkai): quase nada muda na média por origem (Comum 73 → 76% no Médio; quem tem kekkei genkai é uma fatia pequena das runs). Não há linha própria na simulação para "com kekkei genkai". v0.34.0 (kit do prodígio): prodígio 68 → **91%** no Médio, 20 → 62% no Difícil, 1 → 29% no Hardcore. A Folha Furacão (2×9 por 2 de chakra desde o nível 1) e o Punho Bêbado pesaram muito: o prodígio virou a origem mais forte junto com o Senju (93%). Consultar o usuário: candidatos naturais são a Folha Furacão (dano 9 → 6, ou custo 2 → 4) e o Punho Bêbado (roleta ×0,5/×1/×1,5 sem o ×2). v0.34.2 (prodígio com Juventude, taijutsu pela metade e Punho Bêbado mais fraco; Quarteto do Som e Kabuto mais fortes; Mizuki sem se acovardar), Médio: Comum 69%, Nara 67%, Akimichi 61%, Yamanaka 70%, Aburame 60%, Inuzuka 61%, prodígio 91 → 75%, Uchiha 46%, Hyuuga 58%, Uzumaki 77%, Senju 86%. Difícil de 10% (Uchiha) a 37% (Senju); Hardcore de 1% a 10%. O Uchiha ficou abaixo do alvo de kit complexo (50–60%); prodígio, Uzumaki e Senju seguem acima. Consultar antes de mexer.
 
 Roteiro de contas e progresso (combinado em 30/10/2026; a fase 1, o Laboratório `?teste` com `?seed=`, foi implementada na v0.27.0):
-- **Fase 2, perfil local**: conquistas, Livro Bingo e estatísticas por origem implementados na v0.29.0 (`profile_v1`, [docs/perfil.md](docs/perfil.md)); falta desbloqueios/personalização (títulos, skins da roleta, nome do ninja; só cosméticos). A run continua só em memória (F5 reseta).
+- **Fase 2, perfil local**: conquistas, Livro Bingo e estatísticas por origem implementados na v0.29.0 (`profile_v1`, [docs/base/perfil.md](docs/base/perfil.md)); falta desbloqueios/personalização (títulos, skins da roleta, nome do ninja; só cosméticos). A run continua só em memória (F5 reseta).
 
 - **Fase 3, contas opcionais**: só para sincronizar o perfil local; o jogo segue jogável offline e sem conta. Usar um serviço com login pronto (Supabase ou Firebase, a decidir), nunca guardar senha. Pede política de privacidade (LGPD) e revisar o princípio "Sem backend". A Jornada (item 7), com progressão permanente, é o motivo principal para ter contas.
 

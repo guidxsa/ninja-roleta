@@ -12,14 +12,14 @@ const nameOf = (id: string) => (S.techniques as Record<string, string>)[id] ?? i
 const has = (text: string, name: string) => text.toLowerCase().includes(name.toLowerCase());
 
 describe('docs batem com os dados', () => {
-  it('toda técnica do jogador aparece em docs/tecnicas.md', () => {
-    const text = doc('tecnicas.md');
+  it('toda técnica do jogador aparece em docs/base/tecnicas.md', () => {
+    const text = doc('base/tecnicas.md');
     const missing = Object.keys(techniquesById).map(nameOf).filter((n) => !has(text, n));
     expect(missing).toEqual([]);
   });
 
-  it('toda técnica de vilão aparece em docs/viloes.md', () => {
-    const text = doc('viloes.md');
+  it('toda técnica de vilão aparece em docs/base/viloes.md', () => {
+    const text = doc('base/viloes.md');
     const techs: VillainTechnique[] = villains.flatMap((v) => [
       ...v.techniques,
       ...(v.passive && 'monster' in v.passive ? (v.passive.monster?.techniques ?? []) : []),
