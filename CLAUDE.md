@@ -23,6 +23,7 @@ As regras do jogo vivem em `docs/`. Este arquivo trata só de como trabalhar no 
 | [docs/campanha.md](docs/campanha.md) | Ordem, eventos, encontros, invocações, exame, dificuldade, histórico |
 | [docs/itens.md](docs/itens.md) | Itens, bolsa e roleta de recompensa |
 | [docs/perfil.md](docs/perfil.md) | Perfil local: conquistas, Livro Bingo e estatísticas por origem |
+| [docs/jornada.md](docs/jornada.md) | Modo Jornada: rascunho de design, não implementado |
 
 ### Regras para os docs
 
@@ -37,8 +38,10 @@ As regras do jogo vivem em `docs/`. Este arquivo trata só de como trabalhar no 
 
 Combinado em 31/10/2026 (brainstorm com o usuário). Os números são rascunho: a simulação decide e o usuário faz o ajuste fino. Cada frente vira uma versão própria.
 
-5. **Kit do prodígio (v0.34.0, feito em parte)**: entraram Folha Furacão (nível 1), Lótus Primária presa aos Portões (nível 4), Punho Bêbado (nível 4) e Lótus Oculta com o 3º portão (nível 7); a Lótus Primaveril e o Redemoinho saíram. **Ficou de fora: Pesos de treino como ativa do prodígio** (+3 de speed e +2 de taijutsu ao tirar), porque conflita com o item Pesos de treino que já existe; decidir com o usuário como os dois convivem. Os kits de níveis 4/7 das outras origens vêm uma por vez, junto com a árvore de talentos (item 6).
-6. **Hyuuga**: sem técnica nova no nível 1. O kit é taijutsu básico + Selo dos Pontos Vitais (só com o Byakugan); a identidade é abrir o olho. A **Palma do Vácuo** (taijutsu de distância, só com o Byakugan) fica para uma futura **árvore de talentos por linhagem** (escolhas de técnica ao subir de nível), a desenhar junto com os kits de níveis 4/7 das outras origens.
+5. **Kit do prodígio (v0.34.0, feito em parte)**: entraram Folha Furacão (nível 1), Lótus Primária presa aos Portões (nível 4), Punho Bêbado (nível 4) e Lótus Oculta com o 3º portão (nível 7); a Lótus Primaveril e o Redemoinho saíram. **Ficou de fora: Pesos de treino como ativa do prodígio** (+3 de speed e +2 de taijutsu ao tirar), porque conflita com o item Pesos de treino que já existe; decidir com o usuário como os dois convivem. Os kits de níveis 4/7 das outras origens vêm uma por vez e, no Roleta, chegam fixos (sem escolha), como o do prodígio; a árvore de talentos é só da Jornada (item 7).
+6. **Hyuuga**: sem técnica nova no nível 1. O kit é taijutsu básico + Selo dos Pontos Vitais (só com o Byakugan); a identidade é abrir o olho. A **Palma do Vácuo** (taijutsu de distância, só com o Byakugan) fica para a **árvore de talentos da Jornada** (item 7).
+7. **Modo Jornada (combinado em 01/11/2026, só design)**: segundo modo, roguelike de mapa, lento e com controle. Estágios por arco da história com chefe fixo, paradas com legenda, ryō e mercador, run salva no aparelho, protagonistas canônicos com árvore de talentos, 2 suportes (primeiro como companheiros automáticos, com a luta 1 contra 1), conquistas próprias e tela de batalha dedicada com sprites. Tudo em [docs/jornada.md](docs/jornada.md), com as pendências.
+8. **Roleta enxuto**: o modo atual fica mais rápido para sessões curtas: run mais curta (menos paradas) e menos decisões por luta. Não ganha tela de batalha nova nem árvore de talentos. Detalhar com o usuário antes de mexer.
 
 Última rodada concluída: "rebalanceamento das origens"
  (27/10/2026) foi implementada na v0.18.0: 25% de HP e chakra por vitória, controles com tenacidade e vulnerabilidade, barreiras como escudo (ação de turno), ilusões de dano do Uchiha e Sharingan grátis, Possessão do Yamanaka, Gênio do Nara, Determinação mais forte e nerf do prodígio, Akimichi, Inuzuka e Uzumaki. Decisões tomadas junto: o Gênio é ativa com usos por luta (2, +1 nos níveis 4 e 7) e vale nas roletas de combate do jogador; o genjutsu de dano do Uchiha fere de verdade e o do Yamanaka é controle mental com autoferimento; controle em cadeia é contido pela tenacidade (cai por rodada), não por regra de chefe; a meta é não ter origens muito acima ou abaixo das outras.
@@ -52,7 +55,7 @@ Observação em aberto (v0.31.1): vilões 90/110/125/135% (Fácil/Médio/Difíci
 Roteiro de contas e progresso (combinado em 30/10/2026; a fase 1, o Laboratório `?teste` com `?seed=`, foi implementada na v0.27.0):
 - **Fase 2, perfil local**: conquistas, Livro Bingo e estatísticas por origem implementados na v0.29.0 (`profile_v1`, [docs/perfil.md](docs/perfil.md)); falta desbloqueios/personalização (títulos, skins da roleta, nome do ninja; só cosméticos). A run continua só em memória (F5 reseta).
 
-- **Fase 3, contas opcionais**: só para sincronizar o perfil local; o jogo segue jogável offline e sem conta. Usar um serviço com login pronto (Supabase ou Firebase, a decidir), nunca guardar senha. Pede política de privacidade (LGPD) e revisar o princípio "Sem backend".
+- **Fase 3, contas opcionais**: só para sincronizar o perfil local; o jogo segue jogável offline e sem conta. Usar um serviço com login pronto (Supabase ou Firebase, a decidir), nunca guardar senha. Pede política de privacidade (LGPD) e revisar o princípio "Sem backend". A Jornada (item 7), com progressão permanente, é o motivo principal para ter contas.
 
 Quando o design mudar antes do código, listar aqui o que falta implementar.
 
@@ -61,7 +64,7 @@ Quando o design mudar antes do código, listar aqui o que falta implementar.
 - **Mobile-first**: controles de um toque, layout vertical, botões grandes.
 - **Sessões curtas**: uma luta deve durar de 1 a 3 minutos.
 - **Offline**: PWA com service worker.
-- **Campanha só em memória**: F5 reseta a run. Só o histórico de runs persiste (`localStorage`).
+- **Campanha só em memória**: F5 reseta a run (exceto a Jornada, quando existir; ver item 7 das mudanças pendentes). Só o histórico de runs persiste (`localStorage`).
 - **Sem backend.**
 - **Lógica separada da interface**: regras são funções puras (estado entra, estado sai), sem DOM.
 - **RNG injetável**: toda função que sorteia recebe `rng()`; testes com seed.
