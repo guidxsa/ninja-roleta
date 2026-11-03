@@ -1,19 +1,73 @@
-/* Combate do Roleta. */
-.battle { gap: 10px; }
+/* Combate do Roleta: HUD do inimigo em cima, arena com a roleta no meio, HUD do jogador e bandeja de jutsus embaixo.
+   Nada de caixa em volta dos lutadores: o HUD fica direto na cena, com um degradê que some para o centro. */
+.battle { gap: 8px; }
 .battle-head {
   display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted);
-  font: 600 14px/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase;
+  font: 600 14px/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase;
+  padding-bottom: 6px; border-bottom: 1px solid var(--line);
 }
 .battle-head span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.badges { display: flex; flex-wrap: wrap; gap: 5px; min-height: 0; }
+.battle-head .ico { color: var(--accent-2); }
+#round { color: var(--gold-2); }
+.badges { display: flex; flex-wrap: wrap; gap: 4px; min-height: 0; }
 .badges:empty { display: none; }
 
-/* Log: tira translúcida, linhas novas em cima, cor por lado. */
-.log {
-  list-style: none; margin: 0; padding: 8px 10px; height: 132px; overflow-y: auto;
-  background: var(--log-bg); border: 1px solid var(--line); border-left: 2px solid var(--line-strong);
-  font-size: 13px; line-height: 1.4; display: flex; flex-direction: column; gap: 3px;
+/* HUD de lutador */
+.hud { position: relative; display: flex; flex-direction: column; gap: 5px; padding: 8px 10px; isolation: isolate; }
+.hud::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.hud-main { display: flex; align-items: flex-start; gap: 10px; }
+.hud-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.hud-plate { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.hud-plate .name { flex: 1; min-width: 0; font: 400 21px/1.1 var(--font-display); letter-spacing: .02em; text-shadow: var(--title-shadow); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud-face { flex: none; position: relative; }
+.hud .bar-hp { height: 18px; }
+.hud .bar-ck { height: 11px; }
+.hud .bar-ck span { font-size: 10.5px; }
+.hud-extra { display: flex; flex-direction: column; gap: 4px; }
+.hud .passive-row:empty, .hud .kit:empty { display: none; }
+
+/* Inimigo: degradê vermelho vindo da direita (lado do retrato); barras esvaziam em direção ao retrato. */
+.foe-hud::before { background: linear-gradient(270deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 75%); border-right: 2px solid var(--accent); }
+.foe-hud .hud-plate .name { text-align: right; }
+.foe-hud .hud-plate { flex-direction: row-reverse; }
+.foe-hud .bar .fill { margin-left: auto; }
+.foe-hud .bar .bar-trail { left: auto; right: 0; }
+.foe-hud .bar span { justify-content: flex-end; }
+.foe-hud .hud-face .portrait { width: 82px; height: 82px; border: 1px solid var(--accent); box-shadow: 3px 3px 0 var(--accent-deep); }
+.foe-hud #vstats { display: flex; justify-content: flex-end; }
+.foe-hud .stat-pill { padding: 0 6px; font-size: 12px; background: transparent; }
+.foe-hud .kit-chip { font-size: 12px; }
+
+/* Jogador: degradê dourado vindo da esquerda. */
+.ally-hud::before { background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 13%, transparent), transparent 75%); border-left: 2px solid var(--gold); }
+.ally-hud .hud-plate .name { font-size: 19px; }
+.ally-hud .sheet-btn { min-height: 32px; min-width: 32px; padding: 0; background: transparent; border-color: var(--line); }
+.ally-hud .avatar-sm .portrait { width: 64px; height: 64px; }
+.player-mini .chip.passive-chip { font-size: 12px; padding: 0 7px; }
+
+/* Arena: palco da roleta de combate, com o selo 戦 em marca d'água. */
+.arena {
+  position: relative; min-height: 76px; display: flex; flex-direction: column; justify-content: center;
+  padding: 6px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  background: radial-gradient(ellipse 70% 100% at 50% 50%, color-mix(in srgb, var(--surface-2) 70%, transparent), transparent 70%);
 }
+.arena-mark {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none;
+  font-size: 64px; color: var(--text); opacity: .06;
+}
+.arena .dice { position: relative; min-height: 0; }
+.arena .strip { background: color-mix(in srgb, var(--surface) 92%, transparent); }
+
+/* Log: três linhas com o fim esmaecido; tocar abre o histórico da luta. */
+.log {
+  list-style: none; margin: 0; padding: 6px 10px; height: 64px; overflow: hidden; cursor: pointer;
+  background: var(--log-bg); border-left: 2px solid var(--line-strong);
+  font-size: 13px; line-height: 1.35; display: flex; flex-direction: column; gap: 2px;
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent);
+  mask-image: linear-gradient(180deg, #000 55%, transparent);
+  transition: height var(--dur-3) var(--ease);
+}
+.log.open { height: 220px; overflow-y: auto; -webkit-mask-image: none; mask-image: none; }
 .log li .ico { width: 15px; height: 15px; margin-right: 4px; vertical-align: -.22em; }
 .log li.round {
   color: var(--muted); font: 600 12px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; text-align: center;
@@ -26,12 +80,11 @@
 .log li.bad { color: var(--bad); }
 .log li.sys, .log li.muted { color: var(--muted); }
 .log li.jin { color: var(--jin); font-weight: 700; }
-.player-mini { --tab: var(--gold); }
-.player-mini .passive-row { margin-top: 6px; }
-.player-mini .chip.passive-chip { font-size: 12px; padding: 1px 7px; }
 
 /* Ações: abas por tipo e placas de jutsu. */
-.actions { display: flex; flex-direction: column; gap: 8px; }
+.actions { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; border-top: 2px solid var(--accent); }
+.actions:empty { display: none; }
+.cost.short { color: var(--bad); font-weight: 700; }
 .act-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .act-tab.tab-taijutsu.on { border-bottom-color: var(--t-taijutsu); }
 .act-tab.tab-taijutsu .ico { color: var(--t-taijutsu); }
@@ -107,7 +160,21 @@
 .float.miss { color: #c9c3b8; font-size: 18px; letter-spacing: .1em; text-transform: uppercase; }
 .float.heal { color: #a8e09b; }
 .float.ck { color: var(--ck-2); font-size: 18px; }
+.float small { display: block; font-size: .42em; letter-spacing: .2em; text-transform: uppercase; text-align: center; -webkit-text-stroke-width: 2px; }
 .shake { animation: shake .35s; }
+/* Crítico: corte diagonal dourado atravessando o HUD. */
+.slash {
+  position: absolute; left: -10%; right: -10%; top: 46%; height: 3px; z-index: 4; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--gold-2) 30%, #fff 50%, var(--gold-2) 70%, transparent);
+  transform: rotate(-14deg) scaleX(0); transform-origin: 0 50%; animation: slashCut .5s var(--ease) forwards;
+}
+@keyframes slashCut { 0% { transform: rotate(-14deg) scaleX(0); opacity: 1; } 55% { transform: rotate(-14deg) scaleX(1); opacity: 1; } 100% { transform: rotate(-14deg) scaleX(1); opacity: 0; } }
+/* Esquiva: o retrato desliza e deixa uma imagem residual. */
+.evade .hud-face { animation: evade .45s var(--ease); }
+@keyframes evade { 0% { transform: none; filter: none; } 35% { transform: translateX(-12px); filter: opacity(.45) blur(1px); } 100% { transform: none; filter: none; } }
+
+/* Fim da luta: selo carimbado (勝 vitória, 敗 derrota). */
+.end-mark { --s: 64px; align-self: center; margin-bottom: 4px; }
 
 @media (max-width: 380px) {
   .btn.act { grid-template-columns: 28px 1fr; gap: 7px; padding-left: 8px; }

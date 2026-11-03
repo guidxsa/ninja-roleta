@@ -22,6 +22,7 @@ import type { ConsumableId, Fighter, JAction, JBattle, JEvent, JTechnique } from
 import type { Rng } from '../../src/core/rng';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { fighterPortrait, icon } from '../art';
+import { barLayers, barPct, barTone, captureTrails, patchBar, restoreTrails } from '../bars';
 import { swish, land } from '../audio';
 import { esc, h, show, sleep } from '../dom';
 import { ELEMENT_COLORS, lines } from '../tips';
@@ -48,10 +49,16 @@ function portraitOf(f: Fighter, data: JornadaData): string {
 }
 
 function miniBar(kind: 'hp' | 'ck', cur: number, max: number): string {
-  const pct = max > 0 ? Math.max(0, Math.min(100, (cur / max) * 100)) : 0;
-  const low = kind === 'hp' && pct <= 30 ? ' low' : kind === 'hp' && pct <= 60 ? ' mid' : '';
-  return `<div class="bar bar-${kind} jbar${low}" data-bar="${kind}"><div class="fill" style="width:${pct}%"></div><span>${Math.max(0, Math.round(cur))}/${max}</span></div>`;
+  const pct = barPct(cur, max);
+  const tone = barTone(kind, pct);
+  return `<div class="bar bar-${kind} jbar${tone ? ` ${tone}` : ''}" data-bar="${kind}">${barLayers(pct)}<span>${Math.max(0, Math.round(cur))}/${max}</span></div>`;
 }
+
+/** Chave de uma barra para o rastro sobreviver ao redesenho dos lutadores (uid + tipo). */
+const barKey = (bar: HTMLElement) => {
+  const uid = bar.closest<HTMLElement>('.jf')?.dataset.uid;
+  return uid ? `${uid}:${bar.dataset.bar}` : null;
+};
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
@@ -131,8 +138,10 @@ function techButton(f: Fighter, tech: JTechnique): string {
     blocked ? (blocked === 'cooldown' ? B.cooldown(f.cooldowns[tech.id]!) : B.blocked[blocked]) : '',
   ].filter(Boolean);
   const color = tech.element ? ELEMENT_COLORS[tech.element] : `var(--t-${tech.type})`;
-  return `<button class="btn jmove" data-tech="${tech.id}" ${blocked ? 'aria-disabled="true"' : ''} style="--c:${color}"${techTip(tech, f)}>
-    <span class="jmove-ico">${icon(tech.element ?? tech.type)}</span>
+  const wait = blocked === 'cooldown' ? f.cooldowns[tech.id]! : 0;
+  const cd = wait ? `<span class="cd" style="--p:${Math.min(1, wait / Math.max(wait, tech.cooldown ?? wait))}" aria-hidden="true">${wait}</span>` : '';
+  return `<button class="btn jmove${wait ? ' cooling' : ''}" data-tech="${tech.id}" ${blocked ? 'aria-disabled="true"' : ''} style="--c:${color}"${techTip(tech, f)}>
+    <span class="jmove-ico">${icon(tech.element ?? tech.type)}${cd}</span>
     <span class="jmove-txt"><b>${techName(tech.id)}</b><small>${bits.join(' · ')}</small></span></button>`;
 }
 
@@ -166,6 +175,7 @@ export async function jornadaBattle(
       <button class="jb-log" type="button" data-log><span></span></button>
       <div class="jb-menu"></div>
       <div class="jb-intro"><div>${esc(label)}</div></div>
+      <div class="jb-fx" aria-hidden="true"></div>
     </div>`),
   );
   const enemiesEl = root.querySelector<HTMLElement>('.jb-enemies')!;
@@ -177,9 +187,12 @@ export async function jornadaBattle(
   logBtn.addEventListener('click', () => logBtn.classList.toggle('open'));
   const beat = () => (host.instant() ? 70 : 420);
 
+  const fxLayer = root.querySelector<HTMLElement>('.jb-fx')!;
   const render = (s: JBattle) => {
+    const trails = captureTrails(root, barKey);
     enemiesEl.innerHTML = s.fighters.filter((f) => f.side === 'enemy').map((f) => fighterCard(f, data)).join('');
     alliesEl.innerHTML = s.fighters.filter((f) => f.side === 'ally').map((f) => fighterCard(f, data)).join('');
+    restoreTrails(root, barKey, trails);
     root.querySelector('[data-round]')!.textContent = B.round(Math.max(1, s.round));
     const turn = current(s);
     root.querySelectorAll('.jf').forEach((el) => el.classList.toggle('acting', (el as HTMLElement).dataset.uid === turn?.uid && s.status === 'ongoing'));
@@ -190,11 +203,24 @@ export async function jornadaBattle(
     if (logLines.length > 30) logLines.pop();
     logBtn.querySelector('span')!.innerHTML = logLines.map((l) => `<span class="jl">${l}</span>`).join('');
   };
+  /** Número flutuante sobre o lutador, na camada de efeitos da tela (não some quando os cartões são redesenhados). */
   const float = (uid: string, text: string, cls: string) => {
-    const slot = card(uid)?.querySelector('.jf-floats');
-    if (!slot) return;
+    const c = card(uid);
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    const base = root.getBoundingClientRect();
     const el = h(`<span class="jfloat ${cls}">${text}</span>`);
-    slot.appendChild(el);
+    el.style.left = `${r.left - base.left + r.width / 2}px`;
+    el.style.top = `${r.top - base.top + 6}px`;
+    fxLayer.appendChild(el);
+    if (cls === 'crit') {
+      const cut = h('<i class="slash" aria-hidden="true"></i>');
+      cut.style.left = `${r.left - base.left - 8}px`;
+      cut.style.width = `${r.width + 16}px`;
+      cut.style.top = `${r.top - base.top + r.height * 0.4}px`;
+      fxLayer.appendChild(cut);
+      setTimeout(() => cut.remove(), 600);
+    }
     setTimeout(() => el.remove(), host.instant() ? 400 : 1100);
   };
   const pose = (uid: string, cls: string) => {
@@ -218,7 +244,7 @@ export async function jornadaBattle(
     if (!v) return;
     v.hp = Math.max(0, Math.min(v.max, hp));
     const el = card(uid)?.querySelector<HTMLElement>('[data-bar="hp"]');
-    if (el) el.outerHTML = miniBar('hp', v.hp, v.max);
+    if (el) patchBar(el, 'hp', v.hp, v.max, `${Math.max(0, Math.round(v.hp))}/${v.max}`);
   };
 
   async function animate(prev: JBattle, next: JBattle) {
@@ -241,7 +267,8 @@ export async function jornadaBattle(
           const t = data.techniques[e.techId]!;
           const color = t.element ? ELEMENT_COLORS[t.element] : '';
           pose(e.uid, fighter(next, e.uid).side === 'ally' ? 'lunge-up' : 'lunge-down');
-          say(B.logTech(name(e.uid), techName(e.techId)), color);
+          // Chamada do jutsu: pincelada na cor do elemento (ou do tipo da técnica).
+          say(B.logTech(name(e.uid), techName(e.techId)), color || `var(--t-${t.type})`);
           pushLog(B.logTech(name(e.uid), techName(e.techId)));
           for (const target of e.targets) if (color) card(target)?.style.setProperty('--glow', color);
           swish();
@@ -299,7 +326,7 @@ export async function jornadaBattle(
           pushLog(B.logDown(name(e.target)));
           break;
         case 'survive':
-          say(B.survive(name(e.target)), '#ff5a3c');
+          say(B.survive(name(e.target)), 'var(--jin)');
           setHp(e.target, 1);
           break;
         case 'revive':
@@ -320,7 +347,7 @@ export async function jornadaBattle(
           pushLog(B.logRest(name(e.uid), e.chakra));
           break;
         case 'enrage':
-          say(B.enrage(name(e.uid)), '#c62828');
+          say(B.enrage(name(e.uid)), 'var(--accent)');
           pushLog(B.enrage(name(e.uid)));
           break;
         case 'end':
@@ -439,7 +466,7 @@ export async function jornadaBattle(
   render(state);
   const won = state.status === 'won';
   host.mood(won ? 'good' : 'bad');
-  say(won ? B.won : B.lost, won ? '#4fc66a' : '#ef5350');
+  say(`<b class="kanji end-kanji" aria-hidden="true">${won ? '勝' : '敗'}</b>${won ? B.won : B.lost}`, won ? 'var(--gold)' : 'var(--accent-deep)');
   if (won) void flashRelics(root, winRelics(run0), host.instant());
   menu.innerHTML = '';
   await sleep(host.instant() ? 200 : 900);
