@@ -1,7 +1,7 @@
 import type { GenericDef } from '../../core/jornada/trail';
 
-// Runs genéricas (docs/jornada/generica.md): classes, suportes e pools de cada estágio do mapa ramificado.
-// Mesma dificuldade da canônica; um chefe de cada estágio é sorteado no começo da run.
+// Caminho Ninja (docs/jornada/caminho-ninja.md): classes, suportes e pools de cada estágio do mapa ramificado.
+// Mesma dificuldade da História; um chefe de cada estágio é sorteado no começo da run.
 
 const EVENTS = ['gOldLady', 'gRamen', 'gTraining', 'gJokenpo', 'gGuru', 'gAkatsuki', 'gFoundItem', 'gSummon'];
 

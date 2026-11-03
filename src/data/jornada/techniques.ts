@@ -68,7 +68,7 @@ export const elementalTechniques: JTechnique[] = [
   { id: 'jWaterfall', type: 'ninjutsu', element: 'water', target: 'allEnemies', baseDamage: 14, chakraCost: 9, accuracy: 0.9 },
 ];
 
-/** Comum e prodígio das runs genéricas (docs/jornada/classes.md). */
+/** Comum e prodígio do Caminho Ninja (docs/jornada/classes.md). */
 export const classTechniques: JTechnique[] = [
   { id: 'jBunshin', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, clones: 1, active: true },
   { id: 'jExplosiveTag', type: 'taijutsu', element: null, target: 'allEnemies', baseDamage: 11, chakraCost: 4, accuracy: 0.85, cooldown: 2 },

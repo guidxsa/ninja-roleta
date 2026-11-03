@@ -1,6 +1,6 @@
 import type { CharacterDef } from '../../core/jornada/types';
 
-// Personagens jogáveis e aliados da run canônica (docs/jornada/personagens.md). Ficha no nível 1;
+// Personagens jogáveis e aliados da História (docs/jornada/personagens.md). Ficha no nível 1;
 // os aliados sobem de nível junto com o Naruto. Valores provisórios.
 
 const g = (hp: number, chakra: number, speed: number, tai: number, nin: number, gen: number, phys: number, ment: number) => ({
@@ -105,7 +105,7 @@ export const characters: CharacterDef[] = [
   },
 ];
 
-/** Protagonistas e suportes das runs genéricas (docs/jornada/classes.md). O elemento é sorteado na run. */
+/** Protagonistas e suportes do Caminho Ninja (docs/jornada/classes.md). O elemento é sorteado na run. */
 export const genericCharacters: CharacterDef[] = [
   {
     id: 'commonNinja',

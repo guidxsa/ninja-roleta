@@ -18,12 +18,16 @@ export interface RelicDef {
   allyHpPct?: number;
   /** Ryō ganho × este valor. */
   ryoMult?: number;
+  /** XP ganho × este valor. */
+  xpMult?: number;
+  /** Desconto no mercador (fração; soma com os outros, com teto em `balance`). */
+  shopDiscount?: number;
   /** Cura extra da equipe depois de cada vitória (fração do HP máximo). */
   afterWinHealPct?: number;
   /** Dano em todos os inimigos no começo de cada luta. */
   openingDamage?: number;
-  /** Recurso ao pegar: consumíveis ou Vontades do Fogo. */
-  grant?: { items?: Partial<Record<ConsumableId, number>>; willOfFire?: number };
+  /** Recurso ao pegar: consumíveis, Vontades do Fogo, ryō ou pontos de talento. */
+  grant?: { items?: Partial<Record<ConsumableId, number>>; willOfFire?: number; ryo?: number; talentPoints?: number };
 }
 
 export type Weights = Record<Exclude<RelicTier, 'starter'>, number>;

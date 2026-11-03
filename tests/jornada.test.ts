@@ -25,6 +25,7 @@ import {
   choosingNode,
   currentStop,
   finishFight,
+  gainRelic,
   heroMovable,
   leaveStop,
   memberSheet,
@@ -45,6 +46,8 @@ import type { JBattle } from '../src/core/jornada/types';
 import { createRng } from '../src/core/rng';
 import { jornadaData as data } from '../src/data/jornada';
 import { loadJornada, saveJornada, JORNADA_SAVE_KEY } from '../src/state/jornadaSave';
+import { jornadaPtBR } from '../src/data/strings/jornada';
+import { RELIC_ICONS } from '../prototype/jornada/relicIcons';
 
 /** Rng que devolve sempre o mesmo valor (0 = acerta tudo e dispara todo efeito; 0,99 = erra). */
 const fixed = (v: number) => () => v;
@@ -170,7 +173,7 @@ describe('combate de equipe da Jornada', () => {
   });
 });
 
-describe('trilha da run canônica', () => {
+describe('trilha da História', () => {
   it('três estágios, cada um termina no chefe, com os confrontos do mangá na ordem', () => {
     expect(data.stages.map((s) => s.stops.at(-1)!.kind)).toEqual(['boss', 'boss', 'boss']);
     const story = data.stages.map((s) => s.stops.filter((x) => x.kind === 'story' || x.kind === 'boss').map((x) => x.id));
@@ -296,6 +299,40 @@ describe('run da Jornada', () => {
     }
   });
 
+  it('toda relíquia tem nome, descrição e ícone próprio', () => {
+    const icons = new Set<string>();
+    for (const r of data.relics) {
+      expect(jornadaPtBR.relics.list[r.id]?.name, r.id).toBeTruthy();
+      expect(jornadaPtBR.relics.list[r.id]?.desc, r.id).toBeTruthy();
+      expect(RELIC_ICONS[r.id], r.id).toBeTruthy();
+      icons.add(RELIC_ICONS[r.id]!);
+    }
+    expect(icons.size).toBe(data.relics.length);
+  });
+
+  it('relíquias que dão ryō e pontos de talento na hora', () => {
+    const run = newRun(1, 'normal', data);
+    expect(gainRelic(run, 'luckyCoin', data).ryo).toBe(run.ryo + 60);
+    expect(gainRelic(run, 'mastersJournal', data).talentPoints).toBe(run.talentPoints + 1);
+    expect(gainRelic(run, 'heavenEarthScrolls', data).talentPoints).toBe(run.talentPoints + 2);
+  });
+
+  it('Caderno de treino: +15% de XP', () => {
+    const run = newRun(1, 'normal', data);
+    const plain = finishFight(run, won(startBattle(battleSetup(run, data), data, createRng(1))), data).run;
+    const withLog = gainRelic(run, 'trainingLog', data);
+    const boosted = finishFight(withLog, won(startBattle(battleSetup(withLog, data), data, createRng(1))), data).run;
+    expect(boosted.xp).toBe(Math.floor(plain.xp * 1.15));
+  });
+
+  it('desconto do mercador soma relíquias e Tazuna, com teto', () => {
+    const run = { ...newRun(1, 'normal', data), stopIndex: 6 };
+    const price = data.j.shop.trainingPrice;
+    expect(shopOffer(gainRelic(run, 'merchantToken', data), data).training).toBe(Math.floor(price * 0.85));
+    const both = gainRelic(gainRelic({ ...run, flags: ['helpedTazuna'] }, 'merchantToken', data), 'bottomlessPouch', data);
+    expect(shopOffer(both, data).training).toBe(Math.floor(price * (1 - data.j.shop.maxDiscount)));
+  });
+
   it('a vitória recupera 25% da equipe do estágio, inclusive quem não lutou', () => {
     // Capangas (parada 4): Naruto, Sasuke e Sakura. Depois, o Haku: só Naruto e Sasuke lutam.
     const base = { ...newRun(1, 'normal', data), stopIndex: 3 };
@@ -338,7 +375,7 @@ describe('run da Jornada', () => {
   });
 });
 
-describe('runs genéricas', () => {
+describe('Caminho Ninja', () => {
   it('o mapa tem 3 começos, todo nó é alcançável, tem saída e todo caminho chega ao chefe', () => {
     for (let s = 0; s < 30; s++) {
       const map = generateMap(createRng(s), data);
@@ -417,7 +454,7 @@ describe('runs genéricas', () => {
     expect(next.learned).toContain('jWaterShark');
   });
 
-  it('save da genérica vai e volta; save antigo carrega como canônica', () => {
+  it('save do Caminho Ninja vai e volta; save antigo carrega como História', () => {
     const mem = new Map<string, string>();
     const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
     const run = newGenericRun(9, 'normal', 'common', data);

@@ -1,4 +1,4 @@
-// Modo Jornada no protótipo (docs/jornada/): início, trilha da run canônica, paradas, talentos, moveset e
+// Modo Jornada no protótipo (docs/jornada/): início, trilha da História, paradas, talentos, moveset e
 // relíquias. As regras ficam em src/core/jornada; aqui só a interface. A run salva a cada parada.
 import type { Difficulty } from '../../src/core/difficulty';
 import { eventOptions } from '../../src/core/jornada/events';
@@ -52,11 +52,12 @@ import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clearJornada, loadJornada, saveJornada } from '../../src/state/jornadaSave';
 import { fighterPortrait, icon } from '../art';
 import { choose, esc, h, show, sleep } from '../dom';
-import { lines } from '../tips';
 import { tip } from '../tooltip';
 import { jornadaBattle, techName, techTip } from './battle';
 import type { JornadaHost } from './host';
 import { playMinigame } from './minigames';
+import { chestClosed, chestOpen, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
+import { relicIcon } from './relicIcons';
 
 const J = S.jornada;
 const U = J.ui;
@@ -75,27 +76,17 @@ const STOP_ICONS: Record<string, string> = {
   treasure: 'item',
 };
 
-/** Nome da parada: o da trilha canônica, ou (genérica) os inimigos da luta / o tipo da parada. */
+/** Nome da parada: o da trilha da História, ou (Caminho Ninja) os inimigos da luta / o tipo da parada. */
 const stopName = (s: StopDef) =>
   J.stops[s.id] ?? (isFight(s) ? [...new Set(s.enemies.map((e) => J.names[e] ?? e))].join(' e ') : J.stopKinds[s.kind] ?? s.id);
 const stageName = (run: JRun) => J.stages[stageId(run, data)] ?? '';
 const portraitSpec = (id: string, run?: JRun) =>
   run?.skin && id === run.hero ? `ninja:${run.skin}` : (data.characters[id]?.portrait ?? 'ninja:common');
-/** Nome com o elemento sorteado (genérica): "Daichi (Fogo)". */
+/** Nome com o elemento sorteado (Caminho Ninja): "Daichi (Fogo)". */
 function memberName(run: JRun, id: string): string {
   const el = run.mode === 'generic' ? elementOf(run, id, data) : null;
   return el ? J.genericStart.elementOf(J.names[id] ?? id, S.elements[el]) : (J.names[id] ?? id);
 }
-const relicName = (id: string) => J.relics.list[id]?.name ?? id;
-const relicTier = (id: string) => data.relics.find((r) => r.id === id)?.tier ?? 'common';
-
-function relicCard(id: string, extra = ''): string {
-  const r = J.relics.list[id] ?? { name: id, desc: '' };
-  const tier = relicTier(id);
-  return `<div class="jrelic tier-${tier}"><span class="jrelic-ico">${icon(tier === 'legendary' ? 'willOfFire' : tier === 'rare' ? 'scroll' : 'item')}</span>
-    <span class="jrelic-txt"><b>${r.name}</b> <small class="muted">${J.relics.tiers[tier]}</small><small>${r.desc}</small></span>${extra}</div>`;
-}
-
 // ---------------------------------------------------------------------------
 // Entrada
 
@@ -112,6 +103,7 @@ export async function runJornada(host: JornadaHost): Promise<void> {
 async function jornadaLoop(host: JornadaHost): Promise<void> {
   let run = await startScreen(host);
   if (!run) return;
+  markRelicsSeen(run.relics);
   host.unlock(newJornadaAchievements(run, host.unlocked()));
   let shownStage = run.stageIndex;
   while (run.status === 'inProgress') {
@@ -242,8 +234,8 @@ function hud(run: JRun): string {
     <div class="jhud-actions">
       <button class="btn small" data-open="talents">${icon('scroll')} ${U.talentsBtn}${run.talentPoints ? ` <span class="badge">${run.talentPoints}</span>` : ''}</button>
       <button class="btn small" data-open="moveset">${icon('swords')} ${U.movesetBtn}</button>
-      <button class="btn small" data-open="relics"${tip(U.relicsTitle, lines(run.relics.map(relicName)))}>${icon('item')} ${run.relics.length}</button>
     </div>
+    ${relicBar(run)}
     ${bag.length ? `<p class="muted small">${U.bagTitle}: ${bag.join(' · ')}</p>` : ''}
   </section>`;
 }
@@ -270,7 +262,7 @@ function wireHud(root: HTMLElement, host: JornadaHost, get: () => JRun, set: (r:
     const kind = b.dataset.open;
     if (kind === 'talents') set(await talentsModal(host, get()));
     else if (kind === 'moveset') set(await movesetModal(get()));
-    else relicsModal(get());
+    else relicsModal(get(), b.dataset.relic);
     refresh();
   });
 }
@@ -281,7 +273,7 @@ function runStop(host: JornadaHost, run: JRun, stop: StopDef): Promise<JRun> {
   if (stop.kind === 'event') return eventStop(host, run);
   if (stop.kind === 'shop') return shopStop(host, run);
   if (stop.kind === 'rest') return restStop(host, run);
-  return treasureStop(run);
+  return treasureStop(host, run);
 }
 
 async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
@@ -321,7 +313,7 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
 }
 
 // ---------------------------------------------------------------------------
-// Mapa ramificado (runs genéricas)
+// Mapa ramificado (Caminho Ninja)
 
 const NODE_ICONS: Record<string, string> = { ...STOP_ICONS };
 const nodeKindName = (k: string) => (k === 'unknown' ? M.unknown : (J.stopKinds[k] ?? k));
@@ -437,7 +429,7 @@ async function eventStop(host: JornadaHost, run: JRun): Promise<JRun> {
   let won = true;
   if (opt.minigame) won = await playMinigame(opt.minigame, root.querySelector('[data-slot]')!, data, stopRng(run, 11), host.instant());
   const { run: next, relic } = resolveEvent(run, pick, won, data);
-  if (relic) await notice(U.gotRelic(relicName(relic)), J.relics.list[relic]?.desc ?? '');
+  if (relic) await relicReveal(U.gotRelic(relicName(relic)), relic);
   return next;
 }
 
@@ -445,6 +437,7 @@ async function shopStop(host: JornadaHost, run0: JRun): Promise<JRun> {
   let run = run0;
   const offer = shopOffer(run, data);
   const bought = new Set<string>();
+  let shelfPick: string | undefined = offer.relics[0]?.id;
   const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud></div><div data-shop></div>
     <div class="sticky-cta"><button class="btn primary big" data-choice="leave">${U.leave}</button></div></div>`));
   const render = () => {
@@ -455,7 +448,12 @@ async function shopStop(host: JornadaHost, run0: JRun): Promise<JRun> {
       return `<button class="btn small" data-buy="${key}" ${ok ? '' : 'disabled'}>${label}</button>`;
     };
     root.querySelector('[data-shop]')!.innerHTML = `
-      <h3>${U.relicsTitle}</h3>${offer.relics.map((r) => relicCard(r.id, btn({ kind: 'relic', ...r }, `r:${r.id}`))).join('')}
+      <h3>${U.relicsTitle}</h3>
+      <div class="jrshelf">${offer.relics
+        .map((r) => `<button type="button" class="jrshelf-item tier-${relicTier(r.id)}${r.id === shelfPick ? ' on' : ''}${bought.has(`r:${r.id}`) ? ' sold' : ''}" data-shelf="${r.id}">
+          <span class="jrslot big tier-${relicTier(r.id)}">${relicIcon(r.id)}</span><span class="jrprice">${bought.has(`r:${r.id}`) ? U.owned : U.ryo(r.price)}</span></button>`)
+        .join('')}</div>
+      ${shelfPick ? relicCard(shelfPick, btn({ kind: 'relic', ...offer.relics.find((r) => r.id === shelfPick)! }, `r:${shelfPick}`), 'stack') : ''}
       <h3>${U.bagTitle}</h3>${offer.consumables
         .map((c) => `<div class="jrelic"><span class="jrelic-ico">${icon('kit')}</span><span class="jrelic-txt"><b>${J.items[c.id]!.name}</b><small>${J.items[c.id]!.desc}</small></span>${btn({ kind: 'item', ...c }, `i:${c.id}:${run.bag[c.id]}`)}</div>`)
         .join('')}
@@ -465,6 +463,11 @@ async function shopStop(host: JornadaHost, run0: JRun): Promise<JRun> {
   render();
   wireHud(root, host, () => run, (r) => (run = r), render);
   root.addEventListener('click', (e) => {
+    const shelf = (e.target as HTMLElement).closest<HTMLElement>('[data-shelf]');
+    if (shelf) {
+      shelfPick = shelf.dataset.shelf;
+      return render();
+    }
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-buy]');
     if (!b || b.disabled) return;
     const key = b.dataset.buy!;
@@ -496,24 +499,57 @@ async function restStop(host: JornadaHost, run: JRun): Promise<JRun> {
   return rest(run, c, data);
 }
 
-async function treasureStop(run: JRun): Promise<JRun> {
-  const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2>
-    <div class="jchest">${icon('item')}</div><button class="btn primary big" data-choice="open">${U.openTreasure}</button></div>`));
+async function treasureStop(host: JornadaHost, run: JRun): Promise<JRun> {
+  const root = show(h(`<div class="screen jrtreasure"><h2>${stopName(currentStop(run, data)!)}</h2>
+    <button type="button" class="jrchest" data-choice="open" aria-label="${U.openTreasure}">${chestClosed()}</button>
+    <div data-slot></div><button class="btn primary big" data-choice="open">${U.openTreasure}</button></div>`));
   await choose(root);
   const id = openTreasure(run, data);
   const next = id ? gainRelic(run, id, data) : run;
-  root.querySelector('[data-choice]')!.remove();
-  root.insertAdjacentHTML('beforeend', `${id ? relicCard(id) : `<p class="muted center">${U.treasureEmpty}</p>`}<button class="btn primary big" data-choice="ok">${U.continue}</button>`);
+  const box = root.querySelector<HTMLElement>('.jrchest')!;
+  box.classList.add('opening');
+  root.querySelector('.btn[data-choice]')!.remove();
+  await sleep(host.instant() ? 0 : 450);
+  box.innerHTML = chestOpen();
+  box.removeAttribute('data-choice');
+  box.classList.add('open');
+  root.querySelector('[data-slot]')!.innerHTML = id ? relicCard(id, '', 'reveal') : `<p class="muted center">${U.treasureEmpty}</p>`;
+  if (id) host.mood('good');
+  root.insertAdjacentHTML('beforeend', `<button class="btn primary big" data-choice="ok">${U.continue}</button>`);
   await choose(root);
   return leaveStop(next, data);
 }
 
+/** Relíquia ganha fora do tesouro (evento): card revelado com brilho da raridade. */
+async function relicReveal(title: string, id: string): Promise<void> {
+  const root = show(h(`<div class="screen jrtreasure"><h2>${esc(title)}</h2>${relicCard(id, '', 'reveal')}
+    <button class="btn primary big" data-choice="ok">${U.continue}</button></div>`));
+  await choose(root);
+}
+
+/** Escolha do chefe: 3 lendárias lado a lado; tocar destaca, o botão confirma. */
 async function bossChoiceScreen(run: JRun): Promise<JRun> {
-  const root = show(h(`<div class="screen"><h2>${U.bossChoice}</h2>${run.bossChoice!
-    .map((id) => `<button class="jpick" data-choice="${id}">${relicCard(id)}</button>`)
-    .join('')}</div>`));
-  const id = await choose<string>(root);
-  return chooseBossRelic(run, id, data);
+  const options = run.bossChoice!;
+  let pick: string | undefined;
+  const root = show(h(`<div class="screen jrboss"><h2>${U.bossChoice}</h2>
+    <div class="jrboss-row">${options
+      .map((id) => `<button type="button" class="jrboss-opt tier-${relicTier(id)}" data-opt="${id}" aria-label="${relicName(id)}">
+        <span class="jrslot huge tier-${relicTier(id)}">${relicIcon(id)}</span><b>${relicName(id)}</b></button>`)
+      .join('')}</div>
+    <div data-detail><p class="muted center">${U.relicPick}</p></div>
+    <div class="sticky-cta"><button class="btn primary big" data-choice="take" disabled>${U.relicPick}</button></div></div>`));
+  const take = root.querySelector<HTMLButtonElement>('[data-choice="take"]')!;
+  root.querySelector('.jrboss-row')!.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-opt]');
+    if (!b) return;
+    pick = b.dataset.opt!;
+    root.querySelectorAll('[data-opt]').forEach((x) => x.classList.toggle('on', x === b));
+    root.querySelector('[data-detail]')!.innerHTML = relicCard(pick, '', 'pop');
+    take.disabled = false;
+    take.textContent = U.relicTake(relicName(pick));
+  });
+  await choose(root.querySelector('.sticky-cta')!);
+  return chooseBossRelic(run, pick!, data);
 }
 
 // ---------------------------------------------------------------------------
@@ -609,16 +645,6 @@ function movesetModal(run: JRun): Promise<JRun> {
   });
 }
 
-function relicsModal(run: JRun) {
-  const el = modal(`<div class="row between"><h2>${U.relicsTitle}</h2><button class="btn small" data-close>✕</button></div>
-    ${run.relics.length ? run.relics.map((id) => relicCard(id)).join('') : `<p class="muted">${U.noRelics}</p>`}
-    ${run.willOfFire ? `<p>${icon('willOfFire')} ${U.willOfFire(run.willOfFire)}</p>` : ''}`);
-  el.addEventListener('click', (e) => {
-    const t = e.target as HTMLElement;
-    if (t === el || t.closest('[data-close]')) el.remove();
-  });
-}
-
 async function notice(title: string, text: string): Promise<void> {
   const root = show(h(`<div class="screen"><h2>${esc(title)}</h2><section class="card"><p class="pre">${esc(text)}</p></section>
     <button class="btn primary big" data-choice="ok">${U.continue}</button></div>`));
@@ -633,7 +659,7 @@ async function endScreen(host: JornadaHost, run: JRun): Promise<void> {
     <div class="jstart-face">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'md')}</div>
     <p class="center">${won ? U.runWon : U.runLost(stop ? stopName(stop) : '')}</p>
     <p class="center muted">${U.runStats(run.stats.fights, run.stats.wins, run.level)}</p>
-    ${run.relics.length ? run.relics.map((id) => relicCard(id)).join('') : ''}
+    ${run.relics.length ? `<div class="jrbar jrbar-end">${run.relics.map((id) => relicSlot(id, 'span')).join('')}</div>` : ''}
     <button class="btn primary big" data-choice="ok">${U.home}</button></div>`));
   await sleep(host.instant() ? 0 : 300);
   await choose(root);

@@ -4,8 +4,8 @@ Estrutura de uma run: tipos de run, paradas, eventos e minijogos, dificuldade e 
 
 ## Tipos de run
 
-- **Canônica** (implementada na v0.35.0): a história do Naruto, **linear**, sem escolha de caminho. Estágios, paradas e confrontos em [canonica.md](canonica.md).
-- **Genérica** (implementada na v0.36.0): mapa ramificado, parada "desconhecido", classes e encontros variados ([generica.md](generica.md)).
+- **História** (implementada na v0.35.0): a história do Naruto, **linear**, sem escolha de caminho. Estágios, paradas e confrontos em [historia.md](historia.md).
+- **Caminho Ninja** (implementado na v0.36.0): mapa ramificado, parada "desconhecido", classes e encontros variados ([caminho-ninja.md](caminho-ninja.md)).
 
 ## Paradas
 
@@ -19,7 +19,7 @@ Estrutura de uma run: tipos de run, paradas, eventos e minijogos, dificuldade e 
 | Mercador | Relíquias, consumíveis, treino (+1 ponto de talento, 60 ryō) e tratamento (cura 50% da equipe, 30 ryō) |
 | Descanso | Curar 40% da equipe ou treinar (+1 ponto de talento) |
 | Tesouro | Relíquia sorteada pela raridade |
-| Desconhecido | Só nas runs genéricas: sorteia entre luta, evento ou outra parada |
+| Desconhecido | Só no Caminho Ninja: sorteia entre luta, evento ou outra parada |
 
 - Na trilha, o caminho do estágio aparece inteiro, com a legenda, e a parada atual fica marcada.
 - Na trilha dá para abrir a árvore de talentos, o moveset e as relíquias a qualquer momento.
@@ -28,7 +28,7 @@ Estrutura de uma run: tipos de run, paradas, eventos e minijogos, dificuldade e 
 ## Eventos
 
 - **Condicionais e encadeados**: uma escolha deixa uma marca na run, e a marca muda paradas seguintes (proteger o Tazuna barateia o mercador do País das Ondas em 20%).
-- Os eventos da run canônica estão em [canonica.md](canonica.md#eventos).
+- Os eventos da História estão em [historia.md](historia.md#eventos).
 
 ## Minijogos
 
@@ -44,7 +44,7 @@ Recompensas interativas no lugar da roleta visual. Ganhar dá o prêmio do event
 
 - As 4 do Roleta ([campanha.md](../roleta/campanha.md#dificuldade)), com a mesma força nos inimigos.
 - A Vontade do Fogo só existe no Fácil (1 por run) e por relíquia: recomeça uma luta perdida.
-- O Hardcore da Jornada libera ao vencer a run canônica no Difícil.
+- O Hardcore da Jornada libera ao vencer a História no Difícil.
 
 ## Salvamento
 
@@ -54,7 +54,7 @@ Recompensas interativas no lugar da roleta visual. Ganhar dá o prêmio do event
 
 ## Mapa ramificado
 
-Das runs genéricas ([generica.md](generica.md)), implementado na v0.36.0 (`src/core/jornada/map.ts`).
+Do Caminho Ninja ([caminho-ninja.md](caminho-ninja.md)), implementado na v0.36.0 (`src/core/jornada/map.ts`).
 
 - Cada estágio é um mapa de **12 linhas** em 4 colunas, de baixo para cima: a linha 0 tem **3 começos**; as linhas do meio têm 2 a 4 nós; a última é o **chefe**, ligado a todos.
 - Cada nó liga a 1 ou 2 nós da linha de cima (a coluna mais próxima); todo nó é alcançável e tem saída. Depois de cada parada, o jogador escolhe a próxima entre as ligadas à atual.

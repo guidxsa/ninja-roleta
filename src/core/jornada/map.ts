@@ -1,4 +1,4 @@
-// Mapa ramificado das runs genéricas (docs/jornada/run.md#mapa-ramificado): linhas de baixo para cima,
+// Mapa ramificado do Caminho Ninja (docs/jornada/run.md#mapa-ramificado): linhas de baixo para cima,
 // 3 começos, cada nó liga a 1–2 da linha seguinte e todos chegam ao chefe. Puro e com seed.
 import type { Rng } from '../rng';
 import type { JornadaData } from './data';

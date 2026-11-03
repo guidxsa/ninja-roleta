@@ -2,7 +2,7 @@ import type { TalentNode } from '../../core/jornada/talents';
 
 // Árvore do Naruto (docs/jornada/talentos.md). Três ramos de quatro nós; cada nó pede o anterior.
 // Kyuubi abre depois do Haku (estágio 2) e Rasengan quando o Jiraiya ensina (estágio 3).
-// A Ōdama só aparece depois de vencer a run canônica uma vez (conquista `j_canonWin`).
+// A Ōdama só aparece depois de vencer a História uma vez (conquista `j_canonWin`).
 
 export const talents: TalentNode[] = [
   { id: 'tMoreClones', owner: 'naruto', branch: 'clones', tier: 1, cost: 1, mods: { extraClones: 1 } },
@@ -20,7 +20,7 @@ export const talents: TalentNode[] = [
   { id: 'tRasenganFocus', owner: 'naruto', branch: 'rasengan', tier: 3, cost: 2, fromStage: 2, mods: { critBonus: 0.1 } },
   { id: 'tOdama', owner: 'naruto', branch: 'rasengan', tier: 4, cost: 3, fromStage: 2, account: 'j_canonWin', learn: 'jOdama' },
 
-  // Comum (runs genéricas): o ramo Elemento ensina as técnicas do elemento sorteado.
+  // Comum (Caminho Ninja): o ramo Elemento ensina as técnicas do elemento sorteado.
   { id: 'tElement2', owner: 'commonNinja', branch: 'element', tier: 1, cost: 1, learnByElement: { fire: 'jFireball', wind: 'jGale', lightning: 'jLightningCurrent', earth: 'jEarthSpear', water: 'jWaterShark' } },
   { id: 'tElementPower', owner: 'commonNinja', branch: 'element', tier: 2, cost: 2, mods: { typeDamageMult: { ninjutsu: 1.15 } } },
   { id: 'tElement3', owner: 'commonNinja', branch: 'element', tier: 3, cost: 2, learnByElement: { fire: 'jGreatBlaze', wind: 'jVacuumSphere', lightning: 'jLightningBlade', earth: 'jEarthDragon', water: 'jWaterfall' } },

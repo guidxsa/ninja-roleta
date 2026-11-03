@@ -5,7 +5,7 @@
 Três ramos de quatro nós. Cada nó pede o anterior do mesmo ramo e custa pontos de talento ([progressao.md](progressao.md)). A árvore **reinicia a cada run**.
 
 - **Ramos canônicos** abrem pelo estágio da história: Kyuubi depois do Haku (estágio 2), Rasengan quando o Jiraiya ensina (estágio 3).
-- **Nós da conta** ficam liberados de vez por um objetivo: a Ōdama Rasengan pede a conquista *Vale do Fim* (vencer a run canônica).
+- **Nós da conta** ficam liberados de vez por um objetivo: a Ōdama Rasengan pede a conquista *Vale do Fim* (vencer a História).
 - O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
 - Nós que só existem com um elemento (ramo Raio do Uchiha) ficam escondidos para quem não tem o elemento.
 
@@ -22,9 +22,9 @@ Três ramos de quatro nós. Cada nó pede o anterior do mesmo ramo e custa ponto
 | Rasengan | Rasengan | 1 | Aprende o Rasengan |
 | Rasengan | Domínio do Rasengan | 2 | Rasengan: +25% de dano, 2 de chakra a menos |
 | Rasengan | Foco | 2 | +10% de crítico |
-| Rasengan | Ōdama Rasengan | 3 | Aprende a Ōdama (conta: vencer a run canônica) |
+| Rasengan | Ōdama Rasengan | 3 | Aprende a Ōdama (conta: vencer a História) |
 
-## Comum (runs genéricas)
+## Comum (Caminho Ninja)
 
 O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.md#sorteio-do-elemento)).
 
@@ -43,7 +43,7 @@ O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.m
 | Determinação | Esforço | 2 | +10% de dano |
 | Determinação | Vontade do Fogo | 3 | Uma vez por luta fica com 1 de HP; recupera 2% do HP por rodada |
 
-## Prodígio (runs genéricas)
+## Prodígio (Caminho Ninja)
 
 | Ramo | Nó | Custo | Efeito |
 |---|---|---|---|
@@ -60,7 +60,7 @@ O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.m
 | Treino | Mestre do taijutsu | 2 | +15% de dano de taijutsu |
 | Treino | Resistência | 3 | Uma vez por luta fica com 1 de HP |
 
-## Uchiha (runs genéricas)
+## Uchiha (Caminho Ninja)
 
 | Ramo | Nó | Custo | Efeito |
 |---|---|---|---|
@@ -82,7 +82,7 @@ O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.m
 | Sasuke (conta) | Vingador | 2 | +25% de dano abaixo da metade do HP |
 | Sasuke (conta) | Selo amaldiçoado | 3 | Ativa: dano ×1,4 por 3 turnos, paga 10% do HP |
 
-## Hyuuga (runs genéricas)
+## Hyuuga (Caminho Ninja)
 
 A Palma do Vácuo, que estava pendente desde o Roleta, entra no ramo Rotação.
 

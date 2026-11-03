@@ -1,6 +1,6 @@
 # Personagens da Jornada
 
-> Run canônica implementada na v0.35.0 ([README.md](README.md)). Números provisórios: ajustar com `npm run sim:jornada`.
+> História implementada na v0.35.0 ([README.md](README.md)). Números provisórios: ajustar com `npm run sim:jornada`.
 
 Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento por nível fica em `src/data/jornada/characters.ts`. O Naruto é o único controlado pelo jogador; os outros usam a IA da tabela abaixo (`src/core/jornada/ai.ts`).
 
@@ -27,7 +27,7 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 - O Sasuke aprende o **Chidori** ao chegar no exame chunin (estágio 2).
 - As técnicas novas do Naruto vêm da árvore de talentos ([talentos.md](talentos.md)).
 - No mangá, antes do timeskip, a Sakura ainda não é médica: o papel dela é tático (soltar aliado preso, levantar quem caiu, armadilhas).
-- Runs genéricas ([classes.md](classes.md)): o Ninja da Folha (Comum) e os suportes Daichi e Hana usam o elemento sorteado na run e ganham a técnica de nível I dele; o prodígio é o Comum que saiu sem elemento.
+- Caminho Ninja ([classes.md](classes.md)): o Ninja da Folha (Comum) e os suportes Daichi e Hana usam o elemento sorteado na run e ganham a técnica de nível I dele; o prodígio é o Comum que saiu sem elemento.
 
 ## Comportamento
 
@@ -45,7 +45,7 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 
 ## Técnicas
 
-### Run canônica
+### História
 
 | Técnica | Tipo | Elemento | Alvo | Dano | Chakra | Precisão | Extra |
 |---|---|---|---|---|---|---|---|
@@ -78,7 +78,7 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 | Caixão de areia | Ninjutsu | terra | um inimigo | 20 | 7 | 85% | atordoar 30% (1 t) |
 | Shuriken de areia | Ninjutsu | terra | todos os inimigos | 8 | 5 | 85% | — |
 
-### Linhas elementais (runs genéricas)
+### Linhas elementais (Caminho Ninja)
 
 Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talentos.md](talentos.md)).
 
@@ -99,7 +99,7 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 | Tubarão de água | Ninjutsu | água | um inimigo | 18 | 5 | 90% | — |
 | Cachoeira | Ninjutsu | água | todos os inimigos | 14 | 9 | 90% | — |
 
-### Classes das runs genéricas (Comum, prodígio, Uchiha, Hyuuga)
+### Classes do Caminho Ninja (Comum, prodígio, Uchiha, Hyuuga)
 
 | Técnica | Tipo | Elemento | Alvo | Dano | Chakra | Precisão | Extra |
 |---|---|---|---|---|---|---|---|

@@ -4,7 +4,7 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 
 - **[base/](base/)**: regras usadas pelos dois modos (hoje implementadas no Roleta; a Jornada herda).
 - **[roleta/](roleta/)**: o que é só do modo Roleta.
-- **[jornada/](jornada/README.md)**: o modo Jornada (run canônica e runs genéricas).
+- **[jornada/](jornada/README.md)**: o modo Jornada (História e Caminho Ninja).
 
 | Arquivo | Conteúdo |
 |---|---|
@@ -18,7 +18,7 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 | [roleta/campanha.md](roleta/campanha.md) | Ordem, eventos, encontros, invocações, exame, dificuldade, histórico |
 | [roleta/itens.md](roleta/itens.md) | Itens, bolsa e roleta de recompensa |
 | [jornada/README.md](jornada/README.md) | Visão geral, pilares, tipos de run, simulação, ordem de construção, pendências |
-| [jornada/canonica.md](jornada/canonica.md) | Run canônica: estágios, paradas, quem luta, vitórias especiais, eventos |
+| [jornada/historia.md](jornada/historia.md) | História: estágios, paradas, quem luta, vitórias especiais, eventos |
 | [jornada/run.md](jornada/run.md) | Tipos de run, paradas, eventos e minijogos, dificuldade, salvamento, mapa ramificado |
 | [jornada/combate.md](jornada/combate.md) | Combate de equipe, ordem, ações, efeitos, levantar, bolsa, moveset, interface |
 | [jornada/personagens.md](jornada/personagens.md) | Fichas, técnicas e comportamento dos aliados |
@@ -26,5 +26,5 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 | [jornada/talentos.md](jornada/talentos.md) | Árvores de talentos (Naruto, Comum, prodígio, Uchiha, Hyuuga) |
 | [jornada/progressao.md](jornada/progressao.md) | XP, nível, recompensas, entre lutas |
 | [jornada/reliquias.md](jornada/reliquias.md) | Relíquias: tiers, de onde vêm, catálogo |
-| [jornada/generica.md](jornada/generica.md) | Runs genéricas: estrutura, pools por estágio, chefes, eventos |
+| [jornada/caminho-ninja.md](jornada/caminho-ninja.md) | Caminho Ninja: estrutura, pools por estágio, chefes, eventos |
 | [jornada/classes.md](jornada/classes.md) | Classes, sorteio do elemento, desbloqueios, ativas, suportes genéricos |

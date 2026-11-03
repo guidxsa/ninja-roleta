@@ -1,14 +1,14 @@
-# Runs genéricas
+# Caminho Ninja
 
 > Implementadas na v0.36.0 ([README.md](README.md)). Dados em `src/data/jornada/generic.ts` e `events.ts`.
 
-A run que aproveita o **mapa ramificado** ([run.md](run.md#mapa-ramificado)): o jogador escolhe o caminho, com encontros variados e a mesma dificuldade da canônica. Protagonista de uma classe ([classes.md](classes.md)) e 2 suportes sorteados entre os genéricos e as versões suporte das classes liberadas ([classes.md](classes.md#suportes-genéricos-versão-suporte)).
+A run que aproveita o **mapa ramificado** ([run.md](run.md#mapa-ramificado)): o jogador escolhe o caminho, com encontros variados e a mesma dificuldade da História. Protagonista de uma classe ([classes.md](classes.md)) e 2 suportes sorteados entre os genéricos e as versões suporte das classes liberadas ([classes.md](classes.md#suportes-genéricos-versão-suporte)).
 
 ## Estrutura
 
 - 3 estágios, cada um com um mapa de 12 linhas e um **chefe sorteado no começo da run** (aparece no topo do mapa).
 - As lutas das 3 primeiras linhas saem de um pool mais leve.
-- Vencer o chefe: equipe cheia e 1 de 3 relíquias lendárias, como na canônica.
+- Vencer o chefe: equipe cheia e 1 de 3 relíquias lendárias, como na História.
 
 ## Pools por estágio
 

@@ -825,8 +825,105 @@ button[data-tip] { cursor: pointer; }
 .jrelic.tier-rare .jrelic-ico { color: var(--ck-2); }
 .jrelic.tier-legendary { border-color: var(--gold); box-shadow: 0 0 12px color-mix(in srgb, var(--gold) 30%, transparent); }
 .jrelic.tier-legendary .jrelic-ico { color: var(--gold); }
-.jchest { display: grid; place-items: center; padding: 24px; }
-.jchest .ico { width: 72px; height: 72px; color: var(--gold); animation: pop .5s ease-out; }
+
+/* Relíquias: ícone quadrado com a cor da raridade (barra, painel, mercador, chefe). */
+.jrslot {
+  --tier: var(--line);
+  position: relative; display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; padding: 0;
+  border-radius: 10px; border: 2px solid var(--tier); background: var(--surface-3); color: var(--text); cursor: pointer; font: inherit;
+  transition: transform .12s ease;
+}
+.jrslot .ico { width: 26px; height: 26px; vertical-align: 0; }
+.jrslot.big { width: 54px; height: 54px; border-radius: 12px; }
+.jrslot.big .ico { width: 36px; height: 36px; }
+.jrslot.huge { width: 76px; height: 76px; border-radius: 16px; }
+.jrslot.huge .ico { width: 52px; height: 52px; }
+.tier-starter { --tier: #d9822b; }
+.tier-common { --tier: var(--line); }
+.tier-rare { --tier: var(--ck); }
+.tier-legendary { --tier: var(--gold); }
+.jrslot.tier-legendary, .jrcard.tier-legendary .jrcard-ico { box-shadow: 0 0 10px color-mix(in srgb, var(--gold) 40%, transparent); }
+.jrslot:active { transform: scale(.94); }
+.jrslot.is-new { animation: relicIn .7s cubic-bezier(.3, 1.6, .5, 1) both, relicGlow 1.6s ease-out .2s 2; }
+.jrslot.flash { animation: relicFlash .85s ease-out; }
+@keyframes relicIn { from { transform: translateY(-14px) scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes relicGlow { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tier) 90%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
+@keyframes relicFlash { 0% { transform: scale(1); filter: brightness(1); } 30% { transform: scale(1.3); filter: brightness(1.6); box-shadow: 0 0 14px var(--tier); } 100% { transform: scale(1); filter: none; } }
+
+/* Barra do HUD: rola de lado quando não cabe, sem rolar a página. */
+.jrbar { display: flex; gap: 6px; overflow-x: auto; padding: 6px 2px 4px; margin-top: 8px; scrollbar-width: thin; overscroll-behavior-x: contain; }
+.jrbar-end { justify-content: center; flex-wrap: wrap; overflow: visible; }
+.jrstrip { display: flex; gap: 3px; flex: 0 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.jrstrip .jrslot { width: 26px; height: 26px; border-radius: 7px; border-width: 1.5px; cursor: help; }
+.jrstrip .jrslot .ico { width: 18px; height: 18px; }
+.tip-tier { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #6e5a3f; }
+
+/* Card grande de uma relíquia. */
+.jrcard {
+  --tier: var(--line);
+  display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; margin: 8px 0;
+  background: var(--surface-2); border: 2px solid var(--tier);
+}
+.jrcard-ico { width: 60px; height: 60px; flex: none; display: grid; place-items: center; border-radius: 14px; background: var(--surface-3); border: 2px solid var(--tier); }
+.jrcard-ico .ico { width: 42px; height: 42px; }
+.jrcard-txt { flex: 1; min-width: 0; }
+.jrcard-txt b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 19px; line-height: 1.15; }
+.jrcard-txt small { display: block; color: var(--muted); }
+.jrcard-txt .jrcard-tier { color: var(--tier); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+.jrcard.tier-common .jrcard-tier { color: var(--muted); }
+.jrcard > .btn { flex: none; }
+.jrcard.stack { flex-wrap: wrap; }
+.jrcard.stack > .btn { flex: 1 0 100%; }
+.jb-relics { display: flex; justify-content: center; min-width: 0; }
+.jb-head [data-round] { white-space: nowrap; }
+.jrcard.pop { animation: pop .25s ease-out; }
+.jrcard.reveal { animation: relicReveal .7s cubic-bezier(.2, 1.4, .4, 1) both; box-shadow: 0 0 22px color-mix(in srgb, var(--tier) 45%, transparent); }
+@keyframes relicReveal { from { transform: rotateY(90deg) scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Painel: grade por raridade e o detalhe embaixo. */
+.jrpanel h2 small { font-family: var(--font-body, inherit); font-size: 13px; }
+.jrgroup h3 { margin: 12px 0 6px; font-size: 14px; color: var(--tier); }
+.jrgroup.tier-common h3 { color: var(--muted); }
+.jrgrid { display: grid; grid-template-columns: repeat(auto-fill, 54px); gap: 8px; }
+.jrgrid .jrslot.on { transform: translateY(-3px); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tier) 55%, transparent); }
+.jrdetail { position: sticky; bottom: -1px; margin-top: 10px; padding-top: 4px; background: var(--surface); min-height: 40px; }
+.jrwill { margin: 12px 0 0; display: flex; align-items: center; gap: 6px; }
+
+/* Tesouro: baú que treme e abre. */
+.jrtreasure { text-align: center; }
+.jrchest { display: block; margin: 12px auto; padding: 0; border: 0; background: none; cursor: pointer; width: 150px; }
+.jrchest-svg { width: 150px; height: auto; filter: drop-shadow(0 6px 10px #0006); }
+.jrchest:not(.open) { animation: chestIdle 2.4s ease-in-out infinite; }
+.jrchest.opening { animation: chestShake .45s ease-in-out; }
+.jrchest.open .jrchest-svg { animation: pop .3s ease-out; }
+.jrtreasure .jrcard { text-align: left; }
+@keyframes chestIdle { 0%, 80%, 100% { transform: none; } 85% { transform: rotate(-3deg); } 90% { transform: rotate(3deg); } 95% { transform: rotate(-2deg); } }
+@keyframes chestShake { 0%, 100% { transform: none; } 20% { transform: translateX(-6px) rotate(-4deg); } 40% { transform: translateX(6px) rotate(4deg); } 60% { transform: translateX(-4px) rotate(-2deg); } 80% { transform: translateX(4px) rotate(2deg); } }
+
+/* Escolha do chefe: 3 lendárias lado a lado. */
+.jrboss-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+.jrboss-opt {
+  --tier: var(--gold);
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 4px; min-width: 0;
+  border-radius: 14px; border: 2px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer;
+  animation: relicReveal .6s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+.jrboss-opt:nth-child(2) { animation-delay: .12s; }
+.jrboss-opt:nth-child(3) { animation-delay: .24s; }
+.jrboss-opt b { font-size: 13px; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
+.jrboss-opt.on { border-color: var(--tier); transform: translateY(-4px); box-shadow: 0 6px 18px color-mix(in srgb, var(--tier) 40%, transparent); }
+.jrboss-opt .jrslot { pointer-events: none; }
+
+/* Mercador: prateleira de relíquias com etiqueta de preço. */
+.jrshelf { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.jrshelf-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 4px 8px; min-width: 0;
+  border-radius: 12px; border: 2px solid transparent; background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer;
+}
+.jrshelf-item .jrslot { pointer-events: none; }
+.jrshelf-item.on { border-color: var(--tier); }
+.jrshelf-item.sold { opacity: .5; }
+.jrprice { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--surface-3); color: var(--gold); white-space: nowrap; }
 
 .jmodal { max-height: 86vh; overflow-y: auto; }
 .jtree { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
@@ -936,7 +1033,7 @@ button[data-tip] { cursor: pointer; }
 .jhud-member > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .jhud-member b { font-size: 13px; }
 
-/* Runs genéricas: classes, revelação do elemento e mapa ramificado. */
+/* Caminho Ninja: classes, revelação do elemento e mapa ramificado. */
 .jclasses { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .jclass { text-align: left; padding: 10px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer; }
 .jclass b { display: block; font-size: 14px; }
@@ -985,11 +1082,12 @@ body.mode-jornada #sheet-btn { display: none; }
 
   .jbattle {
     display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); column-gap: 16px; row-gap: 10px;
-    grid-template-areas: 'head head' 'goal goal' 'enemies menu' 'banner menu' 'allies menu' 'log menu';
-    grid-template-rows: auto auto 1fr auto 1fr auto; align-items: center; min-height: 0; padding: 16px;
+    grid-template-areas: 'head head' 'relics relics' 'goal goal' 'enemies menu' 'banner menu' 'allies menu' 'log menu';
+    grid-template-rows: auto auto auto 1fr auto 1fr auto; align-items: center; min-height: 0; padding: 16px;
   }
   .jbattle .jb-head { grid-area: head; font-size: 15px; }
   .jbattle .jb-goal { grid-area: goal; }
+  .jbattle .jb-relics { grid-area: relics; }
   .jbattle .jb-enemies { grid-area: enemies; }
   .jbattle .jb-banner { grid-area: banner; }
   .jbattle .jb-allies { grid-area: allies; }
@@ -1022,10 +1120,17 @@ body.mode-jornada #sheet-btn { display: none; }
   .jtrail-screen > .sticky-cta { grid-area: cta; position: static; background: none; padding: 0; }
   .jstop { padding: 8px 10px; }
   .jstop-txt b { font-size: 15px; }
+  .jrgrid { grid-template-columns: repeat(auto-fill, 60px); }
+  .jrboss-row { gap: 16px; }
+  .jrboss-opt { padding: 18px 10px; }
+  .jrboss-opt b { font-size: 15px; }
+  .jrboss-opt .jrslot.huge { width: 96px; height: 96px; }
+  .jrboss-opt .jrslot.huge .ico { width: 66px; height: 66px; }
 }
 
 .jend.win h2 { color: var(--good); }
 .jend.lose h2 { color: var(--bad); }
 @media (prefers-reduced-motion: reduce) {
   .jf, .jfloat, .jb-intro { animation: none !important; transition: none !important; }
+  .jrslot, .jrcard, .jrchest, .jrchest-svg, .jrboss-opt { animation: none !important; transition: none !important; }
 }

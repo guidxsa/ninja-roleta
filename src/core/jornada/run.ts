@@ -1,6 +1,6 @@
 // Estado da run da Jornada (docs/jornada/run.md): trilha ou mapa, equipe, ryō, relíquias, talentos, XP e
 // bolsa. Funções puras; a interface salva o estado no aparelho a cada parada (state/jornadaSave.ts).
-// Dois modos: canônica (trilha linear do Naruto) e genérica (mapa ramificado, classe, elemento sorteado).
+// Dois modos: História (trilha linear do Naruto) e Caminho Ninja (mapa ramificado, classe, elemento sorteado).
 import type { Difficulty } from '../difficulty';
 import { createRng, type Rng } from '../rng';
 import type { Element } from '../types';
@@ -13,7 +13,7 @@ import { canBuyTalent, type TalentContext } from './talents';
 import { isFight, teamFor, type FightKind, type StopDef } from './trail';
 import type { ConsumableId, FighterMods, JBattle } from './types';
 
-/** Protagonista da run canônica. */
+/** Protagonista da História. */
 export const HERO = 'naruto';
 export const MOVESET_SIZE = 4;
 export const CONSUMABLES: ConsumableId[] = ['hpKit', 'chakraKit', 'reviveKit'];
@@ -25,32 +25,32 @@ export interface MemberState {
 
 export interface JRun {
   version: 1;
-  /** Canônica (trilha linear do Naruto) ou genérica (mapa ramificado com classe). */
+  /** História (trilha linear do Naruto) ou Caminho Ninja (mapa ramificado com classe). */
   mode: 'canon' | 'generic';
   /** Personagem protagonista (naruto, commonNinja, prodigy...). */
   hero: string;
-  /** Classe escolhida (canônica: 'naruto'). */
+  /** Classe escolhida (História: 'naruto'). */
   classId: string;
-  /** Elemento sorteado por personagem (genérica: protagonista e suportes). */
+  /** Elemento sorteado por personagem (Caminho Ninja: protagonista e suportes). */
   elements: Record<string, Element | null>;
-  /** Genérica: segundo elemento do protagonista (Uchiha). */
+  /** Caminho Ninja: segundo elemento do protagonista (Uchiha). */
   secondElement: Element | null;
   /** Visual do protagonista (personalização liberada por easter egg, ex.: "sasuke"). */
   skin: string | null;
-  /** Genérica: suportes das lutas comuns. */
+  /** Caminho Ninja: suportes das lutas comuns. */
   supports: string[];
-  /** Genérica: mapa do estágio atual. */
+  /** Caminho Ninja: mapa do estágio atual. */
   map: StageMap | null;
-  /** Genérica: nó em que está (null = escolhendo o próximo). */
+  /** Caminho Ninja: nó em que está (null = escolhendo o próximo). */
   nodeId: string | null;
-  /** Genérica: nós já feitos no estágio. */
+  /** Caminho Ninja: nós já feitos no estágio. */
   path: string[];
-  /** Genérica: chefe sorteado de cada estágio (índice em `bosses`). */
+  /** Caminho Ninja: chefe sorteado de cada estágio (índice em `bosses`). */
   bossPlan: number[];
   seed: number;
   difficulty: Difficulty;
   stageIndex: number;
-  /** Canônica: parada da trilha. Genérica: quantos nós já fez no estágio. */
+  /** História: parada da trilha. Caminho Ninja: quantos nós já fez no estágio. */
   stopIndex: number;
   ryo: number;
   xp: number;
@@ -119,7 +119,7 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
   };
 }
 
-/** Run canônica do Naruto (docs/jornada/canonica.md). */
+/** História do Naruto (docs/jornada/historia.md). */
 export function newRun(seed: number, difficulty: Difficulty, data: JornadaData): JRun {
   return baseRun(seed, difficulty, HERO, data);
 }
@@ -135,7 +135,7 @@ export function drawElement(rng: Rng, data: JornadaData, allowNone: boolean): El
 }
 
 /**
- * Run genérica (docs/jornada/generica.md): sorteia o elemento do protagonista (o Comum sem elemento vira
+ * Run do Caminho Ninja (docs/jornada/caminho-ninja.md): sorteia o elemento do protagonista (o Comum sem elemento vira
  * prodígio) e o dos suportes, o chefe de cada estágio e o mapa do estágio 1.
  */
 /**
@@ -196,7 +196,7 @@ export function stopRng(run: JRun, salt = 0): Rng {
 // ---------------------------------------------------------------------------
 // Estágio e parada
 
-/** Estágio da run canônica (na genérica, `genericStage`). */
+/** Estágio da História (no Caminho Ninja, `genericStage`). */
 export const currentStage = (run: JRun, data: JornadaData) => data.stages[run.stageIndex]!;
 export const genericStage = (run: JRun, data: JornadaData) => data.generic.stages[run.stageIndex]!;
 export const stageCount = (run: JRun, data: JornadaData) => (run.mode === 'generic' ? data.generic.stages.length : data.stages.length);
@@ -210,7 +210,7 @@ export function currentStop(run: JRun, data: JornadaData): StopDef | null {
   return currentStage(run, data).stops[run.stopIndex] ?? null;
 }
 
-/** Na genérica: a run espera o jogador escolher o próximo nó do mapa. */
+/** No Caminho Ninja: a run espera o jogador escolher o próximo nó do mapa. */
 export const choosingNode = (run: JRun) => run.mode === 'generic' && run.status === 'inProgress' && !run.nodeId && !run.bossChoice;
 
 /** Nós que dá para escolher agora. */
@@ -225,7 +225,7 @@ function pickFrom<T>(list: readonly T[], rng: Rng): T {
   return list[Math.floor(rng() * list.length)]!;
 }
 
-/** Parada do nó atual da genérica. O desconhecido vira evento, luta, mercador ou tesouro. */
+/** Parada do nó atual do Caminho Ninja. O desconhecido vira evento, luta, mercador ou tesouro. */
 function stopFromNode(run: JRun, data: JornadaData): StopDef {
   const node = mapNode(run.map!, run.nodeId!);
   const stage = genericStage(run, data);
@@ -294,7 +294,7 @@ export function memberState(run: JRun, id: string, data: JornadaData): MemberSta
 export const elementOf = (run: JRun, id: string, data: JornadaData): Element | null =>
   id in run.elements ? (run.elements[id] ?? null) : (data.characters[id]?.element ?? null);
 
-/** Técnica de nível I do elemento sorteado (genérica). */
+/** Técnica de nível I do elemento sorteado (Caminho Ninja). */
 function elementBasic(run: JRun, id: string, data: JornadaData): string[] {
   const el = run.elements[id];
   return el ? [data.elementLines[el][0]] : [];
@@ -360,7 +360,7 @@ function memberSeed(run: JRun, id: string, data: JornadaData): FighterSeed {
   };
 }
 
-/** Suportes de uma luta: na canônica, os da parada ou do estágio; na genérica, os da run. */
+/** Suportes de uma luta: na História, os da parada ou do estágio; no Caminho Ninja, os da run. */
 export function fightTeam(run: JRun, stop: StopDef, data: JornadaData): string[] {
   return run.mode === 'generic' ? run.supports : teamFor(currentStage(run, data), stop);
 }
@@ -388,7 +388,7 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
 export const xpToNext = (level: number, data: JornadaData) => data.j.xp.base + data.j.xp.perLevel * (level - 1);
 
 function gainXp(run: JRun, xp: number, data: JornadaData): number {
-  const mult = ownedTalents(run, data).reduce((a, t) => a * (t.xpMult ?? 1), 1);
+  const mult = ownedTalents(run, data).reduce((a, t) => a * (t.xpMult ?? 1), 1) * relicDefs(run, data).reduce((a, r) => a * (r.xpMult ?? 1), 1);
   run.xp += Math.floor(xp * mult);
   let ups = 0;
   while (run.xp >= xpToNext(run.level, data)) {
@@ -492,7 +492,7 @@ function advanceStop(run: JRun, data: JornadaData): void {
   }
 }
 
-/** Genérica: fecha o nó atual; depois do chefe, gera o mapa do próximo estágio (ou é vitória). */
+/** Caminho Ninja: fecha o nó atual; depois do chefe, gera o mapa do próximo estágio (ou é vitória). */
 function advanceNode(run: JRun, data: JornadaData): void {
   const node = mapNode(run.map!, run.nodeId!);
   run.stopIndex++;
@@ -535,6 +535,8 @@ export function gainRelic(prev: JRun, relicId: string, data: JornadaData): JRun 
   run.relics.push(relicId);
   for (const [k, n] of Object.entries(def.grant?.items ?? {})) run.bag[k as ConsumableId] = (run.bag[k as ConsumableId] ?? 0) + (n ?? 0);
   run.willOfFire += def.grant?.willOfFire ?? 0;
+  run.ryo += def.grant?.ryo ?? 0;
+  run.talentPoints += def.grant?.talentPoints ?? 0;
   // HP a mais (bandana) entra cheio.
   if (def.stats?.hp && run.members[run.hero]) run.members[run.hero]!.hp += def.stats.hp;
   return run;
@@ -555,14 +557,16 @@ export interface ShopOffer {
   treatment: number;
 }
 
-/** Desconto do mercador: ajudar o Tazuna barateia o mercador do País das Ondas (canônica). */
-export function shopDiscount(run: JRun): number {
-  return run.mode === 'canon' && run.stageIndex === 0 && run.flags.includes('helpedTazuna') ? 0.2 : 0;
+/** Desconto do mercador: relíquias e, na História, ajudar o Tazuna (só no País das Ondas). Tem teto. */
+export function shopDiscount(run: JRun, data: JornadaData): number {
+  const tazuna = run.mode === 'canon' && run.stageIndex === 0 && run.flags.includes('helpedTazuna') ? 0.2 : 0;
+  const relics = relicDefs(run, data).reduce((a, r) => a + (r.shopDiscount ?? 0), 0);
+  return Math.min(data.j.shop.maxDiscount, tazuna + relics);
 }
 
 export function shopOffer(run: JRun, data: JornadaData): ShopOffer {
   const s = data.j.shop;
-  const off = 1 - shopDiscount(run);
+  const off = 1 - shopDiscount(run, data);
   const price = (n: number) => Math.floor(n * off);
   const ids = rollRelics(data.relics, run.relics, data.j.relics.shopWeights, s.relics, stopRng(run, 5));
   return {
