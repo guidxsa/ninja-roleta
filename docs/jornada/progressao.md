@@ -1,6 +1,6 @@
 # Progressão da Jornada
 
-> Run canônica implementada na v0.35.0 ([README.md](README.md)). Números em `src/data/jornada/balance.ts`.
+> História implementada na v0.35.0 ([README.md](README.md)). Números em `src/data/jornada/balance.ts`.
 
 ## XP e nível
 
@@ -28,7 +28,7 @@
 
 Por classe, reinicia a cada run; alguns ramos abrem pela história e outros por objetivos da conta. A do Naruto: [talentos.md](talentos.md).
 
-## Futuro (runs genéricas)
+## Futuro (Caminho Ninja)
 
 - Árvore por classe (Comum, prodígio, Uchiha, Hyuuga), com material já pronto: o kit do prodígio e a Palma do Vácuo do Hyuuga ([classes.md](classes.md)).
 - Sem bônus comprados entre runs, por enquanto.

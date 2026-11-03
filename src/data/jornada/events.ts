@@ -1,6 +1,6 @@
 import type { EventDef } from '../../core/jornada/events';
 
-// Eventos da run canônica (docs/jornada/canonica.md#eventos). Textos em strings/jornada.ts.
+// Eventos da História (docs/jornada/historia.md#eventos). Textos em strings/jornada.ts.
 // Marcas (`flag`) ligam um evento a outro: ajudar o Tazuna dá desconto no mercador do País das Ondas.
 
 export const events: EventDef[] = [
@@ -82,7 +82,7 @@ export const events: EventDef[] = [
   },
 ];
 
-/** Eventos das runs genéricas (docs/jornada/generica.md#eventos), sorteados pelo desconhecido. */
+/** Eventos do Caminho Ninja (docs/jornada/caminho-ninja.md#eventos), sorteados pelo desconhecido. */
 export const genericEvents: EventDef[] = [
   {
     id: 'gOldLady',

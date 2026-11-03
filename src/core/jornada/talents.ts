@@ -11,7 +11,7 @@ export interface TalentNode {
   /** Posição no ramo (1 = raiz). Cada nó pede o anterior do mesmo ramo. */
   tier: number;
   cost: number;
-  /** Estágio (índice) a partir do qual o ramo abre na run canônica. */
+  /** Estágio (índice) a partir do qual o ramo abre na História. */
   fromStage?: number;
   /** Conquista da conta que libera o nó de vez. */
   account?: string;

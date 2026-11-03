@@ -1,6 +1,6 @@
 import type { StageDef } from '../../core/jornada/trail';
 
-// Run canônica do Naruto (docs/jornada/canonica.md): os confrontos do mangá na ordem, com paradas entre eles.
+// História do Naruto (docs/jornada/historia.md): os confrontos do mangá na ordem, com paradas entre eles.
 // Linear: sem escolha de caminho. Os confrontos de história são `story` e o último de cada estágio é `boss`.
 
 export const stages: StageDef[] = [

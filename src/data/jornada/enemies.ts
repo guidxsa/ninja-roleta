@@ -1,6 +1,6 @@
 import type { EnemyDef } from '../../core/jornada/types';
 
-// Inimigos da run canônica (docs/jornada/inimigos.md). A dificuldade multiplica HP, ataques, resistências
+// Inimigos da História (docs/jornada/inimigos.md). A dificuldade multiplica HP, ataques, resistências
 // e dano base (`balance.difficulty`). Valores provisórios.
 
 const e = (

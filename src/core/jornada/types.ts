@@ -156,7 +156,7 @@ export interface Fighter {
   boost: (Boost & { techId: string }) | null;
 }
 
-/** Como a luta se vence (docs/jornada/canonica.md#vitórias-especiais). */
+/** Como a luta se vence (docs/jornada/historia.md#vitórias-especiais). */
 export type WinCondition =
   | { kind: 'defeatAll' }
   /** Levar o inimigo `target` (defId) a `pct` do HP máximo ou menos (sino do Kakashi). */

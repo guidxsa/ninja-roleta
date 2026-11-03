@@ -26,6 +26,7 @@ import { swish, land } from '../audio';
 import { esc, h, show, sleep } from '../dom';
 import { ELEMENT_COLORS, lines } from '../tips';
 import { tip } from '../tooltip';
+import { flashRelics, relicStrip, startRelics, winRelics } from './relics';
 import type { JornadaHost } from './host';
 
 const J = S.jornada;
@@ -153,6 +154,7 @@ export async function jornadaBattle(
   const root = show(
     h(`<div class="screen jbattle scene-${scene}">
       <div class="jb-head"><span>${icon('swords')} ${esc(label)}</span><span data-round></span></div>
+      ${run0.relics.length ? `<div class="jb-relics">${relicStrip(run0)}</div>` : ''}
       ${goal ? `<p class="jb-goal">${esc(goal)}</p>` : ''}
       <div class="jb-side jb-enemies" data-side="enemy"></div>
       <div class="jb-banner" aria-live="polite"></div>
@@ -420,6 +422,7 @@ export async function jornadaBattle(
   render(state);
   await sleep(host.instant() ? 150 : 900);
   root.querySelector('.jb-intro')?.remove();
+  await flashRelics(root, startRelics(run0), host.instant());
   await animate({ ...state, log: [] }, state);
   while (state.status === 'ongoing') {
     if (!awaitingPlayer(state)) break;
@@ -433,6 +436,7 @@ export async function jornadaBattle(
   const won = state.status === 'won';
   host.mood(won ? 'good' : 'bad');
   say(won ? B.won : B.lost, won ? '#4fc66a' : '#ef5350');
+  if (won) void flashRelics(root, winRelics(run0), host.instant());
   menu.innerHTML = '';
   await sleep(host.instant() ? 200 : 900);
   return { battle: state, run };

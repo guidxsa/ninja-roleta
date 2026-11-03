@@ -1,4 +1,4 @@
-// Simulação da run canônica da Jornada: um bot joga N runs por dificuldade e mostra onde elas param.
+// Simulação da História da Jornada: um bot joga N runs por dificuldade e mostra onde elas param.
 // Uso: `npm run sim:jornada -- [runs] [seed]`. O bot joga pior que um humano (não monta moveset, compra
 // sem planejar). Os números vão para o usuário decidir; nada é ajustado sozinho.
 import { chooseAiAction } from '../src/core/jornada/ai';
@@ -70,7 +70,7 @@ function spendTalents(run: JRun): JRun {
   }
 }
 
-/** Canônica ou genérica com a classe ('generic:uchiha'). */
+/** História ou Caminho Ninja com a classe ('generic:uchiha'). */
 type Mode = string;
 const UNLOCKED = new Set(['j_unlockUchiha', 'j_unlockHyuuga']);
 

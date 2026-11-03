@@ -1,8 +1,8 @@
-# Run canônica do Naruto
+# História do Naruto
 
 > Implementada na v0.35.0 ([README.md](README.md)). Dados em `src/data/jornada/stages.ts` e `events.ts`.
 
-A história do mangá, do Mizuki ao Vale do Fim. **Linear**: sem ramificação nem escolha de caminho (o mapa ramificado é das runs genéricas, [run.md](run.md#mapa-ramificado)). Liberada desde o início.
+A história do mangá, do Mizuki ao Vale do Fim. **Linear**: sem ramificação nem escolha de caminho (o mapa ramificado é do Caminho Ninja, [run.md](run.md#mapa-ramificado)). Liberada desde o início.
 
 ## Estágios
 

@@ -59,7 +59,7 @@ export const jornadaBalance = {
     bossChoices: 3,
   },
 
-  // Mapa ramificado das runs genéricas (docs/jornada/run.md#mapa-ramificado). 12 linhas: começo, 10 do meio, chefe.
+  // Mapa ramificado do Caminho Ninja (docs/jornada/run.md#mapa-ramificado). 12 linhas: começo, 10 do meio, chefe.
   map: {
     rows: 12,
     cols: 4,
@@ -72,7 +72,7 @@ export const jornadaBalance = {
     // Desconhecido: o que ele vira ao entrar.
     unknown: { event: 50, fight: 30, shop: 10, treasure: 10 },
   },
-  // Sorteio do elemento nas runs genéricas: peso de cada elemento e de nenhum (Comum sem elemento = prodígio).
+  // Sorteio do elemento no Caminho Ninja: peso de cada elemento e de nenhum (Comum sem elemento = prodígio).
   elementDraw: { element: 16, none: 20 },
 
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
@@ -84,6 +84,8 @@ export const jornadaBalance = {
     trainingPrice: 60,
     treatmentPrice: 30,
     treatmentHealPct: 0.5,
+    // Teto do desconto somado (relíquias + Tazuna).
+    maxDiscount: 0.4,
   },
 };
 

@@ -2,11 +2,11 @@
 
 > Comum e prodígio na v0.36.0; Uchiha, Hyuuga, versões suporte e o easter egg do Sasuke na v0.37.0 ([README.md](README.md)). Dados em `src/data/jornada/generic.ts` e `characters.ts`.
 
-As classes são as protagonistas das runs genéricas ([generica.md](generica.md)). Vêm das origens do Roleta ([origens.md](../base/origens.md)), com um corte: cada classe é uma árvore de talentos inteira ([talentos.md](talentos.md)).
+As classes são as protagonistas do Caminho Ninja ([caminho-ninja.md](caminho-ninja.md)). Vêm das origens do Roleta ([origens.md](../base/origens.md)), com um corte: cada classe é uma árvore de talentos inteira ([talentos.md](talentos.md)).
 
 ## Sorteio do elemento
 
-- Ao começar uma run genérica, um sorteio escondido (sem roleta na tela) define o elemento do protagonista: fogo, vento, raio, terra e água com peso 16 cada, e **nenhum** com peso 20 (20%) quando a classe permite.
+- Ao começar uma run do Caminho Ninja, um sorteio escondido (sem roleta na tela) define o elemento do protagonista: fogo, vento, raio, terra e água com peso 16 cada, e **nenhum** com peso 20 (20%) quando a classe permite.
 - **Comum sem elemento vira prodígio do taijutsu**: outra ficha (só taijutsu, mais HP e speed), outra árvore e a ativa Portões no lugar do Bunshin.
 - **Uchiha**: fogo fixo e um **segundo elemento** sorteado (pode sair nenhum; nunca fogo de novo). O nível I do segundo elemento também entra no kit.
 - **Hyuuga**: sorteia um elemento (nunca nenhum).
@@ -20,8 +20,8 @@ As classes são as protagonistas das runs genéricas ([generica.md](generica.md)
 |---|---|
 | Comum | Inicial |
 | Prodígio | Subclasse do Comum: o Comum que sai sem elemento |
-| Uchiha | Vencer uma run genérica no Médio ou acima com um Comum de fogo (conquista *Chama do clã*) |
-| Hyuuga | Vencer uma run genérica no Médio ou acima com o prodígio (conquista *Olhos abertos*) |
+| Uchiha | Vencer uma run do Caminho Ninja no Médio ou acima com um Comum de fogo (conquista *Chama do clã*) |
+| Hyuuga | Vencer uma run do Caminho Ninja no Médio ou acima com o prodígio (conquista *Olhos abertos*) |
 
 Na tela de início, a classe trancada aparece com cadeado e a condição.
 
