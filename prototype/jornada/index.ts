@@ -656,7 +656,7 @@ async function endScreen(host: JornadaHost, run: JRun): Promise<void> {
   const stop = currentStop(run, data);
   host.mood(won ? 'good' : 'bad');
   const root = show(h(`<div class="screen jend ${won ? 'win' : 'lose'}"><h2>${won ? U.victoryTitle : U.defeatTitle}</h2>
-    <div class="jstart-face">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'md')}</div>
+    <div class="jstart-face end-seal">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'md')}<span class="seal stamp end-stamp${won ? ' gold' : ''}" aria-hidden="true">${won ? '勝' : '敗'}</span></div>
     <p class="center">${won ? U.runWon : U.runLost(stop ? stopName(stop) : '')}</p>
     <p class="center muted">${U.runStats(run.stats.fights, run.stats.wins, run.level)}</p>
     ${run.relics.length ? `<div class="jrbar jrbar-end">${run.relics.map((id) => relicSlot(id, 'span')).join('')}</div>` : ''}

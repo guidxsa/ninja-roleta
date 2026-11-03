@@ -308,7 +308,7 @@ button[data-tip] { cursor: pointer; }
 }
 .modal-body h2 { margin: 0; }
 .modal-head { display: flex; align-items: center; gap: 10px; }
-.modal-head h2 { flex: 1; text-align: left; margin: 0; }
+.modal-head h2 { flex: 1; text-align: left; margin: 0; font-size: 22px; }
 .modal-head h2::after { display: none; }
 .btn.close { min-width: 40px; justify-content: center; }
 
