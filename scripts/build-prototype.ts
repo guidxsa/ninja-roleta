@@ -1,4 +1,6 @@
 // Gera dist/prototipo.html: um único arquivo, sem dependências, que abre direto no navegador.
+// O CSS vem de prototype/styles/index.css (camadas do design system), empacotado pelo esbuild com as
+// fontes embutidas como data URL (funciona offline; ver prototype/fonts/LEIAME.md).
 // Imagens próprias em public/img/ (ex.: public/img/viloes/zabuza.webp) são copiadas para dist/img/
 // e substituem os desenhos; sem elas, o protótipo usa só os SVG embutidos.
 // A música (public/audio/naruto_theme.mp3) vai embutida em base64, para o arquivo seguir único e offline.
@@ -34,11 +36,22 @@ const result = await build({
   define: { __IMAGES__: JSON.stringify(images), __MUSIC__: JSON.stringify(music), __VERSION__: JSON.stringify(version) },
 });
 
+const styles = await build({
+  entryPoints: ['prototype/styles/index.css'],
+  bundle: true,
+  write: false,
+  charset: 'utf8',
+  target: ['chrome105', 'safari15.4', 'firefox110'],
+  loader: { '.woff2': 'dataurl' },
+  logLevel: 'error',
+});
+
 const js = result.outputFiles[0]!.text.replace(/<\/script/gi, '<\\/script');
-const css = readFileSync('prototype/style.css', 'utf8');
+const css = styles.outputFiles[0]!.text.replace(/<\/style/gi, '<\\/style');
+// O script entra antes do estilo: um comentário do CSS com /*SCRIPT*/ não recebe o JS.
 const html = readFileSync('prototype/index.html', 'utf8')
-  .replace('/*STYLE*/', () => css)
-  .replace('/*SCRIPT*/', () => js);
+  .replace('/*SCRIPT*/', () => js)
+  .replace('/*STYLE*/', () => css);
 
 mkdirSync('dist', { recursive: true });
 writeFileSync('dist/prototipo.html', html);

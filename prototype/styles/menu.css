@@ -1,0 +1,138 @@
+/* Cabeçalho (barra de jogo) e tela inicial (Portão da Vila). */
+
+/* ---------------------------------------------------------------------------
+ * Barra de jogo: marca à esquerda, ferramentas em dois grupos (sistema | ninja), progresso em losangos.
+ */
+.top {
+  position: sticky; top: 0; z-index: 5;
+  width: 100%; max-width: 520px;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 8px 16px 8px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.top::after {
+  content: ''; position: absolute; left: 16px; right: 16px; bottom: -1px; height: 1px;
+  background: linear-gradient(90deg, var(--accent) 0 64px, transparent 64px);
+}
+.top-bar { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.brand .seal { --s: 30px; }
+.brand-name {
+  font: 400 17px/1 var(--font-display); letter-spacing: .03em; white-space: nowrap;
+  color: var(--text); text-shadow: var(--title-shadow);
+}
+.top-actions { display: flex; align-items: center; gap: 4px; }
+.tool-group { display: flex; align-items: center; gap: 2px; }
+.tool-group + .tool-group { padding-left: 5px; margin-left: 2px; border-left: 1px solid var(--line); }
+.top-actions .btn.small {
+  min-width: 36px; min-height: 36px; padding: 0; justify-content: center;
+  background: transparent; border-color: transparent; color: var(--muted);
+}
+.top-actions .btn.small:hover:not(:disabled) { color: var(--text); background: var(--surface-2); border-color: transparent; }
+.top-actions .btn .ico { width: 20px; height: 20px; }
+.top-actions .btn[aria-pressed='true'] { color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); }
+#instant-btn[aria-pressed='true'] { color: var(--gold-2); box-shadow: inset 0 -2px 0 var(--gold); }
+
+/* Progresso da campanha: linha com losangos (feito dourado, atual vermelho, a fazer vazado). */
+.dots { position: relative; display: flex; justify-content: space-between; align-items: center; height: 12px; padding: 0 2px; }
+.dots:empty { display: none; }
+.dots::before { content: ''; position: absolute; left: 4px; right: 4px; top: 50%; height: 1px; background: var(--line-strong); }
+.dots i {
+  position: relative; width: 8px; height: 8px; transform: rotate(45deg);
+  background: var(--bg); border: 1px solid var(--line-strong);
+}
+.dots i.done { background: var(--gold); border-color: var(--gold); }
+.dots i.current { width: 11px; height: 11px; background: var(--accent); border-color: var(--accent-2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+
+@media (max-width: 439px) {
+  .brand-name { display: none; }
+}
+@media (max-width: 360px) {
+  .top { padding-left: 10px; padding-right: 10px; }
+  .top-actions .btn.small { min-width: 33px; }
+}
+
+/* ---------------------------------------------------------------------------
+ * Portão da Vila: logo em letreiro de pincel, modos como faixas de pergaminho com selo, atalhos do registro.
+ */
+.gate { gap: 18px; padding-top: 6px; }
+.gate-head { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px 0 6px; }
+.gate-head .seal { --s: 48px; margin-bottom: 4px; }
+.logo {
+  margin: 0; line-height: .95; text-align: center; font: 400 54px/.95 var(--font-display);
+  transform: rotate(-2deg);
+}
+.logo span { display: block; }
+.logo .l1 { font-size: .62em; color: var(--text); letter-spacing: .12em; text-shadow: var(--title-shadow); }
+.logo .l2 {
+  color: var(--accent-2); letter-spacing: .02em;
+  -webkit-text-stroke: 2px var(--text); paint-order: stroke fill;
+  text-shadow: 4px 4px 0 var(--ink);
+}
+[data-theme='light'] .logo .l2 { -webkit-text-stroke-color: var(--ink); text-shadow: 3px 3px 0 color-mix(in srgb, var(--accent) 30%, transparent); }
+/* Pincelada atrás do logo. */
+.gate-head::before {
+  content: ''; position: absolute; left: 50%; top: 62%; width: min(340px, 92%); height: 46px; transform: translate(-50%, -50%) rotate(-3deg);
+  background: color-mix(in srgb, var(--accent-deep) 75%, transparent); z-index: -1;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 40' preserveAspectRatio='none'%3E%3Cpath d='M6 22C40 8 110 4 170 6s100 4 126 12c-6 10-40 16-100 17S50 36 12 34C2 32 0 26 6 22z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 40' preserveAspectRatio='none'%3E%3Cpath d='M6 22C40 8 110 4 170 6s100 4 126 12c-6 10-40 16-100 17S50 36 12 34C2 32 0 26 6 22z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+.gate-sub {
+  margin: 10px 0 0; font: 600 14px/1 var(--font-hud); letter-spacing: .3em; text-transform: uppercase; color: var(--gold);
+  display: flex; align-items: center; gap: 10px;
+}
+.gate-sub::before, .gate-sub::after { content: ''; width: 34px; height: 1px; background: var(--gold-deep); }
+
+.gate-modes { display: flex; flex-direction: column; gap: 12px; }
+/* Faixa de pergaminho: selo à esquerda, nome em letreiro, descrição, seta; a barra vermelha entra no foco. */
+.jmode {
+  --frame: var(--line-strong);
+  --tab: transparent;
+  --fill: var(--surface);
+  position: relative; isolation: isolate; overflow: hidden;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
+  width: 100%; text-align: left; padding: 16px 16px 16px 18px; cursor: pointer;
+  border: 0; background: none; color: var(--text); font: inherit;
+  transition: transform var(--dur-2) var(--ease);
+}
+.jmode::before, .jmode::after {
+  content: ''; position: absolute; z-index: -1; pointer-events: none;
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+}
+.jmode::before { inset: 0; background: var(--frame); transition: background var(--dur-2); }
+.jmode::after {
+  inset: 1px; transition: background-size var(--dur-3) var(--ease);
+  background:
+    linear-gradient(var(--accent), var(--accent)) 0 0 / 4px 100% no-repeat,
+    var(--grain), var(--fill);
+}
+.jmode:hover, .jmode:focus-visible { --frame: var(--gold); outline: none; }
+.jmode:hover::after, .jmode:focus-visible::after { background-size: 7px 100%, auto, auto; }
+.jmode:active { transform: translateY(1px); }
+.jmode .seal { --s: 50px; transition: transform var(--dur-2) var(--ease); }
+.jmode:hover .seal, .jmode:focus-visible .seal { transform: rotate(0deg) scale(1.05); }
+.jmode b { display: block; font: 400 25px/1.1 var(--font-display); letter-spacing: .02em; text-shadow: var(--title-shadow); }
+.jmode small { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.jmode > .ico { width: 22px; height: 22px; color: var(--gold); transition: transform var(--dur-2) var(--ease); }
+.jmode:hover > .ico { transform: translateX(3px); }
+.jmode .ico.lead { width: 40px; height: 40px; color: var(--accent); }
+
+/* Atalhos do registro ninja: linha discreta de entradas com kanji, sem cara de botão colorido. */
+.gate-links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.gate-link {
+  display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px;
+  border: 0; background: var(--surface); color: var(--text); cursor: pointer; text-align: left;
+  font: 600 15px/1.1 var(--font-hud); letter-spacing: .06em; text-transform: uppercase;
+  transition: background var(--dur-1), color var(--dur-1);
+}
+.gate-link .kanji { width: 28px; font-size: 22px; color: var(--accent-2); text-align: center; transition: transform var(--dur-2) var(--ease); }
+.gate-link .kanji.two { font-size: 14px; line-height: 1; writing-mode: vertical-rl; text-orientation: upright; height: 2.2em; display: inline-flex; align-items: center; justify-content: center; }
+.gate-link:hover, .gate-link:focus-visible { background: var(--surface-2); outline: none; }
+.gate-link:hover .kanji { transform: scale(1.12); }
+.gate-foot { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
+
+@media (min-width: 900px) {
+  body.mode-jornada .jmodes { max-width: 620px; margin: 0 auto; width: 100%; }
+}

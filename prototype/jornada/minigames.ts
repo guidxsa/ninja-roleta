@@ -4,6 +4,7 @@ import type { Minigame } from '../../src/core/jornada/events';
 import { checkSequence, jokenpo, memoryDeck, sealSequence, type Hand, type Seal } from '../../src/core/jornada/minigames';
 import type { Rng } from '../../src/core/rng';
 import { ptBR as S } from '../../src/data/strings/ptBR';
+import { icon } from '../art';
 import { h, sleep } from '../dom';
 
 const M = S.jornada.minigames;
@@ -96,7 +97,7 @@ async function seals(slot: HTMLElement, data: JornadaData, rng: Rng, instant: bo
 function rps(slot: HTMLElement, rng: Rng): Promise<boolean> {
   const hands: Hand[] = ['rock', 'paper', 'scissors'];
   const box = h(`<div class="mg"><h3>${M.jokenpoTitle}</h3><p class="muted small">${M.jokenpoHelp}</p>
-    <div class="mg-duel"></div><div class="row center-row">${hands.map((x) => `<button class="btn big-hand" data-h="${x}">${S.handIcons[x]}</button>`).join('')}</div></div>`);
+    <div class="mg-duel"></div><div class="row center-row">${hands.map((x) => `<button class="btn big-hand" data-h="${x}">${icon(x)}</button>`).join('')}</div></div>`);
   slot.replaceChildren(box);
   const duel = box.querySelector<HTMLElement>('.mg-duel')!;
   return new Promise((resolve) => {
@@ -105,7 +106,7 @@ function rps(slot: HTMLElement, rng: Rng): Promise<boolean> {
       if (!b) return;
       const choice = b.dataset.h as Hand;
       const r = jokenpo(choice, rng);
-      duel.innerHTML = `<b>${S.handIcons[choice]}</b><span>vs</span><b>${S.handIcons[r.other]}</b>`;
+      duel.innerHTML = `<b>${icon(choice)}</b><span>vs</span><b>${icon(r.other)}</b>`;
       if (r.result === 'tie') return;
       box.querySelectorAll('button').forEach((x) => x.setAttribute('disabled', ''));
       resolve(r.result === 'win');

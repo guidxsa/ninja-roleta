@@ -1,0 +1,24 @@
+/* Registro ninja (perfil): abas, histórico, conquistas e Livro Bingo; e a janela de Reportar. */
+.profile-tabs { position: sticky; top: -16px; background: var(--surface); z-index: 1; padding-top: 4px; }
+.profile-body { display: flex; flex-direction: column; gap: 8px; }
+.ach-cat {
+  display: flex; align-items: center; gap: 10px; margin: 10px 0 2px;
+  font: 700 14px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); text-align: left;
+}
+.ach-cat::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.ach-list, .bingo, .history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
+.ach, .bingo-card, .history li { display: flex; gap: 12px; align-items: center; padding: 9px 4px; border-bottom: 1px solid var(--line); }
+.history li { flex-direction: column; align-items: stretch; gap: 3px; }
+.ach > span:last-child, .bingo-card > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ach b, .bingo-card b { font: 700 16px/1.2 var(--font-hud); letter-spacing: .02em; }
+.ach.off { opacity: .58; }
+.ach-ico { flex: none; }
+.ach-ico.seal { --s: 34px; }
+.bingo-card .portrait { flex: none; width: 46px; height: 46px; }
+.bingo-card.unknown .portrait { filter: brightness(0); opacity: .55; }
+
+.report textarea {
+  width: 100%; background: var(--surface-2); color: inherit; border: 1px solid var(--line-strong); border-radius: var(--radius);
+  padding: 8px 10px; font: inherit; resize: vertical;
+}
+.report .report-text { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }

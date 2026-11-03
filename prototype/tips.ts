@@ -16,11 +16,11 @@ const BEATEN_BY = Object.fromEntries(Object.entries(BEATS).map(([a, b]) => [b, a
 
 /** Cores dos elementos (fatias, chips e células de técnica). */
 export const ELEMENT_COLORS: Record<Element, string> = {
-  fire: '#e8452c',
-  wind: '#3fae6a',
-  lightning: '#e6b91e',
-  earth: '#a5723f',
-  water: '#2f80dc',
+  fire: '#cf5530',
+  wind: '#5f9a74',
+  lightning: '#cfae48',
+  earth: '#9c7446',
+  water: '#3f7bbd',
 };
 
 export const ELEMENT_ICON: Record<Element, string> = {

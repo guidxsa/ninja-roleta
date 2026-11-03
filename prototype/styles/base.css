@@ -1,0 +1,85 @@
+/* Base: reset, fundo com textura, escala tipográfica e utilitários. */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+[hidden] { display: none !important; }
+body {
+  color: var(--text);
+  font: 15px/1.5 var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--bg);
+  /* Carvão com grão de papel e vinheta: a luz vem do centro, as bordas somem no escuro. */
+  background-image:
+    var(--grain),
+    radial-gradient(ellipse 120% 80% at 50% 0%, var(--bg-2) 0%, var(--bg) 70%);
+  background-attachment: fixed;
+}
+/* Serra em nanquim ao pé da tela, fixa atrás de tudo: a vila vista de longe. */
+body::after {
+  content: ''; position: fixed; pointer-events: none; z-index: -1;
+  left: 0; right: 0; bottom: 0; height: 150px; opacity: .55;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 100' preserveAspectRatio='none'%3E%3Cpath d='M0 100V64l34-18 22 9 38-30 30 20 26-9 40 25 36-30 44 24 30-13 46 26 54-18v50z' fill='%23000' fill-opacity='.45'/%3E%3Cpath d='M0 100V80l56-12 46 11 58-16 46 13 66-15 58 15 70-9v33z' fill='%23000' fill-opacity='.6'/%3E%3C/svg%3E") bottom / 100% 100% no-repeat;
+}
+[data-theme='light'] body::after { opacity: .1; }
+
+/* Escala tipográfica: letreiro (pincel), título de seção (condensada), texto. */
+h1, h2, h3 { margin: 0 0 8px; line-height: 1.15; font-weight: 400; overflow-wrap: break-word; }
+h1, h2 { font-family: var(--font-display); letter-spacing: .02em; }
+h1 { font-size: 46px; text-align: center; }
+h2 {
+  font-size: 25px; text-align: center; color: var(--text);
+  text-shadow: var(--title-shadow);
+}
+/* Pincelada vermelha sob o título de tela. */
+.screen > h2::after, .screen > header > h2::after, .modal-body > h2::after {
+  content: ''; display: block; height: 7px; width: min(180px, 60%); margin: 6px auto 0;
+  background: var(--accent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5.5C30 2 70 1.5 110 2.6S176 4 198 2.4l-1 2.6C170 7 120 6.4 80 6.6S20 7.4 2 5.5z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5.5C30 2 70 1.5 110 2.6S176 4 198 2.4l-1 2.6C170 7 120 6.4 80 6.6S20 7.4 2 5.5z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+h3 {
+  font-family: var(--font-hud); font-weight: 700; font-size: 17px; text-align: center;
+  text-transform: uppercase; letter-spacing: .07em;
+}
+p { margin: 6px 0; }
+small, .small { font-size: 12px; }
+b, strong { font-weight: 700; }
+.muted { color: var(--muted); }
+.center { text-align: center; }
+.row { display: flex; align-items: center; gap: 8px; }
+.between { justify-content: space-between; }
+.pre { white-space: pre-line; }
+.kanji { font-family: var(--font-kanji); font-weight: 400; line-height: 1; font-style: normal; }
+.num { font-family: var(--font-hud); font-variant-numeric: tabular-nums; }
+
+main { width: 100%; max-width: 520px; padding: 14px 16px 24px; flex: 1; }
+footer {
+  padding: 12px 16px 20px; color: var(--muted); text-align: center; max-width: 520px;
+  font-family: var(--font-hud); letter-spacing: .03em;
+}
+.screen { display: flex; flex-direction: column; gap: 12px; animation: screenIn var(--dur-3) var(--ease); }
+
+/* Movimentos com intenção (cada um tem um papel; nada de pulso infinito). */
+@keyframes screenIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes pop { from { transform: scale(.92); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes stamp {
+  0% { transform: scale(1.8) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(.94) rotate(-3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-3deg); opacity: 1; }
+}
+@keyframes unroll { from { clip-path: inset(0 50% 0 50%); } to { clip-path: inset(0 0 0 0); } }
+@keyframes slideUp { from { transform: translateY(18px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--gold) 60%, transparent); }
+  100% { box-shadow: 0 0 0 10px transparent; }
+}
+@keyframes shake { 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+@keyframes floatUp { from { translate: 0 8px; opacity: 0; } 15% { opacity: 1; } to { translate: 0 -30px; opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

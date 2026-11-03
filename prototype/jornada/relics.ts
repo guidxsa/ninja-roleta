@@ -95,7 +95,7 @@ export async function flashRelics(root: ParentNode, ids: readonly string[], inst
 export function relicsModal(run: JRun, focus?: string): void {
   const groups = TIERS.map((t) => ({ t, ids: run.relics.filter((id) => relicTier(id) === t) })).filter((g) => g.ids.length);
   const el = h(`<div class="modal"><div class="modal-body jmodal jrpanel">
-    <div class="row between"><h2>${U.relicsTitle} <small class="muted">${U.relicsCount(run.relics.length)}</small></h2><button class="btn small" data-close>✕</button></div>
+    <div class="modal-head"><h2>${U.relicsTitle} <small class="muted">${U.relicsCount(run.relics.length)}</small></h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
     ${run.relics.length ? '' : `<p class="muted">${U.noRelics}</p>`}
     ${groups
       .map(

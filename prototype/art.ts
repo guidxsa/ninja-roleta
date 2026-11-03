@@ -108,7 +108,39 @@ const ICONS: Record<string, string> = {
   share: '<g fill="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/></g><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4" stroke="currentColor" stroke-width="2" fill="none"/>',
   info: 
 '<circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 10.5V17" stroke="#000a" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.2" r="1.5" fill="#000a"/>',
+  // Interface (traçado de check, x, cadeado e seta baseado no Lucide, licença ISC: https://lucide.dev)
+  check: '<path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
+  close: '<path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+  lock: '<rect x="4" y="11" width="16" height="10.5" rx="1.5" fill="currentColor"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="16" r="1.6" fill="#0008"/>',
+  chevron: '<path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+  advantage: '<path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>',
+  disadvantage: '<path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>',
+  book: '<path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H19v15H6a2 2 0 0 0-2 2z" fill="currentColor"/><path d="M4 20a2 2 0 0 0 2 2h13v-4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 7h7M8.5 10.5h7" stroke="#0008" stroke-width="1.5" stroke-linecap="round"/>',
+  medal: '<path d="M7 2h4l2 6H9zM13 2h4l-2 6h-4z" fill="currentColor" opacity=".65"/><circle cx="12" cy="15" r="6.5" fill="currentColor"/><path d="m12 11.3 1.1 2.3 2.5.3-1.8 1.7.5 2.5-2.3-1.2-2.3 1.2.5-2.5-1.8-1.7 2.5-.3z" fill="#0007"/>',
+  sparkle: '<path d="M12 2c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z" fill="currentColor"/><path d="M19 15c.3 2 1 2.7 3 3-2 .3-2.7 1-3 3-.3-2-1-2.7-3-3 2-.3 2.7-1 3-3z" fill="currentColor" opacity=".7"/>',
+  card: '<rect x="3" y="5" width="11" height="15" rx="1" transform="rotate(-10 8.5 12.5)" fill="currentColor" opacity=".5"/><rect x="9" y="3" width="11" height="15" rx="1" transform="rotate(8 14.5 10.5)" fill="currentColor"/><circle cx="14.6" cy="10.6" r="2.4" fill="none" stroke="#0008" stroke-width="1.4"/>',
+  heart: '<path d="M12 21S3 15 3 8.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 9 2.5C21 15 12 21 12 21z" fill="currentColor"/>',
+  block: '<circle cx="12" cy="12" r="9.5" fill="currentColor"/><rect x="6" y="10.5" width="12" height="3" fill="#0009"/>',
+  // Jokenpô
+  rock: '<path d="M5 11a2 2 0 0 1 2-2h1V8a2 2 0 0 1 4 0 2 2 0 0 1 4 0v1a2 2 0 0 1 3 1.7V15a7 7 0 0 1-7 7h-1a6 6 0 0 1-6-6z" fill="currentColor"/><path d="M8 9v4M12 8v4.5M16 9v4" stroke="#0006" stroke-width="1.3" stroke-linecap="round"/><path d="M5 14c2 0 4 .6 5 2" stroke="#0006" stroke-width="1.3" fill="none" stroke-linecap="round"/>',
+  paper: '<g fill="currentColor"><rect x="6.2" y="5" width="2.8" height="10" rx="1.4"/><rect x="9.6" y="2.5" width="2.8" height="11" rx="1.4"/><rect x="13" y="3.5" width="2.8" height="10" rx="1.4"/><rect x="16.4" y="6" width="2.8" height="9" rx="1.4"/><path d="M6.2 12h13v3.5a6.5 6.5 0 0 1-6.5 6.5h-.5a6 6 0 0 1-4.6-2.2L3.4 15.4a1.6 1.6 0 0 1 2.4-2z"/></g>',
+  scissors: '<g fill="currentColor"><rect x="7" y="2.5" width="3" height="11" rx="1.5" transform="rotate(-12 8.5 8)"/><rect x="12.4" y="2.5" width="3" height="11" rx="1.5" transform="rotate(12 13.9 8)"/><path d="M6 12.5h12v3a6.5 6.5 0 0 1-6.5 6.5h-.5A5.5 5.5 0 0 1 6 16.5z"/></g><path d="M9 14.8h7" stroke="#0006" stroke-width="1.3" stroke-linecap="round"/>',
+  // Log de combate (no lugar dos emojis)
+  mind: '<path d="M13 2a8 8 0 0 1 8 8c0 2.5-1 4-2 5v6h-7v-3H8.5A2.5 2.5 0 0 1 6 15.5V13l-2-1 2.4-4A8 8 0 0 1 13 2z" fill="currentColor"/><path d="M13.5 10a1 1 0 1 1 1-1 2 2 0 1 1-2 2 3 3 0 1 1 3-3" fill="none" stroke="#0008" stroke-width="1.4" stroke-linecap="round"/>',
+  blast: '<path d="M12 1.5 14 8l5.5-3.5L17 10.5l5.5 1.5-5.5 2 3 5.5-5.8-2.6L12 22.5l-2.2-5.6L4 19.5l3-5.5-5.5-2 5.5-1.5L4.5 4.5 10 8z" fill="currentColor"/><circle cx="12" cy="12" r="3" fill="#0005"/>',
+  antlers: '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 21V14C10 10 6 9 5 4M7.5 10.5 3.5 9M8.2 6.6 9.5 3"/><path d="M14 21V14c0-4 4-5 5-10M16.5 10.5l4-1.5M15.8 6.6 14.5 3"/></g>',
+  gourd: '<path d="M10.5 2h3v2.2c0 .8.6 1.3 1.2 1.8a3.6 3.6 0 0 1-.4 5.6A6 6 0 1 1 9.7 11.6a3.6 3.6 0 0 1-.4-5.6c.6-.5 1.2-1 1.2-1.8z" fill="currentColor"/><path d="M8.6 11.6h6.8" stroke="#0007" stroke-width="1.6"/>',
+  steam: '<path d="M8 3c-2 2.5 2 3.5 0 6M12 2c-2 2.5 2 3.5 0 6M16 3c-2 2.5 2 3.5 0 6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M3 12h18a9 9 0 0 1-18 0z" fill="currentColor"/>',
+  sprout: '<path d="M12 22v-9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 13C12 8 9 5 3.5 5c0 5.5 3.5 8 8.5 8zM12 11c0-4 2.5-7 8.5-7 0 5-3 7-8.5 7z" fill="currentColor"/>',
+  tree: '<path d="M12 2c4.5 0 7 3 7 6.5 2 1 2.5 3 2 4.5-.6 2.2-3 3-5 3H8c-2 0-4.4-.8-5-3-.5-1.5 0-3.5 2-4.5C5 5 7.5 2 12 2z" fill="currentColor"/><path d="M12 16v6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M12 15l-3-2.5M12 13l2.5-2" stroke="#0006" stroke-width="1.6" stroke-linecap="round"/>',
+  bug: '<ellipse cx="12" cy="14" rx="6" ry="7.5" fill="currentColor"/><circle cx="12" cy="5.5" r="2.6" fill="currentColor"/><path d="M12 7.5v13" stroke="#0007" stroke-width="1.2"/><path d="M6.5 10 3 8M6 14H2.5M6.5 18 3 20.5M17.5 10 21 8M18 14h3.5M17.5 18l3.5 2.5M10.5 3.5 9 1.5M13.5 3.5 15 1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  ice: '<g stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"><path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7"/><path d="M9.5 3.5 12 6l2.5-2.5M9.5 20.5 12 18l2.5 2.5M3.6 10.4 7 9.5 6 6M20.4 13.6 17 14.5l1 3.5M3.6 13.6 7 14.5l-1 3.5M20.4 10.4 17 9.5 18 6"/></g>',
 };
+
+/** Diz se o ícone existe (o `icon()` cai no neutro sem avisar). */
+export function hasIcon(name: string): boolean {
+  return name in ICONS;
+}
 
 export function icon(name: string, cls = ''): string {
   const body = ICONS[name] ?? ICONS.neutral!;

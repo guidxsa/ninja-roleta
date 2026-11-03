@@ -87,6 +87,15 @@ Quando o design mudar antes do código, listar aqui o que falta implementar.
 /tests         # testes do core
 ```
 
+## Interface (design system "Shinobi")
+
+- Estilos em `prototype/styles/` (camadas: `tokens.css` → `fonts.css` → `base.css` → `components.css` → telas); o build junta tudo com o esbuild e embute as fontes.
+- Cores, fontes, durações e forma só por tokens (`var(--...)`); os temas escuro (Sumi) e claro (Pergaminho) trocam só os tokens.
+- **Nada de emoji como ícone**: ícones são SVG do `ICONS` em `prototype/art.ts` (`icon(nome)`); ícone novo entra lá, no mesmo traço 24×24 em `currentColor`. A exceção é o texto de compartilhar (vai para o WhatsApp).
+- Forma: cantos retos (`--radius: 2px`) e chanfro (`--cut`) nos painéis; o chanfro fica nas camadas `::before`/`::after`, nunca no elemento (cortaria números flutuantes e o foco).
+- Pincel (`--font-display`) só em letreiro grande (logo, título de tela, nomes, chamada de jutsu); texto em `--font-body`; números e rótulos em `--font-hud`. Kanji de selo em `--font-kanji`: kanji novo precisa entrar no recorte (`prototype/fonts/LEIAME.md`).
+- Ids, `data-*` e classes que o TS consulta (`.primary` dos botões de roleta, `.jf`, `.sticky-cta`...) são contrato: mudar o visual não pode mexer neles.
+
 ## Convenções
 
 - Idioma do código e dos commits: _definir (PT-BR ou EN)_.

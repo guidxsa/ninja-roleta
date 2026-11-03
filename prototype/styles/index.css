@@ -1,0 +1,18 @@
+/*
+ * Ninja Roleta: folhas de estilo em camadas (o build junta tudo com o esbuild, na ordem abaixo).
+ * tokens → fontes → base → componentes → telas. Telas só usam tokens e componentes.
+ */
+@import './tokens.css';
+@import './fonts.css';
+@import './base.css';
+@import './components.css';
+@import './menu.css';
+@import './wheel.css';
+@import './campaign.css';
+@import './battle.css';
+@import './sheet.css';
+@import './profile.css';
+@import './jornada.css';
+@import './jornada-battle.css';
+@import './minigames.css';
+@import './instant.css';

@@ -1,0 +1,344 @@
+/* Componentes do design system: ícone, botões, painel, selo, divisória, etiquetas, barras, abas, dica, janelas. */
+
+/* Ícones SVG (art.ts): seguem a cor do texto, alinhados à linha. */
+.ico { width: 1.15em; height: 1.15em; flex: none; vertical-align: -.2em; display: inline-block; }
+.ico.clan { width: 1.25em; height: 1.25em; }
+
+/* ---------------------------------------------------------------------------
+ * Botões. Hierarquia: primário (laca vermelha chanfrada), secundário (grafite com filete),
+ * pequeno/ícone (HUD) e as variações de tela (act, seg, focus...).
+ */
+.btn {
+  appearance: none; position: relative;
+  border: 1px solid var(--line-strong); border-radius: var(--radius);
+  background: var(--surface-2); color: var(--text);
+  padding: 11px 14px; min-height: 48px;
+  font: 700 15px/1.25 var(--font-body); cursor: pointer;
+  transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1), transform var(--dur-1), opacity var(--dur-2);
+  -webkit-touch-callout: none; user-select: none;
+}
+.btn:hover:not(:disabled):not([aria-disabled='true']) { border-color: var(--gold); background: var(--surface-3); }
+.btn:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
+.btn:active:not(:disabled):not([aria-disabled='true']) { transform: translateY(1px); background: var(--surface-3); }
+.btn:disabled, .btn[aria-disabled='true'] { opacity: .4; cursor: default; filter: saturate(.3); }
+.btn .ico { width: 1.2em; height: 1.2em; }
+
+.btn.primary {
+  border: 0; background: var(--accent); color: var(--accent-ink);
+  font-family: var(--font-hud); font-weight: 700; font-size: 18px; letter-spacing: .08em; text-transform: uppercase;
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+  /* Filete dourado interno: a moldura da laca. */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold-2) 55%, transparent), inset 0 -3px 0 color-mix(in srgb, var(--accent-deep) 70%, transparent);
+}
+.btn.primary:hover:not(:disabled):not([aria-disabled='true']) { background: var(--accent-2); }
+/* O chanfro corta o contorno de foco: o anel vai por dentro. */
+.btn.primary:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--gold-2), inset 0 0 0 4px var(--accent-deep); }
+.btn.primary:active:not(:disabled):not([aria-disabled='true']) { background: var(--accent-deep); }
+.btn.big { width: 100%; font-size: 18px; min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.btn.small {
+  min-height: 36px; padding: 4px 10px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  font: 600 15px/1 var(--font-hud); letter-spacing: .05em; text-transform: uppercase;
+}
+.btn.spin { display: flex; align-items: center; justify-content: center; margin: 4px auto 10px; min-width: 170px; }
+.actions-row { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }
+.actions-row .btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.sticky-cta { position: sticky; bottom: 12px; z-index: 3; padding-top: 4px; }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+.btn.ghost:hover:not(:disabled) { color: var(--text); background: transparent; border-color: transparent; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 4px; }
+
+.toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+/* ---------------------------------------------------------------------------
+ * Painel laqueado: grafite, cantos chanfrados, filete de aço (o chanfro também tem filete,
+ * desenhado pela camada de baixo) e uma aba vermelha curta no topo marcando o dono.
+ */
+/* O chanfro fica só nas camadas de fundo (::before = filete, ::after = laca): o conteúdo não é cortado
+   (números flutuantes, selos de quantidade, contorno de foco). */
+.card, .panel, .chamfer {
+  --frame: var(--line-strong);
+  --tab: var(--accent);
+  --fill: var(--surface);
+  position: relative; isolation: isolate;
+}
+.card, .panel { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.card::before, .panel::before, .chamfer::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--frame);
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+}
+.card::after, .panel::after, .chamfer::after {
+  content: ''; position: absolute; inset: 1px; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(var(--tab), var(--tab)) calc(var(--cut) + 5px) 0 / 36px 2px no-repeat,
+    var(--grain), var(--fill);
+  clip-path: polygon(calc(var(--cut) - .5px) 0, 100% 0, 100% calc(100% - var(--cut) + .5px), calc(100% - var(--cut) + .5px) 100%, 0 100%, 0 calc(var(--cut) - .5px));
+}
+.card .name { font-size: 17px; }
+.card.pulse { animation: cardFlash .8s var(--ease); }
+@keyframes cardFlash { 0% { filter: brightness(1.35); } 100% { filter: none; } }
+
+/* Título de seção: rótulo condensado entre filetes, com losango (divisória com função de cabeçalho). */
+.sec-title {
+  display: flex; align-items: center; gap: 10px; margin: 6px 0 2px;
+  font: 700 14px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--gold);
+}
+.sec-title::before, .sec-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line-strong)); }
+.sec-title::after { background: linear-gradient(90deg, var(--line-strong), transparent); }
+.rule { height: 1px; border: 0; margin: 4px 0; background: var(--line); position: relative; overflow: visible; }
+.rule::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
+  transform: rotate(45deg); background: var(--bg); border: 1px solid var(--gold);
+}
+
+/* Selo (hanko): quadrado laqueado com kanji em pincel, levemente torto como carimbo. */
+.seal {
+  --s: 40px;
+  display: inline-grid; place-items: center; flex: none; width: var(--s); height: var(--s);
+  background: var(--grain-dark), var(--accent); color: var(--accent-ink);
+  font: 400 calc(var(--s) * .64)/1 var(--font-kanji);
+  border-radius: 3px; transform: rotate(-3deg);
+  box-shadow: inset 0 0 0 2px var(--accent), inset 0 0 0 3px color-mix(in srgb, var(--accent-ink) 70%, transparent);
+}
+.seal.two { writing-mode: vertical-rl; font-size: calc(var(--s) * .4); letter-spacing: -.04em; }
+.seal.gold { background: var(--grain-dark), var(--gold); color: var(--ink); box-shadow: inset 0 0 0 2px var(--gold), inset 0 0 0 3px color-mix(in srgb, var(--ink) 55%, transparent); }
+.seal.ghost { background: transparent; color: var(--line-strong); box-shadow: inset 0 0 0 1.5px var(--line-strong); }
+.seal.stamp { animation: stamp .45s var(--ease) both; }
+
+/* ---------------------------------------------------------------------------
+ * Etiquetas (antes pílulas): retas, condensadas, cor só no filete e no ícone.
+ */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px; max-width: 100%;
+  padding: 1px 7px; border-radius: var(--radius);
+  font: 600 13px/1.4 var(--font-hud); letter-spacing: .03em; white-space: nowrap;
+  background: color-mix(in srgb, var(--surface-3) 70%, transparent); border: 1px solid var(--line-strong); color: var(--text);
+  -webkit-touch-callout: none;
+}
+.chip .ico { width: 14px; height: 14px; }
+.chip.el { background: color-mix(in srgb, var(--c) 14%, transparent); border-color: color-mix(in srgb, var(--c) 65%, transparent); }
+.chip.el .ico { color: var(--c); }
+.chip.jin { background: color-mix(in srgb, var(--jin) 14%, transparent); border-color: var(--jin); }
+.chip.good { background: color-mix(in srgb, var(--good) 12%, transparent); border-color: color-mix(in srgb, var(--good) 70%, transparent); }
+.chip.bad { background: color-mix(in srgb, var(--bad) 12%, transparent); border-color: color-mix(in srgb, var(--bad) 70%, transparent); }
+.chip.good .ico { color: var(--good); }
+.chip.bad .ico { color: var(--bad); }
+.chip.jin .ico { color: var(--jin); }
+.chip.lvl-chip { background: transparent; border-color: var(--gold); color: var(--gold-2); }
+.chip.diff-easy { border-color: var(--leaf); color: var(--leaf); }
+.chip.diff-normal { border-color: var(--gold); color: var(--gold-2); }
+.chip.diff-hard { border-color: var(--accent); color: var(--foe); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.chip.diff-hardcore { border-color: var(--accent); color: var(--accent-ink); background: var(--accent); }
+.chip.tier-2 { border-color: var(--ck); color: var(--ck-2); }
+.chip.tier-3 { border-color: var(--gold); color: var(--gold-2); }
+.chip.st-victory { border-color: var(--good); color: var(--good); }
+.chip.st-defeat { border-color: var(--bad); color: var(--bad); }
+.chip.st-abandoned { color: var(--muted); }
+.chip.st-reroll { color: var(--muted); border-style: dashed; }
+.chip.origin-chip { font-size: 14px; padding: 2px 9px; }
+.chip.origin-chip .ico { width: 16px; height: 16px; }
+.chips-line { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; min-height: 24px; }
+.chips-left { display: flex; flex-wrap: wrap; gap: 4px; }
+.badge {
+  display: inline-grid; place-items: center; min-width: 18px; padding: 0 4px; border-radius: var(--radius);
+  background: var(--accent); color: var(--accent-ink); font: 700 12px/1.4 var(--font-hud);
+}
+[data-tip] { cursor: help; }
+button[data-tip] { cursor: pointer; }
+.tip-on:not(button) { outline: 1px solid var(--gold-2); outline-offset: 1px; }
+.pop { animation: pop var(--dur-3) var(--ease); }
+
+/* ---------------------------------------------------------------------------
+ * Dica: tira de pergaminho com título em vermelho, sem cantos arredondados.
+ */
+.tip {
+  position: fixed; z-index: 100; pointer-events: none;
+  background: var(--grain-dark), #f1e6cc; color: #22180f;
+  border: 1px solid #b9a375; border-top: 2px solid var(--accent);
+  border-radius: var(--radius); padding: 8px 11px; font-size: 13px; line-height: 1.4;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .45); animation: pop var(--dur-1) var(--ease);
+}
+.tip[hidden] { display: none; }
+.tip::after {
+  content: ''; position: absolute; left: var(--arrow, 50%); bottom: -6px; width: 10px; height: 10px; margin-left: -5px;
+  background: #f1e6cc; border-right: 1px solid #b9a375; border-bottom: 1px solid #b9a375; transform: rotate(45deg);
+}
+.tip.below::after { bottom: auto; top: -6px; transform: rotate(225deg); border-color: var(--accent); }
+.tip-title { display: block; font: 700 15px/1.2 var(--font-hud); letter-spacing: .05em; text-transform: uppercase; color: #8f1118; margin-bottom: 3px; }
+.tip-line { display: block; }
+.tip-line + .tip-line { margin-top: 2px; }
+.tip i { color: #6b5a42; }
+.tip-hint { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; color: var(--paper-muted); margin: 4px 0 0; }
+.tip-tier { font: 600 11px/1 var(--font-hud); text-transform: uppercase; letter-spacing: .08em; color: #6b5a42; }
+
+/* ---------------------------------------------------------------------------
+ * Retratos e avatar: moldura quadrada de metal escuro; o selo do clã fica no canto.
+ */
+.portrait {
+  flex: none; display: inline-block; overflow: hidden; position: relative;
+  border-radius: var(--radius); border: 1px solid var(--line-strong); background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .6);
+}
+.portrait svg, .portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.portrait-sm { width: 30px; height: 30px; }
+.portrait-md { width: 78px; height: 78px; }
+.portrait-lg { width: 96px; height: 96px; }
+.villain-portrait { border-color: color-mix(in srgb, var(--accent) 80%, var(--line-strong)); }
+.avatar { position: relative; flex: none; display: inline-block; }
+.avatar .portrait { border: 2px solid var(--gold); }
+.avatar-sm .portrait { width: 52px; height: 52px; }
+.avatar-lg .portrait { width: 92px; height: 92px; }
+.clan-seal {
+  position: absolute; right: -5px; bottom: -5px; width: 22px; height: 22px;
+  display: grid; place-items: center; background: var(--surface); border: 1px solid var(--gold); color: var(--gold-2);
+  transform: rotate(45deg);
+}
+.clan-seal .ico { width: 14px; height: 14px; transform: rotate(-45deg); }
+.avatar-lg .clan-seal { width: 30px; height: 30px; }
+.avatar-lg .clan-seal .ico { width: 19px; height: 19px; }
+
+/* ---------------------------------------------------------------------------
+ * Barras: trilho com marcas a cada 10%, pontas em diagonal (paralelogramo), cor chapada com brilho de topo.
+ */
+.bar {
+  position: relative; height: 20px; overflow: hidden; background: var(--bar-bg);
+  clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
+}
+.bar::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(0, 0, 0, .45) calc(10% - 1px) 10%);
+}
+.bar .fill {
+  height: 100%; background: var(--hp);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .22), inset 0 -2px 0 rgba(0, 0, 0, .25);
+  transition: width .35s var(--ease), background var(--dur-3);
+}
+/* Rastro de dano: fica atrás do preenchimento e alcança depois (no ganho, pula junto: .snap). */
+.bar .bar-trail {
+  position: absolute; left: 0; top: 0; bottom: 0; z-index: 0;
+  background: color-mix(in srgb, var(--accent-ink) 75%, var(--hp-low));
+  transition: width .6s var(--ease) .32s;
+}
+.bar .bar-trail.snap { transition: none; }
+.bar-ck .bar-trail { background: color-mix(in srgb, var(--accent-ink) 60%, var(--ck)); }
+.bar .bar-trail + .fill { position: relative; z-index: 1; }
+.bar-hp.mid .fill { background: var(--hp-mid); }
+.bar-hp.low .fill { background: var(--hp-low); }
+.bar-ck { height: 15px; }
+.bar-ck .fill { background: var(--ck); }
+.bar-xp { height: 12px; clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%); }
+.bar-xp .fill { background: var(--xp); }
+.bar span {
+  position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; padding: 0 12px;
+  font: 600 13px/1 var(--font-hud); letter-spacing: .04em; font-variant-numeric: tabular-nums;
+  color: #fff; text-shadow: 1px 1px 0 #000, 0 0 3px #000;
+}
+.bar-ck span { font-size: 11px; }
+.bar-xp span { font-size: 10px; padding: 0 9px; }
+
+/* Atributos em régua: rótulo condensado em cima, número grande embaixo. */
+.stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; text-align: center; background: var(--line); border: 1px solid var(--line); }
+.stats div { background: var(--surface); padding: 5px 2px 4px; min-width: 0; }
+.stats small {
+  display: block; color: var(--muted); font: 600 11px/1.1 var(--font-hud); text-transform: uppercase; letter-spacing: .06em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.stats b { font: 700 19px/1.1 var(--font-hud); font-variant-numeric: tabular-nums; }
+.lvl { color: var(--gold-2); font: 700 1em var(--font-hud); }
+.passive-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.passive-row:empty { display: none; }
+.chip.passive-chip { background: transparent; border-color: color-mix(in srgb, var(--gold) 65%, transparent); white-space: normal; }
+.chip.passive-chip.foe { border-color: color-mix(in srgb, var(--accent) 80%, transparent); }
+.chip.passive-chip .ico { width: 16px; height: 16px; color: var(--gold-2); }
+.chip.passive-chip.foe .ico { color: var(--foe); }
+.mods { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mods small { color: var(--muted); }
+.adv { color: var(--good); }
+.dis { color: var(--bad); }
+
+/* ---------------------------------------------------------------------------
+ * Abas (combate, perfil): rótulo condensado, ativa com filete inferior na cor do tipo.
+ */
+.act-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); }
+.act-tab {
+  flex: 1; min-width: 0; min-height: 44px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  background: transparent; color: var(--muted); cursor: pointer; padding: 4px 2px;
+  font: 600 13px/1 var(--font-hud); letter-spacing: .07em; text-transform: uppercase;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  transition: color var(--dur-1), border-color var(--dur-2), background var(--dur-2);
+  -webkit-touch-callout: none; user-select: none;
+}
+.act-tab:hover { color: var(--text); }
+.act-tab .ico { width: 18px; height: 18px; }
+.act-tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.act-tab.on { color: var(--text); border-bottom-color: var(--accent); background: linear-gradient(0deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%); }
+
+/* ---------------------------------------------------------------------------
+ * Janelas: sobreposição central (fim de luta), folha de baixo (perfil, reportar), aviso.
+ */
+.overlay {
+  position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px;
+  background: var(--scrim); animation: pop var(--dur-2) var(--ease);
+}
+.overlay > div {
+  --frame: var(--gold);
+  --tab: var(--gold);
+  --fill: var(--surface);
+  --cut: 14px;
+  position: relative; isolation: isolate; width: min(100%, 360px); padding: 24px 22px 20px;
+  display: flex; flex-direction: column; gap: 10px; text-align: center;
+  animation: slideUp var(--dur-3) var(--ease);
+}
+.overlay > div::before, .overlay > div::after {
+  content: ''; position: absolute; z-index: -1; pointer-events: none;
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+}
+.overlay > div::before { inset: 0; background: var(--frame); }
+.overlay > div::after { inset: 1px; background: var(--grain), var(--fill); }
+.overlay.win h2 { color: var(--gold-2); }
+.overlay.lose h2 { color: var(--bad); }
+.overlay.lose > div { --frame: var(--accent); }
+.xp-gain { margin: 0; font: 700 26px/1 var(--font-hud); letter-spacing: .06em; color: var(--xp); }
+
+.modal { position: fixed; inset: 0; z-index: 20; background: var(--scrim); display: flex; justify-content: center; align-items: flex-end; animation: pop var(--dur-2) var(--ease); }
+.modal-body {
+  background: var(--grain), var(--surface); width: 100%; max-width: 520px; max-height: 86vh; overflow-y: auto;
+  border-top: 2px solid var(--accent); box-shadow: 0 -1px 0 var(--gold-deep), 0 -16px 40px rgba(0, 0, 0, .5);
+  padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  animation: slideUp var(--dur-3) var(--ease);
+}
+.modal-body h2 { margin: 0; }
+.modal-head { display: flex; align-items: center; gap: 10px; }
+.modal-head h2 { flex: 1; text-align: left; margin: 0; }
+.modal-head h2::after { display: none; }
+.btn.close { min-width: 40px; justify-content: center; }
+
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 50; max-width: calc(100% - 32px);
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface); border: 1px solid var(--gold); border-left: 4px solid var(--gold);
+  padding: 10px 14px; box-shadow: 0 10px 28px rgba(0, 0, 0, .55);
+  font: 600 15px/1.3 var(--font-hud); letter-spacing: .03em; animation: slideUp var(--dur-3) var(--ease);
+}
+.toast .ico { width: 22px; height: 22px; color: var(--gold-2); }
+
+/* Bloco de efeito/resultado (texto de um sorteio). */
+.result-card {
+  background: var(--surface-2); border: 1px solid var(--line); border-left: 3px solid var(--gold);
+  padding: 12px; text-align: center;
+}
+.effect {
+  background: color-mix(in srgb, var(--gold) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  border-left: 3px solid var(--gold); padding: 10px 12px; text-align: center; font-weight: 700; margin-top: 8px;
+}
+
+/* Dificuldade: segmentos retos; o escolhido ganha a cor e um losango. */
+.difficulty-box { padding: 4px 0 6px; margin-bottom: 6px; }
+.difficulty-box h3 { font-size: 14px; color: var(--muted); letter-spacing: .12em; }
+.segmented { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.btn.seg { min-height: 44px; font: 700 16px/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }
+.btn.seg[aria-pressed='true'] { border-color: var(--text); }
+.btn.seg.diff-easy[aria-pressed='true'] { background: color-mix(in srgb, var(--leaf) 30%, var(--surface-2)); border-color: var(--leaf); }
+.btn.seg.diff-normal[aria-pressed='true'] { background: color-mix(in srgb, var(--gold) 26%, var(--surface-2)); border-color: var(--gold-2); }
+.btn.seg.diff-hard[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent-2); }
+.btn.seg.diff-hardcore[aria-pressed='true'] { background: var(--ink); color: var(--accent-2); border-color: var(--accent); }
+.btn.seg:disabled { opacity: .4; }

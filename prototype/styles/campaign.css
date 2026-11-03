@@ -1,0 +1,125 @@
+/* Campanha do Roleta: painel do jogador, trilha, fichas de vilão, eventos, jokenpô, fim de run, laboratório. */
+
+/* Painel do ninja (HUD fora da luta). */
+.panel-head { display: flex; align-items: center; gap: 12px; }
+.panel-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.panel-id .name { font: 400 19px/1.15 var(--font-display); letter-spacing: .02em; overflow-wrap: break-word; }
+.sheet-btn { flex: none; }
+.player-panel { --tab: var(--gold); }
+
+/* Trilha: caminho vertical com marcos; o atual ganha a faixa vermelha. */
+.trail { list-style: none; margin: 0; padding: 0 0 0 14px; display: flex; flex-direction: column; gap: 4px; position: relative; }
+.trail::before { content: ''; position: absolute; left: 27px; top: 14px; bottom: 14px; width: 1px; background: var(--line-strong); }
+.trail li {
+  position: relative; display: flex; gap: 10px; align-items: center; padding: 7px 10px 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+.trail li:last-child { border-bottom: 0; }
+.trail li > i {
+  position: relative; z-index: 1; flex: none; width: 26px; height: 26px; display: grid; place-items: center;
+  font: 700 14px/1 var(--font-hud); font-style: normal; background: var(--bg); border: 1px solid var(--line-strong);
+  transform: rotate(45deg) scale(.82);
+}
+.trail li > i > * { transform: rotate(-45deg); }
+.trail li > i > span { display: block; }
+.trail li > i .ico { width: 15px; height: 15px; }
+.trail li div { display: flex; flex-direction: column; min-width: 0; }
+.trail li b { overflow-wrap: break-word; font-weight: 700; }
+.trail li small { color: var(--muted); font-family: var(--font-hud); font-size: 13px; letter-spacing: .03em; }
+.trail-faces { display: flex; flex: none; }
+.trail-faces .portrait + .portrait { margin-left: -10px; }
+.trail-ico { width: 30px; height: 30px; display: grid; place-items: center; flex: none; color: var(--gold); }
+.trail-ico .ico { width: 24px; height: 24px; }
+.trail li.done { opacity: .62; }
+.trail li.done > i { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.trail li.current { background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 85%); }
+.trail li.current::before { content: ''; position: absolute; left: -14px; top: 0; bottom: 0; width: 3px; background: var(--accent); }
+.trail li.current > i { background: var(--accent); border-color: var(--accent-2); color: var(--accent-ink); }
+.trail li.current b { font: 400 17px/1.2 var(--font-display); }
+.trail li.todo { opacity: .55; }
+
+/* Ficha do vilão (mapa e luta): placa vermelha. */
+.foes { display: flex; flex-direction: column; gap: 10px; }
+.villain-card, .villain-panel { --frame: color-mix(in srgb, var(--accent) 55%, var(--line-strong)); --tab: var(--accent); }
+.foe-head { display: flex; gap: 12px; align-items: flex-start; }
+.foe-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.foe-id .name, .villain-panel .name {
+  font: 400 21px/1.1 var(--font-display); letter-spacing: .02em; color: var(--text);
+  text-shadow: var(--title-shadow); overflow-wrap: break-word;
+}
+.villain-card .name { font-size: 22px; }
+.stat-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+.stat-pill {
+  display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: var(--radius);
+  background: var(--surface-2); border: 1px solid var(--line); font: 600 13px/1.4 var(--font-hud); -webkit-touch-callout: none;
+}
+.stat-pill .ico { width: 13px; height: 13px; color: var(--muted); }
+.stat-pill small { color: var(--muted); font-size: 12px; letter-spacing: .04em; }
+.stat-pill b { font-variant-numeric: tabular-nums; font-size: 14px; }
+.kit { display: flex; flex-wrap: wrap; gap: 4px; }
+.kit-chip {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 2px; max-width: 100%;
+  font: 600 13px/1.3 var(--font-hud); letter-spacing: .02em;
+  background: color-mix(in srgb, var(--c) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+  border-left: 2px solid var(--c); -webkit-touch-callout: none;
+}
+.kit-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kit-chip .ico { width: 18px; height: 18px; padding: 2px; background: var(--c); color: #fff; }
+
+/* Tipos de técnica: cor base de cada célula (o elemento, quando há, sobrescreve no estilo da célula).
+   O padrão fica em :where() (sem especificidade) para as classes de tipo ganharem. */
+:where(.btn.act, .kit-chip, .tech-card) { --c: var(--t-ninjutsu); }
+.type-taijutsu { --c: var(--t-taijutsu); }
+.type-ninjutsu { --c: var(--t-ninjutsu); }
+.type-genjutsu { --c: var(--t-genjutsu); }
+.type-medical { --c: var(--t-medical); }
+.act-gates, .act-dojutsu, .act-expansion { --c: var(--t-special); }
+.act-rest { --c: var(--ck); }
+.act-stance, .act-substitution { --c: #7d8592; }
+.act-item { --c: #9a7a52; }
+.act-pass { --c: #66655f; }
+
+/* Jokenpô: três mãos em placas grandes; o duelo mostra as duas lado a lado. */
+.hands { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
+.btn.hand { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 92px; }
+.btn.hand .ico { width: 40px; height: 40px; color: var(--paper); }
+.btn.hand small { font: 600 14px/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }
+.btn.hand.picked { opacity: 1; border-color: var(--gold-2); box-shadow: inset 0 -3px 0 var(--accent); }
+.duel { display: flex; justify-content: center; align-items: center; gap: 20px; text-align: center; min-height: 10px; }
+.duel b { display: grid; place-items: center; }
+.duel b .ico { width: 52px; height: 52px; color: var(--paper); }
+.duel span { color: var(--accent-2); font: 400 22px/1 var(--font-display); }
+.duel small { font-family: var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.result-win { color: var(--good); }
+.result-loss { color: var(--bad); }
+
+/* Fim da run: selo grande carimbado. */
+.end-seal { display: grid; place-items: center; margin: 4px auto; }
+.end-seal > .ico { width: 96px; height: 96px; color: var(--accent); }
+.end-seal > .seal { --s: 84px; }
+.end.win h2 { color: var(--gold-2); }
+.end.lose h2 { color: var(--bad); }
+.end.lose .end-seal .portrait { filter: grayscale(.7); }
+
+/* Laboratório (modo de teste): formulário sóbrio. */
+.lab-box { background: var(--surface); border: 1px solid var(--line); border-left: 2px solid var(--gold); padding: 10px 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
+.lab-box h3 { font-size: 14px; color: var(--muted); margin: 0; text-align: left; letter-spacing: .12em; }
+.lab-elements { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.lab-elements > span { width: 100%; }
+.lab-box .lab-elements label { justify-content: flex-start; gap: 4px; }
+.lab-box label { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.lab-box select, .lab-box input[type='number'] {
+  min-height: 40px; min-width: 0; max-width: 60%; padding: 6px 8px; border-radius: var(--radius);
+  background: var(--surface-2); color: var(--text); border: 1px solid var(--line-strong); font: inherit;
+}
+.lab-box input[type='number'] { width: 80px; }
+.lab-box select:disabled { opacity: .5; }
+.lab-box .btn { min-height: 44px; }
+.lab-box label.lab-check { justify-content: flex-start; cursor: pointer; }
+.lab-check input { width: 20px; height: 20px; accent-color: var(--accent); }
+.lab-techs { display: flex; flex-direction: column; gap: 6px; }
+
+@media (max-width: 380px) {
+  .stats { grid-template-columns: repeat(3, 1fr); }
+  .portrait-md { width: 64px; height: 64px; }
+}
