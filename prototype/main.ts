@@ -241,9 +241,9 @@ const pace = {
 // Textos e cores
 
 /** Fatias das roletas: laranja, verde do colete, azul do chakra, vermelho, areia, roxo, verde-água e marinho. */
-const PALETTE = ['#f28c28', '#6f9a3e', '#2f80dc', '#c62828', '#d4a253', '#8e5bb5', '#2a9d8f', '#3d4f8a'];
-const TIER_COLORS: Record<LineageTier, string> = { common: '#6b6f80', clan: '#2f80dc', rare: '#e8a21c', legendary: '#2fa36b' };
-const SIDE_COLORS = { player: '#2f80dc', villain: '#c62828', miss: '#6b6f80', hit: '#3fae6a', crit: '#e6b91e', foeHit: '#e8742c' };
+const PALETTE = ['#a8332b', '#b8892f', '#3f5f9e', '#4e8a68', '#7d4d8f', '#5d6b78', '#a65a2e', '#6f7a3a'];
+const TIER_COLORS: Record<LineageTier, string> = { common: '#5d6168', clan: '#3f5f9e', rare: '#b8892f', legendary: '#a8332b' };
+const SIDE_COLORS = { player: '#3f5f9e', villain: '#a8332b', miss: '#55585e', hit: '#4e8a5c', crit: '#c49a3a', foeHit: '#b5562c' };
 
 const villainName = (id: string) => S.villains[id] ?? id;
 const techName = (id: string): string => {
@@ -251,6 +251,15 @@ const techName = (id: string): string => {
   if (id.startsWith('copy:')) return `${techName(id.slice(id.indexOf('.') + 1))} (cópia)`;
   return S.techniques[id] ?? id;
 };
+/** Ícones das linhas de log escolhidas por um campo do evento (as que não estão aqui ficam sem ícone). */
+const LOG_ICONS: Record<'skip' | 'mental' | 'debilitate' | 'status', Record<string, string | undefined>> = {
+  skip: { sleep: 'sleep', possession: 'mind', disrupted: 'mind', prison: 'prison', paralysis: 'lightning' },
+  mental: { fear: 'fear', confusion: 'confusion', torment: 'torment' },
+  debilitate: { prison: 'prison', paralysis: 'lightning', sleep: 'sleep', possession: 'mind' },
+  status: { stun: 'stun', burn: 'fire', poison: 'poison', bleed: 'bleed', freeze: 'ice' },
+};
+/** Marca de ativa armada (ícone de check depois do nome). */
+const ARMED = ` ${icon('check', 'armed')}`;
 const ACTIVE_ICON: Record<string, string> = {
   gates: 'gates',
   expansion: 'expansion',
@@ -448,7 +457,7 @@ function checkAchievements(result: 'inProgress' | 'victory' | 'defeat', fallenTo
   if (ids.length === 0) return;
   profile = unlockAchievements(profile, ids, new Date());
   saveProfile(storage, profile);
-  ids.forEach((id, i) => setTimeout(() => toast(S.achievements.unlocked(S.achievements.list[id]?.name ?? id)), i * 2800));
+  ids.forEach((id, i) => setTimeout(() => toast(S.achievements.unlocked(S.achievements.list[id]?.name ?? id), 'medal'), i * 2800));
 }
 
 function track(patch: { status?: RunStatus; furthestStage?: number; difficulty?: Difficulty }) {
@@ -760,18 +769,13 @@ function stageTrail(current: number): string {
   return `<ol class="trail">${campaign
     .map((st, i) => {
       const state = i < current ? 'done' : i === current ? 'current' : 'todo';
-      const sub =
-        st.kind === 'exam'
-          ? `${st.villains.length} lutas`
-          : st.villains.length > 1
-            ? `${st.villains.length} lutas seguidas`
-            : '1 luta';
+      const sub = S.ui.stageFights(st.villains.length, st.kind === 'exam');
       const best = st.kind === 'fight' ? Math.max(0, ...st.rewardTiers.map((t) => t ?? 0)) : 0;
       const tier = best > 0 ? ` · ${S.ui.rewardTier(S.rewardTiers[best] ?? '')}` : '';
       const faces = st.kind === 'exam'
         ? `<span class="trail-ico">${icon('scroll')}</span>`
         : `<span class="trail-faces">${st.villains.map((v) => villainPortrait(v, 'sm')).join('')}</span>`;
-      return `<li class="${state}"><i>${i < current ? '✓' : i + 1}</i>${faces}<div><b>${stageName(st)}</b><small>${sub}${tier}</small></div></li>`;
+      return `<li class="${state}"><i><span>${i < current ? icon('check') : i + 1}</span></i>${faces}<div><b>${stageName(st)}</b><small>${sub}${tier}</small></div></li>`;
     })
     .join('')}</ol>`;
 }
@@ -813,7 +817,7 @@ async function spinRoll<T extends string>(
   await bigWheel(slot, title, rollSlices(r, label), r.index);
   if (c.player.coins > 0) {
     const box = h(`<div><p class="center"><b>${esc(label(r.value))}</b></p><div class="actions-row">
-      <button class="btn" data-choice="reroll">${S.ui.coinReroll(c.player.coins)}</button>
+      <button class="btn" data-choice="reroll">${icon('coin')} ${S.ui.coinReroll(c.player.coins)}</button>
       <button class="btn primary" data-choice="keep">${S.ui.keepResult}</button></div></div>`);
     slot.appendChild(box);
     const choice = await choose<'reroll' | 'keep'>(box);
@@ -854,13 +858,13 @@ function rollSlices<T extends string>(roll: Roll<T>, label: (id: T) => string, c
 // Tela: origem
 
 /** Cores da roleta de quantidade de elementos (0 a 3). */
-const COUNT_COLORS = ['#8a8f9c', '#4f8fd6', '#9b59d0', '#e0a422'];
+const COUNT_COLORS = ['#5d6168', '#3f5f9e', '#7d4d8f', '#b8892f'];
 
 /** Chips de todos os elementos, o principal primeiro (ou "sem elemento"), e da kekkei genkai. */
 function elementChips(elements: Element[], kg: string | null = null): string {
   const els = elements.length ? elements.map((e) => elChip(e)).join('') : `<span class="chip"${tip(S.ui.noAffinity, S.tips.noElement)}>${S.ui.noAffinity}</span>`;
   const k = kg ? S.kekkeiGenkai[kg] : null;
-  return k ? `${els}<span class="chip kg-chip"${tip(k.name, k.desc)}>✦ ${k.name}</span>` : els;
+  return k ? `${els}<span class="chip kg-chip"${tip(k.name, k.desc)}>${icon('sparkle')} ${k.name}</span>` : els;
 }
 
 function originStepSlices(step: OriginStep): WheelSlice[] {
@@ -871,7 +875,7 @@ function originStepSlices(step: OriginStep): WheelSlice[] {
         return {
           label: L[s.value]!,
           weight: s.weight,
-          color: s.value === 'yes' ? '#e2482f' : TIER_COLORS.common,
+          color: s.value === 'yes' ? '#c4501f' : TIER_COLORS.common,
           icon: s.value === 'yes' ? clanSymbol('jinchuuriki') : undefined,
         };
       case 'element': {
@@ -905,7 +909,7 @@ function stepResultText(step: OriginStep): string {
     case 'elementCount':
       return S.ui.elementCount(Number(v));
     case 'kekkeiGenkai':
-      return v === 'none' ? `${S.roulettes.kekkeiGenkai} ${S.kekkeiGenkai.none!.name}` : `✦ ${S.kekkeiGenkai[v]?.name ?? v}`;
+      return v === 'none' ? `${S.roulettes.kekkeiGenkai} ${S.kekkeiGenkai.none!.name}` : `${icon('sparkle')}${S.kekkeiGenkai[v]?.name ?? v}`;
     case 'jinchuuriki':
       return v === 'yes' ? `${clanSymbol('jinchuuriki')}${S.origin.jinchuuriki}` : `${S.origin.jinchuuriki}: ${S.sliceLabels.no}`;
   }
@@ -950,10 +954,10 @@ async function originScreen(): Promise<void> {
     after.innerHTML = `<div class="difficulty-box">
       <h3>${S.ui.difficulty}</h3>
       <div class="segmented">${DIFFICULTIES.map(
-        (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === settings.difficulty}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? '🔒 ' : ''}${S.difficulty[d].name}</button>`,
+        (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === settings.difficulty}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? `${icon('lock')} ` : ''}${S.difficulty[d].name}</button>`,
       ).join('')}</div>
       <p class="muted center small" id="diff-desc">${S.difficulty[settings.difficulty].desc}</p>
-      ${hardcoreOk ? '' : `<p class="muted center small">${S.ui.hardcoreLocked}</p>`}
+      ${hardcoreOk ? '' : `<p class="muted center small">${icon('lock')} ${S.ui.hardcoreLocked}</p>`}
     </div>
     <div class="actions-row">
       <button class="btn" data-choice="reroll">${icon('dice')} ${S.ui.reroll}</button>
@@ -1122,7 +1126,7 @@ async function eventScreen(stage: Stage): Promise<void> {
 async function jokenpoFlow(slot: HTMLElement): Promise<Step> {
   const c = camp!;
   const box = h(`<div class="wheel-box"><h3>${S.roulettes.jokenpo}</h3><p class="muted center">${S.ui.chooseHand}</p>
-    <div class="hands">${HANDS.map((hand) => `<button class="btn hand" data-choice="${hand}">${S.handIcons[hand]}<small>${S.hands[hand]}</small></button>`).join('')}</div>
+    <div class="hands">${HANDS.map((hand) => `<button class="btn hand" data-choice="${hand}">${icon(hand)}<small>${S.hands[hand]}</small></button>`).join('')}</div>
     <div class="duel"></div></div>`);
   slot.replaceChildren(box);
   const choice = await choose<Hand>(box);
@@ -1133,10 +1137,10 @@ async function jokenpoFlow(slot: HTMLElement): Promise<Step> {
   // Suspense: o companheiro "embaralha" as mãos antes de revelar.
   const shuffles = settings.instant ? 0 : 9;
   for (let i = 0; i < shuffles; i++) {
-    duel.innerHTML = `<div><small>${S.ui.you}</small><b>${S.handIcons[choice]}</b></div><span>vs</span><div><small>${S.ui.companion}</small><b>${S.handIcons[HANDS[i % 3]!]}</b></div>`;
+    duel.innerHTML = `<div><small>${S.ui.you}</small><b>${icon(choice)}</b></div><span>vs</span><div><small>${S.ui.companion}</small><b>${icon(HANDS[i % 3]!)}</b></div>`;
     await sleep(90 + i * 15);
   }
-  duel.innerHTML = `<div><small>${S.ui.you}</small><b>${S.handIcons[choice]}</b></div><span>vs</span><div><small>${S.ui.companion}</small><b>${S.handIcons[result.roll.value]}</b></div>`;
+  duel.innerHTML = `<div><small>${S.ui.you}</small><b>${icon(choice)}</b></div><span>vs</span><div><small>${S.ui.companion}</small><b>${icon(result.roll.value)}</b></div>`;
   const text = { win: S.ui.jokenpoWin, draw: S.ui.jokenpoDraw, loss: S.ui.jokenpoLoss }[result.result];
   duel.insertAdjacentHTML('afterend', `<p class="center result-${result.result}"><b>${text}</b></p>`);
   return result;
@@ -1357,7 +1361,7 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     } else {
       // Dano base e precisão base da técnica; a vantagem elemental aparece só como seta.
       const prev = attackPreview(s, techId, data);
-      const elMark = prev.elementMult > 1 ? ` <span class="adv">${S.ui.advantage}</span>` : prev.elementMult < 1 ? ` <span class="dis">${S.ui.disadvantage}</span>` : '';
+      const elMark = prev.elementMult > 1 ? ` <span class="adv">${icon('advantage')}</span>` : prev.elementMult < 1 ? ` <span class="dis">${icon('disadvantage')}</span>` : '';
       const accuracy = Math.round((tech.accuracy ?? data.balance.hit.defaultAccuracy) * 100);
       extra = `${S.ui.techLine(tech.baseDamage, prev.hits, accuracy)}${elMark} · ${S.ui.cost(tech.chakraCost)}`;
     }
@@ -1517,8 +1521,9 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   const logEl = root.querySelector<HTMLElement>('#log')!;
   const actionsEl = root.querySelector<HTMLElement>('#actions')!;
 
-  const log = (text: string, cls = '') => {
-    logEl.insertAdjacentHTML('afterbegin', `<li class="${cls}">${text}</li>`);
+  /** Linha do log; `ico` (opcional) é um ícone do art.ts antes do texto (o Reportar lê só o texto). */
+  const log = (text: string, cls = '', ico?: string) => {
+    logEl.insertAdjacentHTML('afterbegin', `<li class="${cls}">${ico ? icon(ico) : ''}${text}</li>`);
     while (logEl.children.length > 30) logEl.lastElementChild!.remove();
   };
   let kitOf: BattleState['villain']['def'] | null = state.villain.def;
@@ -1578,15 +1583,15 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         const stage = sharinganStage(p, data);
         const name = S.dojutsu[p.dojutsu]!.name;
         const label = S.ui.activeFree(stage ? `${name} (${S.sharinganStage(stage)})` : name, cost);
-        return toggle('dojutsu', p.dojutsu, label, `${name} ✓`, S.ui.activeFreeHint);
+        return toggle('dojutsu', p.dojutsu, label, `${name}${ARMED}`, S.ui.activeFreeHint);
       }
       if (kind === 'gates') {
         const gates = gatesToOpen(p, data)!;
         const hint = `−${gatesHpCost(p, gates.hpCostPct)} HP · ${S.ui.activeFreeHint}`;
-        return toggle('gates', 'gates', S.ui.activeFree(S.gatesStage(gates.stage), cost), `${S.gatesStage(gates.stage)} ✓`, hint);
+        return toggle('gates', 'gates', S.ui.activeFree(S.gatesStage(gates.stage), cost), `${S.gatesStage(gates.stage)}${ARMED}`, hint);
       }
       const hint = `${S.ui.expansionHint} · ${S.ui.activeFreeHint}`;
-      return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name} ✓`, hint);
+      return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name}${ARMED}`, hint);
     };
     /** Ativas de linhagem com botão próprio (Esforço, Fera, Praga, Transmissão, Cópia, Selamento, Pílulas). */
     const lineageActiveToggle = (
@@ -1598,29 +1603,29 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       if (cost === null || !affordable(st, kind)) return '';
       if (kind === 'copy') {
         const label = S.ui.copyFree(cost);
-        return toggle('copy', 'sharingan', label, `${S.actives.copy!.name} ✓`, S.ui.copyHint(techName(copyTarget(st)!)));
+        return toggle('copy', 'sharingan', label, `${S.actives.copy!.name}${ARMED}`, S.ui.copyHint(techName(copyTarget(st)!)));
       }
       if (kind === 'seal') {
         const left = activeUses(p, 'seal', data) - st.playerFx.sealUsed;
         const target = sealTarget(st)!;
         // O alvo só aparece para quem vê a intenção (Gênio) ou quando é um golpe carregado.
         const hint = st.villain.charging ? S.ui.sealHint(techName(target)) : S.ui.sealHintHidden;
-        return toggle('seal', 'scroll', S.ui.sealFree(cost, left), `${S.actives.seal!.name} ✓`, hint);
+        return toggle('seal', 'scroll', S.ui.sealFree(cost, left), `${S.actives.seal!.name}${ARMED}`, hint);
       }
-      if (kind === 'pills') return toggle('pills', 'pill', S.ui.pillsFree, `${S.ui.pillsFree} ✓`, S.ui.pillsHint);
+      if (kind === 'pills') return toggle('pills', 'pill', S.ui.pillsFree, `${S.ui.pillsFree}${ARMED}`, S.ui.pillsHint);
       const name = S.actives[kind]!.name;
       if (kind === 'effort') {
         const left = activeUses(p, 'effort', data) - st.playerFx.effortUsed;
-        return toggle('effort', 'weights', S.ui.effortFree(left), `${name} ✓`, S.ui.activeFreeHint);
+        return toggle('effort', 'weights', S.ui.effortFree(left), `${name}${ARMED}`, S.ui.activeFreeHint);
       }
-      if (kind === 'plague') return toggle('plague', 'poison', S.ui.activeFree(name, cost), `${name} ✓`, S.actives.plague!.desc);
-      if (kind === 'drunkenFist') return toggle('drunkenFist', 'dice', S.ui.activeFree(name, cost), `${name} ✓`, S.actives.drunkenFist!.desc);
+      if (kind === 'plague') return toggle('plague', 'poison', S.ui.activeFree(name, cost), `${name}${ARMED}`, S.actives.plague!.desc);
+      if (kind === 'drunkenFist') return toggle('drunkenFist', 'dice', S.ui.activeFree(name, cost), `${name}${ARMED}`, S.actives.drunkenFist!.desc);
       if (kind === 'transmission') {
         const left = activeUses(p, 'transmission', data) - st.playerFx.transmissionUsed;
         const label = S.ui.transmissionFree(cost, left);
-        return toggle('transmission', 'intent', label, `${name} ✓`, S.ui.transmissionHint(techName(st.villain.charging!)));
+        return toggle('transmission', 'intent', label, `${name}${ARMED}`, S.ui.transmissionHint(techName(st.villain.charging!)));
       }
-      return toggle('beast', 'beast', S.ui.activeFree(name, cost), `${name} ✓`, S.actives.beast!.desc);
+      return toggle('beast', 'beast', S.ui.activeFree(name, cost), `${name}${ARMED}`, S.actives.beast!.desc);
     };
     /** Forçar os portões (prodígio): só junto com a abertura, se há um portão além do liberado. */
     const forceGatesToggle = (st: BattleState): string => {
@@ -1628,7 +1633,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       const next = forcedGate(st.player, data)!;
       const hint = S.ui.forceGatesHint(S.gatesStage(next.stage));
       const label = S.ui.forceGates;
-      return toggle('forceGates', 'gates', label, `${label} ✓`, hint);
+      return toggle('forceGates', 'gates', label, `${label}${ARMED}`, hint);
     };
     const free = [
       canFocus(s) ? toggle('focus', 'focus', S.ui.focus, S.ui.focusArmed, S.ui.focusHint) : '',
@@ -1812,15 +1817,15 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         }
         case 'skip':
-          log(S.log.skip[ev.reason]!(who(ev.side)), 'sys');
+          log(S.log.skip[ev.reason]!(who(ev.side)), 'sys', LOG_ICONS.skip[ev.reason]);
           break;
         case 'priority':
           log(S.log.priority, 'good');
           break;
         case 'charge':
           disp.vck -= ev.chakra;
-          floatNumber(vcard(), '⚠', 'crit');
-          log(S.log.charge(who('villain'), techName(ev.techniqueId)), 'bad');
+          floatNumber(vcard(), icon('warning'), 'crit');
+          log(S.log.charge(who('villain'), techName(ev.techniqueId)), 'bad', 'warning');
           break;
         case 'chargeRelease':
           log(S.log.chargeRelease(who('villain'), techName(ev.techniqueId)), 'bad');
@@ -1831,8 +1836,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'confusionFail':
           if (ev.side === 'villain') disp.vhp -= ev.selfHit;
           else disp.php -= ev.selfHit;
-          if (ev.selfHit > 0) floatNumber(ev.side === 'villain' ? vcard() : pcard, `−${ev.selfHit} 🌀`, 'dmg');
-          log(S.log.confusionFail(who(ev.side), ev.selfHit), ev.side === 'villain' ? 'good' : 'bad');
+          if (ev.selfHit > 0) floatNumber(ev.side === 'villain' ? vcard() : pcard, `−${ev.selfHit} ${icon('confusion')}`, 'dmg');
+          log(S.log.confusionFail(who(ev.side), ev.selfHit), ev.side === 'villain' ? 'good' : 'bad', 'confusion');
           break;
         case 'torment':
           if (ev.side === 'villain') disp.vck -= ev.chakra;
@@ -1840,13 +1845,13 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           log(S.log.torment(who(ev.side), ev.chakra), ev.side === 'villain' ? 'good' : 'bad');
           break;
         case 'mental':
-          log(S.log.mental[ev.effect]!(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad');
+          log(S.log.mental[ev.effect]!(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad', LOG_ICONS.mental[ev.effect]);
           break;
         case 'mentalBroken':
           log(S.log.mentalBroken[ev.effect]!(who(ev.side)), ev.side === 'villain' ? 'bad' : 'good');
           break;
         case 'dodge':
-          floatNumber(pcard, '💨', 'miss');
+          floatNumber(pcard, icon('dodge'), 'miss');
           log(S.log.dodge[ev.source]!, 'good');
           break;
         case 'declare':
@@ -1881,7 +1886,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
             ev.success ? 0 : 1,
             pace.strip(),
           );
-          if (ev.success) floatNumber(mine ? pcard : vcard(), '💨', 'miss');
+          if (ev.success) floatNumber(mine ? pcard : vcard(), icon('dodge'), 'miss');
           log(S.log.substitutionRoll(who(ev.side), ev.success), ev.success === mine ? 'good' : 'bad');
           break;
         }
@@ -1896,9 +1901,9 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
             dice,
             S.roulettes.clash,
             [
-              { label: techName(ev.attackTechnique), weight: ev.odds[0], color: color(ev.attacker, ev.attackTechnique, '#ff8a5a') },
+              { label: techName(ev.attackTechnique), weight: ev.odds[0], color: color(ev.attacker, ev.attackTechnique, '#b5562c') },
               { label: S.sliceLabels.cancel!, weight: ev.odds[1], color: SIDE_COLORS.miss },
-              { label: techName(ev.defenseTechnique), weight: ev.odds[2], color: color(defender, ev.defenseTechnique, '#4aa3ff') },
+              { label: techName(ev.defenseTechnique), weight: ev.odds[2], color: color(defender, ev.defenseTechnique, '#3f5f9e') },
             ],
             ev.result === 'attacker' ? 0 : ev.result === 'cancel' ? 1 : 2,
             pace.strip(),
@@ -1921,8 +1926,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'shield':
           if (ev.side === 'player') disp.pck -= ev.chakra;
           else disp.vck -= ev.chakra;
-          floatNumber(ev.side === 'player' ? pcard : vcard(), `🛡 ${ev.points}`, 'heal');
-          log(S.log.shield(who(ev.side), techName(ev.techniqueId), ev.points), ev.side === 'player' ? 'good' : 'bad');
+          floatNumber(ev.side === 'player' ? pcard : vcard(), `${icon('barrier')} ${ev.points}`, 'heal');
+          log(S.log.shield(who(ev.side), techName(ev.techniqueId), ev.points), ev.side === 'player' ? 'good' : 'bad', 'barrier');
           break;
         case 'shieldHit': {
           // O dano do golpe já saiu do HP na animação: devolve a parte que o escudo segurou.
@@ -1933,7 +1938,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         }
         case 'shieldBreak':
-          log(S.log.shieldBreak(who(ev.side)), ev.side === 'player' ? 'bad' : 'good');
+          log(S.log.shieldBreak(who(ev.side)), ev.side === 'player' ? 'bad' : 'good', 'blast');
           break;
         case 'shieldEnd':
           log(S.log.shieldEnd(who(ev.side)), 'sys');
@@ -1950,13 +1955,13 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           if (ev.side === 'villain') disp.vhp -= ev.damage;
           else disp.php -= ev.damage;
           floatNumber(ev.side === 'villain' ? vcard() : pcard, `−${ev.damage}`, 'dmg');
-          log(S.log.possessed(who(ev.side), techName(ev.techniqueId), ev.damage), ev.side === 'villain' ? 'good' : 'bad');
+          log(S.log.possessed(who(ev.side), techName(ev.techniqueId), ev.damage), ev.side === 'villain' ? 'good' : 'bad', 'mind');
           break;
         case 'geniusArmed':
-          log(S.log.geniusArmed, 'good');
+          log(S.log.geniusArmed, 'good', 'antlers');
           break;
         case 'genius':
-          log(S.log.genius(S.sliceLabels[ev.kept] ?? S.sliceLabels[ev.kept === 'true' ? 'yes' : ev.kept === 'false' ? 'no' : ev.kept] ?? ev.kept), 'good');
+          log(S.log.genius(S.sliceLabels[ev.kept] ?? S.sliceLabels[ev.kept === 'true' ? 'yes' : ev.kept === 'false' ? 'no' : ev.kept] ?? ev.kept), 'good', 'antlers');
           break;
         case 'extinguish':
           log(S.log.extinguish(who(ev.side)), ev.side === 'player' ? 'good' : 'bad');
@@ -1966,7 +1971,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         case 'armor':
           disp.pck -= ev.chakra;
-          floatNumber(pcard, '⚡', 'heal');
+          floatNumber(pcard, icon('armor'), 'heal');
           log(S.log.armor, 'good');
           break;
         case 'armorEnd':
@@ -1977,13 +1982,13 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           log(S.log.steamArmor, 'good');
           break;
         case 'drunkenFist':
-          log(S.log.drunkenFist, 'good');
+          log(S.log.drunkenFist, 'good', 'gourd');
           break;
         case 'drunkenFistEnd':
           log(S.log.drunkenFistEnd, 'sys');
           break;
         case 'drunkenRoll':
-          log(S.log.drunkenRoll(ev.mult), ev.mult >= 1 ? 'good' : 'bad');
+          log(S.log.drunkenRoll(ev.mult), ev.mult >= 1 ? 'good' : 'bad', 'gourd');
           break;
         case 'steamArmorEnd':
           log(S.log.steamArmorEnd, 'sys');
@@ -1991,24 +1996,24 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'steamBurn':
           disp.vhp -= ev.damage;
           floatNumber(vcard(), `−${ev.damage}`, 'dmg');
-          log(S.log.steamBurn(ev.damage), 'good');
+          log(S.log.steamBurn(ev.damage), 'good', 'steam');
           break;
         case 'lifesteal':
           disp.php += ev.hp;
           floatNumber(pcard, `+${ev.hp}`, 'heal');
-          log(S.log.lifesteal(ev.hp), 'good');
+          log(S.log.lifesteal(ev.hp), 'good', 'sprout');
           break;
         case 'cloakSuppressed':
-          log(S.log.cloakSuppressed, 'good');
+          log(S.log.cloakSuppressed, 'good', 'tree');
           break;
         case 'sandShield':
-          log(S.log.sandShield(ev.points), 'good');
+          log(S.log.sandShield(ev.points), 'good', 'sandArmor');
           break;
         case 'item':
           if (ev.item === 'soldierPill') disp.pck += ev.amount;
           if (ev.item === 'explosiveTag') {
             disp.vhp -= ev.amount;
-            floatNumber(vcard(), `−${ev.amount} 💥`, 'crit');
+            floatNumber(vcard(), `−${ev.amount} ${icon('blast')}`, 'crit');
           }
           log(S.log.item[ev.item]!(ev.amount), 'good');
           break;
@@ -2055,15 +2060,15 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           disp.vck -= ev.chakra;
           disp.pck += ev.gained;
           if (ev.gained > 0) floatNumber(pcard, `+${ev.gained} ck`, 'ck');
-          log(S.log.devour(ev.insects, ev.damage, ev.chakra, ev.kept), 'good');
+          log(S.log.devour(ev.insects, ev.damage, ev.chakra, ev.kept), 'good', 'bug');
           break;
         case 'copy':
           disp.pck -= data.balance.copy.chakraCost;
-          log(S.log.copy(techName(ev.techniqueId), ev.success), ev.success ? 'good' : 'bad');
+          log(S.log.copy(techName(ev.techniqueId), ev.success), ev.success ? 'good' : 'bad', 'sharingan');
           break;
         case 'seal':
           disp.pck -= data.balance.seal.chakraCost;
-          log(S.log.seal(techName(ev.techniqueId), ev.turns, ev.charged), 'good');
+          log(S.log.seal(techName(ev.techniqueId), ev.turns, ev.charged), 'good', 'lock');
           break;
         case 'sealEnd':
           log(S.log.sealEnd(techName(ev.techniqueId)), 'sys');
@@ -2071,7 +2076,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'toad':
           disp.vhp -= ev.damage;
           floatNumber(vcard(), `−${ev.damage}`, 'dmg');
-          log(S.log.toad(ev.damage), 'good');
+          log(S.log.toad(ev.damage), 'good', 'toad');
           break;
         case 'glimmer':
           log(S.log.glimmer, 'good');
@@ -2083,7 +2088,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         case 'pill':
           disp.php -= ev.hpLost;
-          log(S.log.pill(S.pills[ev.pill] ?? ev.pill, ev.hpLost), 'good');
+          log(S.log.pill(S.pills[ev.pill] ?? ev.pill, ev.hpLost), 'good', 'pill');
           break;
         case 'pillEnd':
           log(S.log.pillEnd(S.pills[ev.pill] ?? ev.pill, ev.exhausted), ev.exhausted ? 'bad' : 'sys');
@@ -2101,7 +2106,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         case 'transmission':
           disp.pck -= data.balance.transmission.chakraCost;
-          log(S.log.transmission(techName(ev.techniqueId), ev.success), ev.success ? 'good' : 'bad');
+          log(S.log.transmission(techName(ev.techniqueId), ev.success), ev.success ? 'good' : 'bad', 'mind');
           break;
         case 'clones':
           disp.pck -= ev.chakra;
@@ -2121,7 +2126,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           log(S.log.villainHeal(who('villain'), techName(ev.techniqueId), ev.healed), 'bad');
           break;
         case 'poisonUp':
-          log(S.log.poisonUp(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad');
+          log(S.log.poisonUp(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad', 'poison');
           break;
         case 'rest':
           disp.pck += ev.chakra;
@@ -2168,7 +2173,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           const tech = techName(ev.techniqueId);
           if (ev.outcome === 'miss') {
             log(S.log.attackMiss(who(ev.side), tech), 'muted');
-            floatNumber(mine ? vcard() : pcard, 'errou', 'miss');
+            floatNumber(mine ? vcard() : pcard, S.ui.floats.miss, 'miss');
           } else if ((ev.attackType === 'genjutsu' || data.techniquesById[ev.techniqueId]?.mental) && ev.damage === 0) {
             log(S.log.genjutsuHit(who(ev.side), tech), mine ? 'mine' : 'theirs');
           } else {
@@ -2180,23 +2185,23 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         }
         case 'debilitate':
-          log(S.log.debilitate[ev.kind]!(who(ev.target), ev.turns ?? 0), ev.target === 'villain' ? 'good' : 'bad');
+          log(S.log.debilitate[ev.kind]!(who(ev.target), ev.turns ?? 0), ev.target === 'villain' ? 'good' : 'bad', LOG_ICONS.debilitate[ev.kind]);
           break;
         case 'genjutsuImmune':
           log(S.log.genjutsuImmune(who(ev.target)), 'sys');
           break;
         case 'status':
-          log(S.log.status[ev.kind]!(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad');
+          log(S.log.status[ev.kind]!(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad', LOG_ICONS.status[ev.kind]);
           break;
         case 'burnExtend':
           log(S.log.burnExtend(who(ev.target), ev.turns), ev.target === 'villain' ? 'good' : 'bad');
           break;
         case 'burnTick':
         case 'poisonTick': {
-          const icon = ev.type === 'burnTick' ? '🔥' : '🐍';
+          const tickIco = icon(ev.type === 'burnTick' ? 'fire' : 'poison');
           if (ev.target === 'villain') disp.vhp -= ev.damage;
           else disp.php -= ev.damage;
-          floatNumber(ev.target === 'villain' ? vcard() : pcard, `−${ev.damage} ${icon}`, 'dmg');
+          floatNumber(ev.target === 'villain' ? vcard() : pcard, `−${ev.damage} ${tickIco}`, 'dmg');
           const text = ev.type === 'burnTick' ? S.log.burnTick : S.log.poisonTick;
           log(text(who(ev.target), ev.damage), ev.target === 'villain' ? 'good' : 'bad');
           break;
@@ -2214,7 +2219,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
             const variant = passive?.kind === 'cloak' ? passive.variant : 'beast';
             log(S.log.cloak[variant](who('villain')), 'bad');
           }
-          floatNumber(ev.side === 'player' ? pcard : vcard(), '🔥 manto', 'heal');
+          floatNumber(ev.side === 'player' ? pcard : vcard(), `${icon('cloak')} ${S.ui.floats.cloak}`, 'heal');
           break;
         case 'cloakRegen':
           if (ev.side === 'player') disp.php += ev.hp;
@@ -2223,7 +2228,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           log(S.log.cloakRegen(who(ev.side), ev.hp), ev.side === 'player' ? 'good' : 'bad');
           break;
         case 'mist':
-          log(S.log.mist(ev.turns), 'bad');
+          log(S.log.mist(ev.turns), 'bad', 'mist');
           break;
         case 'mistEnd':
           log(S.log.mistEnd, 'sys');
@@ -2247,7 +2252,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           break;
         case 'insaneRevive':
           disp.vhp = ev.hp;
-          floatNumber(vcard(), `🐍 ${ev.hp}`, 'heal');
+          floatNumber(vcard(), `${icon('snake')} ${ev.hp}`, 'heal');
           log(S.log.insaneRevive(who('villain'), ev.hp, ev.chakra), 'bad');
           break;
         case 'debilitateResisted':
@@ -2261,7 +2266,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'revive':
           disp.php = next.player.maxHp;
           disp.pck = next.player.maxChakra;
-          floatNumber(pcard, '❤ retorno', 'heal');
+          floatNumber(pcard, `${icon('heart')} ${S.ui.floats.revive}`, 'heal');
           log(S.log.revive(ev.revivesLeft), 'good');
           break;
         case 'medical':
@@ -2283,7 +2288,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         case 'dojutsu': {
           const name = S.dojutsu[ev.dojutsu]!.name;
           disp.pck -= ev.chakra;
-          floatNumber(pcard, `👁 ${name}`, 'heal');
+          floatNumber(pcard, `${icon(ev.dojutsu)} ${name}`, 'heal');
           log(S.log.dojutsu(ev.stage ? `${name} (${S.sharinganStage(ev.stage)})` : name), 'good');
           break;
         }
@@ -2297,12 +2302,12 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
             disp.pck += ev.gained;
             floatNumber(pcard, `+${ev.gained} ck`, 'ck');
           }
-          log(ev.source === 'hive' ? S.log.hiveDrain(ev.amount, ev.gained ?? 0) : S.log.chakraDrain[ev.source]!(ev.amount), 'good');
+          log(ev.source === 'hive' ? S.log.hiveDrain(ev.amount, ev.gained ?? 0) : S.log.chakraDrain[ev.source]!(ev.amount), 'good', ev.source === 'hive' ? 'bug' : undefined);
           break;
         case 'hiveBurn':
           disp.vhp -= ev.damage;
           floatNumber(vcard(), `−${ev.damage}`, 'dmg');
-          log(S.log.hiveBurn(ev.damage), 'good');
+          log(S.log.hiveBurn(ev.damage), 'good', 'bug');
           break;
         case 'insectsShed':
           log(S.log.insectsShed(ev.insects, ev.left), 'bad');
@@ -2549,8 +2554,8 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 /** Aviso curto sobre a tela, que some sozinho. */
-function toast(text: string) {
-  const el = h(`<div class="toast pop" role="status">${esc(text)}</div>`);
+function toast(text: string, ico = '') {
+  const el = h(`<div class="toast" role="status">${ico ? icon(ico) : ''}<span>${esc(text)}</span></div>`);
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 2600);
 }
@@ -2608,7 +2613,7 @@ function openReport() {
     );
   const R = S.report;
   const overlay = h(`<div class="modal"><div class="modal-body report">
-    <div class="row between"><h2>${R.title}</h2><button class="btn small" data-close>✕</button></div>
+    <div class="modal-head"><h2>${R.title}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
     <p class="muted small">${R.intro}</p>
     <textarea class="report-note" rows="3" placeholder="${esc(R.notePlaceholder)}"></textarea>
     <textarea class="report-text" rows="10" readonly></textarea>
@@ -2640,7 +2645,7 @@ const PROFILE_TABS: ProfileTab[] = ['history', 'achievements', 'bingo', 'origins
 function openProfile(tab: ProfileTab = 'history') {
   const P = S.profile;
   const overlay = h(`<div class="modal"><div class="modal-body profile">
-    <div class="row between"><h2>${P.title}</h2><button class="btn small" data-close>✕</button></div>
+    <div class="modal-head"><h2>${P.title}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
     <div class="act-tabs profile-tabs">${PROFILE_TABS.map((t) => `<button class="act-tab" data-tab="${t}"><span>${P.tabs[t]}</span></button>`).join('')}</div>
     <div class="profile-body"></div></div></div>`);
   const body = overlay.querySelector<HTMLElement>('.profile-body')!;
@@ -2675,7 +2680,7 @@ function achievementsTab(): string {
           const on = unlocked.has(a.id);
           const txt = !on && a.hidden ? { name: A.hiddenName, desc: A.hiddenDesc } : A.list[a.id] ?? { name: a.id, desc: '' };
           const prog = !on && a.progress ? ` <small class="muted">${A.progress(...a.progress(unlocked))}</small>` : '';
-          return `<li class="ach ${on ? 'on' : 'off'}"><span class="ach-ico">${on ? '🏅' : '🔒'}</span><span><b>${txt.name}</b>${prog}<small>${txt.desc}</small></span></li>`;
+          return `<li class="ach ${on ? 'on' : 'off'}"><span class="ach-ico">${icon(on ? 'medal' : 'lock')}</span><span><b>${txt.name}</b>${prog}<small>${txt.desc}</small></span></li>`;
         })
         .join('')}</ul>`;
     })
@@ -2691,7 +2696,7 @@ function jornadaAchievementsSection(unlocked: ReadonlySet<string>): string {
     .map((a) => {
       const on = unlocked.has(a.id);
       const txt = !on && a.hidden ? { name: A.hiddenName, desc: A.hiddenDesc } : JA.list[a.id] ?? { name: a.id, desc: '' };
-      return `<li class="ach ${on ? 'on' : 'off'}"><span class="ach-ico">${on ? '🏅' : '🔒'}</span><span><b>${txt.name}</b><small>${txt.desc}</small></span></li>`;
+      return `<li class="ach ${on ? 'on' : 'off'}"><span class="ach-ico">${icon(on ? 'medal' : 'lock')}</span><span><b>${txt.name}</b><small>${txt.desc}</small></span></li>`;
     })
     .join('')}</ul>`;
 }
@@ -3009,7 +3014,7 @@ async function runCampaign(from = 0): Promise<void> {
 /** Tema aplicado: o escolhido no botão ou o do aparelho. */
 const deviceTheme = window.matchMedia?.('(prefers-color-scheme: light)');
 const currentTheme = (): Theme => settings.theme ?? (deviceTheme?.matches ? 'light' : 'dark');
-const THEME_COLORS: Record<Theme, string> = { dark: '#10121b', light: '#fbf4e3' };
+const THEME_COLORS: Record<Theme, string> = { dark: '#0d0c0b', light: '#e6dac0' };
 
 function applyTheme() {
   const theme = currentTheme();
@@ -3023,8 +3028,14 @@ function applyTheme() {
   btn.setAttribute('aria-label', next);
 }
 
+/** O modo instantâneo também encurta as transições da interface (styles/instant.css). */
+function setInstantCss(on: boolean) {
+  document.documentElement.toggleAttribute('data-instant', on);
+}
+
 /** Botões do cabeçalho: instantâneo, dia/noite, efeitos sonoros e música. */
 function installHeaderToggles() {
+  setInstantCss(settings.instant);
   applyTheme();
   deviceTheme?.addEventListener?.('change', applyTheme);
   document.getElementById('theme-btn')!.addEventListener('click', () => {
@@ -3034,7 +3045,7 @@ function installHeaderToggles() {
   });
 
   const toggles = [
-    { id: 'instant-btn', key: 'instant', on: 'lightning', off: 'lightning', label: S.ui.instant, apply: () => {} },
+    { id: 'instant-btn', key: 'instant', on: 'lightning', off: 'lightning', label: S.ui.instant, apply: setInstantCss },
     { id: 'sfx-btn', key: 'sfx', on: 'soundOn', off: 'soundOff', label: S.ui.sfx, apply: setSfx },
     { id: 'music-btn', key: 'music', on: 'music', off: 'musicOff', label: S.ui.music, apply: setMusic },
   ] as const;
@@ -3057,6 +3068,16 @@ function installHeaderToggles() {
   }
 }
 
+/** Garante as fontes embutidas antes de medir texto (rótulos da roleta). Sem suporte, segue sem esperar. */
+async function loadFonts(): Promise<void> {
+  const faces = ['700 16px "Zen Kaku Gothic New"', '400 16px "Zen Kaku Gothic New"', '700 16px "Barlow Condensed"', '600 16px "Barlow Condensed"', '16px Shojumaru', '16px "Yuji Boku"'];
+  try {
+    await Promise.race([Promise.all(faces.map((f) => document.fonts.load(f, f.includes('Yuji') ? '忍' : 'Aa'))), sleep(1500)]);
+  } catch {
+    /* fontes do sistema */
+  }
+}
+
 async function main() {
   markAbandonedRuns(storage, new Date(), data.balance.history.maxRuns);
   backfillProfile();
@@ -3065,6 +3086,13 @@ async function main() {
   installAudio(settings);
   installHeaderToggles();
   document.getElementById('history-btn')!.addEventListener('click', () => openProfile());
+  // Atalhos do Portão da Vila para o registro ninja e o Reportar.
+  document.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-profile], [data-report]');
+    if (!el) return;
+    if (el.dataset.profile) openProfile(el.dataset.profile as ProfileTab);
+    else openReport();
+  });
   document.getElementById('report-btn')!.addEventListener('click', openReport);
   document.getElementById('sheet-btn')!.addEventListener('click', openSheet);
   // Botões "Ficha" dentro das telas (painel do jogador, card da luta).
@@ -3092,10 +3120,11 @@ async function main() {
   document.getElementById('disclaimer')!.textContent = S.ui.disclaimer;
   document.getElementById('version')!.textContent = S.ui.version(VERSION);
   document.getElementById('sheet-btn')!.innerHTML = icon('scroll');
-  document.getElementById('history-btn')!.innerHTML = icon('timer');
+  document.getElementById('history-btn')!.innerHTML = icon('book');
   document.getElementById('report-btn')!.innerHTML = icon('flag');
 
   installTooltips();
+  await loadFonts();
 
   if (LAB.lab) document.getElementById('version')!.textContent += ` · ${S.lab.badge}`;
   if (LAB.seed !== null) document.getElementById('version')!.textContent += ` · ${S.lab.seed(LAB.seed)}`;
@@ -3114,10 +3143,25 @@ async function main() {
 async function modeScreen(): Promise<'roleta' | 'jornada'> {
   const M = S.jornada.modes;
   document.getElementById('dots')!.innerHTML = '';
+  const P = S.profile.tabs;
+  // Portão da Vila: os modos com o seu selo (運 sorte, 忍道 caminho ninja) e atalhos para o registro ninja.
+  // Os atalhos usam data-profile/data-report (não data-choice): só abrem janelas, não escolhem modo.
+  const link = (attr: string, kanji: string, label: string) =>
+    `<button class="gate-link" ${attr}><span class="kanji${kanji.length > 1 ? ' two' : ''}" aria-hidden="true">${kanji}</span><span>${label}</span></button>`;
   const root = show(
-    h(`<div class="screen jmodes"><h2>${M.title}</h2>
-      <button class="jmode" data-choice="roleta">${icon('dice')}<span><b>${M.roleta.name}</b><small>${M.roleta.desc}</small></span></button>
-      <button class="jmode" data-choice="jornada">${icon('scroll')}<span><b>${M.jornada.name}</b><small>${M.jornada.desc}</small></span></button>
+    h(`<div class="screen jmodes gate">
+      <header class="gate-head">
+        <h1 class="logo">${S.ui.title.split(' ').map((w, i) => `<span class="l${i + 1}">${w}</span>`).join('')}</h1>
+        <p class="gate-sub">${M.title}</p>
+      </header>
+      <nav class="gate-modes">
+        <button class="jmode" data-choice="roleta"><span class="seal" aria-hidden="true">運</span><span><b>${M.roleta.name}</b><small>${M.roleta.desc}</small></span>${icon('chevron')}</button>
+        <button class="jmode" data-choice="jornada"><span class="seal two" aria-hidden="true">忍道</span><span><b>${M.jornada.name}</b><small>${M.jornada.desc}</small></span>${icon('chevron')}</button>
+      </nav>
+      <nav class="gate-links" aria-label="${S.ui.gate.registry}">
+        ${link('data-profile="history"', '歴', P.history)}${link('data-profile="achievements"', '功', P.achievements)}
+        ${link('data-profile="bingo"', '手配', P.bingo)}${link('data-report', '報', S.ui.gate.report)}
+      </nav>
     </div>`),
   );
   return choose<'roleta' | 'jornada'>(root);
@@ -3134,7 +3178,7 @@ const jornadaHost: JornadaHost = {
     profile = unlockAchievements(profile, ids, new Date());
     saveProfile(storage, profile);
     const name = (id: string) => S.jornada.achievements.list[id]?.name ?? S.achievements.list[id]?.name ?? id;
-    ids.forEach((id, i) => setTimeout(() => toast(S.achievements.unlocked(name(id))), i * 2800));
+    ids.forEach((id, i) => setTimeout(() => toast(S.achievements.unlocked(name(id)), 'medal'), i * 2800));
   },
   difficulty: () => settings.difficulty,
   setDifficulty: (d) => {

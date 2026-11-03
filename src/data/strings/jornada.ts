@@ -275,7 +275,6 @@ export const jornadaPtBR = {
   types: { taijutsu: 'Taijutsu', ninjutsu: 'Ninjutsu', genjutsu: 'Genjutsu' } as Record<string, string>,
   targets: { enemy: 'um inimigo', allEnemies: 'todos os inimigos', ally: 'um aliado', self: 'em si' } as Record<string, string>,
   effects: { stun: 'atordoar', burn: 'queimar', poison: 'veneno', chakraBlock: 'bloqueio de chakra' } as Record<string, string>,
-  effectIcons: { stun: '💫', burn: '🔥', poison: '☠️', chakraBlock: '⛔' } as Record<string, string>,
 
   ai: {
     striker: 'Ataca o inimigo mais perigoso.',
@@ -697,8 +696,6 @@ export const jornadaPtBR = {
     logRegen: (who: string, n: number) => `${who} +${n} HP`,
     won: 'Vitória!',
     lost: 'Derrota…',
-    shield: '🛡️',
-    clones: '👥',
   },
 
   achievements: {

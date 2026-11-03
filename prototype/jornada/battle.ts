@@ -32,6 +32,10 @@ import type { JornadaHost } from './host';
 const J = S.jornada;
 const B = J.battle;
 
+/** Ícone de cada efeito de status (dicas, selos do lutador, números flutuantes). */
+export const EFFECT_ICONS: Record<string, string> = { stun: 'stun', burn: 'fire', poison: 'poison', chakraBlock: 'block' };
+const fxIcon = (kind: string) => icon(EFFECT_ICONS[kind] ?? 'neutral');
+
 export const fighterName = (f: { defId: string }) => J.names[f.defId] ?? f.defId;
 export const techName = (id: string) => J.techniques[id] ?? id;
 
@@ -57,7 +61,7 @@ export function techTip(tech: JTechnique, f?: Fighter): string {
   const hits = f ? hitsOf(f, tech) : (tech.hits ?? 1);
   const cost = f ? techniqueCost(f, tech) : tech.chakraCost;
   const effect = tech.onHit
-    ? `${J.effectIcons[tech.onHit.effect]} ${J.effects[tech.onHit.effect]} ${pct(tech.onHit.chance)}${tech.onHit.turns ? ` (${tech.onHit.turns} t)` : ''}`
+    ? `${fxIcon(tech.onHit.effect)} ${J.effects[tech.onHit.effect]} ${pct(tech.onHit.chance)}${tech.onHit.turns ? ` (${tech.onHit.turns} t)` : ''}`
     : '';
   const body = lines([
     `${J.types[tech.type]}${tech.element ? ` · ${S.elements[tech.element]}` : ''}${tech.active ? ` · ${U.actives}` : ''}`,
@@ -68,9 +72,9 @@ export function techTip(tech: JTechnique, f?: Fighter): string {
     tech.penetration ? `penetração ${pct(tech.penetration)}` : '',
     effect,
     tech.healPct ? `cura ${pct(tech.healPct)} do HP` : '',
-    tech.shieldPct ? `${B.shield} escudo ${pct(tech.shieldPct)} do HP de quem usa` : '',
+    tech.shieldPct ? `${icon('barrier')} escudo ${pct(tech.shieldPct)} do HP de quem usa` : '',
     tech.cleanse ? `tira ${J.effects.stun} e ${J.effects.chakraBlock}` : '',
-    tech.clones ? `${B.clones} ${tech.clones} clones` : '',
+    tech.clones ? `${icon('clones')} ${tech.clones} clones` : '',
     cost ? B.chakra(cost) : '',
     tech.hpCostPct && f ? B.hpCost(hpCost(f, tech)) : tech.hpCostPct ? `${pct(tech.hpCostPct)} do HP` : '',
     tech.cooldown ? B.cooldown(tech.cooldown) : '',
@@ -80,7 +84,7 @@ export function techTip(tech: JTechnique, f?: Fighter): string {
 
 function fighterTip(f: Fighter): string {
   const U = J.ui;
-  const effects = f.effects.map((e) => `${J.effectIcons[e.kind]} ${J.effects[e.kind]} (${e.turns})`);
+  const effects = f.effects.map((e) => `${fxIcon(e.kind)} ${J.effects[e.kind]} (${e.turns})`);
   const passive =
     f.passive?.kind === 'enrage' ? U.tipPassive(Math.round(f.passive.atPct * 100), f.passive.damageMult) : f.passive?.kind === 'startShieldPct' ? U.tipStartShield(Math.round(f.passive.pct * 100)) : '';
   const body = lines([
@@ -88,8 +92,8 @@ function fighterTip(f: Fighter): string {
     f.element ? S.elements[f.element] : '',
     f.protagonist ? '' : J.ai[f.ai] ?? '',
     passive,
-    f.shield ? `${B.shield} ${f.shield}` : '',
-    f.clones ? `${B.clones} ${f.clones}` : '',
+    f.shield ? `${icon('barrier')} ${f.shield}` : '',
+    f.clones ? `${icon('clones')} ${f.clones}` : '',
     effects.length ? `${U.tipEffects}: ${effects.join(', ')}` : '',
     f.techniques.map((id) => techName(id)).join(' · '),
   ]);
@@ -97,9 +101,9 @@ function fighterTip(f: Fighter): string {
 }
 
 function statusChips(f: Fighter): string {
-  const chips = f.effects.map((e) => `<span class="jchip bad" title="${J.effects[e.kind]}">${J.effectIcons[e.kind]}${e.turns}</span>`);
-  if (f.shield > 0) chips.push(`<span class="jchip good">${B.shield}${f.shield}</span>`);
-  if (f.clones > 0) chips.push(`<span class="jchip good">${B.clones}${f.clones}</span>`);
+  const chips = f.effects.map((e) => `<span class="jchip bad" title="${J.effects[e.kind]}">${fxIcon(e.kind)}${e.turns}</span>`);
+  if (f.shield > 0) chips.push(`<span class="jchip good">${icon('barrier')}${f.shield}</span>`);
+  if (f.clones > 0) chips.push(`<span class="jchip good">${icon('clones')}${f.clones}</span>`);
   if (f.guarding) chips.push(`<span class="jchip good">${icon('stance')}</span>`);
   return chips.join('');
 }
@@ -123,7 +127,7 @@ function techButton(f: Fighter, tech: JTechnique): string {
     cost ? B.chakra(cost) : '',
     hp ? B.hpCost(hp) : '',
     J.targets[tech.target],
-    tech.onHit ? `${J.effectIcons[tech.onHit.effect]} ${Math.round(tech.onHit.chance * 100)}%` : '',
+    tech.onHit ? `${fxIcon(tech.onHit.effect)} ${Math.round(tech.onHit.chance * 100)}%` : '',
     blocked ? (blocked === 'cooldown' ? B.cooldown(f.cooldowns[tech.id]!) : B.blocked[blocked]) : '',
   ].filter(Boolean);
   const color = tech.element ? ELEMENT_COLORS[tech.element] : `var(--t-${tech.type})`;
@@ -246,7 +250,7 @@ export async function jornadaBattle(
         case 'damage':
           pose(e.target, 'hit');
           float(e.target, `−${e.amount}${e.crit ? '!' : ''}`, e.crit ? 'crit' : 'dmg');
-          if (e.absorbed) float(e.target, `${B.shield}${e.absorbed}`, 'shield');
+          if (e.absorbed) float(e.target, `${icon('barrier')}${e.absorbed}`, 'shield');
           setHp(e.target, shown.get(e.target)!.hp - e.amount);
           pushLog(B.logDamage(name(e.target), e.amount, e.crit));
           land();
@@ -266,22 +270,22 @@ export async function jornadaBattle(
           pushLog(e.type === 'heal' ? B.logHeal(name(e.target), e.amount) : B.logRegen(name(e.target), e.amount));
           break;
         case 'shield':
-          float(e.target, `${B.shield}+${e.amount}`, 'shield');
+          float(e.target, `${icon('barrier')}+${e.amount}`, 'shield');
           pushLog(B.logShield(name(e.target), e.amount));
           break;
         case 'clones':
-          float(e.uid, `${B.clones}${e.total}`, 'shield');
+          float(e.uid, `${icon('clones')}${e.total}`, 'shield');
           pushLog(B.logClones(name(e.uid), e.total));
           break;
         case 'effect':
-          float(e.target, `${J.effectIcons[e.effect]} ${J.effects[e.effect]}`, 'fx');
+          float(e.target, `${fxIcon(e.effect)} ${J.effects[e.effect]}`, 'fx');
           pushLog(B.logEffect(name(e.target), J.effects[e.effect]!));
           break;
         case 'cleanse':
-          float(e.target, '✨', 'heal');
+          float(e.target, icon('sparkle'), 'heal');
           break;
         case 'tick':
-          float(e.target, `−${e.amount} ${J.effectIcons[e.effect]}`, 'dmg');
+          float(e.target, `−${e.amount} ${fxIcon(e.effect)}`, 'dmg');
           setHp(e.target, shown.get(e.target)!.hp - e.amount);
           pushLog(B.logTick(name(e.target), J.effects[e.effect]!, e.amount));
           break;

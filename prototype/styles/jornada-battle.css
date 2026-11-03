@@ -1,0 +1,148 @@
+/* Tela de batalha da Jornada. As poses (lunge/hit/down) são classes: um spritesheet entra depois sem mudar o código. */
+.jbattle {
+  position: relative; gap: 8px; padding: 8px; min-height: calc(100vh - 140px); overflow: hidden;
+  background: var(--grain), var(--scene, var(--bg-2));
+  border: 1px solid var(--line);
+}
+/* Cenários em nanquim: silhuetas escuras sobre um tom de cena, sem cor viva. */
+.jbattle::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .9; background: var(--scene-art, none) bottom / 100% auto no-repeat; }
+.jbattle > * { position: relative; z-index: 1; }
+.jbattle > .jb-intro { position: absolute; z-index: 4; }
+.jbattle.scene-forest { --scene: linear-gradient(180deg, #121a14 0%, #17201a 55%, #1a1712 100%);
+  --scene-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'%3E%3Cg fill='%23000' fill-opacity='.38'%3E%3Cpath d='M20 300V40h10v260zM82 300V0h16v300zM300 300V20h14v280zM360 300V60h9v240z'/%3E%3Cpath d='M0 300v-40c60-18 120-10 200-22s140 6 200-4v66z'/%3E%3C/g%3E%3C/svg%3E"); }
+.jbattle.scene-arena { --scene: linear-gradient(180deg, #1b1716 0%, #221b17 55%, #29201a 100%);
+  --scene-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'%3E%3Cg fill='%23000' fill-opacity='.35'%3E%3Cpath d='M0 300V150h400v150z'/%3E%3Cpath d='M40 150V60h22v90zM338 150V60h22v90z'/%3E%3C/g%3E%3Cpath d='M0 150h400' stroke='%23000' stroke-opacity='.5' stroke-width='3'/%3E%3C/svg%3E"); }
+.jbattle.scene-valley { --scene: linear-gradient(180deg, #141821 0%, #18202a 50%, #161b20 100%);
+  --scene-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'%3E%3Cg fill='%23000' fill-opacity='.42'%3E%3Cpath d='M0 300V30l40 20 20 250zM400 300V30l-40 20-20 250z'/%3E%3C/g%3E%3Cpath d='M175 0v300M200 0v300M225 0v300' stroke='%23fff' stroke-opacity='.05' stroke-width='14'/%3E%3C/svg%3E"); }
+:root[data-theme='light'] .jbattle.scene-forest { --scene: linear-gradient(180deg, #dfe2d0, #cfd3bd 55%, #d6c9a8); }
+:root[data-theme='light'] .jbattle.scene-arena { --scene: linear-gradient(180deg, #e8dcc6, #dccaa9 55%, #cfb68c); }
+:root[data-theme='light'] .jbattle.scene-valley { --scene: linear-gradient(180deg, #d8dde6, #c6cfdb 55%, #bcc4c8); }
+:root[data-theme='light'] .jbattle::before { opacity: .25; }
+
+.jb-goal {
+  margin: 0; text-align: center; font: 600 14px/1.3 var(--font-hud); letter-spacing: .04em; padding: 4px 8px;
+  border-top: 1px solid color-mix(in srgb, var(--gold) 50%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--gold) 50%, transparent);
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+.jb-side { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+
+/* Lutador: estandarte com retrato, placa de nome e barras coladas na base. */
+.jf {
+  position: relative; flex: 1 1 0; min-width: 0; max-width: 150px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px 6px 7px; background: color-mix(in srgb, var(--surface) 86%, transparent); border: 1px solid var(--line);
+  border-top: 2px solid var(--line-strong);
+  color: var(--text); font: inherit; cursor: default; transition: transform var(--dur-2) var(--ease), opacity var(--dur-3), filter var(--dur-3);
+}
+.jf.enemy { border-top-color: var(--accent); }
+.jf.hero { border-top-color: var(--gold-2); }
+.jf.acting { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), inset 0 -3px 0 var(--gold); transform: translateY(-2px); }
+.jf.targetable { cursor: pointer; border-color: var(--accent-2); animation: targetCall 1.1s var(--ease) infinite; }
+@keyframes targetCall { 0%, 100% { box-shadow: 0 0 0 1px var(--accent-2); } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-2) 35%, transparent); } }
+.jf.down { filter: grayscale(1); opacity: .45; }
+.jf-art { position: relative; display: block; }
+.jf-art .portrait-md { width: 58px; height: 58px; }
+.jf-info { width: 100%; display: flex; flex-direction: column; gap: 3px; }
+.jf-name { font: 700 14px/1.1 var(--font-hud); letter-spacing: .04em; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jbar { height: 13px; clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%); }
+.jbar.bar-ck { height: 7px; }
+.jbar span { font-size: 11px; padding: 0 7px; }
+.jbar.bar-ck span { display: none; }
+.jf-chips { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; min-height: 16px; }
+.jchip { display: inline-flex; align-items: center; gap: 2px; font: 700 12px/1.3 var(--font-hud); padding: 0 4px; background: var(--surface-3); border: 1px solid var(--line); }
+.jchip.bad { border-color: color-mix(in srgb, var(--bad) 60%, var(--line)); color: var(--foe); }
+.jchip.good { border-color: color-mix(in srgb, var(--good) 60%, var(--line)); color: var(--good); }
+.jchip .ico { width: 11px; height: 11px; }
+.jf-floats { position: absolute; inset: 0; pointer-events: none; display: flex; justify-content: center; }
+.jfloat {
+  position: absolute; top: 4px; font: 700 20px/1 var(--font-hud); white-space: nowrap;
+  color: #fff; -webkit-text-stroke: 3.5px var(--ink); paint-order: stroke fill;
+  animation: floatUp 1s var(--ease) forwards;
+}
+.jfloat .ico { width: 16px; height: 16px; vertical-align: -.15em; }
+.jfloat.dmg { color: #ff8c7d; }
+.jfloat.crit { color: var(--gold-2); font-size: 26px; }
+.jfloat.heal { color: #a8e09b; }
+.jfloat.ck { color: var(--ck-2); }
+.jfloat.shield, .jfloat.fx { color: #ece6ff; font-size: 15px; }
+.jfloat.miss { color: #c9c3b8; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; }
+.jf.lunge-up { animation: lungeUp .42s var(--ease); }
+.jf.lunge-down { animation: lungeDown .42s var(--ease); }
+.jf.hit { animation: shake .4s; }
+.jf.hit .jf-art { filter: brightness(1.9) drop-shadow(0 0 6px var(--glow, #fff)); }
+@keyframes lungeUp { 40% { transform: translateY(-16px) scale(1.05); } }
+@keyframes lungeDown { 40% { transform: translateY(16px) scale(1.05); } }
+
+/* Chamada do jutsu: pincelada na cor da técnica com o nome em letreiro. */
+.jb-banner { min-height: 34px; display: flex; justify-content: center; align-items: center; }
+.jb-banner span {
+  position: relative; isolation: isolate; padding: 4px 22px;
+  font: 400 18px/1.2 var(--font-display); letter-spacing: .02em; color: #fff;
+  -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill;
+}
+.jb-banner span::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; background: var(--c, var(--accent));
+  opacity: .85;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 40' preserveAspectRatio='none'%3E%3Cpath d='M6 22C40 8 110 4 170 6s100 4 126 12c-6 10-40 16-100 17S50 36 12 34C2 32 0 26 6 22z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 40' preserveAspectRatio='none'%3E%3Cpath d='M6 22C40 8 110 4 170 6s100 4 126 12c-6 10-40 16-100 17S50 36 12 34C2 32 0 26 6 22z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+.jb-banner.show span { animation: bannerIn .32s var(--ease); }
+@keyframes bannerIn { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+.jb-log {
+  width: 100%; text-align: left; font: inherit; font-size: 12.5px; color: var(--muted); background: var(--log-bg);
+  border: 1px solid var(--line); border-left: 2px solid var(--line-strong); padding: 4px 8px; max-height: 42px; overflow: hidden; cursor: pointer;
+}
+.jb-log.open { max-height: 220px; overflow-y: auto; }
+.jb-log .jl { display: block; }
+.jb-log .ico { width: 13px; height: 13px; vertical-align: -.15em; }
+.jb-menu { display: flex; flex-direction: column; gap: 6px; }
+.jb-menu:empty { visibility: hidden; }
+.jb-prompt { margin: 0; text-align: center; font: 600 14px/1.2 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2); }
+.jb-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.jmove { position: relative; display: flex; align-items: center; gap: 9px; text-align: left; padding: 8px; min-height: 56px; border-left: 3px solid var(--c, var(--line)); }
+.jmove.on { box-shadow: inset 0 0 0 1px var(--gold-2); }
+.jmove-ico { width: 30px; height: 30px; flex: none; display: grid; place-items: center; background: var(--c); color: #fff; }
+.jmove-ico .ico { width: 19px; height: 19px; }
+.jmove-txt { min-width: 0; }
+.jmove-txt b { display: block; font: 700 16px/1.1 var(--font-hud); letter-spacing: .03em; }
+.jmove-txt small { display: block; color: var(--muted); font-size: 11.5px; font-weight: 400; line-height: 1.3; }
+.jmove-txt small .ico { width: 12px; height: 12px; vertical-align: -.15em; }
+.jb-extra { display: flex; flex-wrap: wrap; gap: 6px; }
+.jb-extra .jmove { flex: 1 1 100%; }
+.jb-extra .jx { flex: 1 1 0; justify-content: center; }
+/* Entrada: o pergaminho com o nome da luta se recolhe para a esquerda. */
+.jb-intro {
+  position: absolute; inset: 0; display: grid; place-items: center; z-index: 4;
+  background: var(--grain-dark), var(--paper); color: var(--paper-ink); animation: scrollAway .9s ease-in forwards;
+  font: 400 28px/1.2 var(--font-display); text-align: center; padding: 20px;
+}
+@keyframes scrollAway { 0%, 55% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); } }
+
+@media (min-width: 900px) {
+  .jbattle {
+    display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); column-gap: 16px; row-gap: 10px;
+    grid-template-areas: 'head head' 'relics relics' 'goal goal' 'enemies menu' 'banner menu' 'allies menu' 'log menu';
+    grid-template-rows: auto auto auto 1fr auto 1fr auto; align-items: center; min-height: 0; padding: 16px;
+  }
+  .jbattle .jb-head { grid-area: head; font-size: 15px; }
+  .jbattle .jb-goal { grid-area: goal; }
+  .jbattle .jb-relics { grid-area: relics; }
+  .jbattle .jb-enemies { grid-area: enemies; }
+  .jbattle .jb-banner { grid-area: banner; }
+  .jbattle .jb-allies { grid-area: allies; }
+  .jbattle .jb-log { grid-area: log; max-height: 64px; }
+  .jbattle .jb-log.open { max-height: 260px; }
+  .jbattle .jb-menu {
+    grid-area: menu; align-self: stretch; justify-content: center; padding: 12px;
+    background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-top: 2px solid var(--accent);
+  }
+  .jf { max-width: 200px; padding: 10px; }
+  .jf-art .portrait-md { width: 92px; height: 92px; }
+  .jf-name { font-size: 16px; }
+  .jbar { height: 16px; }
+  .jbar span { font-size: 12px; }
+  .jbar.bar-ck { height: 9px; }
+  .jfloat { font-size: 24px; }
+  .jfloat.crit { font-size: 32px; }
+  .jb-banner span { font-size: 24px; }
+}

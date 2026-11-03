@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#10121b" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#fbf4e3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d0c0b" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#e6dac0" media="(prefers-color-scheme: light)" />
     <title>Ninja Roleta</title>
     <script>
       // Tema antes da primeira pintura (sem piscar): o escolhido no botão ou o do aparelho.
@@ -13,30 +13,33 @@
       } catch (e) {}
       document.documentElement.dataset.theme =
         t === 'light' || t === 'dark' ? t : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      // Modo instantâneo também encurta as transições da interface (CSS em styles/instant.css).
+      try {
+        if (JSON.parse(localStorage.getItem('proto_settings_v1') || '{}').instant) document.documentElement.dataset.instant = '';
+      } catch (e) {}
     </script>
-    <!-- Fontes de pincel/estilo japonês. Sem internet, caem para as fontes do sistema. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Shojumaru&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap"
-    />
+    <!-- As fontes vêm embutidas no CSS (styles/fonts.css): o jogo não depende de internet. -->
     <style>
 /*STYLE*/
     </style>
   </head>
   <body>
     <header class="top">
-      <div class="top-actions">
-        <button class="btn small" id="instant-btn"></button>
-        <button class="btn small" id="theme-btn"></button>
-        <button class="btn small" id="sfx-btn"></button>
-        <button class="btn small" id="music-btn"></button>
-        <button class="btn small" id="sheet-btn" title="Ficha ninja" aria-label="Ficha ninja">🥷</button>
-        <button class="btn small" id="history-btn" title="Perfil" aria-label="Perfil">📜</button>
-
-        <button class="btn small" id="report-btn" title="Reportar" aria-label="Reportar">🚩</button>
-
+      <div class="top-bar">
+        <span class="brand" aria-hidden="true"><span class="seal">忍</span><span class="brand-name">Ninja Roleta</span></span>
+        <div class="top-actions">
+          <div class="tool-group">
+            <button class="btn small" id="instant-btn"></button>
+            <button class="btn small" id="theme-btn"></button>
+            <button class="btn small" id="sfx-btn"></button>
+            <button class="btn small" id="music-btn"></button>
+          </div>
+          <div class="tool-group">
+            <button class="btn small" id="sheet-btn" title="Ficha ninja" aria-label="Ficha ninja"></button>
+            <button class="btn small" id="history-btn" title="Registro ninja" aria-label="Registro ninja"></button>
+            <button class="btn small" id="report-btn" title="Reportar" aria-label="Reportar"></button>
+          </div>
+        </div>
       </div>
       <div class="dots" id="dots"></div>
     </header>

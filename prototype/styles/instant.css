@@ -1,0 +1,8 @@
+/* Modo instantâneo (botão do raio): as transições de interface ficam curtas para acompanhar o ritmo. */
+:root[data-instant] {
+  --dur-1: 40ms;
+  --dur-2: 60ms;
+  --dur-3: 90ms;
+}
+:root[data-instant] .screen { animation: none; }
+:root[data-instant] .bar .fill, :root[data-instant] .bar .bar-trail { transition-duration: .12s; transition-delay: 0s; }

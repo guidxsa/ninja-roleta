@@ -138,7 +138,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
       }
       <div class="difficulty-box"><h3>${J.start.difficulty}</h3>
         <div class="segmented">${DIFFICULTIES.map(
-          (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === diff}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? '🔒 ' : ''}${S.difficulty[d].name}</button>`,
+          (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === diff}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? `${icon('lock')} ` : ''}${S.difficulty[d].name}</button>`,
         ).join('')}</div>
         <p class="muted center small">${hardcoreOk ? J.start.willOfFireNote : J.start.hardcoreLocked}</p></div>
       <button class="btn ${saved ? '' : 'primary '}big" data-choice="new">${J.start.newRun}</button>
@@ -150,7 +150,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
           const open = def && (!def.unlock || host.unlocked().has(def.unlock));
           const note = !def ? G.soonClass : open ? G.classes[id]!.desc : G.locked[id]!;
           return `<button class="jclass${open ? '' : ' off'}" data-class="${id}" aria-pressed="${id === 'common'}" ${open ? '' : 'aria-disabled="true"'}>
-            <b>${open ? '' : '🔒 '}${G.classes[id]!.name}</b><small>${note}</small></button>`;
+            <b>${open ? '' : `${icon('lock', 'lock')} `}${G.classes[id]!.name}</b><small>${note}</small></button>`;
         })
         .join('')}</div>
       ${host.unlocked().has('j_sasukeEgg') ? `<button class="btn small jskin" data-skin aria-pressed="false">${G.skinSasuke}</button>` : ''}
@@ -245,7 +245,7 @@ function trail(run: JRun): string {
   return `<ol class="jtrail">${stage.stops
     .map((s, i) => {
       const state = i < run.stopIndex ? 'done' : i === run.stopIndex ? 'here' : 'next';
-      return `<li class="jstop ${state} k-${s.kind}"><span class="jstop-ico">${state === 'done' ? '✓' : icon(STOP_ICONS[s.kind]!)}</span>
+      return `<li class="jstop ${state} k-${s.kind}"><span class="jstop-ico">${state === 'done' ? icon('check') : icon(STOP_ICONS[s.kind]!)}</span>
         <span class="jstop-txt"><b>${stopName(s)}</b><small>${J.stopKinds[s.kind]}</small></span></li>`;
     })
     .join('')}</ol>
@@ -342,7 +342,7 @@ function mapView(run: JRun): string {
   const nodes = map.nodes
     .map((n) => {
       const st = done.has(n.id) ? 'done' : choices.has(n.id) ? 'choice' : 'idle';
-      const inner = n.kind === 'boss' ? fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm') : done.has(n.id) ? '✓' : n.kind === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[n.kind]!);
+      const inner = n.kind === 'boss' ? fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm') : done.has(n.id) ? icon('check') : n.kind === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[n.kind]!);
       return `<button class="jnode-map k-${n.kind} ${st}" style="left:${x(n)}%;top:${y(n)}px" data-node="${n.id}" ${st === 'choice' ? '' : 'aria-disabled="true"'}${tip(nodeKindName(n.kind), nodeKindDesc(n.kind))}>${inner}</button>`;
     })
     .join('');
@@ -420,7 +420,7 @@ async function eventStop(host: JornadaHost, run: JRun): Promise<JRun> {
   const root = show(
     h(`<div class="screen"><h2>${txt.title}</h2><section class="card"><p>${txt.text}</p></section>
       <div class="joptions">${eventOptions(def, run.flags)
-        .map((o) => `<button class="btn big" data-choice="${o.id}">${o.minigame ? '🎴 ' : ''}${txt.options[o.id] ?? o.id}</button>`)
+        .map((o) => `<button class="btn big" data-choice="${o.id}">${o.minigame ? `${icon('card')} ` : ''}${txt.options[o.id] ?? o.id}</button>`)
         .join('')}</div><div data-slot></div></div>`),
   );
   const pick = await choose<string>(root.querySelector('.joptions')!);
@@ -567,7 +567,7 @@ function talentsModal(host: JornadaHost, run0: JRun): Promise<JRun> {
   const el = modal('');
   const render = () => {
     const ctx = talentContext(run, host.unlocked());
-    el.querySelector('.jmodal')!.innerHTML = `<div class="row between"><h2>${T.title}</h2><button class="btn small" data-close>✕</button></div>
+    el.querySelector('.jmodal')!.innerHTML = `<div class="modal-head"><h2>${T.title}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
       <p class="center"><span class="chip lvl-chip">${T.points(run.talentPoints)}</span></p>
       <div class="jtree">${branchesOf(run.hero, data.talents)
         .filter((br) => data.talents.some((n) => n.owner === run.hero && n.branch === br && talentState(n, data.talents, ctx) !== 'hidden'))
@@ -583,7 +583,7 @@ function talentsModal(host: JornadaHost, run0: JRun): Promise<JRun> {
               const hidden = st === 'accountLocked';
               return `<button class="jnode st-${st}" data-node="${n.id}" ${st === 'available' ? '' : 'aria-disabled="true"'}>
                 <b>${hidden ? '???' : txt.name}</b><small>${hidden ? T.states.accountLocked : txt.desc}</small>
-                <small class="jnode-state">${st === 'owned' ? `✓ ${T.states.owned}` : `${T.cost(n.cost)} · ${T.states[st]}`}</small></button>`;
+                <small class="jnode-state">${st === 'owned' ? `${icon('check')} ${T.states.owned}` : `${T.cost(n.cost)} · ${T.states[st]}`}</small></button>`;
             })
             .join('')}</div>`,
         )
@@ -611,7 +611,7 @@ function movesetModal(run: JRun): Promise<JRun> {
   const picked = new Set(run.moveset);
   const el = modal('');
   const render = () => {
-    el.querySelector('.jmodal')!.innerHTML = `<div class="row between"><h2>${U.movesetTitle(picked.size, MOVESET_SIZE)}</h2><button class="btn small" data-close>✕</button></div>
+    el.querySelector('.jmodal')!.innerHTML = `<div class="modal-head"><h2>${U.movesetTitle(picked.size, MOVESET_SIZE)}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
       <p class="muted small">${U.movesetHelp}</p>
       <div class="jmoves-pick">${known
         .map((id) => {

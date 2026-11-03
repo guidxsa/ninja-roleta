@@ -1,0 +1,251 @@
+/* Jornada (docs/jornada/): início, HUD, trilha, mapa, relíquias, mercador, tesouro, talentos. */
+
+.jpick { padding: 0; border: 0; background: none; width: 100%; text-align: left; cursor: pointer; color: var(--text); font: inherit; }
+.jmode-card { flex-direction: row !important; gap: 12px; align-items: center; }
+.jmode-card h3 { margin: 0 0 4px; text-align: left; font: 400 21px/1.1 var(--font-display); letter-spacing: .02em; text-transform: none; text-shadow: var(--title-shadow); }
+.jstart-face { display: flex; justify-content: center; }
+
+/* HUD da run */
+.jhud { --tab: var(--gold); }
+.jhud-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.jhud-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.jhud-team { display: grid; gap: 6px; }
+.jhud-member { display: flex; align-items: center; gap: 8px; }
+.jhud-member > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.jhud-member b { font: 700 15px/1.1 var(--font-hud); letter-spacing: .03em; }
+
+/* Trilha linear (História) */
+.jtrail { list-style: none; margin: 0; padding: 0 0 0 12px; display: flex; flex-direction: column; gap: 2px; border-left: 1px solid var(--line-strong); }
+.jstop { display: flex; align-items: center; gap: 10px; padding: 7px 8px; margin-left: -26px; position: relative; }
+.jstop-ico {
+  width: 28px; height: 28px; flex: none; display: grid; place-items: center;
+  background: var(--bg); border: 1px solid var(--line-strong); transform: rotate(45deg) scale(.86);
+}
+.jstop-ico > * { transform: rotate(-45deg); }
+.jstop-ico .ico { width: 16px; height: 16px; }
+.jstop-txt b { display: block; font: 700 15px/1.2 var(--font-hud); letter-spacing: .03em; }
+.jstop-txt small { color: var(--muted); font-size: 12px; }
+.jstop.done { opacity: .55; }
+.jstop.done .jstop-ico { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+.jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 85%); }
+.jstop.here .jstop-ico { border-color: var(--accent-2); background: var(--accent); color: var(--accent-ink); }
+.jstop.here .jstop-txt b { font: 400 17px/1.2 var(--font-display); letter-spacing: .02em; }
+.jstop.k-boss .jstop-ico { border-color: var(--accent-2); }
+.jstop.k-elite .jstop-ico { border-color: var(--gold-2); }
+.jstop.k-story .jstop-ico { border-color: var(--ck); }
+.jlegend { font-size: 13px; color: var(--muted); }
+.jlegend ul { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 4px; }
+.jlegend .ico { width: 14px; height: 14px; vertical-align: -2px; }
+.jb-head {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted);
+  font: 600 14px/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase;
+}
+.jb-head span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jb-head [data-round] { white-space: nowrap; }
+.jtrail-screen .sticky-cta { background: linear-gradient(180deg, transparent, var(--bg) 24%); padding: 18px 0 8px; }
+.jteam { display: flex; align-items: center; gap: 4px; justify-content: center; margin: 0 0 6px; }
+.jabandon { display: block; margin: 6px auto 0; }
+.joptions { display: flex; flex-direction: column; gap: 8px; }
+
+/* Relíquias: moldura pela raridade (inicial bronze, comum aço, rara índigo, lendária dourada). */
+.jrelic { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface-2); border: 1px solid var(--line); margin-bottom: 6px; }
+.jrelic-ico { width: 34px; height: 34px; flex: none; display: grid; place-items: center; background: var(--surface-3); }
+.jrelic-ico .ico { width: 20px; height: 20px; }
+.jrelic-txt { flex: 1; min-width: 0; }
+.jrslot {
+  --tier: var(--line-strong);
+  position: relative; display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; padding: 0;
+  border: 1px solid var(--tier); background: var(--surface-3); color: var(--text); cursor: pointer; font: inherit;
+  box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 3px color-mix(in srgb, var(--tier) 40%, transparent);
+  transition: transform var(--dur-1) var(--ease);
+}
+.jrslot .ico { width: 26px; height: 26px; vertical-align: 0; }
+.jrslot.big { width: 54px; height: 54px; }
+.jrslot.big .ico { width: 36px; height: 36px; }
+.jrslot.huge { width: 76px; height: 76px; }
+.jrslot.huge .ico { width: 52px; height: 52px; }
+.tier-starter { --tier: #b0703a; }
+.tier-common { --tier: var(--line-strong); }
+.tier-rare { --tier: #5b7fc7; }
+.tier-legendary { --tier: var(--gold-2); }
+/* Lendária: cantos dourados em vez de brilho. */
+.jrslot.tier-legendary::after, .jrcard.tier-legendary .jrcard-ico::after {
+  content: ''; position: absolute; inset: -3px; pointer-events: none;
+  background:
+    linear-gradient(var(--tier), var(--tier)) 0 0 / 8px 2px no-repeat, linear-gradient(var(--tier), var(--tier)) 0 0 / 2px 8px no-repeat,
+    linear-gradient(var(--tier), var(--tier)) 100% 100% / 8px 2px no-repeat, linear-gradient(var(--tier), var(--tier)) 100% 100% / 2px 8px no-repeat;
+}
+.jrslot:active { transform: scale(.94); }
+.jrslot.is-new { animation: relicIn .7s cubic-bezier(.3, 1.6, .5, 1) both, relicGlow 1.6s ease-out .2s 2; }
+.jrslot.flash { animation: relicFlash .85s ease-out; }
+@keyframes relicIn { from { transform: translateY(-14px) scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes relicGlow { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tier) 80%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
+@keyframes relicFlash { 0% { transform: scale(1); filter: none; } 30% { transform: scale(1.25); filter: brightness(1.5); } 100% { transform: scale(1); filter: none; } }
+
+.jrbar { display: flex; gap: 6px; overflow-x: auto; padding: 6px 2px 4px; margin-top: 8px; scrollbar-width: thin; overscroll-behavior-x: contain; }
+.jrbar-end { justify-content: center; flex-wrap: wrap; overflow: visible; }
+.jrstrip { display: flex; gap: 3px; flex: 0 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.jrstrip .jrslot { width: 26px; height: 26px; cursor: help; box-shadow: none; }
+.jrstrip .jrslot .ico { width: 18px; height: 18px; }
+
+.jrcard {
+  --tier: var(--line-strong);
+  display: flex; align-items: center; gap: 12px; padding: 12px; margin: 8px 0;
+  background: var(--surface-2); border: 1px solid var(--tier); border-left: 3px solid var(--tier);
+}
+.jrcard-ico { position: relative; width: 60px; height: 60px; flex: none; display: grid; place-items: center; background: var(--surface-3); border: 1px solid var(--tier); }
+.jrcard-ico .ico { width: 42px; height: 42px; }
+.jrcard-txt { flex: 1; min-width: 0; }
+.jrcard-txt b { display: block; font: 400 19px/1.15 var(--font-display); letter-spacing: .02em; }
+.jrcard-txt small { display: block; color: var(--muted); }
+.jrcard-txt .jrcard-tier { color: var(--tier); font: 700 12px/1.3 var(--font-hud); text-transform: uppercase; letter-spacing: .12em; }
+.jrcard.tier-common .jrcard-tier { color: var(--muted); }
+.jrcard > .btn { flex: none; }
+.jrcard.stack { flex-wrap: wrap; }
+.jrcard.stack > .btn { flex: 1 0 100%; }
+.jb-relics { display: flex; justify-content: center; min-width: 0; }
+.jrcard.pop { animation: pop var(--dur-2) var(--ease); }
+.jrcard.reveal { animation: relicReveal .7s cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes relicReveal { from { transform: rotateY(90deg) scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.jrpanel h2 small { font-family: var(--font-body); font-size: 13px; }
+.jrgroup h3 { margin: 12px 0 6px; font-size: 14px; color: var(--tier); text-align: left; letter-spacing: .14em; }
+.jrgroup.tier-common h3 { color: var(--muted); }
+.jrgrid { display: grid; grid-template-columns: repeat(auto-fill, 54px); gap: 8px; }
+.jrgrid .jrslot.on { transform: translateY(-3px); box-shadow: 0 0 0 2px var(--tier); }
+.jrdetail { position: sticky; bottom: -1px; margin-top: 10px; padding-top: 4px; background: var(--surface); min-height: 40px; }
+.jrwill { margin: 12px 0 0; display: flex; align-items: center; gap: 6px; }
+
+/* Tesouro: baú que treme e abre. */
+.jrtreasure { text-align: center; }
+.jrchest { display: block; margin: 12px auto; padding: 0; border: 0; background: none; cursor: pointer; width: 150px; }
+.jrchest-svg { width: 150px; height: auto; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .55)); }
+.jrchest:not(.open) { animation: chestIdle 2.4s ease-in-out infinite; }
+.jrchest.opening { animation: chestShake .45s ease-in-out; }
+.jrchest.open .jrchest-svg { animation: pop .3s ease-out; }
+.jrtreasure .jrcard { text-align: left; }
+@keyframes chestIdle { 0%, 80%, 100% { transform: none; } 85% { transform: rotate(-3deg); } 90% { transform: rotate(3deg); } 95% { transform: rotate(-2deg); } }
+@keyframes chestShake { 0%, 100% { transform: none; } 20% { transform: translateX(-6px) rotate(-4deg); } 40% { transform: translateX(6px) rotate(4deg); } 60% { transform: translateX(-4px) rotate(-2deg); } 80% { transform: translateX(4px) rotate(2deg); } }
+
+/* Escolha do chefe: 3 lendárias lado a lado. */
+.jrboss-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+.jrboss-opt {
+  --tier: var(--gold-2);
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 4px; min-width: 0;
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer;
+  animation: relicReveal .6s cubic-bezier(.2, 1.4, .4, 1) both;
+  transition: transform var(--dur-2) var(--ease), border-color var(--dur-2);
+}
+.jrboss-opt:nth-child(2) { animation-delay: .12s; }
+.jrboss-opt:nth-child(3) { animation-delay: .24s; }
+.jrboss-opt b { font: 700 14px/1.2 var(--font-hud); letter-spacing: .02em; text-align: center; overflow-wrap: anywhere; }
+.jrboss-opt.on { border-color: var(--tier); transform: translateY(-4px); box-shadow: inset 0 -3px 0 var(--tier); }
+.jrboss-opt .jrslot { pointer-events: none; }
+
+/* Mercador: prateleira com etiqueta de preço. */
+.jrshelf { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.jrshelf-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px 8px; min-width: 0;
+  border: 0; background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer;
+  box-shadow: inset 0 0 0 1px transparent; transition: box-shadow var(--dur-1), background var(--dur-1);
+}
+.jrshelf-item .jrslot { pointer-events: none; }
+.jrshelf-item.on { box-shadow: inset 0 0 0 1px var(--tier); background: var(--surface-3); }
+.jrshelf-item.sold { opacity: .45; }
+.jrprice { font: 700 14px/1 var(--font-hud); letter-spacing: .04em; padding: 3px 8px; background: var(--ink); color: var(--gold-2); border-left: 2px solid var(--gold); white-space: nowrap; }
+
+/* Talentos e moveset */
+.jmodal { max-height: 86vh; overflow-y: auto; }
+.jtree { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.jskin { align-self: center; }
+.jskin[aria-pressed='true'] { border-color: var(--gold-2); box-shadow: inset 0 -2px 0 var(--accent); }
+.jbranch { display: flex; flex-direction: column; gap: 6px; }
+.jbranch h3 { margin: 4px 0; text-align: center; font-size: 15px; color: var(--gold); letter-spacing: .12em; }
+.jnode {
+  text-align: left; padding: 8px 9px; border: 1px solid var(--line); border-left: 3px solid var(--line-strong);
+  background: var(--surface-2); color: var(--text); font: inherit; font-size: 13px; cursor: pointer;
+}
+.jnode b { display: block; font: 700 15px/1.15 var(--font-hud); letter-spacing: .02em; }
+.jnode small { font-size: 11.5px; }
+.jnode .jnode-state { margin-top: 4px; font: 700 12px/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; }
+.jnode.st-owned { border-left-color: var(--gold-2); background: color-mix(in srgb, var(--gold) 12%, var(--surface-2)); }
+.jnode.st-owned .jnode-state { color: var(--gold-2); }
+.jnode.st-available { border-left-color: var(--accent-2); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+.jnode.st-available .jnode-state { color: var(--accent-2); }
+.jnode.st-locked, .jnode.st-stageLocked, .jnode.st-accountLocked, .jnode.st-noPoints { opacity: .5; cursor: default; }
+.jmoves-pick { display: grid; gap: 6px; }
+
+/* Caminho Ninja: classes, revelação do elemento e mapa ramificado. */
+.jclasses { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.jclass {
+  text-align: left; padding: 10px; border: 1px solid var(--line); border-top: 2px solid var(--line-strong);
+  background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer;
+}
+.jclass b { display: block; font: 700 16px/1.15 var(--font-hud); letter-spacing: .03em; }
+.jclass small { display: block; font-size: 11.5px; color: var(--muted); }
+.jclass[aria-pressed='true'] { border-top-color: var(--accent-2); background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); }
+.jclass.off { opacity: .5; cursor: default; }
+.jclass .lock, .lock-note .ico { width: 14px; height: 14px; color: var(--muted); vertical-align: -.15em; }
+.jreveal .portrait-lg { width: 120px; height: 120px; }
+.jmap-wrap { display: flex; flex-direction: column; gap: 6px; }
+.jmap-boss { margin: 0; text-align: center; font: 400 18px/1.2 var(--font-display); color: var(--accent-2); }
+.jmap {
+  position: relative; width: 100%;
+  background: var(--grain-dark), color-mix(in srgb, var(--paper) 10%, var(--surface)); border: 1px solid var(--line);
+}
+.jmap-lines { position: absolute; inset: 0; pointer-events: none; }
+.jmap-lines line { stroke: var(--line-strong); stroke-width: 1.5; stroke-dasharray: 3 5; }
+.jmap-lines line.walked { stroke: var(--accent); stroke-dasharray: none; stroke-width: 2.5; }
+.jnode-map {
+  position: absolute; transform: translate(-50%, -50%) rotate(45deg); width: 34px; height: 34px; padding: 0;
+  display: grid; place-items: center; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); font: inherit; cursor: default;
+}
+.jnode-map > * { transform: rotate(-45deg); }
+.jnode-map .ico { width: 18px; height: 18px; }
+.jnode-map .portrait-sm { width: 30px; height: 30px; border: 0; }
+.jnode-map.k-elite { border-color: var(--gold-2); }
+.jnode-map.k-boss { width: 48px; height: 48px; border-color: var(--accent-2); border-width: 2px; }
+.jnode-map.k-rest { border-color: var(--leaf); }
+.jnode-map.k-treasure { border-color: var(--gold-2); color: var(--gold-2); }
+.jnode-map.done { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+.jnode-map.idle { opacity: .55; }
+.jnode-map.choice { cursor: pointer; border-color: var(--accent-2); background: var(--surface-2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); animation: nodeCall 1.4s var(--ease) infinite; opacity: 1; }
+@keyframes nodeCall { 0%, 100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); } 50% { box-shadow: 0 0 0 6px transparent; } }
+.jq { font: 400 18px/1 var(--font-kanji); color: var(--accent-2); }
+.jlegend .jq { font-size: 14px; }
+.jmap-side { display: flex; flex-direction: column; gap: 6px; }
+.jmap-side .jabandon { align-self: center; }
+
+.jend.win h2 { color: var(--gold-2); }
+.jend.lose h2 { color: var(--bad); }
+
+/* A ficha é do Roleta: some na Jornada. */
+body.mode-jornada #sheet-btn { display: none; }
+
+/* PC: a Jornada usa a tela larga. */
+@media (min-width: 900px) {
+  body.mode-jornada main, body.mode-jornada footer { max-width: 1000px; }
+  body.mode-jornada .top { max-width: 1000px; }
+  body.mode-jornada .modal-body { max-width: 860px; }
+  body.mode-jornada .jstart { max-width: 620px; margin: 0 auto; width: 100%; }
+  .jtrail-screen {
+    display: grid; grid-template-columns: 360px minmax(0, 1fr); column-gap: 20px; row-gap: 10px; align-items: start;
+    grid-template-areas: 'head head' 'hud trail' 'cta trail' 'legend trail';
+    grid-template-rows: auto auto auto 1fr;
+  }
+  .jtrail-screen > .jb-head { grid-area: head; }
+  .jtrail-screen > [data-hud] { grid-area: hud; position: sticky; top: 76px; }
+  .jtrail-screen > .jtrail { grid-area: trail; }
+  .jtrail-screen > .jlegend { grid-area: legend; }
+  .jtrail-screen > .sticky-cta { grid-area: cta; position: static; background: none; padding: 0; }
+  .jtrail-screen.jmap-screen { grid-template-areas: 'head head' 'side trail'; grid-template-rows: auto 1fr; }
+  .jtrail-screen.jmap-screen > .jmap-side { grid-area: side; position: sticky; top: 76px; }
+  .jstop { padding: 8px 10px; }
+  .jstop-txt b { font-size: 16px; }
+  .jrgrid { grid-template-columns: repeat(auto-fill, 60px); }
+  .jrboss-row { gap: 16px; }
+  .jrboss-opt { padding: 18px 10px; }
+  .jrboss-opt b { font-size: 16px; }
+  .jrboss-opt .jrslot.huge { width: 96px; height: 96px; }
+  .jrboss-opt .jrslot.huge .ico { width: 66px; height: 66px; }
+}
