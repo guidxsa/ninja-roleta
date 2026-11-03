@@ -30,7 +30,35 @@
   border: 3px double var(--seal); transform: rotate(8deg); opacity: .62; pointer-events: none;
 }
 .hanko .ico { width: 26px; height: 26px; }
-.sheet-head { display: flex; align-items: center; gap: 12px; }
+.sheet-kicker {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 2px;
+  font: 700 13px/1 var(--font-hud); letter-spacing: .24em; text-transform: uppercase; color: var(--seal);
+}
+.sheet-kicker .kanji { font-size: 20px; }
+.sheet-head { display: flex; align-items: flex-start; gap: 14px; }
+.sheet-head .avatar .portrait { box-shadow: 3px 3px 0 rgba(36, 25, 15, .35); }
+/* Campos pautados do registro: rótulo condensado à esquerda, valor sobre a linha. */
+.sheet-fields { margin: 4px 0 0; display: flex; flex-direction: column; }
+.sheet-fields > div { display: grid; grid-template-columns: 78px 1fr; align-items: center; gap: 6px; padding: 3px 0; border-bottom: 1px solid rgba(36, 25, 15, .2); min-height: 28px; }
+.sheet-fields dt { font: 700 11px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--paper-muted); }
+.sheet-fields dd { margin: 0; font-weight: 700; min-width: 0; }
+.sheet-fields .lvl { color: #6e4f12; font-size: 18px; }
+/* Atributos com régua relativa ao maior atributo de combate. */
+.attr-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+.attr-list li { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 2px 8px; padding: 4px 0 6px; }
+.attr-list span { font: 700 12px/1.1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--paper-muted); }
+.attr-list b { font: 700 21px/1 var(--font-hud); font-variant-numeric: tabular-nums; }
+.attr-list i { grid-column: 1 / -1; display: block; height: 4px; background: var(--seal); box-shadow: 0 0 0 1px rgba(36, 25, 15, .15); }
+.attr-list i::after { content: ''; display: block; }
+.attr-list + .attrs { grid-template-columns: repeat(3, 1fr); margin-top: 4px; }
+/* Bolsa: cada categoria com o seu kanji. */
+.bag-group + .bag-group { margin-top: 10px; }
+.bag-cat {
+  display: flex; align-items: center; gap: 6px; margin: 2px 0 6px;
+  font: 700 12px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--paper-ink);
+}
+.bag-cat .kanji { display: inline-grid; place-items: center; width: 20px; height: 20px; font-size: 14px; color: #fff3e6; background: var(--seal); }
+.bag-cat small { margin-left: auto; font-size: 12px; color: var(--paper-muted); letter-spacing: .04em; }
 .sheet-head .chips-left { padding-right: 4px; }
 .sheet-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .sheet-name {
@@ -59,6 +87,7 @@
 .attrs small { display: block; font: 600 11px/1.1 var(--font-hud); text-transform: uppercase; letter-spacing: .06em; color: var(--paper-muted); }
 .attrs b { font: 700 20px/1.1 var(--font-hud); font-variant-numeric: tabular-nums; }
 .scroll-paper .muted { color: var(--paper-muted); }
+.scroll-paper .lvl { color: #7a5a14; }
 .techs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .tech-card {
   display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; padding: 5px 8px;

@@ -239,7 +239,7 @@ button[data-tip] { cursor: pointer; }
 .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; text-align: center; background: var(--line); border: 1px solid var(--line); }
 .stats div { background: var(--surface); padding: 5px 2px 4px; min-width: 0; }
 .stats small {
-  display: block; color: var(--muted); font: 600 11px/1.1 var(--font-hud); text-transform: uppercase; letter-spacing: .06em;
+  display: block; color: var(--muted); font: 600 10.5px/1.1 var(--font-hud); text-transform: uppercase; letter-spacing: .02em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .stats b { font: 700 19px/1.1 var(--font-hud); font-variant-numeric: tabular-nums; }
@@ -330,6 +330,12 @@ button[data-tip] { cursor: pointer; }
   background: color-mix(in srgb, var(--gold) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
   border-left: 3px solid var(--gold); padding: 10px 12px; text-align: center; font-weight: 700; margin-top: 8px;
 }
+
+/* Atual → novo (melhoria de equipamento, invocação ou técnica). */
+.compare { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; font: 600 15px/1.2 var(--font-hud); letter-spacing: .03em; }
+.compare .was { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
+.compare .now { color: var(--gold-2); padding: 1px 8px; border: 1px solid var(--gold); background: color-mix(in srgb, var(--gold) 12%, transparent); }
+.compare .ico { width: 16px; height: 16px; color: var(--gold); }
 
 /* Dificuldade: segmentos retos; o escolhido ganha a cor e um losango. */
 .difficulty-box { padding: 4px 0 6px; margin-bottom: 6px; }

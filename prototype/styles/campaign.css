@@ -94,7 +94,8 @@
 .result-loss { color: var(--bad); }
 
 /* Fim da run: selo grande carimbado. */
-.end-seal { display: grid; place-items: center; margin: 4px auto; }
+.end-seal { position: relative; display: grid; place-items: center; margin: 8px auto 4px; }
+.end-seal .end-stamp { --s: 46px; position: absolute; right: -26px; bottom: -10px; animation-delay: .25s; }
 .end-seal > .ico { width: 96px; height: 96px; color: var(--accent); }
 .end-seal > .seal { --s: 84px; }
 .end.win h2 { color: var(--gold-2); }
