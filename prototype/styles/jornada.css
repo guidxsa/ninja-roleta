@@ -159,15 +159,24 @@
 .jtree { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
 .jskin { align-self: center; }
 .jskin[aria-pressed='true'] { border-color: var(--gold-2); box-shadow: inset 0 -2px 0 var(--accent); }
-.jbranch { display: flex; flex-direction: column; gap: 6px; }
+.jbranch { display: flex; flex-direction: column; gap: 0; }
 .jbranch h3 { margin: 4px 0; text-align: center; font-size: 15px; color: var(--gold); letter-spacing: .12em; }
 .jnode {
   text-align: left; padding: 8px 9px; border: 1px solid var(--line); border-left: 3px solid var(--line-strong);
   background: var(--surface-2); color: var(--text); font: inherit; font-size: 13px; cursor: pointer;
 }
 .jnode b { display: block; font: 700 15px/1.15 var(--font-hud); letter-spacing: .02em; }
-.jnode small { font-size: 11.5px; }
-.jnode .jnode-state { margin-top: 4px; font: 700 12px/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; }
+.jnode small { display: block; font-size: 11.5px; color: var(--muted); }
+.jnode .jnode-state { margin-top: 5px; font: 700 12px/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; }
+.jnode .jnode-state .ico { width: 13px; height: 13px; vertical-align: -.15em; }
+/* Ramo como coluna de pergaminho: os nós ligados por um traço (dourado no que já foi aprendido). */
+.jbranch .jnode { position: relative; }
+.jbranch .jnode + .jnode { margin-top: 6px; }
+.jbranch .jnode + .jnode::before {
+  content: ''; position: absolute; left: 16px; top: -13px; width: 2px; height: 12px; background: var(--line-strong);
+}
+.jbranch .jnode.st-owned + .jnode::before { background: var(--gold); }
+.jbranch .jnode.st-owned + .jnode.st-owned::before { background: var(--gold-2); }
 .jnode.st-owned { border-left-color: var(--gold-2); background: color-mix(in srgb, var(--gold) 12%, var(--surface-2)); }
 .jnode.st-owned .jnode-state { color: var(--gold-2); }
 .jnode.st-available { border-left-color: var(--accent-2); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
@@ -249,3 +258,6 @@ body.mode-jornada #sheet-btn { display: none; }
   .jrboss-opt .jrslot.huge { width: 96px; height: 96px; }
   .jrboss-opt .jrslot.huge .ico { width: 66px; height: 66px; }
 }
+
+/* Fim da Jornada: o selo fica no canto do retrato. */
+.jstart-face.end-seal { width: max-content; margin: 8px auto; }

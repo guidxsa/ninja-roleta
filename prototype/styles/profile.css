@@ -1,5 +1,10 @@
 /* Registro ninja (perfil): abas, histórico, conquistas e Livro Bingo; e a janela de Reportar. */
 .profile-tabs { position: sticky; top: -16px; background: var(--surface); z-index: 1; padding-top: 4px; }
+.profile-tabs .act-tab { min-height: 54px; gap: 4px; }
+.profile-tabs .kanji { font-size: 19px; color: var(--muted); transition: color var(--dur-1); }
+.profile-tabs .kanji.two { font-size: 14px; letter-spacing: -.05em; }
+.profile-tabs .act-tab.on .kanji { color: var(--accent-2); }
+.modal-head .seal { --s: 36px; }
 .profile-body { display: flex; flex-direction: column; gap: 8px; }
 .ach-cat {
   display: flex; align-items: center; gap: 10px; margin: 10px 0 2px;
@@ -14,8 +19,21 @@
 .ach.off { opacity: .58; }
 .ach-ico { flex: none; }
 .ach-ico.seal { --s: 34px; }
-.bingo-card .portrait { flex: none; width: 46px; height: 46px; }
+.ach-ico.seal.ghost .ico { width: 15px; height: 15px; }
+.ach.on b { color: var(--gold-2); }
+.bingo-card { position: relative; }
+.bingo-card .portrait { flex: none; width: 48px; height: 48px; border-color: var(--line-strong); box-shadow: 2px 2px 0 var(--ink); }
+.bingo-card.beaten .portrait { border-color: var(--accent); }
 .bingo-card.unknown .portrait { filter: brightness(0); opacity: .55; }
+.bingo-card > span:not(.bingo-stamp):not(.portrait) { flex: 1; }
+/* Carimbo do Livro Bingo: 勝 (derrotado) em vermelho, 謎 (desconhecido) apagado. */
+.bingo-stamp {
+  flex: none; display: grid; place-items: center; width: 34px; height: 34px; font-size: 21px;
+  color: var(--accent-2); border: 2px solid currentColor; transform: rotate(-8deg); opacity: .8;
+}
+.bingo-card.unknown .bingo-stamp { color: var(--line-strong); opacity: .6; }
+/* Histórico como livro-razão: linhas finas e data condensada. */
+.history li small { font-family: var(--font-hud); font-size: 13px; letter-spacing: .02em; }
 
 .report textarea {
   width: 100%; background: var(--surface-2); color: inherit; border: 1px solid var(--line-strong); border-radius: var(--radius);
