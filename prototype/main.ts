@@ -141,6 +141,7 @@ import {
   type RunStatus,
 } from '../src/state/runHistory';
 import { clanSymbol, icon, ninjaPortrait, villainPortrait } from './art';
+import { barLayers, barPct, barTone, patchBar } from './bars';
 import { defeat, installAudio, mood, setMusic, setSfx, victory, type Mood } from './audio';
 import {
   lines,
@@ -477,15 +478,17 @@ function applyStep(step: Step) {
 // Componentes
 
 function bar(kind: 'hp' | 'ck', cur: number, max: number): string {
-  const pct = max > 0 ? Math.max(0, Math.min(100, (cur / max) * 100)) : 0;
-  const low = kind === 'hp' && pct <= 30 ? ' low' : kind === 'hp' && pct <= 60 ? ' mid' : '';
+  const pct = barPct(cur, max);
+  const tone = barTone(kind, pct);
   const name = S.stats[kind === 'hp' ? 'hp' : 'chakra'];
-  return `<div class="bar bar-${kind}${low}" data-bar="${kind}"${tip(name, S.tips.stats[kind === 'hp' ? 'hp' : 'chakra'])}><div class="fill" style="width:${pct}%"></div><span>${name} ${cur}/${max}</span></div>`;
+  return `<div class="bar bar-${kind}${tone ? ` ${tone}` : ''}" data-bar="${kind}"${tip(name, S.tips.stats[kind === 'hp' ? 'hp' : 'chakra'])}>${barLayers(pct)}<span>${name} ${cur}/${max}</span></div>`;
 }
 
+/** Atualiza a barra no lugar (com o rastro de dano), sem trocar o elemento. */
 function setBar(root: HTMLElement, kind: 'hp' | 'ck', cur: number, max: number) {
   const el = root.querySelector<HTMLElement>(`[data-bar="${kind}"]`);
-  if (el) el.outerHTML = bar(kind, Math.max(0, Math.round(cur)), max);
+  const v = Math.max(0, Math.round(cur));
+  if (el) patchBar(el, kind, v, max, `${S.stats[kind === 'hp' ? 'hp' : 'chakra']} ${v}/${max}`);
 }
 
 function modChips(mods: NextFightMods): string {
@@ -1235,19 +1238,20 @@ function villainCard(id: string): string {
   </section>`;
 }
 
+/** HUD do inimigo na luta: placa com o nome, barras que esvaziam na direção do retrato, atributos, kit e efeitos. */
 function villainPanel(s: BattleState): string {
   const v = s.villain.def;
-  return `<section class="card villain-panel" id="vcard">
-    <div class="foe-head">${villainPortrait(v.id, 'md')}
-      <div class="foe-id">
-        <div class="row between"><b class="name">${villainName(v.id)}</b>${elChip(v.element)}</div>
+  return `<section class="hud foe-hud villain-panel" id="vcard">
+    <div class="hud-main">
+      <div class="hud-id">
+        <div class="hud-plate"><b class="name">${villainName(v.id)}</b>${elChip(v.element)}</div>
         ${bar('hp', s.villain.hp, v.hp)}
         ${bar('ck', s.villain.chakra, v.chakra)}
         <div id="vstats">${villainLiveStats(s)}</div>
       </div>
+      <div class="hud-face">${villainPortrait(v.id, 'md')}</div>
     </div>
-    <div class="passive-row" id="vpassives">${villainPassiveChips(v)}</div>
-    <div class="kit" id="vkit">${villainKit(v)}</div>
+    <div class="hud-extra"><div class="passive-row" id="vpassives">${villainPassiveChips(v)}</div><div class="kit" id="vkit">${villainKit(v)}</div></div>
     <div class="badges" id="vbadges"></div>
   </section>`;
 }
@@ -1324,6 +1328,9 @@ function actionCell(o: {
 
 const ITEM_ICONS: Record<ConsumableId, string> = { soldierPill: 'pill', medKit: 'kit', explosiveTag: 'tag', smokeBomb: 'smoke' };
 
+/** Custo em chakra da placa; fica vermelho quando o chakra atual não paga. */
+const costTag = (s: BattleState, n: number) => `<span class="cost${n > s.player.chakra ? ' short' : ''}">${S.ui.cost(n)}</span>`;
+
 function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): string {
   const p = s.player;
   const A = S.tips.actions;
@@ -1346,24 +1353,24 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     tipAttr = playerTechTip(p, techId);
     if (tech.devour) {
       const prev = devourPreview(s, data);
-      extra = `${S.ui.devourHint(prev.insects, Math.round(prev.pct * 1000) / 10, prev.damage, prev.chakra, prev.kept)} · ${S.ui.cost(techniqueCost(s, tech, data))}`;
+      extra = `${S.ui.devourHint(prev.insects, Math.round(prev.pct * 1000) / 10, prev.damage, prev.chakra, prev.kept)} · ${costTag(s, techniqueCost(s, tech, data))}`;
     } else if (tech.shadowStrangle) {
-      extra = `${S.ui.strangleHint(shadowStrangleDamage(s, data))} · ${S.ui.cost(tech.chakraCost)}`;
+      extra = `${S.ui.strangleHint(shadowStrangleDamage(s, data))} · ${costTag(s, tech.chakraCost)}`;
     } else if (isIllusion(tech)) {
-      extra = `${S.ui.techLine(tech.baseDamage, 1, null)} · ${S.ui.cost(tech.chakraCost)}`;
+      extra = `${S.ui.techLine(tech.baseDamage, 1, null)} · ${costTag(s, tech.chakraCost)}`;
       if (tech.mental) sub = S.ui.mentalStrength(tech.mentalStrength ?? 1);
     } else if (tech.mental) {
-      extra = `${S.ui.mentalStrength(tech.mentalStrength ?? 1)} · ${S.ui.cost(tech.chakraCost)}`;
+      extra = `${S.ui.mentalStrength(tech.mentalStrength ?? 1)} · ${costTag(s, tech.chakraCost)}`;
     } else if (tech.barrier !== undefined) {
-      extra = `${S.ui.barrierHint(tech.barrier, Boolean(tech.reflectPct))} · ${S.ui.cost(tech.chakraCost)}`;
+      extra = `${S.ui.barrierHint(tech.barrier, Boolean(tech.reflectPct))} · ${costTag(s, tech.chakraCost)}`;
     } else if (tech.state) {
-      extra = `${S.ui.armorHint} · ${S.ui.cost(tech.chakraCost)}`;
+      extra = `${S.ui.armorHint} · ${costTag(s, tech.chakraCost)}`;
     } else {
       // Dano base e precisão base da técnica; a vantagem elemental aparece só como seta.
       const prev = attackPreview(s, techId, data);
       const elMark = prev.elementMult > 1 ? ` <span class="adv">${icon('advantage')}</span>` : prev.elementMult < 1 ? ` <span class="dis">${icon('disadvantage')}</span>` : '';
       const accuracy = Math.round((tech.accuracy ?? data.balance.hit.defaultAccuracy) * 100);
-      extra = `${S.ui.techLine(tech.baseDamage, prev.hits, accuracy)}${elMark} · ${S.ui.cost(tech.chakraCost)}`;
+      extra = `${S.ui.techLine(tech.baseDamage, prev.hits, accuracy)}${elMark} · ${costTag(s, tech.chakraCost)}`;
     }
     if (tech.chakraDrain) sub = S.ui.drain(tech.chakraDrain);
   } else if (itemId) {
@@ -1384,7 +1391,7 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     if (tech) {
       const heal = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * medicalHealPct(p, data)));
       sub = esc(techName(tech.id));
-      extra = `+${heal} HP · ${S.ui.cost(tech.chakraCost)}`;
+      extra = `+${heal} HP · ${costTag(s, tech.chakraCost)}`;
       tipAttr = playerTechTip(p, tech.id);
     }
   } else if (action === 'rest') {
@@ -1467,14 +1474,19 @@ function reactionButton(s: BattleState, pending: PendingReaction, choice: Reacti
   }
 }
 
-function floatNumber(card: HTMLElement | null, text: string, cls: string) {
+/** Número/ícone que sobe sobre o HUD. `fx`: corte diagonal (crítico) ou imagem residual (esquiva). */
+function floatNumber(card: HTMLElement | null, text: string, cls: string, fx?: 'slash' | 'evade') {
   if (!card) return;
   const f = h(`<div class="float ${cls}">${text}</div>`);
   card.appendChild(f);
-  card.classList.remove('shake');
-  if (cls === 'dmg' || cls === 'crit') {
-    void card.offsetWidth;
-    card.classList.add('shake');
+  card.classList.remove('shake', 'evade');
+  if (cls === 'dmg' || cls === 'crit' || fx) void card.offsetWidth;
+  if (cls === 'dmg' || cls === 'crit') card.classList.add('shake');
+  if (fx === 'evade') card.classList.add('evade');
+  if (fx === 'slash') {
+    const cut = h('<i class="slash" aria-hidden="true"></i>');
+    card.appendChild(cut);
+    setTimeout(() => cut.remove(), 600);
   }
   setTimeout(() => f.remove(), 1100);
 }
@@ -1500,14 +1512,18 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     h(`<div class="screen battle">
       <div class="battle-head"><span>${icon('swords')} ${setup.label}</span><span id="round">${S.ui.round(0)}</span></div>
       <div id="vslot">${villainPanel(state)}</div>
-      <div id="dice" class="dice"></div>
-      <ol id="log" class="log"></ol>
-      <section class="card player-mini" id="pcard">
-        <div class="panel-head">${avatar(c.player)}<div class="panel-id"><b class="name"${lineageTip(c.player)}>${S.ui.you} · ${originLabel(c.origin)}</b>
-          <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elementChips(c.player.elements, c.player.kekkeiGenkai)}${jinChip(c.player)}</div></div>
-          <button class="btn small sheet-btn" data-sheet aria-label="${S.ui.sheet}">${icon('scroll')}</button></div>
-        ${bar('hp', state.player.hp, state.player.maxHp)}
-        ${bar('ck', state.player.chakra, state.player.maxChakra)}
+      <div class="arena"><span class="arena-mark kanji" aria-hidden="true">戦</span><div id="dice" class="dice"></div></div>
+      <ol id="log" class="log" title="${S.ui.logToggle}"></ol>
+      <section class="hud ally-hud player-mini" id="pcard">
+        <div class="hud-main">
+          <div class="hud-face">${avatar(c.player)}</div>
+          <div class="hud-id">
+            <div class="hud-plate"><b class="name"${lineageTip(c.player)}>${S.ui.you} · ${originLabel(c.origin)}</b><button class="btn small sheet-btn" data-sheet aria-label="${S.ui.sheet}" title="${S.ui.sheet}">${icon('scroll')}</button></div>
+            <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elementChips(c.player.elements, c.player.kekkeiGenkai)}${jinChip(c.player)}</div>
+            ${bar('hp', state.player.hp, state.player.maxHp)}
+            ${bar('ck', state.player.chakra, state.player.maxChakra)}
+          </div>
+        </div>
         <div class="passive-row">${passiveTraitEntries(c.player).map(passiveChip).join('')}</div>
         <div class="badges" id="pbadges"></div>
       </section>
@@ -1520,6 +1536,8 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   const dice = root.querySelector<HTMLElement>('#dice')!;
   const logEl = root.querySelector<HTMLElement>('#log')!;
   const actionsEl = root.querySelector<HTMLElement>('#actions')!;
+  // Log curto (3 linhas); tocar abre o histórico da luta.
+  logEl.addEventListener('click', () => logEl.classList.toggle('open'));
 
   /** Linha do log; `ico` (opcional) é um ícone do art.ts antes do texto (o Reportar lê só o texto). */
   const log = (text: string, cls = '', ico?: string) => {
@@ -1765,7 +1783,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   const recoverLine = healed
     ? `<p class="muted">${S.ui.recoveredAfterWin(healed.hp - state.player.hp, healed.chakra - state.player.chakra)}</p>`
     : '';
-  overlay.innerHTML = `<div class="overlay ${won ? 'win' : 'lose'}"><div><h2>${msg}</h2>${xpLine}${recoverLine}
+  overlay.innerHTML = `<div class="overlay ${won ? 'win' : 'lose'}"><div><span class="seal stamp end-mark${won ? ' gold' : ''}" aria-hidden="true">${won ? '勝' : '敗'}</span><h2>${msg}</h2>${xpLine}${recoverLine}
     <p class="muted">${S.ui.round(state.round)}</p>
     <button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div></div>`;
   mood(won ? 'good' : 'bad');
@@ -1851,7 +1869,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           log(S.log.mentalBroken[ev.effect]!(who(ev.side)), ev.side === 'villain' ? 'bad' : 'good');
           break;
         case 'dodge':
-          floatNumber(pcard, icon('dodge'), 'miss');
+          floatNumber(pcard, icon('dodge'), 'miss', 'evade');
           log(S.log.dodge[ev.source]!, 'good');
           break;
         case 'declare':
@@ -1886,7 +1904,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
             ev.success ? 0 : 1,
             pace.strip(),
           );
-          if (ev.success) floatNumber(mine ? pcard : vcard(), icon('dodge'), 'miss');
+          if (ev.success) floatNumber(mine ? pcard : vcard(), icon('dodge'), 'miss', 'evade');
           log(S.log.substitutionRoll(who(ev.side), ev.success), ev.success === mine ? 'good' : 'bad');
           break;
         }
@@ -2173,14 +2191,15 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
           const tech = techName(ev.techniqueId);
           if (ev.outcome === 'miss') {
             log(S.log.attackMiss(who(ev.side), tech), 'muted');
-            floatNumber(mine ? vcard() : pcard, S.ui.floats.miss, 'miss');
+            floatNumber(mine ? vcard() : pcard, S.ui.floats.miss, 'miss', 'evade');
           } else if ((ev.attackType === 'genjutsu' || data.techniquesById[ev.techniqueId]?.mental) && ev.damage === 0) {
             log(S.log.genjutsuHit(who(ev.side), tech), mine ? 'mine' : 'theirs');
           } else {
             if (mine) disp.vhp -= ev.damage;
             else disp.php -= ev.damage;
             log(S.log.attackHit(who(ev.side), tech, ev.damage, ev.outcome === 'crit', el), mine ? 'mine' : 'theirs');
-            floatNumber(mine ? vcard() : pcard, `−${ev.damage}`, ev.outcome === 'crit' ? 'crit' : 'dmg');
+            if (ev.outcome === 'crit') floatNumber(mine ? vcard() : pcard, `−${ev.damage}<small>${S.ui.floats.crit}</small>`, 'crit', 'slash');
+            else floatNumber(mine ? vcard() : pcard, `−${ev.damage}`, 'dmg');
           }
           break;
         }
@@ -2327,6 +2346,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     disp.php = next.player.hp;
     disp.pck = next.player.chakra;
     disp.vhp = next.villain.hp;
+    disp.vck = next.villain.chakra;
     sync();
   }
 }

@@ -506,7 +506,8 @@ export const ptBR = {
     title: 'Ninja Roleta',
     subtitle: 'protótipo',
     /** Números flutuantes da luta que são palavra (dano é número). */
-    floats: { miss: 'errou', cloak: 'manto', revive: 'retorno' },
+    floats: { miss: 'errou', cloak: 'manto', revive: 'retorno', crit: 'crítico' },
+    logToggle: 'Tocar abre ou fecha o histórico da luta',
     /** Quantas lutas tem uma etapa da trilha. */
     stageFights: (n: number, exam: boolean) => (exam ? `${n} lutas` : n > 1 ? `${n} lutas seguidas` : '1 luta'),
     /** Atalhos do Portão da Vila (tela inicial) para o registro ninja. */

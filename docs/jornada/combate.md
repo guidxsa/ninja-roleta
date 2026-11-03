@@ -75,8 +75,10 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 
 ## Interface
 
-- Tela dedicada: cenário por estágio, inimigos em cima, equipe embaixo, retratos com barras de HP e chakra e ícones de efeito.
-- Entrada com varrida de pergaminho; cada evento do log anima (avançar no ataque, tremer ao tomar dano, número flutuante, brilho do elemento, cair e levantar), inclusive quando os suportes e os inimigos agem. O modo instantâneo encurta tudo.
+- Tela dedicada: cenário por estágio (silhuetas em nanquim), inimigos em cima, equipe embaixo. Cada lutador é um estandarte: retrato em destaque, nome, barras de HP e chakra e ícones de efeito (SVG, sem emoji).
+- Quem age tem um losango dourado embaixo; na hora de escolher o alvo, os alvos válidos ganham uma retícula vermelha.
+- Entrada com varrida de pergaminho; cada evento do log anima (avançar no ataque, tremer ao tomar dano, número flutuante, brilho do elemento, cair e levantar), inclusive quando os suportes e os inimigos agem. O nome da técnica aparece numa pincelada na cor do elemento (ou do tipo); o crítico ganha um corte dourado. A barra de HP cai e deixa um rastro claro que alcança depois. O modo instantâneo encurta tudo.
+- Técnica em espera (cooldown) mostra um selo com as rodadas que faltam e um anel do quanto ainda falta.
 - Log curto (tocar abre o histórico). Sem roleta na tela: só o resultado.
 - Dicas: passar o mouse ou segurar o dedo numa técnica mostra a ficha dela (tipo, elemento, alvo, dano, precisão, efeitos, custo, espera); num lutador, HP, chakra, elemento, comportamento, passiva, efeitos e técnicas.
 - No PC, a batalha usa duas colunas (arena à esquerda, menu e log à direita) e a trilha mostra o HUD ao lado do caminho. O botão Ficha (do Roleta) some na Jornada.
