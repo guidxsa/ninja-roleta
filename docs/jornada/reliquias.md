@@ -1,6 +1,6 @@
 # Relíquias
 
-> Implementadas na v0.35.0; nomes genéricos, 22 novas e a barra de relíquias na v0.38.0 ([README.md](README.md)). Dados em `src/data/jornada/relics.ts`.
+> Implementadas na v0.35.0; nomes genéricos, 22 novas e a barra de relíquias na v0.37.1 ([README.md](README.md)). Dados em `src/data/jornada/relics.ts`.
 
 - Dão **vantagens passivas** para a run toda ou **recursos** na hora (kits, Vontade do Fogo).
 - Tiers: **inicial** (toda run começa com ela, nunca sai em sorteio), comum, rara e lendária. Uma run não repete relíquia.
@@ -67,4 +67,4 @@
 | Bolsa sem fundo | Lendária | +50% de ryō e o mercador cobra 25% a menos |
 | Pena de fênix | Lendária | Uma vez por luta, ao cair, fica com 1 de HP |
 
-Simulação (`npm run sim:jornada -- 500 2`, Médio) antes → depois das 22 novas (v0.38.0): História 77 → 78%; Caminho Ninja Comum 37 → 36%, Uchiha 46 → 45%, Hyuuga 52 → 51%. Difícil de 2–6% para 4–7%. As novas diluem o sorteio tanto quanto somam; os números são rascunho.
+Simulação (`npm run sim:jornada -- 500 2`, Médio) antes → depois das 22 novas (v0.37.1): História 77 → 78%; Caminho Ninja Comum 37 → 36%, Uchiha 46 → 45%, Hyuuga 52 → 51%. Difícil de 2–6% para 4–7%. As novas diluem o sorteio tanto quanto somam; os números são rascunho.
