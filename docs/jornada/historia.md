@@ -51,7 +51,7 @@ Equipe nas lutas comuns: Sasuke e Sakura. Cenário: arena.
 
 ### 3 · Busca e resgate
 
-Equipe nas lutas comuns: Jiraiya e Sakura. Cenário: Vale do Fim.
+A primeira metade é a busca pela Tsunade, com o Jiraiya; a segunda é o resgate do Sasuke, com a equipe do mangá (Shikamaru, Chōji, Kiba e Neji). Cada luta leva quem estava lá. Cenário: Vale do Fim.
 
 | # | Parada | Tipo | Quem luta |
 |---|---|---|---|
@@ -61,11 +61,11 @@ Equipe nas lutas comuns: Jiraiya e Sakura. Cenário: Vale do Fim.
 | 4 | Cassino de Tanzaku | Mercador | |
 | 5 | Naruto × Sasuke (hospital) | História | Naruto sozinho · vitória especial |
 | 6 | O Sasuke foi embora | Evento | |
-| 7 | Emboscada do Som | Luta | Jiraiya e Sakura |
-| 8 | Jirobo | Elite | Jiraiya e Sakura |
+| 7 | Emboscada do Som | Luta | Naruto, Shikamaru e Kiba |
+| 8 | Jirobo | Elite | Naruto, Chōji e Shikamaru |
 | 9 | Bolsa do Quarteto | Tesouro | |
-| 10 | Kidomaru e Tayuya | Elite | Jiraiya e Sakura |
-| 11 | Sakon e Ukon | Elite | Jiraiya e Sakura |
+| 10 | Kidomaru e Tayuya | Elite | Naruto, Neji e Shikamaru |
+| 11 | Sakon e Ukon | Elite | Naruto, Kiba e Neji |
 | 12 | Naruto, Lee e Gaara × Kimimaro | História | Naruto, Lee e Gaara |
 | 13 | Acampamento | Descanso | |
 | 14 | Vale do Fim (Sasuke) | Chefe | Naruto sozinho |

@@ -123,14 +123,17 @@ import { villains, villainsById } from '../src/data/villains';
 import { achievements } from '../src/data/achievements';
 import {
   achievementsFromHistory,
+  cleanPlayerName,
   killedByCounts,
   loadProfile,
   originRecords,
+  PLAYER_NAME_MAX,
   recordFight,
   saveProfile,
   unlockAchievements,
   type Profile,
 } from '../src/state/profile';
+import { askPlayerName } from './playerName';
 import {
   isHardcoreUnlocked,
   loadRuns,
@@ -673,7 +676,8 @@ function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
     <div class="panel-head">
       ${avatar(p)}
       <div class="panel-id">
-        <b class="name"${lineageTip(p)}>${originLabel(p.origin)}</b>
+        ${profile.playerName ? `<b class="name player-name">${esc(profile.playerName)}</b>` : ''}
+        <b class="name${profile.playerName ? ' name-sub' : ''}"${lineageTip(p)}>${originLabel(p.origin)}</b>
         <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${elementChips(p.elements, p.kekkeiGenkai)}${jinChip(p)}${camp ? diffChip(camp.difficulty) : ''}</div>
       </div>
       <button class="btn small sheet-btn" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button>
@@ -772,7 +776,7 @@ function sheetHtml(c: Campaign): string {
       <header class="sheet-head">
         ${avatar(p, 'lg')}
         <div class="sheet-id">
-          <h2 class="sheet-name">${originLabel(p.origin)}</h2>
+          <h2 class="sheet-name">${profile.playerName ? esc(profile.playerName) : originLabel(p.origin)}</h2>
           <dl class="sheet-fields">
             <div><dt>${F.clan}</dt><dd>${clan}</dd></div>
             <div><dt>${F.level}</dt><dd><span class="lvl">${p.level}</span></dd></div>
@@ -2716,9 +2720,11 @@ function openProfile(tab: ProfileTab = 'history') {
   const P = S.profile;
   const overlay = h(`<div class="modal"><div class="modal-body profile">
     <div class="modal-head"><span class="seal" aria-hidden="true">録</span><h2>${P.title}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
+    <label class="field profile-name"><span>${S.ui.playerName.label}</span><input type="text" data-player-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${S.ui.playerName.placeholder}" value="${esc(profile.playerName ?? '')}"></label>
     <div class="act-tabs profile-tabs">${PROFILE_TABS.map((t) => `<button class="act-tab" data-tab="${t}"><b class="kanji${PROFILE_KANJI[t].length > 1 ? ' two' : ''}" aria-hidden="true">${PROFILE_KANJI[t]}</b><span>${P.tabs[t]}</span></button>`).join('')}</div>
     <div class="profile-body"></div></div></div>`);
   const body = overlay.querySelector<HTMLElement>('.profile-body')!;
+  overlay.querySelector('[data-player-name]')!.addEventListener('change', (e) => setPlayerName((e.target as HTMLInputElement).value));
   const select = (t: ProfileTab) => {
     overlay.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.tab === t));
     body.replaceChildren();
@@ -3208,6 +3214,7 @@ async function main() {
       await runJornada(jornadaHost);
       continue;
     }
+    await ensurePlayerName();
     await originScreen();
     await runCampaign();
   }
@@ -3241,6 +3248,17 @@ async function modeScreen(): Promise<'roleta' | 'jornada'> {
   return choose<'roleta' | 'jornada'>(root);
 }
 
+function setPlayerName(raw: string): void {
+  profile = { ...profile, playerName: cleanPlayerName(raw) };
+  saveProfile(storage, profile);
+}
+
+/** Pergunta o nome uma vez, na primeira entrada no Roleta ou no Caminho Ninja. O Laboratório não pergunta. */
+async function ensurePlayerName(): Promise<void> {
+  if (profile.playerName !== undefined || LAB.lab) return;
+  setPlayerName(await askPlayerName());
+}
+
 /** O que a Jornada usa do protótipo: armazenamento, preferências, perfil e som. */
 const jornadaHost: JornadaHost = {
   storage,
@@ -3260,6 +3278,8 @@ const jornadaHost: JornadaHost = {
     saveSettings();
   },
   mood,
+  ensurePlayerName,
+  playerName: () => profile.playerName ?? '',
 };
 
 void main();

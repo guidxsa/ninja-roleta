@@ -203,6 +203,8 @@ export interface JBattle {
   win: WinCondition;
   /** O protagonista já usou um item neste turno (item não gasta o turno, mas é um por turno). */
   itemUsed: boolean;
+  /** Quantas vezes os suportes já levantaram o protagonista nesta luta. */
+  heroRevives: number;
   log: JEvent[];
 }
 

@@ -365,6 +365,14 @@ export function fightTeam(run: JRun, stop: StopDef, data: JornadaData): string[]
   return run.mode === 'generic' ? run.supports : teamFor(currentStage(run, data), stop);
 }
 
+/** Quem vai lutar na próxima luta do estágio (para o HUD): na História muda de parada em parada. */
+export function nextFightTeam(run: JRun, data: JornadaData): string[] {
+  if (run.mode === 'generic') return run.supports;
+  const stage = currentStage(run, data);
+  const next = stage.stops.slice(run.stopIndex).find(isFight);
+  return next ? fightTeam(run, next, data) : stage.team;
+}
+
 /** Monta a luta da parada atual. Suportes caídos entram com o HP que têm (pelo menos 1). */
 export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
   const stop = currentStop(run, data);

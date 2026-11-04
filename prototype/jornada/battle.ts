@@ -20,6 +20,7 @@ import { CONSUMABLES, spendItem, type JRun } from '../../src/core/jornada/run';
 import type { BattleSetup } from '../../src/core/jornada/battle';
 import type { ConsumableId, Fighter, JAction, JBattle, JEvent, JTechnique } from '../../src/core/jornada/types';
 import type { Rng } from '../../src/core/rng';
+import { jornadaData } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { fighterPortrait, icon } from '../art';
 import { barLayers, barPct, barTone, captureTrails, patchBar, restoreTrails } from '../bars';
@@ -37,11 +38,22 @@ const B = J.battle;
 export const EFFECT_ICONS: Record<string, string> = { stun: 'stun', burn: 'fire', poison: 'poison', chakraBlock: 'block' };
 const fxIcon = (kind: string) => icon(EFFECT_ICONS[kind] ?? 'neutral');
 
-export const fighterName = (f: { defId: string }) => J.names[f.defId] ?? f.defId;
+/** Nome do protagonista: o do jogador no Caminho Ninja ("Nome Uchiha"); na História, o Naruto. Sem escapar. */
+export function heroLabel(hero: string, playerName: string): string {
+  const named = J.heroNamed[hero];
+  return named && playerName ? named(playerName) : (J.names[hero] ?? hero);
+}
+
+/** Nome do protagonista desta luta. */
+let heroName: string | null = null;
+
+export const fighterName = (f: { defId: string; protagonist?: boolean }) => (f.protagonist && heroName ? heroName : (J.names[f.defId] ?? f.defId));
 export const techName = (id: string) => J.techniques[id] ?? id;
 
 /** Visual do protagonista desta luta (personalização da run). */
 let heroSkin: string | null = null;
+
+const CLONE_PCT = Math.round(jornadaData.j.combat.cloneBlockChance * 100);
 
 function portraitOf(f: Fighter, data: JornadaData): string {
   const spec = f.protagonist && heroSkin ? `ninja:${heroSkin}` : (data.characters[f.defId]?.portrait ?? data.enemies[f.defId]?.portrait ?? 'ninja:common');
@@ -62,6 +74,9 @@ const barKey = (bar: HTMLElement) => {
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
 
+/** Clones que a técnica cria, com o bônus de quem usa. */
+const clonesMade = (tech: JTechnique, f?: Fighter) => (tech.clones ?? 0) + (f?.mods.extraClones ?? 0);
+
 /** Dica completa de uma técnica (passar o mouse ou segurar o dedo). `f` mostra custo e golpes reais. */
 export function techTip(tech: JTechnique, f?: Fighter): string {
   const U = J.ui;
@@ -81,7 +96,7 @@ export function techTip(tech: JTechnique, f?: Fighter): string {
     tech.healPct ? `cura ${pct(tech.healPct)} do HP` : '',
     tech.shieldPct ? `${icon('barrier')} escudo ${pct(tech.shieldPct)} do HP de quem usa` : '',
     tech.cleanse ? `tira ${J.effects.stun} e ${J.effects.chakraBlock}` : '',
-    tech.clones ? `${icon('clones')} ${tech.clones} clones` : '',
+    tech.clones ? `${icon('clones')} ${B.clonesMade(clonesMade(tech, f))}. ${B.cloneRule(CLONE_PCT, jornadaData.j.combat.maxClones)}` : '',
     cost ? B.chakra(cost) : '',
     tech.hpCostPct && f ? B.hpCost(hpCost(f, tech)) : tech.hpCostPct ? `${pct(tech.hpCostPct)} do HP` : '',
     tech.cooldown ? B.cooldown(tech.cooldown) : '',
@@ -100,7 +115,7 @@ function fighterTip(f: Fighter): string {
     f.protagonist ? '' : J.ai[f.ai] ?? '',
     passive,
     f.shield ? `${icon('barrier')} ${f.shield}` : '',
-    f.clones ? `${icon('clones')} ${f.clones}` : '',
+    f.clones ? `${icon('clones')} ${B.clonesActive(f.clones, CLONE_PCT)}` : '',
     effects.length ? `${U.tipEffects}: ${effects.join(', ')}` : '',
     f.techniques.map((id) => techName(id)).join(' · '),
   ]);
@@ -110,14 +125,20 @@ function fighterTip(f: Fighter): string {
 function statusChips(f: Fighter): string {
   const chips = f.effects.map((e) => `<span class="jchip bad" title="${J.effects[e.kind]}">${fxIcon(e.kind)}${e.turns}</span>`);
   if (f.shield > 0) chips.push(`<span class="jchip good">${icon('barrier')}${f.shield}</span>`);
-  if (f.clones > 0) chips.push(`<span class="jchip good">${icon('clones')}${f.clones}</span>`);
+  if (f.clones > 0) chips.push(`<span class="jchip good" title="${B.clonesActive(f.clones, CLONE_PCT)}">${icon('clones')}${f.clones}</span>`);
   if (f.guarding) chips.push(`<span class="jchip good">${icon('stance')}</span>`);
   return chips.join('');
 }
 
+/** Cópias do retrato atrás do lutador, uma por clone. `fresh`: as cópias a partir daqui entram com animação. */
+function cloneGhosts(f: Fighter, data: JornadaData, count: number, fresh = count): string {
+  const art = portraitOf(f, data);
+  return Array.from({ length: Math.max(0, count) }, (_, i) => `<span class="jf-clone${i >= fresh ? ' fresh' : ''}" aria-hidden="true">${art}</span>`).join('');
+}
+
 function fighterCard(f: Fighter, data: JornadaData): string {
   return `<button class="jf ${f.side}${f.down ? ' down' : ''}${f.protagonist ? ' hero' : ''}" data-uid="${f.uid}" type="button"${fighterTip(f)}>
-    <span class="jf-art">${portraitOf(f, data)}<span class="jf-floats"></span></span>
+    <span class="jf-art"><span class="jf-clones">${cloneGhosts(f, data, f.clones)}</span>${portraitOf(f, data)}<span class="jf-floats"></span></span>
     <span class="jf-info"><b class="jf-name">${esc(fighterName(f))}</b>
       ${miniBar('hp', f.hp, f.maxHp)}${f.maxChakra > 0 ? miniBar('ck', f.chakra, f.maxChakra) : ''}
       <span class="jf-chips">${statusChips(f)}</span></span>
@@ -131,6 +152,7 @@ function techButton(f: Fighter, tech: JTechnique): string {
   const hits = hitsOf(f, tech);
   const bits = [
     tech.baseDamage > 0 ? `${B.damage(tech.baseDamage)}${hits > 1 ? ` ${B.hits(hits)}` : ''}` : '',
+    tech.clones ? `${icon('clones')} ${B.clonesMade(clonesMade(tech, f))}, ${B.cloneShort}` : '',
     cost ? B.chakra(cost) : '',
     hp ? B.hpCost(hp) : '',
     J.targets[tech.target],
@@ -163,6 +185,7 @@ export async function jornadaBattle(
 ): Promise<BattleResult> {
   let run = run0;
   heroSkin = run0.skin;
+  heroName = run0.mode === 'generic' ? heroLabel(run0.hero, host.playerName()) : null;
   let state = startBattle(setup, data, rng);
   const root = show(
     h(`<div class="screen jbattle scene-${scene}">
@@ -183,6 +206,9 @@ export async function jornadaBattle(
   const menu = root.querySelector<HTMLElement>('.jb-menu')!;
   const banner = root.querySelector<HTMLElement>('.jb-banner')!;
   const logBtn = root.querySelector<HTMLElement>('[data-log]')!;
+  const soloFight = setup.allies.length === 1;
+  // Quantas vezes o protagonista já foi levantado (para dizer se ainda dá para voltar).
+  let revivesSoFar = 0;
   const logLines: string[] = [];
   logBtn.addEventListener('click', () => logBtn.classList.toggle('open'));
   const beat = () => (host.instant() ? 70 : 420);
@@ -286,10 +312,17 @@ export async function jornadaBattle(
           float(e.target, B.miss, 'miss');
           pushLog(B.logMiss(name(e.uid)));
           break;
-        case 'cloneBlock':
+        case 'cloneBlock': {
           float(e.target, B.clone, 'shield');
           pushLog(B.logClone(name(e.target)));
+          // A última cópia atrás do retrato vira fumaça.
+          const ghost = [...(card(e.target)?.querySelectorAll<HTMLElement>('.jf-clone:not(.poof)') ?? [])].pop();
+          if (ghost) {
+            ghost.classList.add('poof');
+            setTimeout(() => ghost.remove(), host.instant() ? 120 : 480);
+          }
           break;
+        }
         case 'heal':
         case 'regen':
           float(e.target, `+${e.amount}`, 'heal');
@@ -300,10 +333,13 @@ export async function jornadaBattle(
           float(e.target, `${icon('barrier')}+${e.amount}`, 'shield');
           pushLog(B.logShield(name(e.target), e.amount));
           break;
-        case 'clones':
+        case 'clones': {
           float(e.uid, `${icon('clones')}${e.total}`, 'shield');
           pushLog(B.logClones(name(e.uid), e.total));
+          const layer = card(e.uid)?.querySelector<HTMLElement>('.jf-clones');
+          if (layer) layer.innerHTML = cloneGhosts(fighter(next, e.uid), data, e.total, layer.querySelectorAll('.jf-clone:not(.poof)').length);
           break;
+        }
         case 'effect':
           float(e.target, `${fxIcon(e.effect)} ${J.effects[e.effect]}`, 'fx');
           pushLog(B.logEffect(name(e.target), J.effects[e.effect]!));
@@ -320,11 +356,20 @@ export async function jornadaBattle(
           float(e.uid, B.stunned, 'fx');
           pushLog(B.logSkip(name(e.uid)));
           break;
-        case 'down':
+        case 'down': {
           card(e.target)?.classList.add('down');
+          card(e.target)?.querySelector('.jf-clones')?.replaceChildren();
           setHp(e.target, 0);
           pushLog(B.logDown(name(e.target)));
+          // Protagonista caído com suportes de pé: a luta segue e o jogador precisa saber por quê.
+          const t = fighter(next, e.target);
+          if (t.protagonist && !soloFight && next.status === 'ongoing') {
+            const revivesLeft = revivesSoFar < data.j.combat.supportRevivesPerFight;
+            say(revivesLeft ? B.heroDown(name(e.target)) : B.heroDownLast(name(e.target)), 'var(--accent-deep)');
+            wait = host.instant() ? 200 : 900;
+          }
           break;
+        }
         case 'survive':
           say(B.survive(name(e.target)), 'var(--jin)');
           setHp(e.target, 1);
@@ -334,6 +379,11 @@ export async function jornadaBattle(
           setHp(e.target, e.hp);
           float(e.target, B.revived(''), 'heal');
           pushLog(B.logRevive(name(e.target)));
+          if (fighter(next, e.target).protagonist) {
+            revivesSoFar++;
+            say(B.heroUp(name(e.target), name(e.uid)), 'var(--good)');
+            wait = host.instant() ? 200 : 800;
+          }
           break;
         case 'item':
           pushLog(B.logItem(name(e.uid), J.items[e.item]?.name ?? e.item));
@@ -392,6 +442,7 @@ export async function jornadaBattle(
       const fallen = downed(state, 'ally');
       const items = CONSUMABLES.filter((id) => run.bag[id] > 0 && itemTargets(state, id).length > 0);
       menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
+        ${me.clones ? `<p class="jb-hint">${icon('clones')} ${B.clonesActive(me.clones, CLONE_PCT)}</p>` : ''}
         <div class="jb-moves">${moves.map((t) => techButton(me, t)).join('')}</div>
         <div class="jb-extra">${actives.map((t) => techButton(me, t)).join('')}
           <button class="btn small jx" data-act="guard" ${tip(B.guard, B.guardDesc)}>${icon('stance')} ${B.guard}</button>

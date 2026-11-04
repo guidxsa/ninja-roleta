@@ -47,7 +47,8 @@ export const stages: StageDef[] = [
   },
   {
     id: 'retrieval',
-    team: ['jiraiya', 'sakura'],
+    // Equipe de resgate do mangá (Shikamaru, Chōji, Kiba, Neji); cada parada leva quem estava lá.
+    team: ['shikamaru', 'choji'],
     scene: 'valley',
     stops: [
       { kind: 'event', id: 'rasenganTraining', event: 'rasenganTraining' },
@@ -62,11 +63,11 @@ export const stages: StageDef[] = [
         win: { kind: 'survive', rounds: 5, target: 'sasukeHospital', pct: 0.5 },
       },
       { kind: 'event', id: 'sasukeLeft', event: 'sasukeLeft' },
-      { kind: 'fight', id: 'soundAmbush', enemies: ['soundNinja', 'snake', 'soundNinja'] },
-      { kind: 'elite', id: 'jirobo', enemies: ['jirobo'] },
+      { kind: 'fight', id: 'soundAmbush', enemies: ['soundNinja', 'snake', 'soundNinja'], team: ['shikamaru', 'kibaAlly'] },
+      { kind: 'elite', id: 'jirobo', enemies: ['jirobo'], team: ['choji', 'shikamaru'] },
       { kind: 'treasure', id: 'treasure3' },
-      { kind: 'elite', id: 'kidomaruTayuya', enemies: ['kidomaru', 'tayuya'] },
-      { kind: 'elite', id: 'sakon', enemies: ['sakon', 'snake'] },
+      { kind: 'elite', id: 'kidomaruTayuya', enemies: ['kidomaru', 'tayuya'], team: ['nejiAlly', 'shikamaru'] },
+      { kind: 'elite', id: 'sakon', enemies: ['sakon', 'snake'], team: ['kibaAlly', 'nejiAlly'] },
       { kind: 'story', id: 'kimimaro', enemies: ['kimimaro'], team: ['lee', 'gaaraAlly'] },
       { kind: 'rest', id: 'rest3' },
       { kind: 'boss', id: 'valley', enemies: ['sasukeFinal'], team: [] },

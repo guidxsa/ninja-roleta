@@ -44,14 +44,16 @@ Um motor próprio, de equipe, separado do combate do Roleta. Compartilha com a b
 | Bloqueio de chakra | Só taijutsu | 2 (64 Palmas: 3) |
 
 - **Escudo** absorve dano antes do HP e não some sozinho.
-- **Clones** (Kage Bunshin): cada golpe de alvo único tem 50% de chance de acertar um clone no lugar do dono (o clone some). No máximo 5 clones.
+- **Clones** (Kage Bunshin): cada golpe de alvo único tem 50% de chance de acertar um clone no lugar do dono (o clone some). Técnicas em área ignoram os clones, mesmo sobrando um inimigo só. No máximo 5 clones.
 - **Kai** e **Palma mística** tiram atordoar e bloqueio de chakra.
 
 ## Cair e levantar
 
 - Quem chega a 0 de HP cai: perde efeitos, escudo e clones.
-- **Protagonista caído é derrota**, mesmo com suportes de pé. Fúria da Kyuubi (talento) segura o Naruto com 1 de HP uma vez por luta.
-- Levantar: ação de turno (do protagonista ou de um suporte tático/curandeiro) ou Pílula de reanimação (item). Volta com 50% do HP.
+- **Protagonista caído não encerra a luta** enquanto houver suporte de pé. Qualquer suporte, de qualquer comportamento, usa o turno para levantá-lo antes de tudo. A luta anda sozinha até ele voltar e agir de novo.
+- Os suportes levantam o protagonista **até 3 vezes por luta** (`combat.supportRevivesPerFight`). Sem esse limite, um inimigo que derruba o protagonista antes de ele agir prenderia a luta num laço sem o jogador. Depois disso ele fica no chão e os suportes seguem lutando: ainda dá para vencer.
+- **Derrota é todos os aliados no chão.** Lutando sozinho, cair é derrota. Fúria da Kyuubi (talento) segura o Naruto com 1 de HP uma vez por luta.
+- Levantar um suporte: ação de turno do protagonista, de um suporte tático/curandeiro, ou Pílula de reanimação (item). Todo levantar volta com 50% do HP.
 
 ## Bolsa
 
@@ -71,7 +73,7 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 ## Vitória e derrota
 
 - Vence quem derruba todos os inimigos, ou cumpre a vitória especial da luta ([historia.md](historia.md#vitórias-especiais)).
-- Derrota acaba a run. No **Fácil**, a Vontade do Fogo (1 por run, ou por relíquia) recomeça a luta com a equipe em pelo menos 50% do HP e do chakra.
+- Derrota (todos os aliados no chão) acaba a run. No **Fácil**, a Vontade do Fogo (1 por run, ou por relíquia) recomeça a luta com a equipe em pelo menos 50% do HP e do chakra.
 
 ## Interface
 
@@ -79,6 +81,8 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 - Quem age tem um losango dourado embaixo; na hora de escolher o alvo, os alvos válidos ganham uma retícula vermelha.
 - Entrada com varrida de pergaminho; cada evento do log anima (avançar no ataque, tremer ao tomar dano, número flutuante, brilho do elemento, cair e levantar), inclusive quando os suportes e os inimigos agem. O nome da técnica aparece numa pincelada na cor do elemento (ou do tipo); o crítico ganha um corte dourado. A barra de HP cai e deixa um rastro claro que alcança depois. O modo instantâneo encurta tudo.
 - Técnica em espera (cooldown) mostra um selo com as rodadas que faltam e um anel do quanto ainda falta.
+- **Clones na tela**: uma cópia do retrato atrás do lutador por clone; a que recebe o golpe vira fumaça, com o aviso "clone recebeu!". O botão da técnica diz quantos clones ela cria e o que eles fazem, a dica traz a regra inteira e, com clones ativos, o menu do turno repete a chance.
+- **Protagonista caído**: uma faixa avisa que os suportes vão levantá-lo (ou que não levanta mais nesta luta), e outra anuncia quem o levantou.
 - Log curto (tocar abre o histórico). Sem roleta na tela: só o resultado.
 - Dicas: passar o mouse ou segurar o dedo numa técnica mostra a ficha dela (tipo, elemento, alvo, dano, precisão, efeitos, custo, espera); num lutador, HP, chakra, elemento, comportamento, passiva, efeitos e técnicas.
 - No PC, a batalha usa duas colunas (arena à esquerda, menu e log à direita) e a trilha mostra o HUD ao lado do caminho. O botão Ficha (do Roleta) some na Jornada.

@@ -16,4 +16,8 @@ export interface JornadaHost {
   difficulty: () => Difficulty;
   setDifficulty: (d: Difficulty) => void;
   mood: (m: Mood) => void;
+  /** Pergunta o nome do jogador se ainda não perguntou (uma vez, no perfil). */
+  ensurePlayerName: () => Promise<void>;
+  /** Nome do jogador ('' = não informou). */
+  playerName: () => string;
 }

@@ -223,7 +223,7 @@ export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique
 
 export function startBattle(setup: BattleSetup, data: JornadaData, rng: Rng): JBattle {
   const fighters = [...setup.allies.map((f, i) => enter(f, 'ally', i)), ...setup.enemies.map((f, i) => enter(f, 'enemy', i))];
-  const s: JBattle = { round: 0, fighters, order: [], turnIndex: 0, turnStarted: false, status: 'ongoing', win: setup.win, itemUsed: false, log: [] };
+  const s: JBattle = { round: 0, fighters, order: [], turnIndex: 0, turnStarted: false, status: 'ongoing', win: setup.win, itemUsed: false, heroRevives: 0, log: [] };
   return advance(s, data, rng);
 }
 
@@ -260,8 +260,8 @@ function end(s: JBattle, status: 'won' | 'lost'): void {
 /** Confere vitória e derrota depois de qualquer mudança de HP. */
 function checkEnd(s: JBattle): void {
   if (s.status !== 'ongoing') return;
-  const hero = protagonist(s);
-  if (hero?.down || alive(s, 'ally').length === 0) return end(s, 'lost');
+  // Protagonista caído não encerra a luta: os suportes de pé usam o turno para levantá-lo (ai.ts).
+  if (alive(s, 'ally').length === 0) return end(s, 'lost');
   if (alive(s, 'enemy').length === 0) return end(s, 'won');
   const w = s.win;
   if (w.kind === 'hpThreshold' || w.kind === 'survive') {
@@ -312,7 +312,11 @@ export function advance(state: JBattle, data: JornadaData, rng: Rng): JBattle {
   const s = clone(state);
   let guard = 0;
   while (s.status === 'ongoing') {
-    if (++guard > 500) throw new Error('luta sem fim');
+    // Com o protagonista caído a luta anda sem o jogador: se ninguém consegue terminar, conta como derrota.
+    if (++guard > 500) {
+      end(s, 'lost');
+      break;
+    }
     if (s.turnIndex >= s.order.length) {
       newRound(s, data, rng);
       continue;
@@ -396,6 +400,7 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
   if (action.kind === 'revive') {
     const t = fighter(s, action.target);
     if (!t.down || t.side !== f.side) throw new Error('alvo inválido');
+    if (t.protagonist) s.heroRevives++;
     reviveFighter(s, f, t, j.reviveHpPct);
     return;
   }
@@ -421,7 +426,7 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
     s.log.push({ type: 'clones', uid: f.uid, total: f.clones });
   }
   for (const t of targets) {
-    if (tech.baseDamage > 0) strike(s, f, t, tech, data, rng, targets.length === 1);
+    if (tech.baseDamage > 0) strike(s, f, t, tech, data, rng);
     else if (tech.onHit && t.side !== f.side) applyStatus(s, f, t, tech, data, rng);
     if (t.down) continue;
     if (tech.healPct) heal(s, f, t, Math.floor(t.maxHp * tech.healPct));
@@ -449,9 +454,11 @@ function applyStatus(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data:
   tryEffect(s, t, tech, data, rng);
 }
 
-function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: JornadaData, rng: Rng, single: boolean): void {
+function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: JornadaData, rng: Rng): void {
   const j = data.j.combat;
   const hits = hitsOf(f, tech);
+  // Clones só seguram golpe de alvo único; técnica em área passa por eles.
+  const single = tech.target !== 'allEnemies';
   for (let i = 0; i < hits && !t.down && s.status === 'ongoing'; i++) {
     const chance = accuracyAgainst(f, t, tech, data);
     // Um sorteio só: abaixo do crítico é crítico, abaixo do acerto é acerto (crítico contido no acerto).

@@ -7,6 +7,10 @@ Estrutura de uma run: tipos de run, paradas, eventos e minijogos, dificuldade e 
 - **História** (implementada na v0.35.0): a história do Naruto, **linear**, sem escolha de caminho. Estágios, paradas e confrontos em [historia.md](historia.md).
 - **Caminho Ninja** (implementado na v0.36.0): mapa ramificado, parada "desconhecido", classes e encontros variados ([caminho-ninja.md](caminho-ninja.md)).
 
+## Tela de início
+
+De cima para baixo: Continuar (quando há run salva, com a dificuldade dela), **Dificuldade da Jornada** (uma só, vale para as duas runs), um cartão da História e um do Caminho Ninja, cada um com o seu botão de começar. A dificuldade da run salva não muda: ela vale para a próxima run.
+
 ## Paradas
 
 | Parada | O que acontece |

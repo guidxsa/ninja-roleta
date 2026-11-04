@@ -25,6 +25,20 @@ export interface Profile {
   villains: Record<string, VillainRecord>;
   /** As conquistas que dá para deduzir do histórico já foram liberadas. */
   backfilled: boolean;
+  /** Nome do jogador. Sem o campo: nunca perguntado; vazio: preferiu não dizer. No futuro pode vir do login. */
+  playerName?: string;
+}
+
+export const PLAYER_NAME_MAX = 16;
+
+/** Nome pronto para guardar: sem espaços sobrando nem caracteres de controle, até o limite. */
+export function cleanPlayerName(raw: string): string {
+  return raw
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, PLAYER_NAME_MAX)
+    .trim();
 }
 
 export function emptyProfile(): Profile {
@@ -40,6 +54,7 @@ export function loadProfile(storage: KeyValueStorage): Profile {
       achievements: parsed.achievements && typeof parsed.achievements === 'object' ? parsed.achievements : base.achievements,
       villains: parsed.villains && typeof parsed.villains === 'object' ? parsed.villains : base.villains,
       backfilled: parsed.backfilled === true,
+      ...(typeof parsed.playerName === 'string' ? { playerName: cleanPlayerName(parsed.playerName) } : {}),
     };
   } catch {
     return emptyProfile();

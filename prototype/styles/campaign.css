@@ -4,6 +4,8 @@
 .panel-head { display: flex; align-items: center; gap: 12px; }
 .panel-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .panel-id .name { font: 400 19px/1.15 var(--font-display); letter-spacing: .02em; overflow-wrap: break-word; }
+/* Com o nome do jogador, a origem vira a linha de baixo. */
+.panel-id .name-sub { font: 700 13px/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .sheet-btn { flex: none; }
 .player-panel { --tab: var(--gold); }
 

@@ -512,6 +512,14 @@ export const ptBR = {
     stageFights: (n: number, exam: boolean) => (exam ? `${n} lutas` : n > 1 ? `${n} lutas seguidas` : '1 luta'),
     /** Atalhos do Portão da Vila (tela inicial) para o registro ninja. */
     gate: { registry: 'Registro ninja', report: 'Reportar' },
+    playerName: {
+      title: 'Qual é o seu nome, ninja?',
+      label: 'Nome do ninja',
+      placeholder: 'Seu nome',
+      hint: 'Aparece na sua ficha e nas lutas. Dá para mudar depois no Registro ninja.',
+      confirm: 'Confirmar',
+      skip: 'Agora não',
+    },
     /** Campos da ficha (registro ninja) e categorias da bolsa. */
     sheetFields: { kicker: 'Registro ninja', clan: 'Clã', level: 'Nível', affinity: 'Afinidade', difficulty: 'Dificuldade' },
     bagCategories: { gear: 'Equipamento', consumables: 'Consumíveis', scrolls: 'Pergaminhos e invocação', coins: 'Moedas' },

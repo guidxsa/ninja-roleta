@@ -15,6 +15,10 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 | Tsunade | 140 | 40 | 12 | 15/12/6 | 10/8 | terra | healer | Soco da Tsunade, Palma mística, Golpe |
 | Rock Lee | 115 | 10 | 15 | 14/0/0 | 9/5 | — | striker | Redemoinho da Folha, Furacão da Folha, Lótus Primária |
 | Gaara | 130 | 40 | 10 | 6/14/4 | 12/8 | terra | guardian | Escudo de areia, Caixão de areia, Shuriken de areia |
+| Shikamaru | 95 | 30 | 11 | 8/10/8 | 6/9 | — | tactician | Kunai, Shuriken, Possessão das Sombras |
+| Chōji | 165 | 28 | 8 | 13/6/2 | 10/5 | — | guardian | Golpe, Tanque de carne humana, Expansão parcial |
+| Kiba | 110 | 22 | 14 | 13/4/2 | 7/5 | — | striker | Kunai, Mordida do Akamaru, Presa sobre Presa |
+| Neji | 120 | 28 | 13 | 14/6/4 | 9/8 | — | striker | Palma Suave, 64 Palmas, Rotação |
 | Ninja da Folha | 100 | 30 | 11 | 9/9/4 | 7/6 | — | striker | Golpe, Shuriken, Kunai, Bunshin |
 | Prodígio do taijutsu | 115 | 12 | 13 | 12/0/0 | 8/5 | — | striker | Golpe, Redemoinho da Folha, Shuriken, Portões |
 | Daichi | 95 | 24 | 11 | 10/10/3 | 6/5 | — | striker | Kunai, Shuriken |
@@ -27,17 +31,19 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 - O Sasuke aprende o **Chidori** ao chegar no exame chunin (estágio 2).
 - As técnicas novas do Naruto vêm da árvore de talentos ([talentos.md](talentos.md)).
 - No mangá, antes do timeskip, a Sakura ainda não é médica: o papel dela é tático (soltar aliado preso, levantar quem caiu, armadilhas).
+- A equipe de resgate entra no estágio 3 da História ([historia.md](historia.md)). O Akamaru luta dentro do kit do Kiba, porque cada lado tem no máximo 3 lutadores.
+- No Caminho Ninja, o protagonista usa o nome do jogador, quando informado ([perfil.md](../base/perfil.md#nome-do-jogador)).
 - Caminho Ninja ([classes.md](classes.md)): o Ninja da Folha (Comum) e os suportes Daichi e Hana usam o elemento sorteado na run e ganham a técnica de nível I dele; o prodígio é o Comum que saiu sem elemento.
 
 ## Comportamento
 
-Os suportes e os inimigos usam o mesmo motor de decisão. Antes de atacar, todo lutador usa escudo próprio quando está ferido, ativa um fortalecimento quando não tem (60%), cria clones quando não tem, e às vezes usa um controle sem dano (35%).
+Os suportes e os inimigos usam o mesmo motor de decisão. Com o protagonista caído, qualquer suporte usa o turno para levantá-lo, antes de tudo ([combate.md](combate.md#cair-e-levantar)). Antes de atacar, todo lutador usa escudo próprio quando está ferido, ativa um fortalecimento quando não tem (60%), cria clones quando não tem, e às vezes usa um controle sem dano (35%).
 
 | IA | Comportamento |
 |---|---|
 | striker | Ataca o inimigo mais perigoso (maior ataque) com a técnica de mais dano esperado. |
-| tactician | Levanta quem caiu (o protagonista primeiro), solta aliado atordoado ou com chakra bloqueado e usa controle no inimigo mais perigoso. |
-| healer | Levanta quem caiu e cura o aliado com menos de 55% do HP. |
+| tactician | Levanta os outros suportes caídos, solta aliado atordoado ou com chakra bloqueado e usa controle no inimigo mais perigoso. |
+| healer | Levanta os outros suportes caídos e cura o aliado com menos de 55% do HP. |
 | guardian | Põe escudo no aliado ferido (protagonista primeiro). |
 | brute | Bate no adversário com menos HP. |
 
@@ -77,6 +83,11 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 | Escudo de areia | Ninjutsu | terra | um aliado | — | 5 | 85% | escudo 25% do HP de quem usa; espera 2 |
 | Caixão de areia | Ninjutsu | terra | um inimigo | 20 | 7 | 85% | atordoar 30% (1 t) |
 | Shuriken de areia | Ninjutsu | terra | todos os inimigos | 8 | 5 | 85% | — |
+| Possessão das Sombras | Ninjutsu | — | um inimigo | — | 4 | 90% | atordoar 70% (1 t); espera 3 |
+| Tanque de carne humana | Taijutsu | — | um inimigo | 20 | 5 | 80% | — |
+| Expansão parcial | Taijutsu | — | um aliado | — | 4 | 85% | escudo 15% do HP de quem usa; espera 2 |
+| Mordida do Akamaru | Taijutsu | — | um inimigo | 11 | 0 | 90% | — |
+| Presa sobre Presa | Taijutsu | — | um inimigo | 10 | 4 | 80% | 2 golpes |
 
 ### Linhas elementais (Caminho Ninja)
 

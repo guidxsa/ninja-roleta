@@ -35,6 +35,17 @@
 /* Histórico como livro-razão: linhas finas e data condensada. */
 .history li small { font-family: var(--font-hud); font-size: 13px; letter-spacing: .02em; }
 
+/* Campo de texto do nome do jogador (pergunta inicial e Registro ninja). */
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field > span { font: 700 13px/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.field input {
+  width: 100%; min-height: 44px; padding: 8px 10px; background: var(--surface-2); color: inherit;
+  border: 1px solid var(--line-strong); border-radius: var(--radius); font: inherit;
+}
+.field input:focus { outline: 2px solid var(--accent-2); outline-offset: 1px; }
+.profile-name { margin-bottom: 8px; }
+.jname-skip { align-self: center; }
+
 .report textarea {
   width: 100%; background: var(--surface-2); color: inherit; border: 1px solid var(--line-strong); border-radius: var(--radius);
   padding: 8px 10px; font: inherit; resize: vertical;

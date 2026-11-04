@@ -20,11 +20,11 @@ import {
   heroActives,
   heroMovable,
   leaveStop,
-  membersSeen,
   memberSheet,
   memberState,
   newGenericRun,
   newRun,
+  nextFightTeam,
   nodeChoices,
   openTreasure,
   resolveEvent,
@@ -34,7 +34,6 @@ import {
   stageCount,
   stageId,
   stageScene,
-  stageTeam,
   stopRng,
   talentContext,
   talentLearns,
@@ -53,7 +52,7 @@ import { clearJornada, loadJornada, saveJornada } from '../../src/state/jornadaS
 import { fighterPortrait, icon } from '../art';
 import { choose, esc, h, show, sleep } from '../dom';
 import { tip } from '../tooltip';
-import { jornadaBattle, techName, techTip } from './battle';
+import { heroLabel, jornadaBattle, techName, techTip } from './battle';
 import type { JornadaHost } from './host';
 import { playMinigame } from './minigames';
 import { chestClosed, chestOpen, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
@@ -82,10 +81,13 @@ const stopName = (s: StopDef) =>
 const stageName = (run: JRun) => J.stages[stageId(run, data)] ?? '';
 const portraitSpec = (id: string, run?: JRun) =>
   run?.skin && id === run.hero ? `ninja:${run.skin}` : (data.characters[id]?.portrait ?? 'ninja:common');
+/** Nome de quem protagoniza, com o nome do jogador no Caminho Ninja. Já escapado: vai direto para o HTML. */
+const heroName = (host: JornadaHost, run: JRun) => esc(run.mode === 'generic' ? heroLabel(run.hero, host.playerName()) : (J.names[run.hero] ?? run.hero));
 /** Nome com o elemento sorteado (Caminho Ninja): "Daichi (Fogo)". */
-function memberName(run: JRun, id: string): string {
+function memberName(host: JornadaHost, run: JRun, id: string): string {
   const el = run.mode === 'generic' ? elementOf(run, id, data) : null;
-  return el ? J.genericStart.elementOf(J.names[id] ?? id, S.elements[el]) : (J.names[id] ?? id);
+  const name = id === run.hero ? heroName(host, run) : (J.names[id] ?? id);
+  return el ? J.genericStart.elementOf(name, S.elements[el]) : name;
 }
 // ---------------------------------------------------------------------------
 // Entrada
@@ -129,32 +131,37 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
   const root = show(
     h(`<div class="screen jstart">
       <h2>${J.start.title}</h2>
-      <section class="card jmode-card"><div class="jstart-face">${fighterPortrait('naruto', 'ninja:uzumaki', 'md')}</div>
-        <div><h3>${J.start.canon}</h3><p class="muted small">${J.start.canonDesc}</p></div></section>
       ${
         saved
-          ? `<button class="btn primary big" data-choice="continue">${icon('scroll')} ${J.start.continue(stageName(saved), saved.stageIndex + 1, stageCount(saved, data))}</button>`
+          ? `<button class="btn primary big" data-choice="continue">${icon('scroll')} ${J.start.continue(stageName(saved), saved.stageIndex + 1, stageCount(saved, data))} <span class="chip diff-${saved.difficulty}">${S.difficulty[saved.difficulty].name}</span></button>`
           : ''
       }
       <div class="difficulty-box"><h3>${J.start.difficulty}</h3>
         <div class="segmented">${DIFFICULTIES.map(
           (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === diff}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? `${icon('lock')} ` : ''}${S.difficulty[d].name}</button>`,
         ).join('')}</div>
+        <p class="center small jdiff-both">${J.start.difficultyBoth}</p>
         <p class="muted center small">${hardcoreOk ? J.start.willOfFireNote : J.start.hardcoreLocked}</p></div>
-      <button class="btn ${saved ? '' : 'primary '}big" data-choice="new">${J.start.newRun}</button>
-      <section class="card jmode-card"><div class="jstart-face">${fighterPortrait('commonNinja', 'ninja:common', 'md')}</div>
-        <div><h3>${G.title}</h3><p class="muted small">${G.desc}</p></div></section>
-      <div class="jclasses">${['common', 'uchiha', 'hyuuga']
-        .map((id) => {
-          const def = data.generic.classes.find((c) => c.id === id);
-          const open = def && (!def.unlock || host.unlocked().has(def.unlock));
-          const note = !def ? G.soonClass : open ? G.classes[id]!.desc : G.locked[id]!;
-          return `<button class="jclass${open ? '' : ' off'}" data-class="${id}" aria-pressed="${id === 'common'}" ${open ? '' : 'aria-disabled="true"'}>
-            <b>${open ? '' : `${icon('lock', 'lock')} `}${G.classes[id]!.name}</b><small>${note}</small></button>`;
-        })
-        .join('')}</div>
-      ${host.unlocked().has('j_sasukeEgg') ? `<button class="btn small jskin" data-skin aria-pressed="false">${G.skinSasuke}</button>` : ''}
-      <button class="btn big" data-choice="generic">${icon('dice')} ${G.start}</button>
+      <section class="card jmode-panel">
+        <div class="jmode-card"><div class="jstart-face">${fighterPortrait('naruto', 'ninja:uzumaki', 'md')}</div>
+          <div><h3>${J.start.canon}</h3><p class="muted small">${J.start.canonDesc}</p></div></div>
+        <button class="btn ${saved ? '' : 'primary '}big" data-choice="new">${J.start.startCanon}</button>
+      </section>
+      <section class="card jmode-panel">
+        <div class="jmode-card"><div class="jstart-face">${fighterPortrait('commonNinja', 'ninja:common', 'md')}</div>
+          <div><h3>${G.title}</h3><p class="muted small">${G.desc}</p></div></div>
+        <div class="jclasses">${['common', 'uchiha', 'hyuuga']
+          .map((id) => {
+            const def = data.generic.classes.find((c) => c.id === id);
+            const open = def && (!def.unlock || host.unlocked().has(def.unlock));
+            const note = !def ? G.soonClass : open ? G.classes[id]!.desc : G.locked[id]!;
+            return `<button class="jclass${open ? '' : ' off'}" data-class="${id}" aria-pressed="${id === 'common'}" ${open ? '' : 'aria-disabled="true"'}>
+              <b>${open ? '' : `${icon('lock', 'lock')} `}${G.classes[id]!.name}</b><small>${note}</small></button>`;
+          })
+          .join('')}</div>
+        ${host.unlocked().has('j_sasukeEgg') ? `<button class="btn small jskin" data-skin aria-pressed="false">${G.skinSasuke}</button>` : ''}
+        <button class="btn ${saved ? '' : 'primary '}big" data-choice="generic">${icon('dice')} ${G.start}</button>
+      </section>
       <button class="btn small" data-choice="back">${J.start.back}</button>
     </div>`),
   );
@@ -186,6 +193,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
       if (saved && !window.confirm(J.start.overwrite)) continue;
       clearJornada(host.storage);
       if (c === 'new') return newRun(host.nextSeed(), diff, data);
+      await host.ensurePlayerName();
       const run = newGenericRun(host.nextSeed(), diff, classId, data, host.unlocked(), classId === 'uchiha' ? skin : null);
       await revealScreen(host, run);
       return run;
@@ -196,11 +204,11 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
 /** Revelação do sorteio do elemento (sem roleta): o elemento ou o prodígio, e os parceiros. */
 async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
   const el = elementOf(run, run.hero, data);
-  const [a, b] = run.supports.map((id) => memberName(run, id));
+  const [a, b] = run.supports.map((id) => memberName(host, run, id));
   const root = show(
     h(`<div class="screen jreveal"><h2>${G.revealTitle}</h2>
       <div class="jstart-face pop">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'lg')}</div>
-      <h3 class="center">${J.names[run.hero]}</h3>
+      <h3 class="center">${heroName(host, run)}</h3>
       <p class="center">${el ? `${icon(el)} ${G.revealElement(S.elements[el])}` : G.revealProdigy}</p>
       ${run.classId === 'uchiha' ? `<p class="center">${run.secondElement ? `${icon(run.secondElement)} ${G.revealSecond(S.elements[run.secondElement])}` : G.revealNoSecond}</p>` : ''}
       <p class="center muted">${G.revealTeam(a ?? '', b ?? '')}</p>
@@ -213,20 +221,19 @@ async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
 // ---------------------------------------------------------------------------
 // HUD e trilha
 
-function hud(run: JRun): string {
+function hud(host: JornadaHost, run: JRun): string {
   const need = xpToNext(run.level, data);
   const bag = (['hpKit', 'chakraKit', 'reviveKit'] as const).filter((id) => run.bag[id] > 0).map((id) => `${J.items[id]!.name} ×${run.bag[id]}`);
   return `<section class="card jhud">
-    <div class="jhud-top">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}<b>${J.names[run.hero]}</b>
+    <div class="jhud-top">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}<b>${heroName(host, run)}</b>
       <span class="chip lvl-chip">${U.level(run.level)}</span><span class="chip">${icon('coin')} ${U.ryo(run.ryo)}</span>
       ${run.willOfFire ? `<span class="chip jin">${icon('willOfFire')} ${run.willOfFire}</span>` : ''}</div>
     <div class="bar bar-xp"><div class="fill" style="width:${Math.min(100, (run.xp / need) * 100)}%"></div><span>${U.xp(run.xp, need)}</span></div>
-    <div class="jhud-team">${membersSeen(run, data)
-      .filter((id) => id === run.hero || stageTeam(run, data).includes(id))
+    <div class="jhud-team">${[run.hero, ...nextFightTeam(run, data)]
       .map((id) => {
         const st = memberState(run, id, data);
         const sh = memberSheet(run, id, data);
-        return `<div class="jhud-member">${fighterPortrait(id, portraitSpec(id, run), 'sm')}<div><b>${memberName(run, id)}</b>
+        return `<div class="jhud-member">${fighterPortrait(id, portraitSpec(id, run), 'sm')}<div><b>${memberName(host, run, id)}</b>
           <div class="bar bar-hp jbar"><div class="fill" style="width:${(st.hp / sh.maxHp) * 100}%"></div><span>${st.hp}/${sh.maxHp}</span></div>
           <div class="bar bar-ck jbar"><div class="fill" style="width:${(st.chakra / sh.maxChakra) * 100}%"></div></div></div></div>`;
       })
@@ -294,14 +301,14 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
   const root = show(
     h(`<div class="screen jtrail-screen">
       <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span><span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
-      <div data-hud>${hud(cur)}</div>
+      <div data-hud>${hud(host, cur)}</div>
       ${trail(cur)}
       <div class="sticky-cta">${teamLine}<button class="btn primary big" data-choice="go">${icon(STOP_ICONS[stop.kind]!)} ${U.go(stopName(stop))}</button>
         <button class="btn small jabandon" data-choice="abandon">${U.abandon}</button></div>
     </div>`),
   );
   wireHud(root, host, () => cur, (r) => (cur = r), () => {
-    root.querySelector('[data-hud]')!.innerHTML = hud(cur);
+    root.querySelector('[data-hud]')!.innerHTML = hud(host, cur);
     saveJornada(host.storage, cur);
   });
   for (;;) {
@@ -358,13 +365,13 @@ async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
   const root = show(
     h(`<div class="screen jtrail-screen jmap-screen">
       <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span><span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
-      <div class="jmap-side"><div data-hud>${hud(cur)}</div>
+      <div class="jmap-side"><div data-hud>${hud(host, cur)}</div>
         <p class="jb-prompt">${M.choose}</p><button class="btn small jabandon" data-abandon>${U.abandon}</button></div>
       <div class="jtrail">${mapView(cur)}</div>
     </div>`),
   );
   wireHud(root, host, () => cur, (r) => (cur = r), () => {
-    root.querySelector('[data-hud]')!.innerHTML = hud(cur);
+    root.querySelector('[data-hud]')!.innerHTML = hud(host, cur);
     saveJornada(host.storage, cur);
   });
   // Rola o mapa até os nós que dá para escolher (no celular o mapa é comprido).
@@ -441,7 +448,7 @@ async function shopStop(host: JornadaHost, run0: JRun): Promise<JRun> {
   const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud></div><div data-shop></div>
     <div class="sticky-cta"><button class="btn primary big" data-choice="leave">${U.leave}</button></div></div>`));
   const render = () => {
-    root.querySelector('[data-hud]')!.innerHTML = hud(run);
+    root.querySelector('[data-hud]')!.innerHTML = hud(host, run);
     const btn = (p: Purchase, key: string) => {
       const ok = canBuy(run, p, data) && !bought.has(key);
       const label = bought.has(key) ? U.owned : p.kind === 'item' && !canBuy({ ...run, ryo: 1e9 }, p, data) ? U.full : `${U.buy} · ${U.ryo(p.price)}`;
@@ -491,7 +498,7 @@ async function shopStop(host: JornadaHost, run0: JRun): Promise<JRun> {
 }
 
 async function restStop(host: JornadaHost, run: JRun): Promise<JRun> {
-  const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud>${hud(run)}</div>
+  const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud>${hud(host, run)}</div>
     <button class="btn big" data-choice="heal">${icon('rest')} ${U.restHeal(Math.round(data.j.run.restHealPct * 100))}</button>
     <button class="btn big" data-choice="train">${icon('scroll')} ${U.restTrain}</button></div>`));
   const c = await choose<'heal' | 'train'>(root);
@@ -621,6 +628,7 @@ function movesetModal(run: JRun): Promise<JRun> {
         })
         .join('')}</div>
       <h3>${U.actives}</h3><p class="muted small">${heroActives(run, data).map(techName).join(' · ')}</p>
+      ${[...heroActives(run, data), ...known].some((id) => data.techniques[id]?.clones) ? `<p class="muted small">${icon('clones')} ${J.battle.cloneRule(Math.round(data.j.combat.cloneBlockChance * 100), data.j.combat.maxClones)}</p>` : ''}
       <button class="btn primary big" data-save ${picked.size ? '' : 'disabled'}>${U.save}</button>`;
   };
   render();

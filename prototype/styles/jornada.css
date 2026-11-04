@@ -1,7 +1,9 @@
 /* Jornada (docs/jornada/): início, HUD, trilha, mapa, relíquias, mercador, tesouro, talentos. */
 
 .jpick { padding: 0; border: 0; background: none; width: 100%; text-align: left; cursor: pointer; color: var(--text); font: inherit; }
-.jmode-card { flex-direction: row !important; gap: 12px; align-items: center; }
+.jmode-panel { --tab: var(--gold); }
+.jmode-card { display: flex; gap: 12px; align-items: center; }
+.jdiff-both { margin: 6px 0 2px; color: var(--gold-2); font-weight: 700; }
 .jmode-card h3 { margin: 0 0 4px; text-align: left; font: 400 21px/1.1 var(--font-display); letter-spacing: .02em; text-transform: none; text-shadow: var(--title-shadow); }
 .jstart-face { display: flex; justify-content: center; }
 

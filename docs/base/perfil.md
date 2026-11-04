@@ -4,6 +4,13 @@ O que fica salvo no aparelho entre as runs: conquistas, Livro Bingo e estatísti
 
 A tela **Registro ninja** (o perfil; botão do livro no cabeçalho ou os atalhos da tela inicial) tem quatro abas, cada uma com o seu selo: Histórico (歴), Conquistas (功), Livro Bingo (手配) e Origens (族). No Livro Bingo, quem já foi derrotado ganha o carimbo 勝; quem nunca apareceu fica na sombra com 謎.
 
+## Nome do jogador
+
+- Perguntado **uma vez**, na primeira entrada no Roleta ou no Caminho Ninja. Dá para pular; o Laboratório não pergunta. Na História, o protagonista continua sendo o Naruto.
+- Fica no perfil (`playerName`), com até 16 caracteres, e dá para mudar no topo do Registro ninja. Sem o campo, ainda não foi perguntado; vazio, a pessoa preferiu não dizer. É só cosmético e, no futuro, pode vir do login (Fase 3 do roteiro).
+- **Roleta**: aparece no painel do jogador, com a origem embaixo, e no título da ficha.
+- **Caminho Ninja**: é o nome do protagonista. Comum e prodígio usam o nome; Uchiha e Hyuuga, "Nome Uchiha" e "Nome Hyuuga".
+
 ## Regras gerais
 
 - Runs do Laboratório (`?teste`) não contam para nada do perfil.

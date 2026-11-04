@@ -31,6 +31,7 @@ import {
   memberSheet,
   newGenericRun,
   newRun,
+  nextFightTeam,
   nodeChoices,
   resolveEvent,
   rest,
@@ -46,6 +47,7 @@ import type { JBattle } from '../src/core/jornada/types';
 import { createRng } from '../src/core/rng';
 import { jornadaData as data } from '../src/data/jornada';
 import { loadJornada, saveJornada, JORNADA_SAVE_KEY } from '../src/state/jornadaSave';
+import { cleanPlayerName, loadProfile, PLAYER_NAME_MAX, PROFILE_STORAGE_KEY, saveProfile } from '../src/state/profile';
 import { jornadaPtBR } from '../src/data/strings/jornada';
 import { RELIC_ICONS } from '../prototype/jornada/relicIcons';
 
@@ -76,6 +78,59 @@ function dummy(over: Partial<FighterSeed> = {}): FighterSeed {
 }
 
 const setup = (over: Partial<BattleSetup> = {}): BattleSetup => ({ allies: [hero()], enemies: [dummy()], win: { kind: 'defeatAll' }, ...over });
+
+describe('equipe de resgate (estágio 3 da História)', () => {
+  const stage = data.stages.find((s) => s.id === 'retrieval')!;
+  const team = (id: string) => {
+    const stop = stage.stops.find((s) => s.id === id)!;
+    return isFight(stop) ? (stop.team ?? stage.team) : [];
+  };
+
+  it('o Quarteto do Som é enfrentado por quem estava lá, sem Jiraiya e Sakura', () => {
+    expect(team('soundAmbush')).toEqual(['shikamaru', 'kibaAlly']);
+    expect(team('jirobo')).toEqual(['choji', 'shikamaru']);
+    expect(team('kidomaruTayuya')).toEqual(['nejiAlly', 'shikamaru']);
+    expect(team('sakon')).toEqual(['kibaAlly', 'nejiAlly']);
+    expect(stage.team).not.toContain('jiraiya');
+    expect(stage.team).not.toContain('sakura');
+    expect(team('tanzaku')).toEqual(['jiraiya', 'tsunade']);
+  });
+
+  it('todos têm ficha, nome e técnicas com nome', () => {
+    for (const id of ['shikamaru', 'choji', 'kibaAlly', 'nejiAlly']) {
+      const c = data.characters[id]!;
+      expect(jornadaPtBR.names[id], id).toBeTruthy();
+      for (const t of c.techniques) {
+        expect(data.techniques[t], t).toBeTruthy();
+        expect(jornadaPtBR.techniques[t], t).toBeTruthy();
+      }
+    }
+  });
+
+  it('o HUD mostra quem luta na próxima parada da História', () => {
+    const run = { ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 0 };
+    expect(nextFightTeam(run, data)).toEqual(['jiraiya', 'tsunade']);
+    const ambush = stage.stops.findIndex((s) => s.id === 'soundAmbush');
+    expect(nextFightTeam({ ...run, stopIndex: ambush }, data)).toEqual(['shikamaru', 'kibaAlly']);
+  });
+});
+
+describe('nome do jogador', () => {
+  it('limpa espaços e caracteres de controle e respeita o limite', () => {
+    expect(cleanPlayerName('  Guilherme   Sá\n ')).toBe('Guilherme Sá');
+    expect(cleanPlayerName('x'.repeat(40))).toHaveLength(PLAYER_NAME_MAX);
+    expect(cleanPlayerName('   ')).toBe('');
+  });
+
+  it('perfil antigo não tem nome (ainda vai perguntar); nome vazio conta como já perguntado', () => {
+    const store: Record<string, string> = {};
+    const storage = { getItem: (k: string) => store[k] ?? null, setItem: (k: string, v: string) => void (store[k] = v) };
+    store[PROFILE_STORAGE_KEY] = JSON.stringify({ achievements: {}, villains: {}, backfilled: true });
+    expect(loadProfile(storage).playerName).toBeUndefined();
+    saveProfile(storage, { ...loadProfile(storage), playerName: '' });
+    expect(loadProfile(storage).playerName).toBe('');
+  });
+});
 
 describe('combate de equipe da Jornada', () => {
   it('para na vez do protagonista e o mais rápido age primeiro', () => {
@@ -132,11 +187,45 @@ describe('combate de equipe da Jornada', () => {
     expect(b.log.some((e) => e.type === 'revive' && e.target === 'a1' && e.hp === 50)).toBe(true);
   });
 
-  it('o protagonista caído é derrota, mesmo com aliados de pé', () => {
-    const ally = { ...dummy(), defId: 'sakura', speed: 2, techniques: ['jKunai'], ai: 'tactician' as const };
+  it('protagonista caído não é derrota: qualquer suporte de pé usa o turno para levantá-lo', () => {
+    for (const ai of ['striker', 'guardian', 'brute', 'tactician', 'healer'] as const) {
+      const ally = { ...dummy(), defId: 'sasuke', speed: 2, techniques: ['jKunai'], ai, hp: 500, maxHp: 500 };
+      const killer = dummy({ speed: 99, techniques: ['jeCleaver'], offense: { taijutsu: 200, ninjutsu: 0, genjutsu: 0 } });
+      // O inimigo mata o herói toda rodada, sempre antes de ele agir: a luta anda sozinha.
+      const b = startBattle(setup({ allies: [hero({ hp: 5 }), ally], enemies: [killer] }), data, fixed(0));
+      const revives = b.log.filter((e) => e.type === 'revive' && e.uid === 'a1' && e.target === 'a0');
+      expect(revives[0], ai).toMatchObject({ hp: 50 });
+      // Com limite por luta, a luta não entra em laço: depois disso o herói fica no chão e o suporte luta.
+      expect(revives.length, ai).toBe(data.j.combat.supportRevivesPerFight);
+      expect(b.status, ai).toBe('lost');
+    }
+  });
+
+  it('com o herói de pé depois de levantado, o jogador volta a agir', () => {
+    const ally = { ...dummy(), defId: 'sasuke', speed: 2, techniques: ['jKunai'], ai: 'striker' as const, hp: 500, maxHp: 500 };
     const killer = dummy({ speed: 99, techniques: ['jeCleaver'], offense: { taijutsu: 200, ninjutsu: 0, genjutsu: 0 } });
-    const b = startBattle(setup({ allies: [hero({ hp: 5 }), ally], enemies: [killer] }), data, fixed(0));
-    expect(b.status).toBe('lost');
+    // Sorteio: ordem da rodada 1 (3), golpe que acerta (0), depois tudo erra (0,99).
+    const rolls = [0.5, 0.5, 0.5, 0];
+    const b = startBattle(setup({ allies: [hero({ hp: 5 }), ally], enemies: [killer] }), data, () => rolls.shift() ?? 0.99);
+    expect(b.log.some((e) => e.type === 'revive' && e.target === 'a0')).toBe(true);
+    expect(awaitingPlayer(b)).toBe(true);
+    expect(current(b)!.uid).toBe('a0');
+  });
+
+  it('derrota só quando todos os aliados caem; sozinho, cair é derrota', () => {
+    const killer = dummy({ speed: 99, techniques: ['jeCleaver'], offense: { taijutsu: 200, ninjutsu: 0, genjutsu: 0 } });
+    expect(startBattle(setup({ allies: [hero({ hp: 5 })], enemies: [killer] }), data, fixed(0)).status).toBe('lost');
+    const ally = { ...dummy(), defId: 'sasuke', speed: 2, techniques: ['jKunai'], ai: 'striker' as const, hp: 5 };
+    // Dois inimigos rápidos derrubam os dois aliados antes de o suporte agir.
+    expect(startBattle(setup({ allies: [hero({ hp: 5 }), ally], enemies: [killer, { ...killer }] }), data, fixed(0)).status).toBe('lost');
+  });
+
+  it('golpe em área ignora os clones, mesmo com um inimigo só', () => {
+    const b = startBattle(setup({ allies: [hero({ techniques: ['jChakraBurst'] })], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.5));
+    const withClones = { ...b, fighters: b.fighters.map((f) => (f.uid === 'e0' ? { ...f, clones: 2 } : f)) } as JBattle;
+    const next = playerAct(withClones, { kind: 'tech', techId: 'jChakraBurst', target: 'e0' }, data, fixed(0.1));
+    expect(next.log.some((e) => e.type === 'cloneBlock')).toBe(false);
+    expect(next.log.some((e) => e.type === 'damage' && e.target === 'e0')).toBe(true);
   });
 
   it('atordoado perde a vez', () => {

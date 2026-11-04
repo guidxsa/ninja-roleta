@@ -48,6 +48,13 @@ export const allyTechniques: JTechnique[] = [
   { id: 'jSandShieldAlly', type: 'ninjutsu', element: 'earth', target: 'ally', baseDamage: 0, chakraCost: 5, shieldPct: 0.25, cooldown: 2 },
   { id: 'jSandCoffinAlly', type: 'ninjutsu', element: 'earth', target: 'enemy', baseDamage: 20, chakraCost: 7, onHit: { effect: 'stun', chance: 0.3, turns: 1 } },
   { id: 'jSandShuriken', type: 'ninjutsu', element: 'earth', target: 'allEnemies', baseDamage: 8, chakraCost: 5 },
+
+  // Equipe de resgate (Neji usa as técnicas do Hyuuga, em classTechniques)
+  { id: 'jShadowBind', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 4, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.7, turns: 1 }, cooldown: 3 },
+  { id: 'jMeatTank', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 20, chakraCost: 5, accuracy: 0.8 },
+  { id: 'jPartialExpansion', type: 'taijutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 4, shieldPct: 0.15, cooldown: 2 },
+  { id: 'jAkamaruBite', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 11, chakraCost: 0, accuracy: 0.9 },
+  { id: 'jFangOverFang', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 10, hits: 2, chakraCost: 4, accuracy: 0.8 },
 ];
 
 /** Linhas elementais (níveis I, II e III) do Comum e dos suportes genéricos (docs/jornada/personagens.md). */
