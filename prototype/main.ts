@@ -124,6 +124,7 @@ import { achievements } from '../src/data/achievements';
 import {
   achievementsFromHistory,
   cleanPlayerName,
+  discoverRelics,
   killedByCounts,
   loadProfile,
   originRecords,
@@ -133,6 +134,7 @@ import {
   unlockAchievements,
   type Profile,
 } from '../src/state/profile';
+import { relicCollection } from './jornada/relics';
 import { askPlayerName } from './playerName';
 import {
   isHardcoreUnlocked,
@@ -2710,12 +2712,12 @@ function openReport() {
   document.body.appendChild(overlay);
 }
 
-type ProfileTab = 'history' | 'achievements' | 'bingo' | 'origins';
-const PROFILE_TABS: ProfileTab[] = ['history', 'achievements', 'bingo', 'origins'];
-/** Selo de cada aba do registro: 歴 histórico, 功 conquistas, 手配 Livro Bingo (procurados), 族 origens (clãs). */
-const PROFILE_KANJI: Record<ProfileTab, string> = { history: '歴', achievements: '功', bingo: '手配', origins: '族' };
+type ProfileTab = 'history' | 'achievements' | 'bingo' | 'origins' | 'relics';
+const PROFILE_TABS: ProfileTab[] = ['history', 'achievements', 'bingo', 'origins', 'relics'];
+/** Selo de cada aba do registro: 歴 histórico, 功 conquistas, 手配 Livro Bingo (procurados), 族 origens (clãs), 宝 relíquias. */
+const PROFILE_KANJI: Record<ProfileTab, string> = { history: '歴', achievements: '功', bingo: '手配', origins: '族', relics: '宝' };
 
-/** Perfil: histórico, conquistas, Livro Bingo e estatísticas por origem, em abas. */
+/** Perfil: histórico, conquistas, Livro Bingo, estatísticas por origem e coleção de relíquias, em abas. */
 function openProfile(tab: ProfileTab = 'history') {
   const P = S.profile;
   const overlay = h(`<div class="modal"><div class="modal-body profile">
@@ -2729,6 +2731,7 @@ function openProfile(tab: ProfileTab = 'history') {
     overlay.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.tab === t));
     body.replaceChildren();
     if (t === 'history') historyTab(body);
+    else if (t === 'relics') relicCollection(body, profile.relics);
     else body.innerHTML = t === 'achievements' ? achievementsTab() : t === 'bingo' ? bingoTab() : originsTab();
   };
   overlay.querySelector('.profile-tabs')!.addEventListener('click', (e) => {
@@ -3241,7 +3244,8 @@ async function modeScreen(): Promise<'roleta' | 'jornada'> {
       </nav>
       <nav class="gate-links" aria-label="${S.ui.gate.registry}">
         ${link('data-profile="history"', '歴', P.history)}${link('data-profile="achievements"', '功', P.achievements)}
-        ${link('data-profile="bingo"', '手配', P.bingo)}${link('data-report', '報', S.ui.gate.report)}
+        ${link('data-profile="bingo"', '手配', P.bingo)}${link('data-profile="relics"', '宝', P.relics)}
+        ${link('data-profile="origins"', '族', P.origins)}${link('data-report', '報', S.ui.gate.report)}
       </nav>
     </div>`),
   );
@@ -3280,6 +3284,13 @@ const jornadaHost: JornadaHost = {
   mood,
   ensurePlayerName,
   playerName: () => profile.playerName ?? '',
+  discoverRelics: (ids) => {
+    if (LAB.lab) return;
+    const next = discoverRelics(profile, ids, new Date());
+    if (next === profile) return;
+    profile = next;
+    saveProfile(storage, profile);
+  },
 };
 
 void main();

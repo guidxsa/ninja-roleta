@@ -127,7 +127,7 @@
   font: 600 15px/1.1 var(--font-hud); letter-spacing: .06em; text-transform: uppercase;
   transition: background var(--dur-1), color var(--dur-1);
 }
-.gate-link .kanji { width: 28px; font-size: 22px; color: var(--accent-2); text-align: center; transition: transform var(--dur-2) var(--ease); }
+.gate-link .kanji { flex: none; width: 28px; font-size: 22px; color: var(--accent-2); text-align: center; transition: transform var(--dur-2) var(--ease); }
 .gate-link .kanji.two { font-size: 14px; line-height: 1; writing-mode: vertical-rl; text-orientation: upright; height: 2.2em; display: inline-flex; align-items: center; justify-content: center; }
 .gate-link:hover, .gate-link:focus-visible { background: var(--surface-2); outline: none; }
 .gate-link:hover .kanji { transform: scale(1.12); }

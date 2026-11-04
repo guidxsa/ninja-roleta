@@ -20,4 +20,6 @@ export interface JornadaHost {
   ensurePlayerName: () => Promise<void>;
   /** Nome do jogador ('' = não informou). */
   playerName: () => string;
+  /** Relíquias que apareceram: entram na coleção do perfil. */
+  discoverRelics: (ids: readonly string[]) => void;
 }

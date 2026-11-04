@@ -8,7 +8,7 @@ import { allyResults, emptyMods, enemySeed, mergeMods, type BattleSetup, type Fi
 import type { JornadaData } from './data';
 import { eventOptions, type EventEffect } from './events';
 import { generateMap, mapNode, nextNodes, type StageMap } from './map';
-import { rollRelic, rollRelics, type RelicDef, type RelicTier } from './relics';
+import { bossChoices, dropRelic, rollRelic, rollRelics, type RelicDef } from './relics';
 import { canBuyTalent, type TalentContext } from './talents';
 import { isFight, teamFor, type FightKind, type StopDef } from './trail';
 import type { ConsumableId, FighterMods, JBattle } from './types';
@@ -106,7 +106,7 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     talents: [],
     learned: [],
     moveset: data.characters[hero]!.techniques.filter((id) => !data.techniques[id]?.active).slice(0, MOVESET_SIZE),
-    relics: data.relics.filter((r) => r.tier === 'starter').map((r) => r.id),
+    relics: data.relics.filter((r) => r.starterFor?.includes(hero)).map((r) => r.id),
     bag,
     willOfFire: data.j.run.willOfFire[difficulty] ?? 0,
     members: {},
@@ -427,11 +427,13 @@ export interface FightOutcome {
   levelUps: number;
   /** Gastou uma Vontade do Fogo: a luta recomeça. */
   retry: boolean;
+  /** Relíquia deixada pela elite vencida. */
+  relic: string | null;
 }
 
 /** Fecha a luta da parada atual: HP da equipe, recompensas e avanço (ou fim da run). */
 export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { run: JRun; outcome: FightOutcome } {
-  const run = clone(prev);
+  let run = clone(prev);
   const stop = currentStop(run, data)!;
   if (!isFight(stop)) throw new Error('a parada atual não é uma luta');
   run.stats.fights++;
@@ -446,11 +448,11 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
         const sheet = memberSheet(run, r.defId, data);
         run.members[r.defId] = { hp: Math.max(r.hp, Math.floor(sheet.maxHp * pct)), chakra: Math.max(r.chakra, Math.floor(sheet.maxChakra * pct)) };
       }
-      return { run, outcome: { won: false, ryo: 0, talent: 0, xp: 0, levelUps: 0, retry: true } };
+      return { run, outcome: { won: false, ryo: 0, talent: 0, xp: 0, levelUps: 0, retry: true, relic: null } };
     }
     run.status = 'defeat';
     for (const r of results) run.members[r.defId] = { hp: r.hp, chakra: r.chakra };
-    return { run, outcome: { won: false, ryo: 0, talent: 0, xp: 0, levelUps: 0, retry: false } };
+    return { run, outcome: { won: false, ryo: 0, talent: 0, xp: 0, levelUps: 0, retry: false, relic: null } };
   }
   run.stats.wins++;
   run.cleared.push(stop.id);
@@ -479,11 +481,14 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   if (stop.kind === 'boss') {
     // Estágio vencido: toda a equipe volta cheia, inclusive quem caiu.
     healAll(run, 1, data, membersSeen(run, data));
-    run.bossChoice = rollRelics(data.relics.filter((r) => r.tier === 'legendary'), run.relics, { common: 0, rare: 0, legendary: 1 }, data.j.relics.bossChoices, stopRng(run, 7));
+    run.bossChoice = bossChoices(data.relics, run.relics, data.j.relics.bossChoices, data.j.relics.starterEvolveChance, stopRng(run, 7));
     if (!run.bossChoice.length) run.bossChoice = null;
   }
+  // Elite vencida deixa uma relíquia (o sorteio vem antes de avançar: a seed é a da parada).
+  const relic = stop.kind === 'elite' ? dropRelic(data.relics, run.relics, data.j.relics.eliteWeights, stopRng(run, 13)) : null;
+  if (relic) run = gainRelic(run, relic, data);
   if (!run.bossChoice) advanceStop(run, data);
-  return { run, outcome: { won: true, ryo, talent: reward.talent, xp: reward.xp, levelUps, retry: false } };
+  return { run, outcome: { won: true, ryo, talent: reward.talent, xp: reward.xp, levelUps, retry: false, relic } };
 }
 
 /** Vai para a próxima parada (ou o próximo estágio, ou a vitória). */
@@ -540,7 +545,10 @@ export function gainRelic(prev: JRun, relicId: string, data: JornadaData): JRun 
   const run = clone(prev);
   const def = data.relics.find((r) => r.id === relicId);
   if (!def || run.relics.includes(relicId)) return run;
-  run.relics.push(relicId);
+  // Evolução: toma o lugar da relíquia inicial.
+  const replaced = def.evolves ? run.relics.indexOf(def.evolves) : -1;
+  if (replaced >= 0) run.relics[replaced] = relicId;
+  else run.relics.push(relicId);
   for (const [k, n] of Object.entries(def.grant?.items ?? {})) run.bag[k as ConsumableId] = (run.bag[k as ConsumableId] ?? 0) + (n ?? 0);
   run.willOfFire += def.grant?.willOfFire ?? 0;
   run.ryo += def.grant?.ryo ?? 0;
@@ -550,9 +558,9 @@ export function gainRelic(prev: JRun, relicId: string, data: JornadaData): JRun 
   return run;
 }
 
-/** Tesouro: relíquia sorteada pela raridade. */
+/** Tesouro: relíquia sorteada pela classificação. */
 export function openTreasure(run: JRun, data: JornadaData): string | null {
-  return rollRelic(data.relics, run.relics, data.j.relics.treasureWeights, stopRng(run, 3));
+  return dropRelic(data.relics, run.relics, data.j.relics.treasureWeights, stopRng(run, 3));
 }
 
 // ---------------------------------------------------------------------------
@@ -576,9 +584,15 @@ export function shopOffer(run: JRun, data: JornadaData): ShopOffer {
   const s = data.j.shop;
   const off = 1 - shopDiscount(run, data);
   const price = (n: number) => Math.floor(n * off);
-  const ids = rollRelics(data.relics, run.relics, data.j.relics.shopWeights, s.relics, stopRng(run, 5));
+  const rng = stopRng(run, 5);
+  // Uma vaga fixa de relíquia de loja; se acabarem, a vaga volta para o sorteio comum.
+  const exclusive = rollRelic(data.relics, run.relics, { shop: 1 }, rng);
+  const ids = [
+    ...rollRelics(data.relics, exclusive ? [...run.relics, exclusive] : run.relics, data.j.relics.shopWeights, s.relics - (exclusive ? 1 : 0), rng),
+    ...(exclusive ? [exclusive] : []),
+  ];
   return {
-    relics: ids.map((id) => ({ id, price: price(data.j.relics.price[data.relics.find((r) => r.id === id)!.tier as Exclude<RelicTier, 'starter'>]) })),
+    relics: ids.map((id) => ({ id, price: price(data.j.relics.price[data.relics.find((r) => r.id === id)!.tier]!) })),
     consumables: CONSUMABLES.map((id) => ({ id, price: price(s.consumablePrice[id]!) })),
     training: price(s.trainingPrice),
     treatment: price(s.treatmentPrice),
@@ -586,7 +600,9 @@ export function shopOffer(run: JRun, data: JornadaData): ShopOffer {
 }
 
 const bagCount = (run: JRun) => CONSUMABLES.reduce((a, id) => a + run.bag[id], 0);
-export const bagFull = (run: JRun, data: JornadaData) => bagCount(run) >= data.j.run.bagLimit;
+/** Espaços da bolsa, com as relíquias. */
+const bagLimit = (run: JRun, data: JornadaData) => data.j.run.bagLimit + relicDefs(run, data).reduce((a, r) => a + (r.bagBonus ?? 0), 0);
+export const bagFull = (run: JRun, data: JornadaData) => bagCount(run) >= bagLimit(run, data);
 
 export type Purchase = { kind: 'relic'; id: string; price: number } | { kind: 'item'; id: ConsumableId; price: number } | { kind: 'training'; price: number } | { kind: 'treatment'; price: number };
 
@@ -615,9 +631,12 @@ export function membersSeen(run: JRun, data: JornadaData): string[] {
 
 export type RestChoice = 'heal' | 'train';
 
+/** Fração curada no descanso, com as relíquias. */
+export const restHealPct = (run: JRun, data: JornadaData) => data.j.run.restHealPct + relicDefs(run, data).reduce((a, r) => a + (r.restHealBonus ?? 0), 0);
+
 export function rest(prev: JRun, choice: RestChoice, data: JornadaData): JRun {
   const run = clone(prev);
-  if (choice === 'heal') healAll(run, data.j.run.restHealPct, data, membersSeen(run, data));
+  if (choice === 'heal') healAll(run, restHealPct(run, data), data, membersSeen(run, data));
   else run.talentPoints++;
   advanceStop(run, data);
   return run;
@@ -648,10 +667,10 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
         const st = memberState(run, id, data);
         run.members[id] = { ...st, hp: Math.max(1, st.hp - Math.floor(st.hp * e.pct)) };
       }
-    } else if (e.kind === 'item') run.bag[e.id] = Math.min(run.bag[e.id] + e.n, run.bag[e.id] + Math.max(0, data.j.run.bagLimit - bagCount(run)));
+    } else if (e.kind === 'item') run.bag[e.id] = Math.min(run.bag[e.id] + e.n, run.bag[e.id] + Math.max(0, bagLimit(run, data) - bagCount(run)));
     else if (e.kind === 'flag') run.flags = [...new Set([...run.flags, e.id])];
     else if (e.kind === 'relic') {
-      relic = rollRelic(data.relics.filter((r) => r.tier === e.tier), run.relics, { common: 1, rare: 1, legendary: 1 }, stopRng(run, 9));
+      relic = dropRelic(data.relics, run.relics, { [e.tier]: 1 }, stopRng(run, 9));
       if (relic) run = gainRelic(run, relic, data);
     } else if (e.kind === 'maxStat') {
       for (const id of e.who === 'hero' ? [run.hero] : membersSeen(run, data)) {

@@ -27,6 +27,8 @@ export interface Profile {
   backfilled: boolean;
   /** Nome do jogador. Sem o campo: nunca perguntado; vazio: preferiu não dizer. No futuro pode vir do login. */
   playerName?: string;
+  /** Coleção da Jornada: id da relíquia → data em que apareceu pela primeira vez (ISO). */
+  relics: Record<string, string>;
 }
 
 export const PLAYER_NAME_MAX = 16;
@@ -42,7 +44,7 @@ export function cleanPlayerName(raw: string): string {
 }
 
 export function emptyProfile(): Profile {
-  return { achievements: {}, villains: {}, backfilled: false };
+  return { achievements: {}, villains: {}, backfilled: false, relics: {} };
 }
 
 export function loadProfile(storage: KeyValueStorage): Profile {
@@ -54,6 +56,7 @@ export function loadProfile(storage: KeyValueStorage): Profile {
       achievements: parsed.achievements && typeof parsed.achievements === 'object' ? parsed.achievements : base.achievements,
       villains: parsed.villains && typeof parsed.villains === 'object' ? parsed.villains : base.villains,
       backfilled: parsed.backfilled === true,
+      relics: parsed.relics && typeof parsed.relics === 'object' ? parsed.relics : base.relics,
       ...(typeof parsed.playerName === 'string' ? { playerName: cleanPlayerName(parsed.playerName) } : {}),
     };
   } catch {
@@ -86,6 +89,15 @@ export function unlockAchievements(profile: Profile, ids: string[], now: Date): 
   const achievements = { ...profile.achievements };
   for (const id of ids) achievements[id] ??= now.toISOString();
   return { ...profile, achievements };
+}
+
+/** Relíquias que apareceram (na run, no mercador, na escolha do chefe): entram na coleção. A data é a da primeira vez. */
+export function discoverRelics(profile: Profile, ids: readonly string[], now: Date): Profile {
+  const fresh = ids.filter((id) => !(id in profile.relics));
+  if (!fresh.length) return profile;
+  const relics = { ...profile.relics };
+  for (const id of fresh) relics[id] = now.toISOString();
+  return { ...profile, relics };
 }
 
 export function killedByCounts(profile: Profile): Record<string, number> {

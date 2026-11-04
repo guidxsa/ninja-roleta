@@ -8,7 +8,7 @@ A run que aproveita o **mapa ramificado** ([run.md](run.md#mapa-ramificado)): o 
 
 - 3 estágios, cada um com um mapa de 12 linhas e um **chefe sorteado no começo da run** (aparece no topo do mapa).
 - As lutas das 3 primeiras linhas saem de um pool mais leve.
-- Vencer o chefe: equipe cheia e 1 de 3 relíquias lendárias, como na História.
+- Vencer o chefe: equipe cheia e 1 de 3 relíquias de chefe (uma pode ser a evolução da inicial), como na História.
 
 ## Pools por estágio
 
@@ -33,7 +33,7 @@ Saem do **desconhecido** (50% das vezes). Um evento não repete na mesma run enq
 | O guru | Pagar 40 ryō: +2 pontos de talento · Memória: +1 ponto de talento · Ir embora |
 | Mantos de nuvem vermelha | Memória: +40 ryō (perdeu: equipe perde 30% do HP) · Fugir (equipe perde 15% do HP) |
 | Achado | +1 Pílula de reanimação · +50 XP |
-| Contrato de invocação | Selos: relíquia rara (perdeu: equipe perde 10% do HP) · +6 de HP máximo da equipe |
+| Contrato de invocação | Selos: relíquia de evento (perdeu: equipe perde 10% do HP) · +6 de HP máximo da equipe |
 
 - Opção com custo em ryō só aparece com ryō suficiente.
 - Perder HP em evento nunca derruba ninguém (fica pelo menos 1).

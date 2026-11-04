@@ -7,6 +7,7 @@ import type { KeyValueStorage } from './runHistory';
 
 export const JORNADA_SAVE_KEY = 'jornada_run_v1';
 const STARTER_RELIC = 'ichirakuBowl';
+const STARTER_EVOLVED = 'ichirakuDeluxe';
 
 export function loadJornada(storage: KeyValueStorage): JRun | null {
   try {
@@ -14,8 +15,9 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     if (!raw) return null;
     const run = JSON.parse(raw) as JRun;
     if (run?.version !== 1 || run.status !== 'inProgress' || typeof run.stageIndex !== 'number') return null;
-    // Runs salvas antes da v0.35.1 não tinham a relíquia inicial.
-    const relics = run.relics.includes(STARTER_RELIC) ? run.relics : [STARTER_RELIC, ...run.relics];
+    // Runs da História salvas antes da v0.35.1 não tinham a relíquia inicial (ou a sua evolução).
+    const hasStarter = (run.mode ?? 'canon') !== 'canon' || run.relics.includes(STARTER_RELIC) || run.relics.includes(STARTER_EVOLVED);
+    const relics = hasStarter ? run.relics : [STARTER_RELIC, ...run.relics];
     // Runs de antes do Caminho Ninja (v0.36.0) são da História.
     const legacy = { mode: 'canon' as const, hero: 'naruto', classId: 'naruto', elements: {}, secondElement: null, skin: null, supports: [], map: null, nodeId: null, path: [], bossPlan: [] };
     return { ...legacy, ...run, cleared: run.cleared ?? [], relics };

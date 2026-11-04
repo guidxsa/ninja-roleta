@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   advance,
@@ -17,6 +18,7 @@ import { generateMap, reachable } from '../src/core/jornada/map';
 import { checkSequence, jokenpo, memoryDeck, sealSequence } from '../src/core/jornada/minigames';
 import { newJornadaAchievements } from '../src/data/jornada/achievements';
 import {
+  bagFull,
   battleSetup,
   buy,
   buyTalent,
@@ -35,6 +37,7 @@ import {
   nodeChoices,
   resolveEvent,
   rest,
+  restHealPct,
   setMoveset,
   shopOffer,
   talentContext,
@@ -47,7 +50,8 @@ import type { JBattle } from '../src/core/jornada/types';
 import { createRng } from '../src/core/rng';
 import { jornadaData as data } from '../src/data/jornada';
 import { loadJornada, saveJornada, JORNADA_SAVE_KEY } from '../src/state/jornadaSave';
-import { cleanPlayerName, loadProfile, PLAYER_NAME_MAX, PROFILE_STORAGE_KEY, saveProfile } from '../src/state/profile';
+import { cleanPlayerName, discoverRelics, emptyProfile, loadProfile, PLAYER_NAME_MAX, PROFILE_STORAGE_KEY, saveProfile } from '../src/state/profile';
+import { bossChoices, dropRelic, rollRelic } from '../src/core/jornada/relics';
 import { jornadaPtBR } from '../src/data/strings/jornada';
 import { RELIC_ICONS } from '../prototype/jornada/relicIcons';
 
@@ -332,14 +336,166 @@ describe('run da Jornada', () => {
     expect(memberSheet(next, HERO, data).maxHp).toBeGreaterThan(memberSheet(run, HERO, data).maxHp);
   });
 
-  it('o chefe oferece 3 lendárias e a escolha avança', () => {
+  it('o chefe oferece 3 relíquias de chefe e a escolha avança', () => {
     const run = { ...newRun(1, 'normal', data), stopIndex: data.stages[0]!.stops.length - 1 };
     const { run: next } = finishFight(run, won(startBattle(battleSetup(run, data), data, createRng(1))), data);
     expect(next.bossChoice).toHaveLength(3);
-    for (const id of next.bossChoice!) expect(data.relics.find((r) => r.id === id)!.tier).toBe('legendary');
+    for (const id of next.bossChoice!) expect(data.relics.find((r) => r.id === id)!.tier).toBe('boss');
     const after = chooseBossRelic(next, next.bossChoice![0]!, data);
     expect(after.relics).toContain(next.bossChoice![0]);
     expect([after.stageIndex, after.stopIndex]).toEqual([1, 0]);
+  });
+
+  it('elite vencida deixa uma relíquia comum, incomum ou rara; luta comum, não', () => {
+    let run = newRun(3, 'normal', data);
+    run = { ...run, stopIndex: data.stages[0]!.stops.findIndex((s) => s.id === 'zabuza') };
+    const { run: next, outcome } = finishFight(run, won(startBattle(battleSetup(run, data), data, createRng(1))), data);
+    expect(outcome.relic).toBeTruthy();
+    expect(next.relics).toContain(outcome.relic);
+    expect(['common', 'uncommon', 'rare']).toContain(data.relics.find((r) => r.id === outcome.relic)!.tier);
+
+    const thugs = { ...newRun(3, 'normal', data), stopIndex: data.stages[0]!.stops.findIndex((s) => s.id === 'thugs') };
+    const plain = finishFight(thugs, won(startBattle(battleSetup(thugs, data), data, createRng(1))), data);
+    expect(plain.outcome.relic).toBeNull();
+  });
+
+  it('o sorteio da elite segue as chances pedidas: 50/33/17', () => {
+    const rng = createRng(11);
+    const seen: Record<string, number> = {};
+    const N = 6000;
+    for (let i = 0; i < N; i++) {
+      const id = dropRelic(data.relics, [], data.j.relics.eliteWeights, rng)!;
+      const tier = data.relics.find((r) => r.id === id)!.tier;
+      seen[tier] = (seen[tier] ?? 0) + 1;
+    }
+    expect(Object.keys(seen).sort()).toEqual(['common', 'rare', 'uncommon']);
+    expect(seen.common! / N).toBeCloseTo(0.5, 1);
+    expect(seen.uncommon! / N).toBeCloseTo(0.33, 1);
+    expect(seen.rare! / N).toBeCloseTo(0.17, 1);
+  });
+
+  it('cada personagem começa com a sua relíquia inicial, sempre com a recuperação', () => {
+    expect(newRun(1, 'normal', data).relics).toEqual(['ichirakuBowl']);
+    const unlocked = new Set(['j_unlockUchiha', 'j_unlockHyuuga']);
+    expect(newGenericRun(1, 'normal', 'uchiha', data, unlocked).relics).toEqual(['clanIncense']);
+    expect(newGenericRun(1, 'normal', 'hyuuga', data, unlocked).relics).toEqual(['familyTea']);
+    for (let s = 0; s < 40; s++) {
+      const r = newGenericRun(s, 'normal', 'common', data);
+      expect(r.relics).toEqual([r.hero === 'prodigy' ? 'trainingBento' : 'academyFlask']);
+    }
+    for (const r of data.relics.filter((x) => x.tier === 'starter')) {
+      expect(r.starterFor?.length, r.id).toBeGreaterThan(0);
+      expect(r.afterWinHealPct, r.id).toBe(0.25);
+    }
+  });
+
+  it('evolução: pode aparecer na escolha do chefe, troca a inicial e nunca sai em outro sorteio', () => {
+    const relics = data.relics;
+    expect(bossChoices(relics, ['ichirakuBowl'], 3, 1, createRng(1))).toContain('ichirakuDeluxe');
+    expect(bossChoices(relics, ['ichirakuBowl'], 3, 1, createRng(1))).toHaveLength(3);
+    expect(bossChoices(relics, ['ichirakuBowl'], 3, 0, createRng(1))).not.toContain('ichirakuDeluxe');
+    // Já evoluiu: não aparece de novo, e outras classes não veem a evolução do Naruto.
+    expect(bossChoices(relics, ['ichirakuDeluxe'], 3, 1, createRng(1))).not.toContain('ichirakuDeluxe');
+    expect(bossChoices(relics, ['academyFlask'], 3, 1, createRng(1))).toContain('chuninFlask');
+
+    const run = gainRelic({ ...newRun(1, 'normal', data), relics: ['ichirakuBowl', 'goggles'] }, 'ichirakuDeluxe', data);
+    expect(run.relics).toEqual(['ichirakuDeluxe', 'goggles']);
+
+    const rng = createRng(5);
+    for (let i = 0; i < 400; i++) {
+      const id = dropRelic(relics, [], { common: 1, uncommon: 1, rare: 1, boss: 1, shop: 1, event: 1 }, rng)!;
+      const def = relics.find((r) => r.id === id)!;
+      expect(def.evolves, id).toBeUndefined();
+      expect(def.tier, id).not.toBe('starter');
+      expect(def.tier, id).not.toBe('special');
+    }
+  });
+
+  it('save: não enfia a Tigela em quem não é da História nem desfaz a evolução', () => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const evolved = { ...newRun(1, 'normal', data), relics: ['ichirakuDeluxe'] };
+    saveJornada(storage, evolved);
+    expect(loadJornada(storage)!.relics).toEqual(['ichirakuDeluxe']);
+    saveJornada(storage, { ...newRun(1, 'normal', data), relics: [] });
+    expect(loadJornada(storage)!.relics).toEqual(['ichirakuBowl']);
+  });
+
+  it('o mercador tem uma vaga de loja; relíquias de loja e evento só saem no lugar delas', () => {
+    const run: JRun = { ...newRun(4, 'normal', data), stopIndex: 6 };
+    const tiers = shopOffer(run, data).relics.map((r) => data.relics.find((x) => x.id === r.id)!.tier);
+    expect(tiers).toHaveLength(data.j.shop.relics);
+    expect(tiers.filter((t) => t === 'shop')).toHaveLength(1);
+    expect(tiers.every((t) => ['common', 'uncommon', 'rare', 'shop'].includes(t))).toBe(true);
+    const rng = createRng(7);
+    for (let i = 0; i < 300; i++) {
+      for (const weights of [data.j.relics.treasureWeights, data.j.relics.eliteWeights]) {
+        const id = dropRelic(data.relics, [], weights, rng);
+        expect(['shop', 'event', 'boss']).not.toContain(data.relics.find((r) => r.id === id)!.tier);
+      }
+    }
+  });
+
+  it('sem nada para sortear, cai na relíquia especial; depois dela, nada', () => {
+    const everyone = data.relics.filter((r) => r.tier !== 'special').map((r) => r.id);
+    const rng = createRng(1);
+    expect(dropRelic(data.relics, everyone, data.j.relics.eliteWeights, rng)).toBe('emptyCharm');
+    expect(dropRelic(data.relics, [...everyone, 'emptyCharm'], data.j.relics.eliteWeights, rng)).toBeNull();
+    expect(rollRelic(data.relics, everyone, data.j.relics.eliteWeights, rng)).toBeNull();
+    expect(gainRelic(newRun(1, 'normal', data), 'emptyCharm', data).ryo).toBe(25);
+  });
+
+  it('ganchos novos das relíquias', () => {
+    const mod = (m: Partial<FighterSeed['mods']>) => ({ ...emptyMods(), ...m });
+    // Clones: contra-ataque em quem acerta o clone.
+    const withCounter = startBattle(setup({ allies: [hero()], enemies: [dummy({ hp: 500, maxHp: 500, mods: mod({ cloneCounter: 4 }), clones: 0 } as Partial<FighterSeed>)] }), data, fixed(0.5));
+    const counter = { ...withCounter, fighters: withCounter.fighters.map((f) => (f.uid === 'e0' ? { ...f, clones: 2 } : f)) } as JBattle;
+    const hit = playerAct(counter, { kind: 'tech', techId: 'jStrike', target: 'e0' }, data, fixed(0.1));
+    expect(hit.log.some((e) => e.type === 'damage' && e.uid === 'e0' && e.target === 'a0' && e.amount === 4)).toBe(true);
+    // Limite de clones.
+    const b = startBattle(setup({ allies: [hero({ mods: mod({ maxClonesBonus: 2, startClones: 6 }) })] }), data, fixed(0.5));
+    const cloned = playerAct(b, { kind: 'tech', techId: 'jKageBunshin', target: 'a0' }, data, fixed(0.5));
+    expect(cloned.fighters[0]!.clones).toBe(data.j.combat.maxClones + 2);
+    // Dano por clone e contra atordoado.
+    const base = startBattle(setup(), data, fixed(0.5)).fighters;
+    const strike = data.techniques.jStrike!;
+    const plain = hitDamage(base[0]!, base[1]!, strike, data);
+    expect(hitDamage({ ...base[0]!, clones: 5, mods: mod({ damagePerClone: 0.2 }) }, base[1]!, strike, data)).toBe(plain * 2);
+    const stunned = { ...base[1]!, effects: [{ kind: 'stun' as const, turns: 1 }] };
+    expect(hitDamage({ ...base[0]!, mods: mod({ stunnedDamageMult: 2 }) }, stunned, strike, data)).toBe(plain * 2);
+    // Chakra: começo da luta e Concentrar.
+    const low = startBattle(setup({ allies: [hero({ chakra: 0, mods: mod({ startChakraPct: 0.5, restBonusPct: 0.25 }) })] }), data, fixed(0.5));
+    expect(low.fighters[0]!.chakra).toBe(15);
+    const rested = playerAct(low, { kind: 'rest' }, data, fixed(0.5));
+    expect(rested.fighters[0]!.chakra).toBe(15 + 15);
+    // Defender cura; kit cura mais.
+    const hurt = startBattle(setup({ allies: [hero({ hp: 20, mods: mod({ guardHealPct: 0.1, kitBonusPct: 1 }) })] }), data, fixed(0.5));
+    expect(useItem(hurt, 'hpKit', 'a0', data).fighters[0]!.hp).toBe(20 + Math.floor(100 * data.j.combat.hpKitPct * 2));
+    expect(playerAct(hurt, { kind: 'guard' }, data, fixed(0.99)).log.some((e) => e.type === 'heal' && e.amount === 10)).toBe(true);
+    // Levantar com mais HP.
+    const ally = { ...dummy(), defId: 'sasuke', speed: 2, techniques: ['jKunai'], ai: 'striker' as const, hp: 0, mods: mod({ reviveHpBonus: 0.3 }) };
+    const rev = playerAct(startBattle(setup({ allies: [hero(), ally], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.5)), { kind: 'revive', target: 'a1' }, data, fixed(0.5));
+    expect(rev.log.some((e) => e.type === 'revive' && e.target === 'a1' && e.hp === 80)).toBe(true);
+  });
+
+  it('bolsa maior e descanso melhor pelas relíquias', () => {
+    const run = { ...newRun(1, 'normal', data), bag: { hpKit: data.j.run.bagLimit, chakraKit: 0, reviveKit: 0 } };
+    expect(bagFull(run, data)).toBe(true);
+    expect(bagFull(gainRelic(run, 'sturdyBag', data), data)).toBe(false);
+    expect(restHealPct(gainRelic(run, 'campBlanket', data), data)).toBeCloseTo(data.j.run.restHealPct + 0.1);
+  });
+
+  it('coleção: relíquia entra ao aparecer, guarda a primeira data e perfil antigo carrega vazio', () => {
+    const first = new Date('2026-01-01T00:00:00Z');
+    const later = new Date('2026-02-01T00:00:00Z');
+    let p = discoverRelics(emptyProfile(), ['goggles', 'kakashiBell'], first);
+    expect(Object.keys(p.relics)).toEqual(['goggles', 'kakashiBell']);
+    p = discoverRelics(p, ['goggles', 'warFan'], later);
+    expect(p.relics.goggles).toBe(first.toISOString());
+    expect(p.relics.warFan).toBe(later.toISOString());
+    expect(discoverRelics(p, ['goggles'], later)).toBe(p);
+    const store: Record<string, string> = { [PROFILE_STORAGE_KEY]: JSON.stringify({ achievements: {}, villains: {}, backfilled: true }) };
+    expect(loadProfile({ getItem: (k: string) => store[k] ?? null, setItem: () => {} }).relics).toEqual({});
   });
 
   it('a árvore pede o nó anterior, o estágio e, na Ōdama, a conquista da conta', () => {
@@ -379,7 +535,7 @@ describe('run da Jornada', () => {
     expect(shopOffer({ ...tazuna, stopIndex: 6 }, data).training).toBe(Math.floor(data.j.shop.trainingPrice * 0.8));
   });
 
-  it('toda run começa com a Tigela do Ichiraku, que nunca sai em sorteio', () => {
+  it('a História começa com a Tigela do Ichiraku, que nunca sai em sorteio', () => {
     const run = newRun(1, 'normal', data);
     expect(run.relics).toEqual(['ichirakuBowl']);
     for (let s = 0; s < 40; s++) {
@@ -397,6 +553,12 @@ describe('run da Jornada', () => {
       icons.add(RELIC_ICONS[r.id]!);
     }
     expect(icons.size).toBe(data.relics.length);
+  });
+
+  it('toda relíquia está no doc', () => {
+    const doc = readFileSync('docs/jornada/reliquias.md', 'utf8');
+    const missing = data.relics.map((r) => jornadaPtBR.relics.list[r.id]!.name).filter((n) => !doc.includes(n));
+    expect(missing).toEqual([]);
   });
 
   it('relíquias que dão ryō e pontos de talento na hora', () => {

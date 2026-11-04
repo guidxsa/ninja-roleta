@@ -91,6 +91,28 @@ export interface FighterMods {
   techChakraDiscount: Record<string, number>;
   /** Uma vez por luta, ao cair, fica com 1 de HP (Fúria da Kyuubi). */
   surviveOnce: boolean;
+  /** Dano em quem acertou um clone. */
+  cloneCounter: number;
+  /** Clones a mais no limite. */
+  maxClonesBonus: number;
+  /** Dano a mais por clone ativo (fração). */
+  damagePerClone: number;
+  /** Dano × este valor contra alvo atordoado. */
+  stunnedDamageMult: number;
+  /** Chance a mais de aplicar o efeito da técnica. */
+  effectChanceBonus: number;
+  /** Volta com esta fração a mais do HP ao ser levantado. */
+  reviveHpBonus: number;
+  /** Chakra recuperado ao derrubar um inimigo. */
+  onKillChakra: number;
+  /** Defender cura esta fração do HP máximo. */
+  guardHealPct: number;
+  /** Concentrar recupera esta fração a mais do chakra máximo. */
+  restBonusPct: number;
+  /** Kits curam esta fração a mais. */
+  kitBonusPct: number;
+  /** Começa a luta com esta fração a mais do chakra máximo. */
+  startChakraPct: number;
 }
 
 export interface CharacterDef {

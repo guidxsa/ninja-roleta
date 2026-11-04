@@ -1135,7 +1135,11 @@ export const ptBR = {
   /** Perfil: conquistas, Livro Bingo e estatísticas por origem. */
   profile: {
     title: 'Registro ninja',
-    tabs: { history: 'Histórico', achievements: 'Conquistas', bingo: 'Livro Bingo', origins: 'Origens' },
+    tabs: { history: 'Histórico', achievements: 'Conquistas', bingo: 'Livro Bingo', origins: 'Origens', relics: 'Relíquias' },
+    relicsIntro: 'Toda relíquia da Jornada que já apareceu para você. As que faltam ficam escondidas até você encontrar.',
+    relicsCount: (found: number, total: number) => `${found} de ${total} encontradas`,
+    relicsHint: 'Toque numa relíquia encontrada para ver o que ela faz.',
+    relicHidden: 'Relíquia ainda não encontrada',
     bingoIntro: 'Todo ninja que você já enfrentou. Os que ainda não apareceram ficam na sombra.',
     unknownVillain: '???',
     faced: (n: number) => `${n} ${n === 1 ? 'luta' : 'lutas'}`,

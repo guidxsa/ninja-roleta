@@ -11,13 +11,14 @@ import { relicIcon } from './relicIcons';
 
 const J = S.jornada;
 const U = J.ui;
-const TIERS: RelicTier[] = ['starter', 'common', 'rare', 'legendary'];
+const TIERS: RelicTier[] = ['starter', 'common', 'uncommon', 'rare', 'boss', 'shop', 'event', 'special'];
 
 const def = (id: string): RelicDef | undefined => data.relics.find((r) => r.id === id);
 export const relicName = (id: string) => J.relics.list[id]?.name ?? id;
 export const relicDesc = (id: string) => J.relics.list[id]?.desc ?? '';
 export const relicTier = (id: string): RelicTier => def(id)?.tier ?? 'common';
-const tierName = (id: string) => J.relics.tiers[relicTier(id)] ?? '';
+export const isEvolution = (id: string) => Boolean(def(id)?.evolves);
+const tierName = (id: string) => (isEvolution(id) ? J.relics.evolution : (J.relics.tiers[relicTier(id)] ?? ''));
 const relicTip = (id: string) => tip(relicName(id), `<span class="tip-tier tier-${relicTier(id)}">${tierName(id)}</span><br>${relicDesc(id)}`);
 
 // Relíquias que o jogador já viu na barra: as que chegam depois entram com brilho.
@@ -119,6 +120,44 @@ export function relicsModal(run: JRun, focus?: string): void {
     const b = t.closest<HTMLElement>('[data-pick]');
     if (b) select(b.dataset.pick);
   });
+}
+
+// ---------------------------------------------------------------------------
+// Coleção (aba do Registro ninja)
+
+/** Coleção de todas as relíquias, por classificação: as não encontradas ficam escondidas. */
+export function relicCollection(container: HTMLElement, found: Readonly<Record<string, string>>): void {
+  const P = S.profile;
+  const total = data.relics.length;
+  const count = data.relics.filter((r) => r.id in found).length;
+  // Evoluções vêm com as de chefe, depois das outras.
+  const inTier = (t: RelicTier) => data.relics.filter((r) => r.tier === t).sort((a, b) => Number(Boolean(a.evolves)) - Number(Boolean(b.evolves)));
+  // Bloco próprio: o contêiner é reaproveitado entre as abas, e o clique não pode ficar preso nele.
+  const root = h(`<div class="jrcollection"><p class="muted small">${P.relicsIntro}</p>
+    <p class="jrcount"><b>${P.relicsCount(count, total)}</b></p>
+    <div class="bar bar-xp jrcount-bar"><div class="fill" style="width:${(count / total) * 100}%"></div></div>
+    ${TIERS.map((t) => {
+      const list = inTier(t);
+      const n = list.filter((r) => r.id in found).length;
+      return `<section class="jrgroup tier-${t}"><h3>${J.relics.tiers[t]} <small class="muted">${n}/${list.length}</small></h3>
+        <p class="muted small jrgroup-desc">${J.relics.tierDesc[t]}</p>
+        <div class="jrgrid">${list
+          .map((r) =>
+            r.id in found
+              ? `<button type="button" class="jrslot big tier-${t}" data-pick="${r.id}" aria-label="${relicName(r.id)}">${relicIcon(r.id)}</button>`
+              : `<span class="jrslot big jrhidden" role="img" aria-label="${P.relicHidden}"><b class="jq">?</b></span>`,
+          )
+          .join('')}</div></section>`;
+    }).join('')}
+    <div class="jrdetail" aria-live="polite"><p class="muted center">${P.relicsHint}</p></div></div>`);
+  const detail = root.querySelector<HTMLElement>('.jrdetail')!;
+  root.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-pick]');
+    if (!b) return;
+    root.querySelectorAll('[data-pick]').forEach((x) => x.classList.toggle('on', x === b));
+    detail.innerHTML = relicCard(b.dataset.pick!, '', 'pop');
+  });
+  container.replaceChildren(root);
 }
 
 // ---------------------------------------------------------------------------

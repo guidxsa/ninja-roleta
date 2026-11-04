@@ -49,11 +49,13 @@
 .jabandon { display: block; margin: 6px auto 0; }
 .joptions { display: flex; flex-direction: column; gap: 8px; }
 
-/* Relíquias: moldura pela raridade (inicial bronze, comum aço, rara índigo, lendária dourada). */
+/* Relíquias: moldura pela classificação (inicial aço, comum clara, incomum azul, rara dourada, chefe vermelha, loja verde, evento roxa, especial turquesa). */
 .jrelic { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--surface-2); border: 1px solid var(--line); margin-bottom: 6px; }
 .jrelic-ico { width: 34px; height: 34px; flex: none; display: grid; place-items: center; background: var(--surface-3); }
 .jrelic-ico .ico { width: 20px; height: 20px; }
 .jrelic-txt { flex: 1; min-width: 0; }
+.jrelic-txt b, .jrelic-txt small { display: block; }
+.jrelic-txt small { color: var(--muted); }
 .jrslot {
   --tier: var(--line-strong);
   position: relative; display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; padding: 0;
@@ -66,12 +68,17 @@
 .jrslot.big .ico { width: 36px; height: 36px; }
 .jrslot.huge { width: 76px; height: 76px; }
 .jrslot.huge .ico { width: 52px; height: 52px; }
-.tier-starter { --tier: #b0703a; }
+.tier-starter { --tier: #8d99a6; }
 .tier-common { --tier: var(--line-strong); }
-.tier-rare { --tier: #5b7fc7; }
-.tier-legendary { --tier: var(--gold-2); }
-/* Lendária: cantos dourados em vez de brilho. */
-.jrslot.tier-legendary::after, .jrcard.tier-legendary .jrcard-ico::after {
+.tier-uncommon { --tier: #5b7fc7; }
+.tier-rare { --tier: var(--gold-2); }
+.tier-boss { --tier: var(--accent-2); }
+.tier-shop { --tier: var(--leaf); }
+.tier-event { --tier: #a06fd6; }
+.tier-special { --tier: #4fb8b0; }
+/* Rara e chefe: cantos na cor da classificação em vez de brilho. */
+.jrslot.tier-rare::after, .jrcard.tier-rare .jrcard-ico::after,
+.jrslot.tier-boss::after, .jrcard.tier-boss .jrcard-ico::after {
   content: ''; position: absolute; inset: -3px; pointer-events: none;
   background:
     linear-gradient(var(--tier), var(--tier)) 0 0 / 8px 2px no-repeat, linear-gradient(var(--tier), var(--tier)) 0 0 / 2px 8px no-repeat,
@@ -91,7 +98,6 @@
 .jrstrip .jrslot .ico { width: 18px; height: 18px; }
 
 .jrcard {
-  --tier: var(--line-strong);
   display: flex; align-items: center; gap: 12px; padding: 12px; margin: 8px 0;
   background: var(--surface-2); border: 1px solid var(--tier); border-left: 3px solid var(--tier);
 }
@@ -117,6 +123,12 @@
 .jrgrid .jrslot.on { transform: translateY(-3px); box-shadow: 0 0 0 2px var(--tier); }
 .jrdetail { position: sticky; bottom: -1px; margin-top: 10px; padding-top: 4px; background: var(--surface); min-height: 40px; }
 .jrwill { margin: 12px 0 0; display: flex; align-items: center; gap: 6px; }
+/* Coleção: contagem geral e relíquia ainda escondida. */
+.jrcollection { display: flex; flex-direction: column; gap: 6px; }
+.jrcount { margin: 4px 0 2px; text-align: center; font: 700 15px/1.2 var(--font-hud); letter-spacing: .06em; }
+.jrcount-bar { height: 8px; }
+.jrgroup-desc { margin: -2px 0 8px; }
+.jrhidden { cursor: default; background: var(--bg); border-style: dashed; border-color: var(--line); box-shadow: none; }
 
 /* Tesouro: baú que treme e abre. */
 .jrtreasure { text-align: center; }
@@ -129,10 +141,11 @@
 @keyframes chestIdle { 0%, 80%, 100% { transform: none; } 85% { transform: rotate(-3deg); } 90% { transform: rotate(3deg); } 95% { transform: rotate(-2deg); } }
 @keyframes chestShake { 0%, 100% { transform: none; } 20% { transform: translateX(-6px) rotate(-4deg); } 40% { transform: translateX(6px) rotate(4deg); } 60% { transform: translateX(-4px) rotate(-2deg); } 80% { transform: translateX(4px) rotate(2deg); } }
 
-/* Escolha do chefe: 3 lendárias lado a lado. */
+/* Escolha do chefe: 3 relíquias lado a lado; a evolução da inicial ganha um selo. */
 .jrboss-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+.jrboss-evo { font: 700 11px/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--gold-2); text-align: center; }
 .jrboss-opt {
-  --tier: var(--gold-2);
+  --tier: var(--accent-2);
   display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 4px; min-width: 0;
   border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer;
   animation: relicReveal .6s cubic-bezier(.2, 1.4, .4, 1) both;

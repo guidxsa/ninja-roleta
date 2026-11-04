@@ -16,7 +16,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 | [inimigos.md](inimigos.md) | Fichas e técnicas dos inimigos |
 | [talentos.md](talentos.md) | Árvores de talentos (Naruto, Comum, prodígio, Uchiha, Hyuuga) |
 | [progressao.md](progressao.md) | XP, nível, recompensas, entre lutas |
-| [reliquias.md](reliquias.md) | Relíquias: tiers, de onde vêm, catálogo |
+| [reliquias.md](reliquias.md) | Relíquias: classificações, de onde vêm, evolução, coleção, catálogo |
 | [caminho-ninja.md](caminho-ninja.md) | Caminho Ninja: estrutura, pools por estágio, chefes, eventos |
 | [classes.md](classes.md) | Classes, sorteio do elemento, desbloqueios, ativas, suportes genéricos |
 

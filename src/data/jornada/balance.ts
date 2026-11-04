@@ -53,12 +53,17 @@ export const jornadaBalance = {
   // XP para o próximo nível: base + porNível × (nível − 1). Cada nível dá 1 ponto de talento.
   xp: { base: 100, perLevel: 40, talentPerLevel: 1 },
 
-  // Relíquias por raridade (docs/jornada/reliquias.md).
+  // Relíquias por classificação (docs/jornada/reliquias.md).
   relics: {
-    treasureWeights: { common: 40, rare: 50, legendary: 10 },
-    shopWeights: { common: 60, rare: 35, legendary: 5 },
-    price: { common: 40, rare: 80, legendary: 150 },
+    // Elite vencida deixa uma relíquia com estas chances.
+    eliteWeights: { common: 50, uncommon: 33, rare: 17 },
+    treasureWeights: { common: 40, uncommon: 35, rare: 25 },
+    // O mercador tem 1 vaga fixa de relíquia de loja; as outras saem destes pesos.
+    shopWeights: { common: 50, uncommon: 33, rare: 17 },
+    price: { common: 40, uncommon: 60, rare: 90, shop: 70 } as Record<string, number>,
     bossChoices: 3,
+    // Chance de uma das opções do chefe ser a evolução da relíquia inicial.
+    starterEvolveChance: 0.5,
   },
 
   // Mapa ramificado do Caminho Ninja (docs/jornada/run.md#mapa-ramificado). 12 linhas: começo, 10 do meio, chefe.

@@ -55,7 +55,7 @@ export const events: EventDef[] = [
       {
         id: 'summon',
         minigame: 'seals',
-        effects: [{ kind: 'relic', tier: 'rare' }],
+        effects: [{ kind: 'relic', tier: 'event' }],
         onLose: [{ kind: 'ryo', n: 20 }],
       },
       { id: 'peek', effects: [{ kind: 'ryo', n: 30 }, { kind: 'flag', id: 'peeked' }] },
@@ -77,7 +77,7 @@ export const events: EventDef[] = [
     id: 'sasukeLeft',
     options: [
       { id: 'promise', effects: [{ kind: 'talent', n: 1 }, { kind: 'healTeam', pct: 0.5 }] },
-      { id: 'jokenpo', minigame: 'jokenpo', effects: [{ kind: 'relic', tier: 'legendary' }], onLose: [{ kind: 'ryo', n: 20 }] },
+      { id: 'jokenpo', minigame: 'jokenpo', effects: [{ kind: 'relic', tier: 'event' }], onLose: [{ kind: 'ryo', n: 20 }] },
     ],
   },
 ];
@@ -138,7 +138,7 @@ export const genericEvents: EventDef[] = [
   {
     id: 'gSummon',
     options: [
-      { id: 'contract', minigame: 'seals', effects: [{ kind: 'relic', tier: 'rare' }], onLose: [{ kind: 'hurtTeam', pct: 0.1 }] },
+      { id: 'contract', minigame: 'seals', effects: [{ kind: 'relic', tier: 'event' }], onLose: [{ kind: 'hurtTeam', pct: 0.1 }] },
       { id: 'share', effects: [{ kind: 'maxStat', who: 'team', stat: 'hp', n: 6 }] },
     ],
   },

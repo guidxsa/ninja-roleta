@@ -13,13 +13,13 @@
 | Luta | Ryō | Pontos de talento | XP |
 |---|---|---|---|
 | Comum | 15 | 0 | 40 |
-| Elite | 35 | 1 | 80 |
+| Elite | 35 | 1 | 80 (+ 1 relíquia) |
 | História | 25 | 1 | 70 |
-| Chefe | 50 | 1 | 120 (+ 1 de 3 relíquias lendárias) |
+| Chefe | 50 | 1 | 120 (+ 1 de 3 relíquias de chefe) |
 
 ## Entre lutas
 
-- HP e chakra seguem de uma luta para a outra. A recuperação depois da vitória vem das relíquias: a **Tigela do Ichiraku**, que toda run tem, devolve 25% do HP e do chakra máximos de toda a equipe do estágio, inclusive quem ficou de fora da luta ([reliquias.md](reliquias.md)).
+- HP e chakra seguem de uma luta para a outra. A recuperação depois da vitória vem das relíquias: a relíquia inicial do personagem (a **Tigela do Ichiraku**, na História) devolve 25% do HP e do chakra máximos de toda a equipe do estágio, inclusive quem ficou de fora da luta ([reliquias.md](reliquias.md)).
 - **Estágio vencido** (o chefe caiu): toda a equipe volta com HP e chakra cheios, inclusive quem caiu.
 - Aliado que caiu volta para a próxima luta com 30% do HP.
 - Quem nunca lutou entra cheio.

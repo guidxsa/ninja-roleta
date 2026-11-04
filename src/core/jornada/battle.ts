@@ -37,6 +37,17 @@ export function emptyMods(): FighterMods {
     techDamageMult: {},
     techChakraDiscount: {},
     surviveOnce: false,
+    cloneCounter: 0,
+    maxClonesBonus: 0,
+    damagePerClone: 0,
+    stunnedDamageMult: 1,
+    effectChanceBonus: 0,
+    reviveHpBonus: 0,
+    onKillChakra: 0,
+    guardHealPct: 0,
+    restBonusPct: 0,
+    kitBonusPct: 0,
+    startChakraPct: 0,
   };
 }
 
@@ -68,6 +79,17 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     techDamageMult: mulMap(a.techDamageMult, b.techDamageMult),
     techChakraDiscount: addMap(a.techChakraDiscount, b.techChakraDiscount),
     surviveOnce: a.surviveOnce || Boolean(b.surviveOnce),
+    cloneCounter: a.cloneCounter + (b.cloneCounter ?? 0),
+    maxClonesBonus: a.maxClonesBonus + (b.maxClonesBonus ?? 0),
+    damagePerClone: a.damagePerClone + (b.damagePerClone ?? 0),
+    stunnedDamageMult: a.stunnedDamageMult * (b.stunnedDamageMult ?? 1),
+    effectChanceBonus: a.effectChanceBonus + (b.effectChanceBonus ?? 0),
+    reviveHpBonus: a.reviveHpBonus + (b.reviveHpBonus ?? 0),
+    onKillChakra: a.onKillChakra + (b.onKillChakra ?? 0),
+    guardHealPct: a.guardHealPct + (b.guardHealPct ?? 0),
+    restBonusPct: a.restBonusPct + (b.restBonusPct ?? 0),
+    kitBonusPct: a.kitBonusPct + (b.kitBonusPct ?? 0),
+    startChakraPct: a.startChakraPct + (b.startChakraPct ?? 0),
   };
 }
 
@@ -112,6 +134,7 @@ function enter(seed: FighterSeed, side: TeamSide, index: number): Fighter {
     ...seed,
     uid: `${side === 'ally' ? 'a' : 'e'}${index}`,
     side,
+    chakra: Math.min(seed.maxChakra, seed.chakra + Math.floor(seed.maxChakra * seed.mods.startChakraPct)),
     effects: [],
     shield: Math.floor(seed.maxHp * shieldPct),
     clones: seed.mods.startClones,
@@ -187,6 +210,7 @@ function attackerMult(f: Fighter, tech: JTechnique): number {
   if (f.hp < f.maxHp * 0.5) mult *= m.lowHpDamageMult;
   if (f.passive?.kind === 'enrage' && f.hp <= f.maxHp * f.passive.atPct) mult *= f.passive.damageMult;
   if (f.boost?.damageMult) mult *= f.boost.damageMult;
+  if (m.damagePerClone) mult *= 1 + m.damagePerClone * f.clones;
   return mult;
 }
 
@@ -203,7 +227,7 @@ export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data
     penetration: Math.min(data.base.penetration.max, (tech.penetration ?? 0) + (user.boost?.penetration ?? 0)),
     elementMult: elementMult(tech, target, data),
     critMult: crit ? data.base.crit.multiplier : 1,
-    extraMult: attackerMult(user, tech),
+    extraMult: attackerMult(user, tech) * (hasEffect(target, 'stun') ? user.mods.stunnedDamageMult : 1),
   });
 }
 
@@ -363,9 +387,10 @@ export function useItem(state: JBattle, item: ConsumableId, targetUid: string, d
     reviveFighter(s, user, t, j.reviveHpPct);
   } else {
     if (t.down || t.side !== user.side) throw new Error('alvo inválido');
-    if (item === 'hpKit') heal(s, user, t, Math.floor(t.maxHp * j.hpKitPct));
+    const boost = 1 + user.mods.kitBonusPct;
+    if (item === 'hpKit') heal(s, user, t, Math.floor(t.maxHp * j.hpKitPct * boost));
     else {
-      const amount = Math.min(t.maxChakra - t.chakra, Math.floor(t.maxChakra * j.chakraKitPct));
+      const amount = Math.min(t.maxChakra - t.chakra, Math.floor(t.maxChakra * j.chakraKitPct * boost));
       t.chakra += amount;
     }
   }
@@ -389,10 +414,11 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
   if (action.kind === 'guard') {
     f.guarding = true;
     s.log.push({ type: 'guard', uid: f.uid });
+    if (f.mods.guardHealPct) heal(s, f, f, Math.floor(f.maxHp * f.mods.guardHealPct));
     return;
   }
   if (action.kind === 'rest') {
-    const amount = Math.min(f.maxChakra - f.chakra, Math.max(1, Math.floor(f.maxChakra * j.restChakraPct)));
+    const amount = Math.min(f.maxChakra - f.chakra, Math.max(1, Math.floor(f.maxChakra * (j.restChakraPct + f.mods.restBonusPct))));
     f.chakra += amount;
     s.log.push({ type: 'rest', uid: f.uid, chakra: amount });
     return;
@@ -422,7 +448,7 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
     s.log.push({ type: 'boost', uid: f.uid, techId: tech.id, turns: tech.boost.turns });
   }
   if (tech.clones) {
-    f.clones = Math.min(j.maxClones, f.clones + tech.clones + f.mods.extraClones);
+    f.clones = Math.min(j.maxClones + f.mods.maxClonesBonus, f.clones + tech.clones + f.mods.extraClones);
     s.log.push({ type: 'clones', uid: f.uid, total: f.clones });
   }
   for (const t of targets) {
@@ -451,7 +477,7 @@ function applyStatus(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data:
     s.log.push({ type: 'miss', uid: f.uid, target: t.uid });
     return;
   }
-  tryEffect(s, t, tech, data, rng);
+  tryEffect(s, f, t, tech, data, rng);
 }
 
 function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: JornadaData, rng: Rng): void {
@@ -459,7 +485,7 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
   const hits = hitsOf(f, tech);
   // Clones só seguram golpe de alvo único; técnica em área passa por eles.
   const single = tech.target !== 'allEnemies';
-  for (let i = 0; i < hits && !t.down && s.status === 'ongoing'; i++) {
+  for (let i = 0; i < hits && !t.down && !f.down && s.status === 'ongoing'; i++) {
     const chance = accuracyAgainst(f, t, tech, data);
     // Um sorteio só: abaixo do crítico é crítico, abaixo do acerto é acerto (crítico contido no acerto).
     const r = rng();
@@ -471,6 +497,10 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     if (single && t.clones > 0 && rng() < j.cloneBlockChance) {
       t.clones--;
       s.log.push({ type: 'cloneBlock', target: t.uid, left: t.clones });
+      if (t.mods.cloneCounter) {
+        s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: t.mods.cloneCounter, crit: false, elementMult: 1, absorbed: 0 });
+        applyHpLoss(s, f, t.mods.cloneCounter);
+      }
       continue;
     }
     const amount = hitDamage(f, t, tech, data, outcome === 'crit');
@@ -478,13 +508,14 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     t.shield -= absorbed;
     s.log.push({ type: 'damage', uid: f.uid, target: t.uid, amount: amount - absorbed, crit: outcome === 'crit', elementMult: elementMult(tech, t, data), absorbed });
     applyHpLoss(s, t, amount - absorbed);
-    if (!t.down) tryEffect(s, t, tech, data, rng);
+    if (t.down && f.mods.onKillChakra) f.chakra = Math.min(f.maxChakra, f.chakra + f.mods.onKillChakra);
+    if (!t.down) tryEffect(s, f, t, tech, data, rng);
   }
 }
 
-function tryEffect(s: JBattle, t: Fighter, tech: JTechnique, data: JornadaData, rng: Rng): void {
+function tryEffect(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: JornadaData, rng: Rng): void {
   const on = tech.onHit;
-  if (!on || t.down || rng() >= on.chance) return;
+  if (!on || t.down || rng() >= on.chance + f.mods.effectChanceBonus) return;
   const turns = on.turns ?? data.j.combat.defaultEffectTurns;
   const prev = t.effects.find((e) => e.kind === on.effect);
   if (prev) prev.turns = Math.max(prev.turns, turns);
@@ -521,7 +552,7 @@ function heal(s: JBattle, f: Fighter, t: Fighter, amount: number): void {
 
 function reviveFighter(s: JBattle, f: Fighter, t: Fighter, pct: number): void {
   t.down = false;
-  t.hp = Math.max(1, Math.floor(t.maxHp * pct));
+  t.hp = Math.max(1, Math.floor(t.maxHp * Math.min(1, pct + t.mods.reviveHpBonus)));
   s.log.push({ type: 'revive', uid: f.uid, target: t.uid, hp: t.hp });
 }
 
