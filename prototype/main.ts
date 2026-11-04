@@ -1435,7 +1435,6 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     ico = icon(ITEM_ICONS[itemId]);
     tipAttr = tip(it.name, it.desc);
   } else if (action === 'stance') {
-    extra = S.ui.stanceHint;
     tipAttr = tip(title, A.stance);
   } else if (action === 'pass') {
     extra = S.ui.passHint;
@@ -1642,8 +1641,9 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     const buttons = actionList(view, tab)
       .map((a) => actionButton(view, a, enabled && avail.includes(a)))
       .join('');
-    const toggle = (key: keyof RoundExtras, ico: string, label: string, armedLabel: string, hint: string) =>
-      `<button class="btn focus-btn${extras[key] ? ' on' : ''}" data-extra="${key}" aria-pressed="${Boolean(extras[key])}" ${enabled ? '' : 'aria-disabled="true"'}${tip(label, hint)}>${icon(ico)}<span>${extras[key] ? armedLabel : label}<small>${hint}</small></span></button>`;
+    /** Botão simples: nome (e um número curto em `small`, como o HP dos portões); a explicação fica só na dica. */
+    const toggle = (key: keyof RoundExtras, ico: string, label: string, armedLabel: string, hint: string, small = '') =>
+      `<button class="btn focus-btn${extras[key] ? ' on' : ''}" data-extra="${key}" aria-pressed="${Boolean(extras[key])}" ${enabled ? '' : 'aria-disabled="true"'}${tip(label, hint)}>${icon(ico)}<span>${extras[key] ? armedLabel : label}${small ? `<small>${small}</small>` : ''}</span></button>`;
     /** Dōjutsu, portões e expansão: ativas grátis (não gastam o turno). */
     /** A ativa aparece se há chakra para ela junto com as outras já marcadas (ou se já está marcada). */
     const affordable = (st: BattleState, kind: FreeActive): boolean => Boolean(extras[kind]) || canFreeActive(st, kind, 'pass', data, extras);
@@ -1659,11 +1659,11 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
       }
       if (kind === 'gates') {
         const gates = gatesToOpen(p, data)!;
-        const hint = `−${gatesHpCost(p, gates.hpCostPct)} HP · ${S.ui.activeFreeHint}`;
-        return toggle('gates', 'gates', S.ui.activeFree(S.gatesStage(gates.stage), cost), `${S.gatesStage(gates.stage)}${ARMED}`, hint);
+        const hp = `−${gatesHpCost(p, gates.hpCostPct)} HP`;
+        return toggle('gates', 'gates', S.ui.activeFree(S.gatesStage(gates.stage), cost), `${S.gatesStage(gates.stage)}${ARMED}`, `${hp} · ${S.ui.activeFreeHint}`, hp);
       }
       const hint = `${S.ui.expansionHint} · ${S.ui.activeFreeHint}`;
-      return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name}${ARMED}`, hint);
+      return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name}${ARMED}`, hint, S.ui.expansionHint);
     };
     /** Ativas de linhagem com botão próprio (Esforço, Fera, Praga, Transmissão, Cópia, Selamento, Pílulas). */
     const lineageActiveToggle = (

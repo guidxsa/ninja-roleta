@@ -32,7 +32,7 @@ export interface JTechnique {
   hitsPerClone?: number;
   maxCloneHits?: number;
   chakraCost: number;
-  /** Fração do HP máximo que custa (Portões, Lótus). */
+  /** Fração do HP máximo que custa (Lótus, Manto da Kyuubi). */
   hpCostPct?: number;
   accuracy?: number;
   critBonus?: number;
@@ -48,10 +48,21 @@ export interface JTechnique {
   clones?: number;
   /** Rodadas de espera depois de usar. */
   cooldown?: number;
-  /** Ativa de classe: não ocupa espaço no moveset (docs/jornada/combate.md#moveset). */
+  /** Ativa de classe: fica fora do moveset e não gasta o turno, uma por turno (docs/jornada/combate.md#turno). */
   active?: boolean;
-  /** Fortalecimento em quem usa por alguns turnos (Portões, Sharingan, Byakugan). */
+  /** Fortalecimento em quem usa por alguns turnos, contando o da ativação (Sharingan, Byakugan). */
   boost?: Boost;
+  /** Abre os Portões (docs/jornada/combate.md#portões): a ativa vira a escolha do portão, sem efeito próprio. */
+  gates?: boolean;
+}
+
+/** Um dos Portões: números brutos, que se somam aos dos portões de baixo. */
+export interface GateLevel {
+  damageMult: number;
+  accuracy?: number;
+  critBonus?: number;
+  /** Desgaste: fração do HP máximo perdida no fim de cada turno com este portão aberto. */
+  drainPct: number;
 }
 
 /** Como um lutador automático escolhe a ação (docs/jornada/personagens.md). */
@@ -113,6 +124,8 @@ export interface FighterMods {
   kitBonusPct: number;
   /** Começa a luta com esta fração a mais do chakra máximo. */
   startChakraPct: number;
+  /** Portões a mais liberados além do 1º (Portão da Vida, Lótus Oculta). */
+  gateLevels: number;
 }
 
 export interface CharacterDef {
@@ -176,6 +189,8 @@ export interface Fighter {
   enraged: boolean;
   /** Fortalecimento ativo (uma técnica de boost por vez; usar de novo renova). */
   boost: (Boost & { techId: string }) | null;
+  /** Portão aberto e turnos que ainda restam (trocar de portão não renova). */
+  gate: { level: number; turns: number } | null;
 }
 
 /** Como a luta se vence (docs/jornada/historia.md#vitórias-especiais). */
@@ -211,6 +226,10 @@ export type JEvent =
   | { type: 'rest'; uid: string; chakra: number }
   | { type: 'enrage'; uid: string }
   | { type: 'boost'; uid: string; techId: string; turns: number }
+  /** Custo em HP de uma técnica (`source` = id) ou desgaste dos Portões (`source` = 'gates'). */
+  | { type: 'hpCost'; uid: string; amount: number; source: string }
+  /** Abriu ou trocou de portão (`level` 1–5) ou fechou (0; `timeout` quando acabou o tempo). */
+  | { type: 'gate'; uid: string; level: number; timeout?: boolean }
   | { type: 'end'; status: BattleStatus };
 
 export interface JBattle {
@@ -225,6 +244,8 @@ export interface JBattle {
   win: WinCondition;
   /** O protagonista já usou um item neste turno (item não gasta o turno, mas é um por turno). */
   itemUsed: boolean;
+  /** O lutador do turno já usou uma ativa (ou trocou de portão): também não gasta o turno, uma por turno. */
+  activeUsed: boolean;
   /** Quantas vezes os suportes já levantaram o protagonista nesta luta. */
   heroRevives: number;
   log: JEvent[];
@@ -236,5 +257,8 @@ export type JAction =
   | { kind: 'revive'; target: string }
   | { kind: 'guard' }
   | { kind: 'rest' };
+
+/** Ação grátis (não gasta o turno, uma por turno): ativa de classe ou troca de portão (0 = fechar). */
+export type JFreeAction = { kind: 'active'; techId: string; target: string } | { kind: 'gate'; level: number };
 
 export type ConsumableId = 'hpKit' | 'chakraKit' | 'reviveKit';

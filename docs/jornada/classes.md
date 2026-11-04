@@ -30,11 +30,11 @@ Na tela de início, a classe trancada aparece com cadeado e a condição.
 | Classe | Ativa | Efeito |
 |---|---|---|
 | Comum | Bunshin | 1 clone (3 de chakra) |
-| Prodígio | Portões | Fortalece: dano ×1,3 por 3 turnos, paga 8% do HP (espera 4) |
+| Prodígio | Portões | Abre, troca ou fecha um dos 5 portões: dano maior com desgaste de HP por turno ([combate.md](combate.md#portões)) |
 | Uchiha | Sharingan | Fortalece: +15% de acerto e +15% de esquiva por 3 turnos (3 de chakra, espera 4) |
 | Hyuuga | Byakugan | Fortalece: não erra e +20% de penetração por 3 turnos (3 de chakra, espera 4) |
 
-Fortalecimento: um bônus temporário em quem usa (dano, acerto, esquiva, penetração) que dura os turnos indicados; usar de novo renova ([combate.md](combate.md)).
+Ativas de classe não gastam o turno: saem junto com a ação, uma por turno ([combate.md](combate.md#turno)). Fortalecimento: um bônus temporário em quem usa (dano, acerto, esquiva, penetração) que dura os turnos indicados, contando o da ativação; usar de novo renova.
 
 ## Suportes genéricos (versão suporte)
 

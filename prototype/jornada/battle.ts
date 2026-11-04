@@ -2,23 +2,31 @@
 // alvo por toque e animação a partir do log de eventos do core. Sem roleta na tela: só o resultado.
 import {
   awaitingPlayer,
+  battlePower,
   blockedReason,
   current,
   downed,
   fighter,
+  gateChoices,
+  gateDrain,
+  gateTotals,
   hitsOf,
   hpCost,
   itemTargets,
+  maxGate,
   playerAct,
+  setGate,
   startBattle,
   techniqueCost,
+  techPower,
+  useActive,
   useItem,
   validTargets,
 } from '../../src/core/jornada/battle';
 import type { JornadaData } from '../../src/core/jornada/data';
 import { CONSUMABLES, spendItem, type JRun } from '../../src/core/jornada/run';
 import type { BattleSetup } from '../../src/core/jornada/battle';
-import type { ConsumableId, Fighter, JAction, JBattle, JEvent, JTechnique } from '../../src/core/jornada/types';
+import type { Boost, ConsumableId, Fighter, FighterMods, JAction, JBattle, JEvent, JTechnique } from '../../src/core/jornada/types';
 import type { Rng } from '../../src/core/rng';
 import { jornadaData } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
@@ -73,22 +81,75 @@ const barKey = (bar: HTMLElement) => {
 };
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
+const pctN = (n: number) => Math.round(n * 100);
+/** Multiplicador com vírgula e até 2 casas (1,15; 1,3). */
+const fmtMult = (n: number) => String(Math.round(n * 100) / 100).replace('.', ',');
+const G = J.gates;
+const gateName = (level: number) => G.names[level - 1] ?? '';
+
+/** Partes de um fortalecimento para a dica ("dano ×1,3, +15% de acerto"). */
+function boostParts(b: Boost): string {
+  return [
+    b.damageMult ? `dano ×${fmtMult(b.damageMult)}` : '',
+    b.accuracy ? (b.accuracy >= 1 ? 'não erra' : `+${pct(b.accuracy)} de acerto`) : '',
+    b.evasion ? `+${pct(b.evasion)} de esquiva` : '',
+    b.penetration ? `+${pct(b.penetration)} de penetração` : '',
+  ]
+    .filter(Boolean)
+    .join(', ');
+}
+
+/** Bônus e desgaste de um portão, para as dicas. */
+function gateLines(f: Fighter, level: number): string[] {
+  const t = gateTotals(level, jornadaData);
+  return [G.bonus(fmtMult(t.damageMult), pctN(t.accuracy), pctN(t.critBonus), level > 1), G.drain(gateDrain(f, level, jornadaData), pctN(t.drainPct))];
+}
+
+/** Dica do botão Portões: o que está aberto, o desgaste e as regras. */
+function gatesTip(s: JBattle, f: Fighter, tech: JTechnique): string {
+  const g = jornadaData.j.gates;
+  const wait = f.gate ? 0 : (f.cooldowns[tech.id] ?? 0);
+  const body = lines([
+    wait ? `<b>${B.cooldown(wait)}</b>` : s.activeUsed ? `<b>${B.activeSpent}</b>` : '',
+    f.gate ? `<b>${gateName(f.gate.level)}</b> · ${G.left(f.gate.turns)}` : '',
+    ...(f.gate ? gateLines(f, f.gate.level) : []),
+    G.max(gateName(maxGate(f, jornadaData))),
+    G.rule,
+    G.duration(g.maxTurns),
+    G.cooldown(g.cooldown),
+  ]);
+  return tip(techName(tech.id), body);
+}
+
+/** Dica de um portão no submenu. */
+function gateOptionTip(f: Fighter, level: number): string {
+  const body = lines([G.romaji[level - 1] ?? '', ...gateLines(f, level), f.gate ? G.left(f.gate.turns) : G.duration(jornadaData.j.gates.maxTurns)]);
+  return tip(gateName(level), body);
+}
 
 /** Clones que a técnica cria, com o bônus de quem usa. */
 const clonesMade = (tech: JTechnique, f?: Fighter) => (tech.clones ?? 0) + (f?.mods.extraClones ?? 0);
 
-/** Dica completa de uma técnica (passar o mouse ou segurar o dedo). `f` mostra custo e golpes reais. */
-export function techTip(tech: JTechnique, f?: Fighter): string {
+/**
+ * Dica completa de uma técnica (passar o mouse ou segurar o dedo): é onde ficam alvo, efeitos, regras e o motivo de
+ * bloqueio. `f` mostra custo, golpes e dano da luta; `mods`, o dano com os bônus de ficha (fora da luta).
+ */
+export function techTip(tech: JTechnique, f?: Fighter, mods?: FighterMods, s?: JBattle): string {
   const U = J.ui;
   const hits = f ? hitsOf(f, tech) : (tech.hits ?? 1);
   const cost = f ? techniqueCost(f, tech) : tech.chakraCost;
+  const power = f ? battlePower(f, tech, jornadaData) : mods ? techPower(tech, mods) : tech.baseDamage;
+  const blocked = f ? blockedReason(f, tech) : null;
+  const why = blocked ? (blocked === 'cooldown' ? B.cooldown(f!.cooldowns[tech.id]!) : B.blocked[blocked]) : tech.active && s?.activeUsed ? B.activeSpent : '';
   const effect = tech.onHit
     ? `${fxIcon(tech.onHit.effect)} ${J.effects[tech.onHit.effect]} ${pct(tech.onHit.chance)}${tech.onHit.turns ? ` (${tech.onHit.turns} t)` : ''}`
     : '';
   const body = lines([
-    `${J.types[tech.type]}${tech.element ? ` · ${S.elements[tech.element]}` : ''}${tech.active ? ` · ${U.actives}` : ''}`,
+    why ? `<b>${why}</b>` : '',
+    `${J.types[tech.type]}${tech.element ? ` · ${S.elements[tech.element]}` : ''}${tech.active ? ' · ativa' : ''}`,
     `${U.tipTarget}: ${J.targets[tech.target]}`,
-    tech.baseDamage > 0 ? `${B.damage(tech.baseDamage)}${hits > 1 ? ` · ${B.hits(hits)}` : ''}${tech.hitsPerClone ? ` (+${tech.hitsPerClone}/clone, até +${tech.maxCloneHits})` : ''}` : '',
+    tech.baseDamage > 0 ? `${B.damage(power)}${hits > 1 ? ` · ${B.hits(hits)}` : ''}${tech.hitsPerClone ? ` (+${tech.hitsPerClone}/clone, até +${tech.maxCloneHits})` : ''}` : '',
+    tech.baseDamage > 0 ? B.powerTip : '',
     tech.baseDamage > 0 || tech.onHit ? `${U.tipAccuracy}: ${pct(tech.accuracy ?? 0.85)}` : '',
     tech.critBonus ? `+${pct(tech.critBonus)} crítico` : '',
     tech.penetration ? `penetração ${pct(tech.penetration)}` : '',
@@ -99,7 +160,9 @@ export function techTip(tech: JTechnique, f?: Fighter): string {
     tech.clones ? `${icon('clones')} ${B.clonesMade(clonesMade(tech, f))}. ${B.cloneRule(CLONE_PCT, jornadaData.j.combat.maxClones)}` : '',
     cost ? B.chakra(cost) : '',
     tech.hpCostPct && f ? B.hpCost(hpCost(f, tech)) : tech.hpCostPct ? `${pct(tech.hpCostPct)} do HP` : '',
+    tech.boost ? B.boostLine(tech.boost.turns, boostParts(tech.boost)) : '',
     tech.cooldown ? B.cooldown(tech.cooldown) : '',
+    tech.active ? B.activeTip : '',
   ]);
   return tip(techName(tech.id), body);
 }
@@ -116,6 +179,9 @@ function fighterTip(f: Fighter): string {
     passive,
     f.shield ? `${icon('barrier')} ${f.shield}` : '',
     f.clones ? `${icon('clones')} ${B.clonesActive(f.clones, CLONE_PCT)}` : '',
+    f.gate ? `${icon('gates')} ${B.gateTip(gateName(f.gate.level), f.gate.turns)}` : '',
+    ...(f.gate ? gateLines(f, f.gate.level) : []),
+    f.boost ? `${icon('sparkle')} ${B.boostTip(techName(f.boost.techId), f.boost.turns)}: ${boostParts(f.boost)}` : '',
     effects.length ? `${U.tipEffects}: ${effects.join(', ')}` : '',
     f.techniques.map((id) => techName(id)).join(' · '),
   ]);
@@ -127,6 +193,8 @@ function statusChips(f: Fighter): string {
   if (f.shield > 0) chips.push(`<span class="jchip good">${icon('barrier')}${f.shield}</span>`);
   if (f.clones > 0) chips.push(`<span class="jchip good" title="${B.clonesActive(f.clones, CLONE_PCT)}">${icon('clones')}${f.clones}</span>`);
   if (f.guarding) chips.push(`<span class="jchip good">${icon('stance')}</span>`);
+  if (f.gate) chips.push(`<span class="jchip gate" title="${B.gateTip(gateName(f.gate.level), f.gate.turns)}">${icon('gates')}${G.numeral[f.gate.level - 1]}·${f.gate.turns}</span>`);
+  if (f.boost) chips.push(`<span class="jchip good" title="${B.boostTip(techName(f.boost.techId), f.boost.turns)}">${icon('sparkle')}${f.boost.turns}</span>`);
   return chips.join('');
 }
 
@@ -145,26 +213,37 @@ function fighterCard(f: Fighter, data: JornadaData): string {
   </button>`;
 }
 
-function techButton(f: Fighter, tech: JTechnique): string {
+/** Botão de técnica: nome e os números principais (dano e custo). O resto fica na dica. */
+function techButton(s: JBattle, f: Fighter, tech: JTechnique): string {
   const blocked = blockedReason(f, tech);
+  const disabled = Boolean(blocked) || Boolean(tech.active && s.activeUsed);
   const cost = techniqueCost(f, tech);
   const hp = hpCost(f, tech);
   const hits = hitsOf(f, tech);
+  const power = battlePower(f, tech, jornadaData);
   const bits = [
-    tech.baseDamage > 0 ? `${B.damage(tech.baseDamage)}${hits > 1 ? ` ${B.hits(hits)}` : ''}` : '',
-    tech.clones ? `${icon('clones')} ${B.clonesMade(clonesMade(tech, f))}, ${B.cloneShort}` : '',
-    cost ? B.chakra(cost) : '',
-    hp ? B.hpCost(hp) : '',
-    J.targets[tech.target],
-    tech.onHit ? `${fxIcon(tech.onHit.effect)} ${Math.round(tech.onHit.chance * 100)}%` : '',
-    blocked ? (blocked === 'cooldown' ? B.cooldown(f.cooldowns[tech.id]!) : B.blocked[blocked]) : '',
+    tech.baseDamage > 0 ? `<span${power > tech.baseDamage ? ' class="up"' : ''}>${B.damage(power)}${hits > 1 ? `×${hits}` : ''}</span>` : '',
+    tech.clones ? `${icon('clones')} +${clonesMade(tech, f)}` : '',
+    cost ? `<span${f.chakra < cost ? ' class="short"' : ''}>${B.chakra(cost)}</span>` : '',
+    hp ? `<span${hp >= f.hp ? ' class="short"' : ''}>${B.hpCost(hp)}</span>` : '',
   ].filter(Boolean);
   const color = tech.element ? ELEMENT_COLORS[tech.element] : `var(--t-${tech.type})`;
   const wait = blocked === 'cooldown' ? f.cooldowns[tech.id]! : 0;
   const cd = wait ? `<span class="cd" style="--p:${Math.min(1, wait / Math.max(wait, tech.cooldown ?? wait))}" aria-hidden="true">${wait}</span>` : '';
-  return `<button class="btn jmove${wait ? ' cooling' : ''}" data-tech="${tech.id}" ${blocked ? 'aria-disabled="true"' : ''} style="--c:${color}"${techTip(tech, f)}>
+  return `<button class="btn jmove${wait ? ' cooling' : ''}" data-tech="${tech.id}" ${disabled ? 'aria-disabled="true"' : ''} style="--c:${color}"${techTip(tech, f, undefined, s)}>
     <span class="jmove-ico">${icon(tech.element ?? tech.type)}${cd}</span>
-    <span class="jmove-txt"><b>${techName(tech.id)}</b><small>${bits.join(' · ')}</small></span></button>`;
+    <span class="jmove-txt"><b>${techName(tech.id)}</b>${bits.length ? `<small>${bits.join(' · ')}</small>` : ''}</span></button>`;
+}
+
+/** Botão dos Portões: aberto, mostra o portão e os turnos; em espera, o círculo de espera. */
+function gatesButton(s: JBattle, f: Fighter, tech: JTechnique): string {
+  const can = gateChoices(s, f, jornadaData).length > 0;
+  const wait = f.gate ? 0 : (f.cooldowns[tech.id] ?? 0);
+  const cd = wait ? `<span class="cd" style="--p:${Math.min(1, wait / jornadaData.j.gates.cooldown)}" aria-hidden="true">${wait}</span>` : '';
+  const small = f.gate ? `${gateName(f.gate.level)} · ${f.gate.turns}t` : '';
+  return `<button class="btn jmove${wait ? ' cooling' : ''}${f.gate ? ' on' : ''}" data-gates ${can ? '' : 'aria-disabled="true"'} style="--c:var(--accent)"${gatesTip(s, f, tech)}>
+    <span class="jmove-ico">${icon('gates')}${cd}</span>
+    <span class="jmove-txt"><b>${techName(tech.id)}</b>${small ? `<small>${small}</small>` : ''}</span></button>`;
 }
 
 export interface BattleResult {
@@ -400,6 +479,35 @@ export async function jornadaBattle(
           say(B.enrage(name(e.uid)), 'var(--accent)');
           pushLog(B.enrage(name(e.uid)));
           break;
+        case 'hpCost': {
+          // Penalidade: a barra cai na hora (custo de técnica ou desgaste dos Portões).
+          const gates = e.source === 'gates';
+          float(e.uid, `${gates ? icon('gates') : ''}−${e.amount}`, 'cost');
+          setHp(e.uid, shown.get(e.uid)!.hp - e.amount);
+          pushLog(B.logHpCost(name(e.uid), e.amount, gates ? B.drainLabel : techName(e.source)));
+          if (!gates) wait = host.instant() ? 70 : 300;
+          break;
+        }
+        case 'gate':
+          if (e.level > 0) {
+            pose(e.uid, 'lunge-up');
+            say(B.gateOpen(name(e.uid), gateName(e.level)), 'var(--accent-2)');
+            float(e.uid, `${icon('gates')}${G.numeral[e.level - 1]}`, 'fx');
+            pushLog(B.logGate(name(e.uid), gateName(e.level)));
+            swish();
+          } else if (e.timeout) {
+            say(B.gateTimeout(name(e.uid)), 'var(--muted)');
+            pushLog(B.gateTimeout(name(e.uid)));
+          } else {
+            pushLog(B.logGateClose(name(e.uid)));
+            wait = host.instant() ? 70 : 200;
+          }
+          break;
+        case 'boost':
+          float(e.uid, icon('sparkle'), 'fx');
+          pushLog(B.logBoost(name(e.uid), techName(e.techId), e.turns));
+          wait = host.instant() ? 70 : 250;
+          break;
         case 'end':
           wait = 0;
           break;
@@ -431,9 +539,13 @@ export async function jornadaBattle(
     });
   }
 
-  /** Menu do turno do protagonista. Itens são aplicados aqui (não gastam o turno). */
-  async function playerTurn(): Promise<JAction> {
+  /**
+   * Menu do turno do protagonista. Itens, ativas e Portões são aplicados aqui (não gastam o turno). Devolve null se a
+   * luta acabou no meio do turno.
+   */
+  async function playerTurn(): Promise<JAction | null> {
     for (;;) {
+      if (!awaitingPlayer(state)) return null;
       render(state);
       const me = current(state)!;
       const techs = me.techniques.map((id) => data.techniques[id]!).filter(Boolean);
@@ -442,9 +554,8 @@ export async function jornadaBattle(
       const fallen = downed(state, 'ally');
       const items = CONSUMABLES.filter((id) => run.bag[id] > 0 && itemTargets(state, id).length > 0);
       menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
-        ${me.clones ? `<p class="jb-hint">${icon('clones')} ${B.clonesActive(me.clones, CLONE_PCT)}</p>` : ''}
-        <div class="jb-moves">${moves.map((t) => techButton(me, t)).join('')}</div>
-        <div class="jb-extra">${actives.map((t) => techButton(me, t)).join('')}
+        <div class="jb-moves">${moves.map((t) => techButton(state, me, t)).join('')}</div>
+        <div class="jb-extra">${actives.map((t) => (t.gates ? gatesButton(state, me, t) : techButton(state, me, t))).join('')}
           <button class="btn small jx" data-act="guard" ${tip(B.guard, B.guardDesc)}>${icon('stance')} ${B.guard}</button>
           <button class="btn small jx" data-act="rest" ${tip(B.rest, B.restDesc)}>${icon('rest')} ${B.rest}</button>
           <button class="btn small jx" data-act="revive" ${tip(B.revive, B.reviveDesc)} ${fallen.length ? '' : 'aria-disabled="true"'}>${icon('willOfFire')} ${B.revive}</button>
@@ -452,7 +563,7 @@ export async function jornadaBattle(
         </div>`;
       const pick = await new Promise<HTMLElement>((resolve) => {
         const onClick = (ev: Event) => {
-          const b = (ev.target as HTMLElement).closest<HTMLElement>('[data-tech],[data-act]');
+          const b = (ev.target as HTMLElement).closest<HTMLElement>('[data-tech],[data-act],[data-gates]');
           if (!b || !menu.contains(b) || b.getAttribute('aria-disabled') === 'true') return;
           menu.removeEventListener('click', onClick);
           resolve(b);
@@ -477,15 +588,56 @@ export async function jornadaBattle(
         await animate(before, state);
         continue;
       }
+      if (pick.hasAttribute('data-gates')) {
+        const level = await pickGate(me);
+        if (level === null) continue;
+        const before = state;
+        state = setGate(state, level, data, rng);
+        await animate(before, state);
+        continue;
+      }
       const tech = data.techniques[pick.dataset.tech!]!;
-      if (tech.target === 'allEnemies' || tech.target === 'self') return { kind: 'tech', techId: tech.id, target: me.uid };
-      const uid = await pickTarget(validTargets(state, me, tech), tech.target === 'ally' ? B.pickAlly : B.pickTarget);
-      if (uid) return { kind: 'tech', techId: tech.id, target: uid };
+      const uid =
+        tech.target === 'allEnemies' || tech.target === 'self'
+          ? me.uid
+          : await pickTarget(validTargets(state, me, tech), tech.target === 'ally' ? B.pickAlly : B.pickTarget);
+      if (!uid) continue;
+      // Ativa: aplica e o turno continua.
+      if (tech.active) {
+        const before = state;
+        state = useActive(state, tech.id, uid, data, rng);
+        await animate(before, state);
+        continue;
+      }
+      return { kind: 'tech', techId: tech.id, target: uid };
     }
   }
 
+  /** Escolha do portão: com uma opção só, aplica direto. */
+  function pickGate(me: Fighter): Promise<number | null> {
+    const choices = gateChoices(state, me, data);
+    // Só um portão para abrir: abre direto. Fechar sempre passa pelo submenu (evita fechar sem querer).
+    if (choices.length === 1 && choices[0]! > 0) return Promise.resolve(choices[0]!);
+    const option = (level: number) =>
+      level === 0
+        ? `<button class="btn jmove" data-level="0" style="--c:var(--line)"${tip(G.close, G.closeTip)}><span class="jmove-ico">${icon('close')}</span><span class="jmove-txt"><b>${G.close}</b></span></button>`
+        : `<button class="btn jmove" data-level="${level}" style="--c:var(--accent)"${gateOptionTip(me, level)}><span class="jmove-ico"><b class="gate-n">${G.numeral[level - 1]}</b></span>
+            <span class="jmove-txt"><b>${gateName(level)}</b><small>×${fmtMult(gateTotals(level, data).damageMult)} · <span class="short">${G.perTurn(gateDrain(me, level, data))}</span></small></span></button>`;
+    menu.innerHTML = `<p class="jb-prompt">${techName('jGates')}</p><div class="jb-moves">${choices.map(option).join('')}</div><button class="btn small" data-cancel>${B.cancel}</button>`;
+    return new Promise((resolve) => {
+      const onClick = (ev: Event) => {
+        const t = ev.target as HTMLElement;
+        const b = t.closest<HTMLElement>('[data-level]');
+        if (!b && !t.closest('[data-cancel]')) return;
+        menu.removeEventListener('click', onClick);
+        resolve(b ? Number(b.dataset.level) : null);
+      };
+      menu.addEventListener('click', onClick);
+    });
+  }
+
   function pickItem(items: ConsumableId[]): Promise<ConsumableId | null> {
-    menu.innerHTML = `<p class="jb-prompt">${B.bagDesc}</p><div class="jb-moves">${items
+    menu.innerHTML = `<p class="jb-prompt">${B.bag}</p><div class="jb-moves">${items
       .map((id) => `<button class="btn jmove" data-item="${id}"><span class="jmove-ico">${icon('kit')}</span><span class="jmove-txt"><b>${J.items[id]!.name} ×${run.bag[id]}</b><small>${J.items[id]!.desc}</small></span></button>`)
       .join('')}</div><button class="btn small" data-cancel>${B.cancel}</button>`;
     return new Promise((resolve) => {
@@ -509,6 +661,7 @@ export async function jornadaBattle(
   while (state.status === 'ongoing') {
     if (!awaitingPlayer(state)) break;
     const action = await playerTurn();
+    if (!action) break;
     menu.innerHTML = '';
     const before = state;
     state = playerAct(state, action, data, rng);

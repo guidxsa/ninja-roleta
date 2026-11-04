@@ -3,12 +3,20 @@ import { describe, expect, it } from 'vitest';
 import {
   advance,
   awaitingPlayer,
+  battlePower,
   current,
   emptyMods,
   enemySeed,
+  gateChoices,
+  gateTotals,
   hitDamage,
+  maxGate,
+  mergeMods,
   playerAct,
+  setGate,
   startBattle,
+  techPower,
+  useActive,
   useItem,
   type BattleSetup,
   type FighterSeed,
@@ -46,6 +54,7 @@ import {
   HERO,
   type JRun,
 } from '../src/core/jornada/run';
+import { chooseAiActive } from '../src/core/jornada/ai';
 import { talentState } from '../src/core/jornada/talents';
 import { isFight } from '../src/core/jornada/trail';
 import type { JBattle } from '../src/core/jornada/types';
@@ -456,7 +465,7 @@ describe('run da Jornada', () => {
     expect(hit.log.some((e) => e.type === 'damage' && e.uid === 'e0' && e.target === 'a0' && e.amount === 4)).toBe(true);
     // Limite de clones.
     const b = startBattle(setup({ allies: [hero({ mods: mod({ maxClonesBonus: 2, startClones: 6 }) })] }), data, fixed(0.5));
-    const cloned = playerAct(b, { kind: 'tech', techId: 'jKageBunshin', target: 'a0' }, data, fixed(0.5));
+    const cloned = useActive(b, 'jKageBunshin', 'a0', data, fixed(0.5));
     expect(cloned.fighters[0]!.clones).toBe(data.j.combat.maxClones + 2);
     // Dano por clone e contra atordoado.
     const base = startBattle(setup(), data, fixed(0.5)).fighters;
@@ -902,15 +911,192 @@ describe('Caminho Ninja', () => {
   it('o visual escolhido fica na run', () => {
     expect(newGenericRun(1, 'normal', 'uchiha', data, new Set(), 'sasuke').skin).toBe('sasuke');
   });
+});
 
-  it('Portões fortalecem o dano por alguns turnos', () => {
-    const me = hero({ techniques: ['jStrike', 'jGates'] });
-    let b = startBattle(setup({ allies: [me], enemies: [dummy({ hp: 999, maxHp: 999 })] }), data, fixed(0.5));
-    const plain = hitDamage(b.fighters[0]!, b.fighters[1]!, data.techniques.jStrike!, data);
-    b = playerAct(b, { kind: 'tech', techId: 'jGates', target: 'a0' }, data, fixed(0.5));
-    expect(b.fighters[0]!.boost?.damageMult).toBe(1.3);
-    expect(hitDamage(b.fighters[0]!, b.fighters[1]!, data.techniques.jStrike!, data)).toBe(Math.floor((8 + 10 - 3) * 1.3));
+describe('ativas grátis e Portões (v0.42.0)', () => {
+  const big = () => dummy({ hp: 999, maxHp: 999 });
+  const prodigy = (over: Partial<FighterSeed> = {}) => hero({ defId: 'prodigy', maxHp: 100, hp: 100, techniques: ['jStrike', 'jPrimaryLotus', 'jGates'], ...over });
+  const fight = (me: FighterSeed) => startBattle(setup({ allies: [me], enemies: [big()] }), data, fixed(0.5));
+  const me = (b: JBattle) => b.fighters[0]!;
+
+  it('custo de HP de técnica gera evento e o HP cai exatamente o custo', () => {
+    const b = fight(prodigy());
+    const after = playerAct(b, { kind: 'tech', techId: 'jPrimaryLotus', target: 'e0' }, data, fixed(0.99));
+    const cost = after.log.slice(b.log.length).find((e) => e.type === 'hpCost');
+    expect(cost).toEqual({ type: 'hpCost', uid: 'a0', amount: 10, source: 'jPrimaryLotus' });
+    const hits = after.log.slice(b.log.length).filter((e) => e.type === 'damage' && e.target === 'a0').reduce((a, e) => a + (e.type === 'damage' ? e.amount : 0), 0);
+    expect(me(after).hp).toBe(100 - 10 - hits);
+  });
+
+  it('ativa não gasta o turno e é uma por turno', () => {
+    const b = fight(hero());
+    const cloned = useActive(b, 'jKageBunshin', 'a0', data, fixed(0.5));
+    expect(awaitingPlayer(cloned)).toBe(true);
+    expect(me(cloned).clones).toBe(2);
+    expect(() => useActive(cloned, 'jKageBunshin', 'a0', data, fixed(0.5))).toThrow();
+    expect(() => playerAct(b, { kind: 'tech', techId: 'jKageBunshin', target: 'a0' }, data, fixed(0.5))).toThrow();
+    // Ataca no mesmo turno; no turno seguinte a ativa volta.
+    const next = playerAct(cloned, { kind: 'tech', techId: 'jStrike', target: 'e0' }, data, fixed(0.99));
+    expect(next.activeUsed).toBe(false);
+    expect(() => useActive(next, 'jKageBunshin', 'a0', data, fixed(0.5))).not.toThrow();
+  });
+
+  it('fortalecimento conta o turno da ativação', () => {
+    let b = fight(hero({ techniques: ['jStrike', 'jSharingan'] }));
+    b = useActive(b, 'jSharingan', 'a0', data, fixed(0.5));
+    let boosted = 0;
+    for (let i = 0; i < 5; i++) {
+      if (me(b).boost) boosted++;
+      b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
+    }
+    expect(boosted).toBe(data.techniques.jSharingan!.boost!.turns);
+  });
+
+  it('portões somam do 1º ao aberto', () => {
+    const vida = gateTotals(3, data);
+    expect(vida.damageMult).toBeCloseTo(1.15 * 1.1 * 1.1);
+    expect(vida.accuracy).toBeCloseTo(0.1);
+    expect(vida.drainPct).toBeCloseTo(0.04);
+    const limite = gateTotals(5, data);
+    expect(limite.damageMult).toBeCloseTo(1.15 * 1.1 ** 4);
+    expect(limite.critBonus).toBeCloseTo(0.05);
+    expect(limite.drainPct).toBeCloseTo(0.08);
+  });
+
+  it('o talento Portão da Vida libera até o 3º e a Lótus Oculta até o 5º', () => {
+    const node = (id: string) => data.talents.find((t) => t.id === id)!;
+    const b = (mods = emptyMods()) => me(fight(prodigy({ mods })));
+    expect(maxGate(b(), data)).toBe(1);
+    expect(maxGate(b(mergeMods(emptyMods(), node('tGateOpen').mods!)), data)).toBe(3);
+    expect(maxGate(b(mergeMods(mergeMods(emptyMods(), node('tGateOpen').mods!), node('tHiddenLotus').mods!)), data)).toBe(5);
+    expect(maxGate(me(fight(hero())), data)).toBe(0);
+  });
+
+  it('abrir dá o bônus no mesmo turno; subir e descer não renovam o tempo; uma troca por turno', () => {
+    let b = fight(prodigy({ mods: { ...emptyMods(), gateLevels: 4 } }));
+    expect(gateChoices(b, me(b), data)).toEqual([1, 2, 3, 4, 5]);
+    const plain = hitDamage(me(b), b.fighters[1]!, data.techniques.jStrike!, data);
+    b = setGate(b, 1, data, fixed(0.5));
+    expect(me(b).gate).toEqual({ level: 1, turns: 4 });
+    expect(awaitingPlayer(b)).toBe(true);
+    expect(gateChoices(b, me(b), data)).toEqual([]);
+    expect(() => setGate(b, 5, data, fixed(0.5))).toThrow();
+    expect(hitDamage(me(b), b.fighters[1]!, data.techniques.jStrike!, data)).toBe(Math.floor((8 + 10 - 3) * 1.15));
     expect(plain).toBe(15);
+    b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
+    expect(me(b).gate).toEqual({ level: 1, turns: 3 });
+    expect(gateChoices(b, me(b), data)).toEqual([2, 3, 4, 5, 0]);
+    b = setGate(b, 5, data, fixed(0.5));
+    expect(me(b).gate).toEqual({ level: 5, turns: 3 });
+    b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
+    b = setGate(b, 2, data, fixed(0.5));
+    expect(me(b).gate).toEqual({ level: 2, turns: 2 });
+  });
+
+  it('desgaste no fim de cada turno aberto, sem derrubar; fecha no tempo e entra em espera', () => {
+    let b = fight(prodigy({ mods: { ...emptyMods(), gateLevels: 4 } }));
+    b = setGate(b, 5, data, fixed(0.5));
+    const hp0 = me(b).hp;
+    b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
+    const drain = b.log.find((e) => e.type === 'hpCost' && e.source === 'gates');
+    expect(drain).toEqual({ type: 'hpCost', uid: 'a0', amount: 8, source: 'gates' });
+    for (let i = 0; i < 3; i++) b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
+    expect(me(b).gate).toBeNull();
+    expect(b.log.some((e) => e.type === 'gate' && e.level === 0 && e.timeout)).toBe(true);
+    const drained = b.log.filter((e) => e.type === 'hpCost' && e.source === 'gates').length;
+    expect(drained).toBe(4);
+    expect(me(b).hp).toBeLessThan(hp0);
+    // Espera de 3 turnos para abrir de novo.
+    for (let i = 0; i < 3; i++) {
+      expect(gateChoices(b, me(b), data)).toEqual([]);
+      b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
+    }
+    expect(gateChoices(b, me(b), data)).toEqual([1, 2, 3, 4, 5]);
+
+    // O desgaste para em 1 de HP.
+    let low = fight(prodigy({ hp: 3, mods: { ...emptyMods(), gateLevels: 4 } }));
+    low = setGate(low, 5, data, fixed(0.5));
+    low = playerAct(low, { kind: 'guard' }, data, fixed(0.99));
+    expect(me(low).hp).toBeGreaterThanOrEqual(1);
+    expect(me(low).down).toBe(false);
+  });
+
+  it('fechar à mão também põe em espera; cair fecha', () => {
+    let b = fight(prodigy());
+    b = setGate(b, 1, data, fixed(0.5));
+    b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
+    b = setGate(b, 0, data, fixed(0.5));
+    expect(me(b).gate).toBeNull();
+    b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
+    expect(gateChoices(b, me(b), data)).toEqual([]);
+
+    // Caiu com o portão aberto: fecha sem espera (levantado, pode abrir de novo).
+    const ally = hero({ defId: 'sakura', protagonist: false, speed: 1, techniques: ['jKunai'] });
+    let d = startBattle(setup({ allies: [prodigy({ hp: 1 }), ally], enemies: [dummy({ offense: { taijutsu: 50, ninjutsu: 0, genjutsu: 0 } })] }), data, fixed(0.5));
+    d = setGate(d, 1, data, fixed(0.5));
+    const n = d.log.length;
+    d = playerAct(d, { kind: 'guard' }, data, fixed(0.1));
+    expect(d.log.slice(n).some((e) => e.type === 'down' && e.target === 'a0')).toBe(true);
+    expect(d.log.slice(n).some((e) => e.type === 'gate')).toBe(false);
+    expect(me(d).gate).toBeNull();
+    expect(me(d).cooldowns.jGates).toBeUndefined();
+  });
+
+  it('a IA do bot abre o portão mais alto que o HP aguenta', () => {
+    const b = fight(prodigy({ mods: { ...emptyMods(), gateLevels: 4 } }));
+    // 100% do HP: o 5º (8% × 4 turnos) deixa 68%.
+    expect(chooseAiActive(b, me(b), data, fixed(0.5))).toEqual({ kind: 'gate', level: 5 });
+    const hurt = fight(prodigy({ hp: 55, mods: { ...emptyMods(), gateLevels: 4 } }));
+    // 55%: só o 1º (2% × 4) ou o 2º (3% × 4 = 12%) deixam ≥ 40%.
+    expect(chooseAiActive(hurt, me(hurt), data, fixed(0.5))).toEqual({ kind: 'gate', level: 2 });
+  });
+
+  it('save com o Quinto portão antigo carrega sem a técnica', () => {
+    const store: Record<string, string> = {};
+    const storage = { getItem: (k: string) => store[k] ?? null, setItem: (k: string, v: string) => void (store[k] = v) };
+    const run = { ...newGenericRun(1, 'normal', 'common', data), learned: ['jGatesHigh', 'jPrimaryLotus'] };
+    store[JORNADA_SAVE_KEY] = JSON.stringify(run);
+    expect(loadJornada(storage)!.learned).toEqual(['jPrimaryLotus']);
+  });
+});
+
+describe('dano mostrado acompanha talentos e níveis', () => {
+  const rankNodes = data.talents.filter((n) => (n.maxRank ?? 1) > 1 && n.rankMods?.techDamageMult);
+
+  it('existe nó de técnica com nível em todas as classes', () => {
+    expect(new Set(rankNodes.map((n) => n.owner))).toEqual(new Set(['naruto', 'commonNinja', 'prodigy', 'uchihaNinja', 'hyuugaNinja']));
+  });
+
+  for (const node of rankNodes) {
+    it(`${node.owner}: ${node.id} sobe o dano a cada nível`, () => {
+      const run0 = node.owner === 'naruto' ? newRun(1, 'normal', data) : { ...newGenericRun(1, 'normal', 'common', data), hero: node.owner };
+      const techIds = Object.keys(node.rankMods!.techDamageMult!);
+      for (const techId of techIds) {
+        const tech = data.techniques[techId]!;
+        let prev = -1;
+        let prevHit = -1;
+        for (let r = 1; r <= node.maxRank!; r++) {
+          const run: JRun = { ...run0, talents: [node.id], talentRanks: { [node.id]: r } };
+          const mods = heroMods(run, data);
+          const power = techPower(tech, mods);
+          expect(power, `${techId} nível ${r}`).toBeGreaterThan(prev);
+          const b = startBattle(setup({ allies: [hero({ mods, techniques: [techId] })], enemies: [dummy({ hp: 999, maxHp: 999 })] }), data, fixed(0.5));
+          const hit = hitDamage(b.fighters[0]!, b.fighters[1]!, tech, data);
+          expect(hit, `${techId} dano real nível ${r}`).toBeGreaterThan(prevHit);
+          expect(battlePower(b.fighters[0]!, tech, data)).toBe(power);
+          prev = power;
+          prevHit = hit;
+        }
+      }
+    });
+  }
+
+  it('na luta, o dano mostrado sobe com o portão aberto', () => {
+    let b = startBattle(setup({ allies: [hero({ techniques: ['jStrike', 'jGates'] })], enemies: [dummy({ hp: 999, maxHp: 999 })] }), data, fixed(0.5));
+    const before = battlePower(b.fighters[0]!, data.techniques.jStrike!, data);
+    b = setGate(b, 1, data, fixed(0.5));
+    expect(battlePower(b.fighters[0]!, data.techniques.jStrike!, data)).toBe(Math.floor(8 * 1.15));
+    expect(before).toBe(8);
   });
 });
 

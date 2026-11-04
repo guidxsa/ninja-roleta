@@ -37,7 +37,7 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 
 ## Comportamento
 
-Os suportes e os inimigos usam o mesmo motor de decisão. Com o protagonista caído, qualquer suporte usa o turno para levantá-lo, antes de tudo ([combate.md](combate.md#cair-e-levantar)). Antes de atacar, todo lutador usa escudo próprio quando está ferido, ativa um fortalecimento quando não tem (60%), cria clones quando não tem, e às vezes usa um controle sem dano (35%).
+Os suportes e os inimigos usam o mesmo motor de decisão. Com o protagonista caído, qualquer suporte usa o turno para levantá-lo, antes de tudo ([combate.md](combate.md#cair-e-levantar)). Antes de agir, todo lutador usa uma ativa grátis (uma por turno, `chooseAiActive`): escudo próprio quando está ferido; Portões, com tudo fechado, no maior portão cujo desgaste nos 4 turnos deixe pelo menos 40% do HP (fecha abaixo de 30%); fortalecimento quando não tem um; clones quando não tem. Depois escolhe a ação, e às vezes usa um controle sem dano (35%).
 
 | IA | Comportamento |
 |---|---|
@@ -125,8 +125,7 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 |---|---|---|---|---|---|---|---|
 | Bunshin | Ninjutsu | — | em si | — | 3 | 85% | 1 clones; ativa de classe |
 | Selo explosivo | Taijutsu | — | todos os inimigos | 11 | 4 | 85% | espera 2 |
-| Portões | Taijutsu | — | em si | — | 0 | 85% | custa 8% do HP; espera 4; fortalece 3 turnos (dano ×1.3); ativa de classe |
-| Quinto portão | Taijutsu | — | em si | — | 0 | 85% | custa 15% do HP; espera 5; fortalece 3 turnos (dano ×1.6) (+10% acerto); ativa de classe |
+| Portões | Taijutsu | — | em si | — | 0 | — | abre, troca ou fecha um portão (Abertura, Descanso, Vida, Dor, Limite): dano ×1,15 a ×1,68 com desgaste de 2% a 8% do HP por turno ([combate.md](combate.md#portões)); ativa de classe |
 | Entrada dinâmica | Taijutsu | — | um inimigo | 15 | 0 | 90% | +10% crítico; espera 2 |
 | Lótus Oculta | Taijutsu | — | um inimigo | 12 | 0 | 85% | 4 golpes; custa 15% do HP; espera 4 |
 | Punho Bêbado | Taijutsu | — | um inimigo | 7 | 0 | 75% | 3 golpes; +15% crítico |

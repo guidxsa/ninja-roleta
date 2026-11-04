@@ -6,6 +6,8 @@ import {
   alive,
   blockedReason,
   downed,
+  gateChoices,
+  gateTotals,
   hasEffect,
   hitDamage,
   hitsOf,
@@ -13,7 +15,7 @@ import {
   validTargets,
 } from './battle';
 import type { JornadaData } from './data';
-import type { Fighter, JAction, JBattle, JTechnique } from './types';
+import type { Fighter, JAction, JBattle, JFreeAction, JTechnique } from './types';
 
 /** Dano esperado da técnica no alvo (acerto × golpes × dano), para comparar opções. */
 export function expectedDamage(s: JBattle, user: Fighter, target: Fighter, tech: JTechnique, data: JornadaData): number {
@@ -25,8 +27,9 @@ export function expectedDamage(s: JBattle, user: Fighter, target: Fighter, tech:
 /** Ameaça de um lutador: o maior ataque dele, mais se estiver em fúria. */
 const threat = (f: Fighter) => Math.max(f.offense.taijutsu, f.offense.ninjutsu, f.offense.genjutsu) * f.mods.damageMult;
 
+/** Técnicas de ação de turno que dá para usar (as ativas são grátis: `chooseAiActive`). */
 const usable = (f: Fighter, data: JornadaData) =>
-  f.techniques.map((id) => data.techniques[id]!).filter((t) => t && !blockedReason(f, t));
+  f.techniques.map((id) => data.techniques[id]!).filter((t) => t && !t.active && !blockedReason(f, t));
 
 /** Melhor ataque de dano contra os alvos possíveis (com desempate pela sorte entre os dois melhores). */
 function bestAttack(s: JBattle, f: Fighter, data: JornadaData, rng: Rng, pick: (opts: Fighter[]) => Fighter[]): JAction | null {
@@ -82,14 +85,9 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
       .sort((a, b) => Number(b.protagonist) - Number(a.protagonist) || a.hp / a.maxHp - b.hp / b.maxHp)[0];
     if (shield && exposed) return { kind: 'tech', techId: shield.id, target: exposed.uid };
   }
-  // Defesa própria: escudo quando está ferido, clones quando não tem.
+  // Defesa própria: escudo quando está ferido (Agulhas de Jizō, Rotação; os escudos ativos vão em chooseAiActive).
   const selfShield = tech((t) => t.target === 'self' && Boolean(t.shieldPct));
   if (selfShield && f.shield === 0 && f.hp < f.maxHp * 0.6) return { kind: 'tech', techId: selfShield.id, target: f.uid };
-  // Fortalecimento (Portões, Sharingan) quando não tem um ativo.
-  const selfBoost = tech((t) => t.target === 'self' && Boolean(t.boost));
-  if (selfBoost && !f.boost && foes.length && rng() < 0.6) return { kind: 'tech', techId: selfBoost.id, target: f.uid };
-  const selfClones = tech((t) => t.target === 'self' && Boolean(t.clones));
-  if (selfClones && f.clones === 0) return { kind: 'tech', techId: selfClones.id, target: f.uid };
   // Inimigo que cura o próprio time (Kabuto) com aliado ferido.
   const allyHeal = tech((t) => Boolean(t.healPct) && t.target === 'ally');
   const hurtFriend = friends.find((x) => x.hp < x.maxHp * 0.45);
@@ -112,4 +110,33 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
     return { kind: 'rest' };
   }
   return attack;
+}
+
+/** Portão para a IA: com tudo fechado, o maior cujo desgaste no tempo todo deixe ≥ 40% do HP; aberto e com HP baixo, fecha. */
+function aiGate(s: JBattle, f: Fighter, data: JornadaData): number | null {
+  const choices = gateChoices(s, f, data);
+  if (!choices.length) return null;
+  const hp = f.hp / f.maxHp;
+  if (f.gate) return hp < 0.3 && choices.includes(0) ? 0 : null;
+  const safe = choices.filter((l) => l > 0 && hp - gateTotals(l, data).drainPct * data.j.gates.maxTurns >= 0.4);
+  return safe.length ? Math.max(...safe) : null;
+}
+
+/**
+ * Ativa grátis antes da ação (docs/jornada/personagens.md#comportamento): escudo próprio quando ferido, depois
+ * Portões ou fortalecimento quando não tem, depois clones quando não tem. Uma por turno.
+ */
+export function chooseAiActive(s: JBattle, f: Fighter, data: JornadaData, _rng: Rng): JFreeAction | null {
+  if (s.activeUsed || f.down || !alive(s, opponentSide(f.side)).length) return null;
+  const actives = f.techniques.map((id) => data.techniques[id]!).filter((t) => t?.active && !t.gates && !blockedReason(f, t));
+  const self = (test: (t: JTechnique) => boolean) => actives.find((t) => t.target === 'self' && test(t));
+  const shield = self((t) => Boolean(t.shieldPct));
+  if (shield && f.shield === 0 && f.hp < f.maxHp * 0.6) return { kind: 'active', techId: shield.id, target: f.uid };
+  const gate = aiGate(s, f, data);
+  if (gate !== null) return { kind: 'gate', level: gate };
+  const boost = self((t) => Boolean(t.boost));
+  if (boost && !f.boost) return { kind: 'active', techId: boost.id, target: f.uid };
+  const clones = self((t) => Boolean(t.clones));
+  if (clones && f.clones === 0) return { kind: 'active', techId: clones.id, target: f.uid };
+  return null;
 }

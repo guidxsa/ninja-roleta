@@ -1,7 +1,8 @@
 // Árvore de talentos da Jornada (docs/jornada/talentos.md#na-tela): tela cheia com o tema da classe, selos ligados
 // por traços de pincel e um cartão com o talento escolhido. No celular, um ramo por vez em abas; no PC, todos lado a lado.
 import type { JRun } from '../../src/core/jornada/run';
-import { buyTalent, talentContext, talentLearns } from '../../src/core/jornada/run';
+import { buyTalent, heroMods, talentContext, talentLearns } from '../../src/core/jornada/run';
+import { techPower } from '../../src/core/jornada/battle';
 import {
   branchesOf,
   talentMaxRank,
@@ -43,6 +44,7 @@ function nodeIcon(run: JRun, n: TalentNode): string {
   const tech = learn ? data.techniques[learn] : null;
   if (tech) return icon(tech.clones || tech.hitsPerClone ? 'clones' : tech.shieldPct ? 'barrier' : tech.healPct ? 'medical' : tech.boost ? 'sparkle' : (tech.element ?? tech.type));
   const m = { ...n.mods, ...n.teamMods };
+  if (m.gateLevels) return icon('gates');
   if (m.surviveOnce) return icon('willOfFire');
   if (m.startClones || m.extraClones || m.maxClonesBonus || m.cloneCounter || m.damagePerClone) return icon('clones');
   if (m.regenPct) return icon('heart');
@@ -121,6 +123,18 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
     </section>`;
   }
 
+  /** Dano da técnica que o nó ensina, com os bônus da run: o nível atual e o próximo (o upar aparece no número). */
+  function powerLine(n: TalentNode): string {
+    const learns = talentLearns(run, n.id, data);
+    const tech = learns ? data.techniques[learns] : null;
+    if (!tech || tech.baseDamage <= 0) return '';
+    const rank = talentRank(n, ctx());
+    const at = (r: number) =>
+      techPower(tech, heroMods({ ...run, talents: rank ? run.talents : [...run.talents, n.id], talentRanks: { ...run.talentRanks, [n.id]: r } }, data));
+    const next = rank >= 1 && rank < talentMaxRank(n) ? at(rank + 1) : null;
+    return `<small class="jt-power">${T.power(techName(tech.id), at(Math.max(1, rank)), next, tech.hits ?? 1)}</small>`;
+  }
+
   function detailView(): string {
     const n = nodes.find((x) => x.id === selected);
     if (!n) return `<p class="muted center">${T.pick}</p>`;
@@ -140,6 +154,7 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
     return `<div class="jt-card"><b>${txt.name}</b>
       ${max > 1 ? `<small class="jt-rank">${T.rank(rank, max)}${txt.rank ? ` · ${txt.rank}` : ''}</small>` : ''}
       <small>${txt.desc}</small>
+      ${powerLine(n)}
       ${n.excludes && st === 'available' ? `<small class="jt-choice">${T.choiceHint}</small>` : ''}
       ${status ? `<small class="jt-status st-${st}">${status}</small>` : ''}</div>${action}`;
   }

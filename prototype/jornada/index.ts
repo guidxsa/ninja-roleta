@@ -17,6 +17,7 @@ import {
   gainRelic,
   genericStage,
   heroActives,
+  heroMods,
   heroMovable,
   leaveStop,
   memberSheet,
@@ -40,6 +41,7 @@ import {
   type JRun,
   type Purchase,
 } from '../../src/core/jornada/run';
+import { techPower } from '../../src/core/jornada/battle';
 import { reachableFrom, type MapNode } from '../../src/core/jornada/map';
 import { isFight, type StopDef } from '../../src/core/jornada/trail';
 import { jornadaData as data } from '../../src/data/jornada';
@@ -604,6 +606,7 @@ function modal(inner: string): HTMLElement {
 function movesetModal(run: JRun): Promise<JRun> {
   const known = heroMovable(run, data);
   const picked = new Set(run.moveset);
+  const mods = heroMods(run, data);
   const el = modal('');
   const render = () => {
     el.querySelector('.jmodal')!.innerHTML = `<div class="modal-head"><h2>${U.movesetTitle(picked.size, MOVESET_SIZE)}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
@@ -611,12 +614,14 @@ function movesetModal(run: JRun): Promise<JRun> {
       <div class="jmoves-pick">${known
         .map((id) => {
           const t = data.techniques[id]!;
-          return `<button class="btn jmove${picked.has(id) ? ' on' : ''}" data-move="${id}" aria-pressed="${picked.has(id)}"${techTip(t)}><span class="jmove-ico">${icon(t.element ?? t.type)}</span>
-            <span class="jmove-txt"><b>${techName(id)}</b><small>${t.baseDamage ? J.battle.damage(t.baseDamage) : ''}${t.chakraCost ? ` · ${J.battle.chakra(t.chakraCost)}` : ''} · ${J.targets[t.target]}</small></span></button>`;
+          const power = techPower(t, mods);
+          const cost = Math.max(0, t.chakraCost - mods.chakraDiscount - (mods.techChakraDiscount[id] ?? 0));
+          const bits = [power ? `<span${power > t.baseDamage ? ' class="up"' : ''}>${J.battle.damage(power)}${(t.hits ?? 1) > 1 ? `×${t.hits}` : ''}</span>` : '', cost ? J.battle.chakra(cost) : ''].filter(Boolean);
+          return `<button class="btn jmove${picked.has(id) ? ' on' : ''}" data-move="${id}" aria-pressed="${picked.has(id)}"${techTip(t, undefined, mods)}><span class="jmove-ico">${icon(t.element ?? t.type)}</span>
+            <span class="jmove-txt"><b>${techName(id)}</b>${bits.length ? `<small>${bits.join(' · ')}</small>` : ''}</span></button>`;
         })
         .join('')}</div>
       <h3>${U.actives}</h3><p class="muted small">${heroActives(run, data).map(techName).join(' · ')}</p>
-      ${[...heroActives(run, data), ...known].some((id) => data.techniques[id]?.clones) ? `<p class="muted small">${icon('clones')} ${J.battle.cloneRule(Math.round(data.j.combat.cloneBlockChance * 100), data.j.combat.maxClones)}</p>` : ''}
       <button class="btn primary big" data-save ${picked.size ? '' : 'disabled'}>${U.save}</button>`;
   };
   render();

@@ -60,11 +60,12 @@ export const talents: TalentNode[] = [
   { id: 'tHardWork', owner: 'commonNinja', branch: 'will', tier: 3, cost: 2, mods: { damageMult: 1.1 } },
   { id: 'tWillOfFire', owner: 'commonNinja', branch: 'will', tier: 4, cost: 3, mods: { surviveOnce: true, regenPct: 0.02 } },
 
-  // Prodígio (Comum sem elemento): o kit do prodígio do Roleta.
-  { id: 'tGateOpen', owner: 'prodigy', branch: 'gates', tier: 1, cost: 1, learn: 'jGatesHigh' },
+  // Prodígio (Comum sem elemento): o kit do prodígio do Roleta. Começa com o Portão da Abertura; o talento Portão da
+  // Vida libera até o 3º portão e a Lótus Oculta até o 5º (Limite).
+  { id: 'tGateOpen', owner: 'prodigy', branch: 'gates', tier: 1, cost: 1, mods: { gateLevels: 2 } },
   { id: 'tGateBody', owner: 'prodigy', branch: 'gates', tier: 2, cost: 2, mods: { startShieldPct: 0.1 } },
   { id: 'tPrimaryLotus', owner: 'prodigy', branch: 'gates', tier: 3, cost: 2, learn: 'jPrimaryLotus', maxRank: 2, rankCost: 2, rankMods: { techDamageMult: { jPrimaryLotus: 1.2 } } },
-  { id: 'tHiddenLotus', owner: 'prodigy', branch: 'gates', tier: 4, cost: 3, learn: 'jHiddenLotus' },
+  { id: 'tHiddenLotus', owner: 'prodigy', branch: 'gates', tier: 4, cost: 3, learn: 'jHiddenLotus', mods: { gateLevels: 2 } },
   { id: 'tYouth', owner: 'prodigy', branch: 'youth', tier: 1, cost: 1, mods: { critBonus: 0.05, accuracyBonus: 0.05 } },
   { id: 'tLeafHurricane', owner: 'prodigy', branch: 'youth', tier: 2, cost: 2, learn: 'jLeafHurricane', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jLeafHurricane: 1.2 } } },
   { id: 'tDrunkenFist', owner: 'prodigy', branch: 'youth', tier: 3, cost: 2, learn: 'jDrunkenFist' },

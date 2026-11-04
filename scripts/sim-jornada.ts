@@ -1,8 +1,8 @@
 // Simulação da História da Jornada: um bot joga N runs por dificuldade e mostra onde elas param.
 // Uso: `npm run sim:jornada -- [runs] [seed]`. O bot joga pior que um humano (não monta moveset, compra
 // sem planejar). Os números vão para o usuário decidir; nada é ajustado sozinho.
-import { chooseAiAction } from '../src/core/jornada/ai';
-import { awaitingPlayer, current, downed, playerAct, startBattle, useItem } from '../src/core/jornada/battle';
+import { chooseAiAction, chooseAiActive } from '../src/core/jornada/ai';
+import { awaitingPlayer, current, downed, playerAct, startBattle, useFree, useItem } from '../src/core/jornada/battle';
 import { eventOptions } from '../src/core/jornada/events';
 import {
   battleSetup,
@@ -53,7 +53,10 @@ function fight(run: JRun, rng: Rng): JRun {
         b = useItem(b, 'hpKit', me.uid, data);
         run = spendItem(run, 'hpKit');
       }
-      b = playerAct(b, chooseAiAction(b, me, data, rng), data, rng);
+      // Ativa grátis (ou troca de portão) antes da ação, como a IA dos outros lutadores.
+      const free = chooseAiActive(b, me, data, rng);
+      if (free) b = useFree(b, free, data, rng);
+      b = playerAct(b, chooseAiAction(b, current(b)!, data, rng), data, rng);
     }
     const res = finishFight(run, b, data);
     run = res.run;
@@ -82,9 +85,18 @@ function pickNode(run: JRun, rng: Rng): string {
   return [...nodeChoices(run)].sort((a, b) => score(b.kind) - score(a.kind))[0]!.id;
 }
 
+/** Seed da i-ésima run do modo. `generic:prodigy` pula as seeds em que o Comum sai com elemento. */
+function seedFor(base: number, mode: Mode): number {
+  if (mode !== 'generic:prodigy') return base;
+  let s = base;
+  while (newGenericRun(s, 'normal', 'common', data, UNLOCKED).hero !== 'prodigy') s += 7919;
+  return s;
+}
+
 function play(seed: number, difficulty: Difficulty, mode: Mode): { run: JRun; stop: string } {
   const rng = createRng(seed);
-  let run = mode === 'canon' ? newRun(seed, difficulty, data) : newGenericRun(seed, difficulty, mode.split(':')[1]!, data, UNLOCKED);
+  const cls = mode === 'generic:prodigy' ? 'common' : mode.split(':')[1]!;
+  let run = mode === 'canon' ? newRun(seed, difficulty, data) : newGenericRun(seed, difficulty, cls, data, UNLOCKED);
   let guard = 0;
   while (run.status === 'inProgress') {
     if (++guard > 400) throw new Error('run sem fim');
@@ -121,12 +133,12 @@ function play(seed: number, difficulty: Difficulty, mode: Mode): { run: JRun; st
   return { run, stop: 'vitória' };
 }
 
-for (const mode of ['canon', 'generic:common', 'generic:uchiha', 'generic:hyuuga']) for (const d of DIFFS) {
+for (const mode of ['canon', 'generic:common', 'generic:prodigy', 'generic:uchiha', 'generic:hyuuga']) for (const d of DIFFS) {
   const stops = new Map<string, number>();
   let wins = 0;
   let levels = 0;
   for (let i = 0; i < RUNS; i++) {
-    const { run, stop } = play(SEED * 100003 + i, d, mode);
+    const { run, stop } = play(seedFor(SEED * 100003 + i, mode), d, mode);
     if (run.status === 'victory') wins++;
     levels += run.level;
     stops.set(stop, (stops.get(stop) ?? 0) + 1);

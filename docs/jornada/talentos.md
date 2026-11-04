@@ -97,10 +97,10 @@ O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.m
 
 | Ramo | Nó | Custo | Efeito |
 |---|---|---|---|
-| Portões | Quinto portão | 1 | Ativa nova: dano ×1,6 e +10% de acerto por 3 turnos, paga 15% do HP |
+| Portões | Portão da Vida | 1 | Libera o 2º e o 3º portão (Descanso e Vida) |
 | Portões | Corpo treinado | 2 | Começa as lutas com escudo de 10% do HP |
 | Portões | Lótus Primária | 2 | Aprende a Lótus Primária |
-| Portões | Lótus Oculta | 3 | Aprende a Lótus Oculta (4 golpes, paga 15% do HP) |
+| Portões | Lótus Oculta | 3 | Aprende a Lótus Oculta (4 golpes, paga 15% do HP) e libera o 4º e o 5º portão (Dor e Limite) |
 | Juventude | Juventude | 1 | +5% de crítico e de acerto |
 | Juventude | Furacão da Folha | 2 | Aprende o Furacão da Folha |
 | Juventude | Punho Bêbado | 2 | Aprende o Punho Bêbado (3 golpes, crítico alto) |

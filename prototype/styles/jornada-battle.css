@@ -86,6 +86,8 @@
 .jchip.bad { border-color: color-mix(in srgb, var(--bad) 60%, var(--line)); color: var(--foe); }
 .jchip.good { border-color: color-mix(in srgb, var(--good) 60%, var(--line)); color: var(--good); }
 .jchip .ico { width: 11px; height: 11px; }
+/* Portão aberto: bônus com penalidade (desgaste), na cor de destaque. */
+.jchip.gate { border-color: color-mix(in srgb, var(--accent-2) 70%, var(--line)); color: var(--accent-2); }
 .jf-floats { position: absolute; inset: 0; pointer-events: none; display: flex; justify-content: center; }
 /* Camada de efeitos por cima da cena: números e cortes não somem quando os cartões são redesenhados. */
 .jbattle > .jb-fx { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
@@ -100,6 +102,7 @@
 .jfloat.heal { color: #a8e09b; }
 .jfloat.ck { color: var(--ck-2); }
 .jfloat.shield, .jfloat.fx { color: #ece6ff; font-size: 15px; }
+.jfloat.cost { color: var(--jin); font-size: 17px; }
 .jfloat.miss { color: #c9c3b8; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; }
 .jf.lunge-up { animation: lungeUp .42s var(--ease); }
 .jf.lunge-down { animation: lungeDown .42s var(--ease); }
@@ -158,6 +161,10 @@
 .jmove-txt b { display: block; font: 700 16px/1.1 var(--font-hud); letter-spacing: .03em; }
 .jmove-txt small { display: block; color: var(--muted); font-size: 11.5px; font-weight: 400; line-height: 1.3; }
 .jmove-txt small .ico { width: 12px; height: 12px; vertical-align: -.15em; }
+/* Dano acima do base (talentos, níveis, portão) e custo que não dá agora. */
+.jmove-txt small .up { color: var(--gold-2); font-weight: 700; }
+.jmove-txt small .short { color: var(--bad); }
+.jmove-ico .gate-n { font: 700 13px/1 var(--font-hud); letter-spacing: .02em; }
 .jb-extra { display: flex; flex-wrap: wrap; gap: 6px; }
 .jb-extra .jmove { flex: 1 1 100%; }
 .jb-extra .jx { flex: 1 1 0; justify-content: center; }

@@ -641,7 +641,6 @@ export const ptBR = {
       `dano ${damage}${hits > 1 ? `×${hits}` : ''}${accuracy === null ? '' : accuracy >= 100 ? ' · não erra' : ` · precisão ${accuracy}`}`,
     armorHint: 'raio no corpo: mais ataque, resistência física e speed (3t)',
     armorOn: (n: number) => `Armadura ${n}t`,
-    stanceHint: 'Resistir usa toda a resistência até seu próximo turno',
     stanceOn: 'Postura',
     passHint: 'Você reagiu e gastou esta ação.',
     owesAction: 'Ação gasta',
@@ -651,13 +650,11 @@ export const ptBR = {
     reactTitle: (who: string, tech: string) => `${who} usa ${tech}! Como reagir?`,
     charged: 'carregado',
     reactResist: 'Resistir',
-    reactResistHint: 'grátis · a resistência reduz o dano',
+    reactResistHint: 'reduz o dano',
     reactSubstitution: 'Substituição',
-    reactSubstitutionHint: (left: number, decoy: boolean) =>
-      `tenta esquivar · ${decoy ? 'o cão serve de isca (não gasta uso)' : `${left} uso(s)`} · não gasta ação`,
+    reactSubstitutionHint: (left: number, decoy: boolean) => (decoy ? 'o cão serve de isca' : `${left} uso(s)`),
     reactClash: (tech: string) => `Disputar: ${tech}`,
-    reactClashHint: (odds: 'good' | 'even' | 'bad') =>
-      `${odds === 'good' ? 'disputa a seu favor' : odds === 'bad' ? 'disputa contra você' : 'disputa equilibrada'} · gasta a próxima ação`,
+    reactClashHint: (odds: 'good' | 'even' | 'bad') => (odds === 'good' ? 'a seu favor' : odds === 'bad' ? 'contra você' : 'equilibrada'),
 
     // Upgrades de técnica à escolha.
     upgradeTitle: 'Upgrade de técnica',

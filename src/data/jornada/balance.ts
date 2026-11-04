@@ -1,3 +1,5 @@
+import type { GateLevel } from '../../core/jornada/types';
+
 // Números do modo Jornada (docs/jornada/). Valores provisórios: ajustar com `npm run sim:jornada`.
 // Acerto, crítico e dificuldade vêm do `balance` do jogo (base); aqui fica só o que é da Jornada.
 
@@ -29,6 +31,22 @@ export const jornadaBalance = {
     chakraKitPct: 0.4,
     // Vontade do Fogo (só no Fácil e por relíquia): levanta o protagonista com esta fração do HP.
     willOfFireHpPct: 0.5,
+  },
+
+  // Portões do prodígio (docs/jornada/combate.md#portões). Números brutos de cada portão; o portão N soma do 1º ao N.
+  // Uma troca por turno (abrir, subir, descer ou fechar); aberto, dura no máximo `maxTurns` turnos contando o da
+  // abertura, e trocar não renova. Sem custo na abertura: desgaste no fim de cada turno aberto (nunca derruba).
+  // Fechou (à mão ou pelo tempo): espera `cooldown` turnos para abrir de novo. Começa com o 1º liberado.
+  gates: {
+    maxTurns: 4,
+    cooldown: 3,
+    levels: [
+      { damageMult: 1.15, drainPct: 0.02 }, // Abertura
+      { damageMult: 1.1, drainPct: 0.01 }, // Descanso
+      { damageMult: 1.1, accuracy: 0.1, drainPct: 0.01 }, // Vida
+      { damageMult: 1.1, drainPct: 0.02 }, // Dor
+      { damageMult: 1.1, critBonus: 0.05, drainPct: 0.02 }, // Limite
+    ] as GateLevel[],
   },
 
   // Entre lutas (docs/jornada/run.md).

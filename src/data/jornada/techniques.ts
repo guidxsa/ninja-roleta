@@ -88,8 +88,8 @@ export const elementalTechniques: JTechnique[] = [
 export const classTechniques: JTechnique[] = [
   { id: 'jBunshin', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, clones: 1, active: true },
   { id: 'jExplosiveTag', type: 'taijutsu', element: null, target: 'allEnemies', baseDamage: 11, chakraCost: 4, accuracy: 0.85, cooldown: 2 },
-  { id: 'jGates', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.08, boost: { damageMult: 1.3, turns: 3 }, active: true, cooldown: 4 },
-  { id: 'jGatesHigh', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.15, boost: { damageMult: 1.6, accuracy: 0.1, turns: 3 }, active: true, cooldown: 5 },
+  // Portões: a ativa abre a escolha do portão; bônus, desgaste e tempo em jornadaBalance.gates.
+  { id: 'jGates', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, active: true, gates: true },
   { id: 'jDynamicEntry', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 15, chakraCost: 0, accuracy: 0.9, critBonus: 0.1, cooldown: 2 },
   { id: 'jHiddenLotus', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, hits: 4, chakraCost: 0, hpCostPct: 0.15, accuracy: 0.85, cooldown: 4 },
   { id: 'jDrunkenFist', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 3, chakraCost: 0, accuracy: 0.75, critBonus: 0.15 },

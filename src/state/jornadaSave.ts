@@ -1,4 +1,5 @@
 import type { JRun } from '../core/jornada/run';
+import { jTechniquesById } from '../data/jornada/techniques';
 import type { KeyValueStorage } from './runHistory';
 
 // Run da Jornada salva no aparelho a cada parada (docs/jornada/run.md#salvamento). É a exceção ao
@@ -20,7 +21,9 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     const relics = hasStarter ? run.relics : [STARTER_RELIC, ...run.relics];
     // Runs de antes do Caminho Ninja (v0.36.0) são da História.
     const legacy = { mode: 'canon' as const, hero: 'naruto', classId: 'naruto', elements: {}, secondElement: null, skin: null, supports: [], map: null, nodeId: null, path: [], bossPlan: [] };
-    return { ...legacy, ...run, cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
+    // Técnicas que saíram do jogo (o Quinto portão virou os Portões em níveis na v0.42.0) somem da run.
+    const known = (ids: string[]) => ids.filter((id) => id in jTechniquesById);
+    return { ...legacy, ...run, learned: known(run.learned ?? []), moveset: known(run.moveset ?? []), cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
   } catch {
     return null;
   }

@@ -120,6 +120,7 @@
 .jt-card > b { font: 400 20px/1.1 var(--font-display); letter-spacing: .02em; color: var(--tree-2); }
 .jt-card > small { font-size: 13.5px; line-height: 1.3; color: var(--muted); }
 .jt-card .jt-rank { font: 700 13px/1.2 var(--font-hud); letter-spacing: .04em; color: var(--tree-2); }
+.jt-card .jt-power { font: 700 13px/1.2 var(--font-hud); letter-spacing: .04em; }
 .jt-card .jt-choice { color: var(--gold-2); }
 .jt-card .jt-status { font: 700 12px/1.2 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }
 

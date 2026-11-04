@@ -5,7 +5,7 @@ import { elementMultiplier } from '../elements';
 import { critChance, hitChance } from '../hit';
 import { clamp, type Rng } from '../rng';
 import type { AttackType } from '../types';
-import { chooseAiAction } from './ai';
+import { chooseAiAction, chooseAiActive } from './ai';
 import type { JornadaData } from './data';
 import type {
   ConsumableId,
@@ -15,6 +15,7 @@ import type {
   JBattle,
   JEffect,
   JEvent,
+  JFreeAction,
   JTechnique,
   TeamSide,
   WinCondition,
@@ -48,6 +49,7 @@ export function emptyMods(): FighterMods {
     restBonusPct: 0,
     kitBonusPct: 0,
     startChakraPct: 0,
+    gateLevels: 0,
   };
 }
 
@@ -90,11 +92,12 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     restBonusPct: a.restBonusPct + (b.restBonusPct ?? 0),
     kitBonusPct: a.kitBonusPct + (b.kitBonusPct ?? 0),
     startChakraPct: a.startChakraPct + (b.startChakraPct ?? 0),
+    gateLevels: a.gateLevels + (b.gateLevels ?? 0),
   };
 }
 
 /** Lutador pronto para entrar (sem uid e lado: `startBattle` define). */
-export type FighterSeed = Omit<Fighter, 'uid' | 'side' | 'effects' | 'shield' | 'clones' | 'down' | 'guarding' | 'cooldowns' | 'survivedOnce' | 'enraged' | 'boost'>;
+export type FighterSeed = Omit<Fighter, 'uid' | 'side' | 'effects' | 'shield' | 'clones' | 'down' | 'guarding' | 'cooldowns' | 'survivedOnce' | 'enraged' | 'boost' | 'gate'>;
 
 export interface BattleSetup {
   allies: FighterSeed[];
@@ -144,6 +147,7 @@ function enter(seed: FighterSeed, side: TeamSide, index: number): Fighter {
     survivedOnce: false,
     enraged: false,
     boost: null,
+    gate: null,
   };
 }
 
@@ -203,15 +207,99 @@ export function elementMult(tech: JTechnique, target: Fighter, data: JornadaData
   return elementMultiplier(tech.element, target.element, data.beats, elementCfg(data));
 }
 
-/** Multiplicador de dano de quem ataca (bônus, HP baixo, fúria). */
-function attackerMult(f: Fighter, tech: JTechnique): number {
+/** Multiplicador de ficha (talentos e relíquias) de uma técnica: o que vale fora da luta. */
+export function staticMult(m: FighterMods, tech: JTechnique): number {
+  return m.damageMult * (m.typeDamageMult[tech.type] ?? 1) * (m.techDamageMult[tech.id] ?? 1);
+}
+
+/** Multiplicador de dano de quem ataca (ficha, HP baixo, fúria, fortalecimento, portão, clones). */
+function attackerMult(f: Fighter, tech: JTechnique, data: JornadaData): number {
   const m = f.mods;
-  let mult = m.damageMult * (m.typeDamageMult[tech.type] ?? 1) * (m.techDamageMult[tech.id] ?? 1);
+  let mult = staticMult(m, tech);
   if (f.hp < f.maxHp * 0.5) mult *= m.lowHpDamageMult;
   if (f.passive?.kind === 'enrage' && f.hp <= f.maxHp * f.passive.atPct) mult *= f.passive.damageMult;
   if (f.boost?.damageMult) mult *= f.boost.damageMult;
+  if (f.gate) mult *= gateTotals(f.gate.level, data).damageMult;
   if (m.damagePerClone) mult *= 1 + m.damagePerClone * f.clones;
   return mult;
+}
+
+/** Base por golpe com o dano plano de taijutsu. */
+const powerBase = (tech: JTechnique, m: FighterMods) => tech.baseDamage + (tech.type === 'taijutsu' ? m.taijutsuFlat : 0);
+
+/**
+ * "Dano N" das telas fora da luta (moveset, árvore): base × bônus de ficha, por golpe. Sobe com os talentos e os
+ * níveis da técnica. O dano de verdade ainda soma o ataque e tira a resistência do alvo.
+ */
+export function techPower(tech: JTechnique, mods: FighterMods): number {
+  return tech.baseDamage > 0 ? Math.floor(powerBase(tech, mods) * staticMult(mods, tech)) : 0;
+}
+
+/** "Dano N" na luta: como `techPower`, mais os bônus do momento (portão, fortalecimento, HP baixo, clones). */
+export function battlePower(f: Fighter, tech: JTechnique, data: JornadaData): number {
+  return tech.baseDamage > 0 ? Math.floor(powerBase(tech, f.mods) * attackerMult(f, tech, data)) : 0;
+}
+
+// ---------------------------------------------------------------------------
+// Portões (docs/jornada/combate.md#portões)
+
+export interface GateTotals {
+  damageMult: number;
+  accuracy: number;
+  critBonus: number;
+  drainPct: number;
+}
+
+/** Bônus e desgaste somados do 1º ao portão `level`. */
+export function gateTotals(level: number, data: JornadaData): GateTotals {
+  const out: GateTotals = { damageMult: 1, accuracy: 0, critBonus: 0, drainPct: 0 };
+  for (const g of data.j.gates.levels.slice(0, level)) {
+    out.damageMult *= g.damageMult;
+    out.accuracy += g.accuracy ?? 0;
+    out.critBonus += g.critBonus ?? 0;
+    out.drainPct += g.drainPct;
+  }
+  return out;
+}
+
+/** Id da ativa dos Portões que o lutador conhece (null = não tem). */
+export const gatesTech = (f: Fighter, data: JornadaData): string | null => f.techniques.find((id) => data.techniques[id]?.gates) ?? null;
+
+/** Portão mais alto que o lutador pode abrir (0 = não tem Portões). */
+export function maxGate(f: Fighter, data: JornadaData): number {
+  return gatesTech(f, data) ? Math.min(data.j.gates.levels.length, 1 + f.mods.gateLevels) : 0;
+}
+
+/** Desgaste de um turno no portão `level`, em HP (antes do limite de não derrubar). */
+export const gateDrain = (f: Fighter, level: number, data: JornadaData) => Math.max(1, Math.floor(f.maxHp * gateTotals(level, data).drainPct));
+
+/**
+ * Escolhas de portão agora: os liberados menos o aberto, e 0 (fechar) com um aberto. Vazio se o lutador já usou a
+ * ativa do turno, ou está com tudo fechado e em espera.
+ */
+export function gateChoices(s: JBattle, f: Fighter, data: JornadaData): number[] {
+  const id = gatesTech(f, data);
+  if (!id || f.down || s.activeUsed) return [];
+  if (!f.gate && (f.cooldowns[id] ?? 0) > 0) return [];
+  const levels = Array.from({ length: maxGate(f, data) }, (_, i) => i + 1).filter((l) => l !== f.gate?.level);
+  return f.gate ? [...levels, 0] : levels;
+}
+
+function closeGates(s: JBattle, f: Fighter, data: JornadaData, timeout: boolean): void {
+  f.gate = null;
+  const id = gatesTech(f, data);
+  // +1: o fim do turno em que fechou já desconta.
+  if (id) f.cooldowns[id] = data.j.gates.cooldown + 1;
+  s.log.push({ type: 'gate', uid: f.uid, level: 0, ...(timeout ? { timeout: true } : {}) });
+}
+
+function changeGate(s: JBattle, f: Fighter, level: number, data: JornadaData): void {
+  if (!gateChoices(s, f, data).includes(level)) throw new Error(`portão indisponível: ${level}`);
+  s.activeUsed = true;
+  if (level === 0) return closeGates(s, f, data, false);
+  // Subir ou descer não renova o tempo.
+  f.gate = { level, turns: f.gate?.turns ?? data.j.gates.maxTurns };
+  s.log.push({ type: 'gate', uid: f.uid, level });
 }
 
 const resistanceKind = (type: AttackType) => (type === 'genjutsu' ? 'mental' : 'physical');
@@ -227,7 +315,7 @@ export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data
     penetration: Math.min(data.base.penetration.max, (tech.penetration ?? 0) + (user.boost?.penetration ?? 0)),
     elementMult: elementMult(tech, target, data),
     critMult: crit ? data.base.crit.multiplier : 1,
-    extraMult: attackerMult(user, tech) * (hasEffect(target, 'stun') ? user.mods.stunnedDamageMult : 1),
+    extraMult: attackerMult(user, tech, data) * (hasEffect(target, 'stun') ? user.mods.stunnedDamageMult : 1),
   });
 }
 
@@ -237,7 +325,7 @@ export function hitsOf(user: Fighter, tech: JTechnique): number {
 }
 
 export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique, data: JornadaData): number {
-  const acc = user.mods.accuracyBonus + (user.boost?.accuracy ?? 0);
+  const acc = user.mods.accuracyBonus + (user.boost?.accuracy ?? 0) + (user.gate ? gateTotals(user.gate.level, data).accuracy : 0);
   const eva = target.mods.evasion + (target.boost?.evasion ?? 0);
   return hitChance(tech.accuracy, acc - eva, data.base.hit);
 }
@@ -247,7 +335,7 @@ export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique
 
 export function startBattle(setup: BattleSetup, data: JornadaData, rng: Rng): JBattle {
   const fighters = [...setup.allies.map((f, i) => enter(f, 'ally', i)), ...setup.enemies.map((f, i) => enter(f, 'enemy', i))];
-  const s: JBattle = { round: 0, fighters, order: [], turnIndex: 0, turnStarted: false, status: 'ongoing', win: setup.win, itemUsed: false, heroRevives: 0, log: [] };
+  const s: JBattle = { round: 0, fighters, order: [], turnIndex: 0, turnStarted: false, status: 'ongoing', win: setup.win, itemUsed: false, activeUsed: false, heroRevives: 0, log: [] };
   return advance(s, data, rng);
 }
 
@@ -315,10 +403,19 @@ function startTurn(s: JBattle, f: Fighter, data: JornadaData): boolean {
   return true;
 }
 
-/** Fim do turno: efeitos e esperas descontam uma rodada. */
-function endTurn(s: JBattle, f: Fighter): void {
+/** Fim do turno: desgaste dos Portões, depois efeitos, portão e esperas descontam uma rodada. */
+function endTurn(s: JBattle, f: Fighter, data: JornadaData): void {
   f.effects = f.effects.map((e) => ({ ...e, turns: e.turns - 1 })).filter((e) => e.turns > 0);
   if (f.boost && --f.boost.turns <= 0) f.boost = null;
+  if (f.gate && !f.down) {
+    // O desgaste nunca derruba: para em 1 de HP.
+    const amount = Math.min(f.hp - 1, gateDrain(f, f.gate.level, data));
+    if (amount > 0) {
+      f.hp -= amount;
+      s.log.push({ type: 'hpCost', uid: f.uid, amount, source: 'gates' });
+    }
+    if (--f.gate.turns <= 0) closeGates(s, f, data, true);
+  }
   for (const id of Object.keys(f.cooldowns)) {
     f.cooldowns[id] = Math.max(0, f.cooldowns[id]! - 1);
     if (f.cooldowns[id] === 0) delete f.cooldowns[id];
@@ -326,6 +423,7 @@ function endTurn(s: JBattle, f: Fighter): void {
   s.turnIndex++;
   s.turnStarted = false;
   s.itemUsed = false;
+  s.activeUsed = false;
 }
 
 /**
@@ -354,13 +452,16 @@ export function advance(state: JBattle, data: JornadaData, rng: Rng): JBattle {
       const acts = startTurn(s, f, data);
       if (s.status !== 'ongoing') break;
       if (!acts) {
-        endTurn(s, f);
+        endTurn(s, f, data);
         continue;
       }
     }
     if (f.protagonist) return s;
-    execute(s, f, chooseAiAction(s, f, data, rng), data, rng);
-    endTurn(s, f);
+    // Ativa grátis antes da ação (hoje só protagonistas têm ativas; fica coerente para a IA).
+    const free = chooseAiActive(s, f, data, rng);
+    if (free) applyFree(s, f, free, data, rng);
+    if (s.status === 'ongoing') execute(s, f, chooseAiAction(s, f, data, rng), data, rng);
+    endTurn(s, f, data);
   }
   return s;
 }
@@ -371,8 +472,35 @@ export function playerAct(state: JBattle, action: JAction, data: JornadaData, rn
   const s = clone(state);
   const f = current(s)!;
   execute(s, f, action, data, rng);
-  endTurn(s, f);
+  endTurn(s, f, data);
   return advance(s, data, rng);
+}
+
+/** Ativa de classe do protagonista: não gasta o turno, uma por turno (contando a troca de portão). */
+export function useActive(state: JBattle, techId: string, targetUid: string, data: JornadaData, rng: Rng): JBattle {
+  return useFree(state, { kind: 'active', techId, target: targetUid }, data, rng);
+}
+
+/** Abre, troca (subir ou descer, sem renovar o tempo) ou fecha (0) os Portões do protagonista. Conta como a ativa do turno. */
+export function setGate(state: JBattle, level: number, data: JornadaData, rng: Rng): JBattle {
+  return useFree(state, { kind: 'gate', level }, data, rng);
+}
+
+/** Ação grátis do protagonista (ativa ou portão). */
+export function useFree(state: JBattle, action: JFreeAction, data: JornadaData, rng: Rng): JBattle {
+  if (!awaitingPlayer(state)) throw new Error('não é a vez do protagonista');
+  const s = clone(state);
+  applyFree(s, current(s)!, action, data, rng);
+  return s;
+}
+
+function applyFree(s: JBattle, f: Fighter, action: JFreeAction, data: JornadaData, rng: Rng): void {
+  if (action.kind === 'gate') return changeGate(s, f, action.level, data);
+  const tech = data.techniques[action.techId];
+  if (!tech?.active || tech.gates) throw new Error(`ativa indisponível: ${action.techId}`);
+  if (s.activeUsed) throw new Error('já usou uma ativa neste turno');
+  applyTech(s, f, tech.id, action.target, data, rng);
+  s.activeUsed = true;
 }
 
 /** Item da bolsa: não gasta o turno, um por turno do protagonista. A run desconta da bolsa. */
@@ -430,21 +558,31 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
     reviveFighter(s, f, t, j.reviveHpPct);
     return;
   }
-  const tech = data.techniques[action.techId];
-  if (!tech || !f.techniques.includes(tech.id)) throw new Error(`técnica indisponível: ${action.techId}`);
+  if (data.techniques[action.techId]?.active) throw new Error(`ativa não gasta o turno: use useActive (${action.techId})`);
+  applyTech(s, f, action.techId, action.target, data, rng);
+}
+
+/** Usa a técnica (ação de turno ou ativa grátis). */
+function applyTech(s: JBattle, f: Fighter, techId: string, targetUid: string, data: JornadaData, rng: Rng): void {
+  const j = data.j.combat;
+  const tech = data.techniques[techId];
+  if (!tech || !f.techniques.includes(tech.id)) throw new Error(`técnica indisponível: ${techId}`);
+  if (tech.gates) throw new Error('Portões: use setGate');
   if (blockedReason(f, tech)) throw new Error(`técnica bloqueada: ${tech.id}`);
-  const targets =
-    tech.target === 'allEnemies' ? alive(s, opponentSide(f.side)) : tech.target === 'self' ? [f] : [fighter(s, action.target)];
+  const targets = tech.target === 'allEnemies' ? alive(s, opponentSide(f.side)) : tech.target === 'self' ? [f] : [fighter(s, targetUid)];
   if (targets.some((t) => t.down)) throw new Error('alvo caído');
   f.chakra -= techniqueCost(f, tech);
-  const hpPaid = hpCost(f, tech);
-  if (hpPaid) f.hp -= hpPaid;
   if (tech.cooldown) f.cooldowns[tech.id] = tech.cooldown + 1;
   s.log.push({ type: 'tech', uid: f.uid, techId: tech.id, targets: targets.map((t) => t.uid) });
+  const hpPaid = hpCost(f, tech);
+  if (hpPaid) {
+    f.hp -= hpPaid;
+    s.log.push({ type: 'hpCost', uid: f.uid, amount: hpPaid, source: tech.id });
+  }
 
   if (tech.boost) {
-    // O turno em que ativa conta: +1 para durar os turnos seguintes.
-    f.boost = { ...tech.boost, turns: tech.boost.turns + 1, techId: tech.id };
+    // Ativa não gasta o turno: o da ativação já conta como um dos turnos do fortalecimento.
+    f.boost = { ...tech.boost, techId: tech.id };
     s.log.push({ type: 'boost', uid: f.uid, techId: tech.id, turns: tech.boost.turns });
   }
   if (tech.clones) {
@@ -489,7 +627,8 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     const chance = accuracyAgainst(f, t, tech, data);
     // Um sorteio só: abaixo do crítico é crítico, abaixo do acerto é acerto (crítico contido no acerto).
     const r = rng();
-    const outcome = r < critChance((tech.critBonus ?? 0) + f.mods.critBonus, data.base.crit, chance) ? 'crit' : r < chance ? 'hit' : 'miss';
+    const gateCrit = f.gate ? gateTotals(f.gate.level, data).critBonus : 0;
+    const outcome = r < critChance((tech.critBonus ?? 0) + f.mods.critBonus + gateCrit, data.base.crit, chance) ? 'crit' : r < chance ? 'hit' : 'miss';
     if (outcome === 'miss') {
       s.log.push({ type: 'miss', uid: f.uid, target: t.uid });
       continue;
@@ -539,6 +678,7 @@ function applyHpLoss(s: JBattle, t: Fighter, amount: number): void {
   t.shield = 0;
   t.guarding = false;
   t.boost = null;
+  t.gate = null;
   s.log.push({ type: 'down', target: t.uid });
   checkEnd(s);
 }
