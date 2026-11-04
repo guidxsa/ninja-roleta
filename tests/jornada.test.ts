@@ -14,7 +14,7 @@ import {
   type FighterSeed,
 } from '../src/core/jornada/battle';
 import { eventOptions } from '../src/core/jornada/events';
-import { generateMap, reachable } from '../src/core/jornada/map';
+import { generateMap, reachable, reachableFrom } from '../src/core/jornada/map';
 import { checkSequence, jokenpo, memoryDeck, sealSequence } from '../src/core/jornada/minigames';
 import { newJornadaAchievements } from '../src/data/jornada/achievements';
 import {
@@ -28,6 +28,7 @@ import {
   currentStop,
   finishFight,
   gainRelic,
+  heroMods,
   heroMovable,
   leaveStop,
   memberSheet,
@@ -41,6 +42,7 @@ import {
   setMoveset,
   shopOffer,
   talentContext,
+  teamMods,
   HERO,
   type JRun,
 } from '../src/core/jornada/run';
@@ -519,6 +521,122 @@ describe('run da Jornada', () => {
     expect(setMoveset(run, ['jStrike'], data).moveset).toEqual(['jStrike']);
   });
 
+  it('talentos: a maioria é única; só alguns sobem de nível, com limite', () => {
+    const none = new Set<string>();
+    const node = (id: string) => data.talents.find((t) => t.id === id)!;
+    let run: JRun = { ...newRun(1, 'normal', data), talentPoints: 30 };
+    const withRanks = data.talents.filter((t) => (t.maxRank ?? 1) > 1);
+    expect(withRanks.length).toBeLessThan(data.talents.length / 3);
+    for (const t of withRanks) {
+      expect(t.maxRank, t.id).toBeLessThanOrEqual(3);
+      expect(t.rankMods, t.id).toBeTruthy();
+    }
+    // Talento único não sobe: fica 'owned' mesmo com pontos.
+    run = buyTalent(run, 'tMoreClones', none, data);
+    expect(talentState(node('tMoreClones'), data.talents, talentContext(run, none))).toBe('owned');
+    expect(() => buyTalent(run, 'tMoreClones', none, data)).toThrow();
+    // Com níveis: sobe até o limite, cobrando o custo do nível.
+    run = buyTalent(run, 'tRendan', none, data);
+    expect(talentState(node('tRendan'), data.talents, talentContext(run, none))).toBe('upgradable');
+    const before = run.talentPoints;
+    run = buyTalent(buyTalent(run, 'tRendan', none, data), 'tRendan', none, data);
+    expect(run.talentRanks.tRendan).toBe(3);
+    expect(run.talentPoints).toBe(before - 2 * node('tRendan').rankCost!);
+    expect(talentState(node('tRendan'), data.talents, talentContext(run, none))).toBe('maxed');
+    expect(() => buyTalent(run, 'tRendan', none, data)).toThrow();
+    // Sem pontos, não sobe: volta a mostrar 'owned'.
+    const broke = { ...buyTalent({ ...newRun(1, 'normal', data), talentPoints: 3 }, 'tMoreClones', none, data) };
+    const one = buyTalent(broke, 'tRendan', none, data);
+    expect(talentState(node('tRendan'), data.talents, talentContext(one, none))).toBe('owned');
+  });
+
+  it('liberar o próximo pede só o anterior no nível 1, e dá para voltar e subir depois', () => {
+    const none = new Set<string>();
+    const node = (id: string) => data.talents.find((t) => t.id === id)!;
+    let run: JRun = { ...newRun(1, 'normal', data), talentPoints: 30 };
+    run = buyTalent(buyTalent(run, 'tMoreClones', none, data), 'tRendan', none, data);
+    expect(talentState(node('tCloneBlast'), data.talents, talentContext(run, none))).toBe('available');
+    run = buyTalent(run, 'tCloneBlast', none, data);
+    run = buyTalent(run, 'tRendan', none, data);
+    expect(run.talentRanks.tRendan).toBe(2);
+  });
+
+  it('o nível aumenta o efeito da técnica', () => {
+    const none = new Set<string>();
+    let run: JRun = { ...newRun(1, 'normal', data), talentPoints: 30, stageIndex: 2 };
+    run = buyTalent(run, 'tRasengan', none, data);
+    expect(heroMods(run, data).techDamageMult.jRasengan ?? 1).toBe(1);
+    run = buyTalent(run, 'tRasengan', none, data);
+    expect(heroMods(run, data).techDamageMult.jRasengan).toBeCloseTo(1.15);
+    expect(heroMods(run, data).techChakraDiscount.jRasengan).toBe(1);
+    run = buyTalent(run, 'tRasengan', none, data);
+    expect(heroMods(run, data).techDamageMult.jRasengan).toBeCloseTo(1.15 * 1.15);
+    expect(heroMods(run, data).techChakraDiscount.jRasengan).toBe(2);
+  });
+
+  it('bifurcação: escolher um caminho fecha o outro, e qualquer um libera o seguinte', () => {
+    const none = new Set<string>();
+    const node = (id: string) => data.talents.find((t) => t.id === id)!;
+    const base: JRun = { ...newRun(1, 'normal', data), talentPoints: 30 };
+    const a = buyTalent(buyTalent(base, 'tMoreClones', none, data), 'tRendan', none, data);
+    expect(talentState(node('tCloneGuard'), data.talents, talentContext(a, none))).toBe('excluded');
+    expect(() => buyTalent(a, 'tCloneGuard', none, data)).toThrow();
+    const b = buyTalent(buyTalent(base, 'tMoreClones', none, data), 'tCloneGuard', none, data);
+    expect(talentState(node('tRendan'), data.talents, talentContext(b, none))).toBe('excluded');
+    expect(talentState(node('tCloneBlast'), data.talents, talentContext(b, none))).toBe('available');
+  });
+
+  it('nenhum ponto fica preso: a árvore do Naruto custa mais do que a run rende, com ramos abertos em cada estágio', () => {
+    const naruto = data.talents.filter((t) => t.owner === 'naruto');
+    expect(new Set(naruto.map((t) => t.branch)).size).toBe(6);
+    // Custo para aprender tudo que dá numa run (nas bifurcações, um lado só) sem contar os níveis.
+    const cost = (stage: number) => {
+      const open = naruto.filter((t) => (t.fromStage ?? 0) <= stage);
+      const seen = new Set<string>();
+      let sum = 0;
+      for (const t of open) {
+        if (seen.has(t.id)) continue;
+        seen.add(t.id);
+        for (const x of t.excludes ?? []) seen.add(x);
+        sum += t.cost;
+      }
+      return sum;
+    };
+    // Pontos que dá para ter ao fim de cada estágio (lutas + níveis + eventos), com folga.
+    expect(cost(0)).toBeGreaterThan(14);
+    expect(cost(1)).toBeGreaterThan(28);
+    expect(cost(2)).toBeGreaterThan(40);
+  });
+
+  it('nós depois de bifurcação dizem quem libera; toda exclusão é mútua; nós e textos existem', () => {
+    for (const t of data.talents) {
+      const same = data.talents.filter((n) => n.owner === t.owner && n.branch === t.branch && n.tier === t.tier - 1);
+      if (same.length > 1) expect(t.requires, t.id).toBeTruthy();
+      for (const r of t.requires ?? []) expect(data.talents.some((n) => n.id === r), r).toBe(true);
+      for (const x of t.excludes ?? []) expect(data.talents.find((n) => n.id === x)?.excludes, x).toContain(t.id);
+      expect(jornadaPtBR.talents.list[t.id]?.name, t.id).toBeTruthy();
+      if ((t.maxRank ?? 1) > 1) expect(jornadaPtBR.talents.list[t.id]?.rank, t.id).toBeTruthy();
+      if (t.learn) expect(data.techniques[t.learn], t.learn).toBeTruthy();
+      expect(jornadaPtBR.talents.branches[t.branch], t.branch).toBeTruthy();
+    }
+  });
+
+  it('talento de equipe vale para os suportes; run salva sem níveis carrega', () => {
+    const none = new Set<string>();
+    let run: JRun = { ...newRun(1, 'normal', data), talentPoints: 30 };
+    const hp = memberSheet(run, 'sasuke', data).maxHp;
+    run = buyTalent(buyTalent(run, 'tNeverGiveUp', none, data), 'tTeam7', none, data);
+    expect(memberSheet(run, 'sasuke', data).maxHp).toBe(Math.floor(hp * 1.15));
+    expect(teamMods(run, data).regenPct).toBeCloseTo(0.01);
+    expect(heroMods(run, data).regenPct).toBeCloseTo(0.01);
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const old = JSON.parse(JSON.stringify(run));
+    delete old.talentRanks;
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+    expect(loadJornada(storage)!.talentRanks).toEqual({});
+  });
+
   it('mercador, descanso e evento', () => {
     let run: JRun = { ...newRun(1, 'normal', data), ryo: 500, stopIndex: 6 };
     expect(currentStop(run, data)!.kind).toBe('shop');
@@ -703,6 +821,15 @@ describe('Caminho Ninja', () => {
     const run = { ...newGenericRun(1, 'normal', 'common', data), hero: 'commonNinja', elements: { commonNinja: 'water' as const }, talentPoints: 5 };
     const next = buyTalent(run, 'tElement2', new Set(), data);
     expect(next.learned).toContain('jWaterShark');
+  });
+
+  it('a partir de um nó, só o que está à frente segue alcançável; o chefe sempre', () => {
+    const map = generateMap(createRng(4), data);
+    const start = map.nodes.find((n) => n.row === 0)!;
+    const ahead = reachableFrom(map, [start.id]);
+    expect(ahead.has(start.id)).toBe(true);
+    expect(map.nodes.filter((n) => n.row === 0 && n.id !== start.id).some((n) => ahead.has(n.id))).toBe(false);
+    expect(ahead.has(map.nodes.find((n) => n.kind === 'boss')!.id)).toBe(true);
   });
 
   it('save do Caminho Ninja vai e volta; save antigo carrega como História', () => {

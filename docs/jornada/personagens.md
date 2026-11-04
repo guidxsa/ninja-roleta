@@ -65,6 +65,15 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 | Explosão de chakra | Ninjutsu | — | todos os inimigos | 14 | 8 | 90% | — |
 | Rasengan | Ninjutsu | — | um inimigo | 28 | 10 | 90% | +5% crítico |
 | Ōdama Rasengan | Ninjutsu | — | um inimigo | 44 | 16 | 85% | penetração 20%; atordoar 30% (1 t) |
+| Rasengan com clone | Ninjutsu | — | um inimigo | 18 | 8 | 90% | +1 golpe por clone (até +2) |
+| Harem no Jutsu | Genjutsu | — | todos os inimigos | — | 6 | 75% | atordoar 40% (1 t); espera 4 |
+| Bomba de fumaça | Taijutsu | — | em si | — | 3 | 85% | fortalece 2 turnos (+30% esquiva); espera 4; ativa de classe |
+| Shuriken das sombras | Taijutsu | — | um inimigo | 7 | 3 | 80% | 3 golpes; espera 1 |
+| Grito de guerra | Ninjutsu | — | um aliado | — | 5 | 85% | cura 20%; tira atordoar e bloqueio; espera 2 |
+| Gamakichi | Ninjutsu | fogo | todos os inimigos | 12 | 6 | 85% | queimar 30% |
+| Gamatatsu | Ninjutsu | água | em si | — | 5 | 85% | escudo 25% do HP de quem usa; espera 3; ativa de classe |
+| Gamabunta | Ninjutsu | — | todos os inimigos | 26 | 16 | 90% | atordoar 25% (1 t); espera 4 |
+| Uma cauda | Ninjutsu | — | em si | — | 0 | 85% | custa 10% do HP; fortalece 3 turnos (dano ×1.35); espera 5; ativa de classe |
 | Bola de Fogo | Ninjutsu | fogo | um inimigo | 16 | 5 | 85% | queimar 25% |
 | Flor de Fênix | Ninjutsu | fogo | todos os inimigos | 8 | 7 | 85% | queimar 20% |
 | Combo do Leão | Taijutsu | — | um inimigo | 18 | 4 | 85% | — |

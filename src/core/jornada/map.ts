@@ -124,9 +124,12 @@ export function nextNodes(map: StageMap, lastDone: string | null): MapNode[] {
 }
 
 /** Nós alcançáveis a partir dos começos (teste: todo nó precisa estar aqui). */
-export function reachable(map: StageMap): Set<string> {
+export const reachable = (map: StageMap): Set<string> => reachableFrom(map, map.nodes.filter((n) => n.row === 0).map((n) => n.id));
+
+/** Nós alcançáveis a partir destes (eles inclusos). A tela apaga o que já ficou para trás. */
+export function reachableFrom(map: StageMap, starts: readonly string[]): Set<string> {
   const seen = new Set<string>();
-  const stack = map.nodes.filter((n) => n.row === 0).map((n) => n.id);
+  const stack = [...starts];
   while (stack.length) {
     const id = stack.pop()!;
     if (seen.has(id)) continue;

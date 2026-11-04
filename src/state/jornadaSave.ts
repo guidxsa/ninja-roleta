@@ -20,7 +20,7 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     const relics = hasStarter ? run.relics : [STARTER_RELIC, ...run.relics];
     // Runs de antes do Caminho Ninja (v0.36.0) são da História.
     const legacy = { mode: 'canon' as const, hero: 'naruto', classId: 'naruto', elements: {}, secondElement: null, skin: null, supports: [], map: null, nodeId: null, path: [], bossPlan: [] };
-    return { ...legacy, ...run, cleared: run.cleared ?? [], relics };
+    return { ...legacy, ...run, cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
   } catch {
     return null;
   }

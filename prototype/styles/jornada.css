@@ -169,34 +169,10 @@
 .jrshelf-item.sold { opacity: .45; }
 .jrprice { font: 700 14px/1 var(--font-hud); letter-spacing: .04em; padding: 3px 8px; background: var(--ink); color: var(--gold-2); border-left: 2px solid var(--gold); white-space: nowrap; }
 
-/* Talentos e moveset */
+/* Moveset */
 .jmodal { max-height: 86vh; overflow-y: auto; }
-.jtree { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
 .jskin { align-self: center; }
 .jskin[aria-pressed='true'] { border-color: var(--gold-2); box-shadow: inset 0 -2px 0 var(--accent); }
-.jbranch { display: flex; flex-direction: column; gap: 0; }
-.jbranch h3 { margin: 4px 0; text-align: center; font-size: 15px; color: var(--gold); letter-spacing: .12em; }
-.jnode {
-  text-align: left; padding: 8px 9px; border: 1px solid var(--line); border-left: 3px solid var(--line-strong);
-  background: var(--surface-2); color: var(--text); font: inherit; font-size: 13px; cursor: pointer;
-}
-.jnode b { display: block; font: 700 15px/1.15 var(--font-hud); letter-spacing: .02em; }
-.jnode small { display: block; font-size: 11.5px; color: var(--muted); }
-.jnode .jnode-state { margin-top: 5px; font: 700 12px/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; }
-.jnode .jnode-state .ico { width: 13px; height: 13px; vertical-align: -.15em; }
-/* Ramo como coluna de pergaminho: os nós ligados por um traço (dourado no que já foi aprendido). */
-.jbranch .jnode { position: relative; }
-.jbranch .jnode + .jnode { margin-top: 6px; }
-.jbranch .jnode + .jnode::before {
-  content: ''; position: absolute; left: 16px; top: -13px; width: 2px; height: 12px; background: var(--line-strong);
-}
-.jbranch .jnode.st-owned + .jnode::before { background: var(--gold); }
-.jbranch .jnode.st-owned + .jnode.st-owned::before { background: var(--gold-2); }
-.jnode.st-owned { border-left-color: var(--gold-2); background: color-mix(in srgb, var(--gold) 12%, var(--surface-2)); }
-.jnode.st-owned .jnode-state { color: var(--gold-2); }
-.jnode.st-available { border-left-color: var(--accent-2); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
-.jnode.st-available .jnode-state { color: var(--accent-2); }
-.jnode.st-locked, .jnode.st-stageLocked, .jnode.st-accountLocked, .jnode.st-noPoints { opacity: .5; cursor: default; }
 .jmoves-pick { display: grid; gap: 6px; }
 
 /* Caminho Ninja: classes, revelação do elemento e mapa ramificado. */
@@ -211,32 +187,69 @@
 .jclass.off { opacity: .5; cursor: default; }
 .jclass .lock, .lock-note .ico { width: 14px; height: 14px; color: var(--muted); vertical-align: -.15em; }
 .jreveal .portrait-lg { width: 120px; height: 120px; }
-.jmap-wrap { display: flex; flex-direction: column; gap: 6px; }
-.jmap-boss { margin: 0; text-align: center; font: 400 18px/1.2 var(--font-display); color: var(--accent-2); }
-.jmap {
-  position: relative; width: 100%;
-  background: var(--grain-dark), color-mix(in srgb, var(--paper) 10%, var(--surface)); border: 1px solid var(--line);
+/* Cenário do estágio (mapa e trilha): as mesmas silhuetas da tela de batalha. */
+.jscene { position: relative; background: var(--grain), var(--scene, var(--bg-2)); border: 1px solid var(--line); overflow: hidden; }
+.jscene::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .9; background: var(--scene-art, none) center / 100% 100% no-repeat; }
+.jtrail-scene { padding: 12px 8px 12px 26px; }
+.jtrail-scene .jtrail { position: relative; border-left-width: 2px; }
+.jmap-wrap { display: flex; flex-direction: column; gap: 8px; }
+.jmap-boss {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px; justify-content: center;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 34%, transparent) 30%, color-mix(in srgb, var(--accent) 34%, transparent) 70%, transparent);
+  border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent);
 }
-.jmap-lines { position: absolute; inset: 0; pointer-events: none; }
-.jmap-lines line { stroke: var(--line-strong); stroke-width: 1.5; stroke-dasharray: 3 5; }
-.jmap-lines line.walked { stroke: var(--accent); stroke-dasharray: none; stroke-width: 2.5; }
+.jmap-boss .portrait { flex: none; border-color: var(--accent-2); box-shadow: 2px 2px 0 var(--accent-deep); }
+.jmap-boss span:not(.portrait) { display: flex; flex-direction: column; gap: 1px; }
+.jmap-boss small { font: 700 11px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.jmap-boss b { font: 400 21px/1.1 var(--font-display); color: var(--accent-2); letter-spacing: .02em; }
+.jmap { width: 100%; }
+.jmap-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.jmap-lines path { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke: color-mix(in srgb, var(--text) 50%, transparent); stroke-width: 2; stroke-dasharray: 1 7; }
+.jmap-lines path.dead { opacity: .22; }
+.jmap-lines path.open { stroke: var(--accent-2); stroke-width: 3; stroke-dasharray: 8 7; animation: mapFlow 1s linear infinite; }
+.jmap-lines path.walked { stroke: var(--accent); stroke-width: 6; stroke-dasharray: none; filter: drop-shadow(0 1px 0 var(--ink)); }
+@keyframes mapFlow { to { stroke-dashoffset: -15; } }
 .jnode-map {
-  position: absolute; transform: translate(-50%, -50%) rotate(45deg); width: 34px; height: 34px; padding: 0;
+  position: absolute; z-index: 1; isolation: isolate; transform: translate(-50%, -50%) rotate(45deg); width: 38px; height: 38px; padding: 0;
   display: grid; place-items: center; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); font: inherit; cursor: default;
+  box-shadow: 2px 2px 0 var(--ink); transition: opacity var(--dur-2);
 }
 .jnode-map > * { transform: rotate(-45deg); }
-.jnode-map .ico { width: 18px; height: 18px; }
-.jnode-map .portrait-sm { width: 30px; height: 30px; border: 0; }
-.jnode-map.k-elite { border-color: var(--gold-2); }
-.jnode-map.k-boss { width: 48px; height: 48px; border-color: var(--accent-2); border-width: 2px; }
-.jnode-map.k-rest { border-color: var(--leaf); }
-.jnode-map.k-treasure { border-color: var(--gold-2); color: var(--gold-2); }
-.jnode-map.done { background: var(--gold); color: var(--ink); border-color: var(--gold); }
-.jnode-map.idle { opacity: .55; }
-.jnode-map.choice { cursor: pointer; border-color: var(--accent-2); background: var(--surface-2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent); animation: nodeCall 1.4s var(--ease) infinite; opacity: 1; }
-@keyframes nodeCall { 0%, 100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); } 50% { box-shadow: 0 0 0 6px transparent; } }
+.jnode-map .ico { width: 20px; height: 20px; }
+.jnode-map .portrait-sm { width: 46px; height: 46px; border: 0; }
+/* Forma por tipo: elite estrelada, descanso redondo, mercador quadrado, tesouro dourado, desconhecido tracejado, chefe grande. */
+.jnode-map.k-elite { border-color: var(--gold-2); color: var(--gold-2); }
+.jnode-map.k-elite::before { content: ''; position: absolute; inset: -1px; z-index: -1; transform: rotate(45deg); background: var(--surface); border: 1px solid var(--gold-2); }
+.jnode-map.k-rest { border-color: var(--leaf); color: var(--leaf); border-radius: 50%; }
+.jnode-map.k-shop { transform: translate(-50%, -50%); border-color: var(--gold); color: var(--gold-2); }
+.jnode-map.k-shop > * { transform: none; }
+.jnode-map.k-treasure { background: color-mix(in srgb, var(--gold) 34%, var(--surface)); border-color: var(--gold-2); color: var(--gold-2); }
+.jnode-map.k-unknown { border-style: dashed; border-radius: 50%; }
+.jnode-map.k-boss {
+  width: 62px; height: 62px; border: 2px solid var(--accent-2); overflow: hidden;
+  box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px var(--accent), 0 0 22px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.jnode-map.done { background: var(--gold); color: var(--ink); border-color: var(--gold); opacity: .9; }
+.jnode-map.done::before { background: var(--gold); border-color: var(--gold); }
+.jnode-map.ahead { opacity: .92; }
+.jnode-map.dead { opacity: .3; filter: grayscale(1); box-shadow: none; }
+.jnode-map.choice { z-index: 2; cursor: pointer; border-color: var(--accent-2); background: var(--surface-2); opacity: 1; animation: nodeCall 1.4s var(--ease) infinite; }
+.jnode-map.choice::before { border-color: var(--accent-2); }
+@keyframes nodeCall { 0%, 100% { box-shadow: 2px 2px 0 var(--ink), 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent); } 50% { box-shadow: 2px 2px 0 var(--ink), 0 0 0 9px transparent; } }
+.jmap-hero { position: absolute; z-index: 3; transform: translate(-50%, -50%); pointer-events: none; animation: heroBob 1.8s ease-in-out infinite; }
+.jmap-hero .portrait { width: 30px; height: 30px; border: 2px solid var(--gold-2); box-shadow: 2px 2px 0 var(--ink); }
+@keyframes heroBob { 50% { margin-top: -4px; } }
+.jstop-hero { flex: none; width: 32px; height: 32px; margin-left: -2px; }
+.jstop-hero .portrait { width: 32px; height: 32px; border: 2px solid var(--gold-2); box-shadow: 2px 2px 0 var(--ink); }
 .jq { font: 400 18px/1 var(--font-kanji); color: var(--accent-2); }
 .jlegend .jq { font-size: 14px; }
+.jlegend-chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.jlegend-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; background: var(--surface-2); border: 1px solid var(--line); font: 600 12px/1 var(--font-hud); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.jlegend-chip .ico { width: 13px; height: 13px; }
+.jlegend-chip .jq { font-size: 13px; }
+.jlegend-chip.k-elite, .jlegend-chip.k-treasure { color: var(--gold-2); }
+.jlegend-chip.k-rest { color: var(--leaf); }
+.jlegend-chip.k-boss { color: var(--accent-2); }
 .jmap-side { display: flex; flex-direction: column; gap: 6px; }
 .jmap-side .jabandon { align-self: center; }
 
@@ -259,7 +272,7 @@ body.mode-jornada #sheet-btn { display: none; }
   }
   .jtrail-screen > .jb-head { grid-area: head; }
   .jtrail-screen > [data-hud] { grid-area: hud; position: sticky; top: 76px; }
-  .jtrail-screen > .jtrail { grid-area: trail; }
+  .jtrail-screen > .jtrail-scene, .jtrail-screen > .jtrail-map { grid-area: trail; }
   .jtrail-screen > .jlegend { grid-area: legend; }
   .jtrail-screen > .sticky-cta { grid-area: cta; position: static; background: none; padding: 0; }
   .jtrail-screen.jmap-screen { grid-template-areas: 'head head' 'side trail'; grid-template-rows: auto 1fr; }

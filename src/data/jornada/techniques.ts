@@ -18,6 +18,15 @@ export const allyTechniques: JTechnique[] = [
   { id: 'jChakraBurst', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 14, chakraCost: 8, accuracy: 0.9 },
   { id: 'jRasengan', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 28, chakraCost: 10, accuracy: 0.9, critBonus: 0.05 },
   { id: 'jOdama', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 44, chakraCost: 16, accuracy: 0.85, penetration: 0.2, onHit: { effect: 'stun', chance: 0.3, turns: 1 } },
+  { id: 'jRasenClone', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 18, hits: 1, hitsPerClone: 1, maxCloneHits: 2, chakraCost: 8, accuracy: 0.9 },
+  { id: 'jHarem', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 0, chakraCost: 6, accuracy: 0.75, onHit: { effect: 'stun', chance: 0.4, turns: 1 }, cooldown: 4 },
+  { id: 'jSmokeBomb', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, boost: { evasion: 0.3, turns: 2 }, active: true, cooldown: 4 },
+  { id: 'jShadowShuriken', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 3, chakraCost: 3, accuracy: 0.8, cooldown: 1 },
+  { id: 'jWarCry', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healPct: 0.2, cleanse: true, cooldown: 2 },
+  { id: 'jGamakichi', type: 'ninjutsu', element: 'fire', target: 'allEnemies', baseDamage: 12, chakraCost: 6, onHit: { effect: 'burn', chance: 0.3 } },
+  { id: 'jGamatatsu', type: 'ninjutsu', element: 'water', target: 'self', baseDamage: 0, chakraCost: 5, shieldPct: 0.25, active: true, cooldown: 3 },
+  { id: 'jGamabunta', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 26, chakraCost: 16, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.25, turns: 1 }, cooldown: 4 },
+  { id: 'jOneTail', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.1, boost: { damageMult: 1.35, turns: 3 }, active: true, cooldown: 5 },
 
   // Sasuke
   { id: 'jFireball', type: 'ninjutsu', element: 'fire', target: 'enemy', baseDamage: 16, chakraCost: 5, onHit: { effect: 'burn', chance: 0.25 } },

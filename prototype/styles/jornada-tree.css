@@ -1,0 +1,137 @@
+/* Árvore de talentos da Jornada: tela cheia com o tema da classe. Cor, marca d'água e padrão vêm dos tokens --tree-*. */
+.jtree-screen {
+  --tree: var(--gold-2);
+  --tree-2: var(--accent-2);
+  --tree-ink: var(--ink);
+  --tree-motif: none;
+  position: fixed; inset: 0; z-index: 60; overflow: hidden auto; overscroll-behavior: contain; color: var(--text);
+  background: radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--tree) 30%, var(--bg)), var(--bg) 72%);
+}
+.jtree-screen::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .09; background: var(--tree-motif); background-size: 92px 92px;
+}
+.jt-naruto {
+  --tree: #f07a1a; --tree-2: #ffd27a;
+  --tree-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Cpath d='M46 46c3-5 11-2 10 5-1 8-14 10-20 2-7-10 1-24 14-23 16 1 24 18 16 32' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.jt-common {
+  --tree: #5f9a74; --tree-2: #cfe3a8;
+  --tree-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Cpath d='M20 70c0-30 18-48 52-50-2 34-20 52-52 50zM20 70 50 40' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.jt-prodigy {
+  --tree: #3f9a3c; --tree-2: #f0603f;
+  --tree-motif: repeating-linear-gradient(135deg, #fff 0 10px, transparent 10px 34px);
+}
+.jt-uchiha {
+  --tree: #d1232a; --tree-2: #f5f1e6;
+  --tree-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Cg fill='%23fff'%3E%3Ccircle cx='46' cy='28' r='9'/%3E%3Ccircle cx='30' cy='56' r='9'/%3E%3Ccircle cx='62' cy='56' r='9'/%3E%3C/g%3E%3Cg fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round'%3E%3Cpath d='M55 28c6 4 8 10 6 16M26 47c-5 3-8 3-14 1M58 65c1 6 0 10-4 15'/%3E%3C/g%3E%3C/svg%3E");
+}
+.jt-hyuuga {
+  --tree: #a99bd8; --tree-2: #ece8f6;
+  --tree-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Cpath d='M46 8 79 65H13zM46 84 13 27h66z' fill='none' stroke='%23fff' stroke-width='3'/%3E%3C/svg%3E");
+}
+:root[data-theme='light'] .jt-hyuuga { --tree: #6d5bb0; --tree-2: #4a3d86; }
+:root[data-theme='light'] .jt-uchiha { --tree-2: #8a1b1b; }
+:root[data-theme='light'] .jt-naruto { --tree: #d0650f; --tree-2: #8a4a08; }
+:root[data-theme='light'] .jt-common { --tree-2: #3f6a2c; }
+:root[data-theme='light'] .jtree-screen::before { filter: invert(1); opacity: .06; }
+
+.jt-body { position: relative; max-width: 1280px; margin: 0 auto; padding: 12px 16px 0; min-height: 100%; display: flex; flex-direction: column; gap: 10px; }
+.jt-crest { position: absolute; top: 56px; right: -40px; width: 220px; height: 220px; opacity: .13; pointer-events: none; color: var(--tree); }
+.jt-crest .ico { width: 100%; height: 100%; }
+
+.jt-head { position: relative; display: flex; align-items: center; gap: 10px; }
+.jt-head .portrait { flex: none; border-color: var(--tree); box-shadow: 2px 2px 0 var(--ink); }
+.jt-title { flex: 1; min-width: 0; }
+.jt-title h2 { margin: 0; font: 400 21px/1.05 var(--font-display); text-align: left; text-shadow: var(--title-shadow); }
+.jt-title h2::after { display: none; }
+.jt-title small { display: block; color: var(--muted); font: 600 13px/1.2 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jt-points { flex: none; display: flex; flex-direction: column; align-items: center; min-width: 50px; padding: 3px 8px; border: 1px solid var(--line-strong); background: var(--surface); }
+.jt-points b { font: 700 23px/1 var(--font-hud); }
+.jt-points small { font: 600 10px/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.jt-points.has { border-color: var(--tree); box-shadow: 0 0 12px color-mix(in srgb, var(--tree) 55%, transparent); }
+.jt-points.has b { color: var(--tree-2); }
+
+.jt-tabs { position: relative; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
+.jt-tab {
+  position: relative; flex: 1 0 auto; min-width: 74px; min-height: 44px; padding: 5px 8px; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  background: var(--surface); color: var(--muted); border: 1px solid var(--line); border-bottom: 2px solid var(--line); cursor: pointer; font: inherit;
+}
+.jt-tab b { font: 700 14px/1.1 var(--font-hud); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.jt-tab small { font: 600 11px/1 var(--font-hud); }
+.jt-tab.on { color: var(--text); border-bottom-color: var(--tree); background: color-mix(in srgb, var(--tree) 18%, var(--surface)); }
+.jt-tab.can::after { content: ''; position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; transform: rotate(45deg); background: var(--tree-2); }
+
+.jt-branch { position: relative; display: none; }
+.jt-branch.on { display: block; }
+.jt-branch h3 { display: none; margin: 4px 0 2px; text-align: center; font: 700 16px/1.1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--tree-2); }
+.jt-branch h3 small { color: var(--muted); font-size: 12px; letter-spacing: 0; }
+.jt-grid { position: relative; width: 100%; max-width: 420px; margin: 0 auto; }
+.jt-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.jt-lines path { fill: none; stroke: var(--line-strong); stroke-width: 3; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.jt-lines path.off { stroke-dasharray: none; opacity: .45; }
+.jt-lines path.open { stroke: color-mix(in srgb, var(--tree) 70%, var(--line-strong)); stroke-width: 3; }
+.jt-lines path.on { stroke: var(--tree); stroke-width: 6; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--tree) 70%, transparent)); }
+.jt-lines path.ink { stroke-dasharray: 1; animation: jtInk .6s var(--ease) both; }
+@keyframes jtInk { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+.jt-node {
+  position: absolute; width: 104px; margin-left: -52px; margin-top: -30px; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.jt-seal {
+  width: 44px; height: 44px; margin: 9px 0 6px; display: grid; place-items: center; transform: rotate(45deg);
+  background: var(--surface); border: 2px solid var(--line-strong); box-shadow: 3px 3px 0 var(--ink);
+  transition: transform var(--dur-2) var(--ease), box-shadow var(--dur-2), background var(--dur-2);
+}
+.jt-seal > span { transform: rotate(-45deg); display: grid; place-items: center; }
+.jt-seal .ico { width: 24px; height: 24px; }
+.jt-name { position: relative; z-index: 1; font: 700 13.5px/1.1 var(--font-hud); letter-spacing: .02em; text-align: center; text-shadow: 1px 1px 0 var(--bg), -1px 1px 0 var(--bg), 1px -1px 0 var(--bg), -1px -1px 0 var(--bg); }
+.jt-pips { display: flex; gap: 3px; margin-top: -4px; }
+.jt-pips i { width: 8px; height: 8px; transform: rotate(45deg); border: 1px solid var(--tree); background: var(--bg); }
+.jt-pips i.on { background: var(--tree-2); border-color: var(--tree-2); }
+
+.jt-node.st-owned .jt-seal, .jt-node.st-upgradable .jt-seal, .jt-node.st-maxed .jt-seal {
+  background: var(--tree); border-color: var(--tree-2); color: var(--tree-ink);
+  box-shadow: 3px 3px 0 var(--ink), 0 0 16px color-mix(in srgb, var(--tree) 70%, transparent);
+}
+.jt-node.st-maxed .jt-seal { outline: 2px solid var(--tree-2); outline-offset: 2px; }
+.jt-node.st-available .jt-seal, .jt-node.st-upgradable .jt-seal { animation: jtCall 1.5s var(--ease) infinite; }
+.jt-node.st-available .jt-seal { border-color: var(--tree); background: color-mix(in srgb, var(--tree) 20%, var(--surface)); }
+.jt-node.st-noPoints .jt-seal { border-color: color-mix(in srgb, var(--tree) 50%, var(--line-strong)); }
+.jt-node.st-noPoints .jt-seal > span, .jt-node.st-locked .jt-seal > span, .jt-node.st-stageLocked .jt-seal > span, .jt-node.st-accountLocked .jt-seal > span { opacity: .55; }
+.jt-node.st-locked, .jt-node.st-stageLocked, .jt-node.st-accountLocked { color: var(--muted); }
+.jt-node.st-locked .jt-seal, .jt-node.st-stageLocked .jt-seal, .jt-node.st-accountLocked .jt-seal { background: var(--bg); box-shadow: none; }
+.jt-node.st-excluded { color: var(--muted); }
+.jt-node.st-excluded .jt-seal { background: var(--bg); box-shadow: none; border-style: dashed; opacity: .55; }
+.jt-node.st-excluded .jt-name { text-decoration: line-through; }
+.jt-node.sel .jt-seal { transform: rotate(45deg) scale(1.12); outline: 2px solid var(--tree-2); outline-offset: 3px; }
+.jt-node.sel .jt-name { color: var(--tree-2); }
+.jt-node.just .jt-seal { animation: jtStamp .45s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes jtCall { 0%, 100% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 0 color-mix(in srgb, var(--tree) 70%, transparent); } 50% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 9px transparent; } }
+@keyframes jtStamp { from { transform: rotate(45deg) scale(1.9); opacity: .3; } to { transform: rotate(45deg) scale(1.12); opacity: 1; } }
+
+.jt-detail {
+  position: sticky; bottom: 0; z-index: 2; margin: auto -16px 0; padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 8px; min-height: 96px;
+  background: var(--surface); border-top: 2px solid var(--tree); box-shadow: 0 -8px 20px rgba(0, 0, 0, .35);
+}
+.jt-card { display: flex; flex-direction: column; gap: 3px; }
+.jt-card > b { font: 400 20px/1.1 var(--font-display); letter-spacing: .02em; color: var(--tree-2); }
+.jt-card > small { font-size: 13.5px; line-height: 1.3; color: var(--muted); }
+.jt-card .jt-rank { font: 700 13px/1.2 var(--font-hud); letter-spacing: .04em; color: var(--tree-2); }
+.jt-card .jt-choice { color: var(--gold-2); }
+.jt-card .jt-status { font: 700 12px/1.2 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }
+
+@media (min-width: 900px) {
+  .jt-body { padding: 20px 24px 0; }
+  .jt-title h2 { font-size: 30px; }
+  .jt-crest { top: 40px; right: 10px; width: 340px; height: 340px; }
+  .jt-tabs { display: none; }
+  .jt-branches { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; align-items: start; }
+  .jt-branch, .jt-branch.on { display: block; }
+  .jt-branch h3 { display: block; }
+  .jt-detail { margin: auto -24px 0; padding: 12px 24px; flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; min-height: 84px; }
+  .jt-detail .jt-card { flex: 1; }
+  .jt-detail .btn { flex: none; width: auto; min-width: 280px; }
+}

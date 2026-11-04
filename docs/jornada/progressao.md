@@ -26,7 +26,7 @@
 
 ## Árvore de talentos
 
-Por classe, reinicia a cada run; alguns ramos abrem pela história e outros por objetivos da conta. A do Naruto: [talentos.md](talentos.md).
+Por classe, reinicia a cada run; alguns ramos abrem pela história e outros por objetivos da conta. Tem bifurcações e alguns talentos sobem de nível: [talentos.md](talentos.md).
 
 ## Futuro (Caminho Ninja)
 

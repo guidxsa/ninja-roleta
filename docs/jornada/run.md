@@ -25,7 +25,7 @@ De cima para baixo: Continuar (quando há run salva, com a dificuldade dela), **
 | Tesouro | Relíquia sorteada pela classificação |
 | Desconhecido | Só no Caminho Ninja: sorteia entre luta, evento ou outra parada |
 
-- Na trilha, o caminho do estágio aparece inteiro, com a legenda, e a parada atual fica marcada.
+- Na trilha, o caminho do estágio aparece inteiro sobre o cenário do estágio, com a legenda, e o retrato do herói marca a parada atual.
 - Na trilha dá para abrir a árvore de talentos, o moveset e as relíquias a qualquer momento.
 - **Moeda (ryō)**: ganha em lutas e eventos, gasta no mercador.
 
@@ -65,4 +65,4 @@ Do Caminho Ninja ([caminho-ninja.md](caminho-ninja.md)), implementado na v0.36.0
 - Regras de linha: a linha 0 só tem lutas; a linha 6 só tesouros (um por rota); a penúltima só descansos; elite a partir da linha 2; descanso a partir da linha 3; mercador nunca logo depois de mercador.
 - Pesos dos outros nós: luta 45, desconhecido 22, elite 12, mercador 8, descanso 8.
 - **Desconhecido**: ao entrar, vira evento (50%), luta (30%), mercador (10%) ou tesouro (10%).
-- Na tela, os nós feitos ficam marcados, os que dá para escolher pulsam e o chefe sorteado aparece no topo com o retrato.
+- **Na tela**: o mapa fica sobre o cenário do estágio, com um leve deslocamento fixo em cada nó para não parecer uma grade, e os caminhos são curvos. A rota feita é uma pincelada vermelha, os caminhos disponíveis correm tracejados e o que já ficou para trás apaga. Cada tipo de nó tem forma própria (luta em losango, elite estrelada, descanso e desconhecido redondos, mercador quadrado, tesouro dourado, chefe grande com o retrato). O retrato do herói marca a posição; a faixa do chefe sorteado fica no topo e a legenda, sempre visível, embaixo.

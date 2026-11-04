@@ -9,7 +9,7 @@ import type { JornadaData } from './data';
 import { eventOptions, type EventEffect } from './events';
 import { generateMap, mapNode, nextNodes, type StageMap } from './map';
 import { bossChoices, dropRelic, rollRelic, rollRelics, type RelicDef } from './relics';
-import { canBuyTalent, type TalentContext } from './talents';
+import { canBuyTalent, talentRankCost, type TalentContext } from './talents';
 import { isFight, teamFor, type FightKind, type StopDef } from './trail';
 import type { ConsumableId, FighterMods, JBattle } from './types';
 
@@ -57,6 +57,8 @@ export interface JRun {
   level: number;
   talentPoints: number;
   talents: string[];
+  /** Nível dos talentos que sobem (sem entrada: nível 1). */
+  talentRanks: Record<string, number>;
   /** Técnicas do protagonista além do kit inicial (talentos). */
   learned: string[];
   /** As 4 técnicas equipadas (sem as ativas de classe). */
@@ -104,6 +106,7 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     level: 1,
     talentPoints: 0,
     talents: [],
+    talentRanks: {},
     learned: [],
     moveset: data.characters[hero]!.techniques.filter((id) => !data.techniques[id]?.active).slice(0, MOVESET_SIZE),
     relics: data.relics.filter((r) => r.starterFor?.includes(hero)).map((r) => r.id),
@@ -270,7 +273,7 @@ export function memberSheet(run: JRun, id: string, data: JornadaData): MemberShe
   const relics = relicDefs(run, data);
   const isHero = id === run.hero;
   const heroStat = (k: 'hp' | 'chakra' | 'speed') => (isHero ? relics.reduce((a, r) => a + (r.stats?.[k] ?? 0), 0) : 0);
-  const allyHpPct = isHero ? 0 : relics.reduce((a, r) => a + (r.allyHpPct ?? 0), 0);
+  const allyHpPct = isHero ? 0 : relics.reduce((a, r) => a + (r.allyHpPct ?? 0), 0) + ownedTalents(run, data).reduce((a, t) => a + (t.allyHpPct ?? 0), 0);
   return {
     maxHp: Math.floor((up(def.hp, gr.hp) + bonus.hp + heroStat('hp')) * (1 + allyHpPct)),
     maxChakra: up(def.chakra, gr.chakra) + bonus.chakra + heroStat('chakra'),
@@ -324,7 +327,11 @@ const ownedTalents = (run: JRun, data: JornadaData) => run.talents.map((id) => d
 /** Bônus de talentos e relíquias no protagonista e na equipe. */
 export function heroMods(run: JRun, data: JornadaData): FighterMods {
   let mods = emptyMods();
-  for (const node of ownedTalents(run, data)) if (node.mods) mods = mergeMods(mods, node.mods);
+  for (const node of ownedTalents(run, data)) {
+    if (node.mods) mods = mergeMods(mods, node.mods);
+    if (node.teamMods) mods = mergeMods(mods, node.teamMods);
+    if (node.rankMods) for (let r = 1; r < (run.talentRanks?.[node.id] ?? 1); r++) mods = mergeMods(mods, node.rankMods);
+  }
   for (const r of relicDefs(run, data)) {
     if (r.mods) mods = mergeMods(mods, r.mods);
     if (r.teamMods) mods = mergeMods(mods, r.teamMods);
@@ -334,6 +341,7 @@ export function heroMods(run: JRun, data: JornadaData): FighterMods {
 
 export function teamMods(run: JRun, data: JornadaData): FighterMods {
   let mods = emptyMods();
+  for (const node of ownedTalents(run, data)) if (node.teamMods) mods = mergeMods(mods, node.teamMods);
   for (const r of relicDefs(run, data)) if (r.teamMods) mods = mergeMods(mods, r.teamMods);
   return mods;
 }
@@ -688,7 +696,7 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
 // Talentos e moveset
 
 export function talentContext(run: JRun, unlocked: ReadonlySet<string>): TalentContext {
-  return { owned: run.talents, points: run.talentPoints, stageIndex: run.stageIndex, unlocked, elements: [run.elements[run.hero] ?? null, run.secondElement] };
+  return { owned: run.talents, ranks: run.talentRanks, points: run.talentPoints, stageIndex: run.stageIndex, unlocked, elements: [run.elements[run.hero] ?? null, run.secondElement] };
 }
 
 /** Técnica que o nó ensina nesta run (fixa ou pelo elemento do protagonista). */
@@ -706,6 +714,12 @@ export function buyTalent(prev: JRun, nodeId: string, unlocked: ReadonlySet<stri
   const node = data.talents.find((t) => t.id === nodeId);
   if (!node || node.owner !== prev.hero || !canBuyTalent(node, data.talents, talentContext(prev, unlocked))) throw new Error('talento indisponível');
   const run = clone(prev);
+  // Já aprendido: sobe um nível (a técnica não muda; os bônus vêm de `rankMods`).
+  if (run.talents.includes(node.id)) {
+    run.talentPoints -= talentRankCost(node);
+    run.talentRanks = { ...run.talentRanks, [node.id]: (run.talentRanks?.[node.id] ?? 1) + 1 };
+    return run;
+  }
   run.talentPoints -= node.cost;
   run.talents.push(node.id);
   const learn = talentLearns(run, node.id, data);

@@ -5,7 +5,6 @@ import { eventOptions } from '../../src/core/jornada/events';
 import {
   battleSetup,
   buy,
-  buyTalent,
   canBuy,
   chooseBossRelic,
   chooseNode,
@@ -36,15 +35,12 @@ import {
   stageId,
   stageScene,
   stopRng,
-  talentContext,
-  talentLearns,
   xpToNext,
   MOVESET_SIZE,
   type JRun,
   type Purchase,
 } from '../../src/core/jornada/run';
-import type { MapNode } from '../../src/core/jornada/map';
-import { branchesOf, talentState } from '../../src/core/jornada/talents';
+import { reachableFrom, type MapNode } from '../../src/core/jornada/map';
 import { isFight, type StopDef } from '../../src/core/jornada/trail';
 import { jornadaData as data } from '../../src/data/jornada';
 import { newJornadaAchievements } from '../../src/data/jornada/achievements';
@@ -58,6 +54,7 @@ import type { JornadaHost } from './host';
 import { playMinigame } from './minigames';
 import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
 import { relicIcon } from './relicIcons';
+import { talentTreeScreen } from './talentTree';
 
 const J = S.jornada;
 const U = J.ui;
@@ -252,13 +249,14 @@ function hud(host: JornadaHost, run: JRun): string {
 
 function trail(run: JRun): string {
   const stage = currentStage(run, data);
-  return `<ol class="jtrail">${stage.stops
+  return `<div class="jtrail-scene jscene scene-${stage.scene}"><ol class="jtrail">${stage.stops
     .map((s, i) => {
       const state = i < run.stopIndex ? 'done' : i === run.stopIndex ? 'here' : 'next';
-      return `<li class="jstop ${state} k-${s.kind}"><span class="jstop-ico">${state === 'done' ? icon('check') : icon(STOP_ICONS[s.kind]!)}</span>
+      const mark = state === 'here' ? `<span class="jstop-hero">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}</span>` : `<span class="jstop-ico">${state === 'done' ? icon('check') : icon(STOP_ICONS[s.kind]!)}</span>`;
+      return `<li class="jstop ${state} k-${s.kind}">${mark}
         <span class="jstop-txt"><b>${stopName(s)}</b><small>${J.stopKinds[s.kind]}</small></span></li>`;
     })
-    .join('')}</ol>
+    .join('')}</ol></div>
     <details class="jlegend"><summary>${U.legend}</summary><ul>${Object.keys(J.stopKinds)
       .map((k) => `<li>${icon(STOP_ICONS[k]!)} <b>${J.stopKinds[k]}</b> · ${J.stopKindDesc[k]}</li>`)
       .join('')}</ul></details>`;
@@ -270,7 +268,7 @@ function wireHud(root: HTMLElement, host: JornadaHost, get: () => JRun, set: (r:
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-open]');
     if (!b) return;
     const kind = b.dataset.open;
-    if (kind === 'talents') set(await talentsModal(host, get()));
+    if (kind === 'talents') set(await talentTreeScreen(host, get(), heroName(host, get())));
     else if (kind === 'moveset') set(await movesetModal(get()));
     else relicsModal(get(), b.dataset.relic);
     refresh();
@@ -332,38 +330,62 @@ const NODE_ICONS: Record<string, string> = { ...STOP_ICONS };
 const nodeKindName = (k: string) => (k === 'unknown' ? M.unknown : (J.stopKinds[k] ?? k));
 const nodeKindDesc = (k: string) => (k === 'unknown' ? M.unknownDesc : (J.stopKindDesc[k] ?? ''));
 
-/** Mapa do estágio: linhas de baixo para cima, chefe no topo, nós alcançáveis tocáveis. */
+/** Deslocamento fixo de cada nó (pelo id, sem sortear): o mapa não parece uma grade. */
+function nodeJitter(id: string): { x: number; y: number } {
+  let h = 7;
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) | 0;
+  return { x: ((h & 0xff) / 255 - 0.5) * 7, y: (((h >> 8) & 0xff) / 255 - 0.5) * 16 };
+}
+
+/** Mapa do estágio: de baixo para cima, chefe no topo, rota feita em pincelada e o herói na posição atual. */
 function mapView(run: JRun): string {
   const map = run.map!;
   const choices = new Set(nodeChoices(run).map((n) => n.id));
   const done = new Set(run.path);
-  const rowH = 64;
-  const height = map.rows * rowH;
-  const x = (n: MapNode) => ((n.col + 0.5) / map.cols) * 100;
-  const y = (n: MapNode) => (map.rows - 1 - n.row) * rowH + rowH / 2;
+  const ahead = reachableFrom(map, [...choices]);
+  const rowH = 74;
+  const pad = 40;
+  const height = map.rows * rowH + pad;
+  const pos = (n: MapNode) => {
+    const j = n.kind === 'boss' ? { x: 0, y: 0 } : nodeJitter(n.id);
+    return { x: ((n.col + 0.5) / map.cols) * 100 + j.x, y: (map.rows - 1 - n.row) * rowH + rowH / 2 + j.y };
+  };
   const byId = new Map(map.nodes.map((n) => [n.id, n]));
-  const lines = map.nodes
+  const last = run.path.at(-1) ?? null;
+  const walked = new Set(run.path.slice(1).map((id, i) => `${run.path[i]}>${id}`));
+  const paths = map.nodes
     .flatMap((n) =>
       n.next.map((id) => {
         const m = byId.get(id)!;
-        const walked = done.has(n.id) && (done.has(id) || choices.has(id));
-        return `<line x1="${x(n)}%" y1="${y(n)}" x2="${x(m)}%" y2="${y(m)}" class="${walked ? 'walked' : ''}"/>`;
+        const a = pos(n);
+        const b = pos(m);
+        const midY = (a.y + b.y) / 2;
+        const cls = walked.has(`${n.id}>${id}`) ? 'walked' : n.id === last && choices.has(id) ? 'open' : ahead.has(n.id) && ahead.has(id) ? 'ahead' : 'dead';
+        return `<path class="${cls}" d="M${a.x} ${a.y}C${a.x} ${midY} ${b.x} ${midY} ${b.x} ${b.y}"/>`;
       }),
     )
     .join('');
   const boss = genericStage(run, data).bosses[run.bossPlan[run.stageIndex] ?? 0]!;
   const nodes = map.nodes
     .map((n) => {
-      const st = done.has(n.id) ? 'done' : choices.has(n.id) ? 'choice' : 'idle';
+      const st = done.has(n.id) ? 'done' : choices.has(n.id) ? 'choice' : ahead.has(n.id) ? 'ahead' : 'dead';
       const inner = n.kind === 'boss' ? fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm') : done.has(n.id) ? icon('check') : n.kind === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[n.kind]!);
-      return `<button class="jnode-map k-${n.kind} ${st}" style="left:${x(n)}%;top:${y(n)}px" data-node="${n.id}" ${st === 'choice' ? '' : 'aria-disabled="true"'}${tip(nodeKindName(n.kind), nodeKindDesc(n.kind))}>${inner}</button>`;
+      const p = pos(n);
+      return `<button class="jnode-map k-${n.kind} ${st}" style="left:${p.x}%;top:${p.y}px" data-node="${n.id}" ${st === 'choice' ? '' : 'aria-disabled="true"'}${tip(nodeKindName(n.kind), nodeKindDesc(n.kind))}>${inner}</button>`;
     })
     .join('');
-  return `<div class="jmap-wrap"><p class="jmap-boss">${M.boss(boss.map((id) => J.names[id] ?? id).join(' e '))}</p>
-    <div class="jmap" style="height:${height}px"><svg class="jmap-lines" width="100%" height="${height}">${lines}</svg>${nodes}</div>
-    <details class="jlegend"><summary>${U.legend}</summary><ul>${['fight', 'elite', 'unknown', 'shop', 'rest', 'treasure', 'boss']
-      .map((k) => `<li>${k === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[k]!)} <b>${nodeKindName(k)}</b> · ${nodeKindDesc(k)}</li>`)
-      .join('')}</ul></details></div>`;
+  // O herói fica no último nó feito; antes da primeira escolha, embaixo do mapa.
+  const here = last ? pos(byId.get(last)!) : { x: 50, y: height - 22 };
+  const legend = ['fight', 'elite', 'unknown', 'shop', 'rest', 'treasure', 'boss']
+    .map((k) => `<span class="jlegend-chip k-${k}"${tip(nodeKindName(k), nodeKindDesc(k))}>${k === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[k]!)}${nodeKindName(k)}</span>`)
+    .join('');
+  return `<div class="jmap-wrap">
+    <div class="jmap-boss">${fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm')}<span><small>${M.bossLabel}</small><b>${boss.map((id) => J.names[id] ?? id).join(' e ')}</b></span></div>
+    <div class="jmap jscene scene-${stageScene(run, data)}" style="height:${height}px">
+      <svg class="jmap-lines" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>${nodes}
+      <span class="jmap-hero" style="left:${here.x}%;top:${here.y}px" aria-hidden="true">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}</span>
+    </div>
+    <div class="jlegend-chips" aria-label="${U.legend}">${legend}</div></div>`;
 }
 
 async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
@@ -373,7 +395,7 @@ async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
       <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span><span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
       <div class="jmap-side"><div data-hud>${hud(host, cur)}</div>
         <p class="jb-prompt">${M.choose}</p><button class="btn small jabandon" data-abandon>${U.abandon}</button></div>
-      <div class="jtrail">${mapView(cur)}</div>
+      <div class="jtrail-map">${mapView(cur)}</div>
     </div>`),
   );
   wireHud(root, host, () => cur, (r) => (cur = r), () => {
@@ -381,7 +403,7 @@ async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
     saveJornada(host.storage, cur);
   });
   // Rola o mapa até os nós que dá para escolher (no celular o mapa é comprido).
-  root.querySelector('.jnode-map.choice')?.scrollIntoView({ block: 'center' });
+  root.querySelector('.jnode-map.choice')?.scrollIntoView({ block: 'center', behavior: host.instant() ? 'auto' : 'smooth' });
   return new Promise((resolve) => {
     root.addEventListener('click', (e) => {
       const t = e.target as HTMLElement;
@@ -577,51 +599,6 @@ function modal(inner: string): HTMLElement {
   const el = h(`<div class="modal"><div class="modal-body jmodal">${inner}</div></div>`);
   document.body.appendChild(el);
   return el;
-}
-
-function talentsModal(host: JornadaHost, run0: JRun): Promise<JRun> {
-  let run = run0;
-  const T = J.talents;
-  const el = modal('');
-  const render = () => {
-    const ctx = talentContext(run, host.unlocked());
-    el.querySelector('.jmodal')!.innerHTML = `<div class="modal-head"><h2>${T.title}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
-      <p class="center"><span class="chip lvl-chip">${T.points(run.talentPoints)}</span></p>
-      <div class="jtree">${branchesOf(run.hero, data.talents)
-        .filter((br) => data.talents.some((n) => n.owner === run.hero && n.branch === br && talentState(n, data.talents, ctx) !== 'hidden'))
-        .map(
-          (br) => `<div class="jbranch"><h3>${data.talents.filter((n) => n.owner === run.hero && n.branch === br).every((n) => talentState(n, data.talents, ctx) === 'accountLocked') ? '???' : T.branches[br]}</h3>${data.talents
-            .filter((n) => n.owner === run.hero && n.branch === br)
-            .map((n) => {
-              const st = talentState(n, data.talents, ctx);
-              const base = T.list[n.id] ?? { name: n.id, desc: '' };
-              // Nós do ramo Elemento mostram a técnica do elemento sorteado.
-              const learns = data.talents.find((x) => x.id === n.id)?.learnByElement ? talentLearns(run, n.id, data) : null;
-              const txt = learns ? { ...base, desc: `${base.desc} (${techName(learns)})` } : base;
-              const hidden = st === 'accountLocked';
-              return `<button class="jnode st-${st}" data-node="${n.id}" ${st === 'available' ? '' : 'aria-disabled="true"'}>
-                <b>${hidden ? '???' : txt.name}</b><small>${hidden ? T.states.accountLocked : txt.desc}</small>
-                <small class="jnode-state">${st === 'owned' ? `${icon('check')} ${T.states.owned}` : `${T.cost(n.cost)} · ${T.states[st]}`}</small></button>`;
-            })
-            .join('')}</div>`,
-        )
-        .join('')}</div>`;
-  };
-  render();
-  return new Promise((resolve) => {
-    el.addEventListener('click', (e) => {
-      const t = e.target as HTMLElement;
-      if (t === el || t.closest('[data-close]')) {
-        el.remove();
-        return resolve(run);
-      }
-      const b = t.closest<HTMLElement>('[data-node]');
-      if (!b || b.getAttribute('aria-disabled') === 'true') return;
-      run = buyTalent(run, b.dataset.node!, host.unlocked(), data);
-      host.mood('good');
-      render();
-    });
-  });
 }
 
 function movesetModal(run: JRun): Promise<JRun> {
