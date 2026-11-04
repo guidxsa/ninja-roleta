@@ -1377,7 +1377,7 @@ function actionCell(o: {
 }): string {
   const off = o.enabled === false ? ' aria-disabled="true"' : '';
   return `<button class="btn act ${o.cls}${o.primary ? ' primary' : ''}"${o.style ?? ''} data-choice="${o.choice}"${off}${o.tip}>
-    <span class="act-ico">${o.ico}</span><span class="act-txt"><b>${o.title}</b>${o.sub ? `<span>${o.sub}</span>` : ''}<small>${o.extra}</small></span></button>`;
+    <span class="act-ico">${o.ico}</span><span class="act-txt"><b>${o.title}</b>${o.sub ? `<span>${o.sub}</span>` : ''}${o.extra ? `<small>${o.extra}</small>` : ''}</span></button>`;
 }
 
 const ITEM_ICONS: Record<ConsumableId, string> = { soldierPill: 'pill', medKit: 'kit', explosiveTag: 'tag', smokeBomb: 'smoke' };
@@ -1418,7 +1418,7 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
     } else if (tech.barrier !== undefined) {
       extra = `${S.ui.barrierHint(tech.barrier, Boolean(tech.reflectPct))} · ${costTag(s, tech.chakraCost)}`;
     } else if (tech.state) {
-      extra = `${S.ui.armorHint} · ${costTag(s, tech.chakraCost)}`;
+      extra = costTag(s, tech.chakraCost);
     } else {
       // Dano base e precisão base da técnica; a vantagem elemental aparece só como seta.
       const prev = attackPreview(s, techId, data);
@@ -1430,14 +1430,12 @@ function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): s
   } else if (itemId) {
     const it = S.consumables[itemId]!;
     title = `${it.name} ×${p.bag[itemId]}`;
-    extra = it.desc;
     cls = 'act-item';
     ico = icon(ITEM_ICONS[itemId]);
     tipAttr = tip(it.name, it.desc);
   } else if (action === 'stance') {
     tipAttr = tip(title, A.stance);
   } else if (action === 'pass') {
-    extra = S.ui.passHint;
     tipAttr = tip(title, A.pass);
   } else if (action === 'medical') {
     const tech = playerMedical(p, data);
@@ -1663,7 +1661,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
         return toggle('gates', 'gates', S.ui.activeFree(S.gatesStage(gates.stage), cost), `${S.gatesStage(gates.stage)}${ARMED}`, `${hp} · ${S.ui.activeFreeHint}`, hp);
       }
       const hint = `${S.ui.expansionHint} · ${S.ui.activeFreeHint}`;
-      return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name}${ARMED}`, hint, S.ui.expansionHint);
+      return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name}${ARMED}`, hint);
     };
     /** Ativas de linhagem com botão próprio (Esforço, Fera, Praga, Transmissão, Cópia, Selamento, Pílulas). */
     const lineageActiveToggle = (

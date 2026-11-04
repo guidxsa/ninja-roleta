@@ -35,7 +35,7 @@ Ativa do prodígio (v0.42.0). Números em `jornadaBalance.gates`; o portão N so
 | Portão | Bruto | Desgaste bruto | Total: dano | Total: desgaste por turno |
 |---|---|---|---|---|
 | 1º Abertura (Kaimon) | dano ×1,15 | 2% do HP máximo | ×1,15 | 2% |
-| 2º Descanso (Kyūmon) | ×1,1 | +1% | ×1,27 | 3% |
+| 2º Descanso (Kyūmon) | ×1,1 | +1% | ×1,26 | 3% |
 | 3º Vida (Seimon) | ×1,1 e +10% de acerto | +1% | ×1,39 (+10% de acerto) | 4% |
 | 4º Dor (Shōmon) | ×1,1 | +2% | ×1,53 | 6% |
 | 5º Limite (Tomon) | ×1,1 e +5% de crítico | +2% | ×1,68 (+10% de acerto, +5% de crítico) | 8% |

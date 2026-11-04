@@ -642,7 +642,6 @@ export const ptBR = {
     armorHint: 'raio no corpo: mais ataque, resistência física e speed (3t)',
     armorOn: (n: number) => `Armadura ${n}t`,
     stanceOn: 'Postura',
-    passHint: 'Você reagiu e gastou esta ação.',
     owesAction: 'Ação gasta',
     stateChip: (el: string) => `Estado: ${el}`,
     resistShort: (phys: number, mental: number) => `Res. física ${phys} · mental ${mental}`,
