@@ -55,7 +55,8 @@ import { clearJornada, loadJornada, saveJornada } from '../../src/state/jornadaS
 import { fighterPortrait, icon } from '../art';
 import { choose, esc, h, show, sleep } from '../dom';
 import { tip } from '../tooltip';
-import { heroLabel, jornadaBattle, memberLabel, techName, techTip } from './battle';
+import { forgetLiveBattle, heroLabel, jornadaBattle, memberLabel, techName, techTip } from './battle';
+import { openJornadaSheet } from './sheet';
 import type { JornadaHost } from './host';
 import { playMinigame } from './minigames';
 import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
@@ -96,25 +97,35 @@ function memberName(host: JornadaHost, run: JRun, id: string): string {
 // ---------------------------------------------------------------------------
 // Entrada
 
+/** Run em andamento, para a Ficha do cabeçalho e do HUD. */
+let live: JRun | null = null;
+const keep = (run: JRun): JRun => (live = run);
+
 export async function runJornada(host: JornadaHost): Promise<void> {
-  // Layout próprio (mais largo no PC) e sem o botão Ficha, que é do Roleta.
+  // Layout próprio (mais largo no PC).
   document.body.classList.add('mode-jornada');
+  forgetLiveBattle();
   try {
     await jornadaLoop(host);
   } finally {
     document.body.classList.remove('mode-jornada');
+    host.setSheet(null);
+    live = null;
   }
 }
 
 async function jornadaLoop(host: JornadaHost): Promise<void> {
   let run = await startScreen(host);
   if (!run) return;
+  keep(run);
+  // A Ficha do cabeçalho passa a mostrar a equipe desta run.
+  host.setSheet(() => live && openJornadaSheet(host, live));
   markRelicsSeen(run.relics);
   host.discoverRelics(run.relics);
   host.unlock(newJornadaAchievements(run, host.unlocked()));
   let shownStage = run.stageIndex;
   while (run.status === 'inProgress') {
-    saveJornada(host.storage, run);
+    saveJornada(host.storage, keep(run));
     run = await playStop(host, run);
     host.discoverRelics(run.relics);
     const fresh = newJornadaAchievements(run, host.unlocked());
@@ -125,7 +136,8 @@ async function jornadaLoop(host: JornadaHost): Promise<void> {
       await notice(U.stageClear(J.stages[prev] ?? ''), stageName(run));
     }
   }
-  saveJornada(host.storage, run);
+  saveJornada(host.storage, keep(run));
+  host.setSheet(null);
   await endScreen(host, run);
 }
 
@@ -281,6 +293,7 @@ function hud(host: JornadaHost, run: JRun): string {
       })
       .join('')}</div>
     <div class="jhud-actions">
+      <button class="btn small" data-open="sheet">${icon('book')} ${U.sheetBtn}</button>
       <button class="btn small" data-open="talents">${icon('scroll')} ${U.talentsBtn}${run.talentPoints ? ` <span class="badge">${run.talentPoints}</span>` : ''}</button>
       <button class="btn small" data-open="moveset">${icon('swords')} ${U.movesetBtn}</button>
     </div>
@@ -305,11 +318,13 @@ function trail(run: JRun): string {
 }
 
 /** Botões do HUD (talentos, moveset, relíquias) funcionam em qualquer tela que mostre o HUD. */
-function wireHud(root: HTMLElement, host: JornadaHost, get: () => JRun, set: (r: JRun) => void, refresh: () => void) {
+function wireHud(root: HTMLElement, host: JornadaHost, get: () => JRun, set0: (r: JRun) => void, refresh: () => void) {
+  const set = (r: JRun) => set0(keep(r));
   root.addEventListener('click', async (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-open]');
     if (!b) return;
     const kind = b.dataset.open;
+    if (kind === 'sheet') return openJornadaSheet(host, get());
     if (kind === 'talents') set(await talentTreeScreen(host, get(), heroName(host, get())));
     else if (kind === 'moveset') set(await movesetModal(get()));
     else relicsModal(get(), b.dataset.relic);
@@ -563,7 +578,7 @@ async function shopStop(host: JornadaHost, run0: JRun): Promise<JRun> {
           : kind === 't'
             ? { kind: 'training', price: offer.training }
             : { kind: 'treatment', price: offer.treatment };
-    run = buy(run, p, data);
+    run = keep(buy(run, p, data));
     if (kind === 'r' || kind === 'heal') bought.add(key);
     host.mood('good');
     render();

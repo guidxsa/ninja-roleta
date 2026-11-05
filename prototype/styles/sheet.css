@@ -132,3 +132,23 @@
 @media (max-width: 380px) {
   .bag { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Ficha da equipe da Jornada: abas por membro no topo do pergaminho. */
+.jsheet-tabs { flex: none; display: flex; gap: 4px; margin: 0 0 4px; overflow-x: auto; }
+.jsheet-tab {
+  flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 6px; padding: 4px 6px;
+  border: 1px solid rgba(36, 25, 15, .3); background: rgba(255, 255, 255, .22); color: var(--paper-ink);
+  font: inherit; text-align: left; cursor: pointer;
+}
+.jsheet-tab .portrait { flex: none; width: 30px; height: 30px; }
+.jsheet-tab span { min-width: 0; display: flex; flex-direction: column; font: 700 13px/1.1 var(--font-hud); letter-spacing: .02em; overflow-wrap: anywhere; }
+.jsheet-tab small { font: 600 10.5px/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--paper-muted); }
+.jsheet-tab[aria-selected='true'] { border-color: var(--seal); box-shadow: inset 0 -3px 0 var(--seal); background: rgba(255, 255, 255, .4); }
+.jsheet-member { flex: none; position: relative; display: flex; flex-direction: column; gap: 8px; }
+.jsheet-member .hanko { top: 0; right: 0; }
+.jsheet-member .sheet-head .portrait { flex: none; box-shadow: 3px 3px 0 rgba(36, 25, 15, .35); border-color: #a5802e; }
+.jsheet-member .sheet-fields small { font-weight: 400; color: var(--paper-muted); }
+.jsheet-live { margin: 0; font: 700 12px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--seal); }
+.jsheet-live .ico { width: 14px; height: 14px; vertical-align: -.15em; }
+.jsheet .mods .chip { font-size: 12px; }
+.jsheet .jrbar { flex-wrap: wrap; }

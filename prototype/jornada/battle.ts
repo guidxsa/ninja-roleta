@@ -67,6 +67,16 @@ export function memberLabel(run: JRun, id: string, playerName: string): string {
   return J.names[id] ?? id;
 }
 
+/** Luta em andamento (para a Ficha mostrar o HP e o chakra ao vivo); null fora da luta. */
+export let liveBattle: (() => JBattle) | null = null;
+/** Run desta luta (a bolsa muda quando um item é usado). */
+export let liveBattleRun: (() => JRun) | null = null;
+/** Esquece a luta (voltar ao menu no meio dela deixa o fluxo órfão sem chegar ao fim). */
+export const forgetLiveBattle = () => {
+  liveBattle = null;
+  liveBattleRun = null;
+};
+
 /** Nome do protagonista desta luta. */
 let heroName: string | null = null;
 /** Nomes da equipe desta luta (suportes com nome sorteado), por ficha. */
@@ -285,6 +295,8 @@ export async function jornadaBattle(
   heroName = run0.mode === 'generic' ? heroLabel(run0.hero, host.playerName()) : null;
   teamNames = Object.fromEntries(setup.allies.map((a) => [a.defId, memberLabel(run0, a.defId, host.playerName())]));
   let state = startBattle(setup, data, rng);
+  liveBattle = () => state;
+  liveBattleRun = () => run;
   const root = show(
     h(`<div class="screen jbattle scene-${scene}">
       <div class="jb-head"><span>${icon('swords')} ${esc(label)}</span><span data-round></span></div>
@@ -693,5 +705,6 @@ export async function jornadaBattle(
   if (won) void flashRelics(root, winRelics(run0), host.instant());
   menu.innerHTML = '';
   await sleep(host.instant() ? 200 : 900);
+  forgetLiveBattle();
   return { battle: state, run };
 }

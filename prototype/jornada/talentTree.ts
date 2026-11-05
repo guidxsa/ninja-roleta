@@ -17,21 +17,12 @@ import { jornadaData as data } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clanSymbol, fighterPortrait, icon } from '../art';
 import { h } from '../dom';
-import { ELEMENT_COLORS } from '../tips';
 import { techName } from './battle';
 import type { JornadaHost } from './host';
+import { themeOf, themeStyle } from './theme';
 
 const J = S.jornada;
 const T = J.talents;
-
-/** Tema de cada protagonista: classe de cor e brasão de fundo. */
-const THEMES: Record<string, { cls: string; crest: string }> = {
-  naruto: { cls: 'jt-naruto', crest: 'uzumaki' },
-  commonNinja: { cls: 'jt-common', crest: 'common' },
-  prodigy: { cls: 'jt-prodigy', crest: 'taijutsuProdigy' },
-  uchihaNinja: { cls: 'jt-uchiha', crest: 'uchiha' },
-  hyuugaNinja: { cls: 'jt-hyuuga', crest: 'hyuuga' },
-};
 
 const ROW = 112;
 /** Coluna do nó no ramo, em % da largura. */
@@ -67,8 +58,7 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
   let run = run0;
   let just: string | null = null;
   const nodes = data.talents.filter((n) => n.owner === run.hero);
-  const theme = THEMES[run.hero] ?? THEMES.commonNinja!;
-  const el = run.elements[run.hero];
+  const theme = themeOf(run.hero);
   const ctx = () => talentContext(run, host.unlocked());
   const state = (n: TalentNode): TalentState => talentState(n, data.talents, ctx());
   const visible = () => nodes.filter((n) => state(n) !== 'hidden');
@@ -77,7 +67,7 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
   let selected = startNode?.id ?? null;
   let tab = startNode?.branch ?? branches()[0]!;
 
-  const root = h(`<div class="jtree-screen ${theme.cls}" role="dialog" aria-label="${T.title}"${run.hero === 'commonNinja' && el ? ` style="--tree:${ELEMENT_COLORS[el]}"` : ''}><div class="jt-body"></div></div>`);
+  const root = h(`<div class="jtree-screen ${theme.cls}" role="dialog" aria-label="${T.title}"${themeStyle(run)}><div class="jt-body"></div></div>`);
   document.body.appendChild(root);
   const body = root.querySelector<HTMLElement>('.jt-body')!;
 
