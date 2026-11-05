@@ -23,6 +23,7 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho ou os atalhos
 - As conquistas são checadas ao começar a campanha (depois do sorteio), depois de cada evento pré-vilão, depois de cada luta e no fim da run. Cada conquista nova aparece num aviso rápido.
 - Na primeira abertura do jogo com o perfil, os marcos que o histórico já prova (vitórias por origem, dificuldade, jinchuuriki, ter passado do Mizuki) são liberados sem aviso.
 - Conquistas escondidas aparecem como "???" até alguém conseguir.
+- **Clássicas** (v0.45.0): as que dependiam de mecânica que saiu do Roleta (Enganado pelo guru, Copiador, Juventude dos portões, Borboleta, Insetos famintos, Domador de bijuu, Princesa lesma) não saem mais. Quem já tem continua tendo; para os outros, não aparecem nem contam no total.
 
 ## Categorias
 

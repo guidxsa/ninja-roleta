@@ -7,6 +7,7 @@ import { gameData as data } from '../src/data/index';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { icon } from './art';
 import { tip } from './tooltip';
+import type { RTechniqueDef } from '../src/data/roleta/techniques';
 
 const T = S.tips;
 const B = data.balance;
@@ -93,6 +94,24 @@ export function playerTechTip(p: PlayerState, id: string): string {
     T.cost(t.chakraCost),
   ]);
   return tip(S.techniques[id] ?? id, body);
+}
+
+/** Ficha da técnica do Roleta enxuto: tipo, dano no nível atual, precisão, extras, efeito e custo. */
+export function rTechTip(p: PlayerState, t: RTechniqueDef): string {
+  const R = S.roleta;
+  const body = lines([
+    `<i>${S.actions[t.type]}${t.element ? ` · ${S.elements[t.element]}` : ''}</i>`,
+    R.ui.damageTip(t.base, t.perLevel),
+    (t.hits ?? 1) > 1 && R.ui.hitsTip(t.hits!),
+    R.ui.accuracyTip(pct(t.accuracy ?? B.hit.defaultAccuracy)),
+    t.critBonus && R.ui.critTip(pct(t.critBonus)),
+    t.penetration && R.ui.penTip(pct(t.penetration)),
+    t.lifesteal && R.ui.lifestealTip(pct(t.lifesteal)),
+    t.effect && R.ui.effectChance(R.effects[t.effect.kind]!.name, pct(t.effect.chance)),
+    p.ninjaToolLevel > 0 && S.bag.ninjaTool.desc(p.ninjaToolLevel * B.ninjaTool.baseDamagePerLevel),
+    T.cost(t.chakra),
+  ]);
+  return tip(S.roleta.techniques[t.id] ?? t.id, body);
 }
 
 /** Ficha da técnica do vilão (elemento: o da técnica ou o do vilão). */

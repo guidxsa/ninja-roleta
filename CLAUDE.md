@@ -15,7 +15,8 @@ As regras do jogo vivem em `docs/`, em três pastas; o índice completo está em
 | Pasta | Conteúdo |
 |---|---|
 | [docs/base/](docs/README.md) | Regras dos dois modos: fundamentos, origens, técnicas, efeitos, vilões, progressão, perfil (hoje implementadas no Roleta; a Jornada herda) |
-| [docs/roleta/](docs/README.md) | Só do Roleta: campanha e itens |
+| [docs/roleta/](docs/README.md) | Só do Roleta: combate enxuto, campanha e itens |
+| [docs/reserva/](docs/reserva/README.md) | Combate clássico guardado para a Jornada (o Roleta deixou de usar na v0.45.0) |
 | [docs/jornada/](docs/jornada/README.md) | Só da Jornada (rascunho, não implementado): run, combate de equipe, classes, progressão, relíquias |
 
 ### Regras para os docs
@@ -43,6 +44,7 @@ Combinado em 31/10/2026 (brainstorm com o usuário). Os números são rascunho: 
    - **Relíquias**: catálogo único marcado por modo (números próprios do Roleta; as de equipe, ryō e talento só na Jornada; exclusivas do Roleta); no Roleta saem da fatia "Relíquia" da recompensa e do baú de chefe (1 de 3); sem relíquia inicial por enquanto; coleção única com filtro.
    - **Não apagar os conceitos que saem do Roleta**: reações, disputa, barreiras, estados elementais, efeitos mentais com fuga, linhas elementais, kits ricos e premium do guru ficam guardados (código clássico com os testes e `docs/reserva/`), porque o usuário talvez os leve para a Jornada.
    - Ordem: v0.45.0 combate, kits e progressão; v0.46.0 run no core, infinito e relíquias; v0.47.0 mais vilões.
+   - **v0.45.0 (feito)**: motor novo `src/core/roleta/` (um toque por turno, esquiva pela speed, dano sem elemento, 4 efeitos, ativa grátis), kits enxutos das 11 linhagens (`src/data/roleta/kits.ts`), técnicas fixas que sobem com o nível (`src/data/roleta/techniques.ts`), eventos/itens/recompensa diretos (`roletaData.base`), Laboratório com o kit fixo, conquistas impossíveis viram "clássicas" (`legacy`). O clássico segue no código com os testes (`npm run sim:classico`) e em `docs/reserva/`. Decidido sozinho (o usuário revisa): todos os números dos kits e das técnicas, a esquiva 5% + 2% por speed (teto 30%), Queimar 5%/2 turnos, Veneno 4%/3, Medo −25% de dano e −15% de acerto, Concentrar 25%, Orochimaru do hardcore volta no máximo 3 vezes (no clássico era a janela de tempo); ajuste inicial do prodígio (Folha Furacão 8 → 6, Portões ×1,5 → ×1,3) e do Inuzuka (Presas 7 → 6). Simulação (`npm run sim:origens -- --runs 300 --seed 2`), Médio clássico → enxuto: Comum 68 → 75%, Nara 68 → 75%, Akimichi 61 → 88%, Yamanaka 70 → 77%, Aburame 61 → 84%, Inuzuka 59 → 94%, prodígio 76 → 95%, Uchiha 45 → 79%, Hyuuga 58 → 87%, Uzumaki 80 → 85%, Senju 87 → 96%; Difícil de 12–39% para 22–65%; Hardcore de 1–9% para 4–33%. Lutas de 3 a 6 rodadas (clássico: 7 a 20+). O enxuto ficou mais fácil para o bot e as linhagens de taijutsu (prodígio, Inuzuka, Akimichi) e o Senju passam do alvo (Médio 60–70%): decidir com o usuário (alavancas: força dos vilões no Roleta, fração de resistência 0,4, esquiva, Portões e Dupla).
 
 9. **Retratos dos personagens (pedido do usuário, ainda sem versão)**: hoje os vilões têm desenho próprio, mas os ninjas usam um molde único que só troca as cores (`ninjaPortrait` em `prototype/art.ts`), então Naruto, Sasuke, Kakashi, Lee e outros quase não se parecem com os personagens. Proposta: desenho próprio em SVG para os cerca de 20 principais; arte própria pode entrar depois em `public/img/jornada/<id>.webp`. Combinar antes de começar.
 

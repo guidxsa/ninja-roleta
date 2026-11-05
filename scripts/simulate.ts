@@ -1,14 +1,16 @@
-// Simulação de balanceamento: `npm run sim -- --fights 2000 --seed 42`
+// Simulação de balanceamento do Roleta enxuto: `npm run sim -- --fights 2000 --seed 42`
 import { rollOrigin } from '../src/core/origin';
 import type { Difficulty } from '../src/core/difficulty';
-import { createPlayer } from '../src/core/player';
+import { createRoletaPlayer } from '../src/core/roleta/player';
 import { createRng } from '../src/core/rng';
 import type { Origin } from '../src/core/types';
 import { campaign } from '../src/data/campaign';
-import { gameData } from '../src/data/index';
+import { roletaData } from '../src/data/roleta/index';
 import { ptBR } from '../src/data/strings/ptBR';
 import { villains, villainsById } from '../src/data/villains';
-import { runBattle, runCampaign } from '../src/sim/runner';
+import { runRoletaBattle, runRoletaCampaign } from '../src/sim/roletaRunner';
+
+const gameData = roletaData.base;
 
 function arg(name: string, fallback: number): number {
   const i = process.argv.indexOf(`--${name}`);
@@ -44,14 +46,14 @@ console.log('Célula = vitória% / rodadas médias / Vontades do Fogo usadas por
 const colWidth = 18;
 console.log(pad('', 16) + villains.map((v) => pad(ptBR.villains[v.id] ?? v.id, colWidth)).join(''));
 for (const a of archetypes) {
-  const player = createPlayer(a.origin, gameData);
+  const player = createRoletaPlayer(a.origin, roletaData);
   let line = pad(a.label, 16);
   for (const v of villains) {
     let wins = 0;
     let rounds = 0;
     let revives = 0;
     for (let i = 0; i < fights; i++) {
-      const r = runBattle(player, v, rng, gameData);
+      const r = runRoletaBattle(player, v, rng, roletaData);
       if (r.status === 'won') wins++;
       rounds += r.round;
       revives += r.player.revivesUsed;
@@ -78,7 +80,7 @@ for (const difficulty of difficulties) {
   const fightOrder = campaign.flatMap((st) => st.villains);
   for (let i = 0; i < runs; i++) {
     const { origin } = rollOrigin(rng, gameData);
-    const result = runCampaign(createPlayer(origin, gameData, difficulty), campaign, villainsById, rng, gameData, difficulty, { progression });
+    const result = runRoletaCampaign(createRoletaPlayer(origin, roletaData, difficulty), campaign, villainsById, rng, roletaData, difficulty, progression);
     allRounds += result.rounds.reduce((a, b) => a + b, 0);
     fightCount += result.rounds.length;
     result.levels.forEach((lv, k) => {

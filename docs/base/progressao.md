@@ -49,6 +49,8 @@ A tabela abaixo usa só o XP dos vilões e do exame. As fatias de XP das roletas
 
 ## Marcos de nível
 
+> Só no combate clássico ([reserva/README.md](../reserva/README.md)). No Roleta enxuto (v0.45.0) não há marcos nem despertar: as técnicas sobem sozinhas com o nível ([roleta/combate.md](../roleta/combate.md#técnicas)).
+
 | Nível | O que destrava |
 |---|---|
 | 4 | Teto de técnica no nível II e **1 upgrade grátis**; barreiras entram na pool; quem usa genjutsu aprende o Teatro do Pavor |

@@ -3,7 +3,8 @@
 O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e afins); os docs devem bater com eles.
 
 - **[base/](base/)**: regras usadas pelos dois modos (hoje implementadas no Roleta; a Jornada herda).
-- **[roleta/](roleta/)**: o que é só do modo Roleta.
+- **[roleta/](roleta/)**: o que é só do modo Roleta (combate enxuto desde a v0.45.0).
+- **[reserva/](reserva/README.md)**: o combate clássico, guardado para a Jornada.
 - **[jornada/](jornada/README.md)**: o modo Jornada (História e Caminho Ninja).
 
 | Arquivo | Conteúdo |
@@ -15,6 +16,8 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 | [base/viloes.md](base/viloes.md) | Fichas, passivas e comportamentos dos vilões |
 | [base/progressao.md](base/progressao.md) | XP, níveis, estágios de status, marcos |
 | [base/perfil.md](base/perfil.md) | Perfil local: conquistas, Livro Bingo e estatísticas por origem |
+| [roleta/combate.md](roleta/combate.md) | Combate enxuto do Roleta: turno, esquiva, efeitos, técnicas e kits |
+| [reserva/README.md](reserva/README.md) | O que ficou guardado do combate clássico e onde está escrito |
 | [roleta/campanha.md](roleta/campanha.md) | Ordem, eventos, encontros, invocações, exame, dificuldade, histórico |
 | [roleta/itens.md](roleta/itens.md) | Itens, bolsa e roleta de recompensa |
 | [jornada/README.md](jornada/README.md) | Visão geral, pilares, tipos de run, simulação, ordem de construção, pendências |

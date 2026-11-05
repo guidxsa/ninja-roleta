@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { VillainTechnique } from '../src/core/types';
 import { techniquesById } from '../src/data/techniques';
+import { roletaTechniques } from '../src/data/roleta/techniques';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { villains } from '../src/data/villains';
 import { enemies } from '../src/data/jornada/enemies';
@@ -17,6 +18,12 @@ describe('docs batem com os dados', () => {
   it('toda técnica do jogador aparece em docs/base/tecnicas.md', () => {
     const text = doc('base/tecnicas.md');
     const missing = Object.keys(techniquesById).map(nameOf).filter((n) => !has(text, n));
+    expect(missing).toEqual([]);
+  });
+
+  it('toda técnica do Roleta enxuto aparece em docs/roleta/combate.md', () => {
+    const text = doc('roleta/combate.md');
+    const missing = roletaTechniques.map((t) => S.roleta.techniques[t.id] ?? t.id).filter((n) => !has(text, n));
     expect(missing).toEqual([]);
   });
 
