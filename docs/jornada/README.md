@@ -43,7 +43,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 
 ## Simulação
 
-`npm run sim:jornada -- [runs] [seed]`: um bot joga a História e o Caminho Ninja (Comum, prodígio, Uchiha, Hyuuga) por dificuldade e mostra a taxa de vitória e onde as runs param. O bot joga pior que um humano (não monta o moveset, compra sem planejar); antes de agir, usa uma ativa grátis como a IA dos suportes. A linha do prodígio pula as seeds em que o Comum sai com elemento.
+`npm run sim:jornada -- [runs] [seed]`: um bot joga a História e o Caminho Ninja (Comum, prodígio, Uchiha, Hyuuga) por dificuldade e mostra a taxa de vitória e onde as runs param. O bot joga pior que um humano (não monta o moveset, compra sem planejar); antes de agir, usa uma ativa grátis como a IA dos suportes. A linha do Comum sorteia o elemento (e ganha a relíquia do sorteio); a do prodígio escolhe direto o Comum sem elemento.
 
 ## Ordem de construção
 
