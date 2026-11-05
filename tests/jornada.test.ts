@@ -31,7 +31,11 @@ import {
   battleSetup,
   buy,
   buyTalent,
+  canBuy,
+  canContinueCycle,
   chooseBossRelic,
+  continueCycle,
+  cycleEnemyMult,
   chooseNode,
   choosingNode,
   currentStop,
@@ -51,19 +55,34 @@ import {
   restHealPct,
   setMoveset,
   shopOffer,
+  stopRng,
+  syncUnlocks,
   talentContext,
+  talentTreeComplete,
   teamMods,
+  xpToNext,
   HERO,
   type JRun,
 } from '../src/core/jornada/run';
 import { chooseAiActive } from '../src/core/jornada/ai';
-import { talentState } from '../src/core/jornada/talents';
+import { talentMaxRank, talentState, treeComplete, type TalentNode } from '../src/core/jornada/talents';
 import { isFight } from '../src/core/jornada/trail';
 import type { JBattle } from '../src/core/jornada/types';
 import { createRng } from '../src/core/rng';
 import { jornadaData as data } from '../src/data/jornada';
 import { loadJornada, saveJornada, JORNADA_SAVE_KEY } from '../src/state/jornadaSave';
-import { cleanPlayerName, discoverRelics, emptyProfile, loadProfile, PLAYER_NAME_MAX, PROFILE_STORAGE_KEY, saveProfile } from '../src/state/profile';
+import {
+  cleanPlayerName,
+  discoverRelics,
+  emptyProfile,
+  loadProfile,
+  PLAYER_NAME_MAX,
+  PROFILE_STORAGE_KEY,
+  reachBeats,
+  reachOf,
+  recordJornadaReach,
+  saveProfile,
+} from '../src/state/profile';
 import { bossChoices, dropRelic, rollRelic } from '../src/core/jornada/relics';
 import { RELIC_RENAMES } from '../src/data/jornada/relics';
 import { jornadaPtBR } from '../src/data/strings/jornada';
@@ -1197,5 +1216,204 @@ describe('minijogos', () => {
     expect(jokenpo('rock', fixed(0)).result).toBe('tie');
     expect(jokenpo('paper', fixed(0)).result).toBe('win');
     expect(jokenpo('scissors', fixed(0)).result).toBe('lose');
+  });
+});
+
+describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
+  const memStorage = () => {
+    const mem = new Map<string, string>();
+    return { mem, storage: { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) } };
+  };
+
+  /** Joga o ciclo inteiro vencendo toda luta (primeira opção em tudo). */
+  function playCycle(run0: JRun): JRun {
+    let run = run0;
+    let guard = 0;
+    while (run.status === 'inProgress' && guard++ < 300) {
+      if (run.bossChoice) {
+        run = chooseBossRelic(run, run.bossChoice[0]!, data);
+        continue;
+      }
+      if (choosingNode(run)) {
+        run = chooseNode(run, nodeChoices(run)[0]!.id);
+        continue;
+      }
+      const stop = currentStop(run, data)!;
+      if (isFight(stop)) run = finishFight(run, won(startBattle(battleSetup(run, data), data, createRng(1))), data).run;
+      else if (stop.kind === 'event') run = resolveEvent(run, eventOptions(data.events[stop.event]!, run.flags, run.ryo)[0]!.id, true, data).run;
+      else if (stop.kind === 'rest') run = rest(run, 'heal', data);
+      else run = leaveStop(run, data);
+    }
+    return run;
+  }
+
+  /** Run com toda a árvore do protagonista comprada (no nível máximo), menos `skip`. */
+  function withTree(run: JRun, keep: (n: TalentNode) => boolean = () => true): JRun {
+    const nodes = data.talents.filter((n) => n.owner === run.hero && keep(n));
+    return {
+      ...run,
+      talents: nodes.map((n) => n.id),
+      talentRanks: Object.fromEntries(nodes.filter((n) => talentMaxRank(n) > 1).map((n) => [n.id, talentMaxRank(n)])),
+    };
+  }
+
+  it('o ciclo 0 sorteia como antes; o ciclo seguinte sorteia outra coisa', () => {
+    const run = newGenericRun(4, 'normal', 'common', data);
+    const legacy = { ...run, cycle: undefined as unknown as number };
+    expect(stopRng(run, 3)()).toBe(stopRng(legacy, 3)());
+    expect(stopRng({ ...run, cycle: 1 }, 3)()).not.toBe(stopRng(run, 3)());
+  });
+
+  it('a cada ciclo os inimigos ficam mais fortes: dificuldade × (1 + 0,4 × ciclo)', () => {
+    const run = chooseNode(newGenericRun(5, 'normal', 'common', data), nodeChoices(newGenericRun(5, 'normal', 'common', data))[0]!.id);
+    const id = (currentStop(run, data) as { enemies: string[] }).enemies[0]!;
+    expect(cycleEnemyMult(run, data)).toBe(1);
+    expect(battleSetup(run, data).enemies[0]).toEqual(enemySeed(id, 'normal', data));
+    // No ciclo seguinte o sorteio da parada também muda: o inimigo vem da parada do ciclo 1.
+    const next = { ...run, cycle: 1 };
+    const id1 = (currentStop(next, data) as { enemies: string[] }).enemies[0]!;
+    expect(cycleEnemyMult(next, data)).toBeCloseTo(1.4);
+    const foe = battleSetup(next, data).enemies[0]!;
+    expect(foe).toEqual(enemySeed(id1, 'normal', data, 1.4));
+    expect(foe.maxHp).toBe(Math.max(1, Math.floor(data.enemies[id1]!.hp * 1.1 * 1.4)));
+    expect(foe.mods.damageMult).toBeCloseTo(1.54);
+  });
+
+  it('só o Caminho Ninja vencido segue de ciclo', () => {
+    expect(() => continueCycle({ ...newRun(1, 'normal', data), status: 'victory' }, data)).toThrow();
+    expect(() => continueCycle(newGenericRun(1, 'normal', 'common', data), data)).toThrow();
+    expect(canContinueCycle({ ...newRun(1, 'normal', data), status: 'victory' })).toBe(false);
+    expect(canContinueCycle({ ...newGenericRun(1, 'normal', 'common', data), status: 'victory' })).toBe(true);
+  });
+
+  it('seguir de ciclo volta ao estágio 1 com tudo e sorteia mapa e chefes novos', () => {
+    const done = playCycle(newGenericRun(11, 'easy', 'common', data));
+    expect(done.status).toBe('victory');
+    const next = continueCycle(done, data);
+    expect(next.cycle).toBe(1);
+    expect([next.status, next.stageIndex, next.stopIndex, next.bossChoice, next.path, next.nodeId]).toEqual(['inProgress', 0, 0, null, [], null]);
+    expect(choosingNode(next)).toBe(true);
+    expect(next.members).toEqual({});
+    expect(next.flags).toEqual([]);
+    for (const k of ['level', 'xp', 'ryo', 'talents', 'talentRanks', 'learned', 'moveset', 'relics', 'bag', 'supports', 'elements', 'stats'] as const) {
+      expect(next[k]).toEqual(done[k]);
+    }
+    // Mesma seed, mesmo ciclo: mesmo mapa; ciclos diferentes: mapas diferentes.
+    expect(continueCycle(done, data).map).toEqual(next.map);
+    const third = continueCycle({ ...done, cycle: 1 }, data);
+    expect(third.cycle).toBe(2);
+    expect(JSON.stringify(third.map)).not.toBe(JSON.stringify(next.map));
+    // O ciclo 2 inteiro também chega ao fim.
+    expect(playCycle(next).status).toBe('victory');
+  });
+
+  it('a Vontade do Fogo volta ao mínimo da dificuldade a cada ciclo, sem tirar as que sobraram', () => {
+    const base = { ...newGenericRun(3, 'easy', 'common', data), status: 'victory' as const };
+    expect(continueCycle({ ...base, willOfFire: 0 }, data).willOfFire).toBe(1);
+    expect(continueCycle({ ...base, willOfFire: 2 }, data).willOfFire).toBe(2);
+    expect(continueCycle({ ...base, difficulty: 'normal', willOfFire: 0 }, data).willOfFire).toBe(0);
+  });
+
+  it('com as relíquias esgotadas, o ciclo ainda termina e segue', () => {
+    const all = data.relics.filter((r) => r.tier !== 'starter' && !r.evolves).map((r) => r.id);
+    const run = { ...newGenericRun(12, 'easy', 'common', data), relics: all };
+    const done = playCycle(run);
+    expect(done.status).toBe('victory');
+    expect(continueCycle(done, data).status).toBe('inProgress');
+  });
+
+  it('árvore completa: nada a aprender nem a subir; bifurcação, elemento e conquista contam como nunca', () => {
+    const common = newGenericRun(6, 'normal', 'common', data);
+    expect(talentTreeComplete(common, data)).toBe(false);
+    expect(talentTreeComplete(withTree(common), data)).toBe(true);
+    // Um nível que ainda dá para subir deixa a árvore aberta.
+    const leveled = data.talents.find((n) => n.owner === common.hero && talentMaxRank(n) > 1)!;
+    const full = withTree(common);
+    expect(talentTreeComplete({ ...full, talentRanks: { ...full.talentRanks, [leveled.id]: 1 } }, data)).toBe(false);
+    // Uchiha sem raio e sem o easter egg: as 3 árvores bastam; com o ramo do Sasuke liberado, não.
+    const uchiha = { ...newGenericRun(6, 'normal', 'uchiha', data, new Set(['j_unlockUchiha'])), secondElement: 'water' as const };
+    const uTree = withTree(uchiha, (n) => !n.account && !n.requiresElement);
+    expect(talentTreeComplete(uTree, data)).toBe(true);
+    expect(talentTreeComplete(uTree, data, new Set(['j_sasukeEgg']))).toBe(false);
+    // Naruto no estágio 1 com tudo o que já abre: os ramos de estágio ainda vêm.
+    const naruto = withTree(newRun(6, 'normal', data), (n) => n.fromStage === undefined && !n.account);
+    expect(treeComplete('naruto', data.talents, talentContext(naruto, new Set()))).toBe(false);
+  });
+
+  it('com a árvore completa, todo ponto de talento vira 30 ryō', () => {
+    const run = withTree(chooseNode(newGenericRun(7, 'normal', 'common', data), nodeChoices(newGenericRun(7, 'normal', 'common', data))[0]!.id));
+    // Luta comum (sem ponto) que sobe um nível: o ponto do nível vira ryō.
+    const leveling = { ...run, xp: xpToNext(run.level, data) - 1 };
+    const { run: after, outcome } = finishFight(leveling, won(startBattle(battleSetup(leveling, data), data, createRng(1))), data);
+    expect(outcome.levelUps).toBe(1);
+    expect(outcome.talentRyo).toBe(30);
+    expect(after.talentPoints).toBe(0);
+    expect(after.ryo).toBe(run.ryo + outcome.ryo + 30);
+    expect(after.stats.talentRyo).toBe(30);
+    // Relíquia que dá ponto, descanso e treino.
+    expect(gainRelic(run, 'mastersJournal', data).ryo).toBe(run.ryo + 30);
+    const rested = rest({ ...run, nodeId: run.nodeId }, 'train', data);
+    expect([rested.talentPoints, rested.ryo]).toEqual([0, run.ryo + 30]);
+    expect(canBuy({ ...run, ryo: 999 }, { kind: 'training', price: 60 }, data)).toBe(false);
+    expect(canBuy({ ...newGenericRun(7, 'normal', 'common', data), ryo: 999 }, { kind: 'training', price: 60 }, data)).toBe(true);
+  });
+
+  it('comprar o último talento converte os pontos que sobraram; save antigo com a árvore completa também', () => {
+    const run = newGenericRun(8, 'normal', 'common', data);
+    const last = data.talents.filter((n) => n.owner === run.hero && talentMaxRank(n) === 1).at(-1)!;
+    const almost = { ...withTree(run, (n) => n.id !== last.id), talentPoints: last.cost + 2 };
+    const bought = buyTalent(almost, last.id, new Set(), data);
+    expect(bought.talentPoints).toBe(0);
+    expect(bought.ryo).toBe(run.ryo + 60);
+    const old = { ...withTree(run), talentPoints: 3 };
+    const synced = syncUnlocks(old, new Set(), data);
+    expect([synced.talentPoints, synced.ryo]).toEqual([0, run.ryo + 90]);
+    // Sem nada a converter nem conquista nova, a mesma run volta.
+    expect(syncUnlocks(run, new Set(['j_unlockUchiha']), data)).toBe(run);
+  });
+
+  it('a Ōdama abre no ciclo seguinte com a conquista da História no retrato da run', () => {
+    const run = { ...newGenericRun(2, 'normal', 'uchiha', data, new Set(['j_unlockUchiha'])), status: 'victory' as const };
+    expect(continueCycle(run, data, new Set(['j_sasukeEgg', 'j_unlockUchiha'])).unlocks).toEqual(['j_sasukeEgg']);
+    expect(newRun(1, 'normal', data, new Set(['j_canonWin', 'j_bell'])).unlocks).toEqual(['j_canonWin']);
+  });
+
+  it('conquistas de ciclo só saem na vitória do ciclo certo, no Caminho Ninja', () => {
+    const g = newGenericRun(1, 'normal', 'common', data);
+    expect(newJornadaAchievements({ ...g, status: 'victory' }, new Set())).not.toContain('j_cycle2');
+    expect(newJornadaAchievements({ ...g, cycle: 1 }, new Set())).not.toContain('j_cycle2');
+    expect(newJornadaAchievements({ ...g, cycle: 1, status: 'victory' }, new Set())).toEqual(expect.arrayContaining(['j_cycle2', 'j_genericWin']));
+    expect(newJornadaAchievements({ ...g, cycle: 4, status: 'victory' }, new Set())).toEqual(expect.arrayContaining(['j_cycle2', 'j_cycle3', 'j_cycle5']));
+    for (const id of ['j_cycle2', 'j_cycle3', 'j_cycle5']) expect(jornadaPtBR.achievements.list[id]).toBeTruthy();
+  });
+
+  it('save com ciclo vai e volta; save antigo carrega no ciclo 0', () => {
+    const { mem, storage } = memStorage();
+    const run = { ...newGenericRun(9, 'normal', 'common', data), cycle: 2, unlocks: ['j_sasukeEgg'] };
+    saveJornada(storage, run);
+    expect(loadJornada(storage)).toEqual(run);
+    const old = JSON.parse(JSON.stringify(run));
+    delete old.cycle;
+    delete old.unlocks;
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+    const loaded = loadJornada(storage)!;
+    expect([loaded.cycle, loaded.unlocks]).toEqual([0, []]);
+  });
+
+  it('recorde do infinito: só sobe, e vencer passa qualquer estágio do mesmo ciclo', () => {
+    const run = newGenericRun(1, 'normal', 'common', data);
+    expect(reachOf({ ...run, cycle: 1, stageIndex: 2 })).toEqual({ cycle: 2, stage: 3, won: false });
+    expect(reachBeats({ cycle: 1, stage: 3, won: true }, { cycle: 1, stage: 3, won: false })).toBe(true);
+    expect(reachBeats({ cycle: 2, stage: 1, won: false }, { cycle: 1, stage: 3, won: true })).toBe(true);
+    expect(reachBeats({ cycle: 2, stage: 1, won: false }, { cycle: 2, stage: 2, won: false })).toBe(false);
+    const p1 = recordJornadaReach(emptyProfile(), { cycle: 2, stage: 2, won: false });
+    expect(p1.jornada?.generic).toEqual({ cycle: 2, stage: 2, won: false });
+    expect(recordJornadaReach(p1, { cycle: 1, stage: 3, won: true })).toBe(p1);
+    const { storage } = memStorage();
+    saveProfile(storage, p1);
+    expect(loadProfile(storage).jornada?.generic).toEqual({ cycle: 2, stage: 2, won: false });
+    storage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ ...p1, jornada: { generic: { cycle: 'x' } } }));
+    expect(loadProfile(storage).jornada).toBeUndefined();
+    expect(loadProfile(memStorage().storage)).toEqual(emptyProfile());
   });
 });

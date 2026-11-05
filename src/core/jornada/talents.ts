@@ -88,6 +88,17 @@ export function canBuyTalent(node: TalentNode, nodes: readonly TalentNode[], ctx
   return st === 'available' || st === 'upgradable';
 }
 
+/**
+ * Árvore completa (docs/jornada/talentos.md#árvore-completa): nada mais a aprender ou subir, nem com pontos infinitos e
+ * todos os estágios abertos. Nó fechado por bifurcação, escondido por elemento ou preso a conquista não liberada conta
+ * como "nunca"; nó preso a estágio da História conta como "ainda vem". Basta olhar o que dá para comprar agora: todo nó
+ * alcançável que falta tem um antecessor comprável.
+ */
+export function treeComplete(owner: string, nodes: readonly TalentNode[], ctx: TalentContext): boolean {
+  const open: TalentContext = { ...ctx, points: Infinity, stageIndex: Infinity };
+  return !nodes.some((n) => n.owner === owner && canBuyTalent(n, nodes, open));
+}
+
 /** Ramos de um personagem, na ordem dos dados. */
 export function branchesOf(owner: string, nodes: readonly TalentNode[]): string[] {
   return [...new Set(nodes.filter((n) => n.owner === owner).map((n) => n.branch))];

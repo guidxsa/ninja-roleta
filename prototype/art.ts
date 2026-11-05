@@ -119,6 +119,8 @@ const ICONS: Record<string, string> = {
   disadvantage: '<path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>',
   book: '<path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H19v15H6a2 2 0 0 0-2 2z" fill="currentColor"/><path d="M4 20a2 2 0 0 0 2 2h13v-4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 7h7M8.5 10.5h7" stroke="#0008" stroke-width="1.5" stroke-linecap="round"/>',
   medal: '<path d="M7 2h4l2 6H9zM13 2h4l-2 6h-4z" fill="currentColor" opacity=".65"/><circle cx="12" cy="15" r="6.5" fill="currentColor"/><path d="m12 11.3 1.1 2.3 2.5.3-1.8 1.7.5 2.5-2.3-1.2-2.3 1.2.5-2.5-1.8-1.7 2.5-.3z" fill="#0007"/>',
+  // Ciclo (modo infinito): duas setas em círculo.
+  cycle: '<path d="M19.5 9.5A8 8 0 0 0 5.2 7.6M4.5 14.5a8 8 0 0 0 14.3 1.9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="m20.5 4.5-.6 5.6-5.4-1.6zM3.5 19.5l.6-5.6 5.4 1.6z" fill="currentColor"/>',
   sparkle: '<path d="M12 2c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z" fill="currentColor"/><path d="M19 15c.3 2 1 2.7 3 3-2 .3-2.7 1-3 3-.3-2-1-2.7-3-3 2-.3 2.7-1 3-3z" fill="currentColor" opacity=".7"/>',
   card: '<rect x="3" y="5" width="11" height="15" rx="1" transform="rotate(-10 8.5 12.5)" fill="currentColor" opacity=".5"/><rect x="9" y="3" width="11" height="15" rx="1" transform="rotate(8 14.5 10.5)" fill="currentColor"/><circle cx="14.6" cy="10.6" r="2.4" fill="none" stroke="#0008" stroke-width="1.4"/>',
   heart: '<path d="M12 21S3 15 3 8.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 9 2.5C21 15 12 21 12 21z" fill="currentColor"/>',

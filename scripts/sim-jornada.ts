@@ -1,5 +1,6 @@
 // Simulação da História da Jornada: um bot joga N runs por dificuldade e mostra onde elas param.
-// Uso: `npm run sim:jornada -- [runs] [seed]`. O bot joga pior que um humano (não monta moveset, compra
+// Uso: `npm run sim:jornada -- [runs] [seed] [ciclos]`. Com `ciclos` > 0, os vencedores do Caminho Ninja seguem no modo
+// infinito até cair (no máximo esse número de ciclos) e sai a curva de sobrevivência por ciclo. O bot joga pior que um humano (não monta moveset, compra
 // sem planejar). Os números vão para o usuário decidir; nada é ajustado sozinho.
 import { chooseAiAction, chooseAiActive } from '../src/core/jornada/ai';
 import { awaitingPlayer, current, downed, playerAct, startBattle, useFree, useItem } from '../src/core/jornada/battle';
@@ -14,6 +15,7 @@ import {
   nodeChoices,
   buyTalent,
   chooseBossRelic,
+  continueCycle,
   currentStop,
   finishFight,
   gainRelic,
@@ -36,6 +38,7 @@ import { jornadaData as data } from '../src/data/jornada';
 
 const RUNS = Number(process.argv[2] ?? 300);
 const SEED = Number(process.argv[3] ?? 1);
+const CYCLES = Number(process.argv[4] ?? 0);
 const DIFFS: Difficulty[] = ['easy', 'normal', 'hard', 'hardcore'];
 const unlocked = new Set<string>();
 
@@ -85,14 +88,23 @@ function pickNode(run: JRun, rng: Rng): string {
   return [...nodeChoices(run)].sort((a, b) => score(b.kind) - score(a.kind))[0]!.id;
 }
 
-function play(seed: number, difficulty: Difficulty, mode: Mode): { run: JRun; stop: string } {
-  const rng = createRng(seed);
+function newModeRun(seed: number, difficulty: Difficulty, mode: Mode): JRun {
   const cls = mode === 'generic:prodigy' ? 'common' : mode.split(':')[1]!;
   // O Comum sorteia o elemento (e ganha a relíquia do sorteio); o prodígio é escolhido direto (sem elemento).
-  let run = mode === 'canon' ? newRun(seed, difficulty, data) : newGenericRun(seed, difficulty, cls, data, UNLOCKED, null, mode === 'generic:prodigy' ? null : 'random');
+  return mode === 'canon' ? newRun(seed, difficulty, data) : newGenericRun(seed, difficulty, cls, data, UNLOCKED, null, mode === 'generic:prodigy' ? null : 'random');
+}
+
+function play(seed: number, difficulty: Difficulty, mode: Mode): { run: JRun; stop: string; rng: Rng } {
+  const rng = createRng(seed);
+  return { ...playCycle(newModeRun(seed, difficulty, mode), rng, mode), rng };
+}
+
+/** Joga um ciclo (a run inteira, fora do modo infinito) até a vitória ou a derrota. */
+function playCycle(run0: JRun, rng: Rng, mode: Mode): { run: JRun; stop: string } {
+  let run = run0;
   let guard = 0;
   while (run.status === 'inProgress') {
-    if (++guard > 400) throw new Error('run sem fim');
+    if (++guard > 400) throw new Error('ciclo sem fim');
     run = spendTalents(run);
     if (run.bossChoice) {
       run = chooseBossRelic(run, run.bossChoice[0]!, data);
@@ -126,16 +138,41 @@ function play(seed: number, difficulty: Difficulty, mode: Mode): { run: JRun; st
   return { run, stop: 'vitória' };
 }
 
+/** Modo infinito: o vencedor segue de ciclo até cair ou chegar ao teto. Devolve quantos ciclos venceu e o nível final. */
+function playInfinite(first: JRun, rng: Rng, mode: Mode): { cyclesWon: number; level: number } {
+  let run = first;
+  let cyclesWon = 1;
+  while (cyclesWon < CYCLES) {
+    run = playCycle(continueCycle(run, data, unlocked), rng, mode).run;
+    if (run.status !== 'victory') break;
+    cyclesWon++;
+  }
+  return { cyclesWon, level: run.level };
+}
+
 for (const mode of ['canon', 'generic:common', 'generic:prodigy', 'generic:uchiha', 'generic:hyuuga']) for (const d of DIFFS) {
   const stops = new Map<string, number>();
   let wins = 0;
   let levels = 0;
+  // Curva do infinito: quantas runs venceram o ciclo k (k = 1..CYCLES).
+  const curve = Array.from({ length: CYCLES }, () => 0);
+  let infiniteLevels = 0;
   for (let i = 0; i < RUNS; i++) {
-    const { run, stop } = play(SEED * 100003 + i, d, mode);
+    const { run, stop, rng } = play(SEED * 100003 + i, d, mode);
     if (run.status === 'victory') wins++;
     levels += run.level;
     stops.set(stop, (stops.get(stop) ?? 0) + 1);
+    if (CYCLES > 0 && mode !== 'canon') {
+      const inf = run.status === 'victory' ? playInfinite(run, rng, mode) : { cyclesWon: 0, level: run.level };
+      for (let k = 0; k < inf.cyclesWon; k++) curve[k]!++;
+      infiniteLevels += inf.level;
+    }
   }
   const top = [...stops.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, n]) => `${k} ${Math.round((n / RUNS) * 100)}%`);
   console.log(`${mode.padEnd(15)} ${d.padEnd(8)} vitória ${Math.round((wins / RUNS) * 100)}% · nível médio ${(levels / RUNS).toFixed(1)} · ${top.join(' · ')}`);
+  if (CYCLES > 0 && mode !== 'canon') {
+    const avg = curve.reduce((a, n) => a + n, 0) / RUNS;
+    const pts = curve.map((n, k) => `C${k + 1} ${Math.round((n / RUNS) * 100)}%`).join(' · ');
+    console.log(`${''.padEnd(15)} ${''.padEnd(8)} infinito: ${pts} · ciclos vencidos (média) ${avg.toFixed(2)} · nível final ${(infiniteLevels / RUNS).toFixed(1)}`);
+  }
 }

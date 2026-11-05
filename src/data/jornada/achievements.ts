@@ -12,6 +12,8 @@ export interface JornadaAchievement {
 const won = (r: JRun) => r.status === 'victory' && r.mode === 'canon';
 const wonGeneric = (r: JRun) => r.status === 'victory' && r.mode === 'generic';
 const notEasy = (r: JRun) => r.difficulty !== 'easy';
+/** Modo infinito do Caminho Ninja: venceu o ciclo `n` (contando do 1). */
+const beatCycle = (n: number) => (r: JRun) => wonGeneric(r) && (r.cycle ?? 0) >= n - 1;
 const hard = (r: JRun) => r.difficulty === 'hard' || r.difficulty === 'hardcore';
 
 export const jornadaAchievements: JornadaAchievement[] = [
@@ -30,6 +32,10 @@ export const jornadaAchievements: JornadaAchievement[] = [
   { id: 'j_unlockHyuuga', check: (r) => wonGeneric(r) && notEasy(r) && r.hero === 'prodigy' },
   { id: 'j_winUchiha', check: (r) => wonGeneric(r) && r.hero === 'uchihaNinja' },
   { id: 'j_winHyuuga', check: (r) => wonGeneric(r) && r.hero === 'hyuugaNinja' },
+  // Modo infinito (docs/jornada/run.md#modo-infinito).
+  { id: 'j_cycle2', check: beatCycle(2) },
+  { id: 'j_cycle3', check: beatCycle(3) },
+  { id: 'j_cycle5', check: beatCycle(5) },
   // Easter egg: Uchiha com raio que aprende o Chidori libera o visual e o ramo do Sasuke (docs/jornada/classes.md#easter-eggs).
   { id: 'j_sasukeEgg', hidden: true, check: (r) => r.hero === 'uchihaNinja' && r.secondElement === 'lightning' && r.learned.includes('jChidori') },
   { id: 'j_sexy', hidden: true, check: (r) => r.cleared.includes('valley') && r.moveset.includes('jSexyJutsu') },

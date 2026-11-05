@@ -43,7 +43,10 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     };
     // Técnicas que saíram do jogo (o Quinto portão virou os Portões em níveis na v0.42.0) somem da run.
     const known = (ids: string[]) => ids.filter((id) => id in jTechniquesById);
-    const loaded: JRun = { ...legacy, ...run, learned: known(run.learned ?? []), moveset: known(run.moveset ?? []), cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
+    // Antes do modo infinito (v0.44.0) não havia ciclo nem o retrato das conquistas da árvore.
+    const cycle = typeof run.cycle === 'number' ? run.cycle : 0;
+    const unlocks = Array.isArray(run.unlocks) ? run.unlocks : [];
+    const loaded: JRun = { ...legacy, ...run, cycle, unlocks, learned: known(run.learned ?? []), moveset: known(run.moveset ?? []), cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
     return withoutStaleElements(loaded);
   } catch {
     return null;

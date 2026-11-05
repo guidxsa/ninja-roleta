@@ -20,8 +20,10 @@ export const jornadaPtBR = {
     difficultyBoth: 'Vale para as duas runs: História e Caminho Ninja.',
     recovery: (pct: number) => `Depois de cada vitória, a equipe recupera ${pct}% do HP e do chakra.`,
     hardcoreLocked: 'O Hardcore libera ao vencer a História no Difícil.',
-    willOfFireNote: 'No Fácil, a Vontade do Fogo recomeça uma luta perdida (1 vez).',
+    willOfFireNote: 'No Fácil, a Vontade do Fogo recomeça uma luta perdida (1 vez por ciclo).',
     back: 'Voltar',
+    /** Recorde do modo infinito do Caminho Ninja (ciclo e estágio contando do 1). */
+    best: (cycle: number, stage: number, won: boolean) => (won ? `Recorde infinito: ciclo ${cycle} vencido` : `Recorde infinito: ciclo ${cycle}, estágio ${stage}`),
   },
 
   stages: {
@@ -334,6 +336,8 @@ export const jornadaPtBR = {
       return `${tech}: dano ${cur}${x}${next !== null ? ` → ${next}${x}` : ''}`;
     },
     choiceHint: 'Escolha um dos dois caminhos: o outro fecha nesta run.',
+    complete: 'Árvore completa',
+    completeTip: (ryo: number) => `Nada mais a aprender ou subir: cada ponto de talento ganho vira ${ryo} ryō na hora.`,
     unique: 'Talento único',
     hiddenName: '???',
     branches: {
@@ -899,7 +903,24 @@ export const jornadaPtBR = {
     movesetGroups: { kit: 'Kit inicial', element: 'Elemento', talents: 'Talentos e eventos' } as Record<string, string>,
     actives: 'Ativas de classe',
     save: 'Salvar',
-    levelUp: (n: number) => `Subiu para o nível ${n}! +1 ponto de talento`,
+    levelUp: (n: number, converted = false) => (converted ? `Subiu para o nível ${n}!` : `Subiu para o nível ${n}! +1 ponto de talento`),
+    talentRyo: (ryo: number) => `Árvore completa: os pontos de talento viraram +${ryo} ryō.`,
+    talentRyoToast: (ryo: number) => `Árvore completa: +${ryo} ryō`,
+    restTrainRyo: (ryo: number) => `Treinar (+${ryo} ryō)`,
+    restTrainRyoTip: (ryo: number) => `Árvore completa: o ponto de talento do treino vira ${ryo} ryō.`,
+    // Modo infinito do Caminho Ninja (docs/jornada/run.md#modo-infinito).
+    cycle: (n: number) => `Ciclo ${n}`,
+    cycleTip: (pct: number) => `Modo infinito: os inimigos estão ${pct}% mais fortes que no 1º ciclo.`,
+    nextCycle: (n: number) => `Seguir para o ciclo ${n}`,
+    nextCycleTip: (pct: number) =>
+      `Modo infinito: volta ao estágio 1 com tudo o que você tem (nível, talentos, relíquias, ryō e bolsa), com chefes e caminho novos. Os inimigos ficam ${pct}% mais fortes que no 1º ciclo.`,
+    homeSavedTip: (n: number) => `A run fica salva: dá para seguir para o ciclo ${n} depois, pelo Continuar.`,
+    cycleStartText: (pct: number) => `De volta ao estágio 1, com chefes e caminho novos. Os inimigos estão ${pct}% mais fortes que no 1º ciclo.`,
+    cycleWonTitle: (n: number) => `Ciclo ${n} vencido!`,
+    runWonGeneric: 'O Caminho Ninja terminou: você venceu os três chefes.',
+    infiniteOverTitle: 'Fim do modo infinito',
+    infiniteReached: (cycle: number, stage: number, stop: string) => `Você chegou ao ciclo ${cycle}, estágio ${stage}${stop ? `: ${stop}` : ''}.`,
+    record: 'Recorde!',
     recovered: (pct: number) => `A equipe recupera ${pct}% do HP e do chakra.`,
     restoredAll: 'Estágio vencido: a equipe volta com HP e chakra cheios.',
     victoryTitle: 'Vitória!',
@@ -1001,6 +1022,9 @@ export const jornadaPtBR = {
       j_winUchiha: { name: 'Herdeiro do clã', desc: 'Vença o Caminho Ninja como Uchiha.' },
       j_winHyuuga: { name: 'Destino quebrado', desc: 'Vença o Caminho Ninja como Hyuuga.' },
       j_sasukeEgg: { name: 'Mil pássaros', desc: 'Um Uchiha com raio aprendeu o Chidori. Libera o visual e o ramo do Sasuke.' },
+      j_cycle2: { name: 'Mais uma volta', desc: 'No modo infinito do Caminho Ninja, vença o ciclo 2.' },
+      j_cycle3: { name: 'Treino sem fim', desc: 'No modo infinito do Caminho Ninja, vença o ciclo 3.' },
+      j_cycle5: { name: 'Vontade inabalável', desc: 'No modo infinito do Caminho Ninja, vença o ciclo 5.' },
     } as Record<string, { name: string; desc: string }>,
   },
 };
