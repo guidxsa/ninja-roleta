@@ -39,11 +39,14 @@ import {
   stopRng,
   xpToNext,
   MOVESET_SIZE,
+  type ElementChoice,
   type JRun,
   type Purchase,
 } from '../../src/core/jornada/run';
 import { techPower } from '../../src/core/jornada/battle';
 import { reachableFrom, type MapNode } from '../../src/core/jornada/map';
+import type { Element } from '../../src/core/types';
+import { ELEMENT_COLORS } from '../tips';
 import { isFight, type StopDef } from '../../src/core/jornada/trail';
 import { jornadaData as data } from '../../src/data/jornada';
 import { newJornadaAchievements } from '../../src/data/jornada/achievements';
@@ -52,7 +55,7 @@ import { clearJornada, loadJornada, saveJornada } from '../../src/state/jornadaS
 import { fighterPortrait, icon } from '../art';
 import { choose, esc, h, show, sleep } from '../dom';
 import { tip } from '../tooltip';
-import { heroLabel, jornadaBattle, techName, techTip } from './battle';
+import { heroLabel, jornadaBattle, memberLabel, techName, techTip } from './battle';
 import type { JornadaHost } from './host';
 import { playMinigame } from './minigames';
 import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
@@ -84,10 +87,10 @@ const portraitSpec = (id: string, run?: JRun) =>
   run?.skin && id === run.hero ? `ninja:${run.skin}` : (data.characters[id]?.portrait ?? 'ninja:common');
 /** Nome de quem protagoniza, com o nome do jogador no Caminho Ninja. Já escapado: vai direto para o HTML. */
 const heroName = (host: JornadaHost, run: JRun) => esc(run.mode === 'generic' ? heroLabel(run.hero, host.playerName()) : (J.names[run.hero] ?? run.hero));
-/** Nome com o elemento sorteado (Caminho Ninja): "Daichi (Fogo)". */
+/** Nome com o elemento (Caminho Ninja): "Daichi (Fogo)". Já escapado. */
 function memberName(host: JornadaHost, run: JRun, id: string): string {
   const el = run.mode === 'generic' ? elementOf(run, id, data) : null;
-  const name = id === run.hero ? heroName(host, run) : (J.names[id] ?? id);
+  const name = esc(memberLabel(run, id, host.playerName()));
   return el ? J.genericStart.elementOf(name, S.elements[el]) : name;
 }
 // ---------------------------------------------------------------------------
@@ -166,6 +169,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
               <b>${open ? '' : `${icon('lock', 'lock')} `}${G.classes[id]!.name}</b><small>${note}</small></button>`;
           })
           .join('')}</div>
+        <div class="jel-pick" data-elements role="group" aria-label="${G.elementTitle}">${ELEMENT_CHOICES.map((c) => elementChoiceButton(c)).join('')}</div>
         ${host.unlocked().has('j_sasukeEgg') ? `<button class="btn small jskin" data-skin aria-pressed="false">${G.skinSasuke}</button>` : ''}
         <button class="btn ${saved ? '' : 'primary '}big" data-choice="generic">${icon('dice')} ${G.start}</button>
       </section>
@@ -192,6 +196,17 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
     if (!b || b.getAttribute('aria-disabled') === 'true') return;
     classId = b.dataset.class!;
     root.querySelectorAll('[data-class]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    // Só o Comum escolhe o elemento.
+    root.querySelector<HTMLElement>('[data-elements]')!.hidden = classId !== 'common';
+  });
+  // Elemento do Comum: um elemento, o prodígio (sem elemento) ou sortear (com a relíquia bônus).
+  let element: ElementChoice = 'random';
+  root.querySelector('[data-elements]')!.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-element]');
+    if (!b) return;
+    const v = b.dataset.element!;
+    element = v === 'random' ? 'random' : v === 'none' ? null : (v as Element);
+    root.querySelectorAll('[data-element]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
   });
   for (;;) {
     const c = await choose<'continue' | 'new' | 'generic' | 'back'>(root);
@@ -202,27 +217,46 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
       clearJornada(host.storage);
       if (c === 'new') return newRun(host.nextSeed(), diff, data);
       await host.ensurePlayerName();
-      const run = newGenericRun(host.nextSeed(), diff, classId, data, host.unlocked(), classId === 'uchiha' ? skin : null);
+      const run = newGenericRun(host.nextSeed(), diff, classId, data, host.unlocked(), classId === 'uchiha' ? skin : null, classId === 'common' ? element : 'random');
       await revealScreen(host, run);
       return run;
     }
   }
 }
 
-/** Revelação do sorteio do elemento (sem roleta): o elemento ou o prodígio, e os parceiros. */
+/** Opções de elemento do Comum na tela de início. */
+const ELEMENT_CHOICES = ['random', 'fire', 'wind', 'lightning', 'earth', 'water', 'none'] as const;
+
+function elementChoiceButton(c: (typeof ELEMENT_CHOICES)[number]): string {
+  const pressed = `aria-pressed="${c === 'random'}"`;
+  if (c === 'random') return `<button type="button" class="jel jel-random" data-element="random" ${pressed}${tip(G.elementRandom, G.elementRandomTip)}>${icon('dice')}<span>${G.elementRandom}</span></button>`;
+  if (c === 'none') return `<button type="button" class="jel" data-element="none" ${pressed}${tip(G.elementProdigy, G.elementProdigyTip)}>${icon('taijutsu')}<span>${G.elementProdigy}</span></button>`;
+  return `<button type="button" class="jel" data-element="${c}" style="--c:${ELEMENT_COLORS[c]}" ${pressed}${tip(S.elements[c], G.elementChoiceTip(S.elements[c]))}>${icon(c)}<span>${S.elements[c]}</span></button>`;
+}
+
+/**
+ * Revelação do começo do Caminho Ninja (sem roleta): o elemento (sorteado ou escolhido), o prodígio ou o Hyuuga sem
+ * elemento, a relíquia bônus de quem sorteou e os parceiros.
+ */
 async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
   const el = elementOf(run, run.hero, data);
   const [a, b] = run.supports.map((id) => memberName(host, run, id));
+  const noElement = data.generic.classes.find((c) => c.id === run.classId)?.noElement;
+  const line = el ? `${icon(el)} ${G.revealElement(S.elements[el])}` : noElement ? G.revealHyuuga : G.revealProdigy;
+  // A relíquia bônus é a que veio além da inicial.
+  const bonus = run.elementPick === 'random' ? run.relics.find((id) => data.relics.find((r) => r.id === id)?.tier !== 'starter') : undefined;
   const root = show(
-    h(`<div class="screen jreveal"><h2>${G.revealTitle}</h2>
+    h(`<div class="screen jreveal"><h2>${run.elementPick === 'random' ? G.revealTitle : G.revealChosen}</h2>
       <div class="jstart-face pop">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'lg')}</div>
       <h3 class="center">${heroName(host, run)}</h3>
-      <p class="center">${el ? `${icon(el)} ${G.revealElement(S.elements[el])}` : G.revealProdigy}</p>
+      <p class="center">${line}</p>
       ${run.classId === 'uchiha' ? `<p class="center">${run.secondElement ? `${icon(run.secondElement)} ${G.revealSecond(S.elements[run.secondElement])}` : G.revealNoSecond}</p>` : ''}
+      ${bonus ? `<h3 class="center">${G.randomBonus}</h3>${relicCard(bonus, '', 'reveal')}` : ''}
       <p class="center muted">${G.revealTeam(a ?? '', b ?? '')}</p>
       <button class="btn primary big" data-choice="ok">${U.continue}</button></div>`),
   );
-  host.mood(el ? 'neutral' : 'good');
+  host.mood(el || noElement ? 'neutral' : 'good');
+  if (bonus) host.discoverRelics([bonus]);
   await choose(root);
 }
 
@@ -308,7 +342,7 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
   let cur = run;
   const team = isFight(stop) ? fightTeam(run, stop, data) : [];
   const teamLine = isFight(stop)
-    ? `<p class="jteam">${[run.hero, ...team].map((id) => fighterPortrait(id, portraitSpec(id), 'sm')).join('')}<span class="muted small">${team.length ? team.map((id) => J.names[id]).join(', ') : U.solo}</span></p>`
+    ? `<p class="jteam">${[run.hero, ...team].map((id) => fighterPortrait(id, portraitSpec(id), 'sm')).join('')}<span class="muted small">${team.length ? team.map((id) => esc(memberLabel(run, id, host.playerName()))).join(', ') : U.solo}</span></p>`
     : '';
   const root = show(
     h(`<div class="screen jtrail-screen">

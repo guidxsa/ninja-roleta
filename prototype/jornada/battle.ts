@@ -24,7 +24,7 @@ import {
   validTargets,
 } from '../../src/core/jornada/battle';
 import type { JornadaData } from '../../src/core/jornada/data';
-import { CONSUMABLES, spendItem, type JRun } from '../../src/core/jornada/run';
+import { CONSUMABLES, spendItem, supportClass, type JRun } from '../../src/core/jornada/run';
 import type { BattleSetup } from '../../src/core/jornada/battle';
 import type { Boost, ConsumableId, Fighter, FighterMods, JAction, JBattle, JEvent, JTechnique } from '../../src/core/jornada/types';
 import type { Rng } from '../../src/core/rng';
@@ -52,10 +52,28 @@ export function heroLabel(hero: string, playerName: string): string {
   return named && playerName ? named(playerName) : (J.names[hero] ?? hero);
 }
 
+/**
+ * Nome de um membro da equipe nesta run: o do jogador (protagonista do Caminho Ninja), o sorteado com o clã
+ * (suportes do Caminho Ninja: "Kaede Uchiha") ou o da ficha. Sem escapar.
+ */
+export function memberLabel(run: JRun, id: string, playerName: string): string {
+  if (id === run.hero) return run.mode === 'generic' ? heroLabel(run.hero, playerName) : (J.names[id] ?? id);
+  const key = run.names?.[id];
+  const cls = key ? supportClass(id, jornadaData) : null;
+  if (key && cls) {
+    const name = J.supportNames[key] ?? key;
+    return J.supportNamed[cls.id]?.(name) ?? name;
+  }
+  return J.names[id] ?? id;
+}
+
 /** Nome do protagonista desta luta. */
 let heroName: string | null = null;
+/** Nomes da equipe desta luta (suportes com nome sorteado), por ficha. */
+let teamNames: Record<string, string> = {};
 
-export const fighterName = (f: { defId: string; protagonist?: boolean }) => (f.protagonist && heroName ? heroName : (J.names[f.defId] ?? f.defId));
+export const fighterName = (f: { defId: string; protagonist?: boolean; side?: string }) =>
+  f.protagonist && heroName ? heroName : ((f.side !== 'enemy' && teamNames[f.defId]) || (J.names[f.defId] ?? f.defId));
 export const techName = (id: string) => J.techniques[id] ?? id;
 
 /** Visual do protagonista desta luta (personalização da run). */
@@ -265,6 +283,7 @@ export async function jornadaBattle(
   let run = run0;
   heroSkin = run0.skin;
   heroName = run0.mode === 'generic' ? heroLabel(run0.hero, host.playerName()) : null;
+  teamNames = Object.fromEntries(setup.allies.map((a) => [a.defId, memberLabel(run0, a.defId, host.playerName())]));
   let state = startBattle(setup, data, rng);
   const root = show(
     h(`<div class="screen jbattle scene-${scene}">

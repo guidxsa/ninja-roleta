@@ -1,18 +1,19 @@
 # Classes da Jornada
 
-> Comum e prodígio na v0.36.0; Uchiha, Hyuuga, versões suporte e o easter egg do Sasuke na v0.37.0 ([README.md](README.md)). Dados em `src/data/jornada/generic.ts` e `characters.ts`.
+> Comum e prodígio na v0.36.0; Uchiha, Hyuuga, versões suporte e o easter egg do Sasuke na v0.37.0; escolha do elemento, Hyuuga sem elemento e suportes com classe e nome sorteados na v0.43.0 ([README.md](README.md)). Dados em `src/data/jornada/generic.ts` e `characters.ts`.
 
 As classes são as protagonistas do Caminho Ninja ([caminho-ninja.md](caminho-ninja.md)). Vêm das origens do Roleta ([origens.md](../base/origens.md)), com um corte: cada classe é uma árvore de talentos inteira ([talentos.md](talentos.md)).
 
-## Sorteio do elemento
+## Elemento: escolher ou sortear
 
-- Ao começar uma run do Caminho Ninja, um sorteio escondido (sem roleta na tela) define o elemento do protagonista: fogo, vento, raio, terra e água com peso 16 cada, e **nenhum** com peso 20 (20%) quando a classe permite.
-- **Comum sem elemento vira prodígio do taijutsu**: outra ficha (só taijutsu, mais HP e speed), outra árvore e a ativa Portões no lugar do Bunshin.
-- **Uchiha**: fogo fixo e um **segundo elemento** sorteado (pode sair nenhum; nunca fogo de novo). O nível I do segundo elemento também entra no kit.
-- **Hyuuga**: sorteia um elemento (nunca nenhum).
+- **Comum**: na tela de início, o jogador **escolhe** o elemento (fogo, vento, raio, terra, água ou **Prodígio**, sem elemento) ou **sorteia**. O sorteio é escondido (sem roleta na tela): os 5 elementos com peso 16 cada e **nenhum** com peso 20 (20%). **Quem sorteia ganha uma relíquia comum aleatória** no começo da run (`elementDraw.randomBonus`), mostrada na revelação.
+- **Comum sem elemento é o prodígio do taijutsu**: outra ficha (só taijutsu, mais HP e speed), outra árvore e a ativa Portões no lugar do Bunshin.
+- **Uchiha**: fogo fixo e um **segundo elemento** sorteado (pode sair nenhum; nunca fogo de novo). O nível I do segundo elemento também entra no kit. Não escolhe.
+- **Hyuuga**: **sem elemento** (v0.43.0): luta com o Byakugan e o Punho Suave, sem técnica elemental (`noElement`).
 - Com elemento, o protagonista começa com a técnica de nível I dele no moveset; no Comum, II e III vêm da árvore.
-- Os 2 suportes também sorteiam o elemento (nunca "nenhum"), a menos que a ficha tenha um fixo (Ren Uchiha: fogo).
-- A tela mostra o resultado logo depois do sorteio, com os parceiros.
+- O sorteio acontece sempre por baixo, mesmo com escolha: a mesma seed dá o mesmo mapa, os mesmos suportes e os mesmos chefes.
+- Os 2 suportes sorteiam o elemento (nunca "nenhum"), a menos que a ficha tenha um fixo (Uchiha: fogo) ou seja sem elemento (Hyuuga).
+- A tela de revelação mostra o elemento, a relíquia bônus (quando sorteou) e os parceiros.
 
 ## Desbloqueios
 
@@ -23,7 +24,7 @@ As classes são as protagonistas do Caminho Ninja ([caminho-ninja.md](caminho-ni
 | Uchiha | Vencer uma run do Caminho Ninja no Médio ou acima com um Comum de fogo (conquista *Chama do clã*) |
 | Hyuuga | Vencer uma run do Caminho Ninja no Médio ou acima com o prodígio (conquista *Olhos abertos*) |
 
-Na tela de início, a classe trancada aparece com cadeado e a condição.
+Na tela de início, a classe trancada aparece com cadeado e a condição. Com a escolha do elemento (v0.43.0), dá para mirar direto no Comum de fogo ou no prodígio.
 
 ## Ativas de classe
 
@@ -38,7 +39,9 @@ Ativas de classe não gastam o turno: saem junto com a ação, uma por turno ([c
 
 ## Suportes genéricos (versão suporte)
 
-- Os parceiros saem de um sorteio: Daichi e Hana (Comuns) sempre entram no sorteio; cada classe liberada traz a sua versão suporte (Ren Uchiha, IA atacante, fogo fixo; Mio Hyuuga, IA guardiã). A própria classe do protagonista não entra.
+- Cada um dos 2 parceiros sorteia a **classe** entre as liberadas (Comum sempre; Uchiha e Hyuuga pelas conquistas), **inclusive a do protagonista**, depois uma das **fichas** da classe que o outro parceiro não pegou, e um **nome** da lista da classe (v0.43.0; nomes originais, sem personagens do mangá).
+- Fichas de suporte (2 por classe, para dois parceiros da mesma classe não repetirem): Comum — atacante (Kunai, Shuriken) e tática (Kunai, Armadilha de fios, Kai); Uchiha — atacante (Kunai, Ilusão dos corvos) e tática (Shuriken, Armadilha de fios), fogo fixo; Hyuuga — guardiã (Palma Suave, Rotação, Kunai) e atacante (Palma Suave, Shuriken, Palma do Vácuo), sem elemento.
+- O nome leva o clã: Comum só o nome ("Daichi"); Uchiha e Hyuuga com o sobrenome ("Kaede Uchiha", "Sei Hyuuga"). Saves antigos, sem nome sorteado, usam o nome da ficha (Daichi, Hana, Ren Uchiha, Mio Hyuuga).
 - Versão suporte: ficha menor que a de protagonista, sem árvore, sobe de nível com o protagonista ([personagens.md](personagens.md)).
 
 ## Easter eggs

@@ -2,7 +2,7 @@
 
 > Implementadas na v0.36.0 ([README.md](README.md)). Dados em `src/data/jornada/generic.ts` e `events.ts`.
 
-A run que aproveita o **mapa ramificado** ([run.md](run.md#mapa-ramificado)): o jogador escolhe o caminho, com encontros variados e a mesma dificuldade da História. Protagonista de uma classe ([classes.md](classes.md)) e 2 suportes sorteados entre os genéricos e as versões suporte das classes liberadas ([classes.md](classes.md#suportes-genéricos-versão-suporte)).
+A run que aproveita o **mapa ramificado** ([run.md](run.md#mapa-ramificado)): o jogador escolhe o caminho, com encontros variados e a mesma dificuldade da História. Protagonista de uma classe ([classes.md](classes.md)) e 2 suportes com classe sorteada entre as liberadas (inclusive a do protagonista), ficha e nome sorteados ([classes.md](classes.md#suportes-genéricos-versão-suporte)).
 
 ## Estrutura
 

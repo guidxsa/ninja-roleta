@@ -41,6 +41,7 @@ import {
   heroMovable,
   leaveStop,
   memberSheet,
+  supportClass,
   newGenericRun,
   newRun,
   nextFightTeam,
@@ -803,7 +804,7 @@ describe('Caminho Ninja', () => {
     }
   });
 
-  it('o Comum sem elemento vira prodígio; com elemento, aprende o nível I', () => {
+  it('o Comum que sorteia sem elemento vira prodígio; com elemento, aprende o nível I', () => {
     const kinds = new Set<string>();
     for (let s = 0; s < 80; s++) {
       const run = newGenericRun(s, 'normal', 'common', data);
@@ -891,7 +892,7 @@ describe('Caminho Ninja', () => {
     expect(newJornadaAchievements(prodigy, new Set())).not.toContain('j_canonWin');
   });
 
-  it('Uchiha: fogo fixo e segundo elemento diferente; Hyuuga sempre com elemento', () => {
+  it('Uchiha: fogo fixo e segundo elemento diferente; Hyuuga sem elemento nem técnica elemental', () => {
     const seconds = new Set<string | null>();
     for (let s = 0; s < 60; s++) {
       const u = newGenericRun(s, 'normal', 'uchiha', data);
@@ -901,25 +902,75 @@ describe('Caminho Ninja', () => {
       if (u.secondElement) expect(heroMovable(u, data)).toContain(data.elementLines[u.secondElement][0]);
       const h = newGenericRun(s, 'normal', 'hyuuga', data);
       expect(h.hero).toBe('hyuugaNinja');
-      expect(h.elements[h.hero]).not.toBeNull();
+      expect(h.elements[h.hero]).toBeNull();
+      const elemental = new Set(Object.values(data.elementLines).flat());
+      expect(heroMovable(h, data).filter((id) => elemental.has(id))).toEqual([]);
     }
     expect(seconds.has(null)).toBe(true);
     expect(seconds.has('lightning')).toBe(true);
   });
 
-  it('classes liberadas trazem a versão suporte para o sorteio de parceiros', () => {
+  it('suportes: classe sorteada entre as liberadas (pode repetir a do protagonista), ficha única e nome da classe', () => {
     const none = new Set<string>();
     const all = new Set(['j_unlockUchiha', 'j_unlockHyuuga']);
-    for (let s = 0; s < 20; s++) expect(newGenericRun(s, 'normal', 'common', data, none).supports.sort()).toEqual(['leafGeninA', 'leafGeninB']);
+    for (let s = 0; s < 20; s++) {
+      const r = newGenericRun(s, 'normal', 'common', data, none);
+      expect(r.supports.sort()).toEqual(['leafGeninA', 'leafGeninB']);
+    }
     const seen = new Set<string>();
-    for (let s = 0; s < 60; s++) {
+    for (let s = 0; s < 80; s++) {
       const r = newGenericRun(s, 'normal', 'uchiha', data, all);
       expect(r.supports).toHaveLength(2);
-      expect(r.supports).not.toContain('uchihaGenin');
+      expect(new Set(r.supports).size).toBe(2);
       r.supports.forEach((id) => seen.add(id));
-      if (r.supports.includes('hyuugaGenin')) expect(r.elements.hyuugaGenin).not.toBeNull();
+      const names = r.supports.map((id) => r.names[id]);
+      expect(new Set(names).size).toBe(2);
+      for (const id of r.supports) {
+        const cls = supportClass(id, data)!;
+        expect(cls.supportNames).toContain(r.names[id]);
+        expect(jornadaPtBR.supportNames[r.names[id]!], r.names[id]).toBeTruthy();
+        if (data.characters[id]!.noElement) expect(r.elements[id]).toBeNull();
+        else expect(r.elements[id]).not.toBeNull();
+      }
     }
-    expect(seen.has('hyuugaGenin')).toBe(true);
+    // Todas as fichas aparecem, inclusive as do Uchiha (a classe do protagonista).
+    expect([...seen].sort()).toEqual(['hyuugaGenin', 'hyuugaGeninB', 'leafGeninA', 'leafGeninB', 'uchihaGenin', 'uchihaGeninB']);
+  });
+
+  it('Comum: escolher o elemento (ou o prodígio) ou sortear; o sorteio dá uma relíquia comum e não muda o mapa', () => {
+    const fire = newGenericRun(4, 'normal', 'common', data, new Set(), null, 'fire');
+    expect([fire.hero, fire.elements.commonNinja, fire.elementPick]).toEqual(['commonNinja', 'fire', 'chosen']);
+    expect(fire.moveset).toContain('jFireSpark');
+    expect(fire.relics).toEqual(['academyManual']);
+    const prodigy = newGenericRun(4, 'normal', 'common', data, new Set(), null, null);
+    expect([prodigy.hero, prodigy.elements.prodigy, prodigy.relics]).toEqual(['prodigy', null, ['greenJumpsuit']]);
+    for (let s = 0; s < 30; s++) {
+      const random = newGenericRun(s, 'normal', 'common', data);
+      expect(random.elementPick).toBe('random');
+      expect(random.relics).toHaveLength(2);
+      expect(data.relics.find((r) => r.id === random.relics[1])!.tier).toBe('common');
+      const chosen = newGenericRun(s, 'normal', 'common', data, new Set(), null, 'water');
+      expect(chosen.map).toEqual(random.map);
+      expect(chosen.supports).toEqual(random.supports);
+    }
+    // Uchiha e Hyuuga não escolhem: fixo ou sem elemento, sem relíquia de sorteio.
+    const u = newGenericRun(4, 'normal', 'uchiha', data, new Set(), null, 'water');
+    expect([u.elements.uchihaNinja, u.elementPick, u.relics]).toEqual(['fire', 'fixed', ['uchihaFan']]);
+  });
+
+  it('save antigo do Hyuuga perde o elemento e a técnica elemental', () => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const h = newGenericRun(3, 'normal', 'hyuuga', data, new Set(['j_unlockHyuuga']));
+    const old = { ...h, elements: { ...h.elements, hyuugaNinja: 'water' as const }, moveset: ['jWaterBullet', 'jStrike'] };
+    const raw = JSON.parse(JSON.stringify(old));
+    delete raw.names;
+    delete raw.elementPick;
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify(raw));
+    const loaded = loadJornada(storage)!;
+    expect(loaded.elements.hyuugaNinja).toBeNull();
+    expect(loaded.moveset).toEqual(['jStrike']);
+    expect(loaded.names).toEqual({});
   });
 
   it('easter egg: o ramo Raio só existe com raio, e o Chidori libera o ramo do Sasuke', () => {

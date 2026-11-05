@@ -136,6 +136,8 @@ export interface CharacterDef {
   offense: AttackStats;
   resistance: Resistances;
   element: Element | null;
+  /** Sem elemento de propósito (Hyuuga): no Caminho Ninja, não sorteia um. */
+  noElement?: boolean;
   /** Técnicas conhecidas no início (as aprendidas depois vêm de talentos e eventos). */
   techniques: string[];
   ai: AiProfile;

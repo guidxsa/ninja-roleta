@@ -32,7 +32,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 ## Tipos de run
 
 - **História do Naruto**: liberada desde o início, linear, com os confrontos do mangá ([historia.md](historia.md)).
-- **Caminho Ninja**: protagonista de uma classe de origem com o elemento sorteado ([classes.md](classes.md)), mapa ramificado, encontros diferentes com a mesma dificuldade; suportes genéricos (2 Comuns, Daichi e Hana) ([caminho-ninja.md](caminho-ninja.md)).
+- **Caminho Ninja**: protagonista de uma classe de origem com o elemento escolhido ou sorteado ([classes.md](classes.md)), mapa ramificado, encontros diferentes com a mesma dificuldade; 2 suportes com classe (entre as liberadas) e nome sorteados ([caminho-ninja.md](caminho-ninja.md)).
 - Um personagem nunca é protagonista e suporte na mesma run.
 
 ## Perfil e conquistas
