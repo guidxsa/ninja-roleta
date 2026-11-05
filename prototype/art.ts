@@ -41,6 +41,8 @@ const ICONS: Record<string, string> = {
   // Ações especiais
   rest: '<path d="M12 3c2.5 3.5 4 6 4 8.5a4 4 0 0 1-8 0C8 9 9.5 6.5 12 3z" fill="currentColor"/><path d="M3 18c3 0 4-2 9-2s6 2 9 2M5 21.5c2.4 0 3.6-1.5 7-1.5s4.6 1.5 7 1.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>',
   stance: '<path d="M12 2 4 5v6c0 5 3.4 9.2 8 11 4.6-1.8 8-6 8-11V5z" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+  // Torii do Portão da Vila: voltar ao menu principal.
+  home: '<path d="M2 5.5c3.5 1 16.5 1 20 0" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M4.5 10h15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M7 6.5V21M17 6.5V21M12 6.5V10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
   gates: '<path d="M2 5h20M4 9h16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M6 7v15M18 7v15M12 9v4" stroke="currentColor" stroke-width="2.4"/>',
   expansion: '<path d="M4 4h6M4 4v6M20 4h-6M20 4v6M4 20h6M4 20v-6M20 20h-6M20 20v-6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/>',
   sharingan:

@@ -22,4 +22,6 @@ export interface JornadaHost {
   playerName: () => string;
   /** Relíquias que apareceram: entram na coleção do perfil. */
   discoverRelics: (ids: readonly string[]) => void;
+  /** Liga a Ficha do cabeçalho para a run em andamento (null = sem run). */
+  setSheet: (open: (() => void) | null) => void;
 }

@@ -47,7 +47,7 @@ import {
   type RoundExtras,
 } from '../src/core/combat';
 import { critChance, hitSlices } from '../src/core/hit';
-import { choose, esc, h, isOff, show, sleep } from './dom';
+import { choose, esc, goHome, h, HOME, isOff, show, sleep, untilHome } from './dom';
 import { lineageOf, rollOrigin, type OriginStep } from '../src/core/origin';
 import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
@@ -442,6 +442,15 @@ interface Campaign {
 }
 
 let camp: Campaign | null = null;
+/** A run do Roleta ainda está em andamento (a tela de fim já apareceu = false). */
+let campLive = false;
+/** Ficha da Jornada: abre a da run em andamento (null = sem run da Jornada). */
+let jornadaSheet: (() => void) | null = null;
+
+/** O botão Ficha do cabeçalho só aparece quando há o que mostrar: run do Roleta ou da Jornada. */
+function syncSheetBtn() {
+  document.body.classList.toggle('has-sheet', Boolean(camp) || Boolean(jornadaSheet));
+}
 const NO_MODS: NextFightMods = { villainStartsFirst: false, playerStartsFirst: false };
 
 // ---------------------------------------------------------------------------
@@ -808,7 +817,9 @@ function sheetHtml(c: Campaign): string {
 
 /** Abre a ficha como uma janela à parte, sobre qualquer tela (inclusive no meio da luta). */
 function openSheet() {
-  if (!camp || document.querySelector('.sheet-wrap')) return;
+  if (document.querySelector('.sheet-wrap')) return;
+  if (jornadaSheet) return jornadaSheet();
+  if (!camp) return;
   const overlay = h(`<div class="sheet-wrap" role="dialog" aria-label="${S.ui.sheet}">
     <div class="scroll">
       <div class="rod"></div>
@@ -993,6 +1004,8 @@ async function originScreen(): Promise<void> {
       trail: [],
       stats: emptyRunStats(),
     };
+    campLive = true;
+    syncSheetBtn();
 
     const root = show(
       h(`<div class="screen"><h2>${S.ui.title}</h2><div class="chips-line" id="origin-chips"></div><div id="slot"></div><div id="after"></div></div>`),
@@ -2562,6 +2575,7 @@ async function noticeScreen(title: string, text: string): Promise<void> {
 
 async function endScreen(won: boolean, stoppedAt: string | null): Promise<void> {
   const c = camp!;
+  campLive = false;
   progressDots(won ? campaign.length : c.stageIndex);
   (won ? victory : defeat)();
   const root = show(
@@ -2982,6 +2996,8 @@ async function labScreen(): Promise<LabTarget> {
       trail: [],
       stats: emptyRunStats(),
     };
+    campLive = true;
+    syncSheetBtn();
     root.querySelector<HTMLElement>('#lab-preview')!.innerHTML = playerPanel(player);
     saveLab(current);
   };
@@ -3201,6 +3217,9 @@ async function main() {
   document.getElementById('disclaimer')!.textContent = S.ui.disclaimer;
   document.getElementById('version')!.textContent = S.ui.version(VERSION);
   document.getElementById('sheet-btn')!.innerHTML = icon('scroll');
+  document.getElementById('home-btn')!.innerHTML = icon('home');
+  document.getElementById('home-btn')!.title = S.ui.home;
+  document.getElementById('home-btn')!.setAttribute('aria-label', S.ui.home);
   document.getElementById('history-btn')!.innerHTML = icon('book');
   document.getElementById('report-btn')!.innerHTML = icon('flag');
 
@@ -3209,21 +3228,48 @@ async function main() {
 
   if (LAB.lab) document.getElementById('version')!.textContent += ` · ${S.lab.badge}`;
   if (LAB.seed !== null) document.getElementById('version')!.textContent += ` · ${S.lab.seed(LAB.seed)}`;
-  if (LAB.lab) for (;;) await labFlow();
+  document.getElementById('home-btn')!.addEventListener('click', askHome);
+  if (LAB.lab) for (;;) if ((await untilHome(labFlow())) === HOME) leftToMenu();
   for (;;) {
-    if ((await modeScreen()) === 'jornada') {
-      await runJornada(jornadaHost);
-      continue;
-    }
-    await ensurePlayerName();
-    await originScreen();
-    await runCampaign();
+    const round = async () => {
+      if ((await modeScreen()) === 'jornada') return runJornada(jornadaHost);
+      await ensurePlayerName();
+      await originScreen();
+      await runCampaign();
+    };
+    if ((await untilHome(round())) === HOME) leftToMenu();
   }
+}
+
+/** Botão do Portão da Vila: confirma quando há run em andamento e volta ao menu sem recarregar a página. */
+function askHome() {
+  const jornada = document.body.classList.contains('mode-jornada');
+  const text = jornada && jornadaSheet ? S.ui.homeConfirmJornada : !jornada && camp && campLive ? S.ui.homeConfirmRoleta : null;
+  if (text && !window.confirm(text)) return;
+  goHome();
+}
+
+/** Arruma o estado deixado pelo fluxo interrompido: a run do Roleta conta como abandonada; a da Jornada já está salva. */
+function leftToMenu() {
+  if (camp && campLive) track({ status: 'abandoned' });
+  camp = null;
+  campLive = false;
+  battlePlayer = null;
+  battleReport = null;
+  jornadaSheet = null;
+  document.body.classList.remove('mode-jornada');
+  mood('neutral');
+  syncSheetBtn();
 }
 
 /** Tela inicial: Roleta (rápido, tudo na sorte) ou Jornada (lento, com controle). */
 async function modeScreen(): Promise<'roleta' | 'jornada'> {
   const M = S.jornada.modes;
+  // No Portão da Vila não há run: some o botão do menu e o da Ficha.
+  camp = null;
+  campLive = false;
+  syncSheetBtn();
+  document.body.classList.add('at-gate');
   document.getElementById('dots')!.innerHTML = '';
   const P = S.profile.tabs;
   // Portão da Vila: os modos com o seu selo (運 sorte, 忍道 caminho ninja) e atalhos para o registro ninja.
@@ -3247,7 +3293,9 @@ async function modeScreen(): Promise<'roleta' | 'jornada'> {
       </nav>
     </div>`),
   );
-  return choose<'roleta' | 'jornada'>(root);
+  const pick = await choose<'roleta' | 'jornada'>(root);
+  document.body.classList.remove('at-gate');
+  return pick;
 }
 
 function setPlayerName(raw: string): void {
@@ -3282,6 +3330,10 @@ const jornadaHost: JornadaHost = {
   mood,
   ensurePlayerName,
   playerName: () => profile.playerName ?? '',
+  setSheet: (open) => {
+    jornadaSheet = open;
+    syncSheetBtn();
+  },
   discoverRelics: (ids) => {
     if (LAB.lab) return;
     const next = discoverRelics(profile, ids, new Date());

@@ -25,6 +25,8 @@
 }
 .top-actions { display: flex; align-items: center; gap: 4px; }
 .tool-group { display: flex; align-items: center; gap: 2px; }
+/* Menu principal só fora do Portão da Vila; Ficha só com uma run em andamento (Roleta ou Jornada). */
+body.at-gate #home-btn, body:not(.has-sheet) #sheet-btn { display: none; }
 .tool-group + .tool-group { padding-left: 5px; margin-left: 2px; border-left: 1px solid var(--line); }
 .top-actions .btn.small {
   min-width: 36px; min-height: 36px; padding: 0; justify-content: center;

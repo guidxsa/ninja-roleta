@@ -256,9 +256,6 @@
 .jend.win h2 { color: var(--gold-2); }
 .jend.lose h2 { color: var(--bad); }
 
-/* A ficha é do Roleta: some na Jornada. */
-body.mode-jornada #sheet-btn { display: none; }
-
 /* PC: a Jornada usa a tela larga. */
 @media (min-width: 900px) {
   body.mode-jornada main, body.mode-jornada footer { max-width: 1000px; }
