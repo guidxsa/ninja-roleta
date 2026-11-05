@@ -169,11 +169,10 @@
 .jrshelf-item.sold { opacity: .45; }
 .jrprice { font: 700 14px/1 var(--font-hud); letter-spacing: .04em; padding: 3px 8px; background: var(--ink); color: var(--gold-2); border-left: 2px solid var(--gold); white-space: nowrap; }
 
-/* Moveset */
+/* Painel das relíquias e visual do Sasuke */
 .jmodal { max-height: 86vh; overflow-y: auto; }
 .jskin { align-self: center; }
 .jskin[aria-pressed='true'] { border-color: var(--gold-2); box-shadow: inset 0 -2px 0 var(--accent); }
-.jmoves-pick { display: grid; gap: 6px; }
 
 /* Caminho Ninja: classes, revelação do elemento e mapa ramificado. */
 .jclasses { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }

@@ -17,9 +17,6 @@ import {
   finishFight,
   gainRelic,
   genericStage,
-  heroActives,
-  heroMods,
-  heroMovable,
   leaveStop,
   memberSheet,
   memberState,
@@ -31,19 +28,16 @@ import {
   resolveEvent,
   rest,
   restHealPct,
-  setMoveset,
   shopOffer,
   stageCount,
   stageId,
   stageScene,
   stopRng,
   xpToNext,
-  MOVESET_SIZE,
   type ElementChoice,
   type JRun,
   type Purchase,
 } from '../../src/core/jornada/run';
-import { techPower } from '../../src/core/jornada/battle';
 import { reachableFrom, type MapNode } from '../../src/core/jornada/map';
 import type { Element } from '../../src/core/types';
 import { ELEMENT_COLORS } from '../tips';
@@ -55,7 +49,8 @@ import { clearJornada, loadJornada, saveJornada } from '../../src/state/jornadaS
 import { fighterPortrait, icon } from '../art';
 import { choose, esc, h, show, sleep } from '../dom';
 import { tip } from '../tooltip';
-import { forgetLiveBattle, heroLabel, jornadaBattle, memberLabel, techName, techTip } from './battle';
+import { forgetLiveBattle, heroLabel, jornadaBattle, memberLabel } from './battle';
+import { movesetScreen } from './moveset';
 import { openJornadaSheet } from './sheet';
 import type { JornadaHost } from './host';
 import { playMinigame } from './minigames';
@@ -326,7 +321,7 @@ function wireHud(root: HTMLElement, host: JornadaHost, get: () => JRun, set0: (r
     const kind = b.dataset.open;
     if (kind === 'sheet') return openJornadaSheet(host, get());
     if (kind === 'talents') set(await talentTreeScreen(host, get(), heroName(host, get())));
-    else if (kind === 'moveset') set(await movesetModal(get()));
+    else if (kind === 'moveset') set(await movesetScreen(get()));
     else relicsModal(get(), b.dataset.relic);
     refresh();
   });
@@ -652,55 +647,6 @@ async function bossChoiceScreen(run: JRun): Promise<JRun> {
 
 // ---------------------------------------------------------------------------
 // Modais
-
-function modal(inner: string): HTMLElement {
-  const el = h(`<div class="modal"><div class="modal-body jmodal">${inner}</div></div>`);
-  document.body.appendChild(el);
-  return el;
-}
-
-function movesetModal(run: JRun): Promise<JRun> {
-  const known = heroMovable(run, data);
-  const picked = new Set(run.moveset);
-  const mods = heroMods(run, data);
-  const el = modal('');
-  const render = () => {
-    el.querySelector('.jmodal')!.innerHTML = `<div class="modal-head"><h2>${U.movesetTitle(picked.size, MOVESET_SIZE)}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
-      <p class="muted small">${U.movesetHelp}</p>
-      <div class="jmoves-pick">${known
-        .map((id) => {
-          const t = data.techniques[id]!;
-          const power = techPower(t, mods);
-          const cost = Math.max(0, t.chakraCost - mods.chakraDiscount - (mods.techChakraDiscount[id] ?? 0));
-          const bits = [power ? `<span${power > t.baseDamage ? ' class="up"' : ''}>${J.battle.damage(power)}${(t.hits ?? 1) > 1 ? `×${t.hits}` : ''}</span>` : '', cost ? J.battle.chakra(cost) : ''].filter(Boolean);
-          return `<button class="btn jmove${picked.has(id) ? ' on' : ''}" data-move="${id}" aria-pressed="${picked.has(id)}"${techTip(t, undefined, mods)}><span class="jmove-ico">${icon(t.element ?? t.type)}</span>
-            <span class="jmove-txt"><b>${techName(id)}</b>${bits.length ? `<small>${bits.join(' · ')}</small>` : ''}</span></button>`;
-        })
-        .join('')}</div>
-      <h3>${U.actives}</h3><p class="muted small">${heroActives(run, data).map(techName).join(' · ')}</p>
-      <button class="btn primary big" data-save ${picked.size ? '' : 'disabled'}>${U.save}</button>`;
-  };
-  render();
-  return new Promise((resolve) => {
-    el.addEventListener('click', (e) => {
-      const t = e.target as HTMLElement;
-      if (t === el || t.closest('[data-close]')) {
-        el.remove();
-        return resolve(run);
-      }
-      if (t.closest('[data-save]') && picked.size) {
-        el.remove();
-        return resolve(setMoveset(run, [...picked], data));
-      }
-      const b = t.closest<HTMLElement>('[data-move]');
-      if (!b) return;
-      const id = b.dataset.move!;
-      if (picked.has(id)) picked.delete(id);
-      else if (picked.size < MOVESET_SIZE) picked.add(id);
-      render();
-    });
-  });
-}
 
 async function notice(title: string, text: string): Promise<void> {
   const root = show(h(`<div class="screen"><h2>${esc(title)}</h2><section class="card"><p class="pre">${esc(text)}</p></section>

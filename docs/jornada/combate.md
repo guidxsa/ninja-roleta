@@ -90,6 +90,7 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 
 - **4 técnicas** equipadas, mais as **ativas de classe** numa área separada (Kage Bunshin, Manto da Kyuubi).
 - O moveset fica salvo entre as lutas; editar (botão Moveset na trilha) é opcional. Técnica nova da árvore entra sozinha se houver espaço.
+- **Tela do moveset** (v0.43.0): tela cheia com o tema da classe, como a árvore de talentos (cor, padrão e brasão; no Comum, a cor do elemento). Em cima, as 4 vagas em selos (tocar tira); depois as ativas de classe, sempre disponíveis; embaixo, as técnicas conhecidas agrupadas por origem (kit inicial, elemento, talentos e eventos), com o dano e o custo da run. Com as 4 vagas cheias, tocar numa técnica nova avisa para tirar uma antes.
 
 ## Vitória e derrota
 
