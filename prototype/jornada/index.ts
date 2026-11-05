@@ -3,6 +3,7 @@
 import type { Difficulty } from '../../src/core/difficulty';
 import { eventOptions } from '../../src/core/jornada/events';
 import {
+  afterWinRecovery,
   battleSetup,
   buy,
   canBuy,
@@ -125,6 +126,9 @@ async function jornadaLoop(host: JornadaHost): Promise<void> {
   await endScreen(host, run);
 }
 
+/** Recuperação depois de cada vitória na dificuldade (configuração da run, sem relíquias). */
+const recoveryLine = (d: Difficulty) => `${icon('heart')} ${J.start.recovery(Math.round((data.j.run.afterWinRecovery[d] ?? 0) * 100))}`;
+
 async function startScreen(host: JornadaHost): Promise<JRun | null> {
   const saved = loadJornada(host.storage);
   const hardcoreOk = host.unlocked().has('j_canonHard');
@@ -143,6 +147,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
           (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === diff}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? `${icon('lock')} ` : ''}${S.difficulty[d].name}</button>`,
         ).join('')}</div>
         <p class="center small jdiff-both">${J.start.difficultyBoth}</p>
+        <p class="center small" data-recovery>${recoveryLine(diff)}</p>
         <p class="muted center small">${hardcoreOk ? J.start.willOfFireNote : J.start.hardcoreLocked}</p></div>
       <section class="card jmode-panel">
         <div class="jmode-card"><div class="jstart-face">${fighterPortrait('naruto', 'ninja:uzumaki', 'md')}</div>
@@ -173,6 +178,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
     diff = b.dataset.diff as Difficulty;
     host.setDifficulty(diff);
     root.querySelectorAll('[data-diff]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    root.querySelector('[data-recovery]')!.innerHTML = recoveryLine(diff);
   });
   let classId = 'common';
   let skin: string | null = null;
@@ -442,6 +448,7 @@ async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, {
     }
     if (outcome.won) {
       const lines = [U.rewards(outcome.ryo, outcome.xp, outcome.talent)];
+      if (next.status === 'inProgress') lines.push(stop.kind === 'boss' ? U.restoredAll : U.recovered(Math.round(afterWinRecovery(next, data) * 100)));
       if (outcome.levelUps) lines.push(U.levelUp(next.level));
       await notice(U.victoryTitle, lines.join('\n'));
       if (outcome.relic) {

@@ -1,4 +1,5 @@
 import type { JRun } from '../core/jornada/run';
+import { RELIC_RENAMES } from '../data/jornada/relics';
 import { jTechniquesById } from '../data/jornada/techniques';
 import type { KeyValueStorage } from './runHistory';
 
@@ -7,8 +8,11 @@ import type { KeyValueStorage } from './runHistory';
 // começo da parada.
 
 export const JORNADA_SAVE_KEY = 'jornada_run_v1';
-const STARTER_RELIC = 'ichirakuBowl';
-const STARTER_EVOLVED = 'ichirakuDeluxe';
+const STARTER_RELIC = 'irukaHeadband';
+const STARTER_EVOLVED = 'firstHokageNecklace';
+
+/** Troca os ids de relíquia que mudaram (v0.43.0: iniciais novas e o Talismã da Vontade do Fogo). */
+export const renameRelicIds = (ids: readonly string[]) => [...new Set(ids.map((id) => RELIC_RENAMES[id] ?? id))];
 
 export function loadJornada(storage: KeyValueStorage): JRun | null {
   try {
@@ -16,6 +20,7 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     if (!raw) return null;
     const run = JSON.parse(raw) as JRun;
     if (run?.version !== 1 || run.status !== 'inProgress' || typeof run.stageIndex !== 'number') return null;
+    run.relics = renameRelicIds(run.relics ?? []);
     // Runs da História salvas antes da v0.35.1 não tinham a relíquia inicial (ou a sua evolução).
     const hasStarter = (run.mode ?? 'canon') !== 'canon' || run.relics.includes(STARTER_RELIC) || run.relics.includes(STARTER_EVOLVED);
     const relics = hasStarter ? run.relics : [STARTER_RELIC, ...run.relics];

@@ -27,6 +27,7 @@ import { checkSequence, jokenpo, memoryDeck, sealSequence } from '../src/core/jo
 import { newJornadaAchievements } from '../src/data/jornada/achievements';
 import {
   bagFull,
+  afterWinRecovery,
   battleSetup,
   buy,
   buyTalent,
@@ -63,6 +64,7 @@ import { jornadaData as data } from '../src/data/jornada';
 import { loadJornada, saveJornada, JORNADA_SAVE_KEY } from '../src/state/jornadaSave';
 import { cleanPlayerName, discoverRelics, emptyProfile, loadProfile, PLAYER_NAME_MAX, PROFILE_STORAGE_KEY, saveProfile } from '../src/state/profile';
 import { bossChoices, dropRelic, rollRelic } from '../src/core/jornada/relics';
+import { RELIC_RENAMES } from '../src/data/jornada/relics';
 import { jornadaPtBR } from '../src/data/strings/jornada';
 import { RELIC_ICONS } from '../prototype/jornada/relicIcons';
 
@@ -385,32 +387,32 @@ describe('run da Jornada', () => {
     expect(seen.rare! / N).toBeCloseTo(0.17, 1);
   });
 
-  it('cada personagem começa com a sua relíquia inicial, sempre com a recuperação', () => {
-    expect(newRun(1, 'normal', data).relics).toEqual(['ichirakuBowl']);
+  it('cada classe começa com a sua relíquia inicial, que não recupera (a recuperação é da dificuldade)', () => {
+    expect(newRun(1, 'normal', data).relics).toEqual(['irukaHeadband']);
     const unlocked = new Set(['j_unlockUchiha', 'j_unlockHyuuga']);
-    expect(newGenericRun(1, 'normal', 'uchiha', data, unlocked).relics).toEqual(['clanIncense']);
-    expect(newGenericRun(1, 'normal', 'hyuuga', data, unlocked).relics).toEqual(['familyTea']);
+    expect(newGenericRun(1, 'normal', 'uchiha', data, unlocked).relics[0]).toBe('uchihaFan');
+    expect(newGenericRun(1, 'normal', 'hyuuga', data, unlocked).relics[0]).toBe('gentleFistScroll');
     for (let s = 0; s < 40; s++) {
       const r = newGenericRun(s, 'normal', 'common', data);
-      expect(r.relics).toEqual([r.hero === 'prodigy' ? 'trainingBento' : 'academyFlask']);
+      expect(r.relics[0]).toBe(r.hero === 'prodigy' ? 'greenJumpsuit' : 'academyManual');
     }
-    for (const r of data.relics.filter((x) => x.tier === 'starter')) {
-      expect(r.starterFor?.length, r.id).toBeGreaterThan(0);
-      expect(r.afterWinHealPct, r.id).toBe(0.25);
+    for (const r of data.relics.filter((x) => x.tier === 'starter' || x.evolves)) {
+      if (r.tier === 'starter') expect(r.starterFor?.length, r.id).toBeGreaterThan(0);
+      expect(r.afterWinHealPct, r.id).toBeUndefined();
     }
   });
 
   it('evolução: pode aparecer na escolha do chefe, troca a inicial e nunca sai em outro sorteio', () => {
     const relics = data.relics;
-    expect(bossChoices(relics, ['ichirakuBowl'], 3, 1, createRng(1))).toContain('ichirakuDeluxe');
-    expect(bossChoices(relics, ['ichirakuBowl'], 3, 1, createRng(1))).toHaveLength(3);
-    expect(bossChoices(relics, ['ichirakuBowl'], 3, 0, createRng(1))).not.toContain('ichirakuDeluxe');
+    expect(bossChoices(relics, ['irukaHeadband'], 3, 1, createRng(1))).toContain('firstHokageNecklace');
+    expect(bossChoices(relics, ['irukaHeadband'], 3, 1, createRng(1))).toHaveLength(3);
+    expect(bossChoices(relics, ['irukaHeadband'], 3, 0, createRng(1))).not.toContain('firstHokageNecklace');
     // Já evoluiu: não aparece de novo, e outras classes não veem a evolução do Naruto.
-    expect(bossChoices(relics, ['ichirakuDeluxe'], 3, 1, createRng(1))).not.toContain('ichirakuDeluxe');
-    expect(bossChoices(relics, ['academyFlask'], 3, 1, createRng(1))).toContain('chuninFlask');
+    expect(bossChoices(relics, ['firstHokageNecklace'], 3, 1, createRng(1))).not.toContain('firstHokageNecklace');
+    expect(bossChoices(relics, ['academyManual'], 3, 1, createRng(1))).toContain('chuninVest');
 
-    const run = gainRelic({ ...newRun(1, 'normal', data), relics: ['ichirakuBowl', 'goggles'] }, 'ichirakuDeluxe', data);
-    expect(run.relics).toEqual(['ichirakuDeluxe', 'goggles']);
+    const run = gainRelic({ ...newRun(1, 'normal', data), relics: ['irukaHeadband', 'goggles'] }, 'firstHokageNecklace', data);
+    expect(run.relics).toEqual(['firstHokageNecklace', 'goggles']);
 
     const rng = createRng(5);
     for (let i = 0; i < 400; i++) {
@@ -422,14 +424,25 @@ describe('run da Jornada', () => {
     }
   });
 
-  it('save: não enfia a Tigela em quem não é da História nem desfaz a evolução', () => {
+  it('save: não enfia a inicial em quem não é da História nem desfaz a evolução', () => {
     const mem = new Map<string, string>();
     const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
-    const evolved = { ...newRun(1, 'normal', data), relics: ['ichirakuDeluxe'] };
+    const evolved = { ...newRun(1, 'normal', data), relics: ['firstHokageNecklace'] };
     saveJornada(storage, evolved);
-    expect(loadJornada(storage)!.relics).toEqual(['ichirakuDeluxe']);
+    expect(loadJornada(storage)!.relics).toEqual(['firstHokageNecklace']);
     saveJornada(storage, { ...newRun(1, 'normal', data), relics: [] });
-    expect(loadJornada(storage)!.relics).toEqual(['ichirakuBowl']);
+    expect(loadJornada(storage)!.relics).toEqual(['irukaHeadband']);
+  });
+
+  it('save: troca os ids de relíquia antigos (v0.43.0) pelos novos', () => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    saveJornada(storage, { ...newRun(1, 'normal', data), relics: ['ichirakuDeluxe', 'hokageNecklace', 'goggles'] });
+    expect(loadJornada(storage)!.relics).toEqual(['firstHokageNecklace', 'willOfFireCharm', 'goggles']);
+    const generic = newGenericRun(1, 'normal', 'common', data);
+    saveJornada(storage, { ...generic, relics: ['academyFlask', 'clanIncense', 'mainHouseTea'] });
+    expect(loadJornada(storage)!.relics).toEqual(['academyManual', 'uchihaFan', 'eightTrigramsScroll']);
+    for (const id of Object.values(RELIC_RENAMES)) expect(data.relics.some((r) => r.id === id), id).toBe(true);
   });
 
   it('o mercador tem uma vaga de loja; relíquias de loja e evento só saem no lugar delas', () => {
@@ -662,12 +675,12 @@ describe('run da Jornada', () => {
     expect(shopOffer({ ...tazuna, stopIndex: 6 }, data).training).toBe(Math.floor(data.j.shop.trainingPrice * 0.8));
   });
 
-  it('a História começa com a Tigela do Ichiraku, que nunca sai em sorteio', () => {
+  it('a História começa com a Bandana do Iruka, que nunca sai em sorteio', () => {
     const run = newRun(1, 'normal', data);
-    expect(run.relics).toEqual(['ichirakuBowl']);
+    expect(run.relics).toEqual(['irukaHeadband']);
     for (let s = 0; s < 40; s++) {
       const r = { ...newRun(s, 'normal', data), stopIndex: 6, ryo: 999 };
-      expect(shopOffer(r, data).relics.map((x) => x.id)).not.toContain('ichirakuBowl');
+      expect(shopOffer(r, data).relics.map((x) => x.id)).not.toContain('irukaHeadband');
     }
   });
 
@@ -711,7 +724,21 @@ describe('run da Jornada', () => {
     expect(shopOffer(both, data).training).toBe(Math.floor(price * (1 - data.j.shop.maxDiscount)));
   });
 
-  it('a vitória recupera 25% da equipe do estágio, inclusive quem não lutou', () => {
+  it('a recuperação depois da vitória vem da dificuldade, e as relíquias somam', () => {
+    const base = newRun(1, 'normal', data);
+    expect(afterWinRecovery(base, data)).toBe(0.25);
+    expect(afterWinRecovery({ ...base, difficulty: 'easy' }, data)).toBe(0.35);
+    expect(afterWinRecovery({ ...base, difficulty: 'hard' }, data)).toBe(0.2);
+    expect(afterWinRecovery({ ...base, difficulty: 'hardcore' }, data)).toBe(0.15);
+    expect(afterWinRecovery(gainRelic(base, 'ichirakuCoupon', data), data)).toBeCloseTo(0.35);
+    // No Difícil, a equipe recupera 20%.
+    const hurt: JRun = { ...base, difficulty: 'hard', stopIndex: 3, members: { naruto: { hp: 20, chakra: 5 }, sasuke: { hp: 20, chakra: 5 }, sakura: { hp: 20, chakra: 5 } } };
+    const { run } = finishFight(hurt, won(startBattle(battleSetup(hurt, data), data, createRng(1))), data);
+    const sasuke = memberSheet(run, 'sasuke', data);
+    expect(run.members.sasuke!.hp).toBe(Math.min(sasuke.maxHp, 20 + Math.floor(sasuke.maxHp * 0.2)));
+  });
+
+  it('a vitória recupera 25% (Médio) da equipe do estágio, inclusive quem não lutou', () => {
     // Capangas (parada 4): Naruto, Sasuke e Sakura. Depois, o Haku: só Naruto e Sasuke lutam.
     const base = { ...newRun(1, 'normal', data), stopIndex: 3 };
     const hurt: JRun = { ...base, members: { naruto: { hp: 20, chakra: 5 }, sasuke: { hp: 20, chakra: 5 }, sakura: { hp: 20, chakra: 5 } } };
@@ -747,9 +774,9 @@ describe('run da Jornada', () => {
     saveJornada(storage, { ...run, status: 'victory' });
     expect(mem.get(JORNADA_SAVE_KEY)).toBe('');
     expect(loadJornada(storage)).toBeNull();
-    // Save de antes da Tigela ganha a relíquia ao carregar.
+    // Save de antes da relíquia inicial ganha a relíquia ao carregar.
     saveJornada(storage, { ...run, relics: ['goggles'] });
-    expect(loadJornada(storage)!.relics).toEqual(['ichirakuBowl', 'goggles']);
+    expect(loadJornada(storage)!.relics).toEqual(['irukaHeadband', 'goggles']);
   });
 });
 

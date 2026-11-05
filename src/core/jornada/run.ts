@@ -419,6 +419,10 @@ function gainXp(run: JRun, xp: number, data: JornadaData): number {
 const ryoGain = (run: JRun, n: number, data: JornadaData) =>
   Math.floor(n * relicDefs(run, data).reduce((a, r) => a * (r.ryoMult ?? 1), 1));
 
+/** Fração do HP e do chakra que a equipe recupera depois de cada vitória: a da dificuldade mais a das relíquias. */
+export const afterWinRecovery = (run: JRun, data: JornadaData) =>
+  (data.j.run.afterWinRecovery[run.difficulty] ?? 0) + relicDefs(run, data).reduce((a, r) => a + (r.afterWinHealPct ?? 0), 0);
+
 function healAll(run: JRun, pct: number, data: JornadaData, ids?: string[]): void {
   for (const id of ids ?? Object.keys(run.members)) {
     const sheet = memberSheet(run, id, data);
@@ -464,9 +468,9 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   }
   run.stats.wins++;
   run.cleared.push(stop.id);
-  // A recuperação vem das relíquias (a Tigela do Ichiraku, inicial, e o Cupom) e vale para a equipe do
-  // estágio inteira: quem lutou e terminou de pé e quem ficou de fora desta luta.
-  const rec = relicDefs(run, data).reduce((a, r) => a + (r.afterWinHealPct ?? 0), 0);
+  // A recuperação vem da dificuldade (mais as relíquias que somam) e vale para a equipe do estágio inteira:
+  // quem lutou e terminou de pé e quem ficou de fora desta luta.
+  const rec = afterWinRecovery(run, data);
   const fought = new Set(results.map((r) => r.defId));
   healAll(run, rec, data, membersSeen(run, data).filter((id) => !fought.has(id)));
   for (const r of results) {
