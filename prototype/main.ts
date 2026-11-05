@@ -129,7 +129,9 @@ import {
   loadProfile,
   originRecords,
   PLAYER_NAME_MAX,
+  reachOf,
   recordFight,
+  recordJornadaReach,
   saveProfile,
   unlockAchievements,
   type Profile,
@@ -3341,6 +3343,16 @@ const jornadaHost: JornadaHost = {
     profile = next;
     saveProfile(storage, profile);
   },
+  jornadaRecord: () => profile.jornada?.generic ?? null,
+  recordJornada: (run) => {
+    if (LAB.lab || run.mode !== 'generic') return false;
+    const next = recordJornadaReach(profile, reachOf(run));
+    if (next === profile) return false;
+    profile = next;
+    saveProfile(storage, profile);
+    return true;
+  },
+  notify: (text, ico = 'sparkle') => toast(text, ico),
 };
 
 void main();

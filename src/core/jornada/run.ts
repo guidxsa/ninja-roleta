@@ -9,7 +9,7 @@ import type { JornadaData } from './data';
 import { eventOptions, type EventEffect } from './events';
 import { generateMap, mapNode, nextNodes, type StageMap } from './map';
 import { bossChoices, dropRelic, rollRelic, rollRelics, type RelicDef } from './relics';
-import { canBuyTalent, talentRankCost, type TalentContext } from './talents';
+import { canBuyTalent, talentRankCost, treeComplete, type TalentContext } from './talents';
 import { isFight, teamFor, type FightKind, type StopDef } from './trail';
 import type { ConsumableId, FighterMods, JBattle } from './types';
 
@@ -79,9 +79,20 @@ export interface JRun {
   bonus: Record<string, { hp: number; chakra: number }>;
   flags: string[];
   status: 'inProgress' | 'victory' | 'defeat';
+  /**
+   * Modo infinito do Caminho Ninja (docs/jornada/run.md#modo-infinito): ciclo atual, contando do 0 (a tela mostra
+   * "Ciclo N" com N = cycle + 1). A cada ciclo os inimigos ficam mais fortes.
+   */
+  cycle: number;
+  /**
+   * Conquistas da conta que liberam nós da árvore (retrato renovado pela interface quando sai conquista e ao seguir de
+   * ciclo). O core usa para saber se a árvore está completa sem receber o perfil.
+   */
+  unlocks: string[];
   /** Escolha de lendária pendente (depois de um chefe). */
   bossChoice: string[] | null;
-  stats: { fights: number; wins: number; alliesLost: number; bestHit: number };
+  /** `talentRyo`: ryō que veio de pontos de talento convertidos (árvore completa), na run toda. */
+  stats: { fights: number; wins: number; alliesLost: number; bestHit: number; talentRyo?: number };
   /** Lutas vencidas (ids das paradas), para as conquistas. */
   cleared: string[];
 }
@@ -127,15 +138,19 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     bonus: {},
     flags: [],
     status: 'inProgress',
+    cycle: 0,
+    unlocks: [],
     bossChoice: null,
     stats: { fights: 0, wins: 0, alliesLost: 0, bestHit: 0 },
     cleared: [],
   };
 }
 
-/** História do Naruto (docs/jornada/historia.md). */
-export function newRun(seed: number, difficulty: Difficulty, data: JornadaData): JRun {
-  return baseRun(seed, difficulty, HERO, data);
+/** História do Naruto (docs/jornada/historia.md). `unlocked`: conquistas do perfil (nós da conta na árvore). */
+export function newRun(seed: number, difficulty: Difficulty, data: JornadaData, unlocked: ReadonlySet<string> = new Set()): JRun {
+  const run = baseRun(seed, difficulty, HERO, data);
+  run.unlocks = talentUnlocks(unlocked, data);
+  return run;
 }
 
 const ELEMENTS: Element[] = ['fire', 'wind', 'lightning', 'earth', 'water'];
@@ -184,6 +199,7 @@ export function newGenericRun(
     run.secondElement = second;
   }
   run.skin = skin;
+  run.unlocks = talentUnlocks(unlocked, data);
   run.elements = { [hero]: element };
   drawSupports(run, rng, data, unlocked);
   run.bossPlan = data.generic.stages.map((s) => Math.floor(rng() * s.bosses.length));
@@ -240,10 +256,14 @@ function mix(a: number): Rng {
   };
 }
 
-/** Rng de uma parada: derivada da seed da run (repetir a parada repete os sorteios). */
+/** Rng de uma parada: derivada da seed da run (repetir a parada repete os sorteios). O ciclo 0 dá os mesmos valores de antes. */
 export function stopRng(run: JRun, salt = 0): Rng {
-  return mix((run.seed ^ Math.imul(run.stageIndex * 100 + run.stopIndex + 1, 0x9e3779b1) ^ Math.imul(salt + 1, 0x85ebca6b)) >>> 0);
+  const at = (run.cycle ?? 0) * 1000 + run.stageIndex * 100 + run.stopIndex + 1;
+  return mix((run.seed ^ Math.imul(at, 0x9e3779b1) ^ Math.imul(salt + 1, 0x85ebca6b)) >>> 0);
 }
+
+/** Força dos inimigos no ciclo atual (multiplica por cima da dificuldade): 1 + fatia × ciclo. */
+export const cycleEnemyMult = (run: JRun, data: JornadaData) => 1 + data.j.infinite.enemyPerCycle * (run.cycle ?? 0);
 
 // ---------------------------------------------------------------------------
 // Estágio e parada
@@ -440,7 +460,7 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
   });
   const opening = relicDefs(run, data).reduce((a, r) => a + (r.openingDamage ?? 0), 0);
   const foes = stop.enemies.map((id) => {
-    const seed = enemySeed(id, run.difficulty, data);
+    const seed = enemySeed(id, run.difficulty, data, cycleEnemyMult(run, data));
     return opening ? { ...seed, hp: Math.max(1, seed.hp - opening) } : seed;
   });
   return { allies, enemies: foes, win: stop.win ?? { kind: 'defeatAll' } };
@@ -452,17 +472,71 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
 /** XP para passar do nível atual. */
 export const xpToNext = (level: number, data: JornadaData) => data.j.xp.base + data.j.xp.perLevel * (level - 1);
 
-function gainXp(run: JRun, xp: number, data: JornadaData): number {
+/** Sobe de nível com o XP ganho. Devolve os níveis e o ryō dos pontos convertidos (árvore completa). */
+function gainXp(run: JRun, xp: number, data: JornadaData): { ups: number; ryo: number } {
   const mult = ownedTalents(run, data).reduce((a, t) => a * (t.xpMult ?? 1), 1) * relicDefs(run, data).reduce((a, r) => a * (r.xpMult ?? 1), 1);
   run.xp += Math.floor(xp * mult);
   let ups = 0;
+  let ryo = 0;
   while (run.xp >= xpToNext(run.level, data)) {
     run.xp -= xpToNext(run.level, data);
     run.level++;
-    run.talentPoints += data.j.xp.talentPerLevel;
+    ryo += addTalentPoints(run, data.j.xp.talentPerLevel, data);
     ups++;
   }
-  return ups;
+  return { ups, ryo };
+}
+
+// ---------------------------------------------------------------------------
+// Árvore completa (docs/jornada/talentos.md#árvore-completa)
+
+/** Só as conquistas que algum nó da árvore usa (o retrato que a run guarda). */
+export function talentUnlocks(unlocked: ReadonlySet<string>, data: JornadaData): string[] {
+  const used = new Set(data.talents.map((t) => t.account).filter((a): a is string => Boolean(a)));
+  return [...unlocked].filter((id) => used.has(id)).sort();
+}
+
+/** Nada mais a aprender ou subir na árvore do protagonista (com as conquistas guardadas na run, ou as dadas). */
+export function talentTreeComplete(run: JRun, data: JornadaData, unlocked: ReadonlySet<string> = new Set(run.unlocks ?? [])): boolean {
+  return treeComplete(run.hero, data.talents, talentContext(run, unlocked));
+}
+
+/** Ganha pontos de talento; com a árvore completa, viram ryō na hora (sem o multiplicador). Devolve o ryō convertido. */
+function addTalentPoints(run: JRun, n: number, data: JornadaData): number {
+  if (n <= 0) return 0;
+  if (!talentTreeComplete(run, data)) {
+    run.talentPoints += n;
+    return 0;
+  }
+  return convertTalentPoints(run, n, data);
+}
+
+function convertTalentPoints(run: JRun, n: number, data: JornadaData): number {
+  const ryo = n * data.j.talentTree.completeRyoPerPoint;
+  run.ryo += ryo;
+  run.stats = { ...run.stats, talentRyo: (run.stats.talentRyo ?? 0) + ryo };
+  return ryo;
+}
+
+/** Pontos guardados viram ryō quando a árvore fecha (último nó comprado, save antigo). */
+function settleTalentPoints(run: JRun, data: JornadaData): number {
+  if (run.talentPoints <= 0 || !talentTreeComplete(run, data)) return 0;
+  const n = run.talentPoints;
+  run.talentPoints = 0;
+  return convertTalentPoints(run, n, data);
+}
+
+/**
+ * Renova o retrato das conquistas da conta (interface: ao abrir a run e quando sai conquista). Uma conquista nova pode
+ * abrir um nó (ex.: o ramo do Sasuke); com a árvore completa, os pontos guardados viram ryō.
+ */
+export function syncUnlocks(prev: JRun, unlocked: ReadonlySet<string>, data: JornadaData): JRun {
+  const unlocks = talentUnlocks(unlocked, data);
+  const same = unlocks.length === (prev.unlocks ?? []).length && unlocks.every((id, i) => id === prev.unlocks[i]);
+  if (same && (prev.talentPoints <= 0 || !talentTreeComplete(prev, data))) return prev;
+  const run = { ...clone(prev), unlocks };
+  settleTalentPoints(run, data);
+  return run;
 }
 
 const ryoGain = (run: JRun, n: number, data: JornadaData) =>
@@ -483,7 +557,10 @@ function healAll(run: JRun, pct: number, data: JornadaData, ids?: string[]): voi
 export interface FightOutcome {
   won: boolean;
   ryo: number;
+  /** Pontos de talento que ficaram (com a árvore completa, 0: viraram `talentRyo`). */
   talent: number;
+  /** Ryō dos pontos convertidos nesta luta (recompensa e níveis). */
+  talentRyo: number;
   xp: number;
   levelUps: number;
   /** Gastou uma Vontade do Fogo: a luta recomeça. */
@@ -509,11 +586,11 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
         const sheet = memberSheet(run, r.defId, data);
         run.members[r.defId] = { hp: Math.max(r.hp, Math.floor(sheet.maxHp * pct)), chakra: Math.max(r.chakra, Math.floor(sheet.maxChakra * pct)) };
       }
-      return { run, outcome: { won: false, ryo: 0, talent: 0, xp: 0, levelUps: 0, retry: true, relic: null } };
+      return { run, outcome: { won: false, ryo: 0, talent: 0, talentRyo: 0, xp: 0, levelUps: 0, retry: true, relic: null } };
     }
     run.status = 'defeat';
     for (const r of results) run.members[r.defId] = { hp: r.hp, chakra: r.chakra };
-    return { run, outcome: { won: false, ryo: 0, talent: 0, xp: 0, levelUps: 0, retry: false, relic: null } };
+    return { run, outcome: { won: false, ryo: 0, talent: 0, talentRyo: 0, xp: 0, levelUps: 0, retry: false, relic: null } };
   }
   run.stats.wins++;
   run.cleared.push(stop.id);
@@ -537,8 +614,8 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   const reward = data.j.rewards[stop.kind as FightKind];
   const ryo = ryoGain(run, reward.ryo, data);
   run.ryo += ryo;
-  run.talentPoints += reward.talent;
-  const levelUps = gainXp(run, reward.xp, data);
+  const rewardRyo = addTalentPoints(run, reward.talent, data);
+  const { ups: levelUps, ryo: levelRyo } = gainXp(run, reward.xp, data);
   if (stop.kind === 'boss') {
     // Estágio vencido: toda a equipe volta cheia, inclusive quem caiu.
     healAll(run, 1, data, membersSeen(run, data));
@@ -549,7 +626,8 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   const relic = stop.kind === 'elite' ? dropRelic(data.relics, run.relics, data.j.relics.eliteWeights, stopRng(run, 13)) : null;
   if (relic) run = gainRelic(run, relic, data);
   if (!run.bossChoice) advanceStop(run, data);
-  return { run, outcome: { won: true, ryo, talent: reward.talent, xp: reward.xp, levelUps, retry: false, relic } };
+  const talentRyo = rewardRyo + levelRyo;
+  return { run, outcome: { won: true, ryo, talent: rewardRyo ? 0 : reward.talent, talentRyo, xp: reward.xp, levelUps, retry: false, relic } };
 }
 
 /** Vai para a próxima parada (ou o próximo estágio, ou a vitória). */
@@ -586,6 +664,35 @@ function advanceNode(run: JRun, data: JornadaData): void {
   run.map = generateMap(stopRng(run, 31), data);
 }
 
+/** O modo infinito existe só no Caminho Ninja: a run vencida pode seguir para o próximo ciclo. */
+export const canContinueCycle = (run: JRun) => run.mode === 'generic' && run.status === 'victory';
+
+/**
+ * Modo infinito (docs/jornada/run.md#modo-infinito): o Caminho Ninja vencido volta ao estágio 1 com os inimigos mais
+ * fortes. Mantém nível, XP, talentos, relíquias, ryō, bolsa, moveset, suportes e as contas da run; sorteia chefes e mapa
+ * novos (da seed e do ciclo), limpa as marcas dos eventos, volta com a equipe cheia e repõe a Vontade do Fogo da
+ * dificuldade (sem tirar as que sobraram).
+ */
+export function continueCycle(prev: JRun, data: JornadaData, unlocked: ReadonlySet<string> = new Set(prev.unlocks ?? [])): JRun {
+  if (!canContinueCycle(prev)) throw new Error('só o Caminho Ninja vencido segue de ciclo');
+  const run = clone(prev);
+  run.cycle = (run.cycle ?? 0) + 1;
+  run.status = 'inProgress';
+  run.stageIndex = 0;
+  run.stopIndex = 0;
+  run.bossChoice = null;
+  run.members = {};
+  run.flags = [];
+  run.cleared = [...new Set(run.cleared)];
+  run.willOfFire = Math.max(run.willOfFire, data.j.run.willOfFire[run.difficulty] ?? 0);
+  const rng = createRng((run.seed ^ Math.imul(run.cycle, 0x27d4eb2f)) >>> 0);
+  run.bossPlan = data.generic.stages.map((s) => Math.floor(rng() * s.bosses.length));
+  run.map = generateMap(rng, data);
+  run.path = [];
+  run.nodeId = null;
+  return syncUnlocks(run, unlocked, data);
+}
+
 /** Pula a parada atual sem efeito (sair do mercador, do tesouro já aberto...). */
 export function leaveStop(prev: JRun, data: JornadaData): JRun {
   const run = clone(prev);
@@ -613,7 +720,7 @@ export function gainRelic(prev: JRun, relicId: string, data: JornadaData): JRun 
   for (const [k, n] of Object.entries(def.grant?.items ?? {})) run.bag[k as ConsumableId] = (run.bag[k as ConsumableId] ?? 0) + (n ?? 0);
   run.willOfFire += def.grant?.willOfFire ?? 0;
   run.ryo += def.grant?.ryo ?? 0;
-  run.talentPoints += def.grant?.talentPoints ?? 0;
+  addTalentPoints(run, def.grant?.talentPoints ?? 0, data);
   // HP a mais (bandana) entra cheio.
   if (def.stats?.hp && run.members[run.hero]) run.members[run.hero]!.hp += def.stats.hp;
   return run;
@@ -671,6 +778,8 @@ export function canBuy(run: JRun, p: Purchase, data: JornadaData): boolean {
   if (run.ryo < p.price) return false;
   if (p.kind === 'relic') return !run.relics.includes(p.id);
   if (p.kind === 'item') return !bagFull(run, data);
+  // Com a árvore completa, o Treino some do mercador (o ponto viraria ryō).
+  if (p.kind === 'training') return !talentTreeComplete(run, data);
   return true;
 }
 
@@ -680,7 +789,7 @@ export function buy(prev: JRun, p: Purchase, data: JornadaData): JRun {
   run.ryo -= p.price;
   if (p.kind === 'relic') run = gainRelic(run, p.id, data);
   else if (p.kind === 'item') run.bag[p.id]++;
-  else if (p.kind === 'training') run.talentPoints++;
+  else if (p.kind === 'training') addTalentPoints(run, 1, data);
   else healAll(run, data.j.shop.treatmentHealPct, data, membersSeen(run, data));
   return run;
 }
@@ -698,7 +807,7 @@ export const restHealPct = (run: JRun, data: JornadaData) => data.j.run.restHeal
 export function rest(prev: JRun, choice: RestChoice, data: JornadaData): JRun {
   const run = clone(prev);
   if (choice === 'heal') healAll(run, restHealPct(run, data), data, membersSeen(run, data));
-  else run.talentPoints++;
+  else addTalentPoints(run, 1, data);
   advanceStop(run, data);
   return run;
 }
@@ -720,7 +829,7 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
   const effects: EventEffect[] = opt.minigame && !wonMinigame ? (opt.onLose ?? []) : opt.effects;
   for (const e of effects) {
     if (e.kind === 'ryo') run.ryo += ryoGain(run, e.n, data);
-    else if (e.kind === 'talent') run.talentPoints += e.n;
+    else if (e.kind === 'talent') addTalentPoints(run, e.n, data);
     else if (e.kind === 'xp') gainXp(run, e.n, data);
     else if (e.kind === 'healTeam') healAll(run, e.pct, data, membersSeen(run, data));
     else if (e.kind === 'hurtTeam') {
@@ -767,10 +876,12 @@ export function buyTalent(prev: JRun, nodeId: string, unlocked: ReadonlySet<stri
   const node = data.talents.find((t) => t.id === nodeId);
   if (!node || node.owner !== prev.hero || !canBuyTalent(node, data.talents, talentContext(prev, unlocked))) throw new Error('talento indisponível');
   const run = clone(prev);
+  run.unlocks = talentUnlocks(unlocked, data);
   // Já aprendido: sobe um nível (a técnica não muda; os bônus vêm de `rankMods`).
   if (run.talents.includes(node.id)) {
     run.talentPoints -= talentRankCost(node);
     run.talentRanks = { ...run.talentRanks, [node.id]: (run.talentRanks?.[node.id] ?? 1) + 1 };
+    settleTalentPoints(run, data);
     return run;
   }
   run.talentPoints -= node.cost;
@@ -781,6 +892,8 @@ export function buyTalent(prev: JRun, nodeId: string, unlocked: ReadonlySet<stri
     // Técnica nova entra no moveset se houver espaço.
     if (!data.techniques[learn]?.active && run.moveset.length < MOVESET_SIZE) run.moveset.push(learn);
   }
+  // A árvore fechou: o que sobrou vira ryō.
+  settleTalentPoints(run, data);
   return run;
 }
 

@@ -9,6 +9,7 @@ A run que aproveita o **mapa ramificado** ([run.md](run.md#mapa-ramificado)): o 
 - 3 estágios, cada um com um mapa de 12 linhas e um **chefe sorteado no começo da run** (aparece no topo do mapa).
 - As lutas das 3 primeiras linhas saem de um pool mais leve.
 - Vencer o chefe: equipe cheia e 1 de 3 relíquias de chefe (uma pode ser a evolução da inicial), como na História.
+- Vencer o 3º chefe: a run pode seguir no [modo infinito](run.md#modo-infinito), de volta ao estágio 1 com chefes e mapa sorteados de novo e os inimigos mais fortes a cada ciclo.
 
 ## Pools por estágio
 

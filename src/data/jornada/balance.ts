@@ -104,6 +104,14 @@ export const jornadaBalance = {
   // Quem prefere sortear o elemento do Comum (em vez de escolher) ganha uma relíquia destes pesos no começo.
   elementDraw: { element: 16, none: 20, randomBonus: { common: 1 } as Record<string, number> },
 
+  // Árvore completa (docs/jornada/talentos.md#árvore-completa): com nada mais a aprender ou subir, cada ponto de
+  // talento ganho vira ryō na hora (metade do Treino do mercador). O ryō convertido não passa pelo multiplicador.
+  talentTree: { completeRyoPerPoint: 30 },
+
+  // Modo infinito do Caminho Ninja (docs/jornada/run.md#modo-infinito): os inimigos ficam × dificuldade ×
+  // (1 + enemyPerCycle × ciclo), com o ciclo contando do 0. Rascunho: a simulação decide e o usuário ajusta.
+  infinite: { enemyPerCycle: 0.4 },
+
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
   minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },
 

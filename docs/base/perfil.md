@@ -1,6 +1,6 @@
 # Perfil
 
-O que fica salvo no aparelho entre as runs: conquistas, Livro Bingo, estatísticas por origem, coleção de relíquias e nome do jogador. A run continua só em memória (F5 reseta); o perfil vive no `localStorage` (`profile_v1`), ao lado do histórico de runs ([campanha.md](../roleta/campanha.md#histórico-de-runs)).
+O que fica salvo no aparelho entre as runs: conquistas, Livro Bingo, estatísticas por origem, coleção de relíquias, recorde do modo infinito e nome do jogador. A run continua só em memória (F5 reseta); o perfil vive no `localStorage` (`profile_v1`), ao lado do histórico de runs ([campanha.md](../roleta/campanha.md#histórico-de-runs)).
 
 A tela **Registro ninja** (o perfil; botão do livro no cabeçalho ou os atalhos da tela inicial) tem cinco abas, cada uma com o seu selo: Histórico (歴), Conquistas (功), Livro Bingo (手配), Origens (族) e Relíquias (宝, a coleção da Jornada: [reliquias.md](../jornada/reliquias.md#coleção)). No Livro Bingo, quem já foi derrotado ganha o carimbo 勝; quem nunca apareceu fica na sombra com 謎.
 
@@ -10,6 +10,12 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho ou os atalhos
 - Fica no perfil (`playerName`), com até 16 caracteres, e dá para mudar no topo do Registro ninja. Sem o campo, ainda não foi perguntado; vazio, a pessoa preferiu não dizer. É só cosmético e, no futuro, pode vir do login (Fase 3 do roteiro).
 - **Roleta**: aparece no painel do jogador, com a origem embaixo, e no título da ficha.
 - **Caminho Ninja**: é o nome do protagonista. Comum e prodígio usam o nome; Uchiha e Hyuuga, "Nome Uchiha" e "Nome Hyuuga".
+
+## Recorde do modo infinito
+
+- O Caminho Ninja vencido pode seguir de ciclo ([run.md](../jornada/run.md#modo-infinito)). O perfil guarda até onde uma run chegou (`jornada.generic`): o ciclo e o estágio (contando do 1) e se venceu esse ciclo. Ciclo maior passa; no mesmo ciclo, vencer passa qualquer estágio; senão, o estágio maior.
+- Grava no fim da run (vitória ou queda) e quando uma run salva que já andou é apagada por uma nova. Sem o campo, nunca registrou.
+- Aparece no cartão do Caminho Ninja, na tela de início da Jornada, a partir de um ciclo vencido; a tela final mostra "Recorde!" quando bate.
 
 ## Regras gerais
 

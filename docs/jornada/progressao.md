@@ -4,7 +4,7 @@
 
 ## XP e nível
 
-- XP para o próximo nível: 100 + 40 × (nível − 1). Cada nível dá **1 ponto de talento** e status (crescimento por personagem em [personagens.md](personagens.md)).
+- XP para o próximo nível: 100 + 40 × (nível − 1). Cada nível dá **1 ponto de talento** e status (crescimento por personagem em [personagens.md](personagens.md)). Com a árvore toda comprada, o ponto vira ryō ([talentos.md](talentos.md#árvore-completa)).
 - Os suportes sobem de nível junto com o protagonista.
 - Subir de nível não restaura HP nem chakra.
 

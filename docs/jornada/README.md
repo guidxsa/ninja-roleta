@@ -1,6 +1,6 @@
 # Jornada
 
-> **História na v0.35.0; Caminho Ninja na v0.36.0; Uchiha, Hyuuga e o easter egg do Sasuke na v0.37.0.** As pendências estão no fim.
+> **História na v0.35.0; Caminho Ninja na v0.36.0; Uchiha, Hyuuga e o easter egg do Sasuke na v0.37.0; modo infinito do Caminho Ninja na v0.44.0.** As pendências estão no fim.
 
 O jogo tem dois modos, escolhidos na tela inicial:
 
@@ -10,7 +10,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 | Arquivo | Conteúdo |
 |---|---|
 | [historia.md](historia.md) | História: estágios, paradas, quem luta, vitórias especiais, eventos |
-| [run.md](run.md) | Tipos de run, paradas, eventos e minijogos, dificuldade, salvamento, mapa ramificado |
+| [run.md](run.md) | Tipos de run, paradas, eventos e minijogos, dificuldade, salvamento, mapa ramificado, modo infinito |
 | [combate.md](combate.md) | Combate de equipe, ordem, ações, efeitos, levantar, bolsa, moveset, interface |
 | [personagens.md](personagens.md) | Fichas, técnicas e comportamento automático dos aliados |
 | [inimigos.md](inimigos.md) | Fichas e técnicas dos inimigos |
@@ -32,18 +32,18 @@ O jogo tem dois modos, escolhidos na tela inicial:
 ## Tipos de run
 
 - **História do Naruto**: liberada desde o início, linear, com os confrontos do mangá ([historia.md](historia.md)).
-- **Caminho Ninja**: protagonista de uma classe de origem com o elemento escolhido ou sorteado ([classes.md](classes.md)), mapa ramificado, encontros diferentes com a mesma dificuldade; 2 suportes com classe (entre as liberadas) e nome sorteados ([caminho-ninja.md](caminho-ninja.md)).
+- **Caminho Ninja**: protagonista de uma classe de origem com o elemento escolhido ou sorteado ([classes.md](classes.md)), mapa ramificado, encontros diferentes com a mesma dificuldade; 2 suportes com classe (entre as liberadas) e nome sorteados ([caminho-ninja.md](caminho-ninja.md)). Vencido, segue no **modo infinito**: de volta ao estágio 1 com os inimigos mais fortes a cada ciclo ([run.md](run.md#modo-infinito)).
 - Um personagem nunca é protagonista e suporte na mesma run.
 
 ## Perfil e conquistas
 
 - O perfil é um só para os dois modos ([perfil.md](../base/perfil.md)); a aba Conquistas tem a categoria Jornada.
-- Conquistas da Jornada: Sino na mão, Ponte do Naruto, Coração de chunin, Vale do Fim (libera a Ōdama Rasengan), Hokage um dia (libera o Hardcore da Jornada), Lenda de Konoha, Ninguém fica para trás, Gama-chan gordo, Colecionador, Caminho próprio (vencer uma run do Caminho Ninja), Chama do clã (libera o Uchiha), Olhos abertos (libera o Hyuuga), Herdeiro do clã, Destino quebrado e duas secretas.
+- Conquistas da Jornada: Sino na mão, Ponte do Naruto, Coração de chunin, Vale do Fim (libera a Ōdama Rasengan), Hokage um dia (libera o Hardcore da Jornada), Lenda de Konoha, Ninguém fica para trás, Gama-chan gordo, Colecionador, Caminho próprio (vencer uma run do Caminho Ninja), Chama do clã (libera o Uchiha), Olhos abertos (libera o Hyuuga), Herdeiro do clã, Destino quebrado, Mais uma volta, Treino sem fim e Vontade inabalável (vencer os ciclos 2, 3 e 5 do modo infinito) e duas secretas.
 - Como a Jornada tem progressão permanente, é o modo que mais justifica contas para sincronizar o perfil (fase 3 do roteiro no CLAUDE.md).
 
 ## Simulação
 
-`npm run sim:jornada -- [runs] [seed]`: um bot joga a História e o Caminho Ninja (Comum, prodígio, Uchiha, Hyuuga) por dificuldade e mostra a taxa de vitória e onde as runs param. O bot joga pior que um humano (não monta o moveset, compra sem planejar); antes de agir, usa uma ativa grátis como a IA dos suportes. A linha do Comum sorteia o elemento (e ganha a relíquia do sorteio); a do prodígio escolhe direto o Comum sem elemento.
+`npm run sim:jornada -- [runs] [seed] [ciclos]`: um bot joga a História e o Caminho Ninja (Comum, prodígio, Uchiha, Hyuuga) por dificuldade e mostra a taxa de vitória e onde as runs param. O bot joga pior que um humano (não monta o moveset, compra sem planejar); antes de agir, usa uma ativa grátis como a IA dos suportes. A linha do Comum sorteia o elemento (e ganha a relíquia do sorteio); a do prodígio escolhe direto o Comum sem elemento. Com `ciclos` > 0, os vencedores do Caminho Ninja seguem no modo infinito até cair (no máximo esse número de ciclos) e sai a curva: a fração das runs que venceu cada ciclo, a média de ciclos vencidos e o nível final.
 
 ## Ordem de construção
 

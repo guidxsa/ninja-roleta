@@ -20,6 +20,13 @@ export interface VillainRecord {
   worstHit: number;
 }
 
+/** Até onde uma run do modo infinito chegou: ciclo e estágio contando do 1; `won` = venceu esse ciclo. */
+export interface JornadaReach {
+  cycle: number;
+  stage: number;
+  won: boolean;
+}
+
 export interface Profile {
   /** Id da conquista → data em que saiu (ISO). */
   achievements: Record<string, string>;
@@ -30,6 +37,8 @@ export interface Profile {
   playerName?: string;
   /** Coleção da Jornada: id da relíquia → data em que apareceu pela primeira vez (ISO). */
   relics: Record<string, string>;
+  /** Recorde do modo infinito da Jornada (só o Caminho Ninja tem). Sem o campo: nunca registrou. */
+  jornada?: { generic?: JornadaReach };
 }
 
 export const PLAYER_NAME_MAX = 16;
@@ -69,6 +78,7 @@ export function loadProfile(storage: KeyValueStorage): Profile {
       backfilled: parsed.backfilled === true,
       relics: parsed.relics && typeof parsed.relics === 'object' ? renameCollection(parsed.relics) : base.relics,
       ...(typeof parsed.playerName === 'string' ? { playerName: cleanPlayerName(parsed.playerName) } : {}),
+      ...(isReach(parsed.jornada?.generic) ? { jornada: { generic: parsed.jornada!.generic } } : {}),
     };
   } catch {
     return emptyProfile();
@@ -109,6 +119,30 @@ export function discoverRelics(profile: Profile, ids: readonly string[], now: Da
   const relics = { ...profile.relics };
   for (const id of fresh) relics[id] = now.toISOString();
   return { ...profile, relics };
+}
+
+function isReach(r: unknown): r is JornadaReach {
+  const x = r as JornadaReach | undefined;
+  return Boolean(x) && typeof x!.cycle === 'number' && typeof x!.stage === 'number' && typeof x!.won === 'boolean';
+}
+
+/** Até onde a run chegou (ciclo e estágio contando do 1). */
+export function reachOf(run: { cycle?: number; stageIndex: number; status: string }): JornadaReach {
+  return { cycle: (run.cycle ?? 0) + 1, stage: run.stageIndex + 1, won: run.status === 'victory' };
+}
+
+/** `a` passa `b`: ciclo maior; no mesmo ciclo, vencer passa qualquer estágio; senão, estágio maior. */
+export function reachBeats(a: JornadaReach, b?: JornadaReach): boolean {
+  if (!b) return true;
+  if (a.cycle !== b.cycle) return a.cycle > b.cycle;
+  if (a.won !== b.won) return a.won;
+  return a.stage > b.stage;
+}
+
+/** Grava o recorde do modo infinito do Caminho Ninja. Sem melhora, devolve o mesmo perfil. */
+export function recordJornadaReach(profile: Profile, reach: JornadaReach): Profile {
+  if (!reachBeats(reach, profile.jornada?.generic)) return profile;
+  return { ...profile, jornada: { ...profile.jornada, generic: reach } };
 }
 
 export function killedByCounts(profile: Profile): Record<string, number> {

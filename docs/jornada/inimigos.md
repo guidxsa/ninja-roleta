@@ -2,7 +2,7 @@
 
 > História implementada na v0.35.0 ([README.md](README.md)). Números provisórios: ajustar com `npm run sim:jornada`.
 
-Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A dificuldade multiplica HP, ataques, resistências e o dano dos inimigos pelo mesmo fator do Roleta ([campanha.md](../roleta/campanha.md#dificuldade)): 90/110/125/125%. Comportamento (IA): [personagens.md](personagens.md#comportamento).
+Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A dificuldade multiplica HP, ataques, resistências e o dano dos inimigos pelo mesmo fator do Roleta ([campanha.md](../roleta/campanha.md#dificuldade)): 90/110/125/125%. No [modo infinito](run.md#modo-infinito) do Caminho Ninja, o ciclo multiplica por cima: × (1 + 0,4 × ciclo). Comportamento (IA): [personagens.md](personagens.md#comportamento).
 
 ## Fichas
 

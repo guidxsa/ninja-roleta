@@ -108,10 +108,11 @@ export interface BattleSetup {
 const scale = (n: number, mult: number) => (n > 0 ? Math.max(1, Math.floor(n * mult)) : 0);
 
 /** Ficha do inimigo com a dificuldade aplicada (HP, ataques e resistências; o dano base sai em `damageMult`). */
-export function enemySeed(defId: string, difficulty: keyof JornadaData['base']['difficulty']['multipliers'], data: JornadaData): FighterSeed {
+export function enemySeed(defId: string, difficulty: keyof JornadaData['base']['difficulty']['multipliers'], data: JornadaData, cycleMult = 1): FighterSeed {
   const def = data.enemies[defId];
   if (!def) throw new Error(`inimigo desconhecido: ${defId}`);
-  const mult = data.base.difficulty.multipliers[difficulty];
+  // Modo infinito: o ciclo multiplica por cima da dificuldade (docs/jornada/run.md#modo-infinito).
+  const mult = data.base.difficulty.multipliers[difficulty] * cycleMult;
   const hp = scale(def.hp, mult);
   return {
     defId,

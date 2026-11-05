@@ -7,7 +7,10 @@ import {
   battleSetup,
   buy,
   canBuy,
+  canContinueCycle,
   chooseBossRelic,
+  continueCycle,
+  cycleEnemyMult,
   chooseNode,
   choosingNode,
   currentStage,
@@ -33,6 +36,8 @@ import {
   stageId,
   stageScene,
   stopRng,
+  syncUnlocks,
+  talentTreeComplete,
   xpToNext,
   type ElementChoice,
   type JRun,
@@ -109,32 +114,63 @@ export async function runJornada(host: JornadaHost): Promise<void> {
   }
 }
 
+/** Ryō de pontos convertidos (árvore completa) já avisado na tela: o resto vira um toast. */
+let announcedTalentRyo = 0;
+
 async function jornadaLoop(host: JornadaHost): Promise<void> {
   let run = await startScreen(host);
   if (!run) return;
-  keep(run);
-  // A Ficha do cabeçalho passa a mostrar a equipe desta run.
-  host.setSheet(() => live && openJornadaSheet(host, live));
+  // O retrato das conquistas da árvore acompanha o perfil (save antigo, conquista liberada fora da run).
+  run = keep(syncUnlocks(run, host.unlocked(), data));
+  announcedTalentRyo = run.stats.talentRyo ?? 0;
   markRelicsSeen(run.relics);
   host.discoverRelics(run.relics);
   host.unlock(newJornadaAchievements(run, host.unlocked()));
-  let shownStage = run.stageIndex;
-  while (run.status === 'inProgress') {
-    saveJornada(host.storage, keep(run));
-    run = await playStop(host, run);
-    host.discoverRelics(run.relics);
-    const fresh = newJornadaAchievements(run, host.unlocked());
-    if (fresh.length) host.unlock(fresh);
-    if (run.status === 'inProgress' && run.stageIndex !== shownStage && !run.bossChoice) {
-      const prev = run.mode === 'generic' ? data.generic.stages[shownStage]!.id : data.stages[shownStage]!.id;
-      shownStage = run.stageIndex;
-      await notice(U.stageClear(J.stages[prev] ?? ''), stageName(run));
+  // Um ciclo por volta (o modo infinito do Caminho Ninja segue de ciclo na tela de vitória).
+  for (;;) {
+    // A Ficha do cabeçalho passa a mostrar a equipe desta run.
+    host.setSheet(() => live && openJornadaSheet(host, live));
+    let shownStage = run.stageIndex;
+    while (run.status === 'inProgress') {
+      saveJornada(host.storage, keep(run));
+      run = await playStop(host, run);
+      host.discoverRelics(run.relics);
+      const fresh = newJornadaAchievements(run, host.unlocked());
+      if (fresh.length) {
+        host.unlock(fresh);
+        run = syncUnlocks(run, host.unlocked(), data);
+      }
+      announceTalentRyo(host, run);
+      if (run.status === 'inProgress' && run.stageIndex !== shownStage && !run.bossChoice) {
+        const prev = run.mode === 'generic' ? data.generic.stages[shownStage]!.id : data.stages[shownStage]!.id;
+        shownStage = run.stageIndex;
+        await notice(U.stageClear(J.stages[prev] ?? ''), stageName(run));
+      }
     }
+    const record = host.recordJornada(run);
+    host.setSheet(null);
+    // Caminho Ninja vencido: a continuação já fica salva (fechar o app ou voltar ao início não perde o ciclo).
+    const next = canContinueCycle(run) ? continueCycle(run, data, host.unlocked()) : null;
+    saveJornada(host.storage, keep(next ?? run));
+    if ((await endScreen(host, run, next, record)) !== 'continue' || !next) return;
+    run = keep(next);
+    host.mood('good');
+    await notice(U.cycle(run.cycle + 1), U.cycleStartText(cyclePct(run)));
   }
-  saveJornada(host.storage, keep(run));
-  host.setSheet(null);
-  await endScreen(host, run);
 }
+
+/** Pontos convertidos fora do aviso de vitória (descanso, evento, relíquia, último talento): um toast. */
+function announceTalentRyo(host: JornadaHost, run: JRun): void {
+  const total = run.stats.talentRyo ?? 0;
+  if (total > announcedTalentRyo) host.notify(U.talentRyoToast(total - announcedTalentRyo), 'coin');
+  announcedTalentRyo = total;
+}
+
+/** Quanto os inimigos do ciclo estão mais fortes que no 1º (em %). */
+const cyclePct = (run: JRun) => Math.round((cycleEnemyMult(run, data) - 1) * 100);
+
+/** Chip do ciclo no cabeçalho (só a partir do ciclo 2), com a força dos inimigos na dica. */
+const cycleChip = (run: JRun) => (run.cycle > 0 ? `<span class="chip jcycle"${tip(U.cycle(run.cycle + 1), U.cycleTip(cyclePct(run)))}>${icon('cycle')} ${U.cycle(run.cycle + 1)}</span>` : '');
 
 /** Recuperação depois de cada vitória na dificuldade (configuração da run, sem relíquias). */
 const recoveryLine = (d: Difficulty) => `${icon('heart')} ${J.start.recovery(Math.round((data.j.run.afterWinRecovery[d] ?? 0) * 100))}`;
@@ -149,7 +185,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
       <h2>${J.start.title}</h2>
       ${
         saved
-          ? `<button class="btn primary big" data-choice="continue">${icon('scroll')} ${J.start.continue(stageName(saved), saved.stageIndex + 1, stageCount(saved, data))} <span class="chip diff-${saved.difficulty}">${S.difficulty[saved.difficulty].name}</span></button>`
+          ? `<button class="btn primary big" data-choice="continue">${icon('scroll')} ${J.start.continue(stageName(saved), saved.stageIndex + 1, stageCount(saved, data))}${saved.cycle > 0 ? ` <span class="chip jcycle">${icon('cycle')} ${U.cycle(saved.cycle + 1)}</span>` : ''} <span class="chip diff-${saved.difficulty}">${S.difficulty[saved.difficulty].name}</span></button>`
           : ''
       }
       <div class="difficulty-box"><h3>${J.start.difficulty}</h3>
@@ -166,7 +202,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
       </section>
       <section class="card jmode-panel">
         <div class="jmode-card"><div class="jstart-face">${fighterPortrait('commonNinja', 'ninja:common', 'md')}</div>
-          <div><h3>${G.title}</h3><p class="muted small">${G.desc}</p></div></div>
+          <div><h3>${G.title}</h3><p class="muted small">${G.desc}</p>${bestLine(host)}</div></div>
         <div class="jclasses">${['common', 'uchiha', 'hyuuga']
           .map((id) => {
             const def = data.generic.classes.find((c) => c.id === id);
@@ -221,14 +257,23 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
     if (c === 'continue' && saved) return saved;
     if (c === 'new' || c === 'generic') {
       if (saved && !window.confirm(J.start.overwrite)) continue;
+      // A run salva que já andou conta para o recorde antes de ser apagada.
+      if (saved && (saved.cycle > 0 || saved.stageIndex > 0 || saved.stopIndex > 0)) host.recordJornada(saved);
       clearJornada(host.storage);
-      if (c === 'new') return newRun(host.nextSeed(), diff, data);
+      if (c === 'new') return newRun(host.nextSeed(), diff, data, host.unlocked());
       await host.ensurePlayerName();
       const run = newGenericRun(host.nextSeed(), diff, classId, data, host.unlocked(), classId === 'uchiha' ? skin : null, classId === 'common' ? element : 'random');
       await revealScreen(host, run);
       return run;
     }
   }
+}
+
+/** Recorde do modo infinito no cartão do Caminho Ninja (a partir de um ciclo vencido). */
+function bestLine(host: JornadaHost): string {
+  const best = host.jornadaRecord();
+  if (!best || (!best.won && best.cycle < 2)) return '';
+  return `<p class="small jbest">${icon('cycle')} ${J.start.best(best.cycle, best.stage, best.won)}</p>`;
 }
 
 /** Opções de elemento do Comum na tela de início. */
@@ -356,7 +401,7 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
     : '';
   const root = show(
     h(`<div class="screen jtrail-screen">
-      <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span><span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
+      <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span>${cycleChip(run)}<span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
       <div data-hud>${hud(host, cur)}</div>
       ${trail(cur)}
       <div class="sticky-cta">${teamLine}<button class="btn primary big" data-choice="go">${icon(STOP_ICONS[stop.kind]!)} ${U.go(stopName(stop))}</button>
@@ -444,7 +489,7 @@ async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
   let cur = run;
   const root = show(
     h(`<div class="screen jtrail-screen jmap-screen">
-      <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span><span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
+      <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span>${cycleChip(run)}<span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
       <div class="jmap-side"><div data-hud>${hud(host, cur)}</div>
         <p class="jb-prompt">${M.choose}</p><button class="btn small jabandon" data-abandon>${U.abandon}</button></div>
       <div class="jtrail-map">${mapView(cur)}</div>
@@ -492,8 +537,10 @@ async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, {
     }
     if (outcome.won) {
       const lines = [U.rewards(outcome.ryo, outcome.xp, outcome.talent)];
+      if (outcome.talentRyo) lines.push(U.talentRyo(outcome.talentRyo));
       if (next.status === 'inProgress') lines.push(stop.kind === 'boss' ? U.restoredAll : U.recovered(Math.round(afterWinRecovery(next, data) * 100)));
-      if (outcome.levelUps) lines.push(U.levelUp(next.level));
+      if (outcome.levelUps) lines.push(U.levelUp(next.level, outcome.talentRyo > 0));
+      announcedTalentRyo = next.stats.talentRyo ?? 0;
       await notice(U.victoryTitle, lines.join('\n'));
       if (outcome.relic) {
         host.mood('good');
@@ -550,7 +597,7 @@ async function shopStop(host: JornadaHost, run0: JRun): Promise<JRun> {
       <h3>${U.bagTitle}</h3>${offer.consumables
         .map((c) => `<div class="jrelic"><span class="jrelic-ico">${icon('kit')}</span><span class="jrelic-txt"><b>${J.items[c.id]!.name}</b><small>${J.items[c.id]!.desc}</small></span>${btn({ kind: 'item', ...c }, `i:${c.id}:${run.bag[c.id]}`)}</div>`)
         .join('')}
-      <div class="jrelic"><span class="jrelic-ico">${icon('scroll')}</span><span class="jrelic-txt"><b>${U.training}</b></span>${btn({ kind: 'training', price: offer.training }, `t:${run.talentPoints}`)}</div>
+      ${talentTreeComplete(run, data) ? '' : `<div class="jrelic"><span class="jrelic-ico">${icon('scroll')}</span><span class="jrelic-txt"><b>${U.training}</b></span>${btn({ kind: 'training', price: offer.training }, `t:${run.talentPoints}`)}</div>`}
       <div class="jrelic"><span class="jrelic-ico">${icon('medical')}</span><span class="jrelic-txt"><b>${U.treatment}</b></span>${btn({ kind: 'treatment', price: offer.treatment }, 'heal')}</div>`;
   };
   render();
@@ -586,10 +633,17 @@ async function shopStop(host: JornadaHost, run0: JRun): Promise<JRun> {
 async function restStop(host: JornadaHost, run: JRun): Promise<JRun> {
   const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud>${hud(host, run)}</div>
     <button class="btn big" data-choice="heal">${icon('rest')} ${U.restHeal(Math.round(restHealPct(run, data) * 100))}</button>
-    <button class="btn big" data-choice="train">${icon('scroll')} ${U.restTrain}</button></div>`));
+    ${restTrainButton(run)}</div>`));
   const c = await choose<'heal' | 'train'>(root);
   host.mood('good');
   return rest(run, c, data);
+}
+
+/** Treinar no descanso: +1 ponto de talento, ou o ryō dele com a árvore completa. */
+function restTrainButton(run: JRun): string {
+  if (!talentTreeComplete(run, data)) return `<button class="btn big" data-choice="train">${icon('scroll')} ${U.restTrain}</button>`;
+  const ryo = data.j.talentTree.completeRyoPerPoint;
+  return `<button class="btn big" data-choice="train"${tip(U.restTrainRyo(ryo), U.restTrainRyoTip(ryo))}>${icon('coin')} ${U.restTrainRyo(ryo)}</button>`;
 }
 
 async function treasureStop(host: JornadaHost, run: JRun): Promise<JRun> {
@@ -654,16 +708,36 @@ async function notice(title: string, text: string): Promise<void> {
   await choose(root);
 }
 
-async function endScreen(host: JornadaHost, run: JRun): Promise<void> {
+/**
+ * Fim da run (ou do ciclo). No Caminho Ninja vencido, `next` é o próximo ciclo (já salvo): "Seguir" continua e "Voltar ao
+ * início" guarda para depois. Cair a partir do ciclo 2 não é uma derrota comum: a run já foi vencida.
+ */
+async function endScreen(host: JornadaHost, run: JRun, next: JRun | null, record: boolean): Promise<'continue' | 'ok'> {
   const won = run.status === 'victory';
+  const infinite = run.cycle > 0;
+  // Do ciclo 2 em diante, o fim é sempre uma conquista: selo dourado.
+  const good = won || infinite;
   const stop = currentStop(run, data);
-  host.mood(won ? 'good' : 'bad');
-  const root = show(h(`<div class="screen jend ${won ? 'win' : 'lose'}"><h2>${won ? U.victoryTitle : U.defeatTitle}</h2>
-    <div class="jstart-face end-seal">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'md')}<span class="seal stamp end-stamp${won ? ' gold' : ''}" aria-hidden="true">${won ? '勝' : '敗'}</span></div>
-    <p class="center">${won ? U.runWon : U.runLost(stop ? stopName(stop) : '')}</p>
+  host.mood(good ? 'good' : 'bad');
+  const title = won ? (infinite ? U.cycleWonTitle(run.cycle + 1) : U.victoryTitle) : infinite ? U.infiniteOverTitle : U.defeatTitle;
+  const text = won
+    ? run.mode === 'generic'
+      ? U.runWonGeneric
+      : U.runWon
+    : infinite
+      ? U.infiniteReached(run.cycle + 1, run.stageIndex + 1, stop ? stopName(stop) : '')
+      : U.runLost(stop ? stopName(stop) : '');
+  const pct = next ? Math.round((cycleEnemyMult(next, data) - 1) * 100) : 0;
+  const buttons = next
+    ? `<button class="btn primary big" data-choice="continue"${tip(U.nextCycle(next.cycle + 1), U.nextCycleTip(pct))}>${icon('cycle')} ${U.nextCycle(next.cycle + 1)}</button>
+       <button class="btn big" data-choice="ok"${tip(U.home, U.homeSavedTip(next.cycle + 1))}>${U.home}</button>`
+    : `<button class="btn primary big" data-choice="ok">${U.home}</button>`;
+  const root = show(h(`<div class="screen jend ${good ? 'win' : 'lose'}"><h2>${title}</h2>
+    <div class="jstart-face end-seal">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'md')}<span class="seal stamp end-stamp${good ? ' gold' : ''}" aria-hidden="true">${good ? '勝' : '敗'}</span></div>
+    <p class="center">${text}${record && (infinite || won) && run.mode === 'generic' ? ` <span class="chip jrecord">${icon('medal')} ${U.record}</span>` : ''}</p>
     <p class="center muted">${U.runStats(run.stats.fights, run.stats.wins, run.level)}</p>
     ${run.relics.length ? `<div class="jrbar jrbar-end">${run.relics.map((id) => relicSlot(id, 'span')).join('')}</div>` : ''}
-    <button class="btn primary big" data-choice="ok">${U.home}</button></div>`));
+    ${buttons}</div>`));
   await sleep(host.instant() ? 0 : 300);
-  await choose(root);
+  return choose<'continue' | 'ok'>(root);
 }

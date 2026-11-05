@@ -95,7 +95,7 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 ## Vitória e derrota
 
 - Vence quem derruba todos os inimigos, ou cumpre a vitória especial da luta ([historia.md](historia.md#vitórias-especiais)).
-- Derrota (todos os aliados no chão) acaba a run. No **Fácil**, a Vontade do Fogo (1 por run, ou por relíquia) recomeça a luta com a equipe em pelo menos 50% do HP e do chakra.
+- Derrota (todos os aliados no chão) acaba a run. No **Fácil**, a Vontade do Fogo (1 por run e por ciclo do modo infinito, ou por relíquia) recomeça a luta com a equipe em pelo menos 50% do HP e do chakra.
 
 ## Interface
 

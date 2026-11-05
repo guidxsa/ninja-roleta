@@ -12,6 +12,16 @@ A árvore **reinicia a cada run** e custa pontos de talento ([progressao.md](pro
 - O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
 - Nós que só existem com um elemento (ramo Raio do Uchiha) ficam escondidos para quem não tem o elemento.
 
+## Árvore completa
+
+Implementada na v0.44.0. Quando não sobra nada para aprender nem subir na árvore do protagonista, **cada ponto de talento ganho vira 30 ryō na hora** (metade do Treino do mercador; `talentTree.completeRyoPerPoint`). O ryō convertido não passa pelo multiplicador de ryō das relíquias.
+
+- Conta como "nunca": o caminho fechado de uma bifurcação, o nó escondido pelo elemento e o nó preso a uma conquista que a conta ainda não tem. O nó preso a um estágio da História conta como "ainda vem".
+- Vale para todo ponto: nível, recompensa de luta, evento, relíquia, descanso. Comprar o último talento converte o que sobrou.
+- Com a árvore completa, o Treino some do mercador e o Treinar do descanso mostra "+30 ryō". A tela da árvore mostra o chip "Árvore completa".
+- Na prática, só as árvores pequenas (Comum, prodígio, Uchiha, Hyuuga) fecham, e quase sempre no [modo infinito](run.md#modo-infinito); a do Naruto custa mais do que a História rende.
+- Uma conquista nova pode reabrir a árvore (o ramo do Sasuke sai no meio da run do Uchiha com raio): a run guarda as conquistas que liberam nós e as renova quando sai conquista.
+
 ## Na tela
 
 - Tela cheia com o **tema da classe**: cor, padrão de fundo e brasão (Naruto: laranja e espiral; Comum: folha, na cor do elemento sorteado; prodígio: verde e vermelho com faixas; Uchiha: vermelho e preto com tomoe; Hyuuga: lavanda com hexagrama). Tudo também no tema claro.

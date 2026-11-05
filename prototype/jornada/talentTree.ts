@@ -1,7 +1,7 @@
 // Árvore de talentos da Jornada (docs/jornada/talentos.md#na-tela): tela cheia com o tema da classe, selos ligados
 // por traços de pincel e um cartão com o talento escolhido. No celular, um ramo por vez em abas; no PC, todos lado a lado.
 import type { JRun } from '../../src/core/jornada/run';
-import { buyTalent, heroMods, talentContext, talentLearns } from '../../src/core/jornada/run';
+import { buyTalent, heroMods, talentContext, talentLearns, talentTreeComplete } from '../../src/core/jornada/run';
 import { techPower } from '../../src/core/jornada/battle';
 import {
   branchesOf,
@@ -17,6 +17,7 @@ import { jornadaData as data } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clanSymbol, fighterPortrait, icon } from '../art';
 import { h } from '../dom';
+import { tip } from '../tooltip';
 import { techName } from './battle';
 import type { JornadaHost } from './host';
 import { themeOf, themeStyle } from './theme';
@@ -153,7 +154,11 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
     const hero = fighterPortrait(run.hero, run.skin ? `ninja:${run.skin}` : (data.characters[run.hero]?.portrait ?? 'ninja:common'), 'sm');
     const scroll = root.scrollTop;
     body.innerHTML = `<span class="jt-crest" aria-hidden="true">${clanSymbol(theme.crest)}</span>
-      <header class="jt-head">${hero}<div class="jt-title"><h2>${T.title}</h2><small>${heroTitle}</small></div>
+      <header class="jt-head">${hero}<div class="jt-title"><h2>${T.title}</h2><small>${heroTitle}</small>${
+        talentTreeComplete(run, data, host.unlocked())
+          ? `<span class="chip jt-complete"${tip(T.complete, T.completeTip(data.j.talentTree.completeRyoPerPoint))}>${icon('check')} ${T.complete}</span>`
+          : ''
+      }</div>
         <span class="jt-points${run.talentPoints ? ' has' : ''}"><b>${run.talentPoints}</b><small>${run.talentPoints === 1 ? T.pointOne : T.pointMany}</small></span>
         <button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></header>
       <nav class="jt-tabs">${branches()

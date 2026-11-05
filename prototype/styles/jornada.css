@@ -44,6 +44,12 @@
 }
 .jb-head span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jb-head [data-round] { white-space: nowrap; }
+/* Modo infinito: chip do ciclo ao lado da dificuldade; recorde e chip de árvore completa. */
+.jb-head .jcycle { margin-left: auto; white-space: nowrap; }
+.chip.jcycle .ico, .jbest .ico, .chip.jt-complete .ico, .chip.jrecord .ico { width: 14px; height: 14px; vertical-align: -2px; }
+.jbest { margin: 4px 0 0; color: var(--gold-2); }
+.chip.jrecord { color: var(--gold-2); }
+.chip.jt-complete { margin-top: 4px; color: var(--leaf); }
 .jtrail-screen .sticky-cta { background: linear-gradient(180deg, transparent, var(--bg) 24%); padding: 18px 0 8px; }
 .jteam { display: flex; align-items: center; gap: 4px; justify-content: center; margin: 0 0 6px; }
 .jabandon { display: block; margin: 6px auto 0; }
