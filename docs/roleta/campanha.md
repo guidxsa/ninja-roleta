@@ -162,6 +162,7 @@ Escolhida na tela de origem; fica salva como preferência do aparelho e no hist�
 - `localStorage`, chave versionada (`runs_v1`), separada do estado da campanha (que vive só em memória; F5 reseta a run).
 - Registro: data e hora, origem (linhagem, elementos, jinchuuriki), dificuldade, resultado (vitória, derrota, abandonada ou re-roll), até qual vilão chegou, nível final, Vontades do Fogo usadas e a **seed**.
 - Ao iniciar a run, grava um registro "em andamento" e atualiza a cada vilão. Ao abrir a página, qualquer registro "em andamento" vira "abandonada".
+- O botão do **Portão da Vila** (torii, no cabeçalho) volta ao menu principal sem recarregar a página. No meio de uma run, pede confirmação e a run vira "abandonada" na hora. Ele some no próprio Portão da Vila; o botão Ficha só aparece quando há uma run em andamento.
 - Re-rolls ficam ocultos por padrão na tela de histórico. Limite: últimas 100 runs.
 - O histórico é a primeira aba da tela Perfil, junto com conquistas, Livro Bingo e origens ([perfil.md](../base/perfil.md)).
 

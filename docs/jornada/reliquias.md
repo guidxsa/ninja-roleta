@@ -1,9 +1,9 @@
 # Relíquias
 
-> Implementadas na v0.35.0; 22 novas e a barra de relíquias na v0.37.1; classificações, relíquia de elite, iniciais por personagem, evoluções e coleção na v0.40.0 ([README.md](README.md)). Dados em `src/data/jornada/relics.ts`.
+> Implementadas na v0.35.0; 22 novas e a barra de relíquias na v0.37.1; classificações, relíquia de elite, iniciais por personagem, evoluções e coleção na v0.40.0; iniciais narrativas, sem a recuperação, na v0.43.0 ([README.md](README.md)). Dados em `src/data/jornada/relics.ts`.
 
 - Dão **vantagens passivas** para a run toda ou **recursos** na hora (kits, Vontade do Fogo). Uma run não repete relíquia.
-- Saem tanto na História quanto no Caminho Ninja, então o texto não cita personagem: efeito sem sujeito vale para o protagonista; "a equipe" inclui o protagonista; "os suportes" são só os aliados. Os nomes de artefatos marcantes (Sino do Kakashi, Colar do Primeiro Hokage, Chapéu do Hokage, Cachimbo do Gamabunta…) ficam.
+- Saem tanto na História quanto no Caminho Ninja, então o texto não cita personagem: efeito sem sujeito vale para o protagonista; "a equipe" inclui o protagonista; "os suportes" são só os aliados. Os nomes de artefatos marcantes (Sino do Kakashi, Chapéu do Hokage, Cachimbo do Gamabunta…) ficam. As iniciais e as evoluções são a exceção: são de uma classe só e contam a história dela.
 - Os itens permanentes do Roleta viraram relíquias (Pesos de treino). A bolsa de consumíveis continua à parte ([combate.md](combate.md#bolsa)).
 - O desconto do mercador soma o das relíquias com o do Tazuna (História, País das Ondas), com teto de 40% (`shop.maxDiscount`).
 
@@ -32,7 +32,11 @@
 
 ## Iniciais e evolução
 
-Cada personagem começa com a sua. Todas recuperam 25% do HP e do chakra da equipe depois de cada vitória (quem lutou e terminou de pé e quem ficou de fora), porque é daí que vem a recuperação da run; as do Caminho Ninja somam um pequeno bônus de classe. A evolução toma o lugar da inicial na barra.
+Cada classe começa com a sua, um objeto que faz sentido na história dela: a bandana que o Iruka deu ao Naruto, o manual da Academia do ninja comum (o mesmo em qualquer elemento), o macacão verde do prodígio, o leque do clã Uchiha e o pergaminho do Punho Suave dos Hyuuga. O bônus fala com o kit da classe (técnicas de fogo, Sharingan, Punho Suave, Byakugan, taijutsu).
+
+A recuperação depois da vitória **não** vem das iniciais: é uma configuração da run, pela dificuldade ([progressao.md](progressao.md#entre-as-lutas)). O Cupom do Ichiraku e o Cartão fidelidade do ramen somam a ela.
+
+A evolução toma o lugar da inicial na barra. A relíquia de chefe que dava a Vontade do Fogo se chamava Colar do Primeiro Hokage; desde a v0.43.0 ela é o **Talismã da Vontade do Fogo**, e o colar virou a evolução da Bandana do Iruka. Saves e a coleção antigos trocam os ids sozinhos (`RELIC_RENAMES`).
 
 ## Na tela
 
@@ -52,11 +56,11 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 
 | Relíquia | Personagem | Efeito |
 |---|---|---|
-| Tigela do Ichiraku | Naruto | Cada vitória recupera 25% do HP e do chakra de toda a equipe. |
-| Cantil da Academia | Comum | Cada vitória recupera 25% do HP e do chakra de toda a equipe. +10% de ryō. |
-| Bentô de treino | prodígio | Cada vitória recupera 25% do HP e do chakra de toda a equipe. +1 de dano no taijutsu. |
-| Incenso do distrito | Uchiha | Cada vitória recupera 25% do HP e do chakra de toda a equipe. +4 de chakra máximo. |
-| Chá da família | Hyuuga | Cada vitória recupera 25% do HP e do chakra de toda a equipe. +3% de acerto. |
+| Bandana do Iruka | Naruto | +10 de HP máximo; abaixo de 50% do HP, +15% de dano. |
+| Manual da Academia | Comum | +10% de XP; +5% de acerto. |
+| Macacão verde | prodígio | +1 de dano no taijutsu; +1 de speed. |
+| Leque do clã | Uchiha | O Sharingan custa 1 de chakra a menos; técnicas de fogo (Faísca de fogo, Bola de Fogo, Flor de Fênix, Grande Labareda) +10% de dano. |
+| Pergaminho do Punho Suave | Hyuuga | Punho Suave, 64 e 128 Palmas +10% de dano; o Byakugan custa 1 de chakra a menos. |
 
 ### Comum (20)
 
@@ -87,7 +91,7 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 
 | Relíquia | Efeito |
 |---|---|
-| Cupom do Ichiraku | Cada vitória cura 10% a mais da equipe. |
+| Cupom do Ichiraku | Cada vitória recupera 10% a mais do HP e do chakra da equipe. |
 | Faixas de mão | +10% de dano de taijutsu. |
 | Sacola de ervas | Recupera 2% do HP por rodada. |
 | Ficha do mercador | O mercador cobra 15% a menos. |
@@ -129,7 +133,7 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 
 | Relíquia | Efeito |
 |---|---|
-| Colar do Primeiro Hokage | +1 Vontade do Fogo: recomeça uma luta perdida. |
+| Talismã da Vontade do Fogo | +1 Vontade do Fogo: recomeça uma luta perdida. |
 | Selo de contenção | Recupera 4% do HP por rodada. |
 | Chapéu do Hokage | +15% de dano da equipe. |
 | Bandana dos Sannin | +25% de HP máximo dos suportes. |
@@ -152,11 +156,11 @@ Só aparecem na escolha depois do chefe, para quem ainda tem a inicial, e tomam 
 
 | Relíquia | Evolui | Efeito |
 |---|---|---|
-| Tigela especial do Ichiraku | Tigela do Ichiraku | Cada vitória recupera 40% da equipe; +15 de HP máximo. |
-| Cantil de chunin | Cantil da Academia | Cada vitória recupera 35% da equipe; +20% de ryō e +10% de XP. |
-| Bentô da Juventude | Bentô de treino | Cada vitória recupera 35% da equipe; +3 de dano no taijutsu. |
-| Incenso do clã | Incenso do distrito | Cada vitória recupera 35% da equipe; +10 de chakra máximo e +5% de crítico. |
-| Chá da Casa Principal | Chá da família | Cada vitória recupera 35% da equipe; +8% de acerto e esquiva 4% dos golpes. |
+| Colar do Primeiro Hokage | Bandana do Iruka | +20 de HP máximo; abaixo de 50% do HP, +30% de dano. |
+| Colete de chunin | Manual da Academia | +15 de HP máximo; +15% de XP; +8% de acerto. |
+| Macacão da Juventude | Macacão verde | +3 de dano no taijutsu; +2 de speed; +5% de crítico. |
+| Brasão Uchiha | Leque do clã | Os Sharingans custam 2 de chakra a menos; técnicas de fogo +20% de dano; +5% de crítico. |
+| Pergaminho dos Oito Trigramas | Pergaminho do Punho Suave | Punho Suave, 64 e 128 Palmas +20% de dano; os Byakugans custam 2 de chakra a menos; esquiva 4% dos golpes. |
 
 ### Loja (7)
 
@@ -177,7 +181,7 @@ Só aparecem na escolha depois do chefe, para quem ainda tem a inicial, e tomam 
 | Amuleto da velhinha | +10 de HP máximo; a equipe recupera 1% do HP por rodada. |
 | Anel estranho | +8% de crítico e +4% de acerto. |
 | Tinta de invocação | Começa as lutas com 1 clone; técnicas de clone criam 1 a mais. |
-| Cartão fidelidade do ramen | Cada vitória cura 15% a mais da equipe. |
+| Cartão fidelidade do ramen | Cada vitória recupera 15% a mais do HP e do chakra da equipe. |
 | Pergaminho do guru | Na hora: +1 ponto de talento e +30 ryō. |
 | Dado do jokenpô | +20% de ryō e +3% de crítico. |
 | Carta de fã | A equipe ganha +3% de acerto e esquiva 3% dos golpes. |

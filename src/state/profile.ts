@@ -1,6 +1,7 @@
 import { lineageKey } from '../core/achievements';
 import type { FightSummary } from '../core/runStats';
 import { winAchievementId } from '../data/achievements';
+import { RELIC_RENAMES } from '../data/jornada/relics';
 import type { KeyValueStorage, RunRecord } from './runHistory';
 
 /**
@@ -47,6 +48,16 @@ export function emptyProfile(): Profile {
   return { achievements: {}, villains: {}, backfilled: false, relics: {} };
 }
 
+/** Coleção com os ids de relíquia que mudaram trocados (fica a data mais antiga). */
+function renameCollection(relics: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [id, at] of Object.entries(relics)) {
+    const key = RELIC_RENAMES[id] ?? id;
+    if (!out[key] || at < out[key]) out[key] = at;
+  }
+  return out;
+}
+
 export function loadProfile(storage: KeyValueStorage): Profile {
   try {
     const raw = storage.getItem(PROFILE_STORAGE_KEY);
@@ -56,7 +67,7 @@ export function loadProfile(storage: KeyValueStorage): Profile {
       achievements: parsed.achievements && typeof parsed.achievements === 'object' ? parsed.achievements : base.achievements,
       villains: parsed.villains && typeof parsed.villains === 'object' ? parsed.villains : base.villains,
       backfilled: parsed.backfilled === true,
-      relics: parsed.relics && typeof parsed.relics === 'object' ? parsed.relics : base.relics,
+      relics: parsed.relics && typeof parsed.relics === 'object' ? renameCollection(parsed.relics) : base.relics,
       ...(typeof parsed.playerName === 'string' ? { playerName: cleanPlayerName(parsed.playerName) } : {}),
     };
   } catch {

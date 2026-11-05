@@ -1,22 +1,52 @@
 import type { RelicDef } from '../../core/jornada/relics';
 
 // Relíquias (docs/jornada/reliquias.md). Inicial por personagem, comum, incomum, rara, de chefe, de loja,
-// de evento e especial. Toda relíquia inicial recupera a equipe depois de cada vitória (a base da recuperação).
+// de evento e especial. A recuperação depois de cada vitória não vem das relíquias: é da dificuldade
+// (`jornadaBalance.run.afterWinRecovery`); o Cupom do Ichiraku e o Cartão do ramen somam a ela.
+
+/** Ids que mudaram (antigo → novo): saves e a coleção do perfil trocam ao carregar. */
+export const RELIC_RENAMES: Record<string, string> = {
+  ichirakuBowl: 'irukaHeadband',
+  ichirakuDeluxe: 'firstHokageNecklace',
+  academyFlask: 'academyManual',
+  chuninFlask: 'chuninVest',
+  trainingBento: 'greenJumpsuit',
+  youthBento: 'youthJumpsuit',
+  clanIncense: 'uchihaFan',
+  uchihaIncense: 'uchihaCrest',
+  familyTea: 'gentleFistScroll',
+  mainHouseTea: 'eightTrigramsScroll',
+  hokageNecklace: 'willOfFireCharm',
+};
+
+const FIRE = ['jFireSpark', 'jFireball', 'jPhoenixFlower', 'jGreatBlaze'];
+const GENTLE_FIST = ['jGentlePalm', 'jSixtyFourPalms', 'jHundredTwentyEight'];
+const each = (ids: string[], n: number) => Object.fromEntries(ids.map((id) => [id, n]));
 
 export const relics: RelicDef[] = [
-  // Iniciais: uma por personagem; a recuperação é igual, muda o bônus de classe.
-  { id: 'ichirakuBowl', tier: 'starter', starterFor: ['naruto'], afterWinHealPct: 0.25 },
-  { id: 'academyFlask', tier: 'starter', starterFor: ['commonNinja'], afterWinHealPct: 0.25, ryoMult: 1.1 },
-  { id: 'trainingBento', tier: 'starter', starterFor: ['prodigy'], afterWinHealPct: 0.25, mods: { taijutsuFlat: 1 } },
-  { id: 'clanIncense', tier: 'starter', starterFor: ['uchihaNinja'], afterWinHealPct: 0.25, stats: { chakra: 4 } },
-  { id: 'familyTea', tier: 'starter', starterFor: ['hyuugaNinja'], afterWinHealPct: 0.25, mods: { accuracyBonus: 0.03 } },
+  // Iniciais: uma por classe, com um objeto da história dela. O Comum leva a mesma em qualquer elemento.
+  { id: 'irukaHeadband', tier: 'starter', starterFor: ['naruto'], stats: { hp: 10 }, mods: { lowHpDamageMult: 1.15 } },
+  { id: 'academyManual', tier: 'starter', starterFor: ['commonNinja'], xpMult: 1.1, mods: { accuracyBonus: 0.05 } },
+  { id: 'greenJumpsuit', tier: 'starter', starterFor: ['prodigy'], stats: { speed: 1 }, mods: { taijutsuFlat: 1 } },
+  { id: 'uchihaFan', tier: 'starter', starterFor: ['uchihaNinja'], mods: { techChakraDiscount: { jSharingan: 1 }, techDamageMult: each(FIRE, 1.1) } },
+  { id: 'gentleFistScroll', tier: 'starter', starterFor: ['hyuugaNinja'], mods: { techChakraDiscount: { jByakugan: 1 }, techDamageMult: each(GENTLE_FIST, 1.1) } },
 
   // Evoluções: aparecem só na escolha depois do chefe e substituem a inicial.
-  { id: 'ichirakuDeluxe', tier: 'boss', evolves: 'ichirakuBowl', afterWinHealPct: 0.4, stats: { hp: 15 } },
-  { id: 'chuninFlask', tier: 'boss', evolves: 'academyFlask', afterWinHealPct: 0.35, ryoMult: 1.2, xpMult: 1.1 },
-  { id: 'youthBento', tier: 'boss', evolves: 'trainingBento', afterWinHealPct: 0.35, mods: { taijutsuFlat: 3 } },
-  { id: 'uchihaIncense', tier: 'boss', evolves: 'clanIncense', afterWinHealPct: 0.35, stats: { chakra: 10 }, mods: { critBonus: 0.05 } },
-  { id: 'mainHouseTea', tier: 'boss', evolves: 'familyTea', afterWinHealPct: 0.35, mods: { accuracyBonus: 0.08, evasion: 0.04 } },
+  { id: 'firstHokageNecklace', tier: 'boss', evolves: 'irukaHeadband', stats: { hp: 20 }, mods: { lowHpDamageMult: 1.3 } },
+  { id: 'chuninVest', tier: 'boss', evolves: 'academyManual', stats: { hp: 15 }, xpMult: 1.15, mods: { accuracyBonus: 0.08 } },
+  { id: 'youthJumpsuit', tier: 'boss', evolves: 'greenJumpsuit', stats: { speed: 2 }, mods: { taijutsuFlat: 3, critBonus: 0.05 } },
+  {
+    id: 'uchihaCrest',
+    tier: 'boss',
+    evolves: 'uchihaFan',
+    mods: { techChakraDiscount: { jSharingan: 2, jSharingan3: 2 }, techDamageMult: each(FIRE, 1.2), critBonus: 0.05 },
+  },
+  {
+    id: 'eightTrigramsScroll',
+    tier: 'boss',
+    evolves: 'gentleFistScroll',
+    mods: { techChakraDiscount: { jByakugan: 2, jByakugan2: 2 }, techDamageMult: each(GENTLE_FIST, 1.2), evasion: 0.04 },
+  },
 
   // Comuns
   { id: 'goggles', tier: 'common', mods: { accuracyBonus: 0.05 } },
@@ -77,7 +107,7 @@ export const relics: RelicDef[] = [
   { id: 'vitalScroll', tier: 'rare', stats: { hp: 25 } },
 
   // De chefe
-  { id: 'hokageNecklace', tier: 'boss', grant: { willOfFire: 1 } },
+  { id: 'willOfFireCharm', tier: 'boss', grant: { willOfFire: 1 } },
   { id: 'eightTrigramSeal', tier: 'boss', mods: { regenPct: 0.04 } },
   { id: 'hokageHat', tier: 'boss', teamMods: { damageMult: 1.15 } },
   { id: 'sanninBand', tier: 'boss', allyHpPct: 0.25 },

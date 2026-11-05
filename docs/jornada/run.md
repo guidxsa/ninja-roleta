@@ -53,7 +53,7 @@ Recompensas interativas no lugar da roleta visual. Ganhar dá o prêmio do event
 ## Salvamento
 
 - A run **fica salva no aparelho** (`localStorage`, `jornada_run_v1`) a cada parada: uma Jornada dura mais que uma sessão. É a exceção ao "F5 reseta", só neste modo.
-- Uma luta em andamento não é salva: o F5 volta para o começo da parada.
+- Uma luta em andamento não é salva: o F5, ou o botão do Portão da Vila (torii, no cabeçalho, que volta ao menu sem recarregar), leva de volta ao começo da parada. O botão pede confirmação; ao continuar a Jornada, a run segue de onde parou.
 - Começar uma nova jornada apaga a salva; terminar (vitória ou derrota) também.
 
 ## Mapa ramificado

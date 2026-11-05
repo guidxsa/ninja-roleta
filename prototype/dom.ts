@@ -1,6 +1,37 @@
 // Utilitários de DOM do protótipo, usados pelo Roleta (main.ts) e pela Jornada (jornada/).
 
-export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+// Sessão das telas: voltar ao menu (goHome) troca a sessão. O fluxo antigo fica órfão: as esperas dele
+// (sleep) nunca mais continuam e o choose dele fica numa tela que já saiu, então ele não redesenha nada.
+let session = 0;
+const homeWaiters = new Set<() => void>();
+
+/** Resultado de `untilHome` quando o jogador voltou ao menu. */
+export const HOME = Symbol('home');
+
+/** Espera `ms`. Se o jogador voltar ao menu no meio, nunca resolve (o fluxo que esperava para ali). */
+export const sleep = (ms: number) => {
+  const s = session;
+  return new Promise<void>((r) => setTimeout(() => s === session && r(), ms));
+};
+
+/** Espera o fluxo terminar ou o jogador voltar ao menu, o que vier primeiro. */
+export async function untilHome<T>(p: Promise<T>): Promise<T | typeof HOME> {
+  let done!: () => void;
+  const home = new Promise<typeof HOME>((r) => (done = () => r(HOME)));
+  homeWaiters.add(done);
+  try {
+    return await Promise.race([p, home]);
+  } finally {
+    homeWaiters.delete(done);
+  }
+}
+
+/** Volta ao menu sem recarregar: troca a sessão, fecha as camadas por cima e solta quem espera em `untilHome`. */
+export function goHome(): void {
+  session++;
+  document.querySelectorAll('.modal, .jtree-screen, .jmoves-screen, .sheet-wrap').forEach((el) => el.remove());
+  for (const f of [...homeWaiters]) f();
+}
 export const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 

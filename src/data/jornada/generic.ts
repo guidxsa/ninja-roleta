@@ -6,13 +6,36 @@ import type { GenericDef } from '../../core/jornada/trail';
 const EVENTS = ['gOldLady', 'gRamen', 'gTraining', 'gJokenpo', 'gGuru', 'gAkatsuki', 'gFoundItem', 'gSummon'];
 
 export const generic: GenericDef = {
+  // Cada suporte sorteia a classe entre as liberadas (pode ser a do protagonista), depois uma ficha ainda não
+  // usada da classe e um nome. Nomes originais, sem personagens do mangá.
   classes: [
-    { id: 'common', hero: 'commonNinja', noElementHero: 'prodigy' },
+    {
+      id: 'common',
+      hero: 'commonNinja',
+      noElementHero: 'prodigy',
+      supports: ['leafGeninA', 'leafGeninB'],
+      supportNames: ['daichi', 'hana', 'kenta', 'yui', 'sora', 'aiko', 'haruto', 'rin', 'takumi', 'mei', 'riku', 'nanami'],
+    },
     // Uchiha: fogo fixo e um segundo elemento sorteado (pode sair nenhum).
-    { id: 'uchiha', hero: 'uchihaNinja', fixedElement: 'fire', secondElement: true, unlock: 'j_unlockUchiha', support: 'uchihaGenin' },
-    { id: 'hyuuga', hero: 'hyuugaNinja', unlock: 'j_unlockHyuuga', support: 'hyuugaGenin' },
+    {
+      id: 'uchiha',
+      hero: 'uchihaNinja',
+      fixedElement: 'fire',
+      secondElement: true,
+      unlock: 'j_unlockUchiha',
+      supports: ['uchihaGenin', 'uchihaGeninB'],
+      supportNames: ['ren', 'akane', 'hikaru', 'tetsu', 'kaede', 'ryo', 'suzu', 'jin', 'kiyomi', 'nao'],
+    },
+    // Hyuuga: sem elemento (Byakugan e Punho Suave bastam).
+    {
+      id: 'hyuuga',
+      hero: 'hyuugaNinja',
+      noElement: true,
+      unlock: 'j_unlockHyuuga',
+      supports: ['hyuugaGenin', 'hyuugaGeninB'],
+      supportNames: ['mio', 'sei', 'haru', 'yuki', 'kenji', 'emi', 'tomo', 'aya', 'shun', 'mai'],
+    },
   ],
-  supports: ['leafGeninA', 'leafGeninB'],
   stages: [
     {
       id: 'g1',

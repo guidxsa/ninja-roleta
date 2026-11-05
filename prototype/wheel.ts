@@ -1,5 +1,6 @@
 // Componentes visuais de roleta. O resultado já vem sorteado pelo core; aqui só se anima até ele.
 import { land, spinStart, swish, tick } from './audio';
+import { sleep } from './dom';
 
 export interface WheelSlice {
   label: string;
@@ -40,7 +41,6 @@ function arcPath(a0: number, a1: number): string {
   return `M ${C} ${C} L ${x0} ${y0} A ${R} ${R} 0 ${large} 1 ${x1} ${y1} Z`;
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Faixas [início, fim) de cada fatia, em frações de 0 a 1. */
 function spans(slices: { weight: number }[]): [number, number][] {
@@ -71,6 +71,8 @@ function tickOnPegs(svg: SVGElement, ranges: [number, number][]): () => void {
   if (pegs.length === 0) return () => {};
   let prev = currentAngle(svg);
   let frame = requestAnimationFrame(function step() {
+    // Voltou ao menu no meio do giro: a roleta saiu da tela e o laço para.
+    if (!svg.isConnected) return;
     const cur = currentAngle(svg);
     const delta = (cur - prev + 360) % 360;
     // Gira no sentido horário: o ponto sob o ponteiro (no topo) é −ângulo e vai diminuindo.

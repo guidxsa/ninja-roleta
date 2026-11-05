@@ -35,10 +35,17 @@ export interface JRun {
   elements: Record<string, Element | null>;
   /** Caminho Ninja: segundo elemento do protagonista (Uchiha). */
   secondElement: Element | null;
+  /**
+   * Como saiu o elemento do protagonista: escolhido na tela de início (Comum), sorteado (Comum que preferiu sortear:
+   * ganha uma relíquia comum) ou fixo pela classe (História, Uchiha, Hyuuga).
+   */
+  elementPick: ElementPick;
   /** Visual do protagonista (personalização liberada por easter egg, ex.: "sasuke"). */
   skin: string | null;
   /** Caminho Ninja: suportes das lutas comuns. */
   supports: string[];
+  /** Caminho Ninja: nome sorteado de cada suporte (id da ficha → chave do nome em strings/jornada.ts). */
+  names: Record<string, string>;
   /** Caminho Ninja: mapa do estágio atual. */
   map: StageMap | null;
   /** Caminho Ninja: nó em que está (null = escolhendo o próximo). */
@@ -79,6 +86,8 @@ export interface JRun {
   cleared: string[];
 }
 
+export type ElementPick = 'chosen' | 'random' | 'fixed';
+
 const clone = (run: JRun): JRun => structuredClone(run);
 
 function baseRun(seed: number, difficulty: Difficulty, hero: string, data: JornadaData): JRun {
@@ -91,8 +100,10 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     classId: hero,
     elements: {},
     secondElement: null,
+    elementPick: 'fixed',
     skin: null,
     supports: [],
+    names: {},
     map: null,
     nodeId: null,
     path: [],
@@ -137,13 +148,14 @@ export function drawElement(rng: Rng, data: JornadaData, allowNone: boolean): El
   return i < ELEMENTS.length ? ELEMENTS[i]! : null;
 }
 
+/** Escolha do elemento na tela de início: um elemento, `null` (sem elemento: prodígio) ou sortear. */
+export type ElementChoice = Element | null | 'random';
+
 /**
- * Run do Caminho Ninja (docs/jornada/caminho-ninja.md): sorteia o elemento do protagonista (o Comum sem elemento vira
- * prodígio) e o dos suportes, o chefe de cada estágio e o mapa do estágio 1.
- */
-/**
- * `unlocked`: conquistas do perfil (as classes liberadas trazem a versão suporte para o sorteio de parceiros).
- * `skin`: visual escolhido na tela de início (só quando liberado).
+ * Run do Caminho Ninja (docs/jornada/caminho-ninja.md). O Comum escolhe o elemento ou sorteia (sorteando, sem
+ * elemento vira prodígio e ganha uma relíquia comum); o Uchiha tem fogo fixo e sorteia o segundo; o Hyuuga não tem
+ * elemento. Depois: os 2 suportes (classe entre as liberadas, ficha e nome), o chefe de cada estágio e o mapa.
+ * `unlocked`: conquistas do perfil (liberam classes para os suportes). `skin`: visual escolhido (só quando liberado).
  */
 export function newGenericRun(
   seed: number,
@@ -152,34 +164,71 @@ export function newGenericRun(
   data: JornadaData,
   unlocked: ReadonlySet<string> = new Set(),
   skin: string | null = null,
+  choice: ElementChoice = 'random',
 ): JRun {
   const cls = data.generic.classes.find((c) => c.id === classId);
   if (!cls) throw new Error(`classe desconhecida: ${classId}`);
   const rng = createRng(seed ^ 0x5bd1e995);
-  const element = cls.fixedElement ?? drawElement(rng, data, Boolean(cls.noElementHero));
+  // O sorteio sempre acontece (mesmo com escolha ou sem elemento): a seed dá o mesmo mapa e os mesmos suportes.
+  const drawn = cls.fixedElement ?? drawElement(rng, data, Boolean(cls.noElementHero));
+  const canChoose = !cls.fixedElement && !cls.noElement;
+  const element = cls.noElement ? null : canChoose && choice !== 'random' ? choice : drawn;
   const hero = element === null && cls.noElementHero ? cls.noElementHero : cls.hero;
-  const run = baseRun(seed, difficulty, hero, data);
+  let run = baseRun(seed, difficulty, hero, data);
   run.mode = 'generic';
   run.classId = classId;
+  run.elementPick = !canChoose ? 'fixed' : choice === 'random' ? 'random' : 'chosen';
   if (cls.secondElement) {
     let second = drawElement(rng, data, true);
     while (second === element) second = drawElement(rng, data, true);
     run.secondElement = second;
   }
   run.skin = skin;
-  // Parceiros: os 2 Comuns, mais as versões suporte das classes liberadas (sem repetir a própria classe).
-  const extra = data.generic.classes.filter((c) => c.support && c.id !== classId && (!c.unlock || unlocked.has(c.unlock))).map((c) => c.support!);
-  const pool = [...data.generic.supports, ...extra];
-  run.supports = [];
-  while (run.supports.length < 2 && pool.length) run.supports.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]!);
   run.elements = { [hero]: element };
-  for (const id of run.supports) run.elements[id] = data.characters[id]!.element ?? drawElement(rng, data, false);
+  drawSupports(run, rng, data, unlocked);
   run.bossPlan = data.generic.stages.map((s) => Math.floor(rng() * s.bosses.length));
   run.map = generateMap(rng, data);
   // O nível I do elemento entra no moveset.
   run.moveset = heroMovable(run, data).slice(0, MOVESET_SIZE);
+  if (run.elementPick === 'random') {
+    const bonus = rollRelic(data.relics, run.relics, data.j.elementDraw.randomBonus, rng);
+    if (bonus) run = gainRelic(run, bonus, data);
+  }
   return run;
 }
+
+/**
+ * Os 2 suportes: cada um sorteia a classe entre as liberadas (a do protagonista também), depois uma ficha ainda não
+ * usada dela (ids únicos) e um nome que o outro não tem. O elemento vem da ficha ou do sorteio (nunca "nenhum"), e
+ * ficha sem elemento de propósito (Hyuuga) fica sem.
+ */
+function drawSupports(run: JRun, rng: Rng, data: JornadaData, unlocked: ReadonlySet<string>): void {
+  const open = data.generic.classes.filter((c) => !c.unlock || unlocked.has(c.unlock));
+  const taken = new Set<string>();
+  run.supports = [];
+  run.names = {};
+  while (run.supports.length < 2) {
+    const avail = open.filter((c) => c.supports.some((id) => !run.supports.includes(id)));
+    if (!avail.length) break;
+    const c = pickFrom(avail, rng);
+    const id = pickFrom(
+      c.supports.filter((x) => !run.supports.includes(x)),
+      rng,
+    );
+    run.supports.push(id);
+    const names = c.supportNames.filter((n) => !taken.has(n));
+    if (names.length) {
+      const name = pickFrom(names, rng);
+      taken.add(name);
+      run.names[id] = name;
+    }
+    const def = data.characters[id]!;
+    run.elements[id] = def.element ?? (def.noElement ? null : drawElement(rng, data, false));
+  }
+}
+
+/** Classe de uma ficha de suporte do Caminho Ninja (para o nome e a Ficha). */
+export const supportClass = (id: string, data: JornadaData) => data.generic.classes.find((c) => c.supports.includes(id)) ?? null;
 
 function mix(a: number): Rng {
   return () => {
@@ -419,6 +468,10 @@ function gainXp(run: JRun, xp: number, data: JornadaData): number {
 const ryoGain = (run: JRun, n: number, data: JornadaData) =>
   Math.floor(n * relicDefs(run, data).reduce((a, r) => a * (r.ryoMult ?? 1), 1));
 
+/** Fração do HP e do chakra que a equipe recupera depois de cada vitória: a da dificuldade mais a das relíquias. */
+export const afterWinRecovery = (run: JRun, data: JornadaData) =>
+  (data.j.run.afterWinRecovery[run.difficulty] ?? 0) + relicDefs(run, data).reduce((a, r) => a + (r.afterWinHealPct ?? 0), 0);
+
 function healAll(run: JRun, pct: number, data: JornadaData, ids?: string[]): void {
   for (const id of ids ?? Object.keys(run.members)) {
     const sheet = memberSheet(run, id, data);
@@ -464,9 +517,9 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   }
   run.stats.wins++;
   run.cleared.push(stop.id);
-  // A recuperação vem das relíquias (a Tigela do Ichiraku, inicial, e o Cupom) e vale para a equipe do
-  // estágio inteira: quem lutou e terminou de pé e quem ficou de fora desta luta.
-  const rec = relicDefs(run, data).reduce((a, r) => a + (r.afterWinHealPct ?? 0), 0);
+  // A recuperação vem da dificuldade (mais as relíquias que somam) e vale para a equipe do estágio inteira:
+  // quem lutou e terminou de pé e quem ficou de fora desta luta.
+  const rec = afterWinRecovery(run, data);
   const fought = new Set(results.map((r) => r.defId));
   healAll(run, rec, data, membersSeen(run, data).filter((id) => !fought.has(id)));
   for (const r of results) {

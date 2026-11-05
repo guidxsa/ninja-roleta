@@ -9,7 +9,7 @@ describe('ícones da interface', () => {
       'check', 'close', 'lock', 'chevron', 'advantage', 'disadvantage', 'book', 'medal', 'sparkle', 'card', 'heart', 'block',
       'rock', 'paper', 'scissors', 'mind', 'blast', 'antlers', 'gourd', 'steam', 'sprout', 'tree', 'bug', 'ice',
       'barrier', 'clones', 'sleep', 'prison', 'lightning', 'fear', 'confusion', 'torment', 'stun', 'fire', 'poison', 'bleed',
-      'warning', 'sharingan', 'byakugan', 'pill', 'toad', 'mist', 'sandArmor', 'dodge', 'armor', 'cloak', 'snake', 'coin',
+      'warning', 'sharingan', 'byakugan', 'pill', 'toad', 'mist', 'sandArmor', 'dodge', 'armor', 'cloak', 'snake', 'coin', 'home',
     ];
     expect(names.filter((n) => !hasIcon(n))).toEqual([]);
   });

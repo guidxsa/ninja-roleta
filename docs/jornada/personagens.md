@@ -26,14 +26,17 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 | Ninja Uchiha | 105 | 32 | 12 | 10/12/8 | 7/8 | fogo | striker | Golpe, Shuriken, Bola de Fogo, Sharingan |
 | Ninja Hyuuga | 105 | 26 | 12 | 12/6/4 | 8/7 | — | striker | Golpe, Palma Suave, Shuriken, Byakugan |
 | Ren Uchiha | 85 | 26 | 12 | 8/10/7 | 5/7 | fogo | striker | Kunai, Ilusão dos corvos |
+| Kaede Uchiha | 90 | 28 | 11 | 7/10/9 | 5/8 | fogo | tactician | Shuriken, Armadilha de fios |
 | Mio Hyuuga | 95 | 22 | 11 | 10/5/4 | 7/6 | — | guardian | Palma Suave, Rotação, Kunai |
+| Sei Hyuuga | 100 | 22 | 12 | 11/5/3 | 7/6 | — | striker | Palma Suave, Shuriken, Palma do Vácuo |
 
 - O Sasuke aprende o **Chidori** ao chegar no exame chunin (estágio 2).
 - As técnicas novas do Naruto vêm da árvore de talentos ([talentos.md](talentos.md)).
 - No mangá, antes do timeskip, a Sakura ainda não é médica: o papel dela é tático (soltar aliado preso, levantar quem caiu, armadilhas).
 - A equipe de resgate entra no estágio 3 da História ([historia.md](historia.md)). O Akamaru luta dentro do kit do Kiba, porque cada lado tem no máximo 3 lutadores.
 - No Caminho Ninja, o protagonista usa o nome do jogador, quando informado ([perfil.md](../base/perfil.md#nome-do-jogador)).
-- Caminho Ninja ([classes.md](classes.md)): o Ninja da Folha (Comum) e os suportes Daichi e Hana usam o elemento sorteado na run e ganham a técnica de nível I dele; o prodígio é o Comum que saiu sem elemento.
+- Caminho Ninja ([classes.md](classes.md)): o Ninja da Folha (Comum) usa o elemento escolhido ou sorteado e os suportes Comuns, o sorteado; todos ganham a técnica de nível I dele. O prodígio é o Comum sem elemento. O Hyuuga (protagonista e suportes) não tem elemento.
+- Nos suportes do Caminho Ninja, o nome da tabela é o da ficha; na run, cada suporte ganha um nome sorteado da lista da classe ([classes.md](classes.md#suportes-genéricos-versão-suporte)).
 
 ## Comportamento
 

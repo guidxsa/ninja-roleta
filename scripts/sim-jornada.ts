@@ -85,18 +85,11 @@ function pickNode(run: JRun, rng: Rng): string {
   return [...nodeChoices(run)].sort((a, b) => score(b.kind) - score(a.kind))[0]!.id;
 }
 
-/** Seed da i-ésima run do modo. `generic:prodigy` pula as seeds em que o Comum sai com elemento. */
-function seedFor(base: number, mode: Mode): number {
-  if (mode !== 'generic:prodigy') return base;
-  let s = base;
-  while (newGenericRun(s, 'normal', 'common', data, UNLOCKED).hero !== 'prodigy') s += 7919;
-  return s;
-}
-
 function play(seed: number, difficulty: Difficulty, mode: Mode): { run: JRun; stop: string } {
   const rng = createRng(seed);
   const cls = mode === 'generic:prodigy' ? 'common' : mode.split(':')[1]!;
-  let run = mode === 'canon' ? newRun(seed, difficulty, data) : newGenericRun(seed, difficulty, cls, data, UNLOCKED);
+  // O Comum sorteia o elemento (e ganha a relíquia do sorteio); o prodígio é escolhido direto (sem elemento).
+  let run = mode === 'canon' ? newRun(seed, difficulty, data) : newGenericRun(seed, difficulty, cls, data, UNLOCKED, null, mode === 'generic:prodigy' ? null : 'random');
   let guard = 0;
   while (run.status === 'inProgress') {
     if (++guard > 400) throw new Error('run sem fim');
@@ -138,7 +131,7 @@ for (const mode of ['canon', 'generic:common', 'generic:prodigy', 'generic:uchih
   let wins = 0;
   let levels = 0;
   for (let i = 0; i < RUNS; i++) {
-    const { run, stop } = play(seedFor(SEED * 100003 + i, mode), d, mode);
+    const { run, stop } = play(SEED * 100003 + i, d, mode);
     if (run.status === 'victory') wins++;
     levels += run.level;
     stops.set(stop, (stops.get(stop) ?? 0) + 1);

@@ -17,9 +17,15 @@
 | História | 25 | 1 | 70 |
 | Chefe | 50 | 1 | 120 (+ 1 de 3 relíquias de chefe) |
 
-## Entre lutas
+## Entre as lutas
 
-- HP e chakra seguem de uma luta para a outra. A recuperação depois da vitória vem das relíquias: a relíquia inicial do personagem (a **Tigela do Ichiraku**, na História) devolve 25% do HP e do chakra máximos de toda a equipe do estágio, inclusive quem ficou de fora da luta ([reliquias.md](reliquias.md)).
+- HP e chakra seguem de uma luta para a outra. Depois de cada vitória, toda a equipe do estágio (inclusive quem ficou de fora da luta) recupera uma fração do HP e do chakra máximos. É uma **configuração da run**, pela dificuldade (`run.afterWinRecovery`), mostrada na tela de início e no aviso de vitória (v0.43.0; antes vinha da relíquia inicial):
+
+  | Fácil | Médio | Difícil | Hardcore |
+  |---|---|---|---|
+  | 35% | 25% | 20% | 15% |
+
+  Relíquias como o Cupom do Ichiraku somam a esse valor ([reliquias.md](reliquias.md)).
 - **Estágio vencido** (o chefe caiu): toda a equipe volta com HP e chakra cheios, inclusive quem caiu.
 - Aliado que caiu volta para a próxima luta com 30% do HP.
 - Quem nunca lutou entra cheio.

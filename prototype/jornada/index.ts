@@ -3,6 +3,7 @@
 import type { Difficulty } from '../../src/core/difficulty';
 import { eventOptions } from '../../src/core/jornada/events';
 import {
+  afterWinRecovery,
   battleSetup,
   buy,
   canBuy,
@@ -16,9 +17,6 @@ import {
   finishFight,
   gainRelic,
   genericStage,
-  heroActives,
-  heroMods,
-  heroMovable,
   leaveStop,
   memberSheet,
   memberState,
@@ -30,19 +28,19 @@ import {
   resolveEvent,
   rest,
   restHealPct,
-  setMoveset,
   shopOffer,
   stageCount,
   stageId,
   stageScene,
   stopRng,
   xpToNext,
-  MOVESET_SIZE,
+  type ElementChoice,
   type JRun,
   type Purchase,
 } from '../../src/core/jornada/run';
-import { techPower } from '../../src/core/jornada/battle';
 import { reachableFrom, type MapNode } from '../../src/core/jornada/map';
+import type { Element } from '../../src/core/types';
+import { ELEMENT_COLORS } from '../tips';
 import { isFight, type StopDef } from '../../src/core/jornada/trail';
 import { jornadaData as data } from '../../src/data/jornada';
 import { newJornadaAchievements } from '../../src/data/jornada/achievements';
@@ -51,7 +49,9 @@ import { clearJornada, loadJornada, saveJornada } from '../../src/state/jornadaS
 import { fighterPortrait, icon } from '../art';
 import { choose, esc, h, show, sleep } from '../dom';
 import { tip } from '../tooltip';
-import { heroLabel, jornadaBattle, techName, techTip } from './battle';
+import { forgetLiveBattle, heroLabel, jornadaBattle, memberLabel } from './battle';
+import { movesetScreen } from './moveset';
+import { openJornadaSheet } from './sheet';
 import type { JornadaHost } from './host';
 import { playMinigame } from './minigames';
 import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
@@ -83,34 +83,44 @@ const portraitSpec = (id: string, run?: JRun) =>
   run?.skin && id === run.hero ? `ninja:${run.skin}` : (data.characters[id]?.portrait ?? 'ninja:common');
 /** Nome de quem protagoniza, com o nome do jogador no Caminho Ninja. Já escapado: vai direto para o HTML. */
 const heroName = (host: JornadaHost, run: JRun) => esc(run.mode === 'generic' ? heroLabel(run.hero, host.playerName()) : (J.names[run.hero] ?? run.hero));
-/** Nome com o elemento sorteado (Caminho Ninja): "Daichi (Fogo)". */
+/** Nome com o elemento (Caminho Ninja): "Daichi (Fogo)". Já escapado. */
 function memberName(host: JornadaHost, run: JRun, id: string): string {
   const el = run.mode === 'generic' ? elementOf(run, id, data) : null;
-  const name = id === run.hero ? heroName(host, run) : (J.names[id] ?? id);
+  const name = esc(memberLabel(run, id, host.playerName()));
   return el ? J.genericStart.elementOf(name, S.elements[el]) : name;
 }
 // ---------------------------------------------------------------------------
 // Entrada
 
+/** Run em andamento, para a Ficha do cabeçalho e do HUD. */
+let live: JRun | null = null;
+const keep = (run: JRun): JRun => (live = run);
+
 export async function runJornada(host: JornadaHost): Promise<void> {
-  // Layout próprio (mais largo no PC) e sem o botão Ficha, que é do Roleta.
+  // Layout próprio (mais largo no PC).
   document.body.classList.add('mode-jornada');
+  forgetLiveBattle();
   try {
     await jornadaLoop(host);
   } finally {
     document.body.classList.remove('mode-jornada');
+    host.setSheet(null);
+    live = null;
   }
 }
 
 async function jornadaLoop(host: JornadaHost): Promise<void> {
   let run = await startScreen(host);
   if (!run) return;
+  keep(run);
+  // A Ficha do cabeçalho passa a mostrar a equipe desta run.
+  host.setSheet(() => live && openJornadaSheet(host, live));
   markRelicsSeen(run.relics);
   host.discoverRelics(run.relics);
   host.unlock(newJornadaAchievements(run, host.unlocked()));
   let shownStage = run.stageIndex;
   while (run.status === 'inProgress') {
-    saveJornada(host.storage, run);
+    saveJornada(host.storage, keep(run));
     run = await playStop(host, run);
     host.discoverRelics(run.relics);
     const fresh = newJornadaAchievements(run, host.unlocked());
@@ -121,9 +131,13 @@ async function jornadaLoop(host: JornadaHost): Promise<void> {
       await notice(U.stageClear(J.stages[prev] ?? ''), stageName(run));
     }
   }
-  saveJornada(host.storage, run);
+  saveJornada(host.storage, keep(run));
+  host.setSheet(null);
   await endScreen(host, run);
 }
+
+/** Recuperação depois de cada vitória na dificuldade (configuração da run, sem relíquias). */
+const recoveryLine = (d: Difficulty) => `${icon('heart')} ${J.start.recovery(Math.round((data.j.run.afterWinRecovery[d] ?? 0) * 100))}`;
 
 async function startScreen(host: JornadaHost): Promise<JRun | null> {
   const saved = loadJornada(host.storage);
@@ -143,6 +157,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
           (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === diff}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? `${icon('lock')} ` : ''}${S.difficulty[d].name}</button>`,
         ).join('')}</div>
         <p class="center small jdiff-both">${J.start.difficultyBoth}</p>
+        <p class="center small" data-recovery>${recoveryLine(diff)}</p>
         <p class="muted center small">${hardcoreOk ? J.start.willOfFireNote : J.start.hardcoreLocked}</p></div>
       <section class="card jmode-panel">
         <div class="jmode-card"><div class="jstart-face">${fighterPortrait('naruto', 'ninja:uzumaki', 'md')}</div>
@@ -161,6 +176,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
               <b>${open ? '' : `${icon('lock', 'lock')} `}${G.classes[id]!.name}</b><small>${note}</small></button>`;
           })
           .join('')}</div>
+        <div class="jel-pick" data-elements role="group" aria-label="${G.elementTitle}">${ELEMENT_CHOICES.map((c) => elementChoiceButton(c)).join('')}</div>
         ${host.unlocked().has('j_sasukeEgg') ? `<button class="btn small jskin" data-skin aria-pressed="false">${G.skinSasuke}</button>` : ''}
         <button class="btn ${saved ? '' : 'primary '}big" data-choice="generic">${icon('dice')} ${G.start}</button>
       </section>
@@ -173,6 +189,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
     diff = b.dataset.diff as Difficulty;
     host.setDifficulty(diff);
     root.querySelectorAll('[data-diff]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    root.querySelector('[data-recovery]')!.innerHTML = recoveryLine(diff);
   });
   let classId = 'common';
   let skin: string | null = null;
@@ -186,6 +203,17 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
     if (!b || b.getAttribute('aria-disabled') === 'true') return;
     classId = b.dataset.class!;
     root.querySelectorAll('[data-class]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    // Só o Comum escolhe o elemento.
+    root.querySelector<HTMLElement>('[data-elements]')!.hidden = classId !== 'common';
+  });
+  // Elemento do Comum: um elemento, o prodígio (sem elemento) ou sortear (com a relíquia bônus).
+  let element: ElementChoice = 'random';
+  root.querySelector('[data-elements]')!.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-element]');
+    if (!b) return;
+    const v = b.dataset.element!;
+    element = v === 'random' ? 'random' : v === 'none' ? null : (v as Element);
+    root.querySelectorAll('[data-element]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
   });
   for (;;) {
     const c = await choose<'continue' | 'new' | 'generic' | 'back'>(root);
@@ -196,27 +224,46 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
       clearJornada(host.storage);
       if (c === 'new') return newRun(host.nextSeed(), diff, data);
       await host.ensurePlayerName();
-      const run = newGenericRun(host.nextSeed(), diff, classId, data, host.unlocked(), classId === 'uchiha' ? skin : null);
+      const run = newGenericRun(host.nextSeed(), diff, classId, data, host.unlocked(), classId === 'uchiha' ? skin : null, classId === 'common' ? element : 'random');
       await revealScreen(host, run);
       return run;
     }
   }
 }
 
-/** Revelação do sorteio do elemento (sem roleta): o elemento ou o prodígio, e os parceiros. */
+/** Opções de elemento do Comum na tela de início. */
+const ELEMENT_CHOICES = ['random', 'fire', 'wind', 'lightning', 'earth', 'water', 'none'] as const;
+
+function elementChoiceButton(c: (typeof ELEMENT_CHOICES)[number]): string {
+  const pressed = `aria-pressed="${c === 'random'}"`;
+  if (c === 'random') return `<button type="button" class="jel jel-random" data-element="random" ${pressed}${tip(G.elementRandom, G.elementRandomTip)}>${icon('dice')}<span>${G.elementRandom}</span></button>`;
+  if (c === 'none') return `<button type="button" class="jel" data-element="none" ${pressed}${tip(G.elementProdigy, G.elementProdigyTip)}>${icon('taijutsu')}<span>${G.elementProdigy}</span></button>`;
+  return `<button type="button" class="jel" data-element="${c}" style="--c:${ELEMENT_COLORS[c]}" ${pressed}${tip(S.elements[c], G.elementChoiceTip(S.elements[c]))}>${icon(c)}<span>${S.elements[c]}</span></button>`;
+}
+
+/**
+ * Revelação do começo do Caminho Ninja (sem roleta): o elemento (sorteado ou escolhido), o prodígio ou o Hyuuga sem
+ * elemento, a relíquia bônus de quem sorteou e os parceiros.
+ */
 async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
   const el = elementOf(run, run.hero, data);
   const [a, b] = run.supports.map((id) => memberName(host, run, id));
+  const noElement = data.generic.classes.find((c) => c.id === run.classId)?.noElement;
+  const line = el ? `${icon(el)} ${G.revealElement(S.elements[el])}` : noElement ? G.revealHyuuga : G.revealProdigy;
+  // A relíquia bônus é a que veio além da inicial.
+  const bonus = run.elementPick === 'random' ? run.relics.find((id) => data.relics.find((r) => r.id === id)?.tier !== 'starter') : undefined;
   const root = show(
-    h(`<div class="screen jreveal"><h2>${G.revealTitle}</h2>
+    h(`<div class="screen jreveal"><h2>${run.elementPick === 'random' ? G.revealTitle : G.revealChosen}</h2>
       <div class="jstart-face pop">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'lg')}</div>
       <h3 class="center">${heroName(host, run)}</h3>
-      <p class="center">${el ? `${icon(el)} ${G.revealElement(S.elements[el])}` : G.revealProdigy}</p>
+      <p class="center">${line}</p>
       ${run.classId === 'uchiha' ? `<p class="center">${run.secondElement ? `${icon(run.secondElement)} ${G.revealSecond(S.elements[run.secondElement])}` : G.revealNoSecond}</p>` : ''}
+      ${bonus ? `<h3 class="center">${G.randomBonus}</h3>${relicCard(bonus, '', 'reveal')}` : ''}
       <p class="center muted">${G.revealTeam(a ?? '', b ?? '')}</p>
       <button class="btn primary big" data-choice="ok">${U.continue}</button></div>`),
   );
-  host.mood(el ? 'neutral' : 'good');
+  host.mood(el || noElement ? 'neutral' : 'good');
+  if (bonus) host.discoverRelics([bonus]);
   await choose(root);
 }
 
@@ -241,6 +288,7 @@ function hud(host: JornadaHost, run: JRun): string {
       })
       .join('')}</div>
     <div class="jhud-actions">
+      <button class="btn small" data-open="sheet">${icon('book')} ${U.sheetBtn}</button>
       <button class="btn small" data-open="talents">${icon('scroll')} ${U.talentsBtn}${run.talentPoints ? ` <span class="badge">${run.talentPoints}</span>` : ''}</button>
       <button class="btn small" data-open="moveset">${icon('swords')} ${U.movesetBtn}</button>
     </div>
@@ -265,13 +313,15 @@ function trail(run: JRun): string {
 }
 
 /** Botões do HUD (talentos, moveset, relíquias) funcionam em qualquer tela que mostre o HUD. */
-function wireHud(root: HTMLElement, host: JornadaHost, get: () => JRun, set: (r: JRun) => void, refresh: () => void) {
+function wireHud(root: HTMLElement, host: JornadaHost, get: () => JRun, set0: (r: JRun) => void, refresh: () => void) {
+  const set = (r: JRun) => set0(keep(r));
   root.addEventListener('click', async (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-open]');
     if (!b) return;
     const kind = b.dataset.open;
+    if (kind === 'sheet') return openJornadaSheet(host, get());
     if (kind === 'talents') set(await talentTreeScreen(host, get(), heroName(host, get())));
-    else if (kind === 'moveset') set(await movesetModal(get()));
+    else if (kind === 'moveset') set(await movesetScreen(get()));
     else relicsModal(get(), b.dataset.relic);
     refresh();
   });
@@ -302,7 +352,7 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
   let cur = run;
   const team = isFight(stop) ? fightTeam(run, stop, data) : [];
   const teamLine = isFight(stop)
-    ? `<p class="jteam">${[run.hero, ...team].map((id) => fighterPortrait(id, portraitSpec(id), 'sm')).join('')}<span class="muted small">${team.length ? team.map((id) => J.names[id]).join(', ') : U.solo}</span></p>`
+    ? `<p class="jteam">${[run.hero, ...team].map((id) => fighterPortrait(id, portraitSpec(id), 'sm')).join('')}<span class="muted small">${team.length ? team.map((id) => esc(memberLabel(run, id, host.playerName()))).join(', ') : U.solo}</span></p>`
     : '';
   const root = show(
     h(`<div class="screen jtrail-screen">
@@ -442,6 +492,7 @@ async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, {
     }
     if (outcome.won) {
       const lines = [U.rewards(outcome.ryo, outcome.xp, outcome.talent)];
+      if (next.status === 'inProgress') lines.push(stop.kind === 'boss' ? U.restoredAll : U.recovered(Math.round(afterWinRecovery(next, data) * 100)));
       if (outcome.levelUps) lines.push(U.levelUp(next.level));
       await notice(U.victoryTitle, lines.join('\n'));
       if (outcome.relic) {
@@ -522,7 +573,7 @@ async function shopStop(host: JornadaHost, run0: JRun): Promise<JRun> {
           : kind === 't'
             ? { kind: 'training', price: offer.training }
             : { kind: 'treatment', price: offer.treatment };
-    run = buy(run, p, data);
+    run = keep(buy(run, p, data));
     if (kind === 'r' || kind === 'heal') bought.add(key);
     host.mood('good');
     render();
@@ -596,55 +647,6 @@ async function bossChoiceScreen(run: JRun): Promise<JRun> {
 
 // ---------------------------------------------------------------------------
 // Modais
-
-function modal(inner: string): HTMLElement {
-  const el = h(`<div class="modal"><div class="modal-body jmodal">${inner}</div></div>`);
-  document.body.appendChild(el);
-  return el;
-}
-
-function movesetModal(run: JRun): Promise<JRun> {
-  const known = heroMovable(run, data);
-  const picked = new Set(run.moveset);
-  const mods = heroMods(run, data);
-  const el = modal('');
-  const render = () => {
-    el.querySelector('.jmodal')!.innerHTML = `<div class="modal-head"><h2>${U.movesetTitle(picked.size, MOVESET_SIZE)}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
-      <p class="muted small">${U.movesetHelp}</p>
-      <div class="jmoves-pick">${known
-        .map((id) => {
-          const t = data.techniques[id]!;
-          const power = techPower(t, mods);
-          const cost = Math.max(0, t.chakraCost - mods.chakraDiscount - (mods.techChakraDiscount[id] ?? 0));
-          const bits = [power ? `<span${power > t.baseDamage ? ' class="up"' : ''}>${J.battle.damage(power)}${(t.hits ?? 1) > 1 ? `×${t.hits}` : ''}</span>` : '', cost ? J.battle.chakra(cost) : ''].filter(Boolean);
-          return `<button class="btn jmove${picked.has(id) ? ' on' : ''}" data-move="${id}" aria-pressed="${picked.has(id)}"${techTip(t, undefined, mods)}><span class="jmove-ico">${icon(t.element ?? t.type)}</span>
-            <span class="jmove-txt"><b>${techName(id)}</b>${bits.length ? `<small>${bits.join(' · ')}</small>` : ''}</span></button>`;
-        })
-        .join('')}</div>
-      <h3>${U.actives}</h3><p class="muted small">${heroActives(run, data).map(techName).join(' · ')}</p>
-      <button class="btn primary big" data-save ${picked.size ? '' : 'disabled'}>${U.save}</button>`;
-  };
-  render();
-  return new Promise((resolve) => {
-    el.addEventListener('click', (e) => {
-      const t = e.target as HTMLElement;
-      if (t === el || t.closest('[data-close]')) {
-        el.remove();
-        return resolve(run);
-      }
-      if (t.closest('[data-save]') && picked.size) {
-        el.remove();
-        return resolve(setMoveset(run, [...picked], data));
-      }
-      const b = t.closest<HTMLElement>('[data-move]');
-      if (!b) return;
-      const id = b.dataset.move!;
-      if (picked.has(id)) picked.delete(id);
-      else if (picked.size < MOVESET_SIZE) picked.add(id);
-      render();
-    });
-  });
-}
 
 async function notice(title: string, text: string): Promise<void> {
   const root = show(h(`<div class="screen"><h2>${esc(title)}</h2><section class="card"><p class="pre">${esc(text)}</p></section>

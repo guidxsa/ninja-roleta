@@ -46,10 +46,14 @@ export interface ClassDef {
   fixedElement?: Element;
   /** Sorteia um segundo elemento (pode sair nenhum), diferente do fixo. */
   secondElement?: boolean;
+  /** Classe sem elemento (Hyuuga): nem sorteia nem ganha a técnica elemental. */
+  noElement?: boolean;
   /** Conquista que libera a classe (sem o campo, liberada desde o início). */
   unlock?: string;
-  /** Versão suporte da classe: entra no sorteio de suportes quando a classe está liberada. */
-  support?: string;
+  /** Fichas da versão suporte da classe (ids distintos: dois suportes da mesma classe não repetem ficha). */
+  supports: string[];
+  /** Chaves de nome sorteadas para os suportes da classe (textos em strings/jornada.ts). */
+  supportNames: string[];
 }
 
 /** Estágio de uma run do Caminho Ninja: pools sorteados no mapa (mesma dificuldade da História). */
@@ -66,8 +70,7 @@ export interface GenericStage {
 }
 
 export interface GenericDef {
+  /** Classes; os suportes do Caminho Ninja saem das versões suporte das classes liberadas. */
   classes: ClassDef[];
-  /** Suportes do Caminho Ninja (versão suporte; elemento sorteado). */
-  supports: string[];
   stages: GenericStage[];
 }

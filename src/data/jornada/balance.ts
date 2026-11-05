@@ -54,6 +54,9 @@ export const jornadaBalance = {
     // Aliado que caiu na luta volta para a próxima com esta fração do HP.
     downedAllyReturnPct: 0.3,
     restHealPct: 0.4,
+    // Recuperação de HP e chakra de toda a equipe depois de cada vitória, pela dificuldade (configuração da run).
+    // Relíquias como o Cupom do Ichiraku somam a ela.
+    afterWinRecovery: { easy: 0.35, normal: 0.25, hard: 0.2, hardcore: 0.15 } as Record<string, number>,
     bagLimit: 5,
     startConsumables: { hpKit: 1, chakraKit: 1 } as Record<string, number>,
     // Vontades do Fogo por dificuldade (só o Fácil tem).
@@ -98,7 +101,8 @@ export const jornadaBalance = {
     unknown: { event: 50, fight: 30, shop: 10, treasure: 10 },
   },
   // Sorteio do elemento no Caminho Ninja: peso de cada elemento e de nenhum (Comum sem elemento = prodígio).
-  elementDraw: { element: 16, none: 20 },
+  // Quem prefere sortear o elemento do Comum (em vez de escolher) ganha uma relíquia destes pesos no começo.
+  elementDraw: { element: 16, none: 20, randomBonus: { common: 1 } as Record<string, number> },
 
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
   minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },

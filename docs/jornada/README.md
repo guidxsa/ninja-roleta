@@ -32,7 +32,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 ## Tipos de run
 
 - **História do Naruto**: liberada desde o início, linear, com os confrontos do mangá ([historia.md](historia.md)).
-- **Caminho Ninja**: protagonista de uma classe de origem com o elemento sorteado ([classes.md](classes.md)), mapa ramificado, encontros diferentes com a mesma dificuldade; suportes genéricos (2 Comuns, Daichi e Hana) ([caminho-ninja.md](caminho-ninja.md)).
+- **Caminho Ninja**: protagonista de uma classe de origem com o elemento escolhido ou sorteado ([classes.md](classes.md)), mapa ramificado, encontros diferentes com a mesma dificuldade; 2 suportes com classe (entre as liberadas) e nome sorteados ([caminho-ninja.md](caminho-ninja.md)).
 - Um personagem nunca é protagonista e suporte na mesma run.
 
 ## Perfil e conquistas
@@ -43,7 +43,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 
 ## Simulação
 
-`npm run sim:jornada -- [runs] [seed]`: um bot joga a História e o Caminho Ninja (Comum, prodígio, Uchiha, Hyuuga) por dificuldade e mostra a taxa de vitória e onde as runs param. O bot joga pior que um humano (não monta o moveset, compra sem planejar); antes de agir, usa uma ativa grátis como a IA dos suportes. A linha do prodígio pula as seeds em que o Comum sai com elemento.
+`npm run sim:jornada -- [runs] [seed]`: um bot joga a História e o Caminho Ninja (Comum, prodígio, Uchiha, Hyuuga) por dificuldade e mostra a taxa de vitória e onde as runs param. O bot joga pior que um humano (não monta o moveset, compra sem planejar); antes de agir, usa uma ativa grátis como a IA dos suportes. A linha do Comum sorteia o elemento (e ganha a relíquia do sorteio); a do prodígio escolhe direto o Comum sem elemento.
 
 ## Ordem de construção
 

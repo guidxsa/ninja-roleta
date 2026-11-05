@@ -90,6 +90,7 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 
 - **4 técnicas** equipadas, mais as **ativas de classe** numa área separada (Kage Bunshin, Manto da Kyuubi).
 - O moveset fica salvo entre as lutas; editar (botão Moveset na trilha) é opcional. Técnica nova da árvore entra sozinha se houver espaço.
+- **Tela do moveset** (v0.43.0): tela cheia com o tema da classe, como a árvore de talentos (cor, padrão e brasão; no Comum, a cor do elemento). Em cima, as 4 vagas em selos (tocar tira); depois as ativas de classe, sempre disponíveis; embaixo, as técnicas conhecidas agrupadas por origem (kit inicial, elemento, talentos e eventos), com o dano e o custo da run. Com as 4 vagas cheias, tocar numa técnica nova avisa para tirar uma antes.
 
 ## Vitória e derrota
 
@@ -108,5 +109,6 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 - **Protagonista caído**: uma faixa avisa que os suportes vão levantá-lo (ou que não levanta mais nesta luta), e outra anuncia quem o levantou.
 - Log curto (tocar abre o histórico). Sem roleta na tela: só o resultado.
 - Dicas: passar o mouse ou segurar o dedo numa técnica mostra a ficha dela (motivo de bloqueio, tipo, elemento, alvo, dano, precisão, efeitos, fortalecimento, custo, espera); num lutador, HP, chakra, elemento, comportamento, passiva, portão, fortalecimento, efeitos e técnicas.
-- No PC, a batalha usa duas colunas (arena à esquerda, menu e log à direita) e a trilha mostra o HUD ao lado do caminho. O botão Ficha (do Roleta) some na Jornada.
+- No PC, a batalha usa duas colunas (arena à esquerda, menu e log à direita) e a trilha mostra o HUD ao lado do caminho.
+- **Ficha da equipe** (v0.43.0; botão Ficha do cabeçalho ou do HUD, também no meio da luta): o pergaminho da Ficha do Roleta, com uma aba por membro (o protagonista e os suportes da próxima luta). Cada aba traz classe, nível, elemento, HP e chakra (os de agora, na luta), atributos com régua, as técnicas com o dano e o custo da run (protagonista: moveset e ativas; suportes: o kit e o papel da IA) e os bônus de talentos e relíquias. A aba do protagonista mostra também a dificuldade, a recuperação por vitória, as relíquias e a bolsa.
 - Pronta para sprites: cada lutador é um bloco com poses em classes CSS; uma imagem própria em `public/img/jornada/<id>.webp` substitui o retrato.
