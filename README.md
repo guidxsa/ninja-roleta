@@ -60,6 +60,14 @@ O jogo está em **0.x** (protótipo) e ainda longe do 1.0. Depois do `v0.9.0` ve
 - **Minor** (`v0.10.0` → `v0.11.0`): muda como se joga ou traz um sistema novo: mecânica, regra, origem ou vilão refeito, rebalanceamento de fórmulas, tela ou modo novo.
 - **Patch** (`v0.10.0` → `v0.10.1`): ajuste ou complemento do que já existe: correção de bug, números, texto, documentação, polimento de interface, uma opção a mais numa tela ou na ferramenta de teste.
 
+Cada versão do histórico tem uma tag `vX.Y.Z`. Três foram criadas depois, em 05/11/2026:
+
+| Tag | Commit | Observação |
+|---|---|---|
+| `v0.4.0` | `5cf7bff` | Sem commit próprio: entrou junto com a `v0.5.0`, então o `package.json` marca 0.5.0. |
+| `v0.7.0` | `a191422` | Commit próprio da versão. |
+| `v0.38.2` | `a2e4c3a` | Sem commit próprio no `master`: entrou junto com a `v0.38.3` no squash do #9, então o `package.json` marca 0.38.3. |
+
 O **v1.0.0** fica para quando o jogo estiver completo para quem joga:
 
 - interface final em `src/ui` no lugar do protótipo;
