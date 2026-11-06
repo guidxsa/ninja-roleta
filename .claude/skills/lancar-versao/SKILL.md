@@ -21,7 +21,7 @@ O histórico de versões fica na tabela **Histórico de versões** do `README.md
   - Se o usuário disser o número ou o tipo ("é só um patch", "isso é versão nova"), vale o que ele disse.
 - O jogo fica em 0.x: depois de `v0.9.0` vem `v0.10.0`, nunca `v1.0.0`. **Nunca suba o major** (`v1.0.0`) por conta própria, nem que o trabalho pareça grande; isso só acontece quando o usuário pedir.
 - Compare versões numericamente (`git tag -l --sort=v:refname`), não em ordem alfabética: `v0.10.0` é maior que `v0.9.0`.
-- Se o trabalho pendente junta mais de uma versão do README sem tag (ex.: v0.4.0 e v0.5.0 nos mesmos arquivos), não tente separar: publique como a versão mais alta e mencione as duas no commit.
+- Se o trabalho pendente junta mais de uma versão do README sem tag (ex.: v0.4.0 e v0.5.0 nos mesmos arquivos), não tente separar: publique como a versão mais alta, mencione as duas no commit e crie uma tag para cada versão (ver "Versão sem commit próprio" no passo 4).
 - Atualize `"version"` no `package.json` e no `package-lock.json` para o mesmo número (sem o `v`):
   ```bash
   npm version 0.6.0 --no-git-tag-version
@@ -53,11 +53,24 @@ Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não fo
 
 ## 4. Tag
 
-Tag **anotada**, no mesmo padrão das anteriores (`v0.3.1 - Licenca MIT e historico de versoes`):
+**Toda versão do Histórico do README tem uma tag**, sempre **anotada**, no mesmo padrão das anteriores (`v0.3.1 - Licenca MIT e historico de versoes`):
 
 ```bash
 git tag -a v0.6.0 -m "v0.6.0 - Resumo curto sem acentos"
 ```
+
+### Versão sem commit próprio ou tag atrasada
+
+Quando a versão entrou junto com outra, ou a tag ficou para depois, a tag ainda é criada. Documente em dois lugares:
+
+1. **Na tag**: aponte para o commit que levou a versão ao `master` e explique no segundo `-m`. Se o commit for próprio da versão, diga isso:
+   ```bash
+   git tag -a v0.38.2 a2e4c3a -m "v0.38.2 - Redesign da ficha, inventario e registro ninja" -m "Tag retroativa criada em 05/11/2026. Sem commit proprio no master: entrou junto com a v0.38.3 no squash do #9, cujo package.json marca 0.38.3."
+   ```
+   Numa versão publicada junto com outra, sem atraso, tire o "Tag retroativa criada em ...".
+2. **No README**: adicione uma linha à tabela de tags da seção **Versionamento**, em ordem crescente (`Tag | Commit | Observação`), e mantenha o texto acima da tabela coerente com ela.
+
+Antes de criar, confira no próprio commit: o `package.json`, a mensagem e se ele está no `master` (`git merge-base --is-ancestor <commit> origin/master`). Veja também se a tag já existe no remoto (`git ls-remote --tags origin vX.Y.Z`). Tag publicada não muda de lugar.
 
 ## 5. Push
 
@@ -68,15 +81,33 @@ git push origin master && git push origin v0.6.0
 - Se o push for recusado porque o remoto tem commits novos, rode `git fetch` e `git pull --rebase origin master`. Se o rebase der conflito, pare e explique ao usuário.
 - **Nunca** use `--force` nem apague ou mova tags já publicadas. Se precisar corrigir uma versão publicada, lance uma versão de patch.
 
+### Versão que vai por pull request
+
+Se o trabalho está numa branch de PR, envie os commits para ela, sem push direto no `master`, e crie as tags nos commits de cada versão. Título e descrição em PT-BR, nesta ordem:
+
+1. Título com o que muda e a versão ou faixa de versões: `Roleta enxuto: combate simples, run por ciclo, reliquias e mais viloes (v0.45.0 a v0.47.0)`. Nunca o nome da branch.
+2. Primeira linha: `**Tags correspondentes: `v0.45.0` (56b545c) e `v0.46.0` (af36575)** (o `package.json` fica em `0.46.0`)`.
+3. Um parágrafo curto com o efeito para quem joga e o que acontece ao mergear (o `master` publica no GitHub Pages).
+4. Uma seção `## vX.Y.Z: resumo` por versão, com as mudanças em itens.
+5. `## Para revisar`, se houver: o que foi decidido sem o usuário e o balanceamento em aberto, com os números da simulação.
+6. `## Conflitos`, se houver: a causa e como foram resolvidos.
+7. `## Como mergear`, se as tags estiverem em commits da branch: pedir **Create a merge commit**, porque com squash elas ficam fora do histórico do `master`.
+8. `## Verificação`: o que passou, em qual commit, e o que não foi testado.
+9. A linha de atribuição indicada pela sessão para PRs.
+
+Conflito de versão duplicada por squash: se `git diff <squash> <commit da branch>` sair vazio, a árvore da branch já contém o `master`. Resolva com `git merge -s ours origin/master`, sem `--force`, e confirme que o diff contra a branch antiga continua vazio.
+
 ## 6. Relatar
 
 Ao usuário, curto: a versão, o que entrou, o resultado dos testes, o hash do commit e os links:
 - commit: `https://github.com/guidxsa/ninja-roleta/commit/<hash>`
 - tag: `https://github.com/guidxsa/ninja-roleta/releases/tag/vX.Y.Z`
 
+Com mais de uma tag, ou tag fora do commit mais recente, use uma tabela `Tag | Commit | Onde está ou observação`.
+
 ## Quando parar e perguntar em vez de publicar
 
 - O usuário disse para não subir ainda ("não commita", "ainda tô testando", "só local").
 - Os testes falham por algo que não é do trabalho atual.
 - `git status` mostra arquivos estranhos ao trabalho que você não sabe se são dele (ex.: arquivos novos fora de `src/`, `tests/`, `prototype/`, `scripts/` e docs).
-- O branch atual não é `master`, ou o push exige rebase com conflito.
+- O branch atual não é `master` nem de um PR aberto, ou o push exige rebase com conflito.
