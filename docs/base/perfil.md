@@ -102,7 +102,7 @@ O perfil é um só para os dois modos. A aba Conquistas mostra as do Roleta (Mar
 | Domador de bijuu | Desfazer o manto do Gaara com a Madeira |
 | Demônio da Névoa | Cair para o Zabuza 5 vezes (somando todas as runs) |
 
-Dano sofrido conta golpes, disputas, queimadura, veneno e autoferimento. Os segredos ligados à reforma elemental e ao Senju (ver "Mudanças de design pendentes" no `CLAUDE.md`) entram junto com eles.
+Dano sofrido conta golpes, disputas, queimadura, veneno e autoferimento. Os segredos ligados à reforma elemental e ao Senju (ver [registro.md](../registro.md)) entram junto com eles.
 
 ## Livro Bingo
 

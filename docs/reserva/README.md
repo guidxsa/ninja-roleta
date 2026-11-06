@@ -1,6 +1,6 @@
 # Reserva: combate clássico
 
-> Desde a v0.45.0 (Roleta enxuto), o Roleta usa o combate simples de [roleta/combate.md](../roleta/combate.md). As regras abaixo **não foram apagadas**: o usuário quer talvez levá-las à Jornada, onde fica a carga complexa (CLAUDE.md, item 8).
+> Desde a v0.45.0 (Roleta enxuto), o Roleta usa o combate simples de [roleta/combate.md](../roleta/combate.md). As regras abaixo **não foram apagadas**: o usuário quer talvez levá-las à Jornada, onde fica a carga complexa ([registro.md](../registro.md), item 8).
 
 O código continua no projeto, com os testes:
 

@@ -11,9 +11,9 @@ Repositório: `origin` → https://github.com/guidxsa/ninja-roleta, branch `mast
 
 ## 1. Descobrir a versão
 
-O histórico de versões fica na tabela **Histórico de versões** do `README.md`, e cada versão publicada tem uma tag (`git tag -l`).
+O histórico de versões fica no `CHANGELOG.md` (versão nova no fim da tabela; basta `tail -3 CHANGELOG.md`), e cada versão publicada tem uma tag (`git tag -l`). As regras de numeração estão na seção **Versionamento** do `README.md`.
 
-- Se o README já tem uma linha nova cuja versão ainda não virou tag, use essa versão.
+- Se o `CHANGELOG.md` já tem uma linha nova cuja versão ainda não virou tag, use essa versão.
 - Se não tem, crie a linha, subindo a partir da última tag pelas regras da seção **Versionamento** do `README.md`. O salto segue o **peso** da mudança, não o fato de ter código novo; o usuário não quer que um ajuste pequeno pese como um update grande:
   - **patch** (`v0.27.0` → `v0.27.1`): ajuste ou complemento de algo que já existe. Um campo ou opção a mais numa tela existente, melhoria em ferramenta de teste ou de desenvolvimento, polimento de interface, correção de bug, ajuste só de números, texto, documentação. Exemplos do histórico: v0.16.1 (botão no cabeçalho), v0.16.2 (barra superior), v0.22.1 (correções), v0.27.1 (status editáveis no Laboratório).
   - **minor** (`v0.26.0` → `v0.27.0`): muda como se joga ou traz um sistema novo. Mecânica ou regra nova, origem ou vilão refeito, rebalanceamento que mexe em fórmulas, tela ou modo novo. Exemplos: v0.18.0 (rebalanceamento das origens), v0.25.0 (cada golpe rola), v0.27.0 (Laboratório e seed).
@@ -21,7 +21,7 @@ O histórico de versões fica na tabela **Histórico de versões** do `README.md
   - Se o usuário disser o número ou o tipo ("é só um patch", "isso é versão nova"), vale o que ele disse.
 - O jogo fica em 0.x: depois de `v0.9.0` vem `v0.10.0`, nunca `v1.0.0`. **Nunca suba o major** (`v1.0.0`) por conta própria, nem que o trabalho pareça grande; isso só acontece quando o usuário pedir.
 - Compare versões numericamente (`git tag -l --sort=v:refname`), não em ordem alfabética: `v0.10.0` é maior que `v0.9.0`.
-- Se o trabalho pendente junta mais de uma versão do README sem tag (ex.: v0.4.0 e v0.5.0 nos mesmos arquivos), não tente separar: publique como a versão mais alta, mencione as duas no commit e crie uma tag para cada versão (ver "Versão sem commit próprio" no passo 4).
+- Se o trabalho pendente junta mais de uma versão do `CHANGELOG.md` sem tag (ex.: v0.4.0 e v0.5.0 nos mesmos arquivos), não tente separar: publique como a versão mais alta, mencione as duas no commit e crie uma tag para cada versão (ver "Versão sem commit próprio" no passo 4).
 - Atualize `"version"` no `package.json` e no `package-lock.json` para o mesmo número (sem o `v`):
   ```bash
   npm version 0.6.0 --no-git-tag-version
@@ -53,7 +53,7 @@ Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não fo
 
 ## 4. Tag
 
-**Toda versão do Histórico do README tem uma tag**, sempre **anotada**, no mesmo padrão das anteriores (`v0.3.1 - Licenca MIT e historico de versoes`):
+**Toda versão do `CHANGELOG.md` tem uma tag**, sempre **anotada**, no mesmo padrão das anteriores (`v0.3.1 - Licenca MIT e historico de versoes`):
 
 ```bash
 git tag -a v0.6.0 -m "v0.6.0 - Resumo curto sem acentos"
