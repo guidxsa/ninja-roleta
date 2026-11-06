@@ -1,6 +1,6 @@
 ---
 name: nova-mecanica
-description: Fluxo ponta a ponta para adicionar ou mudar uma mecânica do jogo Ninja Roleta (dados → core puro → testes → simulação → protótipo → CLAUDE.md/README). Use sempre que o usuário pedir uma regra nova ou alterada no jogo — nível/XP, itens, eventos pré-vilão, vilões, técnicas, passivas, linhagens, dificuldade, recompensas, inventário, ficha, roletas — ou reclamar de um comportamento de jogo ("o player tá subindo de nível demais", "quero que o veneno acumule"), mesmo que não diga "mecânica". Também vale para ajustes de balanceamento que mexem em fórmulas, não só em números.
+description: Fluxo ponta a ponta para adicionar ou mudar uma mecânica do jogo Ninja Roleta (dados → core puro → testes → simulação → protótipo → docs/CHANGELOG). Use sempre que o usuário pedir uma regra nova ou alterada no jogo — nível/XP, itens, eventos pré-vilão, vilões, técnicas, passivas, linhagens, dificuldade, recompensas, inventário, ficha, roletas — ou reclamar de um comportamento de jogo ("o player tá subindo de nível demais", "quero que o veneno acumule"), mesmo que não diga "mecânica". Também vale para ajustes de balanceamento que mexem em fórmulas, não só em números.
 ---
 
 # Nova mecânica (Ninja Roleta)
@@ -9,21 +9,22 @@ O jogo tem uma arquitetura em camadas com regras fortes (ver `CLAUDE.md`). Uma m
 
 ## 0. Entender e medir antes de mexer
 
-1. Leia a seção do `CLAUDE.md` que trata do assunto e a lista **Decisões em aberto**. Se o pedido conflita com uma regra escrita, a regra nova do usuário vence, mas o `CLAUDE.md` precisa ser atualizado depois (passo 6).
+1. Leia o doc que trata do assunto (índice em `docs/README.md`) e `docs/decisoes.md`. Se o pedido conflita com uma regra escrita, a regra nova do usuário vence, mas o doc precisa ser atualizado depois (passo 6). O `docs/registro.md` é grande: busque nele com grep só o que precisar.
 2. Ambiguidade de regra (ex.: "o que conta como força do vilão?"): escolha o padrão mais simples e coerente com o resto do jogo, siga em frente e diga a escolha no relatório final. Só pergunte se a resposta muda muito o trabalho.
 3. Tire a linha de base, para comparar depois:
    ```bash
    npm test 2>&1 | tail -5
-   npm run sim -- --fights 1000 > "$SCRATCH/sim-antes.txt"
+   npm run sim:origens -- --runs 300 --seed 2 > "$SCRATCH/sim-antes.txt"   # Roleta
+   npm run sim:jornada -- 300 2 > "$SCRATCH/sim-jornada-antes.txt"         # Jornada
    ```
-   A simulação demora ~1 min; use o scratchpad da sessão para a saída.
+   Rode só a do modo afetado; use o scratchpad da sessão para a saída e leia só o resumo.
 
 ## 1. Dados primeiro
 
 "Tudo é dado": nenhum número de balanceamento nem texto visível mora no código.
 
 - **Números** → `src/data/balance.ts`, com um comentário curto dizendo o que o número faz e se é proposta.
-- **Listas e pesos** (eventos, itens, roletas) → `src/data/events.ts`; vilões → `src/data/villains.ts`; técnicas → `src/data/techniques.ts`; linhagens → `src/data/lineages.ts`.
+- **Roleta**: `src/data/roleta/` (`balance.ts`, `kits.ts`, `techniques.ts`, `villains.ts`, `relics.ts`). **Jornada**: `src/data/jornada/`. Relíquias dos dois modos: catálogo único em `src/data/relics.ts`. Os arquivos soltos de `src/data/` (`events.ts`, `villains.ts`, `techniques.ts`, `lineages.ts`) são a base e o clássico.
 - **Textos** → `src/data/strings/ptBR.ts`. Quando as chaves são uma união conhecida (ex.: `Difficulty`), não use `as Record<string, ...>`: o objeto literal deixa o índice tipado e evita `possibly undefined`.
 - Campo novo em `VillainDef` ou `PlayerState`: preencha em **todos** os vilões, em `createPlayer` e em `testVillain` (`tests/helpers.ts`), senão o typecheck quebra em lugares distantes.
 
@@ -64,8 +65,11 @@ A simulação (`src/sim/runner.ts`, `scripts/simulate.ts`) é como o projeto med
 
 ## 6. Documentação
 
-- `CLAUDE.md`: atualize a seção da mecânica com as regras e números novos; risque ou edite o item em **Decisões em aberto** se foi resolvido; acrescente um novo se surgiu dúvida.
-- `README.md`: nova linha no **Histórico de versões**, em ordem crescente. A regra de qual número usar está na skill `lancar-versao`.
+- `docs/`: atualize o doc da mecânica com as regras e números novos (os testes de `tests/docs.test.ts` conferem as técnicas).
+- `docs/decisoes.md`: tire o item resolvido; acrescente um se surgiu dúvida ou se você decidiu algo que o usuário precisa revisar.
+- `docs/registro.md`: uma entrada curta com o que foi decidido sozinho e a simulação de antes e depois.
+- `CLAUDE.md`: só se mudou um jeito de trabalhar (regra, convenção, estrutura); não registre versões nele.
+- `CHANGELOG.md`: nova linha no fim da tabela. A regra de qual número usar está na skill `lancar-versao`.
 
 ## 7. Verificar e relatar
 

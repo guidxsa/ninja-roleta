@@ -9,6 +9,8 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 
 | Arquivo | Conteúdo |
 |---|---|
+| [decisoes.md](decisoes.md) | Decisões em aberto: o que espera o usuário |
+| [registro.md](registro.md) | Histórico das decisões e simulações por versão (consulta) |
 | [base/fundamentos.md](base/fundamentos.md) | Status, roleta, restauração, iniciativa, acerto, dano, elementos, chakra, Vontade do Fogo |
 | [base/origens.md](base/origens.md) | Sorteio de origem, status iniciais, linhagens, habilidades, jinchuuriki |
 | [base/tecnicas.md](base/tecnicas.md) | Ficha padrão, ações universais, catálogo de técnicas |
