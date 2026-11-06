@@ -10,7 +10,7 @@ import { createRng } from '../src/core/rng';
 import type { Origin } from '../src/core/types';
 import { roletaData } from '../src/data/roleta/index';
 import { ptBR } from '../src/data/strings/ptBR';
-import { villainsById } from '../src/data/villains';
+import { roletaVillainsById as villainsById } from '../src/data/roleta/villains';
 import { runRoletaRun } from '../src/sim/roletaRunner';
 
 const gameData = roletaData.base;

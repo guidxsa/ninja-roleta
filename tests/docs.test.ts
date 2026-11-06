@@ -4,6 +4,7 @@ import type { VillainTechnique } from '../src/core/types';
 import { techniquesById } from '../src/data/techniques';
 import { roletaTechniques } from '../src/data/roleta/techniques';
 import { roletaRelics } from '../src/data/relics';
+import { roletaExtraVillains } from '../src/data/roleta/villains';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { villains } from '../src/data/villains';
 import { enemies } from '../src/data/jornada/enemies';
@@ -33,6 +34,12 @@ describe('docs batem com os dados', () => {
     const modes = text.slice(text.indexOf('## Modos'));
     const name = (id: string) => S.jornada.relics.list[id]?.name ?? S.roleta.relics[id]?.name ?? id;
     expect(roletaRelics.map((r) => name(r.id)).filter((n) => !has(modes, n))).toEqual([]);
+  });
+
+  it('todo vilão só do Roleta e as técnicas dele aparecem em docs/roleta/run.md', () => {
+    const text = doc('roleta/run.md');
+    const missing = roletaExtraVillains.flatMap((v) => [S.villains[v.id] ?? v.id, ...v.techniques.map((t) => S.roleta.techniques[t.id] ?? t.id)]).filter((n) => !has(text, n));
+    expect(missing).toEqual([]);
   });
 
   it('toda técnica de vilão aparece em docs/base/viloes.md', () => {

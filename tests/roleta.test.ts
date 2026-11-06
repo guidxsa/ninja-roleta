@@ -38,7 +38,8 @@ import type { Origin, VillainDef } from '../src/core/types';
 import { roletaData as data } from '../src/data/roleta/index';
 import { roletaTechniques } from '../src/data/roleta/techniques';
 import { roletaPtBR } from '../src/data/strings/roleta';
-import { villainsById } from '../src/data/villains';
+import { roletaExtraVillains, roletaVillainsById as villainsById } from '../src/data/roleta/villains';
+import { ptBR } from '../src/data/strings/ptBR';
 import { runRoletaRun } from '../src/sim/roletaRunner';
 
 /** Rng que devolve sempre o mesmo valor (0 = acerta e dispara tudo; 0,99 = erra). */
@@ -280,5 +281,27 @@ describe('run do Roleta enxuto e relíquias (v0.46.0)', () => {
     expect(data.relics.find((r) => r.id === id)?.tier).toBe('rare');
     expect(data.base.rewards.some((r) => r.id === 'relic')).toBe(true);
     expect(data.base.items.some((i) => ['ninjaTool', 'speedItem', 'resistanceItem', 'trainingWeights', 'smokeBomb'].includes(i.id))).toBe(false);
+  });
+});
+
+describe('mais vilões no sorteio (v0.47.0)', () => {
+  it('cada categoria tem fichas que existem, com nome e retrato válido, e o ciclo segue sem repetir', () => {
+    for (const ids of Object.values(data.categories)) {
+      for (const id of ids) {
+        expect(villainsById[id]).toBeTruthy();
+        expect(ptBR.villains[id]).toBeTruthy();
+        const spec = villainsById[id]!.portrait;
+        if (spec) expect(spec).toMatch(/^(ninja|villain):[a-zA-Z]+$/);
+      }
+    }
+    expect(data.categories.genin.length).toBeGreaterThanOrEqual(9);
+    expect(data.categories.jounin).toEqual(expect.arrayContaining(['kimimaro', 'neji']));
+    for (const v of roletaExtraVillains) for (const t of v.techniques) expect(roletaPtBR.techniques[t.id]).toBeTruthy();
+  });
+
+  it('os vilões novos lutam no motor enxuto (Irmãos Demônio agem duas vezes)', () => {
+    let s = startRoletaBattle(createRoletaPlayer(origin(null, ['fire']), data), villain('demonBrothers'), { villainStartsFirst: true }, data, fixed(0.5));
+    s = playRoletaRound(s, 'guard', data, fixed(0.5));
+    expect(s.log.filter((e) => e.type === 'attack' && e.side === 'villain').length).toBe(2);
   });
 });

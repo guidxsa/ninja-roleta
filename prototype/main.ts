@@ -95,7 +95,7 @@ import type { ConsumableId, Element, LineageTier, Origin, SummonAnimal, VillainD
 import { CONSUMABLES, type RewardId } from '../src/data/events';
 import { campaign, type Stage } from '../src/data/campaign';
 import { ptBR as S } from '../src/data/strings/ptBR';
-import { villains, villainsById } from '../src/data/villains';
+import { roletaVillains as villains, roletaVillainsById as villainsById } from '../src/data/roleta/villains';
 import { achievements } from '../src/data/achievements';
 import {
   achievementsFromHistory,
@@ -125,7 +125,7 @@ import {
   type KeyValueStorage,
   type RunStatus,
 } from '../src/state/runHistory';
-import { clanSymbol, icon, ninjaPortrait, villainPortrait } from './art';
+import { clanSymbol, fighterPortrait, icon, ninjaPortrait, villainPortrait } from './art';
 import { barLayers, barPct, barTone, patchBar } from './bars';
 import { defeat, installAudio, mood, setMusic, setSfx, victory, type Mood } from './audio';
 import {
@@ -234,6 +234,11 @@ const TIER_COLORS: Record<LineageTier, string> = { common: '#5d6168', clan: '#3f
 const SIDE_COLORS = { player: '#3f5f9e', villain: '#a8332b', miss: '#55585e', hit: '#4e8a5c', crit: '#c49a3a', foeHit: '#b5562c' };
 
 const villainName = (id: string) => S.villains[id] ?? id;
+/** Retrato do vilão: o desenho próprio ou, nos vindos da Jornada, o retrato emprestado de lá. */
+const foePortrait = (id: string, size: 'sm' | 'md' | 'lg' = 'md') => {
+  const spec = villainsById[id]?.portrait;
+  return spec ? fighterPortrait(id, spec, size) : villainPortrait(id, size);
+};
 const techName = (id: string): string => {
   // Cópia (Uchiha): `copy:<vilão>.<técnica>`.
   if (id.startsWith('copy:')) return `${techName(id.slice(id.indexOf('.') + 1))} (cópia)`;
@@ -786,7 +791,7 @@ function stageTrail(run: RRun): string {
     .map((cat, i) => {
       const state = i < done ? 'done' : i === done ? 'current' : 'todo';
       const id = i < done ? run.used[i] : i === done ? run.villainId : null;
-      const faces = id ? `<span class="trail-faces">${villainPortrait(id, 'sm')}</span>` : `<span class="trail-ico">${icon(cat === 'boss' ? 'intent' : 'swords')}</span>`;
+      const faces = id ? `<span class="trail-faces">${foePortrait(id, 'sm')}</span>` : `<span class="trail-ico">${icon(cat === 'boss' ? 'intent' : 'swords')}</span>`;
       const tier = rdata.r.run.rewardTier[cat] ?? 0;
       const sub = cat === 'boss' ? RR.chestTitle : S.ui.rewardTier(S.rewardTiers[tier] ?? '');
       return `<li class="${state}"><i><span>${i < done ? icon('check') : i + 1}</span></i>${faces}<div><b>${RR.categories[cat]}${id ? ` · ${villainName(id)}` : ''}</b><small>${sub}</small></div></li>`;
@@ -1249,7 +1254,7 @@ function villainStats(phys: number, mental: number, speed: number): string {
 function villainCard(id: string, scaled?: VillainDef): string {
   const v = scaled ?? scaleVillain(villainsById[id]!, camp!.difficulty, data);
   return `<section class="card villain-card">
-    <div class="foe-head">${villainPortrait(id, 'lg')}
+    <div class="foe-head">${foePortrait(id, 'lg')}
       <div class="foe-id"><b class="name">${villainName(id)}</b>
         <div class="chips-left">${elChip(v.element)}<span class="chip">${S.stats.hp} ${v.hp}</span><span class="chip">${S.stats.chakra} ${v.chakra}</span></div>
         ${villainStats(Math.floor(v.resistance.physical), Math.floor(v.resistance.mental), v.speed)}
@@ -1270,7 +1275,7 @@ function villainPanel(s: RBattle): string {
         ${bar('ck', s.villain.chakra, v.chakra)}
         <div id="vstats">${villainLiveStats(s)}</div>
       </div>
-      <div class="hud-face">${villainPortrait(v.id, 'md')}</div>
+      <div class="hud-face">${foePortrait(v.id, 'md')}</div>
     </div>
     <div class="hud-extra"><div class="passive-row" id="vpassives">${villainPassiveChips(v)}</div><div class="kit" id="vkit">${villainKit(v, s.villain.techniques)}</div></div>
     <div class="badges" id="vbadges"></div>
@@ -1857,7 +1862,7 @@ async function endScreen(won: boolean, stoppedAt: string | null, record = false)
     ? `<button class="btn primary big" data-choice="continue"${tip(RR.nextCycle(c.run.cycle + 2), RR.nextCycleTip(pct))}>${icon('cycle')} ${RR.nextCycle(c.run.cycle + 2)}</button>`
     : '';
   if (!won) campLive = false;
-  const face = good ? clanSymbol(c.player.origin.lineageId) : villainPortrait(c.run.villainId ?? rdata.categories.genin[0]!, 'lg');
+  const face = good ? clanSymbol(c.player.origin.lineageId) : foePortrait(c.run.villainId ?? rdata.categories.genin[0]!, 'lg');
   const root = show(
     h(`<div class="screen end ${good ? 'win' : 'lose'}">
       <div class="end-seal">${face}<span class="seal stamp end-stamp${good ? ' gold' : ''}" aria-hidden="true">${good ? '勝' : '敗'}</span></div>
@@ -2115,13 +2120,13 @@ function bingoTab(): string {
     .map((v) => {
       const r = profile.villains[v.id];
       if (!r || r.faced === 0) {
-        return `<li class="bingo-card unknown">${villainPortrait(v.id, 'sm')}<span><b>${P.unknownVillain}</b></span><span class="bingo-stamp kanji" aria-hidden="true">謎</span></li>`;
+        return `<li class="bingo-card unknown">${foePortrait(v.id, 'sm')}<span><b>${P.unknownVillain}</b></span><span class="bingo-stamp kanji" aria-hidden="true">謎</span></li>`;
       }
       const lines = [P.faced(r.faced), P.defeated(r.defeated), r.killedYou ? P.killedYou(r.killedYou) : '']
         .filter(Boolean)
         .join(' · ');
       const stamp = r.defeated > 0 ? '<span class="bingo-stamp kanji" aria-hidden="true">勝</span>' : '';
-      return `<li class="bingo-card${r.defeated > 0 ? ' beaten' : ''}">${villainPortrait(v.id, 'sm')}<span><b>${villainName(v.id)}</b><small>${lines}</small>
+      return `<li class="bingo-card${r.defeated > 0 ? ' beaten' : ''}">${foePortrait(v.id, 'sm')}<span><b>${villainName(v.id)}</b><small>${lines}</small>
         <small class="muted">${P.bestHit(r.bestHit)} · ${P.worstHit(r.worstHit)}</small></span>${stamp}</li>`;
     })
     .join('')}</ul>`;

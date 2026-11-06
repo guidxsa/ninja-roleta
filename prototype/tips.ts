@@ -136,7 +136,7 @@ export function villainTechTip(def: VillainDef, t: VillainTechnique): string {
     elementLine(el, deals),
     T.cost(t.chakraCost),
   ]);
-  return tip(S.techniques[t.id] ?? t.id, body);
+  return tip(S.techniques[t.id] ?? S.roleta.techniques[t.id] ?? t.id, body);
 }
 
 /** Ícone que representa a técnica: elemento, ou o tipo (taijutsu, genjutsu, médico, barreira). */

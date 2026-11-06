@@ -10,15 +10,33 @@ Um ciclo tem 6 lutas: **2 genin → 2 chunin → 1 jounin → 1 chefe**. Cada lu
 
 | Categoria | Vilões | Recompensa |
 |---|---|---|
-| Genin | Mizuki, Genin da Areia, Genin do Som, Genin da Folha | Roleta comum |
-| Chunin | Haku, Jirobo, Kidomaru, Tayuya, Sakon | Roleta comum |
-| Jounin | Zabuza, Gaara, Kabuto | Roleta rara |
+| Genin | Mizuki, Genin da Areia, Genin do Som, Genin da Folha, Bandido, Capanga do Gatō, Renegado da Névoa, Ninja da Grama, Ninja da Chuva | Roleta comum |
+| Chunin | Haku, Jirobo, Kidomaru, Tayuya, Sakon, Irmãos Demônio, Dosu, Zaku, Kin | Roleta comum |
+| Jounin | Zabuza, Gaara, Kabuto, Kimimaro, Neji | Roleta rara |
 | Chefe | Orochimaru | Baú do chefe |
 
 - Antes de **cada** luta gira a roleta de eventos; depois de cada vitória, o XP do vilão e a recompensa.
 - HP e chakra seguem de uma luta para a outra. Cada vitória devolve 25% (mais as relíquias de cura); subir de nível restaura tudo.
 - **Chefe**: vencer cura tudo e abre o **baú**: escolher 1 entre 3 relíquias de chefe.
 - O Orochimaru do Roleta volta da derrota no máximo **1 vez** (`villains.insaneRevivesCap`), em qualquer dificuldade, porque o ciclo é curto.
+
+### Vilões vindos da Jornada
+
+Desde a v0.47.0, o sorteio também traz fichas só do Roleta (`roletaExtraVillains` em `src/data/roleta/villains.ts`), adaptadas dos inimigos da Jornada ([inimigos.md](../jornada/inimigos.md)) para o combate enxuto, com o retrato de lá. As fichas dos outros vilões estão em [viloes.md](../base/viloes.md).
+
+| Vilão | Categoria | HP | Chakra | Speed | Tai/Nin/Gen | Res. física/mental | XP | Técnicas | Passiva |
+|---|---|---|---|---|---|---|---|---|---|
+| Bandido | genin | 70 | 0 | 9 | 8/0/0 | 7/6 | 70 | Porrete (8), Emboscada (5×2) | — |
+| Capanga do Gatō | genin | 65 | 0 | 8 | 9/0/0 | 6/6 | 70 | Porrete (8), Golpe de katana (11, 75%) | — |
+| Renegado da Névoa | genin | 80 | 14 | 11 | 7/9/3 | 8/8 | 70 | Kunai (8), Projétil d'Água (10, 4 ck) | — |
+| Ninja da Grama | genin | 85 | 14 | 11 | 9/8/4 | 9/8 | 70 | Kunai (8), Lâmina de Grama (10, 4 ck) | — |
+| Ninja da Chuva | genin | 80 | 16 | 11 | 8/7/9 | 8/9 | 70 | Agulhas do guarda-chuva (5×2), Clone da chuva (genjutsu 9, 4 ck) | — |
+| Irmãos Demônio | chunin | 100 | 10 | 12 | 10/4/0 | 11/9 | 100 | Garra de corrente (9) | Duas ações por turno, cada uma com 60% do dano |
+| Dosu | chunin | 95 | 18 | 10 | 9/11/5 | 10/10 | 100 | Kunai (8), Onda do Som (11, 5 ck) | — |
+| Zaku | chunin | 90 | 18 | 11 | 7/12/4 | 9/9 | 100 | Kunai (8), Ondas de ar (12, 5 ck) | — |
+| Kin | chunin | 85 | 18 | 12 | 7/6/12 | 9/12 | 100 | Kunai (8), Sinos ilusórios (genjutsu 9, 4 ck) | — |
+| Kimimaro | jounin | 190 | 30 | 14 | 14/6/4 | 16/12 | 220 | Dança dos ossos (7×3, 3 ck), Broca de osso (15, 4 ck) | Marca da maldição |
+| Neji | jounin | 160 | 28 | 14 | 14/6/4 | 14/13 | 200 | Punho Gentil (11, 95%), 64 Palmas (4×4, 8 ck) | — |
 
 ## Modo infinito
 

@@ -24,6 +24,23 @@ export const roletaPtBR = {
     rSteam: 'Névoa Ácida',
     rExplosion: 'Bomba de Argila',
     rWood: 'Raízes de Madeira',
+    // Técnicas dos vilões novos (v0.47.0).
+    rvClub: 'Porrete',
+    rvAmbush: 'Emboscada',
+    rvKatana: 'Golpe de katana',
+    rvKunai: 'Kunai',
+    rvWaterBullet: "Projétil d'Água",
+    rvGrassBlade: 'Lâmina de Grama',
+    rvUmbrella: 'Agulhas do guarda-chuva',
+    rvRainClone: 'Clone da chuva',
+    rvChainClaw: 'Garra de corrente',
+    rvSoundWave: 'Onda do Som',
+    rvAirBlast: 'Ondas de ar',
+    rvBellGenjutsu: 'Sinos ilusórios',
+    rvBoneDrill: 'Broca de osso',
+    rvBoneDance: 'Dança dos ossos',
+    rvGentleFist: 'Punho Gentil',
+    rvSixtyFour: '64 Palmas',
   } as Record<string, string>,
 
   /** Passivas dos kits enxutos. */
