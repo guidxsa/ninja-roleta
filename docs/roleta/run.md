@@ -31,7 +31,7 @@ Desde a v0.47.0, o sorteio também traz fichas só do Roleta (`roletaExtraVillai
 | Renegado da Névoa | genin | 80 | 14 | 11 | 7/9/3 | 8/8 | 70 | Kunai (8), Projétil d'Água (10, 4 ck) | — |
 | Ninja da Grama | genin | 85 | 14 | 11 | 9/8/4 | 9/8 | 70 | Kunai (8), Lâmina de Grama (10, 4 ck) | — |
 | Ninja da Chuva | genin | 80 | 16 | 11 | 8/7/9 | 8/9 | 70 | Agulhas do guarda-chuva (5×2), Clone da chuva (genjutsu 9, 4 ck) | — |
-| Irmãos Demônio | chunin | 100 | 10 | 12 | 10/4/0 | 11/9 | 100 | Garra de corrente (9) | Duas ações por turno, cada uma com 60% do dano |
+| Irmãos Demônio | chunin | 100 | 10 | 12 | 10/4/0 | 11/9 | 100 | Garra de corrente (9) | Cada ataque vale por 2 golpes com 60% do dano, numa roleta só |
 | Dosu | chunin | 95 | 18 | 10 | 9/11/5 | 10/10 | 100 | Kunai (8), Onda do Som (11, 5 ck) | — |
 | Zaku | chunin | 90 | 18 | 11 | 7/12/4 | 9/9 | 100 | Kunai (8), Ondas de ar (12, 5 ck) | — |
 | Kin | chunin | 85 | 18 | 12 | 7/6/12 | 9/12 | 100 | Kunai (8), Sinos ilusórios (genjutsu 9, 4 ck) | — |

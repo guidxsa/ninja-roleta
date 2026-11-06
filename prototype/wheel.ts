@@ -1,6 +1,7 @@
 // Componentes visuais de roleta. O resultado já vem sorteado pelo core; aqui só se anima até ele.
 import { land, spinStart, swish, tick } from './audio';
 import { sleep } from './dom';
+import { fitLabel, type LabelFit } from './wheelLabel';
 
 export interface WheelSlice {
   label: string;
@@ -26,8 +27,34 @@ const LABEL_PAD = 8;
 const LABEL_LEN = R - HUB - LABEL_PAD * 2;
 const FONT_MAX = 13;
 const FONT_MIN = 8;
-/** Largura média de um caractere em negrito, em frações do tamanho da fonte (estimativa antes de medir). */
-const CHAR_W = 0.6;
+/** Com duas linhas, o rótulo para antes do centro, onde a fatia ainda tem altura para as duas. */
+const TWO_LINE_LEN = 84;
+const TWO_LINE_RADIUS = R - LABEL_PAD - TWO_LINE_LEN;
+
+let measureCtx: CanvasRenderingContext2D | null = null;
+/** Largura real do texto na fonte do rótulo (.slice-label), sem precisar da roleta na página. */
+function measureLabel(text: string, font: number): number {
+  measureCtx ??= document.createElement('canvas').getContext('2d')!;
+  const family = getComputedStyle(document.documentElement).getPropertyValue('--font-body');
+  measureCtx.font = `700 ${font}px ${family}`;
+  return measureCtx.measureText(text).width;
+}
+
+/** Escreve o rótulo no <text>: uma linha, ou duas centradas no eixo da fatia. */
+function writeLabel(text: SVGTextElement, x: number, { lines, font }: LabelFit): void {
+  text.style.fontSize = `${font}px`;
+  if (lines.length === 1) {
+    text.textContent = lines[0]!;
+    return;
+  }
+  lines.forEach((line, i) => {
+    const tspan = document.createElementNS(SVG_NS, 'tspan');
+    tspan.setAttribute('x', `${x}`);
+    tspan.setAttribute('dy', i === 0 ? '-0.55em' : '1.1em');
+    tspan.textContent = line;
+    text.appendChild(tspan);
+  });
+}
 
 function point(angleDeg: number, radius: number): [number, number] {
   const a = (angleDeg * Math.PI) / 180;
@@ -95,7 +122,6 @@ export function createWheel(slices: WheelSlice[]): Wheel {
   svg.classList.add('wheel');
   const ranges = spans(slices);
   const paths: SVGElement[] = [];
-  const labels: { el: SVGTextElement; label: string; font: number }[] = [];
   const rim = document.createElementNS(SVG_NS, 'circle');
   rim.setAttribute('cx', `${C}`);
   rim.setAttribute('cy', `${C}`);
@@ -139,9 +165,17 @@ export function createWheel(slices: WheelSlice[]): Wheel {
       const right = mid <= 180;
       text.setAttribute('transform', `rotate(${right ? mid - 90 : mid + 90} ${x} ${y})`);
       text.setAttribute('text-anchor', right ? 'end' : 'start');
-      text.style.fontSize = `${font}px`;
-      text.textContent = s.label;
-      labels.push({ el: text, label: s.label, font });
+      writeLabel(
+        text,
+        x,
+        fitLabel(s.label, measureLabel, {
+          width: LABEL_LEN,
+          twoLineWidth: TWO_LINE_LEN,
+          twoLineHeight: 2 * TWO_LINE_RADIUS * Math.sin(((Math.min(span, 180) / 2) * Math.PI) / 180),
+          fontMax: font,
+          fontMin: FONT_MIN,
+        }),
+      );
       svg.appendChild(text);
     }
   });
@@ -188,26 +222,6 @@ export function createWheel(slices: WheelSlice[]): Wheel {
   el.append(wrap, legend);
   let rotation = 0;
 
-  // Estimativa antes de entrar na página: reduz a fonte e corta com reticências.
-  for (const l of labels) {
-    let font = l.font;
-    while (font > FONT_MIN && l.label.length * font * CHAR_W > LABEL_LEN) font -= 0.5;
-    const max = Math.floor(LABEL_LEN / (font * CHAR_W));
-    l.el.style.fontSize = `${font}px`;
-    l.el.textContent = l.label.length > max ? `${l.label.slice(0, Math.max(1, max - 1))}…` : l.label;
-  }
-  // Já na página, mede de verdade (a fonte real pode ser mais larga que a estimativa).
-  requestAnimationFrame(() => {
-    if (!svg.isConnected) return;
-    for (const l of labels) {
-      let text = l.el.textContent ?? '';
-      while (text.length > 2 && l.el.getComputedTextLength() > LABEL_LEN) {
-        text = `${text.replace(/…$/, '').slice(0, -1)}…`;
-        l.el.textContent = text;
-      }
-    }
-  });
-
   return {
     el,
     async spinTo(index, ms) {
@@ -251,6 +265,10 @@ export async function stripRoulette(
     })
     .join('');
   container.innerHTML = `<div class="strip"><div class="strip-title">${title}</div><div class="strip-bar">${segs}<div class="strip-marker"></div></div></div>`;
+  container.querySelectorAll<HTMLElement>('.seg').forEach((seg) => {
+    const span = seg.querySelector('span')!;
+    if (span.scrollWidth > span.clientWidth) seg.classList.add('tight');
+  });
   const marker = container.querySelector<HTMLElement>('.strip-marker')!;
   const pos = landingPoint(ranges[index]!) * 100;
   if (ms > 0) {

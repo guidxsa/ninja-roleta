@@ -941,6 +941,7 @@ export const jornadaPtBR = {
     pickAlly: 'Escolha o aliado',
     pickDowned: 'Escolha quem levantar',
     cancel: 'Voltar',
+    groups: { techniques: 'Técnicas', actives: 'Ativas', actions: 'Ações' },
     guard: 'Defender',
     guardDesc: 'Usa a resistência inteira até o seu próximo turno.',
     rest: 'Concentrar',

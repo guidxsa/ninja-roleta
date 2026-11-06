@@ -169,8 +169,7 @@ Escolhida na tela de origem; fica salva como preferência do aparelho e no hist�
 - O histórico é a primeira aba da tela Perfil, junto com conquistas, Livro Bingo e origens ([perfil.md](../base/perfil.md)).
 
 
-## Seed, Reportar e Compartilhar
+## Seed e Compartilhar
 
 - **Seed**: toda run (e cada re-roll) sorteia uma seed, e todas as roletas da run saem dela. Abrir o jogo com `?seed=N` repete as roletas da primeira run da página; as escolhas do jogador também precisam ser as mesmas para repetir a run inteira.
-- **Reportar** (botão no cabeçalho): nota opcional + relatório para copiar e mandar ao desenvolvedor: versão, seed, link com `?seed=`, origem, etapa, ficha, estado da luta e as últimas 30 linhas do log.
 - **Compartilhar** (fim da run): resumo para colar no grupo, com o caminho em emojis (✅ vitória, 💀 derrota; no exame, 🥇 e ❌), quem derrotou o jogador, as Vontades usadas e a seed. No celular, abre o menu de compartilhar; sem ele, copia.

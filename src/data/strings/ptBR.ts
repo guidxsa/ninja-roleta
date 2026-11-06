@@ -356,8 +356,8 @@ export const ptBR = {
     },
     mirrors: {
       name: 'Espelhos',
-      desc: 'Duas ações por turno, cada uma mais fraca.',
-      hardcore: 'Duas ações por turno, com o dano completo.',
+      desc: 'Cada ataque vale por 2 golpes mais fracos, numa roleta só.',
+      hardcore: 'Cada ataque vale por 2 golpes com o dano completo, numa roleta só.',
     },
     mist: {
       name: 'Demônio da névoa oculta',
@@ -526,7 +526,7 @@ export const ptBR = {
     /** Quantas lutas tem uma etapa da trilha. */
     stageFights: (n: number, exam: boolean) => (exam ? `${n} lutas` : n > 1 ? `${n} lutas seguidas` : '1 luta'),
     /** Atalhos do Portão da Vila (tela inicial) para o registro ninja. */
-    gate: { registry: 'Registro ninja', report: 'Reportar' },
+    gate: { registry: 'Registro ninja' },
     playerName: {
       title: 'Qual é o seu nome, ninja?',
       label: 'Nome do ninja',
@@ -722,6 +722,7 @@ export const ptBR = {
     sheet: 'Ficha ninja',
     openSheet: 'Ficha',
     home: 'Portão da Vila (menu principal)',
+    homeShort: 'Menu',
     homeConfirmRoleta: 'Voltar ao menu principal? A run atual será abandonada.',
     homeConfirmJornada: 'Voltar ao menu principal? A run fica salva no começo da parada atual.',
     close: 'Fechar',
@@ -1236,39 +1237,6 @@ export const ptBR = {
       bijuuTamer: { name: 'Domador de bijuu', desc: 'Desfaça o manto do Gaara com a Madeira.' },
       mistDemon: { name: 'Demônio da Névoa', desc: 'Caia para o Zabuza 5 vezes (no total).' },
     } as Record<string, { name: string; desc: string }>,
-  },
-  /** Botão Reportar: relatório para os testers mandarem. */
-  report: {
-    button: 'Reportar',
-    title: 'Reportar',
-    intro: 'Conte o que aconteceu, copie e mande no grupo. Com a seed e a ficha dá para repetir o caso.',
-    notePlaceholder: 'O que aconteceu? (opcional)',
-    copy: 'Copiar',
-    copied: 'Copiado!',
-    failed: 'Não deu para copiar. Selecione o texto e copie à mão.',
-    fields: {
-      title: (version: string) => `Ninja Roleta v${version} · relatório`,
-      date: 'Data',
-      seed: 'Seed',
-      link: 'Repetir as roletas',
-      note: 'O que aconteceu',
-      device: 'Aparelho',
-      noRun: 'Fora de uma run.',
-      origin: 'Origem',
-      difficulty: 'Dificuldade',
-      stage: 'Etapa',
-      level: 'Nível',
-      revives: 'Vontades usadas',
-      hp: 'HP',
-      chakra: 'Chakra',
-      techniques: 'Técnicas',
-      bag: 'Bolsa',
-      summon: 'Invocação',
-      battle: 'Luta',
-      round: 'rodada',
-      log: 'Log (mais antigo primeiro)',
-      none: 'nenhuma',
-    },
   },
 };
 

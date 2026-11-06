@@ -299,9 +299,33 @@ describe('mais vilões no sorteio (v0.47.0)', () => {
     for (const v of roletaExtraVillains) for (const t of v.techniques) expect(roletaPtBR.techniques[t.id]).toBeTruthy();
   });
 
-  it('os vilões novos lutam no motor enxuto (Irmãos Demônio agem duas vezes)', () => {
+  it('os vilões novos lutam no motor enxuto (Irmãos Demônio: 2 golpes numa roleta só)', () => {
     let s = startRoletaBattle(createRoletaPlayer(origin(null, ['fire']), data), villain('demonBrothers'), { villainStartsFirst: true }, data, fixed(0.5));
     s = playRoletaRound(s, 'guard', data, fixed(0.5));
-    expect(s.log.filter((e) => e.type === 'attack' && e.side === 'villain').length).toBe(2);
+    const attacks = s.log.filter((e) => e.type === 'attack' && e.side === 'villain');
+    expect(attacks.length).toBe(1);
+    expect(attacks[0]).toMatchObject({ hits: 2 });
+  });
+
+  it('Espelhos: uma roleta para os 2 golpes, com o dano dos dois e a fumaça anulando o ataque inteiro', () => {
+    const start = () => startRoletaBattle(createRoletaPlayer(origin(null, ['fire']), data), villain('haku'), { villainStartsFirst: true }, data, fixed(0.5));
+    const plain = { ...villain('haku'), passive: undefined };
+    const hit = playRoletaRound(start(), 'guard', data, fixed(0.5));
+    const base = playRoletaRound(startRoletaBattle(createRoletaPlayer(origin(null, ['fire']), data), plain, { villainStartsFirst: true }, data, fixed(0.5)), 'guard', data, fixed(0.5));
+    const dmg = (s: typeof hit) => s.log.filter((e) => e.type === 'damage' && e.side === 'player' && e.source === 'attack');
+    expect(hit.log.filter((e) => e.type === 'attack' && e.side === 'villain').length).toBe(1);
+    expect(dmg(hit).length).toBe(1);
+    const total = (dmg(hit)[0] as { amount: number }).amount;
+    const full = (dmg(base)[0] as { amount: number }).amount;
+    // Cada golpe vale 60%, arredondado para baixo no golpe; os 2 somam perto de 120% do ataque comum.
+    expect(total % 2).toBe(0);
+    expect(total).toBeGreaterThan(full);
+    expect(total).toBeLessThanOrEqual(Math.ceil(full * 1.2));
+
+    const smoke = start();
+    smoke.fx.dodgeNext = true;
+    const dodged = playRoletaRound(smoke, 'guard', data, fixed(0.5));
+    expect(dodged.log.filter((e) => e.type === 'attack' && e.side === 'villain' && e.outcome === 'miss').length).toBe(1);
+    expect(dmg(dodged).length).toBe(0);
   });
 });

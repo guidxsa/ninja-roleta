@@ -18,7 +18,7 @@
 .hud-main { display: flex; align-items: flex-start; gap: 10px; }
 .hud-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .hud-plate { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.hud-plate .name { flex: 1; min-width: 0; font: 400 21px/1.1 var(--font-display); letter-spacing: .02em; text-shadow: var(--title-shadow); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud-plate .name { flex: 1; min-width: 0; font: 400 21px/1.1 var(--font-display); letter-spacing: .02em; text-shadow: var(--title-shadow); overflow-wrap: break-word; }
 .hud-face { flex: none; position: relative; }
 .hud .bar-hp { height: 18px; }
 .hud .bar-ck { height: 11px; }
@@ -86,6 +86,16 @@
 .actions:empty { display: none; }
 .cost.short { color: var(--bad); font-weight: 700; }
 .act-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.act-group { display: flex; flex-direction: column; gap: 5px; }
+/* Título de seção das ações, nos dois modos. */
+.act-title {
+  display: flex; align-items: center; gap: 8px; margin: 0;
+  font: 700 12px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+}
+.act-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.act-group.compact .btn.act { min-height: 48px; padding-top: 5px; padding-bottom: 5px; }
+.act-group.compact .act-ico { width: 28px; height: 28px; }
+.act-group.compact .act-ico .ico { width: 17px; height: 17px; }
 .act-tab.tab-taijutsu.on { border-bottom-color: var(--t-taijutsu); }
 .act-tab.tab-taijutsu .ico { color: var(--t-taijutsu); }
 .act-tab.tab-ninjutsu.on { border-bottom-color: var(--t-ninjutsu); }

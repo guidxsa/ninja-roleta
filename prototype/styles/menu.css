@@ -25,8 +25,14 @@
 }
 .top-actions { display: flex; align-items: center; gap: 4px; }
 .tool-group { display: flex; align-items: center; gap: 2px; }
-/* Menu principal só fora do Portão da Vila; Ficha só com uma run em andamento (Roleta ou Jornada). */
-body.at-gate #home-btn, body:not(.has-sheet) #sheet-btn { display: none; }
+/* A marca fica no Portão da Vila; fora dele, o mesmo lugar é do botão Menu. Ficha só com uma run em andamento (Roleta ou Jornada). */
+body.at-gate #home-btn, body:not(.at-gate) .brand, body:not(.has-sheet) #sheet-btn { display: none; }
+#home-btn {
+  flex: none; padding: 4px 11px 4px 8px; color: var(--text);
+  background: color-mix(in srgb, var(--gold) 12%, var(--surface-2)); border-color: var(--gold);
+}
+#home-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--gold) 24%, var(--surface-2)); border-color: var(--gold-2); }
+#home-btn .ico { width: 20px; height: 20px; color: var(--gold-2); }
 .tool-group + .tool-group { padding-left: 5px; margin-left: 2px; border-left: 1px solid var(--line); }
 .top-actions .btn.small {
   min-width: 36px; min-height: 36px; padding: 0; justify-content: center;
@@ -54,6 +60,10 @@ body.at-gate #home-btn, body:not(.has-sheet) #sheet-btn { display: none; }
 @media (max-width: 360px) {
   .top { padding-left: 10px; padding-right: 10px; }
   .top-actions .btn.small { min-width: 33px; }
+}
+@media (max-width: 340px) {
+  #home-btn { padding-right: 8px; }
+  #home-btn span { display: none; }
 }
 
 /* ---------------------------------------------------------------------------
@@ -131,6 +141,8 @@ body.at-gate #home-btn, body:not(.has-sheet) #sheet-btn { display: none; }
 }
 .gate-link .kanji { flex: none; width: 28px; font-size: 22px; color: var(--accent-2); text-align: center; transition: transform var(--dur-2) var(--ease); }
 .gate-link .kanji.two { font-size: 14px; line-height: 1; writing-mode: vertical-rl; text-orientation: upright; height: 2.2em; display: inline-flex; align-items: center; justify-content: center; }
+/* Número ímpar de atalhos: o último ocupa a linha inteira. */
+.gate-link:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .gate-link:hover, .gate-link:focus-visible { background: var(--surface-2); outline: none; }
 .gate-link:hover .kanji { transform: scale(1.12); }
 .gate-foot { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }

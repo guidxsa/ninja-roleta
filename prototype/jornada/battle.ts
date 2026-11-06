@@ -585,8 +585,11 @@ export async function jornadaBattle(
       const fallen = downed(state, 'ally');
       const items = CONSUMABLES.filter((id) => run.bag[id] > 0 && itemTargets(state, id).length > 0);
       menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
+        <h4 class="act-title">${B.groups.techniques}</h4>
         <div class="jb-moves">${moves.map((t) => techButton(state, me, t)).join('')}</div>
-        <div class="jb-extra">${actives.map((t) => (t.gates ? gatesButton(state, me, t) : techButton(state, me, t))).join('')}
+        ${actives.length ? `<h4 class="act-title">${B.groups.actives}</h4><div class="jb-extra">${actives.map((t) => (t.gates ? gatesButton(state, me, t) : techButton(state, me, t))).join('')}</div>` : ''}
+        <h4 class="act-title">${B.groups.actions}</h4>
+        <div class="jb-extra">
           <button class="btn small jx" data-act="guard" ${tip(B.guard, B.guardDesc)}>${icon('stance')} ${B.guard}</button>
           <button class="btn small jx" data-act="rest" ${tip(B.rest, B.restDesc)}>${icon('rest')} ${B.rest}</button>
           <button class="btn small jx" data-act="revive" ${tip(B.revive, B.reviveDesc)} ${fallen.length ? '' : 'aria-disabled="true"'}>${icon('willOfFire')} ${B.revive}</button>

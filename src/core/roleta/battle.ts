@@ -586,9 +586,7 @@ function villainTurn(s: RBattle, data: RoletaData, rng: Rng): void {
     s.log.push({ type: 'heal', side: 'villain', amount, source: tech.id });
     return;
   }
-  const p = v.def.passive;
-  const actions = p?.kind === 'mirrors' ? p.actions : 1;
-  for (let i = 0; i < actions && s.status === 'ongoing'; i++) villainAttack(s, tech, p?.kind === 'mirrors' ? p.damageMult : 1, data, rng);
+  villainAttack(s, tech, data, rng);
 }
 
 /** Chances do golpe do vilão contra o jogador. */
@@ -606,18 +604,21 @@ export function villainAttackOdds(s: RBattle, tech: VillainTechnique, data: Role
   return { hit, crit };
 }
 
-function villainAttack(s: RBattle, tech: VillainTechnique, mult: number, data: RoletaData, rng: Rng): void {
+function villainAttack(s: RBattle, tech: VillainTechnique, data: RoletaData, rng: Rng): void {
   const v = s.villain;
+  const p = v.def.passive;
+  // Espelhos: os golpes extras são do mesmo ataque (uma roleta só, como toda técnica de vários golpes).
+  const mirrors = p?.kind === 'mirrors' ? p : null;
+  const hits = (tech.hits ?? 1) * (mirrors?.actions ?? 1);
   if (s.fx.dodgeNext) {
     s.fx.dodgeNext = false;
-    s.log.push({ type: 'attack', side: 'villain', techId: tech.id, hitChance: 0, critChance: 0, outcome: 'miss', hits: tech.hits ?? 1 });
+    s.log.push({ type: 'attack', side: 'villain', techId: tech.id, hitChance: 0, critChance: 0, outcome: 'miss', hits });
     s.log.push({ type: 'dodge', side: 'player' });
     return;
   }
   const odds = villainAttackOdds(s, tech, data);
   const outcome = rollHit(odds.hit, odds.crit, rng);
   if (v.counterCrit) v.counterCrit = false;
-  const hits = tech.hits ?? 1;
   s.log.push({ type: 'attack', side: 'villain', techId: tech.id, hitChance: odds.hit, critChance: odds.crit, outcome, hits });
   if (outcome === 'miss') return;
   const kit = kitOf(s.player, data);
@@ -626,10 +627,9 @@ function villainAttack(s: RBattle, tech: VillainTechnique, mult: number, data: R
     if (kit.passive !== 'trainedEyes' && !s.player.jinchuuriki) addEffect(s, 'player', 'fear', data);
     return;
   }
-  const p = v.def.passive;
   const kind = resistanceKind(tech.type);
   const cloakOn = p?.kind === 'cloak' && (v.cloakTurns > 0 || v.monster);
-  let extra = mult * (cloakOn ? p.cloak.statMult : 1) * (v.lastStand && p?.kind === 'mist' && p.lastStand ? p.lastStand.damageMult : 1);
+  let extra = (mirrors?.damageMult ?? 1) * (cloakOn ? p.cloak.statMult : 1) * (v.lastStand && p?.kind === 'mist' && p.lastStand ? p.lastStand.damageMult : 1);
   if (has(v.effects, 'fear')) extra *= data.r.effects.fear.damageMult;
   const pierce = p?.kind === 'scalpel' ? (p.resistancePierce ?? 0) : 0;
   const per = damage({

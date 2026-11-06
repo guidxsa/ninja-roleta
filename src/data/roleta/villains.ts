@@ -24,7 +24,7 @@ export const roletaExtraVillains: VillainDef[] = [
   // Chunin
   { id: 'demonBrothers', element: 'water', hp: 100, chakra: 10, speed: 12, offense: { taijutsu: 10, ninjutsu: 4, genjutsu: 0 }, resistance: { physical: 11, mental: 9 }, critBonus: 0.02, xp: 100, portrait: 'ninja:mist',
     techniques: [{ id: 'rvChainClaw', type: 'taijutsu', baseDamage: 9, chakraCost: 0, weight: 3 }],
-    // Dois irmãos: duas ações por turno, cada uma com 60% do dano.
+    // Dois irmãos: cada ataque vale por 2 golpes, numa roleta só, cada um com 60% do dano.
     passive: { kind: 'mirrors', actions: 2, damageMult: 0.6 } },
   { id: 'dosu', element: 'wind', hp: 95, chakra: 18, speed: 10, offense: { taijutsu: 9, ninjutsu: 11, genjutsu: 5 }, resistance: { physical: 10, mental: 10 }, critBonus: 0.03, xp: 100, portrait: 'villain:examSound',
     techniques: [{ id: 'rvKunai', type: 'taijutsu', baseDamage: 8, chakraCost: 0, weight: 2 }, { id: 'rvSoundWave', type: 'ninjutsu', baseDamage: 11, chakraCost: 5, weight: 2 }] },

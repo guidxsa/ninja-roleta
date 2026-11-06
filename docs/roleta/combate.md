@@ -13,7 +13,7 @@ O Roleta é o modo rápido: lutas curtas, decisões simples e muita roleta. Acer
 
 ## Acerto, esquiva e dano
 
-- **Uma roleta por técnica** (Erro / Acerto / Crítico). Técnica de vários golpes resolve todos na mesma roleta: acerto, erro ou crítico vale para a técnica inteira.
+- **Uma roleta por técnica** (Erro / Acerto / Crítico). Técnica de vários golpes resolve todos na mesma roleta: acerto, erro ou crítico vale para a técnica inteira. Os golpes extras dos Espelhos (Haku, Irmãos Demônio) seguem a mesma regra.
 - **Esquiva** (a antiga Substituição, agora passiva): 5% + 2% por ponto de speed acima de quem ataca, entre 0% e 30%. Sai da chance de acerto de quem ataca.
 - **Dano** = base da técnica + ataque do tipo − resistência × fração (0,4 sem fazer nada; 1 ao Defender), × 2 no crítico. **Sem multiplicador de elemento**: o elemento só diz quem tem a técnica.
 - Genjutsu fere com o genjutsu contra a resistência mental; taijutsu e ninjutsu, contra a física.
@@ -103,8 +103,8 @@ Mesmas fichas ([viloes.md](../base/viloes.md)), com a dificuldade aplicada. Esco
 ## Na tela
 
 - Painel do vilão com HP, chakra, resistências, speed, passiva, técnicas e efeitos; a próxima ação aparece só para o Nara.
-- Ações numa grade só: cada botão mostra o dano no nível atual (×golpes), a chance de acerto e o custo; efeitos e regras ficam na dica.
-- A ativa tem botão próprio, com os usos que sobram.
+- Ações em seções, todas visíveis: **Técnicas**, **Ações** (Defender e Concentrar) e **Consumíveis** (só com item na bolsa). Cada botão de técnica mostra o dano no nível atual (×golpes), a chance de acerto e o custo; efeitos e regras ficam na dica.
+- A ativa tem botão próprio no topo das Técnicas, com os usos que sobram.
 - Ritmo: a regeneração de chakra é silenciosa, e cada técnica gira uma roleta só.
 
 ## Simulação

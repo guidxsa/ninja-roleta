@@ -106,6 +106,7 @@ export const roletaPtBR = {
   },
 
   ui: {
+    actionGroups: { techniques: 'Técnicas', actions: 'Ações', items: 'Consumíveis' },
     guard: 'Defender',
     guardTip: 'Usa a resistência inteira até o seu próximo turno.',
     rest: 'Concentrar',

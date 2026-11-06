@@ -85,7 +85,6 @@ import {
 } from '../src/core/progression';
 import { buildLabPlayer, LAB_STAT_KEYS, labLearnable, labOrigin, labStatsOf, parseLabParams, type LabConfig } from '../src/core/lab';
 import { newAchievements, type AchievementCategory } from '../src/core/achievements';
-import { buildReport, type ReportBattle } from '../src/core/report';
 import { addEffect, addFight, addJokenpo, addPreEvent, emptyRunStats, type RunStats } from '../src/core/runStats';
 import { summarizeRoletaFight } from '../src/core/roleta/stats';
 import { createRng, type Rng } from '../src/core/rng';
@@ -158,7 +157,7 @@ const VERSION = typeof __VERSION__ === 'undefined' ? 'dev' : __VERSION__;
 
 /** `?teste` abre o laboratório; `?seed=N` fixa as roletas (reproduz uma run ou um bug). */
 const LAB = parseLabParams(window.location.search);
-/** Sem `?seed=`, cada run sorteia a própria seed (`nextRunSeed`), para o Reportar e o Compartilhar. */
+/** Sem `?seed=`, cada run sorteia a própria seed (`nextRunSeed`), para o Compartilhar. */
 let rng: Rng = LAB.seed !== null ? createRng(LAB.seed) : () => Math.random();
 let labSeedUsed = false;
 
@@ -705,8 +704,7 @@ function bagSlots(p: PlayerState): string {
 
 /** Durante a luta, o jogador "vivo" está no estado da batalha, não na campanha. */
 let battlePlayer: (() => PlayerState) | null = null;
-/** Durante a luta, o estado dela para o Reportar. */
-let battleReport: (() => ReportBattle) | null = null;
+
 
 /** Atributo com régua: o número e uma barra relativa ao maior atributo de combate do ninja. */
 function attrRow(key: keyof typeof S.stats, value: number, top: number): string {
@@ -1384,7 +1382,10 @@ function techButton(s: RBattle, t: RTechniqueDef, enabled: boolean): string {
   });
 }
 
-/** Todas as ações numa grade só: técnicas, Defender, Concentrar e os itens da bolsa. */
+const actionGroup = (title: string, body: string, compact = false) =>
+  `<section class="act-group${compact ? ' compact' : ''}"><h4 class="act-title">${title}</h4>${body}</section>`;
+
+/** Ações em seções: técnicas (com a ativa da linhagem), Defender e Concentrar, e os itens da bolsa. */
 function actionGrid(s: RBattle, enabled: boolean): string {
   const p = s.player;
   const techs = playerTechniques(p, rdata).map((t) => techButton(s, t, enabled));
@@ -1395,10 +1396,16 @@ function actionGrid(s: RBattle, enabled: boolean): string {
     const it = S.consumables[id]!;
     return actionCell({ choice: `item:${id}`, cls: 'act-item', ico: icon(ITEM_ICONS[id]), title: `${it.name} ×${p.bag[id]}`, extra: '', tip: tip(it.name, it.desc), enabled });
   });
-  return `<div class="act-grid">${[...techs, guard, rest, ...items].join('')}</div>`;
+  const grid = (cells: string[]) => `<div class="act-grid">${cells.join('')}</div>`;
+  const G = R.ui.actionGroups;
+  return [
+    actionGroup(G.techniques, `${activeButton(s, enabled)}${grid(techs)}`),
+    actionGroup(G.actions, grid([guard, rest]), true),
+    items.length ? actionGroup(G.items, grid(items), true) : '',
+  ].join('');
 }
 
-/** Ativa da linhagem (grátis): botão próprio acima da grade, com os usos que sobram. */
+/** Ativa da linhagem (grátis): botão próprio acima das técnicas, com os usos que sobram. */
 function activeButton(s: RBattle, enabled: boolean): string {
   const kind = kitOf(s.player, rdata).active;
   if (!kind || s.fx.activeUses <= 0) return '';
@@ -1429,16 +1436,6 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
   const villain = setup.def ?? scaleVillain(villainsById[setup.villainId]!, c.difficulty, data);
   let state = startRoletaBattle(c.player, villain, setup.options, rdata, rng);
   battlePlayer = () => state.player;
-  battleReport = () => ({
-    villain: villainName(setup.villainId),
-    round: state.round,
-    hp: state.villain.hp,
-    maxHp: state.villain.maxHp,
-    chakra: state.villain.chakra,
-    maxChakra: state.villain.def.chakra,
-    // O log da tela tem o mais recente em cima.
-    log: [...logEl.querySelectorAll('li')].map((li) => li.textContent ?? '').reverse(),
-  });
 
   const root = show(
     h(`<div class="screen battle">
@@ -1471,7 +1468,7 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
   // Log curto (3 linhas); tocar abre o histórico da luta.
   logEl.addEventListener('click', () => logEl.classList.toggle('open'));
 
-  /** Linha do log; `ico` (opcional) é um ícone do art.ts antes do texto (o Reportar lê só o texto). */
+  /** Linha do log; `ico` (opcional) é um ícone do art.ts antes do texto. */
   const log = (text: string, cls = '', ico?: string) => {
     logEl.insertAdjacentHTML('afterbegin', `<li class="${cls}">${ico ? icon(ico) : ''}${text}</li>`);
     while (logEl.children.length > 30) logEl.lastElementChild!.remove();
@@ -1488,7 +1485,7 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
     }
   };
   const renderActions = (s: RBattle, enabled: boolean) => {
-    actionsEl.innerHTML = `${activeButton(s, enabled)}${actionGrid(s, enabled)}`;
+    actionsEl.innerHTML = actionGrid(s, enabled);
   };
   renderBadges(state);
   if (setup.options.villainStartsFirst) log(S.ui.villainFirst, 'sys');
@@ -1518,7 +1515,6 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
 
   // Resultado
   battlePlayer = null;
-  battleReport = null;
   const overlay = root.querySelector<HTMLElement>('#overlay')!;
   const won = state.status === 'won';
   const msg = won ? S.ui.battleWon : setup.exam ? S.ui.examLost : S.ui.battleLost;
@@ -1960,84 +1956,6 @@ function toast(text: string, ico = '') {
   const el = h(`<div class="toast" role="status">${ico ? icon(ico) : ''}<span>${esc(text)}</span></div>`);
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 2600);
-}
-
-/** Modal do Reportar: nota opcional, prévia do texto e botão de copiar. */
-function openReport() {
-  const c = camp;
-
-  const p = battlePlayer?.() ?? c?.player ?? null;
-  const battle = battleReport?.() ?? null;
-  const st = S.stats;
-  const textFor = (note: string) =>
-    buildReport(
-      {
-        version: VERSION,
-        date: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
-        seed: c?.seed ?? null,
-        link: c && c.seed !== null ? `${location.origin}${location.pathname}?seed=${c.seed}` : null,
-        note,
-        device: navigator.userAgent.slice(0, 160),
-        run:
-          c && p
-            ? {
-                origin: originText(c.origin),
-                difficulty: S.difficulty[c.difficulty].name,
-                stage: `${S.roleta.run.cycle(c.run.cycle + 1)} · ${c.run.step + 1}. ${S.roleta.run.categories[rdata.cycle[c.run.step] ?? 'genin']}${c.run.villainId ? ` · ${villainName(c.run.villainId)}` : ''}`,
-                level: p.level,
-                revivesUsed: p.revivesUsed,
-                hp: p.hp,
-                maxHp: p.maxHp,
-                chakra: p.chakra,
-                maxChakra: p.maxChakra,
-                stats: [
-                  [st.taijutsu, p.offense.taijutsu],
-                  [st.ninjutsu, p.offense.ninjutsu],
-                  [st.genjutsu, p.offense.genjutsu],
-                  [st.physical, p.resistance.physical],
-                  [st.mental, p.resistance.mental],
-                  [st.speed, p.speed],
-                  [st.crit, `+${Math.round(p.critBonus * 100)}%`],
-                ],
-                techniques: p.techniques.map((id) => {
-                  const lv = p.techniqueLevels[id] ?? 0;
-                  return lv > 0 ? `${techName(id)} +${lv}` : techName(id);
-                }),
-                bag: (Object.entries(p.bag) as [ConsumableId, number][])
-                  .filter(([, n]) => n > 0)
-                  .map(([id, n]) => `${S.consumables[id]?.name ?? id} ×${n}`),
-                summon: p.summon ? `${S.summons[p.summon.animal]!.name} ${p.summon.level}` : null,
-              }
-            : null,
-        battle,
-      },
-      S.report.fields,
-    );
-  const R = S.report;
-  const overlay = h(`<div class="modal"><div class="modal-body report">
-    <div class="modal-head"><h2>${R.title}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
-    <p class="muted small">${R.intro}</p>
-    <textarea class="report-note" rows="3" placeholder="${esc(R.notePlaceholder)}"></textarea>
-    <textarea class="report-text" rows="10" readonly></textarea>
-    <button class="btn primary big" data-copy>${R.copy}</button></div></div>`);
-  const note = overlay.querySelector<HTMLTextAreaElement>('.report-note')!;
-  const out = overlay.querySelector<HTMLTextAreaElement>('.report-text')!;
-  const render = () => (out.value = textFor(note.value));
-  render();
-  note.addEventListener('input', render);
-  overlay.querySelector('[data-copy]')!.addEventListener('click', async () => {
-    if (await copyText(out.value)) {
-      toast(R.copied);
-      return;
-    }
-    out.focus();
-    out.select();
-    toast(R.failed);
-  });
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) overlay.remove();
-  });
-  document.body.appendChild(overlay);
 }
 
 type ProfileTab = 'history' | 'achievements' | 'bingo' | 'origins' | 'relics';
@@ -2503,14 +2421,11 @@ async function main() {
   installAudio(settings);
   installHeaderToggles();
   document.getElementById('history-btn')!.addEventListener('click', () => openProfile());
-  // Atalhos do Portão da Vila para o registro ninja e o Reportar.
+  // Atalhos do Portão da Vila para o registro ninja.
   document.addEventListener('click', (e) => {
-    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-profile], [data-report]');
-    if (!el) return;
-    if (el.dataset.profile) openProfile(el.dataset.profile as ProfileTab);
-    else openReport();
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-profile]');
+    if (el) openProfile(el.dataset.profile as ProfileTab);
   });
-  document.getElementById('report-btn')!.addEventListener('click', openReport);
   document.getElementById('sheet-btn')!.addEventListener('click', openSheet);
   // Botões "Ficha" dentro das telas (painel do jogador, card da luta).
   document.addEventListener('click', (e) => {
@@ -2537,11 +2452,10 @@ async function main() {
   document.getElementById('disclaimer')!.textContent = S.ui.disclaimer;
   document.getElementById('version')!.textContent = S.ui.version(VERSION);
   document.getElementById('sheet-btn')!.innerHTML = icon('scroll');
-  document.getElementById('home-btn')!.innerHTML = icon('home');
+  document.getElementById('home-btn')!.innerHTML = `${icon('home')}<span>${S.ui.homeShort}</span>`;
   document.getElementById('home-btn')!.title = S.ui.home;
   document.getElementById('home-btn')!.setAttribute('aria-label', S.ui.home);
   document.getElementById('history-btn')!.innerHTML = icon('book');
-  document.getElementById('report-btn')!.innerHTML = icon('flag');
 
   installTooltips();
   await loadFonts();
@@ -2575,7 +2489,6 @@ function leftToMenu() {
   camp = null;
   campLive = false;
   battlePlayer = null;
-  battleReport = null;
   jornadaSheet = null;
   document.body.classList.remove('mode-jornada');
   mood('neutral');
@@ -2593,7 +2506,7 @@ async function modeScreen(): Promise<'roleta' | 'jornada'> {
   document.getElementById('dots')!.innerHTML = '';
   const P = S.profile.tabs;
   // Portão da Vila: os modos com o seu selo (運 sorte, 忍道 caminho ninja) e atalhos para o registro ninja.
-  // Os atalhos usam data-profile/data-report (não data-choice): só abrem janelas, não escolhem modo.
+  // Os atalhos usam data-profile (não data-choice): só abrem janelas, não escolhem modo.
   const link = (attr: string, kanji: string, label: string) =>
     `<button class="gate-link" ${attr}><span class="kanji${kanji.length > 1 ? ' two' : ''}" aria-hidden="true">${kanji}</span><span>${label}</span></button>`;
   const root = show(
@@ -2609,7 +2522,7 @@ async function modeScreen(): Promise<'roleta' | 'jornada'> {
       <nav class="gate-links" aria-label="${S.ui.gate.registry}">
         ${link('data-profile="history"', '歴', P.history)}${link('data-profile="achievements"', '功', P.achievements)}
         ${link('data-profile="bingo"', '手配', P.bingo)}${link('data-profile="relics"', '宝', P.relics)}
-        ${link('data-profile="origins"', '族', P.origins)}${link('data-report', '報', S.ui.gate.report)}
+        ${link('data-profile="origins"', '族', P.origins)}
       </nav>
     </div>`),
   );

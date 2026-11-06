@@ -49,7 +49,7 @@ export const villains: VillainDef[] = [
       { id: 'senbon', type: 'taijutsu', baseDamage: 7, chakraCost: 0, weight: 3 },
       { id: 'iceMirrors', type: 'ninjutsu', baseDamage: 8, chakraCost: 5, weight: 2 },
     ],
-    // Espelhos: duas ações por turno, cada uma com 60% do dano (100% no hardcore).
+    // Espelhos: cada ataque vale por 2 golpes, numa roleta só, cada um com 60% do dano (100% no hardcore).
     passive: { kind: 'mirrors', actions: 2, damageMult: 0.6 },
     hardcorePassive: { kind: 'mirrors', actions: 2, damageMult: 1 },
   },
