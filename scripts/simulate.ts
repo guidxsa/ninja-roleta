@@ -1,14 +1,15 @@
-// Simulação de balanceamento: `npm run sim -- --fights 2000 --seed 42`
+// Simulação de balanceamento do Roleta enxuto: `npm run sim -- --fights 2000 --seed 42`
 import { rollOrigin } from '../src/core/origin';
 import type { Difficulty } from '../src/core/difficulty';
-import { createPlayer } from '../src/core/player';
+import { createRoletaPlayer } from '../src/core/roleta/player';
 import { createRng } from '../src/core/rng';
 import type { Origin } from '../src/core/types';
-import { campaign } from '../src/data/campaign';
-import { gameData } from '../src/data/index';
+import { roletaData } from '../src/data/roleta/index';
 import { ptBR } from '../src/data/strings/ptBR';
-import { villains, villainsById } from '../src/data/villains';
-import { runBattle, runCampaign } from '../src/sim/runner';
+import { roletaVillains as villains, roletaVillainsById as villainsById } from '../src/data/roleta/villains';
+import { runRoletaBattle, runRoletaRun } from '../src/sim/roletaRunner';
+
+const gameData = roletaData.base;
 
 function arg(name: string, fallback: number): number {
   const i = process.argv.indexOf(`--${name}`);
@@ -44,14 +45,14 @@ console.log('Célula = vitória% / rodadas médias / Vontades do Fogo usadas por
 const colWidth = 18;
 console.log(pad('', 16) + villains.map((v) => pad(ptBR.villains[v.id] ?? v.id, colWidth)).join(''));
 for (const a of archetypes) {
-  const player = createPlayer(a.origin, gameData);
+  const player = createRoletaPlayer(a.origin, roletaData);
   let line = pad(a.label, 16);
   for (const v of villains) {
     let wins = 0;
     let rounds = 0;
     let revives = 0;
     for (let i = 0; i < fights; i++) {
-      const r = runBattle(player, v, rng, gameData);
+      const r = runRoletaBattle(player, v, rng, roletaData);
       if (r.status === 'won') wins++;
       rounds += r.round;
       revives += r.player.revivesUsed;
@@ -67,36 +68,29 @@ const runs = Math.max(1, Math.floor(fights / 2));
 const progression = !process.argv.includes('--bare');
 const difficulties = Object.keys(gameData.balance.difficulty.multipliers) as Difficulty[];
 console.log(`
-Campanha completa: ${runs} runs por dificuldade, origem sorteada, ${progression ? 'com eventos e recompensas' : 'sem eventos nem recompensas'}`);
+Run do Roleta (1º ciclo): ${runs} runs por dificuldade, origem sorteada, ${progression ? 'com eventos e recompensas' : 'sem eventos nem recompensas'}`);
 for (const difficulty of difficulties) {
   const stopCount = new Map<string, number>();
   let victories = 0;
   let allRounds = 0;
   let fightCount = 0;
-  // Nível médio com que o jogador chega a cada vilão (só entre as runs que chegaram lá).
-  const levelSum = new Map<string, { sum: number; n: number }>();
-  const fightOrder = campaign.flatMap((st) => st.villains);
+  let levels = 0;
   for (let i = 0; i < runs; i++) {
     const { origin } = rollOrigin(rng, gameData);
-    const result = runCampaign(createPlayer(origin, gameData, difficulty), campaign, villainsById, rng, gameData, difficulty, { progression });
+    const result = runRoletaRun(createRoletaPlayer(origin, roletaData, difficulty), villainsById, rng, roletaData, difficulty, 1, progression);
     allRounds += result.rounds.reduce((a, b) => a + b, 0);
     fightCount += result.rounds.length;
-    result.levels.forEach((lv, k) => {
-      const e = levelSum.get(fightOrder[k]!) ?? { sum: 0, n: 0 };
-      levelSum.set(fightOrder[k]!, { sum: e.sum + lv, n: e.n + 1 });
-    });
+    levels += result.level;
     if (result.won) victories++;
     else stopCount.set(result.villainReached!, (stopCount.get(result.villainReached!) ?? 0) + 1);
   }
 
   console.log(`
-[${ptBR.difficulty[difficulty].name}]  Vitórias: ${pct(victories / runs)}   Rodadas médias por luta: ${(allRounds / fightCount).toFixed(1)}`);
-  console.log(`  ${pad('Vilão', 18)}${pad('nível médio', 13)}parou aqui`);
+[${ptBR.difficulty[difficulty].name}]  Vence o 1º ciclo: ${pct(victories / runs)}   Rodadas médias por luta: ${(allRounds / fightCount).toFixed(1)}   Nível final médio: ${(levels / runs).toFixed(1)}`);
+  console.log(`  ${pad('Vilão', 18)}parou aqui`);
   for (const v of villains) {
-    const e = levelSum.get(v.id);
     const n = stopCount.get(v.id) ?? 0;
-    const lv = e ? (e.sum / e.n).toFixed(1) : '-';
-    console.log(`  ${pad(ptBR.villains[v.id] ?? v.id, 18)}${pad(lv, 13)}${n > 0 ? pct(n / runs) : ''}`);
+    if (n > 0) console.log(`  ${pad(ptBR.villains[v.id] ?? v.id, 18)}${pct(n / runs)}`);
   }
 }
 console.log('');

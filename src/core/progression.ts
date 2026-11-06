@@ -583,7 +583,7 @@ export function rewardItemSpins(tier: number, data: GameData): number {
  */
 export function applyReward(
   player: PlayerState,
-  reward: Exclude<RewardId, 'item'>,
+  reward: Exclude<RewardId, 'item' | 'relic'>,
   tier: number,
   rng: Rng,
   data: GameData,

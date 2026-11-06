@@ -132,7 +132,8 @@ function autoReward(player: PlayerState, tier: number, rng: Rng, data: GameData)
   let p = player;
   if (id === 'item') {
     for (let i = 0; i < rewardItemSpins(tier, data); i++) p = autoItem(p, rng, data).player;
-  } else {
+  } else if (id !== 'relic') {
+    // A fatia "Relíquia" só existe no Roleta enxuto.
     p = applyReward(p, id, tier, rng, data).player;
   }
   return levelUps(p, data);

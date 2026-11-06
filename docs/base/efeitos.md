@@ -1,5 +1,7 @@
 # Efeitos
 
+> **Combate clássico (reserva)**: desde a v0.45.0, o Roleta usa o combate enxuto de [roleta/combate.md](../roleta/combate.md). Esta página segue valendo como descrição do combate clássico, guardado para a Jornada ([reserva/README.md](../reserva/README.md)); acerto, crítico, dano, resistência e dificuldade continuam valendo para todos.
+
 Efeitos negativos e mentais que ataques e técnicas aplicam. Valem para jogador e vilões. Valores em `balance.status`.
 
 ## Regras gerais

@@ -1,70 +1,48 @@
 // Protótipo jogável: interface mínima sobre o core real. Toda regra vem de src/core; aqui só há fluxo e animação.
 import {
-  actionItemId,
-  actionTechniqueId,
-  attackPreview,
-  attackTechniques,
-  availableActions,
-  activeUses,
-  canCopyIncoming,
-  canFreeActive,
-  copyTarget,
-  forcedGate,
-  sealTarget,
-  FREE_ACTIVES,
-  possessionOptions,
-  freeActiveCost,
-  previewExtras,
-  devourPreview,
-  shadowStrangleDamage,
-  techniqueCost,
-  type FreeActive,
-  canFocus,
-  canGenius,
-  restChakra,
+  canUseActive,
   canUseTechnique,
-  elementalStateOf,
-  gatesHpCost,
-  gatesToOpen,
-  geniusUses,
-  isIllusion,
-  itemAction,
-  playerMedical,
-  playerTechnique,
-  playRound,
-  reactionPreview,
-  reactionTechniqueId,
-  resumeRound,
-  sharinganStage,
-  techAction,
-  startBattle,
-  villainResistance,
-  type BattleOptions,
-  type BattleState,
-  type PendingReaction,
-  type PlayerAction,
-  type ReactionChoice,
-  type RoundExtras,
-} from '../src/core/combat';
+  kitOf,
+  techBase,
+  techCost,
+  playerAttackOdds,
+  playerHitDamage,
+  playRoletaRound,
+  startRoletaBattle,
+  useActive,
+  type RAction,
+  type RBattle,
+  type RBattleOptions,
+  type REvent,
+} from '../src/core/roleta/battle';
+import { createRoletaPlayer, playerTechniques, roletaKit } from '../src/core/roleta/player';
+import { roletaData as rdata } from '../src/data/roleta/index';
+import {
+  chooseChest,
+  contractFor,
+  continueRoletaCycle,
+  currentCategory,
+  cycleMult,
+  drawVillain,
+  finishRoletaFight,
+  gainRoletaRelic,
+  newRoletaRun,
+  rewardRelic,
+  villainFor,
+  type RRun,
+} from '../src/core/roleta/run';
+import type { RTechniqueDef } from '../src/data/roleta/techniques';
 import { critChance, hitSlices } from '../src/core/hit';
 import { choose, esc, goHome, h, HOME, isOff, show, sleep, untilHome } from './dom';
 import { lineageOf, rollOrigin, type OriginStep } from '../src/core/origin';
 import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
   canLevelUp,
-  canUseType,
-  createPlayer,
   equipTrainingWeights,
-  fullRestore,
   recoverAfterWin,
-  knownTechniques,
   gainXp,
-  gatesStage,
-  medicalHealPct,
   removeTrainingWeights,
   techniqueLevel,
-  techniqueSlot,
-  trainingWeightsWin,
   upgradeTechnique,
   withDifficulty,
   xpGain,
@@ -83,7 +61,6 @@ import {
   applyTraining,
   applyTrainingFocus,
   chooseUpgrade,
-  examRecover,
   forfeitUpgrade,
   HANDS,
   levelUp,
@@ -97,7 +74,6 @@ import {
   rollRewardChoices,
   rollSummonAnimal,
   rollTraining,
-  trainingFocusOptions,
   rollWeighted,
   spendCoin,
   upgradeOptions,
@@ -110,16 +86,16 @@ import {
 import { buildLabPlayer, LAB_STAT_KEYS, labLearnable, labOrigin, labStatsOf, parseLabParams, type LabConfig } from '../src/core/lab';
 import { newAchievements, type AchievementCategory } from '../src/core/achievements';
 import { buildReport, type ReportBattle } from '../src/core/report';
-import { addEffect, addFight, addJokenpo, addPreEvent, emptyRunStats, summarizeFight, type RunStats } from '../src/core/runStats';
+import { addEffect, addFight, addJokenpo, addPreEvent, emptyRunStats, type RunStats } from '../src/core/runStats';
+import { summarizeRoletaFight } from '../src/core/roleta/stats';
 import { createRng, type Rng } from '../src/core/rng';
 import { buildShareText, type TrailEntry } from '../src/core/share';
 
-import type { AttackType, ConsumableId, Element, LineageTier, Origin, SummonAnimal } from '../src/core/types';
+import type { ConsumableId, Element, LineageTier, Origin, SummonAnimal, VillainDef } from '../src/core/types';
 import { CONSUMABLES, type RewardId } from '../src/data/events';
 import { campaign, type Stage } from '../src/data/campaign';
-import { gameData as data } from '../src/data/index';
 import { ptBR as S } from '../src/data/strings/ptBR';
-import { villains, villainsById } from '../src/data/villains';
+import { roletaVillains as villains, roletaVillainsById as villainsById } from '../src/data/roleta/villains';
 import { achievements } from '../src/data/achievements';
 import {
   achievementsFromHistory,
@@ -132,11 +108,13 @@ import {
   reachOf,
   recordFight,
   recordJornadaReach,
+  recordRoletaReach,
   saveProfile,
   unlockAchievements,
   type Profile,
 } from '../src/state/profile';
-import { relicCollection } from './jornada/relics';
+import { relicCard, relicCollection, relicName, relicSlot, relicTier } from './jornada/relics';
+import { relicIcon } from './jornada/relicIcons';
 import { askPlayerName } from './playerName';
 import {
   isHardcoreUnlocked,
@@ -147,7 +125,7 @@ import {
   type KeyValueStorage,
   type RunStatus,
 } from '../src/state/runHistory';
-import { clanSymbol, icon, ninjaPortrait, villainPortrait } from './art';
+import { clanSymbol, fighterPortrait, icon, ninjaPortrait, villainPortrait } from './art';
 import { barLayers, barPct, barTone, patchBar } from './bars';
 import { defeat, installAudio, mood, setMusic, setSfx, victory, type Mood } from './audio';
 import {
@@ -156,8 +134,7 @@ import {
   ELEMENT_COLORS,
   ELEMENT_ICON,
   elementChip,
-  fxConditions,
-  playerTechTip,
+  rTechTip,
   techIconName,
   villainTechElement,
   villainTechTip,
@@ -171,6 +148,9 @@ import { createWheel, stripRoulette, type WheelSlice } from './wheel';
 
 // ---------------------------------------------------------------------------
 // Infra
+
+/** Base do Roleta enxuto: linhagens, níveis, eventos, itens e recompensas (sem pool de técnicas nem upgrades). */
+const data = rdata.base;
 
 /** Versão do jogo (package.json), embutida pelo build. */
 declare const __VERSION__: string;
@@ -254,41 +234,20 @@ const TIER_COLORS: Record<LineageTier, string> = { common: '#5d6168', clan: '#3f
 const SIDE_COLORS = { player: '#3f5f9e', villain: '#a8332b', miss: '#55585e', hit: '#4e8a5c', crit: '#c49a3a', foeHit: '#b5562c' };
 
 const villainName = (id: string) => S.villains[id] ?? id;
+/** Retrato do vilão: o desenho próprio ou, nos vindos da Jornada, o retrato emprestado de lá. */
+const foePortrait = (id: string, size: 'sm' | 'md' | 'lg' = 'md') => {
+  const spec = villainsById[id]?.portrait;
+  return spec ? fighterPortrait(id, spec, size) : villainPortrait(id, size);
+};
 const techName = (id: string): string => {
   // Cópia (Uchiha): `copy:<vilão>.<técnica>`.
   if (id.startsWith('copy:')) return `${techName(id.slice(id.indexOf('.') + 1))} (cópia)`;
-  return S.techniques[id] ?? id;
-};
-/** Ícones das linhas de log escolhidas por um campo do evento (as que não estão aqui ficam sem ícone). */
-const LOG_ICONS: Record<'skip' | 'mental' | 'debilitate' | 'status', Record<string, string | undefined>> = {
-  skip: { sleep: 'sleep', possession: 'mind', disrupted: 'mind', prison: 'prison', paralysis: 'lightning' },
-  mental: { fear: 'fear', confusion: 'confusion', torment: 'torment' },
-  debilitate: { prison: 'prison', paralysis: 'lightning', sleep: 'sleep', possession: 'mind' },
-  status: { stun: 'stun', burn: 'fire', poison: 'poison', bleed: 'bleed', freeze: 'ice' },
-};
-/** Marca de ativa armada (ícone de check depois do nome). */
-const ARMED = ` ${icon('check', 'armed')}`;
-const ACTIVE_ICON: Record<string, string> = {
-  gates: 'gates',
-  expansion: 'expansion',
-  effort: 'weights',
-  beast: 'beast',
-  plague: 'poison',
-  transmission: 'intent',
-  seal: 'scroll',
+  return S.roleta.techniques[id] ?? S.techniques[id] ?? id;
 };
 /** Chip de elemento com ícone; `withTip` = false dentro de botões (o botão já tem a própria dica). */
 const elChip = (el: Element | null, withTip = true) => elementChip(el, withTip);
 /** Nível de técnica em algarismos romanos (I, II, III...). */
 const roman = (n: number) => ['', 'I', 'II', 'III', 'IV', 'V', 'VI'][n] ?? String(n);
-
-/** Elemento da técnica de um lado (para o ícone e a cor no log). */
-function techElement(s: BattleState, side: 'player' | 'villain', id: string): Element | null {
-  if (side === 'player') return data.techniquesById[id] ? playerTechnique(s.player, id, data).element : null;
-  const tech = s.villain.def.techniques.find((t) => t.id === id);
-  if (!tech || tech.type === 'taijutsu') return null;
-  return tech.element === undefined ? s.villain.def.element : tech.element;
-}
 
 function originLabel(o: Origin): string {
   return o.lineageId ? S.lineages[o.lineageId] ?? o.lineageId : S.origin.common;
@@ -433,7 +392,8 @@ interface Campaign {
   origin: Origin;
   player: PlayerState;
   difficulty: Difficulty;
-  stageIndex: number;
+  /** Run do Roleta enxuto (ciclo, passo, vilão sorteado, baú). `player` e `mods` vivem aqui ao lado. */
+  run: RRun;
   mods: NextFightMods;
   /** Seed das roletas (null quando não dá para repetir). */
   seed: number | null;
@@ -454,6 +414,13 @@ function syncSheetBtn() {
   document.body.classList.toggle('has-sheet', Boolean(camp) || Boolean(jornadaSheet));
 }
 const NO_MODS: NextFightMods = { villainStartsFirst: false, playerStartsFirst: false };
+/** A run com o jogador e os modificadores atuais (que as telas mexem direto em `camp`). */
+const getRun = (): RRun => ({ ...camp!.run, player: camp!.player, mods: camp!.mods });
+const setRun = (r: RRun) => {
+  camp!.run = r;
+  camp!.player = r.player;
+  camp!.mods = r.mods;
+};
 
 // ---------------------------------------------------------------------------
 // Perfil: conquistas e Livro Bingo (localStorage)
@@ -468,9 +435,9 @@ function backfillProfile() {
 }
 
 /** Uma luta da campanha: entra nas estatísticas da run e no Livro Bingo. */
-function noteFight(villainId: string, exam: boolean, battle: BattleState) {
+function noteFight(villainId: string, exam: boolean, battle: RBattle) {
   if (!camp || LAB.lab) return;
-  const fight = summarizeFight(villainId, exam, battle);
+  const fight = summarizeRoletaFight(villainId, exam, battle);
   camp.stats = addFight(camp.stats, fight);
   profile = recordFight(profile, fight);
   saveProfile(storage, profile);
@@ -490,6 +457,8 @@ function checkAchievements(result: 'inProgress' | 'victory' | 'defeat', fallenTo
     fallenTo,
     killedBy: killedByCounts(profile),
     unlocked: new Set(Object.keys(profile.achievements)),
+    // Ciclos vencidos: no fim do 1º a run fica em `victory`; dos seguintes, o ciclo já avançou.
+    cyclesWon: camp.run.status === 'victory' ? camp.run.cycle + 1 : camp.run.cycle,
   });
   if (ids.length === 0) return;
   profile = unlockAchievements(profile, ids, new Date());
@@ -497,7 +466,7 @@ function checkAchievements(result: 'inProgress' | 'victory' | 'defeat', fallenTo
   ids.forEach((id, i) => setTimeout(() => toast(S.achievements.unlocked(S.achievements.list[id]?.name ?? id), 'medal'), i * 2800));
 }
 
-function track(patch: { status?: RunStatus; furthestStage?: number; difficulty?: Difficulty }) {
+function track(patch: { status?: RunStatus; furthestStage?: number; difficulty?: Difficulty; cycle?: number; fights?: number }) {
 
   // Runs do laboratório não entram no histórico.
   if (!camp || LAB.lab) return;
@@ -550,10 +519,9 @@ function clanSeal(p: PlayerState): string {
   return `<span class="clan-seal clan-${id ?? 'common'}"${tip(name, tierName)}>${clanSymbol(id)}</span>`;
 }
 
-/** Ícone da técnica do jogador: elemento, ou o tipo (taijutsu, genjutsu, médico, barreira). */
-function techIcon(p: PlayerState, id: string): string {
-  const t = playerTechnique(p, id, data);
-  return icon(techIconName(t.type, t.element, { medical: techniqueSlot(t) === 'medical', barrier: t.barrier !== undefined }));
+/** Ícone da técnica do jogador: elemento, ou o tipo (taijutsu, ninjutsu, genjutsu). */
+function techIcon(t: RTechniqueDef): string {
+  return icon(techIconName(t.type, t.element ?? null));
 }
 
 /** Classes e cor de uma célula de técnica (tipo + elemento). */
@@ -564,24 +532,14 @@ function techLook(type: string, element: Element | null): { cls: string; style: 
   };
 }
 
+/** Técnicas do kit enxuto na ficha: dano no nível atual, golpes, precisão e custo (efeitos na dica). */
 function techniqueRows(p: PlayerState): string {
-  return knownTechniques(p, data)
+  return playerTechniques(p, rdata)
     .map((t) => {
-      const slot = techniqueSlot(t);
-      const tech = playerTechnique(p, t.id, data);
-      let info: string;
-      if (slot === 'medical') info = S.ui.heal;
-      else if (t.mental) info = S.ui.mentalStrength(t.mentalStrength ?? 1);
-      else if (tech.barrier !== undefined) info = S.ui.barrierHint(tech.barrier, Boolean(t.reflectPct));
-      else if (t.state) info = S.ui.armorHint;
-      else if (t.devour) info = S.ui.devourInfo;
-      else if (t.shadowStrangle) info = S.ui.strangleInfo;
-      else info = S.ui.techLine(tech.baseDamage, t.hits ?? 1, Math.round((t.accuracy ?? data.balance.hit.defaultAccuracy) * 100));
-      if (t.chakraDrain) info += ` · ${S.ui.drain(t.chakraDrain)}`;
-      if (t.requiresDojutsu) info += ` · ${S.ui.requires(S.dojutsu[t.requiresDojutsu]!.name)}`;
-      const lvl = ` <span class="lvl">${roman(techniqueLevel(p, t.id, data))}</span>`;
-      const look = techLook(slot, tech.element);
-      return `<li class="tech-card ${look.cls}"${look.style}${playerTechTip(p, t.id)}><span class="tc-ico">${techIcon(p, t.id)}</span><span class="tc-txt"><b>${esc(techName(t.id))}${lvl}</b><small>${S.actions[slot]} · ${info} · ${S.ui.cost(tech.chakraCost)}</small></span></li>`;
+      const look = techLook(t.type, t.element ?? null);
+      const dmg = techBase(p, t, rdata);
+      const info = S.roleta.ui.techLine(dmg, t.hits ?? 1, Math.round((t.accuracy ?? data.balance.hit.defaultAccuracy) * 100));
+      return `<li class="tech-card ${look.cls}"${look.style}${rTechTip(p, t)}><span class="tc-ico">${techIcon(t)}</span><span class="tc-txt"><b>${esc(techName(t.id))}</b><small>${S.actions[t.type]} · ${info} · ${S.ui.cost(t.chakra)}</small></span></li>`;
     })
     .join('');
 }
@@ -592,15 +550,12 @@ interface PassiveEntry {
   desc: string;
 }
 
-/** Passiva da origem (uma entrada por mecânica, quando ela junta várias) e as do jinchuuriki. */
+/** Passiva do kit enxuto da linhagem e a do jinchuuriki. */
 function passiveTraitEntries(p: PlayerState): PassiveEntry[] {
-  const passive = S.passives[p.passive];
-  const traits = S.passiveTraits[p.passive] ?? (passive ? [passive] : []);
-  const out: PassiveEntry[] = traits.map((t) => ({ ico: clanSymbol(p.origin.lineageId), ...t }));
-  if (p.jinchuuriki) {
-    out.push({ ico: clanSymbol('jinchuuriki'), ...S.passives.jinchuuriki! });
-    out.push({ ico: icon('genjutsuImmune'), ...S.passives.innerDemon! });
-  }
+  const R = S.roleta;
+  const kit = kitOf(p, rdata);
+  const out: PassiveEntry[] = [{ ico: clanSymbol(p.origin.lineageId), ...R.passives[kit.passive]! }];
+  if (p.jinchuuriki) out.push({ ico: clanSymbol('jinchuuriki'), ...R.passives.jinchuuriki! });
   return out;
 }
 
@@ -623,35 +578,11 @@ function passiveItems(p: PlayerState, tag: 'li' | 'p'): string[] {
   );
 }
 
+/** Passiva e ativa do kit enxuto (mais a do jinchuuriki). */
 function passiveEntries(p: PlayerState): PassiveEntry[] {
   const out: PassiveEntry[] = passiveTraitEntries(p);
-  const item = (ico: string, name: string, desc: string) => out.push({ ico, name, desc });
-  const active = p.active ? S.actives[p.active] : null;
-  if (active) {
-    const stage = gatesStage(p, data);
-    const next = data.balance.gates.stages[stage];
-    const gates = p.active === 'gates' ? ` (${stage ? S.gatesStage(stage) : '—'}${next ? ` · ${S.ui.gatesLocked(next.minTaijutsu)}` : ''})` : '';
-    const ico = ACTIVE_ICON[p.active!] ?? 'ninjutsu';
-    item(icon(ico), active.name + gates, active.desc);
-  }
-  if (p.dojutsu) {
-    const d = S.dojutsu[p.dojutsu]!;
-    const stage = sharinganStage(p, data);
-    item(icon(p.dojutsu), stage ? `${d.name} (${S.sharinganStage(stage)})` : d.name, d.desc);
-  }
-  // Ativas extras do kit: Pílulas do clã (Akimichi) e Cópia (Uchiha).
-  if (p.active === 'expansion') item(icon('pill'), S.actives.pills!.name, S.actives.pills!.desc);
-  if (p.dojutsu === 'sharingan') item(icon('sharingan'), S.actives.copy!.name, S.actives.copy!.desc);
-  // Despertar já alcançado (níveis 4 e 7).
-  const awakening = S.awakening[p.origin.lineageId ?? 'common'] ?? {};
-  for (const level of [4, 7]) {
-    if (p.level >= level && awakening[level]) item(clanSymbol(p.origin.lineageId), S.ui.awakeningTitle(level), awakening[level]!);
-  }
-  if (p.focusUses > 0) item(icon('focus'), S.talents.focus.name, S.talents.focus.desc(p.focusUses));
-  if (p.substitutionBonus > 0) item(icon('substitution'), S.talents.substitution.name, S.talents.substitution.desc(p.substitutionBonus));
-  if (p.shadowClonesLevel > 0) item(icon('clones'), S.talents.shadowClones.name, S.talents.shadowClones.desc(p.shadowClonesLevel));
-  if (p.glimmerLevel > 0) item(icon('amuletSpeed'), S.talents.glimmer.name, S.talents.glimmer.desc(p.glimmerLevel));
-  if (p.pendingUpgrades > 0) item(icon('scroll'), S.ui.upgradeTitle, S.ui.upgradesPending(p.pendingUpgrades));
+  const active = kitOf(p, rdata).active;
+  if (active) out.push({ ico: icon(RACTIVE_ICONS[active] ?? 'ninjutsu'), ...S.roleta.actives[active]! });
   return out;
 }
 
@@ -682,6 +613,21 @@ function jinChip(p: PlayerState): string {
   return `<span class="chip jin"${tip(S.origin.jinchuuriki, body)}>${clanSymbol('jinchuuriki')}${S.origin.jinchuuriki}</span>`;
 }
 
+/** Relíquias do Roleta: fileira de ícones com o efeito de lá na dica. */
+function roletaRelicBar(p: PlayerState): string {
+  const ids = p.relics ?? [];
+  return ids.length ? `<div class="jrbar" role="list" aria-label="${S.roleta.run.relicsTitle}">${ids.map((id) => relicSlot(id, 'span', '', 'roleta')).join('')}</div>` : '';
+}
+
+/** Relíquias que apareceram no Roleta entram na coleção do perfil. */
+function discoverRoletaRelics(ids: readonly string[]) {
+  if (LAB.lab || !ids.length) return;
+  const next = discoverRelics(profile, ids, new Date());
+  if (next === profile) return;
+  profile = next;
+  saveProfile(storage, profile);
+}
+
 function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
   const passives = passiveItems(p, 'p').join('');
   return `
@@ -703,6 +649,7 @@ function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
       ${statBox('physical', p.resistance.physical)}${statBox('mental', p.resistance.mental)}${statBox('speed', p.speed)}
     </div>
     ${passives ? `<div class="passive-row">${passives}</div>` : ''}
+    ${roletaRelicBar(p)}
     ${mods.villainStartsFirst || mods.playerStartsFirst ? `<div class="mods"><small>${S.ui.nextFight}</small> ${modChips(mods)}</div>` : ''}
   </section>`;
 }
@@ -807,6 +754,7 @@ function sheetHtml(c: Campaign): string {
         ${attrRow('speed', p.speed, top)}${attrRow('physical', p.resistance.physical, top)}${attrRow('mental', p.resistance.mental, top)}
       </ul>
       <div class="attrs">${statBox('crit', S.ui.critTier(crit))}${statBox('hp', p.maxHp)}${statBox('chakra', p.maxChakra)}</div>
+      ${(p.relics ?? []).length ? `<h3 class="sheet-title">${S.roleta.run.relicsTitle}</h3>${roletaRelicBar(p)}` : ''}
       <h3 class="sheet-title">${S.ui.bag}</h3>
       ${bagSlots(p)}
       <h3 class="sheet-title">${S.ui.techniques}</h3>
@@ -835,26 +783,25 @@ function openSheet() {
   document.body.appendChild(overlay);
 }
 
-function stageTrail(current: number): string {
-  return `<ol class="trail">${campaign
-    .map((st, i) => {
-      const state = i < current ? 'done' : i === current ? 'current' : 'todo';
-      const sub = S.ui.stageFights(st.villains.length, st.kind === 'exam');
-      const best = st.kind === 'fight' ? Math.max(0, ...st.rewardTiers.map((t) => t ?? 0)) : 0;
-      const tier = best > 0 ? ` · ${S.ui.rewardTier(S.rewardTiers[best] ?? '')}` : '';
-      const faces = st.kind === 'exam'
-        ? `<span class="trail-ico">${icon('scroll')}</span>`
-        : `<span class="trail-faces">${st.villains.map((v) => villainPortrait(v, 'sm')).join('')}</span>`;
-      return `<li class="${state}"><i><span>${i < current ? icon('check') : i + 1}</span></i>${faces}<div><b>${stageName(st)}</b><small>${sub}${tier}</small></div></li>`;
+/** Trilha do ciclo: as 6 lutas (categoria e vilão), feitas, a atual e as que faltam. */
+function stageTrail(run: RRun): string {
+  const RR = S.roleta.run;
+  const done = run.status === 'victory' ? rdata.cycle.length : run.step;
+  return `<ol class="trail">${rdata.cycle
+    .map((cat, i) => {
+      const state = i < done ? 'done' : i === done ? 'current' : 'todo';
+      const id = i < done ? run.used[i] : i === done ? run.villainId : null;
+      const faces = id ? `<span class="trail-faces">${foePortrait(id, 'sm')}</span>` : `<span class="trail-ico">${icon(cat === 'boss' ? 'intent' : 'swords')}</span>`;
+      const tier = rdata.r.run.rewardTier[cat] ?? 0;
+      const sub = cat === 'boss' ? RR.chestTitle : S.ui.rewardTier(S.rewardTiers[tier] ?? '');
+      return `<li class="${state}"><i><span>${i < done ? icon('check') : i + 1}</span></i>${faces}<div><b>${RR.categories[cat]}${id ? ` · ${villainName(id)}` : ''}</b><small>${sub}</small></div></li>`;
     })
     .join('')}</ol>`;
 }
 
 function progressDots(current: number) {
   const el = document.getElementById('dots')!;
-  el.innerHTML = campaign
-    .map((_, i) => `<i class="${i < current ? 'done' : i === current ? 'current' : ''}"></i>`)
-    .join('');
+  el.innerHTML = rdata.cycle.map((_, i) => `<i class="${i < current ? 'done' : i === current ? 'current' : ''}"></i>`).join('');
 }
 
 /** Gira uma roleta grande dentro de `slot`: botão "Girar" (ou automático no modo instantâneo). */
@@ -994,13 +941,13 @@ async function originScreen(): Promise<void> {
     // Hardcore bloqueado (ainda não venceu no Difícil): cai para a dificuldade padrão.
     const hardcoreOk = isHardcoreUnlocked(loadRuns(storage), data.balance.difficulty.hardcoreUnlockedBy);
     if (settings.difficulty === 'hardcore' && !hardcoreOk) settings.difficulty = DEFAULT_DIFFICULTY;
-    let player = createPlayer(roll.origin, data, settings.difficulty);
+    let player = createRoletaPlayer(roll.origin, rdata, settings.difficulty);
     camp = {
       runId,
       origin: roll.origin,
       player,
       difficulty: settings.difficulty,
-      stageIndex: 0,
+      run: newRoletaRun(player, settings.difficulty),
       mods: { ...NO_MODS },
       seed,
       trail: [],
@@ -1043,6 +990,7 @@ async function originScreen(): Promise<void> {
       camp.difficulty = d;
       player = withDifficulty(player, d, data);
       camp.player = player;
+      camp.run = newRoletaRun(player, d);
       saveSettings();
       after.querySelectorAll('[data-diff]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
       after.querySelector('#diff-desc')!.textContent = S.difficulty[d].desc;
@@ -1063,18 +1011,22 @@ async function originScreen(): Promise<void> {
 
 async function mapScreen(): Promise<void> {
   const c = camp!;
-  progressDots(c.stageIndex);
-  const stage = campaign[c.stageIndex]!;
+  const run = getRun();
+  const RR = S.roleta.run;
+  progressDots(run.step);
+  const id = run.villainId!;
+  const pct = Math.round((cycleMult(run, rdata) - 1) * 100);
+  const cycleChip = run.cycle > 0 ? ` <span class="chip jcycle"${tip(RR.cycle(run.cycle + 1), RR.cycleTip(pct))}>${icon('cycle')} ${RR.cycle(run.cycle + 1)}</span>` : '';
   const root = show(
     h(`<div class="screen">
-      <h2>${S.ui.campaign}</h2>
-      ${stageTrail(c.stageIndex)}
-      ${stage.kind === 'fight' ? `<div class="foes">${stage.villains.map((v) => villainCard(v)).join('')}</div>` : ''}
+      <h2>${RR.title} ${run.cycle + 1}${cycleChip}</h2>
+      ${stageTrail(run)}
+      <div class="foes">${villainCard(id, villainFor(run, villainsById, rdata))}</div>
       ${playerPanel(c.player, c.mods)}
       <p class="muted small center">${S.ui.carryHint}</p>
       ${c.player.trainingWeights === 'equipped' ? `<button class="btn" data-choice="weights">${icon('weights')} ${S.ui.weightsRemove}</button>` : ''}
       ${c.player.trainingWeights === 'stored' ? `<button class="btn" data-choice="weights">${icon('weights')} ${S.ui.weightsEquip}</button>` : ''}
-      <div class="sticky-cta"><button class="btn primary big" data-choice="go">${icon(stage.kind === 'exam' ? 'scroll' : 'swords')} ${stageName(stage)}</button></div>
+      <div class="sticky-cta"><button class="btn primary big" data-choice="go">${icon('swords')} ${RR.go(villainName(id))}</button></div>
     </div>`),
   );
   // Os pesos só são equipados ou tirados fora de combate.
@@ -1088,11 +1040,11 @@ async function mapScreen(): Promise<void> {
 // ---------------------------------------------------------------------------
 // Tela: evento pré-vilão
 
-async function eventScreen(stage: Stage): Promise<void> {
+async function eventScreen(name: string): Promise<void> {
   const c = camp!;
   const root = show(
     h(`<div class="screen">
-      <h2>${S.ui.towards(stageName(stage))}</h2>
+      <h2>${S.ui.towards(name)}</h2>
       <div id="slot"></div><div id="detail"></div><div id="hud"></div><div id="cta"></div>
     </div>`),
   );
@@ -1117,8 +1069,8 @@ async function eventScreen(stage: Stage): Promise<void> {
       step = applySimpleEvent(c.player, roll.value);
       break;
     case 'training': {
-      // XP garantido. Com elemento que ainda cresce, o jogador escolhe: destaque de status ou foco elemental.
-      const focus = trainingFocusOptions(c.player, data);
+      // XP garantido e o destaque de status (o foco elemental saiu no Roleta enxuto).
+      const focus: Element[] = [];
       let pick = 'highlight';
       if (focus.length > 0) {
         const box = h(`<div class="wheel-box"><h3>${S.ui.trainingChoice}</h3><div class="act-grid">
@@ -1224,7 +1176,10 @@ async function summonFlow(slot: HTMLElement): Promise<Step> {
   if (c.player.summon) return applySummonEncounter(c.player, c.player.summon.animal);
   const animal = rollSummonAnimal(rng, data);
   await bigWheel(slot, S.roulettes.summonAnimal, rollSlices(animal, (id) => S.summons[id]!.name), animal.index);
-  return applySummonEncounter(c.player, animal.value);
+  // Roleta enxuto: a invocação é uma relíquia (o contrato do animal).
+  const step = applySummonEncounter(c.player, animal.value);
+  const contract = contractFor(animal.value, rdata);
+  return contract ? { ...step, player: gainRoletaRelic(step.player, contract, rdata) } : step;
 }
 
 // ---------------------------------------------------------------------------
@@ -1232,12 +1187,14 @@ async function summonFlow(slot: HTMLElement): Promise<Step> {
 
 interface BattleSetup {
   villainId: string;
-  options: Partial<BattleOptions>;
+  options: Partial<RBattleOptions>;
   label: string;
   exam: boolean;
+  /** Ficha do vilão já com a dificuldade e o ciclo (sem ela, só a dificuldade). */
+  def?: VillainDef;
 }
 
-type VillainDefT = BattleState['villain']['def'];
+type VillainDefT = VillainDef;
 
 const PASSIVE_ICONS: Record<string, string> = {
   trickster: 'trickster',
@@ -1272,8 +1229,8 @@ function villainPassiveChips(v: VillainDefT): string {
 }
 
 /** Técnicas do vilão, cada uma com a cor do elemento e a ficha na dica. */
-function villainKit(v: VillainDefT): string {
-  return v.techniques
+function villainKit(v: VillainDefT, techniques = v.techniques.filter((t) => t.barrier === undefined)): string {
+  return techniques
     .map((t) => {
       const el = villainTechElement(v, t);
       const look = techLook(t.healPct !== undefined ? 'medical' : t.type, el);
@@ -1294,10 +1251,10 @@ function villainStats(phys: number, mental: number, speed: number): string {
 }
 
 /** Ficha do próximo vilão no mapa: retrato, atributos, passivas e técnicas. */
-function villainCard(id: string): string {
-  const v = scaleVillain(villainsById[id]!, camp!.difficulty, data);
+function villainCard(id: string, scaled?: VillainDef): string {
+  const v = scaled ?? scaleVillain(villainsById[id]!, camp!.difficulty, data);
   return `<section class="card villain-card">
-    <div class="foe-head">${villainPortrait(id, 'lg')}
+    <div class="foe-head">${foePortrait(id, 'lg')}
       <div class="foe-id"><b class="name">${villainName(id)}</b>
         <div class="chips-left">${elChip(v.element)}<span class="chip">${S.stats.hp} ${v.hp}</span><span class="chip">${S.stats.chakra} ${v.chakra}</span></div>
         ${villainStats(Math.floor(v.resistance.physical), Math.floor(v.resistance.mental), v.speed)}
@@ -1308,71 +1265,81 @@ function villainCard(id: string): string {
 }
 
 /** HUD do inimigo na luta: placa com o nome, barras que esvaziam na direção do retrato, atributos, kit e efeitos. */
-function villainPanel(s: BattleState): string {
+function villainPanel(s: RBattle): string {
   const v = s.villain.def;
   return `<section class="hud foe-hud villain-panel" id="vcard">
     <div class="hud-main">
       <div class="hud-id">
-        <div class="hud-plate"><b class="name">${villainName(v.id)}</b>${elChip(v.element)}</div>
-        ${bar('hp', s.villain.hp, v.hp)}
+        <div class="hud-plate"><b class="name">${villainName(v.id)}</b></div>
+        ${bar('hp', s.villain.hp, s.villain.maxHp)}
         ${bar('ck', s.villain.chakra, v.chakra)}
         <div id="vstats">${villainLiveStats(s)}</div>
       </div>
-      <div class="hud-face">${villainPortrait(v.id, 'md')}</div>
+      <div class="hud-face">${foePortrait(v.id, 'md')}</div>
     </div>
-    <div class="hud-extra"><div class="passive-row" id="vpassives">${villainPassiveChips(v)}</div><div class="kit" id="vkit">${villainKit(v)}</div></div>
+    <div class="hud-extra"><div class="passive-row" id="vpassives">${villainPassiveChips(v)}</div><div class="kit" id="vkit">${villainKit(v, s.villain.techniques)}</div></div>
     <div class="badges" id="vbadges"></div>
   </section>`;
 }
 
-/** Atributos do vilão na luta (resistências com manto, névoa etc.). */
-function villainLiveStats(s: BattleState): string {
-  const res = (kind: 'physical' | 'mental') => Math.floor(villainResistance(s, kind, data));
+/** Atributos do vilão na luta (resistências com manto). */
+function villainLiveStats(s: RBattle): string {
+  const p = s.villain.def.passive;
+  const cloakOn = p?.kind === 'cloak' && (s.villain.cloakTurns > 0 || s.villain.monster);
+  const res = (kind: 'physical' | 'mental') => Math.floor(s.villain.def.resistance[kind] * (cloakOn ? p.cloak.resistanceMult : 1));
   return villainStats(res('physical'), res('mental'), s.villain.def.speed);
 }
 
-function badgesHtml(s: BattleState, side: 'player' | 'villain'): string {
+const R = S.roleta;
+const EFFECT_ICONS: Record<string, string> = { burn: 'fire', poison: 'poison', stun: 'stun', fear: 'fear' };
+const RACTIVE_ICONS: Record<string, string> = {
+  effort: 'weights',
+  shadow: 'prison',
+  expansion: 'expansion',
+  mindTransfer: 'mind',
+  plague: 'poison',
+  beast: 'beast',
+  gates: 'gates',
+  sharingan: 'sharingan',
+  byakugan: 'byakugan',
+  seal: 'scroll',
+};
+
+function effectChips(effects: RBattle['fx']['effects'], tone: 'good' | 'bad'): Condition[] {
+  return effects
+    .filter((e) => e.turns > 0)
+    .map((e) => ({ icon: EFFECT_ICONS[e.kind] ?? 'warning', label: R.ui.effectOn(R.effects[e.kind]!.name, e.turns), tone, ...R.effects[e.kind]! }));
+}
+
+function badgesHtml(s: RBattle, side: 'player' | 'villain'): string {
   const St = S.tips.status;
   const out: Condition[] = [];
-  const add = (ico: string, label: string, tone: Condition['tone'], t: { name: string; desc: string }) =>
-    out.push({ icon: ico, label, tone, ...t });
+  const add = (ico: string, label: string, tone: Condition['tone'], t: { name: string; desc: string }) => out.push({ icon: ico, label, tone, ...t });
   if (side === 'villain') {
     const v = s.villain;
-    out.push(...fxConditions(v.fx, 'good'));
-    const state = elementalStateOf(s, 'villain', data);
-    if (state) add(ELEMENT_ICON[state], S.ui.stateChip(S.elements[state]), '', St.elementalState(S.elements[state]));
+    out.push(...effectChips(v.effects, 'good'));
     if (v.mistTurns > 0) add('mist', S.ui.mistOn(v.mistTurns), 'bad', St.mist);
-    if (v.insaneTimer > 0) add('timer', S.ui.insaneTimer(v.insaneTimer), 'good', St.insaneTimer);
     if (v.lastStand) add('heartbreak', S.ui.lastStand, 'bad', St.lastStand);
     if (v.monster) add('claw', S.ui.monster, 'bad', St.monster);
-    if (v.insects > 0) add('poison', S.ui.insects(v.insects), 'good', St.insects);
-    if (v.sealed) add('scroll', S.ui.sealedChip(techName(v.sealed.techniqueId), v.sealed.turns), 'good', St.sealed);
-    // Golpe carregado: aviso para todos. Gênio (Nara): vê a próxima ação.
-    if (v.charging) add('warning', S.ui.charging(techName(v.charging)), 'bad', St.charging);
-    else if (s.player.passive === 'genius' && v.intent) {
-      const what = v.intent.kind === 'rest' ? S.ui.intentRest : techName(v.intent.id);
-      add('intent', S.ui.intent(what), '', St.intent);
+    if (v.skipNext === 'seal') add('scroll', R.actives.seal!.name, 'good', R.actives.seal!);
+    // Gênio (Nara): vê a próxima ação do vilão.
+    if (kitOf(s.player, rdata).passive === 'genius' && v.intent) {
+      const what = v.intent.kind === 'rest' ? R.ui.intentRest : techName(v.intent.id);
+      add('intent', R.ui.intent(what), '', St.intent);
     }
     return out.map(conditionChip).join('');
   }
-  const fx = s.playerFx;
-  out.push(...fxConditions(fx, 'bad'));
-  if (fx.dojutsuActive && s.player.dojutsu) {
-    const d = S.dojutsu[s.player.dojutsu]!;
-    add(s.player.dojutsu, S.ui.dojutsuOn(d.name, fx.dojutsuTurns), 'good', { name: d.name, desc: d.desc });
+  const fx = s.fx;
+  out.push(...effectChips(fx.effects, 'bad'));
+  if (fx.buff) {
+    const a = R.actives[fx.buff.kind]!;
+    add(RACTIVE_ICONS[fx.buff.kind] ?? 'ninjutsu', R.ui.buffOn(a.name, fx.buff.turns), 'good', a);
   }
-  if (fx.gatesTurns > 0) add('gates', S.ui.gatesOn(S.gatesStage(fx.gatesStage), fx.gatesTurns), 'good', St.gates);
-  if (fx.expansionTurns > 0) add('expansion', S.ui.expansionOn(fx.expansionTurns), 'good', St.expansion);
-  if (fx.effortTurns > 0) add('weights', S.ui.effortOn(fx.effortTurns), 'good', St.effort);
-  if (fx.beastTurns > 0) add('beast', S.ui.beastOn(fx.beastTurns), 'good', St.beast);
-  if (fx.plagueTurns > 0) add('poison', S.ui.plagueOn(fx.plagueTurns), 'good', St.plague);
-  if (fx.pillTurns > 0 && fx.pill) add('pill', S.ui.pillOn(S.pills[fx.pill] ?? fx.pill, fx.pillTurns), 'good', St.pill);
-  if (fx.exhaustedTurns > 0) add('heartbreak', S.ui.exhausted(fx.exhaustedTurns), 'bad', St.exhausted);
-  if (fx.copied) add('sharingan', S.ui.copiedChip(techName(fx.copied)), 'good', St.copied);
-  if (fx.clonesArmed) add('clones', S.ui.clonesArmed, 'good', St.clones);
-  if (fx.armorTurns > 0) add('armor', S.ui.armorOn(fx.armorTurns), 'good', St.armor);
-  if (fx.stance) add('stance', S.ui.stanceOn, 'good', St.stance);
-  if (fx.dodge) add('dodge', S.ui.dodge, 'good', St.dodge);
+  if (fx.cloakTurns > 0) add('cloak', R.ui.buffOn(R.passives.jinchuuriki!.name, fx.cloakTurns), 'good', R.passives.jinchuuriki!);
+  if (fx.vitalTurns > 0) add('heart', R.ui.buffOn(R.passives.vitalForce!.name, fx.vitalTurns), 'good', R.passives.vitalForce!);
+  if (fx.guarding) add('stance', R.ui.guard, 'good', { name: R.ui.guard, desc: R.ui.guardTip });
+  if (fx.dodgeNext) add('dodge', S.ui.dodge, 'good', St.dodge);
+  if (fx.shield > 0) add('sandArmor', `${fx.shield}`, 'good', R.ui.shieldTip);
   add('willOfFire', `×${s.player.revives}`, '', St.revives);
   return out.map(conditionChip).join('');
 }
@@ -1398,146 +1365,46 @@ function actionCell(o: {
 const ITEM_ICONS: Record<ConsumableId, string> = { soldierPill: 'pill', medKit: 'kit', explosiveTag: 'tag', smokeBomb: 'smoke' };
 
 /** Custo em chakra da placa; fica vermelho quando o chakra atual não paga. */
-const costTag = (s: BattleState, n: number) => `<span class="cost${n > s.player.chakra ? ' short' : ''}">${S.ui.cost(n)}</span>`;
+const costTag = (s: RBattle, n: number) => `<span class="cost${n > s.player.chakra ? ' short' : ''}">${S.ui.cost(n)}</span>`;
 
-function actionButton(s: BattleState, action: PlayerAction, enabled: boolean): string {
+/** Botão de técnica: ícone, nome, dano×golpes, chance de acerto e custo. Efeitos e regras ficam na dica. */
+function techButton(s: RBattle, t: RTechniqueDef, enabled: boolean): string {
+  const odds = playerAttackOdds(s, t, rdata);
+  const dmg = playerHitDamage(s, t, rdata);
+  const look = techLook(t.type, t.element ?? null);
+  return actionCell({
+    choice: `tech:${t.id}`,
+    cls: `act-${t.type} ${look.cls}`,
+    style: look.style,
+    ico: icon(techIconName(t.type, t.element ?? null)),
+    title: esc(techName(t.id)),
+    extra: `${R.ui.techLine(dmg, t.hits ?? 1, Math.round(odds.hit * 100))} · ${costTag(s, techCost(s, t, rdata))}`,
+    tip: rTechTip(s.player, t),
+    enabled: enabled && canUseTechnique(s, t, rdata),
+  });
+}
+
+/** Todas as ações numa grade só: técnicas, Defender, Concentrar e os itens da bolsa. */
+function actionGrid(s: RBattle, enabled: boolean): string {
   const p = s.player;
-  const A = S.tips.actions;
-  let title = S.actions[action] ?? action;
-  let sub = '';
-  let extra = '';
-  let cls = `act-${action}`;
-  let style = '';
-  let ico = icon(action);
-  let tipAttr = '';
-  const techId = actionTechniqueId(action);
-  const itemId = actionItemId(action);
-  if (techId) {
-    const tech = playerTechnique(p, techId, data);
-    const look = techLook(tech.type, tech.element);
-    title = esc(techName(techId));
-    cls = `act-${tech.type} ${look.cls}`;
-    style = look.style;
-    ico = techIcon(p, techId);
-    tipAttr = playerTechTip(p, techId);
-    if (tech.devour) {
-      const prev = devourPreview(s, data);
-      extra = `${S.ui.devourHint(prev.insects, Math.round(prev.pct * 1000) / 10, prev.damage, prev.chakra, prev.kept)} · ${costTag(s, techniqueCost(s, tech, data))}`;
-    } else if (tech.shadowStrangle) {
-      extra = `${S.ui.strangleHint(shadowStrangleDamage(s, data))} · ${costTag(s, tech.chakraCost)}`;
-    } else if (isIllusion(tech)) {
-      extra = `${S.ui.techLine(tech.baseDamage, 1, null)} · ${costTag(s, tech.chakraCost)}`;
-      if (tech.mental) sub = S.ui.mentalStrength(tech.mentalStrength ?? 1);
-    } else if (tech.mental) {
-      extra = `${S.ui.mentalStrength(tech.mentalStrength ?? 1)} · ${costTag(s, tech.chakraCost)}`;
-    } else if (tech.barrier !== undefined) {
-      extra = `${S.ui.barrierHint(tech.barrier, Boolean(tech.reflectPct))} · ${costTag(s, tech.chakraCost)}`;
-    } else if (tech.state) {
-      extra = costTag(s, tech.chakraCost);
-    } else {
-      // Dano base e precisão base da técnica; a vantagem elemental aparece só como seta.
-      const prev = attackPreview(s, techId, data);
-      const elMark = prev.elementMult > 1 ? ` <span class="adv">${icon('advantage')}</span>` : prev.elementMult < 1 ? ` <span class="dis">${icon('disadvantage')}</span>` : '';
-      const accuracy = Math.round((tech.accuracy ?? data.balance.hit.defaultAccuracy) * 100);
-      extra = `${S.ui.techLine(tech.baseDamage, prev.hits, accuracy)}${elMark} · ${costTag(s, tech.chakraCost)}`;
-    }
-    if (tech.chakraDrain) sub = S.ui.drain(tech.chakraDrain);
-  } else if (itemId) {
-    const it = S.consumables[itemId]!;
-    title = `${it.name} ×${p.bag[itemId]}`;
-    cls = 'act-item';
-    ico = icon(ITEM_ICONS[itemId]);
-    tipAttr = tip(it.name, it.desc);
-  } else if (action === 'stance') {
-    tipAttr = tip(title, A.stance);
-  } else if (action === 'pass') {
-    tipAttr = tip(title, A.pass);
-  } else if (action === 'medical') {
-    const tech = playerMedical(p, data);
-    if (tech) {
-      const heal = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * medicalHealPct(p, data)));
-      sub = esc(techName(tech.id));
-      extra = `+${heal} HP · ${costTag(s, tech.chakraCost)}`;
-      tipAttr = playerTechTip(p, tech.id);
-    }
-  } else if (action === 'rest') {
-    const n = restChakra(p, data);
-    extra = `+${n} ck`;
-    tipAttr = tip(title, A.rest(n));
-  }
-  return actionCell({ choice: action, cls, style, ico, title, sub, extra, tip: tipAttr, enabled });
+  const techs = playerTechniques(p, rdata).map((t) => techButton(s, t, enabled));
+  const restN = Math.min(p.maxChakra - p.chakra, Math.max(1, Math.floor(p.maxChakra * rdata.r.rest.chakraPct)));
+  const guard = actionCell({ choice: 'guard', cls: 'act-stance', ico: icon('stance'), title: R.ui.guard, extra: '', tip: tip(R.ui.guard, R.ui.guardTip), enabled });
+  const rest = actionCell({ choice: 'rest', cls: 'act-rest', ico: icon('rest'), title: R.ui.rest, extra: `+${restN} ck`, tip: tip(R.ui.rest, R.ui.restTip(restN)), enabled });
+  const items = CONSUMABLES.filter((id) => p.bag[id] > 0).map((id) => {
+    const it = S.consumables[id]!;
+    return actionCell({ choice: `item:${id}`, cls: 'act-item', ico: icon(ITEM_ICONS[id]), title: `${it.name} ×${p.bag[id]}`, extra: '', tip: tip(it.name, it.desc), enabled });
+  });
+  return `<div class="act-grid">${[...techs, guard, rest, ...items].join('')}</div>`;
 }
 
-type ActionTab = AttackType | 'special' | 'items';
-
-/** Abas de categoria que o jogador usa (taijutsu, ninjutsu, genjutsu), a de ações especiais e a da bolsa. */
-function actionTabs(s: BattleState): ActionTab[] {
-  const copiedType = s.playerFx.copied ? data.techniquesById[s.playerFx.copied]?.type : undefined;
-  const types = (['taijutsu', 'ninjutsu', 'genjutsu'] as AttackType[]).filter((t) => canUseType(s.player, t, data) || t === copiedType);
-  const items = CONSUMABLES.some((id) => s.player.bag[id] > 0);
-  return [...types, 'special', ...(items ? (['items'] as const) : [])];
-}
-
-/** Botões da aba: técnicas da categoria (as que exigem dōjutsu só aparecem com ele ativo) ou as especiais. */
-function actionList(s: BattleState, tab: ActionTab): PlayerAction[] {
-  const p = s.player;
-  if (tab === 'items') return CONSUMABLES.filter((id) => p.bag[id] > 0).map(itemAction);
-  if (tab !== 'special') {
-    const list = attackTechniques(p, data)
-      .filter((t) => t.type === tab && (!t.requiresDojutsu || canUseTechnique(s, { ...t, chakraCost: 0 })))
-      .map((t) => techAction(t.id));
-    // Técnica copiada pelo Sharingan: fica na aba do tipo dela até o fim da luta.
-    const copied = s.playerFx.copied ? data.techniquesById[s.playerFx.copied] : undefined;
-    if (copied?.type === tab) list.push(techAction(copied.id));
-    return list;
-  }
-  const list: PlayerAction[] = [];
-  if (playerMedical(p, data)) list.push('medical');
-  list.push('rest', 'stance');
-  return list;
-}
-
-/** Painel de reação: Resistir em destaque, com as chances de cada outra opção. */
-function reactionButton(s: BattleState, pending: PendingReaction, choice: ReactionChoice): string {
-  const prev = reactionPreview(s, pending.incoming, choice, data);
-  const A = S.tips.actions;
-  switch (prev.kind) {
-    case 'resist':
-      return actionCell({
-        choice,
-        cls: 'react',
-        primary: true,
-        ico: icon('stance'),
-        title: S.ui.reactResist,
-        extra: S.ui.reactResistHint,
-        tip: tip(S.ui.reactResist, A.resist),
-      });
-    case 'substitution':
-      return actionCell({
-        choice,
-        cls: 'react act-substitution',
-        ico: icon('substitution'),
-        title: S.ui.reactSubstitution,
-        extra: S.ui.reactSubstitutionHint(prev.usesLeft, prev.decoy),
-        tip: tip(S.ui.reactSubstitution, A.substitution),
-      });
-    case 'clash': {
-      const id = reactionTechniqueId(choice)!;
-      const tech = playerTechnique(s.player, id, data);
-      const look = techLook(tech.type, tech.element);
-      const title = S.ui.reactClash(esc(techName(id)));
-      const [lose, , win] = prev.odds;
-      return actionCell({
-        choice,
-        cls: `react ${look.cls}`,
-        style: look.style,
-        ico: techIcon(s.player, id),
-        title,
-        extra: `${S.ui.reactClashHint(win > lose + 0.1 ? 'good' : lose > win + 0.1 ? 'bad' : 'even')} · ${S.ui.cost(tech.chakraCost)}`,
-        tip: tip(title, A.clash),
-      });
-    }
-  }
+/** Ativa da linhagem (grátis): botão próprio acima da grade, com os usos que sobram. */
+function activeButton(s: RBattle, enabled: boolean): string {
+  const kind = kitOf(s.player, rdata).active;
+  if (!kind || s.fx.activeUses <= 0) return '';
+  const a = R.actives[kind]!;
+  const ok = enabled && canUseActive(s, rdata);
+  return `<div class="free-row"><button class="btn focus-btn" data-active ${ok ? '' : 'aria-disabled="true"'}${tip(a.name, `${a.desc} ${R.ui.activeTip}`)}>${icon(RACTIVE_ICONS[kind] ?? 'ninjutsu')}<span>${R.ui.activeLabel(a.name, s.fx.activeUses)}</span></button></div>`;
 }
 
 /** Número/ícone que sobe sobre o HUD. `fx`: corte diagonal (crítico) ou imagem residual (esquiva). */
@@ -1557,17 +1424,16 @@ function floatNumber(card: HTMLElement | null, text: string, cls: string, fx?: '
   setTimeout(() => f.remove(), 1100);
 }
 
-async function battleScreen(setup: BattleSetup): Promise<BattleState> {
+async function battleScreen(setup: BattleSetup): Promise<RBattle> {
   const c = camp!;
-  const villain = scaleVillain(villainsById[setup.villainId]!, c.difficulty, data);
-  // A interface escolhe a reação do jogador: a rodada para quando há mais de uma opção.
-  let state = startBattle(c.player, villain, { ...setup.options, interactive: true }, data, rng);
+  const villain = setup.def ?? scaleVillain(villainsById[setup.villainId]!, c.difficulty, data);
+  let state = startRoletaBattle(c.player, villain, setup.options, rdata, rng);
   battlePlayer = () => state.player;
   battleReport = () => ({
     villain: villainName(setup.villainId),
     round: state.round,
     hp: state.villain.hp,
-    maxHp: state.villain.def.hp,
+    maxHp: state.villain.maxHp,
     chakra: state.villain.chakra,
     maxChakra: state.villain.def.chakra,
     // O log da tela tem o mais recente em cima.
@@ -1610,231 +1476,43 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     logEl.insertAdjacentHTML('afterbegin', `<li class="${cls}">${ico ? icon(ico) : ''}${text}</li>`);
     while (logEl.children.length > 30) logEl.lastElementChild!.remove();
   };
-  let kitOf: BattleState['villain']['def'] | null = state.villain.def;
-  const renderBadges = (s: BattleState) => {
+  let kitShown = state.villain.techniques;
+  const renderBadges = (s: RBattle) => {
     root.querySelector('#vbadges')!.innerHTML = badgesHtml(s, 'villain');
     root.querySelector('#pbadges')!.innerHTML = badgesHtml(s, 'player');
     root.querySelector('#vstats')!.innerHTML = villainLiveStats(s);
-    // O vilão pode trocar de ficha no meio da luta (Shukaku): refaz técnicas e passivas.
-    if (s.villain.def !== kitOf) {
-      kitOf = s.villain.def;
-      root.querySelector('#vkit')!.innerHTML = villainKit(s.villain.def);
-      root.querySelector('#vpassives')!.innerHTML = villainPassiveChips(s.villain.def);
+    // O vilão pode trocar de técnicas no meio da luta (Shukaku): refaz o kit.
+    if (s.villain.techniques !== kitShown) {
+      kitShown = s.villain.techniques;
+      root.querySelector('#vkit')!.innerHTML = villainKit(s.villain.def, s.villain.techniques);
     }
   };
-  let tab: ActionTab = 'taijutsu';
-  let current = state;
-  let enabledNow = false;
-  /** Escolhas grátis armadas para a próxima jogada (foco, clones, pavor). */
-  let extras: RoundExtras = {};
-  const renderActions = (s: BattleState, enabled: boolean) => {
-    current = s;
-    enabledNow = enabled;
-    // Ações e números como ficam com as escolhas grátis já marcadas (ex.: Sharingan aceso libera o Tsukuyomi).
-    const view = previewExtras(s, extras, data);
-    // A Cópia só depende do Sharingan: vale com ele aceso nesta mesma rodada.
-    const lit = extras.dojutsu ? previewExtras(s, { dojutsu: true }, data) : s;
-    const avail = availableActions(view, data);
-    // A ação já foi gasta numa reação: só o botão de passar a vez.
-    if (avail.length === 1 && avail[0] === 'pass') {
-      actionsEl.innerHTML = `<div class="act-grid">${actionButton(s, 'pass', enabled)}</div>`;
-      return;
-    }
-    const tabs = actionTabs(view);
-    if (!tabs.includes(tab)) tab = tabs[0]!;
-    const tabLabel = (t: ActionTab) => (t === 'special' ? S.ui.special : t === 'items' ? S.ui.bag : S.actions[t]);
-    const tabIcon = (t: ActionTab) => icon(t === 'special' ? 'swords' : t === 'items' ? 'item' : t);
-    const tabTip = (t: ActionTab) => {
-      const info = S.tips.types[t];
-      return info ? tip(info.name, info.desc) : '';
-    };
-    const tabsHtml = `<div class="act-tabs" role="tablist">${tabs
-      .map((t) => `<button class="act-tab tab-${t}${t === tab ? ' on' : ''}" role="tab" aria-selected="${t === tab}" data-tab="${t}"${tabTip(t)}>${tabIcon(t)}<span>${tabLabel(t)}</span></button>`)
-      .join('')}</div>`;
-    const buttons = actionList(view, tab)
-      .map((a) => actionButton(view, a, enabled && avail.includes(a)))
-      .join('');
-    /** Botão simples: nome (e um número curto em `small`, como o HP dos portões); a explicação fica só na dica. */
-    const toggle = (key: keyof RoundExtras, ico: string, label: string, armedLabel: string, hint: string, small = '') =>
-      `<button class="btn focus-btn${extras[key] ? ' on' : ''}" data-extra="${key}" aria-pressed="${Boolean(extras[key])}" ${enabled ? '' : 'aria-disabled="true"'}${tip(label, hint)}>${icon(ico)}<span>${extras[key] ? armedLabel : label}${small ? `<small>${small}</small>` : ''}</span></button>`;
-    /** Dōjutsu, portões e expansão: ativas grátis (não gastam o turno). */
-    /** A ativa aparece se há chakra para ela junto com as outras já marcadas (ou se já está marcada). */
-    const affordable = (st: BattleState, kind: FreeActive): boolean => Boolean(extras[kind]) || canFreeActive(st, kind, 'pass', data, extras);
-    const freeActiveToggle = (st: BattleState, kind: 'dojutsu' | 'gates' | 'expansion'): string => {
-      const p = st.player;
-      const cost = freeActiveCost(st, kind, data);
-      if (cost === null || !affordable(st, kind)) return '';
-      if (kind === 'dojutsu' && p.dojutsu) {
-        const stage = sharinganStage(p, data);
-        const name = S.dojutsu[p.dojutsu]!.name;
-        const label = S.ui.activeFree(stage ? `${name} (${S.sharinganStage(stage)})` : name, cost);
-        return toggle('dojutsu', p.dojutsu, label, `${name}${ARMED}`, S.ui.activeFreeHint);
-      }
-      if (kind === 'gates') {
-        const gates = gatesToOpen(p, data)!;
-        const hp = `−${gatesHpCost(p, gates.hpCostPct)} HP`;
-        return toggle('gates', 'gates', S.ui.activeFree(S.gatesStage(gates.stage), cost), `${S.gatesStage(gates.stage)}${ARMED}`, `${hp} · ${S.ui.activeFreeHint}`, hp);
-      }
-      const hint = `${S.ui.expansionHint} · ${S.ui.activeFreeHint}`;
-      return toggle('expansion', 'expansion', S.ui.activeFree(S.actives.expansion!.name, cost), `${S.actives.expansion!.name}${ARMED}`, hint);
-    };
-    /** Ativas de linhagem com botão próprio (Esforço, Fera, Praga, Transmissão, Cópia, Selamento, Pílulas). */
-    const lineageActiveToggle = (
-      st: BattleState,
-      kind: 'effort' | 'beast' | 'plague' | 'drunkenFist' | 'transmission' | 'copy' | 'seal' | 'pills',
-    ): string => {
-      const p = st.player;
-      const cost = freeActiveCost(st, kind, data);
-      if (cost === null || !affordable(st, kind)) return '';
-      if (kind === 'copy') {
-        const label = S.ui.copyFree(cost);
-        return toggle('copy', 'sharingan', label, `${S.actives.copy!.name}${ARMED}`, S.ui.copyHint(techName(copyTarget(st)!)));
-      }
-      if (kind === 'seal') {
-        const left = activeUses(p, 'seal', data) - st.playerFx.sealUsed;
-        const target = sealTarget(st)!;
-        // O alvo só aparece para quem vê a intenção (Gênio) ou quando é um golpe carregado.
-        const hint = st.villain.charging ? S.ui.sealHint(techName(target)) : S.ui.sealHintHidden;
-        return toggle('seal', 'scroll', S.ui.sealFree(cost, left), `${S.actives.seal!.name}${ARMED}`, hint);
-      }
-      if (kind === 'pills') return toggle('pills', 'pill', S.ui.pillsFree, `${S.ui.pillsFree}${ARMED}`, S.ui.pillsHint);
-      const name = S.actives[kind]!.name;
-      if (kind === 'effort') {
-        const left = activeUses(p, 'effort', data) - st.playerFx.effortUsed;
-        return toggle('effort', 'weights', S.ui.effortFree(left), `${name}${ARMED}`, S.ui.activeFreeHint);
-      }
-      if (kind === 'plague') return toggle('plague', 'poison', S.ui.activeFree(name, cost), `${name}${ARMED}`, S.actives.plague!.desc);
-      if (kind === 'drunkenFist') return toggle('drunkenFist', 'dice', S.ui.activeFree(name, cost), `${name}${ARMED}`, S.actives.drunkenFist!.desc);
-      if (kind === 'transmission') {
-        const left = activeUses(p, 'transmission', data) - st.playerFx.transmissionUsed;
-        const label = S.ui.transmissionFree(cost, left);
-        return toggle('transmission', 'intent', label, `${name}${ARMED}`, S.ui.transmissionHint(techName(st.villain.charging!)));
-      }
-      return toggle('beast', 'beast', S.ui.activeFree(name, cost), `${name}${ARMED}`, S.actives.beast!.desc);
-    };
-    /** Forçar os portões (prodígio): só junto com a abertura, se há um portão além do liberado. */
-    const forceGatesToggle = (st: BattleState): string => {
-      if (!extras.gates || !forcedGate(st.player, data)) return '';
-      const next = forcedGate(st.player, data)!;
-      const hint = S.ui.forceGatesHint(S.gatesStage(next.stage));
-      const label = S.ui.forceGates;
-      return toggle('forceGates', 'gates', label, `${label}${ARMED}`, hint);
-    };
-    const free = [
-      canFocus(s) ? toggle('focus', 'focus', S.ui.focus, S.ui.focusArmed, S.ui.focusHint) : '',
-      freeActiveCost(s, 'clones', data) !== null && affordable(s, 'clones')
-        ? toggle('clones', 'clones', `${S.ui.clones} · ${S.ui.cost(data.balance.shadowClones.chakraCost)}`, S.ui.clonesArmed, S.ui.clonesHint)
-        : '',
-      freeActiveToggle(s, 'dojutsu'),
-      freeActiveToggle(s, 'gates'),
-      freeActiveToggle(s, 'expansion'),
-      lineageActiveToggle(s, 'effort'),
-      lineageActiveToggle(s, 'beast'),
-      lineageActiveToggle(s, 'plague'),
-      lineageActiveToggle(s, 'drunkenFist'),
-      lineageActiveToggle(s, 'transmission'),
-      lineageActiveToggle(lit, 'copy'),
-      lineageActiveToggle(s, 'seal'),
-      lineageActiveToggle(s, 'pills'),
-      forceGatesToggle(s),
-      canGenius(s, data)
-        ? toggle('genius', 'intent', S.ui.genius, S.ui.geniusArmed, S.ui.geniusHint(geniusUses(s.player, data) - s.playerFx.geniusUsed))
-        : '',
-    ].join('');
-    // Mente no controle (Yamanaka): com o vilão possuído, escolhe a técnica que ele usa em si mesmo.
-    const possess =
-      s.player.passive === 'mindReading' && s.villain.fx.possessed
-        ? possessionOptions(s)
-            .map((t) => {
-              const on = extras.possession === t.id;
-              const label = S.ui.possessionOption(techName(t.id), t.baseDamage * (t.hits ?? 1), t.chakraCost);
-              return `<button class="btn focus-btn${on ? ' on' : ''}" data-possess="${t.id}" aria-pressed="${on}" ${enabled ? '' : 'aria-disabled="true"'}${tip(S.passives.mindReading!.name, S.ui.possessionPick)}>${icon('genjutsu')}<span>${label}</span></button>`;
-            })
-            .join('')
-        : '';
-    actionsEl.innerHTML = `${tabsHtml}${free || possess ? `<div class="free-row">${free}${possess}</div>` : ''}<div class="act-grid">${buttons}</div>`;
+  const renderActions = (s: RBattle, enabled: boolean) => {
+    actionsEl.innerHTML = `${activeButton(s, enabled)}${actionGrid(s, enabled)}`;
   };
-  actionsEl.addEventListener('click', (e) => {
-    const possess = (e.target as HTMLElement).closest<HTMLElement>('[data-possess]');
-    if (possess && enabledNow && !isOff(possess)) {
-      const id = possess.dataset.possess!;
-      const { possession: _, ...rest } = extras;
-      extras = extras.possession === id ? rest : { ...rest, possession: id };
-      renderActions(current, enabledNow);
-      return;
-    }
-    const extra = (e.target as HTMLElement).closest<HTMLElement>('[data-extra]');
-    if (extra && enabledNow && !isOff(extra)) {
-      const key = extra.dataset.extra as keyof RoundExtras;
-      extras = { ...extras, [key]: !extras[key] };
-      // Sem o Sharingan, a Cópia marcada nesta rodada cai junto.
-      if (key === 'dojutsu' && !extras.dojutsu && !freeActiveCost(current, 'copy', data)) extras.copy = false;
-      renderActions(current, enabledNow);
-      return;
-    }
-    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-tab]');
-    if (!t) return;
-    tab = t.dataset.tab as ActionTab;
-    renderActions(current, enabledNow);
-  });
   renderBadges(state);
   if (setup.options.villainStartsFirst) log(S.ui.villainFirst, 'sys');
   if (setup.options.playerStartsFirst) log(S.ui.playerFirst, 'sys');
-
-  /** O vilão atacou e há escolha: Resistir em destaque, Substituição, disputa ou barreira. */
-  const chooseReaction = async (s: BattleState, pending: PendingReaction): Promise<{ choice: ReactionChoice; copy: boolean }> => {
-    const tech = techName(pending.incoming.techniqueId);
-    const charged = pending.incoming.charged ? ` <span class="chip bad">${S.ui.charged}</span>` : '';
-    const def = s.villain.def.techniques.find((t) => t.id === pending.incoming.techniqueId);
-    const techTip = def ? villainTechTip(s.villain.def, def) : '';
-    // Cópia (Uchiha): escolha grátis junto com a reação.
-    let copy = false;
-    const copyBtn = canCopyIncoming(s, data)
-      ? `<div class="free-row"><button class="btn focus-btn" data-copy aria-pressed="false"${tip(S.actives.copy!.name, S.ui.copyReactHint)}>${icon('sharingan')}<span>${S.ui.copyReact(data.balance.copy.chakraCost)}</span></button></div>`
-      : '';
-    actionsEl.innerHTML = `<div class="react-box"><div class="react-head">${villainPortrait(s.villain.def.id, 'sm')}<h3><span class="react-tech"${techTip}>${S.ui.reactTitle(villainName(s.villain.def.id), esc(tech))}</span> ${elChip(pending.incoming.element)}${charged}</h3></div>
-      ${copyBtn}<div class="act-grid">${pending.options.map((o) => reactionButton(s, pending, o)).join('')}</div></div>`;
-    const btn = actionsEl.querySelector<HTMLElement>('[data-copy]');
-    btn?.addEventListener('click', () => {
-      copy = !copy;
-      btn.classList.toggle('on', copy);
-      btn.setAttribute('aria-pressed', String(copy));
-    });
-    const choice = await choose<ReactionChoice>(actionsEl);
-    return { choice, copy };
-  };
+  // A iniciativa sai no começo da luta (uma roleta só).
+  await animate(state.log, state);
 
   while (state.status === 'ongoing') {
     renderActions(state, true);
-    const action = await choose<PlayerAction>(actionsEl);
+    const btn = await new Promise<HTMLElement>((resolve) => {
+      const onClick = (e: Event) => {
+        const b = (e.target as HTMLElement).closest<HTMLElement>('[data-choice],[data-active]');
+        if (!b || isOff(b)) return;
+        actionsEl.removeEventListener('click', onClick);
+        resolve(b);
+      };
+      actionsEl.addEventListener('click', onClick);
+    });
     renderActions(state, false);
-    // Só valem as escolhas grátis que combinam com a ação: cada ativa precisa de chakra para ela, para a
-    // ação e para as que já entraram (na ordem do dōjutsu, portões, expansão e clones).
-    const chosen: RoundExtras = {
-      focus: Boolean(extras.focus) && canFocus(state),
-      genius: Boolean(extras.genius) && canGenius(state, data),
-    };
-    if (extras.possession) chosen.possession = extras.possession;
-    chosen.forceGates = Boolean(extras.forceGates);
-    for (const k of FREE_ACTIVES) {
-      const base = k === 'copy' && chosen.dojutsu ? previewExtras(state, { dojutsu: true }, data) : state;
-      chosen[k] = Boolean(extras[k]) && canFreeActive(base, k, action, data, chosen);
-    }
-    chosen.forceGates = Boolean(chosen.gates && chosen.forceGates);
-    let next = playRound(state, action, rng, data, chosen);
-    // O foco vale só para a jogada; os clones armados ficam no estado da luta.
-    extras = {};
-    await animateRound(state, next);
+    let next: RBattle;
+    if (btn.hasAttribute('data-active')) next = useActive(state, rdata, rng);
+    else next = playRoletaRound(state, btn.dataset.choice as RAction, rdata, rng);
+    await animate(next.log.slice(state.log.length), next, state);
     state = next;
-    // A rodada parou esperando a reação do jogador: escolhe e continua (pode parar de novo, ex.: Espelhos).
-    while (state.pending) {
-      renderBadges(state);
-      const { choice, copy } = await chooseReaction(state, state.pending);
-      renderActions(state, false);
-      next = resumeRound(state, choice, rng, data, undefined, { copy });
-      await animateRound(state, next);
-      state = next;
-    }
     renderBadges(state);
   }
 
@@ -1847,9 +1525,7 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   const xpLine = won ? `<p class="xp-gain pop">${S.ui.xpGained(xpGain(state.player, villainsById[setup.villainId]!.xp, data))}</p>` : '';
   // A vitória devolve parte do HP e do chakra (aplicado no fluxo da campanha).
   const healed = won ? recoverAfterWin(state.player, data) : null;
-  const recoverLine = healed
-    ? `<p class="muted">${S.ui.recoveredAfterWin(healed.hp - state.player.hp, healed.chakra - state.player.chakra)}</p>`
-    : '';
+  const recoverLine = healed ? `<p class="muted">${S.ui.recoveredAfterWin(healed.hp - state.player.hp, healed.chakra - state.player.chakra)}</p>` : '';
   overlay.innerHTML = `<div class="overlay ${won ? 'win' : 'lose'}"><div><span class="seal stamp end-mark${won ? ' gold' : ''}" aria-hidden="true">${won ? '勝' : '敗'}</span><h2>${msg}</h2>${xpLine}${recoverLine}
     <p class="muted">${S.ui.round(state.round)}</p>
     <button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div></div>`;
@@ -1857,388 +1533,46 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
   await choose(overlay);
   return state;
 
-  async function animateRound(prev: BattleState, next: BattleState) {
-    const events = next.log.slice(prev.log.length);
-    const p0 = prev.player;
-    const disp = { php: p0.hp, pck: p0.chakra, vhp: prev.villain.hp, vck: prev.villain.chakra };
+  /** Anima os eventos novos, mostrando as barras a partir do estado anterior. */
+  async function animate(events: REvent[], next: RBattle, prev: RBattle = next) {
+    const disp = { php: prev === next ? next.player.hp : prev.player.hp, pck: prev.player.chakra, vhp: prev.villain.hp, vck: prev.villain.chakra };
     const sync = () => {
       setBar(pcard, 'hp', disp.php, next.player.maxHp);
       setBar(pcard, 'ck', disp.pck, next.player.maxChakra);
       const vc = vcard();
       if (vc) {
-        setBar(vc, 'hp', disp.vhp, next.villain.def.hp);
+        setBar(vc, 'hp', disp.vhp, next.villain.maxHp);
         setBar(vc, 'ck', disp.vck, next.villain.def.chakra);
       }
     };
     const who = (side: 'player' | 'villain') => (side === 'player' ? S.log.you : villainName(next.villain.def.id));
-    let critForced = false;
-    let villainCritForced = false;
-
+    const card = (side: 'player' | 'villain') => (side === 'player' ? pcard : vcard());
+    const RL = R.log;
     for (const ev of events) {
       switch (ev.type) {
         case 'round':
           root.querySelector('#round')!.textContent = S.ui.round(ev.round);
           log(`— ${S.ui.round(ev.round)} —`, 'round');
           continue;
-        case 'ambush':
-          log(S.log.ambush, 'good');
-          break;
-        case 'late':
-          log(S.log.late, 'bad');
-          break;
-        case 'initiative': {
-          const slices = [{ weight: ev.playerChance }, { weight: 1 - ev.playerChance }];
-          await stripRoulette(
-            dice,
-            S.roulettes.initiative,
-            [
-              { label: S.sliceLabels.player!, weight: slices[0]!.weight, color: SIDE_COLORS.player },
-              { label: villainName(prev.villain.def.id), weight: slices[1]!.weight, color: SIDE_COLORS.villain },
-            ],
-            ev.first === 'player' ? 0 : 1,
-            pace.strip(),
-          );
-          log(S.log.initiative(who(ev.first)));
-          break;
-        }
-        case 'skip':
-          log(S.log.skip[ev.reason]!(who(ev.side)), 'sys', LOG_ICONS.skip[ev.reason]);
-          break;
-        case 'priority':
-          log(S.log.priority, 'good');
-          break;
-        case 'charge':
-          disp.vck -= ev.chakra;
-          floatNumber(vcard(), icon('warning'), 'crit');
-          log(S.log.charge(who('villain'), techName(ev.techniqueId)), 'bad', 'warning');
-          break;
-        case 'chargeRelease':
-          log(S.log.chargeRelease(who('villain'), techName(ev.techniqueId)), 'bad');
-          break;
-        case 'wake':
-          log(S.log.wake(who(ev.side)), 'sys');
-          break;
-        case 'confusionFail':
-          if (ev.side === 'villain') disp.vhp -= ev.selfHit;
-          else disp.php -= ev.selfHit;
-          if (ev.selfHit > 0) floatNumber(ev.side === 'villain' ? vcard() : pcard, `−${ev.selfHit} ${icon('confusion')}`, 'dmg');
-          log(S.log.confusionFail(who(ev.side), ev.selfHit), ev.side === 'villain' ? 'good' : 'bad', 'confusion');
-          break;
-        case 'torment':
-          if (ev.side === 'villain') disp.vck -= ev.chakra;
-          else disp.pck -= ev.chakra;
-          log(S.log.torment(who(ev.side), ev.chakra), ev.side === 'villain' ? 'good' : 'bad');
-          break;
-        case 'mental':
-          log(S.log.mental[ev.effect]!(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad', LOG_ICONS.mental[ev.effect]);
-          break;
-        case 'mentalBroken':
-          log(S.log.mentalBroken[ev.effect]!(who(ev.side)), ev.side === 'villain' ? 'bad' : 'good');
-          break;
-        case 'dodge':
-          floatNumber(pcard, icon('dodge'), 'miss', 'evade');
-          log(S.log.dodge[ev.source]!, 'good');
-          break;
-        case 'declare':
-          // O ataque anunciado aparece no log do acerto; aqui só gasta o chakra do vilão.
-          if (ev.side === 'villain') disp.vck -= ev.chakra;
-          else disp.pck -= ev.chakra;
-          continue;
-        case 'reaction': {
-          const mine = ev.side === 'player';
-          if (mine) disp.pck -= ev.chakra;
-          else disp.vck -= ev.chakra;
-          if (ev.kind === 'resist') continue;
-          const R = S.log.reaction;
-          const text =
-            ev.kind === 'passive'
-              ? R.passive(who(ev.side))
-              : ev.kind === 'substitution'
-                ? R.substitution(who(ev.side))
-                : R[ev.kind](who(ev.side), techName(ev.techniqueId ?? ''));
-          log(text, mine ? 'good' : 'bad');
-          break;
-        }
-        case 'substitutionRoll': {
-          const mine = ev.side === 'player';
-          await stripRoulette(
-            dice,
-            `${S.roulettes.substitution} · ${who(ev.side)}`,
-            [
-              { label: S.sliceLabels.dodged!, weight: ev.chance, color: SIDE_COLORS.hit },
-              { label: S.sliceLabels.failed!, weight: 1 - ev.chance, color: SIDE_COLORS.miss },
-            ],
-            ev.success ? 0 : 1,
-            pace.strip(),
-          );
-          if (ev.success) floatNumber(mine ? pcard : vcard(), icon('dodge'), 'miss', 'evade');
-          log(S.log.substitutionRoll(who(ev.side), ev.success), ev.success === mine ? 'good' : 'bad');
-          break;
-        }
-        case 'clash': {
-          // Cabo de guerra: a cor do elemento de cada lado e a anulação no meio.
-          const defender = ev.attacker === 'player' ? 'villain' : 'player';
-          const color = (side: 'player' | 'villain', id: string, fallback: string) => {
-            const el = techElement(next, side, id);
-            return el ? ELEMENT_COLORS[el] : fallback;
-          };
-          await stripRoulette(
-            dice,
-            S.roulettes.clash,
-            [
-              { label: techName(ev.attackTechnique), weight: ev.odds[0], color: color(ev.attacker, ev.attackTechnique, '#b5562c') },
-              { label: S.sliceLabels.cancel!, weight: ev.odds[1], color: SIDE_COLORS.miss },
-              { label: techName(ev.defenseTechnique), weight: ev.odds[2], color: color(defender, ev.defenseTechnique, '#3f5f9e') },
-            ],
-            ev.result === 'attacker' ? 0 : ev.result === 'cancel' ? 1 : 2,
-            pace.strip(),
-          );
-          const winnerSide = ev.result === 'attacker' ? ev.attacker : defender;
-          const text =
-            ev.result === 'cancel'
-              ? S.log.clash.cancel
-              : S.log.clash[ev.result](techName(ev.result === 'attacker' ? ev.attackTechnique : ev.defenseTechnique)) +
-                (ev.crushed ? S.log.clash.crushed : '');
-          log(text, ev.result === 'cancel' ? 'sys' : winnerSide === 'player' ? 'good' : 'bad');
-          break;
-        }
-        case 'clashHit':
-          if (ev.target === 'villain') disp.vhp -= ev.damage;
-          else disp.php -= ev.damage;
-          floatNumber(ev.target === 'villain' ? vcard() : pcard, `−${ev.damage}`, 'dmg');
-          log(S.log.clashHit(who(ev.target), ev.damage), ev.target === 'villain' ? 'mine' : 'theirs');
-          break;
-        case 'shield':
-          if (ev.side === 'player') disp.pck -= ev.chakra;
-          else disp.vck -= ev.chakra;
-          floatNumber(ev.side === 'player' ? pcard : vcard(), `${icon('barrier')} ${ev.points}`, 'heal');
-          log(S.log.shield(who(ev.side), techName(ev.techniqueId), ev.points), ev.side === 'player' ? 'good' : 'bad', 'barrier');
-          break;
-        case 'shieldHit': {
-          // O dano do golpe já saiu do HP na animação: devolve a parte que o escudo segurou.
-          const blocked = Math.round(ev.absorbed / ev.elementMult);
-          if (ev.side === 'player') disp.php += blocked;
-          else disp.vhp += blocked;
-          log(S.log.shieldHit(who(ev.side), ev.absorbed, ev.left, ev.elementMult > 1), ev.side === 'player' ? 'good' : 'bad');
-          break;
-        }
-        case 'shieldBreak':
-          log(S.log.shieldBreak(who(ev.side)), ev.side === 'player' ? 'bad' : 'good', 'blast');
-          break;
-        case 'shieldEnd':
-          log(S.log.shieldEnd(who(ev.side)), 'sys');
-          break;
-        case 'shieldReflect': {
-          const attacker = ev.side === 'player' ? 'villain' : 'player';
-          if (attacker === 'villain') disp.vhp -= ev.damage;
-          else disp.php -= ev.damage;
-          floatNumber(attacker === 'villain' ? vcard() : pcard, `−${ev.damage}`, 'dmg');
-          log(S.log.shieldReflect(ev.damage), ev.side === 'player' ? 'good' : 'bad');
-          break;
-        }
-        case 'possessed':
-          if (ev.side === 'villain') disp.vhp -= ev.damage;
-          else disp.php -= ev.damage;
-          floatNumber(ev.side === 'villain' ? vcard() : pcard, `−${ev.damage}`, 'dmg');
-          log(S.log.possessed(who(ev.side), techName(ev.techniqueId), ev.damage), ev.side === 'villain' ? 'good' : 'bad', 'mind');
-          break;
-        case 'geniusArmed':
-          log(S.log.geniusArmed, 'good', 'antlers');
-          break;
-        case 'genius':
-          log(S.log.genius(S.sliceLabels[ev.kept] ?? S.sliceLabels[ev.kept === 'true' ? 'yes' : ev.kept === 'false' ? 'no' : ev.kept] ?? ev.kept), 'good', 'antlers');
-          break;
-        case 'extinguish':
-          log(S.log.extinguish(who(ev.side)), ev.side === 'player' ? 'good' : 'bad');
-          break;
-        case 'stance':
-          log(S.log.stance, 'good');
-          break;
-        case 'armor':
-          disp.pck -= ev.chakra;
-          floatNumber(pcard, icon('armor'), 'heal');
-          log(S.log.armor, 'good');
-          break;
-        case 'armorEnd':
-          log(S.log.armorEnd, 'sys');
-          break;
-        case 'steamArmor':
-          disp.pck -= ev.chakra;
-          log(S.log.steamArmor, 'good');
-          break;
-        case 'drunkenFist':
-          log(S.log.drunkenFist, 'good', 'gourd');
-          break;
-        case 'drunkenFistEnd':
-          log(S.log.drunkenFistEnd, 'sys');
-          break;
-        case 'drunkenRoll':
-          log(S.log.drunkenRoll(ev.mult), ev.mult >= 1 ? 'good' : 'bad', 'gourd');
-          break;
-        case 'steamArmorEnd':
-          log(S.log.steamArmorEnd, 'sys');
-          break;
-        case 'steamBurn':
-          disp.vhp -= ev.damage;
-          floatNumber(vcard(), `−${ev.damage}`, 'dmg');
-          log(S.log.steamBurn(ev.damage), 'good', 'steam');
-          break;
-        case 'lifesteal':
-          disp.php += ev.hp;
-          floatNumber(pcard, `+${ev.hp}`, 'heal');
-          log(S.log.lifesteal(ev.hp), 'good', 'sprout');
-          break;
-        case 'cloakSuppressed':
-          log(S.log.cloakSuppressed, 'good', 'tree');
-          break;
-        case 'sandShield':
-          log(S.log.sandShield(ev.points), 'good', 'sandArmor');
-          break;
-        case 'item':
-          if (ev.item === 'soldierPill') disp.pck += ev.amount;
-          if (ev.item === 'explosiveTag') {
-            disp.vhp -= ev.amount;
-            floatNumber(vcard(), `−${ev.amount} ${icon('blast')}`, 'crit');
+        case 'initiative':
+          if (!ev.forced) {
+            await stripRoulette(
+              dice,
+              S.roulettes.initiative,
+              [
+                { label: S.sliceLabels.player!, weight: ev.chance, color: SIDE_COLORS.player },
+                { label: villainName(next.villain.def.id), weight: 1 - ev.chance, color: SIDE_COLORS.villain },
+              ],
+              ev.playerFirst ? 0 : 1,
+              pace.strip(),
+            );
           }
-          log(S.log.item[ev.item]!(ev.amount), 'good');
-          break;
-        case 'expansion':
-          disp.pck -= ev.chakra;
-          log(S.log.expansion, 'good');
-          break;
-        case 'expansionEnd':
-          log(S.log.expansionEnd, 'sys');
-          break;
-        case 'effort':
-          log(S.log.effort, 'good');
-          break;
-        case 'effortEnd':
-          log(S.log.effortEnd, 'sys');
-          break;
-        case 'beast':
-          disp.pck -= ev.chakra;
-          log(S.log.beast, 'good');
-          break;
-        case 'beastEnd':
-          log(S.log.beastEnd, 'sys');
-          break;
-        case 'plague':
-          disp.pck -= ev.chakra;
-          log(S.log.plague, 'good');
-          break;
-        case 'plagueEnd':
-          log(S.log.plagueEnd, 'sys');
-          break;
-        case 'vitalForce':
-          if (ev.start) {
-            log(S.log.vitalForce, 'good');
-            break;
-          }
-          disp.php += ev.hp;
-          disp.pck += ev.chakra;
-          if (ev.hp > 0) floatNumber(pcard, `+${ev.hp}`, 'heal');
-          log(S.log.vitalForceRegen(ev.hp, ev.chakra), 'good');
-          break;
-        case 'devour':
-          disp.vhp -= ev.damage;
-          if (ev.damage > 0) floatNumber(vcard(), `−${ev.damage}`, 'dmg');
-          disp.vck -= ev.chakra;
-          disp.pck += ev.gained;
-          if (ev.gained > 0) floatNumber(pcard, `+${ev.gained} ck`, 'ck');
-          log(S.log.devour(ev.insects, ev.damage, ev.chakra, ev.kept), 'good', 'bug');
-          break;
-        case 'copy':
-          disp.pck -= data.balance.copy.chakraCost;
-          log(S.log.copy(techName(ev.techniqueId), ev.success), ev.success ? 'good' : 'bad', 'sharingan');
-          break;
-        case 'seal':
-          disp.pck -= data.balance.seal.chakraCost;
-          log(S.log.seal(techName(ev.techniqueId), ev.turns, ev.charged), 'good', 'lock');
-          break;
-        case 'sealEnd':
-          log(S.log.sealEnd(techName(ev.techniqueId)), 'sys');
-          break;
-        case 'toad':
-          disp.vhp -= ev.damage;
-          floatNumber(vcard(), `−${ev.damage}`, 'dmg');
-          log(S.log.toad(ev.damage), 'good', 'toad');
-          break;
-        case 'glimmer':
-          log(S.log.glimmer, 'good');
-          break;
-        case 'strangle':
-          disp.vhp -= ev.damage;
-          floatNumber(vcard(), `−${ev.damage}`, 'dmg');
-          log(S.log.strangle(ev.damage), 'good');
-          break;
-        case 'pill':
-          disp.php -= ev.hpLost;
-          log(S.log.pill(S.pills[ev.pill] ?? ev.pill, ev.hpLost), 'good', 'pill');
-          break;
-        case 'pillEnd':
-          log(S.log.pillEnd(S.pills[ev.pill] ?? ev.pill, ev.exhausted), ev.exhausted ? 'bad' : 'sys');
-          break;
-        case 'exhaustedEnd':
-          log(S.log.exhaustedEnd, 'sys');
-          break;
-        case 'comeback':
-          disp.php += ev.healed;
-          log(S.log.comeback(ev.healed), 'good');
-          break;
-        case 'gatesForce':
-          disp.php -= ev.hpLost;
-          log(S.log.gatesForce(ev.success, ev.hpLost), ev.success ? 'good' : 'bad');
-          break;
-        case 'transmission':
-          disp.pck -= data.balance.transmission.chakraCost;
-          log(S.log.transmission(techName(ev.techniqueId), ev.success), ev.success ? 'good' : 'bad', 'mind');
-          break;
-        case 'clones':
-          disp.pck -= ev.chakra;
-          log(S.log.clones, 'good');
-          break;
-        case 'cloakCost':
-          if (ev.side === 'player') disp.pck -= ev.chakra;
-          else disp.vck -= ev.chakra;
-          log(S.log.cloakCost(who(ev.side), ev.chakra), 'sys');
-          break;
-        case 'cloakFade':
-          log(S.log.cloakFade(who(ev.side)), ev.side === 'villain' ? 'good' : 'bad');
-          break;
-        case 'villainHeal':
-          disp.vhp += ev.healed;
-          floatNumber(vcard(), `+${ev.healed}`, 'heal');
-          log(S.log.villainHeal(who('villain'), techName(ev.techniqueId), ev.healed), 'bad');
-          break;
-        case 'poisonUp':
-          log(S.log.poisonUp(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad', 'poison');
-          break;
-        case 'rest':
-          disp.pck += ev.chakra;
-          floatNumber(pcard, `+${ev.chakra} ck`, 'ck');
-          log(S.log.rest(ev.chakra));
-          break;
-        case 'gates':
-          disp.php -= ev.hpLost;
-          disp.pck -= ev.chakra;
-          floatNumber(pcard, `−${ev.hpLost}`, 'dmg');
-          log(S.log.gates(S.gatesStage(ev.stage), ev.hpLost, ev.chakra), 'good');
-          break;
-        case 'focus':
-          log(S.log.focus, 'good');
-          break;
-        case 'guaranteedCrit':
-          if (ev.side === 'player') critForced = true;
-          else villainCritForced = true;
-          log(S.log.guaranteedCrit(who(ev.side)), ev.side === 'player' ? 'good' : 'bad');
-          break;
-        case 'movementReading':
-          log(S.log.movementReading(ev.damageBefore, ev.damage), 'good');
+          log(S.log.initiative(who(ev.playerFirst ? 'player' : 'villain')));
           break;
         case 'attack': {
-          // O chakra do ataque já saiu no anúncio ('declare').
           const mine = ev.side === 'player';
-          if (!(mine ? critForced : villainCritForced)) {
+          // Golpe que não erra (Byakugan) ou fumaça: sem roleta de acerto.
+          if (!ev.auto && ev.hitChance > 0) {
             const hs = hitSlices(ev.hitChance, ev.critChance);
             await stripRoulette(
               dice,
@@ -2252,156 +1586,80 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
               pace.strip(),
             );
           }
-          if (mine) critForced = false;
-          else villainCritForced = false;
-          const el = ev.elementMult > 1 ? S.log.elementAdv : ev.elementMult < 1 ? S.log.elementDis : '';
-          const tech = techName(ev.techniqueId);
+          const tech = techName(ev.techId);
           if (ev.outcome === 'miss') {
-            log(S.log.attackMiss(who(ev.side), tech), 'muted');
+            log(RL.attackMiss(who(ev.side), tech), 'muted');
             floatNumber(mine ? vcard() : pcard, S.ui.floats.miss, 'miss', 'evade');
-          } else if ((ev.attackType === 'genjutsu' || data.techniquesById[ev.techniqueId]?.mental) && ev.damage === 0) {
-            log(S.log.genjutsuHit(who(ev.side), tech), mine ? 'mine' : 'theirs');
-          } else {
-            if (mine) disp.vhp -= ev.damage;
-            else disp.php -= ev.damage;
-            log(S.log.attackHit(who(ev.side), tech, ev.damage, ev.outcome === 'crit', el), mine ? 'mine' : 'theirs');
-            if (ev.outcome === 'crit') floatNumber(mine ? vcard() : pcard, `−${ev.damage}<small>${S.ui.floats.crit}</small>`, 'crit', 'slash');
-            else floatNumber(mine ? vcard() : pcard, `−${ev.damage}`, 'dmg');
           }
+          // O dano vem no evento 'damage' logo depois; ilusão sem dano só registra o acerto.
+          else if (!mine && (next.villain.techniques.find((t) => t.id === ev.techId)?.baseDamage ?? 1) <= 0) log(RL.genjutsuHit(who(ev.side), tech), 'theirs');
+          lastAttack = { side: ev.side, tech, crit: ev.outcome === 'crit' };
           break;
         }
-        case 'debilitate':
-          log(S.log.debilitate[ev.kind]!(who(ev.target), ev.turns ?? 0), ev.target === 'villain' ? 'good' : 'bad', LOG_ICONS.debilitate[ev.kind]);
-          break;
-        case 'genjutsuImmune':
-          log(S.log.genjutsuImmune(who(ev.target)), 'sys');
-          break;
-        case 'status':
-          log(S.log.status[ev.kind]!(who(ev.target)), ev.target === 'villain' ? 'good' : 'bad', LOG_ICONS.status[ev.kind]);
-          break;
-        case 'burnExtend':
-          log(S.log.burnExtend(who(ev.target), ev.turns), ev.target === 'villain' ? 'good' : 'bad');
-          break;
-        case 'burnTick':
-        case 'poisonTick': {
-          const tickIco = icon(ev.type === 'burnTick' ? 'fire' : 'poison');
-          if (ev.target === 'villain') disp.vhp -= ev.damage;
-          else disp.php -= ev.damage;
-          floatNumber(ev.target === 'villain' ? vcard() : pcard, `−${ev.damage} ${tickIco}`, 'dmg');
-          const text = ev.type === 'burnTick' ? S.log.burnTick : S.log.poisonTick;
-          log(text(who(ev.target), ev.damage), ev.target === 'villain' ? 'good' : 'bad');
+        case 'damage': {
+          const target = ev.side;
+          if (target === 'villain') disp.vhp -= ev.amount;
+          else disp.php -= ev.amount;
+          const crit = ev.crit === true;
+          if (ev.source === 'attack' && lastAttack) {
+            log(RL.attackHit(who(lastAttack.side), lastAttack.tech, ev.amount, crit), lastAttack.side === 'player' ? 'mine' : 'theirs');
+            lastAttack = null;
+          } else if (ev.source === 'burn' || ev.source === 'poison') log(RL.tick[ev.source]!(who(target), ev.amount), target === 'villain' ? 'good' : 'bad', EFFECT_ICONS[ev.source]);
+          else if (ev.source === 'toad') log(RL.toad(ev.amount), 'good', 'toad');
+          else if (ev.source === 'dog') log(RL.dog(ev.amount), 'good', 'beast');
+          else if (ev.source === 'tag') log(RL.tag(ev.amount), 'good', 'tag');
+          else if (ev.source === 'self') log(RL.selfHit(who(target), ev.amount), 'good', 'mind');
+          else if (ev.source === 'gates') log(RL.gates(ev.amount), 'good', 'gates');
+          if (crit) floatNumber(card(target), `−${ev.amount}<small>${S.ui.floats.crit}</small>`, 'crit', 'slash');
+          else floatNumber(card(target), `−${ev.amount}`, 'dmg');
           break;
         }
-        case 'burnOut':
-          log(S.log.burnOut(who(ev.target)), 'sys');
+        case 'shield':
+          log(RL.shield(ev.absorbed), 'good', 'sandArmor');
           break;
-        case 'poisonCured':
-          log(S.log.poisonCured(who(ev.target)), 'sys');
+        case 'heal':
+          if (ev.side === 'villain') disp.vhp += ev.amount;
+          else disp.php += ev.amount;
+          floatNumber(card(ev.side), `+${ev.amount}`, 'heal');
+          log(RL.heal(who(ev.side), ev.amount), ev.side === 'player' ? 'good' : 'bad');
           break;
-        case 'cloak':
-          if (ev.side === 'player') log(S.log.cloak.player, 'jin');
-          else {
-            const passive = next.villain.def.passive;
-            const variant = passive?.kind === 'cloak' ? passive.variant : 'beast';
-            log(S.log.cloak[variant](who('villain')), 'bad');
-          }
-          floatNumber(ev.side === 'player' ? pcard : vcard(), `${icon('cloak')} ${S.ui.floats.cloak}`, 'heal');
+        case 'effect':
+          log(RL.effect[ev.kind]!(who(ev.side)), ev.side === 'villain' ? 'good' : 'bad', EFFECT_ICONS[ev.kind]);
           break;
-        case 'cloakRegen':
-          if (ev.side === 'player') disp.php += ev.hp;
-          else disp.vhp += ev.hp;
-          floatNumber(ev.side === 'player' ? pcard : vcard(), `+${ev.hp}`, 'heal');
-          log(S.log.cloakRegen(who(ev.side), ev.hp), ev.side === 'player' ? 'good' : 'bad');
+        case 'skip':
+          log(RL.skip[ev.reason]!(who(ev.side)), 'sys', ev.reason === 'stun' ? 'stun' : ev.reason === 'seal' ? 'scroll' : 'mind');
           break;
-        case 'mist':
-          log(S.log.mist(ev.turns), 'bad', 'mist');
+        case 'dodge':
+          floatNumber(pcard, icon('dodge'), 'miss', 'evade');
+          log(RL.dodge, 'good');
           break;
-        case 'mistEnd':
-          log(S.log.mistEnd, 'sys');
-          break;
-        case 'trickster':
-          disp.vhp = 1;
-          log(S.log.trickster(who('villain'), ev.counterCrit), 'bad');
-          break;
-        case 'lastStand':
-          disp.vhp = ev.healed;
-          floatNumber(vcard(), `+${ev.healed}`, 'heal');
-          log(S.log.lastStand(ev.healed, ev.chakra), 'bad');
-          break;
-        case 'insaneTimer':
-          log(S.log.insaneTimer(who('villain'), ev.rounds), 'bad');
-          break;
-        case 'monster':
-          disp.vhp = ev.hp;
-          floatNumber(vcard(), `+${ev.hp}`, 'heal');
-          log(S.log.monster(ev.hp, ev.chakra), 'bad');
-          break;
-        case 'insaneRevive':
-          disp.vhp = ev.hp;
-          floatNumber(vcard(), `${icon('snake')} ${ev.hp}`, 'heal');
-          log(S.log.insaneRevive(who('villain'), ev.hp, ev.chakra), 'bad');
-          break;
-        case 'debilitateResisted':
-          log(S.log.debilitateResisted(who(ev.target)), 'sys');
-          break;
-        case 'regen':
-          disp.php += ev.hp;
-          disp.pck += ev.chakra;
-          log(S.log.regen(ev.hp, ev.chakra), 'good');
-          break;
-        case 'revive':
-          disp.php = next.player.maxHp;
-          disp.pck = next.player.maxChakra;
-          floatNumber(pcard, `${icon('heart')} ${S.ui.floats.revive}`, 'heal');
-          log(S.log.revive(ev.revivesLeft), 'good');
-          break;
-        case 'medical':
-          disp.pck -= ev.chakra;
-          disp.php += ev.healed;
-          floatNumber(pcard, `+${ev.healed}`, 'heal');
-          log(S.log.medical(ev.healed), 'good');
-          break;
-        case 'villainRest':
-          disp.vck += ev.chakra;
-          floatNumber(vcard(), `+${ev.chakra} ck`, 'ck');
-          log(S.log.villainRest(who('villain'), ev.chakra), 'sys');
-          break;
-        case 'summonRegen':
-          disp.php += ev.hp;
-          floatNumber(pcard, `+${ev.hp}`, 'heal');
-          log(S.log.summonRegen(ev.hp), 'good');
-          break;
-        case 'dojutsu': {
-          const name = S.dojutsu[ev.dojutsu]!.name;
-          disp.pck -= ev.chakra;
-          floatNumber(pcard, `${icon(ev.dojutsu)} ${name}`, 'heal');
-          log(S.log.dojutsu(ev.stage ? `${name} (${S.sharinganStage(ev.stage)})` : name), 'good');
-          break;
-        }
-        case 'dojutsuEnd':
-          log(S.log.dojutsuEnd[ev.reason]!(S.dojutsu[ev.dojutsu]!.name), 'sys');
-          break;
-        case 'chakraDrain':
-          disp.vck -= ev.amount;
-          floatNumber(vcard(), `−${ev.amount} ck`, 'ck');
-          if (ev.gained) {
-            disp.pck += ev.gained;
-            floatNumber(pcard, `+${ev.gained} ck`, 'ck');
-          }
-          log(ev.source === 'hive' ? S.log.hiveDrain(ev.amount, ev.gained ?? 0) : S.log.chakraDrain[ev.source]!(ev.amount), 'good', ev.source === 'hive' ? 'bug' : undefined);
-          break;
-        case 'hiveBurn':
-          disp.vhp -= ev.damage;
-          floatNumber(vcard(), `−${ev.damage}`, 'dmg');
-          log(S.log.hiveBurn(ev.damage), 'good', 'bug');
-          break;
-        case 'insectsShed':
-          log(S.log.insectsShed(ev.insects, ev.left), 'bad');
-          break;
-        case 'chakraRegen':
-          // Silenciosa no log: só a barra sobe.
+        case 'rest':
           if (ev.side === 'player') disp.pck += ev.amount;
           else disp.vck += ev.amount;
+          log(RL.rest(who(ev.side), ev.amount), 'sys');
+          break;
+        case 'guard':
+          log(RL.guard, 'good', 'stance');
+          break;
+        case 'item':
+          log(RL.item[ev.id]!, 'good', ITEM_ICONS[ev.id]);
+          break;
+        case 'active': {
+          const kind = kitOf(next.player, rdata).active;
+          const name = R.actives[ev.kind]?.name ?? ev.kind;
+          if (kind) floatNumber(pcard, icon(RACTIVE_ICONS[ev.kind] ?? 'ninjutsu'), 'ck');
+          log(RL.active(name, ev.success), ev.success ? 'good' : 'muted', RACTIVE_ICONS[ev.kind]);
+          break;
+        }
+        case 'passive':
+          log(RL.passive[ev.kind] ?? ev.kind, ev.side === 'player' ? 'good' : 'bad');
+          break;
+        case 'revive':
+          if (ev.side === 'player') {
+            disp.php = next.player.maxHp;
+            disp.pck = next.player.maxChakra;
+            log(RL.revive, 'good', 'willOfFire');
+          } else log(RL.villainRevive, 'bad', 'snake');
           break;
         case 'end':
           log(ev.status === 'won' ? S.log.won : S.log.lost, ev.status === 'won' ? 'good' : 'bad');
@@ -2417,6 +1675,10 @@ async function battleScreen(setup: BattleSetup): Promise<BattleState> {
     sync();
   }
 }
+
+/** Último ataque animado: o dano chega no evento seguinte e o log junta os dois. */
+let lastAttack: { side: 'player' | 'villain'; tech: string; crit: boolean } | null = null;
+
 
 // ---------------------------------------------------------------------------
 // Tela: recompensa
@@ -2440,7 +1702,8 @@ async function rewardScreen(title: string, tier: number): Promise<void> {
   const label = (id: RewardId) => S.rewards[id]!;
 
   let reward: RewardId;
-  if (tier >= 3) {
+  // Recompensa direta: a lendária também é um giro só (só os valores crescem).
+  if (tier >= 99) {
     const choices = rollRewardChoices(c.player, rng, data);
     for (let i = 0; i < choices.length; i++) {
       const r = choices[i]!;
@@ -2467,6 +1730,19 @@ async function rewardScreen(title: string, tier: number): Promise<void> {
       showEffect(results, step.effect);
       refreshHud();
     }
+  } else if (reward === 'relic') {
+    // Relíquia da raridade (sem nada para sortear, vira o XP da raridade).
+    const id = rewardRelic(c.player, tier, rdata, rng);
+    if (id) {
+      c.player = gainRoletaRelic(c.player, id, rdata);
+      discoverRoletaRelics([id]);
+      results.insertAdjacentHTML('beforeend', relicCard(id, '', 'reveal', 'roleta'));
+      mood('good');
+    } else {
+      c.player = gainXp(c.player, data.balance.rewards.xp[tier - 1]!, data);
+      results.insertAdjacentHTML('beforeend', `<div class="effect pop">${S.roleta.run.relicNone}</div>`);
+    }
+    refreshHud();
   } else {
     const step = applyReward(c.player, reward, tier, rng, data);
     applyStep(step);
@@ -2482,13 +1758,6 @@ async function rewardScreen(title: string, tier: number): Promise<void> {
 
 // ---------------------------------------------------------------------------
 // XP e subida de nível
-
-/** Ganha o XP do vilão derrotado; cada nível completado mostra a tela de subida. */
-async function awardXp(villainId: string): Promise<void> {
-  const c = camp!;
-  c.player = gainXp(c.player, villainsById[villainId]!.xp, data);
-  await levelUps();
-}
 
 /**
  * Mostra uma tela por nível completado (XP de vilões, roletas e pergaminhos) e resolve os upgrades
@@ -2549,7 +1818,8 @@ async function levelUpScreen(): Promise<void> {
   applyStep(step);
   showEffect(root.querySelector<HTMLElement>('#results')!, step.effect);
   // Despertar da linhagem nos níveis 4 e 7.
-  const awakening = S.awakening[c.player.origin.lineageId ?? 'common']?.[c.player.level];
+  // Sem despertar no Roleta enxuto: as técnicas sobem sozinhas com o nível.
+  const awakening = undefined as string | undefined;
   if (awakening) {
     root
       .querySelector<HTMLElement>('#results')!
@@ -2575,27 +1845,71 @@ async function noticeScreen(title: string, text: string): Promise<void> {
 // ---------------------------------------------------------------------------
 // Fim de run e histórico
 
-async function endScreen(won: boolean, stoppedAt: string | null): Promise<void> {
+/**
+ * Fim da run. Vitória (o chefe do 1º ciclo caiu): "Seguir para o ciclo 2" ou nova run. Cair a partir do ciclo 2 não é
+ * uma derrota comum: a run já foi vencida.
+ */
+async function endScreen(won: boolean, stoppedAt: string | null, record = false): Promise<'continue' | 'new'> {
   const c = camp!;
-  campLive = false;
-  progressDots(won ? campaign.length : c.stageIndex);
-  (won ? victory : defeat)();
+  const RR = S.roleta.run;
+  const infinite = c.run.cycle > 0;
+  const good = won || infinite;
+  progressDots(won ? rdata.cycle.length : c.run.step);
+  (good ? victory : defeat)();
+  const title = won ? S.ui.victoryTitle : infinite ? RR.infiniteOver : S.ui.defeatTitle;
+  const pct = Math.round(rdata.r.infinite.perCycle * (c.run.cycle + 1) * 100);
+  const cont = won
+    ? `<button class="btn primary big" data-choice="continue"${tip(RR.nextCycle(c.run.cycle + 2), RR.nextCycleTip(pct))}>${icon('cycle')} ${RR.nextCycle(c.run.cycle + 2)}</button>`
+    : '';
+  if (!won) campLive = false;
+  const face = good ? clanSymbol(c.player.origin.lineageId) : foePortrait(c.run.villainId ?? rdata.categories.genin[0]!, 'lg');
   const root = show(
-    h(`<div class="screen end ${won ? 'win' : 'lose'}">
-      <div class="end-seal">${won ? clanSymbol(c.player.origin.lineageId) : villainPortrait(campaign[c.stageIndex]!.villains[0]!, 'lg')}<span class="seal stamp end-stamp${won ? ' gold' : ''}" aria-hidden="true">${won ? '勝' : '敗'}</span></div>
-      <h2>${won ? S.ui.victoryTitle : S.ui.defeatTitle}</h2>
+    h(`<div class="screen end ${good ? 'win' : 'lose'}">
+      <div class="end-seal">${face}<span class="seal stamp end-stamp${good ? ' gold' : ''}" aria-hidden="true">${good ? '勝' : '敗'}</span></div>
+      <h2>${title}</h2>
       ${stoppedAt ? `<p class="center">${S.ui.defeatBy(stoppedAt)}</p>` : ''}
+      <p class="center">${RR.reached(c.run.cycle + 1, c.run.wins)}${record ? ` <span class="chip jrecord">${icon('medal')} ${RR.record}</span>` : ''}</p>
       <p class="center muted">${S.ui.revivesUsed(c.player.revivesUsed)}</p>
-      ${stageTrail(won ? campaign.length : c.stageIndex)}
+      ${stageTrail(c.run)}
       ${playerPanel(c.player)}
       <div class="sticky-cta actions-row">
         <button class="btn big" data-share>${icon('share')} ${S.share.button}</button>
-        <button class="btn primary big" data-choice="new">${icon('dice')} ${S.ui.newRun}</button>
+        ${cont}
+        <button class="btn ${won ? '' : 'primary '}big" data-choice="new">${icon('dice')} ${S.ui.newRun}</button>
       </div>
     </div>`),
   );
-  root.querySelector('[data-share]')!.addEventListener('click', () => void shareRun(c, won, stoppedAt));
-  await choose(root);
+  root.querySelector('[data-share]')!.addEventListener('click', () => void shareRun(c, good, stoppedAt));
+  const choice = await choose<'continue' | 'new'>(root);
+  if (choice === 'new') campLive = false;
+  return choice;
+}
+
+/** Baú do chefe: 3 relíquias lado a lado; tocar destaca, o botão confirma. */
+async function chestScreen(options: string[]): Promise<string> {
+  const RR = S.roleta.run;
+  discoverRoletaRelics(options);
+  let pick: string | undefined;
+  const root = show(h(`<div class="screen jrboss"><h2>${RR.chestTitle}</h2>
+    <div class="jrboss-row">${options
+      .map((id) => `<button type="button" class="jrboss-opt tier-${relicTier(id)}" data-opt="${id}" aria-label="${relicName(id)}">
+        <span class="jrslot huge tier-${relicTier(id)}">${relicIcon(id)}</span><b>${relicName(id)}</b></button>`)
+      .join('')}</div>
+    <div data-detail><p class="muted center">${RR.chestPick}</p></div>
+    <div class="sticky-cta"><button class="btn primary big" data-choice="take" disabled>${RR.chestPick}</button></div></div>`));
+  const take = root.querySelector<HTMLButtonElement>('[data-choice="take"]')!;
+  root.querySelector('.jrboss-row')!.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-opt]');
+    if (!b) return;
+    pick = b.dataset.opt!;
+    root.querySelectorAll('[data-opt]').forEach((x) => x.classList.toggle('on', x === b));
+    root.querySelector('[data-detail]')!.innerHTML = relicCard(pick, '', 'pop', 'roleta');
+    take.disabled = false;
+    take.textContent = RR.chestTake(relicName(pick));
+  });
+  await choose(root.querySelector('.sticky-cta')!);
+  mood('good');
+  return pick!;
 }
 
 /** Compartilha o resumo da run (menu do celular) ou copia para colar no grupo. */
@@ -2669,7 +1983,7 @@ function openReport() {
             ? {
                 origin: originText(c.origin),
                 difficulty: S.difficulty[c.difficulty].name,
-                stage: campaign[c.stageIndex] ? `${c.stageIndex + 1}. ${stageName(campaign[c.stageIndex]!)}` : '—',
+                stage: `${S.roleta.run.cycle(c.run.cycle + 1)} · ${c.run.step + 1}. ${S.roleta.run.categories[rdata.cycle[c.run.step] ?? 'genin']}${c.run.villainId ? ` · ${villainName(c.run.villainId)}` : ''}`,
                 level: p.level,
                 revivesUsed: p.revivesUsed,
                 hp: p.hp,
@@ -2766,10 +2080,13 @@ function achievementsTab(): string {
   const A = S.achievements;
   const unlocked = new Set(Object.keys(profile.achievements));
   const cats: AchievementCategory[] = ['milestone', 'luck', 'style', 'secret'];
-  const got = achievements.filter((a) => unlocked.has(a.id)).length;
-  return `<p class="muted small center">${A.count(got, achievements.length)}</p>${cats
+  // Clássicas (mecânica que saiu do Roleta) só aparecem para quem já tem, e não contam no total.
+  const shown = achievements.filter((a) => !a.legacy || unlocked.has(a.id));
+  const counted = achievements.filter((a) => !a.legacy);
+  const got = counted.filter((a) => unlocked.has(a.id)).length;
+  return `<p class="muted small center">${A.count(got, counted.length)}</p>${cats
     .map((cat) => {
-      const list = achievements.filter((a) => a.category === cat);
+      const list = shown.filter((a) => a.category === cat);
       const n = list.filter((a) => unlocked.has(a.id)).length;
       return `<h3 class="ach-cat">${A.categories[cat]} <small class="muted">${A.progress(n, list.length)}</small></h3><ul class="ach-list">${list
         .map((a) => {
@@ -2803,13 +2120,13 @@ function bingoTab(): string {
     .map((v) => {
       const r = profile.villains[v.id];
       if (!r || r.faced === 0) {
-        return `<li class="bingo-card unknown">${villainPortrait(v.id, 'sm')}<span><b>${P.unknownVillain}</b></span><span class="bingo-stamp kanji" aria-hidden="true">謎</span></li>`;
+        return `<li class="bingo-card unknown">${foePortrait(v.id, 'sm')}<span><b>${P.unknownVillain}</b></span><span class="bingo-stamp kanji" aria-hidden="true">謎</span></li>`;
       }
       const lines = [P.faced(r.faced), P.defeated(r.defeated), r.killedYou ? P.killedYou(r.killedYou) : '']
         .filter(Boolean)
         .join(' · ');
       const stamp = r.defeated > 0 ? '<span class="bingo-stamp kanji" aria-hidden="true">勝</span>' : '';
-      return `<li class="bingo-card${r.defeated > 0 ? ' beaten' : ''}">${villainPortrait(v.id, 'sm')}<span><b>${villainName(v.id)}</b><small>${lines}</small>
+      return `<li class="bingo-card${r.defeated > 0 ? ' beaten' : ''}">${foePortrait(v.id, 'sm')}<span><b>${villainName(v.id)}</b><small>${lines}</small>
         <small class="muted">${P.bestHit(r.bestHit)} · ${P.worstHit(r.worstHit)}</small></span>${stamp}</li>`;
     })
     .join('')}</ul>`;
@@ -2825,7 +2142,7 @@ function originsTab(): string {
       if (!r) return `<li><div class="row between"><b>${name}</b><small class="muted">${P.neverPlayed}</small></div></li>`;
       const pct = Math.round((r.wins / r.runs) * 100);
       const stage = campaign[r.furthestStage];
-      const far = r.wins > 0 ? S.ui.runStatus.victory : stage ? P.furthest(stageName(stage)) : '';
+      const far = r.wins > 0 ? S.ui.runStatus.victory : r.bestFights >= 0 ? S.roleta.run.reached(1, r.bestFights) : stage ? P.furthest(stageName(stage)) : '';
       return `<li><div class="row between"><b>${name}</b><b>${P.winRate(pct)}</b></div>
         <small class="muted">${P.originLine(r.runs, r.wins)} · ${far}</small></li>`;
     })
@@ -2848,7 +2165,15 @@ function historyTab(container: HTMLElement) {
             const origin = `${originLabel(o)}${o.elements.map((e) => ` · ${S.elements[e]}`).join('')}${o.jinchuuriki ? ` · ${S.origin.jinchuuriki}` : ''}`;
 
             const stage = campaign[r.furthestStage];
-            const reached = r.status !== 'victory' && r.status !== 'reroll' && stage ? ` · ${S.ui.reachedStage(stageName(stage))}` : '';
+            // Roleta enxuto: ciclo e lutas; registros antigos: a etapa da campanha.
+            const reached =
+              r.status === 'reroll'
+                ? ''
+                : r.fights !== undefined
+                  ? ` · ${S.roleta.run.reached((r.cycle ?? 0) + 1, r.fights)}`
+                  : r.status !== 'victory' && stage
+                    ? ` · ${S.ui.reachedStage(stageName(stage))}`
+                    : '';
             const diff = r.difficulty ? ` ${diffChip(r.difficulty)}` : '';
             return `<li><div class="row between"><b>${origin}</b><span>${diff} <span class="chip st-${r.status}">${S.ui.runStatus[r.status]}</span></span></div>
               <small class="muted">${date}${reached} · ${S.ui.revivesUsed(r.revivesUsed)}</small></li>`;
@@ -2974,11 +2299,13 @@ async function labScreen(): Promise<LabTarget> {
     const noChoice = elementRule.countWeights.length <= 1 || (elementRule.fixed !== undefined && elementRule.countWeights.length <= 2);
     field('primary').disabled = noChoice || elementRule.fixed !== undefined;
     root.querySelectorAll<HTMLInputElement>('[name="extra-el"]').forEach((i) => (i.disabled = noChoice));
-    const player = buildLabPlayer(c, data);
+    // Roleta enxuto: o kit é fixo pela origem (as técnicas sobem sozinhas com o nível).
+    const enxuto = (p: PlayerState): PlayerState => ({ ...p, techniques: roletaKit(p.origin, rdata), techniqueLevels: {}, pendingUpgrades: 0 });
+    const player = enxuto(buildLabPlayer({ ...c, techniques: [] }, data));
     const auto = labStatsOf(buildLabPlayer({ ...c, stats: {} }, data));
     for (const k of LAB_STAT_KEYS) field(`stat-${k}`).placeholder = String(auto[k]);
     // As opções de técnica dependem da origem e do nível, não das extras já marcadas.
-    const learnable = labLearnable(buildLabPlayer({ ...c, techniques: [] }, data), data);
+    const learnable: ReturnType<typeof labLearnable> = [];
     root.querySelector<HTMLElement>('#lab-techs')!.innerHTML = learnable.length
       ? learnable
           .map(
@@ -2992,7 +2319,7 @@ async function labScreen(): Promise<LabTarget> {
       origin: labOrigin(c, data),
       player,
       difficulty: c.difficulty,
-      stageIndex: current.stage,
+      run: newRoletaRun(player, c.difficulty),
       mods: { ...NO_MODS },
       seed: LAB.seed,
       trail: [],
@@ -3031,83 +2358,74 @@ async function labFlow(): Promise<void> {
     await battleScreen({ villainId: target.villainId, options: {}, label: S.lab.fightLabel(esc(name)), exam: false });
     return;
   }
-  await runCampaign(target.from);
+  await runCampaign();
 }
 
-async function runCampaign(from = 0): Promise<void> {
+/**
+ * Run do Roleta enxuto (docs/roleta/run.md): a cada passo, sorteia o vilão da categoria, gira o evento, luta, ganha o
+ * XP e a recompensa. Depois do chefe: baú e o próximo ciclo (no 1º, a tela de vitória pergunta se segue).
+ */
+async function runCampaign(): Promise<void> {
   const c = camp!;
-  for (let i = from; i < campaign.length; i++) {
-    const stage = campaign[i]!;
-    c.stageIndex = i;
-    track({ furthestStage: i });
+  const RR = S.roleta.run;
+  for (;;) {
+    if (!c.run.villainId) setRun(drawVillain(getRun(), rdata, rng));
+    const run = getRun();
+    const id = run.villainId!;
+    track({ furthestStage: run.step, cycle: run.cycle, fights: run.wins });
     await mapScreen();
-    const entry: TrailEntry = { name: stageName(stage), exam: stage.kind === 'exam', results: [] };
+    const entry: TrailEntry = { name: villainName(id), exam: false, results: [] };
     c.trail.push(entry);
-
-    if (stage.kind === 'exam') {
-      // HP e chakra seguem entre as lutas; perder não gasta a Vontade do Fogo nem encerra a run
-      // (os médicos devolvem metade do HP e do chakra). No fim, restaura tudo.
-      let wins = 0;
-      for (let j = 0; j < stage.villains.length; j++) {
-        const result = await battleScreen({
-          villainId: stage.villains[j]!,
-          options: { allowRevive: false },
-          label: `${S.stages.exam} · ${S.ui.fightOf(j + 1, stage.villains.length)}`,
-          exam: true,
-        });
-        c.player = result.player;
-        entry.results.push(result.status === 'won' ? 'win' : 'loss');
-        noteFight(stage.villains[j]!, true, result);
-        if (result.status === 'won') {
-          wins++;
-          c.player = recoverAfterWin(c.player, data);
-          await awardXp(stage.villains[j]!);
-        } else {
-          c.player = examRecover(c.player, data);
-          await noticeScreen(S.stages.exam, S.ui.examRecovered);
-        }
-      }
-      c.player = fullRestore(c.player);
-      await noticeScreen(S.ui.examResult(wins, stage.villains.length), S.ui.examRestored);
-      const tier = data.balance.exam.rewardTierByWins[wins] ?? 0;
-      if (tier > 0) await rewardScreen(S.ui.examResult(wins, stage.villains.length), tier);
-      continue;
+    await eventScreen(villainName(id));
+    const cat = RR.categories[currentCategory(getRun(), rdata)]!;
+    const result = await battleScreen({
+      villainId: id,
+      options: { villainStartsFirst: c.mods.villainStartsFirst, playerStartsFirst: c.mods.playerStartsFirst },
+      label: RR.fightLabel(c.run.cycle + 1, cat, villainName(id)),
+      exam: false,
+      def: villainFor(getRun(), villainsById, rdata),
+    });
+    entry.results.push(result.status === 'won' ? 'win' : 'loss');
+    noteFight(id, false, result);
+    const { run: next, outcome } = finishRoletaFight(getRun(), result, rdata, rng);
+    setRun(next);
+    if (!outcome.won) {
+      // A partir do ciclo 2 a run já foi vencida: o registro continua como vitória.
+      if (c.run.cycle === 0) track({ status: 'defeat', cycle: 0, fights: c.run.wins });
+      else track({ cycle: c.run.cycle, fights: c.run.wins });
+      const record = recordRoleta();
+      checkAchievements('defeat', id);
+      await endScreen(false, villainName(id), record);
+      return;
     }
-
-    await eventScreen(stage);
-    for (let j = 0; j < stage.villains.length; j++) {
-      const first = j === 0;
-      // A luta não começa restaurada: HP e chakra seguem, inclusive dentro dos blocos.
-      const options: Partial<BattleOptions> = first
-        ? { villainStartsFirst: c.mods.villainStartsFirst, playerStartsFirst: c.mods.playerStartsFirst }
-        : {};
-      const result = await battleScreen({
-        villainId: stage.villains[j]!,
-        options,
-        label: `${i + 1}. ${stageName(stage)}${stage.villains.length > 1 ? ` · ${S.ui.fightOf(j + 1, stage.villains.length)}` : ''}`,
-        exam: false,
-      });
-      if (first) c.mods = { ...NO_MODS };
-      c.player = result.player;
-      entry.results.push(result.status === 'won' ? 'win' : 'loss');
-      noteFight(stage.villains[j]!, false, result);
-      if (result.status !== 'won') {
-        track({ status: 'defeat' });
-        checkAchievements('defeat', stage.villains[j]!);
-        await endScreen(false, villainName(stage.villains[j]!));
-        return;
-      }
-      c.player = trainingWeightsWin(recoverAfterWin(c.player, data), data);
-      const finalFight = i === campaign.length - 1 && j === stage.villains.length - 1;
-      if (finalFight) break;
-      await awardXp(stage.villains[j]!);
-      const tier = stage.rewardTiers[j];
-      if (tier) await rewardScreen(S.ui.battleWon, tier);
+    await levelUps();
+    if (outcome.tier > 0) await rewardScreen(S.ui.battleWon, outcome.tier);
+    if (c.run.bossChoice) setRun(chooseChest(getRun(), await chestScreen(c.run.bossChoice), rdata));
+    if (!outcome.boss) continue;
+    // Fim de ciclo.
+    const record = recordRoleta();
+    if (c.run.status === 'victory') {
+      track({ status: 'victory', cycle: 0, fights: c.run.wins });
+      checkAchievements('victory', null);
+      if ((await endScreen(true, null, record)) !== 'continue') return;
+      setRun(continueRoletaCycle(getRun()));
+    } else {
+      // Do 2º ciclo em diante, o próximo emenda sozinho.
+      track({ cycle: c.run.cycle, fights: c.run.wins });
+      checkAchievements('victory', null);
     }
+    await noticeScreen(RR.cycle(c.run.cycle + 1), RR.cycleStart(Math.round((cycleMult(getRun(), rdata) - 1) * 100)));
   }
-  track({ status: 'victory', furthestStage: campaign.length - 1 });
-  checkAchievements('victory', null);
-  await endScreen(true, null);
+}
+
+/** Recorde do Roleta (ciclo alcançado e lutas vencidas); devolve se bateu. */
+function recordRoleta(): boolean {
+  if (!camp || LAB.lab) return false;
+  const next = recordRoletaReach(profile, { cycle: camp.run.cycle + 1, fights: camp.run.wins });
+  if (next === profile) return false;
+  profile = next;
+  saveProfile(storage, profile);
+  return true;
 }
 
 /** Tema aplicado: o escolhido no botão ou o do aparelho. */

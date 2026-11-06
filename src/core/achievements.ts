@@ -16,6 +16,8 @@ export interface AchievementContext {
   fallenTo: string | null;
   /** Do perfil, já com esta run: quantas vezes cada vilão derrotou o jogador. */
   killedBy: Record<string, number>;
+  /** Roleta enxuto (v0.46.0): ciclos vencidos na run (o chefe caiu). */
+  cyclesWon?: number;
   /** Conquistas liberadas (as do perfil e as que acabaram de sair nesta checagem). */
   unlocked: ReadonlySet<string>;
 }
@@ -26,6 +28,11 @@ export interface AchievementDef {
   /** Aparece como "???" até ser liberada. */
   hidden?: boolean;
   check: (ctx: AchievementContext) => boolean;
+  /**
+   * Clássica: dependia de uma mecânica que saiu do Roleta (v0.45.0, Roleta enxuto). Quem já tem continua tendo;
+   * para os outros, não aparece nem conta no total.
+   */
+  legacy?: boolean;
   /** Progresso [atual, meta], para as conquistas de coleção. */
   progress?: (unlocked: ReadonlySet<string>) => [number, number];
 }
@@ -43,7 +50,7 @@ export function newAchievements(defs: readonly AchievementDef[], ctx: Achievemen
   const unlocked = new Set(ctx.unlocked);
   const found: string[] = [];
   for (const def of defs) {
-    if (unlocked.has(def.id)) continue;
+    if (unlocked.has(def.id) || def.legacy) continue;
     if (!def.check({ ...ctx, unlocked })) continue;
     unlocked.add(def.id);
     found.push(def.id);

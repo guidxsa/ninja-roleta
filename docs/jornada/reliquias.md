@@ -38,6 +38,49 @@ A recuperação depois da vitória **não** vem das iniciais: é uma configuraç
 
 A evolução toma o lugar da inicial na barra. A relíquia de chefe que dava a Vontade do Fogo se chamava Colar do Primeiro Hokage; desde a v0.43.0 ela é o **Talismã da Vontade do Fogo**, e o colar virou a evolução da Bandana do Iruka. Saves e a coleção antigos trocam os ids sozinhos (`RELIC_RENAMES`).
 
+## Modos
+
+Desde a v0.46.0 o catálogo é **um só** para os dois modos (`src/data/relics.ts`): cada relíquia diz em que modo sai. As da tabela abaixo também saem no **Roleta**, com o efeito de lá ([roleta/run.md](../roleta/run.md#relíquias)); as outras são só da Jornada. As exclusivas do Roleta não saem na Jornada. A coleção do perfil é única, com filtro Todas / Jornada / Roleta.
+
+| Relíquia | Classificação | Efeito no Roleta |
+|---|---|---|
+| Óculos de aprendiz | Comum | +5% de acerto. |
+| Bandana da Folha | Comum | +10 de HP máximo. |
+| Bolsa de kunai | Comum | +8% de dano de taijutsu. |
+| Pesos de treino | Comum | Equipar: −2 de speed e +1 de taijutsu por vitória; tirar devolve a speed e dá +3. |
+| Pílulas de soldado | Comum | +4 de chakra máximo. |
+| Fio de aço | Comum | +3% de esquiva. |
+| Caderno de treino | Comum | +15% de XP das lutas. |
+| Sandálias gastas | Comum | +1 de speed. |
+| Pedra de amolar | Comum | +3% de crítico. |
+| Bala de chakra | Comum | Começa as lutas com 10% a mais do chakra. |
+| Ferramenta ninja | Comum (só Roleta) | +2 de dano base em todas as técnicas. |
+| Amuleto de velocidade | Comum (só Roleta) | +2 de speed. |
+| Cupom do Ichiraku | Incomum | Cada vitória recupera 10% a mais do HP e do chakra. |
+| Faixas de mão | Incomum | +10% de dano de taijutsu. |
+| Sacola de ervas | Incomum | Recupera 2% do HP por rodada. |
+| Bandana rasgada | Incomum | Abaixo de 50% do HP, +20% de dano. |
+| Amuleto de resistência | Incomum (só Roleta) | +3 de resistência física e mental. |
+| Sino do Kakashi | Rara | +8% de crítico. |
+| Selos explosivos | Rara | Começo de cada luta: 10 de dano no vilão. |
+| Cabaça de areia | Rara | Começa as lutas com escudo de 10% do HP. |
+| Contrato dos sapos | Rara | Invocação do sapo. |
+| Pedra de chakra | Rara | As técnicas custam 1 de chakra a menos. |
+| Kunai do mestre | Rara | +8% de dano. |
+| Incenso dos sonhos | Rara | +20% de dano de genjutsu. |
+| Reserva de chakra | Rara | Começa as lutas com 25% a mais do chakra. |
+| Pergaminho vital | Rara | +20 de HP máximo. |
+| Contrato das cobras | Rara (só Roleta) | Invocação da cobra (ataque que acerta envenena). |
+| Contrato das lesmas | Rara (só Roleta) | Invocação da lesma (recupera 3% do HP por rodada, +1% por nível). |
+| Talismã da Vontade do Fogo | Chefe | Na hora: +1 Vontade do Fogo. |
+| Selo de contenção | Chefe | Recupera 3% do HP por rodada. |
+| Lâmina de chakra | Chefe | +15% de dano. |
+| Armadura samurai | Chefe | Começa as lutas com escudo de 20% do HP. |
+| Pena de fênix | Chefe | Uma vez por luta, ao cair, fica com 1 de HP. |
+| Núcleo de chakra | Chefe | +8 de chakra máximo. |
+| Estandarte de guerra | Chefe | +8% de crítico. |
+| Manto de Kage | Chefe | +5% de esquiva e +5% de acerto. |
+
 ## Na tela
 
 - **Barra de relíquias** no HUD: um ícone por relíquia, com a borda na cor da classificação (rara e chefe têm cantos marcados). Rola de lado quando não cabe. Segurar (ou passar o mouse) mostra a dica; tocar abre o painel com ela em destaque. A relíquia nova entra com um brilho.

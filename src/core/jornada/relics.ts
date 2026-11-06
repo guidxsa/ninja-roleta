@@ -8,9 +8,53 @@ import type { ConsumableId, FighterMods } from './types';
  */
 export type RelicTier = 'starter' | 'common' | 'uncommon' | 'rare' | 'boss' | 'shop' | 'event' | 'special';
 
+/** Modo de jogo em que a relíquia sai (catálogo único, docs/jornada/reliquias.md#modos). */
+export type RelicMode = 'jornada' | 'roleta';
+
+/**
+ * Efeito da relíquia no Roleta enxuto (docs/roleta/run.md#relíquias). Números próprios: o Roleta tem menos lutas,
+ * um lutador só e dano menor. Status entram na ficha ao ganhar; o resto vale nas lutas.
+ */
+export interface RoletaRelicEffect {
+  damageMult?: number;
+  typeDamageMult?: Partial<Record<'taijutsu' | 'ninjutsu' | 'genjutsu', number>>;
+  /** Dano base a mais em todas as técnicas. */
+  flatDamage?: number;
+  critBonus?: number;
+  accuracyBonus?: number;
+  /** Esquiva a mais (soma na chance de o vilão errar). */
+  dodgeBonus?: number;
+  /** Cura no começo de cada rodada (fração do HP máximo). */
+  regenPct?: number;
+  startShieldPct?: number;
+  startChakraPct?: number;
+  /** Dano no vilão no começo da luta. */
+  openingDamage?: number;
+  /** Cura a mais depois de cada vitória (fração do HP e do chakra máximos). */
+  afterWinHealPct?: number;
+  /** Técnicas custam isto de chakra a menos (nunca abaixo de 0). */
+  chakraDiscount?: number;
+  /** Abaixo de 50% do HP, dano × isto. */
+  lowHpDamageMult?: number;
+  /** Uma vez por luta, ao cair, fica com 1 de HP. */
+  surviveOnce?: boolean;
+  /** XP das lutas × isto. */
+  xpMult?: number;
+  stats?: { hp?: number; chakra?: number; speed?: number; physical?: number; mental?: number };
+  grant?: { revives?: number };
+  /** Contrato de invocação: o animal passa a acompanhar (o evento Invocação sobe o nível). */
+  summon?: 'toad' | 'snake' | 'slug';
+  /** Pesos de treino: a mecânica de equipar e tirar (−2 de speed, +1 de taijutsu por vitória; tirar dá +3). */
+  weights?: boolean;
+}
+
 export interface RelicDef {
   id: string;
   tier: RelicTier;
+  /** Modos em que sai. Sem o campo: só a Jornada. */
+  modes?: RelicMode[];
+  /** Efeito no Roleta (quando sai lá); os campos abaixo são os da Jornada. */
+  roleta?: RoletaRelicEffect;
   /** Inicial: personagens que começam com ela. */
   starterFor?: string[];
   /** Evolução: substitui esta relíquia inicial. Só aparece na escolha depois do chefe. */
@@ -60,6 +104,9 @@ export function rollRelic(relics: readonly RelicDef[], owned: readonly string[],
   const options = pool.filter((r) => r.tier === tier);
   return options[Math.floor(rng() * options.length)]!.id;
 }
+
+/** A relíquia sai neste modo. */
+export const relicInMode = (r: RelicDef, mode: RelicMode) => (r.modes ?? ['jornada']).includes(mode);
 
 /** Várias relíquias diferentes (mercador, escolha do chefe). */
 export function rollRelics(relics: readonly RelicDef[], owned: readonly string[], weights: Weights, n: number, rng: Rng): string[] {

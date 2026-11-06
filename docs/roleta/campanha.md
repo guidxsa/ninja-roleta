@@ -1,6 +1,8 @@
 # Campanha
 
-Estrutura de uma run: ordem dos confrontos, eventos entre eles, encontros, invocações, exame chunin, dificuldade e histórico.
+> **Campanha clássica (reserva)**: desde a v0.46.0, o Roleta usa a run de [run.md](run.md) (ciclo sorteado por categoria, modo infinito, relíquias). A ordem fixa, os blocos, o exame chunin, o guru e a Lição do clã abaixo ficaram guardados ([reserva/README.md](../reserva/README.md)); as seções de Dificuldade, Histórico, Akatsuki, Treino, Jokenpô e Seed continuam valendo.
+
+Estrutura de uma run: ordem dos confrontos, eventos entre eles, encontros, invocações, exame chunin, dificuldade e histórico. O combate é o enxuto ([combate.md](combate.md)).
 
 ## Ordem
 
@@ -27,11 +29,11 @@ Antes de cada vilão (uma vez antes de cada bloco) gira uma roleta de eventos. N
 | 10 | Ajudou uma velhinha e se atrasou | Desvantagem de ação: o vilão ataca primeiro na próxima luta. |
 | 10 | Ramen muito bom | Vantagem de ação: o jogador ataca primeiro na próxima luta. |
 | 10 | Encontro com a Akatsuki | Ver "Akatsuki". |
-| 20 | Treino | XP garantido e roleta de destaque. Ver "Treino". |
+| 25 | Treino | XP garantido e roleta de destaque. Ver "Treino". |
 | 20 | Jokenpô com um companheiro | Ver "Jokenpô". |
-| 10 | Achou um item | Gira a roleta de itens ([itens.md](itens.md)). |
-| 10 | Encontro com guru | Ver "Guru". |
-| 10 | Lição do clã | Ver "Lição do clã". |
+| 15 | Achou um item | Gira a roleta de itens ([itens.md](itens.md)). |
+
+- Desde a v0.45.0 (Roleta enxuto) a roleta é direta: o **guru** e a **Lição do clã** saíram (o peso foi para Treino e Achou item) e ficaram descritos abaixo como reserva ([reserva/README.md](../reserva/README.md)). Pesos em `src/data/roleta/index.ts`.
 
 - Vantagem e desvantagem de ação substituem a roleta de iniciativa na próxima luta contra vilão (no bloco Haku e Zabuza, só na primeira; o exame não consome).
 - Pesos fixos nesta versão.
@@ -39,7 +41,7 @@ Antes de cada vilão (uma vez antes de cada bloco) gira uma roleta de eventos. N
 ### Treino
 
 1. **+60 de XP, garantido** (é um treino).
-2. **Escolha**, quando algum elemento do jogador ainda pode crescer: **destaque de status** (a roleta abaixo) ou **foco elemental** num desses elementos. O foco ensina o nível I da linha do elemento (se ainda não tem) ou sobe a linha em +1 nível, dentro do teto do nível do personagem e do potencial da origem ([origens.md](../base/origens.md#elementos-e-potencial-elemental)). Sem elemento que cresça, vai direto para o destaque.
+2. *(Só no clássico; no Roleta enxuto o Treino vai direto para o destaque.)* **Escolha**, quando algum elemento do jogador ainda pode crescer: **destaque de status** (a roleta abaixo) ou **foco elemental** num desses elementos. O foco ensina o nível I da linha do elemento (se ainda não tem) ou sobe a linha em +1 nível, dentro do teto do nível do personagem e do potencial da origem ([origens.md](../base/origens.md#elementos-e-potencial-elemental)). Sem elemento que cresça, vai direto para o destaque.
 3. **Roleta de destaque**: "você se destacou em...". A fatia sorteada ganha **+3** (speed ganha +2).
 
 | Fatia | Peso |
@@ -139,7 +141,7 @@ Regras do veneno em [efeitos.md](../base/efeitos.md#envenenamento). O sapo não 
 | 0 | Nenhuma |
 | 1 | Roleta de recompensa comum |
 | 2 | Roleta de recompensa rara |
-| 3 | Roleta de recompensa lendária (gira 3, escolhe 1) |
+| 3 | Roleta de recompensa lendária |
 
 - Futuro: provas sem combate ligadas a um status de inteligência.
 

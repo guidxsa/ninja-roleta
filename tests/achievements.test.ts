@@ -162,12 +162,19 @@ describe('conquistas', () => {
     expect(clan.progress!(new Set(others))).toEqual([10, 11]);
   });
 
-  it('exame 3/3 dá Chunin; 0/3 e vencer dá Reprovado, mas vivo', () => {
+  it('o exame saiu do Roleta (v0.46.0): Chunin e Reprovado, mas vivo viram clássicas e não saem mais', () => {
     const exam = (won: boolean) => fight({ exam: true, won, villainId: 'examSand' });
-    expect(newAchievements(achievements, ctx({ stats: withFights(exam(true), exam(true), exam(true)) }))).toContain('chunin');
+    expect(newAchievements(achievements, ctx({ stats: withFights(exam(true), exam(true), exam(true)) }))).not.toContain('chunin');
     const failed = newAchievements(achievements, ctx({ stats: withFights(exam(false), exam(false), exam(false)), result: 'victory' }));
-    expect(failed).toContain('failedButAlive');
-    expect(failed).not.toContain('chunin');
+    expect(failed).not.toContain('failedButAlive');
+    // Genin vale com qualquer vilão genin (o rival do exame virou genin).
+    expect(newAchievements(achievements, ctx({ stats: withFights(fight({ won: true, villainId: 'examSand' })) }))).toContain('genin');
+  });
+
+  it('ciclos do modo infinito do Roleta', () => {
+    expect(newAchievements(achievements, ctx({ cyclesWon: 1 }))).not.toContain('r_cycle2');
+    expect(newAchievements(achievements, ctx({ cyclesWon: 3 }))).toEqual(expect.arrayContaining(['r_cycle2', 'r_cycle3']));
+    expect(newAchievements(achievements, ctx({ cyclesWon: 5 }))).toContain('r_cycle5');
   });
 
   it('derrota para o Orochimaru ou para o Mizuki; Zabuza 5 vezes no perfil', () => {
@@ -250,6 +257,6 @@ describe('perfil', () => {
       run({ status: 'reroll' }),
       run({ status: 'inProgress', furthestStage: 5 }),
     ]);
-    expect(rec).toEqual({ common: { runs: 2, wins: 1, furthestStage: 6 } });
+    expect(rec).toEqual({ common: { runs: 2, wins: 1, furthestStage: 6, bestFights: -1 } });
   });
 });

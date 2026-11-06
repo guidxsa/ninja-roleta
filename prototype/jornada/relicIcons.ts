@@ -143,6 +143,12 @@ export const RELIC_ICONS: Record<string, string> = {
 
   // Especial
   emptyCharm: `<rect x="7" y="4" width="10" height="17" rx="1" fill="none" stroke="${C.metal}" stroke-width="1.600" stroke-dasharray="2.500 1.800"/><path d="M12 1v3" stroke="${C.steel}" stroke-width="1.400"/><circle cx="12" cy="12.500" r="1.200" fill="${C.metal}"/>`,
+  // Exclusivas do Roleta (v0.46.0): antigos itens permanentes e as invocações.
+  ninjaTool: `<path d="M12 2l2.2 10H9.8z" fill="${C.metal}" ${O}/><rect x="10.6" y="12" width="2.8" height="7" fill="${C.woodDark}" ${O}/><circle cx="12" cy="20.6" r="1.8" fill="none" stroke="${C.steel}" stroke-width="1.3"/><path d="M4 16l5-5M20 16l-5-5" stroke="${C.steel}" stroke-width="1.6" stroke-linecap="round"/>`,
+  speedAmulet: `<path d="M12 3v3" stroke="${C.ink}" stroke-width="1.2"/><circle cx="12" cy="13" r="7" fill="${C.leaf}" ${O}/><path d="M8 13h6M9.5 10.5h6M9.5 15.5h5" stroke="${C.white}" stroke-width="1.4" stroke-linecap="round"/><path d="M15 9.5l2.5 3.5-2.5 3.5" fill="none" stroke="${C.white}" stroke-width="1.4"/>`,
+  resistanceAmulet: `<path d="M12 3v3" stroke="${C.ink}" stroke-width="1.2"/><path d="M12 6.5l6.5 2.5v4.5c0 4-3 6.5-6.5 7.5-3.5-1-6.5-3.5-6.5-7.5V9z" fill="${C.blue}" ${O}/><path d="M12 9v9M8.5 12.5h7" stroke="${C.white}" stroke-width="1.4" stroke-linecap="round"/>`,
+  snakeContract: `<rect x="3" y="5" width="18" height="14" rx="1" fill="${C.paper}" ${O}/><rect x="1.5" y="4" width="3" height="16" rx="1.5" fill="${C.purple}"/><path d="M7.5 15.5c2-3 4-3 5.5 0s3.5 3 5-1" fill="none" stroke="${C.purple}" stroke-width="2.2" stroke-linecap="round"/><circle cx="18" cy="14.2" r="1.6" fill="${C.purple}" ${O}/><circle cx="18.4" cy="13.8" r=".4" fill="${C.gold}"/>`,
+  slugContract: `<rect x="3" y="5" width="18" height="14" rx="1" fill="${C.paper}" ${O}/><rect x="1.5" y="4" width="3" height="16" rx="1.5" fill="${C.sky}"/><path d="M7 16c1-3.5 3.5-5 6.5-5s4.5 2 4.5 5z" fill="${C.sky}" ${O}/><path d="M15 11l1-3M17 11.6l2-2.4" stroke="${C.sky}" stroke-width="1.3" stroke-linecap="round"/>`,
 };
 
 /** SVG da relíquia; cai num saco genérico se faltar o desenho. */

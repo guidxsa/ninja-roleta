@@ -254,6 +254,8 @@ export interface VillainDef {
   /** Versão da passiva no modo hardcore (substitui `passive`). */
   hardcorePassive?: VillainPassive;
   behavior?: VillainBehavior;
+  /** Retrato emprestado (Roleta, vilões vindos da Jornada): `ninja:<clã>` ou `villain:<id>`. Sem o campo: o desenho do id. */
+  portrait?: string;
 }
 
 /** Manto: abaixo do limiar de HP, uma vez por luta, por alguns turnos (jinchuuriki, marca da maldição). */

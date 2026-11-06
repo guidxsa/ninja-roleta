@@ -2,6 +2,9 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { VillainTechnique } from '../src/core/types';
 import { techniquesById } from '../src/data/techniques';
+import { roletaTechniques } from '../src/data/roleta/techniques';
+import { roletaRelics } from '../src/data/relics';
+import { roletaExtraVillains } from '../src/data/roleta/villains';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { villains } from '../src/data/villains';
 import { enemies } from '../src/data/jornada/enemies';
@@ -17,6 +20,25 @@ describe('docs batem com os dados', () => {
   it('toda técnica do jogador aparece em docs/base/tecnicas.md', () => {
     const text = doc('base/tecnicas.md');
     const missing = Object.keys(techniquesById).map(nameOf).filter((n) => !has(text, n));
+    expect(missing).toEqual([]);
+  });
+
+  it('toda técnica do Roleta enxuto aparece em docs/roleta/combate.md', () => {
+    const text = doc('roleta/combate.md');
+    const missing = roletaTechniques.map((t) => S.roleta.techniques[t.id] ?? t.id).filter((n) => !has(text, n));
+    expect(missing).toEqual([]);
+  });
+
+  it('toda relíquia do Roleta aparece na tabela de modos de docs/jornada/reliquias.md', () => {
+    const text = doc('jornada/reliquias.md');
+    const modes = text.slice(text.indexOf('## Modos'));
+    const name = (id: string) => S.jornada.relics.list[id]?.name ?? S.roleta.relics[id]?.name ?? id;
+    expect(roletaRelics.map((r) => name(r.id)).filter((n) => !has(modes, n))).toEqual([]);
+  });
+
+  it('todo vilão só do Roleta e as técnicas dele aparecem em docs/roleta/run.md', () => {
+    const text = doc('roleta/run.md');
+    const missing = roletaExtraVillains.flatMap((v) => [S.villains[v.id] ?? v.id, ...v.techniques.map((t) => S.roleta.techniques[t.id] ?? t.id)]).filter((n) => !has(text, n));
     expect(missing).toEqual([]);
   });
 
