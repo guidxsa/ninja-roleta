@@ -16,6 +16,8 @@ export interface AchievementContext {
   fallenTo: string | null;
   /** Do perfil, já com esta run: quantas vezes cada vilão derrotou o jogador. */
   killedBy: Record<string, number>;
+  /** Roleta enxuto (v0.46.0): ciclos vencidos na run (o chefe caiu). */
+  cyclesWon?: number;
   /** Conquistas liberadas (as do perfil e as que acabaram de sair nesta checagem). */
   unlocked: ReadonlySet<string>;
 }

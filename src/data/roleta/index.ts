@@ -4,6 +4,8 @@ import { gameData } from '../index';
 import { roletaBalance } from './balance';
 import { roletaKits } from './kits';
 import { roletaTechniquesById } from './techniques';
+import { roletaRelics } from '../relics';
+import { roletaCategories, roletaCycle } from './villains';
 
 // Pacote de dados do Roleta enxuto (docs/roleta/). Reaproveita a base (`gameData`: linhagens, níveis, dificuldade,
 // eventos, itens e recompensas), sem o que saiu do modo: pool de técnicas, técnicas de nível, upgrades dos marcos,
@@ -22,26 +24,24 @@ export const roletaPreFightEvents: Weighted<PreFightEventId>[] = [
 
 /** Roleta de itens sem o Pergaminho de técnica (as técnicas sobem sozinhas). */
 export const roletaItems: Weighted<ItemId>[] = [
-  { id: 'revive', weight: 10 },
-  { id: 'ninjaTool', weight: 14 },
-  { id: 'resistanceItem', weight: 12 },
-  { id: 'speedItem', weight: 12 },
-  { id: 'xpScroll', weight: 12 },
-  { id: 'soldierPill', weight: 9 },
-  { id: 'medKit', weight: 9 },
-  { id: 'explosiveTag', weight: 8 },
-  { id: 'smokeBomb', weight: 6 },
-  { id: 'loadedCoin', weight: 4 },
-  { id: 'trainingWeights', weight: 4 },
+  // Ferramenta ninja, amuletos e Pesos de treino viraram relíquias (v0.46.0); a Bomba de fumaça saiu (a esquiva é
+  // passiva). Ficam recursos e consumíveis.
+  { id: 'revive', weight: 12 },
+  { id: 'xpScroll', weight: 22 },
+  { id: 'soldierPill', weight: 20 },
+  { id: 'medKit', weight: 20 },
+  { id: 'explosiveTag', weight: 18 },
+  { id: 'loadedCoin', weight: 8 },
 ];
 
-/** Recompensa direta: sem "Nova técnica". */
+/** Recompensa direta: sem "Nova técnica"; com a fatia "Relíquia" (v0.46.0). */
 export const roletaRewards: Weighted<RewardId>[] = [
-  { id: 'stages', weight: 25 },
-  { id: 'xp', weight: 25 },
-  { id: 'item', weight: 20 },
-  { id: 'resistance', weight: 15 },
-  { id: 'critBonus', weight: 15 },
+  { id: 'stages', weight: 22 },
+  { id: 'xp', weight: 20 },
+  { id: 'item', weight: 18 },
+  { id: 'relic', weight: 15 },
+  { id: 'resistance', weight: 13 },
+  { id: 'critBonus', weight: 12 },
 ];
 
 export const roletaData: RoletaData = {
@@ -57,4 +57,7 @@ export const roletaData: RoletaData = {
   r: roletaBalance,
   techniques: roletaTechniquesById,
   kits: roletaKits,
+  relics: roletaRelics,
+  categories: roletaCategories,
+  cycle: roletaCycle,
 };

@@ -51,7 +51,14 @@ export const roletaBalance = {
   // Invocações (passivas): sapo (dano verdadeiro em % do HP máximo do vilão por ataque que acerta), lesma (cura por rodada).
   summons: { toadPct: 0.06, toadPerLevel: 0.02, slugPct: 0.03, slugPerLevel: 0.01 },
   // Vilões: Insano (Orochimaru) sem limite nos dados (hardcore) volta no máximo esta quantidade de vezes.
-  villains: { insaneMaxRevives: 3 },
+  // `insaneRevivesCap`: teto de volta do Orochimaru no Roleta em qualquer dificuldade (o ciclo é curto).
+  villains: { insaneMaxRevives: 3, insaneRevivesCap: 1 },
+  // Run (docs/roleta/run.md): raridade da recompensa por categoria (1 comum, 2 rara, 3 lendária; o chefe abre o baú),
+  // força dos vilões por ciclo (× 1 + perCycle × ciclo, contando do 0; rascunho) e relíquias.
+  run: { rewardTier: { genin: 1, chunin: 1, jounin: 2, boss: 0 } as Record<string, number>, bossChoices: 3 },
+  infinite: { perCycle: 0.3 },
+  // Fatia "Relíquia" da recompensa: classificação pela raridade (comum → comum, rara → incomum, lendária → rara).
+  relicTierByReward: { 1: 'common', 2: 'uncommon', 3: 'rare' } as Record<number, 'common' | 'uncommon' | 'rare'>,
   // Consumíveis na luta.
   items: { soldierPillPct: 0.5, medKitHealPct: 0.15, explosiveTagDamage: 15 },
 };

@@ -450,6 +450,7 @@ export const ptBR = {
     resistance: 'Resistência',
     critBonus: 'Chance de crítico',
     item: 'Roleta de itens',
+    relic: 'Relíquia',
   } as Record<string, string>,
   rewardTiers: ['', 'comum', 'rara', 'lendária'],
   difficulty: {
@@ -1137,7 +1138,8 @@ export const ptBR = {
   profile: {
     title: 'Registro ninja',
     tabs: { history: 'Histórico', achievements: 'Conquistas', bingo: 'Livro Bingo', origins: 'Origens', relics: 'Relíquias' },
-    relicsIntro: 'Toda relíquia da Jornada que já apareceu para você. As que faltam ficam escondidas até você encontrar.',
+    relicsIntro: 'Toda relíquia que já apareceu para você, na Jornada e no Roleta. As que faltam ficam escondidas até você encontrar.',
+    relicModes: { all: 'Todas', jornada: 'Jornada', roleta: 'Roleta' } as Record<string, string>,
     relicsCount: (found: number, total: number) => `${found} de ${total} encontradas`,
     relicsHint: 'Toque numa relíquia encontrada para ver o que ela faz.',
     relicHidden: 'Relíquia ainda não encontrada',
@@ -1162,9 +1164,12 @@ export const ptBR = {
     progress: (n: number, total: number) => `${n}/${total}`,
     categories: { milestone: 'Marcos', luck: 'Sorte e azar', style: 'Estilo', secret: 'Segredos' },
     list: {
-      genin: { name: 'Genin', desc: 'Vença o Mizuki.' },
+      genin: { name: 'Genin', desc: 'Vença um vilão genin.' },
       chunin: { name: 'Chunin', desc: 'Vença as 3 lutas do exame chunin.' },
-      leafNinja: { name: 'Ninja da Folha', desc: 'Vença a campanha.' },
+      leafNinja: { name: 'Ninja da Folha', desc: 'Vença o 1º ciclo (o chefe).' },
+      r_cycle2: { name: 'Sem descanso', desc: 'No modo infinito do Roleta, vença o ciclo 2.' },
+      r_cycle3: { name: 'Roda da fortuna', desc: 'No modo infinito do Roleta, vença o ciclo 3.' },
+      r_cycle5: { name: 'Lenda da roleta', desc: 'No modo infinito do Roleta, vença o ciclo 5.' },
       awakened: { name: 'Despertar', desc: 'Chegue ao nível 7 numa run.' },
       noFear: { name: 'Sem medo do escuro', desc: 'Vença a campanha no Difícil.' },
       legend: { name: 'Lenda', desc: 'Vença a campanha no Hardcore.' },

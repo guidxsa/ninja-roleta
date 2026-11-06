@@ -13,6 +13,8 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho ou os atalhos
 
 ## Recorde do modo infinito
 
+- **Roleta** (v0.46.0): o perfil guarda o ciclo alcançado e as lutas vencidas na melhor run (`roleta`); ciclo maior passa, no mesmo ciclo mais lutas. A tela final mostra "Recorde!" quando bate ([roleta/run.md](../roleta/run.md#modo-infinito)).
+
 - O Caminho Ninja vencido pode seguir de ciclo ([run.md](../jornada/run.md#modo-infinito)). O perfil guarda até onde uma run chegou (`jornada.generic`): o ciclo e o estágio (contando do 1) e se venceu esse ciclo. Ciclo maior passa; no mesmo ciclo, vencer passa qualquer estágio; senão, o estágio maior.
 - Grava no fim da run (vitória ou queda) e quando uma run salva que já andou é apagada por uma nova. Sem o campo, nunca registrou.
 - Aparece no cartão do Caminho Ninja, na tela de início da Jornada, a partir de um ciclo vencido; a tela final mostra "Recorde!" quando bate.
@@ -35,9 +37,12 @@ O perfil é um só para os dois modos. A aba Conquistas mostra as do Roleta (Mar
 
 | Conquista | Condição |
 |---|---|
-| Genin | Vencer o Mizuki |
-| Chunin | Vencer as 3 lutas do exame |
-| Ninja da Folha | Vencer a campanha |
+| Genin | Vencer um vilão genin (até a v0.45.0: o Mizuki) |
+| Chunin | *Clássica desde a v0.46.0 (o exame saiu do Roleta)*: vencer as 3 lutas do exame |
+| Ninja da Folha | Vencer a run (o chefe do 1º ciclo) |
+| Sem descanso | No modo infinito do Roleta, vencer o ciclo 2 |
+| Roda da fortuna | No modo infinito do Roleta, vencer o ciclo 3 |
+| Lenda da roleta | No modo infinito do Roleta, vencer o ciclo 5 |
 | Despertar | Chegar ao nível 7 |
 | Sem medo do escuro | Vencer no Difícil (ou no Hardcore) |
 | Lenda | Vencer no Hardcore |
@@ -69,7 +74,7 @@ O perfil é um só para os dois modos. A aba Conquistas mostra as do Roleta (Mar
 | Intocável | Vencer o Gaara, o Kabuto ou o Orochimaru sem levar dano |
 | Pura força | Vencer como prodígio sem abrir os portões |
 | Ladrão de técnicas | Copiar 3 técnicas com o Sharingan na mesma run |
-| Reprovado, mas vivo (escondida) | Perder as 3 lutas do exame e vencer a campanha |
+| Reprovado, mas vivo (escondida) | *Clássica desde a v0.46.0*: perder as 3 lutas do exame e vencer a campanha |
 
 ### Segredos (todos escondidos)
 

@@ -1,5 +1,7 @@
 # Itens e recompensas
 
+> Desde a v0.46.0, os itens, a recompensa e as relíquias do Roleta estão em [run.md](run.md). Esta página descreve a versão clássica (reserva).
+
 Itens que o jogador ganha nas roletas, a bolsa de consumíveis e a roleta de recompensa pós-vilão.
 
 ## Roleta de itens

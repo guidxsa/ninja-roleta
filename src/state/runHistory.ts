@@ -19,6 +19,9 @@ export interface RunRecord {
   difficulty?: Difficulty;
   /** Seed das roletas da run (`?seed=` repete). Ausente nos registros antigos. */
   seed?: number;
+  /** Roleta enxuto (v0.46.0): ciclo alcançado (contando do 0) e lutas vencidas. Ausentes nos registros da campanha antiga. */
+  cycle?: number;
+  fights?: number;
 }
 
 /** Subconjunto do `localStorage` usado aqui (injetável nos testes). */
@@ -76,7 +79,7 @@ export function startRun(
 export function updateRun(
   storage: KeyValueStorage,
   id: string,
-  patch: Partial<Pick<RunRecord, 'status' | 'furthestStage' | 'revivesUsed' | 'difficulty'>>,
+  patch: Partial<Pick<RunRecord, 'status' | 'furthestStage' | 'revivesUsed' | 'difficulty' | 'cycle' | 'fights'>>,
   now: Date,
   maxRuns: number,
 ): void {

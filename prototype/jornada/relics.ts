@@ -1,8 +1,8 @@
 // Relíquias na interface da Jornada: barra de ícones no HUD e na luta, painel agrupado por raridade,
 // card de revelação e brilho quando uma relíquia age. As regras ficam em src/core/jornada/relics.ts.
-import type { RelicDef, RelicTier } from '../../src/core/jornada/relics';
+import { relicInMode, type RelicDef, type RelicMode, type RelicTier } from '../../src/core/jornada/relics';
+import { allRelics, relicsById } from '../../src/data/relics';
 import type { JRun } from '../../src/core/jornada/run';
-import { jornadaData as data } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { icon } from '../art';
 import { h, sleep } from '../dom';
@@ -13,13 +13,15 @@ const J = S.jornada;
 const U = J.ui;
 const TIERS: RelicTier[] = ['starter', 'common', 'uncommon', 'rare', 'boss', 'shop', 'event', 'special'];
 
-const def = (id: string): RelicDef | undefined => data.relics.find((r) => r.id === id);
-export const relicName = (id: string) => J.relics.list[id]?.name ?? id;
-export const relicDesc = (id: string) => J.relics.list[id]?.desc ?? '';
+// Catálogo único (as da Jornada e as do Roleta). `mode`: o efeito mostrado é o desse modo.
+const def = (id: string): RelicDef | undefined => relicsById[id];
+const RR = S.roleta.relics;
+export const relicName = (id: string) => J.relics.list[id]?.name ?? RR[id]?.name ?? id;
+export const relicDesc = (id: string, mode: RelicMode = 'jornada') => (mode === 'roleta' ? RR[id]?.desc : J.relics.list[id]?.desc) ?? J.relics.list[id]?.desc ?? RR[id]?.desc ?? '';
 export const relicTier = (id: string): RelicTier => def(id)?.tier ?? 'common';
 export const isEvolution = (id: string) => Boolean(def(id)?.evolves);
 const tierName = (id: string) => (isEvolution(id) ? J.relics.evolution : (J.relics.tiers[relicTier(id)] ?? ''));
-const relicTip = (id: string) => tip(relicName(id), `<span class="tip-tier tier-${relicTier(id)}">${tierName(id)}</span><br>${relicDesc(id)}`);
+const relicTip = (id: string, mode: RelicMode = 'jornada') => tip(relicName(id), `<span class="tip-tier tier-${relicTier(id)}">${tierName(id)}</span><br>${relicDesc(id, mode)}`);
 
 // Relíquias que o jogador já viu na barra: as que chegam depois entram com brilho.
 const seen = new Set<string>();
@@ -29,11 +31,11 @@ export function markRelicsSeen(ids: readonly string[]): void {
 }
 
 /** Ícone de uma relíquia. `button` abre o painel (data-open); `span` só mostra a dica. */
-export function relicSlot(id: string, as: 'button' | 'span' = 'button', extraCls = ''): string {
+export function relicSlot(id: string, as: 'button' | 'span' = 'button', extraCls = '', mode: RelicMode = 'jornada'): string {
   const cls = `jrslot tier-${relicTier(id)}${extraCls ? ` ${extraCls}` : ''}`;
   return as === 'button'
-    ? `<button type="button" class="${cls}" data-open="relics" data-relic="${id}" aria-label="${relicName(id)}"${relicTip(id)}>${relicIcon(id)}</button>`
-    : `<span class="${cls}" data-relic="${id}" role="img" aria-label="${relicName(id)}"${relicTip(id)}>${relicIcon(id)}</span>`;
+    ? `<button type="button" class="${cls}" data-open="relics" data-relic="${id}" aria-label="${relicName(id)}"${relicTip(id, mode)}>${relicIcon(id)}</button>`
+    : `<span class="${cls}" data-relic="${id}" role="img" aria-label="${relicName(id)}"${relicTip(id, mode)}>${relicIcon(id)}</span>`;
 }
 
 /** Barra de relíquias do HUD: as novas entram com brilho uma vez. */
@@ -55,10 +57,10 @@ export function relicStrip(run: JRun): string {
 }
 
 /** Card grande: ícone, nome, raridade e efeito. */
-export function relicCard(id: string, extra = '', cls = ''): string {
+export function relicCard(id: string, extra = '', cls = '', mode: RelicMode = 'jornada'): string {
   return `<div class="jrcard tier-${relicTier(id)}${cls ? ` ${cls}` : ''}" data-relic="${id}">
     <span class="jrcard-ico">${relicIcon(id)}</span>
-    <span class="jrcard-txt"><b>${relicName(id)}</b><small class="jrcard-tier">${tierName(id)}</small><small>${relicDesc(id)}</small></span>${extra}</div>`;
+    <span class="jrcard-txt"><b>${relicName(id)}</b><small class="jrcard-tier">${tierName(id)}</small><small>${relicDesc(id, mode)}</small></span>${extra}</div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,36 +130,51 @@ export function relicsModal(run: JRun, focus?: string): void {
 /** Coleção de todas as relíquias, por classificação: as não encontradas ficam escondidas. */
 export function relicCollection(container: HTMLElement, found: Readonly<Record<string, string>>): void {
   const P = S.profile;
-  const total = data.relics.length;
-  const count = data.relics.filter((r) => r.id in found).length;
-  // Evoluções vêm com as de chefe, depois das outras.
-  const inTier = (t: RelicTier) => data.relics.filter((r) => r.tier === t).sort((a, b) => Number(Boolean(a.evolves)) - Number(Boolean(b.evolves)));
-  // Bloco próprio: o contêiner é reaproveitado entre as abas, e o clique não pode ficar preso nele.
-  const root = h(`<div class="jrcollection"><p class="muted small">${P.relicsIntro}</p>
-    <p class="jrcount"><b>${P.relicsCount(count, total)}</b></p>
-    <div class="bar bar-xp jrcount-bar"><div class="fill" style="width:${(count / total) * 100}%"></div></div>
-    ${TIERS.map((t) => {
-      const list = inTier(t);
-      const n = list.filter((r) => r.id in found).length;
-      return `<section class="jrgroup tier-${t}"><h3>${J.relics.tiers[t]} <small class="muted">${n}/${list.length}</small></h3>
-        <p class="muted small jrgroup-desc">${J.relics.tierDesc[t]}</p>
-        <div class="jrgrid">${list
-          .map((r) =>
-            r.id in found
-              ? `<button type="button" class="jrslot big tier-${t}" data-pick="${r.id}" aria-label="${relicName(r.id)}">${relicIcon(r.id)}</button>`
-              : `<span class="jrslot big jrhidden" role="img" aria-label="${P.relicHidden}"><b class="jq">?</b></span>`,
-          )
-          .join('')}</div></section>`;
-    }).join('')}
-    <div class="jrdetail" aria-live="polite"><p class="muted center">${P.relicsHint}</p></div></div>`);
-  const detail = root.querySelector<HTMLElement>('.jrdetail')!;
-  root.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-pick]');
-    if (!b) return;
-    root.querySelectorAll('[data-pick]').forEach((x) => x.classList.toggle('on', x === b));
-    detail.innerHTML = relicCard(b.dataset.pick!, '', 'pop');
-  });
-  container.replaceChildren(root);
+  let mode: RelicMode | 'all' = 'all';
+  const render = () => {
+    const pool = allRelics.filter((r) => mode === 'all' || relicInMode(r, mode));
+    const total = pool.length;
+    const count = pool.filter((r) => r.id in found).length;
+    // Evoluções vêm com as de chefe, depois das outras.
+    const inTier = (t: RelicTier) => pool.filter((r) => r.tier === t).sort((a, b) => Number(Boolean(a.evolves)) - Number(Boolean(b.evolves)));
+    const shownMode: RelicMode = mode === 'roleta' ? 'roleta' : 'jornada';
+    // Bloco próprio: o contêiner é reaproveitado entre as abas, e o clique não pode ficar preso nele.
+    const root = h(`<div class="jrcollection"><p class="muted small">${P.relicsIntro}</p>
+      <div class="segmented jrmode" role="group">${(['all', 'jornada', 'roleta'] as const)
+        .map((m) => `<button type="button" class="btn seg" data-mode="${m}" aria-pressed="${m === mode}">${P.relicModes[m]}</button>`)
+        .join('')}</div>
+      <p class="jrcount"><b>${P.relicsCount(count, total)}</b></p>
+      <div class="bar bar-xp jrcount-bar"><div class="fill" style="width:${total ? (count / total) * 100 : 0}%"></div></div>
+      ${TIERS.map((t) => {
+        const list = inTier(t);
+        if (!list.length) return '';
+        const n = list.filter((r) => r.id in found).length;
+        return `<section class="jrgroup tier-${t}"><h3>${J.relics.tiers[t]} <small class="muted">${n}/${list.length}</small></h3>
+          <p class="muted small jrgroup-desc">${J.relics.tierDesc[t]}</p>
+          <div class="jrgrid">${list
+            .map((r) =>
+              r.id in found
+                ? `<button type="button" class="jrslot big tier-${t}" data-pick="${r.id}" aria-label="${relicName(r.id)}">${relicIcon(r.id)}</button>`
+                : `<span class="jrslot big jrhidden" role="img" aria-label="${P.relicHidden}"><b class="jq">?</b></span>`,
+            )
+            .join('')}</div></section>`;
+      }).join('')}
+      <div class="jrdetail" aria-live="polite"><p class="muted center">${P.relicsHint}</p></div></div>`);
+    const detail = root.querySelector<HTMLElement>('.jrdetail')!;
+    root.addEventListener('click', (e) => {
+      const m = (e.target as HTMLElement).closest<HTMLElement>('[data-mode]');
+      if (m) {
+        mode = m.dataset.mode as RelicMode | 'all';
+        return render();
+      }
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-pick]');
+      if (!b) return;
+      root.querySelectorAll('[data-pick]').forEach((x) => x.classList.toggle('on', x === b));
+      detail.innerHTML = relicCard(b.dataset.pick!, '', 'pop', shownMode);
+    });
+    container.replaceChildren(root);
+  };
+  render();
 }
 
 // ---------------------------------------------------------------------------

@@ -10,6 +10,7 @@ import type { PlayerState } from '../player';
 import type { RoletaData } from './data';
 import type { REffectKind, RTechniqueDef } from '../../data/roleta/techniques';
 import type { RActive } from '../../data/roleta/kits';
+import { relicEffects } from './run';
 
 export type Side = 'player' | 'villain';
 
@@ -56,6 +57,8 @@ export interface RPlayerFx {
   cloakUsed: boolean;
   vitalTurns: number;
   vitalUsed: boolean;
+  /** Pena de fênix já usada nesta luta. */
+  survivedOnce: boolean;
 }
 
 export type RAction = `tech:${string}` | 'guard' | 'rest' | `item:${ConsumableId}`;
@@ -64,7 +67,7 @@ export type REvent =
   | { type: 'initiative'; playerFirst: boolean; chance: number; forced: boolean }
   | { type: 'round'; round: number }
   | { type: 'attack'; side: Side; techId: string; hitChance: number; critChance: number; outcome: HitOutcome; hits: number; auto?: boolean }
-  | { type: 'damage'; side: Side; amount: number; crit?: boolean; source: 'attack' | 'burn' | 'poison' | 'toad' | 'dog' | 'tag' | 'self' | 'gates' }
+  | { type: 'damage'; side: Side; amount: number; crit?: boolean; source: 'attack' | 'burn' | 'poison' | 'toad' | 'dog' | 'tag' | 'self' | 'gates' | 'opening' }
   | { type: 'shield'; side: Side; absorbed: number }
   | { type: 'heal'; side: Side; amount: number; source: string }
   | { type: 'effect'; side: Side; kind: REffectKind; turns: number }
@@ -137,6 +140,7 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
       cloakUsed: false,
       vitalTurns: 0,
       vitalUsed: false,
+      survivedOnce: false,
     },
     round: 0,
     playerFirst: true,
@@ -147,6 +151,15 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
   };
   // Marca da maldição desde o começo (hardcore).
   if (passive?.kind === 'cloak' && passive.fromStart) openVillainCloak(s);
+  // Relíquias de começo de luta: escudo, chakra a mais e dano de abertura.
+  const fx = relicEffects(s.player, data);
+  if (fx.startShieldPct > 0) s.fx.shield += Math.floor(s.player.maxHp * fx.startShieldPct);
+  if (fx.startChakraPct > 0) s.player.chakra = Math.min(s.player.maxChakra, s.player.chakra + Math.floor(s.player.maxChakra * fx.startChakraPct));
+  if (fx.openingDamage > 0) {
+    const n = Math.min(s.villain.hp - 1, fx.openingDamage);
+    s.villain.hp -= n;
+    s.log.push({ type: 'damage', side: 'villain', amount: n, source: 'opening' });
+  }
   const forced = Boolean(options.playerStartsFirst || options.villainStartsFirst);
   const chance = initiativeChance(effectiveSpeed(s, 'player', data), def.speed);
   s.playerFirst = options.playerStartsFirst ? true : options.villainStartsFirst ? false : rollInitiative(effectiveSpeed(s, 'player', data), def.speed, rng) === 'a';
@@ -164,7 +177,7 @@ export const kitOf = (p: PlayerState, data: RoletaData) => data.kits[p.origin.li
 
 /** Dano base de uma técnica do jogador no nível atual (mais a Ferramenta ninja). */
 export function techBase(p: PlayerState, t: RTechniqueDef, data: RoletaData): number {
-  return t.base + t.perLevel * (p.level - 1) + p.ninjaToolLevel * data.base.balance.ninjaTool.baseDamagePerLevel;
+  return t.base + t.perLevel * (p.level - 1) + p.ninjaToolLevel * data.base.balance.ninjaTool.baseDamagePerLevel + relicEffects(p, data).flatDamage;
 }
 
 const buff = (s: RBattle, kind: RActive) => s.fx.buff?.kind === kind && s.fx.buff.turns > 0;
@@ -211,13 +224,15 @@ export function playerAttackOdds(s: RBattle, t: RTechniqueDef, data: RoletaData)
   let bonus = buff(s, 'sharingan') ? k.sharingan.accuracy : 0;
   if (has(s.fx.effects, 'fear')) bonus += data.r.effects.fear.accuracy;
   bonus -= dodgeChance(s.villain.def.speed, effectiveSpeed(s, 'player', data), data);
+  const relic = relicEffects(s.player, data);
+  bonus += relic.accuracyBonus;
   let hit = auto ? 1 : hitChance(t.accuracy, bonus, cfg.hit);
   // Névoa (Zabuza): a chance de erro do jogador × evasionMult.
   const p = s.villain.def.passive;
   if (!auto && p?.kind === 'mist' && s.villain.mistTurns > 0) hit = clamp(1 - (1 - hit) * p.evasionMult, cfg.hit.min, cfg.hit.max);
   const critImmune = p?.kind === 'insane' && p.critImmune;
   const youth = kitOf(s.player, data).passive === 'youth' ? data.r.passives.youthCrit : 0;
-  const crit = critImmune ? 0 : critChance(s.player.critBonus + (t.critBonus ?? 0) + youth, cfg.crit, hit);
+  const crit = critImmune ? 0 : critChance(s.player.critBonus + (t.critBonus ?? 0) + youth + relic.critBonus, cfg.crit, hit);
   return { hit, crit, auto };
 }
 
@@ -231,6 +246,10 @@ function playerExtraMult(s: RBattle, t: RTechniqueDef, data: RoletaData): number
     if (buff(s, 'gates')) m *= k.gates.taijutsuMult;
   }
   if (has(s.fx.effects, 'fear')) m *= data.r.effects.fear.damageMult;
+  // Relíquias: dano geral, por tipo e com HP baixo.
+  const relic = relicEffects(s.player, data);
+  m *= relic.damageMult * (relic.typeDamageMult[t.type] ?? 1);
+  if (s.player.hp < s.player.maxHp * 0.5) m *= relic.lowHpDamageMult;
   return m;
 }
 
@@ -250,7 +269,9 @@ export function playerHitDamage(s: RBattle, t: RTechniqueDef, data: RoletaData, 
 }
 
 /** Técnicas que o jogador pode usar agora (com chakra). */
-export const canUseTechnique = (s: RBattle, t: RTechniqueDef) => s.player.chakra >= t.chakra;
+/** Custo da técnica com as relíquias (nunca abaixo de 0). */
+export const techCost = (s: RBattle, t: RTechniqueDef, data: RoletaData) => Math.max(0, t.chakra - (t.chakra > 0 ? relicEffects(s.player, data).chakraDiscount : 0));
+export const canUseTechnique = (s: RBattle, t: RTechniqueDef, data: RoletaData) => s.player.chakra >= techCost(s, t, data);
 
 // ---------------------------------------------------------------------------
 // Ativa da linhagem (grátis, uma por turno)
@@ -374,6 +395,7 @@ function startOfRound(s: RBattle, data: RoletaData): void {
   if (kit.passive === 'vitality') healPct += r.passives.vitalityPct;
   if (s.fx.vitalTurns > 0) healPct += r.passives.vitalForce.regenPct;
   if (s.player.summon?.animal === 'slug') healPct += r.summons.slugPct + r.summons.slugPerLevel * (s.player.summon.level - 1);
+  healPct += relicEffects(s.player, data).regenPct;
   if (healPct > 0) healPlayer(s, Math.floor(s.player.maxHp * healPct), kit.passive === 'vitality' ? 'vitality' : 'regen');
   // Vilão: manto abaixo do limiar e regeneração dele.
   const vp = s.villain.def.passive;
@@ -476,11 +498,11 @@ function playerTurn(s: RBattle, action: RAction, data: RoletaData, rng: Rng): vo
   if (action.startsWith('item:')) return useItem(s, action.slice(5) as ConsumableId, data, rng);
   const t = data.techniques[action.slice(5)];
   if (!t || !s.player.techniques.includes(t.id)) throw new Error(`técnica desconhecida: ${action}`);
-  if (!canUseTechnique(s, t)) {
+  if (!canUseTechnique(s, t, data)) {
     // Sem chakra: concentra no lugar (a interface não deixa escolher).
     return playerTurn({ ...s }, 'rest', data, rng);
   }
-  s.player.chakra -= t.chakra;
+  s.player.chakra -= techCost(s, t, data);
   playerAttack(s, t, data, rng);
 }
 
@@ -573,7 +595,7 @@ function villainTurn(s: RBattle, data: RoletaData, rng: Rng): void {
 export function villainAttackOdds(s: RBattle, tech: VillainTechnique, data: RoletaData): { hit: number; crit: number } {
   const cfg = data.base.balance;
   const kit = kitOf(s.player, data);
-  let bonus = -dodgeChance(effectiveSpeed(s, 'player', data), s.villain.def.speed, data);
+  let bonus = -dodgeChance(effectiveSpeed(s, 'player', data), s.villain.def.speed, data) - relicEffects(s.player, data).dodgeBonus;
   if (kit.passive === 'mindReading') bonus -= data.r.passives.mindReadingAccuracy;
   if (buff(s, 'sharingan')) bonus -= data.r.kits.sharingan.dodge;
   if (has(s.villain.effects, 'fear')) bonus += data.r.effects.fear.accuracy;
@@ -651,6 +673,13 @@ function hurtPlayer(s: RBattle, amount: number, source: 'attack' | 'burn' | 'poi
   s.log.push({ type: 'damage', side: 'player', amount: n, source, ...(crit ? { crit } : {}) });
   if (s.player.hp > 0) return;
   // Vontade do Fogo: volta inteiro.
+  // Pena de fênix: uma vez por luta, fica com 1 de HP.
+  if (!s.fx.survivedOnce && relicEffects(s.player, data).surviveOnce) {
+    s.fx.survivedOnce = true;
+    s.player.hp = 1;
+    s.log.push({ type: 'passive', side: 'player', kind: 'phoenix' });
+    return;
+  }
   if (s.options.allowRevive && s.player.revives > 0) {
     s.player = { ...s.player, revives: s.player.revives - 1, revivesUsed: s.player.revivesUsed + 1, hp: s.player.maxHp, chakra: s.player.maxChakra };
     s.fx.effects = [];
@@ -692,7 +721,7 @@ function hurtVillain(s: RBattle, amount: number, source: 'attack' | 'burn' | 'po
     s.log.push({ type: 'passive', side: 'villain', kind: 'monster' });
     return n;
   }
-  if (p?.kind === 'insane' && v.revivesUsed < (p.maxRevives ?? data.r.villains.insaneMaxRevives)) {
+  if (p?.kind === 'insane' && v.revivesUsed < Math.min(p.maxRevives ?? data.r.villains.insaneMaxRevives, data.r.villains.insaneRevivesCap)) {
     v.revivesUsed++;
     v.hp = Math.floor(v.maxHp * p.revivePct);
     s.log.push({ type: 'revive', side: 'villain', source: 'insane' });

@@ -4,6 +4,7 @@ import {
   canUseTechnique,
   kitOf,
   techBase,
+  techCost,
   playerAttackOdds,
   playerHitDamage,
   playRoletaRound,
@@ -16,6 +17,20 @@ import {
 } from '../src/core/roleta/battle';
 import { createRoletaPlayer, playerTechniques, roletaKit } from '../src/core/roleta/player';
 import { roletaData as rdata } from '../src/data/roleta/index';
+import {
+  chooseChest,
+  contractFor,
+  continueRoletaCycle,
+  currentCategory,
+  cycleMult,
+  drawVillain,
+  finishRoletaFight,
+  gainRoletaRelic,
+  newRoletaRun,
+  rewardRelic,
+  villainFor,
+  type RRun,
+} from '../src/core/roleta/run';
 import type { RTechniqueDef } from '../src/data/roleta/techniques';
 import { critChance, hitSlices } from '../src/core/hit';
 import { choose, esc, goHome, h, HOME, isOff, show, sleep, untilHome } from './dom';
@@ -24,12 +39,10 @@ import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
   canLevelUp,
   equipTrainingWeights,
-  fullRestore,
   recoverAfterWin,
   gainXp,
   removeTrainingWeights,
   techniqueLevel,
-  trainingWeightsWin,
   upgradeTechnique,
   withDifficulty,
   xpGain,
@@ -48,7 +61,6 @@ import {
   applyTraining,
   applyTrainingFocus,
   chooseUpgrade,
-  examRecover,
   forfeitUpgrade,
   HANDS,
   levelUp,
@@ -96,11 +108,13 @@ import {
   reachOf,
   recordFight,
   recordJornadaReach,
+  recordRoletaReach,
   saveProfile,
   unlockAchievements,
   type Profile,
 } from '../src/state/profile';
-import { relicCollection } from './jornada/relics';
+import { relicCard, relicCollection, relicName, relicSlot, relicTier } from './jornada/relics';
+import { relicIcon } from './jornada/relicIcons';
 import { askPlayerName } from './playerName';
 import {
   isHardcoreUnlocked,
@@ -373,7 +387,8 @@ interface Campaign {
   origin: Origin;
   player: PlayerState;
   difficulty: Difficulty;
-  stageIndex: number;
+  /** Run do Roleta enxuto (ciclo, passo, vilão sorteado, baú). `player` e `mods` vivem aqui ao lado. */
+  run: RRun;
   mods: NextFightMods;
   /** Seed das roletas (null quando não dá para repetir). */
   seed: number | null;
@@ -394,6 +409,13 @@ function syncSheetBtn() {
   document.body.classList.toggle('has-sheet', Boolean(camp) || Boolean(jornadaSheet));
 }
 const NO_MODS: NextFightMods = { villainStartsFirst: false, playerStartsFirst: false };
+/** A run com o jogador e os modificadores atuais (que as telas mexem direto em `camp`). */
+const getRun = (): RRun => ({ ...camp!.run, player: camp!.player, mods: camp!.mods });
+const setRun = (r: RRun) => {
+  camp!.run = r;
+  camp!.player = r.player;
+  camp!.mods = r.mods;
+};
 
 // ---------------------------------------------------------------------------
 // Perfil: conquistas e Livro Bingo (localStorage)
@@ -430,6 +452,8 @@ function checkAchievements(result: 'inProgress' | 'victory' | 'defeat', fallenTo
     fallenTo,
     killedBy: killedByCounts(profile),
     unlocked: new Set(Object.keys(profile.achievements)),
+    // Ciclos vencidos: no fim do 1º a run fica em `victory`; dos seguintes, o ciclo já avançou.
+    cyclesWon: camp.run.status === 'victory' ? camp.run.cycle + 1 : camp.run.cycle,
   });
   if (ids.length === 0) return;
   profile = unlockAchievements(profile, ids, new Date());
@@ -437,7 +461,7 @@ function checkAchievements(result: 'inProgress' | 'victory' | 'defeat', fallenTo
   ids.forEach((id, i) => setTimeout(() => toast(S.achievements.unlocked(S.achievements.list[id]?.name ?? id), 'medal'), i * 2800));
 }
 
-function track(patch: { status?: RunStatus; furthestStage?: number; difficulty?: Difficulty }) {
+function track(patch: { status?: RunStatus; furthestStage?: number; difficulty?: Difficulty; cycle?: number; fights?: number }) {
 
   // Runs do laboratório não entram no histórico.
   if (!camp || LAB.lab) return;
@@ -584,6 +608,21 @@ function jinChip(p: PlayerState): string {
   return `<span class="chip jin"${tip(S.origin.jinchuuriki, body)}>${clanSymbol('jinchuuriki')}${S.origin.jinchuuriki}</span>`;
 }
 
+/** Relíquias do Roleta: fileira de ícones com o efeito de lá na dica. */
+function roletaRelicBar(p: PlayerState): string {
+  const ids = p.relics ?? [];
+  return ids.length ? `<div class="jrbar" role="list" aria-label="${S.roleta.run.relicsTitle}">${ids.map((id) => relicSlot(id, 'span', '', 'roleta')).join('')}</div>` : '';
+}
+
+/** Relíquias que apareceram no Roleta entram na coleção do perfil. */
+function discoverRoletaRelics(ids: readonly string[]) {
+  if (LAB.lab || !ids.length) return;
+  const next = discoverRelics(profile, ids, new Date());
+  if (next === profile) return;
+  profile = next;
+  saveProfile(storage, profile);
+}
+
 function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
   const passives = passiveItems(p, 'p').join('');
   return `
@@ -605,6 +644,7 @@ function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
       ${statBox('physical', p.resistance.physical)}${statBox('mental', p.resistance.mental)}${statBox('speed', p.speed)}
     </div>
     ${passives ? `<div class="passive-row">${passives}</div>` : ''}
+    ${roletaRelicBar(p)}
     ${mods.villainStartsFirst || mods.playerStartsFirst ? `<div class="mods"><small>${S.ui.nextFight}</small> ${modChips(mods)}</div>` : ''}
   </section>`;
 }
@@ -709,6 +749,7 @@ function sheetHtml(c: Campaign): string {
         ${attrRow('speed', p.speed, top)}${attrRow('physical', p.resistance.physical, top)}${attrRow('mental', p.resistance.mental, top)}
       </ul>
       <div class="attrs">${statBox('crit', S.ui.critTier(crit))}${statBox('hp', p.maxHp)}${statBox('chakra', p.maxChakra)}</div>
+      ${(p.relics ?? []).length ? `<h3 class="sheet-title">${S.roleta.run.relicsTitle}</h3>${roletaRelicBar(p)}` : ''}
       <h3 class="sheet-title">${S.ui.bag}</h3>
       ${bagSlots(p)}
       <h3 class="sheet-title">${S.ui.techniques}</h3>
@@ -737,26 +778,25 @@ function openSheet() {
   document.body.appendChild(overlay);
 }
 
-function stageTrail(current: number): string {
-  return `<ol class="trail">${campaign
-    .map((st, i) => {
-      const state = i < current ? 'done' : i === current ? 'current' : 'todo';
-      const sub = S.ui.stageFights(st.villains.length, st.kind === 'exam');
-      const best = st.kind === 'fight' ? Math.max(0, ...st.rewardTiers.map((t) => t ?? 0)) : 0;
-      const tier = best > 0 ? ` · ${S.ui.rewardTier(S.rewardTiers[best] ?? '')}` : '';
-      const faces = st.kind === 'exam'
-        ? `<span class="trail-ico">${icon('scroll')}</span>`
-        : `<span class="trail-faces">${st.villains.map((v) => villainPortrait(v, 'sm')).join('')}</span>`;
-      return `<li class="${state}"><i><span>${i < current ? icon('check') : i + 1}</span></i>${faces}<div><b>${stageName(st)}</b><small>${sub}${tier}</small></div></li>`;
+/** Trilha do ciclo: as 6 lutas (categoria e vilão), feitas, a atual e as que faltam. */
+function stageTrail(run: RRun): string {
+  const RR = S.roleta.run;
+  const done = run.status === 'victory' ? rdata.cycle.length : run.step;
+  return `<ol class="trail">${rdata.cycle
+    .map((cat, i) => {
+      const state = i < done ? 'done' : i === done ? 'current' : 'todo';
+      const id = i < done ? run.used[i] : i === done ? run.villainId : null;
+      const faces = id ? `<span class="trail-faces">${villainPortrait(id, 'sm')}</span>` : `<span class="trail-ico">${icon(cat === 'boss' ? 'intent' : 'swords')}</span>`;
+      const tier = rdata.r.run.rewardTier[cat] ?? 0;
+      const sub = cat === 'boss' ? RR.chestTitle : S.ui.rewardTier(S.rewardTiers[tier] ?? '');
+      return `<li class="${state}"><i><span>${i < done ? icon('check') : i + 1}</span></i>${faces}<div><b>${RR.categories[cat]}${id ? ` · ${villainName(id)}` : ''}</b><small>${sub}</small></div></li>`;
     })
     .join('')}</ol>`;
 }
 
 function progressDots(current: number) {
   const el = document.getElementById('dots')!;
-  el.innerHTML = campaign
-    .map((_, i) => `<i class="${i < current ? 'done' : i === current ? 'current' : ''}"></i>`)
-    .join('');
+  el.innerHTML = rdata.cycle.map((_, i) => `<i class="${i < current ? 'done' : i === current ? 'current' : ''}"></i>`).join('');
 }
 
 /** Gira uma roleta grande dentro de `slot`: botão "Girar" (ou automático no modo instantâneo). */
@@ -902,7 +942,7 @@ async function originScreen(): Promise<void> {
       origin: roll.origin,
       player,
       difficulty: settings.difficulty,
-      stageIndex: 0,
+      run: newRoletaRun(player, settings.difficulty),
       mods: { ...NO_MODS },
       seed,
       trail: [],
@@ -945,6 +985,7 @@ async function originScreen(): Promise<void> {
       camp.difficulty = d;
       player = withDifficulty(player, d, data);
       camp.player = player;
+      camp.run = newRoletaRun(player, d);
       saveSettings();
       after.querySelectorAll('[data-diff]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
       after.querySelector('#diff-desc')!.textContent = S.difficulty[d].desc;
@@ -965,18 +1006,22 @@ async function originScreen(): Promise<void> {
 
 async function mapScreen(): Promise<void> {
   const c = camp!;
-  progressDots(c.stageIndex);
-  const stage = campaign[c.stageIndex]!;
+  const run = getRun();
+  const RR = S.roleta.run;
+  progressDots(run.step);
+  const id = run.villainId!;
+  const pct = Math.round((cycleMult(run, rdata) - 1) * 100);
+  const cycleChip = run.cycle > 0 ? ` <span class="chip jcycle"${tip(RR.cycle(run.cycle + 1), RR.cycleTip(pct))}>${icon('cycle')} ${RR.cycle(run.cycle + 1)}</span>` : '';
   const root = show(
     h(`<div class="screen">
-      <h2>${S.ui.campaign}</h2>
-      ${stageTrail(c.stageIndex)}
-      ${stage.kind === 'fight' ? `<div class="foes">${stage.villains.map((v) => villainCard(v)).join('')}</div>` : ''}
+      <h2>${RR.title} ${run.cycle + 1}${cycleChip}</h2>
+      ${stageTrail(run)}
+      <div class="foes">${villainCard(id, villainFor(run, villainsById, rdata))}</div>
       ${playerPanel(c.player, c.mods)}
       <p class="muted small center">${S.ui.carryHint}</p>
       ${c.player.trainingWeights === 'equipped' ? `<button class="btn" data-choice="weights">${icon('weights')} ${S.ui.weightsRemove}</button>` : ''}
       ${c.player.trainingWeights === 'stored' ? `<button class="btn" data-choice="weights">${icon('weights')} ${S.ui.weightsEquip}</button>` : ''}
-      <div class="sticky-cta"><button class="btn primary big" data-choice="go">${icon(stage.kind === 'exam' ? 'scroll' : 'swords')} ${stageName(stage)}</button></div>
+      <div class="sticky-cta"><button class="btn primary big" data-choice="go">${icon('swords')} ${RR.go(villainName(id))}</button></div>
     </div>`),
   );
   // Os pesos só são equipados ou tirados fora de combate.
@@ -990,11 +1035,11 @@ async function mapScreen(): Promise<void> {
 // ---------------------------------------------------------------------------
 // Tela: evento pré-vilão
 
-async function eventScreen(stage: Stage): Promise<void> {
+async function eventScreen(name: string): Promise<void> {
   const c = camp!;
   const root = show(
     h(`<div class="screen">
-      <h2>${S.ui.towards(stageName(stage))}</h2>
+      <h2>${S.ui.towards(name)}</h2>
       <div id="slot"></div><div id="detail"></div><div id="hud"></div><div id="cta"></div>
     </div>`),
   );
@@ -1126,7 +1171,10 @@ async function summonFlow(slot: HTMLElement): Promise<Step> {
   if (c.player.summon) return applySummonEncounter(c.player, c.player.summon.animal);
   const animal = rollSummonAnimal(rng, data);
   await bigWheel(slot, S.roulettes.summonAnimal, rollSlices(animal, (id) => S.summons[id]!.name), animal.index);
-  return applySummonEncounter(c.player, animal.value);
+  // Roleta enxuto: a invocação é uma relíquia (o contrato do animal).
+  const step = applySummonEncounter(c.player, animal.value);
+  const contract = contractFor(animal.value, rdata);
+  return contract ? { ...step, player: gainRoletaRelic(step.player, contract, rdata) } : step;
 }
 
 // ---------------------------------------------------------------------------
@@ -1137,6 +1185,8 @@ interface BattleSetup {
   options: Partial<RBattleOptions>;
   label: string;
   exam: boolean;
+  /** Ficha do vilão já com a dificuldade e o ciclo (sem ela, só a dificuldade). */
+  def?: VillainDef;
 }
 
 type VillainDefT = VillainDef;
@@ -1196,8 +1246,8 @@ function villainStats(phys: number, mental: number, speed: number): string {
 }
 
 /** Ficha do próximo vilão no mapa: retrato, atributos, passivas e técnicas. */
-function villainCard(id: string): string {
-  const v = scaleVillain(villainsById[id]!, camp!.difficulty, data);
+function villainCard(id: string, scaled?: VillainDef): string {
+  const v = scaled ?? scaleVillain(villainsById[id]!, camp!.difficulty, data);
   return `<section class="card villain-card">
     <div class="foe-head">${villainPortrait(id, 'lg')}
       <div class="foe-id"><b class="name">${villainName(id)}</b>
@@ -1323,9 +1373,9 @@ function techButton(s: RBattle, t: RTechniqueDef, enabled: boolean): string {
     style: look.style,
     ico: icon(techIconName(t.type, t.element ?? null)),
     title: esc(techName(t.id)),
-    extra: `${R.ui.techLine(dmg, t.hits ?? 1, Math.round(odds.hit * 100))} · ${costTag(s, t.chakra)}`,
+    extra: `${R.ui.techLine(dmg, t.hits ?? 1, Math.round(odds.hit * 100))} · ${costTag(s, techCost(s, t, rdata))}`,
     tip: rTechTip(s.player, t),
-    enabled: enabled && canUseTechnique(s, t),
+    enabled: enabled && canUseTechnique(s, t, rdata),
   });
 }
 
@@ -1371,7 +1421,7 @@ function floatNumber(card: HTMLElement | null, text: string, cls: string, fx?: '
 
 async function battleScreen(setup: BattleSetup): Promise<RBattle> {
   const c = camp!;
-  const villain = scaleVillain(villainsById[setup.villainId]!, c.difficulty, data);
+  const villain = setup.def ?? scaleVillain(villainsById[setup.villainId]!, c.difficulty, data);
   let state = startRoletaBattle(c.player, villain, setup.options, rdata, rng);
   battlePlayer = () => state.player;
   battleReport = () => ({
@@ -1675,6 +1725,19 @@ async function rewardScreen(title: string, tier: number): Promise<void> {
       showEffect(results, step.effect);
       refreshHud();
     }
+  } else if (reward === 'relic') {
+    // Relíquia da raridade (sem nada para sortear, vira o XP da raridade).
+    const id = rewardRelic(c.player, tier, rdata, rng);
+    if (id) {
+      c.player = gainRoletaRelic(c.player, id, rdata);
+      discoverRoletaRelics([id]);
+      results.insertAdjacentHTML('beforeend', relicCard(id, '', 'reveal', 'roleta'));
+      mood('good');
+    } else {
+      c.player = gainXp(c.player, data.balance.rewards.xp[tier - 1]!, data);
+      results.insertAdjacentHTML('beforeend', `<div class="effect pop">${S.roleta.run.relicNone}</div>`);
+    }
+    refreshHud();
   } else {
     const step = applyReward(c.player, reward, tier, rng, data);
     applyStep(step);
@@ -1690,13 +1753,6 @@ async function rewardScreen(title: string, tier: number): Promise<void> {
 
 // ---------------------------------------------------------------------------
 // XP e subida de nível
-
-/** Ganha o XP do vilão derrotado; cada nível completado mostra a tela de subida. */
-async function awardXp(villainId: string): Promise<void> {
-  const c = camp!;
-  c.player = gainXp(c.player, villainsById[villainId]!.xp, data);
-  await levelUps();
-}
 
 /**
  * Mostra uma tela por nível completado (XP de vilões, roletas e pergaminhos) e resolve os upgrades
@@ -1784,27 +1840,71 @@ async function noticeScreen(title: string, text: string): Promise<void> {
 // ---------------------------------------------------------------------------
 // Fim de run e histórico
 
-async function endScreen(won: boolean, stoppedAt: string | null): Promise<void> {
+/**
+ * Fim da run. Vitória (o chefe do 1º ciclo caiu): "Seguir para o ciclo 2" ou nova run. Cair a partir do ciclo 2 não é
+ * uma derrota comum: a run já foi vencida.
+ */
+async function endScreen(won: boolean, stoppedAt: string | null, record = false): Promise<'continue' | 'new'> {
   const c = camp!;
-  campLive = false;
-  progressDots(won ? campaign.length : c.stageIndex);
-  (won ? victory : defeat)();
+  const RR = S.roleta.run;
+  const infinite = c.run.cycle > 0;
+  const good = won || infinite;
+  progressDots(won ? rdata.cycle.length : c.run.step);
+  (good ? victory : defeat)();
+  const title = won ? S.ui.victoryTitle : infinite ? RR.infiniteOver : S.ui.defeatTitle;
+  const pct = Math.round(rdata.r.infinite.perCycle * (c.run.cycle + 1) * 100);
+  const cont = won
+    ? `<button class="btn primary big" data-choice="continue"${tip(RR.nextCycle(c.run.cycle + 2), RR.nextCycleTip(pct))}>${icon('cycle')} ${RR.nextCycle(c.run.cycle + 2)}</button>`
+    : '';
+  if (!won) campLive = false;
+  const face = good ? clanSymbol(c.player.origin.lineageId) : villainPortrait(c.run.villainId ?? rdata.categories.genin[0]!, 'lg');
   const root = show(
-    h(`<div class="screen end ${won ? 'win' : 'lose'}">
-      <div class="end-seal">${won ? clanSymbol(c.player.origin.lineageId) : villainPortrait(campaign[c.stageIndex]!.villains[0]!, 'lg')}<span class="seal stamp end-stamp${won ? ' gold' : ''}" aria-hidden="true">${won ? '勝' : '敗'}</span></div>
-      <h2>${won ? S.ui.victoryTitle : S.ui.defeatTitle}</h2>
+    h(`<div class="screen end ${good ? 'win' : 'lose'}">
+      <div class="end-seal">${face}<span class="seal stamp end-stamp${good ? ' gold' : ''}" aria-hidden="true">${good ? '勝' : '敗'}</span></div>
+      <h2>${title}</h2>
       ${stoppedAt ? `<p class="center">${S.ui.defeatBy(stoppedAt)}</p>` : ''}
+      <p class="center">${RR.reached(c.run.cycle + 1, c.run.wins)}${record ? ` <span class="chip jrecord">${icon('medal')} ${RR.record}</span>` : ''}</p>
       <p class="center muted">${S.ui.revivesUsed(c.player.revivesUsed)}</p>
-      ${stageTrail(won ? campaign.length : c.stageIndex)}
+      ${stageTrail(c.run)}
       ${playerPanel(c.player)}
       <div class="sticky-cta actions-row">
         <button class="btn big" data-share>${icon('share')} ${S.share.button}</button>
-        <button class="btn primary big" data-choice="new">${icon('dice')} ${S.ui.newRun}</button>
+        ${cont}
+        <button class="btn ${won ? '' : 'primary '}big" data-choice="new">${icon('dice')} ${S.ui.newRun}</button>
       </div>
     </div>`),
   );
-  root.querySelector('[data-share]')!.addEventListener('click', () => void shareRun(c, won, stoppedAt));
-  await choose(root);
+  root.querySelector('[data-share]')!.addEventListener('click', () => void shareRun(c, good, stoppedAt));
+  const choice = await choose<'continue' | 'new'>(root);
+  if (choice === 'new') campLive = false;
+  return choice;
+}
+
+/** Baú do chefe: 3 relíquias lado a lado; tocar destaca, o botão confirma. */
+async function chestScreen(options: string[]): Promise<string> {
+  const RR = S.roleta.run;
+  discoverRoletaRelics(options);
+  let pick: string | undefined;
+  const root = show(h(`<div class="screen jrboss"><h2>${RR.chestTitle}</h2>
+    <div class="jrboss-row">${options
+      .map((id) => `<button type="button" class="jrboss-opt tier-${relicTier(id)}" data-opt="${id}" aria-label="${relicName(id)}">
+        <span class="jrslot huge tier-${relicTier(id)}">${relicIcon(id)}</span><b>${relicName(id)}</b></button>`)
+      .join('')}</div>
+    <div data-detail><p class="muted center">${RR.chestPick}</p></div>
+    <div class="sticky-cta"><button class="btn primary big" data-choice="take" disabled>${RR.chestPick}</button></div></div>`));
+  const take = root.querySelector<HTMLButtonElement>('[data-choice="take"]')!;
+  root.querySelector('.jrboss-row')!.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-opt]');
+    if (!b) return;
+    pick = b.dataset.opt!;
+    root.querySelectorAll('[data-opt]').forEach((x) => x.classList.toggle('on', x === b));
+    root.querySelector('[data-detail]')!.innerHTML = relicCard(pick, '', 'pop', 'roleta');
+    take.disabled = false;
+    take.textContent = RR.chestTake(relicName(pick));
+  });
+  await choose(root.querySelector('.sticky-cta')!);
+  mood('good');
+  return pick!;
 }
 
 /** Compartilha o resumo da run (menu do celular) ou copia para colar no grupo. */
@@ -1878,7 +1978,7 @@ function openReport() {
             ? {
                 origin: originText(c.origin),
                 difficulty: S.difficulty[c.difficulty].name,
-                stage: campaign[c.stageIndex] ? `${c.stageIndex + 1}. ${stageName(campaign[c.stageIndex]!)}` : '—',
+                stage: `${S.roleta.run.cycle(c.run.cycle + 1)} · ${c.run.step + 1}. ${S.roleta.run.categories[rdata.cycle[c.run.step] ?? 'genin']}${c.run.villainId ? ` · ${villainName(c.run.villainId)}` : ''}`,
                 level: p.level,
                 revivesUsed: p.revivesUsed,
                 hp: p.hp,
@@ -2037,7 +2137,7 @@ function originsTab(): string {
       if (!r) return `<li><div class="row between"><b>${name}</b><small class="muted">${P.neverPlayed}</small></div></li>`;
       const pct = Math.round((r.wins / r.runs) * 100);
       const stage = campaign[r.furthestStage];
-      const far = r.wins > 0 ? S.ui.runStatus.victory : stage ? P.furthest(stageName(stage)) : '';
+      const far = r.wins > 0 ? S.ui.runStatus.victory : r.bestFights >= 0 ? S.roleta.run.reached(1, r.bestFights) : stage ? P.furthest(stageName(stage)) : '';
       return `<li><div class="row between"><b>${name}</b><b>${P.winRate(pct)}</b></div>
         <small class="muted">${P.originLine(r.runs, r.wins)} · ${far}</small></li>`;
     })
@@ -2060,7 +2160,15 @@ function historyTab(container: HTMLElement) {
             const origin = `${originLabel(o)}${o.elements.map((e) => ` · ${S.elements[e]}`).join('')}${o.jinchuuriki ? ` · ${S.origin.jinchuuriki}` : ''}`;
 
             const stage = campaign[r.furthestStage];
-            const reached = r.status !== 'victory' && r.status !== 'reroll' && stage ? ` · ${S.ui.reachedStage(stageName(stage))}` : '';
+            // Roleta enxuto: ciclo e lutas; registros antigos: a etapa da campanha.
+            const reached =
+              r.status === 'reroll'
+                ? ''
+                : r.fights !== undefined
+                  ? ` · ${S.roleta.run.reached((r.cycle ?? 0) + 1, r.fights)}`
+                  : r.status !== 'victory' && stage
+                    ? ` · ${S.ui.reachedStage(stageName(stage))}`
+                    : '';
             const diff = r.difficulty ? ` ${diffChip(r.difficulty)}` : '';
             return `<li><div class="row between"><b>${origin}</b><span>${diff} <span class="chip st-${r.status}">${S.ui.runStatus[r.status]}</span></span></div>
               <small class="muted">${date}${reached} · ${S.ui.revivesUsed(r.revivesUsed)}</small></li>`;
@@ -2206,7 +2314,7 @@ async function labScreen(): Promise<LabTarget> {
       origin: labOrigin(c, data),
       player,
       difficulty: c.difficulty,
-      stageIndex: current.stage,
+      run: newRoletaRun(player, c.difficulty),
       mods: { ...NO_MODS },
       seed: LAB.seed,
       trail: [],
@@ -2245,83 +2353,74 @@ async function labFlow(): Promise<void> {
     await battleScreen({ villainId: target.villainId, options: {}, label: S.lab.fightLabel(esc(name)), exam: false });
     return;
   }
-  await runCampaign(target.from);
+  await runCampaign();
 }
 
-async function runCampaign(from = 0): Promise<void> {
+/**
+ * Run do Roleta enxuto (docs/roleta/run.md): a cada passo, sorteia o vilão da categoria, gira o evento, luta, ganha o
+ * XP e a recompensa. Depois do chefe: baú e o próximo ciclo (no 1º, a tela de vitória pergunta se segue).
+ */
+async function runCampaign(): Promise<void> {
   const c = camp!;
-  for (let i = from; i < campaign.length; i++) {
-    const stage = campaign[i]!;
-    c.stageIndex = i;
-    track({ furthestStage: i });
+  const RR = S.roleta.run;
+  for (;;) {
+    if (!c.run.villainId) setRun(drawVillain(getRun(), rdata, rng));
+    const run = getRun();
+    const id = run.villainId!;
+    track({ furthestStage: run.step, cycle: run.cycle, fights: run.wins });
     await mapScreen();
-    const entry: TrailEntry = { name: stageName(stage), exam: stage.kind === 'exam', results: [] };
+    const entry: TrailEntry = { name: villainName(id), exam: false, results: [] };
     c.trail.push(entry);
-
-    if (stage.kind === 'exam') {
-      // HP e chakra seguem entre as lutas; perder não gasta a Vontade do Fogo nem encerra a run
-      // (os médicos devolvem metade do HP e do chakra). No fim, restaura tudo.
-      let wins = 0;
-      for (let j = 0; j < stage.villains.length; j++) {
-        const result = await battleScreen({
-          villainId: stage.villains[j]!,
-          options: { allowRevive: false },
-          label: `${S.stages.exam} · ${S.ui.fightOf(j + 1, stage.villains.length)}`,
-          exam: true,
-        });
-        c.player = result.player;
-        entry.results.push(result.status === 'won' ? 'win' : 'loss');
-        noteFight(stage.villains[j]!, true, result);
-        if (result.status === 'won') {
-          wins++;
-          c.player = recoverAfterWin(c.player, data);
-          await awardXp(stage.villains[j]!);
-        } else {
-          c.player = examRecover(c.player, data);
-          await noticeScreen(S.stages.exam, S.ui.examRecovered);
-        }
-      }
-      c.player = fullRestore(c.player);
-      await noticeScreen(S.ui.examResult(wins, stage.villains.length), S.ui.examRestored);
-      const tier = data.balance.exam.rewardTierByWins[wins] ?? 0;
-      if (tier > 0) await rewardScreen(S.ui.examResult(wins, stage.villains.length), tier);
-      continue;
+    await eventScreen(villainName(id));
+    const cat = RR.categories[currentCategory(getRun(), rdata)]!;
+    const result = await battleScreen({
+      villainId: id,
+      options: { villainStartsFirst: c.mods.villainStartsFirst, playerStartsFirst: c.mods.playerStartsFirst },
+      label: RR.fightLabel(c.run.cycle + 1, cat, villainName(id)),
+      exam: false,
+      def: villainFor(getRun(), villainsById, rdata),
+    });
+    entry.results.push(result.status === 'won' ? 'win' : 'loss');
+    noteFight(id, false, result);
+    const { run: next, outcome } = finishRoletaFight(getRun(), result, rdata, rng);
+    setRun(next);
+    if (!outcome.won) {
+      // A partir do ciclo 2 a run já foi vencida: o registro continua como vitória.
+      if (c.run.cycle === 0) track({ status: 'defeat', cycle: 0, fights: c.run.wins });
+      else track({ cycle: c.run.cycle, fights: c.run.wins });
+      const record = recordRoleta();
+      checkAchievements('defeat', id);
+      await endScreen(false, villainName(id), record);
+      return;
     }
-
-    await eventScreen(stage);
-    for (let j = 0; j < stage.villains.length; j++) {
-      const first = j === 0;
-      // A luta não começa restaurada: HP e chakra seguem, inclusive dentro dos blocos.
-      const options: Partial<RBattleOptions> = first
-        ? { villainStartsFirst: c.mods.villainStartsFirst, playerStartsFirst: c.mods.playerStartsFirst }
-        : {};
-      const result = await battleScreen({
-        villainId: stage.villains[j]!,
-        options,
-        label: `${i + 1}. ${stageName(stage)}${stage.villains.length > 1 ? ` · ${S.ui.fightOf(j + 1, stage.villains.length)}` : ''}`,
-        exam: false,
-      });
-      if (first) c.mods = { ...NO_MODS };
-      c.player = result.player;
-      entry.results.push(result.status === 'won' ? 'win' : 'loss');
-      noteFight(stage.villains[j]!, false, result);
-      if (result.status !== 'won') {
-        track({ status: 'defeat' });
-        checkAchievements('defeat', stage.villains[j]!);
-        await endScreen(false, villainName(stage.villains[j]!));
-        return;
-      }
-      c.player = trainingWeightsWin(recoverAfterWin(c.player, data), data);
-      const finalFight = i === campaign.length - 1 && j === stage.villains.length - 1;
-      if (finalFight) break;
-      await awardXp(stage.villains[j]!);
-      const tier = stage.rewardTiers[j];
-      if (tier) await rewardScreen(S.ui.battleWon, tier);
+    await levelUps();
+    if (outcome.tier > 0) await rewardScreen(S.ui.battleWon, outcome.tier);
+    if (c.run.bossChoice) setRun(chooseChest(getRun(), await chestScreen(c.run.bossChoice), rdata));
+    if (!outcome.boss) continue;
+    // Fim de ciclo.
+    const record = recordRoleta();
+    if (c.run.status === 'victory') {
+      track({ status: 'victory', cycle: 0, fights: c.run.wins });
+      checkAchievements('victory', null);
+      if ((await endScreen(true, null, record)) !== 'continue') return;
+      setRun(continueRoletaCycle(getRun()));
+    } else {
+      // Do 2º ciclo em diante, o próximo emenda sozinho.
+      track({ cycle: c.run.cycle, fights: c.run.wins });
+      checkAchievements('victory', null);
     }
+    await noticeScreen(RR.cycle(c.run.cycle + 1), RR.cycleStart(Math.round((cycleMult(getRun(), rdata) - 1) * 100)));
   }
-  track({ status: 'victory', furthestStage: campaign.length - 1 });
-  checkAchievements('victory', null);
-  await endScreen(true, null);
+}
+
+/** Recorde do Roleta (ciclo alcançado e lutas vencidas); devolve se bateu. */
+function recordRoleta(): boolean {
+  if (!camp || LAB.lab) return false;
+  const next = recordRoletaReach(profile, { cycle: camp.run.cycle + 1, fights: camp.run.wins });
+  if (next === profile) return false;
+  profile = next;
+  saveProfile(storage, profile);
+  return true;
 }
 
 /** Tema aplicado: o escolhido no botão ou o do aparelho. */

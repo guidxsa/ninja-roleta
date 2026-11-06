@@ -1,5 +1,6 @@
 import { lineageKey, type AchievementContext, type AchievementDef } from '../core/achievements';
 import type { FightSummary } from '../core/runStats';
+import { roletaCategories } from './roleta/villains';
 
 /** Linhagens com conquista própria de vitória (ids dos dados; o comum é `common`). */
 export const ORIGIN_ACHIEVEMENT_LINEAGES = [
@@ -45,9 +46,14 @@ const originIds = ORIGIN_ACHIEVEMENT_LINEAGES.map(winAchievementId);
 /** Ordem da lista = ordem na tela (e na checagem). */
 export const achievements: AchievementDef[] = [
   // Marcos
-  { id: 'genin', category: 'milestone', check: (c) => anyFight(c, (x) => x.won && x.villainId === 'mizuki') },
-  { id: 'chunin', category: 'milestone', check: (c) => examFights(c).filter((x) => x.won).length >= 3 },
+  // Roleta enxuto (v0.46.0): Genin vale com qualquer vilão genin; o exame chunin saiu (Chunin vira clássica).
+  { id: 'genin', category: 'milestone', check: (c) => anyFight(c, (x) => x.won && roletaCategories.genin.includes(x.villainId)) },
+  { id: 'chunin', legacy: true, category: 'milestone', check: (c) => examFights(c).filter((x) => x.won).length >= 3 },
   { id: 'leafNinja', category: 'milestone', check: won },
+  // Modo infinito do Roleta (v0.46.0).
+  { id: 'r_cycle2', category: 'milestone', check: (c) => (c.cyclesWon ?? 0) >= 2 },
+  { id: 'r_cycle3', category: 'milestone', check: (c) => (c.cyclesWon ?? 0) >= 3 },
+  { id: 'r_cycle5', category: 'milestone', check: (c) => (c.cyclesWon ?? 0) >= 5 },
   { id: 'awakened', category: 'milestone', check: (c) => c.level >= 7 },
   { id: 'noFear', category: 'milestone', check: (c) => won(c) && (c.difficulty === 'hard' || c.difficulty === 'hardcore') },
   { id: 'legend', category: 'milestone', check: (c) => won(c) && c.difficulty === 'hardcore' },
@@ -80,6 +86,7 @@ export const achievements: AchievementDef[] = [
   { id: 'copycat', legacy: true, category: 'style', check: (c) => sum(c, (x) => x.copies) >= 3 },
   {
     id: 'failedButAlive',
+    legacy: true,
     category: 'style',
     hidden: true,
     check: (c) => won(c) && examFights(c).length > 0 && examFights(c).every((x) => !x.won),

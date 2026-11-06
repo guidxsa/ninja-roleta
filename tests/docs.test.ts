@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { VillainTechnique } from '../src/core/types';
 import { techniquesById } from '../src/data/techniques';
 import { roletaTechniques } from '../src/data/roleta/techniques';
+import { roletaRelics } from '../src/data/relics';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { villains } from '../src/data/villains';
 import { enemies } from '../src/data/jornada/enemies';
@@ -25,6 +26,13 @@ describe('docs batem com os dados', () => {
     const text = doc('roleta/combate.md');
     const missing = roletaTechniques.map((t) => S.roleta.techniques[t.id] ?? t.id).filter((n) => !has(text, n));
     expect(missing).toEqual([]);
+  });
+
+  it('toda relíquia do Roleta aparece na tabela de modos de docs/jornada/reliquias.md', () => {
+    const text = doc('jornada/reliquias.md');
+    const modes = text.slice(text.indexOf('## Modos'));
+    const name = (id: string) => S.jornada.relics.list[id]?.name ?? S.roleta.relics[id]?.name ?? id;
+    expect(roletaRelics.map((r) => name(r.id)).filter((n) => !has(modes, n))).toEqual([]);
   });
 
   it('toda técnica de vilão aparece em docs/base/viloes.md', () => {

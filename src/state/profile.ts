@@ -39,6 +39,13 @@ export interface Profile {
   relics: Record<string, string>;
   /** Recorde do modo infinito da Jornada (só o Caminho Ninja tem). Sem o campo: nunca registrou. */
   jornada?: { generic?: JornadaReach };
+  /** Recorde do Roleta (v0.46.0): ciclo alcançado (contando do 1) e lutas vencidas na run. */
+  roleta?: RoletaReach;
+}
+
+export interface RoletaReach {
+  cycle: number;
+  fights: number;
 }
 
 export const PLAYER_NAME_MAX = 16;
@@ -79,6 +86,7 @@ export function loadProfile(storage: KeyValueStorage): Profile {
       relics: parsed.relics && typeof parsed.relics === 'object' ? renameCollection(parsed.relics) : base.relics,
       ...(typeof parsed.playerName === 'string' ? { playerName: cleanPlayerName(parsed.playerName) } : {}),
       ...(isReach(parsed.jornada?.generic) ? { jornada: { generic: parsed.jornada!.generic } } : {}),
+      ...(typeof parsed.roleta?.cycle === 'number' && typeof parsed.roleta?.fights === 'number' ? { roleta: parsed.roleta } : {}),
     };
   } catch {
     return emptyProfile();
@@ -145,6 +153,13 @@ export function recordJornadaReach(profile: Profile, reach: JornadaReach): Profi
   return { ...profile, jornada: { ...profile.jornada, generic: reach } };
 }
 
+/** Recorde do Roleta: ciclo maior passa; no mesmo ciclo, mais lutas vencidas. Sem melhora, devolve o mesmo perfil. */
+export function recordRoletaReach(profile: Profile, reach: RoletaReach): Profile {
+  const b = profile.roleta;
+  const beats = !b || reach.cycle > b.cycle || (reach.cycle === b.cycle && reach.fights > b.fights);
+  return beats ? { ...profile, roleta: reach } : profile;
+}
+
 export function killedByCounts(profile: Profile): Record<string, number> {
   return Object.fromEntries(Object.entries(profile.villains).map(([id, v]) => [id, v.killedYou]));
 }
@@ -172,6 +187,8 @@ export interface OriginRecord {
   runs: number;
   wins: number;
   furthestStage: number;
+  /** Roleta enxuto: mais lutas vencidas numa run (−1 = nenhuma run nova). */
+  bestFights: number;
 }
 
 export function originRecords(runs: RunRecord[]): Record<string, OriginRecord> {
@@ -179,10 +196,11 @@ export function originRecords(runs: RunRecord[]): Record<string, OriginRecord> {
   for (const r of runs) {
     if (r.status === 'reroll' || r.status === 'inProgress') continue;
     const key = lineageKey(r.origin);
-    const o = (out[key] ??= { runs: 0, wins: 0, furthestStage: 0 });
+    const o = (out[key] ??= { runs: 0, wins: 0, furthestStage: 0, bestFights: -1 });
     o.runs++;
     if (r.status === 'victory') o.wins++;
-    o.furthestStage = Math.max(o.furthestStage, r.furthestStage);
+    if (r.fights !== undefined) o.bestFights = Math.max(o.bestFights, r.fights);
+    else o.furthestStage = Math.max(o.furthestStage, r.furthestStage);
   }
   return out;
 }

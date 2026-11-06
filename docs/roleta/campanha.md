@@ -1,5 +1,7 @@
 # Campanha
 
+> **Campanha clássica (reserva)**: desde a v0.46.0, o Roleta usa a run de [run.md](run.md) (ciclo sorteado por categoria, modo infinito, relíquias). A ordem fixa, os blocos, o exame chunin, o guru e a Lição do clã abaixo ficaram guardados ([reserva/README.md](../reserva/README.md)); as seções de Dificuldade, Histórico, Akatsuki, Treino, Jokenpô e Seed continuam valendo.
+
 Estrutura de uma run: ordem dos confrontos, eventos entre eles, encontros, invocações, exame chunin, dificuldade e histórico. O combate é o enxuto ([combate.md](combate.md)).
 
 ## Ordem

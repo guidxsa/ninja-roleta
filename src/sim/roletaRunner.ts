@@ -1,8 +1,7 @@
 // Simulação do Roleta enxuto (docs/roleta/combate.md): bot simples e a campanha com eventos e recompensas diretos.
 // O bot joga pior que um humano: escolhe o golpe de mais dano esperado, usa a ativa logo e quase não defende.
 import type { Difficulty } from '../core/difficulty';
-import { scaleVillain } from '../core/difficulty';
-import { canLevelUp, equipTrainingWeights, fullRestore, gainXp, recoverAfterWin, trainingWeightsWin, type PlayerState } from '../core/player';
+import { canLevelUp, equipTrainingWeights, gainXp, recoverAfterWin, trainingWeightsWin, type PlayerState } from '../core/player';
 import {
   applyAkatsuki,
   applyItem,
@@ -10,7 +9,6 @@ import {
   applySimpleEvent,
   applySummonEncounter,
   applyTraining,
-  examRecover,
   HANDS,
   levelUp,
   playJokenpo,
@@ -21,7 +19,6 @@ import {
   rollSummonAnimal,
   rollTraining,
   rollWeighted,
-  type NextFightMods,
   type Step,
 } from '../core/progression';
 import {
@@ -38,10 +35,20 @@ import {
   type RBattleOptions,
 } from '../core/roleta/battle';
 import type { RoletaData } from '../core/roleta/data';
+import {
+  chooseChest,
+  continueRoletaCycle,
+  contractFor,
+  drawVillain,
+  finishRoletaFight,
+  gainRoletaRelic,
+  newRoletaRun,
+  rewardRelic,
+  villainFor,
+} from '../core/roleta/run';
 import { playerTechniques } from '../core/roleta/player';
 import type { Rng } from '../core/rng';
 import type { VillainDef } from '../core/types';
-import type { Stage } from '../data/campaign';
 
 /** Teto de segurança contra lutas infinitas. */
 export const MAX_ROUNDS = 200;
@@ -63,7 +70,7 @@ export function chooseRoletaAction(s: RBattle, data: RoletaData): RAction {
   if (bag.medKit > 0 && p.hp < p.maxHp * 0.3 && s.fx.effects.length > 0) return 'item:medKit';
   if (bag.smokeBomb > 0 && p.hp < p.maxHp * 0.25) return 'item:smokeBomb';
   const techs = playerTechniques(p, data);
-  const affordable = techs.filter((t) => canUseTechnique(s, t));
+  const affordable = techs.filter((t) => canUseTechnique(s, t, data));
   const best = (list: typeof techs) => list.map((t) => ({ t, e: expected(s, t.id, data) })).sort((a, b) => b.e - a.e)[0];
   const bestNow = best(affordable);
   const bestAll = best(techs);
@@ -108,21 +115,25 @@ export function roletaAwardXp(player: PlayerState, villain: VillainDef, data: Ro
 
 function autoItem(player: PlayerState, rng: Rng, data: RoletaData): Step {
   const item = rollItem(player, rng, data.base);
-  const step = applyItem(player, item.value, rng, data.base);
-  // Pesos de treino: o bot equipa e nunca tira.
-  return step.effect.kind === 'trainingWeights' ? { ...step, player: equipTrainingWeights(step.player, data.base) } : step;
+  return applyItem(player, item.value, rng, data.base);
 }
 
-/** Recompensa direta: um giro (a lendária só tem valores maiores). */
+/** Pesos de treino ganhos como relíquia: o bot equipa e nunca tira. */
+const autoWeights = (p: PlayerState, data: RoletaData) => (p.trainingWeights === 'stored' ? equipTrainingWeights(p, data.base) : p);
+
+/** Recompensa direta: um giro (a lendária só tem valores maiores); a fatia Relíquia dá uma da raridade. */
 export function autoRoletaReward(player: PlayerState, tier: number, rng: Rng, data: RoletaData): PlayerState {
   const id = rollReward(player, rng, data.base).value;
   let p = player;
   if (id === 'item') for (let i = 0; i < rewardItemSpins(tier, data.base); i++) p = autoItem(p, rng, data).player;
-  else p = applyReward(p, id, tier, rng, data.base).player;
+  else if (id === 'relic') {
+    const relic = rewardRelic(p, tier, data, rng);
+    p = relic ? autoWeights(gainRoletaRelic(p, relic, data), data) : gainXp(p, data.base.balance.rewards.xp[tier - 1]!, data.base);
+  } else p = applyReward(p, id, tier, rng, data.base).player;
   return roletaLevelUps(p, data);
 }
 
-/** Evento pré-luta direto (sem guru, Lição do clã nem foco elemental). */
+/** Evento pré-luta direto. A Invocação dá o contrato do animal (ou sobe o nível de quem já tem). */
 export function autoRoletaEvent(player: PlayerState, rng: Rng, data: RoletaData): Step {
   const ev = rollWeighted(data.base.preFightEvents, rng).value;
   switch (ev) {
@@ -136,7 +147,7 @@ export function autoRoletaEvent(player: PlayerState, rng: Rng, data: RoletaData)
     case 'foundItem':
       return autoItem(player, rng, data);
     case 'summon':
-      return applySummonEncounter(player, player.summon?.animal ?? rollSummonAnimal(rng, data.base).value);
+      return summonEvent(player, rng, data);
     case 'akatsuki':
       return applyAkatsuki(player, rollAkatsuki(player, rng, data.base).value, data.base);
     default:
@@ -145,77 +156,58 @@ export function autoRoletaEvent(player: PlayerState, rng: Rng, data: RoletaData)
   }
 }
 
-export interface RoletaCampaignResult {
-  won: boolean;
-  stageReached: number;
-  villainReached: string | null;
-  revivesUsed: number;
-  rounds: number[];
-  levels: number[];
-  examWins: number;
+/** Invocação: sem animal, sorteia um e ganha o contrato (relíquia); com animal, ele sobe de nível. */
+export function summonEvent(player: PlayerState, rng: Rng, data: RoletaData): Step {
+  if (player.summon) return applySummonEncounter(player, player.summon.animal);
+  const animal = rollSummonAnimal(rng, data.base).value;
+  const step = applySummonEncounter(player, animal);
+  const contract = contractFor(animal, data);
+  return contract ? { ...step, player: gainRoletaRelic(step.player, contract, data) } : step;
 }
 
-/** Campanha (ordem de hoje, com o exame) com o combate e a progressão enxutos. */
-export function runRoletaCampaign(
+export interface RoletaRunResult {
+  /** Venceu o 1º ciclo. */
+  won: boolean;
+  /** Ciclos vencidos (até o teto pedido). */
+  cyclesWon: number;
+  villainReached: string | null;
+  rounds: number[];
+  level: number;
+}
+
+/** Run do Roleta enxuto com o bot: ciclos de lutas sorteadas por categoria, até cair ou vencer `maxCycles` ciclos. */
+export function runRoletaRun(
   initial: PlayerState,
-  stages: Stage[],
   villainsById: Record<string, VillainDef>,
   rng: Rng,
   data: RoletaData,
   difficulty: Difficulty = 'normal',
+  maxCycles = 1,
   progression = true,
-): RoletaCampaignResult {
-  let player = initial;
+): RoletaRunResult {
+  let run = newRoletaRun(initial, difficulty);
   const rounds: number[] = [];
-  const levels: number[] = [];
-  let examWins = 0;
-  const villain = (id: string) => scaleVillain(villainsById[id]!, difficulty, data.base);
-  const result = (won: boolean, stageReached: number, villainReached: string | null): RoletaCampaignResult => ({
-    won,
-    stageReached,
-    villainReached,
-    revivesUsed: player.revivesUsed,
-    rounds,
-    levels,
-    examWins,
-  });
-  for (let i = 0; i < stages.length; i++) {
-    const stage = stages[i]!;
-    if (stage.kind === 'exam') {
-      let wins = 0;
-      for (const id of stage.villains) {
-        levels.push(player.level);
-        const fight = runRoletaBattle(player, villain(id), rng, data, { allowRevive: false });
-        rounds.push(fight.round);
-        player = fight.player;
-        if (fight.status === 'won') {
-          wins++;
-          player = roletaAwardXp(player, villainsById[id]!, data, true);
-        } else player = examRecover(player, data.base);
-      }
-      examWins = wins;
-      player = fullRestore(player);
-      const tier = data.base.balance.exam.rewardTierByWins[wins] ?? 0;
-      if (progression && tier > 0) player = autoRoletaReward(player, tier, rng, data);
-      continue;
-    }
-    let mods: Partial<NextFightMods> = {};
+  let cyclesWon = 0;
+  for (let guard = 0; guard < 400; guard++) {
+    if (!run.villainId) run = drawVillain(run, data, rng);
     if (progression) {
-      const ev = autoRoletaEvent(player, rng, data);
-      player = roletaLevelUps(ev.player, data);
-      mods = ev.mods;
+      const ev = autoRoletaEvent(run.player, rng, data);
+      run = { ...run, player: roletaLevelUps(ev.player, data), mods: { ...run.mods, ...ev.mods } };
     }
-    for (let j = 0; j < stage.villains.length; j++) {
-      const id = stage.villains[j]!;
-      levels.push(player.level);
-      const fight = runRoletaBattle(player, villain(id), rng, data, j === 0 ? mods : {});
-      rounds.push(fight.round);
-      player = fight.player;
-      if (fight.status !== 'won') return result(false, i, id);
-      player = roletaAwardXp(player, villainsById[id]!, data);
-      const tier = stage.rewardTiers[j];
-      if (progression && tier) player = autoRoletaReward(player, tier, rng, data);
+    const fight = runRoletaBattle(run.player, villainFor(run, villainsById, data), rng, data, run.mods);
+    rounds.push(fight.round);
+    const villainId = run.villainId;
+    const res = finishRoletaFight(run, fight, data, rng);
+    run = res.run;
+    if (!res.outcome.won) return { won: cyclesWon > 0, cyclesWon, villainReached: villainId, rounds, level: run.player.level };
+    run = { ...run, player: roletaLevelUps(run.player, data) };
+    if (progression && res.outcome.tier > 0) run = { ...run, player: autoRoletaReward(run.player, res.outcome.tier, rng, data) };
+    if (run.bossChoice) run = chooseChest(run, run.bossChoice[0]!, data);
+    if (res.outcome.boss) {
+      cyclesWon++;
+      if (cyclesWon >= maxCycles) return { won: true, cyclesWon, villainReached: null, rounds, level: run.player.level };
+      if (run.status === 'victory') run = continueRoletaCycle(run);
     }
   }
-  return result(true, stages.length, null);
+  throw new Error('run sem fim');
 }

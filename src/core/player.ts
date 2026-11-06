@@ -73,6 +73,8 @@ export interface PlayerState {
   glimmerLevel: number;
   revives: number;
   revivesUsed: number;
+  /** Relíquias do Roleta enxuto (v0.46.0); ausente nas fichas antigas e no combate clássico. */
+  relics?: string[];
 }
 
 export const EMPTY_BAG: Bag = { soldierPill: 0, medKit: 0, explosiveTag: 0, smokeBomb: 0 };

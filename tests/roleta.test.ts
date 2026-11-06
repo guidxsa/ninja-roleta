@@ -5,6 +5,7 @@ import { levelUp } from '../src/core/progression';
 import {
   canUseActive,
   dodgeChance,
+  playerAttackOdds,
   playerHitDamage,
   playRoletaRound,
   startRoletaBattle,
@@ -14,14 +15,31 @@ import {
 } from '../src/core/roleta/battle';
 import { createRoletaPlayer, roletaKit } from '../src/core/roleta/player';
 import { summarizeRoletaFight } from '../src/core/roleta/stats';
+import {
+  chooseChest,
+  continueRoletaCycle,
+  contractFor,
+  cycleMult,
+  drawVillain,
+  finishRoletaFight,
+  gainRoletaRelic,
+  newRoletaRun,
+  relicPool,
+  rewardRelic,
+  villainFor,
+} from '../src/core/roleta/run';
+import { relicInMode } from '../src/core/jornada/relics';
+import { relics as jornadaRelics } from '../src/data/jornada/relics';
+import { jornadaData } from '../src/data/jornada';
+import { jornadaPtBR } from '../src/data/strings/jornada';
+import { RELIC_ICONS } from '../prototype/jornada/relicIcons';
 import { createRng } from '../src/core/rng';
 import type { Origin, VillainDef } from '../src/core/types';
-import { campaign } from '../src/data/campaign';
 import { roletaData as data } from '../src/data/roleta/index';
 import { roletaTechniques } from '../src/data/roleta/techniques';
 import { roletaPtBR } from '../src/data/strings/roleta';
 import { villainsById } from '../src/data/villains';
-import { runRoletaCampaign } from '../src/sim/roletaRunner';
+import { runRoletaRun } from '../src/sim/roletaRunner';
 
 /** Rng que devolve sempre o mesmo valor (0 = acerta e dispara tudo; 0,99 = erra). */
 const fixed = (v: number) => () => v;
@@ -161,9 +179,106 @@ describe('combate do Roleta enxuto', () => {
     expect(sum.villainId).toBe('mizuki');
   });
 
-  it('a campanha simulada termina, com lutas curtas', () => {
-    const r = runRoletaCampaign(createRoletaPlayer(origin(null, ['fire']), data, 'easy'), campaign, villainsById, createRng(3), data, 'easy');
+  it('a run simulada termina, com lutas curtas', () => {
+    const r = runRoletaRun(createRoletaPlayer(origin(null, ['fire']), data, 'easy'), villainsById, createRng(3), data, 'easy');
     expect(r.rounds.length).toBeGreaterThan(3);
     expect(r.rounds.every((n) => n < 60)).toBe(true);
+  });
+});
+
+describe('run do Roleta enxuto e relíquias (v0.46.0)', () => {
+  const p0 = () => createRoletaPlayer(origin(null, ['fire']), data);
+
+  it('o ciclo tem 6 lutas por categoria e sorteia sem repetir no ciclo', () => {
+    expect(data.cycle).toEqual(['genin', 'genin', 'chunin', 'chunin', 'jounin', 'boss']);
+    let run = newRoletaRun(p0(), 'normal');
+    run = drawVillain(run, data, fixed(0));
+    expect(data.categories.genin).toContain(run.villainId);
+    const first = run.villainId!;
+    run = { ...run, used: [first], step: 1, villainId: null };
+    run = drawVillain(run, data, fixed(0));
+    expect(run.villainId).not.toBe(first);
+    expect(data.categories.genin).toContain(run.villainId);
+  });
+
+  it('vitória avança o passo; o chefe abre o baú; o 1º ciclo vencido segue mais forte', () => {
+    let run = { ...newRoletaRun(p0(), 'normal'), villainId: 'mizuki' };
+    const win = (r: typeof run) => {
+      const b = startRoletaBattle(r.player, villainFor(r, villainsById, data), {}, data, fixed(0.5));
+      return { ...b, status: 'won' as const };
+    };
+    let res = finishRoletaFight(run, win(run), data, fixed(0.3));
+    expect(res.run.step).toBe(1);
+    expect(res.outcome.tier).toBe(1);
+    expect(res.run.player.xp).toBeGreaterThan(0);
+    run = { ...res.run, step: 5, villainId: 'orochimaru' };
+    res = finishRoletaFight(run, win(run), data, fixed(0.3));
+    expect(res.outcome.boss).toBe(true);
+    expect(res.run.bossChoice?.length).toBe(3);
+    expect(res.run.player.hp).toBe(res.run.player.maxHp);
+    const after = chooseChest(res.run, res.run.bossChoice![0]!, data);
+    expect(after.status).toBe('victory');
+    expect(after.player.relics).toContain(res.run.bossChoice![0]);
+    const next = continueRoletaCycle(after);
+    expect([next.cycle, next.step, next.used, next.status]).toEqual([1, 0, [], 'inProgress']);
+    expect(cycleMult(next, data)).toBeCloseTo(1 + data.r.infinite.perCycle);
+    const v0 = villainFor({ ...after, villainId: 'mizuki' }, villainsById, data);
+    const v1 = villainFor({ ...next, villainId: 'mizuki' }, villainsById, data);
+    expect(v1.hp).toBeGreaterThan(v0.hp);
+  });
+
+  it('derrota encerra a run', () => {
+    const run = { ...newRoletaRun(p0(), 'normal'), villainId: 'mizuki' };
+    const b = { ...startRoletaBattle(run.player, villainFor(run, villainsById, data), {}, data, fixed(0.5)), status: 'lost' as const };
+    expect(finishRoletaFight(run, b, data, fixed(0.5)).run.status).toBe('defeat');
+  });
+
+  it('catálogo único: a Jornada continua com as mesmas relíquias; o Roleta tem as dele e as exclusivas', () => {
+    expect(jornadaRelics.map((r) => r.id)).toEqual(jornadaData.relics.map((r) => r.id));
+    expect(data.relics.every((r) => relicInMode(r, 'roleta') && r.roleta)).toBe(true);
+    for (const id of ['ninjaTool', 'speedAmulet', 'resistanceAmulet', 'snakeContract', 'slugContract', 'trainingWeights', 'toadContract']) {
+      expect(data.relics.some((r) => r.id === id)).toBe(true);
+    }
+    expect(jornadaData.relics.some((r) => r.id === 'ninjaTool')).toBe(false);
+    // Todo nome, efeito no Roleta e ícone existem.
+    for (const r of data.relics) {
+      expect(jornadaPtBR.relics.list[r.id]?.name ?? roletaPtBR.relics[r.id]?.name).toBeTruthy();
+      expect(roletaPtBR.relics[r.id]?.desc).toBeTruthy();
+      expect(RELIC_ICONS[r.id]).toBeTruthy();
+    }
+  });
+
+  it('relíquias no combate: status ao ganhar, crítico, escudo, abertura e Pena de fênix', () => {
+    let p = gainRoletaRelic(p0(), 'leafHeadband', data);
+    expect(p.maxHp).toBe(p0().maxHp + 10);
+    p = gainRoletaRelic(gainRoletaRelic(gainRoletaRelic(p, 'samuraiArmor', data), 'explosiveTags', data), 'phoenixFeather', data);
+    const s = startRoletaBattle(p, villain('zabuza'), { playerStartsFirst: true }, data, fixed(0.5));
+    expect(s.fx.shield).toBe(Math.floor(p.maxHp * 0.2));
+    expect(s.villain.hp).toBe(s.villain.maxHp - 10);
+    const low = { ...s, fx: { ...s.fx, shield: 0 }, player: { ...s.player, hp: 1, revives: 0 }, playerFirst: false };
+    const next = playRoletaRound(low, 'guard', data, fixed(0.5));
+    expect(next.status).toBe('ongoing');
+    expect(next.player.hp).toBe(1);
+    expect(next.fx.survivedOnce).toBe(true);
+    const crit = startRoletaBattle(gainRoletaRelic(p0(), 'kakashiBell', data), villain('mizuki'), {}, data, fixed(0.5));
+    const t = data.techniques.rFire!;
+    expect(playerAttackOdds(crit, t, data).crit).toBeGreaterThan(playerAttackOdds(startRoletaBattle(p0(), villain('mizuki'), {}, data, fixed(0.5)), t, data).crit);
+  });
+
+  it('contratos de invocação e Pesos de treino como relíquias', () => {
+    const toad = gainRoletaRelic(p0(), 'toadContract', data);
+    expect(toad.summon).toEqual({ animal: 'toad', level: 1 });
+    // Com um contrato, os outros não saem mais.
+    expect(relicPool(toad, data).some((r) => r.id === 'snakeContract')).toBe(false);
+    const weights = gainRoletaRelic(p0(), 'trainingWeights', data);
+    expect(weights.trainingWeights).toBe('stored');
+    expect(contractFor('slug', data)).toBe('slugContract');
+  });
+
+  it('a fatia Relíquia sorteia pela raridade e a roleta de itens não tem mais os permanentes', () => {
+    const id = rewardRelic(p0(), 3, data, fixed(0.1))!;
+    expect(data.relics.find((r) => r.id === id)?.tier).toBe('rare');
+    expect(data.base.rewards.some((r) => r.id === 'relic')).toBe(true);
+    expect(data.base.items.some((i) => ['ninjaTool', 'speedItem', 'resistanceItem', 'trainingWeights', 'smokeBomb'].includes(i.id))).toBe(false);
   });
 });
