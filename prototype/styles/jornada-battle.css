@@ -8,16 +8,6 @@
 .jbattle::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .9; background: var(--scene-art, none) bottom / 100% auto no-repeat; }
 .jbattle > * { position: relative; z-index: 1; }
 .jbattle > .jb-intro { position: absolute; z-index: 4; }
-.jbattle.scene-forest, .jscene.scene-forest { --scene: linear-gradient(180deg, #121a14 0%, #17201a 55%, #1a1712 100%);
-  --scene-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'%3E%3Cg fill='%23000' fill-opacity='.38'%3E%3Cpath d='M20 300V40h10v260zM82 300V0h16v300zM300 300V20h14v280zM360 300V60h9v240z'/%3E%3Cpath d='M0 300v-40c60-18 120-10 200-22s140 6 200-4v66z'/%3E%3C/g%3E%3C/svg%3E"); }
-.jbattle.scene-arena, .jscene.scene-arena { --scene: linear-gradient(180deg, #1b1716 0%, #221b17 55%, #29201a 100%);
-  --scene-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'%3E%3Cg fill='%23000' fill-opacity='.35'%3E%3Cpath d='M0 300V150h400v150z'/%3E%3Cpath d='M40 150V60h22v90zM338 150V60h22v90z'/%3E%3C/g%3E%3Cpath d='M0 150h400' stroke='%23000' stroke-opacity='.5' stroke-width='3'/%3E%3C/svg%3E"); }
-.jbattle.scene-valley, .jscene.scene-valley { --scene: linear-gradient(180deg, #141821 0%, #18202a 50%, #161b20 100%);
-  --scene-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'%3E%3Cg fill='%23000' fill-opacity='.42'%3E%3Cpath d='M0 300V30l40 20 20 250zM400 300V30l-40 20-20 250z'/%3E%3C/g%3E%3Cpath d='M175 0v300M200 0v300M225 0v300' stroke='%23fff' stroke-opacity='.05' stroke-width='14'/%3E%3C/svg%3E"); }
-:root[data-theme='light'] .jbattle.scene-forest, :root[data-theme='light'] .jscene.scene-forest { --scene: linear-gradient(180deg, #dfe2d0, #cfd3bd 55%, #d6c9a8); }
-:root[data-theme='light'] .jbattle.scene-arena, :root[data-theme='light'] .jscene.scene-arena { --scene: linear-gradient(180deg, #e8dcc6, #dccaa9 55%, #cfb68c); }
-:root[data-theme='light'] .jbattle.scene-valley, :root[data-theme='light'] .jscene.scene-valley { --scene: linear-gradient(180deg, #d8dde6, #c6cfdb 55%, #bcc4c8); }
-:root[data-theme='light'] .jbattle::before, :root[data-theme='light'] .jscene::before { opacity: .25; }
 
 .jb-goal {
   margin: 0; text-align: center; font: 600 14px/1.3 var(--font-hud); letter-spacing: .04em; padding: 4px 8px;

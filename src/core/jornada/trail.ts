@@ -5,7 +5,7 @@ import type { WinCondition } from './types';
 
 export type FightKind = 'story' | 'fight' | 'elite' | 'boss';
 
-export type StopDef =
+export type StopDef = (
   | {
       kind: FightKind;
       id: string;
@@ -16,7 +16,11 @@ export type StopDef =
     }
   | { kind: 'event'; id: string; event: string }
   | { kind: 'rest'; id: string }
-  | { kind: 'treasure'; id: string };
+  | { kind: 'treasure'; id: string }
+) & {
+  /** Local desta parada (só visual); sem o campo, o cenário do estágio. */
+  scene?: string;
+};
 
 export interface StageDef {
   id: string;

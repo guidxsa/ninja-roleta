@@ -45,6 +45,8 @@
   --jin: #e0682e;
   --foe: #e9a49a;
   --leaf: #6f9a55;
+  --leaf-deep: #3a7240;
+  --orange: #e8701a;
   --navy: #1f2a3d;
   --log-bg: rgba(12, 11, 10, .84);
   --log-mine: #cfe3c6;
@@ -120,6 +122,8 @@
   --jin: #c0501f;
   --foe: #8f1a14;
   --leaf: #4f7a35;
+  --leaf-deep: #2f5f34;
+  --orange: #c2550f;
   --navy: #2c3a52;
   --log-bg: rgba(250, 244, 230, .9);
   --log-mine: #2b6528;
@@ -131,4 +135,33 @@
   --grain: var(--grain-dark);
   --title-shadow: 1.5px 1.5px 0 color-mix(in srgb, var(--accent) 28%, transparent);
   color-scheme: light;
+}
+
+/*
+ * Cor por modo (docs/visual.md): só tokens; o tema continua sendo Sumi ou Pergaminho.
+ * Roleta: laranja e vermelho sobre preto. Jornada: papel envelhecido, madeira e verde da Folha.
+ */
+body.mode-roleta {
+  --bg: #0a0706; --bg-2: #170e08;
+  --surface: #18110c; --surface-2: #221810; --surface-3: #2f2217;
+  --line: #3b2c20;
+  --accent: #ea6f14; --accent-2: #ff9a3d; --accent-deep: #6d2c06; --accent-ink: #160a03;
+  --title-shadow: 2px 2px 0 var(--seal);
+}
+:root[data-theme='light'] body.mode-roleta {
+  --bg: #ecd8b4; --bg-2: #f4e6c8;
+  --surface: #f8eed8; --surface-2: #f0e0bf; --surface-3: #e4cfa4;
+  --line: #d0b78a; --gold: #7d5d1f; --gold-2: #7d5d1f;
+  --accent: #b84a08; --accent-2: #a84308; --accent-deep: #6d2c06; --accent-ink: #fff4e0;
+  --title-shadow: 1.5px 1.5px 0 color-mix(in srgb, var(--orange) 40%, transparent);
+}
+body.mode-jornada {
+  --bg: #100e09; --bg-2: #1b1810;
+  --surface: #1e1a12; --surface-2: #282316; --surface-3: #342d1d;
+  --line: #3f3725;
+}
+:root[data-theme='light'] body.mode-jornada {
+  --bg: #d9c8a3; --bg-2: #e6d8b8;
+  --surface: #efe4c8; --surface-2: #e4d6b3; --surface-3: #d6c59d;
+  --line: #b9a67c; --muted: #5d4f3c; --gold: #7d5d1f; --gold-2: #7d5d1f;
 }

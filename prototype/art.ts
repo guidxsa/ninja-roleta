@@ -1,4 +1,5 @@
-// Arte do protótipo: retratos, símbolos de clã e ícones, todos em SVG desenhado à mão (originais, sem arte oficial).
+// Arte do protótipo: retratos, símbolos de clã e de vila e ícones em SVG desenhado à mão.
+// Retratos podem vir de imagens em public/img/ (inclusive arte oficial, ver public/img/LEIAME.md).
 // Imagens próprias em `public/img/` substituem os retratos: o build lista os arquivos em __IMAGES__.
 
 declare const __IMAGES__: string[];
@@ -289,6 +290,16 @@ function headband(symbol: 'leaf' | 'mist' | 'sand' | 'sound', cloth = '#24324f',
   }[symbol];
   return `<path d="M32 ${y}q18-5 36 0v8q-18-5-36 0z" fill="${cloth}"/><rect x="40" y="${y - 0.5}" width="20" height="10" rx="2" fill="#c9d1dc" stroke="#7d8696" stroke-width=".8"/>${sym}${slash ? `<path d="M41 ${y + 9}l18-9" stroke="#5a6170" stroke-width="1.4"/>` : ''}`;
 }
+
+/** Símbolos das vilas (24×24, traço em `currentColor`): desenho próprio, para ambientação. */
+const VILLAGES = {
+  leaf: '<path d="M12.6 12.4a1.3 1.3 0 1 0-1.3 1.5 3 3 0 0 0 3-3 4.6 4.6 0 0 0-4.6-4.6 6.2 6.2 0 0 0-6.2 6.2 7.8 7.8 0 0 0 7.8 7.8c4.6 0 8.2-3.4 8.7-8L14 3.5l1.4 6.2"/>',
+  mist: '<path d="M4 7q2.7-2.4 5.3 0t5.4 0T20 7M4 12q2.7-2.4 5.3 0t5.4 0T20 12M4 17q2.7-2.4 5.3 0t5.4 0T20 17"/>',
+  sand: '<path d="M4 5h16l-6.2 7L20 19H4l6.2-7z"/><path d="M12 12V5"/>',
+  sound: '<path d="M14 4v12.5"/><path d="M14 4l5.5 3.2"/><ellipse cx="10.4" cy="17" rx="3.6" ry="2.8"/>',
+} as const;
+export const VILLAGE_IDS = Object.keys(VILLAGES) as (keyof typeof VILLAGES)[];
+export const villageCrest = (id: keyof typeof VILLAGES): string => svg(VILLAGES[id], '0 0 24 24', 'ico crest');
 
 /** Corda roxa dos guardas do Som (laço na frente). */
 const rope = '<path d="M20 92q30 -8 60 0" stroke="#6a3f8f" stroke-width="5" fill="none"/><path d="M50 88l-7 8 7-3 7 3z" fill="#6a3f8f"/>';

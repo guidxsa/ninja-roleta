@@ -150,3 +150,54 @@ body.at-gate #home-btn, body:not(.at-gate) .brand, body:not(.has-sheet) #sheet-b
 @media (min-width: 900px) {
   body.mode-jornada .jmodes { max-width: 620px; margin: 0 auto; width: 100%; }
 }
+
+/*
+ * Portão da Vila dentro do universo: Konoha e o Monumento ao fundo, cada modo como uma placa na sua cor
+ * (iguais nos dois temas, porque são objetos da vila) e o registro como etiquetas de arquivo shinobi.
+ */
+.gate { position: relative; isolation: isolate; }
+.gate::before {
+  content: ''; position: absolute; z-index: -2; top: -14px; left: -16px; right: -16px; height: 300px; pointer-events: none;
+  background: var(--scene-art) top center / 100% 100% no-repeat, var(--scene);
+  -webkit-mask: linear-gradient(#000 42%, transparent 80%); mask: linear-gradient(#000 42%, transparent 80%);
+}
+.gate-head { padding-top: 138px; }
+.gate-head::before { z-index: -1; }
+.jmode[data-choice='roleta'] {
+  --frame: #ea6f14; --fill: #120a06; --text: #f6ecd6; --muted: #c9b79c; --gold: #ff9a3d;
+  --accent: #ea6f14; --accent-ink: #160a03; --title-shadow: 2px 2px 0 #b5161f;
+}
+.jmode[data-choice='roleta']::after {
+  background:
+    linear-gradient(#b5161f, #b5161f) 0 0 / 4px 100% no-repeat,
+    repeating-conic-gradient(from 0deg at 44px 50%, rgba(234, 111, 20, .13) 0 9deg, transparent 9deg 18deg),
+    var(--grain), var(--fill);
+}
+.jmode[data-choice='roleta']:hover::after, .jmode[data-choice='roleta']:focus-visible::after { background-size: 7px 100%, auto, auto, auto; }
+.jmode[data-choice='jornada'] {
+  --frame: var(--wood); --fill: var(--paper); --text: var(--paper-ink); --muted: var(--paper-muted); --gold: var(--wood);
+  --accent: var(--leaf-deep); --accent-ink: #f8efdc; --title-shadow: 1.5px 1.5px 0 rgba(47, 95, 52, .3);
+  padding-right: 18px;
+}
+.jmode[data-choice='jornada']::after {
+  background:
+    linear-gradient(var(--wood), var(--wood)) 0 0 / 7px 100% no-repeat,
+    linear-gradient(var(--wood), var(--wood)) 100% 0 / 7px 100% no-repeat,
+    var(--grain-dark), var(--fill);
+}
+.jmode[data-choice='jornada']:hover::after, .jmode[data-choice='jornada']:focus-visible::after { background-size: 11px 100%, 7px 100%, auto, auto; }
+.jmode[data-choice='jornada']:hover, .jmode[data-choice='jornada']:focus-visible { --frame: var(--leaf-deep); }
+.gate-crests { display: flex; align-items: center; justify-content: center; gap: 16px; color: var(--muted); }
+.gate-crests::before, .gate-crests::after { content: ''; flex: 1; height: 1px; background: var(--line-strong); }
+.gate-crests .crest { width: 24px; height: 24px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.gate-links { gap: 8px; background: none; border: 0; }
+.gate-link {
+  background: var(--grain-dark), var(--paper-2); color: var(--paper-ink);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wood) 55%, transparent);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+.gate-link .kanji { color: var(--seal); }
+.gate-link:hover, .gate-link:focus-visible { background: var(--grain-dark), var(--paper); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wood) 55%, transparent), inset 0 -3px 0 var(--seal); }
+@media (min-width: 553px) {
+  .gate::before { left: 0; right: 0; -webkit-mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent), linear-gradient(#000 42%, transparent 80%); -webkit-mask-composite: source-in; mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent), linear-gradient(#000 42%, transparent 80%); mask-composite: intersect; }
+}

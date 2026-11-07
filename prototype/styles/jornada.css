@@ -303,3 +303,54 @@
 
 /* Fim da Jornada: o selo fica no canto do retrato. */
 .jstart-face.end-seal { width: max-content; margin: 8px auto; }
+
+/* Identidade da Jornada: ação no verde da Folha; o vermelho fica para chefe, perigo e carimbo. */
+body.mode-jornada .btn.primary { --accent: var(--leaf-deep); --accent-2: color-mix(in srgb, var(--leaf-deep) 82%, #fff); --accent-deep: color-mix(in srgb, var(--leaf-deep) 60%, #000); --accent-ink: #f8efdc; }
+body.mode-jornada .screen > h2::after, body.mode-jornada .screen > header > h2::after { background: var(--leaf-deep); }
+
+/* Trilha da História: o local em uma faixa no alto e o percurso seguindo abaixo dela. */
+.jtrail-scene { padding-top: 124px; }
+.jtrail-scene::before { inset: 0 0 auto; height: 180px; -webkit-mask: linear-gradient(#000 62%, transparent); mask: linear-gradient(#000 62%, transparent); }
+.jtrail-scene .jtrail { border-left: 2px dashed var(--place, var(--line-strong)); }
+@media (min-width: 900px) {
+  .jtrail-scene { padding-top: 270px; }
+  .jtrail-scene::before { height: 340px; }
+}
+.jtrail-scene .jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--place, var(--accent)) 26%, transparent), transparent 85%); }
+
+/*
+ * Mapa do Caminho Ninja: carta em papel envelhecido, igual nos dois temas. Os tokens são do papel,
+ * as rotas são a pincel e cada nó é um carimbo pela cor do tipo; relevo e rosa dos ventos ficam atrás.
+ */
+.jmap.jscene {
+  --text: var(--paper-ink); --muted: var(--paper-muted); --surface: var(--paper); --surface-2: var(--paper-2);
+  --line-strong: #6a5536; --accent: #a3121b; --accent-2: #c21d26; --accent-deep: #6b0c12; --gold: #94712c; --gold-2: #7d5d1f; --leaf: #4f7a35;
+  background: var(--grain-dark), linear-gradient(90deg, var(--paper-2), var(--paper) 6%, var(--paper) 94%, var(--paper-2));
+  border: 0; box-shadow: inset 0 0 0 2px var(--wood), inset 0 0 26px rgba(74, 47, 28, .35);
+}
+.jmap.jscene::before { opacity: .55; background: var(--map-art, none) center top / 100% auto repeat-y; }
+/* Na linha do chefe só há um nó, no centro: os cantos de cima ficam livres para a rosa dos ventos. */
+.jmap.jscene::after { content: ''; position: absolute; top: 10px; right: 10px; width: 56px; height: 56px; pointer-events: none; opacity: .5; background: var(--map-rose) center / contain no-repeat; }
+.jmap .jmap-lines path { stroke: rgba(36, 25, 15, .6); }
+.jmap .jmap-lines path.open { stroke: var(--accent-2); }
+.jmap .jmap-lines path.walked { stroke: var(--accent); filter: none; }
+.jmap .jnode-map {
+  --stamp: var(--accent);
+  background: var(--grain-dark), var(--stamp); color: #f8efdc; border: 1px solid var(--stamp);
+  box-shadow: inset 0 0 0 2px var(--stamp), inset 0 0 0 3px #f8efdc99, 2px 2px 0 rgba(36, 25, 15, .45);
+}
+.jmap .jnode-map.k-elite { --stamp: var(--accent-deep); color: #f3d38b; border-color: #94712c; }
+.jmap .jnode-map.k-elite::before { background: var(--stamp); border-color: #94712c; }
+.jmap .jnode-map.k-rest { --stamp: #3f6b3a; color: #f8efdc; border-color: var(--stamp); }
+.jmap .jnode-map.k-treasure { --stamp: #94712c; color: #fff4d6; border-color: var(--stamp); }
+.jmap .jnode-map.k-shop { --stamp: var(--wood); color: #f3d38b; border-color: var(--stamp); }
+.jmap .jnode-map.k-unknown { --stamp: var(--paper); color: var(--paper-ink); border-color: var(--paper-ink); box-shadow: 2px 2px 0 rgba(36, 25, 15, .35); }
+.jmap .jnode-map.k-unknown .jq { color: var(--accent); }
+.jmap .jnode-map.k-boss { --stamp: var(--accent); box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--accent); }
+.jmap .jnode-map.done { --stamp: var(--paper-2); color: var(--paper-ink); border-color: var(--paper-muted); box-shadow: none; opacity: .75; }
+.jmap .jnode-map.done::before { background: var(--paper-2); border-color: var(--paper-muted); }
+.jmap .jnode-map.dead { opacity: .32; box-shadow: none; }
+.jmap .jnode-map.choice { border-color: var(--paper-ink); opacity: 1; background: var(--grain-dark), var(--stamp); animation: mapCall 1.4s var(--ease) infinite; }
+.jmap .jnode-map.choice::before { border-color: var(--paper-ink); }
+.jmap .jmap-hero .portrait { border-color: var(--paper-ink); box-shadow: 0 0 0 2px var(--paper), 2px 3px 0 2px rgba(36, 25, 15, .45); }
+@keyframes mapCall { 0%, 100% { box-shadow: inset 0 0 0 2px var(--stamp), inset 0 0 0 3px #f8efdc99, 0 0 0 2px var(--paper-ink); } 50% { box-shadow: inset 0 0 0 2px var(--stamp), inset 0 0 0 3px #f8efdc99, 0 0 0 9px transparent; } }

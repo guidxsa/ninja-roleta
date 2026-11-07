@@ -14,8 +14,8 @@ O que espera o usuário. Um item por decisão; o histórico e os números comple
 ## Design
 
 5. **Pesos de treino como ativa do prodígio** (+3 de speed e +2 de taijutsu ao tirar): ficou de fora porque conflita com a relíquia Pesos de treino.
-6. **Retratos dos personagens**: desenho próprio em SVG para os cerca de 20 principais no lugar do molde `ninjaPortrait` (`prototype/art.ts`); arte opcional em `public/img/jornada/<id>.webp`. Combinar antes de começar.
-7. **Jornada, o que falta**: versão suporte do prodígio, mais easter eggs por combinação, sprites, nomes das paradas com sabor ninja.
+6. **Direção visual: avaliar o piloto** (v0.54.0, [visual.md](visual.md)). Falta o usuário julgar o Portão da Vila, a trilha, o mapa e o sorteio do Roleta pelo critério da direção. Decidido sozinho: quais paradas usam cada local, o desenho dos cenários, das vilas e da barraca de festival, os valores das cores, e o Pergaminho na Jornada mesmo com o aparelho no escuro. Aprovado o piloto: Academia, Ponte das Ondas, Arena do Exame, Hospital e Tanzaku; depois combate, eventos, recompensas, loja, ficha e árvore de talentos. **Retratos**: arte oficial liberada; faltam os arquivos do usuário, começando por `naruto`, `sasuke`, `sakura` e `kakashi` (`public/img/LEIAME.md`). Até lá, vale o molde `ninjaPortrait`.
+7. **Jornada, o que falta**: versão suporte do prodígio, mais easter eggs por combinação, nomes das paradas com sabor ninja.
 8. **Perfil**: fase 2 sem os cosméticos (títulos, skins da roleta); fase 3, contas opcionais só para sincronizar (Supabase ou Firebase, sem guardar senha, política de privacidade LGPD, rever o princípio "Sem backend").
 9. **Idioma do código e dos commits**: não definido. Na prática, commits em PT-BR sem acentos (skill `lancar-versao`).
 10. **Ferramenta (futuro)**: script que gera as tabelas numéricas dos docs a partir dos dados.

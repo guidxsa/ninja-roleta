@@ -14,6 +14,7 @@ Dois modos: **Roleta** (rápido e simples; run em ciclos infinitos) e **Jornada*
 |---|---|
 | [docs/README.md](docs/README.md) | Índice das regras do jogo |
 | [docs/decisoes.md](docs/decisoes.md) | **O que espera o usuário**: balanceamento fora do alvo e design em aberto. Ler antes de mexer em regra ou número |
+| [docs/visual.md](docs/visual.md) | Direção visual: identidade por modo, locais e regra da arte. Ler antes de mexer na interface |
 | [docs/registro.md](docs/registro.md) | Histórico das decisões e das simulações por versão. Só consulta: não ler inteiro sem motivo |
 | `CHANGELOG.md` | Histórico de versões (o que mudou para quem joga) |
 | `.claude/skills/` | `nova-mecanica` (fluxo de regra nova) e `lancar-versao` (publicar) |
@@ -59,8 +60,10 @@ Comandos: `npm test`, `npm run typecheck`, `npm run proto`, `npm run sim:origens
 
 ## Interface (design system "Shinobi")
 
+A direção está em [docs/visual.md](docs/visual.md): a interface deve parecer parte do universo.
+
 - Estilos em `prototype/styles/` (camadas: `tokens.css` → `fonts.css` → `base.css` → `components.css` → telas); o build junta e embute as fontes.
-- Cores, fontes, durações e forma só por tokens (`var(--...)`); os temas Sumi (escuro) e Pergaminho (claro) trocam só os tokens.
+- Cores, fontes, durações e forma só por tokens (`var(--...)`); os temas Sumi (escuro) e Pergaminho (claro) e a cor por modo (`body.mode-roleta`, `body.mode-jornada`) trocam só os tokens. Cor solta só em arte (cenário, roda, placas).
 - **Nada de emoji como ícone**: SVG do `ICONS` em `prototype/art.ts` (`icon(nome)`), traço 24×24 em `currentColor`. Exceção: o texto de compartilhar.
 - Cantos retos (`--radius: 2px`) e chanfro (`--cut`) nos painéis, sempre em `::before`/`::after`, nunca no elemento (cortaria números flutuantes e o foco).
 - `--font-display` (pincel) só em letreiro grande; texto em `--font-body`; números e rótulos em `--font-hud`; kanji em `--font-kanji` (kanji novo entra no recorte, `prototype/fonts/LEIAME.md`).

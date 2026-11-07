@@ -294,6 +294,9 @@ export function currentStop(run: JRun, data: JornadaData): StopDef | null {
   return currentStage(run, data).stops[run.stopIndex] ?? null;
 }
 
+/** Cenário da parada atual: o local dela ou, sem local próprio, o do estágio. */
+export const stopScene = (run: JRun, data: JornadaData): string => currentStop(run, data)?.scene ?? stageScene(run, data);
+
 /** No Caminho Ninja: a run espera o jogador escolher o próximo nó do mapa. */
 export const choosingNode = (run: JRun) => run.mode === 'generic' && run.status === 'inProgress' && !run.nodeId && !run.bossChoice;
 

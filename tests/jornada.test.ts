@@ -60,6 +60,7 @@ import {
   openShop,
   shopOffer,
   stopRng,
+  stopScene,
   syncUnlocks,
   talentContext,
   talentTreeComplete,
@@ -74,6 +75,7 @@ import { isFight } from '../src/core/jornada/trail';
 import type { JBattle } from '../src/core/jornada/types';
 import { createRng } from '../src/core/rng';
 import { jornadaData as data } from '../src/data/jornada';
+import { SCENES } from '../src/data/jornada/scenes';
 import { loadJornada, saveJornada, JORNADA_SAVE_KEY } from '../src/state/jornadaSave';
 import {
   cleanPlayerName,
@@ -368,6 +370,27 @@ describe('combate de equipe da Jornada', () => {
     const a = advance(startBattle(battleSetup(run, data), data, createRng(5)), data, createRng(5));
     const b = advance(startBattle(battleSetup(run, data), data, createRng(5)), data, createRng(5));
     expect(a.log).toEqual(b.log);
+  });
+});
+
+describe('cenário da parada', () => {
+  it('usa o local da parada e, sem local, o do estágio', () => {
+    const at = (stageIndex: number, id: string) => ({
+      ...newRun(1, 'normal', data),
+      stageIndex,
+      stopIndex: data.stages[stageIndex]!.stops.findIndex((s) => s.id === id),
+    });
+    expect(stopScene(at(1, 'forest'), data)).toBe('deathForest');
+    expect(stopScene(at(1, 'kiba'), data)).toBe('arena');
+    expect(stopScene(at(2, 'valley'), data)).toBe('valleyEnd');
+    expect(stopScene(at(0, 'zabuza'), data)).toBe('forest');
+  });
+
+  it('todo cenário dos dados está na lista e tem estilo próprio', () => {
+    const used = [...data.stages.flatMap((st) => [st.scene, ...st.stops.flatMap((s) => (s.scene ? [s.scene] : []))]), ...data.generic.stages.map((g) => g.scene)];
+    for (const scene of used) expect(SCENES as readonly string[], scene).toContain(scene);
+    const css = readFileSync('prototype/styles/scenes.css', 'utf8');
+    for (const scene of SCENES) expect(css, scene).toContain(`.scene-${scene}`);
   });
 });
 

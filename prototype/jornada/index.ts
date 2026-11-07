@@ -38,6 +38,7 @@ import {
   stageId,
   stageScene,
   stopRng,
+  stopScene,
   syncUnlocks,
   talentTreeComplete,
   xpToNext,
@@ -351,7 +352,7 @@ function hud(host: JornadaHost, run: JRun): string {
 
 function trail(run: JRun): string {
   const stage = currentStage(run, data);
-  return `<div class="jtrail-scene jscene scene-${stage.scene}"><ol class="jtrail">${stage.stops
+  return `<div class="jtrail-scene jscene scene-${stopScene(run, data)}"><ol class="jtrail">${stage.stops
     .map((s, i) => {
       const state = i < run.stopIndex ? 'done' : i === run.stopIndex ? 'here' : 'next';
       const mark = state === 'here' ? `<span class="jstop-hero">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}</span>` : `<span class="jstop-ico">${state === 'done' ? icon('check') : icon(STOP_ICONS[s.kind]!)}</span>`;
@@ -534,7 +535,7 @@ function goalText(stop: Extract<StopDef, { enemies: string[] }>): string | null 
 async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, { enemies: string[] }>): Promise<JRun> {
   let run = run0;
   for (let attempt = 0; ; attempt++) {
-    const res = await jornadaBattle(host, data, run, battleSetup(run, data), stopRng(run, attempt), stopName(stop), stageScene(run, data), goalText(stop));
+    const res = await jornadaBattle(host, data, run, battleSetup(run, data), stopRng(run, attempt), stopName(stop), stopScene(run, data), goalText(stop));
     run = res.run;
     const { run: next, outcome } = finishFight(run, res.battle, data);
     if (outcome.retry) {

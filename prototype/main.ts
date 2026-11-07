@@ -127,7 +127,7 @@ import {
   type KeyValueStorage,
   type RunStatus,
 } from '../src/state/runHistory';
-import { clanSymbol, fighterPortrait, icon, ninjaPortrait, villainPortrait } from './art';
+import { clanSymbol, fighterPortrait, icon, ninjaPortrait, VILLAGE_IDS, villageCrest, villainPortrait } from './art';
 import { barLayers, barPct, barTone, patchBar } from './bars';
 import { defeat, installAudio, mood, setMusic, setSfx, victory, type Mood } from './audio';
 import {
@@ -201,13 +201,16 @@ interface Settings {
   music: boolean;
   /** Tema escolhido no botão; sem escolha, segue o aparelho. */
   theme?: Theme;
+  /** Tema escolhido dentro da Jornada; sem escolha, Pergaminho (docs/visual.md). */
+  themeJornada?: Theme;
 }
 const settings: Settings = (() => {
   try {
     const saved = JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}') as Partial<Settings>;
     const difficulty = saved.difficulty && DIFFICULTIES.includes(saved.difficulty) ? saved.difficulty : DEFAULT_DIFFICULTY;
     const theme = saved.theme === 'light' || saved.theme === 'dark' ? saved.theme : undefined;
-    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), theme };
+    const themeJornada = saved.themeJornada === 'light' || saved.themeJornada === 'dark' ? saved.themeJornada : undefined;
+    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), theme, themeJornada };
   } catch {
     return { instant: false, difficulty: DEFAULT_DIFFICULTY, sfx: true, music: false };
   }
@@ -818,6 +821,14 @@ async function bigWheel(slot: HTMLElement, title: string, slices: WheelSlice[], 
     btn.remove();
   }
   await wheel.spinTo(index, pace.wheel());
+  // Carimbo do resultado por cima da roda; não muda o tempo do giro e não bloqueia o toque.
+  if (!settings.instant) {
+    const stamp = document.createElement('span');
+    stamp.className = 'wheel-stamp';
+    stamp.setAttribute('aria-hidden', 'true');
+    stamp.textContent = slices[index]!.label;
+    wheel.el.querySelector('.wheel-wrap')!.appendChild(stamp);
+  }
 }
 
 /**
@@ -2364,7 +2375,15 @@ function recordRoleta(): boolean {
 
 /** Tema aplicado: o escolhido no botão ou o do aparelho. */
 const deviceTheme = window.matchMedia?.('(prefers-color-scheme: light)');
-const currentTheme = (): Theme => settings.theme ?? (deviceTheme?.matches ? 'light' : 'dark');
+/** Modo na tela: define a cor (styles/tokens.css) e qual preferência de tema vale. */
+let uiMode: 'gate' | 'roleta' | 'jornada' = 'gate';
+const currentTheme = (): Theme =>
+  uiMode === 'jornada' ? (settings.themeJornada ?? 'light') : (settings.theme ?? (deviceTheme?.matches ? 'light' : 'dark'));
+function setUiMode(mode: typeof uiMode) {
+  uiMode = mode;
+  document.body.classList.toggle('mode-roleta', mode === 'roleta');
+  applyTheme();
+}
 const THEME_COLORS: Record<Theme, string> = { dark: '#0d0c0b', light: '#e6dac0' };
 
 function applyTheme() {
@@ -2390,7 +2409,9 @@ function installHeaderToggles() {
   applyTheme();
   deviceTheme?.addEventListener?.('change', applyTheme);
   document.getElementById('theme-btn')!.addEventListener('click', () => {
-    settings.theme = currentTheme() === 'dark' ? 'light' : 'dark';
+    const next: Theme = currentTheme() === 'dark' ? 'light' : 'dark';
+    if (uiMode === 'jornada') settings.themeJornada = next;
+    else settings.theme = next;
     saveSettings();
     applyTheme();
   });
@@ -2479,10 +2500,15 @@ async function main() {
   if (LAB.lab) document.getElementById('version')!.textContent += ` · ${S.lab.badge}`;
   if (LAB.seed !== null) document.getElementById('version')!.textContent += ` · ${S.lab.seed(LAB.seed)}`;
   document.getElementById('home-btn')!.addEventListener('click', askHome);
-  if (LAB.lab) for (;;) if ((await untilHome(labFlow())) === HOME) leftToMenu();
+  if (LAB.lab) {
+    setUiMode('roleta');
+    for (;;) if ((await untilHome(labFlow())) === HOME) leftToMenu();
+  }
   for (;;) {
     const round = async () => {
-      if ((await modeScreen()) === 'jornada') return runJornada(jornadaHost);
+      const mode = await modeScreen();
+      setUiMode(mode);
+      if (mode === 'jornada') return runJornada(jornadaHost);
       await ensurePlayerName();
       await originScreen();
       await runCampaign();
@@ -2514,6 +2540,7 @@ function leftToMenu() {
 /** Tela inicial: Roleta (rápido, tudo na sorte) ou Jornada (lento, com controle). */
 async function modeScreen(): Promise<'roleta' | 'jornada'> {
   const M = S.jornada.modes;
+  setUiMode('gate');
   // No Portão da Vila não há run: some o botão do menu e o da Ficha.
   camp = null;
   campLive = false;
@@ -2535,6 +2562,7 @@ async function modeScreen(): Promise<'roleta' | 'jornada'> {
         <button class="jmode" data-choice="roleta"><span class="seal" aria-hidden="true">運</span><span><b>${M.roleta.name}</b><small>${M.roleta.desc}</small></span>${icon('chevron')}</button>
         <button class="jmode" data-choice="jornada"><span class="seal two" aria-hidden="true">忍道</span><span><b>${M.jornada.name}</b><small>${M.jornada.desc}</small></span>${icon('chevron')}</button>
       </nav>
+      <div class="gate-crests" aria-hidden="true">${VILLAGE_IDS.map((v) => villageCrest(v)).join('')}</div>
       <nav class="gate-links" aria-label="${S.ui.gate.registry}">
         ${link('data-profile="history"', '歴', P.history)}${link('data-profile="achievements"', '功', P.achievements)}
         ${link('data-profile="bingo"', '手配', P.bingo)}${link('data-profile="relics"', '宝', P.relics)}

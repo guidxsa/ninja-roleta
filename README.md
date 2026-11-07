@@ -38,10 +38,10 @@ src/core    regras puras: roleta, origem, iniciativa, acerto, dano, elementos, c
 src/data    números de balanceamento, linhagens, técnicas, vilões, campanha, textos (PT-BR)
 src/state   histórico de runs (localStorage injetável)
 src/sim     jogador automático e executor de lutas/campanha
-prototype   protótipo jogável (HTML + TS), usa o core real; arte e ícones em SVG original (prototype/art.ts)
+prototype   protótipo jogável (HTML + TS), usa o core real; cenários e ícones em SVG original, retratos também por imagem
 prototype/styles  design system "Shinobi": tokens, componentes e telas (CSS em camadas)
 prototype/fonts   recorte de kanji em pincel (Yuji Boku); as outras fontes vêm do npm (@fontsource)
-public/img  imagens próprias opcionais que substituem os retratos (ver public/img/LEIAME.md)
+public/img  imagens opcionais que substituem os retratos (ver public/img/LEIAME.md)
 public/audio  música de fundo (naruto_theme.mp3), embutida no protótipo pelo build
 scripts     simulate.ts, build-prototype.ts
 tests       testes do core
@@ -51,7 +51,9 @@ Todo número de balanceamento fica em `src/data/balance.ts` e nos arquivos de da
 
 ## Licença
 
-MIT. Veja o arquivo [LICENSE](LICENSE).
+MIT para o código. Veja o arquivo [LICENSE](LICENSE).
+
+A licença não cobre imagens de personagens em `public/img/`: os direitos da arte são dos detentores, e ela é retirada se houver pedido.
 
 ## Versionamento
 

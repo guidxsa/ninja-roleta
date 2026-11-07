@@ -100,7 +100,7 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 
 ## Interface
 
-- Tela dedicada: cenário por estágio (silhuetas em nanquim), inimigos em cima, equipe embaixo. Cada lutador é um estandarte: retrato em destaque, nome, barras de HP e chakra e ícones de efeito (SVG, sem emoji).
+- Tela dedicada: cenário da parada ou do estágio ([visual.md](../visual.md)), inimigos em cima, equipe embaixo. Cada lutador é um estandarte: retrato em destaque, nome, barras de HP e chakra e ícones de efeito (SVG, sem emoji).
 - Quem age tem um losango dourado embaixo; na hora de escolher o alvo, os alvos válidos ganham uma retícula vermelha.
 - Entrada com varrida de pergaminho; cada evento do log anima (avançar no ataque, tremer ao tomar dano, número flutuante, brilho do elemento, cair e levantar), inclusive quando os suportes e os inimigos agem. O nome da técnica aparece numa pincelada na cor do elemento (ou do tipo); o crítico ganha um corte dourado. A barra de HP cai e deixa um rastro claro que alcança depois. O modo instantâneo encurta tudo.
 - Técnica em espera (cooldown) mostra um selo com as rodadas que faltam e um anel do quanto ainda falta.

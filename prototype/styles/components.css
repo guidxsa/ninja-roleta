@@ -179,6 +179,8 @@ button[data-tip] { cursor: pointer; }
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .6);
 }
 .portrait svg, .portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Imagem de qualquer origem: enquadra o rosto, que costuma ficar na parte de cima. */
+.portrait img { object-position: 50% 18%; }
 .portrait-sm { width: 30px; height: 30px; }
 .portrait-md { width: 78px; height: 78px; }
 .portrait-lg { width: 96px; height: 96px; }
