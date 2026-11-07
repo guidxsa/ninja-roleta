@@ -473,3 +473,58 @@
 .jrecent small { display: block; color: var(--muted); font-size: 13px; line-height: 1.35; }
 .jrecent time { align-self: start; font: 400 14px/1.2 var(--font-hand); color: var(--muted); white-space: nowrap; }
 .jstart .parchment.difficulty-box { padding-bottom: 12px; }
+
+/*
+ * Entrada da Jornada no PC: título e banner no alto; à esquerda, progresso, dificuldade e conquistas recentes;
+ * os dois modos lado a lado (no notebook, empilhados à direita). No celular, a pilha de sempre: o `order` põe as
+ * conquistas e o Voltar depois dos modos.
+ */
+.jstart-side { display: contents; }
+.jstart .jrecent { order: 2; }
+.jstart .jstart-back { order: 3; }
+@media (min-width: 900px) {
+  body.mode-jornada .jstart {
+    max-width: 1600px; display: grid; gap: 14px 20px; align-items: start;
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    grid-template-areas: 'title title' 'banner banner' 'side canon' 'side generic' 'recent generic';
+  }
+  .jstart > h2 { grid-area: title; margin-bottom: 0; }
+  .jstart > .jbanner { grid-area: banner; height: clamp(80px, 12vh, 180px); }
+  .jstart > .jrecent { grid-area: recent; }
+  .jstart-side { grid-area: side; display: flex; flex-direction: column; gap: 14px; }
+  .jstart .jmode-canon { grid-area: canon; }
+  .jstart .jmode-generic { grid-area: generic; }
+  /* Voltar na linha do título, à esquerda: não gasta uma linha no pé da tela. */
+  .jstart .jstart-back { grid-area: title; justify-self: start; align-self: center; }
+  .jstart .jmode-panel { display: flex; flex-direction: column; gap: 12px; }
+}
+@media (min-width: 1280px) {
+  body.mode-jornada .jstart {
+    grid-template-columns: clamp(320px, 24vw, 460px) minmax(0, 1fr) minmax(0, 1.3fr);
+    grid-template-areas: 'title title title' 'banner banner banner' 'side canon generic' 'side recent generic';
+    grid-template-rows: auto auto auto 1fr;
+  }
+}
+
+/* Painéis minimizáveis (prototype/jornada/fold.ts): só no widescreen; fora dele, o botão some e nada dobra. */
+.jfold, .jhud-extra > .jfold-title { display: none; }
+@media (min-width: 1280px) {
+  [data-fold] { position: relative; }
+  .jfold { display: block; position: absolute; top: 8px; right: 8px; z-index: 2; width: 26px; height: 26px; padding: 0; border: 0; background: none; cursor: pointer; }
+  .jfold::after {
+    content: ''; position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; margin: -6px 0 0 -4px;
+    border-right: 2px solid var(--gold-2); border-bottom: 2px solid var(--gold-2); transform: rotate(45deg); transition: transform var(--dur-2) var(--ease);
+  }
+  [data-folded] > .jfold::after { transform: rotate(-135deg); margin-top: -2px; }
+  .jfold:hover::after, .jfold:focus-visible::after { border-color: var(--text); }
+  .jfold:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+  [data-fold] > h3, .jhud-extra > .jfold-title { padding-right: 28px; }
+  .jhud-extra { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--line); }
+  .jhud-extra > .jfold-title { display: block; margin: 0 0 6px; font: 700 12px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .jhud-extra > .jfold { top: 2px; right: -4px; }
+  /* Minimizado: fica o título (h3, o título da bolsa ou o ::before das fichas da luta). */
+  [data-folded] > :not(h3):not(.jfold):not(.jfold-title) { display: none !important; }
+  .jbattle [data-folded].jb-intel, .jbattle [data-folded].jb-order { flex: none; }
+  .jbattle [data-folded].jb-order::before { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+  .jbattle [data-folded].jb-intel::before { padding-bottom: 0; border-bottom: 0; }
+}

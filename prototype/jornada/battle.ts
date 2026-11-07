@@ -38,6 +38,7 @@ import { esc, h, show, sleep } from '../dom';
 import { ELEMENT_COLORS, lines } from '../tips';
 import { tip } from '../tooltip';
 import { flashRelics, relicStrip, startRelics, winRelics } from './relics';
+import { foldAttrs, foldButton } from './fold';
 import type { JornadaHost } from './host';
 
 const J = S.jornada;
@@ -356,10 +357,10 @@ export async function jornadaBattle(
       <div class="jb-side jb-enemies" data-side="enemy"></div>
       <div class="jb-banner" aria-live="polite"></div>
       <div class="jb-side jb-allies" data-side="ally"></div>
-      <div class="jb-left"><div class="jb-order" data-order data-title="${B.orderTitle}"></div>
-        <aside class="jb-intel jb-foes" data-intel="enemy" data-title="${B.foesTitle}"></aside>
+      <div class="jb-left"><div class="jb-order" data-order data-title="${B.orderTitle}"${foldAttrs('order')}></div>
+        <aside class="jb-intel jb-foes" data-intel="enemy" data-title="${B.foesTitle}"${foldAttrs('foes')}></aside>
         <button class="jb-log" type="button" data-log data-title="${B.logTitle}"${tip(B.logTitle, B.logTip)}><span></span></button></div>
-      <div class="jb-right"><aside class="jb-intel jb-team" data-intel="ally" data-title="${B.teamTitle}"></aside>
+      <div class="jb-right"><aside class="jb-intel jb-team" data-intel="ally" data-title="${B.teamTitle}"${foldAttrs('team')}></aside>
         <div class="jb-menu"></div></div>
       <div class="jb-intro"><div>${esc(label)}</div></div>
       <div class="jb-fx" aria-hidden="true"></div>
@@ -381,9 +382,9 @@ export async function jornadaBattle(
     enemiesEl.innerHTML = s.fighters.filter((f) => f.side === 'enemy').map((f) => fighterCard(f, data)).join('');
     alliesEl.innerHTML = s.fighters.filter((f) => f.side === 'ally').map((f) => fighterCard(f, data)).join('');
     // Painéis do widescreen (escondidos abaixo de 1280px pelo CSS).
-    root.querySelector<HTMLElement>('[data-order]')!.innerHTML = orderStrip(s, data);
+    root.querySelector<HTMLElement>('[data-order]')!.innerHTML = foldButton('order') + orderStrip(s, data);
     for (const side of ['enemy', 'ally'] as const) {
-      root.querySelector<HTMLElement>(`[data-intel="${side}"]`)!.innerHTML = s.fighters.filter((f) => f.side === side).map((f) => intelRow(f, data)).join('');
+      root.querySelector<HTMLElement>(`[data-intel="${side}"]`)!.innerHTML = foldButton(side === 'enemy' ? 'foes' : 'team') + s.fighters.filter((f) => f.side === side).map((f) => intelRow(f, data)).join('');
     }
     restoreTrails(root, barKey, trails);
     root.querySelector('[data-round]')!.textContent = B.round(Math.max(1, s.round));

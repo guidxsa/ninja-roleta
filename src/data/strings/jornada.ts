@@ -897,6 +897,9 @@ export const jornadaPtBR = {
     foeLine: (element: string, hp: number) => `${element ? `${element} · ` : ''}HP ${hp}`,
     hintTitle: 'Dica ninja',
     runTitle: 'Sua run',
+    foldTitle: 'Minimizar ou expandir',
+    foldTip: 'Esconde ou mostra este painel. A escolha fica salva neste navegador.',
+    extrasTitle: 'Relíquias e bolsa',
     runRows: {
       progress: 'Jornada',
       wins: 'Lutas vencidas',

@@ -67,6 +67,7 @@ import { themeOf, themeStyle } from './theme';
 import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
 import { relicIcon } from './relicIcons';
 import { talentTreeScreen } from './talentTree';
+import { foldAttrs, foldButton, installFolds } from './fold';
 
 const J = S.jornada;
 const U = J.ui;
@@ -122,6 +123,7 @@ export async function runJornada(host: JornadaHost): Promise<void> {
 let announcedTalentRyo = 0;
 
 async function jornadaLoop(host: JornadaHost): Promise<void> {
+  installFolds();
   let run = await startScreen(host);
   if (!run) return;
   // O retrato das conquistas da árvore acompanha o perfil (save antigo, conquista liberada fora da run).
@@ -193,7 +195,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
     h(`<div class="screen jstart">
       <h2>${J.start.title}</h2>
       <figure class="jbanner${banner ? '' : ' jscene scene-konoha'}">${banner ? `<img src="${banner}" alt="">` : ''}<figcaption>${J.start.tagline}</figcaption></figure>
-      ${saved ? progressCard(saved) : ''}
+      <div class="jstart-side">${saved ? progressCard(saved) : ''}
       <div class="difficulty-box parchment"><h3>${J.start.difficulty}</h3>
         <div class="segmented">${DIFFICULTIES.map(
           (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === diff}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? `${icon('lock')} ` : ''}${S.difficulty[d].name}</button>`,
@@ -202,12 +204,20 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
         <p class="center small" data-recovery>${recoveryLine(diff)}</p>
         <p class="muted center small">${hardcoreOk ? J.start.willOfFireNote : J.start.hardcoreLocked}</p>
         <p class="muted center small">${J.start.infiniteNote}</p></div>
-      <section class="parchment jmode-panel">
+      </div>
+      <section class="parchment jmode-panel jmode-canon">
         <div class="jmode-card"><div class="jstart-face">${fighterPortrait('naruto', 'ninja:uzumaki', 'md')}</div>
           <div><h3>${J.start.canon}</h3><p class="muted small">${J.start.canonDesc}</p></div></div>
         <button class="btn ${saved ? '' : 'primary '}big" data-choice="new">${J.start.startCanon}</button>
       </section>
-      <section class="parchment jmode-panel">
+      ${
+        recent.length
+          ? `<section class="parchment jrecent"><h3>${J.start.recentTitle}</h3><ul>${recent
+              .map((a) => `<li><span class="seal" aria-hidden="true">功</span><span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><time>${J.start.when(a.days)}</time></li>`)
+              .join('')}</ul></section>`
+          : ''
+      }
+      <section class="parchment jmode-panel jmode-generic">
         <div class="jmode-card"><div class="jstart-face">${fighterPortrait('commonNinja', 'ninja:common', 'md')}</div>
           <div><h3>${G.title}</h3><p class="muted small">${G.desc}</p>${bestLine(host)}</div></div>
         <div class="jclasses">${['common', 'uchiha', 'hyuuga']
@@ -223,14 +233,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
         ${host.unlocked().has('j_sasukeEgg') ? `<button class="btn small jskin" data-skin aria-pressed="false" hidden>${G.skinSasuke}</button>` : ''}
         <button class="btn ${saved ? '' : 'primary '}big" data-choice="generic">${icon('dice')} ${G.start}</button>
       </section>
-      ${
-        recent.length
-          ? `<section class="parchment jrecent"><h3>${J.start.recentTitle}</h3><ul>${recent
-              .map((a) => `<li><span class="seal" aria-hidden="true">功</span><span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><time>${J.start.when(a.days)}</time></li>`)
-              .join('')}</ul></section>`
-          : ''
-      }
-      <button class="btn small" data-choice="back">${J.start.back}</button>
+      <button class="btn small jstart-back" data-choice="back">${J.start.back}</button>
     </div>`),
   );
   root.querySelector('.segmented')!.addEventListener('click', (e) => {
@@ -369,8 +372,9 @@ function hud(host: JornadaHost, run: JRun): string {
       <button class="btn small" data-open="moveset">${icon('swords')} ${U.movesetBtn}</button>
       <button class="btn small jhud-shop" data-open="shop"${tip(U.shopBtn, U.shopTip)}>${icon('tag')} ${U.shopBtn}</button>
     </div>
-    ${relicBar(run)}
-    ${bag.length ? `<p class="muted small">${U.bagTitle}: ${bag.join(' · ')}</p>` : ''}
+    <div class="jhud-extra"${foldAttrs('extras')}>${foldButton('extras')}<h4 class="jfold-title">${U.extrasTitle}</h4>
+      ${relicBar(run)}
+      ${bag.length ? `<p class="muted small">${U.bagTitle}: ${bag.join(' · ')}</p>` : ''}</div>
   </section>`;
 }
 
@@ -425,7 +429,7 @@ function hintText(run: JRun, salt: number): string {
 }
 
 function hintCard(run: JRun, salt: number): string {
-  return `<section class="card jhint"><h3>${icon('scroll')} ${U.hintTitle}</h3><p>${hintText(run, salt)}</p></section>`;
+  return `<section class="card jhint"${foldAttrs('hint')}>${foldButton('hint')}<h3>${icon('scroll')} ${U.hintTitle}</h3><p>${hintText(run, salt)}</p></section>`;
 }
 
 /** Próxima parada da História: quem espera na luta (ou o que é a parada) e as seguintes. */
@@ -445,7 +449,7 @@ function trailNext(run: JRun, stop: StopDef): string {
       .join('')}</ul>${goal ? `<p class="jnext-goal">${esc(goal)}</p>` : ''}`;
   } else body = `<p class="muted small">${J.stopKindDesc[stop.kind] ?? ''}</p>`;
   const after = currentStage(run, data).stops.slice(run.stopIndex + 1, run.stopIndex + 4);
-  return `<section class="card jnext">
+  return `<section class="card jnext"${foldAttrs('next')}>${foldButton('next')}
     <h3>${U.nextTitle}</h3>
     <div class="jnext-stop k-${stop.kind}">${icon(STOP_ICONS[stop.kind]!)}<span><b>${stopName(stop)}</b><small>${J.stopKinds[stop.kind]}</small></span></div>
     ${body}
@@ -456,7 +460,7 @@ function trailNext(run: JRun, stop: StopDef): string {
 /** Caminho Ninja: os tipos de nó que dá para escolher agora. */
 function mapNext(run: JRun): string {
   const kinds = [...new Set(nodeChoices(run).map((n) => n.kind))];
-  return `<section class="card jnext"><h3>${U.openPaths}</h3><ul class="jnext-list">${kinds
+  return `<section class="card jnext"${foldAttrs('paths')}>${foldButton('paths')}<h3>${U.openPaths}</h3><ul class="jnext-list">${kinds
     .map((k) => `<li class="k-${k}">${k === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[k]!)}<span>${nodeKindName(k)}<small>${nodeKindDesc(k)}</small></span></li>`)
     .join('')}</ul></section>`;
 }
@@ -546,7 +550,7 @@ function dockShop(root: HTMLElement, host: JornadaHost, get: () => JRun, set: (r
     if (mq.matches && !redraw) {
       set(keep(openShop(get(), data)));
       saveJornada(host.storage, get());
-      dock.innerHTML = `<h3 class="jdock-title">${icon('tag')} ${U.shopTitle} <span class="chip" data-inflation></span></h3><div data-shop></div>`;
+      dock.innerHTML = `${foldButton('shop')}<h3 class="jdock-title">${icon('tag')} ${U.shopTitle} <span class="chip" data-inflation></span></h3><div data-shop></div>`;
       dock.hidden = false;
       redraw = shopPanel(dock.querySelector<HTMLElement>('[data-shop]')!, host, get, set, () => {
         chip();
@@ -613,7 +617,7 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
   const root = show(
     h(`<div class="screen jtrail-screen">
       ${stageTitle(run, 'data-choice="abandon"')}
-      <div class="jcol jcol-l"><div data-hud>${hud(host, cur)}</div><section class="card jshop-dock" data-shop-dock hidden></section></div>
+      <div class="jcol jcol-l"><div data-hud>${hud(host, cur)}</div><section class="card jshop-dock" data-shop-dock hidden${foldAttrs('shop')}></section></div>
       ${trail(cur)}
       <div class="jcol jcol-r">${trailNext(cur, stop)}${hintCard(cur, cur.stopIndex)}${trailLegend()}
         <div class="sticky-cta">${teamLine}<button class="btn primary big" data-choice="go">${icon(STOP_ICONS[stop.kind]!)} ${U.go(stopName(stop))}</button></div></div>
@@ -662,7 +666,7 @@ function runCard(run: JRun): string {
     [R.recovery, U.recoveryShort(rec.hp, rec.chakra)],
   ];
   if (run.cycle > 0) rows.push([R.cycle, String(run.cycle + 1)]);
-  return `<section class="card jnext jrun"><h3>${U.runTitle}</h3><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></section>`;
+  return `<section class="card jnext jrun"${foldAttrs('run')}>${foldButton('run')}<h3>${U.runTitle}</h3><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></section>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -727,7 +731,7 @@ function mapView(run: JRun, hudHtml: string): string {
   // Colunas: build (HUD e loja) | título, carta e legenda | o que vem (chefe, caminhos, sua run, dica).
   // No celular as colunas se desfazem e o CSS refaz a ordem: título, HUD, chefe, carta, legenda.
   return `${stageTitle(run, 'data-abandon', M.choose)}
-    <div class="jcol jcol-l"><div data-hud>${hudHtml}</div><section class="card jshop-dock" data-shop-dock hidden></section></div>
+    <div class="jcol jcol-l"><div data-hud>${hudHtml}</div><section class="card jshop-dock" data-shop-dock hidden${foldAttrs('shop')}></section></div>
     <div class="jcol jcol-r"><div class="jmap-boss">${fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm')}<span><small>${M.bossLabel}</small><b>${boss.map((id) => J.names[id] ?? id).join(' e ')}</b></span></div>
       ${mapNext(run)}${runCard(run)}${hintCard(run, run.path.length)}</div>
     <div class="jtrail-map"><div class="jmap jscene scene-${stageScene(run, data)}" style="--rows:${map.rows}"><div class="jmap-field">
