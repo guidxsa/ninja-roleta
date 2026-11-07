@@ -28,7 +28,7 @@ Saem do **desconhecido** (50% das vezes). Um evento não repete na mesma run enq
 | Evento | Escolhas |
 |---|---|
 | A velhinha | Ajudar (+1 kit de HP e marca *ajudou a velhinha*) · Seguir (+15 ryō) |
-| Barraca de ramen | Pagar (15 ryō, cura 60%) · De graça se ajudou a velhinha (cura 60%) · Treinar (+20 XP) |
+| Barraca de ramen | Pagar (15 ryō, +60 de HP, +18 de chakra) · De graça se ajudou a velhinha (igual) · Treinar (+20 XP) |
 | Treino na clareira | Selos: +1 ponto de talento e +30 XP (perdeu: +30 XP) · Treino pesado (+60 XP, equipe perde 15% do HP) |
 | Jokenpô | Jogar: relíquia rara (perdeu: +10 ryō) · Vender o pergaminho (+20 ryō) |
 | O guru | Pagar 40 ryō: +2 pontos de talento · Memória: +1 ponto de talento · Ir embora |

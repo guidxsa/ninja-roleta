@@ -21,7 +21,7 @@ export const talents: TalentNode[] = [
   { id: 'tAmbush', owner: 'naruto', branch: 'pranks', tier: 4, cost: 2, mods: { stunnedDamageMult: 1.3 } },
   { id: 'tTrickMaster', owner: 'naruto', branch: 'pranks', tier: 5, cost: 3, mods: { effectChanceBonus: 0.15, critBonus: 0.1 } },
 
-  { id: 'tNeverGiveUp', owner: 'naruto', branch: 'bonds', tier: 1, cost: 1, teamMods: { regenPct: 0.01 } },
+  { id: 'tNeverGiveUp', owner: 'naruto', branch: 'bonds', tier: 1, cost: 1, teamMods: { regenHp: 1 } },
   { id: 'tTeam7', owner: 'naruto', branch: 'bonds', tier: 2, col: -1, cost: 2, excludes: ['tWarCry'], allyHpPct: 0.15 },
   { id: 'tWarCry', owner: 'naruto', branch: 'bonds', tier: 2, col: 1, cost: 2, excludes: ['tTeam7'], learn: 'jWarCry', maxRank: 3, rankCost: 1, rankMods: { techChakraDiscount: { jWarCry: 1 } } },
   { id: 'tProtectFriends', owner: 'naruto', branch: 'bonds', tier: 3, cost: 2, requires: ['tTeam7', 'tWarCry'], teamMods: { damageMult: 1.08 } },
@@ -34,7 +34,7 @@ export const talents: TalentNode[] = [
   { id: 'tGamabunta', owner: 'naruto', branch: 'toads', tier: 3, cost: 3, fromStage: 1, requires: ['tGamakichi', 'tGamatatsu'], learn: 'jGamabunta', maxRank: 2, rankCost: 2, rankMods: { techDamageMult: { jGamabunta: 1.2 } } },
   { id: 'tToadBoss', owner: 'naruto', branch: 'toads', tier: 4, cost: 2, fromStage: 1, mods: { chakraDiscount: 1, techDamageMult: { jGamabunta: 1.2 } } },
 
-  { id: 'tKyuubiRegen', owner: 'naruto', branch: 'kyuubi', tier: 1, cost: 1, fromStage: 1, mods: { regenPct: 0.03 } },
+  { id: 'tKyuubiRegen', owner: 'naruto', branch: 'kyuubi', tier: 1, cost: 1, fromStage: 1, mods: { regenHp: 3 } },
   { id: 'tKyuubiCloak', owner: 'naruto', branch: 'kyuubi', tier: 2, col: -1, cost: 2, fromStage: 1, excludes: ['tOneTail'], learn: 'jKyuubiCloak' },
   { id: 'tOneTail', owner: 'naruto', branch: 'kyuubi', tier: 2, col: 1, cost: 2, fromStage: 1, excludes: ['tKyuubiCloak'], learn: 'jOneTail' },
   { id: 'tChakraBurst', owner: 'naruto', branch: 'kyuubi', tier: 3, cost: 2, fromStage: 1, requires: ['tKyuubiCloak', 'tOneTail'], learn: 'jChakraBurst', mods: { lowHpDamageMult: 1.2 }, maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jChakraBurst: 1.2 } } },
@@ -58,7 +58,7 @@ export const talents: TalentNode[] = [
   { id: 'tDetermination', owner: 'commonNinja', branch: 'will', tier: 1, cost: 1, xpMult: 1.25 },
   { id: 'tGrit', owner: 'commonNinja', branch: 'will', tier: 2, cost: 2, mods: { lowHpDamageMult: 1.25 } },
   { id: 'tHardWork', owner: 'commonNinja', branch: 'will', tier: 3, cost: 2, mods: { damageMult: 1.1 } },
-  { id: 'tWillOfFire', owner: 'commonNinja', branch: 'will', tier: 4, cost: 3, mods: { surviveOnce: true, regenPct: 0.02 } },
+  { id: 'tWillOfFire', owner: 'commonNinja', branch: 'will', tier: 4, cost: 3, mods: { surviveOnce: true, regenHp: 2 } },
   { id: 'tFieldMedic', owner: 'commonNinja', branch: 'will', tier: 5, cost: 2, learn: 'jReanimate' },
 
   // Prodígio (Comum sem elemento): o kit do prodígio do Roleta. Começa com o Portão da Abertura; o talento Portão da
@@ -70,7 +70,7 @@ export const talents: TalentNode[] = [
   { id: 'tYouth', owner: 'prodigy', branch: 'youth', tier: 1, cost: 1, mods: { critBonus: 0.05, accuracyBonus: 0.05 } },
   { id: 'tLeafHurricane', owner: 'prodigy', branch: 'youth', tier: 2, cost: 2, learn: 'jLeafHurricane', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jLeafHurricane: 1.2 } } },
   { id: 'tDrunkenFist', owner: 'prodigy', branch: 'youth', tier: 3, cost: 2, learn: 'jDrunkenFist' },
-  { id: 'tSpringtime', owner: 'prodigy', branch: 'youth', tier: 4, cost: 3, mods: { damageMult: 1.1, regenPct: 0.02 } },
+  { id: 'tSpringtime', owner: 'prodigy', branch: 'youth', tier: 4, cost: 3, mods: { damageMult: 1.1, regenHp: 2 } },
   { id: 'tWeights', owner: 'prodigy', branch: 'training', tier: 1, cost: 1, mods: { evasion: 0.05 } },
   { id: 'tDynamicEntry', owner: 'prodigy', branch: 'training', tier: 2, cost: 2, learn: 'jDynamicEntry', maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jDynamicEntry: 1.25 } } },
   { id: 'tTaijutsuMaster', owner: 'prodigy', branch: 'training', tier: 3, cost: 2, mods: { typeDamageMult: { taijutsu: 1.15 } } },
@@ -81,7 +81,7 @@ export const talents: TalentNode[] = [
   { id: 'tSharingan3', owner: 'uchihaNinja', branch: 'sharingan', tier: 1, cost: 1, learn: 'jSharingan3' },
   { id: 'tCopyEye', owner: 'uchihaNinja', branch: 'sharingan', tier: 2, cost: 2, mods: { critBonus: 0.05, accuracyBonus: 0.05 } },
   { id: 'tInsight', owner: 'uchihaNinja', branch: 'sharingan', tier: 3, cost: 2, mods: { evasion: 0.07 } },
-  { id: 'tSharinganFlow', owner: 'uchihaNinja', branch: 'sharingan', tier: 4, cost: 3, mods: { damageMult: 1.1, regenPct: 0.02 } },
+  { id: 'tSharinganFlow', owner: 'uchihaNinja', branch: 'sharingan', tier: 4, cost: 3, mods: { damageMult: 1.1, regenHp: 2 } },
   { id: 'tPhoenix', owner: 'uchihaNinja', branch: 'fire', tier: 1, cost: 1, learn: 'jPhoenixFlower', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jPhoenixFlower: 1.2 } } },
   { id: 'tFirePower', owner: 'uchihaNinja', branch: 'fire', tier: 2, cost: 2, mods: { typeDamageMult: { ninjutsu: 1.15 } } },
   { id: 'tGreatBlazeU', owner: 'uchihaNinja', branch: 'fire', tier: 3, cost: 2, learn: 'jGreatBlaze' },

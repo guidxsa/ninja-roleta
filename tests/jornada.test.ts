@@ -54,7 +54,7 @@ import {
   nodeChoices,
   resolveEvent,
   rest,
-  restHealPct,
+  restHeal,
   setMoveset,
   shopOffer,
   stopRng,
@@ -225,7 +225,7 @@ describe('combate de equipe da Jornada', () => {
   it('item não gasta o turno, mas é um por turno', () => {
     let b = startBattle(setup({ allies: [hero({ hp: 40 })] }), data, fixed(0.5));
     b = useItem(b, 'hpKit', 'a0', data);
-    expect(b.fighters[0]!.hp).toBe(40 + Math.floor(100 * data.j.combat.hpKitPct));
+    expect(b.fighters[0]!.hp).toBe(40 + data.j.combat.hpKit);
     expect(awaitingPlayer(b)).toBe(true);
     expect(() => useItem(b, 'chakraKit', 'a0', data)).toThrow();
   });
@@ -488,7 +488,7 @@ describe('run da Jornada', () => {
     }
     for (const r of data.relics.filter((x) => x.tier === 'starter' || x.evolves)) {
       if (r.tier === 'starter') expect(r.starterFor?.length, r.id).toBeGreaterThan(0);
-      expect(r.afterWinHealPct, r.id).toBeUndefined();
+      expect(r.afterWin, r.id).toBeUndefined();
     }
   });
 
@@ -578,13 +578,13 @@ describe('run da Jornada', () => {
     const stunned = { ...base[1]!, effects: [{ kind: 'stun' as const, turns: 1 }] };
     expect(hitDamage({ ...base[0]!, mods: mod({ stunnedDamageMult: 2 }) }, stunned, strike, data)).toBe(plain * 2);
     // Chakra: começo da luta e Concentrar.
-    const low = startBattle(setup({ allies: [hero({ chakra: 0, mods: mod({ startChakraPct: 0.5, restBonusPct: 0.25 }) })] }), data, fixed(0.5));
+    const low = startBattle(setup({ allies: [hero({ chakra: 0, mods: mod({ startChakra: 15, restBonus: 7 }) })] }), data, fixed(0.5));
     expect(low.fighters[0]!.chakra).toBe(15);
     const rested = playerAct(low, { kind: 'rest' }, data, fixed(0.5));
     expect(rested.fighters[0]!.chakra).toBe(15 + 15);
     // Defender cura; kit cura mais.
-    const hurt = startBattle(setup({ allies: [hero({ hp: 20, mods: mod({ guardHealPct: 0.1, kitBonusPct: 1 }) })] }), data, fixed(0.5));
-    expect(useItem(hurt, 'hpKit', 'a0', data).fighters[0]!.hp).toBe(20 + Math.floor(100 * data.j.combat.hpKitPct * 2));
+    const hurt = startBattle(setup({ allies: [hero({ hp: 20, mods: mod({ guardHeal: 10, kitBonusPct: 1 }) })] }), data, fixed(0.5));
+    expect(useItem(hurt, 'hpKit', 'a0', data).fighters[0]!.hp).toBe(20 + data.j.combat.hpKit * 2);
     expect(playerAct(hurt, { kind: 'guard' }, data, fixed(0.99)).log.some((e) => e.type === 'heal' && e.amount === 10)).toBe(true);
     // Levantar com mais HP.
     const ally = { ...dummy(), defId: 'sasuke', speed: 2, techniques: ['jKunai'], ai: 'striker' as const, hp: 0, mods: mod({ reviveHpBonus: 0.3 }) };
@@ -596,7 +596,31 @@ describe('run da Jornada', () => {
     const run = { ...newRun(1, 'normal', data), bag: { hpKit: data.j.run.bagLimit, chakraKit: 0, reviveKit: 0 } };
     expect(bagFull(run, data)).toBe(true);
     expect(bagFull(gainRelic(run, 'sturdyBag', data), data)).toBe(false);
-    expect(restHealPct(gainRelic(run, 'campBlanket', data), data)).toBeCloseTo(data.j.run.restHealPct + 0.1);
+    expect(restHeal(gainRelic(run, 'campBlanket', data), data)).toEqual({ hp: data.j.run.restHeal.hp + 10, chakra: data.j.run.restHeal.chakra + 3 });
+  });
+
+  it('regen é valor fixo: não cresce com o HP e o chakra máximos', () => {
+    // Mesmo valor com 100 e com 1000 de HP máximo.
+    for (const maxHp of [100, 1000]) {
+      const mods = { ...emptyMods(), regenHp: 3 };
+      const b = startBattle(setup({ allies: [hero({ maxHp, hp: 10, mods })], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.99));
+      expect(b.log.find((e) => e.type === 'regen')).toMatchObject({ amount: 3 });
+      const kit = useItem(startBattle(setup({ allies: [hero({ maxHp, hp: 10 })], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.99)), 'hpKit', 'a0', data);
+      expect(kit.fighters[0]!.hp).toBe(10 + data.j.combat.hpKit);
+    }
+    for (const maxChakra of [30, 300]) {
+      const b = startBattle(setup({ allies: [hero({ maxChakra, chakra: 0 })], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.99));
+      expect(playerAct(b, { kind: 'rest' }, data, fixed(0.99)).fighters[0]!.chakra).toBe(data.j.combat.restChakra);
+      expect(useItem(b, 'chakraKit', 'a0', data).fighters[0]!.chakra).toBe(data.j.combat.chakraKit);
+    }
+  });
+
+  it('técnica de cura é fixa para aliados e escala com a força no inimigo', () => {
+    const ally = { ...dummy(), defId: 'sasuke', hp: 10, maxHp: 500, speed: 2, ai: 'striker' as const };
+    const b = startBattle(setup({ allies: [hero({ techniques: ['jStrike', 'jMysticPalm'] }), ally], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.99));
+    const healed = playerAct(b, { kind: 'tech', techId: 'jMysticPalm', target: 'a1' }, data, fixed(0.99));
+    expect(healed.log.find((e) => e.type === 'heal')).toMatchObject({ amount: data.techniques.jMysticPalm!.healHp });
+    expect(enemySeed('kabuto', 'hard', data).mods.healMult).toBeGreaterThan(1);
   });
 
   it('coleção: relíquia entra ao aparecer, guarda a primeira data e perfil antigo carrega vazio', () => {
@@ -739,8 +763,8 @@ describe('run da Jornada', () => {
     const hp = memberSheet(run, 'sasuke', data).maxHp;
     run = buyTalent(buyTalent(run, 'tNeverGiveUp', none, data), 'tTeam7', none, data);
     expect(memberSheet(run, 'sasuke', data).maxHp).toBe(Math.floor(hp * 1.15));
-    expect(teamMods(run, data).regenPct).toBeCloseTo(0.01);
-    expect(heroMods(run, data).regenPct).toBeCloseTo(0.01);
+    expect(teamMods(run, data).regenHp).toBe(1);
+    expect(heroMods(run, data).regenHp).toBe(1);
     const mem = new Map<string, string>();
     const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
     const old = JSON.parse(JSON.stringify(run));
@@ -816,32 +840,35 @@ describe('run da Jornada', () => {
 
   it('a recuperação depois da vitória vem da dificuldade, e as relíquias somam', () => {
     const base = newRun(1, 'normal', data);
-    expect(afterWinRecovery(base, data)).toBe(0.25);
-    expect(afterWinRecovery({ ...base, difficulty: 'easy' }, data)).toBe(0.35);
-    expect(afterWinRecovery({ ...base, difficulty: 'hard' }, data)).toBe(0.2);
-    expect(afterWinRecovery({ ...base, difficulty: 'hardcore' }, data)).toBe(0.15);
-    expect(afterWinRecovery(gainRelic(base, 'ichirakuCoupon', data), data)).toBeCloseTo(0.35);
-    // No Difícil, a equipe recupera 20%.
+    expect(afterWinRecovery(base, data)).toEqual({ hp: 25, chakra: 8 });
+    expect(afterWinRecovery({ ...base, difficulty: 'easy' }, data)).toEqual({ hp: 35, chakra: 10 });
+    expect(afterWinRecovery({ ...base, difficulty: 'hard' }, data)).toEqual({ hp: 20, chakra: 6 });
+    expect(afterWinRecovery({ ...base, difficulty: 'hardcore' }, data)).toEqual({ hp: 15, chakra: 5 });
+    expect(afterWinRecovery(gainRelic(base, 'ichirakuCoupon', data), data)).toEqual({ hp: 35, chakra: 11 });
+    // No Difícil, cada um recupera 20 de HP.
     const hurt: JRun = { ...base, difficulty: 'hard', stopIndex: 3, members: { naruto: { hp: 20, chakra: 5 }, sasuke: { hp: 20, chakra: 5 }, sakura: { hp: 20, chakra: 5 } } };
-    const { run } = finishFight(hurt, won(startBattle(battleSetup(hurt, data), data, createRng(1))), data);
+    const fought = won(startBattle(battleSetup(hurt, data), data, createRng(1)));
+    const { run } = finishFight(hurt, fought, data);
     const sasuke = memberSheet(run, 'sasuke', data);
-    expect(run.members.sasuke!.hp).toBe(Math.min(sasuke.maxHp, 20 + Math.floor(sasuke.maxHp * 0.2)));
+    const before = fought.fighters.find((f) => f.defId === 'sasuke')!;
+    expect(run.members.sasuke!.hp).toBe(Math.min(sasuke.maxHp, before.hp + 20));
+    expect(run.members.sasuke!.chakra).toBe(before.chakra + 6);
   });
 
-  it('a vitória recupera 25% (Médio) da equipe do estágio, inclusive quem não lutou', () => {
+  it('a vitória recupera 25 de HP (Médio) da equipe do estágio, inclusive quem não lutou', () => {
     // Capangas (parada 4): Naruto, Sasuke e Sakura. Depois, o Haku: só Naruto e Sasuke lutam.
     const base = { ...newRun(1, 'normal', data), stopIndex: 3 };
     const hurt: JRun = { ...base, members: { naruto: { hp: 20, chakra: 5 }, sasuke: { hp: 20, chakra: 5 }, sakura: { hp: 20, chakra: 5 } } };
     const b = startBattle(battleSetup(hurt, data), data, createRng(1));
     const { run } = finishFight(hurt, won(b), data);
     const sasuke = memberSheet(run, 'sasuke', data);
-    expect(run.members.sasuke!.hp).toBe(Math.min(sasuke.maxHp, 20 + Math.floor(sasuke.maxHp * 0.25)));
+    expect(run.members.sasuke!.hp).toBe(Math.min(sasuke.maxHp, 20 + 25));
     // Naruto × Kiba (estágio 2): o Naruto luta sozinho, e a Sakura, fora da luta, também recupera.
     const kiba: JRun = { ...hurt, stageIndex: 1, stopIndex: 5 };
     expect(currentStop(kiba, data)!.id).toBe('kiba');
     const res = finishFight(kiba, won(startBattle(battleSetup(kiba, data), data, createRng(1))), data).run;
     const sakura = memberSheet(res, 'sakura', data);
-    expect(res.members.sakura!.hp).toBe(Math.min(sakura.maxHp, 20 + Math.floor(sakura.maxHp * 0.25)));
+    expect(res.members.sakura!.hp).toBe(Math.min(sakura.maxHp, 20 + 25));
   });
 
   it('vencer o chefe deixa toda a equipe cheia, inclusive quem caiu', () => {

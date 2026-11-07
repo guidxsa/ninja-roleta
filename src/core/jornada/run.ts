@@ -542,15 +542,30 @@ export function syncUnlocks(prev: JRun, unlocked: ReadonlySet<string>, data: Jor
 const ryoGain = (run: JRun, n: number, data: JornadaData) =>
   Math.floor(n * relicDefs(run, data).reduce((a, r) => a * (r.ryoMult ?? 1), 1));
 
-/** Fração do HP e do chakra que a equipe recupera depois de cada vitória: a da dificuldade mais a das relíquias. */
-export const afterWinRecovery = (run: JRun, data: JornadaData) =>
-  (data.j.run.afterWinRecovery[run.difficulty] ?? 0) + relicDefs(run, data).reduce((a, r) => a + (r.afterWinHealPct ?? 0), 0);
+export interface Heal {
+  hp: number;
+  chakra: number;
+}
 
-function healAll(run: JRun, pct: number, data: JornadaData, ids?: string[]): void {
-  for (const id of ids ?? Object.keys(run.members)) {
+/** O que cada membro da equipe recupera depois de cada vitória: o valor da dificuldade mais o das relíquias. */
+export function afterWinRecovery(run: JRun, data: JornadaData): Heal {
+  const base = data.j.run.afterWinRecovery[run.difficulty] ?? { hp: 0, chakra: 0 };
+  return relicDefs(run, data).reduce((a, r) => ({ hp: a.hp + (r.afterWin?.hp ?? 0), chakra: a.chakra + (r.afterWin?.chakra ?? 0) }), base);
+}
+
+function healAll(run: JRun, heal: Heal, data: JornadaData, ids: string[]): void {
+  for (const id of ids) {
     const sheet = memberSheet(run, id, data);
     const st = memberState(run, id, data);
-    run.members[id] = { hp: Math.min(sheet.maxHp, st.hp + Math.floor(sheet.maxHp * pct)), chakra: Math.min(sheet.maxChakra, st.chakra + Math.floor(sheet.maxChakra * pct)) };
+    run.members[id] = { hp: Math.min(sheet.maxHp, st.hp + heal.hp), chakra: Math.min(sheet.maxChakra, st.chakra + heal.chakra) };
+  }
+}
+
+/** Cura total (chefe vencido, ramen da formatura). */
+function healFull(run: JRun, data: JornadaData, ids: string[]): void {
+  for (const id of ids) {
+    const sheet = memberSheet(run, id, data);
+    run.members[id] = { hp: sheet.maxHp, chakra: sheet.maxChakra };
   }
 }
 
@@ -609,8 +624,8 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
       run.members[r.defId] = { hp: Math.floor(sheet.maxHp * data.j.run.downedAllyReturnPct), chakra: r.chakra };
     } else {
       run.members[r.defId] = {
-        hp: Math.min(sheet.maxHp, r.hp + Math.floor(sheet.maxHp * rec)),
-        chakra: Math.min(sheet.maxChakra, r.chakra + Math.floor(sheet.maxChakra * rec)),
+        hp: Math.min(sheet.maxHp, r.hp + rec.hp),
+        chakra: Math.min(sheet.maxChakra, r.chakra + rec.chakra),
       };
     }
   }
@@ -621,7 +636,7 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   const { ups: levelUps, ryo: levelRyo } = gainXp(run, reward.xp, data);
   if (stop.kind === 'boss') {
     // Estágio vencido: toda a equipe volta cheia, inclusive quem caiu.
-    healAll(run, 1, data, membersSeen(run, data));
+    healFull(run, data, membersSeen(run, data));
     run.bossChoice = bossChoices(data.relics, run.relics, data.j.relics.bossChoices, data.j.relics.starterEvolveChance, stopRng(run, 7));
     if (!run.bossChoice.length) run.bossChoice = null;
   }
@@ -793,7 +808,7 @@ export function buy(prev: JRun, p: Purchase, data: JornadaData): JRun {
   if (p.kind === 'relic') run = gainRelic(run, p.id, data);
   else if (p.kind === 'item') run.bag[p.id]++;
   else if (p.kind === 'training') addTalentPoints(run, 1, data);
-  else healAll(run, data.j.shop.treatmentHealPct, data, membersSeen(run, data));
+  else healAll(run, data.j.shop.treatmentHeal, data, membersSeen(run, data));
   return run;
 }
 
@@ -804,12 +819,14 @@ export function membersSeen(run: JRun, data: JornadaData): string[] {
 
 export type RestChoice = 'heal' | 'train';
 
-/** Fração curada no descanso, com as relíquias. */
-export const restHealPct = (run: JRun, data: JornadaData) => data.j.run.restHealPct + relicDefs(run, data).reduce((a, r) => a + (r.restHealBonus ?? 0), 0);
+/** O que o descanso cura em cada membro, com as relíquias. */
+export function restHeal(run: JRun, data: JornadaData): Heal {
+  return relicDefs(run, data).reduce((a, r) => ({ hp: a.hp + (r.restBonus?.hp ?? 0), chakra: a.chakra + (r.restBonus?.chakra ?? 0) }), data.j.run.restHeal);
+}
 
 export function rest(prev: JRun, choice: RestChoice, data: JornadaData): JRun {
   const run = clone(prev);
-  if (choice === 'heal') healAll(run, restHealPct(run, data), data, membersSeen(run, data));
+  if (choice === 'heal') healAll(run, restHeal(run, data), data, membersSeen(run, data));
   else addTalentPoints(run, 1, data);
   advanceStop(run, data);
   return run;
@@ -834,7 +851,8 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
     if (e.kind === 'ryo') run.ryo += ryoGain(run, e.n, data);
     else if (e.kind === 'talent') addTalentPoints(run, e.n, data);
     else if (e.kind === 'xp') gainXp(run, e.n, data);
-    else if (e.kind === 'healTeam') healAll(run, e.pct, data, membersSeen(run, data));
+    else if (e.kind === 'healTeam') healAll(run, e, data, membersSeen(run, data));
+    else if (e.kind === 'healFull') healFull(run, data, membersSeen(run, data));
     else if (e.kind === 'hurtTeam') {
       for (const id of membersSeen(run, data)) {
         const st = memberState(run, id, data);

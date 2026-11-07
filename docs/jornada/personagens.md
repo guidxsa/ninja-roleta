@@ -73,7 +73,7 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 | Harem no Jutsu | Genjutsu | — | todos os inimigos | — | 6 | 75% | atordoar 40% (1 t); espera 4 |
 | Bomba de fumaça | Taijutsu | — | em si | — | 3 | 85% | fortalece 2 turnos (+30% esquiva); espera 4; ativa de classe |
 | Shuriken das sombras | Taijutsu | — | um inimigo | 7 | 3 | 80% | 3 golpes; espera 1 |
-| Grito de guerra | Ninjutsu | — | um aliado | — | 5 | 85% | cura 20%; tira atordoar e bloqueio; espera 2 |
+| Grito de guerra | Ninjutsu | — | um aliado | — | 5 | 85% | cura 20 de HP; tira atordoar e bloqueio; espera 2 |
 | Gamakichi | Ninjutsu | fogo | todos os inimigos | 12 | 6 | 85% | queimar 30% |
 | Gamatatsu | Ninjutsu | água | em si | — | 5 | 85% | escudo 25% do HP de quem usa; espera 3; ativa de classe |
 | Gamabunta | Ninjutsu | — | todos os inimigos | 26 | 16 | 90% | atordoar 25% (1 t); espera 4 |
@@ -84,12 +84,12 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 | Chidori | Ninjutsu | raio | um inimigo | 30 | 10 | 85% | penetração 30% |
 | Kunai | Taijutsu | — | um inimigo | 9 | 0 | 90% | — |
 | Armadilha de fios | Taijutsu | — | um inimigo | 4 | 3 | 85% | atordoar 40% (1 t); espera 2 |
-| Kai (libertar) | Genjutsu | — | um aliado | — | 2 | 85% | cura 10%; tira atordoar e bloqueio |
+| Kai (libertar) | Genjutsu | — | um aliado | — | 2 | 85% | cura 10 de HP; tira atordoar e bloqueio |
 | Óleo de sapo em chamas | Ninjutsu | fogo | todos os inimigos | 14 | 8 | 85% | queimar 30% |
 | Cabelo-agulha | Ninjutsu | — | em si | — | 4 | 85% | escudo 25% do HP de quem usa; espera 3 |
 | Golpe do Sannin | Taijutsu | — | um inimigo | 14 | 0 | 90% | — |
 | Soco da Tsunade | Taijutsu | — | um inimigo | 24 | 3 | 85% | atordoar 25% (1 t) |
-| Palma mística | Ninjutsu | — | um aliado | — | 5 | 85% | cura 30%; tira atordoar e bloqueio |
+| Palma mística | Ninjutsu | — | um aliado | — | 5 | 85% | cura 30 de HP; tira atordoar e bloqueio |
 | Reanimação | Ninjutsu | — | um aliado caído | — | 15 | — | levanta com 50% do HP; espera 2 |
 | Redemoinho da Folha | Taijutsu | — | um inimigo | 12 | 0 | 90% | — |
 | Furacão da Folha | Taijutsu | — | um inimigo | 8 | 0 | 85% | 2 golpes |

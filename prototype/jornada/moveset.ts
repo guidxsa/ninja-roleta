@@ -17,7 +17,7 @@ const U = J.ui;
 
 /** Ícone da técnica: clones, fortalecimento, portões, escudo, cura, ou o elemento/tipo. */
 function techIcon(t: JTechnique): string {
-  return icon(t.gates ? 'gates' : t.clones || t.hitsPerClone ? 'clones' : t.boost ? 'sparkle' : t.shieldPct ? 'barrier' : t.healPct ? 'medical' : (t.element ?? t.type));
+  return icon(t.gates ? 'gates' : t.clones || t.hitsPerClone ? 'clones' : t.boost ? 'sparkle' : t.shieldPct ? 'barrier' : t.healHp ? 'medical' : (t.element ?? t.type));
 }
 
 const techColor = (t: JTechnique) => (t.element ? ELEMENT_COLORS[t.element] : `var(--t-${t.type})`);

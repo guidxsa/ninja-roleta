@@ -47,9 +47,9 @@ Seis ramos custando cerca de 55 pontos, fora os níveis, para os cerca de 30 que
 | Pegadinhas | Shuriken das sombras | 2 | 3 (+1 cada) | Aprende a Shuriken das sombras (3 golpes). Cada nível: +20% de dano |
 | Pegadinhas | Emboscada | 2 | | +30% de dano em alvo atordoado |
 | Pegadinhas | Mestre da trapaça | 3 | | +15% de chance de aplicar efeitos; +10% de crítico |
-| Laços | Não vou desistir | 1 | | A equipe recupera 1% do HP por rodada |
+| Laços | Não vou desistir | 1 | | A equipe recupera 1 de HP por rodada |
 | Laços | Equipe 7 **ou** | 2 | | +15% de HP máximo dos suportes |
-| Laços | Grito de guerra | 2 | 3 (+1 cada) | Aprende o Grito de guerra: cura 20% de um aliado e tira atordoar e bloqueio. Cada nível: 1 de chakra a menos |
+| Laços | Grito de guerra | 2 | 3 (+1 cada) | Aprende o Grito de guerra: cura 20 de HP de um aliado e tira atordoar e bloqueio. Cada nível: 1 de chakra a menos |
 | Laços | Proteger os amigos | 2 | | +8% de dano da equipe |
 | Laços | Ninguém fica para trás | 2 | | Aprende Reanimação; a equipe começa as lutas com escudo de 5% |
 | Laços | Futuro Hokage | 3 | | +7% de dano e +5% de acerto da equipe |
@@ -58,7 +58,7 @@ Seis ramos custando cerca de 55 pontos, fora os níveis, para os cerca de 30 que
 | Sapos | Gamatatsu | 2 | | Ativa: escudo de 25% do HP |
 | Sapos | Gamabunta | 3 | 2 (+2) | Aprende a invocar o Gamabunta: dano enorme em todos, pode atordoar. Nível 2: +20% de dano |
 | Sapos | Chefe dos sapos | 2 | | Técnicas custam 1 de chakra a menos; Gamabunta com +20% de dano |
-| Kyuubi | Chakra da raposa | 1 | | Recupera 3% do HP por rodada |
+| Kyuubi | Chakra da raposa | 1 | | Recupera 3 de HP por rodada |
 | Kyuubi | Manto da Kyuubi **ou** | 2 | | Ativa de classe: paga 8% do HP, ganha escudo de 20% |
 | Kyuubi | Uma cauda | 2 | | Ativa: paga 10% do HP, +35% de dano por 3 turnos |
 | Kyuubi | Explosão de chakra | 2 | 2 (+1) | Aprende a Explosão (todos os inimigos); +20% de dano abaixo da metade do HP. Nível 2: +20% de dano da Explosão |
@@ -101,7 +101,7 @@ O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.m
 | Determinação | Determinação | 1 | +25% de XP |
 | Determinação | Garra | 2 | +25% de dano abaixo da metade do HP |
 | Determinação | Esforço | 2 | +10% de dano |
-| Determinação | Vontade do Fogo | 3 | Uma vez por luta fica com 1 de HP; recupera 2% do HP por rodada |
+| Determinação | Vontade do Fogo | 3 | Uma vez por luta fica com 1 de HP; recupera 2 de HP por rodada |
 | Determinação | Primeiros socorros | 2 | Aprende Reanimação |
 
 ## Prodígio (Caminho Ninja)
@@ -115,7 +115,7 @@ O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.m
 | Juventude | Juventude | 1 | +5% de crítico e de acerto |
 | Juventude | Furacão da Folha | 2 | Aprende o Furacão da Folha |
 | Juventude | Punho Bêbado | 2 | Aprende o Punho Bêbado (3 golpes, crítico alto) |
-| Juventude | Primavera | 3 | +10% de dano; recupera 2% do HP por rodada |
+| Juventude | Primavera | 3 | +10% de dano; recupera 2 de HP por rodada |
 | Treino | Pesos fora | 1 | Esquiva 5% |
 | Treino | Entrada dinâmica | 2 | Aprende a Entrada dinâmica |
 | Treino | Mestre do taijutsu | 2 | +15% de dano de taijutsu |
@@ -128,7 +128,7 @@ O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.m
 | Sharingan | 3 tomoe | 1 | Ativa nova: +20% de acerto, +25% de esquiva e +10% de dano por 4 turnos |
 | Sharingan | Olhar copiador | 2 | +5% de crítico e de acerto |
 | Sharingan | Previsão | 2 | Esquiva 7% |
-| Sharingan | Fluxo do Sharingan | 3 | +10% de dano; recupera 2% do HP por rodada |
+| Sharingan | Fluxo do Sharingan | 3 | +10% de dano; recupera 2 de HP por rodada |
 | Fogo | Flor de Fênix | 1 | Aprende a Flor de Fênix |
 | Fogo | Chama do clã | 2 | +15% de dano de ninjutsu |
 | Fogo | Grande Labareda | 2 | Aprende a Grande Labareda |

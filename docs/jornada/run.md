@@ -20,8 +20,8 @@ De cima para baixo: Continuar (quando há run salva, com a dificuldade dela e, n
 | Elite | Inimigo forte; mais ryō e XP, 1 ponto de talento e 1 relíquia ([reliquias.md](reliquias.md#de-onde-vêm)) |
 | Chefe | Fim do estágio; escolher 1 de 3 relíquias de chefe, uma pode ser a evolução da inicial ([reliquias.md](reliquias.md)) |
 | Evento | Duas escolhas, às vezes com minijogo; algumas dependem de escolhas anteriores |
-| Mercador | Relíquias, consumíveis, treino (+1 ponto de talento, 60 ryō; some com a [árvore completa](talentos.md#árvore-completa)) e tratamento (cura 50% da equipe, 30 ryō) |
-| Descanso | Curar 40% da equipe ou treinar (+1 ponto de talento; com a árvore completa, +30 ryō) |
+| Mercador | Relíquias, consumíveis, treino (+1 ponto de talento, 60 ryō; some com a [árvore completa](talentos.md#árvore-completa)) e tratamento (+50 de HP e +15 de chakra em cada um, 30 ryō) |
+| Descanso | Curar (+40 de HP e +12 de chakra em cada um) ou treinar (+1 ponto de talento; com a árvore completa, +30 ryō) |
 | Tesouro | Relíquia sorteada pela classificação |
 | Desconhecido | Só no Caminho Ninja: sorteia entre luta, evento ou outra parada |
 

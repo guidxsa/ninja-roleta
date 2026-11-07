@@ -19,11 +19,12 @@
 
 ## Entre as lutas
 
-- HP e chakra seguem de uma luta para a outra. Depois de cada vitória, toda a equipe do estágio (inclusive quem ficou de fora da luta) recupera uma fração do HP e do chakra máximos. É uma **configuração da run**, pela dificuldade (`run.afterWinRecovery`), mostrada na tela de início e no aviso de vitória (v0.43.0; antes vinha da relíquia inicial):
+- HP e chakra seguem de uma luta para a outra. Depois de cada vitória, toda a equipe do estágio (inclusive quem ficou de fora da luta) recupera um **valor fixo** de HP e de chakra. É uma **configuração da run**, pela dificuldade (`run.afterWinRecovery`), mostrada na tela de início e no aviso de vitória (v0.43.0; antes vinha da relíquia inicial):
 
-  | Fácil | Médio | Difícil | Hardcore |
-  |---|---|---|---|
-  | 35% | 25% | 20% | 15% |
+  | | Fácil | Médio | Difícil | Hardcore |
+  |---|---|---|---|---|
+  | HP | 35 | 25 | 20 | 15 |
+  | Chakra | 10 | 8 | 6 | 5 |
 
   Relíquias como o Cupom do Ichiraku somam a esse valor ([reliquias.md](reliquias.md)).
 - **Estágio vencido** (o chefe caiu): toda a equipe volta com HP e chakra cheios, inclusive quem caiu.

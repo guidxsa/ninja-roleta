@@ -182,7 +182,7 @@ export function techTip(tech: JTechnique, f?: Fighter, mods?: FighterMods, s?: J
     tech.critBonus ? `+${pct(tech.critBonus)} crítico` : '',
     tech.penetration ? `penetração ${pct(tech.penetration)}` : '',
     effect,
-    tech.healPct ? `cura ${pct(tech.healPct)} do HP` : '',
+    tech.healHp ? `cura ${tech.healHp} de HP` : '',
     tech.shieldPct ? `${icon('barrier')} escudo ${pct(tech.shieldPct)} do HP de quem usa` : '',
     tech.cleanse ? `tira ${J.effects.stun} e ${J.effects.chakraBlock}` : '',
     tech.clones ? `${icon('clones')} ${B.clonesMade(clonesMade(tech, f))}. ${B.cloneRule(CLONE_PCT, jornadaData.j.combat.maxClones)}` : '',

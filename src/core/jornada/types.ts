@@ -38,8 +38,8 @@ export interface JTechnique {
   critBonus?: number;
   penetration?: number;
   onHit?: { effect: JEffect; chance: number; turns?: number };
-  /** Cura do alvo, em fração do HP máximo dele. */
-  healPct?: number;
+  /** Cura do alvo, em valor fixo de HP. */
+  healHp?: number;
   /** Levanta um aliado caído com esta fração do HP máximo dele (alvo `downedAlly`). */
   reviveHpPct?: number;
   /** Escudo no alvo, em fração do HP máximo de quem usa. */
@@ -87,7 +87,7 @@ export interface FighterMods {
   /** Chance a menos de ser acertado (esquiva). */
   evasion: number;
   /** Fração do HP máximo recuperada no começo de cada rodada. */
-  regenPct: number;
+  regenHp: number;
   /** Abaixo de 50% do HP, dano × este valor. */
   lowHpDamageMult: number;
   /** Clones no começo da luta. */
@@ -119,13 +119,15 @@ export interface FighterMods {
   /** Chakra recuperado ao derrubar um inimigo. */
   onKillChakra: number;
   /** Defender cura esta fração do HP máximo. */
-  guardHealPct: number;
+  guardHeal: number;
   /** Concentrar recupera esta fração a mais do chakra máximo. */
-  restBonusPct: number;
+  restBonus: number;
   /** Kits curam esta fração a mais. */
   kitBonusPct: number;
   /** Começa a luta com esta fração a mais do chakra máximo. */
-  startChakraPct: number;
+  startChakra: number;
+  /** Cura de técnica × este valor (o inimigo cura com a força dele). */
+  healMult: number;
   /** Portões a mais liberados além do 1º (Portão da Vida, Lótus Oculta). */
   gateLevels: number;
 }

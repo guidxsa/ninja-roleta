@@ -76,7 +76,7 @@ export const startRelics = (run: JRun) =>
     return r && (acts(r, 'openingDamage') || acts(r, 'startShieldPct') || acts(r, 'startClones'));
   });
 /** Relíquias que curam depois da vitória. */
-export const winRelics = (run: JRun) => run.relics.filter((id) => def(id)?.afterWinHealPct);
+export const winRelics = (run: JRun) => run.relics.filter((id) => def(id)?.afterWin);
 
 /** Faz as relíquias brilharem em sequência dentro de `root`. */
 export async function flashRelics(root: ParentNode, ids: readonly string[], instant: boolean): Promise<void> {

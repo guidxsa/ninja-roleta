@@ -22,11 +22,12 @@ export const jornadaBalance = {
     defaultEffectTurns: 2,
     // Pílula de reanimação: volta com esta fração do HP máximo. As técnicas de reanimar têm a própria (`reviveHpPct`).
     reviveHpPct: 0.5,
-    // Concentrar chakra: recupera esta fração do chakra máximo.
-    restChakraPct: 0.25,
-    // Kits: fração do máximo.
-    hpKitPct: 0.35,
-    chakraKitPct: 0.4,
+    // Regen em valor fixo (v0.49.0): não cresce com o HP e o chakra máximos, para não virar muleta no fim da run.
+    // Concentrar chakra: recupera este valor.
+    restChakra: 8,
+    // Kits: valor curado.
+    hpKit: 35,
+    chakraKit: 12,
     // Vontade do Fogo (só no Fácil e por relíquia): levanta o protagonista com esta fração do HP.
     willOfFireHpPct: 0.5,
   },
@@ -51,10 +52,15 @@ export const jornadaBalance = {
   run: {
     // Aliado que caiu na luta volta para a próxima com esta fração do HP.
     downedAllyReturnPct: 0.3,
-    restHealPct: 0.4,
-    // Recuperação de HP e chakra de toda a equipe depois de cada vitória, pela dificuldade (configuração da run).
+    restHeal: { hp: 40, chakra: 12 },
+    // Recuperação de HP e chakra de cada membro da equipe depois de cada vitória, pela dificuldade (configuração da run).
     // Relíquias como o Cupom do Ichiraku somam a ela.
-    afterWinRecovery: { easy: 0.35, normal: 0.25, hard: 0.2, hardcore: 0.15 } as Record<string, number>,
+    afterWinRecovery: {
+      easy: { hp: 35, chakra: 10 },
+      normal: { hp: 25, chakra: 8 },
+      hard: { hp: 20, chakra: 6 },
+      hardcore: { hp: 15, chakra: 5 },
+    } as Record<string, { hp: number; chakra: number }>,
     bagLimit: 5,
     startConsumables: { hpKit: 1, chakraKit: 1 } as Record<string, number>,
     // Vontades do Fogo por dificuldade (só o Fácil tem).
@@ -118,7 +124,7 @@ export const jornadaBalance = {
     consumablePrice: { hpKit: 20, chakraKit: 20, reviveKit: 35 } as Record<string, number>,
     trainingPrice: 60,
     treatmentPrice: 30,
-    treatmentHealPct: 0.5,
+    treatmentHeal: { hp: 50, chakra: 15 },
     // Teto do desconto somado (relíquias + Tazuna).
     maxDiscount: 0.4,
   },

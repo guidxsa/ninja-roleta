@@ -73,14 +73,14 @@ export interface RelicDef {
   xpMult?: number;
   /** Desconto no mercador (fração; soma com os outros, com teto em `balance`). */
   shopDiscount?: number;
-  /** Cura extra da equipe depois de cada vitória (fração do HP máximo). */
-  afterWinHealPct?: number;
+  /** Cura extra de cada membro da equipe depois de cada vitória (valor fixo). */
+  afterWin?: { hp: number; chakra: number };
   /** Dano em todos os inimigos no começo de cada luta. */
   openingDamage?: number;
   /** Espaços a mais na bolsa. */
   bagBonus?: number;
-  /** Descanso cura esta fração a mais. */
-  restHealBonus?: number;
+  /** Descanso cura este valor a mais. */
+  restBonus?: { hp: number; chakra: number };
   /** Recurso ao pegar: consumíveis, Vontades do Fogo, ryō ou pontos de talento. */
   grant?: { items?: Partial<Record<ConsumableId, number>>; willOfFire?: number; ryo?: number; talentPoints?: number };
 }

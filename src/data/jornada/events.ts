@@ -7,7 +7,7 @@ export const events: EventDef[] = [
   {
     id: 'graduation',
     options: [
-      { id: 'ramen', effects: [{ kind: 'healTeam', pct: 1 }, { kind: 'ryo', n: 15 }] },
+      { id: 'ramen', effects: [{ kind: 'healFull' }, { kind: 'ryo', n: 15 }] },
       { id: 'train', effects: [{ kind: 'talent', n: 1 }] },
     ],
   },
@@ -27,7 +27,7 @@ export const events: EventDef[] = [
         effects: [{ kind: 'maxStat', who: 'team', stat: 'chakra', n: 6 }, { kind: 'xp', n: 40 }],
         onLose: [{ kind: 'maxStat', who: 'team', stat: 'chakra', n: 2 }],
       },
-      { id: 'rest', effects: [{ kind: 'healTeam', pct: 0.3 }] },
+      { id: 'rest', effects: [{ kind: 'healTeam', hp: 30, chakra: 9 }] },
     ],
   },
   {
@@ -46,7 +46,7 @@ export const events: EventDef[] = [
     id: 'preliminaries',
     options: [
       { id: 'ebisu', effects: [{ kind: 'xp', n: 80 }] },
-      { id: 'hospital', effects: [{ kind: 'healTeam', pct: 0.5 }, { kind: 'item', id: 'hpKit', n: 1 }] },
+      { id: 'hospital', effects: [{ kind: 'healTeam', hp: 50, chakra: 15 }, { kind: 'item', id: 'hpKit', n: 1 }] },
     ],
   },
   {
@@ -76,7 +76,7 @@ export const events: EventDef[] = [
   {
     id: 'sasukeLeft',
     options: [
-      { id: 'promise', effects: [{ kind: 'talent', n: 1 }, { kind: 'healTeam', pct: 0.5 }] },
+      { id: 'promise', effects: [{ kind: 'talent', n: 1 }, { kind: 'healTeam', hp: 50, chakra: 15 }] },
       { id: 'jokenpo', minigame: 'jokenpo', effects: [{ kind: 'relic', tier: 'event' }], onLose: [{ kind: 'ryo', n: 20 }] },
     ],
   },
@@ -94,8 +94,8 @@ export const genericEvents: EventDef[] = [
   {
     id: 'gRamen',
     options: [
-      { id: 'eat', cost: 15, effects: [{ kind: 'healTeam', pct: 0.6 }] },
-      { id: 'grateful', requires: 'helpedOldLady', effects: [{ kind: 'healTeam', pct: 0.6 }] },
+      { id: 'eat', cost: 15, effects: [{ kind: 'healTeam', hp: 60, chakra: 18 }] },
+      { id: 'grateful', requires: 'helpedOldLady', effects: [{ kind: 'healTeam', hp: 60, chakra: 18 }] },
       { id: 'skip', effects: [{ kind: 'xp', n: 20 }] },
     ],
   },

@@ -9,7 +9,8 @@ export type EventEffect =
   | { kind: 'ryo'; n: number }
   | { kind: 'talent'; n: number }
   | { kind: 'xp'; n: number }
-  | { kind: 'healTeam'; pct: number }
+  | { kind: 'healTeam'; hp: number; chakra: number }
+  | { kind: 'healFull' }
   | { kind: 'relic'; tier: RelicTier }
   | { kind: 'item'; id: ConsumableId; n: number }
   | { kind: 'flag'; id: string }

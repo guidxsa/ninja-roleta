@@ -34,12 +34,12 @@ const rowY = (n: TalentNode) => (n.tier - 1) * ROW + 44;
 function nodeIcon(run: JRun, n: TalentNode): string {
   const learn = talentLearns(run, n.id, data);
   const tech = learn ? data.techniques[learn] : null;
-  if (tech) return icon(tech.clones || tech.hitsPerClone ? 'clones' : tech.shieldPct ? 'barrier' : tech.healPct ? 'medical' : tech.boost ? 'sparkle' : (tech.element ?? tech.type));
+  if (tech) return icon(tech.clones || tech.hitsPerClone ? 'clones' : tech.shieldPct ? 'barrier' : tech.healHp ? 'medical' : tech.boost ? 'sparkle' : (tech.element ?? tech.type));
   const m = { ...n.mods, ...n.teamMods };
   if (m.gateLevels) return icon('gates');
   if (m.surviveOnce) return icon('willOfFire');
   if (m.startClones || m.extraClones || m.maxClonesBonus || m.cloneCounter || m.damagePerClone) return icon('clones');
-  if (m.regenPct) return icon('heart');
+  if (m.regenHp) return icon('heart');
   if (m.startShieldPct || m.reviveHpBonus) return icon('barrier');
   if (m.evasion) return icon('dodge');
   if (m.critBonus || m.effectChanceBonus) return icon('crit');

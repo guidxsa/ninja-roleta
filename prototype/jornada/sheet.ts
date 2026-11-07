@@ -64,7 +64,7 @@ function modChips(m: FighterMods): string[] {
   if (m.critBonus) out.push(M.critBonus(pct(m.critBonus)));
   if (m.accuracyBonus) out.push(M.accuracyBonus(pct(m.accuracyBonus)));
   if (m.evasion) out.push(M.evasion(pct(m.evasion)));
-  if (m.regenPct) out.push(M.regenPct(pct(m.regenPct)));
+  if (m.regenHp) out.push(M.regenHp(m.regenHp));
   if (m.lowHpDamageMult !== 1) out.push(M.lowHpDamageMult(fmtMult(m.lowHpDamageMult)));
   if (m.startClones) out.push(M.startClones(m.startClones));
   if (m.extraClones) out.push(M.extraClones(m.extraClones));
@@ -72,7 +72,7 @@ function modChips(m: FighterMods): string[] {
   if (m.chakraDiscount) out.push(M.chakraDiscount(m.chakraDiscount));
   if (m.surviveOnce) out.push(M.surviveOnce);
   if (m.reviveHpBonus) out.push(M.reviveHpBonus(pct(m.reviveHpBonus)));
-  if (m.startChakraPct) out.push(M.startChakraPct(pct(m.startChakraPct)));
+  if (m.startChakra) out.push(M.startChakra(m.startChakra));
   if (m.gateLevels) out.push(M.gateLevels(1 + m.gateLevels));
   if (m.cloneCounter) out.push(M.cloneCounter(m.cloneCounter));
   if (m.damagePerClone) out.push(M.damagePerClone(pct(m.damagePerClone)));
@@ -89,7 +89,7 @@ function techRow(t: JTechnique, mods: FighterMods): string {
   const cost = Math.max(0, t.chakraCost - mods.chakraDiscount - (mods.techChakraDiscount[t.id] ?? 0));
   const bits = [
     t.baseDamage > 0 ? `${J.battle.damage(power)}${(t.hits ?? 1) > 1 ? `×${t.hits}` : ''}` : '',
-    t.healPct ? F.heal(pct(t.healPct)) : '',
+    t.healHp ? F.heal(t.healHp) : '',
     t.shieldPct ? F.shield(pct(t.shieldPct)) : '',
     t.clones ? `${icon('clones')} +${t.clones + mods.extraClones}` : '',
     cost ? J.battle.chakra(cost) : '',
@@ -129,7 +129,7 @@ function memberView(host: JornadaHost, run: JRun, id: string): string {
   const techs = (hero ? run.moveset : allyTechniques(run, id, data)).map((t) => data.techniques[t]).filter((t) => t !== undefined);
   const actives = hero ? heroActives(run, data).map((t) => data.techniques[t]!).filter(Boolean) : [];
   const chips = modChips(mods);
-  const recovery = pct(afterWinRecovery(run, data));
+  const recovery = afterWinRecovery(run, data);
   const bag = CONSUMABLES.filter((k) => run.bag[k] > 0).map((k) => `<span class="chip"${tip(J.items[k]!.name, J.items[k]!.desc)}>${icon('kit')} ${J.items[k]!.name} ×${run.bag[k]}</span>`);
   const fields = [
     `<div><dt>${F.fields.class}</dt><dd>${esc(className(run, id))}</dd></div>`,
@@ -137,7 +137,7 @@ function memberView(host: JornadaHost, run: JRun, id: string): string {
     `<div><dt>${F.fields.element}</dt><dd class="chips-left">${els.length ? els.map((e) => elementChip(e)).join('') : `<span class="chip">${F.noElement}</span>`}</dd></div>`,
     hero
       ? `<div><dt>${F.fields.difficulty}</dt><dd><span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></dd></div>
-         <div><dt>${F.fields.recovery}</dt><dd>${F.recovery(recovery)}</dd></div>`
+         <div><dt>${F.fields.recovery}</dt><dd>${F.recovery(recovery.hp, recovery.chakra)}</dd></div>`
       : `<div><dt>${F.fields.role}</dt><dd><small>${J.ai[def.ai] ?? ''}</small></dd></div>`,
   ].join('');
   return `<section class="jsheet-member" data-member="${id}">

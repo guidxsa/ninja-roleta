@@ -124,19 +124,19 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 | Sandálias gastas | +1 de speed; esquiva 2% dos golpes. |
 | Bolinhos de arroz | Os kits curam 25% a mais. |
 | Pedra de amolar | +4% de crítico. |
-| Contas de meditação | Concentrar recupera 10% a mais do chakra. |
-| Colete acolchoado | Defender recupera 3% do HP. |
-| Bala de chakra | Começa as lutas com 10% a mais do chakra. |
-| Cobertor de campanha | O descanso cura 10% a mais. |
+| Contas de meditação | Concentrar recupera 3 de chakra a mais. |
+| Colete acolchoado | Defender recupera 3 de HP. |
+| Bala de chakra | Começa as lutas com 3 de chakra a mais. |
+| Cobertor de campanha | O descanso cura 10 de HP e 3 de chakra a mais. |
 | Bolsa reforçada | +2 espaços na bolsa. |
 
 ### Incomum (17)
 
 | Relíquia | Efeito |
 |---|---|
-| Cupom do Ichiraku | Cada vitória recupera 10% a mais do HP e do chakra da equipe. |
+| Cupom do Ichiraku | Cada vitória recupera 10 de HP e 3 de chakra a mais em cada membro da equipe. |
 | Faixas de mão | +10% de dano de taijutsu. |
-| Sacola de ervas | Recupera 2% do HP por rodada. |
+| Sacola de ervas | Recupera 2 de HP por rodada. |
 | Ficha do mercador | O mercador cobra 15% a menos. |
 | Pergaminho de invocação | Começa as lutas com 1 clone. |
 | Tambor de guerra | A equipe ganha +5% de acerto. |
@@ -168,8 +168,8 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 | Kunai do mestre | +10% de dano. |
 | Pacto de sangue | Abaixo de 50% do HP, +35% de dano. |
 | Incenso dos sonhos | +25% de dano de genjutsu. |
-| Amuleto da longevidade | A equipe recupera 2% do HP por rodada. |
-| Reserva de chakra | Começa as lutas com 25% a mais do chakra. |
+| Amuleto da longevidade | A equipe recupera 2 de HP por rodada. |
+| Reserva de chakra | Começa as lutas com 8 de chakra a mais. |
 | Pergaminho vital | +25 de HP máximo. |
 
 ### Chefe (16)
@@ -177,19 +177,19 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 | Relíquia | Efeito |
 |---|---|
 | Talismã da Vontade do Fogo | +1 Vontade do Fogo: recomeça uma luta perdida. |
-| Selo de contenção | Recupera 4% do HP por rodada. |
+| Selo de contenção | Recupera 4 de HP por rodada. |
 | Chapéu do Hokage | +15% de dano da equipe. |
 | Bandana dos Sannin | +25% de HP máximo dos suportes. |
 | Cachimbo do Gamabunta | As técnicas custam 2 de chakra a menos. |
 | Lâmina de chakra | +25% de dano. |
 | Armadura samurai | A equipe começa as lutas com escudo de 20% do HP. |
 | Pergaminhos do Céu e da Terra | Na hora: +2 pontos de talento. |
-| Lótus eterna | A equipe recupera 3% do HP por rodada. |
+| Lótus eterna | A equipe recupera 3 de HP por rodada. |
 | Bolsa sem fundo | +50% de ryō e o mercador cobra 25% a menos. |
 | Pena de fênix | Uma vez por luta, ao cair, fica com 1 de HP. |
 | Selo do exército | Começa as lutas com 2 clones; o limite de clones sobe em 1. |
 | Manto de Kage | A equipe esquiva 8% dos golpes e ganha +5% de acerto. |
-| Núcleo de chakra | +10 de chakra máximo; começa as lutas com 50% a mais do chakra. |
+| Núcleo de chakra | +10 de chakra máximo; começa as lutas com 15 de chakra a mais. |
 | Talismã da segunda chance | A equipe volta com 30% a mais de HP ao ser levantada. |
 | Estandarte de guerra | A equipe ganha +10% de crítico. |
 
@@ -221,10 +221,10 @@ Só aparecem na escolha depois do chefe, para quem ainda tem a inicial, e tomam 
 
 | Relíquia | Efeito |
 |---|---|
-| Amuleto da velhinha | +10 de HP máximo; a equipe recupera 1% do HP por rodada. |
+| Amuleto da velhinha | +10 de HP máximo; a equipe recupera 1 de HP por rodada. |
 | Anel estranho | +8% de crítico e +4% de acerto. |
 | Tinta de invocação | Começa as lutas com 1 clone; técnicas de clone criam 1 a mais. |
-| Cartão fidelidade do ramen | Cada vitória recupera 15% a mais do HP e do chakra da equipe. |
+| Cartão fidelidade do ramen | Cada vitória recupera 15 de HP e 4 de chakra a mais em cada membro da equipe. |
 | Pergaminho do guru | Na hora: +1 ponto de talento e +30 ryō. |
 | Dado do jokenpô | +20% de ryō e +3% de crítico. |
 | Carta de fã | A equipe ganha +3% de acerto e esquiva 3% dos golpes. |

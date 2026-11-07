@@ -63,7 +63,7 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
   const revive = tech((t) => Boolean(t.reviveHpPct));
   if (revive && fallen.length) return { kind: 'tech', techId: revive.id, target: (fallen.find((x) => x.protagonist) ?? fallen[0]!).uid };
   if (f.ai === 'healer') {
-    const heal = tech((t) => Boolean(t.healPct) && t.target === 'ally');
+    const heal = tech((t) => Boolean(t.healHp) && t.target === 'ally');
     const hurt = [...friends].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
     if (heal && hurt && hurt.hp < hurt.maxHp * 0.55) return { kind: 'tech', techId: heal.id, target: hurt.uid };
   }
@@ -86,7 +86,7 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
   const selfShield = tech((t) => t.target === 'self' && Boolean(t.shieldPct));
   if (selfShield && f.shield === 0 && f.hp < f.maxHp * 0.6) return { kind: 'tech', techId: selfShield.id, target: f.uid };
   // Inimigo que cura o próprio time (Kabuto) com aliado ferido.
-  const allyHeal = tech((t) => Boolean(t.healPct) && t.target === 'ally');
+  const allyHeal = tech((t) => Boolean(t.healHp) && t.target === 'ally');
   const hurtFriend = friends.find((x) => x.hp < x.maxHp * 0.45);
   if (allyHeal && hurtFriend && f.ai !== 'healer') return { kind: 'tech', techId: allyHeal.id, target: hurtFriend.uid };
 

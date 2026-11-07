@@ -68,7 +68,7 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Chuva de agulhas | Taijutsu | — | todos os inimigos | 4 | 3 | 75% | 2 golpes |
 | Clone de névoa | Genjutsu | — | um inimigo | 9 | 2 | 85% | — |
 | Bisturi de chakra | Ninjutsu | — | um inimigo | 13 | 4 | 85% | bloqueio de chakra 40% |
-| Cura médica | Ninjutsu | — | um aliado | — | 5 | 85% | cura 25%; espera 2 |
+| Cura médica | Ninjutsu | — | um aliado | — | 5 | 85% | cura 25 de HP × força do inimigo; espera 2 |
 | Reanimação proibida | Ninjutsu | — | um aliado caído | — | 15 | — | levanta com 30% do HP; espera 3 |
 | Presa sobre presa | Taijutsu | — | um inimigo | 10 | 4 | 80% | 2 golpes |
 | Mordida | Taijutsu | — | um inimigo | 7 | 0 | 90% | — |

@@ -29,7 +29,7 @@ export function emptyMods(): FighterMods {
     critBonus: 0,
     accuracyBonus: 0,
     evasion: 0,
-    regenPct: 0,
+    regenHp: 0,
     lowHpDamageMult: 1,
     startClones: 0,
     extraClones: 0,
@@ -45,10 +45,11 @@ export function emptyMods(): FighterMods {
     effectChanceBonus: 0,
     reviveHpBonus: 0,
     onKillChakra: 0,
-    guardHealPct: 0,
-    restBonusPct: 0,
+    guardHeal: 0,
+    restBonus: 0,
     kitBonusPct: 0,
-    startChakraPct: 0,
+    startChakra: 0,
+    healMult: 1,
     gateLevels: 0,
   };
 }
@@ -72,7 +73,7 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     critBonus: a.critBonus + (b.critBonus ?? 0),
     accuracyBonus: a.accuracyBonus + (b.accuracyBonus ?? 0),
     evasion: a.evasion + (b.evasion ?? 0),
-    regenPct: a.regenPct + (b.regenPct ?? 0),
+    regenHp: a.regenHp + (b.regenHp ?? 0),
     lowHpDamageMult: a.lowHpDamageMult * (b.lowHpDamageMult ?? 1),
     startClones: a.startClones + (b.startClones ?? 0),
     extraClones: a.extraClones + (b.extraClones ?? 0),
@@ -88,10 +89,11 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     effectChanceBonus: a.effectChanceBonus + (b.effectChanceBonus ?? 0),
     reviveHpBonus: a.reviveHpBonus + (b.reviveHpBonus ?? 0),
     onKillChakra: a.onKillChakra + (b.onKillChakra ?? 0),
-    guardHealPct: a.guardHealPct + (b.guardHealPct ?? 0),
-    restBonusPct: a.restBonusPct + (b.restBonusPct ?? 0),
+    guardHeal: a.guardHeal + (b.guardHeal ?? 0),
+    restBonus: a.restBonus + (b.restBonus ?? 0),
     kitBonusPct: a.kitBonusPct + (b.kitBonusPct ?? 0),
-    startChakraPct: a.startChakraPct + (b.startChakraPct ?? 0),
+    startChakra: a.startChakra + (b.startChakra ?? 0),
+    healMult: a.healMult * (b.healMult ?? 1),
     gateLevels: a.gateLevels + (b.gateLevels ?? 0),
   };
 }
@@ -130,7 +132,7 @@ export function enemySeed(defId: string, difficulty: keyof JornadaData['base']['
     techniques: [...def.techniques],
     ai: def.ai,
     ...(def.passive ? { passive: def.passive } : {}),
-    mods: { ...emptyMods(), damageMult: mult },
+    mods: { ...emptyMods(), damageMult: mult, healMult: mult },
   };
 }
 
@@ -140,7 +142,7 @@ function enter(seed: FighterSeed, side: TeamSide, index: number): Fighter {
     ...seed,
     uid: `${side === 'ally' ? 'a' : 'e'}${index}`,
     side,
-    chakra: Math.min(seed.maxChakra, seed.chakra + Math.floor(seed.maxChakra * seed.mods.startChakraPct)),
+    chakra: Math.min(seed.maxChakra, seed.chakra + seed.mods.startChakra),
     effects: [],
     shield: Math.floor(seed.maxHp * shieldPct),
     clones: seed.mods.startClones,
@@ -356,8 +358,8 @@ function newRound(s: JBattle, data: JornadaData, rng: Rng): void {
   s.log.push({ type: 'round', round: s.round });
   if (s.win.kind === 'survive' && s.round > s.win.rounds) return end(s, 'won');
   for (const f of s.fighters) {
-    if (f.down || f.mods.regenPct <= 0 || f.hp >= f.maxHp) continue;
-    const amount = Math.min(f.maxHp - f.hp, Math.max(1, Math.floor(f.maxHp * f.mods.regenPct)));
+    if (f.down || f.mods.regenHp <= 0 || f.hp >= f.maxHp) continue;
+    const amount = Math.min(f.maxHp - f.hp, f.mods.regenHp);
     f.hp += amount;
     s.log.push({ type: 'regen', target: f.uid, amount });
   }
@@ -525,9 +527,9 @@ export function useItem(state: JBattle, item: ConsumableId, targetUid: string, d
   } else {
     if (t.down || t.side !== user.side) throw new Error('alvo inválido');
     const boost = 1 + user.mods.kitBonusPct;
-    if (item === 'hpKit') heal(s, user, t, Math.floor(t.maxHp * j.hpKitPct * boost));
+    if (item === 'hpKit') heal(s, user, t, Math.floor(j.hpKit * boost));
     else {
-      const amount = Math.min(t.maxChakra - t.chakra, Math.floor(t.maxChakra * j.chakraKitPct * boost));
+      const amount = Math.min(t.maxChakra - t.chakra, Math.floor(j.chakraKit * boost));
       t.chakra += amount;
     }
   }
@@ -551,11 +553,11 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
   if (action.kind === 'guard') {
     f.guarding = true;
     s.log.push({ type: 'guard', uid: f.uid });
-    if (f.mods.guardHealPct) heal(s, f, f, Math.floor(f.maxHp * f.mods.guardHealPct));
+    if (f.mods.guardHeal) heal(s, f, f, f.mods.guardHeal);
     return;
   }
   if (action.kind === 'rest') {
-    const amount = Math.min(f.maxChakra - f.chakra, Math.max(1, Math.floor(f.maxChakra * (j.restChakraPct + f.mods.restBonusPct))));
+    const amount = Math.min(f.maxChakra - f.chakra, j.restChakra + f.mods.restBonus);
     f.chakra += amount;
     s.log.push({ type: 'rest', uid: f.uid, chakra: amount });
     return;
@@ -601,7 +603,7 @@ function applyTech(s: JBattle, f: Fighter, techId: string, targetUid: string, da
     if (tech.baseDamage > 0) strike(s, f, t, tech, data, rng);
     else if (tech.onHit && t.side !== f.side) applyStatus(s, f, t, tech, data, rng);
     if (t.down) continue;
-    if (tech.healPct) heal(s, f, t, Math.floor(t.maxHp * tech.healPct));
+    if (tech.healHp) heal(s, f, t, Math.floor(tech.healHp * f.mods.healMult));
     if (tech.shieldPct) {
       const amount = Math.floor(f.maxHp * tech.shieldPct);
       t.shield += amount;

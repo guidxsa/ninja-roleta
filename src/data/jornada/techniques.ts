@@ -22,7 +22,7 @@ export const allyTechniques: JTechnique[] = [
   { id: 'jHarem', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 0, chakraCost: 6, accuracy: 0.75, onHit: { effect: 'stun', chance: 0.4, turns: 1 }, cooldown: 4 },
   { id: 'jSmokeBomb', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, boost: { evasion: 0.3, turns: 2 }, active: true, cooldown: 4 },
   { id: 'jShadowShuriken', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 3, chakraCost: 3, accuracy: 0.8, cooldown: 1 },
-  { id: 'jWarCry', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healPct: 0.2, cleanse: true, cooldown: 2 },
+  { id: 'jWarCry', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healHp: 20, cleanse: true, cooldown: 2 },
   { id: 'jGamakichi', type: 'ninjutsu', element: 'fire', target: 'allEnemies', baseDamage: 12, chakraCost: 6, onHit: { effect: 'burn', chance: 0.3 } },
   { id: 'jGamatatsu', type: 'ninjutsu', element: 'water', target: 'self', baseDamage: 0, chakraCost: 5, shieldPct: 0.25, active: true, cooldown: 3 },
   { id: 'jGamabunta', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 26, chakraCost: 16, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.25, turns: 1 }, cooldown: 4 },
@@ -37,7 +37,7 @@ export const allyTechniques: JTechnique[] = [
   // Sakura (no mangá, antes do timeskip, ela ainda não é médica: apoio tático)
   { id: 'jKunai', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 9, chakraCost: 0, accuracy: 0.9 },
   { id: 'jWireTrap', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 4, chakraCost: 3, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.4, turns: 1 }, cooldown: 2 },
-  { id: 'jRelease', type: 'genjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 2, cleanse: true, healPct: 0.1 },
+  { id: 'jRelease', type: 'genjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 2, cleanse: true, healHp: 10 },
 
   // Jiraiya
   { id: 'jToadOil', type: 'ninjutsu', element: 'fire', target: 'allEnemies', baseDamage: 14, chakraCost: 8, onHit: { effect: 'burn', chance: 0.3 } },
@@ -46,7 +46,7 @@ export const allyTechniques: JTechnique[] = [
 
   // Tsunade
   { id: 'jTsunadePunch', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 24, chakraCost: 3, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.25, turns: 1 } },
-  { id: 'jMysticPalm', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healPct: 0.3, cleanse: true },
+  { id: 'jMysticPalm', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healHp: 30, cleanse: true },
   // Reanimar é habilidade, não regra geral: caro em chakra e com espera (docs/jornada/combate.md#cair-e-levantar).
   { id: 'jReanimate', type: 'ninjutsu', element: null, target: 'downedAlly', baseDamage: 0, chakraCost: 15, cooldown: 2, reviveHpPct: 0.5 },
 
@@ -146,7 +146,7 @@ export const enemyTechniques: JTechnique[] = [
   { id: 'jeRainClone', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 9, chakraCost: 2 },
   // Kabuto
   { id: 'jeChakraScalpel', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 13, chakraCost: 4, onHit: { effect: 'chakraBlock', chance: 0.4 } },
-  { id: 'jeMedicalHeal', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healPct: 0.25, cooldown: 2 },
+  { id: 'jeMedicalHeal', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healHp: 25, cooldown: 2 },
   { id: 'jeReanimate', type: 'ninjutsu', element: null, target: 'downedAlly', baseDamage: 0, chakraCost: 15, cooldown: 3, reviveHpPct: 0.3 },
   // Kiba e Akamaru
   { id: 'jeFangOverFang', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 10, hits: 2, chakraCost: 4, accuracy: 0.8 },

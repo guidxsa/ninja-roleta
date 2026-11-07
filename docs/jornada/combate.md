@@ -12,7 +12,7 @@ Um motor próprio, de equipe, separado do combate do Roleta. Compartilha com a b
 ## Ordem
 
 - A cada rodada, todos os lutadores de pé entram numa ordem por speed × (1 ± 15%). A variação é pequena: a sorte pesa menos que no Roleta.
-- No começo de cada rodada, quem tem regeneração recupera HP.
+- No começo de cada rodada, quem tem regeneração recupera HP. **Regen é valor fixo** (v0.49.0): recuperação, kits, Concentrar e técnicas de cura não crescem com o HP e o chakra máximos. Em fração seguem queimar, veneno, Portões, custos de técnica, reviver e escudos.
 
 ## Turno
 
@@ -21,7 +21,7 @@ Um motor próprio, de equipe, separado do combate do Roleta. Compartilha com a b
 3. O lutador age. Antes da ação, pode usar **uma ativa de classe** (Kage Bunshin, Sharingan, Byakugan, Portões, Manto da Kyuubi...): ela **não gasta o turno**, é uma por turno, e o turno continua. Fortalecimentos contam o turno da ativação (o Sharingan de 3 turnos vale para a ação deste turno e das 2 seguintes). O protagonista escolhe:
    - **técnica** do moveset, tocando no alvo (inimigo ou aliado; técnicas em todos os inimigos e em si não pedem alvo);
    - **Defender**: usa a resistência inteira (100% no lugar de 50%) até o próximo turno dele;
-   - **Concentrar**: recupera 25% do chakra máximo;
+   - **Concentrar**: recupera 8 de chakra;
    - **item da bolsa**: não gasta o turno, um por turno (ver abaixo).
 4. Fim do turno: desgaste dos Portões, depois efeitos, portão e esperas descontam 1.
 
@@ -83,8 +83,8 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 
 | Item | Efeito |
 |---|---|
-| Kit de HP | Cura 35% do HP de um aliado |
-| Kit de chakra | Recupera 40% do chakra de um aliado |
+| Kit de HP | Cura 35 de HP de um aliado |
+| Kit de chakra | Recupera 12 de chakra de um aliado |
 | Pílula de reanimação | Levanta um aliado caído com 50% do HP; no protagonista caído, é usada sozinha |
 
 ## Moveset

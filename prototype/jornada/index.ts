@@ -30,7 +30,7 @@ import {
   openTreasure,
   resolveEvent,
   rest,
-  restHealPct,
+  restHeal,
   shopOffer,
   stageCount,
   stageId,
@@ -173,7 +173,10 @@ const cyclePct = (run: JRun) => Math.round((cycleEnemyMult(run, data) - 1) * 100
 const cycleChip = (run: JRun) => (run.cycle > 0 ? `<span class="chip jcycle"${tip(U.cycle(run.cycle + 1), U.cycleTip(cyclePct(run)))}>${icon('cycle')} ${U.cycle(run.cycle + 1)}</span>` : '');
 
 /** Recuperação depois de cada vitória na dificuldade (configuração da run, sem relíquias). */
-const recoveryLine = (d: Difficulty) => `${icon('heart')} ${J.start.recovery(Math.round((data.j.run.afterWinRecovery[d] ?? 0) * 100))}`;
+const recoveryLine = (d: Difficulty) => {
+  const r = data.j.run.afterWinRecovery[d]!;
+  return `${icon('heart')} ${J.start.recovery(r.hp, r.chakra)}`;
+};
 
 async function startScreen(host: JornadaHost): Promise<JRun | null> {
   const saved = loadJornada(host.storage);
@@ -538,7 +541,7 @@ async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, {
     if (outcome.won) {
       const lines = [U.rewards(outcome.ryo, outcome.xp, outcome.talent)];
       if (outcome.talentRyo) lines.push(U.talentRyo(outcome.talentRyo));
-      if (next.status === 'inProgress') lines.push(stop.kind === 'boss' ? U.restoredAll : U.recovered(Math.round(afterWinRecovery(next, data) * 100)));
+      if (next.status === 'inProgress') lines.push(stop.kind === 'boss' ? U.restoredAll : U.recovered(afterWinRecovery(next, data).hp, afterWinRecovery(next, data).chakra));
       if (outcome.levelUps) lines.push(U.levelUp(next.level, outcome.talentRyo > 0));
       announcedTalentRyo = next.stats.talentRyo ?? 0;
       await notice(U.victoryTitle, lines.join('\n'));
@@ -632,7 +635,7 @@ async function shopStop(host: JornadaHost, run0: JRun): Promise<JRun> {
 
 async function restStop(host: JornadaHost, run: JRun): Promise<JRun> {
   const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud>${hud(host, run)}</div>
-    <button class="btn big" data-choice="heal">${icon('rest')} ${U.restHeal(Math.round(restHealPct(run, data) * 100))}</button>
+    <button class="btn big" data-choice="heal">${icon('rest')} ${U.restHeal(restHeal(run, data).hp, restHeal(run, data).chakra)}</button>
     ${restTrainButton(run)}</div>`));
   const c = await choose<'heal' | 'train'>(root);
   host.mood('good');

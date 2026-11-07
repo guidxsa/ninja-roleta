@@ -84,9 +84,9 @@ Cada evento tem duas escolhas. As com minijogo ([run.md](run.md#minijogos)) dão
 |---|---|
 | Formatura | Comer ramen (cura tudo, +15 ryō) · Treinar (+1 ponto de talento) |
 | O construtor Tazuna | Proteger de graça (+20 ryō e marca: 20% de desconto no mercador do País das Ondas) · Cobrar (+45 ryō) |
-| Subir na árvore | Selos: +6 de chakra máximo da equipe e +40 XP (perdeu: +2) · Descansar (cura 30%) |
+| Subir na árvore | Selos: +6 de chakra máximo da equipe e +40 XP (perdeu: +2) · Descansar (+30 de HP, +9 de chakra) |
 | Prova escrita | Memória: +1 ponto de talento e +20 ryō (perdeu: +5 ryō) · Décima pergunta (+1 ponto de talento) |
-| Preliminares | Ebisu (+80 XP) · Visitar o Lee (cura 50%, +1 kit de HP) |
+| Preliminares | Ebisu (+80 XP) · Visitar o Lee (+50 de HP, +15 de chakra, +1 kit de HP) |
 | O eremita dos sapos | Selos: relíquia de evento (perdeu: +20 ryō) · "Pesquisa" (+30 ryō) |
 | Treino do Rasengan | Selos: +2 pontos de talento (perdeu: +1) · Apostar com a Tsunade (+40 ryō, +10 de HP máximo) |
-| O Sasuke foi embora | Prometer (+1 ponto de talento, cura 50%) · Jokenpô: relíquia de evento (perdeu: +20 ryō) |
+| O Sasuke foi embora | Prometer (+1 ponto de talento, +50 de HP, +15 de chakra) · Jokenpô: relíquia de evento (perdeu: +20 ryō) |
