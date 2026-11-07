@@ -97,7 +97,7 @@ export const talents: TalentNode[] = [
   { id: 'tCursedSeal', owner: 'uchihaNinja', branch: 'sasuke', tier: 4, cost: 3, account: 'j_sasukeEgg', learn: 'jCursedSeal' },
 
   // Hyuuga (v0.37.0): a Palma do Vácuo, pendente desde o Roleta, entra no ramo Rotação.
-  { id: 'tByakuganRange', owner: 'hyuugaNinja', branch: 'byakugan', tier: 1, cost: 1, mods: { accuracyBonus: 0.05, techChakraDiscount: { jByakugan: 1 } } },
+  { id: 'tByakuganRange', owner: 'hyuugaNinja', branch: 'byakugan', tier: 1, cost: 1, mods: { accuracyBonus: 0.05, techChakraDiscount: { jByakugan: 1, jByakugan2: 1 } } },
   { id: 'tVitalPoints', owner: 'hyuugaNinja', branch: 'byakugan', tier: 2, cost: 2, mods: { critBonus: 0.1 } },
   { id: 'tByakugan2', owner: 'hyuugaNinja', branch: 'byakugan', tier: 3, cost: 2, learn: 'jByakugan2' },
   { id: 'tAllSeeing', owner: 'hyuugaNinja', branch: 'byakugan', tier: 4, cost: 3, mods: { evasion: 0.1 } },

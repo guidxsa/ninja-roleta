@@ -74,6 +74,8 @@ export type REvent =
   | { type: 'skip'; side: Side; reason: 'stun' | 'seal' | 'mind' | 'trickster' }
   | { type: 'dodge'; side: Side }
   | { type: 'rest'; side: Side; amount: number }
+  /** Chakra mudou fora do Concentrar (regeneração, custo de golpe, pílula): `value` é o total depois da mudança. */
+  | { type: 'chakra'; side: Side; value: number }
   | { type: 'guard' }
   | { type: 'item'; id: ConsumableId }
   | { type: 'active'; kind: RActive; success: boolean; chance?: number }
@@ -372,12 +374,21 @@ export function playRoletaRound(prev: RBattle, action: RAction, data: RoletaData
   return s;
 }
 
+/** Avisa a interface do chakra atual, para a barra acompanhar a animação. */
+function logChakra(s: RBattle, side: Side): void {
+  s.log.push({ type: 'chakra', side, value: side === 'player' ? s.player.chakra : s.villain.chakra });
+}
+
 function startOfRound(s: RBattle, data: RoletaData): void {
   const r = data.r;
-  // Regeneração de chakra (silenciosa).
+  // Regeneração de chakra (sem texto no registro; só a barra sobe).
   const regen = (max: number) => Math.max(r.chakraRegen.min, Math.floor(max * r.chakraRegen.pct));
+  const playerChakra = s.player.chakra;
+  const villainChakra = s.villain.chakra;
   s.player.chakra = Math.min(s.player.maxChakra, s.player.chakra + regen(s.player.maxChakra));
   s.villain.chakra = Math.min(s.villain.def.chakra, s.villain.chakra + regen(s.villain.def.chakra));
+  if (s.player.chakra !== playerChakra) logChakra(s, 'player');
+  if (s.villain.chakra !== villainChakra) logChakra(s, 'villain');
   const kit = kitOf(s.player, data);
   // Senju: Força vital (1 vez por luta, abaixo do limiar).
   if (kit.passive === 'vitalForce' && !s.fx.vitalUsed && s.player.hp < s.player.maxHp * r.passives.vitalForce.belowPct) {
@@ -502,7 +513,9 @@ function playerTurn(s: RBattle, action: RAction, data: RoletaData, rng: Rng): vo
     // Sem chakra: concentra no lugar (a interface não deixa escolher).
     return playerTurn({ ...s }, 'rest', data, rng);
   }
-  s.player.chakra -= techCost(s, t, data);
+  const cost = techCost(s, t, data);
+  s.player.chakra -= cost;
+  if (cost > 0) logChakra(s, 'player');
   playerAttack(s, t, data, rng);
 }
 
@@ -511,8 +524,10 @@ function useItem(s: RBattle, id: ConsumableId, data: RoletaData, rng: Rng): void
   s.player.bag = { ...s.player.bag, [id]: s.player.bag[id] - 1 };
   s.log.push({ type: 'item', id });
   const it = data.r.items;
-  if (id === 'soldierPill') s.player.chakra = Math.min(s.player.maxChakra, s.player.chakra + Math.floor(s.player.maxChakra * it.soldierPillPct));
-  else if (id === 'medKit') {
+  if (id === 'soldierPill') {
+    s.player.chakra = Math.min(s.player.maxChakra, s.player.chakra + Math.floor(s.player.maxChakra * it.soldierPillPct));
+    logChakra(s, 'player');
+  } else if (id === 'medKit') {
     s.fx.effects = [];
     healPlayer(s, Math.floor(s.player.maxHp * it.medKitHealPct), 'medKit');
   } else if (id === 'explosiveTag') hurtVillain(s, it.explosiveTagDamage, 'tag', data, rng);
@@ -580,6 +595,7 @@ function villainTurn(s: RBattle, data: RoletaData, rng: Rng): void {
     return;
   }
   v.chakra -= tech.chakraCost;
+  if (tech.chakraCost > 0) logChakra(s, 'villain');
   if (tech.healPct !== undefined) {
     const amount = Math.min(v.maxHp - v.hp, Math.floor(v.maxHp * tech.healPct));
     v.hp += amount;

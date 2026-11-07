@@ -136,12 +136,12 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 | Lótus Oculta | Taijutsu | — | um inimigo | 12 | 0 | 85% | 4 golpes; custa 15% do HP; espera 4 |
 | Punho Bêbado | Taijutsu | — | um inimigo | 7 | 0 | 75% | 3 golpes; +15% crítico |
 | Sharingan | Genjutsu | — | em si | — | 3 | 85% | espera 4; fortalece 3 turnos (+15% acerto); ativa de classe |
-| Sharingan de 3 tomoe | Genjutsu | — | em si | — | 4 | 85% | espera 4; fortalece 4 turnos (dano ×1.1) (+20% acerto); ativa de classe |
+| Sharingan (3 tomoe) | Genjutsu | — | em si | — | 4 | 85% | espera 4; fortalece 4 turnos (dano ×1.1) (+20% acerto); ativa de classe |
 | Ilusão dos corvos | Genjutsu | — | um inimigo | 12 | 4 | 85% | atordoar 25% (1 t) |
 | Tsukuyomi | Genjutsu | — | um inimigo | 30 | 12 | 85% | atordoar 50% (1 t); espera 4 |
 | Selo amaldiçoado | Ninjutsu | — | em si | — | 0 | 85% | custa 10% do HP; espera 5; fortalece 3 turnos (dano ×1.4); ativa de classe |
 | Byakugan | Taijutsu | — | em si | — | 3 | 85% | espera 4; fortalece 3 turnos (+100% acerto); ativa de classe |
-| Byakugan desperto | Taijutsu | — | em si | — | 4 | 85% | espera 4; fortalece 4 turnos (dano ×1.15) (+100% acerto); ativa de classe |
+| Byakugan (desperto) | Taijutsu | — | em si | — | 4 | 85% | espera 4; fortalece 4 turnos (dano ×1.15) (+100% acerto); ativa de classe |
 | Palma Suave | Taijutsu | — | um inimigo | 10 | 0 | 95% | penetração 20%; bloqueio de chakra 30% |
 | 64 Palmas | Taijutsu | — | um inimigo | 5 | 8 | 95% | 4 golpes; penetração 30%; bloqueio de chakra 50% (3 t); espera 3 |
 | 128 Palmas | Taijutsu | — | um inimigo | 4 | 12 | 95% | 8 golpes; penetração 30%; bloqueio de chakra 60% (3 t); espera 4 |

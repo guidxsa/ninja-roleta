@@ -125,7 +125,7 @@ O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.m
 
 | Ramo | Nó | Custo | Efeito |
 |---|---|---|---|
-| Sharingan | 3 tomoe | 1 | Ativa nova: +20% de acerto, +25% de esquiva e +10% de dano por 4 turnos |
+| Sharingan | 3 tomoe | 1 | Evolui o Sharingan (substitui a forma básica): +20% de acerto, +25% de esquiva e +10% de dano por 4 turnos |
 | Sharingan | Olhar copiador | 2 | +5% de crítico e de acerto |
 | Sharingan | Previsão | 2 | Esquiva 7% |
 | Sharingan | Fluxo do Sharingan | 3 | +10% de dano; recupera 2 de HP por rodada |
@@ -149,9 +149,9 @@ A Palma do Vácuo, que estava pendente desde o Roleta, entra no ramo Rotação.
 
 | Ramo | Nó | Custo | Efeito |
 |---|---|---|---|
-| Byakugan | Visão ampla | 1 | +5% de acerto; Byakugan custa 1 de chakra a menos |
+| Byakugan | Visão ampla | 1 | +5% de acerto; Byakugan (nas duas formas) custa 1 de chakra a menos |
 | Byakugan | Pontos vitais | 2 | +10% de crítico |
-| Byakugan | Byakugan desperto | 2 | Ativa nova: não erra, +30% de penetração e +15% de dano por 4 turnos |
+| Byakugan | Byakugan desperto | 2 | Evolui o Byakugan (substitui a forma básica): não erra, +30% de penetração e +15% de dano por 4 turnos |
 | Byakugan | Olhos que tudo veem | 3 | Esquiva 10% |
 | Punho Suave | Punho Suave | 1 | +10% de dano de taijutsu |
 | Punho Suave | 64 Palmas | 2 | Aprende as 64 Palmas |

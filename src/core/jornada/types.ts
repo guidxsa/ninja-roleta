@@ -58,6 +58,8 @@ export interface JTechnique {
   boost?: Boost;
   /** Abre os Portões (docs/jornada/combate.md#portões): a ativa vira a escolha do portão, sem efeito próprio. */
   gates?: boolean;
+  /** Forma evoluída desta técnica: quem conhece as duas fica só com a evolução (3 tomoe substitui o Sharingan). */
+  evolves?: string;
 }
 
 /** Um dos Portões: números brutos, que se somam aos dos portões de baixo. */
@@ -217,7 +219,8 @@ export type JEvent =
   | { type: 'round'; round: number }
   | { type: 'turn'; uid: string }
   | { type: 'skip'; uid: string; reason: 'stun' }
-  | { type: 'tech'; uid: string; techId: string; targets: string[] }
+  /** `cost`: chakra pago, já com os descontos. */
+  | { type: 'tech'; uid: string; techId: string; targets: string[]; cost: number }
   | { type: 'miss'; uid: string; target: string }
   | { type: 'damage'; uid: string; target: string; amount: number; crit: boolean; elementMult: number; absorbed: number }
   | { type: 'cloneBlock'; target: string; left: number }
@@ -234,6 +237,8 @@ export type JEvent =
   | { type: 'item'; uid: string; item: string; target: string }
   | { type: 'guard'; uid: string }
   | { type: 'rest'; uid: string; chakra: number }
+  /** Chakra recuperado ao derrubar um inimigo. */
+  | { type: 'chakraGain'; uid: string; amount: number }
   | { type: 'enrage'; uid: string }
   | { type: 'boost'; uid: string; techId: string; turns: number }
   /** Custo em HP de uma técnica (`source` = id) ou desgaste dos Portões (`source` = 'gates'). */

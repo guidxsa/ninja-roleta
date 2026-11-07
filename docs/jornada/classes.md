@@ -37,6 +37,8 @@ Na tela de início, a classe trancada aparece com cadeado e a condição. Com a 
 
 Ativas de classe não gastam o turno: saem junto com a ação, uma por turno ([combate.md](combate.md#turno)). Fortalecimento: um bônus temporário em quem usa (dano, acerto, esquiva, penetração) que dura os turnos indicados, contando o da ativação; usar de novo renova.
 
+O Sharingan e o Byakugan **evoluem** com os talentos [3 tomoe e Byakugan desperto](talentos.md): a forma nova substitui a anterior, e o protagonista continua com uma ativa só (Sharingan (3 tomoe), Byakugan (desperto)).
+
 ## Suportes genéricos (versão suporte)
 
 - Cada um dos 2 parceiros sorteia a **classe** entre as liberadas (Comum sempre; Uchiha e Hyuuga pelas conquistas), **inclusive a do protagonista**, depois uma das **fichas** da classe que o outro parceiro não pegou, e um **nome** da lista da classe (v0.43.0; nomes originais, sem personagens do mangá).

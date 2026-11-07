@@ -102,8 +102,8 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 | Bandana do Iruka | Naruto | +10 de HP máximo; abaixo de 50% do HP, +15% de dano. |
 | Manual da Academia | Comum | +10% de XP; +5% de acerto. |
 | Macacão verde | prodígio | +1 de dano no taijutsu; +1 de speed. |
-| Leque do clã | Uchiha | O Sharingan custa 1 de chakra a menos; técnicas de fogo (Faísca de fogo, Bola de Fogo, Flor de Fênix, Grande Labareda) +10% de dano. |
-| Pergaminho do Punho Suave | Hyuuga | Punho Suave, 64 e 128 Palmas +10% de dano; o Byakugan custa 1 de chakra a menos. |
+| Leque do clã | Uchiha | O Sharingan (nas duas formas) custa 1 de chakra a menos; técnicas de fogo (Faísca de fogo, Bola de Fogo, Flor de Fênix, Grande Labareda) +10% de dano. |
+| Pergaminho do Punho Suave | Hyuuga | Punho Suave, 64 e 128 Palmas +10% de dano; o Byakugan (nas duas formas) custa 1 de chakra a menos. |
 
 ### Comum (20)
 
@@ -202,8 +202,8 @@ Só aparecem na escolha depois do chefe, para quem ainda tem a inicial, e tomam 
 | Colar do Primeiro Hokage | Bandana do Iruka | +20 de HP máximo; abaixo de 50% do HP, +30% de dano. |
 | Colete de chunin | Manual da Academia | +15 de HP máximo; +15% de XP; +8% de acerto. |
 | Macacão da Juventude | Macacão verde | +3 de dano no taijutsu; +2 de speed; +5% de crítico. |
-| Brasão Uchiha | Leque do clã | Os Sharingans custam 2 de chakra a menos; técnicas de fogo +20% de dano; +5% de crítico. |
-| Pergaminho dos Oito Trigramas | Pergaminho do Punho Suave | Punho Suave, 64 e 128 Palmas +20% de dano; os Byakugans custam 2 de chakra a menos; esquiva 4% dos golpes. |
+| Brasão Uchiha | Leque do clã | O Sharingan (nas duas formas) custa 2 de chakra a menos; técnicas de fogo +20% de dano; +5% de crítico. |
+| Pergaminho dos Oito Trigramas | Pergaminho do Punho Suave | Punho Suave, 64 e 128 Palmas +20% de dano; o Byakugan (nas duas formas) custa 2 de chakra a menos; esquiva 4% dos golpes. |
 
 ### Loja (7)
 

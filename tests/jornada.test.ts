@@ -1365,6 +1365,55 @@ describe('ativas grátis e Portões (v0.42.0)', () => {
   });
 });
 
+describe('dōjutsu que evolui', () => {
+  const uchiha = () => ({ ...newGenericRun(1, 'normal', 'uchiha', data), talentPoints: 10 });
+  const heroSeed = (run: JRun) => battleSetup(chooseNode(run, nodeChoices(run)[0]!.id), data).allies.find((a) => a.protagonist)!;
+
+  it('o 3 tomoe substitui o Sharingan: uma ativa só, na lista e na luta', () => {
+    expect(heroActives(uchiha(), data)).toEqual(['jSharingan']);
+    const run = buyTalent(uchiha(), 'tSharingan3', new Set(), data);
+    expect(heroActives(run, data)).toEqual(['jSharingan3']);
+    expect(heroSeed(run).techniques).toContain('jSharingan3');
+    expect(heroSeed(run).techniques).not.toContain('jSharingan');
+  });
+
+  it('o Byakugan desperto substitui o Byakugan', () => {
+    const run = { ...newGenericRun(1, 'normal', 'hyuuga', data), learned: ['jByakugan2'] };
+    expect(heroActives(run, data)).toEqual(['jByakugan2']);
+  });
+
+  it('save antigo com as duas formas carrega com uma ativa', () => {
+    const store: Record<string, string> = {};
+    const storage = { getItem: (k: string) => store[k] ?? null, setItem: (k: string, v: string) => void (store[k] = v) };
+    store[JORNADA_SAVE_KEY] = JSON.stringify({ ...uchiha(), learned: ['jSharingan3'] });
+    expect(heroActives(loadJornada(storage)!, data)).toEqual(['jSharingan3']);
+  });
+
+  it('o desconto da relíquia e do talento vale para a forma evoluída', () => {
+    const run = buyTalent(uchiha(), 'tSharingan3', new Set(), data);
+    expect(run.relics).toContain('uchihaFan');
+    expect(heroMods(run, data).techChakraDiscount.jSharingan3).toBe(1);
+    const hyuuga = { ...newGenericRun(1, 'normal', 'hyuuga', data), talents: ['tByakuganRange'] };
+    expect(heroMods(hyuuga, data).techChakraDiscount.jByakugan2).toBe(2);
+  });
+
+  it('a técnica informa o chakra pago, já com desconto', () => {
+    const seed = hero({ techniques: ['jStrike', 'jSharingan3'], mods: { ...emptyMods(), techChakraDiscount: { jSharingan3: 1 } } });
+    const b = startBattle(setup({ allies: [seed], enemies: [dummy({ hp: 999, maxHp: 999 })] }), data, fixed(0.5));
+    const after = useActive(b, 'jSharingan3', 'a0', data, fixed(0.5));
+    const ev = after.log.slice(b.log.length).find((e) => e.type === 'tech');
+    expect(ev).toMatchObject({ techId: 'jSharingan3', cost: 3 });
+    expect(after.fighters[0]!.chakra).toBe(b.fighters[0]!.chakra - 3);
+  });
+
+  it('chakra ganho por abate gera evento', () => {
+    const seed = hero({ chakra: 10, mods: { ...emptyMods(), onKillChakra: 4 } });
+    const b = startBattle(setup({ allies: [seed], enemies: [dummy({ hp: 1, maxHp: 1 }), dummy({ hp: 999, maxHp: 999 })] }), data, fixed(0.5));
+    const after = playerAct(b, { kind: 'tech', techId: 'jStrike', target: 'e0' }, data, fixed(0));
+    expect(after.log.slice(b.log.length).find((e) => e.type === 'chakraGain')).toEqual({ type: 'chakraGain', uid: 'a0', amount: 4 });
+  });
+});
+
 describe('dano mostrado acompanha talentos e níveis', () => {
   const rankNodes = data.talents.filter((n) => (n.maxRank ?? 1) > 1 && n.rankMods?.techDamageMult);
 

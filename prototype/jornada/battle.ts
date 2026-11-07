@@ -374,7 +374,14 @@ export async function jornadaBattle(
     banner.classList.add('show');
   };
   // Barras durante a animação: parte do estado anterior e aplica cada evento.
-  const shown = new Map<string, { hp: number; max: number }>();
+  const shown = new Map<string, { hp: number; max: number; chakra: number; maxChakra: number }>();
+  const setChakra = (uid: string, chakra: number) => {
+    const v = shown.get(uid);
+    if (!v) return;
+    v.chakra = Math.max(0, Math.min(v.maxChakra, chakra));
+    const el = card(uid)?.querySelector<HTMLElement>('[data-bar="ck"]');
+    if (el) patchBar(el, 'ck', v.chakra, v.maxChakra, `${Math.round(v.chakra)}/${v.maxChakra}`);
+  };
   const setHp = (uid: string, hp: number) => {
     const v = shown.get(uid);
     if (!v) return;
@@ -386,7 +393,7 @@ export async function jornadaBattle(
   async function animate(prev: JBattle, next: JBattle) {
     render(prev);
     shown.clear();
-    for (const f of prev.fighters) shown.set(f.uid, { hp: f.hp, max: f.maxHp });
+    for (const f of prev.fighters) shown.set(f.uid, { hp: f.hp, max: f.maxHp, chakra: f.chakra, maxChakra: f.maxChakra });
     const name = (uid: string) => esc(fighterName(fighter(next, uid)));
     for (const e of next.log.slice(prev.log.length) as JEvent[]) {
       let wait = beat();
@@ -402,6 +409,7 @@ export async function jornadaBattle(
         case 'tech': {
           const t = data.techniques[e.techId]!;
           const color = t.element ? ELEMENT_COLORS[t.element] : '';
+          if (e.cost) setChakra(e.uid, shown.get(e.uid)!.chakra - e.cost);
           pose(e.uid, fighter(next, e.uid).side === 'ally' ? 'lunge-up' : 'lunge-down');
           // Chamada do jutsu: pincelada na cor do elemento (ou do tipo da técnica).
           say(B.logTech(name(e.uid), techName(e.techId)), color || `var(--t-${t.type})`);
@@ -504,7 +512,13 @@ export async function jornadaBattle(
           break;
         case 'rest':
           float(e.uid, `+${e.chakra}`, 'ck');
+          setChakra(e.uid, shown.get(e.uid)!.chakra + e.chakra);
           pushLog(B.logRest(name(e.uid), e.chakra));
+          break;
+        case 'chakraGain':
+          float(e.uid, `+${e.amount}`, 'ck');
+          setChakra(e.uid, shown.get(e.uid)!.chakra + e.amount);
+          wait = 0;
           break;
         case 'enrage':
           say(B.enrage(name(e.uid)), 'var(--accent)');

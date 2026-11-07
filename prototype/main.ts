@@ -1637,6 +1637,12 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
           else disp.vck += ev.amount;
           log(RL.rest(who(ev.side), ev.amount), 'sys');
           break;
+        case 'chakra':
+          // Só a barra muda: sem pausa, para não atrasar a roleta que vem depois.
+          if (ev.side === 'player') disp.pck = ev.value;
+          else disp.vck = ev.value;
+          sync();
+          continue;
         case 'guard':
           log(RL.guard, 'good', 'stance');
           break;

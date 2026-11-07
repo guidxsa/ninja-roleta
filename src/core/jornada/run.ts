@@ -388,7 +388,10 @@ function elementBasic(run: JRun, id: string, data: JornadaData): string[] {
 export function heroKnown(run: JRun, data: JornadaData): string[] {
   const second = run.secondElement ? [data.elementLines[run.secondElement][0]] : [];
   const def = data.characters[run.hero]!;
-  return [...new Set([...def.techniques, ...elementBasic(run, run.hero, data), ...second, ...(def.spareTechniques ?? []), ...run.learned])];
+  const known = [...new Set([...def.techniques, ...elementBasic(run, run.hero, data), ...second, ...(def.spareTechniques ?? []), ...run.learned])];
+  // A forma evoluída toma o lugar da anterior (3 tomoe no lugar do Sharingan).
+  const replaced = new Set(known.map((id) => data.techniques[id]?.evolves));
+  return known.filter((id) => !replaced.has(id));
 }
 
 /** Ativas de classe do protagonista (área separada do moveset). */

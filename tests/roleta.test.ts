@@ -60,6 +60,55 @@ function battle(o: Origin, villainId = 'mizuki', over: Partial<RBattle['player']
   return startRoletaBattle(p, villain(villainId), { playerStartsFirst: true }, data, fixed(0.5));
 }
 
+describe('chakra nos eventos da luta', () => {
+  it('o gasto do golpe vem antes da roleta de acerto', () => {
+    const b = battle(origin(null, ['fire']));
+    const s = playRoletaRound(b, 'tech:rFire', data, fixed(0.5));
+    const events = s.log.slice(b.log.length);
+    const attack = events.findIndex((e) => e.type === 'attack' && e.side === 'player');
+    const spent = events.findIndex((e) => e.type === 'chakra' && e.side === 'player' && e.value === s.player.chakra);
+    expect(spent).toBeGreaterThanOrEqual(0);
+    expect(spent).toBeLessThan(attack);
+  });
+
+  it('golpe sem custo e chakra cheio não geram evento', () => {
+    const b = battle(origin(null, ['fire']));
+    const s = playRoletaRound(b, 'tech:rBasic', data, fixed(0.5));
+    expect(s.log.slice(b.log.length).filter((e) => e.type === 'chakra' && e.side === 'player')).toEqual([]);
+  });
+
+  it('regeneração e Pílula de soldado também aparecem', () => {
+    const b = battle(origin(null, ['fire']), 'mizuki', { chakra: 0, bag: { ...createRoletaPlayer(origin(null, ['fire']), data).bag, soldierPill: 1 } });
+    const s = playRoletaRound(b, 'item:soldierPill', data, fixed(0.5));
+    const values = s.log.slice(b.log.length).flatMap((e) => (e.type === 'chakra' && e.side === 'player' ? [e.value] : []));
+    expect(values).toHaveLength(2);
+    expect(values[0]).toBeGreaterThan(0);
+    expect(values[1]).toBe(s.player.chakra);
+  });
+
+  it('repassar os eventos dá o chakra final, nos dois lados, em toda rodada', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const rng = createRng(seed);
+      let s = startRoletaBattle(createRoletaPlayer(origin(null, ['fire']), data), villain('kabuto'), { playerStartsFirst: true }, data, rng);
+      while (s.status === 'ongoing') {
+        const before = s;
+        s = playRoletaRound(before, 'tech:rFire', data, rng);
+        let player = before.player.chakra;
+        let foe = before.villain.chakra;
+        for (const e of s.log.slice(before.log.length)) {
+          if (e.type === 'chakra' && e.side === 'player') player = e.value;
+          else if (e.type === 'chakra') foe = e.value;
+          else if (e.type === 'rest' && e.side === 'player') player += e.amount;
+          else if (e.type === 'rest') foe += e.amount;
+          else if (e.type === 'revive' && e.side === 'player') player = s.player.maxChakra;
+        }
+        expect(player).toBe(s.player.chakra);
+        expect(foe).toBe(s.villain.chakra);
+      }
+    }
+  });
+});
+
 describe('kit do Roleta enxuto', () => {
   it('Taijutsu básico, 1 técnica por elemento e as da linhagem', () => {
     expect(roletaKit(origin(null, ['fire']), data)).toEqual(['rBasic', 'rFire']);

@@ -28,8 +28,8 @@ export const relics: RelicDef[] = [
   { id: 'irukaHeadband', tier: 'starter', starterFor: ['naruto'], stats: { hp: 10 }, mods: { lowHpDamageMult: 1.15 } },
   { id: 'academyManual', tier: 'starter', starterFor: ['commonNinja'], xpMult: 1.1, mods: { accuracyBonus: 0.05 } },
   { id: 'greenJumpsuit', tier: 'starter', starterFor: ['prodigy'], stats: { speed: 1 }, mods: { taijutsuFlat: 1 } },
-  { id: 'uchihaFan', tier: 'starter', starterFor: ['uchihaNinja'], mods: { techChakraDiscount: { jSharingan: 1 }, techDamageMult: each(FIRE, 1.1) } },
-  { id: 'gentleFistScroll', tier: 'starter', starterFor: ['hyuugaNinja'], mods: { techChakraDiscount: { jByakugan: 1 }, techDamageMult: each(GENTLE_FIST, 1.1) } },
+  { id: 'uchihaFan', tier: 'starter', starterFor: ['uchihaNinja'], mods: { techChakraDiscount: { jSharingan: 1, jSharingan3: 1 }, techDamageMult: each(FIRE, 1.1) } },
+  { id: 'gentleFistScroll', tier: 'starter', starterFor: ['hyuugaNinja'], mods: { techChakraDiscount: { jByakugan: 1, jByakugan2: 1 }, techDamageMult: each(GENTLE_FIST, 1.1) } },
 
   // Evoluções: aparecem só na escolha depois do chefe e substituem a inicial.
   { id: 'firstHokageNecklace', tier: 'boss', evolves: 'irukaHeadband', stats: { hp: 20 }, mods: { lowHpDamageMult: 1.3 } },

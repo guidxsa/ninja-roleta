@@ -578,9 +578,10 @@ function applyTech(s: JBattle, f: Fighter, techId: string, targetUid: string, da
   if (tech.target === 'downedAlly') {
     if (targets.some((t) => !t.down || t.side !== f.side)) throw new Error('alvo inválido');
   } else if (targets.some((t) => t.down)) throw new Error('alvo caído');
-  f.chakra -= techniqueCost(f, tech);
+  const cost = techniqueCost(f, tech);
+  f.chakra -= cost;
   if (tech.cooldown) f.cooldowns[tech.id] = tech.cooldown + 1;
-  s.log.push({ type: 'tech', uid: f.uid, techId: tech.id, targets: targets.map((t) => t.uid) });
+  s.log.push({ type: 'tech', uid: f.uid, techId: tech.id, targets: targets.map((t) => t.uid), cost });
   const hpPaid = hpCost(f, tech);
   if (hpPaid) {
     f.hp -= hpPaid;
@@ -658,7 +659,11 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     t.shield -= absorbed;
     s.log.push({ type: 'damage', uid: f.uid, target: t.uid, amount: amount - absorbed, crit: outcome === 'crit', elementMult: elementMult(tech, t, data), absorbed });
     applyHpLoss(s, t, amount - absorbed);
-    if (t.down && f.mods.onKillChakra) f.chakra = Math.min(f.maxChakra, f.chakra + f.mods.onKillChakra);
+    if (t.down && f.mods.onKillChakra) {
+      const amount = Math.min(f.maxChakra - f.chakra, f.mods.onKillChakra);
+      f.chakra += amount;
+      if (amount > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount });
+    }
     if (!t.down) tryEffect(s, f, t, tech, data, rng);
   }
 }
