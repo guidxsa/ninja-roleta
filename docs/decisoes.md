@@ -13,11 +13,11 @@ O que espera o usuário. Um item por decisão; o histórico e os números comple
 
 ## Design
 
-11. **Outras classes na Jornada** (pedido do usuário, futuro): Nara, Akimichi, Yamanaka, Aburame, Inuzuka, Uzumaki e Senju, com adaptações e lógicas novas de desbloqueio. Ordem sugerida pelo que já existe nos dados: Akimichi, Uzumaki, Inuzuka, Nara, Senju, Aburame, Yamanaka. Yamanaka, Nara e Aburame, que saíram do Roleta, podem entrar antes como suportes.
-12. **Sugestões para discutir**: separar a força do Hardcore da do Difícil na Jornada (hoje iguais; a diferença é só a recuperação); o bot da Jornada usar kit de chakra; limite por estágio no treino e no tratamento da loja, hoje contidos só pelo preço.
 5. **Pesos de treino como ativa do prodígio** (+3 de speed e +2 de taijutsu ao tirar): ficou de fora porque conflita com a relíquia Pesos de treino.
 6. **Retratos dos personagens**: desenho próprio em SVG para os cerca de 20 principais no lugar do molde `ninjaPortrait` (`prototype/art.ts`); arte opcional em `public/img/jornada/<id>.webp`. Combinar antes de começar.
 7. **Jornada, o que falta**: versão suporte do prodígio, mais easter eggs por combinação, sprites, nomes das paradas com sabor ninja.
 8. **Perfil**: fase 2 sem os cosméticos (títulos, skins da roleta); fase 3, contas opcionais só para sincronizar (Supabase ou Firebase, sem guardar senha, política de privacidade LGPD, rever o princípio "Sem backend").
 9. **Idioma do código e dos commits**: não definido. Na prática, commits em PT-BR sem acentos (skill `lancar-versao`).
 10. **Ferramenta (futuro)**: script que gera as tabelas numéricas dos docs a partir dos dados.
+11. **Outras classes na Jornada** (pedido do usuário, futuro): Nara, Akimichi, Yamanaka, Aburame, Inuzuka, Uzumaki e Senju, com adaptações e lógicas novas de desbloqueio. Ordem sugerida pelo que já existe nos dados: Akimichi, Uzumaki, Inuzuka, Nara, Senju, Aburame, Yamanaka. Yamanaka, Nara e Aburame, que saíram do Roleta, podem entrar antes como suportes.
+12. **Sugestões para discutir**: separar a força do Hardcore da do Difícil na Jornada (hoje iguais; a diferença é só a recuperação); o bot da Jornada usar kit de chakra; limite por estágio no treino e no tratamento da loja, hoje contidos só pelo preço.
