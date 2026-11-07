@@ -43,6 +43,7 @@ export const jornadaPtBR = {
     g3: 'Rastro do Som',
   } as Record<string, string>,
   stageLabel: (n: number, total: number, name: string) => `Estágio ${n}/${total} · ${name}`,
+  stageOf: (n: number, total: number) => `Estágio ${n}/${total}`,
 
   stopKinds: {
     story: 'História',
@@ -895,6 +896,18 @@ export const jornadaPtBR = {
     openPaths: 'Caminhos abertos',
     foeLine: (element: string, hp: number) => `${element ? `${element} · ` : ''}HP ${hp}`,
     hintTitle: 'Dica ninja',
+    runTitle: 'Sua run',
+    runRows: {
+      progress: 'Jornada',
+      wins: 'Lutas vencidas',
+      bestHit: 'Maior golpe',
+      alliesLost: 'Aliados caídos',
+      relics: 'Relíquias',
+      purchases: 'Compras na loja',
+      recovery: 'Por vitória',
+      cycle: 'Ciclo',
+    },
+    recoveryShort: (hp: number, chakra: number) => `+${hp} HP · +${chakra} chakra`,
     // Tiradas das regras (docs/jornada/combate.md e run.md); os números vêm do balance.
     hints: {
       elements: (adv: string, dis: string) => `Técnica com vantagem de elemento causa ×${adv} de dano; com desvantagem, ×${dis}. O ciclo: Fogo > Vento > Raio > Terra > Água > Fogo.`,

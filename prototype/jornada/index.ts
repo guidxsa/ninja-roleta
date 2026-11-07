@@ -612,12 +612,11 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
   // Colunas: build (HUD e loja) | trilha | o que vem (próxima parada, dica, seguir). No celular as colunas se desfazem.
   const root = show(
     h(`<div class="screen jtrail-screen">
-      <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span>${cycleChip(run)}<span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
+      ${stageTitle(run, 'data-choice="abandon"')}
       <div class="jcol jcol-l"><div data-hud>${hud(host, cur)}</div><section class="card jshop-dock" data-shop-dock hidden></section></div>
       ${trail(cur)}
       <div class="jcol jcol-r">${trailNext(cur, stop)}${hintCard(cur, cur.stopIndex)}${trailLegend()}
-        <div class="sticky-cta">${teamLine}<button class="btn primary big" data-choice="go">${icon(STOP_ICONS[stop.kind]!)} ${U.go(stopName(stop))}</button>
-        <button class="btn small jabandon" data-choice="abandon">${U.abandon}</button></div></div>
+        <div class="sticky-cta">${teamLine}<button class="btn primary big" data-choice="go">${icon(STOP_ICONS[stop.kind]!)} ${U.go(stopName(stop))}</button></div></div>
     </div>`),
   );
   const refreshHud = () => {
@@ -635,6 +634,35 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
     if (window.confirm(U.abandonConfirm)) return { ...cur, status: 'defeat' };
   }
   return runStop(host, cur, stop);
+}
+
+/**
+ * Título do estágio acima da trilha ou da carta: "Estágio n/t", o nome em destaque, o pedido da tela (no mapa)
+ * e, à direita, ciclo, dificuldade e o Abandonar discreto. `abandon` é o atributo do botão em cada tela.
+ */
+function stageTitle(run: JRun, abandon: string, prompt = ''): string {
+  return `<div class="jstage-title">
+    <div class="jstage-name"><small>${J.stageOf(run.stageIndex + 1, stageCount(run, data))}</small><h2>${stageName(run)}</h2>${prompt ? `<p class="jb-prompt">${prompt}</p>` : ''}</div>
+    <div class="jstage-meta">${cycleChip(run)}<span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span>
+      <button class="btn small jgiveup" ${abandon}>${icon('close')} ${U.abandon}</button></div>
+  </div>`;
+}
+
+/** Card "Sua run" da coluna do que vem (widescreen): só números que a run já guarda. */
+function runCard(run: JRun): string {
+  const R = U.runRows;
+  const rec = afterWinRecovery(run, data);
+  const rows: [string, string][] = [
+    [R.progress, `${Math.round(journeyProgress(run, data) * 100)}%`],
+    [R.wins, `${run.stats.wins}/${run.stats.fights}`],
+    [R.bestHit, String(run.stats.bestHit)],
+    [R.alliesLost, String(run.stats.alliesLost)],
+    [R.relics, String(run.relics.length)],
+    [R.purchases, String(run.shopPurchases ?? 0)],
+    [R.recovery, U.recoveryShort(rec.hp, rec.chakra)],
+  ];
+  if (run.cycle > 0) rows.push([R.cycle, String(run.cycle + 1)]);
+  return `<section class="card jnext jrun"><h3>${U.runTitle}</h3><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></section>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -657,15 +685,16 @@ function mapView(run: JRun, hudHtml: string): string {
   const choices = new Set(nodeChoices(run).map((n) => n.id));
   const done = new Set(run.path);
   const ahead = reachableFrom(map, [...choices]);
-  const rowH = 74;
-  const pad = 40;
-  const height = map.rows * rowH + pad;
-  // Posição vertical em % da carta: no celular a carta tem 74px por linha; no desktop ela estica até a coluna.
-  const pctY = (y: number) => ((y / height) * 100).toFixed(2);
+  // Posições em % do campo interno da carta (.jmap-field, com margem para o chefe, a rosa e o herói não tocarem a
+  // borda). O tremor de cada nó era em px numa linha de 74px; aqui vira fração da linha.
+  const rowPct = 100 / map.rows;
   const pos = (n: MapNode) => {
     const j = n.kind === 'boss' ? { x: 0, y: 0 } : nodeJitter(n.id);
-    return { x: ((n.col + 0.5) / map.cols) * 100 + j.x, y: (map.rows - 1 - n.row) * rowH + rowH / 2 + j.y };
+    // O chefe (retrato grande) sobe para a margem de cima, longe da linha de baixo.
+    const lift = n.kind === 'boss' ? 0.15 : 0.5;
+    return { x: ((n.col + 0.5) / map.cols) * 100 + j.x, y: (map.rows - 1 - n.row + lift + j.y / 74) * rowPct };
   };
+  const fmt = (v: number) => v.toFixed(2);
   const byId = new Map(map.nodes.map((n) => [n.id, n]));
   const last = run.path.at(-1) ?? null;
   const walked = new Set(run.path.slice(1).map((id, i) => `${run.path[i]}>${id}`));
@@ -677,7 +706,7 @@ function mapView(run: JRun, hudHtml: string): string {
         const b = pos(m);
         const midY = (a.y + b.y) / 2;
         const cls = walked.has(`${n.id}>${id}`) ? 'walked' : n.id === last && choices.has(id) ? 'open' : ahead.has(n.id) && ahead.has(id) ? 'ahead' : 'dead';
-        return `<path class="${cls}" d="M${a.x} ${a.y}C${a.x} ${midY} ${b.x} ${midY} ${b.x} ${b.y}"/>`;
+        return `<path class="${cls}" d="M${fmt(a.x)} ${fmt(a.y)}C${fmt(a.x)} ${fmt(midY)} ${fmt(b.x)} ${fmt(midY)} ${fmt(b.x)} ${fmt(b.y)}"/>`;
       }),
     )
     .join('');
@@ -687,32 +716,31 @@ function mapView(run: JRun, hudHtml: string): string {
       const st = done.has(n.id) ? 'done' : choices.has(n.id) ? 'choice' : ahead.has(n.id) ? 'ahead' : 'dead';
       const inner = n.kind === 'boss' ? fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm') : done.has(n.id) ? icon('check') : n.kind === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[n.kind]!);
       const p = pos(n);
-      return `<button class="jnode-map k-${n.kind} ${st}" style="left:${p.x}%;top:${pctY(p.y)}%" data-node="${n.id}" ${st === 'choice' ? '' : 'aria-disabled="true"'}${tip(nodeKindName(n.kind), nodeKindDesc(n.kind))}>${inner}</button>`;
+      return `<button class="jnode-map k-${n.kind} ${st}" style="left:${fmt(p.x)}%;top:${fmt(p.y)}%" data-node="${n.id}" ${st === 'choice' ? '' : 'aria-disabled="true"'}${tip(nodeKindName(n.kind), nodeKindDesc(n.kind))}>${inner}</button>`;
     })
     .join('');
   // O herói fica no último nó feito; antes da primeira escolha, embaixo do mapa.
-  const here = last ? pos(byId.get(last)!) : { x: 50, y: height - 22 };
+  const here = last ? pos(byId.get(last)!) : { x: 50, y: 100 };
   const legend = ['fight', 'elite', 'unknown', 'rest', 'treasure', 'boss']
     .map((k) => `<span class="jlegend-chip k-${k}"${tip(nodeKindName(k), nodeKindDesc(k))}>${k === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[k]!)}${nodeKindName(k)}</span>`)
     .join('');
-  // Colunas: build (HUD e loja) | carta | o que vem (chefe, caminhos, dica, legenda, escolher e abandonar).
-  // No celular as colunas se desfazem e o CSS refaz a ordem de sempre: HUD, escolher, abandonar, chefe, carta, legenda.
-  return `<div class="jcol jcol-l"><div data-hud>${hudHtml}</div><section class="card jshop-dock" data-shop-dock hidden></section></div>
+  // Colunas: build (HUD e loja) | título, carta e legenda | o que vem (chefe, caminhos, sua run, dica).
+  // No celular as colunas se desfazem e o CSS refaz a ordem: título, HUD, chefe, carta, legenda.
+  return `${stageTitle(run, 'data-abandon', M.choose)}
+    <div class="jcol jcol-l"><div data-hud>${hudHtml}</div><section class="card jshop-dock" data-shop-dock hidden></section></div>
     <div class="jcol jcol-r"><div class="jmap-boss">${fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm')}<span><small>${M.bossLabel}</small><b>${boss.map((id) => J.names[id] ?? id).join(' e ')}</b></span></div>
-      ${mapNext(run)}${hintCard(run, run.path.length)}
-      <div class="jlegend-chips" aria-label="${U.legend}">${legend}</div>
-      <p class="jb-prompt">${M.choose}</p><button class="btn small jabandon" data-abandon>${U.abandon}</button></div>
-    <div class="jtrail-map"><div class="jmap jscene scene-${stageScene(run, data)}" style="--rows:${map.rows}">
-      <svg class="jmap-lines" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>${nodes}
-      <span class="jmap-hero" style="left:${here.x}%;top:${pctY(here.y)}%" aria-hidden="true">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}</span>
-    </div></div>`;
+      ${mapNext(run)}${runCard(run)}${hintCard(run, run.path.length)}</div>
+    <div class="jtrail-map"><div class="jmap jscene scene-${stageScene(run, data)}" style="--rows:${map.rows}"><div class="jmap-field">
+      <svg class="jmap-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>${nodes}
+      <span class="jmap-hero" style="left:${fmt(here.x)}%;top:${fmt(here.y)}%" aria-hidden="true">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}</span>
+    </div></div></div>
+    <div class="jlegend-chips" aria-label="${U.legend}">${legend}</div>`;
 }
 
 async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
   let cur = run;
   const root = show(
     h(`<div class="screen jtrail-screen jmap-screen">
-      <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span>${cycleChip(run)}<span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
       ${mapView(cur, hud(host, cur))}
     </div>`),
   );

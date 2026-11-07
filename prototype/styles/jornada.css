@@ -219,7 +219,7 @@
 .jmap-boss small { font: 700 11px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .jmap-boss b { font: 400 21px/1.1 var(--font-display); color: var(--accent-2); letter-spacing: .02em; }
 /* Altura pela quantidade de linhas (--rows, vindo do mapa); nós e herói ficam em % dela. */
-.jmap { width: 100%; height: calc(var(--rows, 12) * 74px + 40px); }
+.jmap { width: 100%; height: calc(var(--rows, 12) * 74px + 104px); }
 .jmap-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .jmap-lines path { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke: color-mix(in srgb, var(--text) 50%, transparent); stroke-width: 2; stroke-dasharray: 1 7; }
 .jmap-lines path.dead { opacity: .22; }
@@ -269,21 +269,36 @@
 .jlegend-chip.k-boss { color: var(--accent-2); }
 /*
  * Colunas da trilha e do mapa: build (.jcol-l: HUD e loja) e o que vem (.jcol-r). No celular elas se desfazem
- * (display: contents) e cada peça volta a ser item da tela; no mapa, `order` refaz a sequência de sempre.
+ * (display: contents) e cada peça volta a ser item da tela, na ordem do HTML: título, HUD, (chefe,) trilha ou carta, legenda.
  */
 .jcol { display: contents; }
 .jnext, .jhint, .jshop-dock { display: none; }
-.jmap-screen [data-hud] { order: 1; }
-.jmap-screen .jb-prompt { order: 2; }
-.jmap-screen .jabandon { order: 3; }
-.jmap-screen .jmap-boss { order: 4; }
-.jmap-screen .jtrail-map { order: 5; }
-.jmap-screen .jlegend-chips { order: 6; }
+
+/* Título do estágio: "Estágio n/t", o nome em destaque e, à direita, ciclo, dificuldade e o Abandonar discreto. */
+.jstage-title { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; }
+.jstage-name { min-width: 0; }
+.jstage-name small { display: block; font: 700 12px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.jstage-name h2 { margin: 3px 0 0; font: 400 clamp(22px, 3.2vh, 34px)/1.1 var(--font-display); letter-spacing: .02em; color: var(--text); text-shadow: var(--title-shadow); }
+.jstage-name .jb-prompt { margin: 4px 0 0; text-align: left; }
+.jstage-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.jstage-meta .jgiveup { min-height: 0; padding: 4px 6px; border-color: transparent; background: none; color: var(--muted); font-size: 12px; }
+.jstage-meta .jgiveup:hover { color: var(--accent-2); }
+.jstage-meta .jgiveup .ico { width: 14px; height: 14px; }
+
+/* Carta: o campo interno guarda margem para o chefe, a rosa dos ventos e o herói não tocarem a borda. */
+.jmap { position: relative; }
+.jmap-field { position: absolute; inset: 66px 30px 46px; }
+.jmap-screen > .jlegend-chips { justify-content: center; }
+
+/* Card "Sua run" (widescreen). */
+.jrun dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0; }
+.jrun dt { color: var(--muted); font-size: 13.5px; }
+.jrun dd { margin: 0; text-align: right; font: 700 14px/1.4 var(--font-hud); letter-spacing: .03em; }
 
 .jend.win h2 { color: var(--gold-2); }
 .jend.lose h2 { color: var(--bad); }
 
-/* Notebook (≥ 900): a Jornada usa a tela larga; build e o que vem empilhados ao lado da trilha ou do mapa. */
+/* Notebook (≥ 900): a Jornada usa a tela larga; título acima da trilha ou da carta, build e o que vem empilhados ao lado. */
 @media (min-width: 900px) {
   body.mode-jornada main, body.mode-jornada footer, body.mode-jornada .top { max-width: var(--shell-max); }
   /*
@@ -298,23 +313,25 @@
   body.mode-jornada .jstart { max-width: 620px; margin: 0 auto; width: 100%; }
   .jtrail-screen {
     display: grid; grid-template-columns: minmax(320px, 360px) minmax(0, 1fr); column-gap: 20px; row-gap: 10px; align-items: start;
-    grid-template-areas: 'head head' 'left trail' 'right trail';
+    grid-template-areas: 'left title' 'left trail' 'right trail';
     grid-template-rows: auto auto minmax(0, 1fr);
     /* Só a trilha (ou a carta) e as colunas rolam por dentro; abaixo de 420px de altura, a página rola. */
     flex: 1 1 0; min-height: 420px;
   }
-  .jtrail-screen > .jb-head { grid-area: head; }
+  .jtrail-screen.jmap-screen { grid-template-areas: 'left title' 'left trail' 'right trail' 'right legend'; grid-template-rows: auto auto minmax(0, 1fr) auto; }
+  .jtrail-screen > .jstage-title { grid-area: title; }
+  .jtrail-screen > .jlegend-chips { grid-area: legend; }
   .jtrail-screen .jcol { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
   .jtrail-screen .jcol-l { grid-area: left; }
   .jtrail-screen .jcol-r { grid-area: right; align-self: stretch; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
-  .jtrail-screen .jcol > * { order: 0; flex: none; }
+  .jtrail-screen .jcol > * { flex: none; }
   .jtrail-screen > .jtrail-scene, .jtrail-screen > .jtrail-map {
     grid-area: trail; align-self: stretch; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
   }
   .jtrail-screen .sticky-cta { position: static; background: none; padding: 0; }
-  .jtrail-screen .jabandon { align-self: center; }
   .jstop { padding: clamp(3px, .8vh, 8px) 10px; }
-  .jtrail-screen > .jtrail-map > .jmap { height: max(100%, calc(var(--rows, 12) * 52px + 40px)); }
+  /* A carta preenche a área e só rola abaixo de 48px por linha. */
+  .jtrail-screen > .jtrail-map > .jmap { height: max(100%, calc(var(--rows, 12) * 48px + 104px)); }
   .jstop-txt b { font-size: 16px; }
   .jrgrid { grid-template-columns: repeat(auto-fill, 60px); }
   .jrboss-row { gap: 16px; }
@@ -325,24 +342,28 @@
 }
 
 /*
- * Widescreen (≥ 1280): três colunas. Build à esquerda (HUD e a loja aberta), trilha ou carta ao centro e,
- * à direita, o que vem: próxima parada (ou caminhos abertos), dica e os botões de seguir e abandonar no pé.
+ * Widescreen (≥ 1280): três colunas, que sobem até o alto. Build à esquerda (HUD e a loja aberta); no centro, o
+ * título do estágio, a trilha ou a carta e a legenda; à direita, o que vem (próxima parada ou caminhos, sua run, dica).
  */
 @media (min-width: 1280px) {
   .jtrail-screen {
     grid-template-columns: minmax(320px, 380px) minmax(0, 1fr) minmax(280px, 340px); column-gap: 24px;
-    grid-template-areas: 'head head head' 'left trail right';
+    grid-template-areas: 'left title right' 'left trail right';
     grid-template-rows: auto minmax(0, 1fr);
   }
+  .jtrail-screen.jmap-screen { grid-template-areas: 'left title right' 'left trail right' 'left legend right'; grid-template-rows: auto minmax(0, 1fr) auto; }
   .jtrail-screen .jcol-l { align-self: stretch; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
   .jhud .jhud-shop { display: none; }
   .jnext, .jhint { display: block; }
   .jshop-dock:not([hidden]) { display: block; }
   /* Na trilha a lista da próxima parada já diz o tipo de cada uma: a legenda sai. */
   .jtrail-screen:not(.jmap-screen) .jlegend { display: none; }
-  .jtrail-screen .sticky-cta, .jmap-screen .jb-prompt { margin-top: auto; }
-  .jmap-screen .jlegend-chips { flex-direction: column; align-items: stretch; }
-  .jmap-screen .jlegend-chips .jlegend-chip { padding: 7px 10px; font-size: 13px; }
+  .jtrail-screen .sticky-cta { margin-top: auto; }
+}
+
+/* Widescreen bem baixo: a dica do mapa sai para o card da run caber. */
+@media (min-width: 1280px) and (max-height: 760px) {
+  .jmap-screen .jhint { display: none; }
 }
 
 /* Widescreen baixo (notebook de 768px): a lista das paradas seguintes sai para seguir e abandonar caberem. */

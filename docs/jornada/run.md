@@ -54,7 +54,7 @@ Recompensas interativas no lugar da roleta visual. Ganhar dá o prêmio do event
 
 - A run **fica salva no aparelho** (`localStorage`, `jornada_run_v1`) a cada parada: uma Jornada dura mais que uma sessão. É a exceção ao "F5 reseta", só neste modo.
 - Uma luta em andamento não é salva: o F5, ou o botão do Portão da Vila (torii, no cabeçalho, que volta ao menu sem recarregar), leva de volta ao começo da parada. O botão pede confirmação; ao continuar a Jornada, a run segue de onde parou.
-- **Abandonar a jornada** acaba a run em derrota (entra no histórico; a Vontade do Fogo não é usada): pelo botão Abandonar da trilha e do mapa ou, desde a v0.57.2, pelo **Desistir** do turno do protagonista, no meio da luta. Os dois pedem confirmação.
+- **Abandonar a jornada** acaba a run em derrota (entra no histórico; a Vontade do Fogo não é usada): pelo Abandonar do título do estágio, na trilha e no mapa, ou, desde a v0.57.2, pelo **Desistir** do turno do protagonista, no meio da luta. Os dois pedem confirmação.
 - Começar uma nova jornada apaga a salva (a que já andou conta antes para o recorde do modo infinito); terminar também, com uma exceção: o **Caminho Ninja vencido** já salva o próximo ciclo, então fechar o app ou voltar ao início na tela de vitória não perde o modo infinito (o Continuar segue de lá).
 
 ## Loja
