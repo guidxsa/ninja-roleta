@@ -34,7 +34,7 @@ export type GuruOutcome = 'charlatan' | 'premium';
 export type PremiumId = 'rasengan' | 'medical' | 'focus' | 'substitution' | 'shadowClones' | 'glimmer';
 
 /** `relic`: só no Roleta enxuto (v0.46.0); a run resolve a fatia com uma relíquia da raridade. */
-export type RewardId = 'stages' | 'newTechnique' | 'xp' | 'item' | 'resistance' | 'critBonus' | 'relic';
+export type RewardId = 'jackpot' | 'stages' | 'newTechnique' | 'xp' | 'item' | 'resistance' | 'critBonus' | 'relic';
 
 export interface Weighted<T> {
   id: T;

@@ -47,8 +47,8 @@ O perfil é um só para os dois modos. A aba Conquistas mostra as do Roleta (Mar
 | Sem medo do escuro | Vencer no Difícil (ou no Hardcore) |
 | Lenda | Vencer no Hardcore |
 | Monstro interno | Vencer como jinchuuriki |
-| Uma por origem (11) | Vencer com cada origem |
-| Mestre dos clãs | Vencer com as 11 origens (mostra o progresso) |
+| Uma por origem (8) | Vencer com cada origem que sai no Roleta; Yamanaka, Nara e Aburame viraram clássicas (v0.52.0) |
+| Mestre dos clãs | Vencer com as 8 origens (mostra o progresso) |
 
 ### Sorte e azar
 
@@ -82,12 +82,12 @@ O perfil é um só para os dois modos. A aba Conquistas mostra as do Roleta (Mar
 |---|---|
 | Uzumaki Naruto | Sortear Uzumaki + jinchuuriki + vento |
 | Dattebayo! | Vencer a campanha com essa origem |
-| Que problemático | Perder no jokenpô sendo Nara |
+| Que problemático | Perder no jokenpô sendo Nara (clássica desde a v0.52.0) |
 | Juventude explosiva | Abrir o 4º portão como prodígio |
 | Gai-sensei aprovaria | Vencer o Orochimaru como prodígio, abrindo um portão na luta |
 | Borboleta | Vencer uma luta como Akimichi depois da pílula vermelha |
 | O destino não está escrito | Vencer uma luta como Hyuuga com 5% do HP ou menos |
-| Bom de ouvido | Como Yamanaka, fazer o vilão se ferir 3 vezes na mesma luta |
+| Bom de ouvido | Como Yamanaka, fazer o vilão se ferir 3 vezes na mesma luta (clássica desde a v0.52.0) |
 | Fome de insetos | Derrubar um vilão com o Devorar (último dano da luta) |
 | Ichiraku de novo | Evento do ramen 3 vezes na mesma run |
 | Ero-sennin | Sapo no nível 3 |

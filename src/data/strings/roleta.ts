@@ -93,6 +93,15 @@ export const roletaPtBR = {
     chestTake: (name: string) => `Pegar: ${name}`,
     relicGot: (name: string) => `Relíquia: ${name}`,
     relicNone: 'Não sobrou relíquia para sortear: vira XP.',
+    // Fatias da recompensa, com o valor da raridade (v0.52.0).
+    rewardSlices: {
+      status: (n: number) => `Status +${n}`,
+      xp: (n: number) => `XP +${n}`,
+      items: (n: number) => `Itens ×${n}`,
+      relic: (tier: string) => `Relíquia ${tier}`,
+      statusGain: (hp: number, chakra: number) => `Na ficha: +${hp} de HP máximo e +${chakra} de chakra máximo.`,
+      jackpotText: (healed: number) => `Jackpot! Relíquia rara${healed ? ` e +${healed} de HP` : ''}.`,
+    },
     nextCycle: (n: number) => `Seguir para o ciclo ${n}`,
     nextCycleTip: (pct: number) => `Modo infinito: de volta aos genin com tudo o que você tem (nível, status, relíquias e bolsa). Os vilões ficam ${pct}% mais fortes que no 1º ciclo.`,
     cycleStart: (pct: number) => `De volta aos genin, com vilões sorteados de novo. Eles estão ${pct}% mais fortes que no 1º ciclo.`,

@@ -5,7 +5,6 @@ import { canLevelUp, equipTrainingWeights, gainXp, recoverAfterWin, trainingWeig
 import {
   applyAkatsuki,
   applyItem,
-  applyReward,
   applySimpleEvent,
   applySummonEncounter,
   applyTraining,
@@ -43,6 +42,8 @@ import {
   finishRoletaFight,
   gainRoletaRelic,
   newRoletaRun,
+  applyJackpot,
+  applyRoletaReward,
   rewardRelic,
   villainFor,
 } from '../core/roleta/run';
@@ -129,7 +130,8 @@ export function autoRoletaReward(player: PlayerState, tier: number, rng: Rng, da
   else if (id === 'relic') {
     const relic = rewardRelic(p, tier, data, rng);
     p = relic ? autoWeights(gainRoletaRelic(p, relic, data), data) : gainXp(p, data.base.balance.rewards.xp[tier - 1]!, data.base);
-  } else p = applyReward(p, id, tier, rng, data.base).player;
+  } else if (id === 'jackpot') p = applyJackpot(p, rng, data).player;
+  else p = applyRoletaReward(p, id as 'stages' | 'xp', tier, rng, data).at(-1)!.player;
   return roletaLevelUps(p, data);
 }
 

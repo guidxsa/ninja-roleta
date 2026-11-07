@@ -25,7 +25,11 @@ import {
   cycleMult,
   drawVillain,
   finishRoletaFight,
+  applyJackpot,
+  applyRoletaReward,
   gainRoletaRelic,
+  rewardTierFor,
+  rewardXp,
   newRoletaRun,
   rewardRelic,
   villainFor,
@@ -55,7 +59,6 @@ import {
   applyGuru,
   applyItem,
   applyPremium,
-  applyReward,
   applySimpleEvent,
   applySummonEncounter,
   applyTraining,
@@ -71,7 +74,6 @@ import {
   rollItem,
   rollPremiumChoices,
   rollReward,
-  rollRewardChoices,
   rollSummonAnimal,
   rollTraining,
   rollWeighted,
@@ -114,6 +116,7 @@ import {
 } from '../src/state/profile';
 import { relicCard, relicCollection, relicName, relicSlot, relicTier } from './jornada/relics';
 import { relicIcon } from './jornada/relicIcons';
+import { lineages as allLineages } from '../src/data/lineages';
 import { askPlayerName } from './playerName';
 import {
   isHardcoreUnlocked,
@@ -790,7 +793,7 @@ function stageTrail(run: RRun): string {
       const state = i < done ? 'done' : i === done ? 'current' : 'todo';
       const id = i < done ? run.used[i] : i === done ? run.villainId : null;
       const faces = id ? `<span class="trail-faces">${foePortrait(id, 'sm')}</span>` : `<span class="trail-ico">${icon(cat === 'boss' ? 'intent' : 'swords')}</span>`;
-      const tier = rdata.r.run.rewardTier[cat] ?? 0;
+      const tier = rewardTierFor(cat, run.cycle, rdata);
       const sub = cat === 'boss' ? RR.chestTitle : S.ui.rewardTier(S.rewardTiers[tier] ?? '');
       return `<li class="${state}"><i><span>${i < done ? icon('check') : i + 1}</span></i>${faces}<div><b>${RR.categories[cat]}${id ? ` · ${villainName(id)}` : ''}</b><small>${sub}</small></div></li>`;
     })
@@ -1695,25 +1698,16 @@ async function rewardScreen(title: string, tier: number): Promise<void> {
     hud.firstElementChild?.classList.add('pulse');
   };
   hud.innerHTML = playerPanel(c.player, c.mods);
-  const label = (id: RewardId) => S.rewards[id]!;
+  // A fatia mostra o que vale nesta raridade.
+  const RW = S.roleta.run.rewardSlices;
+  const label = (id: RewardId) =>
+    id === 'stages' ? RW.status(data.balance.rewards.stages[tier - 1]!)
+    : id === 'xp' ? RW.xp(rewardXp(c.player, tier, rdata))
+    : id === 'item' ? RW.items(rewardItemSpins(tier, data))
+    : id === 'relic' ? RW.relic(S.rewardTiers[tier] ?? '')
+    : S.rewards[id]!;
 
-  let reward: RewardId;
-  // Recompensa direta: a lendária também é um giro só (só os valores crescem).
-  if (tier >= 99) {
-    const choices = rollRewardChoices(c.player, rng, data);
-    for (let i = 0; i < choices.length; i++) {
-      const r = choices[i]!;
-      await bigWheel(slot, `${S.roulettes.reward} · ${S.ui.spinOf(i + 1, choices.length)}`, rollSlices(r, label), r.index);
-      await sleep(settings.instant ? 0 : 300);
-    }
-    const box = h(`<div class="wheel-box"><h3>${S.ui.chooseReward}</h3><div class="act-grid">${choices
-      .map((r, i) => `<button class="btn" data-choice="${i}">${label(r.value)}</button>`)
-      .join('')}</div></div>`);
-    slot.replaceChildren(box);
-    reward = choices[Number(await choose(box))]!.value;
-  } else {
-    reward = (await spinRoll(slot, S.roulettes.reward, () => rollReward(c.player, rng, data), label)).value;
-  }
+  const reward = (await spinRoll(slot, S.roulettes.reward, () => rollReward(c.player, rng, data), label)).value;
 
   const steps: Step[] = [];
   if (reward === 'item') {
@@ -1735,15 +1729,29 @@ async function rewardScreen(title: string, tier: number): Promise<void> {
       results.insertAdjacentHTML('beforeend', relicCard(id, '', 'reveal', 'roleta'));
       mood('good');
     } else {
-      c.player = gainXp(c.player, data.balance.rewards.xp[tier - 1]!, data);
+      c.player = gainXp(c.player, rewardXp(c.player, tier, rdata), data);
       results.insertAdjacentHTML('beforeend', `<div class="effect pop">${S.roleta.run.relicNone}</div>`);
     }
     refreshHud();
+  } else if (reward === 'jackpot') {
+    const out = applyJackpot(c.player, rng, rdata);
+    c.player = out.player;
+    if (out.relic) {
+      discoverRoletaRelics([out.relic]);
+      results.insertAdjacentHTML('beforeend', relicCard(out.relic, '', 'reveal', 'roleta'));
+    }
+    results.insertAdjacentHTML('beforeend', `<div class="effect pop">${RW.jackpotText(out.healed)}</div>`);
+    mood('good');
+    refreshHud();
   } else {
-    const step = applyReward(c.player, reward, tier, rng, data);
-    applyStep(step);
-    steps.push(step);
-    showEffect(results, step.effect);
+    const before = c.player;
+    for (const step of applyRoletaReward(c.player, reward as 'stages' | 'xp', tier, rng, rdata)) {
+      applyStep(step);
+      steps.push(step);
+      showEffect(results, step.effect);
+    }
+    // O nome da fatia não diz quanto vale um estágio: aqui vai o ganho de verdade.
+    if (reward === 'stages') results.insertAdjacentHTML('beforeend', `<div class="effect pop">${RW.statusGain(c.player.maxHp - before.maxHp, c.player.maxChakra - before.maxChakra)}</div>`);
     refreshHud();
   }
   const cta = root.querySelector<HTMLElement>('#cta')!;
@@ -2053,7 +2061,9 @@ function bingoTab(): string {
 function originsTab(): string {
   const P = S.profile;
   const rec = originRecords(loadRuns(storage));
-  return `<p class="muted small">${P.originsIntro}</p><ul class="history">${data.lineages
+  // Linhagem fora do sorteio só aparece para quem jogou com ela.
+  const lineages = allLineages.filter((l) => data.lineages.some((x) => x.id === l.id) || rec[l.id]);
+  return `<p class="muted small">${P.originsIntro}</p><ul class="history">${lineages
     .map((l) => {
       const r = rec[l.id];
       const name = l.id === 'common' ? S.origin.common : S.lineages[l.id] ?? l.id;

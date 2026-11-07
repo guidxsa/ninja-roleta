@@ -75,13 +75,15 @@ Fixas pela origem e **sobem sozinhas com o nível**: dano base = base + por nív
 
 Uma passiva e uma ativa simples por linhagem. A ativa é grátis (uma por turno) e dura 3 rodadas contando a da ativação, quando tem duração.
 
+Yamanaka, Nara e Aburame saíram do sorteio na v0.52.0: funcionam melhor como suporte e ficam guardados para a Jornada (`retiredLineages`). Os kits continuam na tabela e nos dados.
+
 | Linhagem | Passiva | Ativa (usos por luta) |
 |---|---|---|
 | Comum | Determinação: +25% de XP; +1 no maior ataque por nível | Esforço (1): +3 nos três ataques |
-| Nara | Gênio: vê a próxima ação do vilão | Imitação de Sombra (2): 80% de chance de atordoar |
+| Nara (guardado) | Gênio: vê a próxima ação do vilão | Imitação de Sombra (2): 80% de chance de atordoar |
 | Akimichi | Corpo pesado: +15% de dano de taijutsu | Expansão (1): taijutsu ×1,3 e +3 de resistência física |
-| Yamanaka | Leitura mental: o vilão tem −10% de acerto | Transferência de Mente (1): 75% de chance; o vilão perde a vez e se fere com a técnica mais forte dele (não pega quem é imune a genjutsu) |
-| Aburame | Colônia: o Enxame pode envenenar | Praga (1): envenena; o veneno dói em dobro e o Enxame sempre envenena |
+| Yamanaka (guardado) | Leitura mental: o vilão tem −10% de acerto | Transferência de Mente (1): 75% de chance; o vilão perde a vez e se fere com a técnica mais forte dele (não pega quem é imune a genjutsu) |
+| Aburame (guardado) | Colônia: o Enxame pode envenenar | Praga (1): envenena; o veneno dói em dobro e o Enxame sempre envenena |
 | Inuzuka | Dupla: 25% de chance de o cão bater junto (40% do dano) | Fera de quatro patas (1): +3 de speed e Dupla com 60% |
 | Prodígio | Juventude: +5% de crítico; sem ninjutsu e genjutsu | Portões (1): taijutsu ×1,3; custa 20% do HP máximo |
 | Uchiha | Olhos treinados: imune a Medo | Sharingan (1): +15% de acerto, +10% de esquiva e +3 nos ataques |

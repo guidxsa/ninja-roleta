@@ -1,5 +1,6 @@
 import { lineageKey, type AchievementContext, type AchievementDef } from '../core/achievements';
 import type { FightSummary } from '../core/runStats';
+import { roletaBalance } from './roleta/balance';
 import { roletaCategories } from './roleta/villains';
 
 /** Linhagens com conquista própria de vitória (ids dos dados; o comum é `common`). */
@@ -35,13 +36,18 @@ const examFights = (c: AchievementContext) => fights(c).filter((x) => x.exam);
 const closeWin = (x: FightSummary) => x.won && x.hpPctEnd > 0 && x.hpPctEnd <= CLOSE_CALL_HP;
 const isNaruto = (c: AchievementContext) => is(c, 'uzumaki') && c.origin.jinchuuriki && c.origin.elements.includes('wind');
 
+const retired = (lineage: string) => roletaBalance.retiredLineages.includes(lineage);
+
+/** Linhagem fora do sorteio (v0.52.0): a conquista vira clássica, só aparece para quem já tem. */
 const originWins: AchievementDef[] = ORIGIN_ACHIEVEMENT_LINEAGES.map((lineage) => ({
   id: winAchievementId(lineage),
+  ...(retired(lineage) ? { legacy: true } : {}),
   category: 'milestone',
   check: (c) => won(c) && is(c, lineage),
 }));
 
-const originIds = ORIGIN_ACHIEVEMENT_LINEAGES.map(winAchievementId);
+/** Mestre dos clãs pede as linhagens que ainda saem na roleta. */
+const originIds = ORIGIN_ACHIEVEMENT_LINEAGES.filter((lineage) => !retired(lineage)).map(winAchievementId);
 
 /** Ordem da lista = ordem na tela (e na checagem). */
 export const achievements: AchievementDef[] = [
@@ -95,7 +101,7 @@ export const achievements: AchievementDef[] = [
   // Segredos (easter eggs)
   { id: 'narutoUzumaki', category: 'secret', hidden: true, check: isNaruto },
   { id: 'dattebayo', category: 'secret', hidden: true, check: (c) => won(c) && isNaruto(c) },
-  { id: 'troublesome', category: 'secret', hidden: true, check: (c) => is(c, 'nara') && c.stats.jokenpo.loss >= 1 },
+  { id: 'troublesome', legacy: true, category: 'secret', hidden: true, check: (c) => is(c, 'nara') && c.stats.jokenpo.loss >= 1 },
   { id: 'youth', legacy: true, category: 'secret', hidden: true, check: (c) => is(c, 'taijutsuProdigy') && anyFight(c, (x) => x.maxGate >= 4) },
   {
     id: 'gaiApproves',
@@ -105,7 +111,7 @@ export const achievements: AchievementDef[] = [
   },
   { id: 'butterfly', legacy: true, category: 'secret', hidden: true, check: (c) => is(c, 'akimichi') && anyFight(c, (x) => x.won && x.redPill) },
   { id: 'fateDefied', category: 'secret', hidden: true, check: (c) => is(c, 'hyuuga') && anyFight(c, closeWin) },
-  { id: 'mindGames', category: 'secret', hidden: true, check: (c) => is(c, 'yamanaka') && anyFight(c, (x) => x.villainSelfHits >= 3) },
+  { id: 'mindGames', legacy: true, category: 'secret', hidden: true, check: (c) => is(c, 'yamanaka') && anyFight(c, (x) => x.villainSelfHits >= 3) },
   { id: 'hungryBugs', legacy: true, category: 'secret', hidden: true, check: (c) => is(c, 'aburame') && anyFight(c, (x) => x.devourFinish) },
   { id: 'ichiraku', category: 'secret', hidden: true, check: (c) => (c.stats.preEvents.ramen ?? 0) >= 3 },
   { id: 'pervySage', category: 'secret', hidden: true, check: (c) => c.summon?.animal === 'toad' && c.summon.level >= 3 },

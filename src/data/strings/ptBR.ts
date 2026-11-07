@@ -463,6 +463,7 @@ export const ptBR = {
     critBonus: 'Chance de crítico',
     item: 'Roleta de itens',
     relic: 'Relíquia',
+    jackpot: 'Jackpot',
   } as Record<string, string>,
   rewardTiers: ['', 'comum', 'rara', 'lendária'],
   difficulty: {

@@ -27,12 +27,20 @@ import {
   relicPool,
   rewardRelic,
   villainFor,
+  applyJackpot,
+  applyRoletaReward,
+  rewardTierFor,
+  rewardXp,
 } from '../src/core/roleta/run';
 import { relicInMode } from '../src/core/jornada/relics';
 import { relics as jornadaRelics } from '../src/data/jornada/relics';
 import { jornadaData } from '../src/data/jornada';
 import { jornadaPtBR } from '../src/data/strings/jornada';
 import { RELIC_ICONS } from '../prototype/jornada/relicIcons';
+import { xpToNextLevel } from '../src/core/player';
+import { rollOrigin } from '../src/core/origin';
+import { achievements, winAchievementId } from '../src/data/achievements';
+import { gameData } from '../src/data/index';
 import { createRng } from '../src/core/rng';
 import type { Origin, VillainDef } from '../src/core/types';
 import { roletaData as data } from '../src/data/roleta/index';
@@ -327,5 +335,85 @@ describe('mais vilões no sorteio (v0.47.0)', () => {
     const dodged = playRoletaRound(smoke, 'guard', data, fixed(0.5));
     expect(dodged.log.filter((e) => e.type === 'attack' && e.side === 'villain' && e.outcome === 'miss').length).toBe(1);
     expect(dmg(dodged).length).toBe(0);
+  });
+});
+
+describe('recompensa forte e escalando (v0.52.0)', () => {
+  const player = () => createRoletaPlayer({ lineageId: 'common', elements: ['fire'], jinchuuriki: false }, data);
+
+  it('as fatias são Status, Relíquia, XP, Itens e Jackpot', () => {
+    expect(data.base.rewards.map((r) => r.id).sort()).toEqual(['item', 'jackpot', 'relic', 'stages', 'xp']);
+  });
+
+  it('a raridade sobe com o ciclo, até lendária; o chefe segue com o baú', () => {
+    expect(rewardTierFor('genin', 0, data)).toBe(1);
+    expect(rewardTierFor('genin', 1, data)).toBe(2);
+    expect(rewardTierFor('genin', 2, data)).toBe(3);
+    expect(rewardTierFor('genin', 9, data)).toBe(3);
+    expect(rewardTierFor('jounin', 0, data)).toBe(2);
+    expect(rewardTierFor('jounin', 1, data)).toBe(3);
+    expect(rewardTierFor('boss', 5, data)).toBe(0);
+  });
+
+  it('a lendária sai de verdade: relíquia rara na fatia', () => {
+    const id = rewardRelic(player(), 3, data, fixed(0.1))!;
+    expect(data.relics.find((r) => r.id === id)!.tier).toBe('rare');
+  });
+
+  it('Status junta estágios, resistência e crítico', () => {
+    const p = player();
+    const steps = applyRoletaReward(p, 'stages', 2, fixed(0.1), data);
+    const after = steps.at(-1)!.player;
+    expect(steps.map((s) => s.effect.kind)).toEqual(['stages', 'resistance', 'critBonus']);
+    expect(after.critBonus).toBeCloseTo(p.critBonus + data.r.rewards.critBonus[1]!);
+    expect(after.maxHp).toBeGreaterThan(p.maxHp);
+  });
+
+  it('XP acompanha o custo do nível', () => {
+    const low = player();
+    const high = { ...low, level: 8 };
+    expect(rewardXp(low, 1, data)).toBe(Math.floor(xpToNextLevel(1, data.base) * 0.5));
+    expect(rewardXp(high, 1, data)).toBe(Math.floor(xpToNextLevel(8, data.base) * 0.5));
+    expect(rewardXp(high, 1, data)).toBeGreaterThan(rewardXp(low, 1, data));
+    expect(rewardXp(low, 3, data)).toBe(Math.floor(xpToNextLevel(1, data.base) * 1.5));
+  });
+
+  it('Jackpot dá relíquia rara e cura; sem relíquia, XP', () => {
+    const hurt = { ...player(), hp: 10 };
+    const out = applyJackpot(hurt, fixed(0.1), data);
+    expect(data.relics.find((r) => r.id === out.relic)!.tier).toBe('rare');
+    expect(out.player.relics).toContain(out.relic);
+    expect(out.healed).toBe(Math.floor(hurt.maxHp * data.r.rewards.jackpotHealPct));
+    const rares = data.relics.filter((r) => r.tier === 'rare').map((r) => r.id);
+    const none = applyJackpot({ ...hurt, relics: rares }, fixed(0.1), data);
+    expect(none.relic).toBeNull();
+    expect(none.player.xp + none.player.level).toBeGreaterThan(hurt.xp + hurt.level);
+  });
+
+  it('o clássico não muda: a recompensa dele segue com os números antigos', () => {
+    expect(gameData.rewards.map((r) => r.id)).not.toContain('jackpot');
+    expect(gameData.balance.rewards.critBonus).toEqual([0.02, 0.04, 0.06]);
+  });
+});
+
+describe('linhagens fora do Roleta (v0.52.0)', () => {
+  it('Yamanaka, Nara e Aburame saem do sorteio, mas ficam guardadas', () => {
+    const ids = data.base.lineages.map((l) => l.id);
+    for (const id of ['yamanaka', 'nara', 'aburame']) {
+      expect(ids, id).not.toContain(id);
+      expect(gameData.lineages.some((l) => l.id === id), id).toBe(true);
+      expect(data.kits[id], id).toBeTruthy();
+    }
+    expect(ids).toHaveLength(8);
+    const rng = createRng(4);
+    for (let i = 0; i < 300; i++) expect(['yamanaka', 'nara', 'aburame']).not.toContain(rollOrigin(rng, data.base).origin.lineageId);
+  });
+
+  it('as conquistas delas viram clássicas; Mestre dos clãs pede só as que saem', () => {
+    for (const id of ['win_yamanaka', 'win_nara', 'win_aburame', 'mindGames']) expect(achievements.find((a) => a.id === id)!.legacy, id).toBe(true);
+    const master = achievements.find((a) => a.id === 'clanMaster')!;
+    const open = data.base.lineages.map((l) => winAchievementId(l.id));
+    expect(master.progress!(new Set(open))).toEqual([open.length, open.length]);
+    expect(open).toHaveLength(8);
   });
 });

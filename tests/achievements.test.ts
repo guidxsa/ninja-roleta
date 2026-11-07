@@ -159,7 +159,8 @@ describe('conquistas', () => {
     expect(got).toContain(winAchievementId('hyuuga'));
     expect(got).toContain('clanMaster');
     const clan = achievements.find((a) => a.id === 'clanMaster')!;
-    expect(clan.progress!(new Set(others))).toEqual([10, 11]);
+    // As 8 que saem no Roleta (Yamanaka, Nara e Aburame viraram clássicas na v0.52.0).
+    expect(clan.progress!(new Set(others))).toEqual([7, 8]);
   });
 
   it('o exame saiu do Roleta (v0.46.0): Chunin e Reprovado, mas vivo viram clássicas e não saem mais', () => {

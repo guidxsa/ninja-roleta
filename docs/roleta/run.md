@@ -60,18 +60,17 @@ Desde a v0.47.0, o sorteio também traz fichas só do Roleta (`roletaExtraVillai
 
 ## Recompensa
 
-Um giro depois de cada vitória (o chefe abre o baú no lugar). A raridade vem da categoria.
+Um giro depois de cada vitória (o chefe abre o baú no lugar). A raridade vem da categoria (genin e chunin comum, jounin rara) e **sobe 1 a cada ciclo** do modo infinito, até lendária. A fatia mostra o valor da raridade. Refeita na v0.52.0.
 
 | Fatia | Peso | Comum | Rara | Lendária |
 |---|---|---|---|---|
-| Estágio de status | 22 | +1 | +2 | +3 |
-| XP | 20 | +60 | +120 | +200 |
+| Status | 35 | +1 estágio, +2 de resistência, +1% de crítico | +2, +4, +2% | +3, +6, +3% |
+| Relíquia | 22 | comum | incomum | rara |
+| XP | 20 | 50% do custo do nível atual | 100% | 150% |
 | Roleta de itens | 18 | 1 giro | 2 giros | 3 giros |
-| Relíquia | 15 | comum | incomum | rara |
-| Resistência | 13 | +2 | +4 | +6 |
-| Crítico | 12 | +2% | +4% | +6% |
+| Jackpot | 5 | relíquia rara e cura de 25% do HP, em qualquer raridade | | |
 
-Sem relíquia para sortear, a fatia Relíquia vira o XP da raridade.
+A resistência é distribuída ponto a ponto entre física e mental. Sem relíquia para sortear, a fatia Relíquia vira o XP da raridade.
 
 ## Itens
 

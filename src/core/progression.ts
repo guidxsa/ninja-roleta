@@ -249,7 +249,7 @@ export function rollItem(player: PlayerState, rng: Rng, data: GameData): Roll<It
 }
 
 /** Soma XP e devolve o efeito com o valor efetivo (Determinação incluída). */
-function xpStep(player: PlayerState, amount: number, data: GameData): Step {
+export function xpStep(player: PlayerState, amount: number, data: GameData): Step {
   return step(gainXp(player, amount, data), { kind: 'xp', amount: xpGain(player, amount, data) });
 }
 
@@ -583,7 +583,7 @@ export function rewardItemSpins(tier: number, data: GameData): number {
  */
 export function applyReward(
   player: PlayerState,
-  reward: Exclude<RewardId, 'item' | 'relic'>,
+  reward: Exclude<RewardId, 'item' | 'relic' | 'jackpot'>,
   tier: number,
   rng: Rng,
   data: GameData,

@@ -36,23 +36,28 @@ export const roletaItems: Weighted<ItemId>[] = [
 
 /** Recompensa direta: sem "Nova técnica"; com a fatia "Relíquia" (v0.46.0). */
 export const roletaRewards: Weighted<RewardId>[] = [
-  { id: 'stages', weight: 22 },
+  // Status junta estágios, resistência e crítico (v0.52.0).
+  { id: 'stages', weight: 35 },
+  { id: 'relic', weight: 22 },
   { id: 'xp', weight: 20 },
   { id: 'item', weight: 18 },
-  { id: 'relic', weight: 15 },
-  { id: 'resistance', weight: 13 },
-  { id: 'critBonus', weight: 12 },
+  { id: 'jackpot', weight: 5 },
 ];
 
 export const roletaData: RoletaData = {
   base: {
     ...gameData,
+    lineages: gameData.lineages.filter((l) => !roletaBalance.retiredLineages.includes(l.id)),
     techniques: [],
     levelTechniques: [],
     preFightEvents: roletaPreFightEvents,
     items: roletaItems,
     rewards: roletaRewards,
-    balance: { ...gameData.balance, techniqueUpgrade: { ...gameData.balance.techniqueUpgrade, milestones: [] } },
+    balance: {
+      ...gameData.balance,
+      techniqueUpgrade: { ...gameData.balance.techniqueUpgrade, milestones: [] },
+      rewards: { ...gameData.balance.rewards, critBonus: roletaBalance.rewards.critBonus },
+    },
   },
   r: roletaBalance,
   techniques: roletaTechniquesById,
