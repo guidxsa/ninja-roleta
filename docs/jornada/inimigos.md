@@ -23,14 +23,14 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Kin | 70 | 20 | 12 | 6/5/11 | 5/7 | — | tactician | Kunai, Sino ilusório | — |
 | Ninja da Grama | 65 | 16 | 11 | 9/8/4 | 6/5 | terra | striker | Kunai, Projétil de água | — |
 | Ninja da Chuva | 60 | 18 | 11 | 8/7/8 | 6/6 | água | striker | Chuva de agulhas, Clone de névoa | — |
-| Kabuto | 130 | 30 | 13 | 10/12/6 | 8/8 | — | healer | Kunai, Bisturi de chakra, Cura médica | — |
+| Kabuto | 130 | 30 | 13 | 10/12/6 | 8/8 | — | healer | Kunai, Bisturi de chakra, Cura médica, Reanimação proibida | — |
 | Kiba | 100 | 18 | 13 | 11/4/2 | 7/5 | — | brute | Presa sobre presa, Bomba de fedor, Kunai | — |
 | Akamaru | 45 | 0 | 15 | 9/0/0 | 4/3 | — | brute | Mordida | — |
 | Neji | 150 | 30 | 14 | 14/6/4 | 9/9 | — | tactician | Punho Suave, Rotação, 64 Palmas | — |
 | Gaara | 230 | 45 | 10 | 8/15/4 | 12/8 | terra | brute | Caixão de areia, Escudo de areia, Tsunami de areia, Garra do Shukaku | escudo inicial 15% |
 | Ninja do Som | 75 | 16 | 12 | 10/8/6 | 6/6 | — | striker | Lâmina sonora, Onda sonora | — |
 | Orochimaru | 240 | 50 | 13 | 13/15/12 | 10/10 | — | brute | Mãos de cobra, Kusanagi, Manda | fúria abaixo de 50% (dano ×1.2) |
-| Kabuto | 170 | 36 | 14 | 12/13/6 | 9/9 | — | healer | Kunai, Bisturi de chakra, Cura médica | — |
+| Kabuto | 170 | 36 | 14 | 12/13/6 | 9/9 | — | healer | Kunai, Bisturi de chakra, Cura médica, Reanimação proibida | — |
 | Sasuke | 170 | 34 | 15 | 13/13/7 | 8/8 | fogo | striker | Chidori, Bola de Fogo, Combo do Leão | — |
 | Cobra | 90 | 0 | 9 | 11/0/0 | 7/4 | — | brute | Picada | — |
 | Jirobo | 180 | 30 | 9 | 14/8/2 | 11/6 | terra | brute | Soco pesado, Domo de terra | — |
@@ -69,6 +69,7 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Clone de névoa | Genjutsu | — | um inimigo | 9 | 2 | 85% | — |
 | Bisturi de chakra | Ninjutsu | — | um inimigo | 13 | 4 | 85% | bloqueio de chakra 40% |
 | Cura médica | Ninjutsu | — | um aliado | — | 5 | 85% | cura 25%; espera 2 |
+| Reanimação proibida | Ninjutsu | — | um aliado caído | — | 15 | — | levanta com 30% do HP; espera 3 |
 | Presa sobre presa | Taijutsu | — | um inimigo | 10 | 4 | 80% | 2 golpes |
 | Mordida | Taijutsu | — | um inimigo | 7 | 0 | 90% | — |
 | Bomba de fedor | Taijutsu | — | um inimigo | — | 2 | 85% | atordoar 40% (1 t); espera 3 |

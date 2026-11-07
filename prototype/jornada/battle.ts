@@ -5,7 +5,6 @@ import {
   battlePower,
   blockedReason,
   current,
-  downed,
   fighter,
   gateChoices,
   gateDrain,
@@ -245,7 +244,7 @@ function fighterCard(f: Fighter, data: JornadaData): string {
 /** Botão de técnica: nome e os números principais (dano e custo). O resto fica na dica. */
 function techButton(s: JBattle, f: Fighter, tech: JTechnique): string {
   const blocked = blockedReason(f, tech);
-  const disabled = Boolean(blocked) || Boolean(tech.active && s.activeUsed);
+  const disabled = Boolean(blocked) || Boolean(tech.active && s.activeUsed) || validTargets(s, f, tech).length === 0;
   const cost = techniqueCost(f, tech);
   const hp = hpCost(f, tech);
   const hits = hitsOf(f, tech);
@@ -296,7 +295,7 @@ export async function jornadaBattle(
   heroName = run0.mode === 'generic' ? heroLabel(run0.hero, host.playerName()) : null;
   teamNames = Object.fromEntries(setup.allies.map((a) => [a.defId, memberLabel(run0, a.defId, host.playerName())]));
   // Na abertura ninguém agiu ainda: os turnos antes do protagonista só andam depois da intro, para as barras não adiantarem o dano.
-  let state = openBattle(setup);
+  let state = openBattle(setup, data);
   liveBattle = () => state;
   liveBattleRun = () => run;
   const root = show(
@@ -319,8 +318,6 @@ export async function jornadaBattle(
   const banner = root.querySelector<HTMLElement>('.jb-banner')!;
   const logBtn = root.querySelector<HTMLElement>('[data-log]')!;
   const soloFight = setup.allies.length === 1;
-  // Quantas vezes o protagonista já foi levantado (para dizer se ainda dá para voltar).
-  let revivesSoFar = 0;
   const logLines: string[] = [];
   logBtn.addEventListener('click', () => logBtn.classList.toggle('open'));
   const beat = () => (host.instant() ? 70 : 420);
@@ -475,9 +472,10 @@ export async function jornadaBattle(
           pushLog(B.logDown(name(e.target)));
           // Protagonista caído com suportes de pé: a luta segue e o jogador precisa saber por quê.
           const t = fighter(next, e.target);
-          if (t.protagonist && !soloFight && next.status === 'ongoing') {
-            const revivesLeft = revivesSoFar < data.j.combat.supportRevivesPerFight;
-            say(revivesLeft ? B.heroDown(name(e.target)) : B.heroDownLast(name(e.target)), 'var(--accent-deep)');
+          // Olha quem está de pé neste ponto da animação: `next` já é o fim dos turnos, que sem o jogador pode ser a derrota.
+          const backup = next.fighters.some((f) => f.side === 'ally' && f.uid !== e.target && (shown.get(f.uid)?.hp ?? 0) > 0);
+          if (t.protagonist && !soloFight && backup) {
+            say(B.heroDown(name(e.target)), 'var(--accent-deep)');
             wait = host.instant() ? 200 : 900;
           }
           break;
@@ -492,8 +490,7 @@ export async function jornadaBattle(
           float(e.target, B.revived(''), 'heal');
           pushLog(B.logRevive(name(e.target)));
           if (fighter(next, e.target).protagonist) {
-            revivesSoFar++;
-            say(B.heroUp(name(e.target), name(e.uid)), 'var(--good)');
+            say(e.pill ? B.heroPill(name(e.target)) : B.heroUp(name(e.target), name(e.uid)), 'var(--good)');
             wait = host.instant() ? 200 : 800;
           }
           break;
@@ -584,8 +581,8 @@ export async function jornadaBattle(
       const techs = me.techniques.map((id) => data.techniques[id]!).filter(Boolean);
       const moves = techs.filter((t) => !t.active);
       const actives = techs.filter((t) => t.active);
-      const fallen = downed(state, 'ally');
-      const items = CONSUMABLES.filter((id) => run.bag[id] > 0 && itemTargets(state, id).length > 0);
+      // A pílula usada sozinha só sai da bolsa no fim da luta: aqui vale a contagem da luta.
+      const items = CONSUMABLES.filter((id) => (id === 'reviveKit' ? state.pills : run.bag[id]) > 0 && itemTargets(state, id).length > 0);
       menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
         <h4 class="act-title">${B.groups.techniques}</h4>
         <div class="jb-moves">${moves.map((t) => techButton(state, me, t)).join('')}</div>
@@ -594,7 +591,6 @@ export async function jornadaBattle(
         <div class="jb-extra">
           <button class="btn small jx" data-act="guard" ${tip(B.guard, B.guardDesc)}>${icon('stance')} ${B.guard}</button>
           <button class="btn small jx" data-act="rest" ${tip(B.rest, B.restDesc)}>${icon('rest')} ${B.rest}</button>
-          <button class="btn small jx" data-act="revive" ${tip(B.revive, B.reviveDesc)} ${fallen.length ? '' : 'aria-disabled="true"'}>${icon('willOfFire')} ${B.revive}</button>
           <button class="btn small jx" data-act="bag" ${tip(B.bag, B.bagDesc)} ${items.length && !state.itemUsed ? '' : 'aria-disabled="true"'}>${icon('kit')} ${B.bag}</button>
         </div>`;
       const pick = await new Promise<HTMLElement>((resolve) => {
@@ -608,11 +604,6 @@ export async function jornadaBattle(
       });
       if (pick.dataset.act === 'guard') return { kind: 'guard' };
       if (pick.dataset.act === 'rest') return { kind: 'rest' };
-      if (pick.dataset.act === 'revive') {
-        const uid = await pickTarget(fallen, B.pickDowned);
-        if (uid) return { kind: 'revive', target: uid };
-        continue;
-      }
       if (pick.dataset.act === 'bag') {
         const item = await pickItem(items);
         if (!item) continue;
@@ -636,7 +627,7 @@ export async function jornadaBattle(
       const uid =
         tech.target === 'allEnemies' || tech.target === 'self'
           ? me.uid
-          : await pickTarget(validTargets(state, me, tech), tech.target === 'ally' ? B.pickAlly : B.pickTarget);
+          : await pickTarget(validTargets(state, me, tech), tech.target === 'downedAlly' ? B.pickDowned : tech.target === 'ally' ? B.pickAlly : B.pickTarget);
       if (!uid) continue;
       // Ativa: aplica e o turno continua.
       if (tech.active) {

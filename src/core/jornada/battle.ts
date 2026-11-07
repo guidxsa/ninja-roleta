@@ -103,6 +103,8 @@ export interface BattleSetup {
   allies: FighterSeed[];
   enemies: FighterSeed[];
   win: WinCondition;
+  /** Pílulas de reanimação na bolsa da run. */
+  pills?: number;
 }
 
 const scale = (n: number, mult: number) => (n > 0 ? Math.max(1, Math.floor(n * mult)) : 0);
@@ -196,6 +198,7 @@ export function blockedReason(f: Fighter, tech: JTechnique): 'chakra' | 'cooldow
 export function validTargets(s: JBattle, user: Fighter, tech: JTechnique): Fighter[] {
   if (tech.target === 'self') return [user];
   if (tech.target === 'ally') return alive(s, user.side);
+  if (tech.target === 'downedAlly') return downed(s, user.side);
   return alive(s, opponentSide(user.side));
 }
 
@@ -335,13 +338,13 @@ export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique
 // Início e fluxo
 
 /** Monta a luta sem andar: ninguém agiu ainda. É o estado que a tela mostra na abertura. */
-export function openBattle(setup: BattleSetup): JBattle {
+export function openBattle(setup: BattleSetup, data: JornadaData): JBattle {
   const fighters = [...setup.allies.map((f, i) => enter(f, 'ally', i)), ...setup.enemies.map((f, i) => enter(f, 'enemy', i))];
-  return { round: 0, fighters, order: [], turnIndex: 0, turnStarted: false, status: 'ongoing', win: setup.win, itemUsed: false, activeUsed: false, heroRevives: 0, log: [] };
+  return { round: 0, fighters, order: [], turnIndex: 0, turnStarted: false, status: 'ongoing', win: setup.win, itemUsed: false, activeUsed: false, pills: setup.pills ?? 0, pillHpPct: data.j.combat.reviveHpPct, log: [] };
 }
 
 export function startBattle(setup: BattleSetup, data: JornadaData, rng: Rng): JBattle {
-  return advance(openBattle(setup), data, rng);
+  return advance(openBattle(setup, data), data, rng);
 }
 
 function clone(s: JBattle): JBattle {
@@ -377,7 +380,7 @@ function end(s: JBattle, status: 'won' | 'lost'): void {
 /** Confere vitória e derrota depois de qualquer mudança de HP. */
 function checkEnd(s: JBattle): void {
   if (s.status !== 'ongoing') return;
-  // Protagonista caído não encerra a luta: os suportes de pé usam o turno para levantá-lo (ai.ts).
+  // Protagonista caído não encerra a luta: os suportes de pé seguem lutando.
   if (alive(s, 'ally').length === 0) return end(s, 'lost');
   if (alive(s, 'enemy').length === 0) return end(s, 'won');
   const w = s.win;
@@ -518,6 +521,7 @@ export function useItem(state: JBattle, item: ConsumableId, targetUid: string, d
   if (item === 'reviveKit') {
     if (!t.down || t.side !== user.side) throw new Error('alvo inválido');
     reviveFighter(s, user, t, j.reviveHpPct);
+    s.pills = Math.max(0, s.pills - 1);
   } else {
     if (t.down || t.side !== user.side) throw new Error('alvo inválido');
     const boost = 1 + user.mods.kitBonusPct;
@@ -556,13 +560,6 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
     s.log.push({ type: 'rest', uid: f.uid, chakra: amount });
     return;
   }
-  if (action.kind === 'revive') {
-    const t = fighter(s, action.target);
-    if (!t.down || t.side !== f.side) throw new Error('alvo inválido');
-    if (t.protagonist) s.heroRevives++;
-    reviveFighter(s, f, t, j.reviveHpPct);
-    return;
-  }
   if (data.techniques[action.techId]?.active) throw new Error(`ativa não gasta o turno: use useActive (${action.techId})`);
   applyTech(s, f, action.techId, action.target, data, rng);
 }
@@ -575,7 +572,9 @@ function applyTech(s: JBattle, f: Fighter, techId: string, targetUid: string, da
   if (tech.gates) throw new Error('Portões: use setGate');
   if (blockedReason(f, tech)) throw new Error(`técnica bloqueada: ${tech.id}`);
   const targets = tech.target === 'allEnemies' ? alive(s, opponentSide(f.side)) : tech.target === 'self' ? [f] : [fighter(s, targetUid)];
-  if (targets.some((t) => t.down)) throw new Error('alvo caído');
+  if (tech.target === 'downedAlly') {
+    if (targets.some((t) => !t.down || t.side !== f.side)) throw new Error('alvo inválido');
+  } else if (targets.some((t) => t.down)) throw new Error('alvo caído');
   f.chakra -= techniqueCost(f, tech);
   if (tech.cooldown) f.cooldowns[tech.id] = tech.cooldown + 1;
   s.log.push({ type: 'tech', uid: f.uid, techId: tech.id, targets: targets.map((t) => t.uid) });
@@ -595,6 +594,10 @@ function applyTech(s: JBattle, f: Fighter, techId: string, targetUid: string, da
     s.log.push({ type: 'clones', uid: f.uid, total: f.clones });
   }
   for (const t of targets) {
+    if (tech.reviveHpPct) {
+      reviveFighter(s, f, t, tech.reviveHpPct);
+      continue;
+    }
     if (tech.baseDamage > 0) strike(s, f, t, tech, data, rng);
     else if (tech.onHit && t.side !== f.side) applyStatus(s, f, t, tech, data, rng);
     if (t.down) continue;
@@ -685,6 +688,12 @@ function applyHpLoss(s: JBattle, t: Fighter, amount: number): void {
   t.boost = null;
   t.gate = null;
   s.log.push({ type: 'down', target: t.uid });
+  // Pílula na bolsa levanta o protagonista sozinha, antes de conferir a derrota (vale lutando solo).
+  if (t.protagonist && s.pills > 0) {
+    s.pills--;
+    reviveFighter(s, t, t, s.pillHpPct, true);
+    return;
+  }
   checkEnd(s);
 }
 
@@ -695,10 +704,10 @@ function heal(s: JBattle, f: Fighter, t: Fighter, amount: number): void {
   s.log.push({ type: 'heal', uid: f.uid, target: t.uid, amount: real });
 }
 
-function reviveFighter(s: JBattle, f: Fighter, t: Fighter, pct: number): void {
+function reviveFighter(s: JBattle, f: Fighter, t: Fighter, pct: number, pill = false): void {
   t.down = false;
   t.hp = Math.max(1, Math.floor(t.maxHp * Math.min(1, pct + t.mods.reviveHpBonus)));
-  s.log.push({ type: 'revive', uid: f.uid, target: t.uid, hp: t.hp });
+  s.log.push({ type: 'revive', uid: f.uid, target: t.uid, hp: t.hp, ...(pill ? { pill: true } : {}) });
 }
 
 function checkEnrage(s: JBattle): void {

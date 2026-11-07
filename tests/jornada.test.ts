@@ -19,6 +19,7 @@ import {
   techPower,
   useActive,
   useItem,
+  validTargets,
   type BattleSetup,
   type FighterSeed,
 } from '../src/core/jornada/battle';
@@ -173,7 +174,7 @@ describe('nome do jogador', () => {
 describe('combate de equipe da Jornada', () => {
   it('a abertura mostra todos intactos; os turnos antes do protagonista só andam depois', () => {
     const fast = dummy({ speed: 99, hp: 500, maxHp: 500, techniques: ['jeCleaver'] });
-    const opening = openBattle(setup({ enemies: [fast] }));
+    const opening = openBattle(setup({ enemies: [fast] }), data);
     expect(opening.fighters[0]!.hp).toBe(100);
     expect(opening.log).toEqual([]);
     const after = advance(opening, data, fixed(0));
@@ -229,37 +230,93 @@ describe('combate de equipe da Jornada', () => {
     expect(() => useItem(b, 'chakraKit', 'a0', data)).toThrow();
   });
 
-  it('levantar um aliado caído gasta o turno e devolve metade do HP', () => {
-    const ally = { ...dummy(), defId: 'sakura', speed: 2, techniques: ['jKunai'], ai: 'tactician' as const, hp: 0 };
-    let b = startBattle(setup({ allies: [hero(), ally], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.5));
-    expect(b.fighters[1]!.down).toBe(true);
-    b = playerAct(b, { kind: 'revive', target: 'a1' }, data, fixed(0.5));
-    expect(b.log.some((e) => e.type === 'revive' && e.target === 'a1' && e.hp === 50)).toBe(true);
-  });
-
-  it('protagonista caído não é derrota: qualquer suporte de pé usa o turno para levantá-lo', () => {
-    for (const ai of ['striker', 'guardian', 'brute', 'tactician', 'healer'] as const) {
-      const ally = { ...dummy(), defId: 'sasuke', speed: 2, techniques: ['jKunai'], ai, hp: 500, maxHp: 500 };
-      const killer = dummy({ speed: 99, techniques: ['jeCleaver'], offense: { taijutsu: 200, ninjutsu: 0, genjutsu: 0 } });
-      // O inimigo mata o herói toda rodada, sempre antes de ele agir: a luta anda sozinha.
-      const b = startBattle(setup({ allies: [hero({ hp: 5 }), ally], enemies: [killer] }), data, fixed(0));
-      const revives = b.log.filter((e) => e.type === 'revive' && e.uid === 'a1' && e.target === 'a0');
-      expect(revives[0], ai).toMatchObject({ hp: 50 });
-      // Com limite por luta, a luta não entra em laço: depois disso o herói fica no chão e o suporte luta.
-      expect(revives.length, ai).toBe(data.j.combat.supportRevivesPerFight);
-      expect(b.status, ai).toBe('lost');
-    }
-  });
-
-  it('com o herói de pé depois de levantado, o jogador volta a agir', () => {
-    const ally = { ...dummy(), defId: 'sasuke', speed: 2, techniques: ['jKunai'], ai: 'striker' as const, hp: 500, maxHp: 500 };
+  describe('reviver é habilidade ou pílula (v0.48.0)', () => {
     const killer = dummy({ speed: 99, techniques: ['jeCleaver'], offense: { taijutsu: 200, ninjutsu: 0, genjutsu: 0 } });
-    // Sorteio: ordem da rodada 1 (3), golpe que acerta (0), depois tudo erra (0,99).
-    const rolls = [0.5, 0.5, 0.5, 0];
-    const b = startBattle(setup({ allies: [hero({ hp: 5 }), ally], enemies: [killer] }), data, () => rolls.shift() ?? 0.99);
-    expect(b.log.some((e) => e.type === 'revive' && e.target === 'a0')).toBe(true);
-    expect(awaitingPlayer(b)).toBe(true);
-    expect(current(b)!.uid).toBe('a0');
+    const support = (over: Partial<FighterSeed> = {}) => ({ ...dummy(), defId: 'sasuke', speed: 2, techniques: ['jKunai'], ai: 'striker' as const, hp: 500, maxHp: 500, ...over });
+    /** Só o primeiro golpe do inimigo acerta: ordem da rodada (3 sorteios), golpe que acerta, depois tudo erra. */
+    const oneHit = () => {
+      const rolls = [0.5, 0.5, 0.5, 0];
+      return () => rolls.shift() ?? 0.99;
+    };
+
+    it('sem técnica nem pílula, ninguém levanta: o herói fica no chão e os suportes seguem lutando', () => {
+      for (const ai of ['striker', 'guardian', 'brute', 'tactician', 'healer'] as const) {
+        const b = advance(startBattle(setup({ allies: [hero({ hp: 5 }), support({ ai })], enemies: [dummy({ ...killer, hp: 900, maxHp: 900 })] }), data, oneHit()), data, oneHit());
+        expect(b.log.some((e) => e.type === 'revive'), ai).toBe(false);
+        expect(b.fighters[0]!.down, ai).toBe(true);
+        expect(b.fighters[1]!.down, ai).toBe(false);
+      }
+    });
+
+    it('quem tem a técnica levanta o protagonista primeiro, pagando o chakra', () => {
+      const medic = support({ techniques: ['jKunai', 'jReanimate'], chakra: 30, maxChakra: 30 });
+      const b = startBattle(setup({ allies: [hero({ hp: 5 }), medic], enemies: [killer] }), data, oneHit());
+      expect(b.log.find((e) => e.type === 'revive')).toMatchObject({ uid: 'a1', target: 'a0', hp: 50 });
+      expect(b.fighters[1]!.chakra).toBe(30 - data.techniques.jReanimate!.chakraCost);
+      expect(awaitingPlayer(b)).toBe(true);
+      expect(current(b)!.uid).toBe('a0');
+    });
+
+    it('sem chakra para a técnica, não levanta', () => {
+      const medic = support({ techniques: ['jKunai', 'jReanimate'], chakra: 14, maxChakra: 14 });
+      const b = startBattle(setup({ allies: [hero({ hp: 5 }), medic], enemies: [killer] }), data, oneHit());
+      expect(b.log.some((e) => e.type === 'revive')).toBe(false);
+    });
+
+    it('o protagonista com a técnica levanta um suporte caído, gastando o turno', () => {
+      const fallen = support({ hp: 0 });
+      let b = startBattle(setup({ allies: [hero({ techniques: ['jStrike', 'jReanimate'] }), fallen], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.5));
+      expect(validTargets(b, b.fighters[0]!, data.techniques.jReanimate!).map((f) => f.uid)).toEqual(['a1']);
+      b = playerAct(b, { kind: 'tech', techId: 'jReanimate', target: 'a1' }, data, fixed(0.5));
+      expect(b.log.some((e) => e.type === 'revive' && e.target === 'a1' && e.hp === 250)).toBe(true);
+    });
+
+    it('a técnica não acerta quem está de pé', () => {
+      const b = startBattle(setup({ allies: [hero({ techniques: ['jStrike', 'jReanimate'] }), support()], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.5));
+      expect(validTargets(b, b.fighters[0]!, data.techniques.jReanimate!)).toEqual([]);
+      expect(() => playerAct(b, { kind: 'tech', techId: 'jReanimate', target: 'a1' }, data, fixed(0.5))).toThrow();
+    });
+
+    it('a pílula na bolsa levanta o protagonista sozinha, até lutando solo, e sai da contagem', () => {
+      const b = startBattle(setup({ allies: [hero({ hp: 5 })], enemies: [killer], pills: 2 }), data, oneHit());
+      expect(b.status).toBe('ongoing');
+      expect(b.log.find((e) => e.type === 'revive')).toMatchObject({ target: 'a0', hp: 50, pill: true });
+      expect(b.pills).toBe(1);
+      expect(current(b)!.uid).toBe('a0');
+    });
+
+    it('sem pílula, sozinho, cair é derrota; a pílula acaba', () => {
+      expect(startBattle(setup({ allies: [hero({ hp: 5 })], enemies: [killer] }), data, oneHit()).status).toBe('lost');
+      const b = startBattle(setup({ allies: [hero({ hp: 5 })], enemies: [killer], pills: 1 }), data, fixed(0));
+      expect(b.log.filter((e) => e.type === 'revive').length).toBe(1);
+      expect(b.status).toBe('ongoing');
+      expect(playerAct(b, { kind: 'guard' }, data, fixed(0)).status).toBe('lost');
+    });
+
+    it('o botão da pílula em aliado desconta da contagem da luta', () => {
+      let b = startBattle(setup({ allies: [hero(), support({ hp: 0 })], enemies: [dummy({ hp: 500, maxHp: 500 })], pills: 1 }), data, fixed(0.5));
+      b = useItem(b, 'reviveKit', 'a1', data);
+      expect(b.pills).toBe(0);
+    });
+
+    it('a pílula usada sozinha sai da bolsa da run no fim da luta', () => {
+      const run0 = { ...newRun(1, 'normal', data), bag: { hpKit: 0, chakraKit: 0, reviveKit: 2 } };
+      const stop = currentStop(run0, data)!;
+      expect(isFight(stop)).toBe(true);
+      const s = battleSetup(run0, data);
+      expect(s.pills).toBe(2);
+      const fought = { ...startBattle({ ...s, allies: [{ ...s.allies[0]!, hp: 1 }], enemies: [killer] }, data, oneHit()) };
+      fought.status = 'won';
+      expect(finishFight(run0, fought, data).run.bag.reviveKit).toBe(1);
+    });
+
+    it('inimigo só levanta aliado se tiver a técnica', () => {
+      const fallenFoe = dummy({ hp: 0 });
+      const plain = startBattle(setup({ allies: [hero({ speed: 1 })], enemies: [dummy({ speed: 9, ai: 'healer', techniques: ['jeClub'] }), fallenFoe] }), data, fixed(0.99));
+      expect(plain.log.some((e) => e.type === 'revive')).toBe(false);
+      const healer = startBattle(setup({ allies: [hero({ speed: 1 })], enemies: [dummy({ speed: 9, ai: 'healer', techniques: ['jeClub', 'jeReanimate'] }), fallenFoe] }), data, fixed(0.99));
+      expect(healer.log.find((e) => e.type === 'revive')).toMatchObject({ uid: 'e0', target: 'e1', hp: 30 });
+    });
   });
 
   it('derrota só quando todos os aliados caem; sozinho, cair é derrota', () => {
@@ -531,7 +588,7 @@ describe('run da Jornada', () => {
     expect(playerAct(hurt, { kind: 'guard' }, data, fixed(0.99)).log.some((e) => e.type === 'heal' && e.amount === 10)).toBe(true);
     // Levantar com mais HP.
     const ally = { ...dummy(), defId: 'sasuke', speed: 2, techniques: ['jKunai'], ai: 'striker' as const, hp: 0, mods: mod({ reviveHpBonus: 0.3 }) };
-    const rev = playerAct(startBattle(setup({ allies: [hero(), ally], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.5)), { kind: 'revive', target: 'a1' }, data, fixed(0.5));
+    const rev = playerAct(startBattle(setup({ allies: [hero({ techniques: ['jStrike', 'jReanimate'] }), ally], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.5)), { kind: 'tech', techId: 'jReanimate', target: 'a1' }, data, fixed(0.5));
     expect(rev.log.some((e) => e.type === 'revive' && e.target === 'a1' && e.hp === 80)).toBe(true);
   });
 
@@ -880,10 +937,11 @@ describe('Caminho Ninja', () => {
     run = chooseNode(run, nodeChoices(run)[0]!.id);
     const setup = battleSetup(run, data);
     expect(setup.allies[0]!.defId).toBe(run.hero);
-    expect(setup.allies.slice(1).map((a) => a.defId).sort()).toEqual(['leafGeninA', 'leafGeninB']);
-    const genin = setup.allies.find((a) => a.defId === 'leafGeninA')!;
-    expect(genin.element).toBe(run.elements.leafGeninA);
-    expect(genin.techniques).toContain(data.elementLines[run.elements.leafGeninA!][0]);
+    const team = setup.allies.slice(1);
+    expect(team.map((a) => a.defId).sort()).toEqual([...run.supports].sort());
+    const genin = team[0]!;
+    expect(genin.element).toBe(run.elements[genin.defId]);
+    expect(genin.techniques).toContain(data.elementLines[run.elements[genin.defId]!][0]);
   });
 
   it('o ramo Elemento ensina a técnica do elemento sorteado', () => {
@@ -947,7 +1005,8 @@ describe('Caminho Ninja', () => {
     const all = new Set(['j_unlockUchiha', 'j_unlockHyuuga']);
     for (let s = 0; s < 20; s++) {
       const r = newGenericRun(s, 'normal', 'common', data, none);
-      expect(r.supports.sort()).toEqual(['leafGeninA', 'leafGeninB']);
+      expect(r.supports).toHaveLength(2);
+      for (const id of r.supports) expect(['leafGeninA', 'leafGeninB', 'leafMedic']).toContain(id);
     }
     const seen = new Set<string>();
     for (let s = 0; s < 80; s++) {
@@ -966,7 +1025,7 @@ describe('Caminho Ninja', () => {
       }
     }
     // Todas as fichas aparecem, inclusive as do Uchiha (a classe do protagonista).
-    expect([...seen].sort()).toEqual(['hyuugaGenin', 'hyuugaGeninB', 'leafGeninA', 'leafGeninB', 'uchihaGenin', 'uchihaGeninB']);
+    expect([...seen].sort()).toEqual(['hyuugaGenin', 'hyuugaGeninB', 'leafGeninA', 'leafGeninB', 'leafMedic', 'uchihaGenin', 'uchihaGeninB']);
   });
 
   it('Comum: escolher o elemento (ou o prodígio) ou sortear; o sorteio dá uma relíquia comum e não muda o mapa', () => {

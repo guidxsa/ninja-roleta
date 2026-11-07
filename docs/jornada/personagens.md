@@ -12,7 +12,7 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 | Sasuke | 90 | 28 | 13 | 10/10/5 | 6/7 | fogo | striker | Golpe, Shuriken, Bola de Fogo, Combo do Leão |
 | Sakura | 80 | 26 | 10 | 7/6/8 | 5/9 | terra | tactician | Kunai, Shuriken, Armadilha de fios, Kai (libertar) |
 | Jiraiya | 150 | 40 | 12 | 13/14/8 | 10/9 | fogo | striker | Golpe do Sannin, Óleo de sapo em chamas, Cabelo-agulha |
-| Tsunade | 140 | 40 | 12 | 15/12/6 | 10/8 | terra | healer | Soco da Tsunade, Palma mística, Golpe |
+| Tsunade | 140 | 40 | 12 | 15/12/6 | 10/8 | terra | healer | Soco da Tsunade, Palma mística, Golpe, Reanimação |
 | Rock Lee | 115 | 10 | 15 | 14/0/0 | 9/5 | — | striker | Redemoinho da Folha, Furacão da Folha, Lótus Primária |
 | Gaara | 130 | 40 | 10 | 6/14/4 | 12/8 | terra | guardian | Escudo de areia, Caixão de areia, Shuriken de areia |
 | Shikamaru | 95 | 30 | 11 | 8/10/8 | 6/9 | — | tactician | Kunai, Shuriken, Possessão das Sombras |
@@ -29,10 +29,11 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 | Kaede Uchiha | 90 | 28 | 11 | 7/10/9 | 5/8 | fogo | tactician | Shuriken, Armadilha de fios |
 | Mio Hyuuga | 95 | 22 | 11 | 10/5/4 | 7/6 | — | guardian | Palma Suave, Rotação, Kunai |
 | Sei Hyuuga | 100 | 22 | 12 | 11/5/3 | 7/6 | — | striker | Palma Suave, Shuriken, Palma do Vácuo |
+| Mika | 85 | 36 | 10 | 6/8/5 | 5/7 | — | healer | Kunai, Kai (libertar), Reanimação |
 
 - O Sasuke aprende o **Chidori** ao chegar no exame chunin (estágio 2).
 - As técnicas novas do Naruto vêm da árvore de talentos ([talentos.md](talentos.md)).
-- No mangá, antes do timeskip, a Sakura ainda não é médica: o papel dela é tático (soltar aliado preso, levantar quem caiu, armadilhas).
+- No mangá, antes do timeskip, a Sakura ainda não é médica: o papel dela é tático (soltar aliado preso, armadilhas).
 - A equipe de resgate entra no estágio 3 da História ([historia.md](historia.md)). O Akamaru luta dentro do kit do Kiba, porque cada lado tem no máximo 3 lutadores.
 - No Caminho Ninja, o protagonista usa o nome do jogador, quando informado ([perfil.md](../base/perfil.md#nome-do-jogador)).
 - Caminho Ninja ([classes.md](classes.md)): o Ninja da Folha (Comum) usa o elemento escolhido ou sorteado e os suportes Comuns, o sorteado; todos ganham a técnica de nível I dele. O prodígio é o Comum sem elemento. O Hyuuga (protagonista e suportes) não tem elemento.
@@ -40,13 +41,13 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 
 ## Comportamento
 
-Os suportes e os inimigos usam o mesmo motor de decisão. Com o protagonista caído, qualquer suporte usa o turno para levantá-lo, antes de tudo ([combate.md](combate.md#cair-e-levantar)). Antes de agir, todo lutador usa uma ativa grátis (uma por turno, `chooseAiActive`): escudo próprio quando está ferido; Portões, com tudo fechado, no maior portão cujo desgaste nos 4 turnos deixe pelo menos 40% do HP (fecha abaixo de 30%); fortalecimento quando não tem um; clones quando não tem. Depois escolhe a ação, e às vezes usa um controle sem dano (35%).
+Os suportes e os inimigos usam o mesmo motor de decisão. Quem tem técnica de reanimar levanta antes de tudo, o protagonista primeiro ([combate.md](combate.md#cair-e-levantar)). Antes de agir, todo lutador usa uma ativa grátis (uma por turno, `chooseAiActive`): escudo próprio quando está ferido; Portões, com tudo fechado, no maior portão cujo desgaste nos 4 turnos deixe pelo menos 40% do HP (fecha abaixo de 30%); fortalecimento quando não tem um; clones quando não tem. Depois escolhe a ação, e às vezes usa um controle sem dano (35%).
 
 | IA | Comportamento |
 |---|---|
 | striker | Ataca o inimigo mais perigoso (maior ataque) com a técnica de mais dano esperado. |
-| tactician | Levanta os outros suportes caídos, solta aliado atordoado ou com chakra bloqueado e usa controle no inimigo mais perigoso. |
-| healer | Levanta os outros suportes caídos e cura o aliado com menos de 55% do HP. |
+| tactician | Solta aliado atordoado ou com chakra bloqueado e usa controle no inimigo mais perigoso. |
+| healer | Cura o aliado com menos de 55% do HP. |
 | guardian | Põe escudo no aliado ferido (protagonista primeiro). |
 | brute | Bate no adversário com menos HP. |
 
@@ -89,6 +90,7 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 | Golpe do Sannin | Taijutsu | — | um inimigo | 14 | 0 | 90% | — |
 | Soco da Tsunade | Taijutsu | — | um inimigo | 24 | 3 | 85% | atordoar 25% (1 t) |
 | Palma mística | Ninjutsu | — | um aliado | — | 5 | 85% | cura 30%; tira atordoar e bloqueio |
+| Reanimação | Ninjutsu | — | um aliado caído | — | 15 | — | levanta com 50% do HP; espera 2 |
 | Redemoinho da Folha | Taijutsu | — | um inimigo | 12 | 0 | 90% | — |
 | Furacão da Folha | Taijutsu | — | um inimigo | 8 | 0 | 85% | 2 golpes |
 | Lótus Primária | Taijutsu | — | um inimigo | 32 | 0 | 85% | custa 10% do HP; atordoar 30% (1 t); espera 3 |

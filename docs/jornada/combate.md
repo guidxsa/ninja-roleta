@@ -22,7 +22,6 @@ Um motor próprio, de equipe, separado do combate do Roleta. Compartilha com a b
    - **técnica** do moveset, tocando no alvo (inimigo ou aliado; técnicas em todos os inimigos e em si não pedem alvo);
    - **Defender**: usa a resistência inteira (100% no lugar de 50%) até o próximo turno dele;
    - **Concentrar**: recupera 25% do chakra máximo;
-   - **Levantar** um aliado caído: gasta o turno, ele volta com 50% do HP;
    - **item da bolsa**: não gasta o turno, um por turno (ver abaixo).
 4. Fim do turno: desgaste dos Portões, depois efeitos, portão e esperas descontam 1.
 
@@ -71,10 +70,12 @@ Ativa do prodígio (v0.42.0). Números em `jornadaBalance.gates`; o portão N so
 ## Cair e levantar
 
 - Quem chega a 0 de HP cai: perde efeitos, escudo e clones.
-- **Protagonista caído não encerra a luta** enquanto houver suporte de pé. Qualquer suporte, de qualquer comportamento, usa o turno para levantá-lo antes de tudo. A luta anda sozinha até ele voltar e agir de novo.
-- Os suportes levantam o protagonista **até 3 vezes por luta** (`combat.supportRevivesPerFight`). Sem esse limite, um inimigo que derruba o protagonista antes de ele agir prenderia a luta num laço sem o jogador. Depois disso ele fica no chão e os suportes seguem lutando: ainda dá para vencer.
+- **Levantar não é regra geral** (v0.48.0): só a **Pílula de reanimação** e quem tem uma **técnica de reanimar** levantam. Sem isso, quem caiu fica no chão até o fim da luta.
+- **Reanimação** (técnica): gasta o turno, 15 de chakra, espera 2, volta com 50% do HP, alvo aliado caído. Quem tem: Tsunade, a médica de campo Mika ([classes.md](classes.md#suportes-genéricos-versão-suporte)) e quem aprende na árvore (Ninguém fica para trás do Naruto, Primeiros socorros do Comum). Quem tem a técnica levanta antes de tudo, o protagonista primeiro. A técnica do Kabuto é a Reanimação proibida ([inimigos.md](inimigos.md)).
+- **Pílula no protagonista**: se ele cair com pílula na bolsa, uma é usada sozinha, sem gastar turno, inclusive lutando solo.
+- **Protagonista caído sem pílula não encerra a luta** enquanto houver suporte de pé: a luta anda sozinha com os suportes, que ainda podem vencer.
 - **Derrota é todos os aliados no chão.** Lutando sozinho, cair é derrota. Fúria da Kyuubi (talento) segura o Naruto com 1 de HP uma vez por luta.
-- Levantar um suporte: ação de turno do protagonista, de um suporte tático/curandeiro, ou Pílula de reanimação (item). Todo levantar volta com 50% do HP.
+- Pílula em um suporte: item da bolsa, pelo protagonista de pé. Volta com 50% do HP. Bônus de relíquia (Apito de socorro, Talismã da segunda chance) valem para técnica e pílula.
 
 ## Bolsa
 
@@ -84,7 +85,7 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 |---|---|
 | Kit de HP | Cura 35% do HP de um aliado |
 | Kit de chakra | Recupera 40% do chakra de um aliado |
-| Pílula de reanimação | Levanta um aliado caído com 50% do HP |
+| Pílula de reanimação | Levanta um aliado caído com 50% do HP; no protagonista caído, é usada sozinha |
 
 ## Moveset
 
@@ -106,7 +107,7 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 - **Botões simples**: nome e os números principais (dano por golpe com os bônus de talentos, níveis, portão e fortalecimento, golpes e custo). Dano acima do base fica dourado; custo que não dá fica vermelho. Alvo, efeitos, regras, penalidades e motivo de bloqueio ficam na dica.
 - **Clones na tela**: uma cópia do retrato atrás do lutador por clone; a que recebe o golpe vira fumaça, com o aviso "clone recebeu!". O botão da técnica diz quantos clones ela cria; a dica traz a regra inteira.
 - **Fortalecimento e portão**: selo no lutador com os turnos que restam; ao ativar, número flutuante e linha no log.
-- **Protagonista caído**: uma faixa avisa que os suportes vão levantá-lo (ou que não levanta mais nesta luta), e outra anuncia quem o levantou.
+- **Protagonista caído**: uma faixa avisa que os suportes seguem lutando, e outra anuncia quem o levantou (ou a pílula).
 - Log curto (tocar abre o histórico). Sem roleta na tela: só o resultado.
 - Dicas: passar o mouse ou segurar o dedo numa técnica mostra a ficha dela (motivo de bloqueio, tipo, elemento, alvo, dano, precisão, efeitos, fortalecimento, custo, espera); num lutador, HP, chakra, elemento, comportamento, passiva, portão, fortalecimento, efeitos e técnicas.
 - No PC, a batalha usa duas colunas (arena à esquerda, menu e log à direita) e a trilha mostra o HUD ao lado do caminho.

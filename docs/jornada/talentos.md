@@ -51,7 +51,7 @@ Seis ramos custando cerca de 55 pontos, fora os níveis, para os cerca de 30 que
 | Laços | Equipe 7 **ou** | 2 | | +15% de HP máximo dos suportes |
 | Laços | Grito de guerra | 2 | 3 (+1 cada) | Aprende o Grito de guerra: cura 20% de um aliado e tira atordoar e bloqueio. Cada nível: 1 de chakra a menos |
 | Laços | Proteger os amigos | 2 | | +8% de dano da equipe |
-| Laços | Ninguém fica para trás | 2 | | A equipe volta com 20% a mais de HP ao ser levantada e começa as lutas com escudo de 5% |
+| Laços | Ninguém fica para trás | 2 | | Aprende Reanimação; a equipe começa as lutas com escudo de 5% |
 | Laços | Futuro Hokage | 3 | | +7% de dano e +5% de acerto da equipe |
 | Sapos | Contrato com os sapos | 1 | | +8% de dano de ninjutsu |
 | Sapos | Gamakichi **ou** | 2 | 3 (+1 cada) | Aprende a invocar o Gamakichi: óleo em chamas em todos os inimigos. Cada nível: +20% de dano |
@@ -102,6 +102,7 @@ O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.m
 | Determinação | Garra | 2 | +25% de dano abaixo da metade do HP |
 | Determinação | Esforço | 2 | +10% de dano |
 | Determinação | Vontade do Fogo | 3 | Uma vez por luta fica com 1 de HP; recupera 2% do HP por rodada |
+| Determinação | Primeiros socorros | 2 | Aprende Reanimação |
 
 ## Prodígio (Caminho Ninja)
 

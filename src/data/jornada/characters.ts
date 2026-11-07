@@ -72,7 +72,7 @@ export const characters: CharacterDef[] = [
     offense: { taijutsu: 15, ninjutsu: 12, genjutsu: 6 },
     resistance: { physical: 10, mental: 8 },
     element: 'earth',
-    techniques: ['jTsunadePunch', 'jMysticPalm', 'jStrike'],
+    techniques: ['jTsunadePunch', 'jMysticPalm', 'jStrike', 'jReanimate'],
     ai: 'healer',
     growth: g(6, 2, 0.3, 0.7, 0.6, 0.2, 0.5, 0.4),
     portrait: 'ninja:tsunade',
@@ -211,6 +211,20 @@ export const genericCharacters: CharacterDef[] = [
     ai: 'tactician',
     growth: g(6, 2, 0.4, 0.7, 0.8, 0.4, 0.4, 0.5),
     portrait: 'ninja:grass',
+  },
+  // Médica de campo (v0.48.0): sem ela, o Caminho Ninja não teria quem reanimar.
+  {
+    id: 'leafMedic',
+    hp: 85,
+    chakra: 36,
+    speed: 10,
+    offense: { taijutsu: 6, ninjutsu: 8, genjutsu: 5 },
+    resistance: { physical: 5, mental: 7 },
+    element: null,
+    techniques: ['jKunai', 'jRelease', 'jReanimate'],
+    ai: 'healer',
+    growth: g(5, 3, 0.4, 0.5, 0.7, 0.3, 0.4, 0.5),
+    portrait: 'ninja:common',
   },
   // Uchiha e Hyuuga (v0.37.0): protagonistas e versões suporte (entram no sorteio de parceiros quando liberados).
   {

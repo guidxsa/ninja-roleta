@@ -463,7 +463,7 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
     const seed = enemySeed(id, run.difficulty, data, cycleEnemyMult(run, data));
     return opening ? { ...seed, hp: Math.max(1, seed.hp - opening) } : seed;
   });
-  return { allies, enemies: foes, win: stop.win ?? { kind: 'defeatAll' } };
+  return { allies, enemies: foes, win: stop.win ?? { kind: 'defeatAll' }, pills: run.bag.reviveKit };
 }
 
 // ---------------------------------------------------------------------------
@@ -576,6 +576,9 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   if (!isFight(stop)) throw new Error('a parada atual não é uma luta');
   run.stats.fights++;
   for (const e of battle.log) if (e.type === 'damage' && e.uid.startsWith('a') && e.amount > run.stats.bestHit) run.stats.bestHit = e.amount;
+  // Pílulas usadas sozinhas pelo protagonista saem da bolsa aqui; as usadas pelo botão, a tela já descontou.
+  const autoPills = battle.log.filter((e) => e.type === 'revive' && e.pill).length;
+  run.bag.reviveKit = Math.max(0, run.bag.reviveKit - autoPills);
   const won = battle.status === 'won';
   const results = allyResults(battle);
   if (!won) {

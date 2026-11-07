@@ -20,10 +20,8 @@ export const jornadaBalance = {
     burnPct: 0.05,
     poisonPct: 0.06,
     defaultEffectTurns: 2,
-    // Levantar um aliado (ação de turno ou kit): volta com esta fração do HP máximo.
+    // Pílula de reanimação: volta com esta fração do HP máximo. As técnicas de reanimar têm a própria (`reviveHpPct`).
     reviveHpPct: 0.5,
-    // Quantas vezes por luta os suportes levantam o protagonista. Evita laço de cair e levantar sem o jogador agir.
-    supportRevivesPerFight: 3,
     // Concentrar chakra: recupera esta fração do chakra máximo.
     restChakraPct: 0.25,
     // Kits: fração do máximo.

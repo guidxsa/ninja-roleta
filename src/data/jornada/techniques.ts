@@ -47,6 +47,8 @@ export const allyTechniques: JTechnique[] = [
   // Tsunade
   { id: 'jTsunadePunch', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 24, chakraCost: 3, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.25, turns: 1 } },
   { id: 'jMysticPalm', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healPct: 0.3, cleanse: true },
+  // Reanimar é habilidade, não regra geral: caro em chakra e com espera (docs/jornada/combate.md#cair-e-levantar).
+  { id: 'jReanimate', type: 'ninjutsu', element: null, target: 'downedAlly', baseDamage: 0, chakraCost: 15, cooldown: 2, reviveHpPct: 0.5 },
 
   // Rock Lee
   { id: 'jLeafWhirlwind', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, chakraCost: 0, accuracy: 0.9 },
@@ -145,6 +147,7 @@ export const enemyTechniques: JTechnique[] = [
   // Kabuto
   { id: 'jeChakraScalpel', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 13, chakraCost: 4, onHit: { effect: 'chakraBlock', chance: 0.4 } },
   { id: 'jeMedicalHeal', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healPct: 0.25, cooldown: 2 },
+  { id: 'jeReanimate', type: 'ninjutsu', element: null, target: 'downedAlly', baseDamage: 0, chakraCost: 15, cooldown: 3, reviveHpPct: 0.3 },
   // Kiba e Akamaru
   { id: 'jeFangOverFang', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 10, hits: 2, chakraCost: 4, accuracy: 0.8 },
   { id: 'jeDogBite', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, chakraCost: 0, accuracy: 0.9 },

@@ -25,7 +25,7 @@ export const talents: TalentNode[] = [
   { id: 'tTeam7', owner: 'naruto', branch: 'bonds', tier: 2, col: -1, cost: 2, excludes: ['tWarCry'], allyHpPct: 0.15 },
   { id: 'tWarCry', owner: 'naruto', branch: 'bonds', tier: 2, col: 1, cost: 2, excludes: ['tTeam7'], learn: 'jWarCry', maxRank: 3, rankCost: 1, rankMods: { techChakraDiscount: { jWarCry: 1 } } },
   { id: 'tProtectFriends', owner: 'naruto', branch: 'bonds', tier: 3, cost: 2, requires: ['tTeam7', 'tWarCry'], teamMods: { damageMult: 1.08 } },
-  { id: 'tNoOneLeft', owner: 'naruto', branch: 'bonds', tier: 4, cost: 2, teamMods: { reviveHpBonus: 0.2, startShieldPct: 0.05 } },
+  { id: 'tNoOneLeft', owner: 'naruto', branch: 'bonds', tier: 4, cost: 2, learn: 'jReanimate', teamMods: { startShieldPct: 0.05 } },
   { id: 'tFutureHokage', owner: 'naruto', branch: 'bonds', tier: 5, cost: 3, teamMods: { damageMult: 1.07, accuracyBonus: 0.05 } },
 
   { id: 'tToadContract', owner: 'naruto', branch: 'toads', tier: 1, cost: 1, fromStage: 1, mods: { typeDamageMult: { ninjutsu: 1.08 } } },
@@ -59,6 +59,7 @@ export const talents: TalentNode[] = [
   { id: 'tGrit', owner: 'commonNinja', branch: 'will', tier: 2, cost: 2, mods: { lowHpDamageMult: 1.25 } },
   { id: 'tHardWork', owner: 'commonNinja', branch: 'will', tier: 3, cost: 2, mods: { damageMult: 1.1 } },
   { id: 'tWillOfFire', owner: 'commonNinja', branch: 'will', tier: 4, cost: 3, mods: { surviveOnce: true, regenPct: 0.02 } },
+  { id: 'tFieldMedic', owner: 'commonNinja', branch: 'will', tier: 5, cost: 2, learn: 'jReanimate' },
 
   // Prodígio (Comum sem elemento): o kit do prodígio do Roleta. Começa com o Portão da Abertura; o talento Portão da
   // Vida libera até o 3º portão e a Lótus Oculta até o 5º (Limite).

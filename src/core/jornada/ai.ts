@@ -59,12 +59,9 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
   const fallen = downed(s, f.side);
   const tech = (pred: (t: JTechnique) => boolean) => firstUsable(f, data, pred);
 
-  // Protagonista caído: qualquer suporte de pé usa o turno para levantá-lo, antes de tudo (com limite por luta).
-  const fallenHero = fallen.find((x) => x.protagonist);
-  if (fallenHero && s.heroRevives < data.j.combat.supportRevivesPerFight) return { kind: 'revive', target: fallenHero.uid };
-  // Curandeiro e tático levantam os outros suportes.
-  const fallenAlly = fallen.find((x) => !x.protagonist);
-  if ((f.ai === 'healer' || f.ai === 'tactician') && fallenAlly) return { kind: 'revive', target: fallenAlly.uid };
+  // Só quem tem a técnica levanta: antes de tudo, e o protagonista primeiro.
+  const revive = tech((t) => Boolean(t.reviveHpPct));
+  if (revive && fallen.length) return { kind: 'tech', techId: revive.id, target: (fallen.find((x) => x.protagonist) ?? fallen[0]!).uid };
   if (f.ai === 'healer') {
     const heal = tech((t) => Boolean(t.healPct) && t.target === 'ally');
     const hurt = [...friends].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];

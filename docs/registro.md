@@ -24,6 +24,13 @@ Combinado em 31/10/2026 (brainstorm com o usuário). Os números são rascunho: 
 
 9. **Retratos dos personagens (pedido do usuário, ainda sem versão)**: hoje os vilões têm desenho próprio, mas os ninjas usam um molde único que só troca as cores (`ninjaPortrait` em `prototype/art.ts`), então Naruto, Sasuke, Kakashi, Lee e outros quase não se parecem com os personagens. Proposta: desenho próprio em SVG para os cerca de 20 principais; arte própria pode entrar depois em `public/img/jornada/<id>.webp`. Combinar antes de começar.
 
+## Correções do jogador (06/11/2026)
+
+Lista de problemas apontada pelo usuário jogando. Decidido com ele: pílula automática no protagonista, regen fixo menos no chefe, loja com aumento por compra e por estágio, ativa Esforço do Comum, infinito ×1,5 composto só no Hardcore, inimigos calibrados para o bot em 60–70% no Médio, recompensa do Roleta forte e escalando, Yamanaka, Nara e Aburame fora do Roleta.
+
+- **v0.47.3**: abertura da luta não adianta o dano; nome de fatia estreita na roleta.
+- **v0.48.0, reviver como habilidade**: só pílula (automática no protagonista) e técnica levantam; saem a ação Levantar e o limite de 3. Decidido sozinho (o usuário revisa): Reanimação 15 de chakra, espera 2, 50% do HP; quem tem (Tsunade, ficha nova de suporte Mika no sorteio do Comum, talentos Ninguém fica para trás e Primeiros socorros); Kabuto com Reanimação proibida (15, espera 3, 30%). **Efeito inesperado**: a simulação subiu. Antes, inimigos táticos e curandeiros levantavam aliados de graça, sem limite e com 50% do HP, o que os docs nunca descreveram. Decomposição por variantes (400 runs, Médio; dados alterados só em memória): tirar esse reviver dos inimigos dá +6 a +14 pontos; tirar o reviver grátis da equipe, −1 a −6; a Mika, quase nada. Simulação (1000 runs, seed 2), Médio/Difícil/Hardcore antes → depois: História 98/69/60 → 100/68/56, Comum 79/28/26 → 81/29/26, prodígio 92/59/56 → 98/67/62, Uchiha 75/19/16 → 83/18/16, Hyuuga 85/35/30 → 90/37/32. Compensado na calibragem dos inimigos, depois das outras mudanças.
+
 ## Rodadas antigas
 
 Última rodada concluída: "rebalanceamento das origens"

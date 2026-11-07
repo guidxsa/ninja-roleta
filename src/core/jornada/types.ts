@@ -17,7 +17,7 @@ export interface Boost {
 }
 
 /** Quem a técnica atinge. `allEnemies`: todos os adversários de pé. */
-export type JTarget = 'enemy' | 'allEnemies' | 'ally' | 'self';
+export type JTarget = 'enemy' | 'allEnemies' | 'ally' | 'downedAlly' | 'self';
 
 export interface JTechnique {
   id: string;
@@ -40,6 +40,8 @@ export interface JTechnique {
   onHit?: { effect: JEffect; chance: number; turns?: number };
   /** Cura do alvo, em fração do HP máximo dele. */
   healPct?: number;
+  /** Levanta um aliado caído com esta fração do HP máximo dele (alvo `downedAlly`). */
+  reviveHpPct?: number;
   /** Escudo no alvo, em fração do HP máximo de quem usa. */
   shieldPct?: number;
   /** Tira atordoamento e bloqueio de chakra do alvo. */
@@ -222,7 +224,7 @@ export type JEvent =
   | { type: 'regen'; target: string; amount: number }
   | { type: 'down'; target: string }
   | { type: 'survive'; target: string }
-  | { type: 'revive'; uid: string; target: string; hp: number }
+  | { type: 'revive'; uid: string; target: string; hp: number; pill?: boolean }
   | { type: 'item'; uid: string; item: string; target: string }
   | { type: 'guard'; uid: string }
   | { type: 'rest'; uid: string; chakra: number }
@@ -249,14 +251,15 @@ export interface JBattle {
   /** O lutador do turno já usou uma ativa (ou trocou de portão): também não gasta o turno, uma por turno. */
   activeUsed: boolean;
   /** Quantas vezes os suportes já levantaram o protagonista nesta luta. */
-  heroRevives: number;
+  /** Pílulas de reanimação na bolsa: uma é usada sozinha quando o protagonista cai. */
+  pills: number;
+  pillHpPct: number;
   log: JEvent[];
 }
 
 /** Ação do protagonista. */
 export type JAction =
   | { kind: 'tech'; techId: string; target: string }
-  | { kind: 'revive'; target: string }
   | { kind: 'guard' }
   | { kind: 'rest' };
 

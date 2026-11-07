@@ -13,7 +13,7 @@ export const generic: GenericDef = {
       id: 'common',
       hero: 'commonNinja',
       noElementHero: 'prodigy',
-      supports: ['leafGeninA', 'leafGeninB'],
+      supports: ['leafGeninA', 'leafGeninB', 'leafMedic'],
       supportNames: ['daichi', 'hana', 'kenta', 'yui', 'sora', 'aiko', 'haruto', 'rin', 'takumi', 'mei', 'riku', 'nanami'],
     },
     // Uchiha: fogo fixo e um segundo elemento sorteado (pode sair nenhum).

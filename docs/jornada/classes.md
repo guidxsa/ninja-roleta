@@ -43,6 +43,7 @@ Ativas de classe não gastam o turno: saem junto com a ação, uma por turno ([c
 - Fichas de suporte (2 por classe, para dois parceiros da mesma classe não repetirem): Comum — atacante (Kunai, Shuriken) e tática (Kunai, Armadilha de fios, Kai); Uchiha — atacante (Kunai, Ilusão dos corvos) e tática (Shuriken, Armadilha de fios), fogo fixo; Hyuuga — guardiã (Palma Suave, Rotação, Kunai) e atacante (Palma Suave, Shuriken, Palma do Vácuo), sem elemento.
 - O nome leva o clã: Comum só o nome ("Daichi"); Uchiha e Hyuuga com o sobrenome ("Kaede Uchiha", "Sei Hyuuga"). Saves antigos, sem nome sorteado, usam o nome da ficha (Daichi, Hana, Ren Uchiha, Mio Hyuuga).
 - Versão suporte: ficha menor que a de protagonista, sem árvore, sobe de nível com o protagonista ([personagens.md](personagens.md)).
+- A classe Comum tem uma **médica de campo** entre as fichas (Mika, v0.48.0): a única do Caminho Ninja que nasce com Reanimação ([combate.md](combate.md#cair-e-levantar)).
 
 ## Easter eggs
 
