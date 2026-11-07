@@ -14,9 +14,10 @@ import {
   hpCost,
   itemTargets,
   maxGate,
+  advance,
+  openBattle,
   playerAct,
   setGate,
-  startBattle,
   techniqueCost,
   techPower,
   useActive,
@@ -294,7 +295,8 @@ export async function jornadaBattle(
   heroSkin = run0.skin;
   heroName = run0.mode === 'generic' ? heroLabel(run0.hero, host.playerName()) : null;
   teamNames = Object.fromEntries(setup.allies.map((a) => [a.defId, memberLabel(run0, a.defId, host.playerName())]));
-  let state = startBattle(setup, data, rng);
+  // Na abertura ninguém agiu ainda: os turnos antes do protagonista só andam depois da intro, para as barras não adiantarem o dano.
+  let state = openBattle(setup);
   liveBattle = () => state;
   liveBattleRun = () => run;
   const root = show(
@@ -691,7 +693,9 @@ export async function jornadaBattle(
   await sleep(host.instant() ? 150 : 900);
   root.querySelector('.jb-intro')?.remove();
   await flashRelics(root, startRelics(run0), host.instant());
-  await animate({ ...state, log: [] }, state);
+  const opening = state;
+  state = advance(opening, data, rng);
+  await animate(opening, state);
   while (state.status === 'ongoing') {
     if (!awaitingPlayer(state)) break;
     const action = await playerTurn();

@@ -54,6 +54,39 @@ function ellipsize(label: string, width: number, font: number, measure: Measure)
   return '…';
 }
 
+/** Fração da largura da fatia que a altura da letra pode ocupar. */
+const FONT_PER_CHORD = 0.62;
+
+/** Largura da fatia a uma distância do centro. */
+export function sliceChord(radius: number, spanDeg: number): number {
+  return 2 * radius * Math.sin(((Math.min(spanDeg, 180) / 2) * Math.PI) / 180);
+}
+
+export interface SliceFontLimits {
+  /** Raio da roleta e raio onde o nome começa (na borda). */
+  radius: number;
+  outer: number;
+  spanDeg: number;
+  fontMax: number;
+  fontMin: number;
+}
+
+/**
+ * Maior letra do rótulo de uma fatia, ou null se nem o menor tamanho cabe (só a legenda mostra).
+ * A referência é o meio do raio. Fatia estreita, abaixo disso, ainda leva nome curto: ele sai da borda, onde a fatia é
+ * mais larga, então a conta usa a largura no ponto em que o nome termina.
+ */
+export function sliceFont(label: string, measure: Measure, limits: SliceFontLimits): number | null {
+  const { radius, outer, spanDeg, fontMax, fontMin } = limits;
+  const atMiddle = Math.min(fontMax, sliceChord(radius * 0.5, spanDeg) * FONT_PER_CHORD);
+  if (atMiddle >= fontMin) return atMiddle;
+  const fits = fontSteps(fontMax, fontMin).find((f) => {
+    const end = outer - measure(label, f);
+    return end > 0 && sliceChord(end, spanDeg) * FONT_PER_CHORD >= f;
+  });
+  return fits ?? null;
+}
+
 /** Uma linha com letra legível; senão, duas linhas; senão, uma linha menor; só então reticências. */
 export function fitLabel(label: string, measure: Measure, limits: LabelLimits): LabelFit {
   const { width, twoLineWidth, twoLineHeight, fontMax, fontMin } = limits;

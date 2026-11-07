@@ -1,8 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { fitLabel } from '../prototype/wheelLabel';
+import { fitLabel, sliceFont } from '../prototype/wheelLabel';
 
 const measure = (text: string, font: number) => text.length * font * 0.6;
 const limits = { width: 104, twoLineWidth: 84, twoLineHeight: 40, fontMax: 13, fontMin: 8 };
+
+describe('sliceFont', () => {
+  const wheel = { radius: 140, outer: 132, fontMax: 13, fontMin: 8 };
+
+  it('fatia larga segue a conta do meio do raio', () => {
+    expect(sliceFont('Comum', measure, { ...wheel, spanDeg: 100 })).toBe(13);
+  });
+
+  it('o Senju (3 de 103, nome curto) aparece mesmo abaixo do limite do meio do raio', () => {
+    const font = sliceFont('Senju', measure, { ...wheel, spanDeg: (3 / 103) * 360 });
+    expect(font).not.toBeNull();
+    expect(font!).toBeGreaterThanOrEqual(8);
+  });
+
+  it('nome longo em fatia estreita e fatia estreita demais ficam só na legenda', () => {
+    expect(sliceFont('Pergaminho dos Oito Trigramas', measure, { ...wheel, spanDeg: 10 })).toBeNull();
+    expect(sliceFont('Senju', measure, { ...wheel, spanDeg: 1 })).toBeNull();
+  });
+});
 
 describe('fitLabel', () => {
   it('nome curto fica em uma linha com a fonte máxima', () => {

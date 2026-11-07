@@ -1,7 +1,7 @@
 // Componentes visuais de roleta. O resultado já vem sorteado pelo core; aqui só se anima até ele.
 import { land, spinStart, swish, tick } from './audio';
 import { sleep } from './dom';
-import { fitLabel, type LabelFit } from './wheelLabel';
+import { fitLabel, sliceFont, type LabelFit } from './wheelLabel';
 
 export interface WheelSlice {
   label: string;
@@ -151,10 +151,9 @@ export function createWheel(slices: WheelSlice[]): Wheel {
     paths.push(shape);
 
     const span = (f1 - f0) * 360;
-    // A altura da letra cabe na largura da fatia perto do meio do raio; senão, só a legenda mostra.
-    const chord = 2 * (R * 0.5) * Math.sin(((Math.min(span, 180) / 2) * Math.PI) / 180);
-    const font = Math.min(FONT_MAX, chord * 0.62);
-    if (font >= FONT_MIN) {
+    // Sem altura para nenhuma letra, só a legenda mostra.
+    const font = sliceFont(s.label, measureLabel, { radius: R, outer: R - LABEL_PAD, spanDeg: span, fontMax: FONT_MAX, fontMin: FONT_MIN });
+    if (font !== null) {
       const mid = ((f0 + f1) / 2) * 360;
       const [x, y] = point(mid, R - LABEL_PAD);
       const text = document.createElementNS(SVG_NS, 'text');

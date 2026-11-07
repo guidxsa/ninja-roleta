@@ -334,10 +334,14 @@ export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique
 // ---------------------------------------------------------------------------
 // Início e fluxo
 
-export function startBattle(setup: BattleSetup, data: JornadaData, rng: Rng): JBattle {
+/** Monta a luta sem andar: ninguém agiu ainda. É o estado que a tela mostra na abertura. */
+export function openBattle(setup: BattleSetup): JBattle {
   const fighters = [...setup.allies.map((f, i) => enter(f, 'ally', i)), ...setup.enemies.map((f, i) => enter(f, 'enemy', i))];
-  const s: JBattle = { round: 0, fighters, order: [], turnIndex: 0, turnStarted: false, status: 'ongoing', win: setup.win, itemUsed: false, activeUsed: false, heroRevives: 0, log: [] };
-  return advance(s, data, rng);
+  return { round: 0, fighters, order: [], turnIndex: 0, turnStarted: false, status: 'ongoing', win: setup.win, itemUsed: false, activeUsed: false, heroRevives: 0, log: [] };
+}
+
+export function startBattle(setup: BattleSetup, data: JornadaData, rng: Rng): JBattle {
+  return advance(openBattle(setup), data, rng);
 }
 
 function clone(s: JBattle): JBattle {

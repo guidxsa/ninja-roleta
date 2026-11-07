@@ -12,6 +12,7 @@ import {
   hitDamage,
   maxGate,
   mergeMods,
+  openBattle,
   playerAct,
   setGate,
   startBattle,
@@ -170,6 +171,18 @@ describe('nome do jogador', () => {
 });
 
 describe('combate de equipe da Jornada', () => {
+  it('a abertura mostra todos intactos; os turnos antes do protagonista só andam depois', () => {
+    const fast = dummy({ speed: 99, hp: 500, maxHp: 500, techniques: ['jeCleaver'] });
+    const opening = openBattle(setup({ enemies: [fast] }));
+    expect(opening.fighters[0]!.hp).toBe(100);
+    expect(opening.log).toEqual([]);
+    const after = advance(opening, data, fixed(0));
+    expect(after.fighters[0]!.hp).toBeLessThan(100);
+    // O estado de abertura não muda, e o resultado é igual ao de startBattle com o mesmo sorteio.
+    expect(opening.fighters[0]!.hp).toBe(100);
+    expect(after).toEqual(startBattle(setup({ enemies: [fast] }), data, fixed(0)));
+  });
+
   it('para na vez do protagonista e o mais rápido age primeiro', () => {
     const b = startBattle(setup(), data, fixed(0.5));
     expect(awaitingPlayer(b)).toBe(true);
