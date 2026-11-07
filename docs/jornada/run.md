@@ -58,7 +58,7 @@ Recompensas interativas no lugar da roleta visual. Ganhar dá o prêmio do event
 
 ## Loja
 
-Sempre aberta (v0.50.0): o botão Loja fica no HUD, no mapa, na trilha e no descanso, sem gastar parada. Não abre no meio da luta.
+Sempre aberta (v0.50.0): o botão Loja fica no HUD, no mapa, na trilha e no descanso, sem gastar parada. Não abre no meio da luta. No widescreen (v0.57.1), a loja fica aberta na coluna da build, ao lado da trilha e do mapa, no lugar do botão; abrir conta como acesso (sorteia e salva o estoque), por isso o painel só existe quando aparece.
 
 - **Estoque**: 3 relíquias por estágio, sorteadas no primeiro acesso e salvas na run: fechar e abrir, ou recarregar a página, não troca a prateleira. Muda só no estágio seguinte.
 - **À venda**: relíquias, kits (20, 20 e 35 ryō), treino (+1 ponto de talento, 60 ryō; some com a [árvore completa](talentos.md#árvore-completa)) e tratamento (+50 de HP e +15 de chakra em cada um, 30 ryō).

@@ -365,7 +365,7 @@ function hud(host: JornadaHost, run: JRun): string {
       <button class="btn small" data-open="sheet">${icon('book')} ${U.sheetBtn}</button>
       <button class="btn small" data-open="talents">${icon('scroll')} ${U.talentsBtn}${run.talentPoints ? ` <span class="badge">${run.talentPoints}</span>` : ''}</button>
       <button class="btn small" data-open="moveset">${icon('swords')} ${U.movesetBtn}</button>
-      <button class="btn small" data-open="shop"${tip(U.shopBtn, U.shopTip)}>${icon('tag')} ${U.shopBtn}</button>
+      <button class="btn small jhud-shop" data-open="shop"${tip(U.shopBtn, U.shopTip)}>${icon('tag')} ${U.shopBtn}</button>
     </div>
     ${relicBar(run)}
     ${bag.length ? `<p class="muted small">${U.bagTitle}: ${bag.join(' · ')}</p>` : ''}
@@ -381,10 +381,188 @@ function trail(run: JRun): string {
       return `<li class="jstop ${state} k-${s.kind}">${mark}
         <span class="jstop-txt"><b>${stopName(s)}</b><small>${J.stopKinds[s.kind]}</small></span></li>`;
     })
-    .join('')}</ol></div>
-    <details class="jlegend"><summary>${U.legend}</summary><ul>${Object.keys(J.stopKinds)
-      .map((k) => `<li>${icon(STOP_ICONS[k]!)} <b>${J.stopKinds[k]}</b> · ${J.stopKindDesc[k]}</li>`)
-      .join('')}</ul></details>`;
+    .join('')}</ol></div>`;
+}
+
+function trailLegend(): string {
+  return `<details class="jlegend"><summary>${U.legend}</summary><ul>${Object.keys(J.stopKinds)
+    .map((k) => `<li>${icon(STOP_ICONS[k]!)} <b>${J.stopKinds[k]}</b> · ${J.stopKindDesc[k]}</li>`)
+    .join('')}</ul></details>`;
+}
+
+// ---------------------------------------------------------------------------
+// Painéis do widescreen (docs/visual.md, "Celular e desktop"): o que vem pela frente, dicas e a loja ao lado.
+// Abaixo de 1280px o CSS esconde a próxima parada e a dica; a loja embutida nem é montada.
+
+const WIDE = '(min-width: 1280px)';
+
+function hintText(run: JRun, salt: number): string {
+  const c = data.j.combat;
+  const r = data.j.run;
+  const fmt = (n: number) => String(n).replace('.', ',');
+  const pct = (n: number) => Math.round(n * 100);
+  const H = U.hints;
+  const rec = afterWinRecovery(run, data);
+  const all = [
+    H.elements(fmt(c.elementAdvantage), fmt(c.elementDisadvantage)),
+    H.clones(pct(c.cloneBlockChance)),
+    H.guard,
+    H.rest(c.restChakra),
+    H.bag(r.bagLimit),
+    H.revive(pct(c.reviveHpPct)),
+    H.downed(pct(r.downedAllyReturnPct)),
+    H.recovery(rec.hp, rec.chakra),
+    H.elite,
+    H.restStop,
+    U.shopPriceRule(pct(data.j.shop.perPurchase), pct(data.j.shop.perStage)),
+    H.moveset,
+    H.tooltips,
+  ];
+  // Muda a cada parada, sem sortear: estágio e posição escolhem a frase.
+  return all[(run.stageIndex * 5 + salt) % all.length]!;
+}
+
+function hintCard(run: JRun, salt: number): string {
+  return `<section class="card jhint"><h3>${icon('scroll')} ${U.hintTitle}</h3><p>${hintText(run, salt)}</p></section>`;
+}
+
+/** Próxima parada da História: quem espera na luta (ou o que é a parada) e as seguintes. */
+function trailNext(run: JRun, stop: StopDef): string {
+  let body: string;
+  if (isFight(stop)) {
+    const foes = battleSetup(run, data).enemies;
+    const goal = goalText(stop);
+    body = `<ul class="jnext-foes">${foes
+      .map((f) => {
+        const id = f.defId!;
+        const def = data.enemies[id]!;
+        const el = def.element ? `${icon(def.element)} ${S.elements[def.element]}` : '';
+        const ai = J.ai[def.ai];
+        return `<li>${fighterPortrait(id, def.portrait, 'sm')}<span><b>${J.names[id] ?? id}</b><small>${U.foeLine(el, f.maxHp)}</small>${ai ? `<small class="muted">${ai}</small>` : ''}</span></li>`;
+      })
+      .join('')}</ul>${goal ? `<p class="jnext-goal">${esc(goal)}</p>` : ''}`;
+  } else body = `<p class="muted small">${J.stopKindDesc[stop.kind] ?? ''}</p>`;
+  const after = currentStage(run, data).stops.slice(run.stopIndex + 1, run.stopIndex + 4);
+  return `<section class="card jnext">
+    <h3>${U.nextTitle}</h3>
+    <div class="jnext-stop k-${stop.kind}">${icon(STOP_ICONS[stop.kind]!)}<span><b>${stopName(stop)}</b><small>${J.stopKinds[stop.kind]}</small></span></div>
+    ${body}
+    ${after.length ? `<h4>${U.afterTitle}</h4><ol class="jnext-list">${after.map((s) => `<li class="k-${s.kind}">${icon(STOP_ICONS[s.kind]!)}<span>${stopName(s)}<small>${J.stopKinds[s.kind]}</small></span></li>`).join('')}</ol>` : ''}
+  </section>`;
+}
+
+/** Caminho Ninja: os tipos de nó que dá para escolher agora. */
+function mapNext(run: JRun): string {
+  const kinds = [...new Set(nodeChoices(run).map((n) => n.kind))];
+  return `<section class="card jnext"><h3>${U.openPaths}</h3><ul class="jnext-list">${kinds
+    .map((k) => `<li class="k-${k}">${k === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[k]!)}<span>${nodeKindName(k)}<small>${nodeKindDesc(k)}</small></span></li>`)
+    .join('')}</ul></section>`;
+}
+
+/**
+ * Miolo da loja: prateleira de relíquias, bolsa, treino e tratamento. Serve à tela cheia (celular, botão Loja)
+ * e ao painel fixo do widescreen; as regras são as mesmas (`shopOffer`, `canBuy`, `buy`). Devolve o redesenho.
+ */
+function shopPanel(el: HTMLElement, host: JornadaHost, get: () => JRun, set: (r: JRun) => void, onBuy: () => void): () => void {
+  const first = shopOffer(get(), data);
+  host.discoverRelics(first.relics.map((r) => r.id));
+  let shelfPick: string | undefined = first.relics.find((r) => !get().relics.includes(r.id))?.id ?? first.relics[0]?.id;
+  const render = () => {
+    const run = get();
+    const offer = shopOffer(run, data);
+    const owned = (id: string) => run.relics.includes(id);
+    const btn = (p: Purchase, key: string) => {
+      const ok = canBuy(run, p, data);
+      const label = p.kind === 'relic' && owned(p.id) ? U.owned : p.kind === 'item' && !canBuy({ ...run, ryo: 1e9 }, p, data) ? U.full : `${U.buy} · ${U.ryo(p.price)}`;
+      return `<button class="btn small" data-buy="${key}" ${ok ? '' : 'disabled'}>${label}</button>`;
+    };
+    const picked = offer.relics.find((r) => r.id === shelfPick);
+    el.innerHTML = `
+      <h3>${U.relicsTitle}</h3>
+      <div class="jrshelf">${offer.relics
+        .map((r) => `<button type="button" class="jrshelf-item tier-${relicTier(r.id)}${r.id === shelfPick ? ' on' : ''}${owned(r.id) ? ' sold' : ''}" data-shelf="${r.id}">
+          <span class="jrslot big tier-${relicTier(r.id)}">${relicIcon(r.id)}</span><span class="jrprice">${owned(r.id) ? U.owned : U.ryo(r.price)}</span></button>`)
+        .join('')}</div>
+      ${picked ? relicCard(picked.id, btn({ kind: 'relic', ...picked }, `r:${picked.id}`), 'stack') : ''}
+      <h3>${U.bagTitle}</h3>${offer.consumables
+        .map((c) => `<div class="jrelic"><span class="jrelic-ico">${icon('kit')}</span><span class="jrelic-txt"><b>${J.items[c.id]!.name}</b><small>${J.items[c.id]!.desc}</small></span>${btn({ kind: 'item', ...c }, `i:${c.id}`)}</div>`)
+        .join('')}
+      ${talentTreeComplete(run, data) ? '' : `<div class="jrelic"><span class="jrelic-ico">${icon('scroll')}</span><span class="jrelic-txt"><b>${U.training}</b></span>${btn({ kind: 'training', price: offer.training }, 't')}</div>`}
+      <div class="jrelic"><span class="jrelic-ico">${icon('medical')}</span><span class="jrelic-txt"><b>${U.treatment}</b></span>${btn({ kind: 'treatment', price: offer.treatment }, 'heal')}</div>`;
+  };
+  el.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    const shelf = t.closest<HTMLElement>('[data-shelf]');
+    if (shelf) {
+      shelfPick = shelf.dataset.shelf;
+      return render();
+    }
+    const b = t.closest<HTMLButtonElement>('[data-buy]');
+    if (!b || b.disabled) return;
+    const offer = shopOffer(get(), data);
+    const [kind, id] = b.dataset.buy!.split(':');
+    const p: Purchase =
+      kind === 'r'
+        ? { kind: 'relic', ...offer.relics.find((r) => r.id === id)! }
+        : kind === 'i'
+          ? { kind: 'item', ...offer.consumables.find((c) => c.id === id)! }
+          : kind === 't'
+            ? { kind: 'training', price: offer.training }
+            : { kind: 'treatment', price: offer.treatment };
+    set(keep(buy(get(), p, data)));
+    host.mood('good');
+    render();
+    onBuy();
+  });
+  render();
+  return render;
+}
+
+function inflationChip(el: HTMLElement, run: JRun): void {
+  const pct = Math.round(shopInflation(run, data) * 100);
+  el.hidden = pct === 0;
+  el.textContent = U.shopInflation(pct);
+  el.dataset.tip = `<b class="tip-title">${U.shopTitle}</b>${U.shopPriceRule(Math.round(data.j.shop.perPurchase * 100), Math.round(data.j.shop.perStage * 100))}`;
+}
+
+/**
+ * Loja fixa na coluna da build, só no widescreen. Montar abre a loja (`openShop` grava a prateleira e as relíquias
+ * contam como vistas), por isso ela só existe quando aparece de fato e some se a janela estreitar.
+ * Devolve a função que redesenha a loja quando a run muda por fora (talentos, moveset).
+ */
+function dockShop(root: HTMLElement, host: JornadaHost, get: () => JRun, set: (r: JRun) => void, changed: () => void): () => void {
+  const dock = root.querySelector<HTMLElement>('[data-shop-dock]');
+  if (!dock) return () => {};
+  const mq = window.matchMedia(WIDE);
+  let redraw: (() => void) | null = null;
+  const chip = () => {
+    const c = dock.querySelector<HTMLElement>('[data-inflation]');
+    if (c) inflationChip(c, get());
+  };
+  const sync = () => {
+    if (!root.isConnected) return mq.removeEventListener('change', sync);
+    if (mq.matches && !redraw) {
+      set(keep(openShop(get(), data)));
+      saveJornada(host.storage, get());
+      dock.innerHTML = `<h3 class="jdock-title">${icon('tag')} ${U.shopTitle} <span class="chip" data-inflation></span></h3><div data-shop></div>`;
+      dock.hidden = false;
+      redraw = shopPanel(dock.querySelector<HTMLElement>('[data-shop]')!, host, get, set, () => {
+        chip();
+        changed();
+      });
+      chip();
+    } else if (!mq.matches && redraw) {
+      dock.hidden = true;
+      dock.innerHTML = '';
+      redraw = null;
+    }
+  };
+  mq.addEventListener('change', sync);
+  sync();
+  return () => {
+    redraw?.();
+    chip();
+  };
 }
 
 /** Botões do HUD (talentos, moveset, relíquias) funcionam em qualquer tela que mostre o HUD. */
@@ -429,18 +607,25 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
   const teamLine = isFight(stop)
     ? `<p class="jteam">${[run.hero, ...team].map((id) => fighterPortrait(id, portraitSpec(id), 'sm')).join('')}<span class="muted small">${team.length ? team.map((id) => esc(memberLabel(run, id, host.playerName()))).join(', ') : U.solo}</span></p>`
     : '';
+  // Colunas: build (HUD e loja) | trilha | o que vem (próxima parada, dica, seguir). No celular as colunas se desfazem.
   const root = show(
     h(`<div class="screen jtrail-screen">
       <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span>${cycleChip(run)}<span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
-      <div data-hud>${hud(host, cur)}</div>
+      <div class="jcol jcol-l"><div data-hud>${hud(host, cur)}</div><section class="card jshop-dock" data-shop-dock hidden></section></div>
       ${trail(cur)}
-      <div class="sticky-cta">${teamLine}<button class="btn primary big" data-choice="go">${icon(STOP_ICONS[stop.kind]!)} ${U.go(stopName(stop))}</button>
-        <button class="btn small jabandon" data-choice="abandon">${U.abandon}</button></div>
+      <div class="jcol jcol-r">${trailNext(cur, stop)}${hintCard(cur, cur.stopIndex)}${trailLegend()}
+        <div class="sticky-cta">${teamLine}<button class="btn primary big" data-choice="go">${icon(STOP_ICONS[stop.kind]!)} ${U.go(stopName(stop))}</button>
+        <button class="btn small jabandon" data-choice="abandon">${U.abandon}</button></div></div>
     </div>`),
   );
-  wireHud(root, host, () => cur, (r) => (cur = r), () => {
+  const refreshHud = () => {
     root.querySelector('[data-hud]')!.innerHTML = hud(host, cur);
     saveJornada(host.storage, cur);
+  };
+  const redrawShop = dockShop(root, host, () => cur, (r) => (cur = r), refreshHud);
+  wireHud(root, host, () => cur, (r) => (cur = r), () => {
+    refreshHud();
+    redrawShop();
   });
   for (;;) {
     const c = await choose<'go' | 'abandon'>(root);
@@ -465,7 +650,7 @@ function nodeJitter(id: string): { x: number; y: number } {
 }
 
 /** Mapa do estágio: de baixo para cima, chefe no topo, rota feita em pincelada e o herói na posição atual. */
-function mapView(run: JRun): string {
+function mapView(run: JRun, hudHtml: string): string {
   const map = run.map!;
   const choices = new Set(nodeChoices(run).map((n) => n.id));
   const done = new Set(run.path);
@@ -506,13 +691,17 @@ function mapView(run: JRun): string {
   const legend = ['fight', 'elite', 'unknown', 'rest', 'treasure', 'boss']
     .map((k) => `<span class="jlegend-chip k-${k}"${tip(nodeKindName(k), nodeKindDesc(k))}>${k === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[k]!)}${nodeKindName(k)}</span>`)
     .join('');
-  // Três peças irmãs (chefe, carta, legenda): no celular ficam empilhadas; no widescreen chefe e legenda vão para a coluna de contexto.
-  return `<div class="jmap-boss">${fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm')}<span><small>${M.bossLabel}</small><b>${boss.map((id) => J.names[id] ?? id).join(' e ')}</b></span></div>
+  // Colunas: build (HUD e loja) | carta | o que vem (chefe, caminhos, dica, legenda, escolher e abandonar).
+  // No celular as colunas se desfazem e o CSS refaz a ordem de sempre: HUD, escolher, abandonar, chefe, carta, legenda.
+  return `<div class="jcol jcol-l"><div data-hud>${hudHtml}</div><section class="card jshop-dock" data-shop-dock hidden></section></div>
+    <div class="jcol jcol-r"><div class="jmap-boss">${fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm')}<span><small>${M.bossLabel}</small><b>${boss.map((id) => J.names[id] ?? id).join(' e ')}</b></span></div>
+      ${mapNext(run)}${hintCard(run, run.path.length)}
+      <div class="jlegend-chips" aria-label="${U.legend}">${legend}</div>
+      <p class="jb-prompt">${M.choose}</p><button class="btn small jabandon" data-abandon>${U.abandon}</button></div>
     <div class="jtrail-map"><div class="jmap jscene scene-${stageScene(run, data)}" style="height:${height}px">
       <svg class="jmap-lines" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>${nodes}
       <span class="jmap-hero" style="left:${here.x}%;top:${here.y}px" aria-hidden="true">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}</span>
-    </div></div>
-    <div class="jlegend-chips" aria-label="${U.legend}">${legend}</div>`;
+    </div></div>`;
 }
 
 async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
@@ -520,14 +709,17 @@ async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
   const root = show(
     h(`<div class="screen jtrail-screen jmap-screen">
       <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span>${cycleChip(run)}<span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
-      <div class="jmap-side"><div data-hud>${hud(host, cur)}</div>
-        <p class="jb-prompt">${M.choose}</p><button class="btn small jabandon" data-abandon>${U.abandon}</button></div>
-      ${mapView(cur)}
+      ${mapView(cur, hud(host, cur))}
     </div>`),
   );
-  wireHud(root, host, () => cur, (r) => (cur = r), () => {
+  const refreshHud = () => {
     root.querySelector('[data-hud]')!.innerHTML = hud(host, cur);
     saveJornada(host.storage, cur);
+  };
+  const redrawShop = dockShop(root, host, () => cur, (r) => (cur = r), refreshHud);
+  wireHud(root, host, () => cur, (r) => (cur = r), () => {
+    refreshHud();
+    redrawShop();
   });
   // Rola o mapa até os nós que dá para escolher (no celular o mapa é comprido).
   root.querySelector('.jnode-map.choice')?.scrollIntoView({ block: 'center', behavior: host.instant() ? 'auto' : 'smooth' });
@@ -606,71 +798,24 @@ async function eventStop(host: JornadaHost, run: JRun): Promise<JRun> {
 function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
   let run = keep(openShop(run0, data));
   saveJornada(host.storage, run);
-  const first = shopOffer(run, data);
-  host.discoverRelics(first.relics.map((r) => r.id));
-  let shelfPick: string | undefined = first.relics.find((r) => !run.relics.includes(r.id))?.id ?? first.relics[0]?.id;
   const root = h(`<div class="jtree-screen jshop-screen ${themeOf(run.hero).cls}" role="dialog" aria-label="${U.shopTitle}"${themeStyle(run)}><div class="jt-body">
     <div class="jt-head"><h2>${icon('tag')} ${U.shopTitle}</h2><span class="chip" data-ryo></span><span class="chip" data-inflation></span></div>
     <div data-shop></div>
     <div class="sticky-cta"><button class="btn primary big" data-close>${U.leave}</button></div></div></div>`);
   document.body.appendChild(root);
-  const render = () => {
-    const offer = shopOffer(run, data);
+  const chips = () => {
     root.querySelector('[data-ryo]')!.innerHTML = `${icon('coin')} ${U.ryo(run.ryo)}`;
-    const inflation = root.querySelector<HTMLElement>('[data-inflation]')!;
-    const pct = Math.round(shopInflation(run, data) * 100);
-    inflation.hidden = pct === 0;
-    inflation.textContent = U.shopInflation(pct);
-    inflation.dataset.tip = `<b class="tip-title">${U.shopTitle}</b>${U.shopPriceRule(Math.round(data.j.shop.perPurchase * 100), Math.round(data.j.shop.perStage * 100))}`;
-    const owned = (id: string) => run.relics.includes(id);
-    const btn = (p: Purchase, key: string) => {
-      const ok = canBuy(run, p, data);
-      const label = p.kind === 'relic' && owned(p.id) ? U.owned : p.kind === 'item' && !canBuy({ ...run, ryo: 1e9 }, p, data) ? U.full : `${U.buy} · ${U.ryo(p.price)}`;
-      return `<button class="btn small" data-buy="${key}" ${ok ? '' : 'disabled'}>${label}</button>`;
-    };
-    const picked = offer.relics.find((r) => r.id === shelfPick);
-    root.querySelector('[data-shop]')!.innerHTML = `
-      <h3>${U.relicsTitle}</h3>
-      <div class="jrshelf">${offer.relics
-        .map((r) => `<button type="button" class="jrshelf-item tier-${relicTier(r.id)}${r.id === shelfPick ? ' on' : ''}${owned(r.id) ? ' sold' : ''}" data-shelf="${r.id}">
-          <span class="jrslot big tier-${relicTier(r.id)}">${relicIcon(r.id)}</span><span class="jrprice">${owned(r.id) ? U.owned : U.ryo(r.price)}</span></button>`)
-        .join('')}</div>
-      ${picked ? relicCard(picked.id, btn({ kind: 'relic', ...picked }, `r:${picked.id}`), 'stack') : ''}
-      <h3>${U.bagTitle}</h3>${offer.consumables
-        .map((c) => `<div class="jrelic"><span class="jrelic-ico">${icon('kit')}</span><span class="jrelic-txt"><b>${J.items[c.id]!.name}</b><small>${J.items[c.id]!.desc}</small></span>${btn({ kind: 'item', ...c }, `i:${c.id}`)}</div>`)
-        .join('')}
-      ${talentTreeComplete(run, data) ? '' : `<div class="jrelic"><span class="jrelic-ico">${icon('scroll')}</span><span class="jrelic-txt"><b>${U.training}</b></span>${btn({ kind: 'training', price: offer.training }, 't')}</div>`}
-      <div class="jrelic"><span class="jrelic-ico">${icon('medical')}</span><span class="jrelic-txt"><b>${U.treatment}</b></span>${btn({ kind: 'treatment', price: offer.treatment }, 'heal')}</div>`;
+    inflationChip(root.querySelector<HTMLElement>('[data-inflation]')!, run);
   };
-  render();
+  shopPanel(root.querySelector<HTMLElement>('[data-shop]')!, host, () => run, (r) => (run = r), () => {
+    chips();
+    saveJornada(host.storage, run);
+  });
+  chips();
   return new Promise((resolve) => {
-    root.addEventListener('click', (e) => {
-      const t = e.target as HTMLElement;
-      if (t.closest('[data-close]')) {
-        root.remove();
-        return resolve(run);
-      }
-      const shelf = t.closest<HTMLElement>('[data-shelf]');
-      if (shelf) {
-        shelfPick = shelf.dataset.shelf;
-        return render();
-      }
-      const b = t.closest<HTMLButtonElement>('[data-buy]');
-      if (!b || b.disabled) return;
-      const offer = shopOffer(run, data);
-      const [kind, id] = b.dataset.buy!.split(':');
-      const p: Purchase =
-        kind === 'r'
-          ? { kind: 'relic', ...offer.relics.find((r) => r.id === id)! }
-          : kind === 'i'
-            ? { kind: 'item', ...offer.consumables.find((c) => c.id === id)! }
-            : kind === 't'
-              ? { kind: 'training', price: offer.training }
-              : { kind: 'treatment', price: offer.treatment };
-      run = keep(buy(run, p, data));
-      host.mood('good');
-      render();
-      saveJornada(host.storage, run);
+    root.querySelector('[data-close]')!.addEventListener('click', () => {
+      root.remove();
+      resolve(run);
     });
   });
 }

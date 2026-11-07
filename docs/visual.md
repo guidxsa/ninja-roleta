@@ -87,8 +87,8 @@ A CSS não aceita `var()` em `@media`, então os números se repetem nas telas; 
 
 | Tela | Desktop | Situação |
 |---|---|---|
-| Combate da Jornada | Notebook: campo e ações em colunas. Widescreen: equipe à esquerda (grade de duas com 3 ou mais), inimigos ao centro com o local cobrindo o campo, ações fixas à direita. A luta ocupa a altura da janela | Feito (v0.57.0) |
-| Trilha e mapa da Jornada | A tela cabe na janela e só a trilha ou a carta rola. Notebook: equipe ao lado. Widescreen: equipe, trilha ou carta e contexto (seguir, chefe, legenda) | Feito (v0.57.0) |
+| Combate da Jornada | Notebook: campo e ações em colunas, com o registro embaixo. Widescreen: registro da luta sempre aberto à esquerda, campo clássico ao centro (inimigos em cima, equipe embaixo, o local cobrindo o fundo) e ações à direita, na altura da janela. A v0.57.0 pôs a equipe numa coluna à esquerda e os inimigos ao centro; o usuário achou ruim e saiu na v0.57.1 | Feito (v0.57.1) |
+| Trilha e mapa da Jornada | A tela cabe na janela e só a trilha, a carta e as colunas rolam por dentro. Notebook: build e botões ao lado. Widescreen: **build** à esquerda (HUD e a loja aberta; o botão Loja some), trilha ou carta ao centro e **o que vem** à direita (próxima parada com os inimigos, paradas seguintes ou caminhos abertos, chefe, dica de jogo, seguir e abandonar). No celular as colunas se desfazem e a ordem é a de sempre | Feito (v0.57.1) |
 | Roleta, árvore de talentos, Portão, entrada da Jornada, modais e minigames | Ainda na coluna de 520px (a árvore já mostra os ramos lado a lado) | A fazer, uma versão por tela |
 
 ## Situação

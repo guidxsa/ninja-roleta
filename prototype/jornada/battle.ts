@@ -307,7 +307,7 @@ export async function jornadaBattle(
       <div class="jb-side jb-enemies" data-side="enemy"></div>
       <div class="jb-banner" aria-live="polite"></div>
       <div class="jb-side jb-allies" data-side="ally"></div>
-      <button class="jb-log" type="button" data-log><span></span></button>
+      <button class="jb-log" type="button" data-log data-title="${B.logTitle}"><span></span></button>
       <div class="jb-menu"></div>
       <div class="jb-intro"><div>${esc(label)}</div></div>
       <div class="jb-fx" aria-hidden="true"></div>

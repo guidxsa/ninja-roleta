@@ -266,13 +266,23 @@
 .jlegend-chip.k-elite, .jlegend-chip.k-treasure { color: var(--gold-2); }
 .jlegend-chip.k-rest { color: var(--leaf); }
 .jlegend-chip.k-boss { color: var(--accent-2); }
-.jmap-side { display: flex; flex-direction: column; gap: 6px; }
-.jmap-side .jabandon { align-self: center; }
+/*
+ * Colunas da trilha e do mapa: build (.jcol-l: HUD e loja) e o que vem (.jcol-r). No celular elas se desfazem
+ * (display: contents) e cada peça volta a ser item da tela; no mapa, `order` refaz a sequência de sempre.
+ */
+.jcol { display: contents; }
+.jnext, .jhint, .jshop-dock { display: none; }
+.jmap-screen [data-hud] { order: 1; }
+.jmap-screen .jb-prompt { order: 2; }
+.jmap-screen .jabandon { order: 3; }
+.jmap-screen .jmap-boss { order: 4; }
+.jmap-screen .jtrail-map { order: 5; }
+.jmap-screen .jlegend-chips { order: 6; }
 
 .jend.win h2 { color: var(--gold-2); }
 .jend.lose h2 { color: var(--bad); }
 
-/* Notebook (≥ 900): a Jornada usa a tela larga, com o HUD fixo ao lado da trilha ou do mapa. */
+/* Notebook (≥ 900): a Jornada usa a tela larga; build e o que vem empilhados ao lado da trilha ou do mapa. */
 @media (min-width: 900px) {
   body.mode-jornada main, body.mode-jornada footer, body.mode-jornada .top { max-width: var(--shell-max); }
   body.mode-jornada main, body.mode-jornada .top { padding-left: 24px; padding-right: 24px; }
@@ -281,22 +291,21 @@
   body.mode-jornada .jstart { max-width: 620px; margin: 0 auto; width: 100%; }
   .jtrail-screen {
     display: grid; grid-template-columns: minmax(320px, 360px) minmax(0, 1fr); column-gap: 20px; row-gap: 10px; align-items: start;
-    grid-template-areas: 'head head' 'hud trail' 'cta trail' 'legend trail';
-    grid-template-rows: auto auto auto minmax(0, 1fr);
-    /* A tela cabe na janela com a barra e o rodapé (~146px): só a trilha (ou a carta) rola, os painéis ficam sempre à vista. */
+    grid-template-areas: 'head head' 'left trail' 'right trail';
+    grid-template-rows: auto auto minmax(0, 1fr);
+    /* A tela cabe na janela com a barra e o rodapé (~146px): só a trilha (ou a carta) e as colunas rolam por dentro. */
     height: calc(100dvh - 150px); min-height: 460px;
   }
   .jtrail-screen > .jb-head { grid-area: head; }
-  .jtrail-screen > [data-hud] { grid-area: hud; }
+  .jtrail-screen .jcol { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .jtrail-screen .jcol-l { grid-area: left; }
+  .jtrail-screen .jcol-r { grid-area: right; align-self: stretch; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+  .jtrail-screen .jcol > * { order: 0; flex: none; }
   .jtrail-screen > .jtrail-scene, .jtrail-screen > .jtrail-map {
     grid-area: trail; align-self: stretch; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
   }
-  .jtrail-screen > .jlegend { grid-area: legend; }
-  .jtrail-screen > .sticky-cta { grid-area: cta; position: static; background: none; padding: 0; }
-  .jtrail-screen.jmap-screen { grid-template-areas: 'head head' 'side boss' 'side trail' 'side legend'; grid-template-rows: auto auto minmax(0, 1fr) auto; }
-  .jtrail-screen.jmap-screen > .jmap-side { grid-area: side; }
-  .jmap-screen > .jmap-boss { grid-area: boss; }
-  .jmap-screen > .jlegend-chips { grid-area: legend; }
+  .jtrail-screen .sticky-cta { position: static; background: none; padding: 0; }
+  .jtrail-screen .jabandon { align-self: center; }
   .jstop { padding: 8px 10px; }
   .jstop-txt b { font-size: 16px; }
   .jrgrid { grid-template-columns: repeat(auto-fill, 60px); }
@@ -307,18 +316,56 @@
   .jrboss-opt .jrslot.huge .ico { width: 66px; height: 66px; }
 }
 
-/* Widescreen (≥ 1280): três colunas. Equipe à esquerda, trilha ou carta ao centro e o contexto (seguir, chefe, legenda) à direita. */
+/*
+ * Widescreen (≥ 1280): três colunas. Build à esquerda (HUD e a loja aberta), trilha ou carta ao centro e,
+ * à direita, o que vem: próxima parada (ou caminhos abertos), dica e os botões de seguir e abandonar no pé.
+ */
 @media (min-width: 1280px) {
   .jtrail-screen {
-    grid-template-columns: minmax(320px, 360px) minmax(0, 1fr) minmax(260px, 320px); column-gap: 24px;
-    grid-template-areas: 'head head head' 'hud trail cta' 'hud trail legend';
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-columns: minmax(320px, 380px) minmax(0, 1fr) minmax(280px, 340px); column-gap: 24px;
+    grid-template-areas: 'head head head' 'left trail right';
+    grid-template-rows: auto minmax(0, 1fr);
   }
-  .jtrail-screen > .jlegend { align-self: start; }
-  .jtrail-screen.jmap-screen { grid-template-areas: 'head head head' 'side trail boss' 'side trail legend'; grid-template-rows: auto auto minmax(0, 1fr); }
-  .jmap-screen > .jlegend-chips { flex-direction: column; align-items: stretch; align-self: start; }
-  .jmap-screen > .jlegend-chips .jlegend-chip { padding: 7px 10px; font-size: 13px; }
+  .jtrail-screen .jcol-l { align-self: stretch; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+  .jhud .jhud-shop { display: none; }
+  .jnext, .jhint { display: block; }
+  .jshop-dock:not([hidden]) { display: block; }
+  /* Na trilha a lista da próxima parada já diz o tipo de cada uma: a legenda sai. */
+  .jtrail-screen:not(.jmap-screen) .jlegend { display: none; }
+  .jtrail-screen .sticky-cta, .jmap-screen .jb-prompt { margin-top: auto; }
+  .jmap-screen .jlegend-chips { flex-direction: column; align-items: stretch; }
+  .jmap-screen .jlegend-chips .jlegend-chip { padding: 7px 10px; font-size: 13px; }
 }
+
+/* Widescreen baixo (notebook de 768px): a lista das paradas seguintes sai para seguir e abandonar caberem. */
+@media (min-width: 1280px) and (max-height: 860px) {
+  .jnext h4, .jnext h4 + .jnext-list { display: none; }
+  .jnext-foes small.muted { display: none; }
+}
+
+/* Painéis do widescreen: loja embutida, próxima parada e dica. */
+.jdock-title { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font: 400 22px/1.1 var(--font-hand); }
+.jdock-title .chip { margin-left: auto; }
+.jshop-dock h3:not(.jdock-title) { margin: 8px 0 6px; font: 700 12px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.jnext h3, .jhint h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font: 400 22px/1.1 var(--font-hand); }
+.jnext h4 { margin: 10px 0 4px; font: 700 12px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.jnext-stop { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface-2); border-left: 3px solid var(--accent); }
+.jnext-stop > .ico { width: 22px; height: 22px; flex: none; color: var(--accent-2); }
+.jnext-stop b { display: block; font: 400 18px/1.15 var(--font-display); }
+.jnext-stop small, .jnext-list small { display: block; color: var(--muted); font-size: 12.5px; }
+.jnext-foes, .jnext-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.jnext-foes li { display: flex; align-items: center; gap: 10px; }
+.jnext-foes li > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.jnext-foes b { font: 700 15px/1.15 var(--font-hud); letter-spacing: .03em; }
+.jnext-foes small { font-size: 12.5px; }
+.jnext-foes .ico { width: 13px; height: 13px; vertical-align: -.15em; }
+.jnext-goal { margin: 8px 0 0; font: 600 13px/1.3 var(--font-hud); color: var(--gold-2); }
+.jnext-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; }
+.jnext-list li > .ico, .jnext-list li > .jq { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--muted); }
+.jnext-list li.k-elite > .ico, .jnext-list li.k-treasure > .ico { color: var(--gold-2); }
+.jnext-list li.k-boss > .ico, .jnext-list li.k-fight > .ico, .jnext-list li.k-story > .ico { color: var(--accent-2); }
+.jnext-list li.k-rest > .ico { color: var(--leaf); }
+.jhint p { margin: 0; font-size: 14px; line-height: 1.45; }
 
 /* Fim da Jornada: o selo fica no canto do retrato. */
 .jstart-face.end-seal { width: max-content; margin: 8px auto; }
