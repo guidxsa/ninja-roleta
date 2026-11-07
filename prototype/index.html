@@ -3,16 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0d0c0b" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#e6dac0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#d9cfa8" />
     <title>Ninja Roleta</title>
     <script>
-      // Tema antes da primeira pintura (sem piscar): o escolhido no botão ou o do aparelho.
+      // Cor antes da primeira pintura (sem piscar): a escolhida no botão; sem escolha, o verde do :root.
       try {
-        var t = JSON.parse(localStorage.getItem('proto_settings_v1') || '{}').theme;
+        var p = JSON.parse(localStorage.getItem('proto_settings_v1') || '{}').palette;
+        if (p === 'green' || p === 'orange' || p === 'brown') document.documentElement.dataset.palette = p;
       } catch (e) {}
-      document.documentElement.dataset.theme =
-        t === 'light' || t === 'dark' ? t : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
       // Modo instantâneo também encurta as transições da interface (CSS em styles/instant.css).
       try {
         if (JSON.parse(localStorage.getItem('proto_settings_v1') || '{}').instant) document.documentElement.dataset.instant = '';

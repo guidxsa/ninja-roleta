@@ -34,9 +34,9 @@
 .trail-ico .ico { width: 24px; height: 24px; }
 .trail li.done { opacity: .62; }
 .trail li.done > i { background: var(--gold); border-color: var(--gold); color: var(--ink); }
-.trail li.current { background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 85%); }
-.trail li.current::before { content: ''; position: absolute; left: -14px; top: 0; bottom: 0; width: 3px; background: var(--accent); }
-.trail li.current > i { background: var(--accent); border-color: var(--accent-2); color: var(--accent-ink); }
+.trail li.current { background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 16%, transparent), transparent 85%); }
+.trail li.current::before { content: ''; position: absolute; left: -14px; top: 0; bottom: 0; width: 3px; background: var(--primary); }
+.trail li.current > i { background: var(--primary); border-color: var(--primary-2); color: var(--primary-ink); }
 .trail li.current b { font: 400 17px/1.2 var(--font-display); }
 .trail li.todo { opacity: .55; }
 
@@ -119,7 +119,7 @@
 .lab-box select:disabled { opacity: .5; }
 .lab-box .btn { min-height: 44px; }
 .lab-box label.lab-check { justify-content: flex-start; cursor: pointer; }
-.lab-check input { width: 20px; height: 20px; accent-color: var(--accent); }
+.lab-check input { width: 20px; height: 20px; accent-color: var(--primary); }
 .lab-techs { display: flex; flex-direction: column; gap: 6px; }
 
 @media (max-width: 380px) {

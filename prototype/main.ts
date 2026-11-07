@@ -191,7 +191,8 @@ const SETTINGS_KEY = 'proto_settings_v1';
 const DIFFICULTIES = Object.keys(data.balance.difficulty.multipliers) as Difficulty[];
 const DEFAULT_DIFFICULTY: Difficulty = data.balance.difficulty.default;
 /** Preferências do aparelho (não é estado de campanha). A dificuldade é a última escolhida. */
-type Theme = 'light' | 'dark';
+const PALETTES = ['green', 'orange', 'brown'] as const;
+type Palette = (typeof PALETTES)[number];
 interface Settings {
   instant: boolean;
   difficulty: Difficulty;
@@ -199,20 +200,17 @@ interface Settings {
   sfx: boolean;
   /** Música de fundo (desligada por padrão). */
   music: boolean;
-  /** Tema escolhido no botão; sem escolha, segue o aparelho. */
-  theme?: Theme;
-  /** Tema escolhido dentro da Jornada; sem escolha, Pergaminho (docs/visual.md). */
-  themeJornada?: Theme;
+  /** Cor escolhida no botão (docs/visual.md). */
+  palette: Palette;
 }
 const settings: Settings = (() => {
   try {
     const saved = JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}') as Partial<Settings>;
     const difficulty = saved.difficulty && DIFFICULTIES.includes(saved.difficulty) ? saved.difficulty : DEFAULT_DIFFICULTY;
-    const theme = saved.theme === 'light' || saved.theme === 'dark' ? saved.theme : undefined;
-    const themeJornada = saved.themeJornada === 'light' || saved.themeJornada === 'dark' ? saved.themeJornada : undefined;
-    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), theme, themeJornada };
+    const palette = PALETTES.includes(saved.palette as Palette) ? (saved.palette as Palette) : 'green';
+    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), palette };
   } catch {
-    return { instant: false, difficulty: DEFAULT_DIFFICULTY, sfx: true, music: false };
+    return { instant: false, difficulty: DEFAULT_DIFFICULTY, sfx: true, music: false, palette: 'green' };
   }
 })();
 const saveSettings = () => {
@@ -2373,29 +2371,17 @@ function recordRoleta(): boolean {
   return true;
 }
 
-/** Tema aplicado: o escolhido no botão ou o do aparelho. */
-const deviceTheme = window.matchMedia?.('(prefers-color-scheme: light)');
-/** Modo na tela: define a cor (styles/tokens.css) e qual preferência de tema vale. */
-let uiMode: 'gate' | 'roleta' | 'jornada' = 'gate';
-const currentTheme = (): Theme =>
-  uiMode === 'jornada' ? (settings.themeJornada ?? 'light') : (settings.theme ?? (deviceTheme?.matches ? 'light' : 'dark'));
-function setUiMode(mode: typeof uiMode) {
-  uiMode = mode;
-  document.body.classList.toggle('mode-roleta', mode === 'roleta');
-  applyTheme();
-}
-const THEME_COLORS: Record<Theme, string> = { dark: '#0d0c0b', light: '#e6dac0' };
+const PALETTE_BG: Record<Palette, string> = { green: '#d9cfa8', orange: '#ecd8b4', brown: '#cfbb96' };
 
-function applyTheme() {
-  const theme = currentTheme();
-  document.documentElement.dataset.theme = theme;
-  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', THEME_COLORS[theme]));
+/** Aplica a cor escolhida; o botão diz qual é a atual. */
+function applyPalette() {
+  document.documentElement.dataset.palette = settings.palette;
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', PALETTE_BG[settings.palette]));
   const btn = document.getElementById('theme-btn')!;
-  // O botão mostra para onde vai: sol à noite, lua de dia.
-  const next = theme === 'dark' ? S.ui.themeDay : S.ui.themeNight;
-  btn.innerHTML = icon(theme === 'dark' ? 'sun' : 'moon');
-  btn.title = next;
-  btn.setAttribute('aria-label', next);
+  const label = S.ui.palette(S.ui.palettes[settings.palette]);
+  btn.innerHTML = icon('palette');
+  btn.title = label;
+  btn.setAttribute('aria-label', label);
 }
 
 /** O modo instantâneo também encurta as transições da interface (styles/instant.css). */
@@ -2403,17 +2389,14 @@ function setInstantCss(on: boolean) {
   document.documentElement.toggleAttribute('data-instant', on);
 }
 
-/** Botões do cabeçalho: instantâneo, dia/noite, efeitos sonoros e música. */
+/** Botões do cabeçalho: instantâneo, cor, efeitos sonoros e música. */
 function installHeaderToggles() {
   setInstantCss(settings.instant);
-  applyTheme();
-  deviceTheme?.addEventListener?.('change', applyTheme);
+  applyPalette();
   document.getElementById('theme-btn')!.addEventListener('click', () => {
-    const next: Theme = currentTheme() === 'dark' ? 'light' : 'dark';
-    if (uiMode === 'jornada') settings.themeJornada = next;
-    else settings.theme = next;
+    settings.palette = PALETTES[(PALETTES.indexOf(settings.palette) + 1) % PALETTES.length]!;
     saveSettings();
-    applyTheme();
+    applyPalette();
   });
 
   const toggles = [
@@ -2500,15 +2483,10 @@ async function main() {
   if (LAB.lab) document.getElementById('version')!.textContent += ` · ${S.lab.badge}`;
   if (LAB.seed !== null) document.getElementById('version')!.textContent += ` · ${S.lab.seed(LAB.seed)}`;
   document.getElementById('home-btn')!.addEventListener('click', askHome);
-  if (LAB.lab) {
-    setUiMode('roleta');
-    for (;;) if ((await untilHome(labFlow())) === HOME) leftToMenu();
-  }
+  if (LAB.lab) for (;;) if ((await untilHome(labFlow())) === HOME) leftToMenu();
   for (;;) {
     const round = async () => {
-      const mode = await modeScreen();
-      setUiMode(mode);
-      if (mode === 'jornada') return runJornada(jornadaHost);
+      if ((await modeScreen()) === 'jornada') return runJornada(jornadaHost);
       await ensurePlayerName();
       await originScreen();
       await runCampaign();
@@ -2540,7 +2518,6 @@ function leftToMenu() {
 /** Tela inicial: Roleta (rápido, tudo na sorte) ou Jornada (lento, com controle). */
 async function modeScreen(): Promise<'roleta' | 'jornada'> {
   const M = S.jornada.modes;
-  setUiMode('gate');
   // No Portão da Vila não há run: some o botão do menu e o da Ficha.
   camp = null;
   campLive = false;

@@ -8,14 +8,14 @@
   background: radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--tree) 30%, var(--bg)), var(--bg) 72%);
 }
 .jtree-screen::before {
-  content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .09; background: var(--tree-motif); background-size: 92px 92px;
+  content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .06; filter: invert(1); background: var(--tree-motif); background-size: 92px 92px;
 }
 .jt-naruto {
-  --tree: #f07a1a; --tree-2: #ffd27a;
+  --tree: #d0650f; --tree-2: #8a4a08;
   --tree-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Cpath d='M46 46c3-5 11-2 10 5-1 8-14 10-20 2-7-10 1-24 14-23 16 1 24 18 16 32' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 .jt-common {
-  --tree: #5f9a74; --tree-2: #cfe3a8;
+  --tree: #5f9a74; --tree-2: #3f6a2c;
   --tree-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Cpath d='M20 70c0-30 18-48 52-50-2 34-20 52-52 50zM20 70 50 40' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 .jt-prodigy {
@@ -23,18 +23,13 @@
   --tree-motif: repeating-linear-gradient(135deg, #fff 0 10px, transparent 10px 34px);
 }
 .jt-uchiha {
-  --tree: #d1232a; --tree-2: #f5f1e6;
+  --tree: #d1232a; --tree-2: #8a1b1b;
   --tree-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Cg fill='%23fff'%3E%3Ccircle cx='46' cy='28' r='9'/%3E%3Ccircle cx='30' cy='56' r='9'/%3E%3Ccircle cx='62' cy='56' r='9'/%3E%3C/g%3E%3Cg fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round'%3E%3Cpath d='M55 28c6 4 8 10 6 16M26 47c-5 3-8 3-14 1M58 65c1 6 0 10-4 15'/%3E%3C/g%3E%3C/svg%3E");
 }
 .jt-hyuuga {
-  --tree: #a99bd8; --tree-2: #ece8f6;
+  --tree: #6d5bb0; --tree-2: #4a3d86;
   --tree-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Cpath d='M46 8 79 65H13zM46 84 13 27h66z' fill='none' stroke='%23fff' stroke-width='3'/%3E%3C/svg%3E");
 }
-:root[data-theme='light'] .jt-hyuuga { --tree: #6d5bb0; --tree-2: #4a3d86; }
-:root[data-theme='light'] .jt-uchiha { --tree-2: #8a1b1b; }
-:root[data-theme='light'] .jt-naruto { --tree: #d0650f; --tree-2: #8a4a08; }
-:root[data-theme='light'] .jt-common { --tree-2: #3f6a2c; }
-:root[data-theme='light'] .jtree-screen::before { filter: invert(1); opacity: .06; }
 
 .jt-body { position: relative; max-width: 1280px; margin: 0 auto; padding: 12px 16px 0; min-height: 100%; display: flex; flex-direction: column; gap: 10px; }
 .jt-crest { position: absolute; top: 56px; right: -40px; width: 220px; height: 220px; opacity: .13; pointer-events: none; color: var(--tree); }

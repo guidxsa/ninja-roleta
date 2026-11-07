@@ -82,7 +82,7 @@
 .log li.jin { color: var(--jin); font-weight: 700; }
 
 /* Ações: abas por tipo e placas de jutsu. */
-.actions { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; border-top: 2px solid var(--accent); }
+.actions { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; border-top: 2px solid var(--primary); }
 .actions:empty { display: none; }
 .cost.short { color: var(--bad); font-weight: 700; }
 .act-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -141,13 +141,13 @@
 .react-box h3 { text-align: left; margin: 0; font-size: 16px; }
 .react-tech { text-decoration: underline dotted color-mix(in srgb, var(--text) 45%, transparent); text-underline-offset: 3px; }
 .btn.act.primary {
-  --c: var(--accent-deep);
+  --c: var(--primary-deep);
   clip-path: none; box-shadow: none; text-transform: none; letter-spacing: 0;
-  background: var(--accent); border-color: var(--accent-2); border-left-color: var(--gold-2);
+  background: var(--primary); border-color: var(--primary-2); border-left-color: var(--gold-2);
 }
 .btn.act.primary .act-ico { background: var(--ink); color: var(--gold-2); }
-.btn.act.primary b { color: var(--accent-ink); }
-.btn.act.primary small { color: var(--accent-ink); opacity: .85; }
+.btn.act.primary b { color: var(--primary-ink); }
+.btn.act.primary small { color: var(--primary-ink); opacity: .85; }
 
 /* Escolhas grátis: Foco, Clones, Pavor, dōjutsu, portões. */
 .free-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }

@@ -12,7 +12,7 @@ body {
   flex-direction: column;
   align-items: center;
   background-color: var(--bg);
-  /* Carvão com grão de papel e vinheta: a luz vem do centro, as bordas somem no escuro. */
+  /* Papel com grão e vinheta: a luz vem do centro. */
   background-image:
     var(--grain),
     radial-gradient(ellipse 120% 80% at 50% 0%, var(--bg-2) 0%, var(--bg) 70%);
@@ -21,10 +21,9 @@ body {
 /* Serra em nanquim ao pé da tela, fixa atrás de tudo: a vila vista de longe. */
 body::after {
   content: ''; position: fixed; pointer-events: none; z-index: -1;
-  left: 0; right: 0; bottom: 0; height: 150px; opacity: .55;
+  left: 0; right: 0; bottom: 0; height: 150px; opacity: .1;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 100' preserveAspectRatio='none'%3E%3Cpath d='M0 100V64l34-18 22 9 38-30 30 20 26-9 40 25 36-30 44 24 30-13 46 26 54-18v50z' fill='%23000' fill-opacity='.45'/%3E%3Cpath d='M0 100V80l56-12 46 11 58-16 46 13 66-15 58 15 70-9v33z' fill='%23000' fill-opacity='.6'/%3E%3C/svg%3E") bottom / 100% 100% no-repeat;
 }
-[data-theme='light'] body::after { opacity: .1; }
 
 /* Escala tipográfica: letreiro (pincel), título de seção (condensada), texto. */
 h1, h2, h3 { margin: 0 0 8px; line-height: 1.15; font-weight: 400; overflow-wrap: break-word; }
@@ -34,10 +33,10 @@ h2 {
   font-size: 25px; text-align: center; color: var(--text);
   text-shadow: var(--title-shadow);
 }
-/* Pincelada vermelha sob o título de tela. */
+/* Pincelada na cor escolhida sob o título de tela. */
 .screen > h2::after, .screen > header > h2::after, .modal-body > h2::after {
   content: ''; display: block; height: 7px; width: min(180px, 60%); margin: 6px auto 0;
-  background: var(--accent);
+  background: var(--primary);
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5.5C30 2 70 1.5 110 2.6S176 4 198 2.4l-1 2.6C170 7 120 6.4 80 6.6S20 7.4 2 5.5z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 8' preserveAspectRatio='none'%3E%3Cpath d='M2 5.5C30 2 70 1.5 110 2.6S176 4 198 2.4l-1 2.6C170 7 120 6.4 80 6.6S20 7.4 2 5.5z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
 }

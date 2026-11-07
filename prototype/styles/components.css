@@ -24,16 +24,16 @@
 .btn .ico { width: 1.2em; height: 1.2em; }
 
 .btn.primary {
-  border: 0; background: var(--accent); color: var(--accent-ink);
+  border: 0; background: var(--primary); color: var(--primary-ink);
   font-family: var(--font-hud); font-weight: 700; font-size: 18px; letter-spacing: .08em; text-transform: uppercase;
   clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
   /* Filete dourado interno: a moldura da laca. */
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold-2) 55%, transparent), inset 0 -3px 0 color-mix(in srgb, var(--accent-deep) 70%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold-2) 55%, transparent), inset 0 -3px 0 color-mix(in srgb, var(--primary-deep) 70%, transparent);
 }
-.btn.primary:hover:not(:disabled):not([aria-disabled='true']) { background: var(--accent-2); }
+.btn.primary:hover:not(:disabled):not([aria-disabled='true']) { background: var(--primary-2); }
 /* O chanfro corta o contorno de foco: o anel vai por dentro. */
-.btn.primary:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--gold-2), inset 0 0 0 4px var(--accent-deep); }
-.btn.primary:active:not(:disabled):not([aria-disabled='true']) { background: var(--accent-deep); }
+.btn.primary:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--gold-2), inset 0 0 0 4px var(--primary-deep); }
+.btn.primary:active:not(:disabled):not([aria-disabled='true']) { background: var(--primary-deep); }
 .btn.big { width: 100%; font-size: 18px; min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .btn.small {
   min-height: 36px; padding: 4px 10px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
@@ -44,10 +44,10 @@
 .actions-row .btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
 .sticky-cta { position: sticky; bottom: 12px; z-index: 3; padding-top: 4px; }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
-.btn.ghost:hover:not(:disabled) { color: var(--text); background: transparent; border-color: transparent; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 4px; }
+.btn.ghost:hover:not(:disabled) { color: var(--text); background: transparent; border-color: transparent; text-decoration: underline; text-decoration-color: var(--primary); text-underline-offset: 4px; }
 
 .toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
-.toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+.toggle input { width: 18px; height: 18px; accent-color: var(--primary); }
 
 /* ---------------------------------------------------------------------------
  * Painel laqueado: grafite, cantos chanfrados, filete de aço (o chanfro também tem filete,
@@ -57,7 +57,7 @@
    (números flutuantes, selos de quantidade, contorno de foco). */
 .card, .panel, .chamfer {
   --frame: var(--line-strong);
-  --tab: var(--accent);
+  --tab: var(--primary);
   --fill: var(--surface);
   position: relative; isolation: isolate;
 }
@@ -272,7 +272,7 @@ button[data-tip] { cursor: pointer; }
 .act-tab:hover { color: var(--text); }
 .act-tab .ico { width: 18px; height: 18px; }
 .act-tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.act-tab.on { color: var(--text); border-bottom-color: var(--accent); background: linear-gradient(0deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%); }
+.act-tab.on { color: var(--text); border-bottom-color: var(--primary); background: linear-gradient(0deg, color-mix(in srgb, var(--primary) 14%, transparent), transparent 70%); }
 
 /* ---------------------------------------------------------------------------
  * Janelas: sobreposição central (fim de luta), folha de baixo (perfil), aviso.

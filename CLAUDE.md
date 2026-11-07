@@ -63,7 +63,7 @@ Comandos: `npm test`, `npm run typecheck`, `npm run proto`, `npm run sim:origens
 A direção está em [docs/visual.md](docs/visual.md): a interface deve parecer parte do universo.
 
 - Estilos em `prototype/styles/` (camadas: `tokens.css` → `fonts.css` → `base.css` → `components.css` → telas); o build junta e embute as fontes.
-- Cores, fontes, durações e forma só por tokens (`var(--...)`); os temas Sumi (escuro) e Pergaminho (claro) e a cor por modo (`body.mode-roleta`, `body.mode-jornada`) trocam só os tokens. Cor solta só em arte (cenário, roda, placas).
+- Cores, fontes, durações e forma só por tokens (`var(--...)`); as 3 cores (Verde, Laranja e Marrom, `data-palette`) trocam só os tokens. `--primary` é ação e navegação; `--accent` é vermelho de perigo, chefe e carimbo. Cor solta só em arte (cenário, roda, placas).
 - **Nada de emoji como ícone**: SVG do `ICONS` em `prototype/art.ts` (`icon(nome)`), traço 24×24 em `currentColor`. Exceção: o texto de compartilhar.
 - Cantos retos (`--radius: 2px`) e chanfro (`--cut`) nos painéis, sempre em `::before`/`::after`, nunca no elemento (cortaria números flutuantes e o foco).
 - `--font-display` (pincel) só em letreiro grande; texto em `--font-body`; números e rótulos em `--font-hud`; kanji em `--font-kanji` (kanji novo entra no recorte, `prototype/fonts/LEIAME.md`).

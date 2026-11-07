@@ -1,31 +1,30 @@
 /*
  * Design system "Shinobi": tokens de cor, tipografia, forma e movimento.
- * Tema escuro "Sumi" (carvão, grafite, vermelho Sharingan, dourado envelhecido) é o padrão;
- * o claro "Pergaminho" (papel, tinta sumi, mesmos acentos) só troca os tokens.
- * Regra: componentes usam só estes tokens; cor solta no CSS só em arte (madeira, metal).
+ * A base é sempre papel e tinta; as 3 cores (docs/visual.md) trocam só o papel e a cor de ação.
+ * Regra: componentes usam só estes tokens; cor solta no CSS só em arte (cenário, roda, placas).
  */
 :root {
   /* Superfícies */
-  --bg: #0d0c0b;
-  --bg-2: #151312;
-  --surface: #1a1817;
-  --surface-2: #232120;
-  --surface-3: #2f2c29;
-  --line: #36332f;
-  --line-strong: #5a5f66;
-  --steel: #8a919a;
-  --text: #ece3d0;
-  --muted: #9a9286;
+  --bg: #e6dac0;
+  --bg-2: #efe5cf;
+  --surface: #f6efde;
+  --surface-2: #ece1c6;
+  --surface-3: #ddcfad;
+  --line: #cbbb95;
+  --line-strong: #8d8170;
+  --steel: #6c675f;
+  --text: #1f1812;
+  --muted: #6c5d4a;
 
-  /* Acentos: vermelho é ação e perigo; dourado é conquista e destaque raro; pergaminho é documento. */
-  --accent: #b5161f;
-  --accent-2: #db3a40;
-  --accent-deep: #5e0b10;
-  --accent-ink: #f6ecd6;
-  --seal: #b5161f;
-  --gold: #b8954f;
-  --gold-2: #dcbd78;
-  --gold-deep: #6e5428;
+  /* Vermelho é chefe, perigo e carimbo; a ação e a navegação usam --primary (a cor escolhida); dourado é conquista. */
+  --accent: #a3121b;
+  --accent-2: #c21d26;
+  --accent-deep: #6b0c12;
+  --accent-ink: #f8efdc;
+  --seal: #a3121b;
+  --gold: #7d5d1f;
+  --gold-2: #684c15;
+  --gold-deep: #5e4720;
   --ink: #0b0a09;
   --paper: #e8dcc0;
   --paper-2: #d4c39e;
@@ -34,27 +33,27 @@
   --wood: #4a2f1c;
 
   /* Funcionais (dessaturados para viver na paleta) */
-  --hp: #5f9a5c;
-  --hp-mid: #c29a3a;
-  --hp-low: #c4412c;
-  --ck: #3d6fc4;
-  --ck-2: #86aeea;
-  --xp: #c9a253;
-  --good: #7fb476;
-  --bad: #dc5a4f;
-  --jin: #e0682e;
-  --foe: #e9a49a;
-  --leaf: #6f9a55;
-  --leaf-deep: #3a7240;
-  --orange: #e8701a;
-  --navy: #1f2a3d;
-  --log-bg: rgba(12, 11, 10, .84);
-  --log-mine: #cfe3c6;
-  --log-theirs: #f0bab1;
-  --bar-bg: #090807;
-  --shadow: #000;
-  --shadow-soft: rgba(0, 0, 0, .5);
-  --scrim: rgba(6, 5, 4, .82);
+  --hp: #4b8a49;
+  --hp-mid: #ad852b;
+  --hp-low: #b8392a;
+  --ck: #2f60b0;
+  --ck-2: #3e6fc0;
+  --xp: #9c792a;
+  --good: #30692c;
+  --bad: #b3352b;
+  --jin: #c0501f;
+  --foe: #8f1a14;
+  --leaf: #4f7a35;
+  --leaf-deep: #2f5f34;
+  --orange: #c2550f;
+  --navy: #2c3a52;
+  --log-bg: rgba(250, 244, 230, .9);
+  --log-mine: #2b6528;
+  --log-theirs: #962219;
+  --bar-bg: #2a231b;
+  --shadow: rgba(50, 32, 12, .45);
+  --shadow-soft: rgba(50, 32, 12, .2);
+  --scrim: rgba(40, 28, 14, .62);
 
   /* Tipos de técnica (o elemento, quando há, vem no estilo da própria célula). */
   --t-taijutsu: #c4682f;
@@ -74,8 +73,6 @@
   --cut: 10px;
   --cut-sm: 6px;
 
-  /* Sombra dura dos letreiros (pincel) */
-  --title-shadow: 2px 2px 0 var(--accent-deep);
 
   /* Movimento */
   --ease: cubic-bezier(.2, .7, .2, 1);
@@ -83,85 +80,33 @@
   --dur-2: 200ms;
   --dur-3: 320ms;
 
-  /* Textura de papel/washi (ruído claro) */
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  /* Ruído escuro (pergaminho, selos) */
+  /* Textura de papel/washi */
   --grain-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .15 0 0 0 0 .1 0 0 0 0 .05 0 0 0 .12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  color-scheme: dark;
-}
-
-:root[data-theme='light'] {
-  --bg: #e6dac0;
-  --bg-2: #efe5cf;
-  --surface: #f6efde;
-  --surface-2: #ece1c6;
-  --surface-3: #ddcfad;
-  --line: #cbbb95;
-  --line-strong: #8d8170;
-  --steel: #6c675f;
-  --text: #1f1812;
-  --muted: #6c5d4a;
-
-  --accent: #a3121b;
-  --accent-2: #c21d26;
-  --accent-deep: #6b0c12;
-  --accent-ink: #f8efdc;
-  --seal: #a3121b;
-  --gold: #94712c;
-  --gold-2: #ad8636;
-  --gold-deep: #5e4720;
-
-  --hp: #4b8a49;
-  --hp-mid: #ad852b;
-  --hp-low: #b8392a;
-  --ck: #2f60b0;
-  --ck-2: #3e6fc0;
-  --xp: #9c792a;
-  --good: #3c7a37;
-  --bad: #b3352b;
-  --jin: #c0501f;
-  --foe: #8f1a14;
-  --leaf: #4f7a35;
-  --leaf-deep: #2f5f34;
-  --orange: #c2550f;
-  --navy: #2c3a52;
-  --log-bg: rgba(250, 244, 230, .9);
-  --log-mine: #2b6528;
-  --log-theirs: #962219;
-  --bar-bg: #2a231b;
-  --shadow: rgba(50, 32, 12, .45);
-  --shadow-soft: rgba(50, 32, 12, .2);
-  --scrim: rgba(40, 28, 14, .62);
   --grain: var(--grain-dark);
-  --title-shadow: 1.5px 1.5px 0 color-mix(in srgb, var(--accent) 28%, transparent);
   color-scheme: light;
 }
 
-/*
- * Cor por modo (docs/visual.md): só tokens; o tema continua sendo Sumi ou Pergaminho.
- * Roleta: laranja e vermelho sobre preto. Jornada: papel envelhecido, madeira e verde da Folha.
- */
-body.mode-roleta {
-  --bg: #0a0706; --bg-2: #170e08;
-  --surface: #18110c; --surface-2: #221810; --surface-3: #2f2217;
-  --line: #3b2c20;
-  --accent: #ea6f14; --accent-2: #ff9a3d; --accent-deep: #6d2c06; --accent-ink: #160a03;
-  --title-shadow: 2px 2px 0 var(--seal);
+/* Verde é o padrão: vale também sem o atributo. */
+:root, :root[data-palette='green'] {
+  --bg: #d9cfa8; --bg-2: #e6dfbf;
+  --surface: #efe9cf; --surface-2: #e4dcbb; --surface-3: #d6cda6;
+  --line: #b6ab80; --muted: #5a5039;
+  --primary: #2f5f34; --primary-2: #3d7443; --primary-deep: #1d3f22; --primary-ink: #f8efdc;
+  --title-shadow: 1.5px 1.5px 0 rgba(47, 95, 52, .3);
 }
-:root[data-theme='light'] body.mode-roleta {
+:root[data-palette='orange'] {
   --bg: #ecd8b4; --bg-2: #f4e6c8;
   --surface: #f8eed8; --surface-2: #f0e0bf; --surface-3: #e4cfa4;
-  --line: #d0b78a; --gold: #7d5d1f; --gold-2: #7d5d1f;
-  --accent: #b84a08; --accent-2: #a84308; --accent-deep: #6d2c06; --accent-ink: #fff4e0;
-  --title-shadow: 1.5px 1.5px 0 color-mix(in srgb, var(--orange) 40%, transparent);
+  --line: #d0b78a; --muted: #65533c;
+  --primary: #b84a08; --primary-2: #a84308; --primary-deep: #6d2c06; --primary-ink: #fff4e0;
+  --title-shadow: 1.5px 1.5px 0 rgba(184, 74, 8, .32);
 }
-body.mode-jornada {
-  --bg: #100e09; --bg-2: #1b1810;
-  --surface: #1e1a12; --surface-2: #282316; --surface-3: #342d1d;
-  --line: #3f3725;
-}
-:root[data-theme='light'] body.mode-jornada {
-  --bg: #d9c8a3; --bg-2: #e6d8b8;
-  --surface: #efe4c8; --surface-2: #e4d6b3; --surface-3: #d6c59d;
-  --line: #b9a67c; --muted: #5d4f3c; --gold: #7d5d1f; --gold-2: #7d5d1f;
+:root[data-palette='brown'] {
+  --bg: #cfbb96; --bg-2: #dccaa8;
+  --surface: #e8dcc2; --surface-2: #dccdae; --surface-3: #cdba96;
+  --line: #a8946e; --muted: #54452f;
+  --primary: #5c3a1e; --primary-2: #734a27; --primary-deep: #3a2310; --primary-ink: #f8efdc;
+  /* O papel mais escuro pede os sinais um pouco mais escuros. */
+  --accent: #8d0e16; --gold-2: #574011; --good: #285a25; --bad: #962a21;
+  --title-shadow: 1.5px 1.5px 0 rgba(92, 58, 30, .32);
 }

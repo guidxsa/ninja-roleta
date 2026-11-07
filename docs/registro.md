@@ -40,6 +40,8 @@ Lista de problemas apontada pelo usuário jogando. Decidido com ele: pílula aut
 
 Orientação do usuário: a interface deve parecer parte do universo ([visual.md](visual.md)). Decidido com ele: arte oficial liberada nos retratos, piloto de 3 telas antes de estender, cor por modo mantendo os 2 temas, 8 a 10 locais marcantes (3 no piloto). Decidido sozinho (o usuário revisa): os itens listados em [decisoes.md](decisoes.md), item 6. Só visual: `scene` não sorteia nem entra em regra. Simulações antes → depois idênticas, linha a linha (`npm run sim:jornada -- 100 2` e `npm run sim:origens -- --runs 100 --seed 2`).
 
+**v0.55.0** (pedido do usuário): os rostos do Monumento saem; Konoha fica com céu, sol, torre e telhados. Verde, Laranja e Marrom substituem dia/noite nos dois modos: sai o modo noturno, a cor por modo e a preferência por modo. Só visual; simulações antes → depois idênticas, linha a linha (mesmos comandos).
+
 ## Rodadas antigas
 
 Última rodada concluída: "rebalanceamento das origens"

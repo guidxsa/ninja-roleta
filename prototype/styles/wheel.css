@@ -97,22 +97,22 @@
 }
 
 /*
- * Sorteio do Roleta: barraca de festival da vila, sempre à noite (igual nos dois temas), com lanternas,
+ * Sorteio do Roleta: barraca de festival da vila, sempre à noite (igual em qualquer cor), com lanternas,
  * raios atrás da roda e aro laranja. É arte: as cores ficam aqui, como no aro e no ponteiro acima.
  */
-body.mode-roleta .wheel-box {
+.wheel-box {
   --frame: #ea6f14; --tab: transparent; --fill: #0e0805; --surface: #18110c; --text: #f6ecd6; --muted: #c9b79c; --line-strong: #5a4632;
-  --accent: #ea6f14; --accent-2: #ff9a3d; --accent-deep: #6d2c06; --accent-ink: #160a03; --gold: #d9a648; --gold-2: #f3c970;
+  --primary: #ea6f14; --primary-2: #ff9a3d; --primary-deep: #6d2c06; --primary-ink: #160a03; --gold: #d9a648; --gold-2: #f3c970;
   color: var(--text); padding-top: 54px;
 }
-body.mode-roleta .wheel-box::after {
+.wheel-box::after {
   background:
     url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='46'><path d='M0 4q60 16 120 0' fill='none' stroke='%23b8954f' stroke-width='1.4'/><path d='M30 10v3' stroke='%23b8954f'/><ellipse cx='30' cy='23' rx='9' ry='10.5' fill='%23b5161f'/><path d='M21 23h18M22.5 18h15M22.5 28h15' stroke='%235e0b10' stroke-width='.9'/><path d='M26 12.5h8M26 33.5h8' stroke='%23f3c970' stroke-width='2'/><path d='M90 10v3' stroke='%23b8954f'/><ellipse cx='90' cy='23' rx='9' ry='10.5' fill='%23ea6f14'/><path d='M81 23h18M82.5 18h15M82.5 28h15' stroke='%236d2c06' stroke-width='.9'/><path d='M86 12.5h8M86 33.5h8' stroke='%23f3c970' stroke-width='2'/></svg>") 0 2px / 120px 46px repeat-x,
     repeating-conic-gradient(from 0deg at 50% 216px, rgba(234, 111, 20, .1) 0 7.5deg, transparent 7.5deg 15deg),
     var(--grain), var(--fill);
 }
-body.mode-roleta .wheel { filter: drop-shadow(0 0 16px rgba(234, 111, 20, .4)) drop-shadow(0 8px 12px rgba(0, 0, 0, .7)); }
-body.mode-roleta .wheel .rim { fill: #120a06; stroke: #ea6f14; stroke-width: 3; }
-body.mode-roleta .wheel .peg { fill: #f3c970; }
-body.mode-roleta .wheel .hub { fill: #ea6f14; stroke: #120a06; }
-body.mode-roleta .wheel .hub-leaf { stroke: #160a03; stroke-width: 2.4; }
+.wheel { filter: drop-shadow(0 0 16px rgba(234, 111, 20, .4)) drop-shadow(0 8px 12px rgba(0, 0, 0, .7)); }
+.wheel .rim { fill: #120a06; stroke: #ea6f14; stroke-width: 3; }
+.wheel .peg { fill: #f3c970; }
+.wheel .hub { fill: #ea6f14; stroke: #120a06; }
+.wheel .hub-leaf { stroke: #160a03; stroke-width: 2.4; }

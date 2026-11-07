@@ -29,8 +29,8 @@
 .jstop-txt small { color: var(--muted); font-size: 12px; }
 .jstop.done { opacity: .55; }
 .jstop.done .jstop-ico { background: var(--gold); color: var(--ink); border-color: var(--gold); }
-.jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 85%); }
-.jstop.here .jstop-ico { border-color: var(--accent-2); background: var(--accent); color: var(--accent-ink); }
+.jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 16%, transparent), transparent 85%); }
+.jstop.here .jstop-ico { border-color: var(--primary-2); background: var(--primary); color: var(--primary-ink); }
 .jstop.here .jstop-txt b { font: 400 17px/1.2 var(--font-display); letter-spacing: .02em; }
 .jstop.k-boss .jstop-ico { border-color: var(--accent-2); }
 .jstop.k-elite .jstop-ico { border-color: var(--gold-2); }
@@ -178,7 +178,7 @@
 /* Painel das relíquias e visual do Sasuke */
 .jmodal { max-height: 86vh; overflow-y: auto; }
 .jskin { align-self: center; }
-.jskin[aria-pressed='true'] { border-color: var(--gold-2); box-shadow: inset 0 -2px 0 var(--accent); }
+.jskin[aria-pressed='true'] { border-color: var(--gold-2); box-shadow: inset 0 -2px 0 var(--primary); }
 
 /* Caminho Ninja: classes, revelação do elemento e mapa ramificado. */
 .jclasses { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
@@ -188,7 +188,7 @@
 }
 .jclass b { display: block; font: 700 16px/1.15 var(--font-hud); letter-spacing: .03em; }
 .jclass small { display: block; font-size: 11.5px; color: var(--muted); }
-.jclass[aria-pressed='true'] { border-top-color: var(--accent-2); background: color-mix(in srgb, var(--accent) 12%, var(--surface-2)); }
+.jclass[aria-pressed='true'] { border-top-color: var(--primary-2); background: color-mix(in srgb, var(--primary) 14%, var(--surface-2)); }
 .jclass.off { opacity: .5; cursor: default; }
 .jclass .lock, .lock-note .ico { width: 14px; height: 14px; color: var(--muted); vertical-align: -.15em; }
 .jreveal .portrait-lg { width: 120px; height: 120px; }
@@ -206,7 +206,7 @@
 @media (min-width: 560px) { .jel-pick { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
 /* Cenário do estágio (mapa e trilha): as mesmas silhuetas da tela de batalha. */
 .jscene { position: relative; background: var(--grain), var(--scene, var(--bg-2)); border: 1px solid var(--line); overflow: hidden; }
-.jscene::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .9; background: var(--scene-art, none) center / 100% 100% no-repeat; }
+.jscene::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .25; background: var(--scene-art, none) center / 100% 100% no-repeat; }
 .jtrail-scene { padding: 12px 8px 12px 26px; }
 .jtrail-scene .jtrail { position: relative; border-left-width: 2px; }
 .jmap-wrap { display: flex; flex-direction: column; gap: 8px; }
@@ -304,22 +304,18 @@
 /* Fim da Jornada: o selo fica no canto do retrato. */
 .jstart-face.end-seal { width: max-content; margin: 8px auto; }
 
-/* Identidade da Jornada: ação no verde da Folha; o vermelho fica para chefe, perigo e carimbo. */
-body.mode-jornada .btn.primary { --accent: var(--leaf-deep); --accent-2: color-mix(in srgb, var(--leaf-deep) 82%, #fff); --accent-deep: color-mix(in srgb, var(--leaf-deep) 60%, #000); --accent-ink: #f8efdc; }
-body.mode-jornada .screen > h2::after, body.mode-jornada .screen > header > h2::after { background: var(--leaf-deep); }
-
 /* Trilha da História: o local em uma faixa no alto e o percurso seguindo abaixo dela. */
-.jtrail-scene { padding-top: 124px; }
-.jtrail-scene::before { inset: 0 0 auto; height: 180px; -webkit-mask: linear-gradient(#000 62%, transparent); mask: linear-gradient(#000 62%, transparent); }
+.jtrail-scene { padding-top: 148px; }
+.jtrail-scene::before { inset: 0 0 auto; height: 200px; -webkit-mask: linear-gradient(#000 62%, transparent); mask: linear-gradient(#000 62%, transparent); }
 .jtrail-scene .jtrail { border-left: 2px dashed var(--place, var(--line-strong)); }
 @media (min-width: 900px) {
-  .jtrail-scene { padding-top: 270px; }
-  .jtrail-scene::before { height: 340px; }
+  .jtrail-scene { padding-top: 244px; }
+  .jtrail-scene::before { height: 300px; }
 }
-.jtrail-scene .jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--place, var(--accent)) 26%, transparent), transparent 85%); }
+.jtrail-scene .jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--place, var(--primary)) 26%, transparent), transparent 85%); }
 
 /*
- * Mapa do Caminho Ninja: carta em papel envelhecido, igual nos dois temas. Os tokens são do papel,
+ * Mapa do Caminho Ninja: carta em papel envelhecido, igual em qualquer cor. Os tokens são do papel,
  * as rotas são a pincel e cada nó é um carimbo pela cor do tipo; relevo e rosa dos ventos ficam atrás.
  */
 .jmap.jscene {

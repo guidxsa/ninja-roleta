@@ -24,7 +24,7 @@ Implementada na v0.44.0. Quando não sobra nada para aprender nem subir na árvo
 
 ## Na tela
 
-- Tela cheia com o **tema da classe**: cor, padrão de fundo e brasão (Naruto: laranja e espiral; Comum: folha, na cor do elemento sorteado; prodígio: verde e vermelho com faixas; Uchiha: vermelho e preto com tomoe; Hyuuga: lavanda com hexagrama). Tudo também no tema claro.
+- Tela cheia com o **tema da classe**: cor, padrão de fundo e brasão (Naruto: laranja e espiral; Comum: folha, na cor do elemento sorteado; prodígio: verde e vermelho com faixas; Uchiha: vermelho e preto com tomoe; Hyuuga: lavanda com hexagrama).
 - Cada talento é um selo em losango; os traços entre eles acendem na cor da classe quando aprendidos. Quem dá para aprender pulsa; o caminho fechado fica tracejado e riscado. Talentos com níveis mostram marcas de nível embaixo.
 - **Celular**: um ramo por vez, em abas (com a marca de quem tem algo para comprar). **PC**: todos os ramos lado a lado.
 - Tocar seleciona: o cartão de baixo mostra o efeito, o nível e o botão **Aprender** ou **Subir para o nível N**. Aprender tem um carimbo no selo e a tinta correndo pelo traço.
