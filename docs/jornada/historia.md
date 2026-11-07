@@ -20,13 +20,12 @@ Equipe nas lutas comuns: Sasuke e Sakura. Cenário: floresta.
 | 4 | Capangas do Gatō | Luta | Equipe 7 |
 | 5 | O construtor Tazuna | Evento | |
 | 6 | Irmãos Demônio | Elite | Equipe 7 |
-| 7 | Mercado do País das Ondas | Mercador | |
-| 8 | Zabuza, o Demônio da Névoa | Elite | Equipe 7 |
-| 9 | Subir na árvore | Evento | |
-| 10 | Ninjas renegados | Luta | Equipe 7 |
-| 11 | Esconderijo do Gatō | Tesouro | |
-| 12 | Casa do Tazuna | Descanso | |
-| 13 | Naruto e Sasuke × Haku | Chefe | Naruto e Sasuke |
+| 7 | Zabuza, o Demônio da Névoa | Elite | Equipe 7 |
+| 8 | Subir na árvore | Evento | |
+| 9 | Ninjas renegados | Luta | Equipe 7 |
+| 10 | Esconderijo do Gatō | Tesouro | |
+| 11 | Casa do Tazuna | Descanso | |
+| 12 | Naruto e Sasuke × Haku | Chefe | Naruto e Sasuke |
 
 ### 2 · Exame chunin
 
@@ -40,14 +39,13 @@ Equipe nas lutas comuns: Sasuke e Sakura. Cenário: arena.
 | 4 | Trio da Chuva | Elite | Equipe 7 |
 | 5 | Preliminares | Evento | |
 | 6 | Naruto × Kiba (e Akamaru) | História | Naruto sozinho |
-| 7 | Barraca da vila | Mercador | |
-| 8 | O eremita dos sapos | Evento | |
-| 9 | Pergaminho do céu | Tesouro | |
-| 10 | Naruto × Neji | História | Naruto sozinho |
-| 11 | Espião do Som (Kabuto) | Elite | Equipe 7 |
-| 12 | Invasão de Konoha | Luta | Equipe 7 |
-| 13 | Hospital de Konoha | Descanso | |
-| 14 | Naruto × Gaara | Chefe | Naruto sozinho |
+| 7 | O eremita dos sapos | Evento | |
+| 8 | Pergaminho do céu | Tesouro | |
+| 9 | Naruto × Neji | História | Naruto sozinho |
+| 10 | Espião do Som (Kabuto) | Elite | Equipe 7 |
+| 11 | Invasão de Konoha | Luta | Equipe 7 |
+| 12 | Hospital de Konoha | Descanso | |
+| 13 | Naruto × Gaara | Chefe | Naruto sozinho |
 
 ### 3 · Busca e resgate
 
@@ -58,17 +56,16 @@ A primeira metade é a busca pela Tsunade, com o Jiraiya; a segunda é o resgate
 | 1 | Treino do Rasengan | Evento | |
 | 2 | Tanzaku: Orochimaru e Kabuto | História | Naruto, Jiraiya e Tsunade |
 | 3 | Naruto × Kabuto | História | Naruto sozinho |
-| 4 | Cassino de Tanzaku | Mercador | |
-| 5 | Naruto × Sasuke (hospital) | História | Naruto sozinho · vitória especial |
-| 6 | O Sasuke foi embora | Evento | |
-| 7 | Emboscada do Som | Luta | Naruto, Shikamaru e Kiba |
-| 8 | Jirobo | Elite | Naruto, Chōji e Shikamaru |
-| 9 | Bolsa do Quarteto | Tesouro | |
-| 10 | Kidomaru e Tayuya | Elite | Naruto, Neji e Shikamaru |
-| 11 | Sakon e Ukon | Elite | Naruto, Kiba e Neji |
-| 12 | Naruto, Lee e Gaara × Kimimaro | História | Naruto, Lee e Gaara |
-| 13 | Acampamento | Descanso | |
-| 14 | Vale do Fim (Sasuke) | Chefe | Naruto sozinho |
+| 4 | Naruto × Sasuke (hospital) | História | Naruto sozinho · vitória especial |
+| 5 | O Sasuke foi embora | Evento | |
+| 6 | Emboscada do Som | Luta | Naruto, Shikamaru e Kiba |
+| 7 | Jirobo | Elite | Naruto, Chōji e Shikamaru |
+| 8 | Bolsa do Quarteto | Tesouro | |
+| 9 | Kidomaru e Tayuya | Elite | Naruto, Neji e Shikamaru |
+| 10 | Sakon e Ukon | Elite | Naruto, Kiba e Neji |
+| 11 | Naruto, Lee e Gaara × Kimimaro | História | Naruto, Lee e Gaara |
+| 12 | Acampamento | Descanso | |
+| 13 | Vale do Fim (Sasuke) | Chefe | Naruto sozinho |
 
 ## Vitórias especiais
 
@@ -83,7 +80,7 @@ Cada evento tem duas escolhas. As com minijogo ([run.md](run.md#minijogos)) dão
 | Evento | Escolhas |
 |---|---|
 | Formatura | Comer ramen (cura tudo, +15 ryō) · Treinar (+1 ponto de talento) |
-| O construtor Tazuna | Proteger de graça (+20 ryō e marca: 20% de desconto no mercador do País das Ondas) · Cobrar (+45 ryō) |
+| O construtor Tazuna | Proteger de graça (+20 ryō e marca: 20% de desconto na loja durante o País das Ondas) · Cobrar (+45 ryō) |
 | Subir na árvore | Selos: +6 de chakra máximo da equipe e +40 XP (perdeu: +2) · Descansar (+30 de HP, +9 de chakra) |
 | Prova escrita | Memória: +1 ponto de talento e +20 ryō (perdeu: +5 ryō) · Décima pergunta (+1 ponto de talento) |
 | Preliminares | Ebisu (+80 XP) · Visitar o Lee (+50 de HP, +15 de chakra, +1 kit de HP) |

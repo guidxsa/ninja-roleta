@@ -18,7 +18,7 @@ Implementada na v0.44.0. Quando não sobra nada para aprender nem subir na árvo
 
 - Conta como "nunca": o caminho fechado de uma bifurcação, o nó escondido pelo elemento e o nó preso a uma conquista que a conta ainda não tem. O nó preso a um estágio da História conta como "ainda vem".
 - Vale para todo ponto: nível, recompensa de luta, evento, relíquia, descanso. Comprar o último talento converte o que sobrou.
-- Com a árvore completa, o Treino some do mercador e o Treinar do descanso mostra "+30 ryō". A tela da árvore mostra o chip "Árvore completa".
+- Com a árvore completa, o Treino some da loja e o Treinar do descanso mostra "+30 ryō". A tela da árvore mostra o chip "Árvore completa".
 - Na prática, só as árvores pequenas (Comum, prodígio, Uchiha, Hyuuga) fecham, e quase sempre no [modo infinito](run.md#modo-infinito); a do Naruto custa mais do que a História rende.
 - Uma conquista nova pode reabrir a árvore (o ramo do Sasuke sai no meio da run do Uchiha com raio): a run guarda as conquistas que liberam nós e as renova quando sai conquista.
 

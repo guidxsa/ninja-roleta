@@ -22,6 +22,7 @@ import {
   leaveStop,
   memberSheet,
   newRun,
+  openShop,
   openTreasure,
   resolveEvent,
   rest,
@@ -67,6 +68,16 @@ function fight(run: JRun, rng: Rng): JRun {
   }
 }
 
+/** Loja a cada parada: kit de HP se a vida está abaixo da metade; senão, a relíquia mais barata que couber. */
+function shopTurn(run0: JRun): JRun {
+  let run = openShop(run0, data);
+  const hero = memberSheet(run, run.hero, data);
+  const kit = shopOffer(run, data).consumables.find((c) => c.id === 'hpKit')!;
+  if ((run.members[run.hero]?.hp ?? hero.maxHp) < hero.maxHp * 0.5 && canBuy(run, { kind: 'item', ...kit }, data)) run = buy(run, { kind: 'item', ...kit }, data);
+  const relic = shopOffer(run, data).relics.filter((r) => canBuy(run, { kind: 'relic', ...r }, data)).sort((a, b) => a.price - b.price)[0];
+  return relic ? buy(run, { kind: 'relic', ...relic }, data) : run;
+}
+
 function spendTalents(run: JRun): JRun {
   for (;;) {
     const ctx = talentContext(run, unlocked);
@@ -84,7 +95,7 @@ const UNLOCKED = new Set(['j_unlockUchiha', 'j_unlockHyuuga']);
 function pickNode(run: JRun, rng: Rng): string {
   const sheet = memberSheet(run, run.hero, data);
   const hp = (run.members[run.hero]?.hp ?? sheet.maxHp) / sheet.maxHp;
-  const score = (k: string) => (k === 'rest' ? (hp < 0.6 ? 5 : 0) : k === 'elite' ? (hp > 0.8 ? 3 : -2) : k === 'treasure' ? 4 : k === 'shop' ? (run.ryo >= 60 ? 2 : 0) : 1) + rng();
+  const score = (k: string) => (k === 'rest' ? (hp < 0.6 ? 5 : 0) : k === 'elite' ? (hp > 0.8 ? 3 : -2) : k === 'treasure' ? 4 : 1) + rng();
   return [...nodeChoices(run)].sort((a, b) => score(b.kind) - score(a.kind))[0]!.id;
 }
 
@@ -105,7 +116,7 @@ function playCycle(run0: JRun, rng: Rng, mode: Mode): { run: JRun; stop: string 
   let guard = 0;
   while (run.status === 'inProgress') {
     if (++guard > 400) throw new Error('ciclo sem fim');
-    run = spendTalents(run);
+    run = shopTurn(spendTalents(run));
     if (run.bossChoice) {
       run = chooseBossRelic(run, run.bossChoice[0]!, data);
       continue;
@@ -118,12 +129,6 @@ function playCycle(run0: JRun, rng: Rng, mode: Mode): { run: JRun; stop: string 
     if (stop.kind === 'event') {
       const opt = eventOptions(data.events[stop.event]!, run.flags, run.ryo)[0]!;
       run = resolveEvent(run, opt.id, rng() < 0.6, data).run;
-    } else if (stop.kind === 'shop') {
-      const offer = shopOffer(run, data);
-      for (const r of offer.relics) if (canBuy(run, { kind: 'relic', ...r }, data)) run = buy(run, { kind: 'relic', ...r }, data);
-      const kit = offer.consumables[0]!;
-      if (canBuy(run, { kind: 'item', ...kit }, data)) run = buy(run, { kind: 'item', ...kit }, data);
-      run = leaveStop(run, data);
     } else if (stop.kind === 'rest') {
       const hero = memberSheet(run, run.hero, data);
       run = rest(run, (run.members[run.hero]?.hp ?? hero.maxHp) < hero.maxHp * 0.7 ? 'heal' : 'train', data);

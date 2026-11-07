@@ -15,7 +15,6 @@ export type StopDef =
       win?: WinCondition;
     }
   | { kind: 'event'; id: string; event: string }
-  | { kind: 'shop'; id: string }
   | { kind: 'rest'; id: string }
   | { kind: 'treasure'; id: string };
 

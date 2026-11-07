@@ -5,18 +5,18 @@
 - Dão **vantagens passivas** para a run toda ou **recursos** na hora (kits, Vontade do Fogo). Uma run não repete relíquia.
 - Saem tanto na História quanto no Caminho Ninja, então o texto não cita personagem: efeito sem sujeito vale para o protagonista; "a equipe" inclui o protagonista; "os suportes" são só os aliados. Os nomes de artefatos marcantes (Sino do Kakashi, Chapéu do Hokage, Cachimbo do Gamabunta…) ficam. As iniciais e as evoluções são a exceção: são de uma classe só e contam a história dela.
 - Os itens permanentes do Roleta viraram relíquias (Pesos de treino). A bolsa de consumíveis continua à parte ([combate.md](combate.md#bolsa)).
-- O desconto do mercador soma o das relíquias com o do Tazuna (História, País das Ondas), com teto de 40% (`shop.maxDiscount`).
+- O desconto da loja soma o das relíquias com o do Tazuna (História, País das Ondas), com teto de 40% (`shop.maxDiscount`).
 
 ## Classificações
 
 | Classificação | Cor | De onde vem |
 |---|---|---|
 | Inicial | aço | Toda run começa com a do personagem; nunca sai em sorteio |
-| Comum | clara | Elite, tesouro e mercador |
-| Incomum | azul | Elite, tesouro e mercador |
-| Rara | dourada | Elite, tesouro, mercador e alguns eventos |
+| Comum | clara | Elite, tesouro e loja |
+| Incomum | azul | Elite, tesouro e loja |
+| Rara | dourada | Elite, tesouro, loja e alguns eventos |
 | Chefe | vermelha | Escolha de 1 entre 3 depois de vencer um chefe |
-| Loja | verde | Só no mercador |
+| Loja | verde | Só na loja |
 | Evento | roxa | Só em eventos |
 | Especial | turquesa | Só quando não sobra relíquia para sortear; nunca falha |
 
@@ -26,7 +26,7 @@
 |---|---|
 | **Elite** vencida | Comum 50%, incomum 33%, rara 17% |
 | **Tesouro** | Comum 40%, incomum 35%, rara 25% |
-| **Mercador** | 3 à venda: 2 sorteadas (comum 50%, incomum 33%, rara 17%) e 1 de loja. Preços: comum 40, incomum 60, rara 90, loja 70 ryō |
+| **Loja** | 3 à venda por estágio: 2 sorteadas (comum 50%, incomum 33%, rara 17%) e 1 de loja. Preços sobem com as compras e os estágios ([run.md](run.md#loja)). Preços: comum 40, incomum 60, rara 90, loja 70 ryō |
 | **Chefe** | Escolher 1 entre 3 de chefe; com a inicial ainda não evoluída, 50% de chance de uma das 3 ser a evolução dela |
 | **Eventos** | Algumas escolhas dão uma relíquia de evento ou rara ([historia.md](historia.md#eventos), [caminho-ninja.md](caminho-ninja.md#eventos)) |
 

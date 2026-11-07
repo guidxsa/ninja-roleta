@@ -3,7 +3,7 @@
 import type { Rng } from '../rng';
 import type { JornadaData } from './data';
 
-export type NodeKind = 'fight' | 'elite' | 'unknown' | 'shop' | 'rest' | 'treasure' | 'boss';
+export type NodeKind = 'fight' | 'elite' | 'unknown' | 'rest' | 'treasure' | 'boss';
 
 export interface MapNode {
   id: string;
@@ -78,7 +78,7 @@ function connect(layoutRows: number[][], rng: Rng): Map<string, string[]> {
 }
 
 /** Tipo de cada nó pelas regras de linha (docs/jornada/run.md#mapa-ramificado). */
-function kindFor(row: number, rows: number, rng: Rng, data: JornadaData, prevShop: boolean): NodeKind {
+function kindFor(row: number, rows: number, rng: Rng, data: JornadaData): NodeKind {
   const g = data.j.map;
   if (row === rows - 1) return 'boss';
   if (row === 0) return 'fight';
@@ -87,7 +87,6 @@ function kindFor(row: number, rows: number, rng: Rng, data: JornadaData, prevSho
   const w: Partial<Record<NodeKind, number>> = { ...g.weights };
   if (row < g.eliteFromRow) delete w.elite;
   if (row < g.restFromRow) delete w.rest;
-  if (prevShop) delete w.shop;
   return weighted(w, rng);
 }
 
@@ -97,14 +96,10 @@ export function generateMap(rng: Rng, data: JornadaData): StageMap {
   const lay = layout(rows, cols, rng);
   const edges = connect(lay, rng);
   const nodes: MapNode[] = [];
-  const kinds = new Map<string, NodeKind>();
   for (let r = 0; r < rows; r++) {
     for (const c of lay[r]!) {
       const id = nodeId(r, c);
-      // Mercador logo depois de mercador: evita se algum pai for mercador.
-      const prevShop = r > 0 && lay[r - 1]!.some((pc) => kinds.get(nodeId(r - 1, pc)) === 'shop' && (edges.get(nodeId(r - 1, pc)) ?? []).includes(id));
-      const kind = kindFor(r, rows, rng, data, prevShop);
-      kinds.set(id, kind);
+      const kind = kindFor(r, rows, rng, data);
       nodes.push({ id, row: r, col: c, kind, next: edges.get(id) ?? [] });
     }
   }

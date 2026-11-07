@@ -20,18 +20,18 @@ De cima para baixo: Continuar (quando há run salva, com a dificuldade dela e, n
 | Elite | Inimigo forte; mais ryō e XP, 1 ponto de talento e 1 relíquia ([reliquias.md](reliquias.md#de-onde-vêm)) |
 | Chefe | Fim do estágio; escolher 1 de 3 relíquias de chefe, uma pode ser a evolução da inicial ([reliquias.md](reliquias.md)) |
 | Evento | Duas escolhas, às vezes com minijogo; algumas dependem de escolhas anteriores |
-| Mercador | Relíquias, consumíveis, treino (+1 ponto de talento, 60 ryō; some com a [árvore completa](talentos.md#árvore-completa)) e tratamento (+50 de HP e +15 de chakra em cada um, 30 ryō) |
+
 | Descanso | Curar (+40 de HP e +12 de chakra em cada um) ou treinar (+1 ponto de talento; com a árvore completa, +30 ryō) |
 | Tesouro | Relíquia sorteada pela classificação |
 | Desconhecido | Só no Caminho Ninja: sorteia entre luta, evento ou outra parada |
 
 - Na trilha, o caminho do estágio aparece inteiro sobre o cenário do estágio, com a legenda, e o retrato do herói marca a parada atual.
 - Na trilha dá para abrir a árvore de talentos, o moveset e as relíquias a qualquer momento.
-- **Moeda (ryō)**: ganha em lutas e eventos, gasta no mercador.
+- **Moeda (ryō)**: ganha em lutas e eventos, gasta na [loja](#loja).
 
 ## Eventos
 
-- **Condicionais e encadeados**: uma escolha deixa uma marca na run, e a marca muda paradas seguintes (proteger o Tazuna barateia o mercador do País das Ondas em 20%).
+- **Condicionais e encadeados**: uma escolha deixa uma marca na run, e a marca muda paradas seguintes (proteger o Tazuna barateia a loja do País das Ondas em 20%).
 - Os eventos da História estão em [historia.md](historia.md#eventos).
 
 ## Minijogos
@@ -56,15 +56,24 @@ Recompensas interativas no lugar da roleta visual. Ganhar dá o prêmio do event
 - Uma luta em andamento não é salva: o F5, ou o botão do Portão da Vila (torii, no cabeçalho, que volta ao menu sem recarregar), leva de volta ao começo da parada. O botão pede confirmação; ao continuar a Jornada, a run segue de onde parou.
 - Começar uma nova jornada apaga a salva (a que já andou conta antes para o recorde do modo infinito); terminar também, com uma exceção: o **Caminho Ninja vencido** já salva o próximo ciclo, então fechar o app ou voltar ao início na tela de vitória não perde o modo infinito (o Continuar segue de lá).
 
+## Loja
+
+Sempre aberta (v0.50.0): o botão Loja fica no HUD, no mapa, na trilha e no descanso, sem gastar parada. Não abre no meio da luta.
+
+- **Estoque**: 3 relíquias por estágio, sorteadas no primeiro acesso e salvas na run: fechar e abrir, ou recarregar a página, não troca a prateleira. Muda só no estágio seguinte.
+- **À venda**: relíquias, kits (20, 20 e 35 ryō), treino (+1 ponto de talento, 60 ryō; some com a [árvore completa](talentos.md#árvore-completa)) e tratamento (+50 de HP e +15 de chakra em cada um, 30 ryō).
+- **Preço** = base × (1 + 0,10 × compras + 0,25 × estágios passados) × (1 − desconto), arredondado para baixo (`shop.perPurchase`, `shop.perStage`). Toda compra conta, na run inteira; os estágios somam entre os ciclos do [modo infinito](#modo-infinito). Relíquias de desconto vêm por cima, com teto de 40%.
+- O treino e o tratamento não têm limite: quem segura é o preço.
+
 ## Mapa ramificado
 
 Do Caminho Ninja ([caminho-ninja.md](caminho-ninja.md)), implementado na v0.36.0 (`src/core/jornada/map.ts`).
 
 - Cada estágio é um mapa de **12 linhas** em 4 colunas, de baixo para cima: a linha 0 tem **3 começos**; as linhas do meio têm 2 a 4 nós; a última é o **chefe**, ligado a todos.
 - Cada nó liga a 1 ou 2 nós da linha de cima (a coluna mais próxima); todo nó é alcançável e tem saída. Depois de cada parada, o jogador escolhe a próxima entre as ligadas à atual.
-- Regras de linha: a linha 0 só tem lutas; a linha 6 só tesouros (um por rota); a penúltima só descansos; elite a partir da linha 2; descanso a partir da linha 3; mercador nunca logo depois de mercador.
-- Pesos dos outros nós: luta 45, desconhecido 22, elite 12, mercador 8, descanso 8.
-- **Desconhecido**: ao entrar, vira evento (50%), luta (30%), mercador (10%) ou tesouro (10%).
+- Regras de linha: a linha 0 só tem lutas; a linha 6 só tesouros (um por rota); a penúltima só descansos; elite a partir da linha 2; descanso a partir da linha 3.
+- Pesos dos outros nós: luta 53, desconhecido 22, elite 12, descanso 8.
+- **Desconhecido**: ao entrar, vira evento (55%), luta (35%) ou tesouro (10%).
 - **Na tela**: o mapa fica sobre o cenário do estágio, com um leve deslocamento fixo em cada nó para não parecer uma grade, e os caminhos são curvos. A rota feita é uma pincelada vermelha, os caminhos disponíveis correm tracejados e o que já ficou para trás apaga. Cada tipo de nó tem forma própria (luta em losango, elite estrelada, descanso e desconhecido redondos, mercador quadrado, tesouro dourado, chefe grande com o retrato). O retrato do herói marca a posição; a faixa do chefe sorteado fica no topo e a legenda, sempre visível, embaixo.
 
 ## Modo infinito

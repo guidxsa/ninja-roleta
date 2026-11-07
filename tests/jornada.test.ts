@@ -56,6 +56,7 @@ import {
   rest,
   restHeal,
   setMoveset,
+  openShop,
   shopOffer,
   stopRng,
   syncUnlocks,
@@ -536,7 +537,7 @@ describe('run da Jornada', () => {
   });
 
   it('o mercador tem uma vaga de loja; relíquias de loja e evento só saem no lugar delas', () => {
-    const run: JRun = { ...newRun(4, 'normal', data), stopIndex: 6 };
+    const run: JRun = newRun(4, 'normal', data);
     const tiers = shopOffer(run, data).relics.map((r) => data.relics.find((x) => x.id === r.id)!.tier);
     expect(tiers).toHaveLength(data.j.shop.relics);
     expect(tiers.filter((t) => t === 'shop')).toHaveLength(1);
@@ -773,27 +774,25 @@ describe('run da Jornada', () => {
     expect(loadJornada(storage)!.talentRanks).toEqual({});
   });
 
-  it('mercador, descanso e evento', () => {
-    let run: JRun = { ...newRun(1, 'normal', data), ryo: 500, stopIndex: 6 };
-    expect(currentStop(run, data)!.kind).toBe('shop');
+  it('loja, descanso e evento', () => {
+    let run: JRun = { ...newRun(1, 'normal', data), ryo: 500 };
     const offer = shopOffer(run, data);
     expect(offer.relics).toHaveLength(data.j.shop.relics);
     run = buy(run, { kind: 'training', price: offer.training }, data);
     expect(run.talentPoints).toBe(1);
-    run = leaveStop(run, data);
-    expect(currentStop(run, data)!.id).toBe('zabuza');
-    const resting = rest({ ...run, stopIndex: 11 }, 'train', data);
+    const restAt = data.stages[0]!.stops.findIndex((s) => s.kind === 'rest');
+    const resting = rest({ ...run, stopIndex: restAt }, 'train', data);
     expect(resting.talentPoints).toBe(2);
     const tazuna = resolveEvent({ ...newRun(1, 'normal', data), stopIndex: 4 }, 'protect', false, data).run;
     expect(tazuna.flags).toContain('helpedTazuna');
-    expect(shopOffer({ ...tazuna, stopIndex: 6 }, data).training).toBe(Math.floor(data.j.shop.trainingPrice * 0.8));
+    expect(shopOffer(tazuna, data).training).toBe(Math.floor(data.j.shop.trainingPrice * 0.8));
   });
 
   it('a História começa com a Bandana do Iruka, que nunca sai em sorteio', () => {
     const run = newRun(1, 'normal', data);
     expect(run.relics).toEqual(['irukaHeadband']);
     for (let s = 0; s < 40; s++) {
-      const r = { ...newRun(s, 'normal', data), stopIndex: 6, ryo: 999 };
+      const r = { ...newRun(s, 'normal', data), ryo: 999 };
       expect(shopOffer(r, data).relics.map((x) => x.id)).not.toContain('irukaHeadband');
     }
   });
@@ -830,8 +829,117 @@ describe('run da Jornada', () => {
     expect(boosted.xp).toBe(Math.floor(plain.xp * 1.15));
   });
 
+  describe('loja sempre aberta (v0.50.0)', () => {
+    const rich = (over: Partial<JRun> = {}): JRun => ({ ...newRun(1, 'normal', data), ryo: 9999, ...over });
+    const training = (r: JRun) => shopOffer(r, data).training;
+    const base = data.j.shop.trainingPrice;
+
+    it('saiu do mapa e da História', () => {
+      for (const st of data.stages) expect(st.stops.some((s) => (s.kind as string) === 'shop'), st.id).toBe(false);
+      const rng = createRng(3);
+      for (let i = 0; i < 30; i++) expect(generateMap(rng, data).nodes.some((n) => (n.kind as string) === 'shop')).toBe(false);
+    });
+
+    it('cada compra encarece tudo, para a run toda', () => {
+      const once = buy(rich(), { kind: 'training', price: training(rich()) }, data);
+      expect(once.shopPurchases).toBe(1);
+      expect(training(once)).toBe(Math.floor(base * 1.1));
+      const twice = buy(once, { kind: 'item', ...shopOffer(once, data).consumables[0]! }, data);
+      expect(training(twice)).toBe(Math.floor(base * 1.2));
+    });
+
+    it('cada estágio encarece, e os ciclos do infinito contam', () => {
+      expect(training(rich({ stageIndex: 1 }))).toBe(Math.floor(base * 1.25));
+      expect(training(rich({ stageIndex: 2 }))).toBe(Math.floor(base * 1.5));
+      expect(training(rich({ cycle: 1, stageIndex: 0 }))).toBe(Math.floor(base * (1 + 0.25 * data.stages.length)));
+    });
+
+    it('compra e estágio somam, e o desconto vem por cima', () => {
+      const run = rich({ stageIndex: 1, shopPurchases: 2 });
+      expect(training(run)).toBe(Math.floor(base * 1.45));
+      expect(training(gainRelic(run, 'merchantToken', data))).toBe(Math.floor(base * 1.45 * 0.85));
+    });
+
+    it('o estoque fica salvo: comprar e reabrir não troca a prateleira', () => {
+      const open = openShop(rich(), data);
+      const ids = open.shop!.relics;
+      const after = buy(open, { kind: 'relic', ...shopOffer(open, data).relics[0]! }, data);
+      expect(after.shop!.relics).toEqual(ids);
+      expect(openShop(after, data).shop!.relics).toEqual(ids);
+      expect(shopOffer(after, data).relics.map((r) => r.id)).toEqual(ids);
+      // Reabrir sem comprar devolve a mesma run.
+      expect(openShop(open, data)).toBe(open);
+    });
+
+    it('a compra guarda o estoque mesmo sem abrir antes', () => {
+      const run = rich();
+      const offer = shopOffer(run, data);
+      const after = buy(run, { kind: 'relic', ...offer.relics[1]! }, data);
+      expect(after.shop!.relics).toEqual(offer.relics.map((r) => r.id));
+    });
+
+    it('o estoque muda a cada estágio', () => {
+      const a = openShop(rich(), data);
+      const b = openShop({ ...a, stageIndex: 1 }, data);
+      expect(b.shop!.key).not.toBe(a.shop!.key);
+      expect(b.shop!.relics).not.toEqual(a.shop!.relics);
+    });
+
+    it('andar no estágio não troca o estoque', () => {
+      const a = openShop(rich(), data);
+      expect(openShop({ ...a, stopIndex: 5 }, data).shop).toEqual(a.shop);
+    });
+
+    const storage = () => {
+      const mem = new Map<string, string>();
+      return { mem, getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    };
+    /** Save de antes da v0.50.0: sem os campos da loja. */
+    const oldSave = (run: JRun) => {
+      const s = storage();
+      const { shop: _s, shopPurchases: _p, ...old } = run;
+      s.mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+      return loadJornada(s)!;
+    };
+
+    it('save antigo da História: o índice perde o mercador que saiu', () => {
+      const stops = data.stages[0]!.stops;
+      // Depois do mercador (índice antigo 7 era o Zabuza): volta um.
+      const after = oldSave({ ...newRun(1, 'normal', data), stopIndex: 7 });
+      expect(stops[after.stopIndex]!.id).toBe('zabuza');
+      expect(after.shopPurchases).toBe(0);
+      // Parado no mercador (6): segue para a parada seguinte.
+      expect(stops[oldSave({ ...newRun(1, 'normal', data), stopIndex: 6 }).stopIndex]!.id).toBe('zabuza');
+      // Antes do mercador: nada muda.
+      expect(oldSave({ ...newRun(1, 'normal', data), stopIndex: 3 }).stopIndex).toBe(3);
+      // Estágios 2 e 3.
+      expect(data.stages[1]!.stops[oldSave({ ...newRun(1, 'normal', data), stageIndex: 1, stopIndex: 7 }).stopIndex]!.id).toBe(data.stages[1]!.stops[6]!.id);
+      expect(oldSave({ ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 2 }).stopIndex).toBe(2);
+      expect(oldSave({ ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 4 }).stopIndex).toBe(3);
+    });
+
+    it('save antigo do mapa: mercador futuro vira luta e quem estava num segue adiante', () => {
+      const run = newGenericRun(5, 'normal', 'common', data);
+      const nodes = run.map!.nodes.map((n, i) => (i === 3 || i === 5 ? { ...n, kind: 'shop' as never } : n));
+      const here = nodes[3]!;
+      const loaded = oldSave({ ...run, map: { ...run.map!, nodes }, nodeId: here.id, stopIndex: 2 });
+      expect(loaded.map!.nodes.some((n) => (n.kind as string) === 'shop')).toBe(false);
+      expect(loaded.map!.nodes[5]!.kind).toBe('fight');
+      expect(loaded.nodeId).toBeNull();
+      expect(loaded.path).toContain(here.id);
+      expect(loaded.stopIndex).toBe(3);
+    });
+
+    it('save novo não passa pela migração', () => {
+      const s = storage();
+      const run = openShop({ ...newRun(1, 'normal', data), stopIndex: 7, shopPurchases: 2 }, data);
+      saveJornada(s, run);
+      expect(loadJornada(s)).toEqual(run);
+    });
+  });
+
   it('desconto do mercador soma relíquias e Tazuna, com teto', () => {
-    const run = { ...newRun(1, 'normal', data), stopIndex: 6 };
+    const run = newRun(1, 'normal', data);
     const price = data.j.shop.trainingPrice;
     expect(shopOffer(gainRelic(run, 'merchantToken', data), data).training).toBe(Math.floor(price * 0.85));
     const both = gainRelic(gainRelic({ ...run, flags: ['helpedTazuna'] }, 'merchantToken', data), 'bottomlessPouch', data);

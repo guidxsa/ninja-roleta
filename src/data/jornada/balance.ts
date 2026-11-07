@@ -83,7 +83,7 @@ export const jornadaBalance = {
     // Elite vencida deixa uma relíquia com estas chances.
     eliteWeights: { common: 50, uncommon: 33, rare: 17 },
     treasureWeights: { common: 40, uncommon: 35, rare: 25 },
-    // O mercador tem 1 vaga fixa de relíquia de loja; as outras saem destes pesos.
+    // A loja tem 1 vaga fixa de relíquia de loja; as outras saem destes pesos.
     shopWeights: { common: 50, uncommon: 33, rare: 17 },
     price: { common: 40, uncommon: 60, rare: 90, shop: 70 } as Record<string, number>,
     bossChoices: 3,
@@ -100,9 +100,9 @@ export const jornadaBalance = {
     // Linhas do começo com lutas leves ('easyFights').
     easyRows: 3,
     restFromRow: 3,
-    weights: { fight: 45, unknown: 22, elite: 12, shop: 8, rest: 8 },
+    weights: { fight: 53, unknown: 22, elite: 12, rest: 8 },
     // Desconhecido: o que ele vira ao entrar.
-    unknown: { event: 50, fight: 30, shop: 10, treasure: 10 },
+    unknown: { event: 55, fight: 35, treasure: 10 },
   },
   // Sorteio do elemento no Caminho Ninja: peso de cada elemento e de nenhum (Comum sem elemento = prodígio).
   // Quem prefere sortear o elemento do Comum (em vez de escolher) ganha uma relíquia destes pesos no começo.
@@ -119,8 +119,11 @@ export const jornadaBalance = {
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
   minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },
 
+  // Loja sempre aberta (docs/jornada/run.md#loja): preço × (1 + compras × perPurchase + estágios passados × perStage).
   shop: {
     relics: 3,
+    perPurchase: 0.1,
+    perStage: 0.25,
     consumablePrice: { hpKit: 20, chakraKit: 20, reviveKit: 35 } as Record<string, number>,
     trainingPrice: 60,
     treatmentPrice: 30,

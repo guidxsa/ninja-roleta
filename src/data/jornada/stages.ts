@@ -15,7 +15,6 @@ export const stages: StageDef[] = [
       { kind: 'fight', id: 'thugs', enemies: ['gatoThug', 'gatoThug', 'gatoThug'] },
       { kind: 'event', id: 'tazuna', event: 'tazuna' },
       { kind: 'elite', id: 'demonBrothers', enemies: ['gozu', 'meizu'] },
-      { kind: 'shop', id: 'shop1' },
       { kind: 'elite', id: 'zabuza', enemies: ['zabuza'] },
       { kind: 'event', id: 'treeClimbing', event: 'treeClimbing' },
       { kind: 'fight', id: 'mistRogues', enemies: ['mistRogue', 'gatoThug', 'mistRogue'] },
@@ -35,7 +34,6 @@ export const stages: StageDef[] = [
       { kind: 'elite', id: 'rainTrio', enemies: ['rainNinja', 'rainNinja', 'rainNinja'] },
       { kind: 'event', id: 'preliminaries', event: 'preliminaries' },
       { kind: 'story', id: 'kiba', enemies: ['kiba', 'akamaru'], team: [] },
-      { kind: 'shop', id: 'shop2' },
       { kind: 'event', id: 'toadSummon', event: 'toadSummon' },
       { kind: 'treasure', id: 'treasure2' },
       { kind: 'story', id: 'neji', enemies: ['neji'], team: [] },
@@ -54,7 +52,6 @@ export const stages: StageDef[] = [
       { kind: 'event', id: 'rasenganTraining', event: 'rasenganTraining' },
       { kind: 'story', id: 'tanzaku', enemies: ['orochimaru', 'kabuto'], team: ['jiraiya', 'tsunade'] },
       { kind: 'story', id: 'kabuto', enemies: ['kabuto'], team: [] },
-      { kind: 'shop', id: 'shop3' },
       {
         kind: 'story',
         id: 'hospital',

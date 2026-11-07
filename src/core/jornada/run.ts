@@ -95,6 +95,16 @@ export interface JRun {
   stats: { fights: number; wins: number; alliesLost: number; bestHit: number; talentRyo?: number };
   /** Lutas vencidas (ids das paradas), para as conquistas. */
   cleared: string[];
+  /** Prateleira de relíquias da loja no estágio atual: salva, para fechar e abrir não trocar o estoque. */
+  shop: ShopStock | null;
+  /** Compras na loja na run toda: cada uma encarece a próxima. */
+  shopPurchases: number;
+}
+
+export interface ShopStock {
+  /** Ciclo e estágio do estoque. */
+  key: string;
+  relics: string[];
 }
 
 export type ElementPick = 'chosen' | 'random' | 'fixed';
@@ -143,6 +153,8 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     bossChoice: null,
     stats: { fights: 0, wins: 0, alliesLost: 0, bestHit: 0 },
     cleared: [],
+    shop: null,
+    shopPurchases: 0,
   };
 }
 
@@ -297,7 +309,7 @@ function pickFrom<T>(list: readonly T[], rng: Rng): T {
   return list[Math.floor(rng() * list.length)]!;
 }
 
-/** Parada do nó atual do Caminho Ninja. O desconhecido vira evento, luta, mercador ou tesouro. */
+/** Parada do nó atual do Caminho Ninja. O desconhecido vira evento, luta ou tesouro. */
 function stopFromNode(run: JRun, data: JornadaData): StopDef {
   const node = mapNode(run.map!, run.nodeId!);
   const stage = genericStage(run, data);
@@ -316,7 +328,7 @@ function stopFromNode(run: JRun, data: JornadaData): StopDef {
     const fresh = stage.events.filter((e) => !run.flags.includes(`ev:${e}`));
     return { kind: 'event', id, event: pickFrom(fresh.length ? fresh : stage.events, rng) };
   }
-  return { kind: kind as 'shop' | 'rest' | 'treasure', id };
+  return { kind: kind as 'rest' | 'treasure', id };
 }
 
 const relicDefs = (run: JRun, data: JornadaData): RelicDef[] => run.relics.map((id) => data.relics.find((r) => r.id === id)!).filter(Boolean);
@@ -750,7 +762,7 @@ export function openTreasure(run: JRun, data: JornadaData): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Mercador e descanso
+// Loja e descanso
 
 export interface ShopOffer {
   relics: { id: string; price: number }[];
@@ -759,24 +771,43 @@ export interface ShopOffer {
   treatment: number;
 }
 
-/** Desconto do mercador: relíquias e, na História, ajudar o Tazuna (só no País das Ondas). Tem teto. */
+/** Desconto da loja: relíquias e, na História, ajudar o Tazuna (só no País das Ondas). Tem teto. */
 export function shopDiscount(run: JRun, data: JornadaData): number {
   const tazuna = run.mode === 'canon' && run.stageIndex === 0 && run.flags.includes('helpedTazuna') ? 0.2 : 0;
   const relics = relicDefs(run, data).reduce((a, r) => a + (r.shopDiscount ?? 0), 0);
   return Math.min(data.j.shop.maxDiscount, tazuna + relics);
 }
 
-export function shopOffer(run: JRun, data: JornadaData): ShopOffer {
-  const s = data.j.shop;
-  const off = 1 - shopDiscount(run, data);
-  const price = (n: number) => Math.floor(n * off);
-  const rng = stopRng(run, 5);
+const shopKey = (run: JRun) => `${run.cycle ?? 0}:${run.stageIndex}`;
+
+/** Estágios já passados na run, somando os ciclos do modo infinito. */
+const stagesPassed = (run: JRun, data: JornadaData) => (run.cycle ?? 0) * stageCount(run, data) + run.stageIndex;
+
+/** Quanto a loja está mais cara que no começo da run: cada compra e cada estágio somam. */
+export const shopInflation = (run: JRun, data: JornadaData) => data.j.shop.perPurchase * (run.shopPurchases ?? 0) + data.j.shop.perStage * stagesPassed(run, data);
+
+/** Sorteia a prateleira do estágio (depende só da seed, do ciclo e do estágio). */
+function rollShelf(run: JRun, data: JornadaData): string[] {
+  const rng = stopRng({ ...run, stopIndex: 0 }, 5);
   // Uma vaga fixa de relíquia de loja; se acabarem, a vaga volta para o sorteio comum.
   const exclusive = rollRelic(data.relics, run.relics, { shop: 1 }, rng);
-  const ids = [
-    ...rollRelics(data.relics, exclusive ? [...run.relics, exclusive] : run.relics, data.j.relics.shopWeights, s.relics - (exclusive ? 1 : 0), rng),
+  return [
+    ...rollRelics(data.relics, exclusive ? [...run.relics, exclusive] : run.relics, data.j.relics.shopWeights, data.j.shop.relics - (exclusive ? 1 : 0), rng),
     ...(exclusive ? [exclusive] : []),
   ];
+}
+
+/** Abre a loja: no primeiro acesso do estágio, sorteia e guarda o estoque. */
+export function openShop(prev: JRun, data: JornadaData): JRun {
+  if (prev.shop?.key === shopKey(prev)) return prev;
+  return { ...clone(prev), shop: { key: shopKey(prev), relics: rollShelf(prev, data) } };
+}
+
+export function shopOffer(run: JRun, data: JornadaData): ShopOffer {
+  const s = data.j.shop;
+  const off = (1 + shopInflation(run, data)) * (1 - shopDiscount(run, data));
+  const price = (n: number) => Math.floor(n * off);
+  const ids = run.shop?.key === shopKey(run) ? run.shop.relics : rollShelf(run, data);
   return {
     relics: ids.map((id) => ({ id, price: price(data.j.relics.price[data.relics.find((r) => r.id === id)!.tier]!) })),
     consumables: CONSUMABLES.map((id) => ({ id, price: price(s.consumablePrice[id]!) })),
@@ -796,15 +827,17 @@ export function canBuy(run: JRun, p: Purchase, data: JornadaData): boolean {
   if (run.ryo < p.price) return false;
   if (p.kind === 'relic') return !run.relics.includes(p.id);
   if (p.kind === 'item') return !bagFull(run, data);
-  // Com a árvore completa, o Treino some do mercador (o ponto viraria ryō).
+  // Com a árvore completa, o Treino some da loja (o ponto viraria ryō).
   if (p.kind === 'training') return !talentTreeComplete(run, data);
   return true;
 }
 
 export function buy(prev: JRun, p: Purchase, data: JornadaData): JRun {
   if (!canBuy(prev, p, data)) throw new Error('compra indisponível');
-  let run = clone(prev);
+  // O estoque fica guardado antes da compra: a relíquia comprada não pode mudar a prateleira.
+  let run = clone(openShop(prev, data));
   run.ryo -= p.price;
+  run.shopPurchases = (run.shopPurchases ?? 0) + 1;
   if (p.kind === 'relic') run = gainRelic(run, p.id, data);
   else if (p.kind === 'item') run.bag[p.id]++;
   else if (p.kind === 'training') addTalentPoints(run, 1, data);

@@ -31,6 +31,8 @@ import {
   resolveEvent,
   rest,
   restHeal,
+  openShop,
+  shopInflation,
   shopOffer,
   stageCount,
   stageId,
@@ -59,6 +61,7 @@ import { movesetScreen } from './moveset';
 import { openJornadaSheet } from './sheet';
 import type { JornadaHost } from './host';
 import { playMinigame } from './minigames';
+import { themeOf, themeStyle } from './theme';
 import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
 import { relicIcon } from './relicIcons';
 import { talentTreeScreen } from './talentTree';
@@ -75,7 +78,6 @@ const STOP_ICONS: Record<string, string> = {
   elite: 'warning',
   boss: 'intent',
   event: 'focus',
-  shop: 'tag',
   rest: 'rest',
   treasure: 'item',
 };
@@ -339,6 +341,7 @@ function hud(host: JornadaHost, run: JRun): string {
       <button class="btn small" data-open="sheet">${icon('book')} ${U.sheetBtn}</button>
       <button class="btn small" data-open="talents">${icon('scroll')} ${U.talentsBtn}${run.talentPoints ? ` <span class="badge">${run.talentPoints}</span>` : ''}</button>
       <button class="btn small" data-open="moveset">${icon('swords')} ${U.movesetBtn}</button>
+      <button class="btn small" data-open="shop"${tip(U.shopBtn, U.shopTip)}>${icon('tag')} ${U.shopBtn}</button>
     </div>
     ${relicBar(run)}
     ${bag.length ? `<p class="muted small">${U.bagTitle}: ${bag.join(' · ')}</p>` : ''}
@@ -370,6 +373,7 @@ function wireHud(root: HTMLElement, host: JornadaHost, get: () => JRun, set0: (r
     if (kind === 'sheet') return openJornadaSheet(host, get());
     if (kind === 'talents') set(await talentTreeScreen(host, get(), heroName(host, get())));
     else if (kind === 'moveset') set(await movesetScreen(get()));
+    else if (kind === 'shop') set(await shopScreen(host, get()));
     else relicsModal(get(), b.dataset.relic);
     refresh();
   });
@@ -379,7 +383,6 @@ function wireHud(root: HTMLElement, host: JornadaHost, get: () => JRun, set0: (r
 function runStop(host: JornadaHost, run: JRun, stop: StopDef): Promise<JRun> {
   if (isFight(stop)) return fightStop(host, run, stop);
   if (stop.kind === 'event') return eventStop(host, run);
-  if (stop.kind === 'shop') return shopStop(host, run);
   if (stop.kind === 'rest') return restStop(host, run);
   return treasureStop(host, run);
 }
@@ -476,7 +479,7 @@ function mapView(run: JRun): string {
     .join('');
   // O herói fica no último nó feito; antes da primeira escolha, embaixo do mapa.
   const here = last ? pos(byId.get(last)!) : { x: 50, y: height - 22 };
-  const legend = ['fight', 'elite', 'unknown', 'shop', 'rest', 'treasure', 'boss']
+  const legend = ['fight', 'elite', 'unknown', 'rest', 'treasure', 'boss']
     .map((k) => `<span class="jlegend-chip k-${k}"${tip(nodeKindName(k), nodeKindDesc(k))}>${k === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[k]!)}${nodeKindName(k)}</span>`)
     .join('');
   return `<div class="jmap-wrap">
@@ -575,68 +578,90 @@ async function eventStop(host: JornadaHost, run: JRun): Promise<JRun> {
   return next;
 }
 
-async function shopStop(host: JornadaHost, run0: JRun): Promise<JRun> {
-  let run = run0;
-  const offer = shopOffer(run, data);
-  host.discoverRelics(offer.relics.map((r) => r.id));
-  const bought = new Set<string>();
-  let shelfPick: string | undefined = offer.relics[0]?.id;
-  const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud></div><div data-shop></div>
-    <div class="sticky-cta"><button class="btn primary big" data-choice="leave">${U.leave}</button></div></div>`));
+/** Loja sempre aberta: sobreposição como a árvore e o moveset, chamada pelo HUD (docs/jornada/run.md#loja). */
+function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
+  let run = keep(openShop(run0, data));
+  saveJornada(host.storage, run);
+  const first = shopOffer(run, data);
+  host.discoverRelics(first.relics.map((r) => r.id));
+  let shelfPick: string | undefined = first.relics.find((r) => !run.relics.includes(r.id))?.id ?? first.relics[0]?.id;
+  const root = h(`<div class="jtree-screen jshop-screen ${themeOf(run.hero).cls}" role="dialog" aria-label="${U.shopTitle}"${themeStyle(run)}><div class="jt-body">
+    <div class="jt-head"><h2>${icon('tag')} ${U.shopTitle}</h2><span class="chip" data-ryo></span><span class="chip" data-inflation></span></div>
+    <div data-shop></div>
+    <div class="sticky-cta"><button class="btn primary big" data-close>${U.leave}</button></div></div></div>`);
+  document.body.appendChild(root);
   const render = () => {
-    root.querySelector('[data-hud]')!.innerHTML = hud(host, run);
+    const offer = shopOffer(run, data);
+    root.querySelector('[data-ryo]')!.innerHTML = `${icon('coin')} ${U.ryo(run.ryo)}`;
+    const inflation = root.querySelector<HTMLElement>('[data-inflation]')!;
+    const pct = Math.round(shopInflation(run, data) * 100);
+    inflation.hidden = pct === 0;
+    inflation.textContent = U.shopInflation(pct);
+    inflation.dataset.tip = `<b class="tip-title">${U.shopTitle}</b>${U.shopPriceRule(Math.round(data.j.shop.perPurchase * 100), Math.round(data.j.shop.perStage * 100))}`;
+    const owned = (id: string) => run.relics.includes(id);
     const btn = (p: Purchase, key: string) => {
-      const ok = canBuy(run, p, data) && !bought.has(key);
-      const label = bought.has(key) ? U.owned : p.kind === 'item' && !canBuy({ ...run, ryo: 1e9 }, p, data) ? U.full : `${U.buy} · ${U.ryo(p.price)}`;
+      const ok = canBuy(run, p, data);
+      const label = p.kind === 'relic' && owned(p.id) ? U.owned : p.kind === 'item' && !canBuy({ ...run, ryo: 1e9 }, p, data) ? U.full : `${U.buy} · ${U.ryo(p.price)}`;
       return `<button class="btn small" data-buy="${key}" ${ok ? '' : 'disabled'}>${label}</button>`;
     };
+    const picked = offer.relics.find((r) => r.id === shelfPick);
     root.querySelector('[data-shop]')!.innerHTML = `
       <h3>${U.relicsTitle}</h3>
       <div class="jrshelf">${offer.relics
-        .map((r) => `<button type="button" class="jrshelf-item tier-${relicTier(r.id)}${r.id === shelfPick ? ' on' : ''}${bought.has(`r:${r.id}`) ? ' sold' : ''}" data-shelf="${r.id}">
-          <span class="jrslot big tier-${relicTier(r.id)}">${relicIcon(r.id)}</span><span class="jrprice">${bought.has(`r:${r.id}`) ? U.owned : U.ryo(r.price)}</span></button>`)
+        .map((r) => `<button type="button" class="jrshelf-item tier-${relicTier(r.id)}${r.id === shelfPick ? ' on' : ''}${owned(r.id) ? ' sold' : ''}" data-shelf="${r.id}">
+          <span class="jrslot big tier-${relicTier(r.id)}">${relicIcon(r.id)}</span><span class="jrprice">${owned(r.id) ? U.owned : U.ryo(r.price)}</span></button>`)
         .join('')}</div>
-      ${shelfPick ? relicCard(shelfPick, btn({ kind: 'relic', ...offer.relics.find((r) => r.id === shelfPick)! }, `r:${shelfPick}`), 'stack') : ''}
+      ${picked ? relicCard(picked.id, btn({ kind: 'relic', ...picked }, `r:${picked.id}`), 'stack') : ''}
       <h3>${U.bagTitle}</h3>${offer.consumables
-        .map((c) => `<div class="jrelic"><span class="jrelic-ico">${icon('kit')}</span><span class="jrelic-txt"><b>${J.items[c.id]!.name}</b><small>${J.items[c.id]!.desc}</small></span>${btn({ kind: 'item', ...c }, `i:${c.id}:${run.bag[c.id]}`)}</div>`)
+        .map((c) => `<div class="jrelic"><span class="jrelic-ico">${icon('kit')}</span><span class="jrelic-txt"><b>${J.items[c.id]!.name}</b><small>${J.items[c.id]!.desc}</small></span>${btn({ kind: 'item', ...c }, `i:${c.id}`)}</div>`)
         .join('')}
-      ${talentTreeComplete(run, data) ? '' : `<div class="jrelic"><span class="jrelic-ico">${icon('scroll')}</span><span class="jrelic-txt"><b>${U.training}</b></span>${btn({ kind: 'training', price: offer.training }, `t:${run.talentPoints}`)}</div>`}
+      ${talentTreeComplete(run, data) ? '' : `<div class="jrelic"><span class="jrelic-ico">${icon('scroll')}</span><span class="jrelic-txt"><b>${U.training}</b></span>${btn({ kind: 'training', price: offer.training }, 't')}</div>`}
       <div class="jrelic"><span class="jrelic-ico">${icon('medical')}</span><span class="jrelic-txt"><b>${U.treatment}</b></span>${btn({ kind: 'treatment', price: offer.treatment }, 'heal')}</div>`;
   };
   render();
-  wireHud(root, host, () => run, (r) => (run = r), render);
-  root.addEventListener('click', (e) => {
-    const shelf = (e.target as HTMLElement).closest<HTMLElement>('[data-shelf]');
-    if (shelf) {
-      shelfPick = shelf.dataset.shelf;
-      return render();
-    }
-    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-buy]');
-    if (!b || b.disabled) return;
-    const key = b.dataset.buy!;
-    const [kind, id] = key.split(':');
-    const p: Purchase =
-      kind === 'r'
-        ? { kind: 'relic', ...offer.relics.find((r) => r.id === id)! }
-        : kind === 'i'
-          ? { kind: 'item', ...offer.consumables.find((c) => c.id === id)! }
-          : kind === 't'
-            ? { kind: 'training', price: offer.training }
-            : { kind: 'treatment', price: offer.treatment };
-    run = keep(buy(run, p, data));
-    if (kind === 'r' || kind === 'heal') bought.add(key);
-    host.mood('good');
-    render();
-    saveJornada(host.storage, run);
+  return new Promise((resolve) => {
+    root.addEventListener('click', (e) => {
+      const t = e.target as HTMLElement;
+      if (t.closest('[data-close]')) {
+        root.remove();
+        return resolve(run);
+      }
+      const shelf = t.closest<HTMLElement>('[data-shelf]');
+      if (shelf) {
+        shelfPick = shelf.dataset.shelf;
+        return render();
+      }
+      const b = t.closest<HTMLButtonElement>('[data-buy]');
+      if (!b || b.disabled) return;
+      const offer = shopOffer(run, data);
+      const [kind, id] = b.dataset.buy!.split(':');
+      const p: Purchase =
+        kind === 'r'
+          ? { kind: 'relic', ...offer.relics.find((r) => r.id === id)! }
+          : kind === 'i'
+            ? { kind: 'item', ...offer.consumables.find((c) => c.id === id)! }
+            : kind === 't'
+              ? { kind: 'training', price: offer.training }
+              : { kind: 'treatment', price: offer.treatment };
+      run = keep(buy(run, p, data));
+      host.mood('good');
+      render();
+      saveJornada(host.storage, run);
+    });
   });
-  await choose(root.querySelector('.sticky-cta')!);
-  return leaveStop(run, data);
 }
 
-async function restStop(host: JornadaHost, run: JRun): Promise<JRun> {
+async function restStop(host: JornadaHost, run0: JRun): Promise<JRun> {
+  let run = run0;
   const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud>${hud(host, run)}</div>
     <button class="btn big" data-choice="heal">${icon('rest')} ${U.restHeal(restHeal(run, data).hp, restHeal(run, data).chakra)}</button>
-    ${restTrainButton(run)}</div>`));
+    <span data-train>${restTrainButton(run)}</span></div>`));
+  // Talentos e loja continuam à mão: o HUD muda a run (e a árvore pode fechar, trocando o Treinar).
+  wireHud(root, host, () => run, (r) => (run = r), () => {
+    root.querySelector('[data-hud]')!.innerHTML = hud(host, run);
+    root.querySelector('[data-train]')!.innerHTML = restTrainButton(run);
+    saveJornada(host.storage, run);
+  });
   const c = await choose<'heal' | 'train'>(root);
   host.mood('good');
   return rest(run, c, data);

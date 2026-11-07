@@ -11,6 +11,8 @@ import type { KeyValueStorage } from './runHistory';
 export const JORNADA_SAVE_KEY = 'jornada_run_v1';
 const STARTER_RELIC = 'irukaHeadband';
 const STARTER_EVOLVED = 'firstHokageNecklace';
+/** História: em que parada de cada estágio ficava o mercador, antes de a loja ficar sempre aberta (v0.50.0). */
+const OLD_SHOP_STOPS = [6, 6, 3];
 
 /** Troca os ids de relíquia que mudaram (v0.43.0: iniciais novas e o Talismã da Vontade do Fogo). */
 export const renameRelicIds = (ids: readonly string[]) => [...new Set(ids.map((id) => RELIC_RENAMES[id] ?? id))];
@@ -47,10 +49,33 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     const cycle = typeof run.cycle === 'number' ? run.cycle : 0;
     const unlocks = Array.isArray(run.unlocks) ? run.unlocks : [];
     const loaded: JRun = { ...legacy, ...run, cycle, unlocks, learned: known(run.learned ?? []), moveset: known(run.moveset ?? []), cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
-    return withoutStaleElements(loaded);
+    return withoutStaleElements(withoutShopStops(loaded, run.shopPurchases === undefined));
   } catch {
     return null;
   }
+}
+
+/**
+ * A loja deixou de ser parada (v0.50.0). Na História, o índice perde o mercador que saiu (quem estava nele segue para a
+ * parada seguinte, que passa a ter esse índice). No mapa, quem estava num nó de mercador o dá por feito, e os que faltam
+ * viram luta.
+ */
+function withoutShopStops(run: JRun, old: boolean): JRun {
+  const next: JRun = { ...run, shop: run.shop ?? null, shopPurchases: run.shopPurchases ?? 0 };
+  if (!old) return next;
+  if (next.mode !== 'generic') {
+    const at = OLD_SHOP_STOPS[next.stageIndex] ?? Infinity;
+    return next.stopIndex > at ? { ...next, stopIndex: next.stopIndex - 1 } : next;
+  }
+  if (!next.map) return next;
+  const isShop = (kind: string) => kind === 'shop';
+  const current = next.map.nodes.find((n) => n.id === next.nodeId);
+  const left = current && isShop(current.kind);
+  return {
+    ...next,
+    map: { ...next.map, nodes: next.map.nodes.map((n) => (isShop(n.kind) ? { ...n, kind: 'fight' as const } : n)) },
+    ...(left ? { nodeId: null, path: [...next.path, current.id], stopIndex: next.stopIndex + 1 } : {}),
+  };
 }
 
 /**
