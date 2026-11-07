@@ -103,7 +103,7 @@
 .act-tab.tab-genjutsu.on { border-bottom-color: var(--t-genjutsu); }
 .act-tab.tab-genjutsu .ico { color: var(--t-genjutsu); }
 .act-tab.tab-special .ico { color: var(--t-special); }
-.act-tab.tab-items .ico { color: var(--paper-2); }
+.act-tab.tab-items .ico { color: var(--text); }
 
 /* Placa de jutsu: selo quadrado na cor do tipo/elemento, nome condensado, números ao lado. */
 .btn.act {

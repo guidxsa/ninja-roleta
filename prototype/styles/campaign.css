@@ -84,12 +84,12 @@
 /* Jokenpô: três mãos em placas grandes; o duelo mostra as duas lado a lado. */
 .hands { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
 .btn.hand { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 92px; }
-.btn.hand .ico { width: 40px; height: 40px; color: var(--paper); }
+.btn.hand .ico { width: 40px; height: 40px; color: var(--text); }
 .btn.hand small { font: 600 14px/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }
 .btn.hand.picked { opacity: 1; border-color: var(--gold-2); box-shadow: inset 0 -3px 0 var(--accent); }
 .duel { display: flex; justify-content: center; align-items: center; gap: 20px; text-align: center; min-height: 10px; }
 .duel b { display: grid; place-items: center; }
-.duel b .ico { width: 52px; height: 52px; color: var(--paper); }
+.duel b .ico { width: 52px; height: 52px; color: var(--text); }
 .duel span { color: var(--accent-2); font: 400 22px/1 var(--font-display); }
 .duel small { font-family: var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .result-win { color: var(--good); }

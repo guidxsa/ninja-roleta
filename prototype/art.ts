@@ -49,7 +49,7 @@ const ICONS: Record<string, string> = {
   sharingan:
     '<circle cx="12" cy="12" r="10" fill="#b3151b"/><circle cx="12" cy="12" r="6" fill="none" stroke="#2a0507" stroke-width="1"/><circle cx="12" cy="12" r="2.4" fill="#120203"/><g fill="#120203"><circle cx="12" cy="6" r="1.6"/><circle cx="17.2" cy="15" r="1.6"/><circle cx="6.8" cy="15" r="1.6"/></g>',
   byakugan:
-    '<circle cx="12" cy="12" r="10" fill="#ece8f6"/><circle cx="12" cy="12" r="5.5" fill="#d3cdea"/><g stroke="#9d93c7" stroke-width=".9"><path d="M2.5 9.5 6 10.5M2.5 14.5 6 13.5M21.5 9.5 18 10.5M21.5 14.5 18 13.5"/></g>',
+    '<circle cx="12" cy="12" r="10" fill="#ece8f6" stroke="#7d73a8" stroke-width=".9"/><circle cx="12" cy="12" r="5.5" fill="#d3cdea"/><g stroke="#9d93c7" stroke-width=".9"><path d="M2.5 9.5 6 10.5M2.5 14.5 6 13.5M21.5 9.5 18 10.5M21.5 14.5 18 13.5"/></g>',
   item: '<path d="M6 8h12l1.5 12.5a1 1 0 0 1-1 1.5h-13a1 1 0 0 1-1-1.5z" fill="currentColor"/><path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8 12h8" stroke="#0005" stroke-width="1.6"/>',
   substitution: '<rect x="4" y="9" width="16" height="9" rx="4.5" fill="currentColor"/><ellipse cx="18" cy="13.5" rx="2.5" ry="4.5" fill="#0004"/><path d="M8 5l2 2M12 3.5v3M16 5l-2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
   clash: '<path d="M3 21 11 13M21 21l-8-8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M12 2l1.6 4.6L18 5l-2 4.2 4.5 1.3L16 12l-4-.4L8 12l-4.5-1.5L8 9.2 6 5l4.4 1.6z" fill="currentColor"/>',
@@ -177,7 +177,7 @@ const CLANS: Record<string, string> = {
     '<path d="M4.5 10a7.5 7.5 0 0 1 15 0z" fill="#d1232a"/><path d="M4.5 10a7.5 7.5 0 0 0 15 0z" fill="#f5f1e6"/><rect x="10.8" y="16.5" width="2.4" height="6" rx="1" fill="#f5f1e6"/><circle cx="12" cy="10" r="7.5" fill="none" stroke="#0006" stroke-width=".8"/>',
   // Hyuuga: o olho branco com veias.
   hyuuga:
-    '<path d="M1.5 12S6 4.5 12 4.5 22.5 12 22.5 12 18 19.5 12 19.5 1.5 12 1.5 12z" fill="#ece8f6"/><circle cx="12" cy="12" r="4.4" fill="#cfc8e8"/><circle cx="12" cy="12" r="1.4" fill="#f9f8ff"/><path d="M3.5 9 7 10.6M3.5 15 7 13.4M20.5 9 17 10.6M20.5 15 17 13.4" stroke="#a197cc" stroke-width="1"/>',
+    '<path d="M1.5 12S6 4.5 12 4.5 22.5 12 22.5 12 18 19.5 12 19.5 1.5 12 1.5 12z" fill="#ece8f6" stroke="#7d73a8" stroke-width=".9"/><circle cx="12" cy="12" r="4.4" fill="#cfc8e8"/><circle cx="12" cy="12" r="1.4" fill="#f9f8ff"/><path d="M3.5 9 7 10.6M3.5 15 7 13.4M20.5 9 17 10.6M20.5 15 17 13.4" stroke="#a197cc" stroke-width="1"/>',
   // Nara: chifres de cervo.
   nara: '<g fill="none" stroke="#c8a46a" stroke-width="2" stroke-linecap="round"><path d="M10 21V14C10 10 6 9 5 4M7.5 10.5 3.5 9M8.2 6.6 9.5 3"/><path d="M14 21V14c0-4 4-5 5-10M16.5 10.5l4-1.5M15.8 6.6 14.5 3"/></g>',
   // Akimichi: borboleta.
