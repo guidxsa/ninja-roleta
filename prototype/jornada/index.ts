@@ -506,13 +506,13 @@ function mapView(run: JRun): string {
   const legend = ['fight', 'elite', 'unknown', 'rest', 'treasure', 'boss']
     .map((k) => `<span class="jlegend-chip k-${k}"${tip(nodeKindName(k), nodeKindDesc(k))}>${k === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[k]!)}${nodeKindName(k)}</span>`)
     .join('');
-  return `<div class="jmap-wrap">
-    <div class="jmap-boss">${fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm')}<span><small>${M.bossLabel}</small><b>${boss.map((id) => J.names[id] ?? id).join(' e ')}</b></span></div>
-    <div class="jmap jscene scene-${stageScene(run, data)}" style="height:${height}px">
+  // Três peças irmãs (chefe, carta, legenda): no celular ficam empilhadas; no widescreen chefe e legenda vão para a coluna de contexto.
+  return `<div class="jmap-boss">${fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm')}<span><small>${M.bossLabel}</small><b>${boss.map((id) => J.names[id] ?? id).join(' e ')}</b></span></div>
+    <div class="jtrail-map"><div class="jmap jscene scene-${stageScene(run, data)}" style="height:${height}px">
       <svg class="jmap-lines" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>${nodes}
       <span class="jmap-hero" style="left:${here.x}%;top:${here.y}px" aria-hidden="true">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}</span>
-    </div>
-    <div class="jlegend-chips" aria-label="${U.legend}">${legend}</div></div>`;
+    </div></div>
+    <div class="jlegend-chips" aria-label="${U.legend}">${legend}</div>`;
 }
 
 async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
@@ -522,7 +522,7 @@ async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
       <div class="jb-head"><span>${J.stageLabel(run.stageIndex + 1, stageCount(run, data), stageName(run))}</span>${cycleChip(run)}<span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></div>
       <div class="jmap-side"><div data-hud>${hud(host, cur)}</div>
         <p class="jb-prompt">${M.choose}</p><button class="btn small jabandon" data-abandon>${U.abandon}</button></div>
-      <div class="jtrail-map">${mapView(cur)}</div>
+      ${mapView(cur)}
     </div>`),
   );
   wireHud(root, host, () => cur, (r) => (cur = r), () => {

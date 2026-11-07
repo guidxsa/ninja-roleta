@@ -72,6 +72,25 @@ Decidido com o usuário: **a arte oficial é liberada nos retratos de personagen
 - Cenários desenhados, ícones, símbolos de vila e demais ornamentos seguem em desenho próprio.
 - **Nada de rostos desenhados nos cenários**: o Monumento dos Hokages foi tentado na v0.54.0 e saiu na v0.55.0, a pedido do usuário, porque ficou ruim.
 
+## Celular e desktop
+
+Decidido com o usuário (07/11/2026): **celular e desktop são pares**. Compartilham regras, estado, mecânicas e identidade visual, mas cada um tem a sua composição. O desktop **compõe** a tela de outro jeito (colunas, painéis laterais fixos, menos rolagem) em vez de ampliar a do celular. Nenhuma regra muda com a largura: o layout é só CSS (Grid com `grid-template-areas`) e, quando falta um painel, HTML de apresentação, nunca lógica duplicada.
+
+| Faixa | Largura | Composição |
+|---|---|---|
+| Celular | < 600px | Vertical, por prioridade; a base de todo arquivo de estilo |
+| Tablet | 600–899px | A do celular, com mais folga |
+| Notebook | ≥ 900px | Colunas e painéis laterais, até `--shell-max` (1440px) |
+| Widescreen | ≥ 1280px | Mais uma região (equipe, campo e ações; contexto ao lado do mapa) |
+
+A CSS não aceita `var()` em `@media`, então os números se repetem nas telas; a referência fica no topo de `prototype/styles/base.css`. Toda tela nova precisa das duas composições, conferidas em 390×844, 768×1024, 1366×768 e 1920×1080, sem rolagem horizontal.
+
+| Tela | Desktop | Situação |
+|---|---|---|
+| Combate da Jornada | Notebook: campo e ações em colunas. Widescreen: equipe à esquerda (grade de duas com 3 ou mais), inimigos ao centro com o local cobrindo o campo, ações fixas à direita. A luta ocupa a altura da janela | Feito (v0.57.0) |
+| Trilha e mapa da Jornada | A tela cabe na janela e só a trilha ou a carta rola. Notebook: equipe ao lado. Widescreen: equipe, trilha ou carta e contexto (seguir, chefe, legenda) | Feito (v0.57.0) |
+| Roleta, árvore de talentos, Portão, entrada da Jornada, modais e minigames | Ainda na coluna de 520px (a árvore já mostra os ramos lado a lado) | A fazer, uma versão por tela |
+
 ## Situação
 
 O piloto cobre o Portão da Vila e a entrada da Jornada no estilo novo (v0.56.0), e a trilha, o mapa e o sorteio do Roleta (v0.54.0). O que falta está em [decisoes.md](decisoes.md).

@@ -33,7 +33,7 @@ Pastas dos docs: `base/` (regras dos dois modos), `roleta/`, `jornada/` e `reser
 
 ## Princípios
 
-- **Mobile-first**: um toque, layout vertical, botões grandes.
+- **Celular e desktop são pares**: no celular, um toque, layout vertical e botões grandes; no desktop, composição própria (colunas, painéis fixos), não o celular ampliado. Mesma lógica nos dois; faixas e situação por tela em [docs/visual.md](docs/visual.md).
 - **Offline**: PWA com service worker. **Sem backend.**
 - **Run só em memória** (F5 reseta), exceto a Jornada, salva a cada parada (`jornada_run_v1`). Perfil e histórico em `localStorage`.
 - **Lógica separada da interface**: regras são funções puras, sem DOM.

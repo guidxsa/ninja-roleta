@@ -1,4 +1,13 @@
 /* Base: reset, fundo com textura, escala tipográfica e utilitários. */
+/*
+ * Faixas de tela (docs/visual.md, "Celular e desktop"). A CSS não aceita var() em @media, então os
+ * números se repetem nas telas:
+ *   celular    < 600px    composição vertical (a base de todo arquivo)
+ *   tablet     600–899px  a mesma composição, com mais folga
+ *   notebook   ≥ 900px    composição de desktop: colunas e painéis laterais, até --shell-max
+ *   widescreen ≥ 1280px   mais uma região (equipe, campo e ações; contexto ao lado do mapa)
+ * Desktop compõe a tela de outro jeito, não amplia a do celular. Nenhuma regra muda com a largura.
+ */
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 [hidden] { display: none !important; }

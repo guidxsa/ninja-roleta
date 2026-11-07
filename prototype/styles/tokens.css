@@ -82,6 +82,9 @@
   --cut: 10px;
   --cut-sm: 6px;
 
+  /* Largura máxima da área do jogo nas telas com composição de desktop (faixas em base.css). */
+  --shell-max: 1440px;
+
   /* Sombra dura dos letreiros (pincel) */
   --title-shadow: 2px 2px 0 var(--accent-deep);
 

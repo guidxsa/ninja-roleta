@@ -209,7 +209,6 @@
 .jscene::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .9; background: var(--scene-art, none) center / 100% 100% no-repeat; }
 .jtrail-scene { padding: 12px 8px 12px 26px; }
 .jtrail-scene .jtrail { position: relative; border-left-width: 2px; }
-.jmap-wrap { display: flex; flex-direction: column; gap: 8px; }
 .jmap-boss {
   display: flex; align-items: center; gap: 10px; padding: 8px 12px; justify-content: center;
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 34%, transparent) 30%, color-mix(in srgb, var(--accent) 34%, transparent) 70%, transparent);
@@ -273,24 +272,31 @@
 .jend.win h2 { color: var(--gold-2); }
 .jend.lose h2 { color: var(--bad); }
 
-/* PC: a Jornada usa a tela larga. */
+/* Notebook (≥ 900): a Jornada usa a tela larga, com o HUD fixo ao lado da trilha ou do mapa. */
 @media (min-width: 900px) {
-  body.mode-jornada main, body.mode-jornada footer { max-width: 1000px; }
-  body.mode-jornada .top { max-width: 1000px; }
+  body.mode-jornada main, body.mode-jornada footer, body.mode-jornada .top { max-width: var(--shell-max); }
+  body.mode-jornada main, body.mode-jornada .top { padding-left: 24px; padding-right: 24px; }
+  body.mode-jornada .top::after { left: 24px; }
   body.mode-jornada .modal-body { max-width: 860px; }
   body.mode-jornada .jstart { max-width: 620px; margin: 0 auto; width: 100%; }
   .jtrail-screen {
-    display: grid; grid-template-columns: 360px minmax(0, 1fr); column-gap: 20px; row-gap: 10px; align-items: start;
+    display: grid; grid-template-columns: minmax(320px, 360px) minmax(0, 1fr); column-gap: 20px; row-gap: 10px; align-items: start;
     grid-template-areas: 'head head' 'hud trail' 'cta trail' 'legend trail';
-    grid-template-rows: auto auto auto 1fr;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    /* A tela cabe na janela com a barra e o rodapé (~146px): só a trilha (ou a carta) rola, os painéis ficam sempre à vista. */
+    height: calc(100dvh - 150px); min-height: 460px;
   }
   .jtrail-screen > .jb-head { grid-area: head; }
-  .jtrail-screen > [data-hud] { grid-area: hud; position: sticky; top: 76px; }
-  .jtrail-screen > .jtrail-scene, .jtrail-screen > .jtrail-map { grid-area: trail; }
+  .jtrail-screen > [data-hud] { grid-area: hud; }
+  .jtrail-screen > .jtrail-scene, .jtrail-screen > .jtrail-map {
+    grid-area: trail; align-self: stretch; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
+  }
   .jtrail-screen > .jlegend { grid-area: legend; }
   .jtrail-screen > .sticky-cta { grid-area: cta; position: static; background: none; padding: 0; }
-  .jtrail-screen.jmap-screen { grid-template-areas: 'head head' 'side trail'; grid-template-rows: auto 1fr; }
-  .jtrail-screen.jmap-screen > .jmap-side { grid-area: side; position: sticky; top: 76px; }
+  .jtrail-screen.jmap-screen { grid-template-areas: 'head head' 'side boss' 'side trail' 'side legend'; grid-template-rows: auto auto minmax(0, 1fr) auto; }
+  .jtrail-screen.jmap-screen > .jmap-side { grid-area: side; }
+  .jmap-screen > .jmap-boss { grid-area: boss; }
+  .jmap-screen > .jlegend-chips { grid-area: legend; }
   .jstop { padding: 8px 10px; }
   .jstop-txt b { font-size: 16px; }
   .jrgrid { grid-template-columns: repeat(auto-fill, 60px); }
@@ -299,6 +305,19 @@
   .jrboss-opt b { font-size: 16px; }
   .jrboss-opt .jrslot.huge { width: 96px; height: 96px; }
   .jrboss-opt .jrslot.huge .ico { width: 66px; height: 66px; }
+}
+
+/* Widescreen (≥ 1280): três colunas. Equipe à esquerda, trilha ou carta ao centro e o contexto (seguir, chefe, legenda) à direita. */
+@media (min-width: 1280px) {
+  .jtrail-screen {
+    grid-template-columns: minmax(320px, 360px) minmax(0, 1fr) minmax(260px, 320px); column-gap: 24px;
+    grid-template-areas: 'head head head' 'hud trail cta' 'hud trail legend';
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+  .jtrail-screen > .jlegend { align-self: start; }
+  .jtrail-screen.jmap-screen { grid-template-areas: 'head head head' 'side trail boss' 'side trail legend'; grid-template-rows: auto auto minmax(0, 1fr); }
+  .jmap-screen > .jlegend-chips { flex-direction: column; align-items: stretch; align-self: start; }
+  .jmap-screen > .jlegend-chips .jlegend-chip { padding: 7px 10px; font-size: 13px; }
 }
 
 /* Fim da Jornada: o selo fica no canto do retrato. */
