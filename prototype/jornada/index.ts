@@ -648,7 +648,7 @@ function stageTitle(run: JRun, abandon: string, prompt = ''): string {
   return `<div class="jstage-title">
     <div class="jstage-name"><small>${J.stageOf(run.stageIndex + 1, stageCount(run, data))}</small><h2>${stageName(run)}</h2>${prompt ? `<p class="jb-prompt">${prompt}</p>` : ''}</div>
     <div class="jstage-meta">${cycleChip(run)}<span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span>
-      <button class="btn small jgiveup" ${abandon}>${icon('close')} ${U.abandon}</button></div>
+      <button class="btn small jgiveup" ${abandon}${tip(U.abandon, J.battle.giveUpDesc)}>${icon('warning')} ${U.abandon}</button></div>
   </div>`;
 }
 

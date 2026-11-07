@@ -281,9 +281,12 @@
 .jstage-name h2 { margin: 3px 0 0; font: 400 clamp(22px, 3.2vh, 34px)/1.1 var(--font-display); letter-spacing: .02em; color: var(--text); text-shadow: var(--title-shadow); }
 .jstage-name .jb-prompt { margin: 4px 0 0; text-align: left; }
 .jstage-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.jstage-meta .jgiveup { min-height: 0; padding: 4px 6px; border-color: transparent; background: none; color: var(--muted); font-size: 12px; }
-.jstage-meta .jgiveup:hover { color: var(--accent-2); }
-.jstage-meta .jgiveup .ico { width: 14px; height: 14px; }
+/* Abandonar jornada: em cor de perigo, como o Desistir da luta (acaba a run inteira; pede confirmação). */
+.jstage-meta .jgiveup {
+  gap: 6px; color: var(--accent-2); border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.jstage-meta .jgiveup:hover { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.jstage-meta .jgiveup .ico { width: 15px; height: 15px; }
 
 /* Carta: o campo interno guarda margem para o chefe, a rosa dos ventos e o herói não tocarem a borda. */
 .jmap { position: relative; }
