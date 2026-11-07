@@ -1,5 +1,5 @@
 // Ícones das relíquias da Jornada (24×24, desenhos originais). Um por relíquia; cores próprias com contorno
-// escuro para ler bem sobre o papel. `tests/jornada.test.ts` confere que toda relíquia tem o seu.
+// escuro para ler bem nos dois temas. `tests/jornada.test.ts` confere que toda relíquia tem o seu.
 
 const C = {
   metal: '#b9c3cf',

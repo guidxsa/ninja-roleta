@@ -41,8 +41,6 @@ body.at-gate #home-btn, body:not(.at-gate) .brand, body:not(.has-sheet) #sheet-b
 .top-actions .btn.small:hover:not(:disabled) { color: var(--text); background: var(--surface-2); border-color: transparent; }
 .top-actions .btn .ico { width: 20px; height: 20px; }
 .top-actions .btn[aria-pressed='true'] { color: var(--text); box-shadow: inset 0 -2px 0 var(--primary); }
-/* O botão de cor mostra a cor escolhida. */
-.top-actions #theme-btn { color: var(--primary); }
 #instant-btn[aria-pressed='true'] { color: var(--gold-2); box-shadow: inset 0 -2px 0 var(--gold); }
 
 /* Progresso da campanha: linha com losangos (feito dourado, atual vermelho, a fazer vazado). */
@@ -69,11 +67,11 @@ body.at-gate #home-btn, body:not(.at-gate) .brand, body:not(.has-sheet) #sheet-b
 }
 
 /* ---------------------------------------------------------------------------
- * Portão da Vila: logo em letreiro de pincel, modos como faixas de pergaminho com selo, atalhos do registro.
+ * Portão da Vila (docs/visual.md): logo com nuvens, destaque (ilustração do jogador ou Konoha), citação em
+ * pergaminho, cards de modo com arte, faixa de Conquistas e barra inferior com o Registro ninja.
  */
-.gate { gap: 18px; padding-top: 6px; }
-.gate-head { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px 0 6px; }
-.gate-head .seal { --s: 48px; margin-bottom: 4px; }
+.gate { position: relative; isolation: isolate; gap: 14px; padding-top: 0; }
+.gate-head { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding: 22px 0 0; }
 .logo {
   margin: 0; line-height: .95; text-align: center; font: 400 54px/.95 var(--font-display);
   transform: rotate(-2deg);
@@ -82,125 +80,86 @@ body.at-gate #home-btn, body:not(.at-gate) .brand, body:not(.has-sheet) #sheet-b
 .logo .l1 { font-size: .62em; color: var(--text); letter-spacing: .12em; text-shadow: var(--title-shadow); }
 .logo .l2 {
   color: var(--accent-2); letter-spacing: .02em;
-  -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill;
-  text-shadow: 3px 3px 0 color-mix(in srgb, var(--accent) 30%, transparent);
+  -webkit-text-stroke: 2px var(--text); paint-order: stroke fill;
+  text-shadow: 4px 4px 0 var(--ink);
 }
+[data-theme='light'] .logo .l2 { -webkit-text-stroke-color: var(--ink); text-shadow: 3px 3px 0 color-mix(in srgb, var(--accent) 30%, transparent); }
 /* Pincelada atrás do logo. */
 .gate-head::before {
-  content: ''; position: absolute; left: 50%; top: 62%; width: min(340px, 92%); height: 46px; transform: translate(-50%, -50%) rotate(-3deg);
+  content: ''; position: absolute; left: 50%; top: 66%; width: min(340px, 92%); height: 46px; transform: translate(-50%, -50%) rotate(-3deg);
   background: color-mix(in srgb, var(--accent-deep) 75%, transparent); z-index: -1;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 40' preserveAspectRatio='none'%3E%3Cpath d='M6 22C40 8 110 4 170 6s100 4 126 12c-6 10-40 16-100 17S50 36 12 34C2 32 0 26 6 22z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 40' preserveAspectRatio='none'%3E%3Cpath d='M6 22C40 8 110 4 170 6s100 4 126 12c-6 10-40 16-100 17S50 36 12 34C2 32 0 26 6 22z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
 }
+.gate-cloud { position: absolute; z-index: -1; width: 96px; pointer-events: none; }
+.gate-cloud.l { left: -10px; top: 0; }
+.gate-cloud.r { right: -10px; top: 58px; transform: scaleX(-1); width: 84px; }
+
+/* Destaque de ponta a ponta, que apaga em cima e embaixo; a ilustração (img/cenas/portao) cobre tudo. */
+.gate-hero {
+  position: relative; margin: -64px -16px 0; height: 236px; overflow: hidden;
+  background: var(--scene-art) center 34px / 100% auto no-repeat, var(--scene);
+  -webkit-mask: linear-gradient(transparent, #000 24%, #000 70%, transparent); mask: linear-gradient(transparent, #000 24%, #000 70%, transparent);
+}
+.gate-hero img { width: 100%; height: 100%; object-fit: cover; object-position: center 35%; display: block; }
+.gate-quote {
+  margin: -62px 0 0; width: min(86%, 380px); align-self: flex-start; transform: rotate(-1.5deg); padding: 14px 18px 12px;
+}
+.gate-quote p { margin: 0; font: 700 19px/1.25 var(--font-hand); }
+.gate-quote p::before { content: '\201C'; }
+.gate-quote p::after { content: '\201D'; }
+.gate-quote cite { display: block; margin-top: 6px; text-align: right; font: 400 14px/1 var(--font-hand); color: var(--paper-muted); font-style: normal; }
+.gate-quote cite::before { content: '\2014  '; }
 .gate-sub {
-  margin: 10px 0 0; font: 600 14px/1 var(--font-hud); letter-spacing: .3em; text-transform: uppercase; color: var(--gold);
-  display: flex; align-items: center; gap: 10px;
+  margin: 6px 0 0; font: 600 14px/1 var(--font-hud); letter-spacing: .3em; text-transform: uppercase; color: var(--gold);
+  display: flex; align-items: center; gap: 10px; justify-content: center;
 }
 .gate-sub::before, .gate-sub::after { content: ''; width: 34px; height: 1px; background: var(--gold-deep); }
 
-.gate-modes { display: flex; flex-direction: column; gap: 12px; }
-/* Faixa de pergaminho: selo à esquerda, nome em letreiro, descrição, seta; a barra vermelha entra no foco. */
-.jmode {
-  --frame: var(--line-strong);
-  --tab: transparent;
-  --fill: var(--surface);
-  position: relative; isolation: isolate; overflow: hidden;
-  display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
-  width: 100%; text-align: left; padding: 16px 16px 16px 18px; cursor: pointer;
-  border: 0; background: none; color: var(--text); font: inherit;
+/* Cards de modo: pergaminho com a arte à esquerda (ilustração do jogador ou emblema em aquarela). */
+.gate-modes { display: flex; flex-direction: column; gap: 14px; }
+.mode-card {
+  display: grid; grid-template-columns: 96px 1fr auto; gap: 12px; align-items: center; min-height: 112px; width: 100%;
+  padding: 10px 16px 10px 10px; border: 0; background: none; font: inherit; text-align: left; cursor: pointer;
   transition: transform var(--dur-2) var(--ease);
 }
-.jmode::before, .jmode::after {
-  content: ''; position: absolute; z-index: -1; pointer-events: none;
-  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
-}
-.jmode::before { inset: 0; background: var(--frame); transition: background var(--dur-2); }
-.jmode::after {
-  inset: 1px; transition: background-size var(--dur-3) var(--ease);
+.mode-card:hover { transform: translateY(-2px); }
+.mode-card:active { transform: translateY(1px); }
+.mode-card:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; }
+.mode-card[data-choice='jornada'] { --art: #e8701a; --art-ink: #8a2c08; --title-ink: #8f1118; }
+.mode-card[data-choice='roleta'] { --art: #7a52b0; --art-ink: #3f2468; --title-ink: var(--paper-ink); }
+.mode-art {
+  position: relative; align-self: stretch; display: grid; place-items: center; overflow: hidden; color: var(--art-ink);
   background:
-    linear-gradient(var(--accent), var(--accent)) 0 0 / 4px 100% no-repeat,
-    var(--grain), var(--fill);
+    radial-gradient(44% 40% at 42% 44%, color-mix(in srgb, var(--art) 62%, transparent), transparent 100%),
+    radial-gradient(60% 54% at 58% 60%, color-mix(in srgb, var(--art) 34%, transparent), transparent 100%);
 }
-.jmode:hover, .jmode:focus-visible { --frame: var(--gold); outline: none; }
-.jmode:hover::after, .jmode:focus-visible::after { background-size: 7px 100%, auto, auto; }
-.jmode:active { transform: translateY(1px); }
-.jmode .seal { --s: 50px; transition: transform var(--dur-2) var(--ease); }
-.jmode:hover .seal, .jmode:focus-visible .seal { transform: rotate(0deg) scale(1.05); }
-.jmode b { display: block; font: 400 25px/1.1 var(--font-display); letter-spacing: .02em; text-shadow: var(--title-shadow); }
-.jmode small { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.4; }
-.jmode > .ico { width: 22px; height: 22px; color: var(--gold); transition: transform var(--dur-2) var(--ease); }
-.jmode:hover > .ico { transform: translateX(3px); }
-.jmode .ico.lead { width: 40px; height: 40px; color: var(--accent); }
+.mode-art .emblem { width: 64px; height: 64px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.mode-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; -webkit-mask: linear-gradient(90deg, #000 70%, transparent); mask: linear-gradient(90deg, #000 70%, transparent); }
+.mode-card b { display: block; font: 700 31px/1 var(--font-hand); color: var(--title-ink); }
+.mode-card small { display: block; margin-top: 4px; color: var(--paper-muted); font-size: 14px; line-height: 1.35; }
+.mode-card > .ico { width: 26px; height: 26px; color: var(--paper-ink); transition: transform var(--dur-2) var(--ease); }
+.mode-card:hover > .ico { transform: translateX(3px); }
 
-/* Atalhos do registro ninja: linha discreta de entradas com kanji, sem cara de botão colorido. */
-.gate-links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
-.gate-link {
-  display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px;
-  border: 0; background: var(--surface); color: var(--text); cursor: pointer; text-align: left;
-  font: 600 15px/1.1 var(--font-hud); letter-spacing: .06em; text-transform: uppercase;
-  transition: background var(--dur-1), color var(--dur-1);
+/* Barra inferior do Portão: o Registro ninja ao alcance do polegar. Escura nos dois temas, como no mockup. */
+.gate-nav { display: none; }
+body.at-gate { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+body.at-gate .gate-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: grid; grid-template-columns: repeat(5, 1fr);
+  max-width: 520px; margin: 0 auto; padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(16, 12, 9, .95); border-top: 1px solid #6e5428; backdrop-filter: blur(6px);
 }
-.gate-link .kanji { flex: none; width: 28px; font-size: 22px; color: var(--accent-2); text-align: center; transition: transform var(--dur-2) var(--ease); }
-.gate-link .kanji.two { font-size: 14px; line-height: 1; writing-mode: vertical-rl; text-orientation: upright; height: 2.2em; display: inline-flex; align-items: center; justify-content: center; }
-/* Número ímpar de atalhos: o último ocupa a linha inteira. */
-.gate-link:last-child:nth-child(odd) { grid-column: 1 / -1; }
-.gate-link:hover, .gate-link:focus-visible { background: var(--surface-2); outline: none; }
-.gate-link:hover .kanji { transform: scale(1.12); }
-.gate-foot { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
+.gate-nav button {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 60px;
+  border: 0; background: none; color: #cbbf9f; cursor: pointer; font: 600 11px/1 var(--font-hud); letter-spacing: .05em; text-transform: uppercase;
+}
+.gate-nav .kanji { font-size: 21px; color: #ece3d0; }
+.gate-nav .kanji.two { font-size: 14px; line-height: 21px; letter-spacing: -.04em; }
+.gate-nav button[aria-current] { color: #dcbd78; cursor: default; }
+.gate-nav button[aria-current]::before { content: ''; position: absolute; top: 0; left: 24%; right: 24%; height: 3px; background: #b5161f; }
+.gate-nav button:hover:not([aria-current]), .gate-nav button:focus-visible { color: #fff; outline: none; }
+.gate-nav button:focus-visible .kanji { text-decoration: underline; }
 
 @media (min-width: 900px) {
   body.mode-jornada .jmodes { max-width: 620px; margin: 0 auto; width: 100%; }
-}
-
-/*
- * Portão da Vila dentro do universo: os telhados de Konoha ao fundo, cada modo como uma placa na sua cor
- * (a mesma em qualquer cor, porque são objetos da vila) e o registro como etiquetas de arquivo shinobi.
- */
-.gate { position: relative; isolation: isolate; }
-.gate .gate-sub { color: var(--primary-deep); }
-.gate .gate-sub::before, .gate .gate-sub::after { background: var(--primary); }
-.gate::before {
-  content: ''; position: absolute; z-index: -2; top: -14px; left: -16px; right: -16px; height: 300px; pointer-events: none;
-  background: var(--scene-art) top center / 100% 100% no-repeat, var(--scene);
-  -webkit-mask: linear-gradient(#000 50%, transparent 82%); mask: linear-gradient(#000 50%, transparent 82%);
-}
-.gate-head { padding-top: 138px; }
-.gate-head::before { z-index: -1; }
-.jmode[data-choice='roleta'] {
-  --frame: #ea6f14; --fill: #120a06; --text: #f6ecd6; --muted: #c9b79c; --gold: #ff9a3d;
-  --accent: #ea6f14; --accent-ink: #160a03; --title-shadow: 2px 2px 0 #b5161f;
-}
-.jmode[data-choice='roleta']::after {
-  background:
-    linear-gradient(#b5161f, #b5161f) 0 0 / 4px 100% no-repeat,
-    repeating-conic-gradient(from 0deg at 44px 50%, rgba(234, 111, 20, .13) 0 9deg, transparent 9deg 18deg),
-    var(--grain), var(--fill);
-}
-.jmode[data-choice='roleta']:hover::after, .jmode[data-choice='roleta']:focus-visible::after { background-size: 7px 100%, auto, auto, auto; }
-.jmode[data-choice='jornada'] {
-  --frame: var(--wood); --fill: var(--paper); --text: var(--paper-ink); --muted: var(--paper-muted); --gold: var(--wood);
-  --accent: var(--leaf-deep); --accent-ink: #f8efdc; --title-shadow: 1.5px 1.5px 0 rgba(47, 95, 52, .3);
-  padding-right: 18px;
-}
-.jmode[data-choice='jornada']::after {
-  background:
-    linear-gradient(var(--wood), var(--wood)) 0 0 / 7px 100% no-repeat,
-    linear-gradient(var(--wood), var(--wood)) 100% 0 / 7px 100% no-repeat,
-    var(--grain-dark), var(--fill);
-}
-.jmode[data-choice='jornada']:hover::after, .jmode[data-choice='jornada']:focus-visible::after { background-size: 11px 100%, 7px 100%, auto, auto; }
-.jmode[data-choice='jornada']:hover, .jmode[data-choice='jornada']:focus-visible { --frame: var(--leaf-deep); }
-.gate-crests { display: flex; align-items: center; justify-content: center; gap: 16px; color: var(--primary-deep); }
-.gate-crests::before, .gate-crests::after { content: ''; flex: 1; height: 1px; background: var(--line-strong); }
-.gate-crests .crest { width: 24px; height: 24px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.gate-links { gap: 8px; background: none; border: 0; }
-.gate-link {
-  background: var(--grain-dark), var(--paper-2); color: var(--paper-ink);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wood) 55%, transparent);
-  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
-}
-.gate-link .kanji { color: var(--seal); }
-.gate-link:hover, .gate-link:focus-visible { background: var(--grain-dark), var(--paper); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wood) 55%, transparent), inset 0 -3px 0 var(--seal); }
-@media (min-width: 553px) {
-  .gate::before { left: 0; right: 0; -webkit-mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent), linear-gradient(#000 50%, transparent 82%); -webkit-mask-composite: source-in; mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent), linear-gradient(#000 50%, transparent 82%); mask-composite: intersect; }
 }

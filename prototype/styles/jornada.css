@@ -206,7 +206,7 @@
 @media (min-width: 560px) { .jel-pick { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
 /* Cenário do estágio (mapa e trilha): as mesmas silhuetas da tela de batalha. */
 .jscene { position: relative; background: var(--grain), var(--scene, var(--bg-2)); border: 1px solid var(--line); overflow: hidden; }
-.jscene::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .25; background: var(--scene-art, none) center / 100% 100% no-repeat; }
+.jscene::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .9; background: var(--scene-art, none) center / 100% 100% no-repeat; }
 .jtrail-scene { padding: 12px 8px 12px 26px; }
 .jtrail-scene .jtrail { position: relative; border-left-width: 2px; }
 .jmap-wrap { display: flex; flex-direction: column; gap: 8px; }
@@ -315,7 +315,7 @@
 .jtrail-scene .jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--place, var(--primary)) 26%, transparent), transparent 85%); }
 
 /*
- * Mapa do Caminho Ninja: carta em papel envelhecido, igual em qualquer cor. Os tokens são do papel,
+ * Mapa do Caminho Ninja: carta em papel envelhecido, igual nos dois temas. Os tokens são do papel,
  * as rotas são a pincel e cada nó é um carimbo pela cor do tipo; relevo e rosa dos ventos ficam atrás.
  */
 .jmap.jscene {
@@ -350,3 +350,31 @@
 .jmap .jnode-map.choice::before { border-color: var(--paper-ink); }
 .jmap .jmap-hero .portrait { border-color: var(--paper-ink); box-shadow: 0 0 0 2px var(--paper), 2px 3px 0 2px rgba(36, 25, 15, .45); }
 @keyframes mapCall { 0%, 100% { box-shadow: inset 0 0 0 2px var(--stamp), inset 0 0 0 3px #f8efdc99, 0 0 0 2px var(--paper-ink); } 50% { box-shadow: inset 0 0 0 2px var(--stamp), inset 0 0 0 3px #f8efdc99, 0 0 0 9px transparent; } }
+
+/* Entrada da Jornada (docs/visual.md): banner, progresso, painéis em pergaminho e conquistas recentes. */
+.jbanner { position: relative; margin: 0; height: 172px; overflow: hidden; clip-path: var(--torn); background-color: var(--bg-2); }
+.jbanner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.jbanner.jscene { border: 0; }
+.jbanner figcaption {
+  position: absolute; z-index: 1; right: 14px; bottom: 14px; max-width: 74%; text-align: right; transform: rotate(-3deg);
+  font: 700 21px/1.15 var(--font-hand); color: #fff8e8; text-shadow: 0 2px 0 #000, 0 0 10px rgba(0, 0, 0, .7);
+}
+.jprogress-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+.jprogress-row small { font: 700 12px/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.jprogress-row b { display: block; margin: 3px 0 2px; font: 700 26px/1.05 var(--font-hand); }
+.jprogress-row p { margin: 0; color: var(--muted); }
+.jthumb { flex: none; position: relative; width: 108px; height: 72px; overflow: hidden; border: 2px solid var(--paper-ink); box-shadow: 2px 3px 0 rgba(0, 0, 0, .3); }
+.jthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.jprogress-bar { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 5px 8px; margin: 12px 0 14px; }
+.jprogress-bar span { font-size: 13px; color: var(--muted); }
+.jprogress-bar b { font: 700 24px/1 var(--font-hand); }
+.jprogress-bar > i { grid-column: 1 / -1; display: block; height: 12px; background: #3a2a1a; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .6); }
+.jprogress-bar > i > i { display: block; height: 100%; background: linear-gradient(180deg, #f39a3d, #e8701a); }
+.jrecent ul { list-style: none; margin: 0; padding: 0; }
+.jrecent li { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.jrecent li:first-child { border-top: 0; padding-top: 2px; }
+.jrecent .seal { --s: 42px; border-radius: 50%; }
+.jrecent b { display: block; }
+.jrecent small { display: block; color: var(--muted); font-size: 13px; line-height: 1.35; }
+.jrecent time { align-self: start; font: 400 14px/1.2 var(--font-hand); color: var(--muted); white-space: nowrap; }
+.jstart .parchment.difficulty-box { padding-bottom: 12px; }

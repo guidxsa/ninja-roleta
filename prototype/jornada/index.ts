@@ -37,6 +37,7 @@ import {
   stageCount,
   stageId,
   stageScene,
+  journeyProgress,
   stopRng,
   stopScene,
   syncUnlocks,
@@ -54,7 +55,7 @@ import { jornadaData as data } from '../../src/data/jornada';
 import { newJornadaAchievements } from '../../src/data/jornada/achievements';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clearJornada, loadJornada, saveJornada } from '../../src/state/jornadaSave';
-import { fighterPortrait, icon } from '../art';
+import { fighterPortrait, icon, sceneImage } from '../art';
 import { choose, esc, h, show, sleep } from '../dom';
 import { tip } from '../tooltip';
 import { forgetLiveBattle, heroLabel, jornadaBattle, memberLabel } from './battle';
@@ -186,15 +187,14 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
   const hardcoreOk = host.unlocked().has('j_canonHard');
   let diff = host.difficulty();
   if (diff === 'hardcore' && !hardcoreOk) diff = 'normal';
+  const banner = sceneImage('jornada');
+  const recent = host.recentAchievements(3);
   const root = show(
     h(`<div class="screen jstart">
       <h2>${J.start.title}</h2>
-      ${
-        saved
-          ? `<button class="btn primary big" data-choice="continue">${icon('scroll')} ${J.start.continue(stageName(saved), saved.stageIndex + 1, stageCount(saved, data))}${saved.cycle > 0 ? ` <span class="chip jcycle">${icon('cycle')} ${U.cycle(saved.cycle + 1)}</span>` : ''} <span class="chip diff-${saved.difficulty}">${S.difficulty[saved.difficulty].name}</span></button>`
-          : ''
-      }
-      <div class="difficulty-box"><h3>${J.start.difficulty}</h3>
+      <figure class="jbanner${banner ? '' : ' jscene scene-konoha'}">${banner ? `<img src="${banner}" alt="">` : ''}<figcaption>${J.start.tagline}</figcaption></figure>
+      ${saved ? progressCard(saved) : ''}
+      <div class="difficulty-box parchment"><h3>${J.start.difficulty}</h3>
         <div class="segmented">${DIFFICULTIES.map(
           (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === diff}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? `${icon('lock')} ` : ''}${S.difficulty[d].name}</button>`,
         ).join('')}</div>
@@ -202,12 +202,12 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
         <p class="center small" data-recovery>${recoveryLine(diff)}</p>
         <p class="muted center small">${hardcoreOk ? J.start.willOfFireNote : J.start.hardcoreLocked}</p>
         <p class="muted center small">${J.start.infiniteNote}</p></div>
-      <section class="card jmode-panel">
+      <section class="parchment jmode-panel">
         <div class="jmode-card"><div class="jstart-face">${fighterPortrait('naruto', 'ninja:uzumaki', 'md')}</div>
           <div><h3>${J.start.canon}</h3><p class="muted small">${J.start.canonDesc}</p></div></div>
         <button class="btn ${saved ? '' : 'primary '}big" data-choice="new">${J.start.startCanon}</button>
       </section>
-      <section class="card jmode-panel">
+      <section class="parchment jmode-panel">
         <div class="jmode-card"><div class="jstart-face">${fighterPortrait('commonNinja', 'ninja:common', 'md')}</div>
           <div><h3>${G.title}</h3><p class="muted small">${G.desc}</p>${bestLine(host)}</div></div>
         <div class="jclasses">${['common', 'uchiha', 'hyuuga']
@@ -223,6 +223,13 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
         ${host.unlocked().has('j_sasukeEgg') ? `<button class="btn small jskin" data-skin aria-pressed="false">${G.skinSasuke}</button>` : ''}
         <button class="btn ${saved ? '' : 'primary '}big" data-choice="generic">${icon('dice')} ${G.start}</button>
       </section>
+      ${
+        recent.length
+          ? `<section class="parchment jrecent"><h3>${J.start.recentTitle}</h3><ul>${recent
+              .map((a) => `<li><span class="seal" aria-hidden="true">功</span><span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><time>${J.start.when(a.days)}</time></li>`)
+              .join('')}</ul></section>`
+          : ''
+      }
       <button class="btn small" data-choice="back">${J.start.back}</button>
     </div>`),
   );
@@ -274,6 +281,21 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
       return run;
     }
   }
+}
+
+/** Card "Progresso da Jornada" da run salva: capítulo, parada, miniatura, conclusão e o botão Continuar. */
+function progressCard(run: JRun): string {
+  const pct = Math.round(journeyProgress(run, data) * 100);
+  const thumb = sceneImage(stageId(run, data));
+  const stop = run.mode === 'canon' ? currentStop(run, data) : null;
+  const where = stop ? stopName(stop) : J.start.stageOf(run.stageIndex + 1, stageCount(run, data));
+  return `<section class="parchment jprogress">
+    <h3>${J.start.progressTitle}</h3>
+    <div class="jprogress-row"><div><small>${J.start.chapter}</small><b>${stageName(run)}</b><p class="small">${where}</p></div>
+      <span class="jthumb${thumb ? '' : ` jscene scene-${stageScene(run, data)}`}" aria-hidden="true">${thumb ? `<img src="${thumb}" alt="">` : ''}</span></div>
+    <div class="jprogress-bar"><span>${J.start.completion[run.mode]}</span><b>${pct}%</b><i><i style="width:${pct}%"></i></i></div>
+    <button class="btn primary big" data-choice="continue">${icon('scroll')} ${J.start.continue}${run.cycle > 0 ? ` <span class="chip jcycle">${icon('cycle')} ${U.cycle(run.cycle + 1)}</span>` : ''} <span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></button>
+  </section>`;
 }
 
 /** Recorde do modo infinito no cartão do Caminho Ninja (a partir de um ciclo vencido). */

@@ -42,6 +42,8 @@ Orientação do usuário: a interface deve parecer parte do universo ([visual.md
 
 **v0.55.0** (pedido do usuário): os rostos do Monumento saem; Konoha fica com céu, sol, torre e telhados. Verde, Laranja e Marrom substituem dia/noite nos dois modos: sai o modo noturno, a cor por modo e a preferência por modo. Só visual; simulações antes → depois idênticas, linha a linha (mesmos comandos).
 
+**v0.56.0** (pedido do usuário, com referências): volta a paleta antiga (Sumi e Pergaminho com dia/noite); saem as três cores. O Portão e a entrada da Jornada ganham a estrutura dos mockups (pergaminho rasgado, nuvens, letra manuscrita, citação, cards com arte, barra inferior, progresso e conquistas recentes) e vagas para ilustrações do usuário; a liberação de arte oficial passa a valer também para elas. `journeyProgress` no core só lê a run. Simulações antes → depois idênticas, linha a linha (mesmos comandos).
+
 ## Rodadas antigas
 
 Última rodada concluída: "rebalanceamento das origens"

@@ -5,7 +5,7 @@
   border: 1px solid var(--line);
 }
 /* Cenários em nanquim: silhuetas escuras sobre um tom de cena, sem cor viva. */
-.jbattle::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .25; background: var(--scene-art, none) bottom / 100% auto no-repeat; }
+.jbattle::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .9; background: var(--scene-art, none) bottom / 100% auto no-repeat; }
 .jbattle > * { position: relative; z-index: 1; }
 .jbattle > .jb-intro { position: absolute; z-index: 4; }
 

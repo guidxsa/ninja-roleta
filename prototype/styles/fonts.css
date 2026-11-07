@@ -1,6 +1,6 @@
 /*
  * Fontes embutidas pelo build como data URL: funcionam offline.
- * Shojumaru, Zen Kaku Gothic New, Barlow Condensed e Yuji Boku: SIL Open Font License 1.1
+ * Shojumaru, Zen Kaku Gothic New, Barlow Condensed, Kalam e Yuji Boku: SIL Open Font License 1.1
  * (copyright dos autores em cada pacote @fontsource e em prototype/fonts/OFL-YujiBoku.txt).
  * font-display: block evita trocar a fonte depois de medir os rótulos da roleta.
  */
@@ -30,3 +30,7 @@
   unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
 @font-face { font-family: 'Yuji Boku'; font-style: normal; font-weight: 400; font-display: block;
   src: url('../fonts/yuji-boku-kanji.woff2') format('woff2'); }
+@font-face { font-family: 'Kalam'; font-style: normal; font-weight: 400; font-display: block;
+  src: url('@fontsource/kalam/files/kalam-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Kalam'; font-style: normal; font-weight: 700; font-display: block;
+  src: url('@fontsource/kalam/files/kalam-latin-700-normal.woff2') format('woff2'); }

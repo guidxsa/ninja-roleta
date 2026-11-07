@@ -1,0 +1,66 @@
+/*
+ * Ornamentos no estilo das referências (docs/visual.md): pergaminho de borda rasgada, nuvens em espiral,
+ * faixa de pergaminho e letra manuscrita (--font-hand). O recorte fica sempre em ::before/::after,
+ * nunca no elemento, para não cortar números flutuantes nem o foco.
+ */
+:root {
+  /* Borda rasgada: polígono fixo, gerado uma vez, em % com recuos em px. */
+  --torn: polygon(0.0% 1.6px, 3.0% 3.3px, 5.7% 2.7px, 9.3% 0.3px, 13.3% 0.2px, 17.1% 0.3px, 19.9% 2.1px, 24.8% 0.6px, 28.0% 3.1px, 33.4% 2.9px, 37.0% 4.9px, 39.7% 4.3px, 43.1% 0.7px, 45.9% 1.5px, 50.9% 0.9px, 55.1% 3.2px, 58.7% 2.7px, 61.4% 0.3px, 64.5% 3.4px, 68.3% 1.6px, 72.6% 2.3px, 76.0% 4.0px, 80.6% 1.2px, 84.8% 2.6px, 89.9% 3.6px, 93.3% 4.9px, 96.1% 2.1px, calc(100% - 0.7px) 0.0%, calc(100% - 0.2px) 6.4%, calc(100% - 3.4px) 13.8%, calc(100% - 3.9px) 20.7%, calc(100% - 3.1px) 26.2%, calc(100% - 2.6px) 33.2%, calc(100% - 3.8px) 39.5%, calc(100% - 2.1px) 48.2%, calc(100% - 0.3px) 55.5%, calc(100% - 2.9px) 63.0%, calc(100% - 3.7px) 72.0%, calc(100% - 1.7px) 77.4%, calc(100% - 0.1px) 84.8%, calc(100% - 0.8px) 91.1%, calc(100% - 0.3px) 95.6%, 100.0% calc(100% - 0.7px), 96.8% calc(100% - 2.2px), 91.6% calc(100% - 0.4px), 87.8% calc(100% - 3.0px), 82.6% calc(100% - 4.5px), 77.6% calc(100% - 1.5px), 73.8% calc(100% - 2.0px), 68.7% calc(100% - 5.3px), 65.7% calc(100% - 1.0px), 62.5% calc(100% - 1.3px), 58.6% calc(100% - 3.2px), 55.3% calc(100% - 0.0px), 51.5% calc(100% - 2.0px), 47.3% calc(100% - 5.2px), 42.7% calc(100% - 2.8px), 38.4% calc(100% - 3.7px), 35.7% calc(100% - 4.9px), 30.9% calc(100% - 4.8px), 26.0% calc(100% - 2.2px), 22.3% calc(100% - 0.6px), 17.9% calc(100% - 0.3px), 15.2% calc(100% - 1.1px), 12.2% calc(100% - 1.9px), 9.5% calc(100% - 0.0px), 6.6% calc(100% - 0.6px), 3.0% calc(100% - 0.1px), 2.8px 100.0%, 1.1px 95.3%, 1.6px 89.5%, 3.8px 84.9%, 2.1px 75.9%, 0.4px 69.5%, 1.5px 65.0%, 3.7px 59.7%, 0.1px 54.9%, 2.4px 46.1%, 2.4px 41.4%, 2.4px 37.3%, 3.9px 28.4%, 1.2px 20.9%, 0.8px 15.0%, 2.4px 7.2%);
+}
+
+/* Pergaminho: papel com grão, manchas e borda queimada; a sombra é o mesmo recorte deslocado. */
+.parchment {
+  --surface: #efe3c7; --surface-2: rgba(255, 255, 255, .3); --surface-3: rgba(36, 25, 15, .08);
+  --line: rgba(36, 25, 15, .26); --line-strong: rgba(36, 25, 15, .5);
+  --text: var(--paper-ink); --muted: var(--paper-muted); --title-shadow: none;
+  --gold: #7d5d1f; --gold-2: #684c15; --gold-deep: #5e4720; --good: #30692c; --bad: #9e2a21; --foe: #8f1a14; --leaf: #4f7a35; --ck-2: #2f60b0; --jin: #c0501f;
+  position: relative; isolation: isolate; color: var(--text); padding: 16px 16px 14px;
+}
+.parchment::before, .parchment::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; clip-path: var(--torn);
+}
+.parchment::before {
+  z-index: -1;
+  background:
+    radial-gradient(130% 150% at 50% 45%, transparent 58%, rgba(120, 70, 25, .22) 82%, rgba(70, 38, 12, .55) 100%),
+    radial-gradient(28% 34% at 82% 22%, rgba(150, 100, 45, .14), transparent 70%),
+    radial-gradient(22% 30% at 14% 80%, rgba(150, 100, 45, .12), transparent 70%),
+    var(--grain-dark), var(--paper);
+}
+.parchment::after { z-index: -2; background: rgba(0, 0, 0, .45); transform: translate(2px, 4px); }
+[data-theme='light'] .parchment::after { background: rgba(70, 40, 15, .32); }
+/* Pergaminhos vizinhos não repetem o mesmo rasgo. */
+.parchment:nth-child(even)::before { transform: scaleX(-1); }
+.parchment:nth-child(even)::after { transform: scaleX(-1) translate(-2px, 4px); }
+.parchment .btn.primary { --gold: #dcbd78; --gold-2: #f3d38b; }
+.parchment h3 {
+  margin: 0 0 8px; text-align: left; font: 700 22px/1.1 var(--font-hand); letter-spacing: 0; text-transform: none; color: var(--paper-ink);
+}
+
+/* Nuvem em espiral (cloud() em art.ts): ornamento, nunca botão. */
+.cloud { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* Faixa de pergaminho com os rolos nas pontas. */
+.scroll-banner {
+  position: relative; isolation: isolate; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+  width: 100%; padding: 12px 30px; border: 0; background: none; color: var(--paper-ink); font: inherit; text-align: left; cursor: pointer;
+  transition: transform var(--dur-2) var(--ease);
+}
+.scroll-banner::before {
+  content: ''; position: absolute; inset: 4px 12px; z-index: -1; pointer-events: none;
+  background: radial-gradient(120% 160% at 50% 50%, transparent 60%, rgba(110, 62, 20, .3)), var(--grain-dark), linear-gradient(180deg, var(--paper), var(--paper-2));
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .35);
+}
+.scroll-banner::after {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(90deg, #3d2615, #b98a52 45%, #5a3a20) 0 0 / 18px 100% no-repeat,
+    linear-gradient(90deg, #5a3a20, #b98a52 55%, #3d2615) 100% 0 / 18px 100% no-repeat;
+}
+.scroll-banner:hover { transform: translateY(-2px); }
+.scroll-banner:active { transform: translateY(1px); }
+.scroll-banner:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; }
+.scroll-banner .seal { --s: 40px; }
+.scroll-banner b { display: block; font: 700 23px/1.1 var(--font-hand); }
+.scroll-banner small { display: block; color: var(--paper-muted); font-size: 13px; line-height: 1.3; }
+.scroll-banner > .ico { width: 24px; height: 24px; }

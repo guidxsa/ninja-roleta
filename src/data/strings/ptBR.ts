@@ -527,7 +527,21 @@ export const ptBR = {
     /** Quantas lutas tem uma etapa da trilha. */
     stageFights: (n: number, exam: boolean) => (exam ? `${n} lutas` : n > 1 ? `${n} lutas seguidas` : '1 luta'),
     /** Atalhos do Portão da Vila (tela inicial) para o registro ninja. */
-    gate: { registry: 'Registro ninja' },
+    gate: {
+      registry: 'Registro ninja',
+      home: 'Início',
+      achievements: 'Conquistas',
+      achievementsDesc: 'Veja seu progresso e o que falta desbloquear.',
+      // Frases no espírito da obra (paráfrases curtas), sorteadas a cada visita ao Portão.
+      quotes: [
+        { text: 'Eu não volto atrás na minha palavra. Esse é o meu jeito ninja!', by: 'Naruto Uzumaki' },
+        { text: 'Quem abandona os amigos é pior que lixo.', by: 'Kakashi Hatake' },
+        { text: 'O esforço é capaz de superar o talento.', by: 'Rock Lee' },
+        { text: 'Onde as folhas dançam, a chama continua a arder.', by: 'Terceiro Hokage' },
+        { text: 'Um dia eu vou ser Hokage, e todo mundo vai me reconhecer!', by: 'Naruto Uzumaki' },
+        { text: 'Que problemático... mas eu vou até o fim.', by: 'Shikamaru Nara' },
+      ],
+    },
     playerName: {
       title: 'Qual é o seu nome, ninja?',
       label: 'Nome do ninja',
@@ -551,8 +565,8 @@ export const ptBR = {
     history: 'Histórico',
     back: 'Voltar',
     instant: (on: boolean) => (on ? 'Instantâneo: ligado' : 'Instantâneo: desligado'),
-    palette: (name: string) => `Cor: ${name}. Toque para trocar.`,
-    palettes: { green: 'Verde', orange: 'Laranja', brown: 'Marrom' },
+    themeDay: 'Modo dia',
+    themeNight: 'Modo noite',
     sfx: (on: boolean) => (on ? 'Efeitos sonoros: ligados' : 'Efeitos sonoros: desligados'),
     music: (on: boolean) => (on ? 'Música: ligada' : 'Música: desligada'),
     fight: 'Lutar',

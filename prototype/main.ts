@@ -127,7 +127,7 @@ import {
   type KeyValueStorage,
   type RunStatus,
 } from '../src/state/runHistory';
-import { clanSymbol, fighterPortrait, icon, ninjaPortrait, VILLAGE_IDS, villageCrest, villainPortrait } from './art';
+import { clanSymbol, cloud, emblem, fighterPortrait, icon, ninjaPortrait, sceneImage, villainPortrait } from './art';
 import { barLayers, barPct, barTone, patchBar } from './bars';
 import { defeat, installAudio, mood, setMusic, setSfx, victory, type Mood } from './audio';
 import {
@@ -191,8 +191,7 @@ const SETTINGS_KEY = 'proto_settings_v1';
 const DIFFICULTIES = Object.keys(data.balance.difficulty.multipliers) as Difficulty[];
 const DEFAULT_DIFFICULTY: Difficulty = data.balance.difficulty.default;
 /** Preferências do aparelho (não é estado de campanha). A dificuldade é a última escolhida. */
-const PALETTES = ['green', 'orange', 'brown'] as const;
-type Palette = (typeof PALETTES)[number];
+type Theme = 'light' | 'dark';
 interface Settings {
   instant: boolean;
   difficulty: Difficulty;
@@ -200,17 +199,17 @@ interface Settings {
   sfx: boolean;
   /** Música de fundo (desligada por padrão). */
   music: boolean;
-  /** Cor escolhida no botão (docs/visual.md). */
-  palette: Palette;
+  /** Tema escolhido no botão; sem escolha, segue o aparelho. */
+  theme?: Theme;
 }
 const settings: Settings = (() => {
   try {
     const saved = JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}') as Partial<Settings>;
     const difficulty = saved.difficulty && DIFFICULTIES.includes(saved.difficulty) ? saved.difficulty : DEFAULT_DIFFICULTY;
-    const palette = PALETTES.includes(saved.palette as Palette) ? (saved.palette as Palette) : 'green';
-    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), palette };
+    const theme = saved.theme === 'light' || saved.theme === 'dark' ? saved.theme : undefined;
+    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), theme };
   } catch {
-    return { instant: false, difficulty: DEFAULT_DIFFICULTY, sfx: true, music: false, palette: 'green' };
+    return { instant: false, difficulty: DEFAULT_DIFFICULTY, sfx: true, music: false };
   }
 })();
 const saveSettings = () => {
@@ -2371,17 +2370,21 @@ function recordRoleta(): boolean {
   return true;
 }
 
-const PALETTE_BG: Record<Palette, string> = { green: '#d9cfa8', orange: '#ecd8b4', brown: '#cfbb96' };
+/** Tema aplicado: o escolhido no botão ou o do aparelho. */
+const deviceTheme = window.matchMedia?.('(prefers-color-scheme: light)');
+const currentTheme = (): Theme => settings.theme ?? (deviceTheme?.matches ? 'light' : 'dark');
+const THEME_COLORS: Record<Theme, string> = { dark: '#0d0c0b', light: '#e6dac0' };
 
-/** Aplica a cor escolhida; o botão diz qual é a atual. */
-function applyPalette() {
-  document.documentElement.dataset.palette = settings.palette;
-  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', PALETTE_BG[settings.palette]));
+function applyTheme() {
+  const theme = currentTheme();
+  document.documentElement.dataset.theme = theme;
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', THEME_COLORS[theme]));
   const btn = document.getElementById('theme-btn')!;
-  const label = S.ui.palette(S.ui.palettes[settings.palette]);
-  btn.innerHTML = icon('palette');
-  btn.title = label;
-  btn.setAttribute('aria-label', label);
+  // O botão mostra para onde vai: sol à noite, lua de dia.
+  const next = theme === 'dark' ? S.ui.themeDay : S.ui.themeNight;
+  btn.innerHTML = icon(theme === 'dark' ? 'sun' : 'moon');
+  btn.title = next;
+  btn.setAttribute('aria-label', next);
 }
 
 /** O modo instantâneo também encurta as transições da interface (styles/instant.css). */
@@ -2389,14 +2392,15 @@ function setInstantCss(on: boolean) {
   document.documentElement.toggleAttribute('data-instant', on);
 }
 
-/** Botões do cabeçalho: instantâneo, cor, efeitos sonoros e música. */
+/** Botões do cabeçalho: instantâneo, dia/noite, efeitos sonoros e música. */
 function installHeaderToggles() {
   setInstantCss(settings.instant);
-  applyPalette();
+  applyTheme();
+  deviceTheme?.addEventListener?.('change', applyTheme);
   document.getElementById('theme-btn')!.addEventListener('click', () => {
-    settings.palette = PALETTES[(PALETTES.indexOf(settings.palette) + 1) % PALETTES.length]!;
+    settings.theme = currentTheme() === 'dark' ? 'light' : 'dark';
     saveSettings();
-    applyPalette();
+    applyTheme();
   });
 
   const toggles = [
@@ -2475,6 +2479,22 @@ async function main() {
   document.getElementById('home-btn')!.innerHTML = `${icon('home')}<span>${S.ui.homeShort}</span>`;
   document.getElementById('home-btn')!.title = S.ui.home;
   document.getElementById('home-btn')!.setAttribute('aria-label', S.ui.home);
+  const gateNav = document.getElementById('gate-nav')!;
+  gateNav.setAttribute('aria-label', S.ui.gate.registry);
+  const navItem = (kanji: string, label: string, attr = '') =>
+    `<button type="button" ${attr}><span class="kanji${kanji.length > 1 ? ' two' : ''}" aria-hidden="true">${kanji}</span>${label}</button>`;
+  gateNav.innerHTML =
+    navItem('忍', S.ui.gate.home, 'aria-current="page"') +
+    (
+      [
+        ['history', '歴'],
+        ['bingo', '手配'],
+        ['relics', '宝'],
+        ['origins', '族'],
+      ] as const
+    )
+      .map(([tab, kanji]) => navItem(kanji, S.profile.tabs[tab], `data-profile="${tab}"`))
+      .join('');
   document.getElementById('history-btn')!.innerHTML = icon('book');
 
   installTooltips();
@@ -2524,27 +2544,28 @@ async function modeScreen(): Promise<'roleta' | 'jornada'> {
   syncSheetBtn();
   document.body.classList.add('at-gate');
   document.getElementById('dots')!.innerHTML = '';
-  const P = S.profile.tabs;
-  // Portão da Vila: os modos com o seu selo (運 sorte, 忍道 caminho ninja) e atalhos para o registro ninja.
-  // Os atalhos usam data-profile (não data-choice): só abrem janelas, não escolhem modo.
-  const link = (attr: string, kanji: string, label: string) =>
-    `<button class="gate-link" ${attr}><span class="kanji${kanji.length > 1 ? ' two' : ''}" aria-hidden="true">${kanji}</span><span>${label}</span></button>`;
+  const G = S.ui.gate;
+  // Portão da Vila (docs/visual.md): destaque com citação, os modos em pergaminho com arte e a faixa de Conquistas.
+  // A faixa usa data-profile (não data-choice): só abre a janela, não escolhe modo. O Registro fica na barra inferior.
+  const quote = G.quotes[Math.floor(Math.random() * G.quotes.length)]!;
+  const hero = sceneImage('portao');
+  const modeCard = (id: 'jornada' | 'roleta') => {
+    const art = sceneImage(`modo-${id}`);
+    return `<button class="parchment mode-card" data-choice="${id}"><span class="mode-art" aria-hidden="true">${art ? `<img src="${art}" alt="">` : emblem(id)}</span>
+      <span><b>${M[id].name}</b><small>${M[id].desc}</small></span>${icon('chevron')}</button>`;
+  };
   const root = show(
     h(`<div class="screen jmodes gate">
       <header class="gate-head">
+        <span class="gate-cloud l" aria-hidden="true">${cloud()}</span><span class="gate-cloud r" aria-hidden="true">${cloud()}</span>
         <h1 class="logo">${S.ui.title.split(' ').map((w, i) => `<span class="l${i + 1}">${w}</span>`).join('')}</h1>
-        <p class="gate-sub">${M.title}</p>
       </header>
-      <nav class="gate-modes">
-        <button class="jmode" data-choice="roleta"><span class="seal" aria-hidden="true">運</span><span><b>${M.roleta.name}</b><small>${M.roleta.desc}</small></span>${icon('chevron')}</button>
-        <button class="jmode" data-choice="jornada"><span class="seal two" aria-hidden="true">忍道</span><span><b>${M.jornada.name}</b><small>${M.jornada.desc}</small></span>${icon('chevron')}</button>
-      </nav>
-      <div class="gate-crests" aria-hidden="true">${VILLAGE_IDS.map((v) => villageCrest(v)).join('')}</div>
-      <nav class="gate-links" aria-label="${S.ui.gate.registry}">
-        ${link('data-profile="history"', '歴', P.history)}${link('data-profile="achievements"', '功', P.achievements)}
-        ${link('data-profile="bingo"', '手配', P.bingo)}${link('data-profile="relics"', '宝', P.relics)}
-        ${link('data-profile="origins"', '族', P.origins)}
-      </nav>
+      <div class="gate-hero" aria-hidden="true">${hero ? `<img src="${hero}" alt="">` : ''}</div>
+      <blockquote class="parchment gate-quote"><p>${quote.text}</p><cite>${quote.by}</cite></blockquote>
+      <p class="gate-sub">${M.title}</p>
+      <nav class="gate-modes">${modeCard('jornada')}${modeCard('roleta')}</nav>
+      <button class="scroll-banner" data-profile="achievements"><span class="seal gold" aria-hidden="true">功</span>
+        <span><b>${G.achievements}</b><small>${G.achievementsDesc}</small></span>${icon('chevron')}</button>
     </div>`),
   );
   const pick = await choose<'roleta' | 'jornada'>(root);
@@ -2604,6 +2625,14 @@ const jornadaHost: JornadaHost = {
     saveProfile(storage, profile);
     return true;
   },
+  recentAchievements: (limit) =>
+    Object.entries(profile.achievements)
+      .sort((x, y) => y[1].localeCompare(x[1]))
+      .slice(0, limit)
+      .map(([id, at]) => {
+        const t = S.jornada.achievements.list[id] ?? S.achievements.list[id];
+        return { name: t?.name ?? id, desc: t?.desc ?? '', days: Math.max(0, Math.floor((Date.now() - Date.parse(at)) / 86_400_000)) };
+      }),
   notify: (text, ico = 'sparkle') => toast(text, ico),
 };
 

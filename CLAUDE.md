@@ -62,11 +62,12 @@ Comandos: `npm test`, `npm run typecheck`, `npm run proto`, `npm run sim:origens
 
 A direção está em [docs/visual.md](docs/visual.md): a interface deve parecer parte do universo.
 
-- Estilos em `prototype/styles/` (camadas: `tokens.css` → `fonts.css` → `base.css` → `components.css` → telas); o build junta e embute as fontes.
-- Cores, fontes, durações e forma só por tokens (`var(--...)`); as 3 cores (Verde, Laranja e Marrom, `data-palette`) trocam só os tokens. `--primary` é ação e navegação; `--accent` é vermelho de perigo, chefe e carimbo. Cor solta só em arte (cenário, roda, placas).
+- Estilos em `prototype/styles/` (camadas: `tokens.css` → `fonts.css` → `base.css` → `components.css` → `ornaments.css` → telas); o build junta e embute as fontes.
+- Cores, fontes, durações e forma só por tokens (`var(--...)`); os temas Sumi (escuro) e Pergaminho (claro) trocam só os tokens. `--primary` é ação e navegação e `--accent` é perigo, chefe e carimbo (hoje o mesmo vermelho). Cor solta só em arte (cenário, roda, cards de modo).
 - **Nada de emoji como ícone**: SVG do `ICONS` em `prototype/art.ts` (`icon(nome)`), traço 24×24 em `currentColor`. Exceção: o texto de compartilhar.
 - Cantos retos (`--radius: 2px`) e chanfro (`--cut`) nos painéis, sempre em `::before`/`::after`, nunca no elemento (cortaria números flutuantes e o foco).
-- `--font-display` (pincel) só em letreiro grande; texto em `--font-body`; números e rótulos em `--font-hud`; kanji em `--font-kanji` (kanji novo entra no recorte, `prototype/fonts/LEIAME.md`).
+- Painel no estilo das referências: `.parchment` (pergaminho rasgado), nuvens (`cloud()`), `.scroll-banner`.
+- `--font-display` (pincel) só em letreiro grande; `--font-hand` (manuscrita) em título de pergaminho e citação; texto em `--font-body`; números e rótulos em `--font-hud`; kanji em `--font-kanji` (kanji novo entra no recorte, `prototype/fonts/LEIAME.md`).
 - Ids, `data-*` e classes que o TS consulta (`.primary`, `.jf`, `.sticky-cta`...) são contrato: o visual não mexe neles.
 - **Botões simples, detalhes na dica**: ícone, nome e números principais (dano, custo, usos). Efeitos, regras e motivo de bloqueio na dica (`tip()`). Nada de instrução no botão.
 

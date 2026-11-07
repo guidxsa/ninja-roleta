@@ -294,6 +294,20 @@ export function currentStop(run: JRun, data: JornadaData): StopDef | null {
   return currentStage(run, data).stops[run.stopIndex] ?? null;
 }
 
+/**
+ * Quanto da run já foi feito, de 0 a 1 (card de progresso). História: paradas feitas sobre todas as paradas.
+ * Caminho Ninja: estágios vencidos mais a fração de linhas andadas no mapa do estágio atual.
+ */
+export function journeyProgress(run: JRun, data: JornadaData): number {
+  if (run.mode === 'generic') {
+    const rows = run.map?.rows ?? 1;
+    return Math.min(1, (run.stageIndex + Math.min(run.path.length, rows) / rows) / stageCount(run, data));
+  }
+  const total = data.stages.reduce((n, s) => n + s.stops.length, 0);
+  const done = data.stages.slice(0, run.stageIndex).reduce((n, s) => n + s.stops.length, 0) + run.stopIndex;
+  return Math.min(1, done / total);
+}
+
 /** Cenário da parada atual: o local dela ou, sem local próprio, o do estágio. */
 export const stopScene = (run: JRun, data: JornadaData): string => currentStop(run, data)?.scene ?? stageScene(run, data);
 

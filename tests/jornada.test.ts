@@ -61,6 +61,7 @@ import {
   shopOffer,
   stopRng,
   stopScene,
+  journeyProgress,
   syncUnlocks,
   talentContext,
   talentTreeComplete,
@@ -370,6 +371,28 @@ describe('combate de equipe da Jornada', () => {
     const a = advance(startBattle(battleSetup(run, data), data, createRng(5)), data, createRng(5));
     const b = advance(startBattle(battleSetup(run, data), data, createRng(5)), data, createRng(5));
     expect(a.log).toEqual(b.log);
+  });
+});
+
+describe('progresso da run (card da entrada)', () => {
+  it('História: paradas feitas sobre todas as paradas', () => {
+    const total = data.stages.reduce((n, s) => n + s.stops.length, 0);
+    const run = newRun(1, 'normal', data);
+    expect(journeyProgress(run, data)).toBe(0);
+    expect(journeyProgress({ ...run, stageIndex: 1, stopIndex: 0 }, data)).toBeCloseTo(data.stages[0]!.stops.length / total);
+    const last = data.stages.length - 1;
+    expect(journeyProgress({ ...run, stageIndex: last, stopIndex: data.stages[last]!.stops.length - 1 }, data)).toBeCloseTo((total - 1) / total);
+  });
+
+  it('Caminho Ninja: estágios vencidos mais as linhas andadas', () => {
+    const run = newGenericRun(1, 'normal', 'common', data, new Set());
+    const rows = run.map!.rows;
+    const stages = data.generic.stages.length;
+    expect(journeyProgress(run, data)).toBe(0);
+    const half = Array.from({ length: rows / 2 }, (_, i) => `n${i}`);
+    expect(journeyProgress({ ...run, stageIndex: 1, path: half }, data)).toBeCloseTo((1 + 0.5) / stages);
+    const full = Array.from({ length: rows + 3 }, (_, i) => `n${i}`);
+    expect(journeyProgress({ ...run, stageIndex: stages - 1, path: full }, data)).toBe(1);
   });
 });
 

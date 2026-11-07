@@ -7,6 +7,7 @@ O build (`npm run proto`) embute as fontes no HTML como data URL, para o jogo fu
 | Shojumaru | letreiros: logo, títulos de tela, nomes, chamada de jutsu | `@fontsource/shojumaru` (npm) |
 | Zen Kaku Gothic New | texto corrido | `@fontsource/zen-kaku-gothic-new` (npm) |
 | Barlow Condensed | HUD, números, rótulos, botões | `@fontsource/barlow-condensed` (npm) |
+| Kalam | letra manuscrita: títulos de pergaminho, citação, nome dos modos (só o recorte latin) | `@fontsource/kalam` (npm) |
 | Yuji Boku | kanji dos selos (só os usados) | `yuji-boku-kanji.woff2` (este diretório) |
 
 Todas sob a SIL Open Font License 1.1 (`OFL-YujiBoku.txt`; as outras trazem a licença no pacote npm).

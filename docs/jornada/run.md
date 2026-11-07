@@ -9,7 +9,7 @@ Estrutura de uma run: tipos de run, paradas, eventos e minijogos, dificuldade, s
 
 ## Tela de início
 
-De cima para baixo: Continuar (quando há run salva, com a dificuldade dela e, no modo infinito, o chip do ciclo), **Dificuldade da Jornada** (uma só, vale para as duas runs), um cartão da História e um do Caminho Ninja, cada um com o seu botão de começar. A dificuldade da run salva não muda: ela vale para a próxima run. O cartão do Caminho Ninja mostra o recorde do modo infinito a partir de um ciclo vencido.
+De cima para baixo: o banner, o card **Progresso da Jornada** (quando há run salva: capítulo, parada, % de conclusão e o botão Continuar, com a dificuldade dela e, no modo infinito, o chip do ciclo), **Dificuldade da Jornada** (uma só, vale para as duas runs), um cartão da História e um do Caminho Ninja, cada um com o seu botão de começar. A dificuldade da run salva não muda: ela vale para a próxima run. O cartão do Caminho Ninja mostra o recorde do modo infinito a partir de um ciclo vencido. No fim, as **Conquistas recentes** (as 3 mais novas do perfil). A conclusão é `journeyProgress` (`src/core/jornada/run.ts`): na História, paradas feitas sobre todas; no Caminho Ninja, estágios vencidos mais as linhas andadas no mapa.
 
 ## Paradas
 

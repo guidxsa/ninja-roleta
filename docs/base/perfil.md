@@ -2,7 +2,7 @@
 
 O que fica salvo no aparelho entre as runs: conquistas, Livro Bingo, estatísticas por origem, coleção de relíquias, recorde do modo infinito e nome do jogador. A run continua só em memória (F5 reseta); o perfil vive no `localStorage` (`profile_v1`), ao lado do histórico de runs ([campanha.md](../roleta/campanha.md#histórico-de-runs)).
 
-A tela **Registro ninja** (o perfil; botão do livro no cabeçalho ou os atalhos da tela inicial) tem cinco abas, cada uma com o seu selo: Histórico (歴), Conquistas (功), Livro Bingo (手配), Origens (族) e Relíquias (宝, a coleção da Jornada: [reliquias.md](../jornada/reliquias.md#coleção)). No Livro Bingo, quem já foi derrotado ganha o carimbo 勝; quem nunca apareceu fica na sombra com 謎.
+A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra inferior do Portão da Vila ou a faixa de Conquistas) tem cinco abas, cada uma com o seu selo: Histórico (歴), Conquistas (功), Livro Bingo (手配), Origens (族) e Relíquias (宝, a coleção da Jornada: [reliquias.md](../jornada/reliquias.md#coleção)). No Livro Bingo, quem já foi derrotado ganha o carimbo 勝; quem nunca apareceu fica na sombra com 謎.
 
 ## Nome do jogador
 

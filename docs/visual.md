@@ -9,14 +9,22 @@ O jogo deve parecer parte do universo de Naruto, e não um site com tema de Naru
 - **Coerência**: cada tela usa poucas referências, ligadas ao que acontece nela, e não uma coleção de referências soltas.
 - **Função primeiro**: legibilidade, toque e layout de celular não cedem à ambientação.
 
-## As três cores
+## Cores
 
-O jogo é sempre papel e tinta. O botão do cabeçalho alterna **Verde** (padrão), **Laranja** e **Marrom**; a escolha vale nos dois modos e fica salva no aparelho (`settings.palette`). Não há modo noturno, e o jogo não consulta o tema do aparelho.
+A paleta é a de sempre: temas **Sumi** (escuro) e **Pergaminho** (claro), com o botão dia/noite; sem escolha, o jogo segue o aparelho. Vermelho é ação e perigo, dourado é conquista. As três cores da v0.55.0 (Verde, Laranja e Marrom) saíram na v0.56.0, a pedido do usuário.
 
-- Cada cor é um bloco de tokens em `prototype/styles/tokens.css` (`data-palette`): o papel e a cor de ação (`--primary`).
-- `--primary` é ação e navegação: botão principal, abas, progresso, pincelada dos títulos.
-- `--accent` segue vermelho em todas as cores: chefe, vilão, perigo e carimbo.
-- **Peças com cor fixa**, por serem objetos do mundo: a barraca escura da roda (lanternas, raios, aro laranja e carimbo do resultado), as placas dos modos no Portão, a carta do mapa e os cenários. O céu de Konoha acompanha a cor escolhida.
+- `--primary` (ação e navegação) existe separado de `--accent` (perigo, chefe, carimbo), mas hoje aponta para o mesmo vermelho.
+- **Peças com cor fixa**, por serem objetos do mundo: a barraca da roda, a carta do mapa, os cenários, os cards de modo e a barra inferior do Portão.
+
+## Linguagem das referências
+
+Referências do usuário (07/11/2026): o painel do Project Rasengan, o logo de Shadow Rising e dois mockups "Jornada Naruto" (desktop e celular). O que veio delas, em `prototype/styles/ornaments.css`:
+
+- **Pergaminho de borda rasgada** (`.parchment`): papel com grão, manchas e borda queimada sobre o fundo; os tons de texto dentro dele são sempre os escuros do papel, nos dois temas.
+- **Nuvens em espiral** (`cloud()` em `prototype/art.ts`), como ornamento.
+- **Faixa de pergaminho** com rolos (`.scroll-banner`).
+- **Letra manuscrita** (`--font-hand`, Kalam) em títulos de painel, citação e nome dos modos; letreiros seguem em pincel (`--font-display`).
+- **Cards de modo com arte**: Jornada em laranja com a Folha, Roleta em roxo com a espiral.
 
 ## Identidade por modo
 
@@ -24,6 +32,22 @@ O jogo é sempre papel e tinta. O botão do cabeçalho alterna **Verde** (padrã
 |---|---|---|
 | Sensação | Sorte, expectativa, recompensa, ritmo | Aventura, estratégia, exploração, equipe |
 | Peça central | Barraca de festival da roda | Carta do mapa, trilha com o local e cenários |
+
+## Telas no estilo novo
+
+- **Portão da Vila**: logo com nuvens, destaque (ilustração ou Konoha), citação sorteada em pergaminho, cards Jornada e Roleta, faixa de Conquistas e **barra inferior** com o Registro ninja (Início, Histórico, Livro Bingo, Relíquias, Origens), que só aparece no Portão.
+- **Entrada da Jornada**: banner com a chamada, card **Progresso da Jornada** (capítulo, parada, miniatura, % de conclusão e o botão Continuar), painéis em pergaminho e **Conquistas recentes** (as 3 mais novas do perfil).
+
+## Vagas de ilustração
+
+O jogador pode pôr ilustrações em `public/img/cenas/` ([instruções](../public/img/LEIAME.md)). Sem a imagem, vale o desenho próprio.
+
+| Arquivo | Onde | Sem a imagem |
+|---|---|---|
+| `portao` | Destaque do Portão | Cena de Konoha |
+| `jornada` | Banner da entrada da Jornada | Cena de Konoha |
+| `modo-jornada`, `modo-roleta` | Arte dos cards de modo | Emblema em aquarela |
+| `waves`, `exam`, `retrieval`, `g1`, `g2`, `g3` | Miniatura do capítulo no card de progresso | Cenário do estágio |
 
 ## Locais
 
@@ -40,14 +64,14 @@ Na luta, o local fica no alto, atrás dos inimigos, e some antes dos botões. O 
 
 ## Personagens
 
-Decidido com o usuário: **a arte oficial é liberada nos retratos de personagens**. Quem joga deve reconhecer a personagem pelas cores, roupas, acessórios e silhueta.
+Decidido com o usuário: **a arte oficial é liberada nos retratos de personagens e, desde a v0.56.0, nas ilustrações das vagas acima**. Quem joga deve reconhecer a personagem pelas cores, roupas, acessórios e silhueta.
 
 - Os arquivos entram em `public/img/` ([instruções](../public/img/LEIAME.md)) e são fornecidos pelo usuário. A lista dos primeiros está lá.
 - Sem o arquivo, vale o desenho em SVG, então nenhuma tela depende de imagem.
 - Os direitos dessas imagens são dos detentores e não entram na licença MIT do código. A arte é retirada se houver pedido.
-- Cenários, ícones, símbolos de vila e demais ornamentos seguem em desenho próprio.
+- Cenários desenhados, ícones, símbolos de vila e demais ornamentos seguem em desenho próprio.
 - **Nada de rostos desenhados nos cenários**: o Monumento dos Hokages foi tentado na v0.54.0 e saiu na v0.55.0, a pedido do usuário, porque ficou ruim.
 
 ## Situação
 
-O piloto cobre o Portão da Vila, a trilha e o mapa da Jornada e o sorteio do Roleta (v0.54.0), e as três cores valem em todas as telas (v0.55.0). O que falta está em [decisoes.md](decisoes.md).
+O piloto cobre o Portão da Vila e a entrada da Jornada no estilo novo (v0.56.0), e a trilha, o mapa e o sorteio do Roleta (v0.54.0). O que falta está em [decisoes.md](decisoes.md).
