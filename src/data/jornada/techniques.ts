@@ -88,7 +88,9 @@ export const elementalTechniques: JTechnique[] = [
 
 /** Comum e prodígio do Caminho Ninja (docs/jornada/classes.md). */
 export const classTechniques: JTechnique[] = [
-  { id: 'jBunshin', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, clones: 1, active: true },
+  // Diferente do Kage Bunshin: gasta o turno e cria só 1 clone.
+  { id: 'jBunshin', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, clones: 1 },
+  { id: 'jEffort', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, cooldown: 4, boost: { offense: 3, turns: 3 }, active: true },
   { id: 'jExplosiveTag', type: 'taijutsu', element: null, target: 'allEnemies', baseDamage: 11, chakraCost: 4, accuracy: 0.85, cooldown: 2 },
   // Portões: a ativa abre a escolha do portão; bônus, desgaste e tempo em jornadaBalance.gates.
   { id: 'jGates', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, active: true, gates: true },

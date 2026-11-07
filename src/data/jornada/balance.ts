@@ -1,3 +1,4 @@
+import type { Difficulty } from '../../core/difficulty';
 import type { GateLevel } from '../../core/jornada/types';
 
 // Números do modo Jornada (docs/jornada/). Valores provisórios: ajustar com `npm run sim:jornada`.
@@ -112,9 +113,13 @@ export const jornadaBalance = {
   // talento ganho vira ryō na hora (metade do Treino do mercador). O ryō convertido não passa pelo multiplicador.
   talentTree: { completeRyoPerPoint: 30 },
 
-  // Modo infinito do Caminho Ninja (docs/jornada/run.md#modo-infinito): os inimigos ficam × dificuldade ×
-  // (1 + enemyPerCycle × ciclo), com o ciclo contando do 0. Rascunho: a simulação decide e o usuário ajusta.
-  infinite: { enemyPerCycle: 0.4 },
+  // Modo infinito do Caminho Ninja, só no Hardcore (docs/jornada/run.md#modo-infinito): os inimigos ficam × dificuldade
+  // × enemyCycleMult ^ ciclo, com o ciclo contando do 0. Rascunho: a simulação decide e o usuário ajusta.
+  infinite: { enemyCycleMult: 1.5, difficulty: 'hardcore' as Difficulty },
+
+  // Força dos inimigos da Jornada por dificuldade (própria: o Roleta usa a dele). Multiplica HP, ataques e resistências.
+  // Calibrada com o bot na v0.51.0 (docs/registro.md); antes de a Jornada ter a própria, o dano contava o fator duas vezes.
+  enemyStrength: { easy: 0.98, normal: 1.2, hard: 1.36, hardcore: 1.36 } as Record<Difficulty, number>,
 
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
   minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },

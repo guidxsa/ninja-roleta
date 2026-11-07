@@ -19,7 +19,7 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 | Chōji | 165 | 28 | 8 | 13/6/2 | 10/5 | — | guardian | Golpe, Tanque de carne humana, Expansão parcial |
 | Kiba | 110 | 22 | 14 | 13/4/2 | 7/5 | — | striker | Kunai, Mordida do Akamaru, Presa sobre Presa |
 | Neji | 120 | 28 | 13 | 14/6/4 | 9/8 | — | striker | Palma Suave, 64 Palmas, Rotação |
-| Ninja da Folha | 100 | 30 | 11 | 9/9/4 | 7/6 | — | striker | Golpe, Shuriken, Kunai, Bunshin |
+| Ninja da Folha | 100 | 30 | 11 | 9/9/4 | 7/6 | — | striker | Golpe, Shuriken, Bunshin no Jutsu, Esforço; Kunai fora do moveset inicial |
 | Prodígio do taijutsu | 115 | 12 | 13 | 12/0/0 | 8/5 | — | striker | Golpe, Redemoinho da Folha, Shuriken, Portões |
 | Daichi | 95 | 24 | 11 | 10/10/3 | 6/5 | — | striker | Kunai, Shuriken |
 | Hana | 90 | 26 | 10 | 8/10/6 | 5/7 | — | tactician | Kunai, Armadilha de fios, Kai (libertar) |
@@ -128,7 +128,8 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 
 | Técnica | Tipo | Elemento | Alvo | Dano | Chakra | Precisão | Extra |
 |---|---|---|---|---|---|---|---|
-| Bunshin | Ninjutsu | — | em si | — | 3 | 85% | 1 clones; ativa de classe |
+| Bunshin no Jutsu | Ninjutsu | — | em si | — | 3 | 85% | 1 clone; gasta o turno |
+| Esforço | Taijutsu | — | em si | — | 3 | 85% | espera 4; fortalece 3 turnos (+3 nos ataques); ativa de classe |
 | Selo explosivo | Taijutsu | — | todos os inimigos | 11 | 4 | 85% | espera 2 |
 | Portões | Taijutsu | — | em si | — | 0 | — | abre, troca ou fecha um portão (Abertura, Descanso, Vida, Dor, Limite): dano ×1,15 a ×1,68 com desgaste de 2% a 8% do HP por turno ([combate.md](combate.md#portões)); ativa de classe |
 | Entrada dinâmica | Taijutsu | — | um inimigo | 15 | 0 | 90% | +10% crítico; espera 2 |

@@ -119,6 +119,7 @@ const gateName = (level: number) => G.names[level - 1] ?? '';
 function boostParts(b: Boost): string {
   return [
     b.damageMult ? `dano ×${fmtMult(b.damageMult)}` : '',
+    b.offense ? `+${b.offense} nos ataques` : '',
     b.accuracy ? (b.accuracy >= 1 ? 'não erra' : `+${pct(b.accuracy)} de acerto`) : '',
     b.evasion ? `+${pct(b.evasion)} de esquiva` : '',
     b.penetration ? `+${pct(b.penetration)} de penetração` : '',

@@ -10,6 +10,8 @@ export type JEffect = 'stun' | 'burn' | 'poison' | 'chakraBlock';
 /** Bônus temporário em quem usa: dano, acerto, esquiva e penetração por `turns` turnos dele. */
 export interface Boost {
   damageMult?: number;
+  /** Somado aos três ataques (Esforço). */
+  offense?: number;
   accuracy?: number;
   evasion?: number;
   penetration?: number;
@@ -144,6 +146,8 @@ export interface CharacterDef {
   noElement?: boolean;
   /** Técnicas conhecidas no início (as aprendidas depois vêm de talentos e eventos). */
   techniques: string[];
+  /** Técnicas que conhece, mas só depois das outras: ficam fora do moveset inicial (Kunai do Comum). */
+  spareTechniques?: string[];
   ai: AiProfile;
   /** Ganho por nível acima do 1 (frações acumulam; arredonda para baixo). */
   growth: { hp: number; chakra: number; speed: number; offense: AttackStats; resistance: Resistances };

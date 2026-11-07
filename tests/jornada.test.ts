@@ -43,6 +43,7 @@ import {
   currentStop,
   finishFight,
   gainRelic,
+  heroActives,
   heroMods,
   heroMovable,
   leaveStop,
@@ -67,7 +68,7 @@ import {
   HERO,
   type JRun,
 } from '../src/core/jornada/run';
-import { chooseAiActive } from '../src/core/jornada/ai';
+import { chooseAiAction, chooseAiActive } from '../src/core/jornada/ai';
 import { talentMaxRank, talentState, treeComplete, type TalentNode } from '../src/core/jornada/talents';
 import { isFight } from '../src/core/jornada/trail';
 import type { JBattle } from '../src/core/jornada/types';
@@ -1471,30 +1472,82 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     expect(stopRng({ ...run, cycle: 1 }, 3)()).not.toBe(stopRng(run, 3)());
   });
 
-  it('a cada ciclo os inimigos ficam mais fortes: dificuldade × (1 + 0,4 × ciclo)', () => {
-    const run = chooseNode(newGenericRun(5, 'normal', 'common', data), nodeChoices(newGenericRun(5, 'normal', 'common', data))[0]!.id);
+  it('a cada ciclo os inimigos multiplicam: dificuldade × 1,5 ^ ciclo', () => {
+    const run = chooseNode(newGenericRun(5, 'hardcore', 'common', data), nodeChoices(newGenericRun(5, 'hardcore', 'common', data))[0]!.id);
     const id = (currentStop(run, data) as { enemies: string[] }).enemies[0]!;
     expect(cycleEnemyMult(run, data)).toBe(1);
-    expect(battleSetup(run, data).enemies[0]).toEqual(enemySeed(id, 'normal', data));
+    expect(battleSetup(run, data).enemies[0]).toEqual(enemySeed(id, 'hardcore', data));
     // No ciclo seguinte o sorteio da parada também muda: o inimigo vem da parada do ciclo 1.
     const next = { ...run, cycle: 1 };
     const id1 = (currentStop(next, data) as { enemies: string[] }).enemies[0]!;
-    expect(cycleEnemyMult(next, data)).toBeCloseTo(1.4);
+    expect(cycleEnemyMult(next, data)).toBeCloseTo(1.5);
+    expect(cycleEnemyMult({ ...run, cycle: 2 }, data)).toBeCloseTo(2.25);
+    expect(cycleEnemyMult({ ...run, cycle: 4 }, data)).toBeCloseTo(5.0625);
     const foe = battleSetup(next, data).enemies[0]!;
-    expect(foe).toEqual(enemySeed(id1, 'normal', data, 1.4));
-    expect(foe.maxHp).toBe(Math.max(1, Math.floor(data.enemies[id1]!.hp * 1.1 * 1.4)));
-    expect(foe.mods.damageMult).toBeCloseTo(1.54);
+    expect(foe).toEqual(enemySeed(id1, 'hardcore', data, 1.5));
+    expect(foe.maxHp).toBe(Math.max(1, Math.floor(data.enemies[id1]!.hp * data.j.enemyStrength.hardcore * 1.5)));
+    // O multiplicador vale uma vez só no dano: entra no ataque, não em `damageMult`.
+    expect(foe.mods.damageMult).toBe(1);
   });
 
-  it('só o Caminho Ninja vencido segue de ciclo', () => {
-    expect(() => continueCycle({ ...newRun(1, 'normal', data), status: 'victory' }, data)).toThrow();
-    expect(() => continueCycle(newGenericRun(1, 'normal', 'common', data), data)).toThrow();
-    expect(canContinueCycle({ ...newRun(1, 'normal', data), status: 'victory' })).toBe(false);
-    expect(canContinueCycle({ ...newGenericRun(1, 'normal', 'common', data), status: 'victory' })).toBe(true);
+  it('só o Caminho Ninja vencido no Hardcore segue de ciclo', () => {
+    expect(() => continueCycle({ ...newRun(1, 'hardcore', data), status: 'victory' }, data)).toThrow();
+    expect(() => continueCycle(newGenericRun(1, 'hardcore', 'common', data), data)).toThrow();
+    expect(canContinueCycle({ ...newRun(1, 'hardcore', data), status: 'victory' }, data)).toBe(false);
+    expect(canContinueCycle({ ...newGenericRun(1, 'hardcore', 'common', data), status: 'victory' }, data)).toBe(true);
+    for (const d of ['easy', 'normal', 'hard'] as const) {
+      const won = { ...newGenericRun(1, d, 'common', data), status: 'victory' as const };
+      expect(canContinueCycle(won, data), d).toBe(false);
+      expect(() => continueCycle(won, data), d).toThrow();
+      // Save antigo já em ciclo 2 nessa dificuldade: termina o ciclo e não segue.
+      expect(canContinueCycle({ ...won, cycle: 1 }, data), d).toBe(false);
+    }
+  });
+
+  it('a força dos inimigos é da Jornada: mudar a do Roleta não muda aqui', () => {
+    expect(enemySeed('zabuza', 'normal', data).maxHp).toBe(Math.floor(data.enemies.zabuza!.hp * data.j.enemyStrength.normal));
+    const other = { ...data, base: { ...data.base, difficulty: { ...data.base.difficulty, multipliers: { easy: 9, normal: 9, hard: 9, hardcore: 9 } } } };
+    expect(enemySeed('zabuza', 'normal', other)).toEqual(enemySeed('zabuza', 'normal', data));
+  });
+
+  describe('classe Comum (v0.51.0)', () => {
+    const run = newGenericRun(3, 'normal', 'common', data, new Set(), null, 'fire');
+    it('Bunshin no Jutsu é técnica de turno com 1 clone; o Kage Bunshin segue ativa com 2', () => {
+      expect(data.techniques.jBunshin).toMatchObject({ type: 'ninjutsu', clones: 1, chakraCost: 3 });
+      expect(data.techniques.jBunshin!.active).toBeFalsy();
+      expect(data.techniques.jKageBunshin).toMatchObject({ clones: 2, active: true });
+    });
+
+    it('começa com Golpe, Shuriken, Bunshin e o elemento; o Kunai fica conhecido, fora do moveset', () => {
+      expect(run.moveset).toEqual(['jStrike', 'jShuriken', 'jBunshin', data.elementLines.fire[0]]);
+      expect(heroMovable(run, data)).toContain('jKunai');
+      expect(heroActives(run, data)).toEqual(['jEffort']);
+    });
+
+    it('Esforço: grátis, soma nos ataques e o turno continua', () => {
+      const s = setup({ allies: [hero({ techniques: ['jStrike', 'jEffort'] })], enemies: [dummy({ hp: 500, maxHp: 500 })] });
+      const b = startBattle(s, data, fixed(0.5));
+      const plain = hitDamage(b.fighters[0]!, b.fighters[1]!, data.techniques.jStrike!, data);
+      const up = useActive(b, 'jEffort', 'a0', data, fixed(0.5));
+      expect(awaitingPlayer(up)).toBe(true);
+      expect(up.fighters[0]!.chakra).toBe(30 - 3);
+      expect(hitDamage(up.fighters[0]!, up.fighters[1]!, data.techniques.jStrike!, data)).toBe(plain + 3);
+      expect(up.fighters[0]!.boost!.turns).toBe(3);
+      // O botão mostra o bônus.
+      expect(battlePower(up.fighters[0]!, data.techniques.jStrike!, data)).toBe(data.techniques.jStrike!.baseDamage + 3);
+    });
+
+    it('Bunshin gasta o turno e cria o clone, e a IA usa quando não tem nenhum', () => {
+      const s = setup({ allies: [hero({ techniques: ['jStrike', 'jBunshin'] })], enemies: [dummy({ hp: 500, maxHp: 500 })] });
+      const b = startBattle(s, data, fixed(0.5));
+      expect(playerAct(b, { kind: 'tech', techId: 'jBunshin', target: 'a0' }, data, fixed(0.99)).fighters[0]!.clones).toBe(1);
+      expect(chooseAiAction(b, b.fighters[0]!, data, fixed(0.1))).toMatchObject({ techId: 'jBunshin' });
+      expect(chooseAiAction({ ...b, fighters: [{ ...b.fighters[0]!, clones: 1 }, b.fighters[1]!] }, { ...b.fighters[0]!, clones: 1 }, data, fixed(0.1))).toMatchObject({ techId: 'jStrike' });
+    });
   });
 
   it('seguir de ciclo volta ao estágio 1 com tudo e sorteia mapa e chefes novos', () => {
-    const done = playCycle(newGenericRun(11, 'easy', 'common', data));
+    const done = playCycle(newGenericRun(11, 'hardcore', 'common', data));
     expect(done.status).toBe('victory');
     const next = continueCycle(done, data);
     expect(next.cycle).toBe(1);
@@ -1515,10 +1568,12 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
   });
 
   it('a Vontade do Fogo volta ao mínimo da dificuldade a cada ciclo, sem tirar as que sobraram', () => {
-    const base = { ...newGenericRun(3, 'easy', 'common', data), status: 'victory' as const };
-    expect(continueCycle({ ...base, willOfFire: 0 }, data).willOfFire).toBe(1);
+    const base = { ...newGenericRun(3, 'hardcore', 'common', data), status: 'victory' as const };
+    // O Hardcore não tem Vontade do Fogo de graça: só a que sobrou (de relíquia) continua.
+    expect(continueCycle({ ...base, willOfFire: 0 }, data).willOfFire).toBe(0);
     expect(continueCycle({ ...base, willOfFire: 2 }, data).willOfFire).toBe(2);
-    expect(continueCycle({ ...base, difficulty: 'normal', willOfFire: 0 }, data).willOfFire).toBe(0);
+    const withMin = { ...data, j: { ...data.j, run: { ...data.j.run, willOfFire: { ...data.j.run.willOfFire, hardcore: 1 } } } };
+    expect(continueCycle({ ...base, willOfFire: 0 }, withMin).willOfFire).toBe(1);
   });
 
   it('com as relíquias esgotadas, o ciclo ainda termina e segue', () => {
@@ -1526,7 +1581,8 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     const run = { ...newGenericRun(12, 'easy', 'common', data), relics: all };
     const done = playCycle(run);
     expect(done.status).toBe('victory');
-    expect(continueCycle(done, data).status).toBe('inProgress');
+    // O Fácil garante a vitória do bot; quem segue de ciclo é o Hardcore.
+    expect(continueCycle({ ...done, difficulty: 'hardcore' }, data).status).toBe('inProgress');
   });
 
   it('árvore completa: nada a aprender nem a subir; bifurcação, elemento e conquista contam como nunca', () => {
@@ -1580,7 +1636,7 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
   });
 
   it('a Ōdama abre no ciclo seguinte com a conquista da História no retrato da run', () => {
-    const run = { ...newGenericRun(2, 'normal', 'uchiha', data, new Set(['j_unlockUchiha'])), status: 'victory' as const };
+    const run = { ...newGenericRun(2, 'hardcore', 'uchiha', data, new Set(['j_unlockUchiha'])), status: 'victory' as const };
     expect(continueCycle(run, data, new Set(['j_sasukeEgg', 'j_unlockUchiha'])).unlocks).toEqual(['j_sasukeEgg']);
     expect(newRun(1, 'normal', data, new Set(['j_canonWin', 'j_bell'])).unlocks).toEqual(['j_canonWin']);
   });

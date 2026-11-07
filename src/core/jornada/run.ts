@@ -274,8 +274,8 @@ export function stopRng(run: JRun, salt = 0): Rng {
   return mix((run.seed ^ Math.imul(at, 0x9e3779b1) ^ Math.imul(salt + 1, 0x85ebca6b)) >>> 0);
 }
 
-/** Força dos inimigos no ciclo atual (multiplica por cima da dificuldade): 1 + fatia × ciclo. */
-export const cycleEnemyMult = (run: JRun, data: JornadaData) => 1 + data.j.infinite.enemyPerCycle * (run.cycle ?? 0);
+/** Força dos inimigos no ciclo atual (multiplica por cima da dificuldade): multiplicador ^ ciclo. */
+export const cycleEnemyMult = (run: JRun, data: JornadaData) => data.j.infinite.enemyCycleMult ** (run.cycle ?? 0);
 
 // ---------------------------------------------------------------------------
 // Estágio e parada
@@ -387,7 +387,8 @@ function elementBasic(run: JRun, id: string, data: JornadaData): string[] {
 /** Técnicas que o protagonista conhece (kit inicial + elemento + segundo elemento + talentos). */
 export function heroKnown(run: JRun, data: JornadaData): string[] {
   const second = run.secondElement ? [data.elementLines[run.secondElement][0]] : [];
-  return [...new Set([...data.characters[run.hero]!.techniques, ...elementBasic(run, run.hero, data), ...second, ...run.learned])];
+  const def = data.characters[run.hero]!;
+  return [...new Set([...def.techniques, ...elementBasic(run, run.hero, data), ...second, ...(def.spareTechniques ?? []), ...run.learned])];
 }
 
 /** Ativas de classe do protagonista (área separada do moveset). */
@@ -694,8 +695,8 @@ function advanceNode(run: JRun, data: JornadaData): void {
   run.map = generateMap(stopRng(run, 31), data);
 }
 
-/** O modo infinito existe só no Caminho Ninja: a run vencida pode seguir para o próximo ciclo. */
-export const canContinueCycle = (run: JRun) => run.mode === 'generic' && run.status === 'victory';
+/** O modo infinito existe só no Caminho Ninja e no Hardcore: a run vencida pode seguir para o próximo ciclo. */
+export const canContinueCycle = (run: JRun, data: JornadaData) => run.mode === 'generic' && run.status === 'victory' && run.difficulty === data.j.infinite.difficulty;
 
 /**
  * Modo infinito (docs/jornada/run.md#modo-infinito): o Caminho Ninja vencido volta ao estágio 1 com os inimigos mais
@@ -704,7 +705,7 @@ export const canContinueCycle = (run: JRun) => run.mode === 'generic' && run.sta
  * dificuldade (sem tirar as que sobraram).
  */
 export function continueCycle(prev: JRun, data: JornadaData, unlocked: ReadonlySet<string> = new Set(prev.unlocks ?? [])): JRun {
-  if (!canContinueCycle(prev)) throw new Error('só o Caminho Ninja vencido segue de ciclo');
+  if (!canContinueCycle(prev, data)) throw new Error('só o Caminho Ninja vencido segue de ciclo');
   const run = clone(prev);
   run.cycle = (run.cycle ?? 0) + 1;
   run.status = 'inProgress';

@@ -7,7 +7,7 @@ As classes são as protagonistas do Caminho Ninja ([caminho-ninja.md](caminho-ni
 ## Elemento: escolher ou sortear
 
 - **Comum**: na tela de início, o jogador **escolhe** o elemento (fogo, vento, raio, terra, água ou **Prodígio**, sem elemento) ou **sorteia**. O sorteio é escondido (sem roleta na tela): os 5 elementos com peso 16 cada e **nenhum** com peso 20 (20%). **Quem sorteia ganha uma relíquia comum aleatória** no começo da run (`elementDraw.randomBonus`), mostrada na revelação.
-- **Comum sem elemento é o prodígio do taijutsu**: outra ficha (só taijutsu, mais HP e speed), outra árvore e a ativa Portões no lugar do Bunshin.
+- **Comum sem elemento é o prodígio do taijutsu**: outra ficha (só taijutsu, mais HP e speed), outra árvore e a ativa Portões no lugar do Esforço.
 - **Uchiha**: fogo fixo e um **segundo elemento** sorteado (pode sair nenhum; nunca fogo de novo). O nível I do segundo elemento também entra no kit. Não escolhe.
 - **Hyuuga**: **sem elemento** (v0.43.0): luta com o Byakugan e o Punho Suave, sem técnica elemental (`noElement`).
 - Com elemento, o protagonista começa com a técnica de nível I dele no moveset; no Comum, II e III vêm da árvore.
@@ -30,7 +30,7 @@ Na tela de início, a classe trancada aparece com cadeado e a condição. Com a 
 
 | Classe | Ativa | Efeito |
 |---|---|---|
-| Comum | Bunshin | 1 clone (3 de chakra) |
+| Comum | Esforço | Fortalece: +3 nos três ataques por 3 turnos (3 de chakra, espera 4). O **Bunshin no Jutsu** é técnica do moveset, não ativa: gasta o turno e cria 1 clone (o Kage Bunshin do Naruto é ativa e cria 2) |
 | Prodígio | Portões | Abre, troca ou fecha um dos 5 portões: dano maior com desgaste de HP por turno ([combate.md](combate.md#portões)) |
 | Uchiha | Sharingan | Fortalece: +15% de acerto e +15% de esquiva por 3 turnos (3 de chakra, espera 4) |
 | Hyuuga | Byakugan | Fortalece: não erra e +20% de penetração por 3 turnos (3 de chakra, espera 4) |

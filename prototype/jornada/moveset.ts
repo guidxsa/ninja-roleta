@@ -39,7 +39,8 @@ function techBits(t: JTechnique, mods: FighterMods): string {
 /** De onde a técnica veio: kit da ficha, elemento ou talentos/eventos. */
 function groupOf(run: JRun, id: string): 'kit' | 'element' | 'talents' {
   if (run.learned.includes(id)) return 'talents';
-  if (data.characters[run.hero]!.techniques.includes(id)) return 'kit';
+  const def = data.characters[run.hero]!;
+  if (def.techniques.includes(id) || def.spareTechniques?.includes(id)) return 'kit';
   return 'element';
 }
 

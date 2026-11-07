@@ -78,11 +78,11 @@ Do Caminho Ninja ([caminho-ninja.md](caminho-ninja.md)), implementado na v0.36.0
 
 ## Modo infinito
 
-Só no **Caminho Ninja** (implementado na v0.44.0; a História termina no Vale do Fim). A vitória conta como hoje (conquistas de vitória, desbloqueios); depois dela, a tela oferece **Seguir para o ciclo N+1** ou Voltar ao início (a run fica salva para seguir depois).
+Só no **Caminho Ninja** e só no **Hardcore** (implementado na v0.44.0; só no Hardcore desde a v0.51.0; a História termina no Vale do Fim). Run antiga já em ciclo 2 ou mais em outra dificuldade termina o ciclo em que está. A vitória conta como hoje (conquistas de vitória, desbloqueios); depois dela, a tela oferece **Seguir para o ciclo N+1** ou Voltar ao início (a run fica salva para seguir depois).
 
 - **Mantém**: nível, XP, talentos e níveis, técnicas e moveset, relíquias, ryō, bolsa, suportes e os elementos sorteados. As contas da run (lutas, vitórias, aliados caídos) somam.
 - **Recomeça**: estágio 1, com **chefes e mapa sorteados de novo** (da seed e do ciclo), as marcas dos eventos limpas (os eventos voltam a ser novos) e a equipe cheia. A Vontade do Fogo volta ao mínimo da dificuldade (Fácil: 1), sem tirar as que sobraram.
-- **Inimigos mais fortes**: HP, ataques, resistências e dano × dificuldade × **(1 + 0,4 × ciclo)**, com o ciclo contando do 0 (`infinite.enemyPerCycle`; rascunho). Ciclo 2: +40%; ciclo 3: +80%; ciclo 5: +160%.
+- **Inimigos mais fortes**: HP, ataques e resistências × dificuldade × **1,5 ^ ciclo**, com o ciclo contando do 0 (`infinite.enemyCycleMult`; rascunho). Ciclo 2: ×1,5; ciclo 3: ×2,25; ciclo 4: ×3,4; ciclo 5: ×5,1.
 - Pontos de talento que sobram com a árvore toda comprada viram ryō ([talentos.md](talentos.md#árvore-completa)).
 - Com muitos ciclos as relíquias podem acabar: o tesouro fica vazio, a elite não deixa nada e o chefe não oferece escolha (o jogo segue).
 - **Na tela**: chip "Ciclo N" no cabeçalho da trilha e do mapa (a dica mostra o +% dos inimigos), no Continuar e na tela final. Cair a partir do ciclo 2 não é uma derrota comum: "Fim do modo infinito", com o ciclo, o estágio e a parada alcançados.

@@ -9,6 +9,7 @@ import {
   battleSetup,
   buy,
   canBuy,
+  canContinueCycle,
   chooseNode,
   choosingNode,
   newGenericRun,
@@ -167,7 +168,7 @@ for (const mode of ['canon', 'generic:common', 'generic:prodigy', 'generic:uchih
     if (run.status === 'victory') wins++;
     levels += run.level;
     stops.set(stop, (stops.get(stop) ?? 0) + 1);
-    if (CYCLES > 0 && mode !== 'canon') {
+    if (CYCLES > 0 && canContinueCycle({ ...run, status: 'victory' }, data)) {
       const inf = run.status === 'victory' ? playInfinite(run, rng, mode) : { cyclesWon: 0, level: run.level };
       for (let k = 0; k < inf.cyclesWon; k++) curve[k]!++;
       infiniteLevels += inf.level;
@@ -175,7 +176,7 @@ for (const mode of ['canon', 'generic:common', 'generic:prodigy', 'generic:uchih
   }
   const top = [...stops.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, n]) => `${k} ${Math.round((n / RUNS) * 100)}%`);
   console.log(`${mode.padEnd(15)} ${d.padEnd(8)} vitória ${Math.round((wins / RUNS) * 100)}% · nível médio ${(levels / RUNS).toFixed(1)} · ${top.join(' · ')}`);
-  if (CYCLES > 0 && mode !== 'canon') {
+  if (CYCLES > 0 && curve.some((n) => n > 0)) {
     const avg = curve.reduce((a, n) => a + n, 0) / RUNS;
     const pts = curve.map((n, k) => `C${k + 1} ${Math.round((n / RUNS) * 100)}%`).join(' · ');
     console.log(`${''.padEnd(15)} ${''.padEnd(8)} infinito: ${pts} · ciclos vencidos (média) ${avg.toFixed(2)} · nível final ${(infiniteLevels / RUNS).toFixed(1)}`);

@@ -97,10 +97,10 @@ O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.m
 | Ferramentas | Kunai afiada | 1 | +2 de dano no taijutsu |
 | Ferramentas | Selo explosivo | 2 | Aprende o Selo explosivo (todos os inimigos) |
 | Ferramentas | Armadilha de fios | 2 | Aprende a Armadilha de fios |
-| Ferramentas | Substituição | 3 | Esquiva 10%; o Bunshin cria 1 clone a mais |
+| Ferramentas | Substituição | 3 | Esquiva 10%; o Bunshin no Jutsu cria 1 clone a mais |
 | Determinação | Determinação | 1 | +25% de XP |
 | Determinação | Garra | 2 | +25% de dano abaixo da metade do HP |
-| Determinação | Esforço | 2 | +10% de dano |
+| Determinação | Trabalho duro | 2 | +10% de dano |
 | Determinação | Vontade do Fogo | 3 | Uma vez por luta fica com 1 de HP; recupera 2 de HP por rodada |
 | Determinação | Primeiros socorros | 2 | Aprende Reanimação |
 

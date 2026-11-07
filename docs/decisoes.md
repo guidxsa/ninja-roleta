@@ -7,9 +7,9 @@ O que espera o usuário. Um item por decisão; o histórico e os números comple
 ## Balanceamento
 
 1. **Roleta enxuto fora do alvo** (v0.47.1, `npm run sim:origens -- --runs 1000 --seed 2`, Médio): Comum 35%, Nara 42%, Akimichi 70%, Yamanaka 49%, Aburame 63%, Inuzuka 75%, prodígio 85%, Uchiha 47%, Hyuuga 56%, Uzumaki 59%, Senju 77%. O Orochimaru é onde a maioria para. Alavancas: XP por luta ou ciclo mais longo, força do chefe, kits de taijutsu, força dos vilões, esquiva, Portões, Dupla, fração de resistência 0,4.
-2. **Jornada fácil para o bot** (v0.43.0, 1000 runs, seed 2; Médio/Difícil/Hardcore): História 98/69/60, Comum 79/28/26, prodígio 92/59/56, Uchiha 75/19/16, Hyuuga 85/35/30. Alvo da Jornada ainda não combinado. Alavancas: força dos inimigos, chakra e espera das ativas, chance dos clones segurarem o golpe, números dos Portões, levantar com menos HP, menos ponto de talento na elite.
-3. **Fatias do modo infinito**: Jornada `infinite.enemyPerCycle` 0,4 (Uchiha e Hyuuga caem mais rápido; curva no registro, v0.44.0); Roleta 0,3 por ciclo. Ambas são rascunho.
-4. **Revisar o que foi decidido sozinho** da v0.36.0 à v0.47.0 (marcado "decidido sozinho" no registro): chefes solo do Caminho Ninja, números das relíquias e dos Portões, kits enxutos, esquiva, efeitos, Orochimaru do Roleta com 1 volta, fichas dos vilões novos.
+2. **Jornada fora do alvo em algumas classes** (v0.51.0, 1000 runs, seed 2; Médio/Difícil/Hardcore): História 93/61/55, Comum 61/27/23, prodígio 96/69/64, Uchiha 69/26/22, Hyuuga 85/50/42. O Comum entrou no alvo com a força dos inimigos em 1,2; a curva é íngreme e um multiplicador só não leva todos. Alavancas: ativas grátis (Portões e Byakugan pesam no prodígio e no Hyuuga), Portões, lutas e chefes da História. Falta combinar também o alvo da História.
+3. **Modo infinito**: Jornada ×1,5 composto por ciclo, só no Hardcore (curva no registro, v0.51.0; rascunho); Roleta 0,3 por ciclo, somando. O Roleta não foi mudado: decidir se segue o mesmo modelo.
+4. **Revisar o que foi decidido sozinho** da v0.36.0 à v0.51.0 (marcado "decidido sozinho" no registro): chefes solo do Caminho Ninja, números das relíquias e dos Portões, kits enxutos, esquiva, efeitos, Orochimaru do Roleta com 1 volta, fichas dos vilões novos.
 
 ## Design
 

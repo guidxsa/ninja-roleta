@@ -90,6 +90,10 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
   const hurtFriend = friends.find((x) => x.hp < x.maxHp * 0.45);
   if (allyHeal && hurtFriend && f.ai !== 'healer') return { kind: 'tech', techId: allyHeal.id, target: hurtFriend.uid };
 
+  // Clones que gastam o turno (Bunshin): sem nenhum, às vezes vale criar um.
+  const makeClone = tech((t) => t.target === 'self' && t.baseDamage === 0 && Boolean(t.clones));
+  if (makeClone && f.clones === 0 && rng() < 0.4) return { kind: 'tech', techId: makeClone.id, target: f.uid };
+
   // Controle sem dano (Prisão de Água, Bomba de fedor): às vezes, no adversário mais perigoso que está livre.
   const pureControl = tech((t) => t.baseDamage === 0 && t.target === 'enemy' && Boolean(t.onHit));
   const loose = [...foes].filter((x) => !hasEffect(x, 'stun')).sort((a, b) => threat(b) - threat(a))[0];

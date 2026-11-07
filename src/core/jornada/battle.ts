@@ -1,3 +1,4 @@
+import type { Difficulty } from '../difficulty';
 // Combate de equipe da Jornada (docs/jornada/combate.md). Funções puras: estado entra, estado sai.
 // Até 3 × 3. O jogador decide só o turno do protagonista; os outros lutadores usam a IA (ai.ts).
 import { damage } from '../damage';
@@ -111,12 +112,12 @@ export interface BattleSetup {
 
 const scale = (n: number, mult: number) => (n > 0 ? Math.max(1, Math.floor(n * mult)) : 0);
 
-/** Ficha do inimigo com a dificuldade aplicada (HP, ataques e resistências; o dano base sai em `damageMult`). */
-export function enemySeed(defId: string, difficulty: keyof JornadaData['base']['difficulty']['multipliers'], data: JornadaData, cycleMult = 1): FighterSeed {
+/** Ficha do inimigo com a dificuldade aplicada: HP, ataques e resistências, e a cura das técnicas dele. */
+export function enemySeed(defId: string, difficulty: Difficulty, data: JornadaData, cycleMult = 1): FighterSeed {
   const def = data.enemies[defId];
   if (!def) throw new Error(`inimigo desconhecido: ${defId}`);
   // Modo infinito: o ciclo multiplica por cima da dificuldade (docs/jornada/run.md#modo-infinito).
-  const mult = data.base.difficulty.multipliers[difficulty] * cycleMult;
+  const mult = data.j.enemyStrength[difficulty] * cycleMult;
   const hp = scale(def.hp, mult);
   return {
     defId,
@@ -132,7 +133,7 @@ export function enemySeed(defId: string, difficulty: keyof JornadaData['base']['
     techniques: [...def.techniques],
     ai: def.ai,
     ...(def.passive ? { passive: def.passive } : {}),
-    mods: { ...emptyMods(), damageMult: mult, healMult: mult },
+    mods: { ...emptyMods(), healMult: mult },
   };
 }
 
@@ -243,7 +244,7 @@ export function techPower(tech: JTechnique, mods: FighterMods): number {
 
 /** "Dano N" na luta: como `techPower`, mais os bônus do momento (portão, fortalecimento, HP baixo, clones). */
 export function battlePower(f: Fighter, tech: JTechnique, data: JornadaData): number {
-  return tech.baseDamage > 0 ? Math.floor(powerBase(tech, f.mods) * attackerMult(f, tech, data)) : 0;
+  return tech.baseDamage > 0 ? Math.floor((powerBase(tech, f.mods) + (f.boost?.offense ?? 0)) * attackerMult(f, tech, data)) : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -315,7 +316,7 @@ export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data
   const j = data.j.combat;
   return damage({
     baseDamage: tech.baseDamage + (tech.type === 'taijutsu' ? user.mods.taijutsuFlat : 0),
-    offense: user.offense[tech.type],
+    offense: user.offense[tech.type] + (user.boost?.offense ?? 0),
     resistance: target.resistance[resistanceKind(tech.type)],
     fraction: target.guarding ? j.guardFraction : j.resistanceFraction,
     penetration: Math.min(data.base.penetration.max, (tech.penetration ?? 0) + (user.boost?.penetration ?? 0)),

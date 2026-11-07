@@ -152,7 +152,7 @@ async function jornadaLoop(host: JornadaHost): Promise<void> {
     const record = host.recordJornada(run);
     host.setSheet(null);
     // Caminho Ninja vencido: a continuação já fica salva (fechar o app ou voltar ao início não perde o ciclo).
-    const next = canContinueCycle(run) ? continueCycle(run, data, host.unlocked()) : null;
+    const next = canContinueCycle(run, data) ? continueCycle(run, data, host.unlocked()) : null;
     saveJornada(host.storage, keep(next ?? run));
     if ((await endScreen(host, run, next, record)) !== 'continue' || !next) return;
     run = keep(next);
@@ -199,7 +199,8 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
         ).join('')}</div>
         <p class="center small jdiff-both">${J.start.difficultyBoth}</p>
         <p class="center small" data-recovery>${recoveryLine(diff)}</p>
-        <p class="muted center small">${hardcoreOk ? J.start.willOfFireNote : J.start.hardcoreLocked}</p></div>
+        <p class="muted center small">${hardcoreOk ? J.start.willOfFireNote : J.start.hardcoreLocked}</p>
+        <p class="muted center small">${J.start.infiniteNote}</p></div>
       <section class="card jmode-panel">
         <div class="jmode-card"><div class="jstart-face">${fighterPortrait('naruto', 'ninja:uzumaki', 'md')}</div>
           <div><h3>${J.start.canon}</h3><p class="muted small">${J.start.canonDesc}</p></div></div>
