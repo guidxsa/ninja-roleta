@@ -218,7 +218,8 @@
 .jmap-boss span:not(.portrait) { display: flex; flex-direction: column; gap: 1px; }
 .jmap-boss small { font: 700 11px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .jmap-boss b { font: 400 21px/1.1 var(--font-display); color: var(--accent-2); letter-spacing: .02em; }
-.jmap { width: 100%; }
+/* Altura pela quantidade de linhas (--rows, vindo do mapa); nós e herói ficam em % dela. */
+.jmap { width: 100%; height: calc(var(--rows, 12) * 74px + 40px); }
 .jmap-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .jmap-lines path { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke: color-mix(in srgb, var(--text) 50%, transparent); stroke-width: 2; stroke-dasharray: 1 7; }
 .jmap-lines path.dead { opacity: .22; }
@@ -285,6 +286,12 @@
 /* Notebook (≥ 900): a Jornada usa a tela larga; build e o que vem empilhados ao lado da trilha ou do mapa. */
 @media (min-width: 900px) {
   body.mode-jornada main, body.mode-jornada footer, body.mode-jornada .top { max-width: var(--shell-max); }
+  /*
+   * Trilha, mapa e luta cabem na janela: o corpo tem a altura da tela e a tela do jogo ocupa o que sobra entre a
+   * barra e o rodapé (flex), sem número mágico. As outras telas da Jornada rolam como sempre.
+   */
+  body.mode-jornada:has(.jtrail-screen, .jbattle) { height: 100dvh; }
+  body.mode-jornada:has(.jtrail-screen, .jbattle) main { display: flex; flex-direction: column; min-height: 0; }
   body.mode-jornada main, body.mode-jornada .top { padding-left: 24px; padding-right: 24px; }
   body.mode-jornada .top::after { left: 24px; }
   body.mode-jornada .modal-body { max-width: 860px; }
@@ -293,8 +300,8 @@
     display: grid; grid-template-columns: minmax(320px, 360px) minmax(0, 1fr); column-gap: 20px; row-gap: 10px; align-items: start;
     grid-template-areas: 'head head' 'left trail' 'right trail';
     grid-template-rows: auto auto minmax(0, 1fr);
-    /* A tela cabe na janela com a barra e o rodapé (~146px): só a trilha (ou a carta) e as colunas rolam por dentro. */
-    height: calc(100dvh - 150px); min-height: 460px;
+    /* Só a trilha (ou a carta) e as colunas rolam por dentro; abaixo de 420px de altura, a página rola. */
+    flex: 1 1 0; min-height: 420px;
   }
   .jtrail-screen > .jb-head { grid-area: head; }
   .jtrail-screen .jcol { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
@@ -306,7 +313,8 @@
   }
   .jtrail-screen .sticky-cta { position: static; background: none; padding: 0; }
   .jtrail-screen .jabandon { align-self: center; }
-  .jstop { padding: 8px 10px; }
+  .jstop { padding: clamp(3px, .8vh, 8px) 10px; }
+  .jtrail-screen > .jtrail-map > .jmap { height: max(100%, calc(var(--rows, 12) * 52px + 40px)); }
   .jstop-txt b { font-size: 16px; }
   .jrgrid { grid-template-columns: repeat(auto-fill, 60px); }
   .jrboss-row { gap: 16px; }
@@ -375,8 +383,8 @@
 .jtrail-scene::before { inset: 0 0 auto; height: 200px; -webkit-mask: linear-gradient(#000 62%, transparent); mask: linear-gradient(#000 62%, transparent); }
 .jtrail-scene .jtrail { border-left: 2px dashed var(--place, var(--line-strong)); }
 @media (min-width: 900px) {
-  .jtrail-scene { padding-top: 244px; }
-  .jtrail-scene::before { height: 300px; }
+  .jtrail-scene { padding-top: clamp(110px, 22vh, 244px); }
+  .jtrail-scene::before { height: clamp(160px, 28vh, 300px); }
 }
 .jtrail-scene .jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--place, var(--primary)) 26%, transparent), transparent 85%); }
 

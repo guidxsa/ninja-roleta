@@ -80,16 +80,23 @@ Decidido com o usuário (07/11/2026): **celular e desktop são pares**. Comparti
 |---|---|---|
 | Celular | < 600px | Vertical, por prioridade; a base de todo arquivo de estilo |
 | Tablet | 600–899px | A do celular, com mais folga |
-| Notebook | ≥ 900px | Colunas e painéis laterais, até `--shell-max` (1440px) |
+| Notebook | ≥ 900px | Colunas e painéis laterais, até `--shell-max` (1680px) |
 | Widescreen | ≥ 1280px | Mais uma região (equipe, campo e ações; contexto ao lado do mapa) |
 
-A CSS não aceita `var()` em `@media`, então os números se repetem nas telas; a referência fica no topo de `prototype/styles/base.css`. Toda tela nova precisa das duas composições, conferidas em 390×844, 768×1024, 1366×768 e 1920×1080, sem rolagem horizontal.
+A CSS não aceita `var()` em `@media`, então os números se repetem nas telas; a referência fica no topo de `prototype/styles/base.css`.
+
+**Quanto menos rolagem, melhor** (pedido do usuário, v0.57.2). No desktop, trilha, mapa e luta cabem na janela pelo layout, não por um número: o corpo tem a altura da tela e a tela do jogo ocupa o que sobra entre a barra e o rodapé (flex). Só a trilha, a carta e as colunas rolam por dentro, e só se faltar altura. As medidas que pesam na altura acompanham a janela com `clamp(mín, Xvh, máx)`: faixa do cenário da trilha, espaço entre as paradas e retratos da luta. A carta do mapa estica até a coluna (nós em % da altura) e só rola abaixo de 52px por linha; no celular, 74px por linha, como sempre.
+
+Toda tela nova precisa das duas composições, conferidas nos tamanhos reais da área do navegador, sem rolagem horizontal e, no desktop, sem rolagem da página: 390×844 (celular), 1100×800, 1366×650 (notebook), 1536×730 (Full HD com escala de 125%), 1920×950 (Full HD) e 2560×1300 (4K com escala).
 
 | Tela | Desktop | Situação |
 |---|---|---|
 | Combate da Jornada | Notebook: campo e ações em colunas, com o registro embaixo. Widescreen: registro da luta sempre aberto à esquerda, campo clássico ao centro (inimigos em cima, equipe embaixo, o local cobrindo o fundo) e ações à direita, na altura da janela. A v0.57.0 pôs a equipe numa coluna à esquerda e os inimigos ao centro; o usuário achou ruim e saiu na v0.57.1 | Feito (v0.57.1) |
 | Trilha e mapa da Jornada | A tela cabe na janela e só a trilha, a carta e as colunas rolam por dentro. Notebook: build e botões ao lado. Widescreen: **build** à esquerda (HUD e a loja aberta; o botão Loja some), trilha ou carta ao centro e **o que vem** à direita (próxima parada com os inimigos, paradas seguintes ou caminhos abertos, chefe, dica de jogo, seguir e abandonar). No celular as colunas se desfazem e a ordem é a de sempre | Feito (v0.57.1) |
-| Roleta, árvore de talentos, Portão, entrada da Jornada, modais e minigames | Ainda na coluna de 520px (a árvore já mostra os ramos lado a lado) | A fazer, uma versão por tela |
+| Combate: informações do inimigo e da equipe | Registro menor à esquerda com a ficha dos inimigos; a equipe à direita, junto das ações; mais largura para o campo | A fazer (etapa 2) |
+| Entrada da Jornada e painéis minimizáveis | Progresso, conquistas e modos espalhados em colunas; loja, relíquias e bolsa, dica e próximas paradas minimizáveis, com a escolha lembrada | A fazer (etapa 3) |
+| Portão e barra superior | Controles da barra superior e a navegação do Portão espalhados pela tela; as citações num lugar próprio | A fazer (etapa 4) |
+| Roleta, árvore de talentos, modais e minigames | Ainda na coluna de 520px (a árvore já mostra os ramos lado a lado) | A fazer |
 
 ## Situação
 

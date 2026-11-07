@@ -220,7 +220,7 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
           })
           .join('')}</div>
         <div class="jel-pick" data-elements role="group" aria-label="${G.elementTitle}">${ELEMENT_CHOICES.map((c) => elementChoiceButton(c)).join('')}</div>
-        ${host.unlocked().has('j_sasukeEgg') ? `<button class="btn small jskin" data-skin aria-pressed="false">${G.skinSasuke}</button>` : ''}
+        ${host.unlocked().has('j_sasukeEgg') ? `<button class="btn small jskin" data-skin aria-pressed="false" hidden>${G.skinSasuke}</button>` : ''}
         <button class="btn ${saved ? '' : 'primary '}big" data-choice="generic">${icon('dice')} ${G.start}</button>
       </section>
       ${
@@ -253,8 +253,10 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
     if (!b || b.getAttribute('aria-disabled') === 'true') return;
     classId = b.dataset.class!;
     root.querySelectorAll('[data-class]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    // Só o Comum escolhe o elemento.
+    // Só o Comum escolhe o elemento; só o Uchiha tem o visual do Sasuke.
     root.querySelector<HTMLElement>('[data-elements]')!.hidden = classId !== 'common';
+    const skinBtn = root.querySelector<HTMLElement>('[data-skin]');
+    if (skinBtn) skinBtn.hidden = classId !== 'uchiha';
   });
   // Elemento do Comum: um elemento, o prodígio (sem elemento) ou sortear (com a relíquia bônus).
   let element: ElementChoice = 'random';
@@ -658,6 +660,8 @@ function mapView(run: JRun, hudHtml: string): string {
   const rowH = 74;
   const pad = 40;
   const height = map.rows * rowH + pad;
+  // Posição vertical em % da carta: no celular a carta tem 74px por linha; no desktop ela estica até a coluna.
+  const pctY = (y: number) => ((y / height) * 100).toFixed(2);
   const pos = (n: MapNode) => {
     const j = n.kind === 'boss' ? { x: 0, y: 0 } : nodeJitter(n.id);
     return { x: ((n.col + 0.5) / map.cols) * 100 + j.x, y: (map.rows - 1 - n.row) * rowH + rowH / 2 + j.y };
@@ -683,7 +687,7 @@ function mapView(run: JRun, hudHtml: string): string {
       const st = done.has(n.id) ? 'done' : choices.has(n.id) ? 'choice' : ahead.has(n.id) ? 'ahead' : 'dead';
       const inner = n.kind === 'boss' ? fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm') : done.has(n.id) ? icon('check') : n.kind === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[n.kind]!);
       const p = pos(n);
-      return `<button class="jnode-map k-${n.kind} ${st}" style="left:${p.x}%;top:${p.y}px" data-node="${n.id}" ${st === 'choice' ? '' : 'aria-disabled="true"'}${tip(nodeKindName(n.kind), nodeKindDesc(n.kind))}>${inner}</button>`;
+      return `<button class="jnode-map k-${n.kind} ${st}" style="left:${p.x}%;top:${pctY(p.y)}%" data-node="${n.id}" ${st === 'choice' ? '' : 'aria-disabled="true"'}${tip(nodeKindName(n.kind), nodeKindDesc(n.kind))}>${inner}</button>`;
     })
     .join('');
   // O herói fica no último nó feito; antes da primeira escolha, embaixo do mapa.
@@ -698,9 +702,9 @@ function mapView(run: JRun, hudHtml: string): string {
       ${mapNext(run)}${hintCard(run, run.path.length)}
       <div class="jlegend-chips" aria-label="${U.legend}">${legend}</div>
       <p class="jb-prompt">${M.choose}</p><button class="btn small jabandon" data-abandon>${U.abandon}</button></div>
-    <div class="jtrail-map"><div class="jmap jscene scene-${stageScene(run, data)}" style="height:${height}px">
+    <div class="jtrail-map"><div class="jmap jscene scene-${stageScene(run, data)}" style="--rows:${map.rows}">
       <svg class="jmap-lines" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>${nodes}
-      <span class="jmap-hero" style="left:${here.x}%;top:${here.y}px" aria-hidden="true">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}</span>
+      <span class="jmap-hero" style="left:${here.x}%;top:${pctY(here.y)}%" aria-hidden="true">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}</span>
     </div></div>`;
 }
 
@@ -751,6 +755,8 @@ async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, {
   for (let attempt = 0; ; attempt++) {
     const res = await jornadaBattle(host, data, run, battleSetup(run, data), stopRng(run, attempt), stopName(stop), stopScene(run, data), goalText(stop));
     run = res.run;
+    // Desistir no meio da luta: como o Abandonar da trilha, a run acaba em derrota (sem Vontade do Fogo).
+    if (res.abandoned) return { ...run, status: 'defeat' };
     const { run: next, outcome } = finishFight(run, res.battle, data);
     if (outcome.retry) {
       await notice(J.battle.lost, U.retry);

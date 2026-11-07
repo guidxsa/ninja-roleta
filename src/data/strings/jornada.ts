@@ -981,6 +981,8 @@ export const jornadaPtBR = {
     guardDesc: 'Usa a resistência inteira até o seu próximo turno.',
     rest: 'Concentrar',
     restDesc: 'Recupera 8 de chakra.',
+    giveUp: 'Desistir',
+    giveUpDesc: 'Abandona a jornada no meio da luta: a run acaba e conta como derrota.',
     bag: 'Bolsa',
     bagDesc: 'Usa um item: um por turno, sem gastar a vez.',
     activeTip: 'Ativa: sai junto com a ação do turno, uma por turno.',

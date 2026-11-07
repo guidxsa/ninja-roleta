@@ -278,6 +278,8 @@ function gatesButton(s: JBattle, f: Fighter, tech: JTechnique): string {
 export interface BattleResult {
   battle: JBattle;
   run: JRun;
+  /** O jogador desistiu da jornada no meio da luta (Desistir, no turno do protagonista). */
+  abandoned?: boolean;
 }
 
 /** Luta completa. Devolve o estado final e a run com a bolsa já descontada. */
@@ -588,7 +590,7 @@ export async function jornadaBattle(
    * Menu do turno do protagonista. Itens, ativas e Portões são aplicados aqui (não gastam o turno). Devolve null se a
    * luta acabou no meio do turno.
    */
-  async function playerTurn(): Promise<JAction | null> {
+  async function playerTurn(): Promise<JAction | 'abandon' | null> {
     for (;;) {
       if (!awaitingPlayer(state)) return null;
       render(state);
@@ -607,6 +609,7 @@ export async function jornadaBattle(
           <button class="btn small jx" data-act="guard" ${tip(B.guard, B.guardDesc)}>${icon('stance')} ${B.guard}</button>
           <button class="btn small jx" data-act="rest" ${tip(B.rest, B.restDesc)}>${icon('rest')} ${B.rest}</button>
           <button class="btn small jx" data-act="bag" ${tip(B.bag, B.bagDesc)} ${items.length && !state.itemUsed ? '' : 'aria-disabled="true"'}>${icon('kit')} ${B.bag}</button>
+          <button class="btn small jx jgiveup" data-act="abandon" ${tip(B.giveUp, B.giveUpDesc)}>${icon('close')} ${B.giveUp}</button>
         </div>`;
       const pick = await new Promise<HTMLElement>((resolve) => {
         const onClick = (ev: Event) => {
@@ -619,6 +622,10 @@ export async function jornadaBattle(
       });
       if (pick.dataset.act === 'guard') return { kind: 'guard' };
       if (pick.dataset.act === 'rest') return { kind: 'rest' };
+      if (pick.dataset.act === 'abandon') {
+        if (window.confirm(J.ui.abandonConfirm)) return 'abandon';
+        continue;
+      }
       if (pick.dataset.act === 'bag') {
         const item = await pickItem(items);
         if (!item) continue;
@@ -705,6 +712,11 @@ export async function jornadaBattle(
   while (state.status === 'ongoing') {
     if (!awaitingPlayer(state)) break;
     const action = await playerTurn();
+    if (action === 'abandon') {
+      menu.innerHTML = '';
+      forgetLiveBattle();
+      return { battle: state, run, abandoned: true };
+    }
     if (!action) break;
     menu.innerHTML = '';
     const before = state;
