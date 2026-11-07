@@ -29,6 +29,7 @@ import type { BattleSetup } from '../../src/core/jornada/battle';
 import type { Boost, ConsumableId, Fighter, FighterMods, JAction, JBattle, JEvent, JTechnique } from '../../src/core/jornada/types';
 import type { Rng } from '../../src/core/rng';
 import { jornadaData } from '../../src/data/jornada';
+import { BEATS } from '../../src/data/elements';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { fighterPortrait, icon } from '../art';
 import { barLayers, barPct, barTone, captureTrails, patchBar, restoreTrails } from '../bars';
@@ -245,6 +246,15 @@ function fighterCard(f: Fighter, data: JornadaData): string {
   </button>`;
 }
 
+/** Elemento que vence cada elemento (o inverso do ciclo): é contra ele que o inimigo é fraco. */
+const WEAK_TO = Object.fromEntries(Object.entries(BEATS).map(([a, b]) => [b, a])) as Record<string, keyof typeof BEATS>;
+
+/** Faixa da ordem da rodada (widescreen): quem age a partir de agora, o da vez em destaque, sem quem caiu. */
+function orderStrip(s: JBattle, data: JornadaData): string {
+  const rest = s.order.slice(s.turnIndex).map((uid) => s.fighters.find((f) => f.uid === uid)).filter((f): f is Fighter => Boolean(f) && !f!.down);
+  return rest.map((f, i) => `<span class="jb-order-it ${f.side}${i === 0 && s.status === 'ongoing' ? ' now' : ''}"${tip(fighterName(f), '')}>${portraitOf(f, data)}</span>`).join('');
+}
+
 /**
  * Ficha de um lutador nos painéis laterais do widescreen: retrato, nome, barras com números, elemento (e, no inimigo,
  * o comportamento e a passiva) e os chips de estado. A dica é a mesma do retrato. Não é alvo: escolher é no campo.
@@ -253,13 +263,29 @@ function intelRow(f: Fighter, data: JornadaData): string {
   const U = J.ui;
   const passive =
     f.passive?.kind === 'enrage' ? U.tipPassive(Math.round(f.passive.atPct * 100), f.passive.damageMult) : f.passive?.kind === 'startShieldPct' ? U.tipStartShield(Math.round(f.passive.pct * 100)) : '';
-  const traits = [f.element ? `${icon(f.element)} ${S.elements[f.element]}` : '', f.side === 'enemy' ? (J.ai[f.ai] ?? '') : ''].filter(Boolean).join(' · ');
+  const enemy = f.side === 'enemy';
+  const traits = [f.element ? `${icon(f.element)} ${S.elements[f.element]}` : '', enemy ? (J.ai[f.ai] ?? '') : ''].filter(Boolean).join(' · ');
+  // Inimigo: contra o que ele é fraco e forte (ciclo dos elementos), passiva e as técnicas com o dano.
+  let matchup = '';
+  let techs = '';
+  if (enemy) {
+    if (f.element) {
+      const weak = WEAK_TO[f.element]!;
+      const mult = String(data.j.combat.elementAdvantage).replace('.', ',');
+      matchup = `<small class="jb-row-traits jb-row-match"><span class="weak">${icon(weak)} ${B.weakTo(S.elements[weak], mult)}</span><span>${icon(BEATS[f.element])} ${B.strongVs(S.elements[BEATS[f.element]])}</span></small>`;
+    }
+    techs = `<ul class="jb-row-techs">${f.techniques
+      .map((id) => data.techniques[id])
+      .filter((t): t is JTechnique => Boolean(t))
+      .map((t) => `<li style="--c:${t.element ? ELEMENT_COLORS[t.element] : `var(--t-${t.type})`}">${icon(t.element ?? t.type)}<span>${techName(t.id)}</span>${t.baseDamage > 0 ? `<b>${battlePower(f, t, data)}${hitsOf(f, t) > 1 ? `×${hitsOf(f, t)}` : ''}</b>` : ''}</li>`)
+      .join('')}</ul>`;
+  }
   return `<div class="jb-row ${f.side}${f.down ? ' down' : ''}" data-row="${f.uid}"${fighterTip(f)}>
     ${portraitOf(f, data)}
     <div class="jb-row-info"><b>${esc(fighterName(f))}</b>
       ${miniBar('hp', f.hp, f.maxHp)}${f.maxChakra > 0 ? miniBar('ck', f.chakra, f.maxChakra) : ''}
-      ${traits ? `<small class="jb-row-traits">${traits}</small>` : ''}${passive && f.side === 'enemy' ? `<small class="jb-row-traits">${passive}</small>` : ''}
-      <span class="jf-chips">${statusChips(f)}</span></div>
+      ${traits ? `<small class="jb-row-traits">${traits}</small>` : ''}${matchup}${passive && enemy ? `<small class="jb-row-traits">${passive}</small>` : ''}
+      <span class="jf-chips">${statusChips(f)}</span>${techs}</div>
   </div>`;
 }
 
@@ -330,8 +356,9 @@ export async function jornadaBattle(
       <div class="jb-side jb-enemies" data-side="enemy"></div>
       <div class="jb-banner" aria-live="polite"></div>
       <div class="jb-side jb-allies" data-side="ally"></div>
-      <div class="jb-left"><aside class="jb-intel jb-foes" data-intel="enemy" data-title="${B.foesTitle}"></aside>
-        <button class="jb-log" type="button" data-log data-title="${B.logTitle}"><span></span></button></div>
+      <div class="jb-left"><div class="jb-order" data-order data-title="${B.orderTitle}"></div>
+        <aside class="jb-intel jb-foes" data-intel="enemy" data-title="${B.foesTitle}"></aside>
+        <button class="jb-log" type="button" data-log data-title="${B.logTitle}"${tip(B.logTitle, B.logTip)}><span></span></button></div>
       <div class="jb-right"><aside class="jb-intel jb-team" data-intel="ally" data-title="${B.teamTitle}"></aside>
         <div class="jb-menu"></div></div>
       <div class="jb-intro"><div>${esc(label)}</div></div>
@@ -354,6 +381,7 @@ export async function jornadaBattle(
     enemiesEl.innerHTML = s.fighters.filter((f) => f.side === 'enemy').map((f) => fighterCard(f, data)).join('');
     alliesEl.innerHTML = s.fighters.filter((f) => f.side === 'ally').map((f) => fighterCard(f, data)).join('');
     // Painéis do widescreen (escondidos abaixo de 1280px pelo CSS).
+    root.querySelector<HTMLElement>('[data-order]')!.innerHTML = orderStrip(s, data);
     for (const side of ['enemy', 'ally'] as const) {
       root.querySelector<HTMLElement>(`[data-intel="${side}"]`)!.innerHTML = s.fighters.filter((f) => f.side === side).map((f) => intelRow(f, data)).join('');
     }
@@ -636,8 +664,8 @@ export async function jornadaBattle(
           <button class="btn small jx" data-act="guard" ${tip(B.guard, B.guardDesc)}>${icon('stance')} ${B.guard}</button>
           <button class="btn small jx" data-act="rest" ${tip(B.rest, B.restDesc)}>${icon('rest')} ${B.rest}</button>
           <button class="btn small jx" data-act="bag" ${tip(B.bag, B.bagDesc)} ${items.length && !state.itemUsed ? '' : 'aria-disabled="true"'}>${icon('kit')} ${B.bag}</button>
-          <button class="btn small jx jgiveup" data-act="abandon" ${tip(B.giveUp, B.giveUpDesc)}>${icon('close')} ${B.giveUp}</button>
-        </div>`;
+        </div>
+        <button class="btn small jgiveup" data-act="abandon" ${tip(B.giveUp, B.giveUpDesc)}>${icon('warning')} ${B.giveUp}</button>`;
       const pick = await new Promise<HTMLElement>((resolve) => {
         const onClick = (ev: Event) => {
           const b = (ev.target as HTMLElement).closest<HTMLElement>('[data-tech],[data-act],[data-gates]');

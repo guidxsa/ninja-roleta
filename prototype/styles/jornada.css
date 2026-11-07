@@ -347,7 +347,7 @@
  */
 @media (min-width: 1280px) {
   .jtrail-screen {
-    grid-template-columns: minmax(320px, 380px) minmax(0, 1fr) minmax(280px, 340px); column-gap: 24px;
+    grid-template-columns: clamp(320px, 20vw, 440px) minmax(0, 1fr) clamp(280px, 19vw, 420px); column-gap: clamp(20px, 1.6vw, 36px);
     grid-template-areas: 'left title right' 'left trail right';
     grid-template-rows: auto minmax(0, 1fr);
   }

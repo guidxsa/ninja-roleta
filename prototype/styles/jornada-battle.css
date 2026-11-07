@@ -11,7 +11,7 @@
 /* Colunas de apresentação do widescreen: fora dele se desfazem, e o registro e o menu voltam a ser itens da tela. */
 .jb-left, .jb-right { display: contents; }
 .jb-left > *, .jb-right > * { position: relative; z-index: 1; }
-.jb-intel { display: none; }
+.jb-intel, .jb-order { display: none; }
 
 .jb-goal {
   margin: 0; text-align: center; font: 600 14px/1.3 var(--font-hud); letter-spacing: .04em; padding: 4px 8px;
@@ -162,10 +162,13 @@
 .jb-extra { display: flex; flex-wrap: wrap; gap: 6px; }
 .jb-extra .jmove { flex: 1 1 100%; }
 .jb-extra .jx { flex: 1 1 0; justify-content: center; }
-/* Desistir: discreto, numa linha própria à direita, para não competir com as ações. */
-.jb-extra .jx.jgiveup { flex: 1 0 100%; justify-content: flex-end; min-height: 0; padding: 4px 8px; border-color: transparent; background: none; color: var(--muted); font-size: 12px; }
-.jb-extra .jx.jgiveup:hover { color: var(--accent-2); }
-.jb-extra .jx.jgiveup .ico { width: 14px; height: 14px; }
+/* Desistir da jornada: botão próprio no pé do menu, em cor de perigo (acaba a run inteira; pede confirmação). */
+.jb-menu .jgiveup {
+  margin-top: 10px; width: 100%; justify-content: center; gap: 6px;
+  color: var(--accent-2); border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.jb-menu .jgiveup:hover { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.jb-menu .jgiveup .ico { width: 16px; height: 16px; }
 /* Entrada: o pergaminho com o nome da luta se recolhe para a esquerda. */
 .jb-intro {
   position: absolute; inset: 0; display: grid; place-items: center; z-index: 4;
@@ -211,7 +214,7 @@
  */
 @media (min-width: 1280px) {
   .jbattle {
-    grid-template-columns: minmax(260px, 300px) minmax(0, 1fr) minmax(340px, 400px); column-gap: 20px;
+    grid-template-columns: clamp(260px, 19vw, 460px) minmax(0, 1fr) clamp(320px, 22vw, 580px); column-gap: clamp(16px, 1.4vw, 32px);
     grid-template-areas: 'head head head' 'left relics right' 'left goal right' 'left enemies right' 'left banner right' 'left allies right';
     grid-template-rows: auto auto auto 1fr auto 1fr; min-height: 480px; padding: 18px 20px;
   }
@@ -241,21 +244,59 @@
   .jb-row.acting b { color: var(--gold-2); }
   .jb-row.acting > .portrait { box-shadow: 0 0 0 2px var(--gold-2); }
   .jb-row.down { opacity: .45; filter: grayscale(.8); }
-  .jbattle .jb-log, .jbattle .jb-log.open {
-    display: flex; flex-direction: column; justify-content: flex-start; flex: 1 1 0;
-    max-height: none; min-height: 90px; overflow-y: auto; cursor: default; padding: 10px 12px;
+  /* Registro: fechado mostra as 4 linhas mais novas; o toque abre e ele toma a coluna (a ficha encolhe e rola). */
+  .jbattle .jb-log {
+    display: flex; flex-direction: column; justify-content: flex-start; flex: 0 0 auto;
+    max-height: calc(4 * 1.4em * 1.25 + 40px); min-height: 0; overflow: hidden; cursor: pointer; padding: 10px 12px;
     font-size: 12.5px; line-height: 1.4; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
   }
-  .jbattle .jb-log::before { margin: 0 0 6px; }
+  .jbattle .jb-log { margin-top: auto; }
+  .jbattle .jb-log.open { flex: 1 1 0; max-height: none; overflow-y: auto; }
+  .jbattle .jb-log::before { margin: 0 0 6px; padding-right: 18px; }
+  .jbattle .jb-log::after {
+    content: ''; position: absolute; top: 12px; right: 12px; width: 7px; height: 7px;
+    border-right: 2px solid var(--gold-2); border-bottom: 2px solid var(--gold-2); transform: rotate(-135deg); transition: transform var(--dur-2) var(--ease);
+  }
+  .jbattle .jb-log.open::after { transform: rotate(45deg); }
+  .jbattle .jb-log:hover::before { color: var(--text); }
+  /* Ordem da rodada: retratos na ordem dos turnos que faltam, o da vez em destaque. */
+  .jbattle .jb-order { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; flex: none; padding: 8px 12px 10px;
+    background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); }
+  .jbattle .jb-order::before { content: attr(data-title); flex: 1 0 100%; padding-bottom: 6px; margin-bottom: 2px; border-bottom: 1px solid var(--line);
+    font: 700 12px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2); }
+  .jb-order-it { display: inline-flex; }
+  .jb-order-it .portrait { width: 30px; height: 30px; border-width: 2px; }
+  .jb-order-it.enemy .portrait { border-color: var(--accent-2); }
+  .jb-order-it.ally .portrait { border-color: var(--gold); }
+  .jb-order-it.now .portrait { width: 40px; height: 40px; box-shadow: 0 0 0 2px var(--gold-2); }
+  /* Vantagem de elemento e técnicas do inimigo. */
+  .jb-row-match { display: flex; flex-direction: column; gap: 1px; }
+  .jb-row-match .weak { color: var(--leaf); }
+  .jb-row-techs { display: none; list-style: none; margin: 4px 0 0; padding: 0; flex-direction: column; gap: 2px; }
+  .jb-row-techs li { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .jb-row-techs li .ico { width: 13px; height: 13px; flex: none; color: var(--c); }
+  .jb-row-techs li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .jb-row-techs li b { font: 700 12.5px/1 var(--font-hud); }
   .jbattle .jb-log .jl { padding: 3px 0; border-bottom: 1px dashed color-mix(in srgb, var(--line) 60%, transparent); }
   .jbattle .jb-log .jl:first-child { color: var(--text); }
   .jbattle .jb-menu { flex: 1 1 0; min-height: 0; overflow-y: auto; justify-content: flex-start; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
-  .jbattle .jb-side { gap: clamp(18px, 2.5vw, 48px); }
+  /* As técnicas se reorganizam com a largura da coluna: 2 por linha no Full HD, 3 no 4K. */
+  .jbattle .jb-moves { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .jbattle .jb-side { gap: clamp(18px, 2.5vw, 64px); }
   /* Inimigos e equipe se aproximam da faixa do meio: o cenário fica livre no alto. */
   .jbattle .jb-enemies { align-self: end; }
   .jbattle .jb-allies { align-self: start; padding-top: 8px; }
-  .jbattle .jf { max-width: 230px; }
-  .jbattle .jf-art .portrait-md { width: clamp(72px, 11vh, 120px); height: clamp(72px, 11vh, 120px); }
+  .jbattle .jf { max-width: clamp(180px, 13vw, 280px); }
+  .jbattle .jf-art .portrait-md { width: clamp(72px, min(11vh, 6.5vw), 150px); height: clamp(72px, min(11vh, 6.5vw), 150px); }
+}
+
+/* Widescreen alto (≥ 880px de altura, o Full HD já entra): a ficha do inimigo mostra também as técnicas com o dano. */
+@media (min-width: 1280px) and (min-height: 880px) {
+  .jb-row-techs { display: flex; }
+}
+@media (min-width: 1280px) and (min-height: 1100px) {
+  .jbattle .jf-name { font-size: 18px; }
+  .jbattle .jbar { height: 18px; }
 }
 
 /*
