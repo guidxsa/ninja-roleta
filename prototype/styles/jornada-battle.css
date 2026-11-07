@@ -8,6 +8,10 @@
 .jbattle::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .9; background: var(--scene-art, none) bottom / 100% auto no-repeat; }
 .jbattle > * { position: relative; z-index: 1; }
 .jbattle > .jb-intro { position: absolute; z-index: 4; }
+/* Colunas de apresentação do widescreen: fora dele se desfazem, e o registro e o menu voltam a ser itens da tela. */
+.jb-left, .jb-right { display: contents; }
+.jb-left > *, .jb-right > * { position: relative; z-index: 1; }
+.jb-intel { display: none; }
 
 .jb-goal {
   margin: 0; text-align: center; font: 600 14px/1.3 var(--font-hud); letter-spacing: .04em; padding: 4px 8px;
@@ -202,30 +206,63 @@
 }
 
 /*
- * Widescreen (≥ 1280): o campo clássico (inimigos em cima, equipe embaixo) no centro, o registro da luta
- * sempre aberto à esquerda e as ações à direita. A luta tem a altura da janela; o registro rola por dentro.
+ * Widescreen (≥ 1280): o campo clássico (inimigos em cima, equipe embaixo) no centro. À esquerda, a ficha dos
+ * inimigos e o registro da luta; à direita, a ficha da equipe e as ações. Cada coluna rola por dentro se precisar.
  */
 @media (min-width: 1280px) {
   .jbattle {
-    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(340px, 400px); column-gap: 20px;
-    grid-template-areas: 'head head head' 'log relics menu' 'log goal menu' 'log enemies menu' 'log banner menu' 'log allies menu';
+    grid-template-columns: minmax(260px, 300px) minmax(0, 1fr) minmax(340px, 400px); column-gap: 20px;
+    grid-template-areas: 'head head head' 'left relics right' 'left goal right' 'left enemies right' 'left banner right' 'left allies right';
     grid-template-rows: auto auto auto 1fr auto 1fr; min-height: 480px; padding: 18px 20px;
   }
-  .jbattle .jb-log, .jbattle .jb-log.open {
-    display: flex; flex-direction: column; justify-content: flex-start;
-    align-self: stretch; max-height: none; min-height: 0; overflow-y: auto; cursor: default; padding: 10px 12px;
-    font-size: 13px; line-height: 1.45; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
+  .jbattle .jb-left, .jbattle .jb-right { display: flex; flex-direction: column; gap: 10px; align-self: stretch; min-height: 0; }
+  .jbattle .jb-left { grid-area: left; }
+  .jbattle .jb-right { grid-area: right; }
+  .jbattle .jb-intel {
+    display: flex; flex-direction: column; gap: 8px; flex: 0 1 auto; min-height: 0; overflow-y: auto; padding: 10px 12px;
+    background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
   }
-  .jbattle .jb-log::before {
-    content: attr(data-title); display: block; margin: 0 0 6px; padding-bottom: 6px; border-bottom: 1px solid var(--line);
+  .jbattle .jb-foes { border-top: 2px solid var(--accent); }
+  .jbattle .jb-team { border-top: 2px solid var(--gold); }
+  .jbattle .jb-intel::before, .jbattle .jb-log::before {
+    content: attr(data-title); display: block; padding-bottom: 6px; border-bottom: 1px solid var(--line);
     font: 700 12px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2);
   }
+  .jb-row { display: flex; gap: 10px; align-items: flex-start; }
+  .jb-row > .portrait { flex: none; width: 40px; height: 40px; }
+  .jb-row-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .jb-row-info b { font: 700 14px/1.1 var(--font-hud); letter-spacing: .03em; }
+  .jb-row-info .jbar { height: 12px; }
+  .jb-row-info .jbar span { font-size: 10.5px; }
+  .jb-row-info .jbar.bar-ck { height: 7px; }
+  .jb-row-traits { color: var(--muted); font-size: 12px; line-height: 1.3; }
+  .jb-row-traits .ico { width: 12px; height: 12px; vertical-align: -.15em; }
+  .jb-row .jf-chips:empty { display: none; }
+  .jb-row.acting b { color: var(--gold-2); }
+  .jb-row.acting > .portrait { box-shadow: 0 0 0 2px var(--gold-2); }
+  .jb-row.down { opacity: .45; filter: grayscale(.8); }
+  .jbattle .jb-log, .jbattle .jb-log.open {
+    display: flex; flex-direction: column; justify-content: flex-start; flex: 1 1 0;
+    max-height: none; min-height: 90px; overflow-y: auto; cursor: default; padding: 10px 12px;
+    font-size: 12.5px; line-height: 1.4; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
+  }
+  .jbattle .jb-log::before { margin: 0 0 6px; }
   .jbattle .jb-log .jl { padding: 3px 0; border-bottom: 1px dashed color-mix(in srgb, var(--line) 60%, transparent); }
   .jbattle .jb-log .jl:first-child { color: var(--text); }
-  .jbattle .jb-side { gap: 18px; }
+  .jbattle .jb-menu { flex: 1 1 0; min-height: 0; overflow-y: auto; justify-content: flex-start; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+  .jbattle .jb-side { gap: clamp(18px, 2.5vw, 48px); }
   /* Inimigos e equipe se aproximam da faixa do meio: o cenário fica livre no alto. */
   .jbattle .jb-enemies { align-self: end; }
   .jbattle .jb-allies { align-self: start; padding-top: 8px; }
-  .jbattle .jf { max-width: 210px; }
+  .jbattle .jf { max-width: 230px; }
   .jbattle .jf-art .portrait-md { width: clamp(72px, 11vh, 120px); height: clamp(72px, 11vh, 120px); }
+}
+
+/*
+ * Widescreen baixo: as ações têm prioridade. A ficha perde a linha de elemento e comportamento (a dica continua com
+ * tudo) e a da equipe sai (os mesmos números estão nos cartões do campo).
+ */
+@media (min-width: 1280px) and (max-height: 760px) {
+  .jb-row-traits { display: none; }
+  .jbattle .jb-team { display: none; }
 }

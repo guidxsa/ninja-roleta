@@ -69,7 +69,7 @@ Decidido com o usuário: **a arte oficial é liberada nos retratos de personagen
 - Os arquivos entram em `public/img/` ([instruções](../public/img/LEIAME.md)) e são fornecidos pelo usuário. A lista dos primeiros está lá.
 - Sem o arquivo, vale o desenho em SVG, então nenhuma tela depende de imagem.
 - Os direitos dessas imagens são dos detentores e não entram na licença MIT do código. A arte é retirada se houver pedido.
-- Cenários desenhados, ícones, símbolos de vila e demais ornamentos seguem em desenho próprio.
+- Cenários desenhados, ícones e demais ornamentos seguem em desenho próprio. **Símbolos da obra liberados** (pedido do usuário, v0.57.4): a folha de Konoha, as vilas e os clãs (espiral Uzumaki, leque Uchiha...) podem seguir o desenho da obra, refeitos em SVG no `art.ts`; hoje ainda são versões simplificadas (a fazer, junto com o Portão).
 - **Nada de rostos desenhados nos cenários**: o Monumento dos Hokages foi tentado na v0.54.0 e saiu na v0.55.0, a pedido do usuário, porque ficou ruim.
 
 ## Celular e desktop
@@ -91,9 +91,8 @@ Toda tela nova precisa das duas composições, conferidas nos tamanhos reais da 
 
 | Tela | Desktop | Situação |
 |---|---|---|
-| Combate da Jornada | Notebook: campo e ações em colunas, com o registro embaixo. Widescreen: registro da luta sempre aberto à esquerda, campo clássico ao centro (inimigos em cima, equipe embaixo, o local cobrindo o fundo) e ações à direita, na altura da janela. A v0.57.0 pôs a equipe numa coluna à esquerda e os inimigos ao centro; o usuário achou ruim e saiu na v0.57.1 | Feito (v0.57.1) |
+| Combate da Jornada | Notebook: campo e ações em colunas, com o registro embaixo. Widescreen: campo clássico ao centro (inimigos em cima, equipe embaixo, o local cobrindo o fundo); à esquerda, a **ficha dos inimigos** (retrato, HP e chakra, elemento, comportamento, passiva e estados) e o registro da luta; à direita, a **ficha da equipe** e as ações. As fichas acompanham cada golpe. Em janela baixa (≤ 760px) a ficha da equipe sai para as ações caberem. A v0.57.0 pôs a equipe numa coluna e os inimigos ao centro; o usuário achou ruim e saiu na v0.57.1 | Feito (v0.57.4) |
 | Trilha e mapa da Jornada | A tela cabe na janela e só a trilha, a carta e as colunas rolam por dentro. No topo do centro, o **título do estágio** ("Estágio n/t", o nome em letreiro e, no mapa, "Escolha o próximo destino"), com ciclo, dificuldade e o **Abandonar** discreto. Notebook: build e o que vem empilhados ao lado. Widescreen: **build** à esquerda (HUD e a loja aberta; o botão Loja some), trilha ou carta no centro e **o que vem** à direita (na trilha, a próxima parada com os inimigos, as seguintes e o Seguir; no mapa, o chefe, os caminhos abertos e o card **Sua run**), com a dica de jogo. A carta tem margem interna (nenhum símbolo toca a borda) e a **legenda fica embaixo** dela. No celular, título, HUD, (chefe,) trilha ou carta e legenda, nessa ordem | Feito (v0.57.3) |
-| Combate: informações do inimigo e da equipe | Registro menor à esquerda com a ficha dos inimigos; a equipe à direita, junto das ações; mais largura para o campo | A fazer (etapa 2) |
 | Entrada da Jornada e painéis minimizáveis | Progresso, conquistas e modos espalhados em colunas; loja, relíquias e bolsa, dica e próximas paradas minimizáveis, com a escolha lembrada | A fazer (etapa 3) |
 | Portão e barra superior | Controles da barra superior e a navegação do Portão espalhados pela tela; as citações num lugar próprio | A fazer (etapa 4) |
 | Roleta, árvore de talentos, modais e minigames | Ainda na coluna de 520px (a árvore já mostra os ramos lado a lado) | A fazer |

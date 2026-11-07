@@ -105,7 +105,10 @@ function miniBar(kind: 'hp' | 'ck', cur: number, max: number): string {
 /** Chave de uma barra para o rastro sobreviver ao redesenho dos lutadores (uid + tipo). */
 const barKey = (bar: HTMLElement) => {
   const uid = bar.closest<HTMLElement>('.jf')?.dataset.uid;
-  return uid ? `${uid}:${bar.dataset.bar}` : null;
+  if (uid) return `${uid}:${bar.dataset.bar}`;
+  // Ficha do painel lateral (widescreen): rastro próprio, para não disputar com o do cartão.
+  const row = bar.closest<HTMLElement>('[data-row]')?.dataset.row;
+  return row ? `row:${row}:${bar.dataset.bar}` : null;
 };
 
 const pct = (n: number) => `${Math.round(n * 100)}%`;
@@ -242,6 +245,24 @@ function fighterCard(f: Fighter, data: JornadaData): string {
   </button>`;
 }
 
+/**
+ * Ficha de um lutador nos painéis laterais do widescreen: retrato, nome, barras com números, elemento (e, no inimigo,
+ * o comportamento e a passiva) e os chips de estado. A dica é a mesma do retrato. Não é alvo: escolher é no campo.
+ */
+function intelRow(f: Fighter, data: JornadaData): string {
+  const U = J.ui;
+  const passive =
+    f.passive?.kind === 'enrage' ? U.tipPassive(Math.round(f.passive.atPct * 100), f.passive.damageMult) : f.passive?.kind === 'startShieldPct' ? U.tipStartShield(Math.round(f.passive.pct * 100)) : '';
+  const traits = [f.element ? `${icon(f.element)} ${S.elements[f.element]}` : '', f.side === 'enemy' ? (J.ai[f.ai] ?? '') : ''].filter(Boolean).join(' · ');
+  return `<div class="jb-row ${f.side}${f.down ? ' down' : ''}" data-row="${f.uid}"${fighterTip(f)}>
+    ${portraitOf(f, data)}
+    <div class="jb-row-info"><b>${esc(fighterName(f))}</b>
+      ${miniBar('hp', f.hp, f.maxHp)}${f.maxChakra > 0 ? miniBar('ck', f.chakra, f.maxChakra) : ''}
+      ${traits ? `<small class="jb-row-traits">${traits}</small>` : ''}${passive && f.side === 'enemy' ? `<small class="jb-row-traits">${passive}</small>` : ''}
+      <span class="jf-chips">${statusChips(f)}</span></div>
+  </div>`;
+}
+
 /** Botão de técnica: nome e os números principais (dano e custo). O resto fica na dica. */
 function techButton(s: JBattle, f: Fighter, tech: JTechnique): string {
   const blocked = blockedReason(f, tech);
@@ -309,8 +330,10 @@ export async function jornadaBattle(
       <div class="jb-side jb-enemies" data-side="enemy"></div>
       <div class="jb-banner" aria-live="polite"></div>
       <div class="jb-side jb-allies" data-side="ally"></div>
-      <button class="jb-log" type="button" data-log data-title="${B.logTitle}"><span></span></button>
-      <div class="jb-menu"></div>
+      <div class="jb-left"><aside class="jb-intel jb-foes" data-intel="enemy" data-title="${B.foesTitle}"></aside>
+        <button class="jb-log" type="button" data-log data-title="${B.logTitle}"><span></span></button></div>
+      <div class="jb-right"><aside class="jb-intel jb-team" data-intel="ally" data-title="${B.teamTitle}"></aside>
+        <div class="jb-menu"></div></div>
       <div class="jb-intro"><div>${esc(label)}</div></div>
       <div class="jb-fx" aria-hidden="true"></div>
     </div>`),
@@ -330,10 +353,15 @@ export async function jornadaBattle(
     const trails = captureTrails(root, barKey);
     enemiesEl.innerHTML = s.fighters.filter((f) => f.side === 'enemy').map((f) => fighterCard(f, data)).join('');
     alliesEl.innerHTML = s.fighters.filter((f) => f.side === 'ally').map((f) => fighterCard(f, data)).join('');
+    // Painéis do widescreen (escondidos abaixo de 1280px pelo CSS).
+    for (const side of ['enemy', 'ally'] as const) {
+      root.querySelector<HTMLElement>(`[data-intel="${side}"]`)!.innerHTML = s.fighters.filter((f) => f.side === side).map((f) => intelRow(f, data)).join('');
+    }
     restoreTrails(root, barKey, trails);
     root.querySelector('[data-round]')!.textContent = B.round(Math.max(1, s.round));
     const turn = current(s);
     root.querySelectorAll('.jf').forEach((el) => el.classList.toggle('acting', (el as HTMLElement).dataset.uid === turn?.uid && s.status === 'ongoing'));
+    root.querySelectorAll<HTMLElement>('.jb-row').forEach((el) => el.classList.toggle('acting', el.dataset.row === turn?.uid && s.status === 'ongoing'));
   };
   const card = (uid: string) => root.querySelector<HTMLElement>(`.jf[data-uid="${uid}"]`);
   const pushLog = (line: string) => {
@@ -375,21 +403,20 @@ export async function jornadaBattle(
     void banner.offsetWidth;
     banner.classList.add('show');
   };
-  // Barras durante a animação: parte do estado anterior e aplica cada evento.
+  // Barras durante a animação: parte do estado anterior e aplica cada evento, no cartão do campo e na ficha do painel.
+  const bars = (uid: string, kind: 'hp' | 'ck') => root.querySelectorAll<HTMLElement>(`.jf[data-uid="${uid}"] [data-bar="${kind}"], [data-row="${uid}"] [data-bar="${kind}"]`);
   const shown = new Map<string, { hp: number; max: number; chakra: number; maxChakra: number }>();
   const setChakra = (uid: string, chakra: number) => {
     const v = shown.get(uid);
     if (!v) return;
     v.chakra = Math.max(0, Math.min(v.maxChakra, chakra));
-    const el = card(uid)?.querySelector<HTMLElement>('[data-bar="ck"]');
-    if (el) patchBar(el, 'ck', v.chakra, v.maxChakra, `${Math.round(v.chakra)}/${v.maxChakra}`);
+    for (const el of bars(uid, 'ck')) patchBar(el, 'ck', v.chakra, v.maxChakra, `${Math.round(v.chakra)}/${v.maxChakra}`);
   };
   const setHp = (uid: string, hp: number) => {
     const v = shown.get(uid);
     if (!v) return;
     v.hp = Math.max(0, Math.min(v.max, hp));
-    const el = card(uid)?.querySelector<HTMLElement>('[data-bar="hp"]');
-    if (el) patchBar(el, 'hp', v.hp, v.max, `${Math.max(0, Math.round(v.hp))}/${v.max}`);
+    for (const el of bars(uid, 'hp')) patchBar(el, 'hp', v.hp, v.max, `${Math.max(0, Math.round(v.hp))}/${v.max}`);
   };
 
   async function animate(prev: JBattle, next: JBattle) {

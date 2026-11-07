@@ -985,6 +985,8 @@ export const jornadaPtBR = {
     round: (n: number) => `Rodada ${n}`,
     yourTurn: 'Sua vez',
     logTitle: 'Registro da luta',
+    foesTitle: 'Inimigos',
+    teamTitle: 'Sua equipe',
     pickTarget: 'Escolha o alvo',
     pickAlly: 'Escolha o aliado',
     pickDowned: 'Escolha quem levantar',
