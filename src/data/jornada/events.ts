@@ -62,6 +62,14 @@ export const events: EventDef[] = [
     ],
   },
   {
+    // Itachi e Kisame vêm atrás do Naruto; o Sasuke o enfrenta na pousada e o Jiraiya intervém (cap. 139 a 147).
+    id: 'itachiKisame',
+    options: [
+      { id: 'chase', effects: [{ kind: 'xp', n: 50 }, { kind: 'maxStat', who: 'team', stat: 'hp', n: 6 }] },
+      { id: 'stay', effects: [{ kind: 'healTeam', hp: 40, chakra: 12 }, { kind: 'ryo', n: 20 }] },
+    ],
+  },
+  {
     id: 'rasenganTraining',
     options: [
       {

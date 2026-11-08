@@ -111,6 +111,8 @@ const ICONS: Record<string, string> = {
   info: 
 '<circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 10.5V17" stroke="#000a" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.2" r="1.5" fill="#000a"/>',
   // Interface (traçado de check, x, cadeado e seta baseado no Lucide, licença ISC: https://lucide.dev)
+  // Kunai (ornamento: prende pergaminhos na casca do PC).
+  kunai: '<path d="M3 3l8.2 3.4 3.6 3.6-4.8 4.8-3.6-3.6z" fill="currentColor"/><path d="M12.6 12.6l5.2 5.2" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M13.8 15.6l1.8-1.8M15.4 17.2l1.8-1.8" stroke="currentColor" stroke-width="1" stroke-opacity=".55"/><circle cx="19.6" cy="19.6" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>',
   check: '<path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
   close: '<path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
   lock: '<rect x="4" y="11" width="16" height="10.5" rx="1.5" fill="currentColor"/><path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="16" r="1.6" fill="#0008"/>',
@@ -141,6 +143,20 @@ const ICONS: Record<string, string> = {
   ice: '<g stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"><path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7"/><path d="M9.5 3.5 12 6l2.5-2.5M9.5 20.5 12 18l2.5 2.5M3.6 10.4 7 9.5 6 6M20.4 13.6 17 14.5l1 3.5M3.6 13.6 7 14.5l-1 3.5M20.4 10.4 17 9.5 18 6"/></g>',
 };
 
+/**
+ * Texturas da interface (vagas em public/img/ui/): papel, madeira, pincel e fundo. Cada uma que existir vira uma
+ * variável CSS (`--tex-paper`, `--tex-wood`, `--tex-brush`, `--tex-page`); sem a imagem, vale o desenho do CSS.
+ */
+export function uiTextureVars(): Record<string, string> {
+  const slots: Record<string, string> = { papel: '--tex-paper', madeira: '--tex-wood', pincel: '--tex-brush', fundo: '--tex-page' };
+  const out: Record<string, string> = {};
+  for (const [name, cssVar] of Object.entries(slots)) {
+    const path = customImage('ui', name);
+    if (path) out[cssVar] = `url("${path}")`;
+  }
+  return out;
+}
+
 /** Diz se o ícone existe (o `icon()` cai no neutro sem avisar). */
 export function hasIcon(name: string): boolean {
   return name in ICONS;
@@ -167,14 +183,19 @@ const spiral = (cx: number, cy: number, turns: number, step = 1) => {
   return { d, x };
 };
 
-const leafSpiral = spiral(11.5, 12.5, 3, 1.2);
+/**
+ * Símbolo de Konoha (24×24), usado na vila e no clã comum: a espiral larga que sai para a ponta da folha, no alto à
+ * direita, e o triângulo do talo embaixo, à esquerda.
+ */
+const VILLAGE_LEAF =
+  '<path d="M12.2 13A1.2 1.2 0 0 0 9.8 13A2.4 2.4 0 0 0 14.6 13A3.6 3.6 0 0 0 7.4 13A4.8 4.8 0 0 0 17 13C17 9.2 18.4 5.8 20.6 3L15.6 6.2"/><path d="M7.9 15.9 3 20.8l6.6-2.6z" fill="currentColor" stroke="none"/>';
 
 const CLANS: Record<string, string> = {
-  // Folha (comum): a folha com o redemoinho dentro.
-  common: `<path d="M3.5 20.5C3.5 11 9.5 4.5 20.5 3.5 19.5 14.5 13 20.5 3.5 20.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="${leafSpiral.d}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3.5 20.5 7 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`,
-  // Uchiha: o leque.
+  // Folha (comum): o símbolo de Konoha, o mesmo da vila, na cor da folha.
+  common: `<g fill="none" stroke="#e8701a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${VILLAGE_LEAF}</g>`,
+  // Uchiha: o uchiwa (leque) do clã, vermelho em cima e branco embaixo, com o cabo.
   uchiha:
-    '<path d="M4.5 10a7.5 7.5 0 0 1 15 0z" fill="#d1232a"/><path d="M4.5 10a7.5 7.5 0 0 0 15 0z" fill="#f5f1e6"/><rect x="10.8" y="16.5" width="2.4" height="6" rx="1" fill="#f5f1e6"/><circle cx="12" cy="10" r="7.5" fill="none" stroke="#0006" stroke-width=".8"/>',
+    '<path d="M12 1.8a7.6 7.6 0 0 1 7.6 7.6c0 .9-.1 1.7-.4 2.5H4.8a7.6 7.6 0 0 1 7.2-10.1z" fill="#d1232a"/><path d="M4.8 11.9h14.4A7.6 7.6 0 0 1 12 17a7.6 7.6 0 0 1-7.2-5.1z" fill="#f5f1e6"/><circle cx="12" cy="9.4" r="7.6" fill="none" stroke="#2a1d16" stroke-width=".9"/><rect x="10.9" y="17" width="2.2" height="5.6" rx=".6" fill="#f5f1e6" stroke="#2a1d16" stroke-width=".8"/>',
   // Hyuuga: o olho branco com veias.
   hyuuga:
     '<path d="M1.5 12S6 4.5 12 4.5 22.5 12 22.5 12 18 19.5 12 19.5 1.5 12 1.5 12z" fill="#ece8f6" stroke="#7d73a8" stroke-width=".9"/><circle cx="12" cy="12" r="4.4" fill="#cfc8e8"/><circle cx="12" cy="12" r="1.4" fill="#f9f8ff"/><path d="M3.5 9 7 10.6M3.5 15 7 13.4M20.5 9 17 10.6M20.5 15 17 13.4" stroke="#a197cc" stroke-width="1"/>',
@@ -189,11 +210,11 @@ const CLANS: Record<string, string> = {
   // Aburame: besouro.
   aburame:
     '<g stroke="#5d7a4a" stroke-width="1.5" stroke-linecap="round"><path d="M7 9 3 7M6.5 13H2.5M7 17l-3.5 2.5M17 9l4-2M17.5 13h4M17 17l3.5 2.5"/></g><ellipse cx="12" cy="14" rx="5.5" ry="7" fill="#3e5a34"/><circle cx="12" cy="5.5" r="2.6" fill="#2b4024"/><path d="M12 8v13" stroke="#9fbf7a" stroke-width="1"/>',
-  // Inuzuka: pegada.
+  // Inuzuka: as presas vermelhas pintadas no rosto do clã.
   inuzuka:
-    '<g fill="#c0392b"><ellipse cx="12" cy="16" rx="5.2" ry="4.5"/><ellipse cx="5" cy="10.5" rx="2.2" ry="2.8"/><ellipse cx="9.3" cy="6" rx="2.2" ry="2.9"/><ellipse cx="14.7" cy="6" rx="2.2" ry="2.9"/><ellipse cx="19" cy="10.5" rx="2.2" ry="2.8"/></g>',
-  // Uzumaki: redemoinho.
-  uzumaki: `<circle cx="12" cy="12" r="10.5" fill="#d1232a"/><path d="${spiral(12, 12, 4, 1.05).d}" fill="none" stroke="#fff3e6" stroke-width="1.8" stroke-linecap="round"/>`,
+    '<path d="M3.5 5.5h6.5L6.2 18.5z" fill="#c0392b"/><path d="M14 5.5h6.5L17.8 18.5z" fill="#c0392b"/>',
+  // Uzumaki: o redemoinho vermelho do clã, sem fundo, com a ponta solta para fora.
+  uzumaki: `<path d="${spiral(11.4, 12, 3, 1.75).d} c0 3-2 5.6-4.6 7" fill="none" stroke="#d1232a" stroke-width="2.3" stroke-linecap="round"/>`,
   // Senju: folha com o broto da árvore.
   senju:
     '<path d="M12 2.5c5 3 7.5 7.5 7.5 11.5a7.5 7.5 0 0 1-15 0C4.5 10 7 5.5 12 2.5z" fill="#2fa36b"/><path d="M12 21V9M12 14l-3.5-3M12 12l3-2.5" stroke="#eaf7ee" stroke-width="1.6" stroke-linecap="round" fill="none"/>',
@@ -282,27 +303,115 @@ function head(f: Face = {}): string {
 
 /** Bandana com a placa de metal e o símbolo da vila. */
 function headband(symbol: 'leaf' | 'mist' | 'sand' | 'sound', cloth = '#24324f', slash = false, y = 31): string {
-  const sym = {
-    leaf: `<path d="M48 ${y + 4.5}a1 1 0 0 1 2 0a2 2 0 0 1-4 0a3 3 0 0 1 6 0" fill="none" stroke="#6c7383" stroke-width="1.1"/><path d="M46 ${y + 4.5}l-3-3" stroke="#6c7383" stroke-width="1.1"/>`,
-    mist: `<path d="M44 ${y + 2.5}q2-1.5 4 0t4 0M44 ${y + 4.5}q2-1.5 4 0t4 0M44 ${y + 6.5}q2-1.5 4 0t4 0" fill="none" stroke="#6c7383" stroke-width="1"/>`,
-    sand: `<path d="M44.5 ${y + 1.5}h11l-4 3.5 4 3.5h-11l4-3.5z" fill="none" stroke="#6c7383" stroke-width="1.1"/>`,
-    sound: `<path d="M51.5 ${y + 1.5}v5.5" stroke="#6c7383" stroke-width="1.3"/><ellipse cx="49.6" cy="${y + 7}" rx="2" ry="1.5" fill="#6c7383"/><path d="M51.5 ${y + 1.5}l3 1.5" stroke="#6c7383" stroke-width="1.3"/>`,
-  }[symbol];
+  // A placa leva o mesmo símbolo da vila (VILLAGES), reduzido a 10×10 no meio do metal.
+  const sym = `<g transform="translate(45 ${y - 0.6}) scale(.42)" color="#6c7383" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${VILLAGES[symbol]}</g>`;
   return `<path d="M32 ${y}q18-5 36 0v8q-18-5-36 0z" fill="${cloth}"/><rect x="40" y="${y - 0.5}" width="20" height="10" rx="2" fill="#c9d1dc" stroke="#7d8696" stroke-width=".8"/>${sym}${slash ? `<path d="M41 ${y + 9}l18-9" stroke="#5a6170" stroke-width="1.4"/>` : ''}`;
 }
 
-/** Símbolos das vilas (24×24, traço em `currentColor`): desenho próprio, para ambientação. */
+/**
+ * Símbolos das vilas (24×24, traço em `currentColor`), no formato da obra (liberado pelo usuário, v0.57.9):
+ * Folha (espiral com a ponta da folha e o triângulo do talo), Névoa (quatro traços ondulados inclinados),
+ * Areia (a ampulheta) e Som (a nota musical).
+ */
 const VILLAGES = {
-  leaf: '<path d="M12.6 12.4a1.3 1.3 0 1 0-1.3 1.5 3 3 0 0 0 3-3 4.6 4.6 0 0 0-4.6-4.6 6.2 6.2 0 0 0-6.2 6.2 7.8 7.8 0 0 0 7.8 7.8c4.6 0 8.2-3.4 8.7-8L14 3.5l1.4 6.2"/>',
-  mist: '<path d="M4 7q2.7-2.4 5.3 0t5.4 0T20 7M4 12q2.7-2.4 5.3 0t5.4 0T20 12M4 17q2.7-2.4 5.3 0t5.4 0T20 17"/>',
-  sand: '<path d="M4 5h16l-6.2 7L20 19H4l6.2-7z"/><path d="M12 12V5"/>',
-  sound: '<path d="M14 4v12.5"/><path d="M14 4l5.5 3.2"/><ellipse cx="10.4" cy="17" rx="3.6" ry="2.8"/>',
+  leaf: VILLAGE_LEAF,
+  mist: '<path d="M4.6 19.5c1.4-2.4-.6-4.6.8-7s1.5-4.3 1.7-6.6M9 19.5c1.4-2.4-.6-4.6.8-7s1.5-4.3 1.7-6.6M13.4 19.5c1.4-2.4-.6-4.6.8-7s1.5-4.3 1.7-6.6M17.8 19.5c1.4-2.4-.6-4.6.8-7s1.5-4.3 1.7-6.6"/>',
+  sand: '<path d="M5 4.5h14M5 19.5h14M7.2 4.5c0 4.2 4.3 5 4.3 7.5s-4.3 3.3-4.3 7.5M16.8 4.5c0 4.2-4.3 5-4.3 7.5s4.3 3.3 4.3 7.5"/>',
+  sound: '<path d="M14 4v12.5"/><path d="M14 4c1.6 2.4 5.2 2.6 5.2 6"/><ellipse cx="10.4" cy="17" rx="3.6" ry="2.8" fill="currentColor"/>',
 } as const;
 export const VILLAGE_IDS = Object.keys(VILLAGES) as (keyof typeof VILLAGES)[];
 export const villageCrest = (id: keyof typeof VILLAGES): string => svg(VILLAGES[id], '0 0 24 24', 'ico crest');
 
-/** Ilustração do jogador em `img/cenas/<nome>` (docs/visual.md), se existir. */
-export const sceneImage = (name: string): string | null => customImage('cenas', name);
+/**
+ * Mapa único das artes de `img/cenas/` (docs/visual.md, "Vagas de ilustração"): a chave que o código usa → o nome do
+ * arquivo (sem extensão). É o único lugar com nome de arquivo; a interface pede pela chave. Sem entrada, a chave é o
+ * próprio nome (`portao`, `jornada`, `g1`...). Um vídeo com o mesmo nome do arquivo vira a versão animada.
+ */
+export const SCENE_ART: Record<string, string> = {
+  // Portão da Vila: a dualidade. De dia o Naruto observa Konoha; à noite, o Sasuke.
+  'portao-dia': 'dia',
+  'portao-noite': 'noite',
+  // Arcos da História do Naruto, pelo id do estágio (src/data/jornada/stages.ts).
+  'arco-waves': 'waves',
+  'arco-exam': 'chunnin',
+  'arco-sannin': 'sannin',
+  'arco-retrieval': 'sasuke',
+  // Caminho Ninja: card da entrada da Jornada e pôster da preparação (o Minato).
+  'modo-caminho': 'caminho-ninja',
+};
+const sceneFile = (key: string): string => SCENE_ART[key] ?? key;
+
+/** Ilustração do jogador para a chave (ver `SCENE_ART`), se existir. */
+export const sceneImage = (name: string): string | null => customImage('cenas', sceneFile(name));
+
+/** Vídeo próprio (`img/<pasta>/<nome>.webm|mp4`), se existir: a versão animada de uma vaga. */
+function customVideo(folder: string, name: string): string | null {
+  for (const ext of ['webm', 'mp4']) {
+    const path = `img/${folder}/${name}.${ext}`;
+    if (IMAGES.includes(path)) return path;
+  }
+  return null;
+}
+
+/** Há algum vídeo nas vagas? (o botão Animado só aparece quando há.) */
+export const hasSceneVideos = (): boolean => IMAGES.some((p) => /\.(webm|mp4)$/i.test(p));
+
+/** Modo das cenas: Leve (imagem parada, padrão) ou Animado (vídeo em loop, quando a vaga tem). */
+let animatedScenes = false;
+
+const prefersStill = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function sceneInner(name: string): string {
+  const img = sceneImage(name);
+  const video = customVideo('cenas', sceneFile(name));
+  if (video && animatedScenes && !prefersStill()) {
+    return `<video src="${video}" autoplay muted loop playsinline preload="metadata"${img ? ` poster="${img}"` : ''} aria-hidden="true"></video>`;
+  }
+  return img ? `<img src="${img}" alt="">` : '';
+}
+
+/**
+ * Ilustração de uma vaga de `cenas/` no modo atual: a imagem (Leve) ou o vídeo (Animado), num invólucro que o
+ * `applySceneMode` redesenha. Sem imagem nem vídeo, `null` (quem chama usa o desenho próprio).
+ */
+export function sceneMedia(name: string): string | null {
+  const inner = sceneInner(name);
+  return inner ? `<span class="scene-media" data-scene="${name}">${inner}</span>` : null;
+}
+
+/** Arte do arco (estágio) da História, ou a vaga com o id do estágio (Caminho Ninja: g1, g2, g3). */
+export const arcMedia = (stageId: string): string | null => sceneMedia(`arco-${stageId}`) ?? sceneMedia(stageId);
+
+/**
+ * Proporção de cada arte que carrega (largura / altura) em `--ratio`, no contêiner que a enquadra. Assim o CSS dá à
+ * vaga a forma da imagem em vez de cortá-la (docs/visual.md, "Vagas de ilustração"). Vale para imagem e vídeo.
+ */
+export function installSceneRatios(): void {
+  if (typeof document === 'undefined') return;
+  const HOSTS = '.mode-card, .gate-hero, .jc-panel, .jarc, .jarc-fan-i, .jthumb';
+  const mark = (el: HTMLElement, w: number, h: number) => {
+    if (!w || !h) return;
+    const host = el.closest<HTMLElement>(HOSTS) ?? el.parentElement;
+    host?.style.setProperty('--ratio', (w / h).toFixed(3));
+  };
+  document.addEventListener('load', (e) => {
+    const t = e.target;
+    if (t instanceof HTMLImageElement && t.closest('[data-scene]')) mark(t, t.naturalWidth, t.naturalHeight);
+  }, true);
+  document.addEventListener('loadedmetadata', (e) => {
+    const t = e.target;
+    if (t instanceof HTMLVideoElement && t.closest('[data-scene]')) mark(t, t.videoWidth, t.videoHeight);
+  }, true);
+}
+
+/** Troca o modo e redesenha as cenas que estão na tela, sem recarregar. */
+export function applySceneMode(animated: boolean): void {
+  animatedScenes = animated;
+  if (typeof document === 'undefined') return;
+  document.querySelectorAll<HTMLElement>('[data-scene]').forEach((el) => {
+    el.innerHTML = sceneInner(el.dataset.scene!);
+  });
+}
 
 /** Nuvem em espiral (ornamento), desenho próprio. */
 export const cloud = (): string =>

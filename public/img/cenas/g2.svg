@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" width="240" height="160">
+  <!-- Arte simples provisória do estágio 2 do Caminho Ninja (Vilas em guerra): muralha e torres com fumaça sob céu vermelho. Troque por uma ilustração com o mesmo nome. -->
+  <defs>
+    <linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a2a22"/><stop offset=".55" stop-color="#c2552e"/><stop offset="1" stop-color="#e8a05a"/></linearGradient>
+  </defs>
+  <rect width="240" height="160" fill="url(#c)"/>
+  <g fill="#3b2a24" fill-opacity=".45">
+    <path d="M60 70 C52 58 62 48 58 36 C70 44 66 58 74 66z"/>
+    <path d="M168 64 C160 50 172 40 166 26 C180 36 176 52 184 60z"/>
+  </g>
+  <path d="M0 108 H240 V160 H0z" fill="#2a1a14"/>
+  <g fill="#2a1a14">
+    <path d="M44 108 V76 h28 v32z"/><path d="M38 78 l20 -14 l20 14z"/>
+    <path d="M150 108 V70 h32 v38z"/><path d="M144 72 l22 -16 l22 16z"/>
+    <path d="M0 96 h240 v14 H0z"/>
+    <path d="M0 92 h10 v6 H0z M18 92 h10 v6 H18z M86 92 h10 v6 H86z M104 92 h10 v6 h-10z M122 92 h10 v6 h-10z M196 92 h10 v6 h-10z M214 92 h10 v6 h-10z M232 92 h8 v6 h-8z"/>
+  </g>
+  <g fill="#f3c06a"><rect x="54" y="84" width="6" height="8"/><rect x="162" y="80" width="7" height="9"/></g>
+  <path d="M0 140 C50 132 120 146 240 134 V160 H0z" fill="#170e0a"/>
+</svg>

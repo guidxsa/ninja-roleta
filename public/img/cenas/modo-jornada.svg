@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <!-- Imagem provisória (gerada): troque por uma ilustração com o mesmo nome e apague este .svg. -->
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3a64e"/><stop offset="1" stop-color="#d0662a"/></linearGradient></defs>
+  <rect width="800" height="500" fill="url(#s)"/>
+  <path d="M0 360 C144 290 256 330 400 300 S656 275 800 330 V500 H0z" fill="#6a3a1e" fill-opacity=".55"/>
+  <path d="M0 420 C200 380 480 430 800 390 V500 H0z" fill="#6a3a1e" fill-opacity=".85"/>
+  <text x="400.0" y="250" font-size="23" text-anchor="middle" fill="#fff8e8" font-family="sans-serif" font-weight="700">img/cenas/modo-jornada</text><text x="400.0" y="280" font-size="14" text-anchor="middle" fill="#fff8e8" fill-opacity=".85" font-family="sans-serif">troque por uma imagem sua (mesmo nome, .webp, .png ou .jpg)</text>
+</svg>

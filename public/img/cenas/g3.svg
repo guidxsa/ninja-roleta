@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" width="240" height="160">
+  <!-- Arte simples provisória do estágio 3 do Caminho Ninja (Rastro do Som): vale estreito e enevoado à noite, com notas de som. Troque por uma ilustração com o mesmo nome. -->
+  <defs>
+    <linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1f33"/><stop offset=".6" stop-color="#3b3658"/><stop offset="1" stop-color="#6a5a7a"/></linearGradient>
+  </defs>
+  <rect width="240" height="160" fill="url(#c)"/>
+  <circle cx="190" cy="38" r="14" fill="#e8e2d4" fill-opacity=".85"/>
+  <path d="M0 160 V40 C20 52 30 78 46 92 C60 104 72 120 84 160z" fill="#17142a"/>
+  <path d="M240 160 V30 C220 46 206 76 192 92 C178 108 168 126 158 160z" fill="#17142a"/>
+  <path d="M0 122 C60 110 120 128 240 116 V136 C150 146 80 130 0 140z" fill="#c9c3d8" fill-opacity=".22"/>
+  <path d="M86 160 C100 130 112 110 120 96 C128 110 140 130 156 160z" fill="#2a2440"/>
+  <g fill="none" stroke="#b9a6e0" stroke-width="2" stroke-linecap="round" stroke-opacity=".8">
+    <path d="M104 74 V56 l10 -3 V71"/>
+    <path d="M132 64 V48"/><path d="M132 48 c4 2 8 3 8 8"/>
+  </g>
+  <g fill="#b9a6e0" fill-opacity=".8"><ellipse cx="101.5" cy="75" rx="3.5" ry="2.6"/><ellipse cx="111.5" cy="72" rx="3.5" ry="2.6"/><ellipse cx="129.5" cy="65" rx="3.5" ry="2.6"/></g>
+</svg>

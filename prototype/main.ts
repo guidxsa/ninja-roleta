@@ -127,7 +127,7 @@ import {
   type KeyValueStorage,
   type RunStatus,
 } from '../src/state/runHistory';
-import { clanSymbol, cloud, emblem, fighterPortrait, icon, ninjaPortrait, sceneImage, villainPortrait } from './art';
+import { applySceneMode, installSceneRatios, clanSymbol, cloud, emblem, fighterPortrait, hasSceneVideos, icon, ninjaPortrait, sceneMedia, uiTextureVars, villainPortrait } from './art';
 import { barLayers, barPct, barTone, patchBar } from './bars';
 import { defeat, installAudio, mood, setMusic, setSfx, victory, type Mood } from './audio';
 import {
@@ -143,7 +143,7 @@ import {
   type Condition,
 } from './tips';
 import { installTooltips, tip } from './tooltip';
-import { runJornada } from './jornada';
+import { jornadaProgressCard, runJornada } from './jornada';
 import { jornadaAchievements } from '../src/data/jornada/achievements';
 import type { JornadaHost } from './jornada/host';
 import { createWheel, stripRoulette, type WheelSlice } from './wheel';
@@ -199,6 +199,8 @@ interface Settings {
   sfx: boolean;
   /** Música de fundo (desligada por padrão). */
   music: boolean;
+  /** Cenas animadas (vídeo nas vagas de ilustração); desligado é o modo Leve, o padrão. */
+  animated: boolean;
   /** Tema escolhido no botão; sem escolha, segue o aparelho. */
   theme?: Theme;
 }
@@ -207,9 +209,9 @@ const settings: Settings = (() => {
     const saved = JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}') as Partial<Settings>;
     const difficulty = saved.difficulty && DIFFICULTIES.includes(saved.difficulty) ? saved.difficulty : DEFAULT_DIFFICULTY;
     const theme = saved.theme === 'light' || saved.theme === 'dark' ? saved.theme : undefined;
-    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), theme };
+    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), animated: Boolean(saved.animated), theme };
   } catch {
-    return { instant: false, difficulty: DEFAULT_DIFFICULTY, sfx: true, music: false };
+    return { instant: false, difficulty: DEFAULT_DIFFICULTY, sfx: true, music: false, animated: false };
   }
 })();
 const saveSettings = () => {
@@ -1981,35 +1983,58 @@ function toast(text: string, ico = '') {
 }
 
 type ProfileTab = 'history' | 'achievements' | 'bingo' | 'origins' | 'relics';
-const PROFILE_TABS: ProfileTab[] = ['history', 'achievements', 'bingo', 'origins', 'relics'];
-/** Selo de cada aba do registro: 歴 histórico, 功 conquistas, 手配 Livro Bingo (procurados), 族 origens (clãs), 宝 relíquias. */
-const PROFILE_KANJI: Record<ProfileTab, string> = { history: '歴', achievements: '功', bingo: '手配', origins: '族', relics: '宝' };
+type RegistryPage = 'history' | 'bingo' | 'relics' | 'achievements';
+type HistoryFilter = 'general' | 'origins' | 'difficulty';
+/** Selo de cada seção do Registro: 歴 histórico, 功 conquistas, 手配 Livro Bingo (procurados), 宝 relíquias. */
+const REGISTRY_KANJI: Record<RegistryPage, string> = { history: '歴', achievements: '功', bingo: '手配', relics: '宝' };
 
-/** Perfil: histórico, conquistas, Livro Bingo, estatísticas por origem e coleção de relíquias, em abas. */
+/** Entradas antigas (barra superior, barra do Portão, faixa de Conquistas): Origens vira o filtro do Histórico. */
 function openProfile(tab: ProfileTab = 'history') {
-  const P = S.profile;
-  const overlay = h(`<div class="modal"><div class="modal-body profile">
-    <div class="modal-head"><span class="seal" aria-hidden="true">録</span><h2>${P.title}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
-    <label class="field profile-name"><span>${S.ui.playerName.label}</span><input type="text" data-player-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${S.ui.playerName.placeholder}" value="${esc(profile.playerName ?? '')}"></label>
-    <div class="act-tabs profile-tabs">${PROFILE_TABS.map((t) => `<button class="act-tab" data-tab="${t}"><b class="kanji${PROFILE_KANJI[t].length > 1 ? ' two' : ''}" aria-hidden="true">${PROFILE_KANJI[t]}</b><span>${P.tabs[t]}</span></button>`).join('')}</div>
+  if (tab === 'origins') openRegistry('history', 'origins');
+  else openRegistry(tab);
+}
+
+/**
+ * Registro em popup (um padrão só, em todo lugar): uma seção por vez, num pergaminho com rolos. O Histórico filtra por
+ * Geral, Origens e Dificuldade. O nome do jogador aparece no topo só no celular (no PC ele fica na Ficha do Início).
+ */
+function openRegistry(page: RegistryPage, filter: HistoryFilter = 'general') {
+  const D = S.ui.desk;
+  const k = REGISTRY_KANJI[page];
+  const overlay = h(`<div class="modal"><div class="modal-body profile registry">
+    <span class="scroll-roll t" aria-hidden="true"></span><span class="scroll-roll b" aria-hidden="true"></span>
+    <div class="modal-head"><span class="seal${k.length > 1 ? ' two' : ''}" aria-hidden="true">${k}</span><h2>${D.nav[page]}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
+    <label class="field profile-name reg-name"><span>${S.ui.playerName.label}</span><input type="text" data-player-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${S.ui.playerName.placeholder}" value="${esc(profile.playerName ?? '')}"></label>
+    ${page === 'history' ? `<div class="segmented desk-filters">${(['general', 'origins', 'difficulty'] as const).map((f) => `<button class="btn seg" data-filter="${f}" aria-pressed="${f === filter}">${D.filters[f]}</button>`).join('')}</div>` : ''}
     <div class="profile-body"></div></div></div>`);
   const body = overlay.querySelector<HTMLElement>('.profile-body')!;
   overlay.querySelector('[data-player-name]')!.addEventListener('change', (e) => setPlayerName((e.target as HTMLInputElement).value));
-  const select = (t: ProfileTab) => {
-    overlay.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.tab === t));
+  const fill = (f: HistoryFilter) => {
     body.replaceChildren();
-    if (t === 'history') historyTab(body);
-    else if (t === 'relics') relicCollection(body, profile.relics);
-    else body.innerHTML = t === 'achievements' ? achievementsTab() : t === 'bingo' ? bingoTab() : originsTab();
+    if (page === 'history') {
+      if (f === 'general') historyTab(body);
+      else body.innerHTML = f === 'origins' ? originsTab() : difficultyStats();
+    } else if (page === 'relics') relicCollection(body, profile.relics);
+    else body.innerHTML = page === 'bingo' ? bingoTab() : achievementsTab();
   };
-  overlay.querySelector('.profile-tabs')!.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-tab]');
-    if (b) select(b.dataset.tab as ProfileTab);
+  overlay.querySelector('.desk-filters')?.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-filter]');
+    if (!b) return;
+    overlay.querySelectorAll('[data-filter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    fill(b.dataset.filter as HistoryFilter);
   });
+  const close = () => {
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') close();
+  };
   overlay.addEventListener('click', (e) => {
-    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) overlay.remove();
+    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) close();
   });
-  select(tab);
+  document.addEventListener('keydown', onKey);
+  fill(filter);
   document.body.appendChild(overlay);
 }
 
@@ -2382,9 +2407,14 @@ function applyTheme() {
   const btn = document.getElementById('theme-btn')!;
   // O botão mostra para onde vai: sol à noite, lua de dia.
   const next = theme === 'dark' ? S.ui.themeDay : S.ui.themeNight;
-  btn.innerHTML = icon(theme === 'dark' ? 'sun' : 'moon');
+  btn.innerHTML = `${icon(theme === 'dark' ? 'sun' : 'moon')}${toolLabel('theme')}`;
   btn.title = next;
   btn.setAttribute('aria-label', next);
+}
+
+/** Nome curto ao lado do ícone da barra: o CSS só mostra no PC (≥ 1280px). */
+function toolLabel(key: keyof typeof S.ui.toolLabels): string {
+  return `<span class="tool-label">${S.ui.toolLabels[key]}</span>`;
 }
 
 /** O modo instantâneo também encurta as transições da interface (styles/instant.css). */
@@ -2395,6 +2425,9 @@ function setInstantCss(on: boolean) {
 /** Botões do cabeçalho: instantâneo, dia/noite, efeitos sonoros e música. */
 function installHeaderToggles() {
   setInstantCss(settings.instant);
+  // Modo das cenas antes de qualquer tela; o botão só aparece quando alguma vaga tem vídeo.
+  applySceneMode(settings.animated);
+  document.getElementById('anim-btn')!.hidden = !hasSceneVideos();
   applyTheme();
   deviceTheme?.addEventListener?.('change', applyTheme);
   document.getElementById('theme-btn')!.addEventListener('click', () => {
@@ -2405,6 +2438,7 @@ function installHeaderToggles() {
 
   const toggles = [
     { id: 'instant-btn', key: 'instant', on: 'lightning', off: 'lightning', label: S.ui.instant, apply: setInstantCss },
+    { id: 'anim-btn', key: 'animated', on: 'sparkle', off: 'sparkle', label: S.ui.animated, apply: applySceneMode },
     { id: 'sfx-btn', key: 'sfx', on: 'soundOn', off: 'soundOff', label: S.ui.sfx, apply: setSfx },
     { id: 'music-btn', key: 'music', on: 'music', off: 'musicOff', label: S.ui.music, apply: setMusic },
   ] as const;
@@ -2412,7 +2446,7 @@ function installHeaderToggles() {
     const btn = document.getElementById(t.id)!;
     const render = () => {
       const on = settings[t.key];
-      btn.innerHTML = icon(on ? t.on : t.off);
+      btn.innerHTML = `${icon(on ? t.on : t.off)}${toolLabel(t.key)}`;
       btn.setAttribute('aria-pressed', String(on));
       btn.title = t.label(on);
       btn.setAttribute('aria-label', t.label(on));
@@ -2475,7 +2509,7 @@ async function main() {
   });
   document.getElementById('disclaimer')!.textContent = S.ui.disclaimer;
   document.getElementById('version')!.textContent = S.ui.version(VERSION);
-  document.getElementById('sheet-btn')!.innerHTML = icon('scroll');
+  document.getElementById('sheet-btn')!.innerHTML = `${icon('scroll')}${toolLabel('sheet')}`;
   document.getElementById('home-btn')!.innerHTML = `${icon('home')}<span>${S.ui.homeShort}</span>`;
   document.getElementById('home-btn')!.title = S.ui.home;
   document.getElementById('home-btn')!.setAttribute('aria-label', S.ui.home);
@@ -2495,9 +2529,13 @@ async function main() {
     )
       .map(([tab, kanji]) => navItem(kanji, S.profile.tabs[tab], `data-profile="${tab}"`))
       .join('');
-  document.getElementById('history-btn')!.innerHTML = icon('book');
+  document.getElementById('history-btn')!.innerHTML = `${icon('book')}${toolLabel('history')}`;
 
   installTooltips();
+  for (const [k, v] of Object.entries(uiTextureVars())) document.documentElement.style.setProperty(k, v);
+  installSideNav();
+  installQuoteStrip();
+  installSceneRatios();
   await loadFonts();
 
   if (LAB.lab) document.getElementById('version')!.textContent += ` · ${S.lab.badge}`;
@@ -2506,7 +2544,8 @@ async function main() {
   if (LAB.lab) for (;;) if ((await untilHome(labFlow())) === HOME) leftToMenu();
   for (;;) {
     const round = async () => {
-      if ((await modeScreen()) === 'jornada') return runJornada(jornadaHost);
+      const pick = await modeScreen();
+      if (pick !== 'roleta') return runJornada(jornadaHost, { resume: pick === 'jornada-continue' });
       await ensurePlayerName();
       await originScreen();
       await runCampaign();
@@ -2536,8 +2575,16 @@ function leftToMenu() {
 }
 
 /** Tela inicial: Roleta (rápido, tudo na sorte) ou Jornada (lento, com controle). */
-async function modeScreen(): Promise<'roleta' | 'jornada'> {
+async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-continue'> {
+  // A barra lateral pediu um modo de dentro de uma run: abre direto nele.
+  if (pendingMode) {
+    const m = pendingMode;
+    pendingMode = null;
+    markNav(m);
+    return m;
+  }
   const M = S.jornada.modes;
+  const D = S.ui.desk;
   // No Portão da Vila não há run: some o botão do menu e o da Ficha.
   camp = null;
   campLive = false;
@@ -2547,30 +2594,172 @@ async function modeScreen(): Promise<'roleta' | 'jornada'> {
   const G = S.ui.gate;
   // Portão da Vila (docs/visual.md): destaque com citação, os modos em pergaminho com arte e a faixa de Conquistas.
   // A faixa usa data-profile (não data-choice): só abre a janela, não escolhe modo. O Registro fica na barra inferior.
-  const quote = G.quotes[Math.floor(Math.random() * G.quotes.length)]!;
-  const hero = sceneImage('portao');
+  // Dualidade (docs/visual.md): de dia o Naruto observa Konoha, à noite o Sasuke. As duas cenas, frases e selos ficam
+  // montados; o CSS mostra a do tema atual (data-theme) e troca devagar, como um amanhecer.
+  const DU = G.duality;
+  const pickQuote = (list: readonly { text: string; by: string }[]) => list[Math.floor(Math.random() * list.length)]!;
+  const day = sceneMedia('portao-dia') ?? sceneMedia('portao');
+  const night = sceneMedia('portao-noite') ?? day;
+  const hero = day || night ? `<span class="duo-layer duo-day">${day ?? ''}</span><span class="duo-layer duo-night">${night ?? ''}</span>` : null;
+  const duoQuote = (t: 'day' | 'night') => {
+    const q = pickQuote(DU[t].quotes);
+    return `<div class="duo-q duo-${t}"><p>${q.text}</p><cite>${q.by}</cite></div>`;
+  };
   const modeCard = (id: 'jornada' | 'roleta') => {
-    const art = sceneImage(`modo-${id}`);
-    return `<button class="parchment mode-card" data-choice="${id}"><span class="mode-art" aria-hidden="true">${art ? `<img src="${art}" alt="">` : emblem(id)}</span>
-      <span><b>${M[id].name}</b><small>${M[id].desc}</small></span>${icon('chevron')}</button>`;
+    const art = sceneMedia(`modo-${id}`);
+    return `<button class="parchment mode-card" data-choice="${id}"><span class="mode-art" aria-hidden="true">${art ?? emblem(id)}</span>
+      <span><b>${M[id].name}</b><small>${M[id].desc}</small><span class="mode-cta">${id === 'jornada' ? D.ctaJornadaNew : D.ctaRoleta} ${icon('chevron')}</span></span>${icon('chevron')}
+      <span class="scroll-roll l" aria-hidden="true"></span><span class="scroll-roll r" aria-hidden="true"></span><span class="seal mode-seal" aria-hidden="true">${id === 'jornada' ? '道' : '運'}</span></button>`;
   };
   const root = show(
     h(`<div class="screen jmodes gate">
-      <header class="gate-head">
-        <span class="gate-cloud l" aria-hidden="true">${cloud()}</span><span class="gate-cloud r" aria-hidden="true">${cloud()}</span>
-        <h1 class="logo">${S.ui.title.split(' ').map((w, i) => `<span class="l${i + 1}">${w}</span>`).join('')}</h1>
-      </header>
-      <div class="gate-hero" aria-hidden="true">${hero ? `<img src="${hero}" alt="">` : ''}</div>
-      <blockquote class="parchment gate-quote"><p>${quote.text}</p><cite>${quote.by}</cite></blockquote>
-      <p class="gate-sub">${M.title}</p>
-      <nav class="gate-modes">${modeCard('jornada')}${modeCard('roleta')}</nav>
-      <button class="scroll-banner" data-profile="achievements"><span class="seal gold" aria-hidden="true">功</span>
-        <span><b>${G.achievements}</b><small>${G.achievementsDesc}</small></span>${icon('chevron')}</button>
+      <div class="gate-main">
+        <div class="gate-banner">
+          <header class="gate-head">
+            <span class="gate-cloud l" aria-hidden="true">${cloud()}</span><span class="gate-cloud r" aria-hidden="true">${cloud()}</span>
+            <h1 class="logo">${S.ui.title.split(' ').map((w, i) => `<span class="l${i + 1}">${w}</span>`).join('')}</h1>
+            <p class="duo-tags"><span class="duo-tag duo-day">${DU.day.tag}</span><span class="duo-tag duo-night">${DU.night.tag}</span></p>
+          </header>
+          <div class="gate-hero duo" aria-hidden="true">${hero ?? ''}</div>
+          <blockquote class="parchment gate-quote">${duoQuote('day')}${duoQuote('night')}
+            <span class="seal duo-seal duo-day" aria-hidden="true">${DU.day.seal}</span><span class="seal duo-seal duo-night" aria-hidden="true">${DU.night.seal}</span></blockquote>
+        </div>
+        <p class="gate-sub">${M.title}</p>
+        <nav class="gate-modes">${modeCard('jornada')}${modeCard('roleta')}</nav>
+        <button class="scroll-banner" data-profile="achievements"><span class="seal gold" aria-hidden="true">功</span>
+          <span><b>${G.achievements}</b><small>${G.achievementsDesc}</small></span>${icon('chevron')}</button>
+      </div>
+      <aside class="gate-aside">${profileCard()}${progressSlot()}${recentCard()}</aside>
     </div>`),
   );
-  const pick = await choose<'roleta' | 'jornada'>(root);
+  // A barra lateral escolhe o modo pelo mesmo botão do card enquanto o Início está na tela.
+  gateApi = { root };
+  root.querySelector('[data-desk-name]')?.addEventListener('change', (e) => setPlayerName((e.target as HTMLInputElement).value));
+  markNav('home');
+  const pick = await choose<'roleta' | 'jornada' | 'continue'>(root);
+  gateApi = null;
   document.body.classList.remove('at-gate');
-  return pick;
+  markNav(pick === 'roleta' ? 'roleta' : 'jornada');
+  return pick === 'continue' ? 'jornada-continue' : pick;
+}
+
+// ---------------------------------------------------------------------------
+// Casca do PC (docs/visual.md, "Celular e desktop"): barra lateral persistente, Início em painéis, Registro em
+// popup e a faixa de frases no pé. No celular nada disto aparece (o CSS esconde a partir de 900px).
+
+type NavId = 'home' | 'jornada' | 'roleta' | RegistryPage;
+const NAV_ICONS: Record<NavId, string> = { home: 'home', jornada: 'scroll', roleta: 'dice', history: 'book', bingo: 'card', relics: 'sparkle', achievements: 'medal' };
+const REGISTRY_PAGES: RegistryPage[] = ['history', 'bingo', 'relics', 'achievements'];
+
+/** Modo pedido pela barra lateral de dentro de uma run: o próximo Portão abre direto nele. */
+let pendingMode: 'roleta' | 'jornada' | null = null;
+/** Início aberto (só existe enquanto o Portão está na tela). */
+let gateApi: { root: HTMLElement } | null = null;
+
+function markNav(id: NavId): void {
+  document.querySelectorAll<HTMLElement>('#side-nav [data-nav]').forEach((b) => {
+    if (b.dataset.nav === id) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
+  });
+}
+
+function installSideNav(): void {
+  const D = S.ui.desk;
+  const nav = document.getElementById('side-nav')!;
+  nav.setAttribute('aria-label', D.navLabel);
+  const item = (id: NavId) => `<button type="button" data-nav="${id}">${icon(NAV_ICONS[id])}<span>${D.nav[id]}</span></button>`;
+  nav.innerHTML = `<span class="side-brand seal" aria-hidden="true">忍</span>${(['home', 'jornada', 'roleta'] as const).map(item).join('')}<hr>${REGISTRY_PAGES.map(item).join('')}`;
+  nav.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-nav]');
+    if (!b) return;
+    const id = b.dataset.nav as NavId;
+    // O Registro abre em popup em qualquer tela (a de trás fica intacta).
+    if (id !== 'home' && id !== 'jornada' && id !== 'roleta') return openRegistry(id);
+    // No Início: o modo é escolhido pelo mesmo botão do card.
+    if (gateApi) {
+      if (id !== 'home') gateApi.root.querySelector<HTMLElement>(`[data-choice="${id}"]`)?.click();
+      return;
+    }
+    const inJornada = document.body.classList.contains('mode-jornada');
+    if ((id === 'jornada' && inJornada) || (id === 'roleta' && !inJornada)) return;
+    const text = inJornada && jornadaSheet ? S.ui.homeConfirmJornada : !inJornada && camp && campLive ? S.ui.homeConfirmRoleta : null;
+    if (text && !window.confirm(text)) return;
+    pendingMode = id === 'home' ? null : id;
+    goHome();
+  });
+}
+
+/** Faixa de frases no pé (PC): uma frase sorteada, trocando a cada 20 s. */
+function installQuoteStrip(): void {
+  const el = document.getElementById('quote-strip')!;
+  const quotes = S.ui.gate.quotes;
+  let last = -1;
+  const next = () => {
+    let i = Math.floor(Math.random() * quotes.length);
+    if (quotes.length > 1 && i === last) i = (i + 1) % quotes.length;
+    last = i;
+    el.classList.remove('in');
+    void el.offsetWidth;
+    el.innerHTML = `“${quotes[i]!.text}” <cite>${quotes[i]!.by}</cite>`;
+    el.classList.add('in');
+  };
+  next();
+  setInterval(next, 20_000);
+}
+
+/** Ficha do perfil (coluna direita do Início): nome, avatar padrão e números do perfil. */
+function profileCard(): string {
+  const D = S.ui.desk;
+  const runs = loadRuns(storage).filter((r) => r.status !== 'reroll');
+  const wins = runs.filter((r) => r.status === 'victory').length;
+  const cycles = runs.filter((r) => r.fights !== undefined).map((r) => (r.cycle ?? 0) + 1);
+  const best = profile.jornada?.generic ?? null;
+  const counted = achievements.filter((a) => !a.legacy).length + jornadaAchievements.length;
+  const rows: [string, string][] = [
+    [D.stats.roletaRuns, String(runs.length)],
+    [D.stats.roletaWins, String(wins)],
+    [D.stats.bestCycle, cycles.length ? String(Math.max(...cycles)) : D.none],
+    [D.stats.jornada, best ? S.jornada.start.best(best.cycle, best.stage, best.won) : D.none],
+    [D.stats.achievements, `${Object.keys(profile.achievements).length}/${counted}`],
+    [D.stats.villains, String(Object.keys(profile.villains).length)],
+    [D.stats.relics, String(Object.keys(profile.relics).length)],
+  ];
+  return `<section class="parchment desk-profile"><span class="desk-pin" aria-hidden="true">${icon('kunai')}</span>
+    <h3>${D.profileTitle}</h3>
+    <div class="desk-id"><span${tip(D.profileTitle, D.avatarSoon)}>${ninjaPortrait('common', false, 'md')}</span>
+      <label class="field"><span>${S.ui.playerName.label}</span><input type="text" data-desk-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${D.namePlaceholder}" value="${esc(profile.playerName ?? '')}"></label></div>
+    <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+  </section>`;
+}
+
+/** Progresso da Jornada na coluna direita, com o selo carimbado no canto ('' sem run salva). */
+function progressSlot(): string {
+  const card = jornadaProgressCard(storage);
+  return card ? `<div class="desk-prog">${card}<span class="seal desk-seal" aria-hidden="true">巻</span></div>` : '';
+}
+
+/** Conquistas recentes (coluna direita do Início), com o atalho para a página. */
+function recentCard(): string {
+  const recent = jornadaHost.recentAchievements(3);
+  if (!recent.length) return '';
+  const J = S.jornada.start;
+  return `<section class="parchment jrecent desk-recent"><h3>${J.recentTitle} <button type="button" class="btn small desk-all" data-profile="achievements">${S.ui.desk.seeAll} ${icon('chevron')}</button></h3><ul>${recent
+    .map((a) => `<li><span class="seal" aria-hidden="true">功</span><span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><time>${J.when(a.days)}</time></li>`)
+    .join('')}</ul></section>`;
+}
+
+/** Estatística por dificuldade (filtro do Histórico): runs, vitórias, % e o melhor ciclo do Roleta. */
+function difficultyStats(): string {
+  const D = S.ui.desk;
+  const runs = loadRuns(storage).filter((r) => r.status !== 'reroll');
+  return `<ul class="history">${DIFFICULTIES.map((d) => {
+    const mine = runs.filter((r) => r.difficulty === d);
+    if (!mine.length) return `<li><div class="row between"><b>${S.difficulty[d].name}</b><small class="muted">${D.diffEmpty}</small></div></li>`;
+    const wins = mine.filter((r) => r.status === 'victory').length;
+    const cycles = mine.filter((r) => r.fights !== undefined).map((r) => (r.cycle ?? 0) + 1);
+    return `<li><div class="row between"><b>${S.difficulty[d].name}</b><b>${S.profile.winRate(Math.round((wins / mine.length) * 100))}</b></div>
+      <small class="muted">${D.diffLine(mine.length, wins)}${cycles.length ? ` · ${D.diffBest(Math.max(...cycles))}` : ''}</small></li>`;
+  }).join('')}</ul>`;
 }
 
 function setPlayerName(raw: string): void {

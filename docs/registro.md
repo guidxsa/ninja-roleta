@@ -44,6 +44,10 @@ Orientação do usuário: a interface deve parecer parte do universo ([visual.md
 
 **v0.56.0** (pedido do usuário, com referências): volta a paleta antiga (Sumi e Pergaminho com dia/noite); saem as três cores. O Portão e a entrada da Jornada ganham a estrutura dos mockups (pergaminho rasgado, nuvens, letra manuscrita, citação, cards com arte, barra inferior, progresso e conquistas recentes) e vagas para ilustrações do usuário; a liberação de arte oficial passa a valer também para elas. `journeyProgress` no core só lê a run. Simulações antes → depois idênticas, linha a linha (mesmos comandos).
 
+## Dualidade Naruto e Sasuke (v0.58.0, 08/11/2026)
+
+Pedido do usuário: a dualidade Naruto/Sasuke como eixo da identidade. Decidido com ele: 4 arcos (conteúdo novo conferido com o mangá e apresentado), `sasuke.webp` como arte do Vale do Fim, campanha do Sasuke só em arquitetura e design doc. Feito: Portão dia/noite (Naruto e Sasuke), mapa único de artes `SCENE_ART`, faixa de arcos, campanhas (`CampaignDef`) e migração do save. Decidido sem ele, para revisar ([decisoes.md](decisoes.md) item 19): o evento Itachi e Kisame, o descanso Pousada de Tanzaku e o Kabuto como chefe. Simulação (300 runs, seed 2), vitória antes → depois: Fácil 100 → 100%, Médio 92 → 92%, Difícil 58 → 59%, Hardcore 50 → 51%.
+
 ## Rodadas antigas
 
 Última rodada concluída: "rebalanceamento das origens"

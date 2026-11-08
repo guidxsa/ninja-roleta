@@ -35,6 +35,15 @@ O jogo tem dois modos, escolhidos na tela inicial:
 - **Caminho Ninja**: protagonista de uma classe de origem com o elemento escolhido ou sorteado ([classes.md](classes.md)), mapa ramificado, encontros diferentes com a mesma dificuldade; 2 suportes com classe (entre as liberadas) e nome sorteados ([caminho-ninja.md](caminho-ninja.md)). Vencido, segue no **modo infinito**: de volta ao estágio 1 com os inimigos mais fortes a cada ciclo ([run.md](run.md#modo-infinito)).
 - Um personagem nunca é protagonista e suporte na mesma run.
 
+## Campanhas
+
+A História é organizada em **campanhas** (`CampaignDef` em `src/core/jornada/data.ts`, dados em `src/data/jornada/campaigns.ts`). Cada campanha é a perspectiva de um personagem, com seus arcos em ordem, e se liga ao dia ou à noite da identidade visual. Combate, loja, relíquias, talentos e eventos são os mesmos para todas; muda o que se conta e como.
+
+- **Naruto** (dia): a única jogável, em 4 arcos ([historia.md](historia.md)).
+- **Sasuke** (noite): em design ([historia-sasuke.md](historia-sasuke.md)).
+- Fluxo de entrada: a entrada da Jornada tem os cards **Modo História** (abre a escolha da perspectiva: Naruto ou Sasuke, em breve) e **Caminho Ninja** (abre a preparação: classe e elemento); o Progresso continua a run salva direto ([visual.md](../visual.md#entrada-da-jornada)).
+- A run guarda a campanha (`campaign`; sem ela, Naruto) e lê os arcos por `storyStages`. Shippuden entra como campanhas novas, sem sistema novo.
+
 ## Perfil e conquistas
 
 - O perfil é um só para os dois modos ([perfil.md](../base/perfil.md)); a aba Conquistas tem a categoria Jornada.

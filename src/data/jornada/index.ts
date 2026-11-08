@@ -7,6 +7,7 @@ import { enemiesById } from './enemies';
 import { eventsById } from './events';
 import { relics } from './relics';
 import { stages } from './stages';
+import { campaigns } from './campaigns';
 import { talents } from './talents';
 import { generic } from './generic';
 import { elementLines, jTechniquesById } from './techniques';
@@ -20,6 +21,7 @@ export const jornadaData: JornadaData = {
   enemies: enemiesById,
   stageTechniques,
   stages,
+  campaigns,
   talents,
   relics,
   events: eventsById,

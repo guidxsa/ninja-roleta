@@ -1,4 +1,4 @@
-import { heroMovable, MOVESET_SIZE, type JRun } from '../core/jornada/run';
+import { heroMovable, MOVESET_SIZE, STORY_ARCS, storyStages, type JRun } from '../core/jornada/run';
 import { jornadaData } from '../data/jornada';
 import { RELIC_RENAMES } from '../data/jornada/relics';
 import { jTechniquesById } from '../data/jornada/techniques';
@@ -13,6 +13,8 @@ const STARTER_RELIC = 'irukaHeadband';
 const STARTER_EVOLVED = 'firstHokageNecklace';
 /** História: em que parada de cada estágio ficava o mercador, antes de a loja ficar sempre aberta (v0.50.0). */
 const OLD_SHOP_STOPS = [6, 6, 3];
+/** História: as paradas do antigo 3º estágio ("Busca e resgate"), que virou os arcos Sannin e Vale do Fim (v0.58.0). */
+const OLD_RETRIEVAL_STOPS = ['rasenganTraining', 'tanzaku', 'kabuto', 'hospital', 'sasukeLeft', 'soundAmbush', 'jirobo', 'treasure3', 'kidomaruTayuya', 'sakon', 'kimimaro', 'rest3', 'valley'];
 
 /** Troca os ids de relíquia que mudaram (v0.43.0: iniciais novas e o Talismã da Vontade do Fogo). */
 export const renameRelicIds = (ids: readonly string[]) => [...new Set(ids.map((id) => RELIC_RENAMES[id] ?? id))];
@@ -49,7 +51,7 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     const cycle = typeof run.cycle === 'number' ? run.cycle : 0;
     const unlocks = Array.isArray(run.unlocks) ? run.unlocks : [];
     const loaded: JRun = { ...legacy, ...run, cycle, unlocks, learned: known(run.learned ?? []), moveset: known(run.moveset ?? []), cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
-    return withoutStaleElements(withoutShopStops(loaded, run.shopPurchases === undefined));
+    return withoutStaleElements(inFourArcs(withoutShopStops(loaded, run.shopPurchases === undefined)));
   } catch {
     return null;
   }
@@ -76,6 +78,23 @@ function withoutShopStops(run: JRun, old: boolean): JRun {
     map: { ...next.map, nodes: next.map.nodes.map((n) => (isShop(n.kind) ? { ...n, kind: 'fight' as const } : n)) },
     ...(left ? { nodeId: null, path: [...next.path, current.id], stopIndex: next.stopIndex + 1 } : {}),
   };
+}
+
+/**
+ * O 3º estágio da História virou dois arcos (v0.58.0). Quem estava nele vai para a mesma parada, achada pelo id, no Sannin
+ * ou no Vale do Fim.
+ */
+function inFourArcs(run: JRun): JRun {
+  if (run.mode === 'generic' || run.storyArcs === STORY_ARCS) return { ...run, storyArcs: run.mode === 'generic' ? run.storyArcs : STORY_ARCS };
+  const next: JRun = { ...run, storyArcs: STORY_ARCS };
+  if (run.stageIndex < 2) return next;
+  const id = OLD_RETRIEVAL_STOPS[Math.min(run.stopIndex, OLD_RETRIEVAL_STOPS.length - 1)]!;
+  const stages = storyStages(run, jornadaData);
+  for (let stageIndex = 2; stageIndex < stages.length; stageIndex++) {
+    const stopIndex = stages[stageIndex]!.stops.findIndex((s) => s.id === id);
+    if (stopIndex >= 0) return { ...next, stageIndex, stopIndex };
+  }
+  return next;
 }
 
 /**

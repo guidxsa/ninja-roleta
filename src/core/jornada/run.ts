@@ -56,6 +56,10 @@ export interface JRun {
   bossPlan: number[];
   seed: number;
   difficulty: Difficulty;
+  /** História: campanha (perspectiva) da run; ausente = a do Naruto. */
+  campaign?: string;
+  /** História: 4 = trilha em quatro arcos (v0.58.0). Ausente = save de quando Sannin e Vale do Fim eram um estágio só. */
+  storyArcs?: number;
   stageIndex: number;
   /** História: parada da trilha. Caminho Ninja: quantos nós já fez no estágio. */
   stopIndex: number;
@@ -131,6 +135,8 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     bossPlan: [],
     seed,
     difficulty,
+    campaign: 'naruto',
+    storyArcs: STORY_ARCS,
     stageIndex: 0,
     stopIndex: 0,
     ryo: 0,
@@ -280,10 +286,14 @@ export const cycleEnemyMult = (run: JRun, data: JornadaData) => data.j.infinite.
 // ---------------------------------------------------------------------------
 // Estágio e parada
 
+/** Versão da trilha da História: Ondas, Exame, Sannin e Vale do Fim (v0.58.0). */
+export const STORY_ARCS = 4;
+
 /** Estágio da História (no Caminho Ninja, `genericStage`). */
-export const currentStage = (run: JRun, data: JornadaData) => data.stages[run.stageIndex]!;
+export const storyStages = (run: Pick<JRun, 'campaign'>, data: JornadaData) => data.campaigns[run.campaign ?? 'naruto']?.stages ?? data.stages;
+export const currentStage = (run: JRun, data: JornadaData) => storyStages(run, data)[run.stageIndex]!;
 export const genericStage = (run: JRun, data: JornadaData) => data.generic.stages[run.stageIndex]!;
-export const stageCount = (run: JRun, data: JornadaData) => (run.mode === 'generic' ? data.generic.stages.length : data.stages.length);
+export const stageCount = (run: JRun, data: JornadaData) => (run.mode === 'generic' ? data.generic.stages.length : storyStages(run, data).length);
 export const stageId = (run: JRun, data: JornadaData) => (run.mode === 'generic' ? genericStage(run, data).id : currentStage(run, data).id);
 export const stageScene = (run: JRun, data: JornadaData) => (run.mode === 'generic' ? genericStage(run, data).scene : currentStage(run, data).scene);
 /** Suportes das lutas comuns do estágio. */
@@ -303,8 +313,9 @@ export function journeyProgress(run: JRun, data: JornadaData): number {
     const rows = run.map?.rows ?? 1;
     return Math.min(1, (run.stageIndex + Math.min(run.path.length, rows) / rows) / stageCount(run, data));
   }
-  const total = data.stages.reduce((n, s) => n + s.stops.length, 0);
-  const done = data.stages.slice(0, run.stageIndex).reduce((n, s) => n + s.stops.length, 0) + run.stopIndex;
+  const stages = storyStages(run, data);
+  const total = stages.reduce((n, s) => n + s.stops.length, 0);
+  const done = stages.slice(0, run.stageIndex).reduce((n, s) => n + s.stops.length, 0) + run.stopIndex;
   return Math.min(1, done / total);
 }
 
@@ -688,8 +699,8 @@ function advanceStop(run: JRun, data: JornadaData): void {
   if (run.stopIndex < currentStage(run, data).stops.length) return;
   run.stageIndex++;
   run.stopIndex = 0;
-  if (run.stageIndex >= data.stages.length) {
-    run.stageIndex = data.stages.length - 1;
+  if (run.stageIndex >= storyStages(run, data).length) {
+    run.stageIndex = storyStages(run, data).length - 1;
     run.stopIndex = currentStage(run, data).stops.length - 1;
     run.status = 'victory';
   }

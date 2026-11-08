@@ -101,7 +101,9 @@ body.at-gate #home-btn, body:not(.at-gate) .brand, body:not(.has-sheet) #sheet-b
   background: var(--scene-art) center 34px / 100% auto no-repeat, var(--scene);
   -webkit-mask: linear-gradient(transparent, #000 24%, #000 70%, transparent); mask: linear-gradient(transparent, #000 24%, #000 70%, transparent);
 }
-.gate-hero img { width: 100%; height: 100%; object-fit: cover; object-position: center 35%; display: block; }
+/* Invólucro das cenas (imagem ou vídeo, art.ts sceneMedia): não muda o layout. */
+.scene-media { display: contents; }
+.gate-hero :is(img, video) { width: 100%; height: 100%; object-fit: cover; object-position: center 35%; display: block; }
 .gate-quote {
   margin: -62px 0 0; width: min(86%, 380px); align-self: flex-start; transform: rotate(-1.5deg); padding: 14px 18px 12px;
 }
@@ -135,7 +137,7 @@ body.at-gate #home-btn, body:not(.at-gate) .brand, body:not(.has-sheet) #sheet-b
     radial-gradient(60% 54% at 58% 60%, color-mix(in srgb, var(--art) 34%, transparent), transparent 100%);
 }
 .mode-art .emblem { width: 64px; height: 64px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.mode-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; -webkit-mask: linear-gradient(90deg, #000 70%, transparent); mask: linear-gradient(90deg, #000 70%, transparent); }
+.mode-art :is(img, video) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; -webkit-mask: linear-gradient(90deg, #000 70%, transparent); mask: linear-gradient(90deg, #000 70%, transparent); }
 .mode-card b { display: block; font: 700 31px/1 var(--font-hand); color: var(--title-ink); }
 .mode-card small { display: block; margin-top: 4px; color: var(--paper-muted); font-size: 14px; line-height: 1.35; }
 .mode-card > .ico { width: 26px; height: 26px; color: var(--paper-ink); transition: transform var(--dur-2) var(--ease); }
@@ -163,3 +165,41 @@ body.at-gate .gate-nav {
 @media (min-width: 900px) {
   body.mode-jornada .jmodes { max-width: 620px; margin: 0 auto; width: 100%; }
 }
+
+.tool-label { display: none; }
+
+/* Barra superior no PC: cada ícone com o nome ao lado e os grupos espalhados. */
+@media (min-width: 1280px) {
+  .top-actions { gap: 18px; }
+  .tool-group { gap: 6px; }
+  .tool-group + .tool-group { padding-left: 16px; }
+  .top-actions .btn.small { gap: 6px; padding: 0 10px; }
+  .tool-label { display: inline; font: 600 12px/1 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; }
+}
+
+/*
+ * Dualidade do Portão (docs/visual.md): de dia o Naruto observa Konoha, à noite o Sasuke. As duas versões (cena, frase,
+ * selo e legenda) ficam montadas e o tema (data-theme) escolhe; a troca é lenta, um amanhecer, não um piscar de tema.
+ * Enquadramento: o Naruto fica à direita da arte do dia e o Sasuke à esquerda da noite (um espelha o outro).
+ */
+.duo-day, .duo-night { transition: opacity var(--dur-dawn) ease-in-out, visibility 0s linear var(--dur-dawn); }
+.duo-day, :root[data-theme='light'] .duo-night { opacity: 0; visibility: hidden; }
+:root[data-theme='light'] .duo-day, :root:not([data-theme='light']) .duo-night { opacity: 1; visibility: visible; transition: opacity var(--dur-dawn) ease-in-out, visibility 0s; }
+@media (prefers-reduced-motion: reduce) { .duo-day, .duo-night { transition: none; } }
+.gate-hero.duo { --pos-day: 64% 62%; --pos-night: 30% 58%; }
+/* Com arte, sai o desenho de Konoha do fundo; a cena do dia fica sempre por baixo, opaca, e só a noite entra e sai por
+   cima. Assim nenhum quadro da troca fica sem imagem (antes as duas ficavam meio transparentes e o desenho aparecia). */
+.gate-hero.duo:has(img, video) { background: none; }
+.duo-layer { position: absolute; inset: 0; }
+.gate-hero .duo-layer.duo-day { opacity: 1; visibility: visible; transition: none; }
+.gate-hero .duo-layer.duo-night { visibility: visible; transition: opacity var(--dur-dawn) ease-in-out; }
+.gate .gate-hero .duo-day :is(img, video) { object-position: var(--pos-day); }
+.gate .gate-hero .duo-night :is(img, video) { object-position: var(--pos-night); }
+/* Noite: a cena é escura; um véu leve atrás do logo e da frase segura a leitura. */
+.gate-hero .duo-night::after { content: ''; position: absolute; inset: 0; background: radial-gradient(70% 90% at 20% 20%, rgba(5, 8, 20, .45), transparent 70%); pointer-events: none; }
+/* Frase da vez: as duas no mesmo lugar, uma some enquanto a outra aparece. */
+.gate-quote { display: grid; position: relative; }
+.gate-quote .duo-q { grid-area: 1 / 1; }
+.gate-quote .duo-seal { --s: 30px; position: absolute; right: -10px; top: -12px; rotate: 6deg; }
+.duo-tags { display: grid; margin: 8px 0 0; }
+.duo-tag { grid-area: 1 / 1; font: 700 15px/1.1 var(--font-hand); color: var(--text); text-shadow: 0 1px 2px color-mix(in srgb, var(--bg) 80%, transparent); text-align: center; }

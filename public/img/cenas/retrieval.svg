@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" width="240" height="160">
+  <!-- Imagem provisória (gerada): troque por uma ilustração com o mesmo nome e apague este .svg. -->
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9d6a3"/><stop offset="1" stop-color="#6f9a4f"/></linearGradient></defs>
+  <rect width="240" height="160" fill="url(#s)"/>
+  <path d="M0 115 C43 93 77 106 120 96 S197 88 240 106 V160 H0z" fill="#3c5a2a" fill-opacity=".55"/>
+  <path d="M0 134 C60 122 144 138 240 125 V160 H0z" fill="#3c5a2a" fill-opacity=".85"/>
+  <text x="120.0" y="80" font-size="13" text-anchor="middle" fill="#fff8e8" font-family="sans-serif" font-weight="700">img/cenas/retrieval</text>
+</svg>

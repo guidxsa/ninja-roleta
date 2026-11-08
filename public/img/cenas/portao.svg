@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 760" width="1600" height="760">
+  <!-- Imagem provisória (gerada): troque por uma ilustração com o mesmo nome e apague este .svg. -->
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2c27a"/><stop offset="1" stop-color="#d98a3a"/></linearGradient></defs>
+  <rect width="1600" height="760" fill="url(#s)"/>
+  <path d="M0 547 C288 441 512 502 800 456 S1312 418 1600 502 V760 H0z" fill="#6b4a2e" fill-opacity=".55"/>
+  <path d="M0 638 C400 578 960 654 1600 593 V760 H0z" fill="#6b4a2e" fill-opacity=".85"/>
+  <text x="800.0" y="380" font-size="47" text-anchor="middle" fill="#fff8e8" font-family="sans-serif" font-weight="700">img/cenas/portao</text><text x="800.0" y="441" font-size="29" text-anchor="middle" fill="#fff8e8" fill-opacity=".85" font-family="sans-serif">troque por uma imagem sua (mesmo nome, .webp, .png ou .jpg)</text>
+</svg>

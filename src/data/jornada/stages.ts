@@ -44,14 +44,24 @@ export const stages: StageDef[] = [
     ],
   },
   {
+    id: 'sannin',
+    // Busca pela Tsunade (vol. 16 a 19): Itachi em Konoha, o treino do Rasengan, Tanzaku e o Kabuto.
+    team: ['jiraiya'],
+    scene: 'forest',
+    stops: [
+      { kind: 'event', id: 'itachiKisame', scene: 'konoha', event: 'itachiKisame' },
+      { kind: 'event', id: 'rasenganTraining', event: 'rasenganTraining' },
+      { kind: 'rest', id: 'rest4' },
+      { kind: 'story', id: 'tanzaku', enemies: ['orochimaru', 'kabuto'], team: ['jiraiya', 'tsunade'] },
+      { kind: 'boss', id: 'kabuto', enemies: ['kabuto'], team: [] },
+    ],
+  },
+  {
     id: 'retrieval',
-    // Equipe de resgate do mangá (Shikamaru, Chōji, Kiba, Neji); cada parada leva quem estava lá.
+    // Vale do Fim: do hospital ao Vale. Equipe de resgate do mangá (Shikamaru, Chōji, Kiba, Neji); cada parada leva quem estava lá.
     team: ['shikamaru', 'choji'],
     scene: 'valley',
     stops: [
-      { kind: 'event', id: 'rasenganTraining', event: 'rasenganTraining' },
-      { kind: 'story', id: 'tanzaku', enemies: ['orochimaru', 'kabuto'], team: ['jiraiya', 'tsunade'] },
-      { kind: 'story', id: 'kabuto', enemies: ['kabuto'], team: [] },
       {
         kind: 'story',
         id: 'hospital',

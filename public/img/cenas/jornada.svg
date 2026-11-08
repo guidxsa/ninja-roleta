@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 520" width="1600" height="520">
+  <!-- Imagem provisória (gerada): troque por uma ilustração com o mesmo nome e apague este .svg. -->
+  <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0b56a"/><stop offset="1" stop-color="#c9783a"/></linearGradient></defs>
+  <rect width="1600" height="520" fill="url(#s)"/>
+  <path d="M0 374 C288 302 512 343 800 312 S1312 286 1600 343 V520 H0z" fill="#5c3d24" fill-opacity=".55"/>
+  <path d="M0 437 C400 395 960 447 1600 406 V520 H0z" fill="#5c3d24" fill-opacity=".85"/>
+  <text x="800.0" y="260" font-size="47" text-anchor="middle" fill="#fff8e8" font-family="sans-serif" font-weight="700">img/cenas/jornada</text><text x="800.0" y="321" font-size="29" text-anchor="middle" fill="#fff8e8" fill-opacity=".85" font-family="sans-serif">troque por uma imagem sua (mesmo nome, .webp, .png ou .jpg)</text>
+</svg>

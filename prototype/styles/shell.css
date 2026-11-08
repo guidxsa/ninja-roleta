@@ -1,0 +1,254 @@
+/*
+ * Casca do PC (docs/visual.md, "Celular e desktop"): barra lateral persistente à esquerda, Início em painéis (destaque e
+ * modos no centro, ficha do perfil, progresso e conquistas à direita), páginas do Registro na área central e a faixa de
+ * frases no pé. Composição inspirada numa referência do usuário; a identidade é a do jogo (tokens, pergaminho, madeira).
+ * No celular nada disto aparece: o Portão segue em pilha, com a barra inferior.
+ */
+.side-nav, .gate-aside, .quote-strip, .mode-cta { display: none; }
+.gate-main, .gate-banner { display: contents; }
+
+@media (min-width: 900px) {
+  :root { --side-w: 92px; }
+  body { padding-left: var(--side-w); }
+
+  /* Barra lateral: tábua escura de madeira, peça de cor fixa como a barra inferior do Portão. */
+  .side-nav {
+    position: fixed; z-index: 7; left: 0; top: 0; bottom: 0; width: var(--side-w);
+    display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 10px 8px; overflow-y: auto;
+    background: var(--grain-dark), var(--tex-wood, none) 0 0 / 220px auto, linear-gradient(180deg, #2b1a10, #1a110a); background-blend-mode: normal, multiply, normal; border-right: 2px solid #4a2f1c;
+    box-shadow: inset -1px 0 0 rgba(255, 222, 170, .08);
+  }
+  .side-brand { --s: 46px; align-self: center; margin: 2px 0 12px; }
+  .side-nav hr { width: 60%; margin: 8px auto; border: 0; border-top: 1px solid rgba(255, 222, 170, .18); }
+  .side-nav button {
+    display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 4px; border: 1px solid transparent; background: none;
+    color: #cbbf9f; cursor: pointer; font: 600 11px/1.1 var(--font-hud); letter-spacing: .05em; text-transform: uppercase; text-align: center;
+  }
+  .side-nav button .ico { width: 24px; height: 24px; }
+  .side-nav button:hover, .side-nav button:focus-visible { color: #fff; background: rgba(255, 222, 170, .06); outline: none; }
+  .side-nav button:focus-visible { box-shadow: inset 0 0 0 1px #dcbd78; }
+  .side-nav button[aria-current] {
+    color: #ffd88a; border-color: #b5671f; box-shadow: inset 3px 0 0 #b5161f;
+    background: linear-gradient(180deg, rgba(232, 112, 26, .28), rgba(232, 112, 26, .1));
+  }
+  /* O Menu da barra superior sai (a barra lateral tem o Início); a barra inferior do Portão é só do celular. */
+  #home-btn { display: none !important; }
+  body.at-gate { padding-bottom: 0; }
+  body.at-gate .gate-nav { display: none; }
+
+  /* Rodapé: frase sorteada à esquerda; o aviso de projeto de fã e a versão à direita, pequenos. */
+  footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; max-width: var(--shell-max); padding: 8px 24px 12px; text-align: left; }
+  .quote-strip { display: block; flex: 1; min-width: 0; margin: 0; font: 400 16px/1.3 var(--font-hand); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; }
+  .quote-strip.in { opacity: 1; animation: quoteIn .7s var(--ease); }
+  .quote-strip cite { margin-left: 8px; font-size: 14px; font-style: normal; color: var(--muted); }
+  .quote-strip cite::before { content: '\2014  '; }
+  .foot-legal { flex: none; text-align: right; }
+
+  /* Início: cabe na janela; centro trocável (Início ou uma página do Registro) e coluna direita. */
+  body.at-gate main, body.at-gate .top { max-width: var(--shell-max); padding-left: 24px; padding-right: 24px; }
+  body.at-gate .top::after { left: 24px; }
+  body.at-gate:has(.gate) { height: 100dvh; }
+  body.at-gate:has(.gate) main { display: flex; flex-direction: column; min-height: 0; }
+  .gate {
+    flex: 1 1 0; min-height: 440px; display: grid; gap: 16px clamp(16px, 1.6vw, 32px); padding-top: 0;
+    grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 440px); grid-template-areas: 'main aside';
+  }
+  .gate-main { grid-area: main; display: grid; grid-template-rows: minmax(0, 1fr) auto auto; gap: 12px; min-height: 0; }
+  .gate-aside {
+    grid-area: aside; display: flex; flex-direction: column; gap: 14px; min-height: 0; overflow-y: auto; padding: 2px 4px 6px;
+    scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
+  }
+
+  /* Destaque: a imagem do Portão (img/cenas/portao) cobre a moldura; logo e citação por cima. */
+  .gate-banner {
+    display: block; position: relative; isolation: isolate; overflow: hidden; min-height: 200px;
+    border: 2px solid #4a2f1c; box-shadow: inset 0 0 0 1px rgba(255, 222, 170, .12), 0 6px 0 rgba(0, 0, 0, .22);
+  }
+  .gate-banner .gate-hero { position: absolute; inset: 0; z-index: -1; margin: 0; height: auto; -webkit-mask: none; mask: none; }
+  .gate-banner .gate-hero :is(img, video) { object-position: center 40%; }
+  .gate-banner::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(90deg, rgba(16, 10, 5, .45), transparent 60%); }
+  .gate-banner .gate-head { position: absolute; left: clamp(20px, 3vw, 52px); top: clamp(14px, 3vh, 40px); align-items: flex-start; padding: 0; }
+  .gate-banner .logo { font-size: clamp(54px, min(6vw, 10vh), 124px); text-align: left; }
+  .gate-banner .gate-quote { position: absolute; left: clamp(20px, 3vw, 52px); bottom: clamp(14px, 3vh, 34px); width: min(48%, 540px); margin: 0; }
+  .gate-sub { margin: 0; }
+
+  /* Modos lado a lado: a arte maior à esquerda e o botão de ação embaixo do texto. */
+  .gate-modes { flex-direction: row; gap: clamp(14px, 1.6vw, 28px); }
+  .gate-modes .mode-card { flex: 1 1 0; grid-template-columns: clamp(110px, 12vw, 210px) minmax(0, 1fr); min-height: clamp(128px, 18vh, 210px); }
+  .gate-modes .mode-card > .ico { display: none; }
+  .mode-cta {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 8px 14px;
+    background: var(--primary); color: var(--primary-ink); font: 700 13px/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase;
+  }
+  .mode-cta .ico { width: 15px; height: 15px; color: currentColor; }
+  .gate .scroll-banner { display: none; }
+
+  /* Coluna direita: ficha do perfil, progresso da Jornada e conquistas recentes, em pergaminho. */
+  .gate-aside > .parchment h3 { margin: 0 0 8px; font: 700 21px/1.1 var(--font-hand); }
+  .desk-id { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+  .desk-id > span { flex: none; }
+  .desk-id .field { flex: 1; min-width: 0; }
+  .desk-profile dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0; }
+  .desk-profile dt { color: var(--muted); font-size: 13.5px; }
+  .desk-profile dd { margin: 0; text-align: right; font: 700 14px/1.4 var(--font-hud); letter-spacing: .03em; }
+  .desk-recent h3 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .desk-all { min-height: 0; padding: 4px 8px; font-size: 12px; }
+  .desk-all .ico { width: 13px; height: 13px; }
+
+  /* A barra superior usa a largura do jogo em todos os modos (o Roleta ainda centraliza o conteúdo em 520px). */
+  .top { max-width: var(--shell-max); padding-left: 24px; padding-right: 24px; }
+  .top::after { left: 24px; }
+  .top-actions { margin-left: auto; }
+}
+
+@keyframes quoteIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .quote-strip.in { animation: none; } }
+
+/*
+ * Direção de arte do Início no PC (pedido do usuário): menos caixas, mais composição. A ilustração é a cena, com a borda
+ * dissolvida em tinta; os modos são pergaminhos com rolos que sobem sobre ela, com a arte saindo do papel e um selo
+ * costurando imagem e texto; a coluna direita é uma pilha de pergaminhos presa por uma kunai. Só desenho próprio e tokens
+ * (madeira e metal são peças de cor fixa, como prevê o visual.md).
+ */
+.scroll-roll, .mode-seal, .desk-pin, .desk-seal { display: none; }
+@media (min-width: 900px) {
+  :root {
+    /* Pincelada (a mesma do logo) e borda de tinta irregular para as ilustrações. */
+    --brush: var(--tex-brush, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 40' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='300' height='40' fill='white'/%3E%3Cpath d='M40 10h110M70 31h150M180 9h70M20 28h30M120 33h90M240 30h40' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/mask%3E%3C/defs%3E%3Cpath mask='url(%23m)' d='M6 22C40 8 110 4 170 6s100 4 126 12c-6 10-40 16-100 17S50 36 12 34C2 32 0 26 6 22z'/%3E%3C/svg%3E"));
+    --ink-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M2 5C10 1 22 6 35 2S60 5 72 1 92 5 98 2L99 30C97 45 100 60 98 75L97 92C85 97 70 92 55 97S28 92 15 98 4 94 1 96L2 70C0 55 3 40 1 25Z'/%3E%3C/svg%3E");
+  }
+  .gate { position: relative; isolation: isolate; }
+  /* Vinheta: as peças flutuam sobre o papel da página. */
+  .gate::before { content: ''; position: absolute; inset: -14px -24px; z-index: -2; pointer-events: none; background: radial-gradient(closest-side, transparent 70%, rgba(60, 35, 15, .14) 92%, transparent 100%); }
+
+  /* Cena: sem moldura; a imagem se dissolve em tinta nas bordas e some embaixo, sob os pergaminhos. */
+  .gate-banner { overflow: visible; border: 0; box-shadow: none; min-height: 240px; }
+  .gate-banner::after { content: none; }
+  .gate-banner .gate-hero {
+    -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat, linear-gradient(#000 62%, transparent 100%);
+    -webkit-mask-composite: source-in; mask: var(--ink-edge) center / 100% 100% no-repeat, linear-gradient(#000 62%, transparent 100%); mask-composite: intersect;
+  }
+  .gate-banner .gate-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, rgba(16, 10, 5, .5), transparent 55%); }
+  .gate-banner .gate-cloud.l { left: -46px; top: -6px; width: 120px; }
+  .gate-banner .gate-cloud.r { right: -96px; top: 40%; width: 110px; }
+  /* Citação: pergaminho preso à direita, cruzando a borda da cena. */
+  .gate-banner .gate-quote { left: auto; right: calc(-1 * clamp(10px, 1.2vw, 24px)); bottom: auto; top: clamp(18px, 7vh, 70px); width: min(38%, 440px); rotate: 2deg; z-index: 2; filter: drop-shadow(3px 6px 4px rgba(0, 0, 0, .3)); }
+  .gate-sub { display: none; }
+
+  /* Modos: pergaminhos desenrolados que sobem sobre a cena. */
+  .gate-modes { position: relative; z-index: 3; margin-top: calc(-1 * clamp(56px, 10vh, 120px)); padding: 0 18px; gap: clamp(26px, 3vw, 56px); }
+  .gate-modes .mode-card {
+    /* --art-h: altura da arte (sai do papel por cima); --art-col: largura da coluna, pela proporção da imagem. */
+    --art-lift: clamp(34px, 6vh, 62px); --art-h: clamp(150px, 22vh, 260px); --art-col: clamp(130px, 14vw, 240px);
+    padding: 14px 28px 16px 26px; overflow: visible; filter: drop-shadow(2px 7px 5px rgba(0, 0, 0, .3));
+    grid-template-columns: var(--art-col) minmax(0, 1fr); column-gap: 22px; min-height: calc(var(--art-h) - var(--art-lift));
+  }
+  .gate-modes .mode-card:has(.mode-art > .scene-media) { --art-col: min(calc(var(--art-h) * var(--ratio, .8)), 50%); }
+  .gate-modes .mode-art > .scene-media :is(img, video) { top: auto; height: auto; aspect-ratio: var(--ratio, .8); max-height: calc(100% + var(--art-lift) + 6px); }
+  .gate-modes .mode-card:nth-child(1) { rotate: -1.2deg; }
+  .gate-modes .mode-card:nth-child(2) { rotate: .8deg; }
+  .scroll-roll { display: block; position: absolute; z-index: 1; pointer-events: none; border-radius: 9px; box-shadow: 1px 2px 0 rgba(0, 0, 0, .35); }
+  .mode-card .scroll-roll { top: -10px; bottom: -10px; width: 20px; background: var(--tex-wood, none) center / cover, linear-gradient(90deg, #24150a, #6a4527 18%, #d4a466 42%, #8a5d34 62%, #2e1c0f); background-blend-mode: multiply, normal; }
+  .mode-card .scroll-roll.l { left: -8px; }
+  .mode-card .scroll-roll.r { right: -8px; }
+  /* A arte sai do papel por cima e se funde nele, sem moldura. */
+  .gate-modes .mode-art { overflow: visible; background: none; align-self: stretch; }
+  .gate-modes .mode-art :is(img, video) {
+    inset: auto -10px -6px -8px; width: calc(100% + 18px); height: max(var(--art-h), calc(100% + var(--art-lift) + 6px));
+    -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat, linear-gradient(90deg, #000 72%, transparent 100%); -webkit-mask-composite: source-in;
+    mask: var(--ink-edge) center / 100% 100% no-repeat, linear-gradient(90deg, #000 72%, transparent 100%); mask-composite: intersect;
+  }
+  .gate-modes .mode-art .emblem { width: clamp(64px, 8vw, 110px); height: clamp(64px, 8vw, 110px); }
+  .mode-seal { display: inline-grid; position: absolute; z-index: 2; --s: 40px; top: 10px; left: calc(var(--art-col) + 6px); rotate: -8deg; }
+  .gate-modes .mode-card b { font-size: clamp(30px, 2.6vw, 42px); padding-left: 34px; }
+  /* Ação: pincelada vermelha no lugar do botão retangular. */
+  .mode-cta {
+    padding: 11px 28px 12px 24px; margin-top: 12px; background: var(--primary); white-space: nowrap;
+    -webkit-mask: var(--brush) center / 100% 100% no-repeat; mask: var(--brush) center / 100% 100% no-repeat;
+  }
+
+  /* Coluna direita: pilha de pergaminhos levemente desalinhados, um sobre o outro. */
+  .gate-aside { gap: 0; padding: 16px 10px 10px 4px; }
+  .gate-aside > * { position: relative; filter: drop-shadow(2px 6px 4px rgba(0, 0, 0, .28)); }
+  .gate-aside > * + * { margin-top: -6px; }
+  .gate-aside > :nth-child(1) { rotate: -.7deg; z-index: 3; }
+  .gate-aside > :nth-child(2) { rotate: .6deg; z-index: 2; }
+  .gate-aside > :nth-child(3) { rotate: -.4deg; z-index: 1; }
+  .gate-aside > .parchment h3, .desk-prog .parchment h3 { position: relative; padding-bottom: 9px; }
+  .gate-aside > .parchment h3::after, .desk-prog .parchment h3::after {
+    content: ''; position: absolute; left: -4px; bottom: 0; width: 92px; height: 7px; background: var(--accent); opacity: .85;
+    -webkit-mask: var(--brush) center / 100% 100% no-repeat; mask: var(--brush) center / 100% 100% no-repeat;
+  }
+  /* Kunai cravada no alto da ficha; selo carimbado no progresso. */
+  .desk-pin { display: block; position: absolute; z-index: 4; top: -26px; left: 44%; width: 48px; height: 48px; rotate: 128deg; color: #4b5260; filter: drop-shadow(1px 2px 0 rgba(0, 0, 0, .35)); }
+  .desk-pin .ico { width: 100%; height: 100%; }
+  .desk-prog { position: relative; }
+  .desk-seal { display: inline-grid; position: absolute; z-index: 2; --s: 34px; top: 12px; right: 16px; rotate: 9deg; opacity: .92; }
+  .desk-prog .jprogress h3 { padding-right: 46px; }
+  /* A miniatura do capítulo sai do pergaminho, colada torta. */
+  .gate-aside .jthumb { rotate: 4deg; translate: 16px -4px; box-shadow: 3px 5px 0 rgba(0, 0, 0, .28); }
+  /* Avatar num medalhão de madeira. */
+  .desk-id > span .portrait { border-radius: 50%; border: 0; box-shadow: 0 0 0 4px #6a4527, 0 0 0 6px #3f2715, 3px 6px 0 6px rgba(0, 0, 0, .25); }
+
+  /* Faixa de frases: um traço de pincel abre a frase. */
+  .quote-strip::before { content: ''; display: inline-block; width: 30px; height: 6px; margin-right: 10px; vertical-align: middle; background: var(--accent); -webkit-mask: var(--brush) center / 100% 100% no-repeat; mask: var(--brush) center / 100% 100% no-repeat; }
+}
+
+/*
+ * Registro em popup (um padrão só, no PC e no celular): pergaminho vertical com rolos em cima e embaixo, uma seção por vez.
+ * O papel é o envelhecido da casca; a textura img/ui/papel entra por cima quando existir.
+ */
+.modal-body.registry {
+  --surface: #e7d3a6; --surface-2: rgba(255, 255, 255, .25); --surface-3: rgba(36, 25, 15, .08);
+  --line: rgba(36, 25, 15, .28); --line-strong: rgba(36, 25, 15, .5);
+  --text: #1a1008; --muted: #4a3620; --title-shadow: none;
+  --gold: #7d5d1f; --gold-2: #684c15; --good: #30692c; --bad: #9e2a21; --leaf: #4f7a35;
+  position: relative; display: flex; flex-direction: column; overflow: visible; max-height: 86vh; padding: 24px 22px 26px; border: 0; color: var(--text);
+  background:
+    var(--tex-paper, none) center / cover,
+    radial-gradient(130% 120% at 50% 45%, transparent 56%, rgba(120, 70, 25, .3) 82%, rgba(60, 32, 10, .62) 100%),
+    radial-gradient(26% 30% at 84% 18%, rgba(150, 100, 45, .2), transparent 70%),
+    radial-gradient(22% 28% at 12% 82%, rgba(150, 100, 45, .18), transparent 70%),
+    var(--grain-dark), var(--grain-dark), #dcc391;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+}
+.registry .modal-head h2 { font: 700 28px/1.1 var(--font-hand); }
+.registry .profile-body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.registry .scroll-roll {
+  display: block; position: absolute; z-index: 1; left: -12px; right: -12px; height: 20px; border-radius: 10px; pointer-events: none;
+  background: var(--tex-wood, none) center / cover, linear-gradient(180deg, #24150a, #6a4527 18%, #d4a466 42%, #8a5d34 62%, #2e1c0f); background-blend-mode: multiply, normal;
+  box-shadow: 0 3px 4px rgba(0, 0, 0, .4);
+}
+.registry .scroll-roll.t { top: -11px; }
+.registry .scroll-roll.b { bottom: -11px; }
+.registry .desk-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 0 12px; }
+.registry .desk-filters .btn.seg { background: transparent; border-color: transparent; border-bottom: 2px solid var(--line); }
+.registry .desk-filters .btn.seg[aria-pressed='true'] { background: rgba(255, 245, 220, .45); border-color: var(--line-strong); border-bottom-color: var(--accent); }
+@media (min-width: 900px) {
+  .modal:has(.registry) { align-items: center; }
+  .modal-body.registry { max-width: 860px; padding: 30px 34px 32px; }
+  /* No PC o nome fica na Ficha do Início. */
+  .registry .reg-name { display: none; }
+  /* Página com textura (img/ui/fundo), por baixo do grão. */
+  body { background-image: var(--grain), var(--tex-page, none), radial-gradient(ellipse 120% 80% at 50% 0%, var(--bg-2) 0%, var(--bg) 70%); }
+
+  /* Papel envelhecido nos pergaminhos do Início: mais quente, queimado nas bordas, com manchas; tinta mais escura. */
+  .gate .parchment { --paper: #dcc391; --paper-2: #c9a96c; --paper-ink: #1a1008; --paper-muted: #4a3620; }
+  .gate .parchment::before {
+    background:
+      var(--tex-paper, none) center / cover,
+      radial-gradient(130% 150% at 50% 45%, transparent 48%, rgba(120, 70, 25, .32) 76%, rgba(60, 32, 10, .66) 100%),
+      radial-gradient(28% 34% at 82% 22%, rgba(150, 100, 45, .24), transparent 70%),
+      radial-gradient(22% 30% at 14% 80%, rgba(150, 100, 45, .22), transparent 70%),
+      radial-gradient(16% 20% at 58% 64%, rgba(120, 80, 35, .16), transparent 70%),
+      var(--grain-dark), var(--grain-dark), var(--paper);
+  }
+}
+
+/* Dualidade no PC: a legenda acompanha o logo, à esquerda. */
+@media (min-width: 900px) {
+  /* O logo fica sobre a arte nos dois temas: a primeira linha clara com sombra, e uma sombra de tinta atrás do canto. */
+  .gate-banner .logo .l1 { color: #f3e6c8; text-shadow: 0 2px 6px rgba(0, 0, 0, .85), 0 0 2px rgba(0, 0, 0, .9); }
+  .gate-banner .gate-hero.duo::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(42% 46% at 16% 22%, rgba(16, 10, 5, .5), transparent 100%); }
+  .gate-banner .duo-tag { text-align: left; font-size: clamp(15px, 1.1vw, 20px); color: #f3e6c8; text-shadow: 0 1px 3px rgba(0, 0, 0, .8); }
+}

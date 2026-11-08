@@ -533,6 +533,29 @@ export const ptBR = {
       achievements: 'Conquistas',
       achievementsDesc: 'Veja seu progresso e o que falta desbloquear.',
       // Frases no espírito da obra (paráfrases curtas), sorteadas a cada visita ao Portão.
+      // Dualidade do Portão: de dia, o Naruto e quem acredita nele; à noite, o Sasuke e o que o move. Nenhum dos dois é o lado "bom".
+      duality: {
+        day: {
+          tag: 'Dia · Naruto observa Konoha',
+          seal: '陽',
+          quotes: [
+            { text: 'Eu não volto atrás na minha palavra. Esse é o meu jeito ninja!', by: 'Naruto Uzumaki' },
+            { text: 'Um dia eu vou ser Hokage, e todo mundo vai me reconhecer!', by: 'Naruto Uzumaki' },
+            { text: 'Eu vou trazer o Sasuke de volta. É uma promessa para a vida toda.', by: 'Naruto Uzumaki' },
+            { text: 'Ninguém sabe a dor de ficar sozinho como eu sei.', by: 'Naruto Uzumaki' },
+          ],
+        },
+        night: {
+          tag: 'Noite · Sasuke observa Konoha',
+          seal: '影',
+          quotes: [
+            { text: 'O que eu tenho não é um sonho, porque eu vou torná-lo realidade.', by: 'Sasuke Uchiha' },
+            { text: 'Eu não sou como você. Eu perdi tudo de uma vez.', by: 'Sasuke Uchiha' },
+            { text: 'Você se tornou meu melhor amigo. Por isso mesmo.', by: 'Sasuke Uchiha' },
+            { text: 'Odeie-me, amaldiçoe-me. E sobreviva, agarrado à vida.', by: 'Itachi Uchiha' },
+          ],
+        },
+      },
       quotes: [
         { text: 'Eu não volto atrás na minha palavra. Esse é o meu jeito ninja!', by: 'Naruto Uzumaki' },
         { text: 'Quem abandona os amigos é pior que lixo.', by: 'Kakashi Hatake' },
@@ -565,8 +588,36 @@ export const ptBR = {
     history: 'Histórico',
     back: 'Voltar',
     instant: (on: boolean) => (on ? 'Instantâneo: ligado' : 'Instantâneo: desligado'),
+    animated: (on: boolean) => (on ? 'Cenas animadas: ligado' : 'Cenas animadas: desligado (Leve: imagens paradas)'),
     themeDay: 'Modo dia',
     themeNight: 'Modo noite',
+    // Nomes curtos ao lado dos ícones da barra, só no PC (no celular a barra mostra só os ícones).
+    toolLabels: { instant: 'Instantâneo', animated: 'Animado', theme: 'Tema', sfx: 'Efeitos', music: 'Música', sheet: 'Ficha', history: 'Registro' },
+    // Casca do PC (docs/visual.md, "Celular e desktop"): barra lateral, Início em painéis e páginas do Registro.
+    desk: {
+      nav: { home: 'Início', jornada: 'Jornada', roleta: 'Roleta', history: 'Histórico', bingo: 'Livro Bingo', relics: 'Relíquias', achievements: 'Conquistas' },
+      navLabel: 'Navegação',
+      profileTitle: 'Ficha do ninja',
+      namePlaceholder: 'Registre seu nome',
+      avatarSoon: 'Avatar editável: em breve.',
+      stats: {
+        roletaRuns: 'Runs no Roleta',
+        roletaWins: 'Vitórias no Roleta',
+        bestCycle: 'Melhor ciclo',
+        jornada: 'Caminho Ninja',
+        achievements: 'Conquistas',
+        villains: 'Livro Bingo',
+        relics: 'Relíquias vistas',
+      },
+      none: '—',
+      ctaJornadaNew: 'Jogar',
+      ctaRoleta: 'Girar agora',
+      seeAll: 'Ver todas',
+      filters: { general: 'Geral', origins: 'Origens', difficulty: 'Dificuldade' },
+      diffLine: (runs: number, wins: number) => `${runs} ${runs === 1 ? 'run' : 'runs'} · ${wins} ${wins === 1 ? 'vitória' : 'vitórias'}`,
+      diffBest: (cycle: number) => `Melhor ciclo: ${cycle}`,
+      diffEmpty: 'Nenhuma run nesta dificuldade.',
+    },
     sfx: (on: boolean) => (on ? 'Efeitos sonoros: ligados' : 'Efeitos sonoros: desligados'),
     music: (on: boolean) => (on ? 'Música: ligada' : 'Música: desligada'),
     fight: 'Lutar',

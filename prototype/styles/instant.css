@@ -3,6 +3,7 @@
   --dur-1: 40ms;
   --dur-2: 60ms;
   --dur-3: 90ms;
+  --dur-dawn: 90ms;
 }
 :root[data-instant] .screen { animation: none; }
 :root[data-instant] .bar .fill, :root[data-instant] .bar .bar-trail { transition-duration: .12s; transition-delay: 0s; }

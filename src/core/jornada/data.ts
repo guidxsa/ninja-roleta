@@ -7,6 +7,18 @@ import type { GenericDef, StageDef } from './trail';
 import type { TalentNode } from './talents';
 import type { CharacterDef, EnemyDef, JTechnique } from './types';
 
+/**
+ * Uma campanha da História: a perspectiva de um personagem, com seus arcos (estágios) em ordem. Os sistemas são os
+ * mesmos para todas; muda o que se conta e como (docs/jornada/README.md#campanhas). `time` liga a campanha ao dia ou
+ * à noite da identidade visual.
+ */
+export interface CampaignDef {
+  id: string;
+  perspective: 'naruto' | 'sasuke';
+  time: 'day' | 'night';
+  stages: StageDef[];
+}
+
 /** Pacote de dados que o core da Jornada recebe por parâmetro (nunca importa os dados diretamente). */
 export interface JornadaData {
   /** `balance` do jogo: acerto, crítico, penetração e dificuldade são os mesmos do Roleta. */
@@ -18,7 +30,9 @@ export interface JornadaData {
   enemies: Record<string, EnemyDef>;
   /** Técnicas que um aliado ganha ao chegar no estágio (índice do estágio). */
   stageTechniques: Record<string, Record<number, string[]>>;
+  /** Arcos da campanha do Naruto (o mesmo que `campaigns.naruto.stages`). */
   stages: StageDef[];
+  campaigns: Record<string, CampaignDef>;
   talents: TalentNode[];
   relics: RelicDef[];
   events: Record<string, EventDef>;

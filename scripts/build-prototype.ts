@@ -11,7 +11,7 @@ import { join, relative } from 'node:path';
 
 const IMG_DIR = 'public/img';
 const MUSIC_FILE = 'public/audio/naruto_theme.mp3';
-const IMAGE_EXT = /\.(webp|png|jpe?g|svg)$/i;
+const IMAGE_EXT = /\.(webp|png|jpe?g|svg|webm|mp4)$/i;
 
 function listImages(dir: string): string[] {
   if (!existsSync(dir)) return [];

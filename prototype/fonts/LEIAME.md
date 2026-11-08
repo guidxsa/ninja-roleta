@@ -18,7 +18,7 @@ Todas sob a SIL Open Font License 1.1 (`OFL-YujiBoku.txt`; as outras trazem a li
 baixe o recorte de novo (o Google Fonts gera o arquivo com o parâmetro `text=`):
 
 ```
-運忍道録歴功手配族戦勝敗商休宝遺才修報火水風雷土体幻医術子丑寅卯辰巳午未申酉戌亥油天地謎強将話縁試賞昇装薬巻金具籍
+運忍道録歴功手配族戦勝敗商休宝遺才修報火水風雷土体幻医術子丑寅卯辰巳午未申酉戌亥油天地謎強将話縁試賞昇装薬巻金具籍陽影一二三四史
 ```
 
 ```bash

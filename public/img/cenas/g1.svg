@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" width="240" height="160">
+  <!-- Arte simples provisória do estágio 1 do Caminho Ninja (Terras de ninguém): estrada vazia entre colinas ao entardecer. Troque por uma ilustração com o mesmo nome. -->
+  <defs>
+    <linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d9a0"/><stop offset=".6" stop-color="#e8a868"/><stop offset="1" stop-color="#c77a45"/></linearGradient>
+  </defs>
+  <rect width="240" height="160" fill="url(#c)"/>
+  <circle cx="172" cy="62" r="20" fill="#fff1cf" fill-opacity=".85"/>
+  <path d="M0 96 C30 80 62 84 92 90 S150 72 186 80 240 86 240 86 V160 H0z" fill="#8a5a3a" fill-opacity=".55"/>
+  <path d="M0 116 C44 102 90 112 132 104 S206 100 240 110 V160 H0z" fill="#5e3b26" fill-opacity=".8"/>
+  <path d="M104 160 C112 140 120 124 126 112 L132 112 C134 126 146 142 168 160z" fill="#d9b27a" fill-opacity=".75"/>
+  <g stroke="#2e1d12" stroke-width="2" stroke-linecap="round" fill="none">
+    <path d="M38 118 V96"/><path d="M38 100 l-8 -6 M38 104 l8 -7"/>
+    <path d="M206 112 V94"/><path d="M206 98 l-7 -5 M206 102 l7 -6"/>
+  </g>
+  <g fill="#2e1d12"><path d="M58 52 l6 3 l6 -3 l-6 1z"/><path d="M82 44 l5 2.5 l5 -2.5 l-5 1z"/></g>
+</svg>

@@ -61,6 +61,8 @@ import {
   shopOffer,
   stopRng,
   stopScene,
+  stageCount,
+  storyStages,
   journeyProgress,
   syncUnlocks,
   talentContext,
@@ -123,7 +125,7 @@ function dummy(over: Partial<FighterSeed> = {}): FighterSeed {
 
 const setup = (over: Partial<BattleSetup> = {}): BattleSetup => ({ allies: [hero()], enemies: [dummy()], win: { kind: 'defeatAll' }, ...over });
 
-describe('equipe de resgate (estágio 3 da História)', () => {
+describe('equipe de resgate (estágio 4 da História, Vale do Fim)', () => {
   const stage = data.stages.find((s) => s.id === 'retrieval')!;
   const team = (id: string) => {
     const stop = stage.stops.find((s) => s.id === id)!;
@@ -137,7 +139,9 @@ describe('equipe de resgate (estágio 3 da História)', () => {
     expect(team('sakon')).toEqual(['kibaAlly', 'nejiAlly']);
     expect(stage.team).not.toContain('jiraiya');
     expect(stage.team).not.toContain('sakura');
-    expect(team('tanzaku')).toEqual(['jiraiya', 'tsunade']);
+    const sannin = data.stages.find((s) => s.id === 'sannin')!;
+    const tanzaku = sannin.stops.find((s) => s.id === 'tanzaku')!;
+    expect(isFight(tanzaku) && tanzaku.team).toEqual(['jiraiya', 'tsunade']);
   });
 
   it('todos têm ficha, nome e técnicas com nome', () => {
@@ -152,8 +156,8 @@ describe('equipe de resgate (estágio 3 da História)', () => {
   });
 
   it('o HUD mostra quem luta na próxima parada da História', () => {
-    const run = { ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 0 };
-    expect(nextFightTeam(run, data)).toEqual(['jiraiya', 'tsunade']);
+    expect(nextFightTeam({ ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 0 }, data)).toEqual(['jiraiya', 'tsunade']);
+    const run = { ...newRun(1, 'normal', data), stageIndex: 3, stopIndex: 0 };
     const ambush = stage.stops.findIndex((s) => s.id === 'soundAmbush');
     expect(nextFightTeam({ ...run, stopIndex: ambush }, data)).toEqual(['shikamaru', 'kibaAlly']);
   });
@@ -405,7 +409,8 @@ describe('cenário da parada', () => {
     });
     expect(stopScene(at(1, 'forest'), data)).toBe('deathForest');
     expect(stopScene(at(1, 'kiba'), data)).toBe('arena');
-    expect(stopScene(at(2, 'valley'), data)).toBe('valleyEnd');
+    expect(stopScene(at(3, 'valley'), data)).toBe('valleyEnd');
+    expect(stopScene(at(2, 'itachiKisame'), data)).toBe('konoha');
     expect(stopScene(at(0, 'zabuza'), data)).toBe('forest');
   });
 
@@ -418,14 +423,26 @@ describe('cenário da parada', () => {
 });
 
 describe('trilha da História', () => {
-  it('três estágios, cada um termina no chefe, com os confrontos do mangá na ordem', () => {
-    expect(data.stages.map((s) => s.stops.at(-1)!.kind)).toEqual(['boss', 'boss', 'boss']);
+  it('quatro arcos (Ondas, Exame, Sannin, Vale do Fim), cada um termina no chefe, com os confrontos do mangá na ordem', () => {
+    expect(data.stages.map((s) => s.id)).toEqual(['waves', 'exam', 'sannin', 'retrieval']);
+    expect(data.stages.map((s) => s.stops.at(-1)!.kind)).toEqual(['boss', 'boss', 'boss', 'boss']);
     const story = data.stages.map((s) => s.stops.filter((x) => x.kind === 'story' || x.kind === 'boss').map((x) => x.id));
     expect(story).toEqual([
       ['mizuki', 'bells', 'haku'],
       ['forest', 'kiba', 'neji', 'gaara'],
-      ['tanzaku', 'kabuto', 'hospital', 'kimimaro', 'valley'],
+      ['tanzaku', 'kabuto'],
+      ['hospital', 'kimimaro', 'valley'],
     ]);
+  });
+
+  it('campanhas: a do Naruto é a História de sempre, e a run nova e o save antigo caem nela', () => {
+    expect(data.campaigns.naruto!.stages).toBe(data.stages);
+    expect(data.campaigns.naruto!.time).toBe('day');
+    const run = newRun(1, 'normal', data);
+    expect(run.campaign).toBe('naruto');
+    expect(storyStages(run, data)).toBe(data.stages);
+    expect(storyStages({ campaign: undefined }, data)).toBe(data.stages);
+    expect(stageCount(run, data)).toBe(4);
   });
 
   it('toda parada aponta para dados que existem', () => {
@@ -944,7 +961,7 @@ describe('run da Jornada', () => {
     /** Save de antes da v0.50.0: sem os campos da loja. */
     const oldSave = (run: JRun) => {
       const s = storage();
-      const { shop: _s, shopPurchases: _p, ...old } = run;
+      const { shop: _s, shopPurchases: _p, storyArcs: _a, ...old } = run;
       s.mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
       return loadJornada(s)!;
     };
@@ -961,8 +978,31 @@ describe('run da Jornada', () => {
       expect(oldSave({ ...newRun(1, 'normal', data), stopIndex: 3 }).stopIndex).toBe(3);
       // Estágios 2 e 3.
       expect(data.stages[1]!.stops[oldSave({ ...newRun(1, 'normal', data), stageIndex: 1, stopIndex: 7 }).stopIndex]!.id).toBe(data.stages[1]!.stops[6]!.id);
-      expect(oldSave({ ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 2 }).stopIndex).toBe(2);
-      expect(oldSave({ ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 4 }).stopIndex).toBe(3);
+      // Antigo 3º estágio (hoje Sannin e Vale do Fim): o mercador saía depois do Kabuto.
+      const at = (r: JRun) => data.stages[r.stageIndex]!.stops[r.stopIndex]!.id;
+      expect(at(oldSave({ ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 2 }))).toBe('kabuto');
+      expect(at(oldSave({ ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 4 }))).toBe('hospital');
+    });
+
+    it('save da trilha em três estágios vai para a mesma parada nos quatro arcos', () => {
+      const s = storage();
+      const legacy = (stageIndex: number, stopIndex: number) => {
+        const { storyArcs: _a, ...old } = { ...newRun(1, 'normal', data), stageIndex, stopIndex };
+        s.mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+        const r = loadJornada(s)!;
+        return [r.stageIndex, data.stages[r.stageIndex]!.stops[r.stopIndex]!.id, r.storyArcs];
+      };
+      expect(legacy(2, 0)).toEqual([2, 'rasenganTraining', 4]);
+      expect(legacy(2, 1)).toEqual([2, 'tanzaku', 4]);
+      expect(legacy(2, 2)).toEqual([2, 'kabuto', 4]);
+      expect(legacy(2, 3)).toEqual([3, 'hospital', 4]);
+      expect(legacy(2, 12)).toEqual([3, 'valley', 4]);
+      // Estágios de antes não mudam.
+      expect(legacy(1, 5)).toEqual([1, data.stages[1]!.stops[5]!.id, 4]);
+      // Já na trilha nova: nada muda.
+      const fresh = { ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 3 };
+      saveJornada(s, fresh);
+      expect(loadJornada(s)).toEqual(fresh);
     });
 
     it('save antigo do mapa: mercador futuro vira luta e quem estava num segue adiante', () => {
