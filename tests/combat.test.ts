@@ -17,7 +17,7 @@ import {
 import { createPlayer, learnTechnique } from '../src/core/player';
 import { createRng } from '../src/core/rng';
 import type { Origin } from '../src/core/types';
-import { gameData } from '../src/data/index';
+import { formulaData as gameData } from './helpers';
 import { villains } from '../src/data/villains';
 import { runBattle, MAX_ROUNDS } from '../src/sim/runner';
 import { battle, hold, seq, testVillain, withInitiative } from './helpers';

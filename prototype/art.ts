@@ -338,6 +338,12 @@ export const SCENE_ART: Record<string, string> = {
   'arco-retrieval': 'sasuke',
   // Caminho Ninja: card da entrada da Jornada e pôster da preparação (o Minato).
   'modo-caminho': 'caminho-ninja',
+  // Roleta no PC (todas opcionais; sem imagem, vale o cenário desenhado): palco do sorteio e uma por categoria de vilão.
+  'roleta': 'roleta',
+  'roleta-genin': 'roleta-genin',
+  'roleta-chunin': 'roleta-chunin',
+  'roleta-jounin': 'roleta-jounin',
+  'roleta-boss': 'roleta-chefe',
 };
 const sceneFile = (key: string): string => SCENE_ART[key] ?? key;
 
@@ -388,7 +394,7 @@ export const arcMedia = (stageId: string): string | null => sceneMedia(`arco-${s
  */
 export function installSceneRatios(): void {
   if (typeof document === 'undefined') return;
-  const HOSTS = '.mode-card, .gate-hero, .jc-panel, .jarc, .jarc-fan-i, .jthumb';
+  const HOSTS = '.mode-card, .gate-hero, .jc-panel, .jarc, .jarc-fan-i, .jthumb, .rmap-art, .rstage, .rarena-art';
   const mark = (el: HTMLElement, w: number, h: number) => {
     if (!w || !h) return;
     const host = el.closest<HTMLElement>(HOSTS) ?? el.parentElement;

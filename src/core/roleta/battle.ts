@@ -5,6 +5,8 @@ import { damage } from '../damage';
 import { critChance, hitChance, rollHit, type HitOutcome } from '../hit';
 import { rollInitiative, initiativeChance } from '../initiative';
 import { clamp, type Rng } from '../rng';
+import { cloneTakesHit } from '../clones';
+import { payGateUpkeep } from '../gates';
 import type { AttackType, ConsumableId, ResistanceKind, VillainDef, VillainTechnique } from '../types';
 import type { PlayerState } from '../player';
 import type { RoletaData } from './data';
@@ -41,6 +43,8 @@ export interface RVillain {
   cloakUsed: boolean;
   monster: boolean;
   revivesUsed: number;
+  /** Escudo de areia do vilão (natureza Areia): absorve dano antes do HP. */
+  shield: number;
 }
 
 export interface RPlayerFx {
@@ -49,6 +53,8 @@ export interface RPlayerFx {
   activeUses: number;
   /** Fortalecimento da ativa em andamento (turnos contando o da ativação). */
   buff: { kind: RActive; turns: number } | null;
+  /** Portões: rodadas já mantidas desde a abertura (a manutenção da próxima é a de número gateRounds + 1). */
+  gateRounds: number;
   guarding: boolean;
   /** Bomba de fumaça: esquiva garantida do próximo ataque. */
   dodgeNext: boolean;
@@ -59,6 +65,8 @@ export interface RPlayerFx {
   vitalUsed: boolean;
   /** Pena de fênix já usada nesta luta. */
   survivedOnce: boolean;
+  /** Clone do Bunshin ativo (no máximo 1). */
+  clone: boolean;
 }
 
 export type RAction = `tech:${string}` | 'guard' | 'rest' | `item:${ConsumableId}`;
@@ -66,8 +74,11 @@ export type RAction = `tech:${string}` | 'guard' | 'rest' | `item:${ConsumableId
 export type REvent =
   | { type: 'initiative'; playerFirst: boolean; chance: number; forced: boolean }
   | { type: 'round'; round: number }
+  | { type: 'clone'; side: Side; action: 'create' | 'block' }
+  | { type: 'gates'; action: 'upkeep'; cost: number }
+  | { type: 'gates'; action: 'close'; reason: 'manual' | 'chakra' }
   | { type: 'attack'; side: Side; techId: string; hitChance: number; critChance: number; outcome: HitOutcome; hits: number; auto?: boolean }
-  | { type: 'damage'; side: Side; amount: number; crit?: boolean; source: 'attack' | 'burn' | 'poison' | 'toad' | 'dog' | 'tag' | 'self' | 'gates' | 'opening' }
+  | { type: 'damage'; side: Side; amount: number; crit?: boolean; source: 'attack' | 'burn' | 'poison' | 'toad' | 'dog' | 'tag' | 'self' | 'opening' }
   | { type: 'shield'; side: Side; absorbed: number }
   | { type: 'heal'; side: Side; amount: number; source: string }
   | { type: 'effect'; side: Side; kind: REffectKind; turns: number }
@@ -127,6 +138,8 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
     cloakUsed: false,
     monster: false,
     revivesUsed: 0,
+    // Natureza Areia (jogador ou vilão): escudo de areia no começo da luta (`sandShieldPct`).
+    shield: def.kekkeiGenkai === 'sand' ? Math.floor(def.hp * b.sandShieldPct) : 0,
   };
   const s: RBattle = {
     player: { ...player, hp: Math.max(1, player.hp) },
@@ -135,6 +148,7 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
       effects: [],
       activeUses: kit.active ? b.kits.uses[kit.active] ?? 1 : 0,
       buff: null,
+      gateRounds: 0,
       guarding: false,
       dodgeNext: false,
       shield: player.kekkeiGenkai === 'sand' ? Math.floor(player.maxHp * b.sandShieldPct) : 0,
@@ -143,6 +157,7 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
       vitalTurns: 0,
       vitalUsed: false,
       survivedOnce: false,
+      clone: false,
     },
     round: 0,
     playerFirst: true,
@@ -280,6 +295,10 @@ export const canUseTechnique = (s: RBattle, t: RTechniqueDef, data: RoletaData) 
 
 export function canUseActive(s: RBattle, data: RoletaData): boolean {
   const kit = kitOf(s.player, data);
+  // Portões: abrir (com chakra para a abertura) ou fechar, uma vez por turno, quantas vezes quiser na luta.
+  if (kit.active === 'gates') {
+    return s.status === 'ongoing' && !s.activeUsed && (buff(s, 'gates') || (!s.fx.buff && s.player.chakra >= data.r.kits.gates.activation));
+  }
   return s.status === 'ongoing' && Boolean(kit.active) && s.fx.activeUses > 0 && !s.activeUsed && !s.fx.buff;
 }
 
@@ -289,6 +308,20 @@ export function useActive(prev: RBattle, data: RoletaData, rng: Rng): RBattle {
   const kind = kitOf(s.player, data).active!;
   const k = data.r.kits;
   s.activeUsed = true;
+  if (kind === 'gates') {
+    // Aberto: fecha. Fechado: paga a abertura; a manutenção começa na próxima rodada (src/core/gates.ts).
+    if (buff(s, 'gates')) {
+      s.fx.buff = null;
+      s.log.push({ type: 'gates', action: 'close', reason: 'manual' });
+      return s;
+    }
+    s.player.chakra -= k.gates.activation;
+    logChakra(s, 'player');
+    s.fx.buff = { kind, turns: 1 };
+    s.fx.gateRounds = 0;
+    s.log.push({ type: 'active', kind, success: true });
+    return s;
+  }
   s.fx.activeUses--;
   const timed = (turns: number) => (s.fx.buff = { kind, turns });
   switch (kind) {
@@ -311,13 +344,6 @@ export function useActive(prev: RBattle, data: RoletaData, rng: Rng): RBattle {
       timed(k.plague.turns);
       addEffect(s, 'villain', 'poison', data);
       break;
-    case 'gates': {
-      timed(k.gates.turns);
-      const cost = Math.floor(s.player.maxHp * k.gates.hpCostPct);
-      s.player.hp = Math.max(1, s.player.hp - cost);
-      s.log.push({ type: 'damage', side: 'player', amount: cost, source: 'gates' });
-      break;
-    }
     case 'shadow': {
       const ok = rng() < k.shadow.chance;
       s.log.push({ type: 'active', kind, success: ok, chance: k.shadow.chance });
@@ -382,13 +408,26 @@ function logChakra(s: RBattle, side: Side): void {
 function startOfRound(s: RBattle, data: RoletaData): void {
   const r = data.r;
   // Regeneração de chakra (sem texto no registro; só a barra sobe).
-  const regen = (max: number) => Math.max(r.chakraRegen.min, Math.floor(max * r.chakraRegen.pct));
+  const regen = (max: number, pct = r.chakraRegen.pct) => Math.max(r.chakraRegen.min, Math.floor(max * pct));
   const playerChakra = s.player.chakra;
   const villainChakra = s.villain.chakra;
   s.player.chakra = Math.min(s.player.maxChakra, s.player.chakra + regen(s.player.maxChakra));
-  s.villain.chakra = Math.min(s.villain.def.chakra, s.villain.chakra + regen(s.villain.def.chakra));
+  s.villain.chakra = Math.min(s.villain.def.chakra, s.villain.chakra + regen(s.villain.def.chakra, r.villainChakra.regenPct));
   if (s.player.chakra !== playerChakra) logChakra(s, 'player');
   if (s.villain.chakra !== villainChakra) logChakra(s, 'villain');
+  // Portões abertos: manutenção crescente; sem chakra para ela, fecham sozinhos.
+  if (buff(s, 'gates')) {
+    s.fx.gateRounds++;
+    const paid = payGateUpkeep(s.player.chakra, s.fx.gateRounds, data.base.balance.gateCosts);
+    if (paid) {
+      s.player.chakra = paid.chakra;
+      s.log.push({ type: 'gates', action: 'upkeep', cost: paid.cost });
+      logChakra(s, 'player');
+    } else {
+      s.fx.buff = null;
+      s.log.push({ type: 'gates', action: 'close', reason: 'chakra' });
+    }
+  }
   const kit = kitOf(s.player, data);
   // Senju: Força vital (1 vez por luta, abaixo do limiar).
   if (kit.passive === 'vitalForce' && !s.fx.vitalUsed && s.player.hp < s.player.maxHp * r.passives.vitalForce.belowPct) {
@@ -429,7 +468,8 @@ function openVillainCloak(s: RBattle): void {
 }
 
 function endOfRound(s: RBattle, data: RoletaData, rng: Rng): void {
-  if (s.fx.buff) {
+  // Os Portões não contam rodadas: ficam até fechar (à mão ou sem chakra).
+  if (s.fx.buff && s.fx.buff.kind !== 'gates') {
     s.fx.buff.turns--;
     if (s.fx.buff.turns <= 0) s.fx.buff = null;
   }
@@ -535,6 +575,12 @@ function useItem(s: RBattle, id: ConsumableId, data: RoletaData, rng: Rng): void
 }
 
 function playerAttack(s: RBattle, t: RTechniqueDef, data: RoletaData, rng: Rng): void {
+  // Bunshin no Jutsu: cria o clone (no máximo 1), sem roleta de acerto.
+  if (t.clone) {
+    s.fx.clone = true;
+    s.log.push({ type: 'clone', side: 'player', action: 'create' });
+    return;
+  }
   const odds = playerAttackOdds(s, t, data);
   const outcome = odds.auto ? (rng() < odds.crit ? 'crit' : 'hit') : rollHit(odds.hit, odds.crit, rng);
   const hits = t.hits ?? 1;
@@ -589,7 +635,7 @@ function villainTurn(s: RBattle, data: RoletaData, rng: Rng): void {
   const intent = v.intent ?? rollIntent(s, rng);
   const tech = intent.kind === 'tech' ? v.techniques.find((t) => t.id === intent.id) : undefined;
   if (!tech || tech.chakraCost > v.chakra) {
-    const amount = Math.min(v.def.chakra - v.chakra, Math.max(1, Math.floor(v.def.chakra * data.r.rest.chakraPct)));
+    const amount = Math.min(v.def.chakra - v.chakra, Math.max(1, Math.floor(v.def.chakra * data.r.villainChakra.restPct)));
     v.chakra += amount;
     s.log.push({ type: 'rest', side: 'villain', amount });
     return;
@@ -637,6 +683,12 @@ function villainAttack(s: RBattle, tech: VillainTechnique, data: RoletaData, rng
   if (v.counterCrit) v.counterCrit = false;
   s.log.push({ type: 'attack', side: 'villain', techId: tech.id, hitChance: odds.hit, critChance: odds.crit, outcome, hits });
   if (outcome === 'miss') return;
+  // Clone do Bunshin: o golpe (alvo único) pode cair nele; o clone some (src/core/clones.ts).
+  if (cloneTakesHit(s.fx.clone ? 1 : 0, true, data.base.balance.clones, rng)) {
+    s.fx.clone = false;
+    s.log.push({ type: 'clone', side: 'player', action: 'block' });
+    return;
+  }
   const kit = kitOf(s.player, data);
   // Genjutsu sem dano: só o efeito (Medo). Uchiha e jinchuuriki são imunes.
   if (tech.baseDamage <= 0) {
@@ -710,7 +762,14 @@ function hurtPlayer(s: RBattle, amount: number, source: 'attack' | 'burn' | 'poi
 /** Fere o vilão e resolve as passivas de queda (Enganador, Último fôlego, Shukaku, Insano). Devolve o dano causado. */
 function hurtVillain(s: RBattle, amount: number, source: 'attack' | 'burn' | 'poison' | 'toad' | 'dog' | 'tag' | 'self', data: RoletaData, rng: Rng, crit = false): number {
   const v = s.villain;
-  const n = Math.max(0, Math.min(v.hp, amount));
+  let left = amount;
+  if (v.shield > 0 && left > 0) {
+    const absorbed = Math.min(v.shield, left);
+    v.shield -= absorbed;
+    left -= absorbed;
+    s.log.push({ type: 'shield', side: 'villain', absorbed });
+  }
+  const n = Math.max(0, Math.min(v.hp, left));
   v.hp -= n;
   s.log.push({ type: 'damage', side: 'villain', amount: n, source, ...(crit ? { crit } : {}) });
   if (v.hp > 0) return n;

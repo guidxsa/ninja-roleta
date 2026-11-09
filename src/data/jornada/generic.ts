@@ -16,17 +16,16 @@ export const generic: GenericDef = {
       supports: ['leafGeninA', 'leafGeninB', 'leafMedic'],
       supportNames: ['daichi', 'hana', 'kenta', 'yui', 'sora', 'aiko', 'haruto', 'rin', 'takumi', 'mei', 'riku', 'nanami'],
     },
-    // Uchiha: fogo fixo e um segundo elemento sorteado (pode sair nenhum).
+    // Uchiha: sempre e só Fogo (v0.59.0; a mesma regra da origem do Roleta).
     {
       id: 'uchiha',
       hero: 'uchihaNinja',
       fixedElement: 'fire',
-      secondElement: true,
       unlock: 'j_unlockUchiha',
       supports: ['uchihaGenin', 'uchihaGeninB'],
       supportNames: ['ren', 'akane', 'hikaru', 'tetsu', 'kaede', 'ryo', 'suzu', 'jin', 'kiyomi', 'nao'],
     },
-    // Hyuuga: sem elemento (Byakugan e Punho Suave bastam).
+    // Hyuuga: natureza sorteada em silêncio, sem ninjutsu elemental (Byakugan e Punho Suave bastam; v0.59.0).
     {
       id: 'hyuuga',
       hero: 'hyuugaNinja',

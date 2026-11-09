@@ -54,6 +54,8 @@ O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype
 | `modo-jornada`, `modo-roleta` | os mesmos | Arte dos cards de modo | Emblema em aquarela |
 | `arco-waves`, `arco-exam`, `arco-sannin`, `arco-retrieval` | `waves`, `chunnin`, `sannin`, `sasuke` (a equipe do resgate) | Faixa de arcos da História e miniatura do card de progresso | Cenário do estágio |
 | `g1`, `g2`, `g3` | os mesmos | Miniatura do Caminho Ninja | Cenário do estágio |
+| `roleta` | (vazia) | Palco do sorteio da origem no PC | Cenário desenhado de Konoha |
+| `roleta-genin`, `roleta-chunin`, `roleta-jounin`, `roleta-boss` | `roleta-genin`, `roleta-chunin`, `roleta-jounin`, `roleta-chefe` (vazias) | Roleta no PC: painel do mapa do ciclo, palco das roletas e fundo da arena da luta, pela categoria da luta atual | Cenário desenhado: Konoha, arena, floresta, Vale do Fim |
 | `modo-caminho` | `caminho-ninja` (o Minato) | Card e pôster do Caminho Ninja | Retrato do ninja comum no card; a arte `jornada` no pôster |
 
 `sasuke2` (Itachi e Sasuke) está reservada para a campanha do Sasuke ([historia-sasuke.md](jornada/historia-sasuke.md)).
@@ -68,6 +70,18 @@ A dualidade é o eixo da identidade. O Portão mostra **o Naruto observando Kono
 - Leitura: o logo do PC fica claro com sombra nos dois temas, e há uma sombra de tinta no canto do logo.
 - Nenhum dos dois é o lado "bom". As falas mostram o que move cada um.
 - Animado: `dia.webm` e `noite.webm` viram as versões em vídeo sem mudar código.
+
+### Roleta no PC
+
+O Roleta tem composição própria no PC (`prototype/styles/roleta-desk.css`), nos moldes da Jornada, e cabe na janela; no celular nada muda.
+- **Sorteio da origem**: a roda no centro, sobre a arte `roleta`; com os resultados, a roda some e entram as opções centradas (a Ficha à esquerda; a Dificuldade, o Re-rolar e o Começar à direita). O botão Ficha da barra só aparece depois das roletas, para não entregar a classe.
+- **Outras telas de roleta** (evento, recompensa, nível, melhoria, aviso: `.rwheel`): a roda sozinha no centro, sobre a arte da vaga, sem a Ficha. Durante as roletas, o nome do evento fica como etiqueta no alto do palco; no fim, o resultado e as mudanças aparecem num popup sobre o palco, com **Ficha** (abre a janela) e a ação.
+- **Mapa do ciclo** (`.rmap`), em duas colunas: à esquerda, a **Ficha aberta em painéis minimizáveis** (ficha e atributos, relíquias e bolsa, técnicas, passivas), como os da Jornada; à direita, o título, a trilha e a cena da categoria com o **vilão por cima** da arte, e o Lutar embaixo.
+- **Trilha** (PC e celular): cada etapa tem duas linhas, o **Evento** pré-luta (dado, etiqueta dourada; depois de acontecer, o nome) e o **Confronto** (marco, rosto, categoria e vilão; etiqueta vermelha). Etapa vencida expande e mostra o que deu (XP, status, nível, itens, relíquia do baú), pelo registro da run.
+- **Luta** (`.rb-desk`): o layout da luta da Jornada. A arte da categoria é o fundo da luta; no centro, o vilão em cima, a arena (faixas de iniciativa e de acerto) no meio e você embaixo, sem caixa; à esquerda, a ficha do vilão (atributos, passivas, técnicas) e o registro da luta; à direita, as ações. Até 1279px, duas colunas (o campo e as ações; a ficha e o registro embaixo do campo).
+- **Mapa**: o botão principal é "Seguir: evento pré-luta" até o evento acontecer, depois "Lutar"; embaixo, **Abandonar run** em cor de perigo (também no pé das ações da luta). O vilão fica no meio da cena.
+- **Cores**: no tema claro o dourado (`--gold`, `--gold-2`) é escuro o bastante para o papel; a Ficha aberta do mapa usa o papel da janela da ficha nos dois temas.
+- **Fim da run**: à esquerda, um pergaminho com o selo e o carimbo 勝/敗, o título e os números; à direita, a trilha (com o que cada etapa deu) e a Ficha resumida; as ações embaixo.
 
 ### Entrada da Jornada
 

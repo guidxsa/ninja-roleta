@@ -1,6 +1,6 @@
 // Tipos do modo Jornada (docs/jornada/). O combate é de equipe e não depende do combate do Roleta;
 // só as fórmulas puras (acerto, dano, elementos) são compartilhadas.
-import type { AttackStats, AttackType, Element, Resistances } from '../types';
+import type { AttackStats, AttackType, Element, KekkeiGenkaiId, Resistances } from '../types';
 
 export type TeamSide = 'ally' | 'enemy';
 
@@ -26,6 +26,8 @@ export interface JTechnique {
   /** Status de ataque usado. Genjutsu enfrenta a resistência mental; os outros, a física. */
   type: AttackType;
   element: Element | null;
+  /** Técnica de Kekkei Genkai (Espelhos de Gelo, areia do Gaara): no encontro, vale como a natureza (os dois pais). */
+  kekkeiGenkai?: KekkeiGenkaiId;
   target: JTarget;
   /** Dano base por golpe (0 = técnica sem dano). */
   baseDamage: number;
@@ -67,8 +69,6 @@ export interface GateLevel {
   damageMult: number;
   accuracy?: number;
   critBonus?: number;
-  /** Desgaste: fração do HP máximo perdida no fim de cada turno com este portão aberto. */
-  drainPct: number;
 }
 
 /** Como um lutador automático escolhe a ação (docs/jornada/personagens.md). */
@@ -144,7 +144,12 @@ export interface CharacterDef {
   offense: AttackStats;
   resistance: Resistances;
   element: Element | null;
-  /** Sem elemento de propósito (Hyuuga): no Caminho Ninja, não sorteia um. */
+  /** Natureza de Kekkei Genkai da ficha (Gaara aliado: Areia). */
+  kekkeiGenkai?: KekkeiGenkaiId;
+  /**
+   * Sem ninjutsu elemental (Hyuuga, Prodígio): a natureza existe (sorteada em silêncio no Caminho Ninja), mas não dá
+   * técnica de elemento (v0.59.0).
+   */
   noElement?: boolean;
   /** Técnicas conhecidas no início (as aprendidas depois vêm de talentos e eventos). */
   techniques: string[];
@@ -165,6 +170,8 @@ export interface EnemyDef {
   offense: AttackStats;
   resistance: Resistances;
   element: Element | null;
+  /** Natureza de Kekkei Genkai (Gelo do Haku, Areia do Gaara): uma natureza só (src/core/nature.ts). */
+  kekkeiGenkai?: KekkeiGenkaiId;
   techniques: string[];
   ai: AiProfile;
   passive?: EnemyPassive;
@@ -185,6 +192,8 @@ export interface Fighter {
   offense: AttackStats;
   resistance: Resistances;
   element: Element | null;
+  /** Natureza de Kekkei Genkai do lutador, quando houver. */
+  kekkeiGenkai?: KekkeiGenkaiId;
   techniques: string[];
   ai: AiProfile;
   passive?: EnemyPassive;
@@ -201,8 +210,8 @@ export interface Fighter {
   enraged: boolean;
   /** Fortalecimento ativo (uma técnica de boost por vez; usar de novo renova). */
   boost: (Boost & { techId: string }) | null;
-  /** Portão aberto e turnos que ainda restam (trocar de portão não renova). */
-  gate: { level: number; turns: number } | null;
+  /** Portão aberto e turnos já mantidos (a próxima manutenção é a de número rounds + 1; trocar não zera). */
+  gate: { level: number; rounds: number } | null;
 }
 
 /** Como a luta se vence (docs/jornada/historia.md#vitórias-especiais). */
@@ -243,8 +252,10 @@ export type JEvent =
   | { type: 'boost'; uid: string; techId: string; turns: number }
   /** Custo em HP de uma técnica (`source` = id) ou desgaste dos Portões (`source` = 'gates'). */
   | { type: 'hpCost'; uid: string; amount: number; source: string }
-  /** Abriu ou trocou de portão (`level` 1–5) ou fechou (0; `timeout` quando acabou o tempo). */
-  | { type: 'gate'; uid: string; level: number; timeout?: boolean }
+  /** Abriu ou trocou de portão (`level` 1–5; `cost` de chakra) ou fechou (0; `exhausted` quando faltou chakra). */
+  | { type: 'gate'; uid: string; level: number; cost?: number; exhausted?: boolean }
+  /** Manutenção dos Portões paga no fim do turno. */
+  | { type: 'gateUpkeep'; uid: string; amount: number }
   | { type: 'end'; status: BattleStatus };
 
 export interface JBattle {

@@ -350,3 +350,6 @@ button[data-tip] { cursor: pointer; }
 .btn.seg.diff-hard[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent-2); }
 .btn.seg.diff-hardcore[aria-pressed='true'] { background: var(--ink); color: var(--accent-2); border-color: var(--accent); }
 .btn.seg:disabled { opacity: .4; }
+
+/* Natureza silenciosa (origem sem ninjutsu elemental, v0.59.0): o chip aparece tracejado e mais apagado. */
+.chip.el.silent { border-style: dashed; opacity: .75; }

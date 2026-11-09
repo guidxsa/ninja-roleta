@@ -235,23 +235,28 @@ Ciclo de vantagem: **fogo > vento > raio > terra > água > fogo**. Taijutsu e t�
 
 Futuro: estado **Molhado** (acertos de água) que deixa o alvo vulnerável a raio.
 
-- Técnicas elementais só podem ser aprendidas nos elementos do jogador, até o potencial elemental da origem ([origens.md](origens.md#elementos-e-potencial-elemental)).
+- Técnicas elementais só podem ser aprendidas nos elementos do jogador, até o potencial elemental da origem ([origens.md](origens.md#natureza-e-ninjutsu-elemental)).
 - Os críticos elementais continuam aplicando os efeitos de [efeitos.md](efeitos.md) (queimadura, paralisia, atordoamento).
 - Na tela, todo ataque e toda intenção do vilão mostram o **ícone e a cor do elemento**.
 
+## Natureza
+
+Regra comum aos três modos (v0.59.0, `src/core/nature.ts`). Todo ninja tem **uma natureza**: um dos 5 elementos ou uma Kekkei Genkai. A Kekkei Genkai **é** uma natureza (não se soma a um elemento). Só Comum (com proficiência), Uzumaki, Senju e Uchiha usam ninjutsu elemental; nas outras origens a natureza é sorteada em silêncio e só aparece na ficha ([origens.md](origens.md#natureza-e-ninjutsu-elemental)).
+
 ## Kekkei genkai
 
-Dois elementos-pai fundidos numa natureza nova. Sai no sorteio da origem ([origens.md](origens.md#sorteio)) para quem tem **potencial elemental pleno** e os **dois pais** entre os elementos, por uma roleta: as candidatas dividem a chance entre si e o resto é "nenhuma". A Madeira é exclusiva do Senju.
+Dois elementos-pai fundidos numa natureza nova. No encontro de elementos, conta como o **pai mais vantajoso** (a mesma função no clássico, no Roleta e na Jornada).
 
-| Kekkei genkai | Pais | Chance | Identidade |
+- **Jogador**: só o **Mokuton do Senju** (3% dos Senju, depois da roleta de natureza; [origens.md](origens.md#sorteio)).
+- **Vilões**: **Gelo** é a natureza do Haku e **Areia** a do Gaara, em todos os modos. A Areia dá o escudo de início de luta também no Roleta (10% do HP).
+- Lava, Tempestade, Vapor e Explosão ficam guardadas nos dados, sem sorteio (v0.59.0).
+
+| Kekkei genkai | Pais | Quem tem | Identidade |
 |---|---|---|---|
-| Gelo | Água + vento | 25% | Precisão e controle: congela |
-| Areia | Terra + vento | 25% | Defesa: escudo no início de cada luta; prende e esmaga |
-| Lava | Fogo + terra | 25% | Dano bruto: queima e derrete escudos (×1,5 no escudo) |
-| Tempestade | Raio + água | 25% | Rajadas de vários golpes, prioridade e penetração |
-| Vapor | Fogo + água | 25% | Corrosão: envenena; armadura que queima quem bate com taijutsu |
-| Explosão | Terra + raio | 25% | Tudo ou nada: dano altíssimo, erra muito, passa pelo escudo |
-| Madeira (Senju) | Terra + água | 30% | Prende, cura com o dano e desfaz o manto de chakra |
+| Gelo | Água + vento | Haku | Precisão e controle: congela |
+| Areia | Terra + vento | Gaara | Defesa: escudo no início de cada luta; prende e esmaga |
+| Madeira | Terra + água | Senju (3%) | Prende, cura com o dano e desfaz o manto de chakra |
+| Lava, Tempestade, Vapor, Explosão | — | ninguém (guardadas) | — |
 
 - Quem tem a kekkei genkai começa com o nível I da linha dela (e a prisão, na Areia e na Madeira); a técnica do nível 4 entra sozinha. As fichas estão em [tecnicas.md](tecnicas.md#kekkei-genkai).
 - As técnicas de kekkei genkai não têm elemento próprio: **no encontro de elementos** (disputa, escudo, estado) contam como o **pai mais vantajoso** naquele encontro.
@@ -266,6 +271,21 @@ Dois elementos-pai fundidos numa natureza nova. Sai no sorteio da origem ([orige
 - **Concentrar chakra** (ação universal) recupera **15% do chakra máximo** (arredondado para baixo, mínimo 1) gastando o turno.
 - Como a luta não começa restaurada, o chakra que sobra de uma luta é o que se tem na próxima.
 - Vilões também têm reserva de chakra, concentram chakra com a mesma fórmula e sorteiam a técnica e a reação só entre as que podem pagar (ver [viloes.md](viloes.md)).
+
+## Clones
+
+Regra comum ao Roleta e à Jornada (v0.59.0, `src/core/clones.ts`). O **Bunshin no Jutsu** está no kit inicial de quem tem ninjutsu (Roleta: todas as origens menos o Prodígio; Jornada: quem tem ninjutsu acima de 0, menos o Naruto, que já tem o Kage Bunshin). Gasta o turno e cria **1 clone** (no máximo 1). Cada golpe de alvo único tem **50%** de chance de cair no clone, que some ao receber qualquer dano. Queimar e veneno não pegam o clone. Custo: 5 de chakra no Roleta, 3 na Jornada.
+
+## Portões
+
+Regra comum ao Roleta e à Jornada (v0.59.0, `src/core/gates.ts`):
+
+- **abrir** custa chakra (Roleta: 4; Jornada: 3 por portão aberto a mais, descer é grátis);
+- **manter** custa chakra a cada rodada, crescendo rápido: `ceil(2 × 1,5^(n−1))` → **2, 3, 5, 7, 11, 16...** (na Jornada, × 1 + 0,25 × (nível − 1));
+- **sem limite de rodadas** e **sem custo de HP**: sem chakra para a manutenção, fecham sozinhos;
+- abrir e fechar não gastam a vez. No Roleta dá para reabrir na mesma luta; na Jornada, fechar põe 3 turnos de espera.
+
+O combate clássico (reserva) mantém os Portões antigos.
 
 ## Vontade do Fogo (revive)
 

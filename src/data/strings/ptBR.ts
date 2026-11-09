@@ -41,6 +41,9 @@ export const ptBR = {
     common: 'Comum',
     jinchuuriki: 'Jinchuuriki',
     noAffinity: 'Sem elemento',
+    /** O Comum que tira 0 elementos vira o Prodígio do taijutsu. */
+    noElementProdigy: 'Sem proficiência: Prodígio do taijutsu',
+    proficient: 'Proficiência elemental',
   },
   villains: {
     mizuki: 'Mizuki',
@@ -485,12 +488,14 @@ export const ptBR = {
     crit: 'Crítico',
   },
   roulettes: {
+    relicTier: 'Raridade da relíquia',
+    relic: 'Relíquia',
     training: 'Destaque do treino',
     premium: 'O que o guru ensina',
     clash: 'Disputa de ninjutsu',
     substitution: 'Substituição',
     lineage: 'Linhagem',
-    elementCount: 'Quantos elementos?',
+    elementCount: 'Proficiência elemental?',
     kekkeiGenkai: 'Kekkei genkai?',
     element: 'Elemento de chakra',
     jinchuuriki: 'Jinchuuriki?',
@@ -507,6 +512,8 @@ export const ptBR = {
   },
   sliceLabels: {
     common: 'Comum',
+    prodigy: 'Não · Prodígio',
+    proficient: 'Sim',
     yes: 'Sim',
     no: 'Não',
     miss: 'Erro',
@@ -657,7 +664,7 @@ export const ptBR = {
     villainFirst: 'Vilão age primeiro',
     playerFirst: 'Você age primeiro',
     guaranteedCrit: 'Crítico garantido',
-    carryHint: 'HP e chakra não se restauram entre as lutas: cada vitória devolve uma parte; subir de nível e vencer o chefe restauram tudo.',
+    carryHint: 'Cada luta começa com HP e chakra cheios. Depois da vitória, a roleta de relíquia: quanto mais forte o vilão, mais rara ela tende a ser.',
     recoveredAfterWin: (hp: number, ck: number) => `Fôlego da vitória: +${hp} HP e +${ck} de chakra.`,
     examRestored: 'Fim do exame: HP e chakra totalmente restaurados.',
     examRecovered: 'Os médicos do exame te atendem: você segue com metade do HP e do chakra.',
@@ -1073,6 +1080,7 @@ export const ptBR = {
     element: (name: string, beats: string, beatenBy: string, crit: string) =>
       `Chakra de ${name}. Vence ${beats} e perde para ${beatenBy} em disputas, escudos e estados elementais. Crítico: ${crit}.`,
     noElement: 'Sem elemento: só técnicas neutras.',
+    silentNature: 'A natureza desta origem: aparece na ficha, mas a origem não usa ninjutsu elemental (sem técnicas da natureza).',
 
     // Ficha de técnica.
     techKind: (type: string, element: string) => (element ? `${type} de ${element}` : type),

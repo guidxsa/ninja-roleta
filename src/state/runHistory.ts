@@ -83,8 +83,11 @@ export function updateRun(
   now: Date,
   maxRuns: number,
 ): void {
+  // Uma run vencida continua vencida: sair, abandonar ou cair depois (no modo infinito) só atualiza até onde chegou.
   const runs = loadRuns(storage).map((r) =>
-    r.id === id ? { ...r, ...patch, updatedAt: now.toISOString() } : r,
+    r.id === id
+      ? { ...r, ...patch, ...(r.status === 'victory' && patch.status && patch.status !== 'victory' ? { status: 'victory' as const } : {}), updatedAt: now.toISOString() }
+      : r,
   );
   saveRuns(storage, runs, maxRuns);
 }

@@ -13,6 +13,11 @@ export interface ClanLessonBonus {
 }
 
 export const balance = {
+  // Clones do Bunshin no Jutsu (src/core/clones.ts): a mesma chance no Roleta e na Jornada (v0.59.0).
+  clones: { blockChance: 0.5 },
+  // Portões (src/core/gates.ts): manutenção por rodada mantida = ceil(base × crescimento^(n−1)) → 2, 3, 5, 7, 11...
+  // A mesma regra no Roleta e na Jornada; a abertura custa por modo (proposta v0.59.0).
+  gateCosts: { upkeepBase: 2, upkeepGrowth: 1.5 },
   origin: {
     // Jinchuuriki: roleta independente da linhagem (origens.md). Os pesos das linhagens ficam em lineages.ts.
     jinchuurikiChance: 0.1,

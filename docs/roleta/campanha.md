@@ -41,7 +41,7 @@ Antes de cada vilão (uma vez antes de cada bloco) gira uma roleta de eventos. N
 ### Treino
 
 1. **+60 de XP, garantido** (é um treino).
-2. *(Só no clássico; no Roleta enxuto o Treino vai direto para o destaque.)* **Escolha**, quando algum elemento do jogador ainda pode crescer: **destaque de status** (a roleta abaixo) ou **foco elemental** num desses elementos. O foco ensina o nível I da linha do elemento (se ainda não tem) ou sobe a linha em +1 nível, dentro do teto do nível do personagem e do potencial da origem ([origens.md](../base/origens.md#elementos-e-potencial-elemental)). Sem elemento que cresça, vai direto para o destaque.
+2. *(Só no clássico; no Roleta enxuto o Treino vai direto para o destaque.)* **Escolha**, quando algum elemento do jogador ainda pode crescer: **destaque de status** (a roleta abaixo) ou **foco elemental** num desses elementos. O foco ensina o nível I da linha do elemento (se ainda não tem) ou sobe a linha em +1 nível, dentro do teto do nível do personagem e do potencial da origem ([origens.md](../base/origens.md#natureza-e-ninjutsu-elemental)). Sem elemento que cresça, vai direto para o destaque.
 3. **Roleta de destaque**: "você se destacou em...". A fatia sorteada ganha **+3** (speed ganha +2).
 
 | Fatia | Peso |

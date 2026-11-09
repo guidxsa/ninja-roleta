@@ -37,7 +37,7 @@ export const jornadaAchievements: JornadaAchievement[] = [
   { id: 'j_cycle3', check: beatCycle(3) },
   { id: 'j_cycle5', check: beatCycle(5) },
   // Easter egg: Uchiha com raio que aprende o Chidori libera o visual e o ramo do Sasuke (docs/jornada/classes.md#easter-eggs).
-  { id: 'j_sasukeEgg', hidden: true, check: (r) => r.hero === 'uchihaNinja' && r.secondElement === 'lightning' && r.learned.includes('jChidori') },
+  { id: 'j_sasukeEgg', hidden: true, check: (r) => r.hero === 'uchihaNinja' && r.learned.includes('jChidori') },
   { id: 'j_sexy', hidden: true, check: (r) => r.cleared.includes('valley') && r.moveset.includes('jSexyJutsu') },
 ];
 

@@ -21,7 +21,7 @@ import { createRng } from '../src/core/rng';
 import { applyClanLesson } from '../src/core/progression';
 import type { Element, KekkeiGenkaiId, Origin, VillainTechnique } from '../src/core/types';
 import { kekkeiGenkaiCandidates, rollKekkeiGenkai } from '../src/core/origin';
-import { gameData } from '../src/data/index';
+import { formulaData as gameData } from './helpers';
 import { battle, seq, testVillain, withInitiative } from './helpers';
 
 const ofType = <T extends BattleEvent['type']>(log: BattleEvent[], type: T) =>

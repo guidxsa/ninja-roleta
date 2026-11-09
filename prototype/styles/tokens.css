@@ -120,8 +120,9 @@
   --accent-deep: #6b0c12;
   --accent-ink: #f8efdc;
   --seal: #a3121b;
-  --gold: #94712c;
-  --gold-2: #ad8636;
+  /* Dourado no papel claro: escuro o bastante para ler (antes #94712c/#ad8636 quase sumiam). */
+  --gold: #7d5d1f;
+  --gold-2: #684c15;
   --gold-deep: #5e4720;
 
   --hp: #4b8a49;

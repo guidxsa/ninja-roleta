@@ -6,30 +6,32 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 
 ## Fichas
 
+Desde a v0.59.0, quem tem ninjutsu começa com o **Bunshin no Jutsu** (fora do moveset quando já há 4 técnicas; [fundamentos.md](../base/fundamentos.md#clones)); o Lee e o Prodígio ganharam chakra para manter os Portões; o Gaara tem a natureza Areia e o Haku, Gelo ([fundamentos.md](../base/fundamentos.md#kekkei-genkai)). Na coluna Elemento, "—" é natureza silenciosa (sorteada, sem técnica).
+
 | Personagem | HP | Chakra | Speed | Tai/Nin/Gen | Res. física/mental | Elemento | IA | Técnicas |
 |---|---|---|---|---|---|---|---|---|
 | Naruto | 110 | 30 | 10 | 9/8/3 | 7/5 | vento | striker | Golpe, Shuriken, Sexy no Jutsu, Kage Bunshin |
-| Sasuke | 90 | 28 | 13 | 10/10/5 | 6/7 | fogo | striker | Golpe, Shuriken, Bola de Fogo, Combo do Leão |
-| Sakura | 80 | 26 | 10 | 7/6/8 | 5/9 | terra | tactician | Kunai, Shuriken, Armadilha de fios, Kai (libertar) |
-| Jiraiya | 150 | 40 | 12 | 13/14/8 | 10/9 | fogo | striker | Golpe do Sannin, Óleo de sapo em chamas, Cabelo-agulha |
-| Tsunade | 140 | 40 | 12 | 15/12/6 | 10/8 | terra | healer | Soco da Tsunade, Palma mística, Golpe, Reanimação |
-| Rock Lee | 115 | 10 | 15 | 14/0/0 | 9/5 | — | striker | Redemoinho da Folha, Furacão da Folha, Lótus Primária |
-| Gaara | 130 | 40 | 10 | 6/14/4 | 12/8 | terra | guardian | Escudo de areia, Caixão de areia, Shuriken de areia |
-| Shikamaru | 95 | 30 | 11 | 8/10/8 | 6/9 | — | tactician | Kunai, Shuriken, Possessão das Sombras |
-| Chōji | 165 | 28 | 8 | 13/6/2 | 10/5 | — | guardian | Golpe, Tanque de carne humana, Expansão parcial |
-| Kiba | 110 | 22 | 14 | 13/4/2 | 7/5 | — | striker | Kunai, Mordida do Akamaru, Presa sobre Presa |
-| Neji | 120 | 28 | 13 | 14/6/4 | 9/8 | — | striker | Palma Suave, 64 Palmas, Rotação |
+| Sasuke | 90 | 28 | 13 | 10/10/5 | 6/7 | fogo | striker | Golpe, Shuriken, Bola de Fogo, Combo do Leão, Bunshin no Jutsu |
+| Sakura | 80 | 26 | 10 | 7/6/8 | 5/9 | terra | tactician | Kunai, Shuriken, Armadilha de fios, Kai (libertar), Bunshin no Jutsu |
+| Jiraiya | 150 | 40 | 12 | 13/14/8 | 10/9 | fogo | striker | Golpe do Sannin, Óleo de sapo em chamas, Cabelo-agulha, Bunshin no Jutsu |
+| Tsunade | 140 | 40 | 12 | 15/12/6 | 10/8 | terra | healer | Soco da Tsunade, Palma mística, Golpe, Reanimação, Bunshin no Jutsu |
+| Rock Lee | 115 | 20 | 15 | 14/0/0 | 9/5 | — | striker | Redemoinho da Folha, Furacão da Folha, Lótus Primária |
+| Gaara | 130 | 40 | 10 | 6/14/4 | 12/8 | areia (Kekkei Genkai) | guardian | Escudo de areia, Caixão de areia, Shuriken de areia, Bunshin no Jutsu |
+| Shikamaru | 95 | 30 | 11 | 8/10/8 | 6/9 | — | tactician | Kunai, Shuriken, Possessão das Sombras, Bunshin no Jutsu |
+| Chōji | 165 | 28 | 8 | 13/6/2 | 10/5 | — | guardian | Golpe, Tanque de carne humana, Expansão parcial, Bunshin no Jutsu |
+| Kiba | 110 | 22 | 14 | 13/4/2 | 7/5 | — | striker | Kunai, Mordida do Akamaru, Presa sobre Presa, Bunshin no Jutsu |
+| Neji | 120 | 28 | 13 | 14/6/4 | 9/8 | — | striker | Palma Suave, 64 Palmas, Rotação, Bunshin no Jutsu |
 | Ninja da Folha | 100 | 30 | 11 | 9/9/4 | 7/6 | — | striker | Golpe, Shuriken, Bunshin no Jutsu, Esforço; Kunai fora do moveset inicial |
-| Prodígio do taijutsu | 115 | 12 | 13 | 12/0/0 | 8/5 | — | striker | Golpe, Redemoinho da Folha, Shuriken, Portões |
-| Daichi | 95 | 24 | 11 | 10/10/3 | 6/5 | — | striker | Kunai, Shuriken |
-| Hana | 90 | 26 | 10 | 8/10/6 | 5/7 | — | tactician | Kunai, Armadilha de fios, Kai (libertar) |
-| Ninja Uchiha | 105 | 32 | 12 | 10/12/8 | 7/8 | fogo | striker | Golpe, Shuriken, Bola de Fogo, Sharingan |
-| Ninja Hyuuga | 105 | 26 | 12 | 12/6/4 | 8/7 | — | striker | Golpe, Palma Suave, Shuriken, Byakugan |
-| Ren Uchiha | 85 | 26 | 12 | 8/10/7 | 5/7 | fogo | striker | Kunai, Ilusão dos corvos |
-| Kaede Uchiha | 90 | 28 | 11 | 7/10/9 | 5/8 | fogo | tactician | Shuriken, Armadilha de fios |
-| Mio Hyuuga | 95 | 22 | 11 | 10/5/4 | 7/6 | — | guardian | Palma Suave, Rotação, Kunai |
-| Sei Hyuuga | 100 | 22 | 12 | 11/5/3 | 7/6 | — | striker | Palma Suave, Shuriken, Palma do Vácuo |
-| Mika | 85 | 36 | 10 | 6/8/5 | 5/7 | — | healer | Kunai, Kai (libertar), Reanimação |
+| Prodígio do taijutsu | 115 | 22 | 13 | 12/0/0 | 8/5 | — | striker | Golpe, Redemoinho da Folha, Shuriken, Portões |
+| Daichi | 95 | 24 | 11 | 10/10/3 | 6/5 | — | striker | Kunai, Shuriken, Bunshin no Jutsu |
+| Hana | 90 | 26 | 10 | 8/10/6 | 5/7 | — | tactician | Kunai, Armadilha de fios, Kai (libertar), Bunshin no Jutsu |
+| Ninja Uchiha | 105 | 32 | 12 | 10/12/8 | 7/8 | fogo | striker | Golpe, Shuriken, Bola de Fogo, Sharingan, Bunshin no Jutsu |
+| Ninja Hyuuga | 105 | 26 | 12 | 12/6/4 | 8/7 | — | striker | Golpe, Palma Suave, Shuriken, Byakugan, Bunshin no Jutsu |
+| Ren Uchiha | 85 | 26 | 12 | 8/10/7 | 5/7 | fogo | striker | Kunai, Ilusão dos corvos, Bunshin no Jutsu |
+| Kaede Uchiha | 90 | 28 | 11 | 7/10/9 | 5/8 | fogo | tactician | Shuriken, Armadilha de fios, Bunshin no Jutsu |
+| Mio Hyuuga | 95 | 22 | 11 | 10/5/4 | 7/6 | — | guardian | Palma Suave, Rotação, Kunai, Bunshin no Jutsu |
+| Sei Hyuuga | 100 | 22 | 12 | 11/5/3 | 7/6 | — | striker | Palma Suave, Shuriken, Palma do Vácuo, Bunshin no Jutsu |
+| Mika | 85 | 36 | 10 | 6/8/5 | 5/7 | — | healer | Kunai, Kai (libertar), Reanimação, Bunshin no Jutsu |
 
 - O Sasuke aprende o **Chidori** ao chegar no exame chunin (estágio 2).
 - As técnicas novas do Naruto vêm da árvore de talentos ([talentos.md](talentos.md)).

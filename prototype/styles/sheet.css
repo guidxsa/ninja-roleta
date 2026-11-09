@@ -66,17 +66,17 @@
   font-size: clamp(16px, 5.2vw, 23px); overflow-wrap: normal; word-break: keep-all;
 }
 .sheet-name::after { display: none; }
-.scroll-paper .chip { background: rgba(36, 25, 15, .06); color: var(--paper-ink); border-color: rgba(36, 25, 15, .38); }
-.scroll-paper .chip.el { background: color-mix(in srgb, var(--c) 22%, transparent); border-color: var(--c); }
-.scroll-paper .chip.lvl-chip { color: #6e4f12; border-color: #a5802e; background: rgba(201, 162, 83, .22); }
-.scroll-paper .chip.jin, .scroll-paper .chip.diff-hard { color: #8c1d16; border-color: var(--seal); background: rgba(181, 22, 31, .08); }
-.scroll-paper .chip.diff-hardcore { color: #fff3e6; }
-.scroll-paper .chip.diff-easy { color: #2d5f22; border-color: #4f7a35; }
-.scroll-paper .chip.diff-normal { color: #6e4f12; border-color: #a5802e; }
-.scroll-paper .chip.good { color: #2d5f22; }
-.scroll-paper .chip.bad { color: #8c1d16; }
-.scroll-paper .clan-seal { background: var(--paper); border-color: #a5802e; color: #6e4f12; }
-.scroll-paper .avatar .portrait { border-color: #a5802e; }
+:is(.scroll-paper, .rsheet-panel) .chip { background: rgba(36, 25, 15, .06); color: var(--paper-ink); border-color: rgba(36, 25, 15, .38); }
+:is(.scroll-paper, .rsheet-panel) .chip.el { background: color-mix(in srgb, var(--c) 22%, transparent); border-color: var(--c); }
+:is(.scroll-paper, .rsheet-panel) .chip.lvl-chip { color: #6e4f12; border-color: #a5802e; background: rgba(201, 162, 83, .22); }
+:is(.scroll-paper, .rsheet-panel) .chip.jin, :is(.scroll-paper, .rsheet-panel) .chip.diff-hard { color: #8c1d16; border-color: var(--seal); background: rgba(181, 22, 31, .08); }
+:is(.scroll-paper, .rsheet-panel) .chip.diff-hardcore { color: #fff3e6; }
+:is(.scroll-paper, .rsheet-panel) .chip.diff-easy { color: #2d5f22; border-color: #4f7a35; }
+:is(.scroll-paper, .rsheet-panel) .chip.diff-normal { color: #6e4f12; border-color: #a5802e; }
+:is(.scroll-paper, .rsheet-panel) .chip.good { color: #2d5f22; }
+:is(.scroll-paper, .rsheet-panel) .chip.bad { color: #8c1d16; }
+:is(.scroll-paper, .rsheet-panel) .clan-seal { background: var(--paper); border-color: #a5802e; color: #6e4f12; }
+:is(.scroll-paper, .rsheet-panel) .avatar .portrait { border-color: #a5802e; }
 .sheet-title {
   display: flex; align-items: center; gap: 8px; text-align: left; margin: 10px 0 2px;
   font: 700 14px/1 var(--font-hud); letter-spacing: .16em; text-transform: uppercase; color: var(--seal);
@@ -86,8 +86,8 @@
 .attrs div { padding: 5px 2px 4px; background: rgba(255, 255, 255, .22); border: 1px solid rgba(36, 25, 15, .25); min-width: 0; }
 .attrs small { display: block; font: 600 11px/1.1 var(--font-hud); text-transform: uppercase; letter-spacing: .06em; color: var(--paper-muted); }
 .attrs b { font: 700 20px/1.1 var(--font-hud); font-variant-numeric: tabular-nums; }
-.scroll-paper .muted { color: var(--paper-muted); }
-.scroll-paper .lvl { color: #7a5a14; }
+:is(.scroll-paper, .rsheet-panel) .muted { color: var(--paper-muted); }
+:is(.scroll-paper, .rsheet-panel) .lvl { color: #7a5a14; }
 .techs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .tech-card {
   display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; padding: 5px 8px;
@@ -152,3 +152,15 @@
 .jsheet-live .ico { width: 14px; height: 14px; vertical-align: -.15em; }
 .jsheet .mods .chip { font-size: 12px; }
 .jsheet .jrbar { flex-wrap: wrap; }
+
+/* Painéis da Ficha no mapa do Roleta (PC): o mesmo papel da janela da ficha, nos dois temas (no escuro, a tinta clara do
+   tema sumia sobre as cores de papel das técnicas, relíquias e bolsa). */
+.rsheet-panel {
+  --fill: var(--paper); --frame: rgba(36, 25, 15, .45);
+  --surface: #efe3c7; --surface-2: rgba(255, 255, 255, .28); --surface-3: rgba(36, 25, 15, .08);
+  --line: rgba(36, 25, 15, .3); --line-strong: rgba(36, 25, 15, .5);
+  --muted: var(--paper-muted); --text: var(--paper-ink); --bar-bg: #2a231b; --title-shadow: none;
+  --gold: #7d5d1f; --gold-2: #684c15;
+  color: var(--paper-ink);
+}
+.rsheet-panel::after { background: var(--grain-dark), linear-gradient(90deg, var(--paper-2), var(--paper) 7%, var(--paper) 93%, var(--paper-2)); }

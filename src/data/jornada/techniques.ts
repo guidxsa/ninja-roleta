@@ -56,9 +56,9 @@ export const allyTechniques: JTechnique[] = [
   { id: 'jPrimaryLotus', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 32, chakraCost: 0, hpCostPct: 0.1, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.3, turns: 1 }, cooldown: 3 },
 
   // Gaara (aliado)
-  { id: 'jSandShieldAlly', type: 'ninjutsu', element: 'earth', target: 'ally', baseDamage: 0, chakraCost: 5, shieldPct: 0.25, cooldown: 2 },
-  { id: 'jSandCoffinAlly', type: 'ninjutsu', element: 'earth', target: 'enemy', baseDamage: 20, chakraCost: 7, onHit: { effect: 'stun', chance: 0.3, turns: 1 } },
-  { id: 'jSandShuriken', type: 'ninjutsu', element: 'earth', target: 'allEnemies', baseDamage: 8, chakraCost: 5 },
+  { id: 'jSandShieldAlly', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'ally', baseDamage: 0, chakraCost: 5, shieldPct: 0.25, cooldown: 2 },
+  { id: 'jSandCoffinAlly', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'enemy', baseDamage: 20, chakraCost: 7, onHit: { effect: 'stun', chance: 0.3, turns: 1 } },
+  { id: 'jSandShuriken', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'allEnemies', baseDamage: 8, chakraCost: 5 },
 
   // Equipe de resgate (Neji usa as técnicas do Hyuuga, em classTechniques)
   { id: 'jShadowBind', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 4, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.7, turns: 1 }, cooldown: 3 },
@@ -137,7 +137,7 @@ export const enemyTechniques: JTechnique[] = [
   { id: 'jeWaterDragon', type: 'ninjutsu', element: 'water', target: 'allEnemies', baseDamage: 13, chakraCost: 8 },
   // Haku
   { id: 'jeSenbon', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 5, hits: 3, chakraCost: 0, accuracy: 0.85 },
-  { id: 'jeIceMirrors', type: 'ninjutsu', element: 'water', target: 'allEnemies', baseDamage: 8, hits: 2, chakraCost: 8, cooldown: 2 },
+  { id: 'jeIceMirrors', type: 'ninjutsu', element: 'water', kekkeiGenkai: 'ice', target: 'allEnemies', baseDamage: 8, hits: 2, chakraCost: 8, cooldown: 2 },
   { id: 'jePressurePoint', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 6, chakraCost: 2, onHit: { effect: 'stun', chance: 0.3, turns: 1 } },
   // Exame: Trio do Som
   { id: 'jeSoundWave', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 11, chakraCost: 3, onHit: { effect: 'stun', chance: 0.2, turns: 1 } },
@@ -159,9 +159,9 @@ export const enemyTechniques: JTechnique[] = [
   { id: 'jeRotation', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 4, shieldPct: 0.2, cooldown: 3 },
   { id: 'jeSixtyFourPalms', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 4, hits: 4, chakraCost: 8, accuracy: 0.95, penetration: 0.3, onHit: { effect: 'chakraBlock', chance: 0.5, turns: 3 }, cooldown: 3 },
   // Gaara (exame)
-  { id: 'jeSandCoffin', type: 'ninjutsu', element: 'earth', target: 'enemy', baseDamage: 18, chakraCost: 6, onHit: { effect: 'stun', chance: 0.35, turns: 1 } },
-  { id: 'jeSandShield', type: 'ninjutsu', element: 'earth', target: 'self', baseDamage: 0, chakraCost: 4, shieldPct: 0.15, cooldown: 3 },
-  { id: 'jeSandTsunami', type: 'ninjutsu', element: 'earth', target: 'allEnemies', baseDamage: 14, chakraCost: 9 },
+  { id: 'jeSandCoffin', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'enemy', baseDamage: 18, chakraCost: 6, onHit: { effect: 'stun', chance: 0.35, turns: 1 } },
+  { id: 'jeSandShield', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'self', baseDamage: 0, chakraCost: 4, shieldPct: 0.15, cooldown: 3 },
+  { id: 'jeSandTsunami', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'allEnemies', baseDamage: 14, chakraCost: 9 },
   { id: 'jeShukakuClaw', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 22, chakraCost: 3, accuracy: 0.8 },
   // Orochimaru
   { id: 'jeSnakeHands', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 11, hits: 2, chakraCost: 4, onHit: { effect: 'poison', chance: 0.3 } },

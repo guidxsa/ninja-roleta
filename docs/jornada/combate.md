@@ -29,22 +29,25 @@ Custo em HP (Lótus, Manto da Kyuubi, Uma cauda, Selo amaldiçoado) e desgaste d
 
 ## Portões
 
-Ativa do prodígio (v0.42.0). Números em `jornadaBalance.gates`; o portão N soma os bônus e o desgaste do 1º ao N.
+Ativa do prodígio (v0.42.0; custo em chakra desde a v0.59.0, regra comum em [fundamentos.md](../base/fundamentos.md#portões)). Números em `jornadaBalance.gates` e `balance.gateCosts`; o portão N soma os bônus do 1º ao N.
 
-| Portão | Bruto | Desgaste bruto | Total: dano | Total: desgaste por turno |
-|---|---|---|---|---|
-| 1º Abertura (Kaimon) | dano ×1,15 | 2% do HP máximo | ×1,15 | 2% |
-| 2º Descanso (Kyūmon) | ×1,1 | +1% | ×1,26 | 3% |
-| 3º Vida (Seimon) | ×1,1 e +10% de acerto | +1% | ×1,39 (+10% de acerto) | 4% |
-| 4º Dor (Shōmon) | ×1,1 | +2% | ×1,53 | 6% |
-| 5º Limite (Tomon) | ×1,1 e +5% de crítico | +2% | ×1,68 (+10% de acerto, +5% de crítico) | 8% |
+| Portão | Bruto | Total: dano | Manutenção (× da regra comum) |
+|---|---|---|---|
+| 1º Abertura (Kaimon) | dano ×1,15 | ×1,15 | ×1 |
+| 2º Descanso (Kyūmon) | ×1,1 | ×1,26 | ×1,25 |
+| 3º Vida (Seimon) | ×1,1 e +10% de acerto | ×1,39 (+10% de acerto) | ×1,5 |
+| 4º Dor (Shōmon) | ×1,1 | ×1,53 | ×1,75 |
+| 5º Limite (Tomon) | ×1,1 e +5% de crítico | ×1,68 (+10% de acerto, +5% de crítico) | ×2 |
 
 - **Uma troca por turno** (é a ativa do turno): com tudo fechado, abrir qualquer portão liberado; aberto, subir ou descer para qualquer outro, ou fechar. Não gasta a vez.
-- Aberto, fica no máximo **4 turnos, contando o da abertura**. Subir ou descer **não renova** o tempo.
-- **Sem custo na abertura.** No fim de cada turno com um portão aberto (inclusive atordoado), **desgaste**: perde a fração do HP máximo do portão atual. O desgaste nunca derruba: para em 1 de HP.
-- Fechou (pelo jogador ou pelo tempo): **espera 3 turnos** para abrir de novo. Caiu: os portões fecham, sem espera.
+- **Abrir ou subir** custa **3 de chakra por portão a mais** (abrir o 5º direto custa 15); descer é grátis. Só aparecem os portões que dá para pagar.
+- **Manutenção** no fim de cada turno aberto (inclusive atordoado): 2, 3, 5, 7, 11, 16... de chakra, × o peso do portão atual (arredondado para cima). Trocar de portão não zera a contagem.
+- **Sem limite de turnos e sem custo de HP**: sem chakra para a manutenção, fecham sozinhos.
+- Fechou (pelo jogador ou por falta de chakra): **espera 3 turnos** para abrir de novo. Caiu: os portões fecham, sem espera.
 - Liberação: o prodígio começa com a Abertura; o talento Portão da Vida libera até o 3º e a Lótus Oculta, até o 5º ([talentos.md](talentos.md#prodígio-caminho-ninja)).
-- Na tela: um botão Portões. Com um portão só para abrir, abre direto; com mais, um submenu com cada portão (nome, dano e desgaste em HP por turno) e Fechar. O lutador ganha um selo com o número do portão e os turnos que restam. A dica traz bônus, desgaste, tempo e espera.
+- Chakra: o Prodígio tem 22 e o Lee 20 (eram 12 e 10), porque a Jornada não regenera chakra na luta.
+- IA: abre o portão mais alto que dá para abrir e manter por 2 turnos; deixa fechar sozinho.
+- Na tela: um botão Portões com o portão aberto e a próxima manutenção. Com um portão só para abrir, abre direto; com mais, um submenu com cada portão (nome, dano e custo de abertura) e Fechar. A dica traz bônus, custos e espera.
 
 ## Acerto e dano
 
@@ -64,7 +67,7 @@ Ativa do prodígio (v0.42.0). Números em `jornadaBalance.gates`; o portão N so
 | Bloqueio de chakra | Só taijutsu | 2 (64 Palmas: 3) |
 
 - **Escudo** absorve dano antes do HP e não some sozinho.
-- **Clones** (Kage Bunshin): cada golpe de alvo único tem 50% de chance de acertar um clone no lugar do dono (o clone some). Técnicas em área ignoram os clones, mesmo sobrando um inimigo só. No máximo 5 clones.
+- **Clones** (Kage Bunshin e Bunshin no Jutsu; regra comum em [fundamentos.md](../base/fundamentos.md#clones)): cada golpe de alvo único tem 50% de chance de acertar um clone no lugar do dono (o clone some). Técnicas em área ignoram os clones, mesmo sobrando um inimigo só. No máximo 5 clones.
 - **Kai** e **Palma mística** tiram atordoar e bloqueio de chakra.
 
 ## Cair e levantar

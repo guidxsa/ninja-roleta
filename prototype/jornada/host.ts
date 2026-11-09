@@ -31,7 +31,8 @@ export interface JornadaHost {
   /** Grava até onde a run do Caminho Ninja chegou; devolve se bateu o recorde. Nada no Laboratório. */
   recordJornada: (run: JRun) => boolean;
   /** As conquistas mais recentes do perfil, da mais nova para a mais antiga (dias desde que saíram). */
-  recentAchievements: (limit: number) => { name: string; desc: string; days: number }[];
+  /** `onlyJornada`: só as conquistas da Jornada (a entrada da Jornada); sem ele, todas (o Início). */
+  recentAchievements: (limit: number, onlyJornada?: boolean) => { name: string; desc: string; days: number }[];
   /** Aviso curto (toast). */
   notify: (text: string, icon?: string) => void;
 }

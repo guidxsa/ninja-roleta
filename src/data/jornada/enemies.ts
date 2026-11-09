@@ -40,11 +40,12 @@ export const enemies: EnemyDef[] = [
   e('gozu', 62, 8, 11, [8, 3, 0], [5, 4], 'water', ['jeChainClaw', 'jeChainSweep'], 'brute', 'ninja:mist'),
   e('meizu', 62, 8, 11, [8, 3, 0], [5, 4], 'water', ['jeChainClaw', 'jeChainSweep'], 'brute', 'ninja:mist'),
   e('zabuza', 160, 30, 12, [12, 11, 3], [9, 6], 'water', ['jeCleaver', 'jeWaterPrison', 'jeWaterDragon'], 'brute', 'villain:zabuza'),
-  e('haku', 150, 34, 16, [9, 11, 6], [7, 8], 'water', ['jeSenbon', 'jeIceMirrors', 'jePressurePoint'], 'tactician', 'villain:haku', {
+  // Haku: natureza Gelo (Kekkei Genkai, v0.59.0).
+  { ...e('haku', 150, 34, 16, [9, 11, 6], [7, 8], 'water', ['jeSenbon', 'jeIceMirrors', 'jePressurePoint'], 'tactician', 'villain:haku', {
     kind: 'enrage',
     atPct: 0.4,
     damageMult: 1.25,
-  }),
+  }), kekkeiGenkai: 'ice' },
 
   // Estágio 2 · Exame chunin
   e('dosu', 80, 20, 10, [8, 10, 4], [6, 6], null, ['jeKunai', 'jeSoundWave'], 'striker', 'villain:examSound'),
@@ -56,10 +57,11 @@ export const enemies: EnemyDef[] = [
   e('kiba', 100, 18, 13, [11, 4, 2], [7, 5], null, ['jeFangOverFang', 'jeStinkBomb', 'jeKunai'], 'brute', 'ninja:inuzuka'),
   e('akamaru', 45, 0, 15, [9, 0, 0], [4, 3], null, ['jeDogBite'], 'brute', 'ninja:akamaru'),
   e('neji', 150, 30, 14, [14, 6, 4], [9, 9], null, ['jeGentleFist', 'jeRotation', 'jeSixtyFourPalms'], 'tactician', 'ninja:hyuuga'),
-  e('gaara', 230, 45, 10, [8, 15, 4], [12, 8], 'earth', ['jeSandCoffin', 'jeSandShield', 'jeSandTsunami', 'jeShukakuClaw'], 'brute', 'villain:gaara', {
+  // Gaara: natureza Areia (Kekkei Genkai, v0.59.0).
+  { ...e('gaara', 230, 45, 10, [8, 15, 4], [12, 8], 'earth', ['jeSandCoffin', 'jeSandShield', 'jeSandTsunami', 'jeShukakuClaw'], 'brute', 'villain:gaara', {
     kind: 'startShieldPct',
     pct: 0.15,
-  }),
+  }), kekkeiGenkai: 'sand' },
   e('soundNinja', 75, 16, 12, [10, 8, 6], [6, 6], null, ['jeSoundBlade', 'jeSoundWave'], 'striker', 'villain:examSound'),
 
   // Estágio 3 · Busca e resgate

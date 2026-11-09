@@ -1,5 +1,6 @@
 import { damage as computeDamage } from './damage';
 import { elementMultiplier } from './elements';
+import { natureParents } from './nature';
 import type { GameData } from './gameData';
 import { critChance, genjutsuHitChance, hitChance, rollHit, type HitOutcome } from './hit';
 import { initiativeChance, rollInitiative } from './initiative';
@@ -800,13 +801,17 @@ function villainTechElement(def: VillainDef, tech: VillainTechnique): Element | 
 }
 
 /** Espelhos (Haku): as ações extras viram golpes do mesmo ataque (um acerto, uma reação, um crítico). */
-function villainCombatTech(s: BattleState, tech: VillainTechnique): CombatTech {
+function villainCombatTech(s: BattleState, tech: VillainTechnique, data: GameData): CombatTech {
   const passive = s.villain.def.passive;
   const mirrors = passive?.kind === 'mirrors' && tech.barrier === undefined ? passive.actions : 1;
   return {
     id: tech.id,
     type: tech.type,
     element: villainTechElement(s.villain.def, tech),
+    // Natureza de Kekkei Genkai do vilão (Gelo, Areia): nas técnicas do elemento dele, vale o pai mais vantajoso.
+    ...(s.villain.def.kekkeiGenkai && tech.type !== 'taijutsu' && tech.element === undefined
+      ? { parents: natureParents(s.villain.def.kekkeiGenkai, data.kekkeiGenkai) }
+      : {}),
     baseDamage: tech.baseDamage,
     hits: (tech.hits ?? 1) * mirrors,
     chakraCost: tech.chakraCost,
@@ -825,7 +830,7 @@ function villainTech(s: BattleState, id: string): VillainTechnique {
 function incomingTech(s: BattleState, incoming: IncomingAttack, data: GameData): CombatTech {
   return incoming.attacker === 'player'
     ? playerCombatTech(s, incoming.techniqueId, data)
-    : villainCombatTech(s, villainTech(s, incoming.techniqueId));
+    : villainCombatTech(s, villainTech(s, incoming.techniqueId), data);
 }
 
 // ---------------------------------------------------------------------------
@@ -1711,7 +1716,7 @@ function chooseVillainReaction(s: BattleState, incoming: IncomingAttack, rng: Rn
 
 /** Ficha da técnica de disputa de quem defende. */
 function defenderTech(s: BattleState, side: Side, techniqueId: string, data: GameData): CombatTech {
-  return side === 'player' ? playerCombatTech(s, techniqueId, data) : villainCombatTech(s, villainTech(s, techniqueId));
+  return side === 'player' ? playerCombatTech(s, techniqueId, data) : villainCombatTech(s, villainTech(s, techniqueId), data);
 }
 
 /** Poder na disputa: dano × golpes + ninjutsu × 0,5; Rasengan +25%; golpe carregado ×2. */
@@ -2348,7 +2353,7 @@ function possessedSelfHit(s: BattleState, side: Side, data: GameData): void {
     const options = possessionOptions(s);
     const picked = options.find((t) => t.id === s.playerFx.possessionPick);
     for (const t of picked ? [picked] : options) {
-      const c = villainCombatTech(s, t);
+      const c = villainCombatTech(s, t, data);
       if (!best || c.baseDamage * c.hits > best.baseDamage * best.hits) best = c;
     }
     if (best) s.villain.chakra -= best.chakraCost;
@@ -3442,7 +3447,7 @@ function villainAttack(
   react?: ReactionPolicy,
 ): boolean {
   const fx = s.playerFx;
-  const combat = villainCombatTech(s, tech);
+  const combat = villainCombatTech(s, tech, data);
   if ((tech.type === 'taijutsu' || tech.type === 'ninjutsu') && tech.baseDamage > 0) s.villain.lastTechnique = tech.id;
 
   if (confusionFails(s, 'villain', selfHitDamage(s, 'villain', combat, data), rng, data)) return false;
@@ -3517,7 +3522,7 @@ function resolveVillainAttack(
   rng: Rng,
   data: GameData,
 ): void {
-  const combat = villainCombatTech(s, tech);
+  const combat = villainCombatTech(s, tech, data);
   const reaction = performReaction(s, 'villain', combat, charged, choice, rng, data);
   if (reaction.kind === 'resolved' || s.status !== 'ongoing') return;
   // Ataque múltiplo: cada golpe rola o próprio acerto e crítico; um erro não para os seguintes.

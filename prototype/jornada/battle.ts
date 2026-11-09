@@ -7,7 +7,8 @@ import {
   current,
   fighter,
   gateChoices,
-  gateDrain,
+  gateOpenCost,
+  nextGateUpkeep,
   gateTotals,
   hitsOf,
   hpCost,
@@ -91,7 +92,7 @@ export const techName = (id: string) => J.techniques[id] ?? id;
 /** Visual do protagonista desta luta (personalização da run). */
 let heroSkin: string | null = null;
 
-const CLONE_PCT = Math.round(jornadaData.j.combat.cloneBlockChance * 100);
+const CLONE_PCT = Math.round(jornadaData.base.clones.blockChance * 100);
 
 function portraitOf(f: Fighter, data: JornadaData): string {
   const spec = f.protagonist && heroSkin ? `ninja:${heroSkin}` : (data.characters[f.defId]?.portrait ?? data.enemies[f.defId]?.portrait ?? 'ninja:common');
@@ -133,10 +134,10 @@ function boostParts(b: Boost): string {
     .join(', ');
 }
 
-/** Bônus e desgaste de um portão, para as dicas. */
+/** Bônus e próxima manutenção de um portão, para as dicas. */
 function gateLines(f: Fighter, level: number): string[] {
   const t = gateTotals(level, jornadaData);
-  return [G.bonus(fmtMult(t.damageMult), pctN(t.accuracy), pctN(t.critBonus), level > 1), G.drain(gateDrain(f, level, jornadaData), pctN(t.drainPct))];
+  return [G.bonus(fmtMult(t.damageMult), pctN(t.accuracy), pctN(t.critBonus), level > 1), G.upkeep(nextGateUpkeep(f, level, jornadaData))];
 }
 
 /** Dica do botão Portões: o que está aberto, o desgaste e as regras. */
@@ -145,11 +146,12 @@ function gatesTip(s: JBattle, f: Fighter, tech: JTechnique): string {
   const wait = f.gate ? 0 : (f.cooldowns[tech.id] ?? 0);
   const body = lines([
     wait ? `<b>${B.cooldown(wait)}</b>` : s.activeUsed ? `<b>${B.activeSpent}</b>` : '',
-    f.gate ? `<b>${gateName(f.gate.level)}</b> · ${G.left(f.gate.turns)}` : '',
+    f.gate ? `<b>${gateName(f.gate.level)}</b>` : '',
     ...(f.gate ? gateLines(f, f.gate.level) : []),
     G.max(gateName(maxGate(f, jornadaData))),
     G.rule,
-    G.duration(g.maxTurns),
+    G.open(g.activationPerLevel),
+    G.growth,
     G.cooldown(g.cooldown),
   ]);
   return tip(techName(tech.id), body);
@@ -157,7 +159,8 @@ function gatesTip(s: JBattle, f: Fighter, tech: JTechnique): string {
 
 /** Dica de um portão no submenu. */
 function gateOptionTip(f: Fighter, level: number): string {
-  const body = lines([G.romaji[level - 1] ?? '', ...gateLines(f, level), f.gate ? G.left(f.gate.turns) : G.duration(jornadaData.j.gates.maxTurns)]);
+  const cost = gateOpenCost(f, level, jornadaData);
+  const body = lines([G.romaji[level - 1] ?? '', ...gateLines(f, level), cost ? G.open(jornadaData.j.gates.activationPerLevel) : '']);
   return tip(gateName(level), body);
 }
 
@@ -213,7 +216,7 @@ function fighterTip(f: Fighter): string {
     passive,
     f.shield ? `${icon('barrier')} ${f.shield}` : '',
     f.clones ? `${icon('clones')} ${B.clonesActive(f.clones, CLONE_PCT)}` : '',
-    f.gate ? `${icon('gates')} ${B.gateTip(gateName(f.gate.level), f.gate.turns)}` : '',
+    f.gate ? `${icon('gates')} ${B.gateTip(gateName(f.gate.level), nextGateUpkeep(f, f.gate.level, jornadaData))}` : '',
     ...(f.gate ? gateLines(f, f.gate.level) : []),
     f.boost ? `${icon('sparkle')} ${B.boostTip(techName(f.boost.techId), f.boost.turns)}: ${boostParts(f.boost)}` : '',
     effects.length ? `${U.tipEffects}: ${effects.join(', ')}` : '',
@@ -227,7 +230,7 @@ function statusChips(f: Fighter): string {
   if (f.shield > 0) chips.push(`<span class="jchip good">${icon('barrier')}${f.shield}</span>`);
   if (f.clones > 0) chips.push(`<span class="jchip good" title="${B.clonesActive(f.clones, CLONE_PCT)}">${icon('clones')}${f.clones}</span>`);
   if (f.guarding) chips.push(`<span class="jchip good">${icon('stance')}</span>`);
-  if (f.gate) chips.push(`<span class="jchip gate" title="${B.gateTip(gateName(f.gate.level), f.gate.turns)}">${icon('gates')}${G.numeral[f.gate.level - 1]}·${f.gate.turns}</span>`);
+  if (f.gate) chips.push(`<span class="jchip gate" title="${B.gateTip(gateName(f.gate.level), nextGateUpkeep(f, f.gate.level, jornadaData))}">${icon('gates')}${G.numeral[f.gate.level - 1]}</span>`);
   if (f.boost) chips.push(`<span class="jchip good" title="${B.boostTip(techName(f.boost.techId), f.boost.turns)}">${icon('sparkle')}${f.boost.turns}</span>`);
   return chips.join('');
 }
@@ -317,7 +320,7 @@ function gatesButton(s: JBattle, f: Fighter, tech: JTechnique): string {
   const can = gateChoices(s, f, jornadaData).length > 0;
   const wait = f.gate ? 0 : (f.cooldowns[tech.id] ?? 0);
   const cd = wait ? `<span class="cd" style="--p:${Math.min(1, wait / jornadaData.j.gates.cooldown)}" aria-hidden="true">${wait}</span>` : '';
-  const small = f.gate ? `${gateName(f.gate.level)} · ${f.gate.turns}t` : '';
+  const small = f.gate ? `${gateName(f.gate.level)} · ${G.perTurn(nextGateUpkeep(f, f.gate.level, jornadaData))}` : '';
   return `<button class="btn jmove${wait ? ' cooling' : ''}${f.gate ? ' on' : ''}" data-gates ${can ? '' : 'aria-disabled="true"'} style="--c:var(--accent)"${gatesTip(s, f, tech)}>
     <span class="jmove-ico">${icon('gates')}${cd}</span>
     <span class="jmove-txt"><b>${techName(tech.id)}</b>${small ? `<small>${small}</small>` : ''}</span></button>`;
@@ -598,13 +601,16 @@ export async function jornadaBattle(
             float(e.uid, `${icon('gates')}${G.numeral[e.level - 1]}`, 'fx');
             pushLog(B.logGate(name(e.uid), gateName(e.level)));
             swish();
-          } else if (e.timeout) {
+          } else if (e.exhausted) {
             say(B.gateTimeout(name(e.uid)), 'var(--muted)');
             pushLog(B.gateTimeout(name(e.uid)));
           } else {
             pushLog(B.logGateClose(name(e.uid)));
             wait = host.instant() ? 70 : 200;
           }
+          break;
+        case 'gateUpkeep':
+          pushLog(B.logGateUpkeep(name(e.uid), e.amount));
           break;
         case 'boost':
           float(e.uid, icon('sparkle'), 'fx');
@@ -727,7 +733,7 @@ export async function jornadaBattle(
       level === 0
         ? `<button class="btn jmove" data-level="0" style="--c:var(--line)"${tip(G.close, G.closeTip)}><span class="jmove-ico">${icon('close')}</span><span class="jmove-txt"><b>${G.close}</b></span></button>`
         : `<button class="btn jmove" data-level="${level}" style="--c:var(--accent)"${gateOptionTip(me, level)}><span class="jmove-ico"><b class="gate-n">${G.numeral[level - 1]}</b></span>
-            <span class="jmove-txt"><b>${gateName(level)}</b><small>×${fmtMult(gateTotals(level, data).damageMult)} · <span class="short">${G.perTurn(gateDrain(me, level, data))}</span></small></span></button>`;
+            <span class="jmove-txt"><b>${gateName(level)}</b><small>×${fmtMult(gateTotals(level, data).damageMult)}${gateOpenCost(me, level, data) ? ` · <span class="short">${G.openCost(gateOpenCost(me, level, data))}</span>` : ''}</small></span></button>`;
     menu.innerHTML = `<p class="jb-prompt">${techName('jGates')}</p><div class="jb-moves">${choices.map(option).join('')}</div><button class="btn small" data-cancel>${B.cancel}</button>`;
     return new Promise((resolve) => {
       const onClick = (ev: Event) => {

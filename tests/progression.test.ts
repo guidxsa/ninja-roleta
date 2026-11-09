@@ -52,7 +52,7 @@ import {
 import { createRng } from '../src/core/rng';
 import type { Origin } from '../src/core/types';
 import { campaign } from '../src/data/campaign';
-import { gameData } from '../src/data/index';
+import { formulaData as gameData } from './helpers';
 import { villainsById } from '../src/data/villains';
 import { battle, seq, testVillain, withInitiative } from './helpers';
 

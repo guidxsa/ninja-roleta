@@ -8,15 +8,18 @@ O Roleta é o modo rápido: um ciclo curto de lutas sorteadas, sem história, qu
 
 Um ciclo tem 6 lutas: **2 genin → 2 chunin → 1 jounin → 1 chefe**. Cada luta sorteia um vilão da categoria do passo, sem repetir no mesmo ciclo.
 
-| Categoria | Vilões | Recompensa |
+| Categoria | Vilões | Depois da vitória |
 |---|---|---|
-| Genin | Mizuki, Genin da Areia, Genin do Som, Genin da Folha, Bandido, Capanga do Gatō, Renegado da Névoa, Ninja da Grama, Ninja da Chuva | Roleta comum |
-| Chunin | Haku, Jirobo, Kidomaru, Tayuya, Sakon, Irmãos Demônio, Dosu, Zaku, Kin | Roleta comum |
-| Jounin | Zabuza, Gaara, Kabuto, Kimimaro, Neji | Roleta rara |
+| Genin | Mizuki, Genin da Areia, Genin do Som, Genin da Folha, Bandido, Capanga do Gatō, Renegado da Névoa, Ninja da Grama, Ninja da Chuva | Roleta de relíquia (pesos Genin) |
+| Chunin | Haku, Jirobo, Kidomaru, Tayuya, Sakon, Irmãos Demônio, Dosu, Zaku, Kin | Roleta de relíquia (pesos Chunin) |
+| Jounin | Zabuza, Gaara, Kabuto, Kimimaro, Neji | Roleta de relíquia (pesos Jounin) |
 | Chefe | Orochimaru | Baú do chefe |
 
-- Antes de **cada** luta gira a roleta de eventos; depois de cada vitória, o XP do vilão e a recompensa.
-- HP e chakra seguem de uma luta para a outra. Cada vitória devolve 25% (mais as relíquias de cura); subir de nível restaura tudo.
+- Antes de **cada** luta gira a roleta de eventos; depois de cada vitória, o XP do vilão e a roleta de relíquia (o chefe abre o baú).
+- O evento é um passo à parte: no mapa, o botão é "Seguir: evento pré-luta"; no resultado do evento dá para **Lutar** ou **Voltar ao mapa** (aí o botão do mapa vira "Lutar", e o evento não se repete).
+- **Abandonar run** (no mapa e na luta, com confirmação): a run termina, conta como abandonada no histórico e vai para a tela de fim.
+- **Cada luta começa com HP e chakra cheios** (v0.59.0). Sem a recuperação parcial depois da vitória; a dificuldade fica toda dentro da luta, o que deixa o balanceamento medível pela simulação.
+- **Força dos vilões por categoria** (`villainPower`, × HP e ataques, calibrado pela simulação): Genin, Chunin e Jounin ×1, Chefe ×0,9.
 - **Chefe**: vencer cura tudo e abre o **baú**: escolher 1 entre 3 relíquias de chefe.
 - O Orochimaru do Roleta volta da derrota no máximo **1 vez** (`villains.insaneRevivesCap`), em qualquer dificuldade, porque o ciclo é curto.
 
@@ -40,10 +43,12 @@ Desde a v0.47.0, o sorteio também traz fichas só do Roleta (`roletaExtraVillai
 
 ## Modo infinito
 
-- Vencer o chefe do 1º ciclo é a **vitória da run**: conta no histórico e nas conquistas como antes. A tela de vitória oferece **Seguir para o ciclo 2**.
+- O modo infinito existe **só no Hardcore** (v0.59.0). Em qualquer dificuldade, vencer o chefe do 1º ciclo é a **vitória da run** (histórico e conquistas); no Fácil, Médio e Difícil a run termina aí. No Hardcore, a tela de vitória oferece **Seguir para o ciclo 2**.
+- Uma run vencida continua vencida: sair, abandonar ou cair depois só atualiza até onde chegou (ciclo e lutas). O Hardcore libera com uma run vencida no Difícil.
 - Cada ciclo novo volta aos genin com os vilões sorteados de novo e **mais fortes**: HP, ataques, resistências e dano × dificuldade × **(1 + 0,3 × ciclo)**, com o ciclo contando do 0 (`infinite.perCycle`; rascunho).
+- **Piso do ciclo novo** (`infinite.floor`, proposta): cada status do vilão (HP, chakra, speed, ataques, resistências) é no mínimo o do **último chefe vencido** × Genin 1,05, Chunin 1,10, Jounin 1,18, Chefe 1,28. O kit (técnicas) não muda.
 - Mantém tudo: nível, status, técnicas, relíquias, bolsa e Vontades do Fogo. Do 2º ciclo em diante, o próximo emenda sozinho.
-- Cair a partir do ciclo 2 é o "Fim do modo infinito": a run segue registrada como vitória, com o ciclo e as lutas alcançados.
+- Cair a partir do ciclo 2 é "Vitória · fim do modo infinito": a run segue registrada como vitória, com o ciclo e as lutas alcançados.
 - Recorde no perfil (`roleta`: ciclo e lutas vencidas) e conquistas: Sem descanso (ciclo 2), Roda da fortuna (ciclo 3) e Lenda da roleta (ciclo 5).
 
 ## Eventos
@@ -60,17 +65,19 @@ Desde a v0.47.0, o sorteio também traz fichas só do Roleta (`roletaExtraVillai
 
 ## Recompensa
 
-Um giro depois de cada vitória (o chefe abre o baú no lugar). A raridade vem da categoria (genin e chunin comum, jounin rara) e **sobe 1 a cada ciclo** do modo infinito, até lendária. A fatia mostra o valor da raridade. Refeita na v0.52.0.
+Desde a v0.59.0, a roleta de recompensa (status, XP, itens, jackpot) saiu. Depois de cada vitória (fora o chefe) gira a **roleta de relíquia**, sem escolha (`relicReward`, proposta):
 
-| Fatia | Peso | Comum | Rara | Lendária |
-|---|---|---|---|---|
-| Status | 35 | +1 estágio, +2 de resistência, +1% de crítico | +2, +4, +2% | +3, +6, +3% |
-| Relíquia | 22 | comum | incomum | rara |
-| XP | 20 | 50% do custo do nível atual | 100% | 150% |
-| Roleta de itens | 18 | 1 giro | 2 giros | 3 giros |
-| Jackpot | 5 | relíquia rara e cura de 25% do HP, em qualquer raridade | | |
+1. **Raridade**, com os pesos da categoria do vilão; cada ciclo do modo infinito passa 10 pontos de Comum para Rara (`cycleShift`).
 
-A resistência é distribuída ponto a ponto entre física e mental. Sem relíquia para sortear, a fatia Relíquia vira o XP da raridade.
+   | Categoria | Comum | Incomum | Rara |
+   |---|---|---|---|
+   | Genin | 70 | 25 | 5 |
+   | Chunin | 45 | 40 | 15 |
+   | Jounin | 20 | 45 | 35 |
+
+2. **Relíquia**: uma das que o jogador ainda não tem, naquela raridade, com peso igual. Raridade esgotada sai da roleta; sem nenhuma relíquia para sortear, vale o XP de uma recompensa rara.
+
+O **chefe** continua com o **baú** (escolher 1 entre 3 relíquias de chefe). Status e itens agora vêm dos eventos pré-luta e dos níveis.
 
 ## Itens
 
@@ -98,4 +105,4 @@ O catálogo é o mesmo da Jornada, e cada relíquia diz em que modo sai ([reliqu
 ## Dificuldade e histórico
 
 - Dificuldade: a mesma da base ([campanha.md](campanha.md#dificuldade)). O Hardcore libera ao vencer a run (o 1º ciclo) no Difícil.
-- Histórico (`runs_v1`): os registros novos guardam o ciclo e as lutas vencidas (`cycle`, `fights`); as abas Histórico e Origens mostram "Ciclo N · X lutas". Os registros da campanha antiga continuam mostrando a etapa.
+- Histórico (`runs_v1`): a run só entra no histórico ao **Começar campanha**, depois das roletas da origem; re-rolar ou sair durante o sorteio não deixa registro. Os registros novos guardam o ciclo e as lutas vencidas (`cycle`, `fights`); as abas Histórico e Origens mostram "Ciclo N · X lutas". Os registros da campanha antiga continuam mostrando a etapa.

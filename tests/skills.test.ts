@@ -28,7 +28,7 @@ import {
 import { applyLevelUp, createPlayer, gainXp, learnTechnique, upgradeTechnique, type PlayerState } from '../src/core/player';
 import { applyPremium, chooseUpgrade, learnableTechniques, levelUp } from '../src/core/progression';
 import type { Element, Origin, VillainPassive } from '../src/core/types';
-import { gameData } from '../src/data/index';
+import { formulaData as gameData } from './helpers';
 import { levelTechniques, lineageTechniques, lineTechniques, premiumTechniques, techniquesById } from '../src/data/techniques';
 import { villainsById } from '../src/data/villains';
 import { battle, hold, noRegen, seq, testVillain, withInitiative } from './helpers';

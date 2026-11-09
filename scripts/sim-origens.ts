@@ -28,14 +28,21 @@ const progression = !process.argv.includes('--bare');
 const cycles = Math.max(1, arg('ciclos', 3));
 
 // Uma linha por origem dos dados (a roleta inteira), com o peso dela.
+// O Prodígio do taijutsu sai do Comum que tira 0 elementos (v0.59.0): a fatia dele é a do Comum × a chance de 0.
 const totalWeight = gameData.lineages.reduce((a, l) => a + l.weight, 0);
+const commonDef = gameData.lineages.find((l) => l.id === COMMON_LINEAGE)!;
+const zeroShare = (commonDef.elements.countWeights[0] ?? 0) / commonDef.elements.countWeights.reduce((a, b) => a + b, 0);
+const share = (id: string, weight: number) =>
+  id === COMMON_LINEAGE ? weight * (1 - zeroShare) : id === 'taijutsuProdigy' ? commonDef.weight * zeroShare : weight;
 const origins = gameData.lineages.map((l) => ({
-  label: `${ptBR.lineages[l.id] ?? l.id} (${Math.round((l.weight / totalWeight) * 100)}%)`,
+  label: `${ptBR.lineages[l.id] ?? l.id} (${Math.round((share(l.id, l.weight) / totalWeight) * 100)}%)`,
   make: (): Origin => ({
     lineageId: l.id === COMMON_LINEAGE ? null : l.id,
-    // Elementos pela roleta da origem (quantidade e quais), como no jogo.
+    // Elementos pela roleta da origem (quantidade e quais), como no jogo. O Comum com 0 é o Prodígio (linha própria):
+    // aqui o Comum sorteia de novo até ter elemento.
     ...(() => {
-      const elements = rollElements(l, rng, gameData).elements;
+      let elements = rollElements(l, rng, gameData).elements;
+      while (l.id === COMMON_LINEAGE && elements.length === 0) elements = rollElements(l, rng, gameData).elements;
       return { elements, kekkeiGenkai: rollKekkeiGenkai(l, elements, rng, gameData).kekkeiGenkai };
     })(),
     jinchuuriki: false,

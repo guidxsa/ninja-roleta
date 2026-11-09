@@ -13,7 +13,7 @@ import {
 } from '../src/core/combat';
 import { createPlayer, learnTechnique, type PlayerState } from '../src/core/player';
 import type { Element, Origin, VillainTechnique } from '../src/core/types';
-import { gameData } from '../src/data/index';
+import { formulaData as gameData } from './helpers';
 import { villainsById } from '../src/data/villains';
 import { hold, seq, testVillain, withInitiative } from './helpers';
 

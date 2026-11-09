@@ -37,6 +37,8 @@ export const villains: VillainDef[] = [
   {
     id: 'haku',
     element: 'water',
+    // Natureza de Kekkei Genkai (v0.59.0): Gelo, uma natureza só (água + vento na vantagem).
+    kekkeiGenkai: 'ice',
     hp: 80,
     chakra: 18,
     speed: 14,
@@ -124,6 +126,8 @@ export const villains: VillainDef[] = [
   {
     id: 'gaara',
     element: 'earth',
+    // Natureza de Kekkei Genkai (v0.59.0): Areia, uma natureza só (terra + vento na vantagem).
+    kekkeiGenkai: 'sand',
     // Era 160 de HP e defesa 14/14: aliviado por ser o gargalo da campanha.
     hp: 140,
     chakra: 36,

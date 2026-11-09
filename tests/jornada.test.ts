@@ -1121,7 +1121,10 @@ describe('Caminho Ninja', () => {
       const run = newGenericRun(s, 'normal', 'common', data);
       kinds.add(run.hero);
       const el = run.elements[run.hero];
-      if (run.hero === 'prodigy') expect(el).toBeNull();
+      // O Prodígio tem natureza (silenciosa), mas nenhuma técnica de elemento (v0.59.0).
+      expect(el).not.toBeNull();
+      const elemental = new Set(Object.values(data.elementLines).flat());
+      if (run.hero === 'prodigy') expect(heroMovable(run, data).filter((id) => elemental.has(id))).toEqual([]);
       else expect(run.moveset).toContain(data.elementLines[el!][0]);
       for (const id of run.supports) expect(run.elements[id]).not.toBeNull();
     }
@@ -1204,22 +1207,16 @@ describe('Caminho Ninja', () => {
     expect(newJornadaAchievements(prodigy, new Set())).not.toContain('j_canonWin');
   });
 
-  it('Uchiha: fogo fixo e segundo elemento diferente; Hyuuga sem elemento nem técnica elemental', () => {
-    const seconds = new Set<string | null>();
+  it('Uchiha: sempre e só Fogo; Hyuuga com natureza silenciosa e nenhuma técnica elemental (v0.59.0)', () => {
     for (let s = 0; s < 60; s++) {
       const u = newGenericRun(s, 'normal', 'uchiha', data);
-      expect([u.hero, u.elements[u.hero]]).toEqual(['uchihaNinja', 'fire']);
-      expect(u.secondElement).not.toBe('fire');
-      seconds.add(u.secondElement);
-      if (u.secondElement) expect(heroMovable(u, data)).toContain(data.elementLines[u.secondElement][0]);
+      expect([u.hero, u.elements[u.hero], u.secondElement]).toEqual(['uchihaNinja', 'fire', null]);
       const h = newGenericRun(s, 'normal', 'hyuuga', data);
       expect(h.hero).toBe('hyuugaNinja');
-      expect(h.elements[h.hero]).toBeNull();
+      expect(h.elements[h.hero]).not.toBeNull();
       const elemental = new Set(Object.values(data.elementLines).flat());
       expect(heroMovable(h, data).filter((id) => elemental.has(id))).toEqual([]);
     }
-    expect(seconds.has(null)).toBe(true);
-    expect(seconds.has('lightning')).toBe(true);
   });
 
   it('suportes: classe sorteada entre as liberadas (pode repetir a do protagonista), ficha única e nome da classe', () => {
@@ -1242,8 +1239,8 @@ describe('Caminho Ninja', () => {
         const cls = supportClass(id, data)!;
         expect(cls.supportNames).toContain(r.names[id]);
         expect(jornadaPtBR.supportNames[r.names[id]!], r.names[id]).toBeTruthy();
-        if (data.characters[id]!.noElement) expect(r.elements[id]).toBeNull();
-        else expect(r.elements[id]).not.toBeNull();
+        // Todo ninja tem natureza (a do Hyuuga é silenciosa).
+        expect(r.elements[id]).not.toBeNull();
       }
     }
     // Todas as fichas aparecem, inclusive as do Uchiha (a classe do protagonista).
@@ -1256,7 +1253,8 @@ describe('Caminho Ninja', () => {
     expect(fire.moveset).toContain('jFireSpark');
     expect(fire.relics).toEqual(['academyManual']);
     const prodigy = newGenericRun(4, 'normal', 'common', data, new Set(), null, null);
-    expect([prodigy.hero, prodigy.elements.prodigy, prodigy.relics]).toEqual(['prodigy', null, ['greenJumpsuit']]);
+    expect([prodigy.hero, prodigy.relics]).toEqual(['prodigy', ['greenJumpsuit']]);
+    expect(prodigy.elements.prodigy).not.toBeNull();
     for (let s = 0; s < 30; s++) {
       const random = newGenericRun(s, 'normal', 'common', data);
       expect(random.elementPick).toBe('random');
@@ -1286,12 +1284,10 @@ describe('Caminho Ninja', () => {
     expect(loaded.names).toEqual({});
   });
 
-  it('easter egg: o ramo Raio só existe com raio, e o Chidori libera o ramo do Sasuke', () => {
+  it('easter egg: o Chidori (aprendido no treino; o Uchiha é só Fogo) libera o ramo do Sasuke', () => {
     const base = { ...newGenericRun(1, 'normal', 'uchiha', data), talentPoints: 20 };
     const node = (id: string) => data.talents.find((t) => t.id === id)!;
-    const noLightning = { ...base, secondElement: 'water' as const };
-    expect(talentState(node('tChidoriU'), data.talents, talentContext(noLightning, new Set()))).toBe('hidden');
-    const lightning = { ...base, secondElement: 'lightning' as const };
+    const lightning = base;
     expect(talentState(node('tChidoriU'), data.talents, talentContext(lightning, new Set()))).toBe('available');
     expect(talentState(node('tLionU'), data.talents, talentContext(lightning, new Set()))).toBe('accountLocked');
     const learned = buyTalent(lightning, 'tChidoriU', new Set(), data);
@@ -1347,11 +1343,9 @@ describe('ativas grátis e Portões (v0.42.0)', () => {
     const vida = gateTotals(3, data);
     expect(vida.damageMult).toBeCloseTo(1.15 * 1.1 * 1.1);
     expect(vida.accuracy).toBeCloseTo(0.1);
-    expect(vida.drainPct).toBeCloseTo(0.04);
     const limite = gateTotals(5, data);
     expect(limite.damageMult).toBeCloseTo(1.15 * 1.1 ** 4);
     expect(limite.critBonus).toBeCloseTo(0.05);
-    expect(limite.drainPct).toBeCloseTo(0.08);
   });
 
   it('o talento Portão da Vida libera até o 3º e a Lótus Oculta até o 5º', () => {
@@ -1363,53 +1357,51 @@ describe('ativas grátis e Portões (v0.42.0)', () => {
     expect(maxGate(me(fight(hero())), data)).toBe(0);
   });
 
-  it('abrir dá o bônus no mesmo turno; subir e descer não renovam o tempo; uma troca por turno', () => {
+  it('abrir custa chakra por portão; subir paga a diferença, descer é grátis; uma troca por turno (v0.59.0)', () => {
     let b = fight(prodigy({ mods: { ...emptyMods(), gateLevels: 4 } }));
     expect(gateChoices(b, me(b), data)).toEqual([1, 2, 3, 4, 5]);
     const plain = hitDamage(me(b), b.fighters[1]!, data.techniques.jStrike!, data);
+    const ck0 = me(b).chakra;
     b = setGate(b, 1, data, fixed(0.5));
-    expect(me(b).gate).toEqual({ level: 1, turns: 4 });
+    expect([me(b).gate, me(b).chakra]).toEqual([{ level: 1, rounds: 0 }, ck0 - 3]);
     expect(awaitingPlayer(b)).toBe(true);
     expect(gateChoices(b, me(b), data)).toEqual([]);
     expect(() => setGate(b, 5, data, fixed(0.5))).toThrow();
     expect(hitDamage(me(b), b.fighters[1]!, data.techniques.jStrike!, data)).toBe(Math.floor((8 + 10 - 3) * 1.15));
     expect(plain).toBe(15);
+    let n = b.log.length;
     b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
-    expect(me(b).gate).toEqual({ level: 1, turns: 3 });
+    expect(b.log.slice(n).filter((e) => e.type === 'gateUpkeep')).toEqual([{ type: 'gateUpkeep', uid: 'a0', amount: 2 }]);
+    expect(me(b).gate).toEqual({ level: 1, rounds: 1 });
     expect(gateChoices(b, me(b), data)).toEqual([2, 3, 4, 5, 0]);
+    const ck1 = me(b).chakra;
     b = setGate(b, 5, data, fixed(0.5));
-    expect(me(b).gate).toEqual({ level: 5, turns: 3 });
+    expect([me(b).gate, me(b).chakra]).toEqual([{ level: 5, rounds: 1 }, ck1 - 12]);
+    n = b.log.length;
+    // 2ª manutenção (3) no 5º portão (× 2): 6.
     b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
+    expect(b.log.slice(n).filter((e) => e.type === 'gateUpkeep')).toEqual([{ type: 'gateUpkeep', uid: 'a0', amount: 6 }]);
+    const ck2 = me(b).chakra;
     b = setGate(b, 2, data, fixed(0.5));
-    expect(me(b).gate).toEqual({ level: 2, turns: 2 });
+    expect([me(b).gate, me(b).chakra]).toEqual([{ level: 2, rounds: 2 }, ck2]);
   });
 
-  it('desgaste no fim de cada turno aberto, sem derrubar; fecha no tempo e entra em espera', () => {
-    let b = fight(prodigy({ mods: { ...emptyMods(), gateLevels: 4 } }));
-    b = setGate(b, 5, data, fixed(0.5));
-    const hp0 = me(b).hp;
-    b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
-    const drain = b.log.find((e) => e.type === 'hpCost' && e.source === 'gates');
-    expect(drain).toEqual({ type: 'hpCost', uid: 'a0', amount: 8, source: 'gates' });
-    for (let i = 0; i < 3; i++) b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
-    expect(me(b).gate).toBeNull();
-    expect(b.log.some((e) => e.type === 'gate' && e.level === 0 && e.timeout)).toBe(true);
-    const drained = b.log.filter((e) => e.type === 'hpCost' && e.source === 'gates').length;
-    expect(drained).toBe(4);
-    expect(me(b).hp).toBeLessThan(hp0);
-    // Espera de 3 turnos para abrir de novo.
-    for (let i = 0; i < 3; i++) {
-      expect(gateChoices(b, me(b), data)).toEqual([]);
-      b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
-    }
-    expect(gateChoices(b, me(b), data)).toEqual([1, 2, 3, 4, 5]);
+  it('manutenção crescente e sem limite de turnos; sem chakra, fecha e entra em espera (sem custo de HP)', () => {
+    let b = fight(prodigy({ maxChakra: 100, chakra: 100 }));
+    b = setGate(b, 1, data, fixed(0.5));
+    for (let i = 0; i < 6; i++) b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
+    expect(b.log.filter((e) => e.type === 'gateUpkeep').map((e) => (e.type === 'gateUpkeep' ? e.amount : 0))).toEqual([2, 3, 5, 7, 11, 16]);
+    expect(me(b).gate).toEqual({ level: 1, rounds: 6 });
+    expect(b.log.some((e) => e.type === 'hpCost' && e.source === 'gates')).toBe(false);
 
-    // O desgaste para em 1 de HP.
-    let low = fight(prodigy({ hp: 3, mods: { ...emptyMods(), gateLevels: 4 } }));
-    low = setGate(low, 5, data, fixed(0.5));
+    let low = fight(prodigy({ chakra: 6 }));
+    low = setGate(low, 1, data, fixed(0.5));
     low = playerAct(low, { kind: 'guard' }, data, fixed(0.99));
-    expect(me(low).hp).toBeGreaterThanOrEqual(1);
-    expect(me(low).down).toBe(false);
+    expect(me(low).gate).toEqual({ level: 1, rounds: 1 });
+    low = playerAct(low, { kind: 'guard' }, data, fixed(0.99));
+    expect(me(low).gate).toBeNull();
+    expect(low.log.some((e) => e.type === 'gate' && e.level === 0 && e.exhausted)).toBe(true);
+    expect(me(low).cooldowns.jGates).toBeGreaterThan(0);
   });
 
   it('fechar à mão também põe em espera; cair fecha', () => {
@@ -1433,13 +1425,13 @@ describe('ativas grátis e Portões (v0.42.0)', () => {
     expect(me(d).cooldowns.jGates).toBeUndefined();
   });
 
-  it('a IA do bot abre o portão mais alto que o HP aguenta', () => {
+  it('a IA abre o portão mais alto que dá para abrir e manter por 2 turnos', () => {
     const b = fight(prodigy({ mods: { ...emptyMods(), gateLevels: 4 } }));
-    // 100% do HP: o 5º (8% × 4 turnos) deixa 68%.
+    // 30 de chakra: o 5º custa 15 + 4 + 6 = 25.
     expect(chooseAiActive(b, me(b), data, fixed(0.5))).toEqual({ kind: 'gate', level: 5 });
-    const hurt = fight(prodigy({ hp: 55, mods: { ...emptyMods(), gateLevels: 4 } }));
-    // 55%: só o 1º (2% × 4) ou o 2º (3% × 4 = 12%) deixam ≥ 40%.
-    expect(chooseAiActive(hurt, me(hurt), data, fixed(0.5))).toEqual({ kind: 'gate', level: 2 });
+    const low = fight(prodigy({ chakra: 12, mods: { ...emptyMods(), gateLevels: 4 } }));
+    // 12: o 1º (3 + 2 + 3 = 8) cabe; o 2º (6 + 3 + 4 = 13) não.
+    expect(chooseAiActive(low, me(low), data, fixed(0.5))).toEqual({ kind: 'gate', level: 1 });
   });
 
   it('save com o Quinto portão antigo carrega sem a técnica', () => {
@@ -1672,12 +1664,14 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
       expect(battlePower(up.fighters[0]!, data.techniques.jStrike!, data)).toBe(data.techniques.jStrike!.baseDamage + 3);
     });
 
-    it('Bunshin gasta o turno e cria o clone, e a IA usa quando não tem nenhum', () => {
-      const s = setup({ allies: [hero({ techniques: ['jStrike', 'jBunshin'] })], enemies: [dummy({ hp: 500, maxHp: 500 })] });
+    it('Bunshin gasta o turno e cria o clone, e a IA usa quando não tem nenhum e está ferida (HP < 70%)', () => {
+      const s = setup({ allies: [hero({ hp: 60, techniques: ['jStrike', 'jBunshin'] })], enemies: [dummy({ hp: 500, maxHp: 500 })] });
       const b = startBattle(s, data, fixed(0.5));
       expect(playerAct(b, { kind: 'tech', techId: 'jBunshin', target: 'a0' }, data, fixed(0.99)).fighters[0]!.clones).toBe(1);
       expect(chooseAiAction(b, b.fighters[0]!, data, fixed(0.1))).toMatchObject({ techId: 'jBunshin' });
       expect(chooseAiAction({ ...b, fighters: [{ ...b.fighters[0]!, clones: 1 }, b.fighters[1]!] }, { ...b.fighters[0]!, clones: 1 }, data, fixed(0.1))).toMatchObject({ techId: 'jStrike' });
+      const healthy = { ...b.fighters[0]!, hp: 100 };
+      expect(chooseAiAction({ ...b, fighters: [healthy, b.fighters[1]!] }, healthy, data, fixed(0.1))).toMatchObject({ techId: 'jStrike' });
     });
   });
 

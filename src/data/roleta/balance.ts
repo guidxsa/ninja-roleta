@@ -10,8 +10,12 @@ export const roletaBalance = {
   // Sai da chance de acerto de quem ataca (a roleta continua uma só).
   dodge: { base: 0.05, perSpeed: 0.02, max: 0.3 },
   // Concentrar: recupera esta fração do chakra máximo. Regeneração silenciosa no começo de cada rodada.
-  rest: { chakraPct: 0.25 },
-  chakraRegen: { pct: 0.05, min: 1 },
+  // Economia de chakra (v0.59.0, proposta): técnicas custam o dobro, a regeneração caiu de 5% para 3% e Concentrar subiu
+  // de 25% para 30%, para técnica ser escolha a cada 2 ou 3 rodadas e não toda rodada. O vilão segue com o ritmo antigo
+  // (`villainChakra`), para a mudança não mexer na força dele.
+  rest: { chakraPct: 0.3 },
+  chakraRegen: { pct: 0.03, min: 1 },
+  villainChakra: { restPct: 0.25, regenPct: 0.05 },
   // Os 4 efeitos, com duração fixa (turnos de quem sofre). Queimar e Veneno: fração do HP máximo por turno.
   // Medo: dano × damageMult e acerto + accuracy.
   effects: {
@@ -40,7 +44,9 @@ export const roletaBalance = {
     mindTransfer: { chance: 0.75 },
     plague: { turns: 3 },
     beast: { turns: 3, speed: 3, dogChance: 0.6 },
-    gates: { turns: 3, taijutsuMult: 1.3, hpCostPct: 0.2 },
+    // Portões (src/core/gates.ts): abrir custa `activation` de chakra; manter custa a manutenção comum a cada rodada,
+    // sem limite de rodadas (fecham sozinhos sem chakra); podem reabrir. Sem custo de HP (v0.59.0).
+    gates: { activation: 4, taijutsuMult: 1.3 },
     sharingan: { turns: 3, accuracy: 0.15, dodge: 0.1, offense: 3 },
     byakugan: { turns: 3 },
   },
@@ -63,7 +69,23 @@ export const roletaBalance = {
   // Linhagens que saíram do sorteio do Roleta (v0.52.0): funcionam melhor como suporte e ficam guardadas para a Jornada.
   // As conquistas delas viram clássicas e os dados seguem em `gameData`.
   retiredLineages: ['nara', 'yamanaka', 'aburame'] as readonly string[],
-  infinite: { perCycle: 0.3 },
+  // Modo infinito (só no Hardcore): força por ciclo e o piso do ciclo novo, que parte dos status do último chefe
+  // (cada status do vilão ≥ o do chefe × floor da categoria; proposta, v0.59.0).
+  infinite: { perCycle: 0.3, floor: { genin: 1.05, chunin: 1.1, jounin: 1.18, boss: 1.28 } as Record<string, number> },
+  // Toda luta começa com HP e chakra cheios (v0.59.0): força dos vilões por categoria (× HP e ataques). Calibrado pela
+  // simulação (`npm run sim:origens`): sem a roleta de recompensa o jogador cresce menos, e o Médio só volta a ~65% com o
+  // chefe a ×0,9. Proposta para o usuário.
+  villainPower: { genin: 1, chunin: 1, jounin: 1, boss: 0.9 } as Record<string, number>,
+  // Roleta de relíquia depois da luta (fora o chefe): pesos da raridade por categoria; cada ciclo do infinito passa
+  // `cycleShift` pontos de Comum para Rara (proposta, v0.59.0).
+  relicReward: {
+    weights: {
+      genin: { common: 70, uncommon: 25, rare: 5 },
+      chunin: { common: 45, uncommon: 40, rare: 15 },
+      jounin: { common: 20, uncommon: 45, rare: 35 },
+    } as Record<string, { common: number; uncommon: number; rare: number }>,
+    cycleShift: 10,
+  },
   // Fatia "Relíquia" da recompensa: classificação pela raridade (comum → comum, rara → incomum, lendária → rara).
   relicTierByReward: { 1: 'common', 2: 'uncommon', 3: 'rare' } as Record<number, 'common' | 'uncommon' | 'rare'>,
   // Consumíveis na luta.

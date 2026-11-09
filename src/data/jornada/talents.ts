@@ -90,7 +90,8 @@ export const talents: TalentNode[] = [
   { id: 'tGenjutsuPower', owner: 'uchihaNinja', branch: 'illusions', tier: 2, cost: 2, mods: { typeDamageMult: { genjutsu: 1.2 } } },
   { id: 'tFearGaze', owner: 'uchihaNinja', branch: 'illusions', tier: 3, cost: 2, mods: { accuracyBonus: 0.05, critBonus: 0.05 } },
   { id: 'tTsukuyomi', owner: 'uchihaNinja', branch: 'illusions', tier: 4, cost: 3, learn: 'jTsukuyomi' },
-  { id: 'tChidoriU', owner: 'uchihaNinja', branch: 'lightning', tier: 1, cost: 2, requiresElement: 'lightning', learn: 'jChidori' },
+  // O Uchiha é sempre Fogo (v0.59.0): o Chidori virou técnica aprendida no treino (como o do Sasuke com o Kakashi).
+  { id: 'tChidoriU', owner: 'uchihaNinja', branch: 'lightning', tier: 1, cost: 2, learn: 'jChidori' },
   { id: 'tLionU', owner: 'uchihaNinja', branch: 'sasuke', tier: 1, cost: 1, account: 'j_sasukeEgg', learn: 'jLionBarrage', maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jLionBarrage: 1.25 } } },
   { id: 'tLightningBladeU', owner: 'uchihaNinja', branch: 'sasuke', tier: 2, cost: 2, account: 'j_sasukeEgg', learn: 'jLightningBlade' },
   { id: 'tAvenger', owner: 'uchihaNinja', branch: 'sasuke', tier: 3, cost: 2, account: 'j_sasukeEgg', mods: { lowHpDamageMult: 1.25 } },

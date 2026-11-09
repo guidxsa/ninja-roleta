@@ -4,7 +4,8 @@
 import { scaleVillain, type Difficulty } from '../difficulty';
 import type { GameData } from '../gameData';
 import { bossChoices, dropRelic, type RelicDef, type RoletaRelicEffect } from '../jornada/relics';
-import { fullRestore, gainXp, recoverAfterWin, trainingWeightsWin, xpGain, xpToNextLevel, type PlayerState } from '../player';
+import { spin, type Slice } from '../roulette';
+import { fullRestore, gainXp, trainingWeightsWin, xpGain, xpToNextLevel, type PlayerState } from '../player';
 import { applyReward, xpStep, type NextFightMods, type Step } from '../progression';
 import type { Rng } from '../rng';
 import type { VillainDef } from '../types';
@@ -31,7 +32,26 @@ export interface RRun {
   bossChoice: string[] | null;
   /** Lutas vencidas na run toda. */
   wins: number;
+  /** Status do último chefe vencido (já escalados): o piso do ciclo seguinte no modo infinito. */
+  lastBoss?: VillainStats | null;
 }
+
+/** Status de um vilão que o piso do modo infinito compara (o kit não entra). */
+export interface VillainStats {
+  hp: number;
+  chakra: number;
+  speed: number;
+  offense: VillainDef['offense'];
+  resistance: VillainDef['resistance'];
+}
+
+const statsOf = (v: VillainDef): VillainStats => ({ hp: v.hp, chakra: v.chakra, speed: v.speed, offense: { ...v.offense }, resistance: { ...v.resistance } });
+
+/** O modo infinito existe só no Hardcore: só a run vencida nele segue para o próximo ciclo. */
+export const canContinueRoleta = (run: RRun) => run.status === 'victory' && run.difficulty === 'hardcore';
+
+/** Toda luta começa com HP e chakra cheios (v0.59.0). */
+export const readyForFight = (player: PlayerState): PlayerState => fullRestore(player);
 
 export function newRoletaRun(player: PlayerState, difficulty: Difficulty): RRun {
   return {
@@ -79,7 +99,33 @@ export function villainFor(run: RRun, villains: Record<string, VillainDef>, data
             },
           },
         };
-  return scaleVillain(villains[run.villainId!]!, run.difficulty, scaled);
+  const cat = currentCategory(run, data);
+  const v = scaleVillain(villains[run.villainId!]!, run.difficulty, scaled);
+  // Força da categoria (as lutas começam com HP cheio, v0.59.0): × HP e ataques.
+  const pow = data.r.villainPower[cat] ?? 1;
+  let out: VillainDef =
+    pow === 1
+      ? v
+      : {
+          ...v,
+          hp: Math.floor(v.hp * pow),
+          offense: { taijutsu: Math.floor(v.offense.taijutsu * pow), ninjutsu: Math.floor(v.offense.ninjutsu * pow), genjutsu: Math.floor(v.offense.genjutsu * pow) },
+        };
+  // Modo infinito: o ciclo novo parte dos status do último chefe (cada status ≥ o do chefe × piso da categoria).
+  const last = run.cycle > 0 ? run.lastBoss : null;
+  if (last) {
+    const f = data.r.infinite.floor[cat] ?? 1;
+    const up = (own: number, boss: number) => Math.max(own, Math.ceil(boss * f));
+    out = {
+      ...out,
+      hp: up(out.hp, last.hp),
+      chakra: up(out.chakra, last.chakra),
+      speed: up(out.speed, last.speed),
+      offense: { taijutsu: up(out.offense.taijutsu, last.offense.taijutsu), ninjutsu: up(out.offense.ninjutsu, last.offense.ninjutsu), genjutsu: up(out.offense.genjutsu, last.offense.genjutsu) },
+      resistance: { physical: up(out.resistance.physical, last.resistance.physical), mental: up(out.resistance.mental, last.resistance.mental) },
+    };
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -157,6 +203,42 @@ export function rewardRelic(player: PlayerState, tier: number, data: RoletaData,
   return dropRelic(relicPool(player, data), player.relics ?? [], { [relicTier]: 1 }, rng);
 }
 
+/** Raridades da roleta de relíquia pós-luta. */
+const RELIC_REWARD_TIERS = ['common', 'uncommon', 'rare'] as const;
+export type RelicRewardTier = (typeof RELIC_REWARD_TIERS)[number];
+
+export interface RelicRewardRoll {
+  /** Roleta da raridade (pesos da categoria; só as raridades com relíquia para sortear). */
+  tierStep: { slices: Slice<RelicRewardTier>[]; index: number } | null;
+  /** Roleta da relíquia (as da raridade que o jogador ainda não tem, peso igual). */
+  relicStep: { slices: Slice<string>[]; index: number } | null;
+  relic: string | null;
+}
+
+/** Pesos da raridade para a categoria e o ciclo (cada ciclo do infinito passa pontos de Comum para Rara). */
+export function relicRewardWeights(category: RCategory, cycle: number, data: RoletaData): Record<RelicRewardTier, number> {
+  const w = data.r.relicReward.weights[category] ?? data.r.relicReward.weights.genin!;
+  const shift = Math.min(w.common, data.r.relicReward.cycleShift * cycle);
+  return { common: w.common - shift, uncommon: w.uncommon, rare: w.rare + shift };
+}
+
+/**
+ * Roleta de relíquia depois da luta (fora o chefe): a raridade pelos pesos da categoria e, nela, uma relíquia que o
+ * jogador ainda não tem. Raridade esgotada sai da roleta; sem nenhuma relíquia para sortear, `relic` é null.
+ */
+export function rollRelicReward(player: PlayerState, category: RCategory, cycle: number, data: RoletaData, rng: Rng): RelicRewardRoll {
+  const owned = player.relics ?? [];
+  const pool = relicPool(player, data).filter((r) => !owned.includes(r.id));
+  const weights = relicRewardWeights(category, cycle, data);
+  const tierSlices = RELIC_REWARD_TIERS.filter((t) => weights[t] > 0 && pool.some((r) => r.tier === t)).map((t) => ({ label: t, weight: weights[t], value: t }));
+  if (!tierSlices.length) return { tierStep: null, relicStep: null, relic: null };
+  const tierIndex = spin(tierSlices, rng).index;
+  const tier = tierSlices[tierIndex]!.value;
+  const relicSlices = pool.filter((r) => r.tier === tier).map((r) => ({ label: r.id, weight: 1, value: r.id }));
+  const relicIndex = spin(relicSlices, rng).index;
+  return { tierStep: { slices: tierSlices, index: tierIndex }, relicStep: { slices: relicSlices, index: relicIndex }, relic: relicSlices[relicIndex]!.value };
+}
+
 /** Contrato do animal (evento Invocação): a relíquia que corresponde a ele. */
 export const contractFor = (animal: string, data: RoletaData) => data.relics.find((r) => r.roleta?.summon === animal)?.id ?? null;
 
@@ -180,10 +262,8 @@ export function finishRoletaFight(prev: RRun, battle: RBattle, data: RoletaData,
   const boss = isBossStep(prev, data);
   if (!won) return { run: { ...prev, player: battle.player, status: 'defeat' }, outcome: { won, xp: 0, tier: 0, boss } };
   const fx = relicEffects(battle.player, data);
-  let p = trainingWeightsWin(recoverAfterWin(battle.player, data.base), data.base);
-  if (fx.afterWinHealPct > 0) {
-    p = { ...p, hp: Math.min(p.maxHp, p.hp + Math.floor(p.maxHp * fx.afterWinHealPct)), chakra: Math.min(p.maxChakra, p.chakra + Math.floor(p.maxChakra * fx.afterWinHealPct)) };
-  }
+  // Sem recuperação parcial: a próxima luta começa com HP e chakra cheios (`readyForFight`).
+  let p = trainingWeightsWin(battle.player, data.base);
   // XP do vilão (a ficha da base; o ciclo não muda o XP), com as relíquias de XP.
   const xp = Math.floor(battle.villain.def.xp * fx.xpMult);
   p = gainXp(p, xp, data.base);
@@ -191,6 +271,7 @@ export function finishRoletaFight(prev: RRun, battle: RBattle, data: RoletaData,
   const run: RRun = { ...prev, player: p, wins: prev.wins + 1, used: [...prev.used, prev.villainId!], villainId: null, mods: { villainStartsFirst: false, playerStartsFirst: false } };
   if (boss) {
     run.player = fullRestore(run.player);
+    run.lastBoss = statsOf(battle.villain.def);
     const choices = bossChoices(relicPool(run.player, data), run.player.relics ?? [], data.r.run.bossChoices, 0, rng);
     run.bossChoice = choices.length ? choices : null;
     if (!run.bossChoice) endCycle(run);
@@ -251,7 +332,7 @@ function continueInPlace(run: RRun): void {
 
 /** Modo infinito: depois da vitória do 1º ciclo, segue para o próximo (dos seguintes, o ciclo emenda sozinho). */
 export function continueRoletaCycle(prev: RRun): RRun {
-  if (prev.status !== 'victory') throw new Error('só a run vencida segue de ciclo');
+  if (!canContinueRoleta(prev)) throw new Error('só a run vencida no Hardcore segue de ciclo');
   const run = { ...prev };
   continueInPlace(run);
   return run;

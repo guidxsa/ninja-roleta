@@ -60,6 +60,11 @@ export interface ElementRule {
   fixed?: Element;
   /** Peso de cada quantidade total de elementos (índice = quantidade, o fixo conta). */
   countWeights: number[];
+  /**
+   * Natureza sorteada em silêncio (v0.59.0): a origem não usa ninjutsu elemental, então a natureza só aparece na ficha
+   * (sem roleta na tela). Ela continua valendo na vantagem elemental.
+   */
+  silent?: boolean;
 }
 
 /**
@@ -242,6 +247,8 @@ export interface VillainDef {
   reactions?: ReactionWeights;
   /** Estado elemental a luta toda (Armadura de Areia do Gaara). */
   elementalState?: Element;
+  /** Natureza de Kekkei Genkai (Gelo do Haku, Areia do Gaara): conta como uma natureza só (src/core/nature.ts). */
+  kekkeiGenkai?: KekkeiGenkaiId;
   /** Barreira (id de uma técnica dele) já erguida no início da luta, sem custo. */
   startingShield?: string;
   /** Diferencial de crítico do vilão (somado aos 5% base). */

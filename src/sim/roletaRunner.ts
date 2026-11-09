@@ -1,5 +1,6 @@
 // Simulação do Roleta enxuto (docs/roleta/combate.md): bot simples e a campanha com eventos e recompensas diretos.
 // O bot joga pior que um humano: escolhe o golpe de mais dano esperado, usa a ativa logo e quase não defende.
+import { gateUpkeep } from '../core/gates';
 import type { Difficulty } from '../core/difficulty';
 import { canLevelUp, equipTrainingWeights, gainXp, recoverAfterWin, trainingWeightsWin, type PlayerState } from '../core/player';
 import {
@@ -44,9 +45,14 @@ import {
   newRoletaRun,
   applyJackpot,
   applyRoletaReward,
+  canContinueRoleta,
+  readyForFight,
   rewardRelic,
+  rewardXp,
+  rollRelicReward,
   villainFor,
 } from '../core/roleta/run';
+import type { RCategory } from '../data/roleta/villains';
 import { playerTechniques } from '../core/roleta/player';
 import type { Rng } from '../core/rng';
 import type { VillainDef } from '../core/types';
@@ -70,7 +76,10 @@ export function chooseRoletaAction(s: RBattle, data: RoletaData): RAction {
   if (bag.explosiveTag > 0 && s.villain.hp <= data.r.items.explosiveTagDamage) return 'item:explosiveTag';
   if (bag.medKit > 0 && p.hp < p.maxHp * 0.3 && s.fx.effects.length > 0) return 'item:medKit';
   if (bag.smokeBomb > 0 && p.hp < p.maxHp * 0.25) return 'item:smokeBomb';
-  const techs = playerTechniques(p, data);
+  const all = playerTechniques(p, data);
+  const bunshin = all.find((t) => t.clone);
+  if (bunshin && !s.fx.clone && p.hp < p.maxHp * 0.7 && canUseTechnique(s, bunshin, data)) return `tech:${bunshin.id}`;
+  const techs = all.filter((t) => !t.clone);
   const affordable = techs.filter((t) => canUseTechnique(s, t, data));
   const best = (list: typeof techs) => list.map((t) => ({ t, e: expected(s, t.id, data) })).sort((a, b) => b.e - a.e)[0];
   const bestNow = best(affordable);
@@ -86,7 +95,11 @@ export function chooseRoletaAction(s: RBattle, data: RoletaData): RAction {
 function wantsActive(s: RBattle, data: RoletaData): boolean {
   if (!canUseActive(s, data)) return false;
   const kind = kitOf(s.player, data).active;
-  if (kind === 'gates') return s.player.hp > s.player.maxHp * 0.5;
+  if (kind === 'gates') {
+    if (s.fx.buff?.kind === 'gates') return false;
+    const g = data.base.balance.gateCosts;
+    return s.player.chakra >= data.r.kits.gates.activation + gateUpkeep(1, g) + gateUpkeep(2, g);
+  }
   return true;
 }
 
@@ -132,6 +145,13 @@ export function autoRoletaReward(player: PlayerState, tier: number, rng: Rng, da
     p = relic ? autoWeights(gainRoletaRelic(p, relic, data), data) : gainXp(p, data.base.balance.rewards.xp[tier - 1]!, data.base);
   } else if (id === 'jackpot') p = applyJackpot(p, rng, data).player;
   else p = applyRoletaReward(p, id as 'stages' | 'xp', tier, rng, data).at(-1)!.player;
+  return roletaLevelUps(p, data);
+}
+
+/** Roleta de relíquia pós-luta, direta (sem nenhuma para sortear, o XP de uma recompensa rara). */
+export function autoRelicReward(player: PlayerState, category: RCategory, cycle: number, rng: Rng, data: RoletaData): PlayerState {
+  const roll = rollRelicReward(player, category, cycle, data, rng);
+  const p = roll.relic ? autoWeights(gainRoletaRelic(player, roll.relic, data), data) : gainXp(player, rewardXp(player, 2, data), data.base);
   return roletaLevelUps(p, data);
 }
 
@@ -196,6 +216,7 @@ export function runRoletaRun(
       const ev = autoRoletaEvent(run.player, rng, data);
       run = { ...run, player: roletaLevelUps(ev.player, data), mods: { ...run.mods, ...ev.mods } };
     }
+    run = { ...run, player: readyForFight(run.player) };
     const fight = runRoletaBattle(run.player, villainFor(run, villainsById, data), rng, data, run.mods);
     rounds.push(fight.round);
     const villainId = run.villainId;
@@ -203,12 +224,16 @@ export function runRoletaRun(
     run = res.run;
     if (!res.outcome.won) return { won: cyclesWon > 0, cyclesWon, villainReached: villainId, rounds, level: run.player.level };
     run = { ...run, player: roletaLevelUps(run.player, data) };
-    if (progression && res.outcome.tier > 0) run = { ...run, player: autoRoletaReward(run.player, res.outcome.tier, rng, data) };
+    if (progression && !res.outcome.boss) run = { ...run, player: autoRelicReward(run.player, data.cycle[run.step - 1] ?? 'genin', run.cycle, rng, data) };
     if (run.bossChoice) run = chooseChest(run, run.bossChoice[0]!, data);
     if (res.outcome.boss) {
       cyclesWon++;
       if (cyclesWon >= maxCycles) return { won: true, cyclesWon, villainReached: null, rounds, level: run.player.level };
-      if (run.status === 'victory') run = continueRoletaCycle(run);
+      if (run.status === 'victory') {
+        // O modo infinito existe só no Hardcore.
+        if (!canContinueRoleta(run)) return { won: true, cyclesWon, villainReached: null, rounds, level: run.player.level };
+        run = continueRoletaCycle(run);
+      }
     }
   }
   throw new Error('run sem fim');

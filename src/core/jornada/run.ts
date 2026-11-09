@@ -202,11 +202,16 @@ export function newGenericRun(
   const cls = data.generic.classes.find((c) => c.id === classId);
   if (!cls) throw new Error(`classe desconhecida: ${classId}`);
   const rng = createRng(seed ^ 0x5bd1e995);
+  // Natureza silenciosa (sem ninjutsu elemental: Hyuuga, Prodígio, suportes assim): sorteio à parte, para não mudar o
+  // mapa e os suportes da seed (v0.59.0).
+  const natureRng = createRng(seed ^ 0x9e3779b9);
   // O sorteio sempre acontece (mesmo com escolha ou sem elemento): a seed dá o mesmo mapa e os mesmos suportes.
   const drawn = cls.fixedElement ?? drawElement(rng, data, Boolean(cls.noElementHero));
   const canChoose = !cls.fixedElement && !cls.noElement;
-  const element = cls.noElement ? null : canChoose && choice !== 'random' ? choice : drawn;
-  const hero = element === null && cls.noElementHero ? cls.noElementHero : cls.hero;
+  const choiceEl = cls.noElement ? null : canChoose && choice !== 'random' ? choice : drawn;
+  const hero = choiceEl === null && cls.noElementHero ? cls.noElementHero : cls.hero;
+  // Todo ninja tem natureza: quem não tem ninjutsu elemental a recebe em silêncio (só na ficha e na vantagem).
+  const element = choiceEl ?? drawElement(natureRng, data, false);
   let run = baseRun(seed, difficulty, hero, data);
   run.mode = 'generic';
   run.classId = classId;
@@ -219,7 +224,7 @@ export function newGenericRun(
   run.skin = skin;
   run.unlocks = talentUnlocks(unlocked, data);
   run.elements = { [hero]: element };
-  drawSupports(run, rng, data, unlocked);
+  drawSupports(run, rng, data, unlocked, natureRng);
   run.bossPlan = data.generic.stages.map((s) => Math.floor(rng() * s.bosses.length));
   run.map = generateMap(rng, data);
   // O nível I do elemento entra no moveset.
@@ -236,7 +241,7 @@ export function newGenericRun(
  * usada dela (ids únicos) e um nome que o outro não tem. O elemento vem da ficha ou do sorteio (nunca "nenhum"), e
  * ficha sem elemento de propósito (Hyuuga) fica sem.
  */
-function drawSupports(run: JRun, rng: Rng, data: JornadaData, unlocked: ReadonlySet<string>): void {
+function drawSupports(run: JRun, rng: Rng, data: JornadaData, unlocked: ReadonlySet<string>, natureRng: Rng = rng): void {
   const open = data.generic.classes.filter((c) => !c.unlock || unlocked.has(c.unlock));
   const taken = new Set<string>();
   run.supports = [];
@@ -257,7 +262,8 @@ function drawSupports(run: JRun, rng: Rng, data: JornadaData, unlocked: Readonly
       run.names[id] = name;
     }
     const def = data.characters[id]!;
-    run.elements[id] = def.element ?? (def.noElement ? null : drawElement(rng, data, false));
+    // Sem ninjutsu elemental (Hyuuga): natureza silenciosa, do sorteio à parte.
+    run.elements[id] = def.element ?? (def.noElement ? drawElement(natureRng, data, false) : drawElement(rng, data, false));
   }
 }
 
@@ -408,6 +414,8 @@ export const elementOf = (run: JRun, id: string, data: JornadaData): Element | n
 
 /** Técnica de nível I do elemento sorteado (Caminho Ninja). */
 function elementBasic(run: JRun, id: string, data: JornadaData): string[] {
+  // Natureza silenciosa (sem ninjutsu elemental) não dá técnica.
+  if (data.characters[id]?.noElement) return [];
   const el = run.elements[id];
   return el ? [data.elementLines[el][0]] : [];
 }
@@ -475,6 +483,7 @@ function memberSeed(run: JRun, id: string, data: JornadaData): FighterSeed {
     offense: sheet.offense,
     resistance: sheet.resistance,
     element: elementOf(run, id, data),
+    ...(def.kekkeiGenkai ? { kekkeiGenkai: def.kekkeiGenkai } : {}),
     techniques: hero ? [...run.moveset, ...heroActives(run, data)] : allyTechniques(run, id, data),
     ai: def.ai,
     mods: hero ? heroMods(run, data) : teamMods(run, data),

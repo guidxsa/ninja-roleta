@@ -9,36 +9,57 @@
 .sheet-btn { flex: none; }
 .player-panel { --tab: var(--gold); }
 
-/* Trilha: caminho vertical com marcos; o atual ganha a faixa vermelha. */
+/*
+ * Trilha: caminho vertical com marcos; o atual ganha a faixa vermelha. Cada etapa tem duas linhas: o Evento pré-luta
+ * (dado, etiqueta própria) e o Confronto (marco, rosto e categoria). Etapa vencida expande com o que ela deu.
+ */
 .trail { list-style: none; margin: 0; padding: 0 0 0 14px; display: flex; flex-direction: column; gap: 4px; position: relative; }
 .trail::before { content: ''; position: absolute; left: 27px; top: 14px; bottom: 14px; width: 1px; background: var(--line-strong); }
-.trail li {
-  position: relative; display: flex; gap: 10px; align-items: center; padding: 7px 10px 7px 0;
-  border-bottom: 1px solid var(--line);
-}
+.trail li { position: relative; padding: 5px 10px 6px 0; border-bottom: 1px solid var(--line); }
 .trail li:last-child { border-bottom: 0; }
-.trail li > i {
+.rrow { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.rrow > div { display: flex; flex-direction: column; min-width: 0; }
+.rrow.ev { padding: 0 0 3px 2px; font-size: 13px; color: color-mix(in srgb, var(--text) 80%, transparent); }
+.rrow.ev > div { flex-direction: row; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.rrow-ico { position: relative; z-index: 1; flex: none; width: 22px; height: 22px; display: grid; place-items: center; background: var(--bg); border: 1px dashed var(--line-strong); border-radius: 50%; color: var(--gold-2); }
+.rrow-ico .ico { width: 13px; height: 13px; }
+.rtag { font: 700 10.5px/1 var(--font-hud) !important; letter-spacing: .12em !important; text-transform: uppercase; color: var(--muted); }
+.rrow.ev .rtag { color: var(--gold-2); }
+.rrow.fight .rtag { color: var(--accent-2); }
+.rrow.fight > i {
   position: relative; z-index: 1; flex: none; width: 26px; height: 26px; display: grid; place-items: center;
   font: 700 14px/1 var(--font-hud); font-style: normal; background: var(--bg); border: 1px solid var(--line-strong);
   transform: rotate(45deg) scale(.82);
 }
-.trail li > i > * { transform: rotate(-45deg); }
-.trail li > i > span { display: block; }
-.trail li > i .ico { width: 15px; height: 15px; }
-.trail li div { display: flex; flex-direction: column; min-width: 0; }
+.rrow.fight > i > * { transform: rotate(-45deg); }
+.rrow.fight > i > span { display: block; }
+.rrow.fight > i .ico { width: 15px; height: 15px; }
 .trail li b { overflow-wrap: break-word; font-weight: 700; }
-.trail li small { color: var(--muted); font-family: var(--font-hud); font-size: 13px; letter-spacing: .03em; }
+.trail li small:not(.rtag) { color: var(--muted); font-family: var(--font-hud); font-size: 13px; letter-spacing: .03em; }
 .trail-faces { display: flex; flex: none; }
 .trail-faces .portrait + .portrait { margin-left: -10px; }
 .trail-ico { width: 30px; height: 30px; display: grid; place-items: center; flex: none; color: var(--gold); }
 .trail-ico .ico { width: 24px; height: 24px; }
-.trail li.done { opacity: .62; }
-.trail li.done > i { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.trail li.done { opacity: 1; }
+.trail li.done .rrow.fight > i { background: var(--gold); border-color: var(--gold); color: #fff8e8; }
 .trail li.current { background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 16%, transparent), transparent 85%); }
 .trail li.current::before { content: ''; position: absolute; left: -14px; top: 0; bottom: 0; width: 3px; background: var(--primary); }
-.trail li.current > i { background: var(--primary); border-color: var(--primary-2); color: var(--primary-ink); }
-.trail li.current b { font: 400 17px/1.2 var(--font-display); }
-.trail li.todo { opacity: .55; }
+.trail li.current .rrow.fight > i { background: var(--primary); border-color: var(--primary-2); color: var(--primary-ink); }
+.trail li.current .rrow.fight b { font: 400 17px/1.2 var(--font-display); }
+.trail li.todo { opacity: .72; }
+/* Etapa vencida: o resumo abre o que ela deu. */
+.rstep details > summary { list-style: none; cursor: pointer; position: relative; padding-right: 22px; }
+.rstep details > summary::-webkit-details-marker { display: none; }
+.rstep-more { position: absolute; right: 0; top: 50%; translate: 0 -50%; color: var(--muted); transition: rotate var(--dur-2) var(--ease); }
+.rstep-more .ico { width: 16px; height: 16px; }
+.rstep details[open] .rstep-more { rotate: 90deg; }
+.rstep details > summary:hover .rstep-more, .rstep details > summary:focus-visible .rstep-more { color: var(--text); }
+.rstep-log { margin: 6px 0 2px 36px; padding: 8px 10px; background: color-mix(in srgb, var(--surface) 80%, transparent); border-left: 2px solid var(--gold); }
+.rstep-log h4 { margin: 0 0 4px; font: 700 11px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.rstep-log ul { margin: 0; padding-left: 16px; font-size: 13.5px; line-height: 1.4; }
+.rstep-log li { padding: 1px 0; border: 0; }
+.rstep-log .compare { display: none; }
+.trail li.done:has(details[open]) { opacity: 1; }
 
 /* Ficha do vilão (mapa e luta): placa vermelha. */
 .foes { display: flex; flex-direction: column; gap: 10px; }
@@ -99,7 +120,8 @@
 .end-seal { position: relative; display: grid; place-items: center; margin: 8px auto 4px; }
 .end-seal .end-stamp { --s: 46px; position: absolute; right: -26px; bottom: -10px; animation-delay: .25s; }
 .end-seal > .ico { width: 96px; height: 96px; color: var(--accent); }
-.end-seal > .seal { --s: 84px; }
+/* O carimbo também é .seal: sem o :not ele crescia junto e cobria o selo. */
+.end-seal > .seal:not(.end-stamp) { --s: 84px; }
 .end.win h2 { color: var(--gold-2); }
 .end.lose h2 { color: var(--bad); }
 .end.lose .end-seal .portrait { filter: grayscale(.7); }
@@ -126,3 +148,14 @@
   .stats { grid-template-columns: repeat(3, 1fr); }
   .portrait-md { width: 64px; height: 64px; }
 }
+
+/* Dica da categoria (mapa e trilha): resumo e a grade dos vilões; os não encontrados ficam como incógnita. */
+.rmap-cap, .rcat { cursor: help; }
+.rcat { text-decoration: underline dotted color-mix(in srgb, currentColor 45%, transparent); text-underline-offset: 3px; }
+.ctip-sum { margin: 4px 0 6px; }
+.ctip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; max-width: 320px; }
+.ctip-v { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.ctip-v small { font-size: 11px; line-height: 1.15; }
+.ctip-v .portrait { width: 40px; height: 40px; }
+.ctip-q { display: grid; place-items: center; width: 40px; height: 40px; border: 1px dashed currentColor; opacity: .55; font: 700 20px/1 var(--font-hud); }
+.ctip-v.unknown small { opacity: .6; }

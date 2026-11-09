@@ -17,21 +17,23 @@ import {
 } from '../src/core/roleta/battle';
 import { createRoletaPlayer, playerTechniques, roletaKit } from '../src/core/roleta/player';
 import { roletaData as rdata } from '../src/data/roleta/index';
+import { hasElementalNinjutsu } from '../src/core/nature';
+import { gateUpkeep } from '../src/core/gates';
 import {
   chooseChest,
   contractFor,
   continueRoletaCycle,
+  canContinueRoleta,
+  readyForFight,
+  rollRelicReward,
   currentCategory,
   cycleMult,
   drawVillain,
   finishRoletaFight,
-  applyJackpot,
-  applyRoletaReward,
   gainRoletaRelic,
   rewardTierFor,
   rewardXp,
   newRoletaRun,
-  rewardRelic,
   villainFor,
   type RRun,
 } from '../src/core/roleta/run';
@@ -43,8 +45,6 @@ import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
   canLevelUp,
   equipTrainingWeights,
-  recoverAfterWin,
-  gainXp,
   removeTrainingWeights,
   techniqueLevel,
   upgradeTechnique,
@@ -68,12 +68,10 @@ import {
   HANDS,
   levelUp,
   playJokenpo,
-  rewardItemSpins,
   rollAkatsuki,
   rollGuru,
   rollItem,
   rollPremiumChoices,
-  rollReward,
   rollSummonAnimal,
   rollTraining,
   rollWeighted,
@@ -84,6 +82,7 @@ import {
   type ProgressEffect,
   type Roll,
   type Step,
+  xpStep,
 } from '../src/core/progression';
 import { buildLabPlayer, LAB_STAT_KEYS, labLearnable, labOrigin, labStatsOf, parseLabParams, type LabConfig } from '../src/core/lab';
 import { newAchievements, type AchievementCategory } from '../src/core/achievements';
@@ -93,10 +92,10 @@ import { createRng, type Rng } from '../src/core/rng';
 import { buildShareText, type TrailEntry } from '../src/core/share';
 
 import type { ConsumableId, Element, LineageTier, Origin, SummonAnimal, VillainDef } from '../src/core/types';
-import { CONSUMABLES, type RewardId } from '../src/data/events';
+import { CONSUMABLES } from '../src/data/events';
 import { campaign, type Stage } from '../src/data/campaign';
 import { ptBR as S } from '../src/data/strings/ptBR';
-import { roletaVillains as villains, roletaVillainsById as villainsById } from '../src/data/roleta/villains';
+import { roletaVillains as villains, roletaVillainsById as villainsById, type RCategory } from '../src/data/roleta/villains';
 import { achievements } from '../src/data/achievements';
 import {
   achievementsFromHistory,
@@ -115,6 +114,7 @@ import {
   type Profile,
 } from '../src/state/profile';
 import { relicCard, relicCollection, relicName, relicSlot, relicTier } from './jornada/relics';
+import { foldAttrs, foldButton, installFolds } from './jornada/fold';
 import { relicIcon } from './jornada/relicIcons';
 import { lineages as allLineages } from '../src/data/lineages';
 import { askPlayerName } from './playerName';
@@ -405,6 +405,23 @@ interface Campaign {
   trail: TrailEntry[];
   /** Estatísticas da run, para as conquistas. */
   stats: RunStats;
+  /** O que aconteceu em cada etapa (chave `ciclo:etapa`): o evento e os textos das mudanças. A trilha mostra ao expandir. */
+  log: Record<string, StepLog>;
+}
+
+interface StepLog {
+  event?: string;
+  items: string[];
+}
+
+/** Etapa em andamento (a do mapa), para o registro; -1 fora de uma etapa. */
+let logStep = -1;
+const stepKey = (cycle: number, step: number) => `${cycle}:${step}`;
+/** Registro da etapa atual (criado na primeira vez). */
+function stepLog(): StepLog | null {
+  if (!camp || logStep < 0) return null;
+  const key = stepKey(camp.run.cycle, logStep);
+  return (camp.log[key] ??= { items: [] });
 }
 
 let camp: Campaign | null = null;
@@ -481,6 +498,8 @@ function applyStep(step: Step) {
   if (!camp) return;
   camp.player = step.player;
   camp.mods = { ...camp.mods, ...step.mods };
+  // A trilha guarda o que cada etapa deu (evento, recompensa, nível, melhoria).
+  if (step.effect.kind !== 'none') stepLog()?.items.push(effectText(step.effect));
 }
 
 // ---------------------------------------------------------------------------
@@ -641,7 +660,7 @@ function playerPanel(p: PlayerState, mods: NextFightMods = NO_MODS): string {
       <div class="panel-id">
         ${profile.playerName ? `<b class="name player-name">${esc(profile.playerName)}</b>` : ''}
         <b class="name${profile.playerName ? ' name-sub' : ''}"${lineageTip(p)}>${originLabel(p.origin)}</b>
-        <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${elementChips(p.elements, p.kekkeiGenkai)}${jinChip(p)}${camp ? diffChip(camp.difficulty) : ''}</div>
+        <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(p.level)}</span>${elementChips(p.elements, p.kekkeiGenkai, silentNature(p))}${jinChip(p)}${camp ? diffChip(camp.difficulty) : ''}</div>
       </div>
       <button class="btn small sheet-btn" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button>
     </div>
@@ -717,7 +736,8 @@ function attrRow(key: keyof typeof S.stats, value: number, top: number): string 
   return `<li${tip(S.stats[key], S.tips.stats[key])}><span>${S.stats[key]}</span><b>${value}</b><i style="width:${pct}%"></i></li>`;
 }
 
-function sheetHtml(c: Campaign): string {
+/** Pedaços da ficha (janela e painéis do mapa no PC): cabeçalho com atributos, relíquias e bolsa, técnicas, passivas. */
+function sheetParts(c: Campaign) {
   const p = battlePlayer?.() ?? c.player;
   const crit = critChance(p.critBonus, data.balance.crit);
   const F = S.ui.sheetFields;
@@ -732,10 +752,7 @@ function sheetHtml(c: Campaign): string {
   const combat = [p.offense.taijutsu, p.offense.ninjutsu, p.offense.genjutsu, p.speed, p.resistance.physical, p.resistance.mental];
   const top = Math.max(...combat);
   const clan = p.origin.lineageId ? S.lineages[p.origin.lineageId] ?? p.origin.lineageId : S.origin.common;
-  return `
-    <div class="scroll-paper">
-      <span class="hanko" aria-hidden="true">${clanSymbol(p.origin.lineageId)}</span>
-      <p class="sheet-kicker"><span class="kanji" aria-hidden="true">忍</span>${F.kicker}</p>
+  const head = `
       <header class="sheet-head">
         ${avatar(p, 'lg')}
         <div class="sheet-id">
@@ -750,22 +767,49 @@ function sheetHtml(c: Campaign): string {
       </header>
       ${xpBar(p)}
       ${bar('hp', p.hp, p.maxHp)}
-      ${bar('ck', p.chakra, p.maxChakra)}
-      <h3 class="sheet-title">${S.ui.attributes}</h3>
+      ${bar('ck', p.chakra, p.maxChakra)}`;
+  const attrs = `
       <ul class="attr-list">
         ${attrRow('taijutsu', p.offense.taijutsu, top)}${attrRow('ninjutsu', p.offense.ninjutsu, top)}${attrRow('genjutsu', p.offense.genjutsu, top)}
         ${attrRow('speed', p.speed, top)}${attrRow('physical', p.resistance.physical, top)}${attrRow('mental', p.resistance.mental, top)}
       </ul>
-      <div class="attrs">${statBox('crit', S.ui.critTier(crit))}${statBox('hp', p.maxHp)}${statBox('chakra', p.maxChakra)}</div>
-      ${(p.relics ?? []).length ? `<h3 class="sheet-title">${S.roleta.run.relicsTitle}</h3>${roletaRelicBar(p)}` : ''}
-      <h3 class="sheet-title">${S.ui.bag}</h3>
-      ${bagSlots(p)}
+      <div class="attrs">${statBox('crit', S.ui.critTier(crit))}${statBox('hp', p.maxHp)}${statBox('chakra', p.maxChakra)}</div>`;
+  const relics = (p.relics ?? []).length ? `<h3 class="sheet-title">${S.roleta.run.relicsTitle}</h3>${roletaRelicBar(p)}` : '';
+  const bag = `<h3 class="sheet-title">${S.ui.bag}</h3>${bagSlots(p)}`;
+  const techs = `<ul class="techs">${techniqueRows(p)}</ul>`;
+  const extra = `${passives ? `<h3 class="sheet-title">${S.ui.passives}</h3><ul class="sheet-passives">${passives}</ul>` : ''}${nextFight ? `<h3 class="sheet-title">${S.ui.nextFight}</h3><div class="mods">${modChips(c.mods)}</div>` : ''}`;
+  return { p, head, attrs, relics, bag, techs, extra };
+}
+
+function sheetHtml(c: Campaign): string {
+  const { p, head, attrs, relics, bag, techs, extra } = sheetParts(c);
+  return `
+    <div class="scroll-paper">
+      <span class="hanko" aria-hidden="true">${clanSymbol(p.origin.lineageId)}</span>
+      <p class="sheet-kicker"><span class="kanji" aria-hidden="true">忍</span>${S.ui.sheetFields.kicker}</p>
+      ${head}
+      <h3 class="sheet-title">${S.ui.attributes}</h3>
+      ${attrs}
+      ${relics}
+      ${bag}
       <h3 class="sheet-title">${S.ui.techniques}</h3>
-      <ul class="techs">${techniqueRows(p)}</ul>
+      ${techs}
       <p class="tip-hint">${icon('info')} ${S.tips.hint}</p>
-      ${passives ? `<h3 class="sheet-title">${S.ui.passives}</h3><ul class="sheet-passives">${passives}</ul>` : ''}
-      ${nextFight ? `<h3 class="sheet-title">${S.ui.nextFight}</h3><div class="mods">${modChips(c.mods)}</div>` : ''}
+      ${extra}
     </div>`;
+}
+
+/** A ficha aberta no mapa do PC: painéis minimizáveis como os da Jornada (a escolha fica salva no navegador). */
+function sheetPanels(c: Campaign): string {
+  const { head, attrs, relics, bag, techs, extra } = sheetParts(c);
+  const panel = (key: string, title: string, body: string) =>
+    `<section class="card rsheet-panel"${foldAttrs(key)}>${foldButton(key)}<h3>${title}</h3><div class="rsheet-body">${body}</div></section>`;
+  return [
+    panel('r-sheet', S.ui.sheet, `${head}${attrs}`),
+    panel('r-bag', `${S.roleta.run.relicsTitle} · ${S.ui.bag}`, `${relics}${bag}`),
+    panel('r-tech', S.ui.techniques, techs),
+    extra ? panel('r-pass', S.ui.passives, extra) : '',
+  ].join('');
 }
 
 /** Abre a ficha como uma janela à parte, sobre qualquer tela (inclusive no meio da luta). */
@@ -786,18 +830,29 @@ function openSheet() {
   document.body.appendChild(overlay);
 }
 
-/** Trilha do ciclo: as 6 lutas (categoria e vilão), feitas, a atual e as que faltam. */
-function stageTrail(run: RRun): string {
+/**
+ * Trilha do ciclo: cada etapa tem duas linhas, o **Evento** pré-luta e o **Confronto** (categoria e vilão). Etapa vencida
+ * expande e mostra o evento e o que ela deu (registro em `camp.log`).
+ */
+function stageTrail(run: RRun, log: Record<string, StepLog> = camp?.log ?? {}): string {
   const RR = S.roleta.run;
   const done = run.status === 'victory' ? rdata.cycle.length : run.step;
-  return `<ol class="trail">${rdata.cycle
+  return `<ol class="trail rtrail">${rdata.cycle
     .map((cat, i) => {
       const state = i < done ? 'done' : i === done ? 'current' : 'todo';
       const id = i < done ? run.used[i] : i === done ? run.villainId : null;
+      const entry = log[stepKey(run.cycle, i)];
       const faces = id ? `<span class="trail-faces">${foePortrait(id, 'sm')}</span>` : `<span class="trail-ico">${icon(cat === 'boss' ? 'intent' : 'swords')}</span>`;
       const tier = rewardTierFor(cat, run.cycle, rdata);
       const sub = cat === 'boss' ? RR.chestTitle : S.ui.rewardTier(S.rewardTiers[tier] ?? '');
-      return `<li class="${state}"><i><span>${i < done ? icon('check') : i + 1}</span></i>${faces}<div><b>${RR.categories[cat]}${id ? ` · ${villainName(id)}` : ''}</b><small>${sub}</small></div></li>`;
+      const ev = `<div class="rrow ev"><span class="rrow-ico">${icon('dice')}</span><div><small class="rtag">${RR.eventRow}</small><span>${entry?.event ?? RR.eventPending}</span></div></div>`;
+      const fight = `<div class="rrow fight"><i><span>${i < done ? icon('check') : i + 1}</span></i>${faces}<div><small class="rtag">${RR.fightRow}</small><b><span class="rcat"${categoryTip(cat, run.cycle)}>${RR.categories[cat]}</span>${id ? ` · ${villainName(id)}` : ''}</b><small>${sub}</small></div></div>`;
+      if (state === 'done' && entry) {
+        const items = entry.items.length ? entry.items.map((t) => `<li>${t}</li>`).join('') : `<li class="muted">${RR.noRewards}</li>`;
+        return `<li class="rstep done"><details><summary>${ev}${fight}<span class="rstep-more" aria-hidden="true">${icon('chevron')}</span></summary>
+          <div class="rstep-log"><h4>${RR.rewardsTitle}</h4><ul>${items}</ul></div></details></li>`;
+      }
+      return `<li class="rstep ${state}">${ev}${fight}</li>`;
     })
     .join('')}</ol>`;
 }
@@ -888,12 +943,20 @@ function rollSlices<T extends string>(roll: Roll<T>, label: (id: T) => string, c
 /** Cores da roleta de quantidade de elementos (0 a 3). */
 const COUNT_COLORS = ['#5d6168', '#3f5f9e', '#7d4d8f', '#b8892f'];
 
-/** Chips de todos os elementos, o principal primeiro (ou "sem elemento"), e da kekkei genkai. */
-function elementChips(elements: Element[], kg: string | null = null): string {
-  const els = elements.length ? elements.map((e) => elChip(e)).join('') : `<span class="chip"${tip(S.ui.noAffinity, S.tips.noElement)}>${S.ui.noAffinity}</span>`;
+/**
+ * Chip da natureza (src/core/nature.ts): a Kekkei Genkai, que é uma natureza só, ou o elemento. Quem não usa ninjutsu
+ * elemental tem a natureza "silenciosa": o chip mostra, com a dica de que ela não dá técnica.
+ */
+function elementChips(elements: Element[], kg: string | null = null, silent = false): string {
   const k = kg ? S.kekkeiGenkai[kg] : null;
-  return k ? `${els}<span class="chip kg-chip"${tip(k.name, k.desc)}>${icon('sparkle')} ${k.name}</span>` : els;
+  if (k) return `<span class="chip kg-chip"${tip(k.name, k.desc)}>${icon('sparkle')} ${k.name}</span>`;
+  if (!elements.length) return `<span class="chip"${tip(S.ui.noAffinity, S.tips.noElement)}>${S.ui.noAffinity}</span>`;
+  if (silent) return elements.map((e) => `<span class="chip el silent" style="--c:${ELEMENT_COLORS[e]}"${tip(S.elements[e], S.tips.silentNature)}>${icon(ELEMENT_ICON[e])} ${S.elements[e]}</span>`).join('');
+  return elements.map((e) => elChip(e)).join('');
 }
+
+/** A natureza do jogador é silenciosa (origem sem ninjutsu elemental). */
+const silentNature = (p: PlayerState) => !hasElementalNinjutsu(lineageOf(p.origin.lineageId, data));
 
 function originStepSlices(step: OriginStep): WheelSlice[] {
   const L = S.sliceLabels;
@@ -914,7 +977,8 @@ function originStepSlices(step: OriginStep): WheelSlice[] {
         return { label: S.kekkeiGenkai[s.value]?.name ?? s.value, weight: s.weight, color: s.value === 'none' ? TIER_COLORS.common : TIER_COLORS.legendary };
       case 'elementCount': {
         const n = Number(s.value);
-        return { label: S.ui.elementCount(n), weight: s.weight, color: COUNT_COLORS[n] ?? TIER_COLORS.common };
+        // Roleta de proficiência do Comum: sem proficiência vira o Prodígio; com, uma natureza (v0.59.0).
+        return { label: n === 0 ? S.sliceLabels.prodigy! : S.sliceLabels.proficient!, weight: s.weight, color: COUNT_COLORS[n] ?? TIER_COLORS.common };
       }
       case 'lineage': {
         // A cor da fatia indica o nível: comum, clã ou rara.
@@ -935,7 +999,7 @@ function stepResultText(step: OriginStep): string {
     case 'element':
       return `${icon(ELEMENT_ICON[v as Element])}${S.elements[v as Element]}`;
     case 'elementCount':
-      return S.ui.elementCount(Number(v));
+      return Number(v) === 0 ? `${clanSymbol('taijutsuProdigy')}${S.origin.noElementProdigy}` : S.origin.proficient;
     case 'kekkeiGenkai':
       return v === 'none' ? `${S.roulettes.kekkeiGenkai} ${S.kekkeiGenkai.none!.name}` : `${icon('sparkle')}${S.kekkeiGenkai[v]?.name ?? v}`;
     case 'jinchuuriki':
@@ -962,13 +1026,17 @@ async function originScreen(): Promise<void> {
       mods: { ...NO_MODS },
       seed,
       trail: [],
+      log: {},
       stats: emptyRunStats(),
     };
     campLive = true;
-    syncSheetBtn();
+    // A Ficha da barra só aparece depois das roletas: antes, entregaria a classe sorteada.
+    document.body.classList.remove('has-sheet');
 
     const root = show(
-      h(`<div class="screen"><h2>${S.ui.title}</h2><div class="chips-line" id="origin-chips"></div><div id="slot"></div><div id="after"></div></div>`),
+      h(`<div class="screen rwheel rorigin"><h2>${S.ui.title}</h2><div class="chips-line" id="origin-chips"></div>
+        <div class="rstage-box">${rstage('roleta', 'konoha')}<div id="slot"></div></div>
+        <div class="rside"><div id="ohud"></div><div id="after"></div></div></div>`),
     );
     const chips = root.querySelector<HTMLElement>('#origin-chips')!;
     const slot = root.querySelector<HTMLElement>('#slot')!;
@@ -977,9 +1045,12 @@ async function originScreen(): Promise<void> {
       chips.insertAdjacentHTML('beforeend', `<span class="chip origin-chip pop">${stepResultText(step)}</span>`);
       await sleep(settings.instant ? 0 : 500);
     }
-    // Só registra depois das roletas: o histórico não pode revelar a origem antes da animação.
-    startRun(storage, { id: runId, origin: roll.origin, now: new Date(), ...(seed !== null ? { seed } : {}) }, data.balance.history.maxRuns);
-    slot.innerHTML = playerPanel(player);
+    syncSheetBtn();
+    root.classList.add('rolled');
+    // A ficha vai para a coluna da direita; no PC a última roleta fica no palco (no celular o CSS a esconde).
+    const ohud = root.querySelector<HTMLElement>('#ohud')!;
+    ohud.innerHTML = playerPanel(player);
+    slot.classList.add('done');
     const after = root.querySelector<HTMLElement>('#after')!;
     after.innerHTML = `<div class="difficulty-box">
       <h3>${S.ui.difficulty}</h3>
@@ -1005,58 +1076,114 @@ async function originScreen(): Promise<void> {
       saveSettings();
       after.querySelectorAll('[data-diff]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
       after.querySelector('#diff-desc')!.textContent = S.difficulty[d].desc;
-      slot.innerHTML = playerPanel(player);
+      ohud.innerHTML = playerPanel(player);
     });
     const choice = await choose<'reroll' | 'start'>(after);
     if (choice === 'start') {
+      // A run só entra no histórico quando começa: re-rolar ou sair durante o sorteio não deixa registro.
+      startRun(storage, { id: runId, origin: roll.origin, now: new Date(), ...(seed !== null ? { seed } : {}) }, data.balance.history.maxRuns);
       track({ difficulty: camp.difficulty });
       checkAchievements('inProgress', null);
       return;
     }
-    track({ status: 'reroll', difficulty: camp.difficulty });
   }
+}
+
+// ---------------------------------------------------------------------------
+// Roleta no PC (docs/visual.md, "Roleta no PC"): palco com arte atrás das roletas e arte da categoria no mapa e na
+// luta. Sem imagem na vaga, o cenário desenhado da categoria (nunca um aviso de imagem faltando). No celular, some.
+
+const CATEGORY_SCENE: Record<string, string> = { genin: 'konoha', chunin: 'arena', jounin: 'forest', boss: 'valleyEnd' };
+
+/** Categoria da luta atual (ou a primeira, antes da run). */
+const roletaCategory = (): string => (camp ? currentCategory(getRun(), rdata) : 'genin');
+
+/**
+ * Dica da categoria (mapa e trilha): a recompensa, a escala do ciclo e os vilões dela. Os que estão no Livro Bingo
+ * aparecem com retrato e nome; os ainda não encontrados ficam como incógnita.
+ */
+function categoryTip(cat: string, cycle: number): string {
+  const RR = S.roleta.run;
+  const ids = rdata.categories[cat as keyof typeof rdata.categories] ?? [];
+  const known = ids.filter((id) => (profile.villains[id]?.faced ?? 0) > 0);
+  const tier = rewardTierFor(cat as RCategory, cycle, rdata);
+  const reward = cat === 'boss' ? RR.chestTitle : S.ui.rewardTier(S.rewardTiers[tier] ?? '');
+  const faces = ids
+    .map((id) => (known.includes(id) ? `<span class="ctip-v">${foePortrait(id, 'sm')}<small>${villainName(id)}</small></span>` : `<span class="ctip-v unknown"><span class="ctip-q">?</span><small>${RR.catUnknown}</small></span>`))
+    .join('');
+  return tip(RR.categories[cat] ?? cat, `<p class="ctip-sum">${RR.catTipBody(reward)} ${RR.catKnown(known.length, ids.length)}</p><div class="ctip-grid">${faces}</div>`);
+}
+
+/** Arte de uma vaga do Roleta num contêiner `cls`; sem imagem, o cenário desenhado `scene`. */
+function roletaArt(key: string, scene: string, cls: string, inner = ''): string {
+  const art = sceneMedia(key);
+  return `<div class="${cls}${art ? '' : ` jscene scene-${scene}`}" aria-hidden="true">${art ?? ''}${inner}</div>`;
+}
+
+/** Palco das roletas: a arte (da entrada ou da categoria) atrás do `#slot`. */
+function rstage(key = `roleta-${roletaCategory()}`, scene = CATEGORY_SCENE[roletaCategory()] ?? 'konoha'): string {
+  return roletaArt(key, scene, 'rstage');
 }
 
 // ---------------------------------------------------------------------------
 // Tela: mapa da campanha
 
-async function mapScreen(): Promise<void> {
+/** Mapa do ciclo. `eventDone`: o evento pré-luta desta etapa já aconteceu (o botão vira Lutar). */
+async function mapScreen(eventDone: boolean): Promise<'event' | 'fight' | 'abandon'> {
   const c = camp!;
   const run = getRun();
   const RR = S.roleta.run;
   progressDots(run.step);
   const id = run.villainId!;
+  const cat = currentCategory(run, rdata);
+  logStep = run.step;
   const pct = Math.round((cycleMult(run, rdata) - 1) * 100);
   const cycleChip = run.cycle > 0 ? ` <span class="chip jcycle"${tip(RR.cycle(run.cycle + 1), RR.cycleTip(pct))}>${icon('cycle')} ${RR.cycle(run.cycle + 1)}</span>` : '';
   const root = show(
-    h(`<div class="screen">
+    h(`<div class="screen rmap">
       <h2>${RR.title} ${run.cycle + 1}${cycleChip}</h2>
-      ${stageTrail(run)}
-      <div class="foes">${villainCard(id, villainFor(run, villainsById, rdata))}</div>
+      <div class="rmap-trail">${stageTrail(run)}
+        <div class="rmap-scene">${roletaArt(`roleta-${cat}`, CATEGORY_SCENE[cat] ?? 'konoha', 'rmap-art')}
+          <div class="rmap-foe"><span class="rmap-cap"${categoryTip(cat, run.cycle)}><span class="seal">${cat === 'boss' ? '将' : '戦'}</span>${RR.categories[cat]}</span><div class="foes">${villainCard(id, villainFor(run, villainsById, rdata))}</div></div>
+        </div>
+      </div>
+      <div class="rmap-me">
+      <div class="rmap-sheet">${sheetPanels(c)}</div>
       ${playerPanel(c.player, c.mods)}
       <p class="muted small center">${S.ui.carryHint}</p>
       ${c.player.trainingWeights === 'equipped' ? `<button class="btn" data-choice="weights">${icon('weights')} ${S.ui.weightsRemove}</button>` : ''}
       ${c.player.trainingWeights === 'stored' ? `<button class="btn" data-choice="weights">${icon('weights')} ${S.ui.weightsEquip}</button>` : ''}
-      <div class="sticky-cta"><button class="btn primary big" data-choice="go">${icon('swords')} ${RR.go(villainName(id))}</button></div>
+      </div>
+      <div class="sticky-cta">${
+        eventDone
+          ? `<button class="btn primary big" data-choice="fight">${icon('swords')} ${RR.go(villainName(id))}</button>`
+          : `<button class="btn primary big" data-choice="event">${icon('dice')} ${RR.toEvent}</button>`
+      }<button class="btn small jgiveup rabandon" data-choice="abandon">${icon('warning')} ${RR.abandon}</button></div>
     </div>`),
   );
-  // Os pesos só são equipados ou tirados fora de combate.
-  if ((await choose<'go' | 'weights'>(root)) === 'weights') {
-    c.player =
-      c.player.trainingWeights === 'stored' ? equipTrainingWeights(c.player, data) : removeTrainingWeights(c.player, data);
-    return mapScreen();
+  for (;;) {
+    const pick = await choose<'event' | 'fight' | 'weights' | 'abandon'>(root);
+    // Os pesos só são equipados ou tirados fora de combate.
+    if (pick === 'weights') {
+      c.player =
+        c.player.trainingWeights === 'stored' ? equipTrainingWeights(c.player, data) : removeTrainingWeights(c.player, data);
+      return mapScreen(eventDone);
+    }
+    if (pick === 'abandon' && !window.confirm(RR.abandonConfirm)) continue;
+    return pick;
   }
 }
 
 // ---------------------------------------------------------------------------
 // Tela: evento pré-vilão
 
-async function eventScreen(name: string): Promise<void> {
+/** Evento pré-luta; no fim, Voltar ao mapa ou Lutar. */
+async function eventScreen(name: string): Promise<'back' | 'fight'> {
   const c = camp!;
   const root = show(
-    h(`<div class="screen">
+    h(`<div class="screen rwheel">
       <h2>${S.ui.towards(name)}</h2>
-      <div id="slot"></div><div id="detail"></div><div id="hud"></div><div id="cta"></div>
+      <div class="rstage-box">${rstage()}<div id="slot"></div></div><div class="rside"><div id="detail"></div><div id="hud"></div><div id="cta"></div></div>
     </div>`),
   );
   const slot = root.querySelector<HTMLElement>('#slot')!;
@@ -1070,6 +1197,8 @@ async function eventScreen(name: string): Promise<void> {
 
   const roll = await spinRoll(slot, S.roulettes.event, () => rollWeighted(data.preFightEvents, rng), (id) => S.events[id]!.name);
   const ev = S.events[roll.value]!;
+  const slog = stepLog();
+  if (slog) slog.event = ev.name;
   detail.innerHTML = `<div class="result-card"><h3>${ev.name}</h3><p>${ev.desc}</p></div>`;
   await sleep(settings.instant ? 0 : 400);
 
@@ -1153,9 +1282,10 @@ async function eventScreen(name: string): Promise<void> {
   showEffect(detail, step.effect);
   refreshHud(true);
   const cta = root.querySelector<HTMLElement>('#cta')!;
-  cta.innerHTML = `<div class="sticky-cta"><button class="btn primary big" data-choice="go">${icon('swords')} ${S.ui.fight}</button></div>`;
-  await choose(cta);
+  cta.innerHTML = `<div class="sticky-cta"><button class="btn rsheet-open" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button><button class="btn" data-choice="back">${S.roleta.run.backToMap}</button><button class="btn primary big" data-choice="go">${icon('swords')} ${S.ui.fight}</button></div>`;
+  const next = await choose<'back' | 'go'>(cta);
   await levelUps();
+  return next === 'go' ? 'fight' : 'back';
 }
 
 async function jokenpoFlow(slot: HTMLElement): Promise<Step> {
@@ -1342,7 +1472,12 @@ function badgesHtml(s: RBattle, side: 'player' | 'villain'): string {
   }
   const fx = s.fx;
   out.push(...effectChips(fx.effects, 'bad'));
-  if (fx.buff) {
+  if (fx.buff?.kind === 'gates') {
+    // Portões: sem contagem de rodadas; o selo mostra a próxima manutenção.
+    const a = R.actives.gates!;
+    const next = gateUpkeep(fx.gateRounds + 1, rdata.base.balance.gateCosts);
+    add('gates', R.ui.gatesOn(a.name, next), 'good', { name: a.name, desc: `${a.desc} ${R.ui.gatesNext(next)}` });
+  } else if (fx.buff) {
     const a = R.actives[fx.buff.kind]!;
     add(RACTIVE_ICONS[fx.buff.kind] ?? 'ninjutsu', R.ui.buffOn(a.name, fx.buff.turns), 'good', a);
   }
@@ -1350,6 +1485,7 @@ function badgesHtml(s: RBattle, side: 'player' | 'villain'): string {
   if (fx.vitalTurns > 0) add('heart', R.ui.buffOn(R.passives.vitalForce!.name, fx.vitalTurns), 'good', R.passives.vitalForce!);
   if (fx.guarding) add('stance', R.ui.guard, 'good', { name: R.ui.guard, desc: R.ui.guardTip });
   if (fx.dodgeNext) add('dodge', S.ui.dodge, 'good', St.dodge);
+  if (fx.clone) add('clones', R.ui.cloneOn, 'good', { name: techName('rBunshin'), desc: R.ui.cloneTip(Math.round(rdata.base.balance.clones.blockChance * 100)) });
   if (fx.shield > 0) add('sandArmor', `${fx.shield}`, 'good', R.ui.shieldTip);
   add('willOfFire', `×${s.player.revives}`, '', St.revives);
   return out.map(conditionChip).join('');
@@ -1389,9 +1525,10 @@ function techButton(s: RBattle, t: RTechniqueDef, enabled: boolean): string {
     style: look.style,
     ico: icon(techIconName(t.type, t.element ?? null)),
     title: esc(techName(t.id)),
-    extra: `${R.ui.techLine(dmg, t.hits ?? 1, Math.round(odds.hit * 100))} · ${costTag(s, techCost(s, t, rdata))}`,
-    tip: rTechTip(s.player, t),
-    enabled: enabled && canUseTechnique(s, t, rdata),
+    // Bunshin: sem dano nem roleta de acerto; mostra o clone e o custo.
+    extra: t.clone ? `${R.ui.cloneLine} · ${costTag(s, techCost(s, t, rdata))}` : `${R.ui.techLine(dmg, t.hits ?? 1, Math.round(odds.hit * 100))} · ${costTag(s, techCost(s, t, rdata))}`,
+    tip: t.clone ? tip(techName(t.id), R.ui.cloneTip(Math.round(rdata.base.balance.clones.blockChance * 100))) : rTechTip(s.player, t),
+    enabled: enabled && canUseTechnique(s, t, rdata) && !(t.clone && s.fx.clone),
   });
 }
 
@@ -1424,6 +1561,13 @@ function activeButton(s: RBattle, enabled: boolean): string {
   if (!kind || s.fx.activeUses <= 0) return '';
   const a = R.actives[kind]!;
   const ok = enabled && canUseActive(s, rdata);
+  if (kind === 'gates') {
+    // Portões: abrir (custo da abertura) ou fechar; a dica traz a próxima manutenção.
+    const open = s.fx.buff?.kind === 'gates';
+    const label = open ? R.ui.gatesCloseLabel(a.name) : R.ui.gatesOpen(a.name, rdata.r.kits.gates.activation);
+    const next = gateUpkeep(open ? s.fx.gateRounds + 1 : 1, rdata.base.balance.gateCosts);
+    return `<div class="free-row"><button class="btn focus-btn" data-active ${ok ? '' : 'aria-disabled="true"'}${tip(a.name, `${a.desc} ${R.ui.gatesNext(next)}`)}>${icon('gates')}<span>${label}</span></button></div>`;
+  }
   return `<div class="free-row"><button class="btn focus-btn" data-active ${ok ? '' : 'aria-disabled="true"'}${tip(a.name, `${a.desc} ${R.ui.activeTip}`)}>${icon(RACTIVE_ICONS[kind] ?? 'ninjutsu')}<span>${R.ui.activeLabel(a.name, s.fx.activeUses)}</span></button></div>`;
 }
 
@@ -1444,7 +1588,8 @@ function floatNumber(card: HTMLElement | null, text: string, cls: string, fx?: '
   setTimeout(() => f.remove(), 1100);
 }
 
-async function battleScreen(setup: BattleSetup): Promise<RBattle> {
+/** Luta do Roleta. Devolve `null` se o jogador abandonar a run no meio. */
+async function battleScreen(setup: BattleSetup, abandonable = false): Promise<RBattle | null> {
   const c = camp!;
   const villain = setup.def ?? scaleVillain(villainsById[setup.villainId]!, c.difficulty, data);
   let state = startRoletaBattle(c.player, villain, setup.options, rdata, rng);
@@ -1454,14 +1599,14 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
     h(`<div class="screen battle">
       <div class="battle-head"><span>${icon('swords')} ${setup.label}</span><span id="round">${S.ui.round(0)}</span></div>
       <div id="vslot">${villainPanel(state)}</div>
-      <div class="arena"><span class="arena-mark kanji" aria-hidden="true">戦</span><div id="dice" class="dice"></div></div>
+      <div class="arena">${roletaArt(`roleta-${roletaCategory()}`, CATEGORY_SCENE[roletaCategory()] ?? 'konoha', 'rarena-art')}<span class="arena-mark kanji" aria-hidden="true">戦</span><div id="dice" class="dice"></div></div>
       <ol id="log" class="log" title="${S.ui.logToggle}"></ol>
       <section class="hud ally-hud player-mini" id="pcard">
         <div class="hud-main">
           <div class="hud-face">${avatar(c.player)}</div>
           <div class="hud-id">
             <div class="hud-plate"><b class="name"${lineageTip(c.player)}>${S.ui.you} · ${originLabel(c.origin)}</b><button class="btn small sheet-btn" data-sheet aria-label="${S.ui.sheet}" title="${S.ui.sheet}">${icon('scroll')}</button></div>
-            <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elementChips(c.player.elements, c.player.kekkeiGenkai)}${jinChip(c.player)}</div>
+            <div class="chips-left"><span class="chip lvl-chip">${S.ui.levelLabel(c.player.level)}</span>${elementChips(c.player.elements, c.player.kekkeiGenkai, silentNature(c.player))}${jinChip(c.player)}</div>
             ${bar('hp', state.player.hp, state.player.maxHp)}
             ${bar('ck', state.player.chakra, state.player.maxChakra)}
           </div>
@@ -1478,6 +1623,20 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
   const dice = root.querySelector<HTMLElement>('#dice')!;
   const logEl = root.querySelector<HTMLElement>('#log')!;
   const actionsEl = root.querySelector<HTMLElement>('#actions')!;
+  // PC (docs/visual.md, "Roleta no PC"): layout da luta da Jornada. O campo fica com os dois cards e a arena; a ficha
+  // do vilão (atributos, passivas, técnicas) e o registro vão para o painel da esquerda. São os mesmos nós, com os mesmos
+  // ids, então as atualizações seguem funcionando. No celular nada se move.
+  if (window.matchMedia?.('(min-width: 900px)').matches) {
+    root.classList.add('rb-desk');
+    const intel = h(`<aside class="rb-intel"><section class="rb-foe"><h3>${S.jornada.battle.foesTitle}</h3></section><section class="rb-log"><h3>${S.jornada.battle.logTitle}</h3></section></aside>`);
+    const foe = intel.querySelector<HTMLElement>('.rb-foe')!;
+    for (const sel of ['#vstats', '#vpassives', '#vkit']) {
+      const el = root.querySelector<HTMLElement>(sel);
+      if (el) foe.appendChild(el);
+    }
+    intel.querySelector('.rb-log')!.appendChild(logEl);
+    root.querySelector('.battle-head')!.after(intel);
+  }
   // Log curto (3 linhas); tocar abre o histórico da luta.
   logEl.addEventListener('click', () => logEl.classList.toggle('open'));
 
@@ -1498,7 +1657,9 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
     }
   };
   const renderActions = (s: RBattle, enabled: boolean) => {
-    actionsEl.innerHTML = actionGrid(s, enabled);
+    actionsEl.innerHTML =
+      actionGrid(s, enabled) +
+      (abandonable ? `<button class="btn small jgiveup rabandon" data-abandon ${enabled ? '' : 'aria-disabled="true"'}>${icon('warning')} ${R.run.abandon}</button>` : '');
   };
   renderBadges(state);
   if (setup.options.villainStartsFirst) log(S.ui.villainFirst, 'sys');
@@ -1510,13 +1671,18 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
     renderActions(state, true);
     const btn = await new Promise<HTMLElement>((resolve) => {
       const onClick = (e: Event) => {
-        const b = (e.target as HTMLElement).closest<HTMLElement>('[data-choice],[data-active]');
+        const b = (e.target as HTMLElement).closest<HTMLElement>('[data-choice],[data-active],[data-abandon]');
         if (!b || isOff(b)) return;
+        if (b.hasAttribute('data-abandon') && !window.confirm(R.run.abandonConfirm)) return;
         actionsEl.removeEventListener('click', onClick);
         resolve(b);
       };
       actionsEl.addEventListener('click', onClick);
     });
+    if (btn.hasAttribute('data-abandon')) {
+      battlePlayer = null;
+      return null;
+    }
     renderActions(state, false);
     let next: RBattle;
     if (btn.hasAttribute('data-active')) next = useActive(state, rdata, rng);
@@ -1532,10 +1698,8 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
   const won = state.status === 'won';
   const msg = won ? S.ui.battleWon : setup.exam ? S.ui.examLost : S.ui.battleLost;
   const xpLine = won ? `<p class="xp-gain pop">${S.ui.xpGained(xpGain(state.player, villainsById[setup.villainId]!.xp, data))}</p>` : '';
-  // A vitória devolve parte do HP e do chakra (aplicado no fluxo da campanha).
-  const healed = won ? recoverAfterWin(state.player, data) : null;
-  const recoverLine = healed ? `<p class="muted">${S.ui.recoveredAfterWin(healed.hp - state.player.hp, healed.chakra - state.player.chakra)}</p>` : '';
-  overlay.innerHTML = `<div class="overlay ${won ? 'win' : 'lose'}"><div><span class="seal stamp end-mark${won ? ' gold' : ''}" aria-hidden="true">${won ? '勝' : '敗'}</span><h2>${msg}</h2>${xpLine}${recoverLine}
+  // Sem recuperação parcial: a próxima luta começa com HP e chakra cheios (v0.59.0).
+  overlay.innerHTML = `<div class="overlay ${won ? 'win' : 'lose'}"><div><span class="seal stamp end-mark${won ? ' gold' : ''}" aria-hidden="true">${won ? '勝' : '敗'}</span><h2>${msg}</h2>${xpLine}
     <p class="muted">${S.ui.round(state.round)}</p>
     <button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div></div>`;
   mood(won ? 'good' : 'bad');
@@ -1618,13 +1782,13 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
           else if (ev.source === 'dog') log(RL.dog(ev.amount), 'good', 'beast');
           else if (ev.source === 'tag') log(RL.tag(ev.amount), 'good', 'tag');
           else if (ev.source === 'self') log(RL.selfHit(who(target), ev.amount), 'good', 'mind');
-          else if (ev.source === 'gates') log(RL.gates(ev.amount), 'good', 'gates');
           if (crit) floatNumber(card(target), `−${ev.amount}<small>${S.ui.floats.crit}</small>`, 'crit', 'slash');
           else floatNumber(card(target), `−${ev.amount}`, 'dmg');
           break;
         }
         case 'shield':
-          log(RL.shield(ev.absorbed), 'good', 'sandArmor');
+          // Escudo de areia: o do jogador é bom para ele; o do vilão (Gaara), ruim.
+          log(ev.side === 'villain' ? RL.shieldFoe(ev.absorbed) : RL.shield(ev.absorbed), ev.side === 'villain' ? 'bad' : 'good', 'sandArmor');
           break;
         case 'heal':
           if (ev.side === 'villain') disp.vhp += ev.amount;
@@ -1641,6 +1805,15 @@ async function battleScreen(setup: BattleSetup): Promise<RBattle> {
         case 'dodge':
           floatNumber(pcard, icon('dodge'), 'miss', 'evade');
           log(RL.dodge, 'good');
+          break;
+        case 'gates':
+          if (ev.action === 'upkeep') log(RL.gatesUpkeep(ev.cost), 'muted', 'gates');
+          else log(ev.reason === 'chakra' ? RL.gatesExhausted : RL.gatesClose, 'muted', 'gates');
+          break;
+        case 'clone':
+          // Bunshin: o clone aparece, ou recebe o golpe e some.
+          if (ev.action === 'block') floatNumber(pcard, icon('clones'), 'miss', 'evade');
+          log(ev.action === 'block' ? RL.cloneBlock : RL.cloneCreate, 'good', 'clones');
           break;
         case 'rest':
           if (ev.side === 'player') disp.pck += ev.amount;
@@ -1698,87 +1871,6 @@ let lastAttack: { side: 'player' | 'villain'; tech: string; crit: boolean } | nu
 // ---------------------------------------------------------------------------
 // Tela: recompensa
 
-/** Roleta de recompensa na raridade `tier`. A lendária gira 3 vezes e o jogador escolhe 1. */
-async function rewardScreen(title: string, tier: number): Promise<void> {
-  const c = camp!;
-  const tierName = S.rewardTiers[tier] ?? '';
-  const root = show(
-    h(`<div class="screen"><h2>${title}</h2><p class="center"><span class="chip tier tier-${tier}">${S.ui.rewardTier(tierName)}</span></p>
-      <div id="slot"></div><div id="results"></div><div id="hud"></div><div id="cta"></div></div>`),
-  );
-  const slot = root.querySelector<HTMLElement>('#slot')!;
-  const results = root.querySelector<HTMLElement>('#results')!;
-  const hud = root.querySelector<HTMLElement>('#hud')!;
-  const refreshHud = () => {
-    hud.innerHTML = playerPanel(c.player, c.mods);
-    hud.firstElementChild?.classList.add('pulse');
-  };
-  hud.innerHTML = playerPanel(c.player, c.mods);
-  // A fatia mostra o que vale nesta raridade.
-  const RW = S.roleta.run.rewardSlices;
-  const label = (id: RewardId) =>
-    id === 'stages' ? RW.status(data.balance.rewards.stages[tier - 1]!)
-    : id === 'xp' ? RW.xp(rewardXp(c.player, tier, rdata))
-    : id === 'item' ? RW.items(rewardItemSpins(tier, data))
-    : id === 'relic' ? RW.relic(S.rewardTiers[tier] ?? '')
-    : S.rewards[id]!;
-
-  const reward = (await spinRoll(slot, S.roulettes.reward, () => rollReward(c.player, rng, data), label)).value;
-
-  const steps: Step[] = [];
-  if (reward === 'item') {
-    const spins = rewardItemSpins(tier, data);
-    for (let i = 0; i < spins; i++) {
-      await sleep(settings.instant ? 0 : 400);
-      const step = await itemFlow(slot);
-      applyStep(step);
-      steps.push(step);
-      showEffect(results, step.effect);
-      refreshHud();
-    }
-  } else if (reward === 'relic') {
-    // Relíquia da raridade (sem nada para sortear, vira o XP da raridade).
-    const id = rewardRelic(c.player, tier, rdata, rng);
-    if (id) {
-      c.player = gainRoletaRelic(c.player, id, rdata);
-      discoverRoletaRelics([id]);
-      results.insertAdjacentHTML('beforeend', relicCard(id, '', 'reveal', 'roleta'));
-      mood('good');
-    } else {
-      c.player = gainXp(c.player, rewardXp(c.player, tier, rdata), data);
-      results.insertAdjacentHTML('beforeend', `<div class="effect pop">${S.roleta.run.relicNone}</div>`);
-    }
-    refreshHud();
-  } else if (reward === 'jackpot') {
-    const out = applyJackpot(c.player, rng, rdata);
-    c.player = out.player;
-    if (out.relic) {
-      discoverRoletaRelics([out.relic]);
-      results.insertAdjacentHTML('beforeend', relicCard(out.relic, '', 'reveal', 'roleta'));
-    }
-    results.insertAdjacentHTML('beforeend', `<div class="effect pop">${RW.jackpotText(out.healed)}</div>`);
-    mood('good');
-    refreshHud();
-  } else {
-    const before = c.player;
-    for (const step of applyRoletaReward(c.player, reward as 'stages' | 'xp', tier, rng, rdata)) {
-      applyStep(step);
-      steps.push(step);
-      showEffect(results, step.effect);
-    }
-    // O nome da fatia não diz quanto vale um estágio: aqui vai o ganho de verdade.
-    if (reward === 'stages') results.insertAdjacentHTML('beforeend', `<div class="effect pop">${RW.statusGain(c.player.maxHp - before.maxHp, c.player.maxChakra - before.maxChakra)}</div>`);
-    refreshHud();
-  }
-  const cta = root.querySelector<HTMLElement>('#cta')!;
-  cta.innerHTML = `<div class="sticky-cta"><button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div>`;
-  await choose(cta);
-  await levelUps();
-}
-
-// ---------------------------------------------------------------------------
-// XP e subida de nível
-
 /**
  * Mostra uma tela por nível completado (XP de vilões, roletas e pergaminhos) e resolve os upgrades
  * à escolha pendentes (marcos, pergaminho, recompensa). O XP de um upgrade sem alvo pode subir de nível.
@@ -1794,7 +1886,7 @@ async function levelUps(): Promise<void> {
 async function upgradeScreen(): Promise<void> {
   const c = camp!;
   const root = show(
-    h(`<div class="screen"><h2>${S.ui.upgradeTitle}</h2><div id="slot"></div><div id="results"></div><div id="hud"></div><div id="cta"></div></div>`),
+    h(`<div class="screen rwheel"><h2>${S.ui.upgradeTitle}</h2><div class="rstage-box">${rstage()}<div id="slot"></div></div><div class="rside"><div id="results"></div><div id="hud"></div><div id="cta"></div></div></div>`),
   );
   const slot = root.querySelector<HTMLElement>('#slot')!;
   const hud = root.querySelector<HTMLElement>('#hud')!;
@@ -1820,15 +1912,15 @@ async function upgradeScreen(): Promise<void> {
   hud.innerHTML = playerPanel(c.player, c.mods);
   hud.firstElementChild?.classList.add('pulse');
   const cta = root.querySelector<HTMLElement>('#cta')!;
-  cta.innerHTML = `<div class="sticky-cta"><button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div>`;
+  cta.innerHTML = `<div class="sticky-cta"><button class="btn rsheet-open" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button><button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div>`;
   await choose(cta);
 }
 
 async function levelUpScreen(): Promise<void> {
   const c = camp!;
   const root = show(
-    h(`<div class="screen"><h2>${S.ui.levelUpTitle}</h2><p class="center"><span class="chip tier tier-2">${S.ui.levelLabel(c.player.level + 1)}</span></p>
-      <div id="slot"></div><div id="results"></div><div id="hud"></div><div id="cta"></div></div>`),
+    h(`<div class="screen rwheel"><h2>${S.ui.levelUpTitle}</h2><p class="center"><span class="chip tier tier-2">${S.ui.levelLabel(c.player.level + 1)}</span></p>
+      <div class="rstage-box">${rstage()}<div id="slot"></div></div><div class="rside"><div id="results"></div><div id="hud"></div><div id="cta"></div></div></div>`),
   );
   const hud = root.querySelector<HTMLElement>('#hud')!;
   hud.innerHTML = playerPanel(c.player, c.mods);
@@ -1848,7 +1940,7 @@ async function levelUpScreen(): Promise<void> {
   hud.innerHTML = playerPanel(c.player, c.mods);
   hud.firstElementChild?.classList.add('pulse');
   const cta = root.querySelector<HTMLElement>('#cta')!;
-  cta.innerHTML = `<div class="sticky-cta"><button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div>`;
+  cta.innerHTML = `<div class="sticky-cta"><button class="btn rsheet-open" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button><button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div>`;
   await choose(cta);
 }
 
@@ -1856,8 +1948,9 @@ async function levelUpScreen(): Promise<void> {
 async function noticeScreen(title: string, text: string): Promise<void> {
   const c = camp!;
   const root = show(
-    h(`<div class="screen"><h2>${title}</h2><div class="effect pop">${text}</div><div id="hud">${playerPanel(c.player, c.mods)}</div>
-      <div class="sticky-cta"><button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div></div>`),
+    h(`<div class="screen rwheel"><h2>${title}</h2><div class="rstage-box">${rstage()}</div>
+      <div class="rside"><div class="effect pop">${text}</div><div id="hud">${playerPanel(c.player, c.mods)}</div>
+      <div class="sticky-cta"><button class="btn rsheet-open" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button><button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div></div></div>`),
   );
   await choose(root);
 }
@@ -1869,33 +1962,40 @@ async function noticeScreen(title: string, text: string): Promise<void> {
  * Fim da run. Vitória (o chefe do 1º ciclo caiu): "Seguir para o ciclo 2" ou nova run. Cair a partir do ciclo 2 não é
  * uma derrota comum: a run já foi vencida.
  */
-async function endScreen(won: boolean, stoppedAt: string | null, record = false): Promise<'continue' | 'new'> {
+async function endScreen(won: boolean, stoppedAt: string | null, record = false, abandoned = false): Promise<'continue' | 'new'> {
   const c = camp!;
   const RR = S.roleta.run;
   const infinite = c.run.cycle > 0;
   const good = won || infinite;
   progressDots(won ? rdata.cycle.length : c.run.step);
   (good ? victory : defeat)();
-  const title = won ? S.ui.victoryTitle : infinite ? RR.infiniteOver : S.ui.defeatTitle;
+  const title = abandoned ? RR.abandoned : won ? S.ui.victoryTitle : infinite ? RR.infiniteOver : S.ui.defeatTitle;
   const pct = Math.round(rdata.r.infinite.perCycle * (c.run.cycle + 1) * 100);
-  const cont = won
+  // O modo infinito existe só no Hardcore: nas outras dificuldades, a vitória encerra a run.
+  const canGo = won && canContinueRoleta(getRun());
+  const cont = canGo
     ? `<button class="btn primary big" data-choice="continue"${tip(RR.nextCycle(c.run.cycle + 2), RR.nextCycleTip(pct))}>${icon('cycle')} ${RR.nextCycle(c.run.cycle + 2)}</button>`
     : '';
-  if (!won) campLive = false;
+  if (!canGo) campLive = false;
   const face = good ? clanSymbol(c.player.origin.lineageId) : foePortrait(c.run.villainId ?? rdata.categories.genin[0]!, 'lg');
   const root = show(
-    h(`<div class="screen end ${good ? 'win' : 'lose'}">
+    h(`<div class="screen end rend ${good ? 'win' : 'lose'}">
+      <div class="rend-l">
       <div class="end-seal">${face}<span class="seal stamp end-stamp${good ? ' gold' : ''}" aria-hidden="true">${good ? '勝' : '敗'}</span></div>
       <h2>${title}</h2>
       ${stoppedAt ? `<p class="center">${S.ui.defeatBy(stoppedAt)}</p>` : ''}
       <p class="center">${RR.reached(c.run.cycle + 1, c.run.wins)}${record ? ` <span class="chip jrecord">${icon('medal')} ${RR.record}</span>` : ''}</p>
       <p class="center muted">${S.ui.revivesUsed(c.player.revivesUsed)}</p>
+      ${won && !canGo ? `<p class="center muted small">${icon('lock')} ${RR.infiniteHardcoreOnly}</p>` : ''}
+      </div>
+      <div class="rend-r">
       ${stageTrail(c.run)}
       ${playerPanel(c.player)}
+      </div>
       <div class="sticky-cta actions-row">
         <button class="btn big" data-share>${icon('share')} ${S.share.button}</button>
         ${cont}
-        <button class="btn ${won ? '' : 'primary '}big" data-choice="new">${icon('dice')} ${S.ui.newRun}</button>
+        <button class="btn ${canGo ? '' : 'primary '}big" data-choice="new">${icon('dice')} ${S.ui.newRun}</button>
       </div>
     </div>`),
   );
@@ -1903,6 +2003,56 @@ async function endScreen(won: boolean, stoppedAt: string | null, record = false)
   const choice = await choose<'continue' | 'new'>(root);
   if (choice === 'new') campLive = false;
   return choice;
+}
+
+/** Cores da roleta de raridade da relíquia. */
+const RELIC_TIER_COLORS: Record<string, string> = { common: '#5d6168', uncommon: '#4e8a68', rare: '#3f5f9e' };
+
+/**
+ * Relíquia da vitória (docs/roleta/run.md#recompensa): a roleta da raridade, com os pesos da categoria do vilão, e a
+ * da relíquia (as que faltam). Sem escolha. Sem nenhuma para sortear, vale o XP de uma recompensa rara.
+ */
+async function relicRewardScreen(cat: RCategory): Promise<void> {
+  const c = camp!;
+  const RR = S.roleta.run;
+  const root = show(
+    h(`<div class="screen rwheel"><h2>${RR.relicRewardTitle}</h2><p class="center"><span class="chip">${RR.categories[cat]}</span></p>
+      <div class="rstage-box">${rstage()}<div id="slot"></div></div><div class="rside"><div id="results"></div><div id="hud"></div><div id="cta"></div></div></div>`),
+  );
+  const slot = root.querySelector<HTMLElement>('#slot')!;
+  const results = root.querySelector<HTMLElement>('#results')!;
+  const hud = root.querySelector<HTMLElement>('#hud')!;
+  hud.innerHTML = playerPanel(c.player, c.mods);
+  const roll = rollRelicReward(c.player, cat, c.run.cycle, rdata, rng);
+  const tiers = S.jornada.relics.tiers;
+  if (roll.tierStep) {
+    await bigWheel(slot, S.roulettes.relicTier, roll.tierStep.slices.map((s) => ({ label: tiers[s.value] ?? s.value, weight: s.weight, color: RELIC_TIER_COLORS[s.value] ?? PALETTE[0]! })), roll.tierStep.index);
+  }
+  if (roll.relicStep) {
+    await bigWheel(
+      slot,
+      S.roulettes.relic,
+      roll.relicStep.slices.map((s, i) => ({ label: relicName(s.value), weight: s.weight, color: PALETTE[i % PALETTE.length]!, icon: relicIcon(s.value) })),
+      roll.relicStep.index,
+    );
+  }
+  if (roll.relic) {
+    c.player = gainRoletaRelic(c.player, roll.relic, rdata);
+    discoverRoletaRelics([roll.relic]);
+    results.innerHTML = relicCard(roll.relic, '', 'pop', 'roleta');
+    stepLog()?.items.push(`${icon('sparkle')} ${relicName(roll.relic)}`);
+    mood('good');
+  } else {
+    const step = xpStep(c.player, rewardXp(c.player, 2, rdata), data);
+    applyStep(step);
+    showEffect(results, step.effect);
+  }
+  hud.innerHTML = playerPanel(c.player, c.mods);
+  hud.firstElementChild?.classList.add('pulse');
+  const cta = root.querySelector<HTMLElement>('#cta')!;
+  cta.innerHTML = `<div class="sticky-cta"><button class="btn rsheet-open" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button><button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div>`;
+  await choose(cta);
+  await levelUps();
 }
 
 /** Baú do chefe: 3 relíquias lado a lado; tocar destaca, o botão confirma. */
@@ -2290,6 +2440,7 @@ async function labScreen(): Promise<LabTarget> {
       mods: { ...NO_MODS },
       seed: LAB.seed,
       trail: [],
+      log: {},
       stats: emptyRunStats(),
     };
     campLive = true;
@@ -2340,18 +2491,36 @@ async function runCampaign(): Promise<void> {
     const run = getRun();
     const id = run.villainId!;
     track({ furthestStage: run.step, cycle: run.cycle, fights: run.wins });
-    await mapScreen();
     const entry: TrailEntry = { name: villainName(id), exam: false, results: [] };
     c.trail.push(entry);
-    await eventScreen(villainName(id));
-    const cat = RR.categories[currentCategory(getRun(), rdata)]!;
-    const result = await battleScreen({
-      villainId: id,
-      options: { villainStartsFirst: c.mods.villainStartsFirst, playerStartsFirst: c.mods.playerStartsFirst },
-      label: RR.fightLabel(c.run.cycle + 1, cat, villainName(id)),
-      exam: false,
-      def: villainFor(getRun(), villainsById, rdata),
-    });
+    // Mapa → evento pré-luta (uma vez) → luta. Do evento dá para voltar ao mapa; aí o botão vira Lutar.
+    let eventDone = false;
+    let go: 'event' | 'fight' | 'abandon';
+    for (;;) {
+      go = await mapScreen(eventDone);
+      if (go !== 'event') break;
+      eventDone = true;
+      if ((await eventScreen(villainName(id))) === 'fight') {
+        go = 'fight';
+        break;
+      }
+    }
+    if (go === 'abandon') return abandonRun();
+    // Toda luta começa com HP e chakra cheios (v0.59.0).
+    c.player = readyForFight(c.player);
+    const fightCat = currentCategory(getRun(), rdata);
+    const cat = RR.categories[fightCat]!;
+    const result = await battleScreen(
+      {
+        villainId: id,
+        options: { villainStartsFirst: c.mods.villainStartsFirst, playerStartsFirst: c.mods.playerStartsFirst },
+        label: RR.fightLabel(c.run.cycle + 1, cat, villainName(id)),
+        exam: false,
+        def: villainFor(getRun(), villainsById, rdata),
+      },
+      true,
+    );
+    if (!result) return abandonRun();
     entry.results.push(result.status === 'won' ? 'win' : 'loss');
     noteFight(id, false, result);
     const { run: next, outcome } = finishRoletaFight(getRun(), result, rdata, rng);
@@ -2366,8 +2535,13 @@ async function runCampaign(): Promise<void> {
       return;
     }
     await levelUps();
-    if (outcome.tier > 0) await rewardScreen(S.ui.battleWon, outcome.tier);
-    if (c.run.bossChoice) setRun(chooseChest(getRun(), await chestScreen(c.run.bossChoice), rdata));
+    // Depois da luta (fora o chefe): a roleta de relíquia, com a raridade pela categoria do vilão.
+    if (!outcome.boss) await relicRewardScreen(fightCat);
+    if (c.run.bossChoice) {
+      const relic = await chestScreen(c.run.bossChoice);
+      setRun(chooseChest(getRun(), relic, rdata));
+      stepLog()?.items.push(`${icon('sparkle')} ${relicName(relic)}`);
+    }
     if (!outcome.boss) continue;
     // Fim de ciclo.
     const record = recordRoleta();
@@ -2383,6 +2557,15 @@ async function runCampaign(): Promise<void> {
     }
     await noticeScreen(RR.cycle(c.run.cycle + 1), RR.cycleStart(Math.round((cycleMult(getRun(), rdata) - 1) * 100)));
   }
+}
+
+/** Abandonar a run (mapa ou luta): conta como abandonada e mostra o fim da run. */
+async function abandonRun(): Promise<void> {
+  const c = camp!;
+  track({ status: 'abandoned', cycle: c.run.cycle, fights: c.run.wins });
+  const record = recordRoleta();
+  campLive = false;
+  await endScreen(false, null, record, true);
 }
 
 /** Recorde do Roleta (ciclo alcançado e lutas vencidas); devolve se bateu. */
@@ -2536,6 +2719,7 @@ async function main() {
   installSideNav();
   installQuoteStrip();
   installSceneRatios();
+  installFolds();
   await loadFonts();
 
   if (LAB.lab) document.getElementById('version')!.textContent += ` · ${S.lab.badge}`;
@@ -2814,8 +2998,9 @@ const jornadaHost: JornadaHost = {
     saveProfile(storage, profile);
     return true;
   },
-  recentAchievements: (limit) =>
+  recentAchievements: (limit, onlyJornada = false) =>
     Object.entries(profile.achievements)
+      .filter(([id]) => !onlyJornada || id in S.jornada.achievements.list)
       .sort((x, y) => y[1].localeCompare(x[1]))
       .slice(0, limit)
       .map(([id, at]) => {

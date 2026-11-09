@@ -222,7 +222,7 @@ async function entryScreen(host: JornadaHost, saved: JRun | null): Promise<'cont
   let diff = host.difficulty();
   if (diff === 'hardcore' && !hardcoreOk) diff = 'normal';
   const hero = sceneMedia('jornada');
-  const recent = host.recentAchievements(3);
+  const recent = host.recentAchievements(3, true);
   const quote = J.start.quotes[Math.floor(Math.random() * J.start.quotes.length)]!;
   const card = (id: 'story' | 'path', art: string, seal: string, name: string, desc: string, cta: string) =>
     `<button class="parchment mode-card" data-choice="${id}"><span class="mode-art" aria-hidden="true">${art}</span>
@@ -464,7 +464,7 @@ async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
       <div class="jstart-face pop">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'lg')}</div>
       <h3 class="center">${heroName(host, run)}</h3>
       <p class="center">${line}</p>
-      ${run.classId === 'uchiha' ? `<p class="center">${run.secondElement ? `${icon(run.secondElement)} ${G.revealSecond(S.elements[run.secondElement])}` : G.revealNoSecond}</p>` : ''}
+      ${run.classId === 'uchiha' && run.secondElement ? `<p class="center">${icon(run.secondElement)} ${G.revealSecond(S.elements[run.secondElement])}</p>` : ''}
       ${bonus ? `<h3 class="center">${G.randomBonus}</h3>${relicCard(bonus, '', 'reveal')}` : ''}
       <p class="center muted">${G.revealTeam(a ?? '', b ?? '')}</p>
       <button class="btn primary big" data-choice="ok">${U.continue}</button></div>`),
@@ -544,7 +544,7 @@ function hintText(run: JRun, salt: number): string {
   const rec = afterWinRecovery(run, data);
   const all = [
     H.elements(fmt(c.elementAdvantage), fmt(c.elementDisadvantage)),
-    H.clones(pct(c.cloneBlockChance)),
+    H.clones(pct(data.base.clones.blockChance)),
     H.guard,
     H.rest(c.restChakra),
     H.bag(r.bagLimit),

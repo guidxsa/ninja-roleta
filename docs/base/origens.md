@@ -7,47 +7,46 @@ A origem do personagem é sorteada no início da run: linhagem, elementos e jinc
 ## Sorteio
 
 1. **Roleta de linhagem**: uma roleta só, com quatro níveis de raridade (a cor da fatia indica o nível).
-2. **Quantidade de elementos**: roleta pelos pesos da origem (tabela abaixo). Não gira quando só há uma quantidade possível.
-3. **Elementos**: um giro por elemento, sem repetir (cada giro tira o já sorteado; os 5 elementos têm o mesmo peso). O **primeiro** é o **elemento principal**. O elemento fixo da origem (o fogo do Uchiha) entra primeiro e conta na quantidade.
-4. **Kekkei genkai**: quem tem potencial pleno (Comum, Senju; o Uchiha com fogo e um segundo elemento) e os dois elementos-pai de uma kekkei genkai gira a roleta dela ([fundamentos.md](fundamentos.md#kekkei-genkai)). Sem par, não gira.
+2. **Proficiência elemental** (só o Comum): roleta Sim/Não. **Sem proficiência, o Comum vira o Prodígio do taijutsu** (v0.59.0): o Prodígio não tem fatia própria na roleta de linhagem.
+3. **Natureza**: todo ninja tem **uma natureza só** ([fundamentos.md](fundamentos.md#natureza)). Só as quatro origens com **ninjutsu elemental** (Comum com proficiência, Uzumaki, Senju e Uchiha) a veem na roleta; o Uchiha é **sempre Fogo** (não gira). As outras origens recebem a natureza **sorteada em silêncio**: ela aparece na ficha (chip tracejado), mas não dá técnica.
+4. **Mokuton** (só o Senju): depois da natureza, a roleta da Madeira, raríssima (**3%**). Saindo, a Madeira **é** a natureza do Senju, no lugar do elemento. As outras Kekkei Genkai não saem para o jogador (v0.59.0).
 5. **Jinchuuriki**: roleta independente, **10%**. Acumula com qualquer linhagem.
 
 | Nível | Linhagem | Peso |
 |---|---|---|
-| Comum | Comum | 30 |
+| Comum | Comum (inclui o Prodígio do taijutsu, que sai do Comum sem elemento) | 39 |
 | Clã | Nara | 8 |
 | Clã | Akimichi | 8 |
 | Clã | Yamanaka | 8 |
 | Clã | Aburame | 8 |
 | Clã | Inuzuka | 8 |
-| Rara | Prodígio do taijutsu | 9 |
 | Rara | Uchiha | 7 |
 | Rara | Hyuuga | 7 |
 | Rara | Uzumaki | 7 |
 | Lendária | Senju | 3 |
 
-Total 103: comum 30, clãs 40, raras 30 e lendária 3 (cerca de 29%, 39%, 29% e 3%).
+Total 103: comum 39, clãs 40, raras 21 e lendária 3. Na prática: Comum 30 (29%), Prodígio do taijutsu 9 (9%, o Comum com 0 elementos), clãs 40 (39%), Uchiha, Hyuuga e Uzumaki 21 (20%) e Senju 3 (3%): as mesmas chances de antes.
 
-### Elementos e potencial elemental
+### Natureza e ninjutsu elemental
 
-Não se aprende elemento novo durante a run: os elementos são os do sorteio. O **potencial elemental** diz até onde a origem leva as técnicas dos seus elementos ([tecnicas.md](tecnicas.md#níveis-de-técnica)).
+Não se aprende natureza nova durante a run: ela é a do sorteio (v0.59.0).
 
-| Origem | 0 elementos | 1 | 2 | 3 | Potencial | Começa com o básico do principal? |
-|---|---|---|---|---|---|---|
-| Comum | — | 50 | 35 | 15 | **Pleno** em todos (até III; IV no nível 10) | Sim |
-| Senju | — | 40 | 40 | 20 | **Pleno** em todos | Sim |
-| Uchiha | — | 65 (só fogo) | 35 (fogo + 1) | — | **Pleno** no fogo; **parcial** no outro | Sim (Fagulha do Dragão) |
-| Nara, Akimichi, Yamanaka, Aburame, Inuzuka, Hyuuga, Uzumaki | 30 | 55 | 15 | — | **Parcial** (até o nível de técnica II) | Não |
-| Prodígio do taijutsu | sempre 0 | — | — | — | Nenhum | — |
+| Origem | Natureza | Roleta na tela | Ninjutsu elemental |
+|---|---|---|---|
+| Comum | proficiência 60 Sim / 18 Não (Não = **Prodígio do taijutsu**); com proficiência, 1 dos 5 elementos | Sim | Sim (pleno) |
+| Uzumaki | 1 dos 5 elementos (a natureza ocupa o lugar do antigo Selo Explosivo no kit) | Sim | Sim (pleno) |
+| Senju | 1 dos 5 elementos; depois o **Mokuton** (3%) | Sim | Sim (pleno) |
+| Uchiha | sempre **Fogo** | Não (fixa) | Sim (fogo) |
+| Nara, Akimichi, Yamanaka, Aburame, Inuzuka, Hyuuga, Prodígio do taijutsu | 1 dos 5, **em silêncio** | Não | Não (só informativa) |
 
-- **Pleno**: as linhas elementais sobem até o teto do nível do personagem.
-- **Parcial**: o nível I vem pela recompensa "nova técnica" ou pelo foco elemental do Treino ([campanha.md](../roleta/campanha.md#treino)), e a linha para no **II**. A barreira do elemento (nível 4) entra; a Armadura de Raio (nível 7) não. O potencial dessas origens está no kit da linhagem.
-- Com vários elementos, os upgrades se dividem entre as linhas: quem tem 3 elementos demora mais para levar cada um ao topo.
+Com o Senju em 3% da roleta de linhagem e o Mokuton em 3% dos Senju, a Madeira sai em cerca de **1 a cada 1100 runs**.
+
+Quem tem ninjutsu (todas as origens, menos o Prodígio do taijutsu) começa com o **Bunshin no Jutsu** ([fundamentos.md](fundamentos.md#clones)).
 
 ### Re-roll
 
 - Infinito, só na tela de origem, antes da primeira luta.
-- Cada re-roll conta como campanha nova e entra no histórico com status "re-roll".
+- A run só entra no histórico ao começar a campanha (v0.58.0): re-rolar não deixa registro.
 
 ## Status iniciais
 
@@ -55,17 +54,17 @@ Referência: **90 pontos**, cerca de 70 em status e 20 em resistências. Convers
 
 | Origem | Taijutsu | Ninjutsu | Genjutsu | Res. física | Res. mental | Speed | HP | Chakra | Pontos | Leitura da lore |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Comum | 10 | 10 | 10 | 10 | 10 | 10 | 100 | 30 | 90 | Sem dom, sem defeito: a régua |
+| Comum | 12 | 13 | 5 | 10 | 9 | 10 | 100 | 32 | 90 | A régua, com base de ninjutsu elemental; genjutsu fraco |
 | Nara | 7 | 14 | 9 | 9 | 12 | 9 | 100 | 34 | 91,5 | Cabeça e sombras; corpo preguiçoso |
 | Akimichi | 15 | 7 | 4 | 14 | 7 | 6 | 150 | 34 | 88 | Massa, vida e força; lento e fácil de iludir |
 | Yamanaka | 8 | 9 | 16 | 8 | 15 | 10 | 100 | 32 | 97 | Mente forte, corpo frágil |
 | Aburame | 7 | 13 | 8 | 11 | 12 | 8 | 105 | 38 | 92,5 | Reserva grande de chakra, calmo e defensivo |
-| Inuzuka | 14 | 7 | 5 | 12 | 7 | 14 | 100 | 24 | 88 | Selvagem e rápido; pouco chakra |
+| Inuzuka | 15 | 7 | 5 | 13 | 7 | 14 | 100 | 24 | 90 | Selvagem e rápido; pouco chakra |
 | Prodígio do taijutsu | 18 | 0 | 0 | 12 | 8 | 13 | 110 | 22 | 79,5 | Só corpo; quase sem chakra |
-| Uchiha | 11 | 11 | 13 | 9 | 11 | 11 | 100 | 28 | 95,5 | Talento em tudo, olhos treinados |
+| Uchiha | 10 | 12 | 13 | 10 | 11 | 11 | 100 | 28 | 96,5 | Talento em tudo, olhos treinados |
 | Hyuuga | 15 | 6 | 6 | 11 | 10 | 12 | 100 | 28 | 90 | Punho Gentil, precisão e reflexo |
-| Uzumaki | 10 | 10 | 5 | 12 | 9 | 9 | 120 | 38 | 90,5 | Vitalidade e chakra enormes; péssimo em genjutsu |
-| Senju | 11 | 11 | 6 | 12 | 10 | 10 | 125 | 40 | 97,5 | Como o Uzumaki, um degrau acima: forte de propósito (e raro) |
+| Uzumaki | 12 | 12 | 3 | 12 | 9 | 11 | 120 | 38 | 95,5 | Vitalidade e chakra enormes; péssimo em genjutsu |
+| Senju | 12 | 13 | 5 | 12 | 10 | 12 | 125 | 40 | 102,5 | Como o Uzumaki, um degrau acima: forte de propósito (e raro) |
 
 Lógica das resistências (provisória): clãs de corpo (Akimichi, Inuzuka, Uzumaki) puxam para a física; clãs de mente e ilusão (Yamanaka) puxam para a mental. O prodígio tem a mental mais baixa que a física: é um alvo natural de genjutsu, como na série.
 
@@ -224,7 +223,7 @@ Identidade: o clã do fundador. Muita vida e muito chakra, como o Uzumaki, mas p
 
 - **Herdeiro do fundador** (passiva): começa a run com **+1 Vontade do Fogo** (campo `extraRevives`).
 - **Força vital** (passiva): na 1ª vez na luta em que o HP cai abaixo de **30%**, regenera **4% do HP máximo** no início de cada rodada durante **3 rodadas**. Toda **cura recebida** (Palma Curativa, Lesma, Nunca desistir, manto, itens de cura) rende **+25%**.
-- **Elemento Madeira**: só o Senju com terra e água pode tê-lo (roleta de 30%; [fundamentos.md](fundamentos.md#kekkei-genkai)).
+- **Mokuton**: só o Senju pode tê-lo, pela roleta própria depois da natureza (3%; [fundamentos.md](fundamentos.md#kekkei-genkai)). A Madeira passa a ser a natureza dele.
 
 ## Despertar
 

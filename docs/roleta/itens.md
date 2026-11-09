@@ -50,7 +50,7 @@ Gira depois de cada vilão ou bloco derrotado. A raridade define a força de cad
 
 - **Recompensa direta** (v0.45.0): um giro em todas as raridades; a lendária só tem valores maiores. A fatia "Nova técnica" saiu (as técnicas sobem sozinhas) e o "gira 3, escolhe 1" da lendária também.
 - Fatias impossíveis somem (ex.: nova técnica sem nada para aprender nem subir).
-- Não há fatia de elemento: os elementos vêm só do sorteio da origem ([origens.md](../base/origens.md#elementos-e-potencial-elemental)). A antiga fatia "Elemento secundário" (peso 5) saiu na v0.30 e o peso foi para "Nova técnica".
+- Não há fatia de elemento: os elementos vêm só do sorteio da origem ([origens.md](../base/origens.md#natureza-e-ninjutsu-elemental)). A antiga fatia "Elemento secundário" (peso 5) saiu na v0.30 e o peso foi para "Nova técnica".
 - A pool de técnicas respeita a origem e o elemento (ver [tecnicas.md](../base/tecnicas.md)) e não tem as premium (só o guru ensina). Sem técnica nova para aprender, a "nova técnica" vira upgrade.
 - **Resistência**: os pontos são distribuídos um a um por roleta entre física e mental (50% cada).
 

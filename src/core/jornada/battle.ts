@@ -2,7 +2,9 @@ import type { Difficulty } from '../difficulty';
 // Combate de equipe da Jornada (docs/jornada/combate.md). Funções puras: estado entra, estado sai.
 // Até 3 × 3. O jogador decide só o turno do protagonista; os outros lutadores usam a IA (ai.ts).
 import { damage } from '../damage';
-import { elementMultiplier } from '../elements';
+import { natureMultiplier } from '../nature';
+import { cloneTakesHit } from '../clones';
+import { gateUpkeep, payGateUpkeep } from '../gates';
 import { critChance, hitChance } from '../hit';
 import { clamp, type Rng } from '../rng';
 import type { AttackType } from '../types';
@@ -130,6 +132,7 @@ export function enemySeed(defId: string, difficulty: Difficulty, data: JornadaDa
     offense: { taijutsu: scale(def.offense.taijutsu, mult), ninjutsu: scale(def.offense.ninjutsu, mult), genjutsu: scale(def.offense.genjutsu, mult) },
     resistance: { physical: scale(def.resistance.physical, mult), mental: scale(def.resistance.mental, mult) },
     element: def.element,
+    ...(def.kekkeiGenkai ? { kekkeiGenkai: def.kekkeiGenkai } : {}),
     techniques: [...def.techniques],
     ai: def.ai,
     ...(def.passive ? { passive: def.passive } : {}),
@@ -210,8 +213,9 @@ function elementCfg(data: JornadaData) {
   return { advantage: j.elementAdvantage, disadvantage: j.elementDisadvantage, neutral: 1, pierce: j.elementAdvantage };
 }
 
+/** Encontro de naturezas (src/core/nature.ts): a Kekkei Genkai conta como uma natureza, com o pai mais favorável. */
 export function elementMult(tech: JTechnique, target: Fighter, data: JornadaData): number {
-  return elementMultiplier(tech.element, target.element, data.beats, elementCfg(data));
+  return natureMultiplier(tech.kekkeiGenkai ?? tech.element, target.kekkeiGenkai ?? target.element, data.kekkeiGenkai, data.beats, elementCfg(data));
 }
 
 /** Multiplicador de ficha (talentos e relíquias) de uma técnica: o que vale fora da luta. */
@@ -254,17 +258,15 @@ export interface GateTotals {
   damageMult: number;
   accuracy: number;
   critBonus: number;
-  drainPct: number;
 }
 
-/** Bônus e desgaste somados do 1º ao portão `level`. */
+/** Bônus somados do 1º ao portão `level`. */
 export function gateTotals(level: number, data: JornadaData): GateTotals {
-  const out: GateTotals = { damageMult: 1, accuracy: 0, critBonus: 0, drainPct: 0 };
+  const out: GateTotals = { damageMult: 1, accuracy: 0, critBonus: 0 };
   for (const g of data.j.gates.levels.slice(0, level)) {
     out.damageMult *= g.damageMult;
     out.accuracy += g.accuracy ?? 0;
     out.critBonus += g.critBonus ?? 0;
-    out.drainPct += g.drainPct;
   }
   return out;
 }
@@ -277,8 +279,15 @@ export function maxGate(f: Fighter, data: JornadaData): number {
   return gatesTech(f, data) ? Math.min(data.j.gates.levels.length, 1 + f.mods.gateLevels) : 0;
 }
 
-/** Desgaste de um turno no portão `level`, em HP (antes do limite de não derrubar). */
-export const gateDrain = (f: Fighter, level: number, data: JornadaData) => Math.max(1, Math.floor(f.maxHp * gateTotals(level, data).drainPct));
+/** Chakra para ir do portão aberto (0 = fechado) ao `level`: cada portão a mais custa a abertura; descer é grátis. */
+export const gateOpenCost = (f: Fighter, level: number, data: JornadaData) => Math.max(0, level - (f.gate?.level ?? 0)) * data.j.gates.activationPerLevel;
+
+/** Manutenção da rodada `n` mantida no portão `level` (src/core/gates.ts, com o peso do nível). */
+export const gateUpkeepAt = (level: number, n: number, data: JornadaData) =>
+  gateUpkeep(n, data.base.gateCosts, 1 + data.j.gates.upkeepLevelStep * (level - 1));
+
+/** Próxima manutenção de quem está com os Portões abertos (ou a 1ª, se abrisse o `level`). */
+export const nextGateUpkeep = (f: Fighter, level: number, data: JornadaData) => gateUpkeepAt(level, (f.gate?.rounds ?? 0) + 1, data);
 
 /**
  * Escolhas de portão agora: os liberados menos o aberto, e 0 (fechar) com um aberto. Vazio se o lutador já usou a
@@ -288,25 +297,28 @@ export function gateChoices(s: JBattle, f: Fighter, data: JornadaData): number[]
   const id = gatesTech(f, data);
   if (!id || f.down || s.activeUsed) return [];
   if (!f.gate && (f.cooldowns[id] ?? 0) > 0) return [];
-  const levels = Array.from({ length: maxGate(f, data) }, (_, i) => i + 1).filter((l) => l !== f.gate?.level);
+  // Subir só com chakra para a abertura; descer e fechar, sempre.
+  const levels = Array.from({ length: maxGate(f, data) }, (_, i) => i + 1).filter((l) => l !== f.gate?.level && gateOpenCost(f, l, data) <= f.chakra);
   return f.gate ? [...levels, 0] : levels;
 }
 
-function closeGates(s: JBattle, f: Fighter, data: JornadaData, timeout: boolean): void {
+function closeGates(s: JBattle, f: Fighter, data: JornadaData, exhausted: boolean): void {
   f.gate = null;
   const id = gatesTech(f, data);
   // +1: o fim do turno em que fechou já desconta.
   if (id) f.cooldowns[id] = data.j.gates.cooldown + 1;
-  s.log.push({ type: 'gate', uid: f.uid, level: 0, ...(timeout ? { timeout: true } : {}) });
+  s.log.push({ type: 'gate', uid: f.uid, level: 0, ...(exhausted ? { exhausted: true } : {}) });
 }
 
 function changeGate(s: JBattle, f: Fighter, level: number, data: JornadaData): void {
   if (!gateChoices(s, f, data).includes(level)) throw new Error(`portão indisponível: ${level}`);
   s.activeUsed = true;
   if (level === 0) return closeGates(s, f, data, false);
-  // Subir ou descer não renova o tempo.
-  f.gate = { level, turns: f.gate?.turns ?? data.j.gates.maxTurns };
-  s.log.push({ type: 'gate', uid: f.uid, level });
+  // Subir paga a abertura de cada portão a mais; trocar não zera a manutenção.
+  const cost = gateOpenCost(f, level, data);
+  f.chakra -= cost;
+  f.gate = { level, rounds: f.gate?.rounds ?? 0 };
+  s.log.push({ type: 'gate', uid: f.uid, level, ...(cost ? { cost } : {}) });
 }
 
 const resistanceKind = (type: AttackType) => (type === 'genjutsu' ? 'mental' : 'physical');
@@ -414,18 +426,18 @@ function startTurn(s: JBattle, f: Fighter, data: JornadaData): boolean {
   return true;
 }
 
-/** Fim do turno: desgaste dos Portões, depois efeitos, portão e esperas descontam uma rodada. */
+/** Fim do turno: efeitos e esperas descontam uma rodada; os Portões cobram a manutenção (ou fecham). */
 function endTurn(s: JBattle, f: Fighter, data: JornadaData): void {
   f.effects = f.effects.map((e) => ({ ...e, turns: e.turns - 1 })).filter((e) => e.turns > 0);
   if (f.boost && --f.boost.turns <= 0) f.boost = null;
   if (f.gate && !f.down) {
-    // O desgaste nunca derruba: para em 1 de HP.
-    const amount = Math.min(f.hp - 1, gateDrain(f, f.gate.level, data));
-    if (amount > 0) {
-      f.hp -= amount;
-      s.log.push({ type: 'hpCost', uid: f.uid, amount, source: 'gates' });
-    }
-    if (--f.gate.turns <= 0) closeGates(s, f, data, true);
+    const n = f.gate.rounds + 1;
+    const paid = payGateUpkeep(f.chakra, n, data.base.gateCosts, 1 + data.j.gates.upkeepLevelStep * (f.gate.level - 1));
+    if (paid) {
+      f.chakra = paid.chakra;
+      f.gate.rounds = n;
+      s.log.push({ type: 'gateUpkeep', uid: f.uid, amount: paid.cost });
+    } else closeGates(s, f, data, true);
   }
   for (const id of Object.keys(f.cooldowns)) {
     f.cooldowns[id] = Math.max(0, f.cooldowns[id]! - 1);
@@ -631,7 +643,6 @@ function applyStatus(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data:
 }
 
 function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: JornadaData, rng: Rng): void {
-  const j = data.j.combat;
   const hits = hitsOf(f, tech);
   // Clones só seguram golpe de alvo único; técnica em área passa por eles.
   const single = tech.target !== 'allEnemies';
@@ -645,7 +656,7 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
       s.log.push({ type: 'miss', uid: f.uid, target: t.uid });
       continue;
     }
-    if (single && t.clones > 0 && rng() < j.cloneBlockChance) {
+    if (cloneTakesHit(t.clones, single, data.base.clones, rng)) {
       t.clones--;
       s.log.push({ type: 'cloneBlock', target: t.uid, left: t.clones });
       if (t.mods.cloneCounter) {

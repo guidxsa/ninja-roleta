@@ -48,6 +48,18 @@ Orientação do usuário: a interface deve parecer parte do universo ([visual.md
 
 Pedido do usuário: a dualidade Naruto/Sasuke como eixo da identidade. Decidido com ele: 4 arcos (conteúdo novo conferido com o mangá e apresentado), `sasuke.webp` como arte do Vale do Fim, campanha do Sasuke só em arquitetura e design doc. Feito: Portão dia/noite (Naruto e Sasuke), mapa único de artes `SCENE_ART`, faixa de arcos, campanhas (`CampaignDef`) e migração do save. Decidido sem ele, para revisar ([decisoes.md](decisoes.md) item 19): o evento Itachi e Kisame, o descanso Pousada de Tanzaku e o Kabuto como chefe. Simulação (300 runs, seed 2), vitória antes → depois: Fácil 100 → 100%, Médio 92 → 92%, Difícil 58 → 59%, Hardcore 50 → 51%.
 
+## Origens: Prodígio no Comum e máximo de 2 elementos (v0.59.0, 08/11/2026)
+
+Pedido do usuário, com os números do Inuzuka, Uchiha, Uzumaki e Senju definidos por ele (o Comum seguiu a proposta: 12/13/5, res. 10/9, chakra 32). Regra: o Comum que tira 0 elementos é o Prodígio do taijutsu (peso dele passou ao Comum, 39; elementos do Comum [18, 36, 24]); clãs 1 a 2 (75/25); Senju 1 a 2 (50/50); máximo 2 para todos. Os testes de fórmula do clássico usam uma base congelada das origens antigas (`formulaData`, `tests/helpers.ts`). Simulação do Roleta (1000 runs, seed 2), Médio antes → depois: Comum 47 → 68%, Akimichi 76 → 76%, Inuzuka 82 → 86%, Prodígio 88 → 88%, Uchiha 56 → 62%, Hyuuga 69 → 66%, Uzumaki 67 → 80%, Senju 84 → 93%. Jornada sem mudança.
+
+## Roleta reformulada (v0.59.0, 08/11/2026)
+
+Pedido do usuário: lutas com HP e chakra cheios, roleta de relíquia pós-luta com pesos por categoria (sem escolha; o baú do chefe fica), infinito só no Hardcore com o ciclo novo acima do último chefe, e a correção do Hardcore que não liberava (a vitória era sobrescrita por "abandonada" ao sair depois de vencer). Decidido sem ele: os pesos da roleta de relíquia, o piso do infinito e a força dos vilões (Chefe ×0,9; os outros ×1). Simulação do Roleta (1000 runs, seed 2), média do Médio: antes 74%, só com a regra nova 59%, com o Chefe ×0,9 65%.
+
+## Revisão estrutural: natureza, Bunshin, Portões e chakra (v0.59.0, 08/11/2026)
+
+Pedido do usuário com as respostas: o Comum também usa ninjutsu elemental; a natureza das outras origens é silenciosa; as outras Kekkei Genkai saem do jogador; os Portões novos valem nos dois modos. Regras comuns em `src/core/nature.ts`, `clones.ts` e `gates.ts`. Decidido sozinho: Mokuton em 3% dos Senju; Bunshin com 5 de chakra no Roleta; Portões com abertura 4 (Roleta) e 3 por portão (Jornada), manutenção `ceil(2 × 1,5^(n−1))` e peso de nível +25%; o vilão do Roleta fica com a regeneração e o Concentrar antigos; a IA da Jornada só cria clone com HP < 70%. Simulação (Roleta 1000 runs e Jornada 300, seed 2), Médio ponderado do Roleta: 64% → 58%; tabelas em [decisoes.md](decisoes.md) (item 24).
+
 ## Rodadas antigas
 
 Última rodada concluída: "rebalanceamento das origens"

@@ -97,4 +97,15 @@ describe('hardcore', () => {
     updateRun(st, 'c', { status: 'victory', difficulty: 'hard' }, now, 100);
     expect(isHardcoreUnlocked(loadRuns(st), 'hard')).toBe(true);
   });
+
+  it('a vitória não se desfaz: sair, abandonar ou cair depois (modo infinito) só atualiza até onde chegou', () => {
+    const st = memoryStorage();
+    startRun(st, { id: 'a', origin, now }, 100);
+    updateRun(st, 'a', { status: 'victory', difficulty: 'hard' }, now, 100);
+    updateRun(st, 'a', { status: 'abandoned' }, now, 100);
+    updateRun(st, 'a', { status: 'defeat', cycle: 2, fights: 9 }, now, 100);
+    const r = loadRuns(st)[0]!;
+    expect([r.status, r.cycle, r.fights]).toEqual(['victory', 2, 9]);
+    expect(isHardcoreUnlocked(loadRuns(st), 'hard')).toBe(true);
+  });
 });

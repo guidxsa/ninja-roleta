@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyLabStats, buildLabPlayer, labLearnable, labStatsOf, labOrigin, parseLabParams, type LabConfig } from '../src/core/lab';
 import { createPlayer } from '../src/core/player';
-import { gameData as data } from '../src/data/index';
+import { formulaData as data } from './helpers';
 
 const base: LabConfig = {
   lineageId: 'common',

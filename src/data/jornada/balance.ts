@@ -15,7 +15,6 @@ export const jornadaBalance = {
     elementAdvantage: 1.25,
     elementDisadvantage: 0.8,
     // Chance de um clone receber o golpe no lugar de quem tem clones (o clone some).
-    cloneBlockChance: 0.5,
     maxClones: 5,
     // Queimar e veneno tiram esta fração do HP máximo no começo do turno de quem sofre.
     burnPct: 0.05,
@@ -34,18 +33,20 @@ export const jornadaBalance = {
   },
 
   // Portões do prodígio (docs/jornada/combate.md#portões). Números brutos de cada portão; o portão N soma do 1º ao N.
-  // Uma troca por turno (abrir, subir, descer ou fechar); aberto, dura no máximo `maxTurns` turnos contando o da
-  // abertura, e trocar não renova. Sem custo na abertura: desgaste no fim de cada turno aberto (nunca derruba).
-  // Fechou (à mão ou pelo tempo): espera `cooldown` turnos para abrir de novo. Começa com o 1º liberado.
+  // Uma troca por turno (abrir, subir, descer ou fechar), sem gastar a vez. Abrir ou subir custa
+  // `activationPerLevel` de chakra por portão aberto a mais; descer é grátis. Aberto, paga no fim de cada turno a
+  // manutenção comum (src/core/gates.ts) × (1 + `upkeepLevelStep` × (nível − 1)); sem chakra para ela, fecha
+  // sozinho. Sem limite de turnos e sem custo de HP (v0.59.0). Fechou: espera `cooldown` turnos. Começa com o 1º.
   gates: {
-    maxTurns: 4,
+    activationPerLevel: 3,
+    upkeepLevelStep: 0.25,
     cooldown: 3,
     levels: [
-      { damageMult: 1.15, drainPct: 0.02 }, // Abertura
-      { damageMult: 1.1, drainPct: 0.01 }, // Descanso
-      { damageMult: 1.1, accuracy: 0.1, drainPct: 0.01 }, // Vida
-      { damageMult: 1.1, drainPct: 0.02 }, // Dor
-      { damageMult: 1.1, critBonus: 0.05, drainPct: 0.02 }, // Limite
+      { damageMult: 1.15 }, // Abertura
+      { damageMult: 1.1 }, // Descanso
+      { damageMult: 1.1, accuracy: 0.1 }, // Vida
+      { damageMult: 1.1 }, // Dor
+      { damageMult: 1.1, critBonus: 0.05 }, // Limite
     ] as GateLevel[],
   },
 

@@ -9,7 +9,7 @@ Catálogo de ações de combate: ações universais, reações, técnicas por ca
 - Cada personagem tem um **skill set por categoria**: taijutsu, ninjutsu, genjutsu e ninjutsu médico. Pode ter várias técnicas em cada uma e escolhe qual usar no turno (uma aba por categoria).
 - Aprender uma técnica **soma** ao skill set.
 - Formas de aprender: kit inicial da origem ([origens.md](origens.md)), técnicas de nível (automáticas ao atingir o nível), roleta de recompensa ("nova técnica") e, para as premium, o guru ([campanha.md](../roleta/campanha.md#guru)).
-- Técnicas elementais só nos elementos do jogador (os do sorteio; não se aprende elemento novo na run), até o potencial elemental da origem ([origens.md](origens.md#elementos-e-potencial-elemental)).
+- Técnicas elementais só nos elementos do jogador (os do sorteio; não se aprende elemento novo na run), até o potencial elemental da origem ([origens.md](origens.md#natureza-e-ninjutsu-elemental)).
 - O campo `lineages` restringe técnicas exclusivas.
 - Vilões usam as mesmas fichas de técnica (ver [viloes.md](viloes.md)).
 

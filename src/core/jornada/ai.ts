@@ -7,7 +7,8 @@ import {
   blockedReason,
   downed,
   gateChoices,
-  gateTotals,
+  gateOpenCost,
+  gateUpkeepAt,
   hasEffect,
   hitDamage,
   hitsOf,
@@ -90,9 +91,9 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
   const hurtFriend = friends.find((x) => x.hp < x.maxHp * 0.45);
   if (allyHeal && hurtFriend && f.ai !== 'healer') return { kind: 'tech', techId: allyHeal.id, target: hurtFriend.uid };
 
-  // Clones que gastam o turno (Bunshin): sem nenhum, às vezes vale criar um.
+  // Clones que gastam o turno (Bunshin): sem nenhum e já ferido (HP < 70%, a mesma regra do bot do Roleta), às vezes vale criar um.
   const makeClone = tech((t) => t.target === 'self' && t.baseDamage === 0 && Boolean(t.clones));
-  if (makeClone && f.clones === 0 && rng() < 0.4) return { kind: 'tech', techId: makeClone.id, target: f.uid };
+  if (makeClone && f.clones === 0 && f.hp < f.maxHp * 0.7 && rng() < 0.4) return { kind: 'tech', techId: makeClone.id, target: f.uid };
 
   // Controle sem dano (Prisão de Água, Bomba de fedor): às vezes, no adversário mais perigoso que está livre.
   const pureControl = tech((t) => t.baseDamage === 0 && t.target === 'enemy' && Boolean(t.onHit));
@@ -113,14 +114,15 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
   return attack;
 }
 
-/** Portão para a IA: com tudo fechado, o maior cujo desgaste no tempo todo deixe ≥ 40% do HP; aberto e com HP baixo, fecha. */
+/**
+ * Portão para a IA: com tudo fechado, o maior que dá para abrir e ainda manter por 2 turnos; aberto, deixa fechar
+ * sozinho quando faltar chakra.
+ */
 function aiGate(s: JBattle, f: Fighter, data: JornadaData): number | null {
   const choices = gateChoices(s, f, data);
-  if (!choices.length) return null;
-  const hp = f.hp / f.maxHp;
-  if (f.gate) return hp < 0.3 && choices.includes(0) ? 0 : null;
-  const safe = choices.filter((l) => l > 0 && hp - gateTotals(l, data).drainPct * data.j.gates.maxTurns >= 0.4);
-  return safe.length ? Math.max(...safe) : null;
+  if (!choices.length || f.gate) return null;
+  const affordable = choices.filter((l) => l > 0 && gateOpenCost(f, l, data) + gateUpkeepAt(l, 1, data) + gateUpkeepAt(l, 2, data) <= f.chakra);
+  return affordable.length ? Math.max(...affordable) : null;
 }
 
 /**
