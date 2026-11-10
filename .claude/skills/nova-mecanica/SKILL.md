@@ -77,7 +77,7 @@ A simulação (`src/sim/runner.ts`, `scripts/simulate.ts`) é como o projeto med
 npx tsc --noEmit && npx vitest run 2>&1 | tail -4 && npm run proto | tail -1
 ```
 
-Com tudo verde, publique a versão seguindo a skill `lancar-versao` (testa, commita, faz push e sobe a tag). O usuário quer isso ao fim de toda funcionalidade, sem precisar pedir. No relatório final (em PT-BR, para o usuário, não um changelog):
+Com tudo verde, prepare a versão seguindo a skill `lancar-versao` (testa, commita na branch `feature/*` e faz push só da branch). O usuário quer isso ao fim de toda funcionalidade, sem precisar pedir. Merge no `master`, tag e deploy ficam para depois da aprovação explícita dele. No relatório final (em PT-BR, para o usuário, não um changelog):
 - o que a mecânica faz agora, com os números escolhidos;
 - simulação antes/depois e o que isso significa para o jogador;
 - decisões que você tomou sozinho e riscos (ex.: "Difícil não vence nenhuma campanha na simulação").

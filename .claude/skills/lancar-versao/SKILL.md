@@ -1,13 +1,22 @@
 ---
 name: lancar-versao
-description: Fecha uma versão do Ninja Roleta - testa, commita, faz push e sobe a tag vX.Y.Z no GitHub. Use sempre que terminar uma funcionalidade, mecânica, ajuste de balanceamento ou correção neste projeto (inclusive ao fim da skill nova-mecanica), sem esperar o usuário pedir "commita" - ele quer que toda versão nova seja publicada assim por padrão. Escolhe sozinha o tamanho do salto pelo peso da mudança: ajustes e complementos pequenos sobem patch (v0.27.0 → v0.27.1), não minor. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github" ou "faz a tag".
+description: Fecha uma versão do Ninja Roleta em duas fases - preparar (testa, commita numa branch feature/* e faz push só da branch) e publicar (merge no master, tag vX.Y.Z e deploy, só com aprovação explícita do usuário). Use sempre que terminar uma funcionalidade, mecânica, ajuste de balanceamento ou correção neste projeto (inclusive ao fim da skill nova-mecanica), preparando sem esperar o usuário pedir "commita". Escolhe sozinha o tamanho do salto pelo peso da mudança: ajustes e complementos pequenos sobem patch (v0.27.0 → v0.27.1), não minor. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github" ou "faz a tag".
 ---
 
 # Lançar versão (Ninja Roleta)
 
-O usuário pediu, de forma permanente, que **toda funcionalidade ou versão nova termine publicada**: testada, commitada, enviada ao GitHub e com a tag da versão. Não pergunte "posso commitar?" ao fim do trabalho; isso já está autorizado. Só pare e pergunte nos casos descritos em "Quando parar".
+A versão tem duas fases:
 
-Repositório: `origin` → https://github.com/guidxsa/ninja-roleta, branch `master`.
+- **Preparar** (passos 1 a 5): ao fim de toda funcionalidade, sem perguntar "posso commitar?". Testa, commita numa branch `feature/<tema>` e faz push **só da branch**.
+- **Publicar** (passo 6): merge no `master`, tag e deploy. **Só depois de uma aprovação explícita do usuário** ("publica vX.Y.Z", "pode mergear"). Aprovação de uma versão não vale para a seguinte.
+
+**Nunca dê push direto no `master`**: o GitHub Pages publica a cada push nele. Commits, tags e PRs **sem `Co-Authored-By`** nem outra linha de atribuição.
+
+(Regras provisórias até o `v1.0.0`; depois dele entra o fluxo `feature/* → staging → main` com PR WIP.)
+
+Repositório: `origin` → https://github.com/guidxsa/ninja-roleta, produção na branch `master`.
+
+Antes de começar: se estiver no `master`, crie a branch (`git switch -c feature/<tema-curto>`); o trabalho já pode estar em uma `feature/*`.
 
 ## 1. Descobrir a versão
 
@@ -46,12 +55,10 @@ Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não fo
    - Cada vilao da XP pela dificuldade; nivel maximo 10
    - Dificuldade facil/medio/dificil escala HP, dano e defesa dos viloes
    - Ficha ninja com retrato e bolsa de itens; tema visual ninja
-
-   Co-Authored-By: <linha de atribuição indicada pela sessão>
    ```
-   Use a linha `Co-Authored-By` que a sessão indicar para commits.
+   Sem linha `Co-Authored-By` nem outra atribuição, mesmo que a sessão sugira uma.
 
-## 4. Tag
+## Tag (só na publicação, passo 6)
 
 **Toda versão do `CHANGELOG.md` tem uma tag**, sempre **anotada**, no mesmo padrão das anteriores (`v0.3.1 - Licenca MIT e historico de versoes`):
 
@@ -72,18 +79,34 @@ Quando a versão entrou junto com outra, ou a tag ficou para depois, a tag ainda
 
 Antes de criar, confira no próprio commit: o `package.json`, a mensagem e se ele está no `master` (`git merge-base --is-ancestor <commit> origin/master`). Veja também se a tag já existe no remoto (`git ls-remote --tags origin vX.Y.Z`). Tag publicada não muda de lugar.
 
-## 5. Push
+## 4. Push da branch
 
 ```bash
-git push origin master && git push origin v0.6.0
+git push -u origin feature/<tema>
 ```
 
-- Se o push for recusado porque o remoto tem commits novos, rode `git fetch` e `git pull --rebase origin master`. Se o rebase der conflito, pare e explique ao usuário.
-- **Nunca** use `--force` nem apague ou mova tags já publicadas. Se precisar corrigir uma versão publicada, lance uma versão de patch.
+- Nunca `git push origin master`. Nunca `--force` nem apague ou mova tags já publicadas; para corrigir uma versão publicada, lance um patch.
+- Se a branch ficou atrás do `master`, `git fetch` e `git rebase origin/master` antes do push (branch ainda não publicada pode ser rebaseada). Conflito: pare e explique.
+
+## 5. Relatar e pedir aprovação
+
+Ao usuário, curto: a versão proposta, o que entrou, o resultado dos testes, o hash do commit e o link para abrir o PR ou comparar (`https://github.com/guidxsa/ninja-roleta/compare/master...feature/<tema>`). Termine pedindo a aprovação para publicar. **Pare aqui.**
+
+## 6. Publicar (só com aprovação explícita)
+
+1. Confira que a branch não mudou desde o relato e que os testes do passo 2 seguem verdes.
+2. Merge preservando os commits: pelo PR com **Create a merge commit**, ou localmente com `git switch master && git pull --ff-only && git merge --no-ff feature/<tema>`.
+3. Tag anotada no commit que chegou ao `master` (seção Tag) e push: `git push origin master && git push origin vX.Y.Z`.
+4. Apague a branch: `git branch -d feature/<tema>` (o `-d` só funciona se tudo foi mergeado) e `git push origin --delete feature/<tema>`.
+5. O push no `master` dispara o Pages. Relate a versão e os links:
+   - commit: `https://github.com/guidxsa/ninja-roleta/commit/<hash>`
+   - tag: `https://github.com/guidxsa/ninja-roleta/releases/tag/vX.Y.Z`
+
+   Com mais de uma tag, ou tag fora do commit mais recente, use uma tabela `Tag | Commit | Onde está ou observação`.
 
 ### Versão que vai por pull request
 
-Se o trabalho está numa branch de PR, envie os commits para ela, sem push direto no `master`, e crie as tags nos commits de cada versão. Título e descrição em PT-BR, nesta ordem:
+Se houver PR para a branch, a descrição segue este padrão. As tags só são criadas na publicação. Título e descrição em PT-BR, nesta ordem:
 
 1. Título com o que muda e a versão ou faixa de versões: `Roleta enxuto: combate simples, run por ciclo, reliquias e mais viloes (v0.45.0 a v0.47.0)`. Nunca o nome da branch.
 2. Primeira linha: `**Tags correspondentes: `v0.45.0` (56b545c) e `v0.46.0` (af36575)** (o `package.json` fica em `0.46.0`)`.
@@ -91,23 +114,15 @@ Se o trabalho está numa branch de PR, envie os commits para ela, sem push diret
 4. Uma seção `## vX.Y.Z: resumo` por versão, com as mudanças em itens.
 5. `## Para revisar`, se houver: o que foi decidido sem o usuário e o balanceamento em aberto, com os números da simulação.
 6. `## Conflitos`, se houver: a causa e como foram resolvidos.
-7. `## Como mergear`, se as tags estiverem em commits da branch: pedir **Create a merge commit**, porque com squash elas ficam fora do histórico do `master`.
+7. `## Como mergear`: pedir **Create a merge commit**, que preserva os commits da branch no histórico do `master` (squash os junta num só).
 8. `## Verificação`: o que passou, em qual commit, e o que não foi testado.
-9. A linha de atribuição indicada pela sessão para PRs.
 
 Conflito de versão duplicada por squash: se `git diff <squash> <commit da branch>` sair vazio, a árvore da branch já contém o `master`. Resolva com `git merge -s ours origin/master`, sem `--force`, e confirme que o diff contra a branch antiga continua vazio.
 
-## 6. Relatar
-
-Ao usuário, curto: a versão, o que entrou, o resultado dos testes, o hash do commit e os links:
-- commit: `https://github.com/guidxsa/ninja-roleta/commit/<hash>`
-- tag: `https://github.com/guidxsa/ninja-roleta/releases/tag/vX.Y.Z`
-
-Com mais de uma tag, ou tag fora do commit mais recente, use uma tabela `Tag | Commit | Onde está ou observação`.
-
-## Quando parar e perguntar em vez de publicar
+## Quando parar e perguntar
 
 - O usuário disse para não subir ainda ("não commita", "ainda tô testando", "só local").
 - Os testes falham por algo que não é do trabalho atual.
 - `git status` mostra arquivos estranhos ao trabalho que você não sabe se são dele (ex.: arquivos novos fora de `src/`, `tests/`, `prototype/`, `scripts/` e docs).
-- O branch atual não é `master` nem de um PR aberto, ou o push exige rebase com conflito.
+- O branch atual não é `master` nem `feature/*`, ou o rebase dá conflito.
+- Qualquer passo que toque o `master` sem aprovação explícita desta versão.

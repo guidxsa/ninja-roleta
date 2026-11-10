@@ -17,7 +17,7 @@ Dois modos: **Roleta** (rápido e simples; run em ciclos infinitos) e **Jornada*
 | [docs/visual.md](docs/visual.md) | Direção visual: identidade por modo, locais e regra da arte. Ler antes de mexer na interface |
 | [docs/registro.md](docs/registro.md) | Histórico das decisões e das simulações por versão. Só consulta: não ler inteiro sem motivo |
 | `CHANGELOG.md` | Histórico de versões (o que mudou para quem joga) |
-| `.claude/skills/` | `nova-mecanica` (fluxo de regra nova) e `lancar-versao` (publicar) |
+| `.claude/skills/` | `nova-mecanica` (fluxo de regra nova) e `lancar-versao` (preparar e, com aprovação, publicar) |
 
 Pastas dos docs: `base/` (regras dos dois modos), `roleta/`, `jornada/` e `reserva/` (combate clássico guardado para a Jornada).
 
@@ -78,4 +78,6 @@ A direção está em [docs/visual.md](docs/visual.md): a interface deve parecer 
 - Dano e resistência arredondados para baixo no fim do cálculo.
 - Antes de mudar uma fórmula, escrever ou ajustar o teste.
 - Balanceamento: proposto ao usuário com a tabela de antes e depois, nunca compensado sozinho (alvo em `docs/decisoes.md`).
-- **Toda versão termina publicada** (testar, commitar, push e tag `vX.Y.Z`) sem esperar pedido: skill `lancar-versao`. Nunca `--force`; só segurar se o usuário pedir.
+- **Nada de push direto no `master`** (produção; o Pages publica a cada push). Cada trabalho vai numa branch `feature/<tema>`: testar, commitar e dar push só da branch, sem esperar pedido (skill `lancar-versao`). Merge no `master`, tag `vX.Y.Z` e deploy só com aprovação explícita do usuário ("publica vX.Y.Z"). Nunca `--force`.
+- **Commits e PRs sem `Co-Authored-By`** nem outra linha de atribuição.
+- A partir do `v1.0.0` entra o fluxo `feature/* → staging → main` com PR WIP permanente (plano aprovado, ainda não implementado).
