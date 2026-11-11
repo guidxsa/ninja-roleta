@@ -2,7 +2,9 @@
 
 O que fica salvo no aparelho entre as runs: conquistas, Livro Bingo, estatísticas por origem, coleção de relíquias, recorde do modo infinito e nome do jogador. A run continua só em memória (F5 reseta); o perfil vive no `localStorage` (`profile_v1`), ao lado do histórico de runs ([campanha.md](../roleta/campanha.md#histórico-de-runs)).
 
-A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra inferior do Portão da Vila ou a faixa de Conquistas) tem cinco abas, cada uma com o seu selo: Histórico (歴), Conquistas (功), Livro Bingo (手配), Origens (族) e Relíquias (宝, a coleção da Jornada: [reliquias.md](../jornada/reliquias.md#coleção)). No Livro Bingo, quem já foi derrotado ganha o carimbo 勝; quem nunca apareceu fica na sombra com 謎.
+A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra lateral do PC, a barra inferior do Portão da Vila ou a faixa de Conquistas) abre em popup, uma seção por vez, cada uma com o seu selo: Histórico (歴, com os filtros Geral, Origens e Dificuldade), Conquistas (功), Livro Bingo (手配) e Relíquias (宝, a coleção da Jornada: [reliquias.md](../jornada/reliquias.md#coleção)). No Livro Bingo, quem já foi derrotado ganha o carimbo 勝; quem nunca apareceu fica na sombra com 謎.
+
+**Dados que não deu para ler** (v0.60.0): se o histórico ou o perfil estiverem corrompidos, o jogo segue com eles vazios, mas antes guarda o conteúdo em `runs_v1_backup` ou `profile_v1_backup` (a primeira cópia fica), para a gravação seguinte não apagar tudo sem volta. Uma linha estragada do histórico sai sozinha, sem levar as outras.
 
 ## Nome do jogador
 
@@ -13,7 +15,8 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra infe
 
 ## Recorde do modo infinito
 
-- **Roleta** (v0.46.0): o perfil guarda o ciclo alcançado e as lutas vencidas na melhor run (`roleta`); ciclo maior passa, no mesmo ciclo mais lutas. A tela final mostra "Recorde!" quando bate ([roleta/run.md](../roleta/run.md#modo-infinito)).
+- **Roleta** (v0.46.0): o perfil guarda o ciclo alcançado e as lutas vencidas na melhor run (`roleta`); ciclo maior passa, no mesmo ciclo mais lutas. A tela final mostra "Recorde!" quando bate ([roleta/run.md](../roleta/run.md#modo-infinito)). O "Melhor ciclo" da Ficha do ninja vem desse recorde (e do histórico, para quem jogou antes dele).
+- **Hardcore do Roleta liberado** (`hardcoreUnlocked`, v0.60.0): fica no perfil. Antes era recalculado do histórico, que guarda só as últimas 100 runs, e a vitória no Difícil que liberou podia sair dele e travar o Hardcore de novo.
 
 - O Caminho Ninja vencido pode seguir de ciclo ([run.md](../jornada/run.md#modo-infinito)). O perfil guarda até onde uma run chegou (`jornada.generic`): o ciclo e o estágio (contando do 1) e se venceu esse ciclo. Ciclo maior passa; no mesmo ciclo, vencer passa qualquer estágio; senão, o estágio maior.
 - Grava no fim da run (vitória ou queda) e quando uma run salva que já andou é apagada por uma nova. Sem o campo, nunca registrou.

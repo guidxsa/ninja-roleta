@@ -248,8 +248,8 @@ export function playerAttackOdds(s: RBattle, t: RTechniqueDef, data: RoletaData)
   const p = s.villain.def.passive;
   if (!auto && p?.kind === 'mist' && s.villain.mistTurns > 0) hit = clamp(1 - (1 - hit) * p.evasionMult, cfg.hit.min, cfg.hit.max);
   const critImmune = p?.kind === 'insane' && p.critImmune;
-  const youth = kitOf(s.player, data).passive === 'youth' ? data.r.passives.youthCrit : 0;
-  const crit = critImmune ? 0 : critChance(s.player.critBonus + (t.critBonus ?? 0) + youth + relic.critBonus, cfg.crit, hit);
+  // A Juventude do Prodígio já vem no critBonus da ficha (createPlayer); não soma de novo aqui.
+  const crit = critImmune ? 0 : critChance(s.player.critBonus + (t.critBonus ?? 0) + relic.critBonus, cfg.crit, hit);
   return { hit, crit, auto };
 }
 
@@ -540,23 +540,24 @@ function playerTurn(s: RBattle, action: RAction, data: RoletaData, rng: Rng): vo
     s.log.push({ type: 'guard' });
     return;
   }
-  if (action === 'rest') {
-    const amount = Math.min(s.player.maxChakra - s.player.chakra, Math.max(1, Math.floor(s.player.maxChakra * data.r.rest.chakraPct)));
-    s.player.chakra += amount;
-    s.log.push({ type: 'rest', side: 'player', amount });
-    return;
-  }
+  if (action === 'rest') return concentrate(s, data);
   if (action.startsWith('item:')) return useItem(s, action.slice(5) as ConsumableId, data, rng);
   const t = data.techniques[action.slice(5)];
   if (!t || !s.player.techniques.includes(t.id)) throw new Error(`técnica desconhecida: ${action}`);
-  if (!canUseTechnique(s, t, data)) {
-    // Sem chakra: concentra no lugar (a interface não deixa escolher).
-    return playerTurn({ ...s }, 'rest', data, rng);
-  }
+  // Sem chakra (a manutenção dos Portões, no começo da rodada, pode ter gasto depois da escolha): concentra no lugar,
+  // no mesmo turno. Repetir o turno faria os efeitos doerem e perderem a duração duas vezes.
+  if (!canUseTechnique(s, t, data)) return concentrate(s, data);
   const cost = techCost(s, t, data);
   s.player.chakra -= cost;
   if (cost > 0) logChakra(s, 'player');
   playerAttack(s, t, data, rng);
+}
+
+/** Concentrar: recupera uma fração do chakra máximo (pelo menos 1). */
+function concentrate(s: RBattle, data: RoletaData): void {
+  const amount = Math.min(s.player.maxChakra - s.player.chakra, Math.max(1, Math.floor(s.player.maxChakra * data.r.rest.chakraPct)));
+  s.player.chakra += amount;
+  s.log.push({ type: 'rest', side: 'player', amount });
 }
 
 function useItem(s: RBattle, id: ConsumableId, data: RoletaData, rng: Rng): void {

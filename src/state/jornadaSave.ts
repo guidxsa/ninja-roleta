@@ -1,4 +1,4 @@
-import { heroMovable, MOVESET_SIZE, STORY_ARCS, storyStages, type JRun } from '../core/jornada/run';
+import { heroMovable, MOVESET_SIZE, silentNatures, STORY_ARCS, storyStages, type JRun } from '../core/jornada/run';
 import { jornadaData } from '../data/jornada';
 import { RELIC_RENAMES } from '../data/jornada/relics';
 import { jTechniquesById } from '../data/jornada/techniques';
@@ -51,7 +51,7 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     const cycle = typeof run.cycle === 'number' ? run.cycle : 0;
     const unlocks = Array.isArray(run.unlocks) ? run.unlocks : [];
     const loaded: JRun = { ...legacy, ...run, cycle, unlocks, learned: known(run.learned ?? []), moveset: known(run.moveset ?? []), cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
-    return withoutStaleElements(inFourArcs(withoutShopStops(loaded, run.shopPurchases === undefined)));
+    return withSilentNatures(inFourArcs(withoutShopStops(loaded, run.shopPurchases === undefined)));
   } catch {
     return null;
   }
@@ -98,28 +98,28 @@ function inFourArcs(run: JRun): JRun {
 }
 
 /**
- * Fichas sem elemento (Hyuuga, desde a v0.43.0) perdem o elemento sorteado em saves antigos, e o moveset perde a
- * técnica elemental que o protagonista não conhece mais.
+ * Fichas sem ninjutsu elemental (Hyuuga, Prodígio) têm natureza silenciosa (v0.59.0): conta na vantagem, mas não dá
+ * técnica. Saves de antes não a tinham, e até a v0.59.1 o carregamento a zerava: quem está sem recebe a da seed, a mesma
+ * de uma run nova. O moveset perde a técnica elemental que essas fichas não usam (saves de antes da v0.43.0).
  */
-function withoutStaleElements(run: JRun): JRun {
-  const stale = Object.keys(run.elements).filter((id) => jornadaData.characters[id]?.noElement && run.elements[id] !== null);
-  const heroCls = jornadaData.generic.classes.find((c) => c.hero === run.hero);
-  if (run.mode === 'generic' && heroCls?.noElement && run.elements[run.hero]) stale.push(run.hero);
-  if (!stale.length) return run;
-  const elements = { ...run.elements };
-  for (const id of stale) elements[id] = null;
-  const next = { ...run, elements };
+function withSilentNatures(run: JRun): JRun {
+  const restored = silentNatures(run, jornadaData);
+  const missing = Object.keys(restored).filter((id) => !run.elements[id]);
+  const next = missing.length ? { ...run, elements: { ...run.elements, ...Object.fromEntries(missing.map((id) => [id, restored[id]!])) } } : run;
   const movable = heroMovable(next, jornadaData);
   const moveset = next.moveset.filter((id) => movable.includes(id));
+  if (moveset.length === next.moveset.length) return next;
   return { ...next, moveset: moveset.length ? moveset : movable.slice(0, MOVESET_SIZE) };
 }
 
-export function saveJornada(storage: KeyValueStorage, run: JRun): void {
+/** Grava a run. `false`: o aparelho não guardou (cheio ou bloqueado) e a run segue só na memória: a interface avisa. */
+export function saveJornada(storage: KeyValueStorage, run: JRun): boolean {
   try {
     if (run.status === 'inProgress') storage.setItem(JORNADA_SAVE_KEY, JSON.stringify(run));
     else clearJornada(storage);
+    return true;
   } catch {
-    // Armazenamento cheio ou bloqueado: a run segue em memória.
+    return false;
   }
 }
 

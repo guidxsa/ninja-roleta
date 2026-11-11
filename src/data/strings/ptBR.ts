@@ -528,6 +528,15 @@ export const ptBR = {
   ui: {
     title: 'Ninja Roleta',
     subtitle: 'protótipo',
+    /** O aparelho não guardou a Jornada (cheio ou bloqueado). Avisado uma vez por sessão. */
+    saveFailed: 'Não deu para salvar a jornada neste aparelho. Ela segue aberta, mas fechar a página agora perde o progresso.',
+    /** Tela de erro: algo quebrou no meio de uma tela. */
+    error: {
+      title: 'Um jutsu falhou',
+      text: 'Algo deu errado nesta tela. A jornada salva continua guardada; a run do Roleta em andamento termina aqui.',
+      detail: 'Detalhe para relatar o problema',
+      home: 'Voltar ao Portão',
+    },
     /** Números flutuantes da luta que são palavra (dano é número). */
     floats: { miss: 'errou', cloak: 'manto', revive: 'retorno', crit: 'crítico' },
     logToggle: 'Tocar abre ou fecha o histórico da luta',

@@ -99,6 +99,7 @@ import { roletaVillains as villains, roletaVillainsById as villainsById, type RC
 import { achievements } from '../src/data/achievements';
 import {
   achievementsFromHistory,
+  bestRoletaCycle,
   cleanPlayerName,
   discoverRelics,
   killedByCounts,
@@ -110,6 +111,7 @@ import {
   recordJornadaReach,
   recordRoletaReach,
   saveProfile,
+  syncHardcoreUnlock,
   unlockAchievements,
   type Profile,
 } from '../src/state/profile';
@@ -119,7 +121,6 @@ import { relicIcon } from './jornada/relicIcons';
 import { lineages as allLineages } from '../src/data/lineages';
 import { askPlayerName } from './playerName';
 import {
-  isHardcoreUnlocked,
   loadRuns,
   markAbandonedRuns,
   startRun,
@@ -455,6 +456,19 @@ function backfillProfile() {
   if (profile.backfilled) return;
   profile = { ...unlockAchievements(profile, achievementsFromHistory(loadRuns(storage)), new Date()), backfilled: true };
   saveProfile(storage, profile);
+}
+
+/**
+ * Hardcore liberado: guardado no perfil (o histórico tem só as últimas runs). Toda run passa pela tela da origem, então
+ * a vitória que libera é vista aqui enquanto ainda está no histórico.
+ */
+function hardcoreUnlocked(): boolean {
+  const next = syncHardcoreUnlock(profile, loadRuns(storage), data.balance.difficulty.hardcoreUnlockedBy);
+  if (next !== profile) {
+    profile = next;
+    saveProfile(storage, profile);
+  }
+  return Boolean(profile.hardcoreUnlocked);
 }
 
 /** Uma luta da campanha: entra nas estatísticas da run e no Livro Bingo. */
@@ -1016,7 +1030,7 @@ async function originScreen(): Promise<void> {
     const roll = rollOrigin(rng, data);
     const runId = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
     // Hardcore bloqueado (ainda não venceu no Difícil): cai para a dificuldade padrão.
-    const hardcoreOk = isHardcoreUnlocked(loadRuns(storage), data.balance.difficulty.hardcoreUnlockedBy);
+    const hardcoreOk = hardcoreUnlocked();
     if (settings.difficulty === 'hardcore' && !hardcoreOk) settings.difficulty = DEFAULT_DIFFICULTY;
     let player = createRoletaPlayer(roll.origin, rdata, settings.difficulty);
     camp = {
@@ -2657,6 +2671,7 @@ async function loadFonts(): Promise<void> {
 }
 
 async function main() {
+  installErrorHandlers();
   markAbandonedRuns(storage, new Date(), data.balance.history.maxRuns);
   backfillProfile();
 
@@ -2727,16 +2742,22 @@ async function main() {
   if (LAB.lab) document.getElementById('version')!.textContent += ` · ${S.lab.badge}`;
   if (LAB.seed !== null) document.getElementById('version')!.textContent += ` · ${S.lab.seed(LAB.seed)}`;
   document.getElementById('home-btn')!.addEventListener('click', askHome);
-  if (LAB.lab) for (;;) if ((await untilHome(labFlow())) === HOME) leftToMenu();
+  const round = async () => {
+    if (LAB.lab) return labFlow();
+    const pick = await modeScreen();
+    if (pick !== 'roleta') return runJornada(jornadaHost, { resume: pick === 'jornada-continue' });
+    await ensurePlayerName();
+    await originScreen();
+    await runCampaign();
+  };
   for (;;) {
-    const round = async () => {
-      const pick = await modeScreen();
-      if (pick !== 'roleta') return runJornada(jornadaHost, { resume: pick === 'jornada-continue' });
-      await ensurePlayerName();
-      await originScreen();
-      await runCampaign();
-    };
-    if ((await untilHome(round())) === HOME) leftToMenu();
+    try {
+      if ((await untilHome(round())) === HOME) leftToMenu();
+    } catch (err) {
+      leftToMenu();
+      // O próprio aviso também pode ser interrompido pelo botão do Portão.
+      await untilHome(errorScreen(err));
+    }
   }
 }
 
@@ -2746,6 +2767,36 @@ function askHome() {
   const text = jornada && jornadaSheet ? S.ui.homeConfirmJornada : !jornada && camp && campLive ? S.ui.homeConfirmRoleta : null;
   if (text && !window.confirm(text)) return;
   goHome();
+}
+
+/**
+ * Uma tela quebrou no meio do fluxo (exceção). Antes, o laço principal parava e a interface congelava sem aviso. Agora:
+ * fecha as camadas por cima, mostra o que houve e volta ao Portão. A Jornada salva fica como estava (é salva por parada).
+ */
+async function errorScreen(err: unknown): Promise<void> {
+  console.error(err);
+  goHome();
+  const E = S.ui.error;
+  const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+  const root = show(
+    h(`<div class="screen" role="alert"><h2>${E.title}</h2><section class="card"><p>${E.text}</p>
+      <details><summary class="small muted">${E.detail}</summary><p class="pre small muted">${esc(`${detail} · ${S.ui.version(VERSION)}`)}</p></details></section>
+      <button class="btn primary big" data-choice="ok">${icon('home')} ${E.home}</button></div>`),
+  );
+  await choose(root);
+}
+
+/** Erro fora do fluxo das telas (um clique, uma animação): a tela segue; avisa uma vez a cada tanto, sem travar. */
+let lastErrorToast = 0;
+function installErrorHandlers(): void {
+  const warn = (err: unknown) => {
+    console.error(err);
+    if (Date.now() - lastErrorToast < 10_000) return;
+    lastErrorToast = Date.now();
+    toast(S.ui.error.title, 'warning');
+  };
+  window.addEventListener('error', (e) => warn(e.error ?? e.message));
+  window.addEventListener('unhandledrejection', (e) => warn(e.reason));
 }
 
 /** Arruma o estado deixado pelo fluxo interrompido: a run do Roleta conta como abandonada; a da Jornada já está salva. */
@@ -2897,13 +2948,13 @@ function profileCard(): string {
   const D = S.ui.desk;
   const runs = loadRuns(storage).filter((r) => r.status !== 'reroll');
   const wins = runs.filter((r) => r.status === 'victory').length;
-  const cycles = runs.filter((r) => r.fights !== undefined).map((r) => (r.cycle ?? 0) + 1);
+  const bestCycle = bestRoletaCycle(profile, runs);
   const best = profile.jornada?.generic ?? null;
   const counted = achievements.filter((a) => !a.legacy).length + jornadaAchievements.length;
   const rows: [string, string][] = [
     [D.stats.roletaRuns, String(runs.length)],
     [D.stats.roletaWins, String(wins)],
-    [D.stats.bestCycle, cycles.length ? String(Math.max(...cycles)) : D.none],
+    [D.stats.bestCycle, bestCycle !== null ? String(bestCycle) : D.none],
     [D.stats.jornada, best ? S.jornada.start.best(best.cycle, best.stage, best.won) : D.none],
     [D.stats.achievements, `${Object.keys(profile.achievements).length}/${counted}`],
     [D.stats.villains, String(Object.keys(profile.villains).length)],

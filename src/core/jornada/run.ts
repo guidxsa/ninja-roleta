@@ -267,6 +267,27 @@ function drawSupports(run: JRun, rng: Rng, data: JornadaData, unlocked: Readonly
   }
 }
 
+/**
+ * Naturezas silenciosas de uma run do Caminho Ninja, refeitas da seed: o mesmo sorteio à parte de `newGenericRun`, na
+ * mesma ordem (o protagonista sem ninjutsu elemental, depois os suportes assim). Serve para recuperar saves que as
+ * perderam (até a v0.59.1 o carregamento zerava o elemento de quem tem `noElement`).
+ */
+export function silentNatures(run: Pick<JRun, 'mode' | 'seed' | 'hero' | 'supports'>, data: JornadaData): Record<string, Element> {
+  if (run.mode !== 'generic') return {};
+  const natureRng = createRng(run.seed ^ 0x9e3779b9);
+  const out: Record<string, Element> = {};
+  const draw = (id: string) => {
+    const el = drawElement(natureRng, data, false);
+    if (el) out[id] = el;
+  };
+  if (data.characters[run.hero]?.noElement) draw(run.hero);
+  for (const id of run.supports) {
+    const def = data.characters[id];
+    if (def && !def.element && def.noElement) draw(id);
+  }
+  return out;
+}
+
 /** Classe de uma ficha de suporte do Caminho Ninja (para o nome e a Ficha). */
 export const supportClass = (id: string, data: JornadaData) => data.generic.classes.find((c) => c.supports.includes(id)) ?? null;
 

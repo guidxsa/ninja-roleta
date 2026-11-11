@@ -55,7 +55,7 @@ import { isFight, type StopDef } from '../../src/core/jornada/trail';
 import { jornadaData as data } from '../../src/data/jornada';
 import { newJornadaAchievements } from '../../src/data/jornada/achievements';
 import { ptBR as S } from '../../src/data/strings/ptBR';
-import { clearJornada, loadJornada, saveJornada } from '../../src/state/jornadaSave';
+import { loadJornada, saveJornada } from '../../src/state/jornadaSave';
 import { arcMedia, fighterPortrait, icon, sceneMedia, sceneVars } from '../art';
 import { choose, esc, h, show, sleep } from '../dom';
 import { tip } from '../tooltip';
@@ -148,7 +148,7 @@ async function jornadaLoop(host: JornadaHost, resume: boolean): Promise<void> {
     host.setSheet(() => live && openJornadaSheet(host, live));
     let shownStage = run.stageIndex;
     while (run.status === 'inProgress') {
-      saveJornada(host.storage, keep(run));
+      persist(host, keep(run));
       run = await playStop(host, run);
       host.discoverRelics(run.relics);
       const fresh = newJornadaAchievements(run, host.unlocked());
@@ -167,7 +167,7 @@ async function jornadaLoop(host: JornadaHost, resume: boolean): Promise<void> {
     host.setSheet(null);
     // Caminho Ninja vencido: a continuação já fica salva (fechar o app ou voltar ao início não perde o ciclo).
     const next = canContinueCycle(run, data) ? continueCycle(run, data, host.unlocked()) : null;
-    saveJornada(host.storage, keep(next ?? run));
+    persist(host, keep(next ?? run));
     if ((await endScreen(host, run, next, record)) !== 'continue' || !next) return;
     run = keep(next);
     host.mood('good');
@@ -210,13 +210,23 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
   }
 }
 
-/** Confirma apagar a run salva (o recorde conta antes) e libera o começo de uma nova. */
+/**
+ * Confirma trocar a run salva (o recorde dela conta antes) e libera o começo de uma nova. A salva não é apagada aqui:
+ * a nova a substitui quando é salva pela primeira vez, então sair no meio (nome, revelação) não perde as duas.
+ */
 function replaceSaved(host: JornadaHost, saved: JRun | null): boolean {
   if (!saved) return true;
   if (!window.confirm(J.start.overwrite)) return false;
   if (saved.cycle > 0 || saved.stageIndex > 0 || saved.stopIndex > 0) host.recordJornada(saved);
-  clearJornada(host.storage);
   return true;
+}
+
+/** Salvar falhou (aparelho cheio ou bloqueado): avisa uma vez por sessão, sem interromper. */
+let warnedSaveFailed = false;
+function persist(host: JornadaHost, run: JRun): void {
+  if (saveJornada(host.storage, run) || warnedSaveFailed) return;
+  warnedSaveFailed = true;
+  host.notify(S.ui.saveFailed, 'warning');
 }
 
 async function entryScreen(host: JornadaHost, saved: JRun | null): Promise<'continue' | 'story' | 'path' | 'back'> {
@@ -680,7 +690,7 @@ function dockShop(root: HTMLElement, host: JornadaHost, get: () => JRun, set: (r
     if (!root.isConnected) return mq.removeEventListener('change', sync);
     if (mq.matches && !redraw) {
       set(keep(openShop(get(), data)));
-      saveJornada(host.storage, get());
+      persist(host, get());
       dock.innerHTML = `${foldButton('shop')}<h3 class="jdock-title">${icon('tag')} ${U.shopTitle} <span class="chip" data-inflation></span></h3><div data-shop></div>`;
       dock.hidden = false;
       redraw = shopPanel(dock.querySelector<HTMLElement>('[data-shop]')!, host, get, set, () => {
@@ -756,7 +766,7 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
   );
   const refreshHud = () => {
     root.querySelector('[data-hud]')!.innerHTML = hud(host, cur);
-    saveJornada(host.storage, cur);
+    persist(host, cur);
   };
   const redrawShop = dockShop(root, host, () => cur, (r) => (cur = r), refreshHud);
   wireHud(root, host, () => cur, (r) => (cur = r), () => {
@@ -881,7 +891,7 @@ async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
   );
   const refreshHud = () => {
     root.querySelector('[data-hud]')!.innerHTML = hud(host, cur);
-    saveJornada(host.storage, cur);
+    persist(host, cur);
   };
   const redrawShop = dockShop(root, host, () => cur, (r) => (cur = r), refreshHud);
   wireHud(root, host, () => cur, (r) => (cur = r), () => {
@@ -966,7 +976,7 @@ async function eventStop(host: JornadaHost, run: JRun): Promise<JRun> {
 /** Loja sempre aberta: sobreposição como a árvore e o moveset, chamada pelo HUD (docs/jornada/run.md#loja). */
 function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
   let run = keep(openShop(run0, data));
-  saveJornada(host.storage, run);
+  persist(host, run);
   const root = h(`<div class="jtree-screen jshop-screen ${themeOf(run.hero).cls}" role="dialog" aria-label="${U.shopTitle}"${themeStyle(run)}><div class="jt-body">
     <div class="jt-head"><h2>${icon('tag')} ${U.shopTitle}</h2><span class="chip" data-ryo></span><span class="chip" data-inflation></span></div>
     <div data-shop></div>
@@ -978,7 +988,7 @@ function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
   };
   shopPanel(root.querySelector<HTMLElement>('[data-shop]')!, host, () => run, (r) => (run = r), () => {
     chips();
-    saveJornada(host.storage, run);
+    persist(host, run);
   });
   chips();
   return new Promise((resolve) => {
@@ -998,7 +1008,7 @@ async function restStop(host: JornadaHost, run0: JRun): Promise<JRun> {
   wireHud(root, host, () => run, (r) => (run = r), () => {
     root.querySelector('[data-hud]')!.innerHTML = hud(host, run);
     root.querySelector('[data-train]')!.innerHTML = restTrainButton(run);
-    saveJornada(host.storage, run);
+    persist(host, run);
   });
   const c = await choose<'heal' | 'train'>(root);
   host.mood('good');

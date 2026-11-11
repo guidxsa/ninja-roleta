@@ -30,7 +30,6 @@ export const roletaBalance = {
     mindReadingAccuracy: 0.1,
     duoChance: 0.25,
     dogDamagePct: 0.4,
-    youthCrit: 0.05,
     preciseFistPen: 0.3,
     vitalityPct: 0.02,
     vitalForce: { belowPct: 0.3, regenPct: 0.04, turns: 3 },
