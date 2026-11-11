@@ -212,6 +212,32 @@
   .rb-intel > section { flex: 1; min-width: 0; max-height: 160px; }
 }
 @media (min-width: 900px) and (min-height: 560px) and (max-height: 760px) {
-  .rstage-box .wheel-wrap { width: min(36vh, 100%, 320px); margin: 20px auto 8px; }
+  .rstage-box .wheel-wrap { width: min(30vh, 100%, 300px); margin: 16px auto 6px; }
   .rb-desk #vcard .hud-face .portrait, .rb-desk #pcard .hud-face .portrait { width: clamp(60px, 10vh, 90px); height: clamp(60px, 10vh, 90px); }
+}
+
+/*
+ * Proporções (docs/visual.md, "Celular e desktop"). Tablet: a roda cresce com a largura sem passar da altura; a ficha e
+ * as opções da origem ficam lado a lado. Notebook estreito: a coluna lateral da roleta encolhe.
+ */
+@media (min-width: 600px) {
+  .wheel-wrap { width: min(60vw, 44vh, 420px); }
+}
+@media (min-width: 600px) and (max-width: 899px), (min-width: 600px) and (max-height: 559px) {
+  .rorigin #after:not(:empty) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+}
+@media (min-width: 900px) and (min-height: 560px) and (max-width: 1279px) {
+  .rwheel { grid-template-columns: minmax(0, 1.25fr) minmax(300px, .85fr); }
+  body:has(.rwheel, .rmap, .screen.battle, .rend) main { padding-left: 16px; padding-right: 16px; }
+}
+/* Compacta: a legenda da roda em três colunas, mais baixa, para caber no palco junto da roda. */
+@media (min-width: 900px) and (min-height: 560px) and (max-height: 760px) {
+  .rstage-box .legend { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 8px; font-size: 12px; }
+  .rstage-box .legend li { padding: 2px 4px; }
+  .rstage-box .wheel-box h3 { margin-bottom: 2px; }
+}
+@media (min-width: 900px) and (min-height: 560px) and (max-height: 680px) {
+  .rstage-box { padding-top: 10px; padding-bottom: 10px; }
+  .rstage-box .wheel-wrap { width: min(22vh, 100%, 220px); margin: 6px auto 2px; }
+  .rwheel > h2 { font-size: 21px; }
 }
