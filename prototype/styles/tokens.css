@@ -86,6 +86,9 @@
   --shell-max: 2240px;
   /* Coluna das telas sem composição de desktop: a do celular; no tablet, mais larga (celular expandido). */
   --col-max: 520px;
+  /* Espaço entre peças de uma tela: o mesmo em toda grade (docs/visual.md, "Cada peça no seu espaço"). */
+  --gap: 12px;
+  --gap-lg: clamp(14px, 1.6vw, 28px);
   /* Janelas (modais): celular, tablet e desktop. */
   --modal-max: 520px;
   /* Alvo mínimo dos botões pequenos; com toque, 44px (faixa "toque" em base.css). */

@@ -49,33 +49,36 @@
   body.at-gate .top::after { left: 24px; }
   body.at-gate:has(.gate) { height: max(100dvh, var(--floor-h)); }
   body.at-gate:has(.gate) main { display: flex; flex-direction: column; min-height: 0; }
+  /* Cada peça no seu espaço (docs/visual.md): cena e modos no centro, coluna direita ao lado; nada cruza a borda de nada. */
   .gate {
-    flex: 1 1 0; min-height: 0; display: grid; gap: 16px clamp(16px, 1.6vw, 32px); padding-top: 0;
+    flex: 1 1 0; min-height: 0; display: grid; gap: var(--gap-lg); padding-top: 0;
     grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 440px); grid-template-areas: 'main aside';
   }
-  .gate-main { grid-area: main; display: grid; grid-template-rows: minmax(0, 1fr) auto auto; gap: 12px; min-height: 0; container: gate-main / inline-size; }
+  .gate-main { grid-area: main; display: grid; grid-template-rows: minmax(120px, 1fr) auto; gap: var(--gap-lg); min-height: 0; container: gate-main / inline-size; }
   .gate-aside {
-    grid-area: aside; display: flex; flex-direction: column; gap: 14px; min-height: 0; overflow-y: auto; padding: 2px 4px 6px;
-    scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
+    grid-area: aside; display: flex; flex-direction: column; gap: var(--gap); min-height: 0; overflow: hidden auto; padding: 14px 8px 10px;
+    container: gate-aside / size; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
   }
 
-  /* Destaque: a imagem do Portão (img/cenas/portao) cobre a moldura; logo e citação por cima. */
-  .gate-banner {
-    display: block; position: relative; isolation: isolate; overflow: hidden; min-height: 200px;
-    border: 2px solid #4a2f1c; box-shadow: inset 0 0 0 1px rgba(255, 222, 170, .12), 0 6px 0 rgba(0, 0, 0, .22);
+  /* Cena: a ilustração preenche a célula (foco do SCENE_ART), com a borda de tinta. Logo e citação ficam dentro dela,
+     em cantos opostos; a cena é um container, e a citação sai quando ela fica baixa ou estreita. */
+  .gate-banner { display: block; position: relative; isolation: isolate; min-height: 0; container: gate-banner / size; }
+  .gate-banner .gate-hero { position: absolute; inset: 0; z-index: -1; margin: 0; height: auto; }
+  .gate-banner .gate-head { position: absolute; left: clamp(16px, 4cqw, 52px); top: clamp(10px, 5cqh, 40px); align-items: flex-start; padding: 0; }
+  .gate-banner .logo { font-size: clamp(40px, min(9cqw, 24cqh), 124px); text-align: left; }
+  .gate-banner .gate-quote {
+    position: absolute; right: clamp(14px, 3cqw, 40px); top: clamp(12px, 6cqh, 44px); width: min(40cqw, 440px); margin: 0; align-self: auto; transform: none;
+    rotate: 1.5deg; z-index: 2; filter: drop-shadow(3px 6px 4px rgba(0, 0, 0, .3));
   }
-  .gate-banner .gate-hero { position: absolute; inset: 0; z-index: -1; margin: 0; height: auto; -webkit-mask: none; mask: none; }
-  .gate-banner .gate-hero :is(img, video) { object-position: center 40%; }
-  .gate-banner::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(90deg, rgba(16, 10, 5, .45), transparent 60%); }
-  .gate-banner .gate-head { position: absolute; left: clamp(20px, 3vw, 52px); top: clamp(14px, 3vh, 40px); align-items: flex-start; padding: 0; }
-  .gate-banner .logo { font-size: clamp(54px, min(6vw, 10vh), 124px); text-align: left; }
-  .gate-banner .gate-quote { position: absolute; left: clamp(20px, 3vw, 52px); bottom: clamp(14px, 3vh, 34px); width: min(48%, 540px); margin: 0; }
-  .gate-sub { margin: 0; }
+  .gate-banner .gate-quote .duo-seal { right: 6px; top: 6px; --s: 26px; }
+  .gate-banner .gate-quote p { padding-right: 26px; }
+  .gate-sub { display: none; }
 
-  /* Modos lado a lado: a arte maior à esquerda e o botão de ação embaixo do texto. */
-  .gate-modes { flex-direction: row; gap: clamp(14px, 1.6vw, 28px); }
-  .gate-modes .mode-card { flex: 1 1 0; grid-template-columns: clamp(110px, 12vw, 210px) minmax(0, 1fr); min-height: clamp(128px, 18vh, 210px); }
-  .gate-modes .mode-card > .ico { display: none; }
+  /* Modos lado a lado, cada um na sua célula; a arte e o texto se arranjam pela largura do card (menu.css). */
+  .gate-modes { flex-direction: row; gap: var(--gap-lg); padding: 0 10px; }
+  .gate-modes .mode-card { flex: 1 1 0; padding: 12px 22px 14px 20px; }
+  .gate-modes .mode-body { grid-template-columns: min(46%, calc(var(--card-h) * var(--art-r))) minmax(0, 1fr); column-gap: clamp(12px, 4cqi, 22px); }
+  .gate-modes .mode-body > .ico { display: none; }
   .mode-cta {
     display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 8px 14px;
     background: var(--primary); color: var(--primary-ink); font: 700 13px/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase;
@@ -121,72 +124,46 @@
   /* Vinheta: as peças flutuam sobre o papel da página. */
   .gate::before { content: ''; position: absolute; inset: -14px -24px; z-index: -2; pointer-events: none; background: radial-gradient(closest-side, transparent 70%, rgba(60, 35, 15, .14) 92%, transparent 100%); }
 
-  /* Cena: sem moldura; a imagem se dissolve em tinta nas bordas e some embaixo, sob os pergaminhos. */
-  .gate-banner { overflow: visible; border: 0; box-shadow: none; min-height: 240px; }
-  .gate-banner::after { content: none; }
-  .gate-banner .gate-hero {
-    -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat, linear-gradient(#000 62%, transparent 100%);
-    -webkit-mask-composite: source-in; mask: var(--ink-edge) center / 100% 100% no-repeat, linear-gradient(#000 62%, transparent 100%); mask-composite: intersect;
-  }
+  /* Cena: sem moldura, com a borda dissolvida em tinta e um véu atrás do logo. */
+  .gate-banner .gate-hero { -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat; mask: var(--ink-edge) center / 100% 100% no-repeat; }
   .gate-banner .gate-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, rgba(16, 10, 5, .5), transparent 55%); }
-  .gate-banner .gate-cloud.l { left: -46px; top: -6px; width: 120px; }
-  .gate-banner .gate-cloud.r { right: -96px; top: 40%; width: 110px; }
-  /* Citação: pergaminho preso à direita, cruzando a borda da cena. */
-  .gate-banner .gate-quote { left: auto; right: calc(-1 * clamp(10px, 1.2vw, 24px)); bottom: auto; top: clamp(18px, 7vh, 70px); width: min(38%, 440px); rotate: 2deg; z-index: 2; filter: drop-shadow(3px 6px 4px rgba(0, 0, 0, .3)); }
-  .gate-sub { display: none; }
+  .gate-banner .gate-cloud.l { left: 0; top: 0; width: clamp(64px, 12cqw, 120px); }
+  .gate-banner .gate-cloud.r { display: none; }
 
-  /* Modos: pergaminhos desenrolados que sobem sobre a cena. */
-  .gate-modes { position: relative; z-index: 3; margin-top: calc(-1 * clamp(56px, 10vh, 120px)); padding: 0 18px; gap: clamp(26px, 3vw, 56px); }
-  .gate-modes .mode-card {
-    /* --art-h: altura da arte (sai do papel por cima); --art-col: largura da coluna, pela proporção da imagem. */
-    --art-lift: clamp(28px, 6vh, 62px); --art-h: clamp(130px, min(22vh, 16vw), 260px); --art-col: clamp(120px, min(14vw, 24vh), 240px);
-    padding: 14px 28px 16px 26px; overflow: visible; filter: drop-shadow(2px 7px 5px rgba(0, 0, 0, .3));
-    grid-template-columns: var(--art-col) minmax(0, 1fr); column-gap: 22px; min-height: calc(var(--art-h) - var(--art-lift));
-  }
-  .gate-modes .mode-card:has(.mode-art > .scene-media) { --art-col: min(calc(var(--art-h) * var(--ratio, .8)), 50%); }
-  .gate-modes .mode-art > .scene-media :is(img, video) { top: auto; height: auto; aspect-ratio: var(--ratio, .8); max-height: calc(100% + var(--art-lift) + 6px); }
-  .gate-modes .mode-card:nth-child(1) { rotate: -1.2deg; }
-  .gate-modes .mode-card:nth-child(2) { rotate: .8deg; }
+  /* Modos: pergaminhos desenrolados com rolos de madeira, levemente inclinados (o espaço entre eles cobre a folga). */
+  .gate-modes .mode-card { overflow: visible; filter: drop-shadow(2px 7px 5px rgba(0, 0, 0, .3)); }
+  .gate-modes .mode-card:nth-child(1) { rotate: -.8deg; }
+  .gate-modes .mode-card:nth-child(2) { rotate: .6deg; }
   .scroll-roll { display: block; position: absolute; z-index: 1; pointer-events: none; border-radius: 9px; box-shadow: 1px 2px 0 rgba(0, 0, 0, .35); }
-  .mode-card .scroll-roll { top: -10px; bottom: -10px; width: 20px; background: var(--tex-wood, none) center / cover, linear-gradient(90deg, #24150a, #6a4527 18%, #d4a466 42%, #8a5d34 62%, #2e1c0f); background-blend-mode: multiply, normal; }
+  .mode-card .scroll-roll { top: -8px; bottom: -8px; width: 18px; background: var(--tex-wood, none) center / cover, linear-gradient(90deg, #24150a, #6a4527 18%, #d4a466 42%, #8a5d34 62%, #2e1c0f); background-blend-mode: multiply, normal; }
   .mode-card .scroll-roll.l { left: -8px; }
   .mode-card .scroll-roll.r { right: -8px; }
-  /* A arte sai do papel por cima e se funde nele, sem moldura. */
-  .gate-modes .mode-art { overflow: visible; background: none; align-self: stretch; }
-  .gate-modes .mode-art :is(img, video) {
-    inset: auto -10px -6px -8px; width: calc(100% + 18px); height: max(var(--art-h), calc(100% + var(--art-lift) + 6px));
-    -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat, linear-gradient(90deg, #000 72%, transparent 100%); -webkit-mask-composite: source-in;
-    mask: var(--ink-edge) center / 100% 100% no-repeat, linear-gradient(90deg, #000 72%, transparent 100%); mask-composite: intersect;
-  }
-  .gate-modes .mode-art .emblem { width: clamp(64px, 8vw, 110px); height: clamp(64px, 8vw, 110px); }
-  .mode-seal { display: inline-grid; position: absolute; z-index: 2; --s: 40px; top: 10px; left: calc(var(--art-col) + 6px); rotate: -8deg; }
-  .gate-modes .mode-card b { font-size: clamp(30px, 2.6vw, 42px); padding-left: 34px; }
+  /* Selo no canto do card, sobre a ponta da arte: costura imagem e texto sem sair do pergaminho. */
+  .mode-seal { display: inline-grid; position: absolute; z-index: 2; --s: clamp(30px, 9cqi, 40px); top: 6px; left: 14px; rotate: -8deg; }
   /* Ação: pincelada vermelha no lugar do botão retangular. */
   .mode-cta {
     padding: 11px 28px 12px 24px; margin-top: 12px; background: var(--primary); white-space: nowrap;
     -webkit-mask: var(--brush) center / 100% 100% no-repeat; mask: var(--brush) center / 100% 100% no-repeat;
   }
 
-  /* Coluna direita: pilha de pergaminhos levemente desalinhados, um sobre o outro. */
-  .gate-aside { gap: 0; padding: 16px 10px 10px 4px; }
-  .gate-aside > * { position: relative; filter: drop-shadow(2px 6px 4px rgba(0, 0, 0, .28)); }
-  .gate-aside > * + * { margin-top: -6px; }
-  .gate-aside > :nth-child(1) { rotate: -.7deg; z-index: 3; }
-  .gate-aside > :nth-child(2) { rotate: .6deg; z-index: 2; }
-  .gate-aside > :nth-child(3) { rotate: -.4deg; z-index: 1; }
+  /* Coluna direita: pergaminhos levemente desalinhados, cada um no seu espaço. */
+  .gate-aside > * { position: relative; flex: none; filter: drop-shadow(2px 6px 4px rgba(0, 0, 0, .28)); }
+  .gate-aside > :nth-child(1) { rotate: -.6deg; }
+  .gate-aside > :nth-child(2) { rotate: .5deg; }
+  .gate-aside > :nth-child(3) { rotate: -.4deg; }
   .gate-aside > .parchment h3, .desk-prog .parchment h3 { position: relative; padding-bottom: 9px; }
   .gate-aside > .parchment h3::after, .desk-prog .parchment h3::after {
     content: ''; position: absolute; left: -4px; bottom: 0; width: 92px; height: 7px; background: var(--accent); opacity: .85;
     -webkit-mask: var(--brush) center / 100% 100% no-repeat; mask: var(--brush) center / 100% 100% no-repeat;
   }
   /* Kunai cravada no alto da ficha; selo carimbado no progresso. */
-  .desk-pin { display: block; position: absolute; z-index: 4; top: -26px; left: 44%; width: 48px; height: 48px; rotate: 128deg; color: #4b5260; filter: drop-shadow(1px 2px 0 rgba(0, 0, 0, .35)); }
+  .desk-pin { display: block; position: absolute; z-index: 4; top: -12px; left: 46%; width: 38px; height: 38px; rotate: 128deg; color: #4b5260; filter: drop-shadow(1px 2px 0 rgba(0, 0, 0, .35)); }
   .desk-pin .ico { width: 100%; height: 100%; }
   .desk-prog { position: relative; }
   .desk-seal { display: inline-grid; position: absolute; z-index: 2; --s: 34px; top: 12px; right: 16px; rotate: 9deg; opacity: .92; }
   .desk-prog .jprogress h3 { padding-right: 46px; }
-  /* A miniatura do capítulo sai do pergaminho, colada torta. */
-  .gate-aside .jthumb { rotate: 4deg; translate: 16px -4px; box-shadow: 3px 5px 0 rgba(0, 0, 0, .28); }
+  /* A miniatura do capítulo, colada torta dentro do pergaminho. */
+  .gate-aside .jthumb { rotate: 3deg; box-shadow: 3px 5px 0 rgba(0, 0, 0, .28); }
   /* Avatar num medalhão de madeira. */
   .desk-id > span .portrait { border-radius: 50%; border: 0; box-shadow: 0 0 0 4px #6a4527, 0 0 0 6px #3f2715, 3px 6px 0 6px rgba(0, 0, 0, .25); }
 
@@ -254,9 +231,9 @@
 }
 
 /*
- * Proporções (docs/visual.md, "Celular e desktop"): a casca se ajusta à largura E à altura da janela.
- * Os cards de modo olham o espaço que recebem (container query em .gate-main), não a tela: com o centro estreito
- * (tablet deitado, notebook com a coluna direita), a arte vai para cima do texto, em vez de espremer as duas colunas.
+ * Proporções (docs/visual.md, "Celular e desktop"): a casca se ajusta à largura E à altura da janela, e cada peça olha
+ * o próprio espaço (container queries). Quando falta espaço, as peças saem por prioridade: 1) citação; 2) descrição do
+ * card; 3) conquistas recentes; 4) números da ficha. Ação, progresso e título nunca saem.
  */
 @media (min-width: 900px) and (min-height: 560px) and (max-width: 1199px) {
   :root { --side-w: 76px; }
@@ -265,35 +242,37 @@
   body.at-gate main, body.at-gate .top, .top { padding-left: 16px; padding-right: 16px; }
 }
 @media (min-width: 900px) and (min-height: 560px) {
-  @container gate-main (max-width: 760px) {
-    .gate-modes { gap: clamp(18px, 2.4vw, 32px); padding: 0 10px; }
-    .gate-modes .mode-card {
-      --art-top: clamp(84px, 15vh, 150px);
-      grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--art-top) auto; row-gap: 8px;
-      min-height: 0; padding: 0 18px 14px;
-    }
-    .gate-modes .mode-card:has(.mode-art > .scene-media), .jgate .gate-modes .mode-card:has(.jarc-fan) { --art-col: 100%; }
-    .gate-modes .mode-art :is(img, video), .gate-modes .mode-art > .scene-media :is(img, video) {
-      inset: auto auto -4px 50%; translate: -50% 0; width: auto; max-width: calc(100% + 12px);
-      height: calc(100% + var(--art-lift)); max-height: none; aspect-ratio: var(--ratio, 1.4);
-      -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat, linear-gradient(#000 70%, transparent 100%);
-      mask: var(--ink-edge) center / 100% 100% no-repeat, linear-gradient(#000 70%, transparent 100%);
-    }
-    .gate-modes .mode-art .jarc-fan :is(img, video) { translate: none; width: 100%; height: 100%; max-width: none; aspect-ratio: auto; -webkit-mask: none; mask: none; }
-    .gate-modes .jarc-fan { inset: calc(-1 * var(--art-lift)) 12% 0; }
-    .mode-seal { --s: 34px; left: 10px; top: calc(var(--art-top) - 10px); }
-    .gate-modes .mode-card b, .jgate .gate-modes .mode-card b { font-size: clamp(24px, 3.4cqi, 34px); padding-left: 32px; }
+  /* Centro estreito (tablet deitado): a arte vai para cima do texto, numa célula com a forma da arte (corte limitado). */
+  @container gate-main (max-width: 720px) {
+    .gate-modes .mode-card { padding: 10px 18px 14px; }
+    .gate-modes .mode-body { grid-template-columns: minmax(0, 1fr); align-items: start; row-gap: 8px; min-height: 0; }
+    .gate-modes .mode-art { aspect-ratio: clamp(1.6, var(--ratio, 1.8), 2.4); }
     .gate-modes .mode-card small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
     .mode-cta { margin-top: 8px; }
   }
+  /* 1) Citação: sai quando a cena fica baixa ou estreita (a faixa de frases do rodapé continua). */
+  @container gate-banner (max-height: 250px) { .gate-banner .gate-quote { display: none; } }
+  @container gate-banner (max-width: 620px) { .gate-banner .gate-quote { display: none; } }
+  /* 3) e 4) Coluna direita baixa: saem as conquistas recentes e, depois, os números da ficha. */
+  @container gate-aside (max-height: 600px) { .gate-aside > .jrecent { display: none; } }
+  /* Com run salva, o progresso (que nunca sai) precisa do espaço: os números da ficha e as notas da dificuldade cedem. */
+  @container gate-aside (max-height: 680px) { .gate-aside:has(.desk-prog) .desk-profile dl { display: none; } }
+  @container gate-aside (max-height: 560px) {
+    .gate-aside:has(.jprogress) .difficulty-box p { display: none; }
+    .gate-aside .jprogress-bar { margin: 8px 0 10px; }
+  }
+  @container gate-aside (max-height: 400px) { .desk-profile dl, .difficulty-box p { display: none; } }
 }
-/* Compacta (altura baixa): a cena encolhe antes dos cards; a citação fica menor. */
+/* Compacta (altura baixa): a cena cede altura; 2) a descrição do card encurta e, no arranjo empilhado, some. */
 @media (min-width: 900px) and (min-height: 560px) and (max-height: 720px) {
-  .gate-banner { min-height: 160px; }
   .gate-banner .gate-quote { padding: 10px 14px 8px; }
   .gate-banner .gate-quote p { font-size: 16px; }
-  .gate-modes { margin-top: calc(-1 * clamp(40px, 8vh, 70px)); }
+  .gate-modes .mode-card small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
   .gate-aside > .parchment h3 { font-size: 18px; }
   .desk-profile dl { gap: 2px 12px; }
   .desk-id { margin-bottom: 6px; }
+  @container gate-main (max-width: 720px) {
+    .gate-modes .mode-art { aspect-ratio: clamp(2.2, var(--ratio, 2.4), 3); }
+    .gate-modes .mode-card small { display: none; }
+  }
 }

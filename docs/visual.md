@@ -36,16 +36,22 @@ Referências do usuário (07/11/2026): o painel do Project Rasengan, o logo de S
 ## Telas no estilo novo
 
 - **Portão da Vila**: logo com nuvens, destaque (ilustração ou Konoha), citação sorteada em pergaminho, cards Jornada e Roleta, faixa de Conquistas e **barra inferior** com o Registro ninja (Início, Histórico, Livro Bingo, Relíquias, Origens), que só aparece no Portão.
-- **Casca do PC** (pedido do usuário, a partir de uma referência de composição): **barra lateral** persistente em todas as telas (Início, Jornada, Roleta; Histórico, Livro Bingo, Relíquias, Conquistas); o **Início** em painéis, com o destaque (imagem `portao`, logo e citação) e os dois modos lado a lado no centro e, à direita, a **Ficha do ninja** (nome, avatar padrão e números do perfil), o **Progresso da Jornada** (o botão continua a run direto) e as **Conquistas recentes**; o **Registro abre em popup** em qualquer tela e em qualquer entrada (barra lateral, botão Registro, barra do Portão no celular), uma seção por vez, num pergaminho vertical com rolos; o Histórico filtra por Geral, Origens e Dificuldade; a janela antiga de abas saiu (pedido do usuário: um padrão só); no pé, a **faixa de frases** sorteadas. O Portão "Vila com placas" foi tentado antes e rejeitado. **Direção de arte** (pedido do usuário: "menos caixas, mais composição"): a ilustração do destaque é a cena, sem moldura, com a borda dissolvida em tinta; os modos são pergaminhos desenrolados com rolos de madeira que sobem sobre ela, com a arte saindo do papel, um selo (道, 運) costurando imagem e texto e a ação numa pincelada vermelha; a coluna direita é uma pilha de pergaminhos levemente desalinhados, presa por uma kunai, com selo, títulos sublinhados a pincel, miniatura colada torta e o avatar num medalhão; o papel dos pergaminhos do Início é envelhecido (mais quente, queimado nas bordas, com manchas e tinta mais escura); as pinceladas têm falhas de cerda. **Vagas de textura** em `public/img/ui/` (`papel`, `madeira`, `pincel`, `fundo`): cada imagem que existir entra no lugar do desenho do CSS. Se o PC agradar, o usuário pretende levar essa linguagem ao celular.
+- **Casca do PC** (pedido do usuário, a partir de uma referência de composição): **barra lateral** persistente em todas as telas (Início, Jornada, Roleta; Histórico, Livro Bingo, Relíquias, Conquistas); o **Início** em painéis, com o destaque (imagem `portao`, logo e citação) e os dois modos lado a lado no centro e, à direita, a **Ficha do ninja** (nome, avatar padrão e números do perfil), o **Progresso da Jornada** (o botão continua a run direto) e as **Conquistas recentes**; o **Registro abre em popup** em qualquer tela e em qualquer entrada (barra lateral, botão Registro, barra do Portão no celular), uma seção por vez, num pergaminho vertical com rolos; o Histórico filtra por Geral, Origens e Dificuldade; a janela antiga de abas saiu (pedido do usuário: um padrão só); no pé, a **faixa de frases** sorteadas. O Portão "Vila com placas" foi tentado antes e rejeitado. **Direção de arte** (pedido do usuário: "menos caixas, mais composição"; revista em 11/11/2026, quando ele apontou que as peças brigavam entre si em outras resoluções): **cada peça no seu espaço**. A ilustração do destaque é a cena, sem moldura, com a borda dissolvida em tinta, e o logo e a citação ficam dentro dela, em cantos opostos; os modos são pergaminhos desenrolados com rolos de madeira, em células próprias abaixo da cena, com a arte **dentro** do papel (moldura de tinta), um selo (道, 運) no canto e a ação numa pincelada vermelha; a coluna direita são pergaminhos levemente desalinhados, um abaixo do outro, com a kunai, o selo e a miniatura dentro do próprio pergaminho, títulos sublinhados a pincel e o avatar num medalhão; o papel dos pergaminhos do Início é envelhecido (mais quente, queimado nas bordas, com manchas e tinta mais escura); as pinceladas têm falhas de cerda. Saíram os cards subindo sobre a cena, a arte vazando do papel, a citação cruzando a borda e a pilha sobreposta. **Vagas de textura** em `public/img/ui/` (`papel`, `madeira`, `pincel`, `fundo`): cada imagem que existir entra no lugar do desenho do CSS. Se o PC agradar, o usuário pretende levar essa linguagem ao celular.
 - **Entrada da Jornada**: banner com a chamada, card **Progresso da Jornada** (capítulo, parada, miniatura, % de conclusão e o botão Continuar), painéis em pergaminho e **Conquistas recentes** (as 3 mais novas do perfil).
 
 ## Vagas de ilustração
 
 O jogador pode pôr ilustrações em `public/img/cenas/` ([instruções](../public/img/LEIAME.md)). Sem a imagem, vale o desenho próprio. Hoje as vagas têm **imagens provisórias** (`.svg` com o nome do arquivo escrito), para ver o efeito: troque por uma imagem com o mesmo nome e apague o `.svg`. Cada vaga aceita também um **vídeo curto em loop** (`.webm` ou `.mp4`, sem som) com o mesmo nome: o botão **Animado** da barra superior (só aparece quando há vídeo) troca entre o modo **Leve**, com a imagem parada e padrão, e o animado; com `prefers-reduced-motion`, sempre a imagem.
 
-**Proporção**: cada vaga respeita a proporção da imagem (o jogo mede a arte ao carregar e põe `--ratio` no contêiner). Corte, só nas bordas que se dissolvem em tinta, ou quando a arte é mais alta que o espaço; o enquadramento fica numa variável por vaga (`--pos-*`, `--arc-pos`).
+**A arte se ajusta ao espaço** (decidido com o usuário, 11/11/2026: "preencher com foco"). Uma regra só para toda ilustração, a moldura `.art-frame` (`prototype/styles/art.css`):
+- o layout dá a célula e a arte a **preenche**, cortando as sobras em volta do **foco** (onde estão os rostos);
+- a **forma** de cada imagem é lida no build (`scripts/image-size.ts`, largura e altura de PNG, JPEG, WebP e SVG) e já vem no HTML em `--ratio`, então nada pula ao carregar; vídeo mede ao carregar;
+- o **limite de corte**: onde a célula pode escolher a forma, ela usa a proporção da arte dentro de uma faixa (`aspect-ratio: clamp(mín, var(--ratio), máx)`);
+- quando o corte passaria do limite, o card **troca de arranjo** pela largura dele, não pela tela (arte ao lado ↔ arte em cima).
 
-O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype/art.ts`) liga a chave ao arquivo. É o único lugar com nome de arquivo: trocar uma arte é trocar o arquivo, ou uma linha do mapa. Sem entrada no mapa, a chave é o próprio nome do arquivo.
+Nenhuma vaga tem tamanho ou enquadramento próprio no CSS.
+
+O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype/art.ts`) liga a chave ao arquivo e ao **foco** da arte (em % da imagem; sem entrada, o centro um pouco acima). É o único lugar com nome de arquivo e com enquadramento: trocar uma arte é trocar o arquivo, ou uma linha do mapa. Sem entrada no mapa, a chave é o próprio nome do arquivo.
 
 | Chave | Arquivo hoje | Onde | Sem a imagem |
 |---|---|---|---|
@@ -66,7 +72,7 @@ A dualidade é o eixo da identidade. O Portão mostra **o Naruto observando Kono
 
 - As duas versões ficam montadas (`.duo-day` e `.duo-night`) e o CSS por `data-theme` troca devagar (`--dur-dawn`), como um amanhecer. A cena do dia fica sempre opaca por baixo e só a da noite entra e sai por cima: nenhum quadro da troca fica sem imagem (o desenho de Konoha do fundo só aparece quando não há arte).
 - Junto da cena mudam a frase (falas do personagem da vez), o selo 陽/影 e a legenda "Naruto/Sasuke observa Konoha". Não é só um papel de parede.
-- Os dois estão em lados opostos da arte (o Naruto à direita, o Sasuke à esquerda): um espelha o outro. O enquadramento fica em `--pos-day` e `--pos-night`.
+- Os dois estão em lados opostos da arte (o Naruto à direita, o Sasuke à esquerda): um espelha o outro. O foco de cada uma fica no `SCENE_ART`.
 - Leitura: o logo do PC fica claro com sombra nos dois temas, e há uma sombra de tinta no canto do logo.
 - Nenhum dos dois é o lado "bom". As falas mostram o que move cada um.
 - Animado: `dia.webm` e `noite.webm` viram as versões em vídeo sem mudar código.
@@ -91,8 +97,8 @@ A entrada da Jornada usa a **composição do Início** (a mesma casca `.gate`, c
 - à direita, Progresso da Jornada (Continuar direto), Dificuldade e Conquistas recentes. No celular, a pilha: destaque, progresso, modos, dificuldade e conquistas.
 
 Cada card abre a sua tela:
-- **Modo História → Escolha a perspectiva**: dois pôsteres lado a lado, o Naruto de dia (arte `portao-dia`, os arcos e o Começar) e o Sasuke à noite (arte `portao-noite`, papel frio, travado: "Em breve"). As perspectivas vêm das campanhas (`data.campaigns`); a do Sasuke destrava quando os dados dela existirem.
-- **Caminho Ninja → Preparar**: o pôster com os três estágios e, ao lado, classe, elemento e Começar.
+- **Modo História → Escolha a perspectiva**: dois pôsteres lado a lado, cada um com a arte numa célula e o pergaminho embaixo (as duas artes com a mesma altura, os dois pergaminhos também; em janela baixa, o Começar sobe para a linha do título): o Naruto de dia (arte `portao-dia`, os arcos e o Começar) e o Sasuke à noite (arte `portao-noite`, papel frio, travado: "Em breve"). As perspectivas vêm das campanhas (`data.campaigns`); a do Sasuke destrava quando os dados dela existirem.
+- **Caminho Ninja → Preparar**: o pôster (a arte e, embaixo, o pergaminho com os três estágios) e, ao lado, classe, elemento e Começar.
 
 ### Arcos da Jornada
 
@@ -102,7 +108,7 @@ Na escolha da perspectiva, o painel do Naruto mostra os quatro arcos como **perg
 - o arco da run salva sobe com a moldura ("Você está aqui") e os anteriores desbotam ("Concluído");
 - no celular, a faixa rola de lado e abre no arco atual.
 
-O enquadramento de cada arte (onde estão os rostos) fica em `--arc-pos`, por arco, em `jornada.css`. Na run da História, o painel da trilha mostra a arte do arco atual no lugar do cenário desenhado: no PC, a metade direita do painel, com a borda de tinta, fundindo no papel, e a lista de paradas à esquerda; no celular, no alto do painel. Número e nome do arco vão em selo e letra de mão. Sem arte, volta o cenário do local. O combate continua com o local da parada.
+O foco de cada arte (onde estão os rostos) vem do `SCENE_ART`. Na run da História, o painel da trilha mostra a arte do arco atual no lugar do cenário desenhado: no PC, a lista de paradas numa célula (rola por dentro) e a arte na célula ao lado, com a borda de tinta; no celular e no tablet, a arte no alto do painel. Número e nome do arco vão em selo e letra de mão, dentro da arte. Sem arte, volta o cenário do local. O combate continua com o local da parada.
 
 ## Locais
 
@@ -143,7 +149,8 @@ Decidido com o usuário (07/11/2026): **celular e desktop são pares**. Comparti
 | Piso | desktop **e** altura < 620px (`--floor-h`) | A tela é montada com 620px de altura e a página rola um pouco, em vez de espremer e sobrepor |
 | Toque | `pointer: coarse` | Alvos de pelo menos 44px (`--tap`) nos botões pequenos; as dicas já abrem com o toque longo |
 
-- **Componentes olham o próprio espaço** (container queries), não só a tela: os cards de modo do Início e da entrada da Jornada põem a arte em cima do texto quando o centro tem menos de 760px; a trilha com a arte do arco alarga a lista quando tem menos de 680px.
+- **Componentes olham o próprio espaço** (container queries), não só a tela: os cards de modo põem a arte em cima do texto quando o centro tem menos de 720px, a citação sai quando a cena fica baixa ou estreita, e a coluna direita solta peças quando fica baixa.
+- **Cada peça no seu espaço** (decidido com o usuário, 11/11/2026): em todas as telas, as peças ocupam células de uma grade com o mesmo espaçamento (`--gap`, `--gap-lg`) e nada cruza a borda de nada; ornamento (selo, rolo, kunai) fica dentro da própria peça. Quando falta espaço, as peças saem nesta ordem: 1) citação; 2) descrição do card (encurta, depois some); 3) conquistas recentes; 4) números da ficha e notas da dificuldade. **Nunca saem**: botão de ação, progresso da Jornada e título.
 - **Notebook estreito** (900–1279px): barra lateral de 76px, coluna direita do Início e coluna da build mais estreitas.
 - **Escala fluida pela menor dimensão**: arte, retratos e roda usam `clamp` com `min(vw, vh)`, para crescer com a tela sem estourar a altura.
 - Telas simples da Jornada (sorteio, nome, descanso, baú, fim) ficam numa coluna central de leitura no desktop.

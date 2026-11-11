@@ -64,6 +64,8 @@ Pedido do usuário com as respostas: o Comum também usa ninjutsu elemental; a n
 
 Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados em notebook (1366×768 e Full HD com escala) e tablet. Checklist fechado com ele: composição por largura e altura, tablet em pé como celular expandido, tablet deitado como desktop compacto com toque, piso de altura, escala fluida, todas as telas. Os números foram decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual: nenhuma regra nem número de balanceamento mudou; testes (570) iguais.
 
+**Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
+
 ## Rodadas antigas
 
 Última rodada concluída: "rebalanceamento das origens"

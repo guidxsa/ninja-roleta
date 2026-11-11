@@ -56,7 +56,7 @@ import { jornadaData as data } from '../../src/data/jornada';
 import { newJornadaAchievements } from '../../src/data/jornada/achievements';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clearJornada, loadJornada, saveJornada } from '../../src/state/jornadaSave';
-import { arcMedia, fighterPortrait, icon, sceneMedia } from '../art';
+import { arcMedia, fighterPortrait, icon, sceneMedia, sceneVars } from '../art';
 import { choose, esc, h, show, sleep } from '../dom';
 import { tip } from '../tooltip';
 import { forgetLiveBattle, heroLabel, jornadaBattle, memberLabel } from './battle';
@@ -70,6 +70,7 @@ import { relicIcon } from './relicIcons';
 import { talentTreeScreen } from './talentTree';
 import { foldAttrs, foldButton, installFolds } from './fold';
 import { WIDE } from '../layout';
+import { modeCard } from '../modeCard';
 
 const J = S.jornada;
 const U = J.ui;
@@ -225,10 +226,6 @@ async function entryScreen(host: JornadaHost, saved: JRun | null): Promise<'cont
   const hero = sceneMedia('jornada');
   const recent = host.recentAchievements(3, true);
   const quote = J.start.quotes[Math.floor(Math.random() * J.start.quotes.length)]!;
-  const card = (id: 'story' | 'path', art: string, seal: string, name: string, desc: string, cta: string) =>
-    `<button class="parchment mode-card" data-choice="${id}"><span class="mode-art" aria-hidden="true">${art}</span>
-      <span><b>${name}</b><small>${desc}</small><span class="mode-cta">${cta} ${icon('chevron')}</span></span>${icon('chevron')}
-      <span class="scroll-roll l" aria-hidden="true"></span><span class="scroll-roll r" aria-hidden="true"></span><span class="seal mode-seal" aria-hidden="true">${seal}</span></button>`;
   const root = show(
     h(`<div class="screen gate jgate">
       <div class="gate-main">
@@ -240,8 +237,8 @@ async function entryScreen(host: JornadaHost, saved: JRun | null): Promise<'cont
           <blockquote class="parchment gate-quote"><p>${quote.text}</p><cite>${quote.by}</cite></blockquote>
         </div>
         <nav class="gate-modes">
-          ${card('story', arcFan(), '史', J.start.storyName, J.start.storyDesc, J.start.storyCta)}
-          ${card('path', sceneMedia('modo-caminho') ?? fighterPortrait('commonNinja', 'ninja:common', 'lg'), '道', G.title, G.desc, J.start.pathCta)}
+          ${modeCard({ id: 'story', art: arcFan(), artVars: '--ratio:1.25', seal: '史', name: J.start.storyName, desc: J.start.storyDesc, cta: J.start.storyCta })}
+          ${modeCard({ id: 'path', art: sceneMedia('modo-caminho') ?? fighterPortrait('commonNinja', 'ninja:common', 'lg'), artVars: sceneVars('modo-caminho'), seal: '道', name: G.title, desc: G.desc, cta: J.start.pathCta })}
         </nav>
         <button class="btn small jstart-back" data-choice="back">${J.start.back}</button>
       </div>
@@ -278,7 +275,7 @@ async function entryScreen(host: JornadaHost, saved: JRun | null): Promise<'cont
 function arcFan(): string {
   const arts = data.stages.map((s) => arcMedia(s.id)).filter(Boolean);
   if (!arts.length) return fighterPortrait('naruto', 'ninja:uzumaki', 'lg');
-  return `<span class="jarc-fan">${arts.map((a, i) => `<span class="jarc-fan-i" style="--i:${i}">${a}</span>`).join('')}</span>`;
+  return `<span class="jarc-fan">${arts.map((a, i) => `<span class="jarc-fan-i art-frame" style="--i:${i}">${a}</span>`).join('')}</span>`;
 }
 
 /** Perspectivas da História: as campanhas dos dados e a do Sasuke, ainda em design (em breve). */
@@ -298,7 +295,7 @@ async function campaignScreen(host: JornadaHost, saved: JRun | null): Promise<JR
         const art = sceneMedia(p.art);
         const txt = C[p.id];
         return `<section class="jc-panel jc-${p.time}${open ? '' : ' is-locked'}" data-campaign="${p.id}"${open ? '' : ' aria-disabled="true"'}>
-          <span class="jc-art" aria-hidden="true">${art ?? ''}</span>
+          <span class="jc-art art-frame" aria-hidden="true">${art ?? ''}</span>
           <div class="jc-body parchment">
             <span class="seal jc-seal" aria-hidden="true">${p.seal}</span>
             <h3>${txt.name}</h3><p class="small">${txt.desc}</p>
@@ -330,7 +327,7 @@ async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Promise<J
     h(`<div class="screen jpath">
       <header class="jsub-head"><button class="btn small" data-choice="back">${J.start.back}</button><h2>${G.title}</h2><p class="muted">${G.desc}</p></header>
       <section class="jc-panel jpath-poster" aria-hidden="true">
-        <span class="jc-art">${sceneMedia('modo-caminho') ?? sceneMedia('jornada') ?? ''}</span>
+        <span class="jc-art art-frame">${sceneMedia('modo-caminho') ?? sceneMedia('jornada') ?? ''}</span>
         <div class="jc-body parchment"><span class="seal jc-seal">道</span><h3>${J.start.pathStages}</h3>
           <ol class="jpath-stages">${data.generic.stages.map((g, i) => `<li><span class="seal ghost">${ARC_NUMERALS[i] ?? i + 1}</span>${J.stages[g.id] ?? g.id}</li>`).join('')}</ol></div>
       </section>
@@ -410,7 +407,7 @@ function arcStrip(saved: JRun | null): string {
       const art = arcMedia(s.id);
       const state = i === now ? ' is-now' : i < now ? ' is-done' : '';
       return `<li class="jarc${state}" data-arc="${s.id}"${i === now ? ' aria-current="step"' : ''}>
-        <span class="jarc-art${art ? '' : ` jscene scene-${s.scene}`}" aria-hidden="true">${art ?? ''}</span>
+        <span class="jarc-art art-frame${art ? '' : ` jscene scene-${s.scene}`}" aria-hidden="true">${art ?? ''}</span>
         <span class="seal jarc-n" aria-hidden="true">${ARC_NUMERALS[i] ?? i + 1}</span>
         <b>${J.stages[s.id] ?? s.id}</b>${i === now ? `<small>${J.start.arcNow}</small>` : i < now ? `<small>${icon('check')} ${J.start.arcDone}</small>` : ''}</li>`;
     })
@@ -426,7 +423,7 @@ function progressCard(run: JRun): string {
   return `<section class="parchment jprogress">
     <h3>${J.start.progressTitle}</h3>
     <div class="jprogress-row"><div><small>${J.start.chapter}</small><b>${stageName(run)}</b><p class="small">${where}</p></div>
-      <span class="jthumb${thumb ? '' : ` jscene scene-${stageScene(run, data)}`}" aria-hidden="true">${thumb ?? ''}</span></div>
+      <span class="jthumb art-frame${thumb ? '' : ` jscene scene-${stageScene(run, data)}`}" aria-hidden="true">${thumb ?? ''}</span></div>
     <div class="jprogress-bar"><span>${J.start.completion[run.mode]}</span><b>${pct}%</b><i><i style="width:${pct}%"></i></i></div>
     <button class="btn primary big" data-choice="continue">${icon('scroll')} ${J.start.continue}${run.cycle > 0 ? ` <span class="chip jcycle">${icon('cycle')} ${U.cycle(run.cycle + 1)}</span>` : ''} <span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></button>
   </section>`;
@@ -512,7 +509,7 @@ function trail(run: JRun): string {
   // História: o painel mostra a arte do arco (SCENE_ART), com o número e o nome; sem arte, o cenário desenhado do local.
   const art = sceneMedia(`arco-${stage.id}`);
   const arc = art
-    ? `<figure class="jtrail-art" data-arc="${stage.id}" aria-hidden="true">${art}<figcaption><span class="seal">${ARC_NUMERALS[run.stageIndex] ?? run.stageIndex + 1}</span>${J.stages[stage.id] ?? ''}</figcaption></figure>`
+    ? `<figure class="jtrail-art art-frame" data-arc="${stage.id}" aria-hidden="true">${art}<figcaption><span class="seal">${ARC_NUMERALS[run.stageIndex] ?? run.stageIndex + 1}</span>${J.stages[stage.id] ?? ''}</figcaption></figure>`
     : '';
   return `<div class="jtrail-scene ${art ? 'jtrail-arc' : 'jscene'} scene-${stopScene(run, data)}">${arc}<ol class="jtrail">${stage.stops
     .map((s, i) => {
