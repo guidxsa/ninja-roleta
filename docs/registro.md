@@ -60,6 +60,10 @@ Pedido do usuário: lutas com HP e chakra cheios, roleta de relíquia pós-luta 
 
 Pedido do usuário com as respostas: o Comum também usa ninjutsu elemental; a natureza das outras origens é silenciosa; as outras Kekkei Genkai saem do jogador; os Portões novos valem nos dois modos. Regras comuns em `src/core/nature.ts`, `clones.ts` e `gates.ts`. Decidido sozinho: Mokuton em 3% dos Senju; Bunshin com 5 de chakra no Roleta; Portões com abertura 4 (Roleta) e 3 por portão (Jornada), manutenção `ceil(2 × 1,5^(n−1))` e peso de nível +25%; o vilão do Roleta fica com a regeneração e o Concentrar antigos; a IA da Jornada só cria clone com HP < 70%. Simulação (Roleta 1000 runs e Jornada 300, seed 2), Médio ponderado do Roleta: 64% → 58%; tabelas em [decisoes.md](decisoes.md) (item 24).
 
+## Proporções de tela (v0.59.1, 10/11/2026)
+
+Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados em notebook (1366×768 e Full HD com escala) e tablet. Checklist fechado com ele: composição por largura e altura, tablet em pé como celular expandido, tablet deitado como desktop compacto com toque, piso de altura, escala fluida, todas as telas. Os números foram decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual: nenhuma regra nem número de balanceamento mudou; testes (570) iguais.
+
 ## Rodadas antigas
 
 Última rodada concluída: "rebalanceamento das origens"

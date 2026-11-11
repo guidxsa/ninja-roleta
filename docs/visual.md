@@ -131,20 +131,31 @@ Decidido com o usuário: **a arte oficial é liberada nos retratos de personagen
 
 Decidido com o usuário (07/11/2026): **celular e desktop são pares**. Compartilham regras, estado, mecânicas e identidade visual, mas cada um tem a sua composição. O desktop **compõe** a tela de outro jeito (colunas, painéis laterais fixos, menos rolagem) em vez de ampliar a do celular. Nenhuma regra muda com a largura: o layout é só CSS (Grid com `grid-template-areas`) e, quando falta um painel, HTML de apresentação, nunca lógica duplicada.
 
-| Faixa | Largura | Composição |
+**A composição olha a largura e a altura** (decidido com o usuário, 10/11/2026, depois do teste em notebook e tablet): só a largura punha o desktop apertado em tablet deitado e notebook baixo, e deixava o tablet em pé com a coluna de 520px.
+
+| Faixa | Condição | Composição |
 |---|---|---|
 | Celular | < 600px | Vertical, por prioridade; a base de todo arquivo de estilo |
-| Tablet | 600–899px | A do celular, com mais folga |
-| Notebook | ≥ 900px | Colunas e painéis laterais, até `--shell-max` (2240px) |
-| Widescreen | ≥ 1280px | Mais uma região (equipe, campo e ações; contexto ao lado do mapa) |
+| Tablet ("celular expandido") | ≥ 600px, fora do desktop | A ordem do celular usando a largura: coluna até 860px (`--col-max`), cena e logo maiores, cards e painéis em 2 colunas (modos lado a lado com a arte em cima, as duas perspectivas, ficha e opções da origem), roda pela altura. Barra inferior, sem barra lateral. O celular deitado (altura < 560) também fica aqui |
+| Desktop | ≥ 900px **e** altura ≥ 560px | Colunas e painéis laterais, até `--shell-max` (2240px). Tablet deitado é desktop compacto |
+| Widescreen | ≥ 1280px **e** altura ≥ 560px | Mais uma região (equipe, campo e ações; contexto ao lado do mapa) |
+| Compacta | desktop **e** altura ≤ 720px | Menos detalhe: cena, roda e citação menores, técnicas da luta 2 por linha com botões mais baixos, legenda da roda em 3 colunas |
+| Piso | desktop **e** altura < 620px (`--floor-h`) | A tela é montada com 620px de altura e a página rola um pouco, em vez de espremer e sobrepor |
+| Toque | `pointer: coarse` | Alvos de pelo menos 44px (`--tap`) nos botões pequenos; as dicas já abrem com o toque longo |
 
-A CSS não aceita `var()` em `@media`, então os números se repetem nas telas; a referência fica no topo de `prototype/styles/base.css`.
+- **Componentes olham o próprio espaço** (container queries), não só a tela: os cards de modo do Início e da entrada da Jornada põem a arte em cima do texto quando o centro tem menos de 760px; a trilha com a arte do arco alarga a lista quando tem menos de 680px.
+- **Notebook estreito** (900–1279px): barra lateral de 76px, coluna direita do Início e coluna da build mais estreitas.
+- **Escala fluida pela menor dimensão**: arte, retratos e roda usam `clamp` com `min(vw, vh)`, para crescer com a tela sem estourar a altura.
+- Telas simples da Jornada (sorteio, nome, descanso, baú, fim) ficam numa coluna central de leitura no desktop.
+- Janelas: 520px no celular, 720px no tablet e 860px no desktop (`--modal-max`).
+
+A CSS não aceita `var()` em `@media`, então as condições se repetem nas telas; a referência fica no topo de `prototype/styles/base.css` e, para o TS, em `prototype/layout.ts` (`DESK`, `WIDE`).
 
 **Quanto menos rolagem, melhor** (pedido do usuário, v0.57.2). No desktop, trilha, mapa e luta cabem na janela pelo layout, não por um número: o corpo tem a altura da tela e a tela do jogo ocupa o que sobra entre a barra e o rodapé (flex). Só a trilha, a carta e as colunas rolam por dentro, e só se faltar altura. As medidas que pesam na altura acompanham a janela com `clamp(mín, Xvh, máx)`: faixa do cenário da trilha, espaço entre as paradas e retratos da luta. A carta do mapa estica até a coluna (nós em % de um campo interno com margem) e só rola abaixo de 48px por linha; no celular, 74px por linha, como sempre.
 
 **Layout fluido** (v0.57.5): as peças crescem e se reorganizam com a janela, sem degraus fixos. As colunas laterais têm largura em `vw` com `clamp` (mínimo, proporção, máximo); as grades de botões usam `repeat(auto-fill, minmax(...))` e ganham colunas quando sobra largura (as técnicas da luta: 2 por linha no Full HD, 3 no 4K); retratos e espaços seguem `vw` e `vh`. O detalhe acompanha a altura: abaixo de 760px só o essencial, a partir de 880px a ficha completa.
 
-Toda tela nova precisa das duas composições, conferidas nos tamanhos reais da área do navegador, sem rolagem horizontal e, no desktop, sem rolagem da página: 390×844 (celular), 1100×800, 1366×650 (notebook), 1536×730 (Full HD com escala de 125%), 1920×950 (Full HD) e 2560×1300 (4K com escala).
+Toda tela nova precisa das composições de celular, tablet e desktop, conferidas nos tamanhos reais da área do navegador, sem rolagem horizontal e, no desktop com altura ≥ 620px, sem rolagem da página: 390×844 (celular), 768×1024 e 820×1180 (tablet em pé), 1024×768 e 1180×820 (tablet deitado), 1100×800, 1280×620 (Full HD com escala de 150%), 1366×650 e 1366×657 (notebook), 1536×730 (Full HD com escala de 125%), 1920×950 (Full HD) e 2560×1300 (4K com escala).
 
 | Tela | Desktop | Situação |
 |---|---|---|
@@ -152,7 +163,8 @@ Toda tela nova precisa das duas composições, conferidas nos tamanhos reais da 
 | Trilha e mapa da Jornada | A tela cabe na janela e só a trilha, a carta e as colunas rolam por dentro. No topo do centro, o **título do estágio** ("Estágio n/t", o nome em letreiro e, no mapa, "Escolha o próximo destino"), com ciclo, dificuldade e o **Abandonar jornada** em cor de perigo, como o Desistir da luta (v0.57.7). Notebook: build e o que vem empilhados ao lado. Widescreen: **build** à esquerda (HUD e a loja aberta; o botão Loja some), trilha ou carta no centro e **o que vem** à direita (na trilha, a próxima parada com os inimigos, as seguintes e o Seguir; no mapa, o chefe, os caminhos abertos e o card **Sua run**), com a dica de jogo. A carta tem margem interna (nenhum símbolo toca a borda) e a **legenda fica embaixo** dela. No celular, título, HUD, (chefe,) trilha ou carta e legenda, nessa ordem | Feito (v0.57.3) |
 | Entrada da Jornada e painéis minimizáveis | Entrada: título com o Voltar, banner baixo e, embaixo, três colunas (no notebook, duas): progresso e dificuldade; a História com as conquistas recentes embaixo; o Caminho Ninja. No celular, a pilha de sempre. **Painéis minimizáveis** no widescreen (botão no canto, a escolha fica no navegador): na trilha e no mapa, relíquias e bolsa, loja, próxima parada, caminhos abertos, sua run e dica; na luta, ordem da rodada e as fichas (o registro já recolhe; as ações nunca) | Feito (v0.57.6) |
 | Portão e barra superior | Casca do PC (barra lateral, Início em painéis, páginas do Registro, faixa de frases) e a barra superior com o nome de cada ferramenta | Feito (aguardando aprovação do usuário) |
-| Roleta, árvore de talentos, modais e minigames | Ainda na coluna de 520px (a árvore já mostra os ramos lado a lado) | A fazer |
+| Roleta, árvore de talentos, modais e minigames | O Roleta tem composição própria no PC ("Roleta no PC"); roda e legenda acompanham a altura. Modais por faixa; minigames seguem na coluna de 520px | Feito (v0.59.1), aguardando o teste do usuário |
+| Proporções (tablet, notebook baixo) | Faixas por largura e altura, compacta, piso, toque e container queries (acima) | Feito (v0.59.1), aguardando o teste do usuário |
 
 ## Situação
 
