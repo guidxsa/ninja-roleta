@@ -56,3 +56,13 @@ O que espera o usuário. Um item por decisão; o histórico e os números comple
     - **Frequência de técnica no Roleta** (bot, 300 lutas por origem): caiu de ~0,96 para ~0,85 por rodada (Prodígio 0,67). A luta é curta e começa com chakra cheio, então a reserva inicial pesa mais que a regeneração: para chegar a 1 técnica a cada 2 ou 3 rodadas seriam custos perto de 10 ou chakra inicial menor. Fica a decisão.
     - **Jornada** (300 runs, seed 2, Normal): a IA dos aliados com Bunshin só cria clone ferida (HP < 70%), a mesma regra do bot do Roleta; sem isso o Uchiha caía de 69% para 47%. Depois: História 91, Comum 59, Prodígio 91, Uchiha 66, Hyuuga 80 (antes 92/60/95/69/84).
     - **Para revisar**: o desconto de chakra das relíquias é fixo e perdeu peso com os custos dobrados; o clássico (reserva) manteve os Portões antigos.
+26. **v0.60.0: conferir o que decidi sozinho** ([plataforma.md](base/plataforma.md), [registro.md](registro.md#confiabilidade-acessibilidade-e-offline-v0600-11112026)). A Juventude em 5% foi decidida com o usuário; o resto, sozinho:
+    - **PWA**: a página vem da rede primeiro (versão nova no próximo acesso online), imagens do cache; ícone com o selo 忍 em desenho próprio (`prototype/pwa/`), que pode virar uma arte do usuário. O iOS usa o mesmo PNG de 192px como ícone da tela inicial.
+    - **Dicas**: tocar num botão bloqueado agora abre a dica (antes só segurando); chips e selos com dica entram na ordem do Tab.
+    - **Tela de erro** ("Um jutsu falhou", com Voltar ao Portão) e o aviso quando o aparelho não salva a Jornada: os textos.
+    - **Compartilhar**: "Campanha concluída" virou "Run vencida"; a queda no infinito diz o ciclo e quem derrubou; linha "Mesmas roletas: <link>" com `?seed=`.
+    - **Turno sem chakra no Roleta**: tratado como bug (a regra sempre foi concentrar no lugar); o efeito na simulação é pequeno (registro).
+27. **Encontrado e não corrigido** (mexe em regra; o usuário decide):
+    - **Akatsuki "enfraquecer" sem efeito no Roleta**: o evento corta HP e chakra, mas a luta seguinte já começa cheia desde a v0.59.0 (`readyForFight`). Trocar o efeito, como o Cupom do Ichiraku (item 23)?
+    - **Sobras da roleta de recompensa** (saiu na v0.59.0): `applyRoletaReward`, `applyJackpot` e `autoRoletaReward` sem uso, e a trilha do Roleta ainda mostra uma "raridade da recompensa" (`rewardTierFor`) que não decide mais nada. Proposta: tirar o código morto e o rótulo.
+    - **Jornada mostra o XP da vitória sem os bônus** de talentos e relíquias (o ganho de verdade é maior).

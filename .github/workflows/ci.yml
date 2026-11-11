@@ -1,0 +1,29 @@
+# Verifica cada branch de trabalho e cada PR antes do merge no master (o master publica no Pages a cada push).
+# Mesmos passos do build de produção, sem publicar.
+name: Verificar
+
+on:
+  push:
+    branches: ['feature/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx vitest run
+      - run: npm run proto

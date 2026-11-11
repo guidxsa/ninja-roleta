@@ -39,7 +39,7 @@ import {
 } from '../src/core/roleta/run';
 import type { RTechniqueDef } from '../src/data/roleta/techniques';
 import { critChance, hitSlices } from '../src/core/hit';
-import { choose, esc, goHome, h, HOME, isOff, show, sleep, untilHome } from './dom';
+import { choose, esc, goHome, h, HOME, isOff, openDialog, show, sleep, untilHome } from './dom';
 import { lineageOf, rollOrigin, type OriginStep } from '../src/core/origin';
 import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
@@ -89,7 +89,7 @@ import { newAchievements, type AchievementCategory } from '../src/core/achieveme
 import { addEffect, addFight, addJokenpo, addPreEvent, emptyRunStats, type RunStats } from '../src/core/runStats';
 import { summarizeRoletaFight } from '../src/core/roleta/stats';
 import { createRng, type Rng } from '../src/core/rng';
-import { buildShareText, type TrailEntry } from '../src/core/share';
+import { buildShareText, replayUrl, type TrailEntry } from '../src/core/share';
 
 import type { ConsumableId, Element, LineageTier, Origin, SummonAnimal, VillainDef } from '../src/core/types';
 import { CONSUMABLES } from '../src/data/events';
@@ -148,7 +148,7 @@ import { jornadaProgressCard, runJornada } from './jornada';
 import { jornadaAchievements } from '../src/data/jornada/achievements';
 import type { JornadaHost } from './jornada/host';
 import { createWheel, stripRoulette, type WheelSlice } from './wheel';
-import { DESK } from './layout';
+import { DESK, prefersStill } from './layout';
 import { modeCard } from './modeCard';
 
 // ---------------------------------------------------------------------------
@@ -225,9 +225,13 @@ const saveSettings = () => {
   }
 };
 
+/**
+ * Ritmo das animações. Com menos movimento pedido pelo aparelho, as roletas param direto no resultado: o CSS já zera a
+ * transição, e esperar o giro deixaria a tela parada 3 s.
+ */
 const pace = {
-  wheel: () => (settings.instant ? 0 : 3000),
-  strip: () => (settings.instant ? 0 : 600),
+  wheel: () => (settings.instant || prefersStill() ? 0 : 3000),
+  strip: () => (settings.instant || prefersStill() ? 0 : 600),
   beat: () => (settings.instant ? 140 : 480),
 };
 
@@ -843,7 +847,7 @@ function openSheet() {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) overlay.remove();
   });
-  document.body.appendChild(overlay);
+  openDialog(overlay);
 }
 
 /**
@@ -2109,8 +2113,10 @@ async function shareRun(c: Campaign, won: boolean, stoppedAt: string | null) {
       trail: c.trail,
       won,
       fallenTo: stoppedAt,
+      cycle: c.run.cycle + 1,
       revivesUsed: c.player.revivesUsed,
       seed: c.seed,
+      replayUrl: replayUrl(window.location, c.seed),
     },
     S.share,
   );
@@ -2167,7 +2173,7 @@ function openProfile(tab: ProfileTab = 'history') {
 function openRegistry(page: RegistryPage, filter: HistoryFilter = 'general') {
   const D = S.ui.desk;
   const k = REGISTRY_KANJI[page];
-  const overlay = h(`<div class="modal"><div class="modal-body profile registry">
+  const overlay = h(`<div class="modal" aria-label="${D.nav[page]}"><div class="modal-body profile registry">
     <span class="scroll-roll t" aria-hidden="true"></span><span class="scroll-roll b" aria-hidden="true"></span>
     <div class="modal-head"><span class="seal${k.length > 1 ? ' two' : ''}" aria-hidden="true">${k}</span><h2>${D.nav[page]}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
     <label class="field profile-name reg-name"><span>${S.ui.playerName.label}</span><input type="text" data-player-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${S.ui.playerName.placeholder}" value="${esc(profile.playerName ?? '')}"></label>
@@ -2189,19 +2195,12 @@ function openRegistry(page: RegistryPage, filter: HistoryFilter = 'general') {
     overlay.querySelectorAll('[data-filter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     fill(b.dataset.filter as HistoryFilter);
   });
-  const close = () => {
-    overlay.remove();
-    document.removeEventListener('keydown', onKey);
-  };
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') close();
-  };
+  // Escape, foco e o fim do listener ficam com openDialog (antes o keydown ficava preso quando goHome fechava a janela).
   overlay.addEventListener('click', (e) => {
-    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) close();
+    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) overlay.remove();
   });
-  document.addEventListener('keydown', onKey);
   fill(filter);
-  document.body.appendChild(overlay);
+  openDialog(overlay);
 }
 
 /** Selo da conquista: 功 dourado quando liberada; contorno com cadeado quando não. */
@@ -2672,6 +2671,7 @@ async function loadFonts(): Promise<void> {
 
 async function main() {
   installErrorHandlers();
+  registerServiceWorker();
   markAbandonedRuns(storage, new Date(), data.balance.history.maxRuns);
   backfillProfile();
 
@@ -2926,6 +2926,15 @@ function installSideNav(): void {
 }
 
 /** Faixa de frases no pé (PC): uma frase sorteada, trocando a cada 20 s. */
+/**
+ * Jogo instalável e offline (prototype/sw.ts). Só num endereço web: aberto como arquivo (`file:`), o navegador não aceita
+ * service worker, e o arquivo único já funciona sem rede.
+ */
+function registerServiceWorker(): void {
+  if (!('serviceWorker' in navigator) || !/^https?:$/.test(window.location.protocol)) return;
+  navigator.serviceWorker.register('sw.js').catch((err: unknown) => console.warn('service worker', err));
+}
+
 function installQuoteStrip(): void {
   const el = document.getElementById('quote-strip')!;
   const quotes = S.ui.gate.quotes;

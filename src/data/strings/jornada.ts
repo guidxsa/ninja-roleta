@@ -794,6 +794,8 @@ export const jornadaPtBR = {
 
   minigames: {
     memoryTitle: 'Jogo da memória',
+    /** Nome da carta virada para baixo (leitor de tela). */
+    cardLabel: (n: number) => `Carta ${n}`,
     memoryHelp: (misses: number) => `Ache os pares de selos. Pode errar ${misses} vezes.`,
     missesLeft: (n: number) => `Erros restantes: ${n}`,
     sealsTitle: 'Sequência de selos',

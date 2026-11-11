@@ -1,6 +1,6 @@
 // Componentes visuais de roleta. O resultado já vem sorteado pelo core; aqui só se anima até ele.
 import { land, spinStart, swish, tick } from './audio';
-import { sleep } from './dom';
+import { announce, sleep } from './dom';
 import { fitLabel, sliceFont, type LabelFit } from './wheelLabel';
 
 export interface WheelSlice {
@@ -120,6 +120,8 @@ export function createWheel(slices: WheelSlice[]): Wheel {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${SIZE} ${SIZE}`);
   svg.classList.add('wheel');
+  // O desenho repete a legenda: o leitor de tela lê a legenda e ouve o resultado (announce, em spinTo).
+  svg.setAttribute('aria-hidden', 'true');
   const ranges = spans(slices);
   const paths: SVGElement[] = [];
   const rim = document.createElementNS(SVG_NS, 'circle');
@@ -242,6 +244,8 @@ export function createWheel(slices: WheelSlice[]): Wheel {
       delete el.dataset.spinning;
       paths.forEach((path, i) => path.classList.toggle('dim', i !== index));
       items.forEach((li, i) => li.classList.toggle('win', i === index));
+      const label = slices[index]?.label;
+      if (label) announce(label);
     },
   };
 }

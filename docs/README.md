@@ -19,6 +19,7 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 | [base/viloes.md](base/viloes.md) | Fichas, passivas e comportamentos dos vilões |
 | [base/progressao.md](base/progressao.md) | XP, níveis, estágios de status, marcos |
 | [base/perfil.md](base/perfil.md) | Perfil local: conquistas, Livro Bingo e estatísticas por origem |
+| [base/plataforma.md](base/plataforma.md) | Offline e instalação (PWA), acessibilidade, o que acontece quando algo falha |
 | [roleta/run.md](roleta/run.md) | Run do Roleta: ciclo por categoria, modo infinito, eventos, recompensa, itens e relíquias |
 | [roleta/combate.md](roleta/combate.md) | Combate enxuto do Roleta: turno, esquiva, efeitos, técnicas e kits |
 | [reserva/README.md](reserva/README.md) | O que ficou guardado do combate clássico e onde está escrito |

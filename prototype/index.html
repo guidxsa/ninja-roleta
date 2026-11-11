@@ -6,6 +6,9 @@
     <meta name="theme-color" content="#0d0c0b" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#e6dac0" media="(prefers-color-scheme: light)" />
     <title>Ninja Roleta</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
     <script>
       // Tema antes da primeira pintura (sem piscar): o escolhido no botão ou o do aparelho.
       try {
@@ -45,7 +48,7 @@
       <div class="dots" id="dots"></div>
     </header>
     <nav class="side-nav" id="side-nav"></nav>
-    <main id="screen"></main>
+    <main id="screen" tabindex="-1"></main>
     <nav class="gate-nav" id="gate-nav"></nav>
     <footer><p class="quote-strip" id="quote-strip"></p><span class="foot-legal"><small id="disclaimer"></small> <small id="version" class="version"></small></span></footer>
     <script>

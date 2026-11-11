@@ -7,7 +7,7 @@ O jogo deve parecer parte do universo de Naruto, e não um site com tema de Naru
 - **O mundo reconhecível mesmo sem personagens**: vilas, clãs, selos, pergaminhos, mapas, kanji e caligrafia.
 - **Objetos do universo no lugar de componentes genéricos**: fichas, pergaminhos, carimbos, placas de madeira, etiquetas de arquivo e cartas de mapa, em vez de cards, gradientes modernos e sombras difusas.
 - **Coerência**: cada tela usa poucas referências, ligadas ao que acontece nela, e não uma coleção de referências soltas.
-- **Função primeiro**: legibilidade, toque e layout de celular não cedem à ambientação.
+- **Função primeiro**: legibilidade, toque e layout de celular não cedem à ambientação. Teclado, leitor de tela e menos movimento também ([plataforma.md](base/plataforma.md#acessibilidade)).
 
 ## Cores
 

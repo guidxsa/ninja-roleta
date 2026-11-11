@@ -5,7 +5,7 @@ import { allRelics, relicsById } from '../../src/data/relics';
 import type { JRun } from '../../src/core/jornada/run';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { icon } from '../art';
-import { h, sleep } from '../dom';
+import { h, openDialog, sleep } from '../dom';
 import { tip } from '../tooltip';
 import { relicIcon } from './relicIcons';
 
@@ -97,7 +97,7 @@ export async function flashRelics(root: ParentNode, ids: readonly string[], inst
 /** Painel com todas as relíquias da run, agrupadas por raridade; tocar mostra o detalhe embaixo. */
 export function relicsModal(run: JRun, focus?: string): void {
   const groups = TIERS.map((t) => ({ t, ids: run.relics.filter((id) => relicTier(id) === t) })).filter((g) => g.ids.length);
-  const el = h(`<div class="modal"><div class="modal-body jmodal jrpanel">
+  const el = h(`<div class="modal" aria-label="${U.relicsTitle}"><div class="modal-body jmodal jrpanel">
     <div class="modal-head"><h2>${U.relicsTitle} <small class="muted">${U.relicsCount(run.relics.length)}</small></h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
     ${run.relics.length ? '' : `<p class="muted">${U.noRelics}</p>`}
     ${groups
@@ -109,7 +109,7 @@ export function relicsModal(run: JRun, focus?: string): void {
     ${run.willOfFire ? `<p class="jrwill">${icon('willOfFire')} ${U.willOfFire(run.willOfFire)}</p>` : ''}
     <div class="jrdetail" aria-live="polite"></div>
   </div></div>`);
-  document.body.appendChild(el);
+  openDialog(el);
   const detail = el.querySelector<HTMLElement>('.jrdetail')!;
   const select = (id: string | undefined) => {
     el.querySelectorAll('[data-pick]').forEach((b) => b.classList.toggle('on', (b as HTMLElement).dataset.pick === id));

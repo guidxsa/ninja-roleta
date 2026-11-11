@@ -7,7 +7,7 @@ import type { FighterMods, JTechnique } from '../../src/core/jornada/types';
 import { jornadaData as data } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clanSymbol, fighterPortrait, icon } from '../art';
-import { h } from '../dom';
+import { h, openDialog } from '../dom';
 import { ELEMENT_COLORS } from '../tips';
 import { techName, techTip } from './battle';
 import { themeOf, themeStyle } from './theme';
@@ -55,7 +55,7 @@ export function movesetScreen(run: JRun): Promise<JRun> {
   let fullFlash = false;
 
   const root = h(`<div class="jtree-screen jmoves-screen ${theme.cls}" role="dialog" aria-label="${U.movesetName}"${themeStyle(run)}><div class="jt-body"></div></div>`);
-  document.body.appendChild(root);
+  openDialog(root);
   const body = root.querySelector<HTMLElement>('.jt-body')!;
   const hero = fighterPortrait(run.hero, run.skin ? `ninja:${run.skin}` : (data.characters[run.hero]?.portrait ?? 'ninja:common'), 'sm');
 

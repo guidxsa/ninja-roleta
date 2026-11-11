@@ -1,6 +1,7 @@
 // Arte do protótipo: retratos, símbolos de clã e de vila e ícones em SVG desenhado à mão.
 // Retratos podem vir de imagens em public/img/ (inclusive arte oficial, ver public/img/LEIAME.md).
 // Imagens próprias em `public/img/` substituem os retratos: o build lista os arquivos em __IMAGES__.
+import { prefersStill } from './layout';
 
 declare const __IMAGES__: string[];
 declare const __IMAGE_META__: Record<string, readonly [number, number]>;
@@ -373,7 +374,6 @@ export const hasSceneVideos = (): boolean => IMAGES.some((p) => /\.(webm|mp4)$/i
 /** Modo das cenas: Leve (imagem parada, padrão) ou Animado (vídeo em loop, quando a vaga tem). */
 let animatedScenes = false;
 
-const prefersStill = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function sceneInner(name: string): string {
   const img = sceneImage(name);

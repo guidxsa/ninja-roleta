@@ -1225,10 +1225,13 @@ export const ptBR = {
     loss: '💀',
     examWin: '🥇',
     examLoss: '❌',
-    victory: 'Campanha concluída 🏆',
+    victory: 'Run vencida 🏆',
+    cycle: (n: number) => `ciclo ${n}`,
     fallenTo: (name: string) => `Caiu para ${name}`,
+    fallenInCycle: (cycle: number, name: string) => `caiu no ciclo ${cycle} para ${name}`,
     revives: (n: number) => `${n} ${n === 1 ? 'Vontade' : 'Vontades'} do Fogo`,
     seed: (n: number) => `seed ${n}`,
+    replay: (url: string) => `Mesmas roletas: ${url}`,
   },
   /** Perfil: conquistas, Livro Bingo e estatísticas por origem. */
   profile: {

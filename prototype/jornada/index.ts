@@ -57,7 +57,7 @@ import { newJornadaAchievements } from '../../src/data/jornada/achievements';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { loadJornada, saveJornada } from '../../src/state/jornadaSave';
 import { arcMedia, fighterPortrait, icon, sceneMedia, sceneVars } from '../art';
-import { choose, esc, h, show, sleep } from '../dom';
+import { choose, esc, h, openDialog, show, sleep } from '../dom';
 import { tip } from '../tooltip';
 import { forgetLiveBattle, heroLabel, jornadaBattle, memberLabel } from './battle';
 import { movesetScreen } from './moveset';
@@ -861,7 +861,9 @@ function mapView(run: JRun, hudHtml: string): string {
       const st = done.has(n.id) ? 'done' : choices.has(n.id) ? 'choice' : ahead.has(n.id) ? 'ahead' : 'dead';
       const inner = n.kind === 'boss' ? fighterPortrait(boss[0]!, data.enemies[boss[0]!]!.portrait, 'sm') : done.has(n.id) ? icon('check') : n.kind === 'unknown' ? '<b class="jq">?</b>' : icon(NODE_ICONS[n.kind]!);
       const p = pos(n);
-      return `<button class="jnode-map k-${n.kind} ${st}" style="left:${fmt(p.x)}%;top:${fmt(p.y)}%" data-node="${n.id}" ${st === 'choice' ? '' : 'aria-disabled="true"'}${tip(nodeKindName(n.kind), nodeKindDesc(n.kind))}>${inner}</button>`;
+      // O conteúdo é só ícone (ou "?"): o nome do tipo de parada vai no rótulo, com o chefe quando é ele.
+      const label = n.kind === 'boss' ? `${nodeKindName(n.kind)}: ${boss.map((id) => J.names[id] ?? id).join(' e ')}` : nodeKindName(n.kind);
+      return `<button class="jnode-map k-${n.kind} ${st}" style="left:${fmt(p.x)}%;top:${fmt(p.y)}%" data-node="${n.id}" aria-label="${esc(label)}" ${st === 'choice' ? '' : 'aria-disabled="true"'}${tip(nodeKindName(n.kind), nodeKindDesc(n.kind))}>${inner}</button>`;
     })
     .join('');
   // O herói fica no último nó feito; antes da primeira escolha, embaixo do mapa.
@@ -981,7 +983,7 @@ function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
     <div class="jt-head"><h2>${icon('tag')} ${U.shopTitle}</h2><span class="chip" data-ryo></span><span class="chip" data-inflation></span></div>
     <div data-shop></div>
     <div class="sticky-cta"><button class="btn primary big" data-close>${U.leave}</button></div></div></div>`);
-  document.body.appendChild(root);
+  openDialog(root);
   const chips = () => {
     root.querySelector('[data-ryo]')!.innerHTML = `${icon('coin')} ${U.ryo(run.ryo)}`;
     inflationChip(root.querySelector<HTMLElement>('[data-inflation]')!, run);

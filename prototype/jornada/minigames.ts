@@ -23,7 +23,7 @@ function memory(slot: HTMLElement, data: JornadaData, rng: Rng, instant: boolean
   let misses = cfg.memoryMaxMisses;
   const box = h(`<div class="mg"><h3>${M.memoryTitle}</h3><p class="muted small">${M.memoryHelp(misses)}</p>
     <p class="mg-status">${M.missesLeft(misses)}</p>
-    <div class="mg-grid">${deck.map((_, i) => `<button class="mg-card" data-i="${i}" type="button"></button>`).join('')}</div></div>`);
+    <div class="mg-grid">${deck.map((_, i) => `<button class="mg-card" data-i="${i}" type="button" aria-label="${M.cardLabel(i + 1)}"></button>`).join('')}</div></div>`);
   slot.replaceChildren(box);
   const status = box.querySelector<HTMLElement>('.mg-status')!;
   return new Promise((resolve) => {
@@ -36,6 +36,8 @@ function memory(slot: HTMLElement, data: JornadaData, rng: Rng, instant: boolean
       const i = Number(b.dataset.i);
       b.classList.add('up');
       b.innerHTML = glyph(deck[i]!);
+      // Virada, a carta mostra o selo (o nome dele vai no texto); o rótulo de "Carta N" sai.
+      b.removeAttribute('aria-label');
       open.push(i);
       if (open.length < 2) return;
       const [a, c] = open as [number, number];
@@ -54,6 +56,7 @@ function memory(slot: HTMLElement, data: JornadaData, rng: Rng, instant: boolean
         const el = box.querySelector<HTMLElement>(`[data-i="${k}"]`)!;
         el.classList.remove('up');
         el.innerHTML = '';
+        el.setAttribute('aria-label', M.cardLabel(k + 1));
       }
       busy = false;
       if (misses < 0) resolve(false);
@@ -97,7 +100,7 @@ async function seals(slot: HTMLElement, data: JornadaData, rng: Rng, instant: bo
 function rps(slot: HTMLElement, rng: Rng): Promise<boolean> {
   const hands: Hand[] = ['rock', 'paper', 'scissors'];
   const box = h(`<div class="mg"><h3>${M.jokenpoTitle}</h3><p class="muted small">${M.jokenpoHelp}</p>
-    <div class="mg-duel"></div><div class="row center-row">${hands.map((x) => `<button class="btn big-hand" data-h="${x}">${icon(x)}</button>`).join('')}</div></div>`);
+    <div class="mg-duel"></div><div class="row center-row">${hands.map((x) => `<button class="btn big-hand" data-h="${x}" aria-label="${S.hands[x]}" title="${S.hands[x]}">${icon(x)}</button>`).join('')}</div></div>`);
   slot.replaceChildren(box);
   const duel = box.querySelector<HTMLElement>('.mg-duel')!;
   return new Promise((resolve) => {
