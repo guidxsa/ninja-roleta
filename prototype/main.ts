@@ -39,7 +39,7 @@ import {
 } from '../src/core/roleta/run';
 import type { RTechniqueDef } from '../src/data/roleta/techniques';
 import { critChance, hitSlices } from '../src/core/hit';
-import { choose, esc, goHome, h, HOME, isOff, show, sleep, untilHome } from './dom';
+import { choose, esc, goHome, h, HOME, isOff, openDialog, show, sleep, untilHome } from './dom';
 import { lineageOf, rollOrigin, type OriginStep } from '../src/core/origin';
 import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
@@ -89,7 +89,7 @@ import { newAchievements, type AchievementCategory } from '../src/core/achieveme
 import { addEffect, addFight, addJokenpo, addPreEvent, emptyRunStats, type RunStats } from '../src/core/runStats';
 import { summarizeRoletaFight } from '../src/core/roleta/stats';
 import { createRng, type Rng } from '../src/core/rng';
-import { buildShareText, type TrailEntry } from '../src/core/share';
+import { buildShareText, replayUrl, type TrailEntry } from '../src/core/share';
 
 import type { ConsumableId, Element, LineageTier, Origin, SummonAnimal, VillainDef } from '../src/core/types';
 import { CONSUMABLES } from '../src/data/events';
@@ -99,6 +99,7 @@ import { roletaVillains as villains, roletaVillainsById as villainsById, type RC
 import { achievements } from '../src/data/achievements';
 import {
   achievementsFromHistory,
+  bestRoletaCycle,
   cleanPlayerName,
   discoverRelics,
   killedByCounts,
@@ -110,6 +111,7 @@ import {
   recordJornadaReach,
   recordRoletaReach,
   saveProfile,
+  syncHardcoreUnlock,
   unlockAchievements,
   type Profile,
 } from '../src/state/profile';
@@ -119,7 +121,6 @@ import { relicIcon } from './jornada/relicIcons';
 import { lineages as allLineages } from '../src/data/lineages';
 import { askPlayerName } from './playerName';
 import {
-  isHardcoreUnlocked,
   loadRuns,
   markAbandonedRuns,
   startRun,
@@ -147,7 +148,7 @@ import { jornadaProgressCard, runJornada } from './jornada';
 import { jornadaAchievements } from '../src/data/jornada/achievements';
 import type { JornadaHost } from './jornada/host';
 import { createWheel, stripRoulette, type WheelSlice } from './wheel';
-import { DESK } from './layout';
+import { DESK, prefersStill } from './layout';
 import { modeCard } from './modeCard';
 
 // ---------------------------------------------------------------------------
@@ -224,9 +225,13 @@ const saveSettings = () => {
   }
 };
 
+/**
+ * Ritmo das animações. Com menos movimento pedido pelo aparelho, as roletas param direto no resultado: o CSS já zera a
+ * transição, e esperar o giro deixaria a tela parada 3 s.
+ */
 const pace = {
-  wheel: () => (settings.instant ? 0 : 3000),
-  strip: () => (settings.instant ? 0 : 600),
+  wheel: () => (settings.instant || prefersStill() ? 0 : 3000),
+  strip: () => (settings.instant || prefersStill() ? 0 : 600),
   beat: () => (settings.instant ? 140 : 480),
 };
 
@@ -455,6 +460,19 @@ function backfillProfile() {
   if (profile.backfilled) return;
   profile = { ...unlockAchievements(profile, achievementsFromHistory(loadRuns(storage)), new Date()), backfilled: true };
   saveProfile(storage, profile);
+}
+
+/**
+ * Hardcore liberado: guardado no perfil (o histórico tem só as últimas runs). Toda run passa pela tela da origem, então
+ * a vitória que libera é vista aqui enquanto ainda está no histórico.
+ */
+function hardcoreUnlocked(): boolean {
+  const next = syncHardcoreUnlock(profile, loadRuns(storage), data.balance.difficulty.hardcoreUnlockedBy);
+  if (next !== profile) {
+    profile = next;
+    saveProfile(storage, profile);
+  }
+  return Boolean(profile.hardcoreUnlocked);
 }
 
 /** Uma luta da campanha: entra nas estatísticas da run e no Livro Bingo. */
@@ -829,7 +847,7 @@ function openSheet() {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) overlay.remove();
   });
-  document.body.appendChild(overlay);
+  openDialog(overlay);
 }
 
 /**
@@ -1016,7 +1034,7 @@ async function originScreen(): Promise<void> {
     const roll = rollOrigin(rng, data);
     const runId = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
     // Hardcore bloqueado (ainda não venceu no Difícil): cai para a dificuldade padrão.
-    const hardcoreOk = isHardcoreUnlocked(loadRuns(storage), data.balance.difficulty.hardcoreUnlockedBy);
+    const hardcoreOk = hardcoreUnlocked();
     if (settings.difficulty === 'hardcore' && !hardcoreOk) settings.difficulty = DEFAULT_DIFFICULTY;
     let player = createRoletaPlayer(roll.origin, rdata, settings.difficulty);
     camp = {
@@ -2095,8 +2113,10 @@ async function shareRun(c: Campaign, won: boolean, stoppedAt: string | null) {
       trail: c.trail,
       won,
       fallenTo: stoppedAt,
+      cycle: c.run.cycle + 1,
       revivesUsed: c.player.revivesUsed,
       seed: c.seed,
+      replayUrl: replayUrl(window.location, c.seed),
     },
     S.share,
   );
@@ -2153,7 +2173,7 @@ function openProfile(tab: ProfileTab = 'history') {
 function openRegistry(page: RegistryPage, filter: HistoryFilter = 'general') {
   const D = S.ui.desk;
   const k = REGISTRY_KANJI[page];
-  const overlay = h(`<div class="modal"><div class="modal-body profile registry">
+  const overlay = h(`<div class="modal" aria-label="${D.nav[page]}"><div class="modal-body profile registry">
     <span class="scroll-roll t" aria-hidden="true"></span><span class="scroll-roll b" aria-hidden="true"></span>
     <div class="modal-head"><span class="seal${k.length > 1 ? ' two' : ''}" aria-hidden="true">${k}</span><h2>${D.nav[page]}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
     <label class="field profile-name reg-name"><span>${S.ui.playerName.label}</span><input type="text" data-player-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${S.ui.playerName.placeholder}" value="${esc(profile.playerName ?? '')}"></label>
@@ -2175,19 +2195,12 @@ function openRegistry(page: RegistryPage, filter: HistoryFilter = 'general') {
     overlay.querySelectorAll('[data-filter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     fill(b.dataset.filter as HistoryFilter);
   });
-  const close = () => {
-    overlay.remove();
-    document.removeEventListener('keydown', onKey);
-  };
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') close();
-  };
+  // Escape, foco e o fim do listener ficam com openDialog (antes o keydown ficava preso quando goHome fechava a janela).
   overlay.addEventListener('click', (e) => {
-    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) close();
+    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) overlay.remove();
   });
-  document.addEventListener('keydown', onKey);
   fill(filter);
-  document.body.appendChild(overlay);
+  openDialog(overlay);
 }
 
 /** Selo da conquista: 功 dourado quando liberada; contorno com cadeado quando não. */
@@ -2657,6 +2670,8 @@ async function loadFonts(): Promise<void> {
 }
 
 async function main() {
+  installErrorHandlers();
+  registerServiceWorker();
   markAbandonedRuns(storage, new Date(), data.balance.history.maxRuns);
   backfillProfile();
 
@@ -2727,16 +2742,22 @@ async function main() {
   if (LAB.lab) document.getElementById('version')!.textContent += ` · ${S.lab.badge}`;
   if (LAB.seed !== null) document.getElementById('version')!.textContent += ` · ${S.lab.seed(LAB.seed)}`;
   document.getElementById('home-btn')!.addEventListener('click', askHome);
-  if (LAB.lab) for (;;) if ((await untilHome(labFlow())) === HOME) leftToMenu();
+  const round = async () => {
+    if (LAB.lab) return labFlow();
+    const pick = await modeScreen();
+    if (pick !== 'roleta') return runJornada(jornadaHost, { resume: pick === 'jornada-continue' });
+    await ensurePlayerName();
+    await originScreen();
+    await runCampaign();
+  };
   for (;;) {
-    const round = async () => {
-      const pick = await modeScreen();
-      if (pick !== 'roleta') return runJornada(jornadaHost, { resume: pick === 'jornada-continue' });
-      await ensurePlayerName();
-      await originScreen();
-      await runCampaign();
-    };
-    if ((await untilHome(round())) === HOME) leftToMenu();
+    try {
+      if ((await untilHome(round())) === HOME) leftToMenu();
+    } catch (err) {
+      leftToMenu();
+      // O próprio aviso também pode ser interrompido pelo botão do Portão.
+      await untilHome(errorScreen(err));
+    }
   }
 }
 
@@ -2746,6 +2767,36 @@ function askHome() {
   const text = jornada && jornadaSheet ? S.ui.homeConfirmJornada : !jornada && camp && campLive ? S.ui.homeConfirmRoleta : null;
   if (text && !window.confirm(text)) return;
   goHome();
+}
+
+/**
+ * Uma tela quebrou no meio do fluxo (exceção). Antes, o laço principal parava e a interface congelava sem aviso. Agora:
+ * fecha as camadas por cima, mostra o que houve e volta ao Portão. A Jornada salva fica como estava (é salva por parada).
+ */
+async function errorScreen(err: unknown): Promise<void> {
+  console.error(err);
+  goHome();
+  const E = S.ui.error;
+  const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+  const root = show(
+    h(`<div class="screen" role="alert"><h2>${E.title}</h2><section class="card"><p>${E.text}</p>
+      <details><summary class="small muted">${E.detail}</summary><p class="pre small muted">${esc(`${detail} · ${S.ui.version(VERSION)}`)}</p></details></section>
+      <button class="btn primary big" data-choice="ok">${icon('home')} ${E.home}</button></div>`),
+  );
+  await choose(root);
+}
+
+/** Erro fora do fluxo das telas (um clique, uma animação): a tela segue; avisa uma vez a cada tanto, sem travar. */
+let lastErrorToast = 0;
+function installErrorHandlers(): void {
+  const warn = (err: unknown) => {
+    console.error(err);
+    if (Date.now() - lastErrorToast < 10_000) return;
+    lastErrorToast = Date.now();
+    toast(S.ui.error.title, 'warning');
+  };
+  window.addEventListener('error', (e) => warn(e.error ?? e.message));
+  window.addEventListener('unhandledrejection', (e) => warn(e.reason));
 }
 
 /** Arruma o estado deixado pelo fluxo interrompido: a run do Roleta conta como abandonada; a da Jornada já está salva. */
@@ -2875,6 +2926,15 @@ function installSideNav(): void {
 }
 
 /** Faixa de frases no pé (PC): uma frase sorteada, trocando a cada 20 s. */
+/**
+ * Jogo instalável e offline (prototype/sw.ts). Só num endereço web: aberto como arquivo (`file:`), o navegador não aceita
+ * service worker, e o arquivo único já funciona sem rede.
+ */
+function registerServiceWorker(): void {
+  if (!('serviceWorker' in navigator) || !/^https?:$/.test(window.location.protocol)) return;
+  navigator.serviceWorker.register('sw.js').catch((err: unknown) => console.warn('service worker', err));
+}
+
 function installQuoteStrip(): void {
   const el = document.getElementById('quote-strip')!;
   const quotes = S.ui.gate.quotes;
@@ -2897,13 +2957,13 @@ function profileCard(): string {
   const D = S.ui.desk;
   const runs = loadRuns(storage).filter((r) => r.status !== 'reroll');
   const wins = runs.filter((r) => r.status === 'victory').length;
-  const cycles = runs.filter((r) => r.fights !== undefined).map((r) => (r.cycle ?? 0) + 1);
+  const bestCycle = bestRoletaCycle(profile, runs);
   const best = profile.jornada?.generic ?? null;
   const counted = achievements.filter((a) => !a.legacy).length + jornadaAchievements.length;
   const rows: [string, string][] = [
     [D.stats.roletaRuns, String(runs.length)],
     [D.stats.roletaWins, String(wins)],
-    [D.stats.bestCycle, cycles.length ? String(Math.max(...cycles)) : D.none],
+    [D.stats.bestCycle, bestCycle !== null ? String(bestCycle) : D.none],
     [D.stats.jornada, best ? S.jornada.start.best(best.cycle, best.stage, best.won) : D.none],
     [D.stats.achievements, `${Object.keys(profile.achievements).length}/${counted}`],
     [D.stats.villains, String(Object.keys(profile.villains).length)],

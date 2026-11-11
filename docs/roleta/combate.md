@@ -34,7 +34,7 @@ O sangramento virou veneno; prisão, sono, possessão e congelar viraram atordoa
 ## Chakra e itens
 
 - Técnicas custam chakra; o taijutsu básico é grátis. No começo de cada rodada, o jogador recupera **3%** do chakra máximo e o vilão **5%** (mínimo 1), sem pausa na tela.
-- **Economia de chakra** (v0.59.0, proposta): as técnicas custam o dobro de antes (6 nas de elemento e de clã, 4 nas de taijutsu do clã, 8 nas mais fortes, 7 na Madeira), a regeneração do jogador caiu de 5% para 3% e Concentrar subiu de 25% para 30%. O vilão segue com o ritmo antigo (5% e 25%), para a mudança não mexer na força dele.
+- **Economia de chakra** (v0.59.0, proposta): as técnicas custam o dobro de antes (6 nas de elemento e de clã, inclusive as Presas Giratórias do Inuzuka; 4 nas outras de taijutsu de clã, a Mão Expandida, a Folha Furacão e o Selo dos Pontos Vitais; 8 nas mais fortes, 7 na Madeira; os valores de cada uma estão na tabela de técnicas), a regeneração do jogador caiu de 5% para 3% e Concentrar subiu de 25% para 30%. O vilão segue com o ritmo antigo (5% e 25%), para a mudança não mexer na força dele.
 - Itens na luta: Pílula de soldado (+50% do chakra), Kit médico (limpa os efeitos e cura 15%), Selo explosivo (15 de dano, sem roleta), Bomba de fumaça (esquiva garantida do próximo ataque).
 - **Vontade do Fogo**: ao cair, volta com HP e chakra cheios ([fundamentos.md](../base/fundamentos.md#vontade-do-fogo-revive)).
 

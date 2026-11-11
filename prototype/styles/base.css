@@ -69,6 +69,12 @@ b, strong { font-weight: 700; }
 .pre { white-space: pre-line; }
 .kanji { font-family: var(--font-kanji); font-weight: 400; line-height: 1; font-style: normal; }
 .num { font-family: var(--font-hud); font-variant-numeric: tabular-nums; }
+/* Só para o leitor de tela (anúncios da roleta). */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* A tela e as janelas recebem o foco ao abrir (teclado e leitor de tela); o contorno fica para os botões. */
+#screen:focus, [aria-modal='true']:focus { outline: none; }
+/* Chips, selos e linhas com dica recebem foco pelo teclado (a dica abre): mesmo anel dos botões. */
+[data-tip][tabindex='0']:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
 
 main { width: 100%; max-width: var(--col-max); padding: 14px 16px 24px; flex: 1; }
 footer {

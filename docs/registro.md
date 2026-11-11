@@ -66,6 +66,32 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Confiabilidade, acessibilidade e offline (v0.60.0, 11/11/2026)
+
+Pedido do usuário: analisar o jogo como produto e escolher as melhorias. Escolhido: corrigir bugs que mudam a regra ou perdem dados, tirar do alcance só do mouse a informação que vive nas dicas, e cumprir o princípio de PWA offline. Balanceamento, visual e composição ficaram de fora (aguardam o usuário).
+
+**Bugs de regra** (testes antes da correção; simulação `npm run sim:origens -- --runs 1000 --seed 2`):
+- **Turno sem chakra no Roleta** (decidido sozinho, é bug): quando a técnica escolhida ficava sem chakra (a manutenção dos Portões cobra depois da escolha), o turno se repetia numa cópia: queimar e veneno doíam duas vezes, os efeitos perdiam 2 turnos, e a queda ou a Vontade do Fogo caíam na cópia. Agora concentra no mesmo turno.
+- **Juventude do Prodígio** (decidido com o usuário): o +5% de crítico era somado na ficha e de novo na luta (10%). Agora 5%, como no doc e no texto da passiva. `youthCrit` saiu do `roleta/balance.ts`; vale `passives.youth.critBonus`.
+- **Natureza silenciosa na Jornada** (decidido sozinho, é bug): o carregamento zerava a natureza de Hyuuga e Prodígio (sobra da v0.43.0, quando eles não tinham elemento); um F5 tirava a vantagem elemental de vez. Saves afetados recebem a da seed.
+
+Simulação do Roleta, vitória no 1º ciclo (Médio / Difícil), antes → sem o turno repetido → com a Juventude em 5%:
+
+| Origem | Médio | Difícil |
+|---|---|---|
+| Comum | 42 → 42 → 42 | 14 → 14 → 14 |
+| Akimichi | 73 → 73 → 73 | 43 → 43 → 43 |
+| Inuzuka | 73 → 73 → 73 | 36 → 36 → 36 |
+| Prodígio | 85 → 86 → 85 | 62 → 66 → 60 |
+| Uchiha | 33 → 33 → 32 | 10 → 10 → 10 |
+| Hyuuga | 59 → 60 → 60 | 24 → 24 → 25 |
+| Uzumaki | 66 → 67 → 68 | 31 → 31 → 32 |
+| Senju | 85 → 85 → 85 | 58 → 58 → 58 |
+
+Hardcore do Prodígio 47 → 46 → 44%; as outras células do Hardcore variam até 2 pontos. Nada foi compensado.
+
+**Dados do jogador**: Hardcore liberado guardado no perfil (o histórico guarda só 100 runs); dado corrompido vai para `<chave>_backup` antes de ser sobrescrito; falha ao salvar a Jornada avisa; a Jornada antiga só é trocada quando a nova é salva; uma exceção numa tela mostra um aviso e volta ao Portão (antes a interface congelava). Detalhes em [perfil.md](base/perfil.md) e [jornada/run.md](jornada/run.md#salvamento).
+
 ## Rodadas antigas
 
 Última rodada concluída: "rebalanceamento das origens"

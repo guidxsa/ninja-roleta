@@ -528,6 +528,15 @@ export const ptBR = {
   ui: {
     title: 'Ninja Roleta',
     subtitle: 'protótipo',
+    /** O aparelho não guardou a Jornada (cheio ou bloqueado). Avisado uma vez por sessão. */
+    saveFailed: 'Não deu para salvar a jornada neste aparelho. Ela segue aberta, mas fechar a página agora perde o progresso.',
+    /** Tela de erro: algo quebrou no meio de uma tela. */
+    error: {
+      title: 'Um jutsu falhou',
+      text: 'Algo deu errado nesta tela. A jornada salva continua guardada; a run do Roleta em andamento termina aqui.',
+      detail: 'Detalhe para relatar o problema',
+      home: 'Voltar ao Portão',
+    },
     /** Números flutuantes da luta que são palavra (dano é número). */
     floats: { miss: 'errou', cloak: 'manto', revive: 'retorno', crit: 'crítico' },
     logToggle: 'Tocar abre ou fecha o histórico da luta',
@@ -1216,10 +1225,13 @@ export const ptBR = {
     loss: '💀',
     examWin: '🥇',
     examLoss: '❌',
-    victory: 'Campanha concluída 🏆',
+    victory: 'Run vencida 🏆',
+    cycle: (n: number) => `ciclo ${n}`,
     fallenTo: (name: string) => `Caiu para ${name}`,
+    fallenInCycle: (cycle: number, name: string) => `caiu no ciclo ${cycle} para ${name}`,
     revives: (n: number) => `${n} ${n === 1 ? 'Vontade' : 'Vontades'} do Fogo`,
     seed: (n: number) => `seed ${n}`,
+    replay: (url: string) => `Mesmas roletas: ${url}`,
   },
   /** Perfil: conquistas, Livro Bingo e estatísticas por origem. */
   profile: {

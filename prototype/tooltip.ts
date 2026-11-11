@@ -15,11 +15,26 @@ export function tip(title: string, body: string): string {
   return ` data-tip="${escAttr(html)}"`;
 }
 
-const isInteractive = (el: Element) => Boolean(el.closest('button, a, input, label, [data-choice]'));
+const INTERACTIVE = 'button, a, input, label, [data-choice]';
+const isInteractive = (el: Element) => Boolean(el.closest(INTERACTIVE));
+/** Botão bloqueado (`aria-disabled`): o toque não aciona nada, então mostra a dica, que diz o motivo do bloqueio. */
+const isBlocked = (el: Element) => el.closest(INTERACTIVE)?.getAttribute('aria-disabled') === 'true';
+
+/**
+ * Elementos informativos com dica (chips, selos, linhas da ficha) recebem foco, para a dica abrir também pelo teclado.
+ * Os que ficam dentro de um botão ficam de fora: o próprio botão já recebe o foco.
+ */
+function makeTipsFocusable(root: Element | Document): void {
+  const own = root instanceof HTMLElement && root.matches('[data-tip]:not([tabindex])') ? [root] : [];
+  for (const el of [...own, ...root.querySelectorAll<HTMLElement>('[data-tip]:not([tabindex])')]) {
+    if (!isInteractive(el)) el.tabIndex = 0;
+  }
+}
 
 export function installTooltips(): void {
   const box = document.createElement('div');
   box.className = 'tip';
+  box.id = 'tip-box';
   box.setAttribute('role', 'tooltip');
   box.hidden = true;
   document.body.appendChild(box);
@@ -32,8 +47,12 @@ export function installTooltips(): void {
   let swallowClick = false;
   let lastPointer = 'mouse';
 
+  const release = (el: HTMLElement | null) => {
+    el?.classList.remove('tip-on');
+    el?.removeAttribute('aria-describedby');
+  };
   const hide = () => {
-    anchor?.classList.remove('tip-on');
+    release(anchor);
     anchor = null;
     box.hidden = true;
   };
@@ -41,9 +60,11 @@ export function installTooltips(): void {
   const show = (el: HTMLElement) => {
     const html = el.dataset.tip;
     if (!html) return;
-    anchor?.classList.remove('tip-on');
+    release(anchor);
     anchor = el;
     el.classList.add('tip-on');
+    // O leitor de tela lê a dica junto com o elemento.
+    el.setAttribute('aria-describedby', box.id);
     box.innerHTML = html;
     box.hidden = false;
     place();
@@ -130,7 +151,7 @@ export function installTooltips(): void {
         return;
       }
       const el = target(e);
-      if (el && !isInteractive(el)) {
+      if (el && (!isInteractive(el) || isBlocked(el))) {
         // No toque, alterna; no mouse a passagem já abriu, então o clique só garante que fique aberta.
         if (anchor === el && lastPointer !== 'mouse') hide();
         else if (anchor !== el) show(el);
@@ -141,9 +162,25 @@ export function installTooltips(): void {
     true,
   );
 
+  // Teclado: o foco visível (Tab) abre a dica; o foco do clique ou do toque não (aí valem as regras acima).
+  document.addEventListener('focusin', (e) => {
+    const el = target(e);
+    if (el && el.matches(':focus-visible')) show(el);
+  });
+  document.addEventListener('focusout', (e) => {
+    if (anchor && target(e) === anchor && lastPointer === 'keyboard') hide();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') lastPointer = 'keyboard';
+  });
+
   window.addEventListener('scroll', () => anchor && place(), { passive: true, capture: true });
   window.addEventListener('resize', hide);
   document.addEventListener('keydown', (e) => e.key === 'Escape' && hide());
-  // A tela trocou e o elemento sumiu: fecha.
-  new MutationObserver(() => anchor && !anchor.isConnected && hide()).observe(document.body, { childList: true, subtree: true });
+  // A tela trocou e o elemento sumiu: fecha. Dicas novas na tela ficam focáveis.
+  makeTipsFocusable(document);
+  new MutationObserver((records) => {
+    if (anchor && !anchor.isConnected) hide();
+    for (const r of records) r.addedNodes.forEach((n) => n instanceof Element && makeTipsFocusable(n));
+  }).observe(document.body, { childList: true, subtree: true });
 }

@@ -44,7 +44,7 @@ Desde a v0.47.0, o sorteio também traz fichas só do Roleta (`roletaExtraVillai
 ## Modo infinito
 
 - O modo infinito existe **só no Hardcore** (v0.59.0). Em qualquer dificuldade, vencer o chefe do 1º ciclo é a **vitória da run** (histórico e conquistas); no Fácil, Médio e Difícil a run termina aí. No Hardcore, a tela de vitória oferece **Seguir para o ciclo 2**.
-- Uma run vencida continua vencida: sair, abandonar ou cair depois só atualiza até onde chegou (ciclo e lutas). O Hardcore libera com uma run vencida no Difícil.
+- Uma run vencida continua vencida: sair, abandonar ou cair depois só atualiza até onde chegou (ciclo e lutas). O Hardcore libera com uma run vencida no Difícil, e fica liberado de vez no perfil ([perfil.md](../base/perfil.md#recorde-do-modo-infinito)).
 - Cada ciclo novo volta aos genin com os vilões sorteados de novo e **mais fortes**: HP, ataques, resistências e dano × dificuldade × **(1 + 0,3 × ciclo)**, com o ciclo contando do 0 (`infinite.perCycle`; rascunho).
 - **Piso do ciclo novo** (`infinite.floor`, proposta): cada status do vilão (HP, chakra, speed, ataques, resistências) é no mínimo o do **último chefe vencido** × Genin 1,05, Chunin 1,10, Jounin 1,18, Chefe 1,28. O kit (técnicas) não muda.
 - Mantém tudo: nível, status, técnicas, relíquias, bolsa e Vontades do Fogo. Do 2º ciclo em diante, o próximo emenda sozinho.

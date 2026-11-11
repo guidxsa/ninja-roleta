@@ -64,6 +64,7 @@ import {
   stageCount,
   storyStages,
   journeyProgress,
+  silentNatures,
   syncUnlocks,
   talentContext,
   talentTreeComplete,
@@ -1269,7 +1270,7 @@ describe('Caminho Ninja', () => {
     expect([u.elements.uchihaNinja, u.elementPick, u.relics]).toEqual(['fire', 'fixed', ['uchihaFan']]);
   });
 
-  it('save antigo do Hyuuga perde o elemento e a técnica elemental', () => {
+  it('save antigo do Hyuuga guarda o elemento como natureza silenciosa e perde a técnica elemental', () => {
     const mem = new Map<string, string>();
     const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
     const h = newGenericRun(3, 'normal', 'hyuuga', data, new Set(['j_unlockHyuuga']));
@@ -1279,9 +1280,40 @@ describe('Caminho Ninja', () => {
     delete raw.elementPick;
     mem.set(JORNADA_SAVE_KEY, JSON.stringify(raw));
     const loaded = loadJornada(storage)!;
-    expect(loaded.elements.hyuugaNinja).toBeNull();
+    expect(loaded.elements.hyuugaNinja).toBe('water');
     expect(loaded.moveset).toEqual(['jStrike']);
     expect(loaded.names).toEqual({});
+  });
+
+  it('a natureza silenciosa sobrevive ao salvar e carregar (até a v0.59.1 o carregamento a zerava)', () => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const all = new Set(['j_unlockHyuuga', 'j_unlockUchiha']);
+    for (let seed = 0; seed < 40; seed++) {
+      for (const [cls, choice] of [['hyuuga', 'random'], ['common', null], ['common', 'random'], ['uchiha', 'random']] as const) {
+        const run = newGenericRun(seed, 'normal', cls, data, all, null, choice);
+        saveJornada(storage, run);
+        const loaded = loadJornada(storage)!;
+        expect(loaded.elements).toEqual(run.elements);
+        expect(loaded.moveset).toEqual(run.moveset);
+      }
+    }
+  });
+
+  it('save que perdeu a natureza recebe a da seed, igual à de uma run nova', () => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const all = new Set(['j_unlockHyuuga', 'j_unlockUchiha']);
+    for (let seed = 0; seed < 40; seed++) {
+      for (const [cls, choice] of [['hyuuga', 'random'], ['common', null], ['common', 'random']] as const) {
+        const run = newGenericRun(seed, 'normal', cls, data, all, null, choice);
+        const lost = Object.fromEntries(Object.entries(run.elements).map(([id, el]) => [id, data.characters[id]?.noElement ? null : el]));
+        // A função refaz exatamente o que a criação sorteou para as fichas sem ninjutsu elemental.
+        expect(silentNatures(run, data)).toEqual(Object.fromEntries(Object.entries(run.elements).filter(([id]) => data.characters[id]?.noElement)));
+        mem.set(JORNADA_SAVE_KEY, JSON.stringify({ ...run, elements: lost }));
+        expect(loadJornada(storage)!.elements).toEqual(run.elements);
+      }
+    }
   });
 
   it('easter egg: o Chidori (aprendido no treino; o Uchiha é só Fogo) libera o ramo do Sasuke', () => {

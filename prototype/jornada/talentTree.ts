@@ -16,7 +16,7 @@ import {
 import { jornadaData as data } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clanSymbol, fighterPortrait, icon } from '../art';
-import { h } from '../dom';
+import { h, openDialog } from '../dom';
 import { tip } from '../tooltip';
 import { techName } from './battle';
 import type { JornadaHost } from './host';
@@ -69,7 +69,7 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
   let tab = startNode?.branch ?? branches()[0]!;
 
   const root = h(`<div class="jtree-screen ${theme.cls}" role="dialog" aria-label="${T.title}"${themeStyle(run)}><div class="jt-body"></div></div>`);
-  document.body.appendChild(root);
+  openDialog(root);
   const body = root.querySelector<HTMLElement>('.jt-body')!;
 
   const branchName = (b: string) => (nodes.filter((n) => n.branch === b).every((n) => state(n) === 'accountLocked') ? T.hiddenName : T.branches[b]!);

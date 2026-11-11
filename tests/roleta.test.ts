@@ -114,6 +114,39 @@ describe('chakra nos eventos da luta', () => {
   });
 });
 
+describe('turno sem chakra para a técnica (v0.60.0)', () => {
+  // Os Portões cobram a manutenção no começo da rodada, depois da escolha: a técnica pode ficar sem chakra.
+  const broke = (over: Partial<RBattle['player']> = {}) => {
+    const b = battle(origin(null, ['fire']), 'mizuki', { chakra: 0, ...over });
+    return { ...b, fx: { ...b.fx, effects: [{ kind: 'burn' as const, turns: 3 }] } };
+  };
+
+  it('concentra no lugar sem repetir o turno: o efeito dói e perde um turno uma vez só', () => {
+    const b = broke();
+    const s = playRoletaRound(b, 'tech:rFire', data, fixed(0.5));
+    const events = s.log.slice(b.log.length);
+    expect(events.filter((e) => e.type === 'damage' && e.side === 'player' && e.source === 'burn')).toHaveLength(1);
+    expect(events.filter((e) => e.type === 'rest' && e.side === 'player')).toHaveLength(1);
+    expect(s.fx.effects.find((e) => e.kind === 'burn')?.turns).toBe(2);
+    expect(events.some((e) => e.type === 'attack' && e.side === 'player')).toBe(false);
+  });
+
+  it('o resultado fica no estado de verdade: a queda pelo efeito encerra a luta', () => {
+    const b = { ...broke({ hp: 1, revives: 0 }), options: { allowRevive: false } };
+    const s = playRoletaRound(b, 'tech:rFire', data, fixed(0.5));
+    expect(s.status).toBe('lost');
+  });
+});
+
+describe('Juventude do Prodígio (v0.60.0)', () => {
+  it('+5% de crítico, contado uma vez (antes somava na ficha e de novo na luta)', () => {
+    const t = data.techniques.rBasic!;
+    const lee = playerAttackOdds(battle(origin('taijutsuProdigy')), t, data);
+    const plain = playerAttackOdds(battle(origin(null, ['fire'])), t, data);
+    expect(lee.crit - plain.crit).toBeCloseTo(data.base.balance.passives.youth.critBonus, 10);
+  });
+});
+
 describe('kit do Roleta enxuto', () => {
   it('Taijutsu básico, Bunshin (quem usa ninjutsu), a técnica da natureza (só os elementais) e as da linhagem', () => {
     expect(roletaKit(origin(null, ['fire']), data)).toEqual(['rBasic', 'rBunshin', 'rFire']);

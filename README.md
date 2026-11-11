@@ -8,7 +8,7 @@ Jogo de browser de sessões curtas, movido a roletas, inspirado no universo ninj
 
 Núcleo de regras (`src/core`) com testes, uma simulação em terminal para ajustar o balanceamento e um **protótipo jogável** em HTML (`prototype/`), feito só para visualizar o jogo: roletas animadas, eventos pré-luta, combate com barras de HP/chakra, inventário, recompensas, exame chunin e histórico de runs. Não é a interface final.
 
-**Jogar no navegador (celular ou PC):** https://guidxsa.github.io/ninja-roleta/ — atualizado automaticamente a cada push no `master`.
+**Jogar no navegador (celular ou PC):** https://guidxsa.github.io/ninja-roleta/ — atualizado automaticamente a cada push no `master`. Dá para instalar como aplicativo (o navegador oferece "Instalar" ou "Adicionar à tela inicial") e jogar sem internet depois da primeira visita ([docs/base/plataforma.md](docs/base/plataforma.md)).
 
 ## Comandos
 
@@ -18,7 +18,7 @@ npm test                                   # testes das regras (Vitest)
 npm run typecheck                          # checagem de tipos
 npm run sim -- --fights 2000 --seed 42     # simulação de balanceamento (--bare: sem eventos nem recompensas)
 npm run sim:origens -- --runs 300          # campanha completa por origem, com eventos e recompensas automáticos
-npm run proto                              # gera dist/prototipo.html (abre direto no navegador, funciona offline)
+npm run proto                              # gera dist/prototipo.html (abre direto no navegador, funciona offline), sw.js e manifesto
 ```
 
 ## Modo de teste
@@ -74,7 +74,6 @@ Cada versão do histórico tem uma tag `vX.Y.Z`. Quatro foram criadas depois, em
 O **v1.0.0** fica para quando o jogo estiver completo para quem joga:
 
 - interface final em `src/ui` no lugar do protótipo;
-- PWA instalável e offline (manifest + service worker);
 - nome definitivo;
 - campanha completa e balanceada, com todos os sistemas dos `docs/` implementados;
 - textos visíveis em arquivos de strings, prontos para tradução.

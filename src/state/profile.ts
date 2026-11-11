@@ -2,7 +2,8 @@ import { lineageKey } from '../core/achievements';
 import type { FightSummary } from '../core/runStats';
 import { winAchievementId } from '../data/achievements';
 import { RELIC_RENAMES } from '../data/jornada/relics';
-import type { KeyValueStorage, RunRecord } from './runHistory';
+import type { Difficulty } from '../core/difficulty';
+import { backupUnreadable, isHardcoreUnlocked, type KeyValueStorage, type RunRecord } from './runHistory';
 
 /**
  * Perfil local (Fase 2): conquistas liberadas e o Livro Bingo (contadores por vilão).
@@ -41,6 +42,8 @@ export interface Profile {
   jornada?: { generic?: JornadaReach };
   /** Recorde do Roleta (v0.46.0): ciclo alcançado (contando do 1) e lutas vencidas na run. */
   roleta?: RoletaReach;
+  /** Hardcore liberado (v0.60.0). Sem o campo: vale o histórico (`syncHardcoreUnlock`). */
+  hardcoreUnlocked?: true;
 }
 
 export interface RoletaReach {
@@ -75,8 +78,9 @@ function renameCollection(relics: Record<string, string>): Record<string, string
 }
 
 export function loadProfile(storage: KeyValueStorage): Profile {
+  let raw: string | null = null;
   try {
-    const raw = storage.getItem(PROFILE_STORAGE_KEY);
+    raw = storage.getItem(PROFILE_STORAGE_KEY);
     const parsed = raw ? (JSON.parse(raw) as Partial<Profile>) : {};
     const base = emptyProfile();
     return {
@@ -87,10 +91,28 @@ export function loadProfile(storage: KeyValueStorage): Profile {
       ...(typeof parsed.playerName === 'string' ? { playerName: cleanPlayerName(parsed.playerName) } : {}),
       ...(isReach(parsed.jornada?.generic) ? { jornada: { generic: parsed.jornada!.generic } } : {}),
       ...(typeof parsed.roleta?.cycle === 'number' && typeof parsed.roleta?.fights === 'number' ? { roleta: parsed.roleta } : {}),
+      ...(parsed.hardcoreUnlocked === true ? { hardcoreUnlocked: true as const } : {}),
     };
   } catch {
+    if (raw) backupUnreadable(storage, PROFILE_STORAGE_KEY, raw);
     return emptyProfile();
   }
+}
+
+/**
+ * Hardcore liberado fica no perfil: o histórico guarda só as últimas runs, e a vitória que liberou pode sair dele.
+ * Sem mudança, devolve o mesmo perfil.
+ */
+export function syncHardcoreUnlock(profile: Profile, runs: RunRecord[], unlockedBy: Difficulty): Profile {
+  if (profile.hardcoreUnlocked || !isHardcoreUnlocked(runs, unlockedBy)) return profile;
+  return { ...profile, hardcoreUnlocked: true };
+}
+
+/** Melhor ciclo do Roleta (contando do 1): o recorde do perfil, ou o do histórico para quem jogou antes dele. */
+export function bestRoletaCycle(profile: Profile, runs: RunRecord[]): number | null {
+  const cycles = runs.filter((r) => r.fights !== undefined).map((r) => (r.cycle ?? 0) + 1);
+  if (profile.roleta) cycles.push(profile.roleta.cycle);
+  return cycles.length ? Math.max(...cycles) : null;
 }
 
 export function saveProfile(storage: KeyValueStorage, profile: Profile): void {

@@ -20,7 +20,7 @@ import { techPower } from '../../src/core/jornada/battle';
 import { jornadaData as data } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clanSymbol, fighterPortrait, icon } from '../art';
-import { esc, h } from '../dom';
+import { esc, h, openDialog } from '../dom';
 import { ELEMENT_COLORS, elementChip } from '../tips';
 import { tip } from '../tooltip';
 import { liveBattle, liveBattleRun, memberLabel, techName, techTip } from './battle';
@@ -204,5 +204,5 @@ export function openJornadaSheet(host: JornadaHost, run0: JRun): void {
     }
   });
   render();
-  document.body.appendChild(overlay);
+  openDialog(overlay);
 }

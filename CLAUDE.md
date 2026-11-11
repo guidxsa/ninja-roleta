@@ -34,7 +34,7 @@ Pastas dos docs: `base/` (regras dos dois modos), `roleta/`, `jornada/` e `reser
 ## Princípios
 
 - **Celular e desktop são pares**: no celular, um toque, layout vertical e botões grandes; no desktop, composição própria (colunas, painéis fixos), não o celular ampliado. Mesma lógica nos dois; faixas e situação por tela em [docs/visual.md](docs/visual.md).
-- **Offline**: PWA com service worker. **Sem backend.**
+- **Offline**: PWA com service worker (`prototype/sw.ts`; [docs/base/plataforma.md](docs/base/plataforma.md)). **Sem backend.**
 - **Run só em memória** (F5 reseta), exceto a Jornada, salva a cada parada (`jornada_run_v1`). Perfil e histórico em `localStorage`.
 - **Lógica separada da interface**: regras são funções puras, sem DOM.
 - **RNG injetável**: toda função que sorteia recebe `rng()`; testes com seed.
@@ -43,7 +43,7 @@ Pastas dos docs: `base/` (regras dos dois modos), `roleta/`, `jornada/` e `reser
 
 ## Stack e estrutura
 
-Vite + TypeScript sem framework de UI; Vitest; esbuild gera o protótipo.
+TypeScript sem framework de UI; Vitest; esbuild gera o protótipo (`scripts/build-prototype.ts`: um HTML só, mais `sw.js`, manifesto e ícones). Não há Vite. A CI roda typecheck, testes e build em toda `feature/**` e PR (`.github/workflows/ci.yml`); o `pages.yml` publica o `master`.
 
 ```
 docs/                design (ver acima)

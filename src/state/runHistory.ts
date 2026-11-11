@@ -30,12 +30,33 @@ export interface KeyValueStorage {
   setItem(key: string, value: string): void;
 }
 
-export function loadRuns(storage: KeyValueStorage): RunRecord[] {
+/**
+ * Guarda o valor que não deu para ler em `<chave>_backup` antes que a próxima gravação o substitua (quem lê devolve
+ * vazio, e a gravação seguinte apagaria tudo). Fica a primeira cópia: um segundo problema não apaga a primeira.
+ */
+export function backupUnreadable(storage: KeyValueStorage, key: string, raw: string): void {
   try {
-    const raw = storage.getItem(RUNS_STORAGE_KEY);
-    const parsed: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? (parsed as RunRecord[]).map(migrateOrigin) : [];
+    const backupKey = `${key}_backup`;
+    if (!storage.getItem(backupKey)) storage.setItem(backupKey, raw);
   } catch {
+    /* sem espaço: não há o que fazer */
+  }
+}
+
+/** Registro com o mínimo para as telas (uma linha estragada não derruba o histórico inteiro). */
+const isRecord = (r: unknown): r is RunRecord =>
+  typeof r === 'object' && r !== null && typeof (r as RunRecord).id === 'string' && typeof (r as RunRecord).origin === 'object' && (r as RunRecord).origin !== null;
+
+export function loadRuns(storage: KeyValueStorage): RunRecord[] {
+  let raw: string | null = null;
+  try {
+    raw = storage.getItem(RUNS_STORAGE_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) throw new Error('histórico não é uma lista');
+    if (raw && !parsed.every(isRecord)) backupUnreadable(storage, RUNS_STORAGE_KEY, raw);
+    return parsed.filter(isRecord).map(migrateOrigin);
+  } catch {
+    if (raw) backupUnreadable(storage, RUNS_STORAGE_KEY, raw);
     return [];
   }
 }
