@@ -69,6 +69,7 @@ import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCar
 import { relicIcon } from './relicIcons';
 import { talentTreeScreen } from './talentTree';
 import { foldAttrs, foldButton, installFolds } from './fold';
+import { WIDE } from '../layout';
 
 const J = S.jornada;
 const U = J.ui;
@@ -531,9 +532,9 @@ function trailLegend(): string {
 
 // ---------------------------------------------------------------------------
 // Painéis do widescreen (docs/visual.md, "Celular e desktop"): o que vem pela frente, dicas e a loja ao lado.
-// Abaixo de 1280px o CSS esconde a próxima parada e a dica; a loja embutida nem é montada.
+// Abaixo da faixa WIDE (../layout) o CSS esconde a próxima parada e a dica; a loja embutida nem é montada.
 
-const WIDE = '(min-width: 1280px)';
+
 
 function hintText(run: JRun, salt: number): string {
   const c = data.j.combat;

@@ -147,6 +147,7 @@ import { jornadaProgressCard, runJornada } from './jornada';
 import { jornadaAchievements } from '../src/data/jornada/achievements';
 import type { JornadaHost } from './jornada/host';
 import { createWheel, stripRoulette, type WheelSlice } from './wheel';
+import { DESK } from './layout';
 
 // ---------------------------------------------------------------------------
 // Infra
@@ -1626,7 +1627,7 @@ async function battleScreen(setup: BattleSetup, abandonable = false): Promise<RB
   // PC (docs/visual.md, "Roleta no PC"): layout da luta da Jornada. O campo fica com os dois cards e a arena; a ficha
   // do vilão (atributos, passivas, técnicas) e o registro vão para o painel da esquerda. São os mesmos nós, com os mesmos
   // ids, então as atualizações seguem funcionando. No celular nada se move.
-  if (window.matchMedia?.('(min-width: 900px)').matches) {
+  if (window.matchMedia?.(DESK).matches) {
     root.classList.add('rb-desk');
     const intel = h(`<aside class="rb-intel"><section class="rb-foe"><h3>${S.jornada.battle.foesTitle}</h3></section><section class="rb-log"><h3>${S.jornada.battle.logTitle}</h3></section></aside>`);
     const foe = intel.querySelector<HTMLElement>('.rb-foe')!;

@@ -50,7 +50,7 @@
 }
 :root[data-theme='light'] .jbattle.scene-konoha::before, :root[data-theme='light'] .jbattle.scene-deathForest::before, :root[data-theme='light'] .jbattle.scene-valleyEnd::before { opacity: .42; }
 /* Widescreen: o campo é largo, então o local o cobre inteiro, recortado em vez de esticado. */
-@media (min-width: 1280px) {
+@media (min-width: 1280px) and (min-height: 560px) {
   .jbattle.scene-konoha::before, .jbattle.scene-deathForest::before, .jbattle.scene-valleyEnd::before {
     aspect-ratio: auto; height: 58%; max-height: none; background-size: cover; background-position: center 35%;
   }

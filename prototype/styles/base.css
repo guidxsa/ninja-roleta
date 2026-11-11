@@ -1,12 +1,17 @@
 /* Base: reset, fundo com textura, escala tipográfica e utilitários. */
 /*
- * Faixas de tela (docs/visual.md, "Celular e desktop"). A CSS não aceita var() em @media, então os
- * números se repetem nas telas:
- *   celular    < 600px    composição vertical (a base de todo arquivo)
- *   tablet     600–899px  a mesma composição, com mais folga
- *   notebook   ≥ 900px    composição de desktop: colunas e painéis laterais, até --shell-max
- *   widescreen ≥ 1280px   mais uma região (equipe, campo e ações; contexto ao lado do mapa)
- * Desktop compõe a tela de outro jeito, não amplia a do celular. Nenhuma regra muda com a largura.
+ * Faixas de tela (docs/visual.md, "Celular e desktop"). Largura E altura: a CSS não aceita var() em @media,
+ * então as condições se repetem nas telas (e em prototype/layout.ts, para o TS):
+ *   celular    < 600px                              composição vertical (a base de todo arquivo)
+ *   tablet     ≥ 600px, fora do desktop             "celular expandido": a mesma ordem, usando a largura
+ *                                                   (coluna até --col-max, grades de 2 colunas)
+ *   desktop    (min-width: 900px) and (min-height: 560px)   colunas e painéis laterais, até --shell-max
+ *   wide       (min-width: 1280px) and (min-height: 560px)  mais uma região (equipe, campo e ações)
+ *   compacta   desktop and (max-height: 720px)      menos detalhe, arte e letreiro menores
+ *   piso       desktop and (max-height: 619px)      a página rola em vez de espremer ("cabe na janela" sai)
+ *   toque      (pointer: coarse)                    alvos de toque maiores (--tap), nada só no hover
+ * Celular deitado (altura < 560) fica na composição do tablet. Desktop compõe a tela de outro jeito, não
+ * amplia a do celular. Nenhuma regra muda com o tamanho.
  */
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -65,10 +70,14 @@ b, strong { font-weight: 700; }
 .kanji { font-family: var(--font-kanji); font-weight: 400; line-height: 1; font-style: normal; }
 .num { font-family: var(--font-hud); font-variant-numeric: tabular-nums; }
 
-main { width: 100%; max-width: 520px; padding: 14px 16px 24px; flex: 1; }
+main { width: 100%; max-width: var(--col-max); padding: 14px 16px 24px; flex: 1; }
 footer {
-  padding: 12px 16px 20px; color: var(--muted); text-align: center; max-width: 520px;
+  padding: 12px 16px 20px; color: var(--muted); text-align: center; max-width: var(--col-max);
   font-family: var(--font-hud); letter-spacing: .03em;
+}
+/* Tablet ("celular expandido"): a coluna usa a largura; as telas abrem grades de 2 colunas onde couber. */
+@media (min-width: 600px) {
+  main { padding-left: 24px; padding-right: 24px; }
 }
 .screen { display: flex; flex-direction: column; gap: 12px; animation: screenIn var(--dur-3) var(--ease); }
 
