@@ -307,3 +307,26 @@
   .jb-row-traits { display: none; }
   .jbattle .jb-team { display: none; }
 }
+
+/*
+ * Proporções (docs/visual.md, "Celular e desktop"). Tablet: retratos e técnicas crescem com a largura. Desktop:
+ * os retratos acompanham a menor dimensão. Compacta (altura ≤ 720): técnicas 2 por linha e botões mais baixos,
+ * para o Desistir caber sem rolar a coluna.
+ */
+@media (min-width: 600px) {
+  .jf-art .portrait-md { width: clamp(64px, 11vw, 104px); height: clamp(64px, 11vw, 104px); }
+  .jf { max-width: 200px; }
+}
+@media (min-width: 900px) and (min-height: 560px) {
+  .jf-art .portrait-md { width: clamp(64px, min(13vh, 8vw), 120px); height: clamp(64px, min(13vh, 8vw), 120px); }
+}
+@media (min-width: 900px) and (min-height: 560px) and (max-height: 720px) {
+  .jbattle { row-gap: 6px; padding-top: 10px; padding-bottom: 10px; }
+  .jbattle .jb-menu { padding: 8px 10px; gap: 4px; }
+  .jbattle .jb-moves { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 4px; }
+  .jbattle .jmove { min-height: 44px; padding: 5px 6px; gap: 6px; }
+  .jbattle .jmove-ico { width: 24px; height: 24px; }
+  .jbattle .jmove-txt b { font-size: 14px; }
+  .jbattle .jb-menu .jgiveup { margin-top: 4px; min-height: 40px; }
+  .jbattle .jb-extra .jx { min-height: 40px; padding: 6px 8px; }
+}
