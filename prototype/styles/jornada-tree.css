@@ -124,7 +124,7 @@
 .jt-card .jt-choice { color: var(--gold-2); }
 .jt-card .jt-status { font: 700 12px/1.2 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }
 
-@media (min-width: 900px) {
+@media (min-width: 900px) and (min-height: 560px) {
   .jt-body { padding: 20px 24px 0; }
   .jt-title h2 { font-size: 30px; }
   .jt-crest { top: 40px; right: 10px; width: 340px; height: 340px; }

@@ -127,7 +127,7 @@ import {
   type KeyValueStorage,
   type RunStatus,
 } from '../src/state/runHistory';
-import { applySceneMode, installSceneRatios, clanSymbol, cloud, emblem, fighterPortrait, hasSceneVideos, icon, ninjaPortrait, sceneMedia, uiTextureVars, villainPortrait } from './art';
+import { applySceneMode, installSceneRatios, clanSymbol, cloud, emblem, fighterPortrait, hasSceneVideos, icon, ninjaPortrait, sceneMedia, sceneVars, uiTextureVars, villainPortrait } from './art';
 import { barLayers, barPct, barTone, patchBar } from './bars';
 import { defeat, installAudio, mood, setMusic, setSfx, victory, type Mood } from './audio';
 import {
@@ -147,6 +147,8 @@ import { jornadaProgressCard, runJornada } from './jornada';
 import { jornadaAchievements } from '../src/data/jornada/achievements';
 import type { JornadaHost } from './jornada/host';
 import { createWheel, stripRoulette, type WheelSlice } from './wheel';
+import { DESK } from './layout';
+import { modeCard } from './modeCard';
 
 // ---------------------------------------------------------------------------
 // Infra
@@ -1626,7 +1628,7 @@ async function battleScreen(setup: BattleSetup, abandonable = false): Promise<RB
   // PC (docs/visual.md, "Roleta no PC"): layout da luta da Jornada. O campo fica com os dois cards e a arena; a ficha
   // do vilão (atributos, passivas, técnicas) e o registro vão para o painel da esquerda. São os mesmos nós, com os mesmos
   // ids, então as atualizações seguem funcionando. No celular nada se move.
-  if (window.matchMedia?.('(min-width: 900px)').matches) {
+  if (window.matchMedia?.(DESK).matches) {
     root.classList.add('rb-desk');
     const intel = h(`<aside class="rb-intel"><section class="rb-foe"><h3>${S.jornada.battle.foesTitle}</h3></section><section class="rb-log"><h3>${S.jornada.battle.logTitle}</h3></section></aside>`);
     const foe = intel.querySelector<HTMLElement>('.rb-foe')!;
@@ -2789,12 +2791,11 @@ async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-continue'> 
     const q = pickQuote(DU[t].quotes);
     return `<div class="duo-q duo-${t}"><p>${q.text}</p><cite>${q.by}</cite></div>`;
   };
-  const modeCard = (id: 'jornada' | 'roleta') => {
-    const art = sceneMedia(`modo-${id}`);
-    return `<button class="parchment mode-card" data-choice="${id}"><span class="mode-art" aria-hidden="true">${art ?? emblem(id)}</span>
-      <span><b>${M[id].name}</b><small>${M[id].desc}</small><span class="mode-cta">${id === 'jornada' ? D.ctaJornadaNew : D.ctaRoleta} ${icon('chevron')}</span></span>${icon('chevron')}
-      <span class="scroll-roll l" aria-hidden="true"></span><span class="scroll-roll r" aria-hidden="true"></span><span class="seal mode-seal" aria-hidden="true">${id === 'jornada' ? '道' : '運'}</span></button>`;
-  };
+  const gateCard = (id: 'jornada' | 'roleta') =>
+    modeCard({
+      id, art: sceneMedia(`modo-${id}`) ?? emblem(id), artVars: sceneVars(`modo-${id}`), seal: id === 'jornada' ? '道' : '運',
+      name: M[id].name, desc: M[id].desc, cta: id === 'jornada' ? D.ctaJornadaNew : D.ctaRoleta,
+    });
   const root = show(
     h(`<div class="screen jmodes gate">
       <div class="gate-main">
@@ -2809,7 +2810,7 @@ async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-continue'> 
             <span class="seal duo-seal duo-day" aria-hidden="true">${DU.day.seal}</span><span class="seal duo-seal duo-night" aria-hidden="true">${DU.night.seal}</span></blockquote>
         </div>
         <p class="gate-sub">${M.title}</p>
-        <nav class="gate-modes">${modeCard('jornada')}${modeCard('roleta')}</nav>
+        <nav class="gate-modes">${gateCard('jornada')}${gateCard('roleta')}</nav>
         <button class="scroll-banner" data-profile="achievements"><span class="seal gold" aria-hidden="true">功</span>
           <span><b>${G.achievements}</b><small>${G.achievementsDesc}</small></span>${icon('chevron')}</button>
       </div>

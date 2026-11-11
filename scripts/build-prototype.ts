@@ -8,6 +8,7 @@
 import { build } from 'esbuild';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { imageSize } from './image-size';
 
 const IMG_DIR = 'public/img';
 const MUSIC_FILE = 'public/audio/naruto_theme.mp3';
@@ -23,6 +24,13 @@ function listImages(dir: string): string[] {
 }
 
 const images = listImages(IMG_DIR);
+// Largura e altura de cada imagem: a arte conhece a própria proporção antes de carregar (vídeo mede ao carregar).
+const imageMeta: Record<string, readonly [number, number]> = {};
+for (const path of images) {
+  if (/.(webm|mp4)$/i.test(path)) continue;
+  const size = imageSize(readFileSync(join(IMG_DIR, path.slice('img/'.length))));
+  if (size) imageMeta[path] = size;
+}
 const version = (JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }).version;
 const music = existsSync(MUSIC_FILE) ? readFileSync(MUSIC_FILE).toString('base64') : '';
 
@@ -33,7 +41,7 @@ const result = await build({
   target: 'es2020',
   write: false,
   charset: 'utf8',
-  define: { __IMAGES__: JSON.stringify(images), __MUSIC__: JSON.stringify(music), __VERSION__: JSON.stringify(version) },
+  define: { __IMAGES__: JSON.stringify(images), __IMAGE_META__: JSON.stringify(imageMeta), __MUSIC__: JSON.stringify(music), __VERSION__: JSON.stringify(version) },
 });
 
 const styles = await build({

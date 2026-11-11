@@ -84,6 +84,19 @@
 
   /* Largura máxima da área do jogo nas telas com composição de desktop (faixas em base.css). */
   --shell-max: 2240px;
+  /* Coluna das telas sem composição de desktop: a do celular; no tablet, mais larga (celular expandido). */
+  --col-max: 520px;
+  /* Espaço entre peças de uma tela: o mesmo em toda grade (docs/visual.md, "Cada peça no seu espaço"). */
+  --gap: 12px;
+  --gap-lg: clamp(14px, 1.6vw, 28px);
+  /* Janelas (modais): celular, tablet e desktop. */
+  --modal-max: 520px;
+  /* Alvo mínimo dos botões pequenos; com toque, 44px (faixa "toque" em base.css). */
+  --tap: 36px;
+  /* Piso de altura do desktop: abaixo dele a página rola em vez de espremer as colunas (faixa "piso" em base.css). */
+  --floor-h: 620px;
+  /* Escala fluida: tamanhos de arte e letreiro do desktop usam min(vw, vh) com clamp, para acompanhar a
+     menor dimensão (largura e altura), não só a largura. */
 
   /* Sombra dura dos letreiros (pincel) */
   --title-shadow: 2px 2px 0 var(--accent-deep);
@@ -150,3 +163,8 @@
   --title-shadow: 1.5px 1.5px 0 color-mix(in srgb, var(--accent) 28%, transparent);
   color-scheme: light;
 }
+
+/* Faixas (base.css): só tokens mudam aqui; as telas cuidam da composição. */
+@media (min-width: 600px) { :root { --col-max: 860px; --modal-max: 720px; } }
+@media (min-width: 900px) and (min-height: 560px) { :root { --modal-max: 860px; } }
+@media (pointer: coarse) { :root { --tap: 44px; } }

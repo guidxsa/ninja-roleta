@@ -3,7 +3,10 @@
 // Imagens próprias em `public/img/` substituem os retratos: o build lista os arquivos em __IMAGES__.
 
 declare const __IMAGES__: string[];
+declare const __IMAGE_META__: Record<string, readonly [number, number]>;
 const IMAGES: readonly string[] = typeof __IMAGES__ === 'undefined' ? [] : __IMAGES__;
+/** Largura e altura de cada imagem, lidas no build (scripts/image-size.ts): a arte sabe a própria forma antes de carregar. */
+const IMAGE_META: Record<string, readonly [number, number]> = typeof __IMAGE_META__ === 'undefined' ? {} : __IMAGE_META__;
 const EXTS = ['webp', 'png', 'jpg', 'jpeg', 'svg'];
 
 /** Caminho de uma imagem própria (`img/<pasta>/<nome>.<ext>`), se existir. */
@@ -323,29 +326,34 @@ export const VILLAGE_IDS = Object.keys(VILLAGES) as (keyof typeof VILLAGES)[];
 export const villageCrest = (id: keyof typeof VILLAGES): string => svg(VILLAGES[id], '0 0 24 24', 'ico crest');
 
 /**
- * Mapa único das artes de `img/cenas/` (docs/visual.md, "Vagas de ilustração"): a chave que o código usa → o nome do
- * arquivo (sem extensão). É o único lugar com nome de arquivo; a interface pede pela chave. Sem entrada, a chave é o
- * próprio nome (`portao`, `jornada`, `g1`...). Um vídeo com o mesmo nome do arquivo vira a versão animada.
+ * Mapa único das artes de `img/cenas/` (docs/visual.md, "Vagas de ilustração"): a chave que o código usa → o arquivo
+ * (sem extensão) e o **foco** da arte, em % da imagem (onde estão os rostos). É o único lugar com nome de arquivo e com
+ * enquadramento; a interface pede pela chave e a moldura (.art-frame, styles/art.css) corta em volta do foco. Sem
+ * entrada, a chave é o próprio nome do arquivo e o foco é o centro, um pouco acima (`DEFAULT_FOCUS`). Um vídeo com o
+ * mesmo nome do arquivo vira a versão animada.
  */
-export const SCENE_ART: Record<string, string> = {
-  // Portão da Vila: a dualidade. De dia o Naruto observa Konoha; à noite, o Sasuke.
-  'portao-dia': 'dia',
-  'portao-noite': 'noite',
+export interface SceneArt { file?: string; focus?: readonly [x: number, y: number] }
+const DEFAULT_FOCUS: readonly [number, number] = [50, 35];
+export const SCENE_ART: Record<string, SceneArt> = {
+  // Portão da Vila: a dualidade. De dia o Naruto observa Konoha (à direita da arte); à noite, o Sasuke (à esquerda).
+  'portao-dia': { file: 'dia', focus: [64, 62] },
+  'portao-noite': { file: 'noite', focus: [30, 58] },
+  // Entrada da Jornada e card do modo: o time 7, com o Naruto à direita.
+  'jornada': { focus: [62, 46] },
+  'modo-jornada': { focus: [72, 46] },
+  'modo-roleta': { focus: [50, 50] },
   // Arcos da História do Naruto, pelo id do estágio (src/data/jornada/stages.ts).
-  'arco-waves': 'waves',
-  'arco-exam': 'chunnin',
-  'arco-sannin': 'sannin',
-  'arco-retrieval': 'sasuke',
+  'arco-waves': { file: 'waves', focus: [62, 34] },
+  'arco-exam': { file: 'chunnin', focus: [50, 58] },
+  'arco-sannin': { file: 'sannin', focus: [50, 30] },
+  'arco-retrieval': { file: 'sasuke', focus: [26, 40] },
   // Caminho Ninja: card da entrada da Jornada e pôster da preparação (o Minato).
-  'modo-caminho': 'caminho-ninja',
+  'modo-caminho': { file: 'caminho-ninja', focus: [50, 30] },
   // Roleta no PC (todas opcionais; sem imagem, vale o cenário desenhado): palco do sorteio e uma por categoria de vilão.
-  'roleta': 'roleta',
-  'roleta-genin': 'roleta-genin',
-  'roleta-chunin': 'roleta-chunin',
-  'roleta-jounin': 'roleta-jounin',
-  'roleta-boss': 'roleta-chefe',
+  'roleta-boss': { file: 'roleta-chefe' },
 };
-const sceneFile = (key: string): string => SCENE_ART[key] ?? key;
+const sceneFile = (key: string): string => SCENE_ART[key]?.file ?? key;
+const sceneFocus = (key: string): readonly [number, number] => SCENE_ART[key]?.focus ?? DEFAULT_FOCUS;
 
 /** Ilustração do jogador para a chave (ver `SCENE_ART`), se existir. */
 export const sceneImage = (name: string): string | null => customImage('cenas', sceneFile(name));
@@ -382,23 +390,35 @@ function sceneInner(name: string): string {
  */
 export function sceneMedia(name: string): string | null {
   const inner = sceneInner(name);
-  return inner ? `<span class="scene-media" data-scene="${name}">${inner}</span>` : null;
+  return inner ? `<span class="scene-media" data-scene="${name}" style="${sceneVars(name)}">${inner}</span>` : null;
+}
+
+/**
+ * Forma e foco da arte de uma vaga, como variáveis de estilo: `--ratio` (largura / altura, lida no build) e
+ * `--fx`/`--fy` (o foco do `SCENE_ART`). Vão no invólucro da arte e em quem precisa da forma para se compor (o card).
+ */
+export function sceneVars(name: string): string {
+  const img = sceneImage(name);
+  const size = img ? IMAGE_META[img] : undefined;
+  const [fx, fy] = sceneFocus(name);
+  return `${size ? `--ratio:${(size[0] / size[1]).toFixed(3)};` : ''}--fx:${fx}%;--fy:${fy}%`;
 }
 
 /** Arte do arco (estágio) da História, ou a vaga com o id do estágio (Caminho Ninja: g1, g2, g3). */
 export const arcMedia = (stageId: string): string | null => sceneMedia(`arco-${stageId}`) ?? sceneMedia(stageId);
 
 /**
- * Proporção de cada arte que carrega (largura / altura) em `--ratio`, no contêiner que a enquadra. Assim o CSS dá à
- * vaga a forma da imagem em vez de cortá-la (docs/visual.md, "Vagas de ilustração"). Vale para imagem e vídeo.
+ * Reserva para o que o build não mede (vídeo, imagem de formato desconhecido): ao carregar, a proporção vai em
+ * `--ratio` no invólucro da arte e no contêiner que a enquadra. As imagens já nascem com ela (`sceneVars`).
  */
 export function installSceneRatios(): void {
   if (typeof document === 'undefined') return;
   const HOSTS = '.mode-card, .gate-hero, .jc-panel, .jarc, .jarc-fan-i, .jthumb, .rmap-art, .rstage, .rarena-art';
   const mark = (el: HTMLElement, w: number, h: number) => {
     if (!w || !h) return;
-    const host = el.closest<HTMLElement>(HOSTS) ?? el.parentElement;
-    host?.style.setProperty('--ratio', (w / h).toFixed(3));
+    const ratio = (w / h).toFixed(3);
+    el.closest<HTMLElement>('[data-scene]')?.style.setProperty('--ratio', ratio);
+    (el.closest<HTMLElement>(HOSTS) ?? el.parentElement)?.style.setProperty('--ratio', ratio);
   };
   document.addEventListener('load', (e) => {
     const t = e.target;

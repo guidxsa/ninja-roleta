@@ -178,7 +178,7 @@
 @keyframes scrollAway { 0%, 55% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); } }
 
 /* Notebook (≥ 900): campo à esquerda e ações em coluna à direita. */
-@media (min-width: 900px) {
+@media (min-width: 900px) and (min-height: 560px) {
   .jbattle {
     display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); column-gap: 16px; row-gap: 10px;
     grid-template-areas: 'head head' 'relics relics' 'goal goal' 'enemies menu' 'banner menu' 'allies menu' 'log menu';
@@ -212,7 +212,7 @@
  * Widescreen (≥ 1280): o campo clássico (inimigos em cima, equipe embaixo) no centro. À esquerda, a ficha dos
  * inimigos e o registro da luta; à direita, a ficha da equipe e as ações. Cada coluna rola por dentro se precisar.
  */
-@media (min-width: 1280px) {
+@media (min-width: 1280px) and (min-height: 560px) {
   .jbattle {
     grid-template-columns: clamp(260px, 19vw, 460px) minmax(0, 1fr) clamp(320px, 22vw, 580px); column-gap: clamp(16px, 1.4vw, 32px);
     grid-template-areas: 'head head head' 'left relics right' 'left goal right' 'left enemies right' 'left banner right' 'left allies right';
@@ -303,7 +303,30 @@
  * Widescreen baixo: as ações têm prioridade. A ficha perde a linha de elemento e comportamento (a dica continua com
  * tudo) e a da equipe sai (os mesmos números estão nos cartões do campo).
  */
-@media (min-width: 1280px) and (max-height: 760px) {
+@media (min-width: 1280px) and (min-height: 560px) and (max-height: 760px) {
   .jb-row-traits { display: none; }
   .jbattle .jb-team { display: none; }
+}
+
+/*
+ * Proporções (docs/visual.md, "Celular e desktop"). Tablet: retratos e técnicas crescem com a largura. Desktop:
+ * os retratos acompanham a menor dimensão. Compacta (altura ≤ 720): técnicas 2 por linha e botões mais baixos,
+ * para o Desistir caber sem rolar a coluna.
+ */
+@media (min-width: 600px) {
+  .jf-art .portrait-md { width: clamp(64px, 11vw, 104px); height: clamp(64px, 11vw, 104px); }
+  .jf { max-width: 200px; }
+}
+@media (min-width: 900px) and (min-height: 560px) {
+  .jf-art .portrait-md { width: clamp(64px, min(13vh, 8vw), 120px); height: clamp(64px, min(13vh, 8vw), 120px); }
+}
+@media (min-width: 900px) and (min-height: 560px) and (max-height: 720px) {
+  .jbattle { row-gap: 6px; padding-top: 10px; padding-bottom: 10px; }
+  .jbattle .jb-menu { padding: 8px 10px; gap: 4px; }
+  .jbattle .jb-moves { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 4px; }
+  .jbattle .jmove { min-height: 44px; padding: 5px 6px; gap: 6px; }
+  .jbattle .jmove-ico { width: 24px; height: 24px; }
+  .jbattle .jmove-txt b { font-size: 14px; }
+  .jbattle .jb-menu .jgiveup { margin-top: 4px; min-height: 40px; }
+  .jbattle .jb-extra .jx { min-height: 40px; padding: 6px 8px; }
 }

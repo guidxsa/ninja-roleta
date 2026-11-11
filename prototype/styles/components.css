@@ -36,7 +36,7 @@
 .btn.primary:active:not(:disabled):not([aria-disabled='true']) { background: var(--primary-deep); }
 .btn.big { width: 100%; font-size: 18px; min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 10px; }
 .btn.small {
-  min-height: 36px; padding: 4px 10px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: var(--tap); padding: 4px 10px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
   font: 600 15px/1 var(--font-hud); letter-spacing: .05em; text-transform: uppercase;
 }
 .btn.spin { display: flex; align-items: center; justify-content: center; margin: 4px auto 10px; min-width: 170px; }
@@ -303,7 +303,7 @@ button[data-tip] { cursor: pointer; }
 
 .modal { position: fixed; inset: 0; z-index: 20; background: var(--scrim); display: flex; justify-content: center; align-items: flex-end; animation: pop var(--dur-2) var(--ease); }
 .modal-body {
-  background: var(--grain), var(--surface); width: 100%; max-width: 520px; max-height: 86vh; overflow-y: auto;
+  background: var(--grain), var(--surface); width: 100%; max-width: var(--modal-max); max-height: 86dvh; overflow-y: auto;
   border-top: 2px solid var(--accent); box-shadow: 0 -1px 0 var(--gold-deep), 0 -16px 40px rgba(0, 0, 0, .5);
   padding: 16px; display: flex; flex-direction: column; gap: 10px;
   animation: slideUp var(--dur-3) var(--ease);
@@ -312,7 +312,7 @@ button[data-tip] { cursor: pointer; }
 .modal-head { display: flex; align-items: center; gap: 10px; }
 .modal-head h2 { flex: 1; text-align: left; margin: 0; font-size: 22px; }
 .modal-head h2::after { display: none; }
-.btn.close { min-width: 40px; justify-content: center; }
+.btn.close { min-width: max(40px, var(--tap)); justify-content: center; }
 
 .toast {
   position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 50; max-width: calc(100% - 32px);
