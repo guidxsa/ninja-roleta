@@ -130,9 +130,18 @@ export const jornadaPtBR = {
     valley: 'Vale do Fim',
   } as Record<string, string>,
 
+  // Falas do roteiro de luta (chave → texto; docs/jornada/roteiro.md).
+  script: {
+    bellsStart: 'Peguem os sinos até o meio-dia. Quem não pegar fica sem almoço.',
+    bellsGot: 'Peguei! O sino é nosso, Kakashi-sensei!',
+  } as Record<string, string>,
+  // Nomes das formas (transformações) que o roteiro liga.
+  forms: {} as Record<string, string>,
+
   winConditions: {
     hpThreshold: (pct: number) => `Pegue o sino: leve o HP dele a ${pct}%.`,
     survive: (rounds: number, pct: number) => `Aguente ${rounds} rodadas ou leve o HP dele a ${pct}%.`,
+    finisher: (who: string, tech: string) => `${who} só cai com ${tech}.`,
   },
 
   names: {
@@ -1089,6 +1098,12 @@ export const jornadaPtBR = {
     stunned: 'atordoado',
     enrage: (name: string) => `${name} entrou em fúria!`,
     survive: (name: string) => `${name} resistiu com 1 de HP!`,
+    // Roteiro (docs/jornada/roteiro.md).
+    line: (who: string, line: string) => `${who}: “${line}”`,
+    form: (name: string, form: string) => `${name}: ${form}!`,
+    enter: (name: string) => `${name} entrou na luta!`,
+    leave: (name: string) => `${name} saiu da luta`,
+    endure: (name: string, tech: string) => `${name} aguentou! Só ${tech} derruba.`,
     revived: (name: string) => `${name} levantou`,
     chakra: (n: number) => `${n} chakra`,
     hpCost: (n: number) => `${n} HP`,

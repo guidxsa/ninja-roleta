@@ -6,7 +6,14 @@ import { stages } from './stages';
 // (docs/jornada/historia-sasuke.md). Shippuden entra como campanhas novas aqui, sem sistema novo.
 
 export const campaigns: Record<string, CampaignDef> = {
-  naruto: { id: 'naruto', perspective: 'naruto', time: 'day', stages },
+  naruto: {
+    id: 'naruto',
+    perspective: 'naruto',
+    time: 'day',
+    stages,
+    // Marcos da história (docs/jornada/roteiro.md#marcos): o Sasuke aprende o Chidori no exame (estágio 1, contando do 0).
+    grants: [{ who: 'sasuke', learn: 'jChidori', at: { stage: 1 } }],
+  },
 };
 
 /** Campanha de quem não escolhe (e das runs salvas antes das campanhas). */

@@ -12,11 +12,23 @@ import type { CharacterDef, EnemyDef, JTechnique } from './types';
  * mesmos para todas; muda o que se conta e como (docs/jornada/README.md#campanhas). `time` liga a campanha ao dia ou
  * à noite da identidade visual.
  */
+/**
+ * Marco da história (docs/jornada/roteiro.md#marcos): técnica que a campanha dá a um personagem (protagonista ou
+ * aliado) a partir de um estágio (índice, contando do 0) ou depois de uma parada. Não passa pela árvore de talentos.
+ */
+export interface StoryGrant {
+  who: string;
+  learn: string;
+  at: { stage: number } | { stop: string };
+}
+
 export interface CampaignDef {
   id: string;
   perspective: 'naruto' | 'sasuke';
   time: 'day' | 'night';
   stages: StageDef[];
+  /** Marcos da história: técnicas que a campanha dá (substitui o antigo `stageTechniques`, v0.66.0). */
+  grants?: StoryGrant[];
 }
 
 /** Pacote de dados que o core da Jornada recebe por parâmetro (nunca importa os dados diretamente). */
@@ -29,7 +41,6 @@ export interface JornadaData {
   characters: Record<string, CharacterDef>;
   enemies: Record<string, EnemyDef>;
   /** Técnicas que um aliado ganha ao chegar no estágio (índice do estágio). */
-  stageTechniques: Record<string, Record<number, string[]>>;
   /** Kekkei Genkai (as mesmas da base): pais de cada natureza para a vantagem (src/core/nature.ts). */
   kekkeiGenkai: KekkeiGenkaiDef[];
   /** Arcos da campanha do Naruto (o mesmo que `campaigns.naruto.stages`). */

@@ -59,7 +59,7 @@ São os mesmos acontecimentos, com regras e sentido trocados.
 **Falta para jogar:**
 - o protagonista por campanha (hoje `newRun` usa o Naruto);
 - a relíquia inicial da campanha;
-- `stageTechniques` por campanha (hoje é indexado pelo estágio da campanha do Naruto);
+- ~~`stageTechniques` por campanha~~: resolvido na v0.66.0 com os marcos da história (`grants` em cada campanha, [roteiro.md](roteiro.md#marcos));
 - o card da campanha na entrada da Jornada;
 - os inimigos novos (Itachi, Naruto do Vale, Yoroi);
 - os eventos;
