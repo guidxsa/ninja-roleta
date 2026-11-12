@@ -1,4 +1,7 @@
+import { jornadaHero } from '../../core/jornada/classes';
 import type { CharacterDef } from '../../core/jornada/types';
+import { lineages } from '../lineages';
+import { jornadaBalance } from './balance';
 
 // Personagens jogáveis e aliados da História (docs/jornada/personagens.md). Ficha no nível 1;
 // os aliados sobem de nível junto com o Naruto. Valores provisórios.
@@ -161,38 +164,14 @@ export const characters: CharacterDef[] = [
   },
 ];
 
+/**
+ * Protagonistas do Caminho Ninja: calculados das origens (base única, v0.64.0; `originScale` no balance da Jornada).
+ */
+const genericHeroes: CharacterDef[] = lineages.map((l) => jornadaHero(l, jornadaBalance.originScale)).filter((c): c is CharacterDef => c !== null);
+
 /** Protagonistas e suportes do Caminho Ninja (docs/jornada/classes.md). O elemento é sorteado na run. */
 export const genericCharacters: CharacterDef[] = [
-  {
-    id: 'commonNinja',
-    hp: 100,
-    chakra: 30,
-    speed: 11,
-    offense: { taijutsu: 9, ninjutsu: 9, genjutsu: 4 },
-    resistance: { physical: 7, mental: 6 },
-    element: null,
-    techniques: ['jStrike', 'jShuriken', 'jBunshin', 'jEffort'],
-    spareTechniques: ['jKunai'],
-    ai: 'striker',
-    growth: g(8, 3, 0.5, 0.9, 1, 0.3, 0.6, 0.5),
-    portrait: 'ninja:common',
-  },
-  {
-    id: 'prodigy',
-    hp: 115,
-    // Chakra para manter os Portões (v0.59.0: era 12).
-    chakra: 22,
-    // Sem ninjutsu elemental: a natureza existe (sorteada em silêncio), sem técnica (v0.59.0).
-    noElement: true,
-    speed: 13,
-    offense: { taijutsu: 12, ninjutsu: 0, genjutsu: 0 },
-    resistance: { physical: 8, mental: 5 },
-    element: null,
-    techniques: ['jStrike', 'jLeafWhirlwind', 'jShuriken', 'jGates'],
-    ai: 'striker',
-    growth: g(9, 1, 0.6, 1.2, 0, 0, 0.7, 0.4),
-    portrait: 'ninja:taijutsuProdigy',
-  },
+  ...genericHeroes,
   {
     id: 'leafGeninA',
     hp: 95,
@@ -234,33 +213,6 @@ export const genericCharacters: CharacterDef[] = [
     portrait: 'ninja:common',
   },
   // Uchiha e Hyuuga (v0.37.0): protagonistas e versões suporte (entram no sorteio de parceiros quando liberados).
-  {
-    id: 'uchihaNinja',
-    hp: 105,
-    chakra: 32,
-    speed: 12,
-    offense: { taijutsu: 10, ninjutsu: 12, genjutsu: 8 },
-    resistance: { physical: 7, mental: 8 },
-    element: 'fire',
-    techniques: ['jStrike', 'jShuriken', 'jFireball', 'jSharingan', 'jBunshin'],
-    ai: 'striker',
-    growth: g(7, 3, 0.6, 0.9, 1.1, 0.7, 0.5, 0.6),
-    portrait: 'ninja:uchiha',
-  },
-  {
-    id: 'hyuugaNinja',
-    hp: 105,
-    chakra: 26,
-    noElement: true,
-    speed: 12,
-    offense: { taijutsu: 12, ninjutsu: 6, genjutsu: 4 },
-    resistance: { physical: 8, mental: 7 },
-    element: null,
-    techniques: ['jStrike', 'jGentlePalm', 'jShuriken', 'jByakugan', 'jBunshin'],
-    ai: 'striker',
-    growth: g(8, 2, 0.6, 1.2, 0.5, 0.3, 0.6, 0.5),
-    portrait: 'ninja:hyuuga',
-  },
   {
     id: 'uchihaGenin',
     hp: 85,

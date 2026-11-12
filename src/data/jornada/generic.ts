@@ -1,4 +1,6 @@
+import { jornadaClasses } from '../../core/jornada/classes';
 import type { GenericDef } from '../../core/jornada/trail';
+import { lineages } from '../lineages';
 
 // Caminho Ninja (docs/jornada/caminho-ninja.md): classes, suportes e pools de cada estágio do mapa ramificado.
 // Mesma dificuldade da História; um chefe de cada estágio é sorteado no começo da run.
@@ -8,33 +10,8 @@ const EVENTS = ['gOldLady', 'gRamen', 'gTraining', 'gJokenpo', 'gGuru', 'gAkatsu
 export const generic: GenericDef = {
   // Cada suporte sorteia a classe entre as liberadas (pode ser a do protagonista), depois uma ficha ainda não
   // usada da classe e um nome. Nomes originais, sem personagens do mangá.
-  classes: [
-    {
-      id: 'common',
-      hero: 'commonNinja',
-      noElementHero: 'prodigy',
-      supports: ['leafGeninA', 'leafGeninB', 'leafMedic'],
-      supportNames: ['daichi', 'hana', 'kenta', 'yui', 'sora', 'aiko', 'haruto', 'rin', 'takumi', 'mei', 'riku', 'nanami'],
-    },
-    // Uchiha: sempre e só Fogo (v0.59.0; a mesma regra da origem do Roleta).
-    {
-      id: 'uchiha',
-      hero: 'uchihaNinja',
-      fixedElement: 'fire',
-      unlock: 'j_unlockUchiha',
-      supports: ['uchihaGenin', 'uchihaGeninB'],
-      supportNames: ['ren', 'akane', 'hikaru', 'tetsu', 'kaede', 'ryo', 'suzu', 'jin', 'kiyomi', 'nao'],
-    },
-    // Hyuuga: natureza sorteada em silêncio, sem ninjutsu elemental (Byakugan e Punho Suave bastam; v0.59.0).
-    {
-      id: 'hyuuga',
-      hero: 'hyuugaNinja',
-      noElement: true,
-      unlock: 'j_unlockHyuuga',
-      supports: ['hyuugaGenin', 'hyuugaGeninB'],
-      supportNames: ['mio', 'sei', 'haru', 'yuki', 'kenji', 'emi', 'tomo', 'aya', 'shun', 'mai'],
-    },
-  ],
+  // Classes montadas das origens com bloco `jornada` (base única, v0.64.0; src/data/lineages.ts).
+  classes: jornadaClasses(lineages),
   stages: [
     {
       id: 'g1',

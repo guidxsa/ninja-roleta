@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { generatedBlock, replaceGenerated } from '../src/core/docTables';
+import { DOC_TABLES } from '../scripts/docTablesList';
 import { describe, expect, it } from 'vitest';
 import type { VillainTechnique } from '../src/core/types';
 import { techniquesById } from '../src/data/techniques';
@@ -63,5 +65,20 @@ describe('docs batem com os dados', () => {
       ...enemies.map((e) => J.names[e.id] ?? e.id).filter((n) => !has(foes, n)),
     ];
     expect(missing).toEqual([]);
+  });
+});
+
+describe('tabelas geradas dos docs (v0.64.0)', () => {
+  it('estão em dia com os dados (rode `npm run docs:tabelas` depois de mudar números)', () => {
+    const stale = DOC_TABLES.filter(({ file, name, table }) => generatedBlock(readFileSync(file, 'utf8'), name) !== table());
+    expect(stale.map((t) => `${t.file} (${t.name})`)).toEqual([]);
+  });
+
+  it('trocar o trecho gerado mantém o resto do doc', () => {
+    const doc = 'antes\n<!-- gerado:x -->\nvelho\n<!-- /gerado -->\ndepois';
+    const next = replaceGenerated(doc, 'x', 'novo');
+    expect(next).toBe('antes\n<!-- gerado:x -->\nnovo\n<!-- /gerado -->\ndepois');
+    expect(generatedBlock(next, 'x')).toBe('novo');
+    expect(() => replaceGenerated('sem marcador', 'x', 'novo')).toThrow();
   });
 });

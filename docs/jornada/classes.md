@@ -1,6 +1,6 @@
 # Classes da Jornada
 
-> Comum e prodígio na v0.36.0; Uchiha, Hyuuga, versões suporte e o easter egg do Sasuke na v0.37.0; escolha do elemento, Hyuuga sem elemento e suportes com classe e nome sorteados na v0.43.0 ([README.md](README.md)). Dados em `src/data/jornada/generic.ts` e `characters.ts`.
+> Comum e prodígio na v0.36.0; Uchiha, Hyuuga, versões suporte e o easter egg do Sasuke na v0.37.0; escolha do elemento, Hyuuga sem elemento e suportes com classe e nome sorteados na v0.43.0; base única com as origens na v0.64.0 ([README.md](README.md)). Dados no bloco `jornada` das origens (`src/data/lineages.ts`) e nas fichas de suporte (`characters.ts`).
 
 As classes são as protagonistas do Caminho Ninja ([caminho-ninja.md](caminho-ninja.md)). Vêm das origens do Roleta ([origens.md](../base/origens.md)), com um corte: cada classe é uma árvore de talentos inteira ([talentos.md](talentos.md)).
 
@@ -14,6 +14,30 @@ As classes são as protagonistas do Caminho Ninja ([caminho-ninja.md](caminho-ni
 - O sorteio acontece sempre por baixo, mesmo com escolha: a mesma seed dá o mesmo mapa, os mesmos suportes e os mesmos chefes.
 - Os 2 suportes sorteiam o elemento (nunca "nenhum"), a menos que a ficha tenha um fixo (Uchiha: fogo) ou não use ninjutsu elemental (Hyuuga: natureza silenciosa).
 - A tela de revelação mostra o elemento, a relíquia bônus (quando sorteou) e os parceiros.
+
+## Base única e status derivados
+
+Desde a v0.64.0, cada classe sai de uma origem do Roleta ([origens.md](../base/origens.md#base-única)). A origem tem um bloco `jornada` com o que é próprio do Caminho Ninja (técnicas iniciais, IA, retrato, suportes, nomes e desbloqueio), e a natureza vem da regra da origem: elemento fixo (Uchiha), natureza silenciosa (Hyuuga) ou o protagonista sem elemento (o Comum que não sorteia elemento vira o do Prodígio).
+
+Os status do protagonista são **calculados** dos status da origem (`originScale` em `src/data/jornada/balance.ts`, proposta):
+
+- ataques × 0,75 e resistências × 0,7, para baixo;
+- HP e chakra iguais aos da origem;
+- speed da origem + 1;
+- crescimento por nível proporcional ao status inicial do protagonista: HP 8%, chakra 10%, speed 5%, ataques 10% e resistências 8% por nível (as frações acumulam).
+
+Um ajuste por classe (`jornada.hero.adjust`) pode somar por cima da fórmula, só com aprovação. Os personagens da História e as fichas de suporte continuam escritos à mão.
+
+A tabela abaixo é gerada dos dados (`npm run docs:tabelas`); não edite à mão.
+
+<!-- gerado:status-protagonistas -->
+| Origem | Protagonista | HP | Chakra | Speed | Taijutsu | Ninjutsu | Genjutsu | Res. física | Res. mental |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Comum | `commonNinja` | 100 | 32 | 11 | 9 | 9 | 3 | 7 | 6 |
+| Prodígio do taijutsu | `prodigy` | 110 | 22 | 14 | 13 | 0 | 0 | 8 | 5 |
+| Uchiha | `uchihaNinja` | 105 | 32 | 12 | 10 | 12 | 8 | 7 | 8 |
+| Hyuuga | `hyuugaNinja` | 105 | 28 | 13 | 12 | 4 | 4 | 7 | 7 |
+<!-- /gerado -->
 
 ## Desbloqueios
 

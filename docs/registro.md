@@ -66,6 +66,29 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Origens e classes numa base só (v0.64.0, 12/11/2026)
+
+Pedido do usuário (item 22, unificação completa com status derivados; item 10, tabelas geradas). As classes do Caminho Ninja saem do bloco `jornada` das origens (`src/data/lineages.ts`) e os status do protagonista vêm da fórmula `originScale` (ataques × 0,75, resistências × 0,7, HP e chakra × 1, speed + 1; crescimento por nível proporcional ao status inicial). Decidido sozinho: os números da fórmula (calibrados pela média dos protagonistas de antes), deixar de fora os personagens da História e as fichas de suporte, e a lore das origens sair da tabela para uma lista (a tabela agora é gerada).
+
+Protagonistas antes → depois (HP, chakra, speed, tai/nin/gen, res. física/mental):
+- Comum: 100, 30, 11, 9/9/4, 7/6 → 100, 32, 11, 9/9/3, 7/6
+- Prodígio: 115, 22, 13, 12/0/0, 8/5 → 110, 22, 14, 13/0/0, 8/5
+- Uchiha: 105, 32, 12, 10/12/8, 7/8 → 100, 28, 12, 7/9/9, 7/7
+- Hyuuga: 105, 26, 12, 12/6/4, 8/7 → 100, 28, 13, 11/4/4, 7/7
+
+Simulação (`npm run sim:origens -- --runs 1000 --seed 2`): o Roleta ficou idêntico. Jornada (`npm run sim:jornada -- 1000 2`), vitória v0.63.0 → v0.64.0 (a História não muda: os personagens dela são escritos à mão):
+
+| Classe | Fácil | Médio | Difícil | Hardcore |
+|---|---|---|---|---|
+| Comum | 98 → 98 | 61 → 62 | 24 → 26 | 21 → 21 |
+| Prodígio | 100 → 100 | 92 → 95 | 61 → 65 | 54 → 60 |
+| Uchiha | 100 → 99 | 66 → **40** | 21 → 6 | 15 → 4 |
+| Hyuuga | 100 → 100 | 81 → 74 | 41 → 30 | 34 → 25 |
+
+O Uchiha da origem distribui os ataques por igual (10/12/13), e na Jornada as técnicas dele (Bola de Fogo, Sharingan) são de ninjutsu e taijutsu: com 7/9/9 o dano cai muito. O Hyuuga perdeu taijutsu e HP.
+
+**Ajuste por classe** (escolhido pelo usuário entre as opções): o Uchiha volta ao perfil de antes (+5 HP, +4 chakra, +3 taijutsu, +3 ninjutsu, −1 genjutsu, +1 res. mental → 105, 32, 10/12/8, 7/8) e o Hyuuga ganha +1 taijutsu e +5 HP (105, 12/4/4). Vitória com o ajuste (Fácil/Médio/Difícil/Hardcore): Uchiha 100/72/29/22 (antes da base única 100/66/21/15) e Hyuuga 100/82/42/35 (100/81/41/34). O Uchiha passou um pouco do de antes porque o crescimento por nível agora vem da fórmula (taijutsu 1, ninjutsu 1,2, HP 8,4 por nível, contra 0,9, 1,1 e 7 da tabela antiga). Comum e Prodígio não mudam com o ajuste.
+
 ## Conquistas com ícone e avatar editável (v0.63.0, 12/11/2026)
 
 Pedido do usuário (itens 18 e 16): ícone próprio por conquista, por enquanto desenhado por mim, e avatar escolhido entre os personagens jogáveis já liberados, em SVG por enquanto. Decidido sozinho: o ícone de cada conquista (as vitórias por origem usam o símbolo do clã; desenho novo do sino), o que libera cada avatar (origens jogadas ou vencidas no Roleta; na Jornada, Naruto, Uchiha, Hyuuga e o visual do Sasuke pelas conquistas) e onde ele aparece (Ficha do ninja do PC e topo do Registro ninja). Sem mudança de regra nem de balanceamento.

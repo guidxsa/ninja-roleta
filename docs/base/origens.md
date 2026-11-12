@@ -48,23 +48,44 @@ Quem tem ninjutsu (todas as origens, menos o Prodígio do taijutsu) começa com 
 - Infinito, só na tela de origem, antes da primeira luta.
 - A run só entra no histórico ao começar a campanha (v0.58.0): re-rolar não deixa registro.
 
+## Base única
+
+Desde a v0.64.0, as origens são também a base das classes do Caminho Ninja: a origem que tem o bloco `jornada` abre uma classe, e os status do protagonista são calculados dos status abaixo ([classes.md](../jornada/classes.md#base-única-e-status-derivados)). Hoje: Comum (com o Prodígio do taijutsu como protagonista sem elemento), Uchiha e Hyuuga.
+
 ## Status iniciais
 
 Referência: **90 pontos**, cerca de 70 em status e 20 em resistências. Conversão: taijutsu, ninjutsu, genjutsu e as duas resistências valem 1 ponto; speed vale 1,5; 10 de HP vale 1; 2 de chakra valem 1. A distribuição segue a lore (v0.30), com o total perto de 90; a coluna "Pontos" mostra quanto cada origem fica acima ou abaixo.
 
-| Origem | Taijutsu | Ninjutsu | Genjutsu | Res. física | Res. mental | Speed | HP | Chakra | Pontos | Leitura da lore |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Comum | 12 | 13 | 5 | 10 | 9 | 10 | 100 | 32 | 90 | A régua, com base de ninjutsu elemental; genjutsu fraco |
-| Nara | 7 | 14 | 9 | 9 | 12 | 9 | 100 | 34 | 91,5 | Cabeça e sombras; corpo preguiçoso |
-| Akimichi | 15 | 7 | 4 | 14 | 7 | 6 | 150 | 34 | 88 | Massa, vida e força; lento e fácil de iludir |
-| Yamanaka | 8 | 9 | 16 | 8 | 15 | 10 | 100 | 32 | 97 | Mente forte, corpo frágil |
-| Aburame | 7 | 13 | 8 | 11 | 12 | 8 | 105 | 38 | 92,5 | Reserva grande de chakra, calmo e defensivo |
-| Inuzuka | 15 | 7 | 5 | 13 | 7 | 14 | 100 | 24 | 90 | Selvagem e rápido; pouco chakra |
-| Prodígio do taijutsu | 18 | 0 | 0 | 12 | 8 | 13 | 110 | 22 | 79,5 | Só corpo; quase sem chakra |
-| Uchiha | 10 | 12 | 13 | 10 | 11 | 11 | 100 | 28 | 96,5 | Talento em tudo, olhos treinados |
-| Hyuuga | 15 | 6 | 6 | 11 | 10 | 12 | 100 | 28 | 90 | Punho Gentil, precisão e reflexo |
-| Uzumaki | 12 | 12 | 3 | 12 | 9 | 11 | 120 | 38 | 95,5 | Vitalidade e chakra enormes; péssimo em genjutsu |
-| Senju | 12 | 13 | 5 | 12 | 10 | 12 | 125 | 40 | 102,5 | Como o Uzumaki, um degrau acima: forte de propósito (e raro) |
+A tabela abaixo é gerada dos dados (`npm run docs:tabelas`, v0.64.0); não edite à mão.
+
+<!-- gerado:status-origens -->
+| Origem | Taijutsu | Ninjutsu | Genjutsu | Res. física | Res. mental | Speed | HP | Chakra | Pontos |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Comum | 12 | 13 | 5 | 10 | 9 | 10 | 100 | 32 | 90 |
+| Nara | 7 | 14 | 9 | 9 | 12 | 9 | 100 | 34 | 91,5 |
+| Akimichi | 15 | 7 | 4 | 14 | 7 | 6 | 150 | 34 | 88 |
+| Yamanaka | 8 | 9 | 16 | 8 | 15 | 10 | 100 | 32 | 97 |
+| Aburame | 7 | 13 | 8 | 11 | 12 | 8 | 105 | 38 | 92,5 |
+| Inuzuka | 15 | 7 | 5 | 13 | 7 | 14 | 100 | 24 | 90 |
+| Prodígio do taijutsu | 18 | 0 | 0 | 12 | 8 | 13 | 110 | 22 | 79,5 |
+| Uchiha | 10 | 12 | 13 | 10 | 11 | 11 | 100 | 28 | 96,5 |
+| Hyuuga | 15 | 6 | 6 | 11 | 10 | 12 | 100 | 28 | 90 |
+| Uzumaki | 12 | 12 | 3 | 12 | 9 | 11 | 120 | 38 | 95,5 |
+| Senju | 12 | 13 | 5 | 12 | 10 | 12 | 125 | 40 | 102,5 |
+<!-- /gerado -->
+
+Leitura da lore:
+- **Comum**: A régua, com base de ninjutsu elemental; genjutsu fraco.
+- **Nara**: Cabeça e sombras; corpo preguiçoso.
+- **Akimichi**: Massa, vida e força; lento e fácil de iludir.
+- **Yamanaka**: Mente forte, corpo frágil.
+- **Aburame**: Reserva grande de chakra, calmo e defensivo.
+- **Inuzuka**: Selvagem e rápido; pouco chakra.
+- **Prodígio do taijutsu**: Só corpo; quase sem chakra.
+- **Uchiha**: Talento em tudo, olhos treinados.
+- **Hyuuga**: Punho Gentil, precisão e reflexo.
+- **Uzumaki**: Vitalidade e chakra enormes; péssimo em genjutsu.
+- **Senju**: Como o Uzumaki, um degrau acima: forte de propósito (e raro).
 
 Lógica das resistências (provisória): clãs de corpo (Akimichi, Inuzuka, Uzumaki) puxam para a física; clãs de mente e ilusão (Yamanaka) puxam para a mental. O prodígio tem a mental mais baixa que a física: é um alvo natural de genjutsu, como na série.
 
