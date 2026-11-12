@@ -485,6 +485,13 @@ describe('run da Jornada', () => {
     expect(next.cleared).toEqual(['mizuki']);
   });
 
+  it('o XP da vitória que a tela mostra já tem os bônus de talentos e relíquias', () => {
+    const run = { ...newRun(1, 'normal', data), relics: ['trainingLog'] };
+    const b = startBattle(battleSetup(run, data), data, createRng(1));
+    const { outcome } = finishFight(run, won(b), data);
+    expect(outcome.xp).toBeGreaterThanOrEqual(Math.floor(data.j.rewards.story.xp * 1.15));
+  });
+
   it('perder acaba a run; no Fácil a Vontade do Fogo recomeça a luta', () => {
     const normal = newRun(1, 'normal', data);
     expect(finishFight(normal, lost(startBattle(battleSetup(normal, data), data, createRng(1))), data).run.status).toBe('defeat');

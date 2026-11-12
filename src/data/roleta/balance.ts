@@ -58,13 +58,10 @@ export const roletaBalance = {
   // Vilões: Insano (Orochimaru) sem limite nos dados (hardcore) volta no máximo esta quantidade de vezes.
   // `insaneRevivesCap`: teto de volta do Orochimaru no Roleta em qualquer dificuldade (o ciclo é curto).
   villains: { insaneMaxRevives: 3, insaneRevivesCap: 1 },
-  // Run (docs/roleta/run.md): raridade da recompensa por categoria (1 comum, 2 rara, 3 lendária; o chefe abre o baú),
-  // força dos vilões por ciclo (× 1 + perCycle × ciclo, contando do 0; rascunho) e relíquias.
-  // A raridade sobe 1 por ciclo, até `maxRewardTier` (v0.52.0).
-  run: { rewardTier: { genin: 1, chunin: 1, jounin: 2, boss: 0 } as Record<string, number>, maxRewardTier: 3, bossChoices: 3 },
-  // Recompensa (docs/roleta/run.md#recompensa): XP em fração do que falta do nível atual inteiro, por raridade (acompanha o
-  // custo do nível); crítico da fatia Status, por raridade; cura do Jackpot.
-  rewards: { xpPct: [0.5, 1, 1.5], critBonus: [0.01, 0.02, 0.03], jackpotHealPct: 0.25 },
+  // Run (docs/roleta/run.md): relíquias do baú do chefe.
+  run: { bossChoices: 3 },
+  // Sem relíquia para sortear na roleta pós-luta: XP em fração do custo do nível atual (acompanha o nível).
+  rewards: { xpPct: [0.5, 1, 1.5] },
   // Linhagens que saíram do sorteio do Roleta (v0.52.0): funcionam melhor como suporte e ficam guardadas para a Jornada.
   // As conquistas delas viram clássicas e os dados seguem em `gameData`.
   retiredLineages: ['nara', 'yamanaka', 'aburame'] as readonly string[],
@@ -85,8 +82,6 @@ export const roletaBalance = {
     } as Record<string, { common: number; uncommon: number; rare: number }>,
     cycleShift: 10,
   },
-  // Fatia "Relíquia" da recompensa: classificação pela raridade (comum → comum, rara → incomum, lendária → rara).
-  relicTierByReward: { 1: 'common', 2: 'uncommon', 3: 'rare' } as Record<number, 'common' | 'uncommon' | 'rare'>,
   // Consumíveis na luta.
   items: { soldierPillPct: 0.5, medKitHealPct: 0.15, explosiveTagDamage: 15 },
 };

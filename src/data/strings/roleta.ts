@@ -173,7 +173,7 @@ export const roletaPtBR = {
     wornSandals: { desc: '+1 de speed.' },
     whetstone: { desc: '+3% de crítico.' },
     chakraCandy: { desc: 'Começa as lutas com 10% a mais do chakra.' },
-    ichirakuCoupon: { desc: 'Cada vitória recupera 10% a mais do HP e do chakra.' },
+    ichirakuCoupon: { desc: 'Começa as lutas com 20% de HP e de chakra acima do máximo.' },
     handWraps: { desc: '+10% de dano de taijutsu.' },
     herbPouch: { desc: 'Recupera 2% do HP por rodada.' },
     tornHeadband: { desc: 'Abaixo de 50% do HP, +20% de dano.' },

@@ -3,10 +3,10 @@
 // Depois do chefe: cura total, baú com 3 relíquias de chefe e o próximo ciclo, com os vilões mais fortes.
 import { scaleVillain, type Difficulty } from '../difficulty';
 import type { GameData } from '../gameData';
-import { bossChoices, dropRelic, type RelicDef, type RoletaRelicEffect } from '../jornada/relics';
+import { bossChoices, type RelicDef, type RoletaRelicEffect } from '../jornada/relics';
 import { spin, type Slice } from '../roulette';
 import { fullRestore, gainXp, trainingWeightsWin, xpGain, xpToNextLevel, type PlayerState } from '../player';
-import { applyReward, xpStep, type NextFightMods, type Step } from '../progression';
+import type { NextFightMods } from '../progression';
 import type { Rng } from '../rng';
 import type { VillainDef } from '../types';
 import type { RBattle } from './battle';
@@ -49,9 +49,6 @@ const statsOf = (v: VillainDef): VillainStats => ({ hp: v.hp, chakra: v.chakra, 
 
 /** O modo infinito existe só no Hardcore: só a run vencida nele segue para o próximo ciclo. */
 export const canContinueRoleta = (run: RRun) => run.status === 'victory' && run.difficulty === 'hardcore';
-
-/** Toda luta começa com HP e chakra cheios (v0.59.0). */
-export const readyForFight = (player: PlayerState): PlayerState => fullRestore(player);
 
 export function newRoletaRun(player: PlayerState, difficulty: Difficulty): RRun {
   return {
@@ -132,7 +129,7 @@ export function villainFor(run: RRun, villains: Record<string, VillainDef>, data
 // Relíquias
 
 /** Efeitos das relíquias do jogador no Roleta, somados (multiplicadores multiplicam). */
-export function relicEffects(player: PlayerState, data: RoletaData): Required<Pick<RoletaRelicEffect, 'damageMult' | 'flatDamage' | 'critBonus' | 'accuracyBonus' | 'dodgeBonus' | 'regenPct' | 'startShieldPct' | 'startChakraPct' | 'openingDamage' | 'afterWinHealPct' | 'chakraDiscount' | 'lowHpDamageMult' | 'xpMult'>> & {
+export function relicEffects(player: PlayerState, data: RoletaData): Required<Pick<RoletaRelicEffect, 'damageMult' | 'flatDamage' | 'critBonus' | 'accuracyBonus' | 'dodgeBonus' | 'regenPct' | 'startShieldPct' | 'startChakraPct' | 'openingDamage' | 'startOverPct' | 'chakraDiscount' | 'lowHpDamageMult' | 'xpMult'>> & {
   typeDamageMult: Record<string, number>;
   surviveOnce: boolean;
 } {
@@ -146,7 +143,7 @@ export function relicEffects(player: PlayerState, data: RoletaData): Required<Pi
     startShieldPct: 0,
     startChakraPct: 0,
     openingDamage: 0,
-    afterWinHealPct: 0,
+    startOverPct: 0,
     chakraDiscount: 0,
     lowHpDamageMult: 1,
     xpMult: 1,
@@ -159,7 +156,7 @@ export function relicEffects(player: PlayerState, data: RoletaData): Required<Pi
     out.damageMult *= e.damageMult ?? 1;
     out.lowHpDamageMult *= e.lowHpDamageMult ?? 1;
     out.xpMult *= e.xpMult ?? 1;
-    for (const k of ['flatDamage', 'critBonus', 'accuracyBonus', 'dodgeBonus', 'regenPct', 'startShieldPct', 'startChakraPct', 'openingDamage', 'afterWinHealPct', 'chakraDiscount'] as const) out[k] += e[k] ?? 0;
+    for (const k of ['flatDamage', 'critBonus', 'accuracyBonus', 'dodgeBonus', 'regenPct', 'startShieldPct', 'startChakraPct', 'openingDamage', 'startOverPct', 'chakraDiscount'] as const) out[k] += e[k] ?? 0;
     for (const [t, m] of Object.entries(e.typeDamageMult ?? {})) out.typeDamageMult[t] = (out.typeDamageMult[t] ?? 1) * (m ?? 1);
     if (e.surviveOnce) out.surviveOnce = true;
   }
@@ -195,12 +192,6 @@ export function gainRoletaRelic(player: PlayerState, id: string, data: RoletaDat
   if (e.summon && p.summon?.animal !== e.summon) p = { ...p, summon: { animal: e.summon, level: 1 } };
   if (e.weights && p.trainingWeights === 'none') p = { ...p, trainingWeights: 'stored' };
   return p;
-}
-
-/** Fatia "Relíquia" da recompensa: uma relíquia da classificação da raridade (null = nada para sortear). */
-export function rewardRelic(player: PlayerState, tier: number, data: RoletaData, rng: Rng): string | null {
-  const relicTier = data.r.relicTierByReward[tier] ?? 'common';
-  return dropRelic(relicPool(player, data), player.relics ?? [], { [relicTier]: 1 }, rng);
 }
 
 /** Raridades da roleta de relíquia pós-luta. */
@@ -248,65 +239,35 @@ export const contractFor = (animal: string, data: RoletaData) => data.relics.fin
 export interface RFightOutcome {
   won: boolean;
   xp: number;
-  /** Raridade da recompensa (0 = sem roleta: o chefe abre o baú). */
-  tier: number;
   boss: boolean;
 }
 
 /**
- * Fecha a luta: vitória recupera (mais as relíquias), conta os Pesos e o XP (sem subir de nível: a interface mostra
- * uma subida por vez) e avança o passo. Depois do chefe: cura total e o baú. Derrota encerra a run.
+ * Fecha a luta: a vitória recupera HP e chakra por inteiro (v0.61.0: a cura é depois da luta, e o que acontece até a
+ * próxima, como a Akatsuki, chega nela), conta os Pesos e o XP (sem subir de nível: a interface mostra uma subida por
+ * vez) e avança o passo. Depois do chefe: o baú. Derrota encerra a run.
  */
 export function finishRoletaFight(prev: RRun, battle: RBattle, data: RoletaData, rng: Rng): { run: RRun; outcome: RFightOutcome } {
   const won = battle.status === 'won';
   const boss = isBossStep(prev, data);
-  if (!won) return { run: { ...prev, player: battle.player, status: 'defeat' }, outcome: { won, xp: 0, tier: 0, boss } };
+  if (!won) return { run: { ...prev, player: battle.player, status: 'defeat' }, outcome: { won, xp: 0, boss } };
   const fx = relicEffects(battle.player, data);
-  // Sem recuperação parcial: a próxima luta começa com HP e chakra cheios (`readyForFight`).
-  let p = trainingWeightsWin(battle.player, data.base);
+  let p = fullRestore(trainingWeightsWin(battle.player, data.base));
   // XP do vilão (a ficha da base; o ciclo não muda o XP), com as relíquias de XP.
   const xp = Math.floor(battle.villain.def.xp * fx.xpMult);
   p = gainXp(p, xp, data.base);
-  const category = currentCategory(prev, data);
   const run: RRun = { ...prev, player: p, wins: prev.wins + 1, used: [...prev.used, prev.villainId!], villainId: null, mods: { villainStartsFirst: false, playerStartsFirst: false } };
   if (boss) {
-    run.player = fullRestore(run.player);
     run.lastBoss = statsOf(battle.villain.def);
     const choices = bossChoices(relicPool(run.player, data), run.player.relics ?? [], data.r.run.bossChoices, 0, rng);
     run.bossChoice = choices.length ? choices : null;
     if (!run.bossChoice) endCycle(run);
   } else run.step++;
-  return { run, outcome: { won, xp: xpGain(battle.player, xp, data.base), tier: rewardTierFor(category, prev.cycle, data), boss } };
+  return { run, outcome: { won, xp: xpGain(battle.player, xp, data.base), boss } };
 }
 
-/** Raridade da recompensa: a da categoria, mais 1 por ciclo do modo infinito (o chefe abre o baú, sem raridade). */
-export function rewardTierFor(category: RCategory, cycle: number, data: RoletaData): number {
-  const base = data.r.run.rewardTier[category] ?? 0;
-  return base === 0 ? 0 : Math.min(data.r.run.maxRewardTier, base + cycle);
-}
-
-/** XP da fatia: fração do custo do nível atual, para não perder valor com o nível. */
+/** XP no lugar da relíquia quando não há nenhuma para sortear: fração do custo do nível atual (`rewards.xpPct`). */
 export const rewardXp = (player: PlayerState, tier: number, data: RoletaData) => Math.floor(xpToNextLevel(player.level, data.base) * data.r.rewards.xpPct[tier - 1]!);
-
-/**
- * Fatias diretas da recompensa do Roleta. Status junta estágios, resistência e crítico; o XP acompanha o custo do nível.
- * Item, relíquia e jackpot têm tela própria (`rewardRelic`, `applyJackpot`).
- */
-export function applyRoletaReward(player: PlayerState, reward: 'stages' | 'xp', tier: number, rng: Rng, data: RoletaData): Step[] {
-  if (reward === 'xp') return [xpStep(player, rewardXp(player, tier, data), data.base)];
-  const stages = applyReward(player, 'stages', tier, rng, data.base);
-  const resistance = applyReward(stages.player, 'resistance', tier, rng, data.base);
-  return [stages, resistance, applyReward(resistance.player, 'critBonus', tier, rng, data.base)];
-}
-
-/** Jackpot: relíquia rara (ou, sem nenhuma para sortear, o XP da raridade máxima) e cura. */
-export function applyJackpot(player: PlayerState, rng: Rng, data: RoletaData): { player: PlayerState; relic: string | null; healed: number } {
-  const relic = rewardRelic(player, data.r.run.maxRewardTier, data, rng);
-  let p = relic ? gainRoletaRelic(player, relic, data) : gainXp(player, rewardXp(player, data.r.run.maxRewardTier, data), data.base);
-  const healed = Math.min(p.maxHp - p.hp, Math.floor(p.maxHp * data.r.rewards.jackpotHealPct));
-  p = { ...p, hp: p.hp + healed };
-  return { player: p, relic, healed };
-}
 
 /** Escolhe a relíquia do baú do chefe e fecha o ciclo. */
 export function chooseChest(prev: RRun, id: string, data: RoletaData): RRun {

@@ -171,7 +171,12 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
   // Relíquias de começo de luta: escudo, chakra a mais e dano de abertura.
   const fx = relicEffects(s.player, data);
   if (fx.startShieldPct > 0) s.fx.shield += Math.floor(s.player.maxHp * fx.startShieldPct);
-  if (fx.startChakraPct > 0) s.player.chakra = Math.min(s.player.maxChakra, s.player.chakra + Math.floor(s.player.maxChakra * fx.startChakraPct));
+  if (fx.startChakraPct > 0) gainPlayerChakra(s, Math.floor(s.player.maxChakra * fx.startChakraPct));
+  // Cupom do Ichiraku: começa acima do máximo (o excedente não volta: cura e regeneração param no máximo).
+  if (fx.startOverPct > 0) {
+    s.player.hp += Math.floor(s.player.maxHp * fx.startOverPct);
+    s.player.chakra += Math.floor(s.player.maxChakra * fx.startOverPct);
+  }
   if (fx.openingDamage > 0) {
     const n = Math.min(s.villain.hp - 1, fx.openingDamage);
     s.villain.hp -= n;
@@ -411,7 +416,7 @@ function startOfRound(s: RBattle, data: RoletaData): void {
   const regen = (max: number, pct = r.chakraRegen.pct) => Math.max(r.chakraRegen.min, Math.floor(max * pct));
   const playerChakra = s.player.chakra;
   const villainChakra = s.villain.chakra;
-  s.player.chakra = Math.min(s.player.maxChakra, s.player.chakra + regen(s.player.maxChakra));
+  gainPlayerChakra(s, regen(s.player.maxChakra));
   s.villain.chakra = Math.min(s.villain.def.chakra, s.villain.chakra + regen(s.villain.def.chakra, r.villainChakra.regenPct));
   if (s.player.chakra !== playerChakra) logChakra(s, 'player');
   if (s.villain.chakra !== villainChakra) logChakra(s, 'villain');
@@ -555,8 +560,7 @@ function playerTurn(s: RBattle, action: RAction, data: RoletaData, rng: Rng): vo
 
 /** Concentrar: recupera uma fração do chakra máximo (pelo menos 1). */
 function concentrate(s: RBattle, data: RoletaData): void {
-  const amount = Math.min(s.player.maxChakra - s.player.chakra, Math.max(1, Math.floor(s.player.maxChakra * data.r.rest.chakraPct)));
-  s.player.chakra += amount;
+  const amount = gainPlayerChakra(s, Math.max(1, Math.floor(s.player.maxChakra * data.r.rest.chakraPct)));
   s.log.push({ type: 'rest', side: 'player', amount });
 }
 
@@ -566,7 +570,7 @@ function useItem(s: RBattle, id: ConsumableId, data: RoletaData, rng: Rng): void
   s.log.push({ type: 'item', id });
   const it = data.r.items;
   if (id === 'soldierPill') {
-    s.player.chakra = Math.min(s.player.maxChakra, s.player.chakra + Math.floor(s.player.maxChakra * it.soldierPillPct));
+    gainPlayerChakra(s, Math.floor(s.player.maxChakra * it.soldierPillPct));
     logChakra(s, 'player');
   } else if (id === 'medKit') {
     s.fx.effects = [];
@@ -721,6 +725,13 @@ function villainAttack(s: RBattle, tech: VillainTechnique, data: RoletaData, rng
 
 // ---------------------------------------------------------------------------
 // Dano, cura, quedas
+
+/** Chakra do jogador até o máximo; acima dele (Cupom do Ichiraku) não sobe nem desce. Devolve o ganho. */
+function gainPlayerChakra(s: RBattle, amount: number): number {
+  const n = Math.max(0, Math.min(s.player.maxChakra - s.player.chakra, amount));
+  s.player.chakra += n;
+  return n;
+}
 
 function healPlayer(s: RBattle, amount: number, source: string): void {
   const n = Math.min(s.player.maxHp - s.player.hp, Math.max(0, amount));

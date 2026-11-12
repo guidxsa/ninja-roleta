@@ -546,10 +546,14 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
 /** XP para passar do nível atual. */
 export const xpToNext = (level: number, data: JornadaData) => data.j.xp.base + data.j.xp.perLevel * (level - 1);
 
-/** Sobe de nível com o XP ganho. Devolve os níveis e o ryō dos pontos convertidos (árvore completa). */
-function gainXp(run: JRun, xp: number, data: JornadaData): { ups: number; ryo: number } {
+/**
+ * Sobe de nível com o XP ganho (com os bônus de talentos e relíquias). Devolve o XP de verdade, os níveis e o ryō dos
+ * pontos convertidos (árvore completa).
+ */
+function gainXp(run: JRun, xp: number, data: JornadaData): { gained: number; ups: number; ryo: number } {
   const mult = ownedTalents(run, data).reduce((a, t) => a * (t.xpMult ?? 1), 1) * relicDefs(run, data).reduce((a, r) => a * (r.xpMult ?? 1), 1);
-  run.xp += Math.floor(xp * mult);
+  const gained = Math.floor(xp * mult);
+  run.xp += gained;
   let ups = 0;
   let ryo = 0;
   while (run.xp >= xpToNext(run.level, data)) {
@@ -558,7 +562,7 @@ function gainXp(run: JRun, xp: number, data: JornadaData): { ups: number; ryo: n
     ryo += addTalentPoints(run, data.j.xp.talentPerLevel, data);
     ups++;
   }
-  return { ups, ryo };
+  return { gained, ups, ryo };
 }
 
 // ---------------------------------------------------------------------------
@@ -707,7 +711,7 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   const ryo = ryoGain(run, reward.ryo, data);
   run.ryo += ryo;
   const rewardRyo = addTalentPoints(run, reward.talent, data);
-  const { ups: levelUps, ryo: levelRyo } = gainXp(run, reward.xp, data);
+  const { gained: xpGained, ups: levelUps, ryo: levelRyo } = gainXp(run, reward.xp, data);
   if (stop.kind === 'boss') {
     // Estágio vencido: toda a equipe volta cheia, inclusive quem caiu.
     healFull(run, data, membersSeen(run, data));
@@ -719,7 +723,7 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   if (relic) run = gainRelic(run, relic, data);
   if (!run.bossChoice) advanceStop(run, data);
   const talentRyo = rewardRyo + levelRyo;
-  return { run, outcome: { won: true, ryo, talent: rewardRyo ? 0 : reward.talent, talentRyo, xp: reward.xp, levelUps, retry: false, relic } };
+  return { run, outcome: { won: true, ryo, talent: rewardRyo ? 0 : reward.talent, talentRyo, xp: xpGained, levelUps, retry: false, relic } };
 }
 
 /** Vai para a próxima parada (ou o próximo estágio, ou a vitória). */

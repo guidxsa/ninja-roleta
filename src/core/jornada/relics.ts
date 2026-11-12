@@ -30,8 +30,8 @@ export interface RoletaRelicEffect {
   startChakraPct?: number;
   /** Dano no vilão no começo da luta. */
   openingDamage?: number;
-  /** Cura a mais depois de cada vitória (fração do HP e do chakra máximos). */
-  afterWinHealPct?: number;
+  /** Começa cada luta com HP e chakra acima do máximo (fração do máximo; o excedente só se gasta, não volta). */
+  startOverPct?: number;
   /** Técnicas custam isto de chakra a menos (nunca abaixo de 0). */
   chakraDiscount?: number;
   /** Abaixo de 50% do HP, dano × isto. */

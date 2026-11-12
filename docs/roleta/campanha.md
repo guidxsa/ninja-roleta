@@ -93,7 +93,7 @@ Configuração: `balance.events.clanLesson`.
 | Jinchuuriki | É caçado: perde 1 Vontade do Fogo | Não é percebido |
 | Não jinchuuriki | Assiste à luta deles de longe: +5% de chance de crítico | Se mete onde não devia: perde 1 Vontade do Fogo |
 
-Nunca causa game over. Sem Vontade do Fogo para perder, perde metade do HP e do chakra que tem (o HP nunca fica abaixo de 1).
+Nunca causa game over. Sem Vontade do Fogo para perder, perde metade do HP e do chakra que tem (o HP nunca fica abaixo de 1) e entra assim na próxima luta: no Roleta, a cura total vem só depois da vitória ([run.md](run.md)).
 
 ### Guru
 

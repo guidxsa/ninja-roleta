@@ -18,9 +18,9 @@ Um ciclo tem 6 lutas: **2 genin → 2 chunin → 1 jounin → 1 chefe**. Cada lu
 - Antes de **cada** luta gira a roleta de eventos; depois de cada vitória, o XP do vilão e a roleta de relíquia (o chefe abre o baú).
 - O evento é um passo à parte: no mapa, o botão é "Seguir: evento pré-luta"; no resultado do evento dá para **Lutar** ou **Voltar ao mapa** (aí o botão do mapa vira "Lutar", e o evento não se repete).
 - **Abandonar run** (no mapa e na luta, com confirmação): a run termina, conta como abandonada no histórico e vai para a tela de fim.
-- **Cada luta começa com HP e chakra cheios** (v0.59.0). Sem a recuperação parcial depois da vitória; a dificuldade fica toda dentro da luta, o que deixa o balanceamento medível pela simulação.
+- **A vitória recupera HP e chakra por inteiro** (v0.61.0; na v0.59.0 a cura vinha no começo da luta). O que acontece entre as lutas chega na seguinte: a Akatsuki que tira metade do HP e do chakra faz o jogador entrar ferido. A run começa cheia.
 - **Força dos vilões por categoria** (`villainPower`, × HP e ataques, calibrado pela simulação): Genin, Chunin e Jounin ×1, Chefe ×0,9.
-- **Chefe**: vencer cura tudo e abre o **baú**: escolher 1 entre 3 relíquias de chefe.
+- **Chefe**: vencer abre o **baú**: escolher 1 entre 3 relíquias de chefe.
 - O Orochimaru do Roleta volta da derrota no máximo **1 vez** (`villains.insaneRevivesCap`), em qualquer dificuldade, porque o ciclo é curto.
 
 ### Vilões vindos da Jornada
@@ -75,7 +75,7 @@ Desde a v0.59.0, a roleta de recompensa (status, XP, itens, jackpot) saiu. Depoi
    | Chunin | 45 | 40 | 15 |
    | Jounin | 20 | 45 | 35 |
 
-2. **Relíquia**: uma das que o jogador ainda não tem, naquela raridade, com peso igual. Raridade esgotada sai da roleta; sem nenhuma relíquia para sortear, vale o XP de uma recompensa rara.
+2. **Relíquia**: uma das que o jogador ainda não tem, naquela raridade, com peso igual. Raridade esgotada sai da roleta; sem nenhuma relíquia para sortear, vale XP igual ao custo do nível atual (`rewards.xpPct`).
 
 O **chefe** continua com o **baú** (escolher 1 entre 3 relíquias de chefe). Status e itens agora vêm dos eventos pré-luta e dos níveis.
 
@@ -94,7 +94,7 @@ Bolsa: até 3 de cada consumível (o excedente vira 30 de XP). A Ferramenta ninj
 
 ## Relíquias
 
-O catálogo é o mesmo da Jornada, e cada relíquia diz em que modo sai ([reliquias.md](../jornada/reliquias.md#modos)). No Roleta, elas saem da fatia **Relíquia** da recompensa e do **baú do chefe**, e não há relíquia inicial.
+O catálogo é o mesmo da Jornada, e cada relíquia diz em que modo sai ([reliquias.md](../jornada/reliquias.md#modos)). No Roleta, elas saem da **roleta de relíquia** depois da vitória e do **baú do chefe**, e não há relíquia inicial.
 
 - Os efeitos no Roleta têm números próprios (menos lutas, um lutador só); as de equipe, ryō, clones, talento e mercador ficam só na Jornada.
 - Exclusivas do Roleta: Ferramenta ninja, Amuleto de velocidade, Amuleto de resistência e os Contratos das cobras e das lesmas.

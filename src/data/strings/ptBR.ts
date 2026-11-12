@@ -468,7 +468,6 @@ export const ptBR = {
     relic: 'Relíquia',
     jackpot: 'Jackpot',
   } as Record<string, string>,
-  rewardTiers: ['', 'comum', 'rara', 'lendária'],
   difficulty: {
     easy: { name: 'Fácil', desc: 'Vilões mais fracos.' },
     normal: { name: 'Médio', desc: 'O desafio padrão.' },
@@ -656,7 +655,6 @@ export const ptBR = {
     examIntro: 'Lutas avulsas. Perder não causa game over nem gasta a Vontade do Fogo: só reduz a recompensa.',
     examResult: (wins: number, total: number) => `Exame: ${wins} de ${total} vitórias`,
     examReward: (tier: string, spins: number) => `Recompensa ${tier}, ${spins} giro(s)`,
-    rewardTier: (tier: string) => `Recompensa ${tier}`,
     spinOf: (i: number, n: number) => `Giro ${i} de ${n}`,
     fightOf: (i: number, n: number) => `Luta ${i} de ${n}`,
     victoryTitle: 'Campanha concluída!',
@@ -870,8 +868,8 @@ export const ptBR = {
       meddled: 'Você se meteu onde não devia e apanhou da Akatsuki: perdeu 1 Vontade do Fogo.',
     } as Record<string, string>,
     akatsukiWeakened: {
-      hunted: 'A Akatsuki atacou o jinchuuriki: perdeu metade do HP e do chakra.',
-      meddled: 'Você se meteu onde não devia: perdeu metade do HP e do chakra.',
+      hunted: 'A Akatsuki atacou o jinchuuriki: perdeu metade do HP e do chakra e entra assim na próxima luta.',
+      meddled: 'Você se meteu onde não devia: perdeu metade do HP e do chakra e entra assim na próxima luta.',
     } as Record<string, string>,
     akatsukiInsight:
       'Eles procuram um jinchuuriki e passaram direto. Mas você assistiu à luta deles de longe e aprendeu a mirar nos pontos vitais: mais chance de crítico.',

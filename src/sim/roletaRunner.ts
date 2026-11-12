@@ -12,10 +12,8 @@ import {
   HANDS,
   levelUp,
   playJokenpo,
-  rewardItemSpins,
   rollAkatsuki,
   rollItem,
-  rollReward,
   rollSummonAnimal,
   rollTraining,
   rollWeighted,
@@ -43,11 +41,7 @@ import {
   finishRoletaFight,
   gainRoletaRelic,
   newRoletaRun,
-  applyJackpot,
-  applyRoletaReward,
   canContinueRoleta,
-  readyForFight,
-  rewardRelic,
   rewardXp,
   rollRelicReward,
   villainFor,
@@ -135,19 +129,6 @@ function autoItem(player: PlayerState, rng: Rng, data: RoletaData): Step {
 /** Pesos de treino ganhos como relíquia: o bot equipa e nunca tira. */
 const autoWeights = (p: PlayerState, data: RoletaData) => (p.trainingWeights === 'stored' ? equipTrainingWeights(p, data.base) : p);
 
-/** Recompensa direta: um giro (a lendária só tem valores maiores); a fatia Relíquia dá uma da raridade. */
-export function autoRoletaReward(player: PlayerState, tier: number, rng: Rng, data: RoletaData): PlayerState {
-  const id = rollReward(player, rng, data.base).value;
-  let p = player;
-  if (id === 'item') for (let i = 0; i < rewardItemSpins(tier, data.base); i++) p = autoItem(p, rng, data).player;
-  else if (id === 'relic') {
-    const relic = rewardRelic(p, tier, data, rng);
-    p = relic ? autoWeights(gainRoletaRelic(p, relic, data), data) : gainXp(p, data.base.balance.rewards.xp[tier - 1]!, data.base);
-  } else if (id === 'jackpot') p = applyJackpot(p, rng, data).player;
-  else p = applyRoletaReward(p, id as 'stages' | 'xp', tier, rng, data).at(-1)!.player;
-  return roletaLevelUps(p, data);
-}
-
 /** Roleta de relíquia pós-luta, direta (sem nenhuma para sortear, o XP de uma recompensa rara). */
 export function autoRelicReward(player: PlayerState, category: RCategory, cycle: number, rng: Rng, data: RoletaData): PlayerState {
   const roll = rollRelicReward(player, category, cycle, data, rng);
@@ -216,7 +197,6 @@ export function runRoletaRun(
       const ev = autoRoletaEvent(run.player, rng, data);
       run = { ...run, player: roletaLevelUps(ev.player, data), mods: { ...run.mods, ...ev.mods } };
     }
-    run = { ...run, player: readyForFight(run.player) };
     const fight = runRoletaBattle(run.player, villainFor(run, villainsById, data), rng, data, run.mods);
     rounds.push(fight.round);
     const villainId = run.villainId;

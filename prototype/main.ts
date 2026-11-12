@@ -24,14 +24,12 @@ import {
   contractFor,
   continueRoletaCycle,
   canContinueRoleta,
-  readyForFight,
   rollRelicReward,
   currentCategory,
   cycleMult,
   drawVillain,
   finishRoletaFight,
   gainRoletaRelic,
-  rewardTierFor,
   rewardXp,
   newRoletaRun,
   villainFor,
@@ -863,10 +861,9 @@ function stageTrail(run: RRun, log: Record<string, StepLog> = camp?.log ?? {}): 
       const id = i < done ? run.used[i] : i === done ? run.villainId : null;
       const entry = log[stepKey(run.cycle, i)];
       const faces = id ? `<span class="trail-faces">${foePortrait(id, 'sm')}</span>` : `<span class="trail-ico">${icon(cat === 'boss' ? 'intent' : 'swords')}</span>`;
-      const tier = rewardTierFor(cat, run.cycle, rdata);
-      const sub = cat === 'boss' ? RR.chestTitle : S.ui.rewardTier(S.rewardTiers[tier] ?? '');
+      const sub = cat === 'boss' ? RR.chestTitle : RR.relicRewardTitle;
       const ev = `<div class="rrow ev"><span class="rrow-ico">${icon('dice')}</span><div><small class="rtag">${RR.eventRow}</small><span>${entry?.event ?? RR.eventPending}</span></div></div>`;
-      const fight = `<div class="rrow fight"><i><span>${i < done ? icon('check') : i + 1}</span></i>${faces}<div><small class="rtag">${RR.fightRow}</small><b><span class="rcat"${categoryTip(cat, run.cycle)}>${RR.categories[cat]}</span>${id ? ` · ${villainName(id)}` : ''}</b><small>${sub}</small></div></div>`;
+      const fight = `<div class="rrow fight"><i><span>${i < done ? icon('check') : i + 1}</span></i>${faces}<div><small class="rtag">${RR.fightRow}</small><b><span class="rcat"${categoryTip(cat)}>${RR.categories[cat]}</span>${id ? ` · ${villainName(id)}` : ''}</b><small>${sub}</small></div></div>`;
       if (state === 'done' && entry) {
         const items = entry.items.length ? entry.items.map((t) => `<li>${t}</li>`).join('') : `<li class="muted">${RR.noRewards}</li>`;
         return `<li class="rstep done"><details><summary>${ev}${fight}<span class="rstep-more" aria-hidden="true">${icon('chevron')}</span></summary>
@@ -1119,15 +1116,14 @@ const CATEGORY_SCENE: Record<string, string> = { genin: 'konoha', chunin: 'arena
 const roletaCategory = (): string => (camp ? currentCategory(getRun(), rdata) : 'genin');
 
 /**
- * Dica da categoria (mapa e trilha): a recompensa, a escala do ciclo e os vilões dela. Os que estão no Livro Bingo
+ * Dica da categoria (mapa e trilha): a recompensa e os vilões dela. Os que estão no Livro Bingo
  * aparecem com retrato e nome; os ainda não encontrados ficam como incógnita.
  */
-function categoryTip(cat: string, cycle: number): string {
+function categoryTip(cat: string): string {
   const RR = S.roleta.run;
   const ids = rdata.categories[cat as keyof typeof rdata.categories] ?? [];
   const known = ids.filter((id) => (profile.villains[id]?.faced ?? 0) > 0);
-  const tier = rewardTierFor(cat as RCategory, cycle, rdata);
-  const reward = cat === 'boss' ? RR.chestTitle : S.ui.rewardTier(S.rewardTiers[tier] ?? '');
+  const reward = cat === 'boss' ? RR.chestTitle : RR.relicRewardTitle;
   const faces = ids
     .map((id) => (known.includes(id) ? `<span class="ctip-v">${foePortrait(id, 'sm')}<small>${villainName(id)}</small></span>` : `<span class="ctip-v unknown"><span class="ctip-q">?</span><small>${RR.catUnknown}</small></span>`))
     .join('');
@@ -1164,7 +1160,7 @@ async function mapScreen(eventDone: boolean): Promise<'event' | 'fight' | 'aband
       <h2>${RR.title} ${run.cycle + 1}${cycleChip}</h2>
       <div class="rmap-trail">${stageTrail(run)}
         <div class="rmap-scene">${roletaArt(`roleta-${cat}`, CATEGORY_SCENE[cat] ?? 'konoha', 'rmap-art')}
-          <div class="rmap-foe"><span class="rmap-cap"${categoryTip(cat, run.cycle)}><span class="seal">${cat === 'boss' ? '将' : '戦'}</span>${RR.categories[cat]}</span><div class="foes">${villainCard(id, villainFor(run, villainsById, rdata))}</div></div>
+          <div class="rmap-foe"><span class="rmap-cap"${categoryTip(cat)}><span class="seal">${cat === 'boss' ? '将' : '戦'}</span>${RR.categories[cat]}</span><div class="foes">${villainCard(id, villainFor(run, villainsById, rdata))}</div></div>
         </div>
       </div>
       <div class="rmap-me">
@@ -2521,8 +2517,6 @@ async function runCampaign(): Promise<void> {
       }
     }
     if (go === 'abandon') return abandonRun();
-    // Toda luta começa com HP e chakra cheios (v0.59.0).
-    c.player = readyForFight(c.player);
     const fightCat = currentCategory(getRun(), rdata);
     const cat = RR.categories[fightCat]!;
     const result = await battleScreen(

@@ -19,7 +19,7 @@ export const roletaEffects: Record<string, RoletaRelicEffect> = {
   whetstone: { critBonus: 0.03 },
   chakraCandy: { startChakraPct: 0.1 },
   // Incomuns
-  ichirakuCoupon: { afterWinHealPct: 0.1 },
+  ichirakuCoupon: { startOverPct: 0.2 },
   handWraps: { typeDamageMult: { taijutsu: 1.1 } },
   herbPouch: { regenPct: 0.02 },
   tornHeadband: { lowHpDamageMult: 1.2 },
