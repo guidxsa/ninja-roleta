@@ -60,6 +60,13 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
   const fallen = downed(s, f.side);
   const tech = (pred: (t: JTechnique) => boolean) => firstUsable(f, data, pred);
 
+  // Finalizador (o Rasengan no Kabuto): com o alvo perto de cair, usa a técnica que derruba.
+  const w = s.win;
+  if (w.kind === 'finisher' && f.side === 'ally') {
+    const target = foes.find((x) => x.defId === w.target);
+    const finisher = tech((t) => t.id === w.technique);
+    if (target && finisher && target.hp <= target.maxHp * 0.3) return { kind: 'tech', techId: finisher.id, target: target.uid };
+  }
   // Só quem tem a técnica levanta: antes de tudo, e o protagonista primeiro.
   const revive = tech((t) => Boolean(t.reviveHpPct));
   if (revive && fallen.length) return { kind: 'tech', techId: revive.id, target: (fallen.find((x) => x.protagonist) ?? fallen[0]!).uid };

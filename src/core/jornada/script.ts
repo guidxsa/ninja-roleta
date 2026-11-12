@@ -19,6 +19,10 @@ export interface FormDef {
   healPct?: number;
   /** Retrato da forma (a interface usa no lugar do da ficha). */
   portrait?: string;
+  /** Técnicas a mais enquanto a forma dura (Garras da Kyuubi). */
+  addTechniques?: string[];
+  /** Turnos do lutador que a forma dura; sem o campo, até o fim da luta. Ao acabar, volta à ficha de antes. */
+  turns?: number;
 }
 
 /** Quando a regra dispara. `who` é o id da ficha (defId) do lutador. */
@@ -32,6 +36,8 @@ export type ScriptTrigger =
 /** O que a regra faz. `line` é a chave da fala em `strings/jornada.ts` (`script`). */
 export type ScriptAction =
   | { do: 'say'; who: string; line: string }
+  /** O lutador cai pelo roteiro (o Sasuke protegendo o Naruto do Haku). */
+  | { do: 'knock'; who: string }
   | { do: 'form'; who: string; form: string }
   /** Entra um lutador da reserva da luta (montada pela parada). */
   | { do: 'enter'; who: string }
@@ -45,6 +51,8 @@ export type ScriptAction =
 
 export interface ScriptRule {
   when: ScriptTrigger;
+  /** A regra só vale com esta marca na run (o selo do Sasuke só desperta depois da Floresta da Morte). */
+  if?: { flag: string };
   do: ScriptAction[];
 }
 
@@ -63,9 +71,11 @@ export function formOf(defId: string, formId: string, data: JornadaData): FormDe
   return def?.forms?.find((x) => x.id === formId);
 }
 
-/** Liga uma forma no lutador. */
+/** Liga uma forma no lutador. Guarda a ficha de antes para a forma temporária voltar. */
 export function applyForm(f: Fighter, form: FormDef): void {
+  if (!f.formBase) f.formBase = { offense: { ...f.offense }, resistance: { ...f.resistance }, techniques: [...f.techniques], maxHp: f.maxHp, ...(f.passive ? { passive: f.passive } : {}) };
   f.form = form.id;
+  f.formTurns = form.turns ?? 0;
   if (form.statMult) {
     const m = form.statMult;
     f.offense = { taijutsu: Math.floor(f.offense.taijutsu * m), ninjutsu: Math.floor(f.offense.ninjutsu * m), genjutsu: Math.floor(f.offense.genjutsu * m) };
@@ -77,8 +87,26 @@ export function applyForm(f: Fighter, form: FormDef): void {
     f.hp = Math.max(1, Math.floor(f.maxHp * ratio));
   }
   if (form.techniques) f.techniques = [...form.techniques];
+  if (form.addTechniques) f.techniques = [...new Set([...f.techniques, ...form.addTechniques])];
   if (form.passive) f.passive = form.passive;
   if (form.healPct) f.hp = Math.min(f.maxHp, f.hp + Math.floor(f.maxHp * form.healPct));
+}
+
+/** A forma temporária acabou: volta à ficha de antes (o HP acompanha a proporção, nunca abaixo de 1). */
+export function endForm(f: Fighter): void {
+  const base = f.formBase;
+  if (!base) return;
+  const ratio = f.maxHp > 0 ? f.hp / f.maxHp : 1;
+  f.offense = { ...base.offense };
+  f.resistance = { ...base.resistance };
+  f.techniques = [...base.techniques];
+  f.maxHp = base.maxHp;
+  if (!f.down) f.hp = Math.max(1, Math.floor(f.maxHp * ratio));
+  if (base.passive) f.passive = base.passive;
+  else delete f.passive;
+  delete f.form;
+  delete f.formBase;
+  delete f.formTurns;
 }
 
 function triggered(s: JBattle, w: ScriptTrigger, ctx: ScriptContext): boolean {
@@ -107,6 +135,19 @@ function perform(s: JBattle, a: ScriptAction, data: JornadaData, enterFighter: (
     case 'say': {
       const f = byDef(s, a.who);
       s.log.push({ type: 'say', uid: f?.uid ?? null, who: a.who, line: a.line });
+      return;
+    }
+    case 'knock': {
+      const f = byDef(s, a.who);
+      if (!f || f.down) return;
+      f.down = true;
+      f.hp = 0;
+      f.effects = [];
+      f.clones = 0;
+      f.shield = 0;
+      f.boost = null;
+      f.gate = null;
+      s.log.push({ type: 'down', target: f.uid, scripted: true });
       return;
     }
     case 'form': {
@@ -162,7 +203,7 @@ export function runScript(s: JBattle, data: JornadaData, enterFighter: (s: JBatt
   s.scripting = true;
   try {
     s.script.forEach((rule, i) => {
-      if (s.fired.includes(i) || !triggered(s, rule.when, ctx)) return;
+      if (s.fired.includes(i) || (rule.if && !s.runFlags.includes(rule.if.flag)) || !triggered(s, rule.when, ctx)) return;
       s.fired.push(i);
       for (const a of rule.do) perform(s, a, data, enterFighter);
     });

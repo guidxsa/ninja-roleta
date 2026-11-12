@@ -5,6 +5,7 @@ import { battleSetup, finishFight, grantedTechniques, heroKnown, newRun, resolve
 import type { ScriptRule } from '../src/core/jornada/script';
 import type { JBattle } from '../src/core/jornada/types';
 import { jornadaData as data } from '../src/data/jornada';
+import { chooseAiAction } from '../src/core/jornada/ai';
 
 /** Rng fixo: 0 acerta tudo. */
 const fixed = (v: number) => () => v;
@@ -139,5 +140,70 @@ describe('marcos da história (v0.66.0)', () => {
     const bells = data.stages[0]!.stops.findIndex((s) => s.id === 'bells');
     const s = openBattle(battleSetup({ ...newRun(1, 'normal', data), stopIndex: bells }, data), data);
     expect(says(s)).toEqual(['bellsStart']);
+  });
+});
+
+describe('acréscimos do roteiro (v0.67.0)', () => {
+  it('knock: o aliado cai pelo roteiro e o gatilho de queda dispara na mesma checagem', () => {
+    const sasuke = hero({ defId: 'sasuke', protagonist: false, speed: 40 });
+    const script = [
+      rule({ on: 'hpBelow', who: 'gatoThug', pct: 0.99 }, { do: 'knock', who: 'sasuke' }),
+      rule({ on: 'down', who: 'sasuke' }, { do: 'say', who: 'naruto', line: 'sasuke' }),
+    ];
+    const s = hit(startBattle(setup({ allies: [hero(), sasuke], enemies: [foe({ hp: 999, maxHp: 999 })], script }), data, fixed(0)));
+    expect(s.fighters.find((f) => f.defId === 'sasuke')!.down).toBe(true);
+    expect(s.log.some((e) => e.type === 'down' && e.scripted)).toBe(true);
+    expect(says(s)).toEqual(['sasuke']);
+    expect(s.status).toBe('ongoing');
+  });
+
+  it('condição de marca: a regra só vale com a marca na run', () => {
+    const script = [{ when: { on: 'start' as const }, if: { flag: 'curseMark' }, do: [{ do: 'say' as const, who: 'naruto', line: 'selo' }] }];
+    expect(says(openBattle(setup({ script }), data))).toEqual([]);
+    expect(says(openBattle(setup({ script, runFlags: ['curseMark'] }), data))).toEqual(['selo']);
+  });
+
+  it('forma temporária: técnicas a mais enquanto dura, e volta à ficha no fim', () => {
+    const d: JornadaData = {
+      ...data,
+      characters: { ...data.characters, naruto: { ...data.characters.naruto!, forms: [{ id: 'kyuubi', statMult: 2, addTechniques: ['jRasengan'], turns: 1 }] } },
+    };
+    const s0 = startBattle(setup({ enemies: [foe({ hp: 999, maxHp: 999 })], script: [rule({ on: 'start' }, { do: 'form', who: 'naruto', form: 'kyuubi' })] }), d, fixed(0));
+    const me0 = s0.fighters[0]!;
+    expect(me0.form).toBe('kyuubi');
+    expect(me0.techniques).toContain('jRasengan');
+    expect(me0.offense.taijutsu).toBe(20);
+    const s1 = hit(s0, 'jStrike', 'e0', d);
+    const me1 = s1.fighters[0]!;
+    expect(me1.form).toBeUndefined();
+    expect(me1.techniques).not.toContain('jRasengan');
+    expect(me1.offense.taijutsu).toBe(10);
+    expect(s1.log.some((e) => e.type === 'formEnd')).toBe(true);
+  });
+
+  it('técnica sorteada: paga uma vez e resolve a variante; os pesos dos talentos mudam o sorteio', () => {
+    const roll = { ...data.techniques.jShuriken!, id: 'jTestRoll', baseDamage: 0, chakraCost: 3, roll: [{ tech: 'jStrike', weight: 1 }, { tech: 'jShuriken', weight: 0 }] };
+    const d: JornadaData = { ...data, techniques: { ...data.techniques, jTestRoll: roll } };
+    const me = hero({ techniques: ['jStrike', 'jTestRoll'] });
+    const s1 = hit(startBattle(setup({ allies: [me], enemies: [foe({ hp: 999, maxHp: 999 })] }), d, fixed(0)), 'jTestRoll', 'e0', d);
+    expect(s1.log.find((e) => e.type === 'roll')).toMatchObject({ techId: 'jTestRoll', variant: 'jStrike' });
+    expect(s1.log.find((e) => e.type === 'tech' && e.techId === 'jTestRoll')).toMatchObject({ cost: 3 });
+    const tuned = hero({ techniques: ['jStrike', 'jTestRoll'], mods: { ...emptyMods(), rollWeights: { jStrike: -1, jShuriken: 2 } } });
+    const s2 = hit(startBattle(setup({ allies: [tuned], enemies: [foe({ hp: 999, maxHp: 999 })] }), d, fixed(0)), 'jTestRoll', 'e0', d);
+    expect(s2.log.find((e) => e.type === 'roll')).toMatchObject({ variant: 'jShuriken' });
+  });
+
+  it('finalizador: a técnica entra na luta mesmo fora do moveset, e a IA a usa com o alvo perto de cair', () => {
+    const stages = structuredClone(data.campaigns.naruto!.stages);
+    const mizuki = stages[0]!.stops[0]!;
+    if (mizuki.kind !== 'story') throw new Error('a primeira parada mudou');
+    mizuki.win = { kind: 'finisher', target: 'mizuki', technique: 'jRasengan' };
+    const d: JornadaData = { ...data, stages, campaigns: { naruto: { ...data.campaigns.naruto!, stages } } };
+    const run = { ...newRun(1, 'normal', d), learned: ['jRasengan'], moveset: ['jStrike', 'jShuriken', 'jSexyJutsu'] };
+    const setupK = battleSetup(run, d);
+    expect(setupK.allies[0]!.techniques).toContain('jRasengan');
+    const b = openBattle({ ...setupK, enemies: [{ ...setupK.enemies[0]!, hp: 5 }] }, d);
+    const act = chooseAiAction(b, b.fighters[0]!, d, fixed(0.5));
+    expect(act).toMatchObject({ kind: 'tech', techId: 'jRasengan' });
   });
 });

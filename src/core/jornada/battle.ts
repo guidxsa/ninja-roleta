@@ -24,7 +24,7 @@ import type {
   WinCondition,
   FighterSeed,
 } from './types';
-import { runScript, type ScriptContext, type ScriptRule } from './script';
+import { endForm, runScript, type ScriptContext, type ScriptRule } from './script';
 
 export function emptyMods(): FighterMods {
   return {
@@ -56,6 +56,7 @@ export function emptyMods(): FighterMods {
     startChakra: 0,
     healMult: 1,
     gateLevels: 0,
+    rollWeights: {},
   };
 }
 
@@ -100,6 +101,7 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     startChakra: a.startChakra + (b.startChakra ?? 0),
     healMult: a.healMult * (b.healMult ?? 1),
     gateLevels: a.gateLevels + (b.gateLevels ?? 0),
+    rollWeights: addMap(a.rollWeights, b.rollWeights),
   };
 }
 
@@ -114,6 +116,8 @@ export interface BattleSetup {
   /** Roteiro da parada e os lutadores que ele pode pôr na luta (docs/jornada/roteiro.md). */
   script?: ScriptRule[];
   reserve?: { side: TeamSide; seed: FighterSeed }[];
+  /** Marcas da run (condição `if` do roteiro). */
+  runFlags?: string[];
 }
 
 const scale = (n: number, mult: number) => (n > 0 ? Math.max(1, Math.floor(n * mult)) : 0);
@@ -376,6 +380,7 @@ export function openBattle(setup: BattleSetup, data: JornadaData): JBattle {
     fired: [],
     reserve: setup.reserve ? structuredClone(setup.reserve) : [],
     flags: [],
+    runFlags: [...(setup.runFlags ?? [])],
   };
   // Regras de abertura (falas, forma desde o começo).
   script(s, data);
@@ -394,7 +399,10 @@ function enterFromReserve(s: JBattle, defId: string): Fighter | null {
 
 /** Ponto de checagem do roteiro (abertura, perda de HP, virada de rodada, técnica usada). */
 function script(s: JBattle, data: JornadaData, ctx: ScriptContext = {}): void {
+  if (!s.script.length) return;
   runScript(s, data, enterFromReserve, ctx);
+  // O roteiro pode derrubar alguém (knock) ou pôr gente na luta: confere o fim de novo.
+  checkEnd(s);
 }
 
 export function startBattle(setup: BattleSetup, data: JornadaData, rng: Rng): JBattle {
@@ -474,6 +482,12 @@ function startTurn(s: JBattle, f: Fighter, data: JornadaData): boolean {
 /** Fim do turno: efeitos e esperas descontam uma rodada; os Portões cobram a manutenção (ou fecham). */
 function endTurn(s: JBattle, f: Fighter, data: JornadaData): void {
   f.effects = f.effects.map((e) => ({ ...e, turns: e.turns - 1 })).filter((e) => e.turns > 0);
+  // Forma temporária (roteiro ou ativa): conta os turnos de quem a usa.
+  if (f.form && f.formTurns && --f.formTurns <= 0) {
+    const form = f.form;
+    endForm(f);
+    s.log.push({ type: 'formEnd', uid: f.uid, form });
+  }
   if (f.boost && --f.boost.turns <= 0) f.boost = null;
   if (f.gate && !f.down) {
     const n = f.gate.rounds + 1;
@@ -628,7 +642,6 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
 
 /** Usa a técnica (ação de turno ou ativa grátis). */
 function applyTech(s: JBattle, f: Fighter, techId: string, targetUid: string, data: JornadaData, rng: Rng): void {
-  const j = data.j.combat;
   const tech = data.techniques[techId];
   if (!tech || !f.techniques.includes(tech.id)) throw new Error(`técnica indisponível: ${techId}`);
   if (tech.gates) throw new Error('Portões: use setGate');
@@ -641,12 +654,33 @@ function applyTech(s: JBattle, f: Fighter, techId: string, targetUid: string, da
   f.chakra -= cost;
   if (tech.cooldown) f.cooldowns[tech.id] = tech.cooldown + 1;
   s.log.push({ type: 'tech', uid: f.uid, techId: tech.id, targets: targets.map((t) => t.uid), cost });
+  // Técnica sorteada: paga a de cima e resolve a variante (com o alvo dela: área, si mesmo ou o escolhido).
+  if (tech.roll) {
+    const variant = data.techniques[rollVariant(f, tech, rng)];
+    if (!variant) return;
+    s.log.push({ type: 'roll', uid: f.uid, techId: tech.id, variant: variant.id });
+    const vTargets = variant.target === 'allEnemies' ? alive(s, opponentSide(f.side)) : variant.target === 'self' ? [f] : targets;
+    return resolveEffects(s, f, variant, vTargets, data, rng);
+  }
   const hpPaid = hpCost(f, tech);
   if (hpPaid) {
     f.hp -= hpPaid;
     s.log.push({ type: 'hpCost', uid: f.uid, amount: hpPaid, source: tech.id });
   }
 
+  resolveEffects(s, f, tech, targets, data, rng);
+}
+
+/** Sorteia a variante da técnica pelo peso (com os pesos a mais dos talentos; peso 0 ou menos sai do sorteio). */
+function rollVariant(f: Fighter, tech: JTechnique, rng: Rng): string {
+  const opts = tech.roll!.map((v) => ({ id: v.tech, w: Math.max(0, v.weight + (f.mods.rollWeights[v.tech] ?? 0)) })).filter((v) => v.w > 0);
+  let x = rng() * opts.reduce((a, v) => a + v.w, 0);
+  return (opts.find((v) => (x -= v.w) < 0) ?? opts[opts.length - 1] ?? { id: tech.roll![0]!.tech }).id;
+}
+
+/** Efeitos da técnica nos alvos (depois de pagar o custo). */
+function resolveEffects(s: JBattle, f: Fighter, tech: JTechnique, targets: Fighter[], data: JornadaData, rng: Rng): void {
+  const j = data.j.combat;
   if (tech.boost) {
     // Ativa não gasta o turno: o da ativação já conta como um dos turnos do fortalecimento.
     f.boost = { ...tech.boost, techId: tech.id };

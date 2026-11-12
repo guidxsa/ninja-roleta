@@ -557,9 +557,12 @@ export function nextFightTeam(run: JRun, data: JornadaData): string[] {
 export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
   const stop = currentStop(run, data);
   if (!stop || !isFight(stop)) throw new Error('a parada atual não é uma luta');
+  const win = stop.win ?? { kind: 'defeatAll' as const };
   const allies = [run.hero, ...fightTeam(run, stop, data)].map((id) => {
     const seed = memberSeed(run, id, data);
-    return { ...seed, hp: Math.max(1, seed.hp) };
+    // Finalizador: a técnica exigida entra na luta mesmo fora do moveset (ninguém fica preso).
+    const finisher = win.kind === 'finisher' && seed.protagonist && heroKnown(run, data).includes(win.technique) && !seed.techniques.includes(win.technique);
+    return { ...seed, hp: Math.max(1, seed.hp), ...(finisher ? { techniques: [...seed.techniques, win.technique] } : {}) };
   });
   const opening = relicDefs(run, data).reduce((a, r) => a + (r.openingDamage ?? 0), 0);
   const foes = stop.enemies.map((id) => {
@@ -576,9 +579,9 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
   return {
     allies,
     enemies: foes,
-    win: stop.win ?? { kind: 'defeatAll' },
+    win,
     pills: run.bag.reviveKit,
-    ...(stop.script ? { script: stop.script, reserve } : {}),
+    ...(stop.script ? { script: stop.script, reserve, runFlags: [...run.flags] } : {}),
   };
 }
 

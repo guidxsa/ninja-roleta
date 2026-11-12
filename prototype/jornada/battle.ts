@@ -653,6 +653,17 @@ export async function jornadaBattle(
           wait = host.instant() ? 300 : 1000;
           break;
         }
+        case 'roll':
+          say(B.roll(name(e.uid), techName(e.variant)), 'var(--accent-2)');
+          pushLog(B.roll(name(e.uid), techName(e.variant)));
+          break;
+        case 'formEnd': {
+          const f = fighter(next, e.uid);
+          const el = card(e.uid);
+          if (el) el.outerHTML = fighterCard({ ...f, form: undefined, hp: shown.get(e.uid)?.hp ?? f.hp, chakra: shown.get(e.uid)?.chakra ?? f.chakra }, data);
+          pushLog(B.formEnd(name(e.uid), J.forms[e.form] ?? e.form));
+          break;
+        }
         case 'endure':
           setHp(e.target, 1);
           say(B.endure(name(e.target), techName(e.technique)), 'var(--jin)');

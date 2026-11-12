@@ -63,6 +63,11 @@ export interface JTechnique {
   gates?: boolean;
   /** Forma evoluída desta técnica: quem conhece as duas fica só com a evolução (3 tomoe substitui o Sharingan). */
   evolves?: string;
+  /**
+   * Técnica sorteada (Kuchiyose no Jutsu): ao usar, paga o custo desta e sorteia uma das variantes pelo peso; o efeito é
+   * o da variante. Talentos mexem nos pesos (`rollWeights`).
+   */
+  roll?: { tech: string; weight: number }[];
 }
 
 /** Um dos Portões: números brutos, que se somam aos dos portões de baixo. */
@@ -135,6 +140,8 @@ export interface FighterMods {
   healMult: number;
   /** Portões a mais liberados além do 1º (Portão da Vida, Lótus Oculta). */
   gateLevels: number;
+  /** Peso a mais (ou a menos) de cada variante de técnica sorteada (Sapos do Naruto). */
+  rollWeights: Record<string, number>;
 }
 
 export interface CharacterDef {
@@ -223,6 +230,9 @@ export interface Fighter {
   gone?: boolean;
   /** Entrou pelo roteiro (invocação, convidado): não vai para a equipe da run no fim da luta. */
   guest?: boolean;
+  /** Ficha de antes da forma e turnos que ainda restam dela (0 = até o fim da luta). */
+  formBase?: { offense: AttackStats; resistance: Resistances; techniques: string[]; maxHp: number; passive?: EnemyPassive };
+  formTurns?: number;
 }
 
 /** Lutador pronto para entrar (sem uid, lado e estado de luta). */
@@ -256,7 +266,8 @@ export type JEvent =
   | { type: 'cleanse'; uid: string; target: string }
   | { type: 'tick'; target: string; effect: JEffect; amount: number }
   | { type: 'regen'; target: string; amount: number }
-  | { type: 'down'; target: string }
+  /** `scripted`: caiu pelo roteiro (não foi derrotado). */
+  | { type: 'down'; target: string; scripted?: boolean }
   | { type: 'survive'; target: string }
   | { type: 'revive'; uid: string; target: string; hp: number; pill?: boolean }
   | { type: 'item'; uid: string; item: string; target: string }
@@ -274,8 +285,11 @@ export type JEvent =
   | { type: 'gateUpkeep'; uid: string; amount: number }
   /** Fala do roteiro (`line`: chave em strings/jornada.ts; `uid` null quando quem fala não está na luta). */
   | { type: 'say'; uid: string | null; who: string; line: string }
-  /** Ligou uma forma (roteiro). */
+  /** Ligou uma forma (roteiro) ou a forma temporária acabou. */
   | { type: 'form'; uid: string; form: string }
+  | { type: 'formEnd'; uid: string; form: string }
+  /** Técnica sorteada: qual variante saiu. */
+  | { type: 'roll'; uid: string; techId: string; variant: string }
   /** Entrou ou saiu da luta pelo roteiro. */
   | { type: 'enter'; uid: string }
   | { type: 'leave'; uid: string }
@@ -309,6 +323,8 @@ export interface JBattle {
   reserve: { side: TeamSide; seed: FighterSeed }[];
   /** Marcas que o roteiro deixa na run (copiadas para `run.flags` no fim da luta). */
   flags: string[];
+  /** Marcas que a run já tinha ao abrir a luta (condição `if` das regras do roteiro). */
+  runFlags: string[];
   /** Trava contra recursão enquanto o roteiro executa. */
   scripting?: boolean;
 }
