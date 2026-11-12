@@ -2,7 +2,7 @@
 
 > História implementada na v0.35.0 ([README.md](README.md)). Números provisórios: ajustar com `npm run sim:jornada`.
 
-Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A dificuldade multiplica HP, ataques, resistências e a cura das técnicas dos inimigos por uma força própria da Jornada (`enemyStrength`): 98/120/136/136%. O fator entra uma vez só: antes da v0.51.0 entrava também no dano final. No [modo infinito](run.md#modo-infinito) do Caminho Ninja (só no Hardcore), o ciclo multiplica por cima: × 1,5 ^ ciclo. Comportamento (IA): [personagens.md](personagens.md#comportamento).
+Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A dificuldade multiplica HP, ataques, resistências e a cura das técnicas dos inimigos por uma força própria da Jornada (`enemyStrength`): 100/125/140/150% (Fácil/Médio/Difícil/Hardcore, v0.65.0; antes 98/120/136/136%). Na **História**, a força ainda é multiplicada por 1,1 (`storyStrength`, v0.65.0): a trilha fixa e os aliados fortes deixavam a História bem mais fácil que o Caminho Ninja. O fator entra uma vez só: antes da v0.51.0 entrava também no dano final. No [modo infinito](run.md#modo-infinito) do Caminho Ninja (só no Hardcore), o ciclo multiplica por cima: × 1,5 ^ ciclo. Comportamento (IA): [personagens.md](personagens.md#comportamento).
 
 ## Fichas
 

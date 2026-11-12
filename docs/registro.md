@@ -66,6 +66,27 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Jornada mais forte e classes niveladas (v0.65.0, 12/11/2026)
+
+Pedido do usuário (item 12): tudo um pouco mais forte na Jornada, sobretudo a História, e o Hardcore acima do Difícil. Números escolhidos pelo usuário entre conjuntos simulados:
+- força dos inimigos (`enemyStrength`) 98/120/136/136% → **100/125/140/150%** (Fácil/Médio/Difícil/Hardcore);
+- multiplicador novo da História (`storyStrength`) **× 1,1** por cima da dificuldade;
+- ajuste por classe (`jornada.hero.adjust`), pedido do usuário depois de ver o desnível: Comum +15 HP, +4 chakra, +1 taijutsu e +1 ninjutsu; Prodígio −10 HP e −3 taijutsu (alvo dele: perto de 70% no Médio); o ajuste do Hyuuga da v0.64.0 saiu (o −1 de taijutsu e −5 de HP testados anulavam o +1 e +5).
+
+A curva é muito sensível: o Médio de 1,2 para 1,3, igual para tudo, derrubava a História para 77% e o Comum para 38% (300 runs). Por isso a História ganhou multiplicador próprio e as classes, ajuste próprio. O experimento com as fichas trocadas só na memória não recalculava o crescimento por nível; com o crescimento real, −4 de taijutsu levava o Prodígio a 56%, e o ajuste final ficou em −3.
+
+Simulação (`npm run sim:jornada -- 1000 2`), vitória v0.64.0 → v0.65.0:
+
+| Run | Fácil | Médio | Difícil | Hardcore |
+|---|---|---|---|---|
+| História | 100 → 99 | 92 → **62** | 60 → 18 | 54 → 3 |
+| Comum | 98 → 98 | 62 → **60** | 26 → 22 | 21 → 7 |
+| Prodígio | 100 → 100 | 95 → **70** | 65 → 29 | 60 → 8 |
+| Uchiha | 100 → 99 | 72 → **61** | 29 → 19 | 22 → 4 |
+| Hyuuga | 100 → 99 | 82 → **61** | 42 → 26 | 35 → 7 |
+
+O Médio ficou todo no alvo (60–70%). O Hardcore ficou bem difícil (3 a 8%), dentro do que o usuário já aceitou para o modo.
+
 ## Origens e classes numa base só (v0.64.0, 12/11/2026)
 
 Pedido do usuário (item 22, unificação completa com status derivados; item 10, tabelas geradas). As classes do Caminho Ninja saem do bloco `jornada` das origens (`src/data/lineages.ts`) e os status do protagonista vêm da fórmula `originScale` (ataques × 0,75, resistências × 0,7, HP e chakra × 1, speed + 1; crescimento por nível proporcional ao status inicial). Decidido sozinho: os números da fórmula (calibrados pela média dos protagonistas de antes), deixar de fora os personagens da História e as fichas de suporte, e a lore das origens sair da tabela para uma lista (a tabela agora é gerada).

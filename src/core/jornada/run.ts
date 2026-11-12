@@ -314,6 +314,9 @@ export function stopRng(run: JRun, salt = 0): Rng {
 /** Força dos inimigos no ciclo atual (multiplica por cima da dificuldade): multiplicador ^ ciclo. */
 export const cycleEnemyMult = (run: JRun, data: JornadaData) => data.j.infinite.enemyCycleMult ** (run.cycle ?? 0);
 
+/** Força dos inimigos da run por cima da dificuldade: o ciclo do infinito e, na História, `storyStrength` (v0.65.0). */
+export const runEnemyMult = (run: JRun, data: JornadaData) => cycleEnemyMult(run, data) * (run.mode === 'canon' ? data.j.storyStrength : 1);
+
 // ---------------------------------------------------------------------------
 // Estágio e parada
 
@@ -538,7 +541,7 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
   });
   const opening = relicDefs(run, data).reduce((a, r) => a + (r.openingDamage ?? 0), 0);
   const foes = stop.enemies.map((id) => {
-    const seed = enemySeed(id, run.difficulty, data, cycleEnemyMult(run, data));
+    const seed = enemySeed(id, run.difficulty, data, runEnemyMult(run, data));
     return opening ? { ...seed, hp: Math.max(1, seed.hp - opening) } : seed;
   });
   return { allies, enemies: foes, win: stop.win ?? { kind: 'defeatAll' }, pills: run.bag.reviveKit };
