@@ -28,6 +28,11 @@ export const lineages: LineageDef[] = [
     elementalPotential: 'full',
     passive: 'determination',
     active: 'effort',
+    // Caminho Ninja: classe Comum; sem elemento no sorteio, o protagonista vira o do Prodígio.
+    jornada: {
+      hero: { id: 'commonNinja', techniques: ['jStrike', 'jShuriken', 'jBunshin', 'jEffort'], spareTechniques: ['jKunai'], ai: 'striker', portrait: 'ninja:common' },
+      class: { id: 'common', noElementOrigin: 'taijutsuProdigy', supports: ['leafGeninA', 'leafGeninB', 'leafMedic'], supportNames: ['daichi', 'hana', 'kenta', 'yui', 'sora', 'aiko', 'haruto', 'rin', 'takumi', 'mei', 'riku', 'nanami'] },
+    },
   },
   {
     id: 'nara',
@@ -104,6 +109,10 @@ export const lineages: LineageDef[] = [
     active: 'gates',
     startingTechniques: ['leafHurricane'],
     forbiddenAttackTypes: ['ninjutsu', 'genjutsu'],
+    // Caminho Ninja: o protagonista da classe Comum quando o sorteio não dá elemento.
+    jornada: {
+      hero: { id: 'prodigy', techniques: ['jStrike', 'jLeafWhirlwind', 'jShuriken', 'jGates'], ai: 'striker', portrait: 'ninja:taijutsuProdigy' },
+    },
   },
   {
     id: 'uchiha',
@@ -117,6 +126,11 @@ export const lineages: LineageDef[] = [
     passive: 'genjutsuResistance',
     startingTechniques: ['basicGenjutsu', 'painIllusion'],
     dojutsu: 'sharingan',
+    // Caminho Ninja: sempre e só Fogo (a regra da origem).
+    jornada: {
+      hero: { id: 'uchihaNinja', techniques: ['jStrike', 'jShuriken', 'jFireball', 'jSharingan', 'jBunshin'], ai: 'striker', portrait: 'ninja:uchiha' },
+      class: { id: 'uchiha', unlock: 'j_unlockUchiha', supports: ['uchihaGenin', 'uchihaGeninB'], supportNames: ['ren', 'akane', 'hikaru', 'tetsu', 'kaede', 'ryo', 'suzu', 'jin', 'kiyomi', 'nao'] },
+    },
   },
   {
     id: 'hyuuga',
@@ -129,6 +143,11 @@ export const lineages: LineageDef[] = [
     passive: 'preciseFist',
     startingTechniques: ['chakraBlockStrike'],
     dojutsu: 'byakugan',
+    // Caminho Ninja: natureza silenciosa, sem ninjutsu elemental (Byakugan e Punho Suave bastam).
+    jornada: {
+      hero: { id: 'hyuugaNinja', techniques: ['jStrike', 'jGentlePalm', 'jShuriken', 'jByakugan', 'jBunshin'], ai: 'striker', portrait: 'ninja:hyuuga' },
+      class: { id: 'hyuuga', unlock: 'j_unlockHyuuga', supports: ['hyuugaGenin', 'hyuugaGeninB'], supportNames: ['mio', 'sei', 'haru', 'yuki', 'kenji', 'emi', 'tomo', 'aya', 'shun', 'mai'] },
+    },
   },
   {
     id: 'uzumaki',

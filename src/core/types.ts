@@ -1,4 +1,5 @@
 // Tipos compartilhados entre core, dados e simulação.
+import type { OriginJornada } from './jornada/classes';
 
 export type Element = 'fire' | 'wind' | 'lightning' | 'earth' | 'water';
 
@@ -100,6 +101,8 @@ export interface LineageDef {
   taijutsuGrowth?: number;
   /** Vontades do Fogo a mais no início da run (Herdeiro do fundador, Senju). */
   extraRevives?: number;
+  /** Caminho Ninja (base única, v0.64.0): protagonista e classe que a origem abre; os status vêm de `stats`. */
+  jornada?: OriginJornada;
 }
 
 /** `'affinity'` = usa o elemento principal do jogador. */

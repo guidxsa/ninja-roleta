@@ -130,6 +130,18 @@ export const jornadaBalance = {
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
   minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },
 
+  // Base única (docs/jornada/classes.md#status-derivados, v0.64.0): o protagonista de cada classe sai dos status da
+  // origem do Roleta. Ataques × offense, resistências × resistance, HP e chakra × hp/chakra (para baixo), speed +
+  // speedBonus. Crescimento por nível em fração do status inicial do protagonista. Proposta para o usuário.
+  originScale: {
+    offense: 0.75,
+    resistance: 0.7,
+    hp: 1,
+    chakra: 1,
+    speedBonus: 1,
+    growth: { hp: 0.08, chakra: 0.1, speed: 0.05, offense: 0.1, resistance: 0.08 },
+  },
+
   // Loja sempre aberta (docs/jornada/run.md#loja): preço × (1 + estágios passados × perStage), e com a maldição do
   // mercador também + compras desde a maldição × perPurchase (v0.62.0).
   // `refresh`: atualizar as relíquias custa base + step × usos no estágio (volta à base no estágio novo; proposta).
