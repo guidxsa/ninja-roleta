@@ -84,11 +84,15 @@ export const enemies: EnemyDef[] = [
     atPct: 0.5,
     damageMult: 1.25,
   }),
-  e('sasukeFinal', 330, 50, 16, [15, 16, 8], [10, 10], 'fire', ['jeSasukeChidori', 'jeDragonFlame', 'jeSasukeLion', 'jeSasukeFireball'], 'striker', 'ninja:uchiha', {
-    kind: 'enrage',
-    atPct: 0.5,
-    damageMult: 1.3,
-  }),
+  // Vale do Fim: o selo nível 2 entra pelo roteiro (forma), por cima da fúria.
+  {
+    ...e('sasukeFinal', 330, 50, 16, [15, 16, 8], [10, 10], 'fire', ['jeSasukeChidori', 'jeDragonFlame', 'jeSasukeLion', 'jeSasukeFireball'], 'striker', 'ninja:uchiha', {
+      kind: 'enrage',
+      atPct: 0.5,
+      damageMult: 1.3,
+    }),
+    forms: [{ id: 'curseMark2', statMult: 1.2, healPct: 0.2 }],
+  },
 ];
 
 export const enemiesById: Record<string, EnemyDef> = Object.fromEntries(enemies.map((x) => [x.id, x]));

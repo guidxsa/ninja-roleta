@@ -229,7 +229,8 @@ describe('História canônica: Ondas (v0.67.0)', () => {
     const end = playOut(startBattle(battleSetup(run, data), data, createRng(5)), data, createRng(5));
     expect(end.fighters.some((f) => f.defId === 'kakashiAlly' && f.guest)).toBe(true);
     expect(end.fighters.find((f) => f.defId === 'sakura')!.gone).toBe(true);
-    if (end.status === 'won') {
+    expect(end.status).toBe('won');
+    {
       const next = finishFight(run, end, data).run;
       expect(next.members.sakura?.hp ?? 1).toBeGreaterThan(0);
       expect(next.members.kakashiAlly).toBeUndefined();
@@ -254,7 +255,8 @@ describe('História canônica: Exame (v0.67.0)', () => {
     const run = { ...newRun(3, 'easy', data), ...stopAt('exam', 'orochimaruForest') };
     const end = playOut(startBattle(battleSetup(run, data), data, createRng(2)), data, createRng(2));
     expect(says(end)).toContain('orochiStart');
-    if (end.status === 'won') expect(finishFight(run, end, data).run.flags).toContain('curseMark');
+    expect(end.status).toBe('won');
+    expect(finishFight(run, end, data).run.flags).toContain('curseMark');
   });
 
   it('Trio do Som: o selo do Sasuke só desperta com a marca', () => {
@@ -275,7 +277,8 @@ describe('História canônica: Exame (v0.67.0)', () => {
     expect(shukaku).toBeDefined();
     expect(end.fighters.find((f) => f.defId === 'gaara')!.gone).toBe(true);
     expect(end.fighters.some((f) => f.defId === 'gamabuntaAlly' && f.side === 'ally')).toBe(true);
-    if (end.status === 'won') expect(shukaku!.down).toBe(true);
+    expect(end.status).toBe('won');
+    expect(shukaku!.down).toBe(true);
   });
 
   it('o contrato com os sapos dá o Kuchiyose no Jutsu, qualquer que seja a escolha', () => {
@@ -284,6 +287,48 @@ describe('História canônica: Exame (v0.67.0)', () => {
     for (const [opt, won] of [['summon', false], ['peek', true]] as const) {
       const next = resolveEvent(at, opt, won, data).run;
       expect(heroKnown(next, data)).toContain('jKuchiyose');
+    }
+  });
+});
+
+describe('História canônica: Sannin e Resgate (v0.67.0)', () => {
+  it('o treino com o Jiraiya dá o Rasengan', () => {
+    const at = { ...newRun(3, 'normal', data), ...stopAt('sannin', 'rasenganTraining') };
+    expect(heroKnown(at, data)).not.toContain('jRasengan');
+    expect(heroKnown(resolveEvent(at, 'bet', true, data).run, data)).toContain('jRasengan');
+  });
+
+  it('Kabuto: aguenta com 1 de HP até o Rasengan, e a IA usa o Rasengan para fechar', () => {
+    const run = { ...newRun(3, 'easy', data), ...stopAt('sannin', 'kabuto'), level: 8 };
+    const s = battleSetup(run, data);
+    expect(s.allies[0]!.techniques).toContain('jRasengan');
+    const end = playOut(startBattle(s, data, createRng(9)), data, createRng(9));
+    expect(end.status).toBe('won');
+    {
+      const kabutoDown = end.log.findIndex((e) => e.type === 'down' && end.fighters.find((f) => f.uid === e.target)?.defId === 'kabuto');
+      const lastTech = [...end.log.slice(0, kabutoDown)].reverse().find((e) => e.type === 'tech');
+      expect(lastTech).toMatchObject({ techId: 'jRasengan' });
+    }
+  });
+
+  it('Kimimaro: o Naruto começa sozinho, o Lee chega na rodada 3 e o Gaara na 5', () => {
+    const run = { ...newRun(3, 'easy', data), ...stopAt('retrieval', 'kimimaro'), level: 9 };
+    const s0 = startBattle(battleSetup(run, data), data, createRng(3));
+    expect(s0.fighters.filter((f) => f.side === 'ally').map((f) => f.defId)).toEqual(['naruto']);
+    const end = playOut(s0, data, createRng(3));
+    const entered = end.log.filter((e) => e.type === 'enter').map((e) => (e.type === 'enter' ? end.fighters.find((f) => f.uid === e.uid)!.defId : ''));
+    if (end.round >= 5) expect(entered).toEqual(['lee', 'gaaraAlly']);
+  });
+
+  it('Vale do Fim: selo nível 2 e manto de uma cauda; a 20% o Sasuke parte e a run vence', () => {
+    // No jogo, o Naruto chega ao Vale já com o Rasengan (marco dos Sannin).
+    const run = { ...newRun(3, 'easy', data), ...stopAt('retrieval', 'valley'), level: 10, learned: ['jRasengan'] };
+    const end = playOut(startBattle(battleSetup(run, data), data, createRng(1)), data, createRng(1));
+    expect(end.status).toBe('won');
+    {
+      expect(end.fighters.find((f) => f.defId === 'sasukeFinal')!.form).toBe('curseMark2');
+      expect(end.log.at(-1)).toMatchObject({ type: 'end', scripted: true });
+      expect(says(end)).toContain('valleyEnd');
     }
   });
 });

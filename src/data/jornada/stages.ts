@@ -55,10 +55,12 @@ export const stages: StageDef[] = [
         team: ['sasuke'],
         script: [
           { when: { on: 'start' }, do: [{ do: 'say', who: 'haku', line: 'hakuStart' }] },
-          { when: { on: 'hpBelow', who: 'haku', pct: 0.55 }, do: [{ do: 'say', who: 'sasuke', line: 'hakuSasuke' }, { do: 'knock', who: 'sasuke' }] },
+          // Se o Sasuke ainda estiver de pé, ele se joga na frente do Naruto; se já caiu, a regra seguinte já disparou.
+          { when: { on: 'hpBelow', who: 'haku', pct: 0.55 }, do: [{ do: 'knock', who: 'sasuke' }] },
           {
             when: { on: 'down', who: 'sasuke' },
             do: [
+              { do: 'say', who: 'sasuke', line: 'hakuSasuke' },
               { do: 'say', who: 'naruto', line: 'hakuRage' },
               { do: 'form', who: 'naruto', form: 'kyuubi' },
               { do: 'flag', id: 'kyuubiAwakened' },
@@ -160,7 +162,19 @@ export const stages: StageDef[] = [
       { kind: 'event', id: 'rasenganTraining', event: 'rasenganTraining' },
       { kind: 'rest', id: 'rest4' },
       { kind: 'story', id: 'tanzaku', enemies: ['orochimaru', 'kabuto'], team: ['jiraiya', 'tsunade'] },
-      { kind: 'boss', id: 'kabuto', enemies: ['kabuto'], team: [] },
+      // Kabuto: só o Rasengan o derruba (finalizador).
+      {
+        kind: 'boss',
+        id: 'kabuto',
+        enemies: ['kabuto'],
+        team: [],
+        win: { kind: 'finisher', target: 'kabuto', technique: 'jRasengan' },
+        script: [
+          { when: { on: 'start' }, do: [{ do: 'say', who: 'kabuto', line: 'kabutoStart' }] },
+          { when: { on: 'hpBelow', who: 'kabuto', pct: 0.25 }, do: [{ do: 'say', who: 'kabuto', line: 'kabutoHeal' }] },
+          { when: { on: 'tech', tech: 'jRasengan', who: 'naruto' }, do: [{ do: 'say', who: 'naruto', line: 'kabutoRasengan' }] },
+        ],
+      },
     ],
   },
   {
@@ -176,6 +190,7 @@ export const stages: StageDef[] = [
         enemies: ['sasukeHospital'],
         team: [],
         win: { kind: 'survive', rounds: 5, target: 'sasukeHospital', pct: 0.5 },
+        script: [{ when: { on: 'start' }, do: [{ do: 'say', who: 'sasukeHospital', line: 'hospitalStart' }] }],
       },
       { kind: 'event', id: 'sasukeLeft', scene: 'konoha', event: 'sasukeLeft' },
       { kind: 'fight', id: 'soundAmbush', enemies: ['soundNinja', 'snake', 'soundNinja'], team: ['shikamaru', 'kibaAlly'] },
@@ -183,9 +198,42 @@ export const stages: StageDef[] = [
       { kind: 'treasure', id: 'treasure3' },
       { kind: 'elite', id: 'kidomaruTayuya', enemies: ['kidomaru', 'tayuya'], team: ['nejiAlly', 'shikamaru'] },
       { kind: 'elite', id: 'sakon', enemies: ['sakon', 'snake'], team: ['kibaAlly', 'nejiAlly'] },
-      { kind: 'story', id: 'kimimaro', enemies: ['kimimaro'], team: ['lee', 'gaaraAlly'] },
+      // Kimimaro: o Naruto começa sozinho, o Lee chega, depois o Gaara; a doença vence o Kimimaro.
+      {
+        kind: 'story',
+        id: 'kimimaro',
+        enemies: ['kimimaro'],
+        team: [],
+        win: { kind: 'survive', rounds: 8, target: 'kimimaro', pct: 0.3 },
+        script: [
+          { when: { on: 'start' }, do: [{ do: 'say', who: 'kimimaro', line: 'kimimaroStart' }] },
+          { when: { on: 'round', round: 3 }, do: [{ do: 'say', who: 'lee', line: 'kimimaroLee' }, { do: 'enter', who: 'lee' }] },
+          { when: { on: 'round', round: 5 }, do: [{ do: 'say', who: 'gaaraAlly', line: 'kimimaroGaara' }, { do: 'enter', who: 'gaaraAlly' }] },
+        ],
+      },
       { kind: 'rest', id: 'rest3' },
-      { kind: 'boss', id: 'valley', scene: 'valleyEnd', enemies: ['sasukeFinal'], team: [] },
+      // Vale do Fim: selo nível 2 contra o manto de uma cauda; no fim, o choque e o Sasuke parte.
+      {
+        kind: 'boss',
+        id: 'valley',
+        scene: 'valleyEnd',
+        enemies: ['sasukeFinal'],
+        team: [],
+        script: [
+          { when: { on: 'start' }, do: [{ do: 'say', who: 'sasukeFinal', line: 'valleyStart' }] },
+          { when: { on: 'hpBelow', who: 'sasukeFinal', pct: 0.6 }, do: [{ do: 'say', who: 'sasukeFinal', line: 'valleyCurse' }, { do: 'form', who: 'sasukeFinal', form: 'curseMark2' }] },
+          { when: { on: 'hpBelow', who: 'naruto', pct: 0.45 }, do: [{ do: 'say', who: 'naruto', line: 'valleyKyuubi' }, { do: 'form', who: 'naruto', form: 'oneTail' }] },
+          {
+            when: { on: 'hpBelow', who: 'sasukeFinal', pct: 0.2 },
+            do: [
+              { do: 'say', who: 'naruto', line: 'valleyRasengan' },
+              { do: 'say', who: 'sasukeFinal', line: 'valleyChidori' },
+              { do: 'say', who: 'narrator', line: 'valleyEnd' },
+              { do: 'end', status: 'won' },
+            ],
+          },
+        ],
+      },
     ],
   },
 ];

@@ -65,7 +65,11 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
   if (w.kind === 'finisher' && f.side === 'ally') {
     const target = foes.find((x) => x.defId === w.target);
     const finisher = tech((t) => t.id === w.technique);
-    if (target && finisher && target.hp <= target.maxHp * 0.3) return { kind: 'tech', techId: finisher.id, target: target.uid };
+    if (target && target.hp <= target.maxHp * 0.3) {
+      if (finisher) return { kind: 'tech', techId: finisher.id, target: target.uid };
+      // Conhece a técnica, mas falta chakra: concentra para fechar no turno seguinte.
+      if (f.techniques.includes(w.technique) && !f.cooldowns[w.technique]) return { kind: 'rest' };
+    }
   }
   // Só quem tem a técnica levanta: antes de tudo, e o protagonista primeiro.
   const revive = tech((t) => Boolean(t.reviveHpPct));

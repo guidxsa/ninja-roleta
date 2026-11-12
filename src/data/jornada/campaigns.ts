@@ -16,6 +16,8 @@ export const campaigns: Record<string, CampaignDef> = {
       { who: 'sasuke', learn: 'jChidori', at: { stage: 1 } },
       // Contrato com os sapos (Exame): Kuchiyose no Jutsu, com o sapo sorteado.
       { who: 'naruto', learn: 'jKuchiyose', at: { stop: 'toadSummon' } },
+      // Treino com o Jiraiya (Sannin): o Rasengan, que derruba o Kabuto.
+      { who: 'naruto', learn: 'jRasengan', at: { stop: 'rasenganTraining' } },
     ],
   },
 };
