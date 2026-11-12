@@ -79,6 +79,7 @@ import {
   buyCleanse,
   isCursed,
   shopWeights,
+  runEnemyMult,
 } from '../src/core/jornada/run';
 import { chooseAiAction, chooseAiActive } from '../src/core/jornada/ai';
 import { talentMaxRank, talentState, treeComplete, type TalentNode } from '../src/core/jornada/talents';
@@ -490,6 +491,16 @@ describe('run da Jornada', () => {
     expect(next.ryo).toBe(data.j.rewards.story.ryo);
     expect(next.stopIndex).toBe(1);
     expect(next.cleared).toEqual(['mizuki']);
+  });
+
+  it('a História tem força própria por cima da dificuldade (v0.65.0)', () => {
+    const canon = newRun(1, 'normal', data);
+    const generic = { ...canon, mode: 'generic' as const };
+    expect(runEnemyMult(canon, data)).toBeCloseTo(data.j.storyStrength);
+    expect(runEnemyMult(generic, data)).toBe(1);
+    const foe = battleSetup(canon, data).enemies[0]!;
+    expect(foe.maxHp).toBe(enemySeed(foe.defId!, 'normal', data, data.j.storyStrength).maxHp);
+    expect(data.j.enemyStrength.hardcore).toBeGreaterThan(data.j.enemyStrength.hard);
   });
 
   it('o XP da vitória que a tela mostra já tem os bônus de talentos e relíquias', () => {

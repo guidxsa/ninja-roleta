@@ -125,7 +125,11 @@ export const jornadaBalance = {
 
   // Força dos inimigos da Jornada por dificuldade (própria: o Roleta usa a dele). Multiplica HP, ataques e resistências.
   // Calibrada com o bot na v0.51.0 (docs/registro.md); antes de a Jornada ter a própria, o dano contava o fator duas vezes.
-  enemyStrength: { easy: 0.98, normal: 1.2, hard: 1.36, hardcore: 1.36 } as Record<Difficulty, number>,
+  // v0.65.0 (aprovado pelo usuário): tudo um pouco mais forte, e o Hardcore separado do Difícil.
+  enemyStrength: { easy: 1, normal: 1.25, hard: 1.4, hardcore: 1.5 } as Record<Difficulty, number>,
+  // História: multiplica por cima da dificuldade (v0.65.0). A trilha fixa e os aliados fortes deixavam a História bem
+  // mais fácil que o Caminho Ninja na mesma dificuldade.
+  storyStrength: 1.1,
 
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
   minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },
