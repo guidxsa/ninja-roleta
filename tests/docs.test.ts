@@ -81,4 +81,10 @@ describe('tabelas geradas dos docs (v0.64.0)', () => {
     expect(generatedBlock(next, 'x')).toBe('novo');
     expect(() => replaceGenerated('sem marcador', 'x', 'novo')).toThrow();
   });
+
+  it('não depende da quebra de linha do arquivo (CRLF no Windows)', () => {
+    const doc = 'antes\r\n<!-- gerado:x -->\r\na\r\nb\r\n<!-- /gerado -->\r\ndepois';
+    expect(generatedBlock(doc, 'x')).toBe('a\nb');
+    expect(replaceGenerated(doc, 'x', 'c\nd')).toBe('antes\r\n<!-- gerado:x -->\r\nc\r\nd\r\n<!-- /gerado -->\r\ndepois');
+  });
 });
