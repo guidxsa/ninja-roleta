@@ -5,7 +5,7 @@ import type { Difficulty } from '../difficulty';
 import { createRng, type Rng } from '../rng';
 import type { Element } from '../types';
 import { allyResults, emptyMods, enemySeed, mergeMods, type BattleSetup, type FighterSeed } from './battle';
-import type { JornadaData } from './data';
+import type { JornadaData, StoryGrant } from './data';
 import { eventOptions, SHOP_CURSE, type EventEffect } from './events';
 import { generateMap, mapNode, nextNodes, type StageMap } from './map';
 import { bossChoices, dropRelic, rollRelic, rollRelics, type RelicDef } from './relics';
@@ -448,11 +448,31 @@ function elementBasic(run: JRun, id: string, data: JornadaData): string[] {
   return el ? [data.elementLines[el][0]] : [];
 }
 
-/** Técnicas que o protagonista conhece (kit inicial + elemento + segundo elemento + talentos). */
+/** Marco alcançado: o estágio já chegou, ou a parada já passou (na História; a run vencida alcançou todos). */
+function grantReached(run: JRun, at: StoryGrant['at'], data: JornadaData): boolean {
+  if ('stage' in at) return run.stageIndex >= at.stage;
+  if (run.status === 'victory') return true;
+  const stages = storyStages(run, data);
+  const si = stages.findIndex((st) => st.stops.some((s) => s.id === at.stop));
+  if (si < 0) return false;
+  const pi = stages[si]!.stops.findIndex((s) => s.id === at.stop);
+  return run.stageIndex > si || (run.stageIndex === si && run.stopIndex > pi);
+}
+
+/** Técnicas que a campanha já deu a este personagem (marcos da história; só na História). */
+export function grantedTechniques(run: JRun, who: string, data: JornadaData): string[] {
+  if (run.mode !== 'canon') return [];
+  const grants = data.campaigns[run.campaign ?? 'naruto']?.grants ?? [];
+  return grants.filter((g) => g.who === who && grantReached(run, g.at, data)).map((g) => g.learn);
+}
+
+/** Técnicas que o protagonista conhece (kit inicial + elemento + segundo elemento + marcos da história + talentos). */
 export function heroKnown(run: JRun, data: JornadaData): string[] {
   const second = run.secondElement ? [data.elementLines[run.secondElement][0]] : [];
   const def = data.characters[run.hero]!;
-  const known = [...new Set([...def.techniques, ...elementBasic(run, run.hero, data), ...second, ...(def.spareTechniques ?? []), ...run.learned])];
+  const known = [
+    ...new Set([...def.techniques, ...elementBasic(run, run.hero, data), ...second, ...(def.spareTechniques ?? []), ...grantedTechniques(run, run.hero, data), ...run.learned]),
+  ];
   // A forma evoluída toma o lugar da anterior (3 tomoe no lugar do Sharingan).
   const replaced = new Set(known.map((id) => data.techniques[id]?.evolves));
   return known.filter((id) => !replaced.has(id));
@@ -463,12 +483,14 @@ export const heroActives = (run: JRun, data: JornadaData) => heroKnown(run, data
 /** Técnicas que podem entrar no moveset. */
 export const heroMovable = (run: JRun, data: JornadaData) => heroKnown(run, data).filter((id) => !data.techniques[id]?.active);
 
-/** Técnicas de um aliado até o estágio atual. */
+/** Técnicas de um aliado até agora (ficha + elemento + marcos da história). */
 export function allyTechniques(run: JRun, id: string, data: JornadaData): string[] {
-  const extra = Object.entries(data.stageTechniques[id] ?? {})
-    .filter(([stage]) => Number(stage) <= run.stageIndex)
-    .flatMap(([, list]) => list);
-  return [...data.characters[id]!.techniques, ...elementBasic(run, id, data), ...extra];
+  return [...new Set([...data.characters[id]!.techniques, ...elementBasic(run, id, data), ...grantedTechniques(run, id, data)])];
+}
+
+/** Técnica nova do protagonista entra no moveset se houver espaço (talento, evento ou marco). */
+function addToMoveset(run: JRun, id: string, data: JornadaData): void {
+  if (!data.techniques[id]?.active && !run.moveset.includes(id) && run.moveset.length < MOVESET_SIZE) run.moveset.push(id);
 }
 
 const ownedTalents = (run: JRun, data: JornadaData) => run.talents.map((id) => data.talents.find((t) => t.id === id)).filter((t) => t !== undefined);
@@ -544,7 +566,20 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
     const seed = enemySeed(id, run.difficulty, data, runEnemyMult(run, data));
     return opening ? { ...seed, hp: Math.max(1, seed.hp - opening) } : seed;
   });
-  return { allies, enemies: foes, win: stop.win ?? { kind: 'defeatAll' }, pills: run.bag.reviveKit };
+  // Roteiro: os lutadores que ele pode pôr na luta (inimigos com a força da run; aliados com a ficha da run).
+  const reserveIds = [...new Set((stop.script ?? []).flatMap((r) => r.do.flatMap((a) => (a.do === 'enter' ? [a.who] : a.do === 'replace' ? [a.with] : []))))];
+  const reserve = reserveIds.map((id) =>
+    data.enemies[id]
+      ? { side: 'enemy' as const, seed: enemySeed(id, run.difficulty, data, runEnemyMult(run, data)) }
+      : { side: 'ally' as const, seed: memberSeed(run, id, data) },
+  );
+  return {
+    allies,
+    enemies: foes,
+    win: stop.win ?? { kind: 'defeatAll' },
+    pills: run.bag.reviveKit,
+    ...(stop.script ? { script: stop.script, reserve } : {}),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -675,6 +710,8 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   const stop = currentStop(run, data)!;
   if (!isFight(stop)) throw new Error('a parada atual não é uma luta');
   run.stats.fights++;
+  // Marcas que o roteiro deixou (docs/jornada/roteiro.md).
+  if (battle.flags?.length) run.flags = [...new Set([...run.flags, ...battle.flags])];
   for (const e of battle.log) if (e.type === 'damage' && e.uid.startsWith('a') && e.amount > run.stats.bestHit) run.stats.bestHit = e.amount;
   // Pílulas usadas sozinhas pelo protagonista saem da bolsa aqui; as usadas pelo botão, a tela já descontou.
   const autoPills = battle.log.filter((e) => e.type === 'revive' && e.pill).length;
@@ -736,6 +773,13 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
 /** Vai para a próxima parada (ou o próximo estágio, ou a vitória). */
 function advanceStop(run: JRun, data: JornadaData): void {
   if (run.mode === 'generic') return advanceNode(run, data);
+  const before = grantedTechniques(run, run.hero, data);
+  stepStop(run, data);
+  // Marco novo do protagonista entra no moveset se houver espaço.
+  for (const id of grantedTechniques(run, run.hero, data)) if (!before.includes(id)) addToMoveset(run, id, data);
+}
+
+function stepStop(run: JRun, data: JornadaData): void {
   run.stopIndex++;
   if (run.stopIndex < currentStage(run, data).stops.length) return;
   run.stageIndex++;
@@ -1026,6 +1070,10 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
       if (!isCursed(run)) run.cursedPurchases = 0;
       run.flags = [...new Set([...run.flags, SHOP_CURSE])];
     } else if (e.kind === 'cleanse') liftCurse(run);
+    else if (e.kind === 'learn' && !run.learned.includes(e.technique) && !heroKnown(run, data).includes(e.technique)) {
+      run.learned.push(e.technique);
+      addToMoveset(run, e.technique, data);
+    }
     else if (e.kind === 'relic') {
       relic = dropRelic(data.relics, run.relics, { [e.tier]: 1 }, stopRng(run, 9));
       if (relic) run = gainRelic(run, relic, data);
@@ -1076,8 +1124,7 @@ export function buyTalent(prev: JRun, nodeId: string, unlocked: ReadonlySet<stri
   const learn = talentLearns(run, node.id, data);
   if (learn && !run.learned.includes(learn)) {
     run.learned.push(learn);
-    // Técnica nova entra no moveset se houver espaço.
-    if (!data.techniques[learn]?.active && run.moveset.length < MOVESET_SIZE) run.moveset.push(learn);
+    addToMoveset(run, learn, data);
   }
   // A árvore fechou: o que sobrou vira ryō.
   settleTalentPoints(run, data);

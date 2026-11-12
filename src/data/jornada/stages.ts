@@ -11,7 +11,18 @@ export const stages: StageDef[] = [
     stops: [
       { kind: 'story', id: 'mizuki', scene: 'konoha', enemies: ['mizuki'], team: [] },
       { kind: 'event', id: 'graduation', scene: 'konoha', event: 'graduation' },
-      { kind: 'story', id: 'bells', scene: 'konoha', enemies: ['kakashi'], win: { kind: 'hpThreshold', target: 'kakashi', pct: 0.5 } },
+      // Teste do sino: o molde do roteiro de luta (docs/jornada/roteiro.md, v0.66.0).
+      {
+        kind: 'story',
+        id: 'bells',
+        scene: 'konoha',
+        enemies: ['kakashi'],
+        win: { kind: 'hpThreshold', target: 'kakashi', pct: 0.5 },
+        script: [
+          { when: { on: 'start' }, do: [{ do: 'say', who: 'kakashi', line: 'bellsStart' }] },
+          { when: { on: 'hpBelow', who: 'kakashi', pct: 0.5 }, do: [{ do: 'say', who: 'naruto', line: 'bellsGot' }] },
+        ],
+      },
       { kind: 'fight', id: 'thugs', enemies: ['gatoThug', 'gatoThug', 'gatoThug'] },
       { kind: 'event', id: 'tazuna', event: 'tazuna' },
       { kind: 'elite', id: 'demonBrothers', enemies: ['gozu', 'meizu'] },

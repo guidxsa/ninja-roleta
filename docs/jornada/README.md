@@ -10,6 +10,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 | Arquivo | Conteúdo |
 |---|---|
 | [historia.md](historia.md) | História: estágios, paradas, quem luta, vitórias especiais, eventos |
+| [roteiro.md](roteiro.md) | Roteiro de luta (gatilhos, falas, formas, troca de fase), marcos da história e finalizador |
 | [run.md](run.md) | Tipos de run, paradas, eventos e minijogos, dificuldade, salvamento, mapa ramificado, modo infinito |
 | [combate.md](combate.md) | Combate de equipe, ordem, ações, efeitos, levantar, bolsa, moveset, interface |
 | [personagens.md](personagens.md) | Fichas, técnicas e comportamento automático dos aliados |

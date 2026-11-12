@@ -1,6 +1,7 @@
 // Trilha da História (docs/jornada/historia.md): cada estágio é uma sequência fixa de paradas, sem
 // ramificação. O mapa ramificado é do Caminho Ninja (ainda não implementadas).
 import type { Element } from '../types';
+import type { ScriptRule } from './script';
 import type { WinCondition } from './types';
 
 export type FightKind = 'story' | 'fight' | 'elite' | 'boss';
@@ -13,6 +14,8 @@ export type StopDef = (
       /** Suportes desta luta (ids); `[]` = o Naruto sozinho. Sem o campo, a equipe do estágio. */
       team?: string[];
       win?: WinCondition;
+      /** Roteiro da luta: gatilhos e ações (docs/jornada/roteiro.md). */
+      script?: ScriptRule[];
     }
   | { kind: 'event'; id: string; event: string }
   | { kind: 'rest'; id: string }

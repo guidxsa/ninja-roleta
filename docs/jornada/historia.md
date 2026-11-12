@@ -84,7 +84,8 @@ Runs salvas quando os dois arcos eram um estágio só voltam na mesma parada (`s
 
 ## Vitórias especiais
 
-- **Teste do sino**: levar o HP do Kakashi a 50% ou menos vence (pegar o sino).
+- **Teste do sino**: levar o HP do Kakashi a 50% ou menos vence (pegar o sino). Desde a v0.66.0 a luta tem roteiro (falas de abertura e do sino; [roteiro.md](roteiro.md)).
+- **Finalizador**: o alvo só cai com uma técnica ([roteiro.md](roteiro.md#condições-de-vitória)). Nenhuma parada usa ainda; entra na v0.67.0.
 - **Hospital**: aguentar 5 rodadas de pé, ou levar o HP do Sasuke a 50%, vence (o Kakashi interrompe).
 - As outras lutas se vencem derrubando todos os inimigos.
 

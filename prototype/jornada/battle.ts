@@ -95,7 +95,9 @@ let heroSkin: string | null = null;
 const CLONE_PCT = Math.round(jornadaData.base.clones.blockChance * 100);
 
 function portraitOf(f: Fighter, data: JornadaData): string {
-  const spec = f.protagonist && heroSkin ? `ninja:${heroSkin}` : (data.characters[f.defId]?.portrait ?? data.enemies[f.defId]?.portrait ?? 'ninja:common');
+  // Forma ligada pelo roteiro (manto, Shukaku) com retrato próprio.
+  const formArt = f.form ? (data.characters[f.defId] ?? data.enemies[f.defId])?.forms?.find((x) => x.id === f.form)?.portrait : undefined;
+  const spec = formArt ?? (f.protagonist && heroSkin ? `ninja:${heroSkin}` : (data.characters[f.defId]?.portrait ?? data.enemies[f.defId]?.portrait ?? 'ninja:common'));
   return fighterPortrait(f.defId, spec, 'md');
 }
 
@@ -616,6 +618,45 @@ export async function jornadaBattle(
           float(e.uid, icon('sparkle'), 'fx');
           pushLog(B.logBoost(name(e.uid), techName(e.techId), e.turns));
           wait = host.instant() ? 70 : 250;
+          break;
+        // Roteiro (docs/jornada/roteiro.md): falas, formas e troca de lutadores.
+        case 'say': {
+          const who = e.uid ? name(e.uid) : esc(J.names[e.who] ?? e.who);
+          const line = J.script[e.line] ?? e.line;
+          say(B.line(who, line), 'var(--ink)');
+          pushLog(B.line(who, line));
+          wait = host.instant() ? 300 : 1400;
+          break;
+        }
+        case 'form': {
+          const f = fighter(next, e.uid);
+          const el = card(e.uid);
+          if (el) el.outerHTML = fighterCard({ ...f, hp: shown.get(e.uid)?.hp ?? f.hp, chakra: shown.get(e.uid)?.chakra ?? f.chakra }, data);
+          shown.set(e.uid, { hp: shown.get(e.uid)?.hp ?? f.hp, max: f.maxHp, chakra: shown.get(e.uid)?.chakra ?? f.chakra, maxChakra: f.maxChakra });
+          say(B.form(name(e.uid), J.forms[e.form] ?? e.form), 'var(--accent)');
+          pushLog(B.form(name(e.uid), J.forms[e.form] ?? e.form));
+          wait = host.instant() ? 300 : 1100;
+          break;
+        }
+        case 'enter':
+        case 'leave': {
+          // Quem entra ou sai muda a fileira: redesenha e devolve as barras ao ponto da animação.
+          render(next);
+          for (const f of next.fighters) if (!shown.has(f.uid)) shown.set(f.uid, { hp: f.hp, max: f.maxHp, chakra: f.chakra, maxChakra: f.maxChakra });
+          for (const [uid, v] of shown) {
+            setHp(uid, v.hp);
+            setChakra(uid, v.chakra);
+          }
+          const msg = e.type === 'enter' ? B.enter(name(e.uid)) : B.leave(name(e.uid));
+          say(msg, 'var(--accent-2)');
+          pushLog(msg);
+          wait = host.instant() ? 300 : 1000;
+          break;
+        }
+        case 'endure':
+          setHp(e.target, 1);
+          say(B.endure(name(e.target), techName(e.technique)), 'var(--jin)');
+          pushLog(B.endure(name(e.target), techName(e.technique)));
           break;
         case 'end':
           wait = 0;

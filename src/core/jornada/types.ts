@@ -1,6 +1,7 @@
 // Tipos do modo Jornada (docs/jornada/). O combate é de equipe e não depende do combate do Roleta;
 // só as fórmulas puras (acerto, dano, elementos) são compartilhadas.
 import type { AttackStats, AttackType, Element, KekkeiGenkaiId, Resistances } from '../types';
+import type { FormDef, ScriptRule } from './script';
 
 export type TeamSide = 'ally' | 'enemy';
 
@@ -160,6 +161,8 @@ export interface CharacterDef {
   growth: { hp: number; chakra: number; speed: number; offense: AttackStats; resistance: Resistances };
   /** Retrato: arte de vilão (`villain:<id>`) ou de ninja por linhagem (`ninja:<chave>`). */
   portrait: string;
+  /** Transformações que o roteiro (ou uma ativa) pode ligar (docs/jornada/roteiro.md). */
+  forms?: FormDef[];
 }
 
 export interface EnemyDef {
@@ -176,6 +179,8 @@ export interface EnemyDef {
   ai: AiProfile;
   passive?: EnemyPassive;
   portrait: string;
+  /** Transformações que o roteiro pode ligar (Gaara → Shukaku). */
+  forms?: FormDef[];
 }
 
 export interface Fighter {
@@ -212,7 +217,16 @@ export interface Fighter {
   boost: (Boost & { techId: string }) | null;
   /** Portão aberto e turnos já mantidos (a próxima manutenção é a de número rounds + 1; trocar não zera). */
   gate: { level: number; rounds: number } | null;
+  /** Forma ligada (roteiro), quando houver. */
+  form?: string;
+  /** Saiu da luta pelo roteiro (troca de fase): não volta nem conta para a vitória. */
+  gone?: boolean;
+  /** Entrou pelo roteiro (invocação, convidado): não vai para a equipe da run no fim da luta. */
+  guest?: boolean;
 }
+
+/** Lutador pronto para entrar (sem uid, lado e estado de luta). */
+export type FighterSeed = Omit<Fighter, 'uid' | 'side' | 'effects' | 'shield' | 'clones' | 'down' | 'guarding' | 'cooldowns' | 'survivedOnce' | 'enraged' | 'boost' | 'gate'>;
 
 /** Como a luta se vence (docs/jornada/historia.md#vitórias-especiais). */
 export type WinCondition =
@@ -220,7 +234,9 @@ export type WinCondition =
   /** Levar o inimigo `target` (defId) a `pct` do HP máximo ou menos (sino do Kakashi). */
   | { kind: 'hpThreshold'; target: string; pct: number }
   /** Aguentar `rounds` rodadas de pé, ou levar `target` a `pct` (Sasuke no hospital). */
-  | { kind: 'survive'; rounds: number; target: string; pct: number };
+  | { kind: 'survive'; rounds: number; target: string; pct: number }
+  /** Derrubar `target`, que só cai com a técnica `technique` (o Rasengan no Kabuto): outro golpe fatal deixa 1 de HP. */
+  | { kind: 'finisher'; target: string; technique: string };
 
 export type BattleStatus = 'ongoing' | 'won' | 'lost';
 
@@ -256,7 +272,16 @@ export type JEvent =
   | { type: 'gate'; uid: string; level: number; cost?: number; exhausted?: boolean }
   /** Manutenção dos Portões paga no fim do turno. */
   | { type: 'gateUpkeep'; uid: string; amount: number }
-  | { type: 'end'; status: BattleStatus };
+  /** Fala do roteiro (`line`: chave em strings/jornada.ts; `uid` null quando quem fala não está na luta). */
+  | { type: 'say'; uid: string | null; who: string; line: string }
+  /** Ligou uma forma (roteiro). */
+  | { type: 'form'; uid: string; form: string }
+  /** Entrou ou saiu da luta pelo roteiro. */
+  | { type: 'enter'; uid: string }
+  | { type: 'leave'; uid: string }
+  /** O alvo do finalizador aguentou com 1 de HP (só cai com a técnica certa). */
+  | { type: 'endure'; target: string; technique: string }
+  | { type: 'end'; status: BattleStatus; scripted?: boolean };
 
 export interface JBattle {
   round: number;
@@ -277,6 +302,15 @@ export interface JBattle {
   pills: number;
   pillHpPct: number;
   log: JEvent[];
+  /** Roteiro da parada (docs/jornada/roteiro.md) e os índices das regras que já dispararam. */
+  script: ScriptRule[];
+  fired: number[];
+  /** Lutadores que o roteiro pode pôr na luta (`enter`, `replace`). */
+  reserve: { side: TeamSide; seed: FighterSeed }[];
+  /** Marcas que o roteiro deixa na run (copiadas para `run.flags` no fim da luta). */
+  flags: string[];
+  /** Trava contra recursão enquanto o roteiro executa. */
+  scripting?: boolean;
 }
 
 /** Ação do protagonista. */

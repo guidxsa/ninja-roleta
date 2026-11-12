@@ -3,7 +3,7 @@ import { balance } from '../balance';
 import { BEATS } from '../elements';
 import { kekkeiGenkai } from '../kekkeiGenkai';
 import { jornadaBalance } from './balance';
-import { charactersById, stageTechniques } from './characters';
+import { charactersById } from './characters';
 import { enemiesById } from './enemies';
 import { eventsById } from './events';
 import { relics } from './relics';
@@ -20,7 +20,6 @@ export const jornadaData: JornadaData = {
   techniques: jTechniquesById,
   characters: charactersById,
   enemies: enemiesById,
-  stageTechniques,
   kekkeiGenkai,
   stages,
   campaigns,

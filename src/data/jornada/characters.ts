@@ -271,8 +271,3 @@ export const genericCharacters: CharacterDef[] = [
 ];
 
 export const charactersById: Record<string, CharacterDef> = Object.fromEntries([...characters, ...genericCharacters].map((c) => [c.id, c]));
-
-/** Técnicas que um aliado ganha ao chegar num estágio (o Sasuke aprende o Chidori no exame). */
-export const stageTechniques: Record<string, Record<number, string[]>> = {
-  sasuke: { 1: ['jChidori'] },
-};

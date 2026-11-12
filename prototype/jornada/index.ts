@@ -66,7 +66,7 @@ import { arcMedia, fighterPortrait, icon, sceneMedia, sceneVars } from '../art';
 import { choose, esc, h, openDialog, show, sleep } from '../dom';
 import { tip } from '../tooltip';
 import { achievementIcon } from '../achievementIcons';
-import { forgetLiveBattle, heroLabel, jornadaBattle, memberLabel } from './battle';
+import { forgetLiveBattle, heroLabel, jornadaBattle, memberLabel, techName } from './battle';
 import { movesetScreen } from './moveset';
 import { openJornadaSheet } from './sheet';
 import type { JornadaHost } from './host';
@@ -958,6 +958,7 @@ function goalText(stop: Extract<StopDef, { enemies: string[] }>): string | null 
   const w = stop.win;
   if (!w || w.kind === 'defeatAll') return null;
   if (w.kind === 'hpThreshold') return J.winConditions.hpThreshold(Math.round(w.pct * 100));
+  if (w.kind === 'finisher') return J.winConditions.finisher(J.names[w.target] ?? w.target, techName(w.technique));
   return J.winConditions.survive(w.rounds, Math.round(w.pct * 100));
 }
 

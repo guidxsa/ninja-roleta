@@ -20,7 +20,9 @@ export type EventEffect =
   /** Maldição do mercador: cada compra encarece a loja até ela sair (marca `SHOP_CURSE`). */
   | { kind: 'curse' }
   /** Tira a maldição do mercador. */
-  | { kind: 'cleanse' };
+  | { kind: 'cleanse' }
+  /** O protagonista aprende uma técnica (marco da história ou treino de evento; não passa pela árvore). */
+  | { kind: 'learn'; technique: string };
 
 /** Marca da maldição do mercador (docs/jornada/run.md#loja). */
 export const SHOP_CURSE = 'shopCurse';

@@ -22,7 +22,9 @@ import type {
   JTechnique,
   TeamSide,
   WinCondition,
+  FighterSeed,
 } from './types';
+import { runScript, type ScriptContext, type ScriptRule } from './script';
 
 export function emptyMods(): FighterMods {
   return {
@@ -101,8 +103,7 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
   };
 }
 
-/** Lutador pronto para entrar (sem uid e lado: `startBattle` define). */
-export type FighterSeed = Omit<Fighter, 'uid' | 'side' | 'effects' | 'shield' | 'clones' | 'down' | 'guarding' | 'cooldowns' | 'survivedOnce' | 'enraged' | 'boost' | 'gate'>;
+export type { FighterSeed };
 
 export interface BattleSetup {
   allies: FighterSeed[];
@@ -110,6 +111,9 @@ export interface BattleSetup {
   win: WinCondition;
   /** Pílulas de reanimação na bolsa da run. */
   pills?: number;
+  /** Roteiro da parada e os lutadores que ele pode pôr na luta (docs/jornada/roteiro.md). */
+  script?: ScriptRule[];
+  reserve?: { side: TeamSide; seed: FighterSeed }[];
 }
 
 const scale = (n: number, mult: number) => (n > 0 ? Math.max(1, Math.floor(n * mult)) : 0);
@@ -169,7 +173,7 @@ export const fighter = (s: JBattle, uid: string): Fighter => {
   return f;
 };
 export const alive = (s: JBattle, side: TeamSide) => s.fighters.filter((f) => f.side === side && !f.down);
-export const downed = (s: JBattle, side: TeamSide) => s.fighters.filter((f) => f.side === side && f.down);
+export const downed = (s: JBattle, side: TeamSide) => s.fighters.filter((f) => f.side === side && f.down && !f.gone);
 export const opponentSide = (side: TeamSide): TeamSide => (side === 'ally' ? 'enemy' : 'ally');
 export const protagonist = (s: JBattle) => s.fighters.find((f) => f.protagonist) ?? null;
 export const hasEffect = (f: Fighter, e: JEffect) => f.effects.some((x) => x.kind === e && x.turns > 0);
@@ -355,7 +359,42 @@ export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique
 /** Monta a luta sem andar: ninguém agiu ainda. É o estado que a tela mostra na abertura. */
 export function openBattle(setup: BattleSetup, data: JornadaData): JBattle {
   const fighters = [...setup.allies.map((f, i) => enter(f, 'ally', i)), ...setup.enemies.map((f, i) => enter(f, 'enemy', i))];
-  return { round: 0, fighters, order: [], turnIndex: 0, turnStarted: false, status: 'ongoing', win: setup.win, itemUsed: false, activeUsed: false, pills: setup.pills ?? 0, pillHpPct: data.j.combat.reviveHpPct, log: [] };
+  const s: JBattle = {
+    round: 0,
+    fighters,
+    order: [],
+    turnIndex: 0,
+    turnStarted: false,
+    status: 'ongoing',
+    win: setup.win,
+    itemUsed: false,
+    activeUsed: false,
+    pills: setup.pills ?? 0,
+    pillHpPct: data.j.combat.reviveHpPct,
+    log: [],
+    script: setup.script ? structuredClone(setup.script) : [],
+    fired: [],
+    reserve: setup.reserve ? structuredClone(setup.reserve) : [],
+    flags: [],
+  };
+  // Regras de abertura (falas, forma desde o começo).
+  script(s, data);
+  return s;
+}
+
+/** Põe na luta um lutador da reserva (roteiro). Entra no fim da fila de uids do lado e age a partir da próxima rodada. */
+function enterFromReserve(s: JBattle, defId: string): Fighter | null {
+  const i = s.reserve.findIndex((r) => r.seed.defId === defId);
+  if (i < 0) return null;
+  const [r] = s.reserve.splice(i, 1);
+  const f = { ...enter(r!.seed, r!.side, s.fighters.filter((x) => x.side === r!.side).length), guest: true };
+  s.fighters.push(f);
+  return f;
+}
+
+/** Ponto de checagem do roteiro (abertura, perda de HP, virada de rodada, técnica usada). */
+function script(s: JBattle, data: JornadaData, ctx: ScriptContext = {}): void {
+  runScript(s, data, enterFromReserve, ctx);
 }
 
 export function startBattle(setup: BattleSetup, data: JornadaData, rng: Rng): JBattle {
@@ -370,6 +409,8 @@ function newRound(s: JBattle, data: JornadaData, rng: Rng): void {
   s.round++;
   s.log.push({ type: 'round', round: s.round });
   if (s.win.kind === 'survive' && s.round > s.win.rounds) return end(s, 'won');
+  script(s, data);
+  if (s.status !== 'ongoing') return;
   for (const f of s.fighters) {
     if (f.down || f.mods.regenHp <= 0 || f.hp >= f.maxHp) continue;
     const amount = Math.min(f.maxHp - f.hp, f.mods.regenHp);
@@ -403,6 +444,10 @@ function checkEnd(s: JBattle): void {
     const t = s.fighters.find((f) => f.side === 'enemy' && f.defId === w.target);
     if (t && (t.down || t.hp <= t.maxHp * w.pct)) end(s, 'won');
   }
+  if (w.kind === 'finisher') {
+    const t = s.fighters.find((f) => f.side === 'enemy' && f.defId === w.target && !f.gone);
+    if (t?.down) end(s, 'won');
+  }
 }
 
 /** Começo do turno: queimar e veneno, depois o atordoamento (perde a vez). Devolve se o lutador age. */
@@ -415,7 +460,7 @@ function startTurn(s: JBattle, f: Fighter, data: JornadaData): boolean {
     const pct = e === 'burn' ? data.j.combat.burnPct : data.j.combat.poisonPct;
     const amount = Math.max(1, Math.floor(f.maxHp * pct));
     s.log.push({ type: 'tick', target: f.uid, effect: e, amount });
-    applyHpLoss(s, f, amount);
+    applyHpLoss(s, f, amount, data);
     if (f.down) return false;
   }
   if (s.status !== 'ongoing') return false;
@@ -523,6 +568,7 @@ function applyFree(s: JBattle, f: Fighter, action: JFreeAction, data: JornadaDat
   if (!tech?.active || tech.gates) throw new Error(`ativa indisponível: ${action.techId}`);
   if (s.activeUsed) throw new Error('já usou uma ativa neste turno');
   applyTech(s, f, tech.id, action.target, data, rng);
+  script(s, data, { tech: tech.id, by: f });
   s.activeUsed = true;
 }
 
@@ -577,6 +623,7 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
   }
   if (data.techniques[action.techId]?.active) throw new Error(`ativa não gasta o turno: use useActive (${action.techId})`);
   applyTech(s, f, action.techId, action.target, data, rng);
+  script(s, data, { tech: action.techId, by: f });
 }
 
 /** Usa a técnica (ação de turno ou ativa grátis). */
@@ -661,7 +708,7 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
       s.log.push({ type: 'cloneBlock', target: t.uid, left: t.clones });
       if (t.mods.cloneCounter) {
         s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: t.mods.cloneCounter, crit: false, elementMult: 1, absorbed: 0 });
-        applyHpLoss(s, f, t.mods.cloneCounter);
+        applyHpLoss(s, f, t.mods.cloneCounter, data);
       }
       continue;
     }
@@ -669,7 +716,7 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     const absorbed = Math.min(t.shield, amount);
     t.shield -= absorbed;
     s.log.push({ type: 'damage', uid: f.uid, target: t.uid, amount: amount - absorbed, crit: outcome === 'crit', elementMult: elementMult(tech, t, data), absorbed });
-    applyHpLoss(s, t, amount - absorbed);
+    applyHpLoss(s, t, amount - absorbed, data, tech.id);
     if (t.down && f.mods.onKillChakra) {
       const amount = Math.min(f.maxChakra - f.chakra, f.mods.onKillChakra);
       f.chakra += amount;
@@ -689,9 +736,22 @@ function tryEffect(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: J
   s.log.push({ type: 'effect', target: t.uid, effect: on.effect, turns });
 }
 
-function applyHpLoss(s: JBattle, t: Fighter, amount: number): void {
+/** Perde HP e confere o fim; depois, o roteiro (HP abaixo de X%, alguém caiu). `techId`: o golpe que causou. */
+function applyHpLoss(s: JBattle, t: Fighter, amount: number, data: JornadaData, techId?: string): void {
+  lose(s, t, amount, techId);
+  script(s, data);
+}
+
+function lose(s: JBattle, t: Fighter, amount: number, techId?: string): void {
   if (amount <= 0) return;
   t.hp = Math.max(0, t.hp - amount);
+  // Finalizador: o alvo só cai com a técnica certa; outro golpe fatal deixa 1 de HP.
+  const w = s.win;
+  if (t.hp === 0 && w.kind === 'finisher' && t.side === 'enemy' && t.defId === w.target && techId !== w.technique) {
+    t.hp = 1;
+    s.log.push({ type: 'endure', target: t.uid, technique: w.technique });
+    return checkEnd(s);
+  }
   if (t.hp > 0) return checkEnd(s);
   if (t.mods.surviveOnce && !t.survivedOnce) {
     t.survivedOnce = true;
@@ -741,7 +801,7 @@ function checkEnrage(s: JBattle): void {
 
 /** Resultado da luta para a run: HP e chakra de cada aliado no fim, por defId. */
 export function allyResults(s: JBattle): { defId: string; hp: number; chakra: number; down: boolean }[] {
-  return s.fighters.filter((f) => f.side === 'ally').map((f) => ({ defId: f.defId, hp: f.hp, chakra: f.chakra, down: f.down }));
+  return s.fighters.filter((f) => f.side === 'ally' && !f.guest).map((f) => ({ defId: f.defId, hp: f.hp, chakra: f.chakra, down: f.down }));
 }
 
 export type { JEvent };

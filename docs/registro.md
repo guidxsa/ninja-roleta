@@ -66,6 +66,18 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Roteiro de luta e marcos da história (v0.66.0, 12/11/2026)
+
+Pedido do usuário: a História fiel aos acontecimentos fundamentais do mangá, separando progressão narrativa obrigatória de personalização. A proposta de arquitetura foi aprovada, e esta versão entra só com a infraestrutura, sem mudar o conteúdo (a História canônica será discutida antes da v0.67.0):
+- **Roteiro de luta** (`src/core/jornada/script.ts`): regras "quando → faça" no dado da parada. Gatilhos: abertura, rodada, HP abaixo de X%, alguém caiu, técnica usada. Ações: fala, forma, entrar, trocar de lutador, curar, marca na run, fim roteirizado. O motor confere em pontos fixos (abertura, perda de HP, virada de rodada, depois da técnica) e cada regra dispara uma vez.
+- **Formas** nas fichas (transformações); **finalizador** como condição de vitória.
+- **Marcos da história** (`grants` na campanha) no lugar do `stageTechniques`: o Chidori do Sasuke migrou sem mudar nada. Efeito de evento novo `learn`.
+- Os sinos do Kakashi ganharam falas pelo roteiro (prova do formato).
+
+Decidido sozinho: o lutador que entra age a partir da rodada seguinte; quem entra pelo roteiro não vira membro da equipe; os marcos valem só na História; os textos das falas dos sinos.
+
+Simulação (`npm run sim:jornada -- 1000 2`): idêntica à da v0.65.0 (as falas não mexem no combate).
+
 ## Jornada mais forte e classes niveladas (v0.65.0, 12/11/2026)
 
 Pedido do usuário (item 12): tudo um pouco mais forte na Jornada, sobretudo a História, e o Hardcore acima do Difícil. Números escolhidos pelo usuário entre conjuntos simulados:
