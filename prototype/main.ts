@@ -38,6 +38,8 @@ import {
 import type { RTechniqueDef } from '../src/data/roleta/techniques';
 import { critChance, hitSlices } from '../src/core/hit';
 import { choose, esc, goHome, h, HOME, isOff, openDialog, show, sleep, untilHome } from './dom';
+import { achievementIcon } from './achievementIcons';
+import { avatarChoices, currentAvatar } from '../src/core/avatar';
 import { lineageOf, rollOrigin, type OriginStep } from '../src/core/origin';
 import { scaleVillain, type Difficulty } from '../src/core/difficulty';
 import {
@@ -83,7 +85,7 @@ import {
   xpStep,
 } from '../src/core/progression';
 import { buildLabPlayer, LAB_STAT_KEYS, labLearnable, labOrigin, labStatsOf, parseLabParams, type LabConfig } from '../src/core/lab';
-import { newAchievements, type AchievementCategory } from '../src/core/achievements';
+import { lineageKey, newAchievements, type AchievementCategory } from '../src/core/achievements';
 import { addEffect, addFight, addJokenpo, addPreEvent, emptyRunStats, type RunStats } from '../src/core/runStats';
 import { summarizeRoletaFight } from '../src/core/roleta/stats';
 import { createRng, type Rng } from '../src/core/rng';
@@ -2172,11 +2174,12 @@ function openRegistry(page: RegistryPage, filter: HistoryFilter = 'general') {
   const overlay = h(`<div class="modal" aria-label="${D.nav[page]}"><div class="modal-body profile registry">
     <span class="scroll-roll t" aria-hidden="true"></span><span class="scroll-roll b" aria-hidden="true"></span>
     <div class="modal-head"><span class="seal${k.length > 1 ? ' two' : ''}" aria-hidden="true">${k}</span><h2>${D.nav[page]}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
-    <label class="field profile-name reg-name"><span>${S.ui.playerName.label}</span><input type="text" data-player-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${S.ui.playerName.placeholder}" value="${esc(profile.playerName ?? '')}"></label>
+    <div class="reg-id">${avatarButton('sm')}<label class="field profile-name reg-name"><span>${S.ui.playerName.label}</span><input type="text" data-player-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${S.ui.playerName.placeholder}" value="${esc(profile.playerName ?? '')}"></label></div>
     ${page === 'history' ? `<div class="segmented desk-filters">${(['general', 'origins', 'difficulty'] as const).map((f) => `<button class="btn seg" data-filter="${f}" aria-pressed="${f === filter}">${D.filters[f]}</button>`).join('')}</div>` : ''}
     <div class="profile-body"></div></div></div>`);
   const body = overlay.querySelector<HTMLElement>('.profile-body')!;
   overlay.querySelector('[data-player-name]')!.addEventListener('change', (e) => setPlayerName((e.target as HTMLInputElement).value));
+  overlay.querySelector('[data-avatar]')?.addEventListener('click', openAvatarPicker);
   const fill = (f: HistoryFilter) => {
     body.replaceChildren();
     if (page === 'history') {
@@ -2199,8 +2202,9 @@ function openRegistry(page: RegistryPage, filter: HistoryFilter = 'general') {
   openDialog(overlay);
 }
 
-/** Selo da conquista: 功 dourado quando liberada; contorno com cadeado quando não. */
-const achSeal = (on: boolean) => (on ? '<span class="ach-ico seal gold" aria-hidden="true">功</span>' : `<span class="ach-ico seal ghost" aria-hidden="true">${icon('lock')}</span>`);
+/** Selo da conquista: o ícone dela num selo dourado quando liberada; contorno com cadeado quando não. */
+const achSeal = (on: boolean, id: string) =>
+  on ? `<span class="ach-ico seal gold" aria-hidden="true">${achievementIcon(id)}</span>` : `<span class="ach-ico seal ghost" aria-hidden="true">${icon('lock')}</span>`;
 
 function achievementsTab(): string {
   const A = S.achievements;
@@ -2219,7 +2223,7 @@ function achievementsTab(): string {
           const on = unlocked.has(a.id);
           const txt = !on && a.hidden ? { name: A.hiddenName, desc: A.hiddenDesc } : A.list[a.id] ?? { name: a.id, desc: '' };
           const prog = !on && a.progress ? ` <small class="muted">${A.progress(...a.progress(unlocked))}</small>` : '';
-          return `<li class="ach ${on ? 'on' : 'off'}">${achSeal(on)}<span><b>${txt.name}</b>${prog}<small>${txt.desc}</small></span></li>`;
+          return `<li class="ach ${on ? 'on' : 'off'}">${achSeal(on, a.id)}<span><b>${txt.name}</b>${prog}<small>${txt.desc}</small></span></li>`;
         })
         .join('')}</ul>`;
     })
@@ -2235,7 +2239,7 @@ function jornadaAchievementsSection(unlocked: ReadonlySet<string>): string {
     .map((a) => {
       const on = unlocked.has(a.id);
       const txt = !on && a.hidden ? { name: A.hiddenName, desc: A.hiddenDesc } : JA.list[a.id] ?? { name: a.id, desc: '' };
-      return `<li class="ach ${on ? 'on' : 'off'}">${achSeal(on)}<span><b>${txt.name}</b><small>${txt.desc}</small></span></li>`;
+      return `<li class="ach ${on ? 'on' : 'off'}">${achSeal(on, a.id)}<span><b>${txt.name}</b><small>${txt.desc}</small></span></li>`;
     })
     .join('')}</ul>`;
 }
@@ -2865,6 +2869,7 @@ async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-continue'> 
   // A barra lateral escolhe o modo pelo mesmo botão do card enquanto o Início está na tela.
   gateApi = { root };
   root.querySelector('[data-desk-name]')?.addEventListener('change', (e) => setPlayerName((e.target as HTMLInputElement).value));
+  root.querySelector('.desk-id [data-avatar]')?.addEventListener('click', openAvatarPicker);
   markNav('home');
   const pick = await choose<'roleta' | 'jornada' | 'continue'>(root);
   gateApi = null;
@@ -2946,7 +2951,57 @@ function installQuoteStrip(): void {
   setInterval(next, 20_000);
 }
 
-/** Ficha do perfil (coluna direita do Início): nome, avatar padrão e números do perfil. */
+/** Avatares liberados agora (core puro: origens jogadas no Roleta e conquistas da Jornada). */
+function avatarOptions(): string[] {
+  const played = loadRuns(storage).map((r) => lineageKey(r.origin));
+  return avatarChoices({ playedLineages: [...new Set(played)], achievements: Object.keys(profile.achievements) });
+}
+
+/** Desenho do avatar a partir da chave de retrato (`ninja:<chave>`). */
+function avatarArt(spec: string, size: 'sm' | 'md' | 'lg'): string {
+  const key = spec.split(':')[1] ?? 'common';
+  return ninjaPortrait(key, false, size);
+}
+
+/** Nome do avatar na escolha: a origem, ou um nome próprio (visual do Sasuke). */
+function avatarName(spec: string): string {
+  const key = spec.split(':')[1] ?? 'common';
+  return S.ui.desk.avatarNames[key] ?? S.lineages[key as keyof typeof S.lineages] ?? key;
+}
+
+/** Botão do avatar (ficha do Início e Registro): mostra o atual e abre a escolha. */
+function avatarButton(size: 'sm' | 'md'): string {
+  const D = S.ui.desk;
+  const spec = currentAvatar(profile.avatar, avatarOptions());
+  return `<button type="button" class="avatar-btn" data-avatar aria-label="${D.avatarEdit}"${tip(D.avatarTitle, D.avatarTip)}>${avatarArt(spec, size)}</button>`;
+}
+
+/** Janela de escolha do avatar. Escolher grava no perfil e redesenha os botões abertos. */
+function openAvatarPicker(): void {
+  const D = S.ui.desk;
+  const choices = avatarOptions();
+  const now = currentAvatar(profile.avatar, choices);
+  const overlay = h(`<div class="modal" aria-label="${D.avatarPick}"><div class="modal-body avatar-pick">
+    <div class="modal-head"><h2>${D.avatarPick}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
+    <div class="avatar-grid">${choices
+      .map((spec) => `<button type="button" class="avatar-opt" data-pick="${esc(spec)}" aria-pressed="${spec === now}">${avatarArt(spec, 'md')}<small>${esc(avatarName(spec))}</small></button>`)
+      .join('')}</div></div></div>`);
+  overlay.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    const pick = t.closest<HTMLElement>('[data-pick]');
+    if (pick) {
+      profile = { ...profile, avatar: pick.dataset.pick! };
+      saveProfile(storage, profile);
+      document.querySelectorAll<HTMLElement>('[data-avatar]').forEach((b) => (b.innerHTML = avatarArt(profile.avatar!, b.closest('.desk-id') ? 'md' : 'sm')));
+      overlay.remove();
+      return;
+    }
+    if (e.target === overlay || t.closest('[data-close]')) overlay.remove();
+  });
+  openDialog(overlay);
+}
+
+/** Ficha do perfil (coluna direita do Início): nome, avatar e números do perfil. */
 function profileCard(): string {
   const D = S.ui.desk;
   const runs = loadRuns(storage).filter((r) => r.status !== 'reroll');
@@ -2965,7 +3020,7 @@ function profileCard(): string {
   ];
   return `<section class="parchment desk-profile"><span class="desk-pin" aria-hidden="true">${icon('kunai')}</span>
     <h3>${D.profileTitle}</h3>
-    <div class="desk-id"><span${tip(D.profileTitle, D.avatarSoon)}>${ninjaPortrait('common', false, 'md')}</span>
+    <div class="desk-id">${avatarButton('md')}
       <label class="field"><span>${S.ui.playerName.label}</span><input type="text" data-desk-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${D.namePlaceholder}" value="${esc(profile.playerName ?? '')}"></label></div>
     <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
   </section>`;
@@ -2983,7 +3038,7 @@ function recentCard(): string {
   if (!recent.length) return '';
   const J = S.jornada.start;
   return `<section class="parchment jrecent desk-recent"><h3>${J.recentTitle} <button type="button" class="btn small desk-all" data-profile="achievements">${S.ui.desk.seeAll} ${icon('chevron')}</button></h3><ul>${recent
-    .map((a) => `<li><span class="seal" aria-hidden="true">功</span><span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><time>${J.when(a.days)}</time></li>`)
+    .map((a) => `<li><span class="seal ach-ico" aria-hidden="true">${achievementIcon(a.id)}</span><span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><time>${J.when(a.days)}</time></li>`)
     .join('')}</ul></section>`;
 }
 
@@ -3060,7 +3115,7 @@ const jornadaHost: JornadaHost = {
       .slice(0, limit)
       .map(([id, at]) => {
         const t = S.jornada.achievements.list[id] ?? S.achievements.list[id];
-        return { name: t?.name ?? id, desc: t?.desc ?? '', days: Math.max(0, Math.floor((Date.now() - Date.parse(at)) / 86_400_000)) };
+        return { id, name: t?.name ?? id, desc: t?.desc ?? '', days: Math.max(0, Math.floor((Date.now() - Date.parse(at)) / 86_400_000)) };
       }),
   notify: (text, ico = 'sparkle') => toast(text, ico),
 };

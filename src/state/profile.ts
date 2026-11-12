@@ -44,6 +44,8 @@ export interface Profile {
   roleta?: RoletaReach;
   /** Hardcore liberado (v0.60.0). Sem o campo: vale o histórico (`syncHardcoreUnlock`). */
   hardcoreUnlocked?: true;
+  /** Avatar escolhido (chave de retrato, `ninja:<chave>`; v0.63.0). Sem o campo: o padrão. */
+  avatar?: string;
 }
 
 export interface RoletaReach {
@@ -92,6 +94,7 @@ export function loadProfile(storage: KeyValueStorage): Profile {
       ...(isReach(parsed.jornada?.generic) ? { jornada: { generic: parsed.jornada!.generic } } : {}),
       ...(typeof parsed.roleta?.cycle === 'number' && typeof parsed.roleta?.fights === 'number' ? { roleta: parsed.roleta } : {}),
       ...(parsed.hardcoreUnlocked === true ? { hardcoreUnlocked: true as const } : {}),
+      ...(typeof parsed.avatar === 'string' && parsed.avatar.length <= 64 ? { avatar: parsed.avatar } : {}),
     };
   } catch {
     if (raw) backupUnreadable(storage, PROFILE_STORAGE_KEY, raw);
