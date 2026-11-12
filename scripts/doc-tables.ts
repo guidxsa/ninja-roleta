@@ -2,14 +2,15 @@
 // `npm run docs:tabelas` grava; `npm run docs:tabelas -- --check` só confere (sai com erro se estiver desatualizado).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { DOC_TABLES } from './docTablesList';
-import { replaceGenerated } from '../src/core/docTables';
+import { generatedBlock, replaceGenerated } from '../src/core/docTables';
 
 const check = process.argv.includes('--check');
 let stale = 0;
 for (const { file, name, table } of DOC_TABLES) {
   const doc = readFileSync(file, 'utf8');
+  // Compara o conteúdo, sem olhar a quebra de linha do arquivo.
+  if (generatedBlock(doc, name) === table()) continue;
   const next = replaceGenerated(doc, name, table());
-  if (next === doc) continue;
   stale++;
   if (check) console.log(`desatualizado: ${file} (${name})`);
   else {

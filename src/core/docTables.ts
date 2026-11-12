@@ -52,7 +52,8 @@ export function generatedBlock(doc: string, name: string): string | null {
   if (a < 0) return null;
   const b = doc.indexOf(CLOSE, a);
   if (b < 0) return null;
-  return doc.slice(a + open(name).length, b).replace(/^\r?\n/, '').replace(/\r?\n$/, '');
+  // Sem depender da quebra de linha do arquivo (o Git no Windows devolve CRLF).
+  return doc.slice(a + open(name).length, b).replace(/\r\n/g, '\n').replace(/^\n/, '').replace(/\n$/, '');
 }
 
 /** Doc com o trecho gerado trocado. Sem os marcadores, lança erro (o doc precisa dizer onde a tabela fica). */
@@ -60,5 +61,7 @@ export function replaceGenerated(doc: string, name: string, table: string): stri
   const a = doc.indexOf(open(name));
   const b = a < 0 ? -1 : doc.indexOf(CLOSE, a);
   if (a < 0 || b < 0) throw new Error(`marcadores de "${name}" ausentes`);
-  return `${doc.slice(0, a)}${open(name)}\n${table}\n${doc.slice(b)}`;
+  // Mantém a quebra de linha que o arquivo já usa.
+  const eol = doc.includes('\r\n') ? '\r\n' : '\n';
+  return `${doc.slice(0, a)}${open(name)}${eol}${table.replace(/\n/g, eol)}${eol}${doc.slice(b)}`;
 }
