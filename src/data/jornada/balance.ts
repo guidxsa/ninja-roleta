@@ -85,8 +85,13 @@ export const jornadaBalance = {
     // Elite vencida deixa uma relíquia com estas chances.
     eliteWeights: { common: 50, uncommon: 33, rare: 17 },
     treasureWeights: { common: 40, uncommon: 35, rare: 25 },
-    // A loja tem 1 vaga fixa de relíquia de loja; as outras saem destes pesos.
-    shopWeights: { common: 50, uncommon: 33, rare: 17 },
+    // A loja tem 1 vaga fixa de relíquia de loja; as outras saem destes pesos, um por estágio passado (o último vale
+    // para os seguintes e para o modo infinito): a prateleira melhora com a run (v0.62.0, proposta).
+    shopWeights: [
+      { common: 50, uncommon: 33, rare: 17 },
+      { common: 40, uncommon: 37, rare: 23 },
+      { common: 30, uncommon: 40, rare: 30 },
+    ],
     price: { common: 40, uncommon: 60, rare: 90, shop: 70 } as Record<string, number>,
     bossChoices: 3,
     // Chance de uma das opções do chefe ser a evolução da relíquia inicial.
@@ -125,11 +130,16 @@ export const jornadaBalance = {
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
   minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },
 
-  // Loja sempre aberta (docs/jornada/run.md#loja): preço × (1 + compras × perPurchase + estágios passados × perStage).
+  // Loja sempre aberta (docs/jornada/run.md#loja): preço × (1 + estágios passados × perStage), e com a maldição do
+  // mercador também + compras desde a maldição × perPurchase (v0.62.0).
+  // `refresh`: atualizar as relíquias custa base + step × usos no estágio (volta à base no estágio novo; proposta).
+  // `cleansePrice`: amuleto que tira a maldição (só aparece com ela; proposta).
   shop: {
     relics: 3,
     perPurchase: 0.1,
     perStage: 0.25,
+    refresh: { base: 20, step: 15 },
+    cleansePrice: 60,
     consumablePrice: { hpKit: 20, chakraKit: 20, reviveKit: 35 } as Record<string, number>,
     trainingPrice: 60,
     treatmentPrice: 30,

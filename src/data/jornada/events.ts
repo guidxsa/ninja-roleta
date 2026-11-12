@@ -1,4 +1,4 @@
-import type { EventDef } from '../../core/jornada/events';
+import { SHOP_CURSE, type EventDef } from '../../core/jornada/events';
 
 // Eventos da História (docs/jornada/historia.md#eventos). Textos em strings/jornada.ts.
 // Marcas (`flag`) ligam um evento a outro: ajudar o Tazuna dá desconto no mercador do País das Ondas.
@@ -148,6 +148,21 @@ export const genericEvents: EventDef[] = [
     options: [
       { id: 'contract', minigame: 'seals', effects: [{ kind: 'relic', tier: 'event' }], onLose: [{ kind: 'hurtTeam', pct: 0.1 }] },
       { id: 'share', effects: [{ kind: 'maxStat', who: 'team', stat: 'hp', n: 6 }] },
+    ],
+  },
+  // Má sorte (v0.62.0): a maldição do mercador faz cada compra encarecer a loja até sair (santuário ou amuleto da loja).
+  {
+    id: 'gBadOmen',
+    options: [
+      { id: 'bargain', effects: [{ kind: 'ryo', n: 35 }, { kind: 'curse' }] },
+      { id: 'ward', minigame: 'seals', effects: [{ kind: 'xp', n: 20 }], onLose: [{ kind: 'curse' }] },
+    ],
+  },
+  {
+    id: 'gShrine',
+    options: [
+      { id: 'purify', requires: SHOP_CURSE, effects: [{ kind: 'cleanse' }] },
+      { id: 'pray', effects: [{ kind: 'healTeam', hp: 30, chakra: 9 }] },
     ],
   },
 ];

@@ -16,7 +16,14 @@ export type EventEffect =
   | { kind: 'flag'; id: string }
   | { kind: 'maxStat'; who: 'hero' | 'team'; stat: 'hp' | 'chakra'; n: number }
   /** Perde uma fração do HP atual da equipe (nunca abaixo de 1). */
-  | { kind: 'hurtTeam'; pct: number };
+  | { kind: 'hurtTeam'; pct: number }
+  /** Maldição do mercador: cada compra encarece a loja até ela sair (marca `SHOP_CURSE`). */
+  | { kind: 'curse' }
+  /** Tira a maldição do mercador. */
+  | { kind: 'cleanse' };
+
+/** Marca da maldição do mercador (docs/jornada/run.md#loja). */
+export const SHOP_CURSE = 'shopCurse';
 
 export interface EventOption {
   id: string;

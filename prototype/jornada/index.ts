@@ -47,6 +47,12 @@ import {
   type ElementChoice,
   type JRun,
   type Purchase,
+  refreshPrice,
+  canRefreshShelf,
+  refreshShelf,
+  cleansePrice,
+  buyCleanse,
+  isCursed,
 } from '../../src/core/jornada/run';
 import { reachableFrom, type MapNode } from '../../src/core/jornada/map';
 import type { Element } from '../../src/core/types';
@@ -561,7 +567,7 @@ function hintText(run: JRun, salt: number): string {
     H.recovery(rec.hp, rec.chakra),
     H.elite,
     H.restStop,
-    U.shopPriceRule(pct(data.j.shop.perPurchase), pct(data.j.shop.perStage)),
+    U.shopPriceRule(pct(data.j.shop.perStage)),
     H.moveset,
     H.tooltips,
   ];
@@ -624,8 +630,15 @@ function shopPanel(el: HTMLElement, host: JornadaHost, get: () => JRun, set: (r:
       return `<button class="btn small" data-buy="${key}" ${ok ? '' : 'disabled'}>${label}</button>`;
     };
     const picked = offer.relics.find((r) => r.id === shelfPick);
+    const refresh = refreshPrice(run, data);
+    const refreshBtn = `<button class="btn small" data-refresh ${canRefreshShelf(run, data) ? '' : 'aria-disabled="true"'}${tip(U.refreshBtn, U.refreshTip(data.j.shop.refresh.step))}>${icon('cycle')} ${U.refreshBtn} · ${refresh ? U.ryo(refresh) : U.refreshFree}</button>`;
+    const cleanse = cleansePrice(run, data);
+    const cleanseRow =
+      cleanse === null
+        ? ''
+        : `<div class="jrelic"><span class="jrelic-ico">${icon('sparkle')}</span><span class="jrelic-txt"><b>${U.cleanse}</b><small>${U.cleanseDesc}</small></span><button class="btn small" data-cleanse ${run.ryo >= cleanse ? '' : 'disabled'}>${U.buy} · ${U.ryo(cleanse)}</button></div>`;
     el.innerHTML = `
-      <h3>${U.relicsTitle}</h3>
+      <div class="jrshelf-head"><h3>${U.relicsTitle}</h3>${refreshBtn}</div>
       <div class="jrshelf">${offer.relics
         .map((r) => `<button type="button" class="jrshelf-item tier-${relicTier(r.id)}${r.id === shelfPick ? ' on' : ''}${owned(r.id) ? ' sold' : ''}" data-shelf="${r.id}">
           <span class="jrslot big tier-${relicTier(r.id)}">${relicIcon(r.id)}</span><span class="jrprice">${owned(r.id) ? U.owned : U.ryo(r.price)}</span></button>`)
@@ -635,7 +648,8 @@ function shopPanel(el: HTMLElement, host: JornadaHost, get: () => JRun, set: (r:
         .map((c) => `<div class="jrelic"><span class="jrelic-ico">${icon('kit')}</span><span class="jrelic-txt"><b>${J.items[c.id]!.name}</b><small>${J.items[c.id]!.desc}</small></span>${btn({ kind: 'item', ...c }, `i:${c.id}`)}</div>`)
         .join('')}
       ${talentTreeComplete(run, data) ? '' : `<div class="jrelic"><span class="jrelic-ico">${icon('scroll')}</span><span class="jrelic-txt"><b>${U.training}</b></span>${btn({ kind: 'training', price: offer.training }, 't')}</div>`}
-      <div class="jrelic"><span class="jrelic-ico">${icon('medical')}</span><span class="jrelic-txt"><b>${U.treatment}</b></span>${btn({ kind: 'treatment', price: offer.treatment }, 'heal')}</div>`;
+      <div class="jrelic"><span class="jrelic-ico">${icon('medical')}</span><span class="jrelic-txt"><b>${U.treatment}</b></span>${btn({ kind: 'treatment', price: offer.treatment }, 'heal')}</div>
+      ${cleanseRow}`;
   };
   el.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
@@ -643,6 +657,24 @@ function shopPanel(el: HTMLElement, host: JornadaHost, get: () => JRun, set: (r:
     if (shelf) {
       shelfPick = shelf.dataset.shelf;
       return render();
+    }
+    if (t.closest('[data-refresh]')) {
+      if (!canRefreshShelf(get(), data)) return;
+      set(keep(refreshShelf(get(), data)));
+      const ids = shopOffer(get(), data).relics.map((r) => r.id);
+      host.discoverRelics(ids);
+      shelfPick = ids.find((id) => !get().relics.includes(id)) ?? ids[0];
+      host.mood('good');
+      render();
+      return onBuy();
+    }
+    const c = t.closest<HTMLButtonElement>('[data-cleanse]');
+    if (c) {
+      if (c.disabled) return;
+      set(keep(buyCleanse(get(), data)));
+      host.mood('good');
+      render();
+      return onBuy();
     }
     const b = t.closest<HTMLButtonElement>('[data-buy]');
     if (!b || b.disabled) return;
@@ -667,9 +699,12 @@ function shopPanel(el: HTMLElement, host: JornadaHost, get: () => JRun, set: (r:
 
 function inflationChip(el: HTMLElement, run: JRun): void {
   const pct = Math.round(shopInflation(run, data) * 100);
-  el.hidden = pct === 0;
-  el.textContent = U.shopInflation(pct);
-  el.dataset.tip = `<b class="tip-title">${U.shopTitle}</b>${U.shopPriceRule(Math.round(data.j.shop.perPurchase * 100), Math.round(data.j.shop.perStage * 100))}`;
+  const cursed = isCursed(run);
+  el.hidden = pct === 0 && !cursed;
+  el.textContent = cursed ? `${U.curseChip} · ${U.shopInflation(pct)}` : U.shopInflation(pct);
+  el.classList.toggle('bad', cursed);
+  const rules = U.shopPriceRule(Math.round(data.j.shop.perStage * 100)) + (cursed ? ` ${U.shopCurseRule(Math.round(data.j.shop.perPurchase * 100))}` : '');
+  el.dataset.tip = `<b class="tip-title">${U.shopTitle}</b>${rules}`;
 }
 
 /**

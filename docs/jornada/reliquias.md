@@ -26,7 +26,7 @@
 |---|---|
 | **Elite** vencida | Comum 50%, incomum 33%, rara 17% |
 | **Tesouro** | Comum 40%, incomum 35%, rara 25% |
-| **Loja** | 3 à venda por estágio: 2 sorteadas (comum 50%, incomum 33%, rara 17%) e 1 de loja. Preços sobem com as compras e os estágios ([run.md](run.md#loja)). Preços: comum 40, incomum 60, rara 90, loja 70 ryō |
+| **Loja** | 3 à venda por estágio: 2 sorteadas e 1 de loja. A chance melhora a cada estágio passado (comum/incomum/rara): 50/33/17 no 1º, 40/37/23 no 2º, 30/40/30 do 3º em diante (proposta, v0.62.0). Dá para atualizar a prateleira pagando ([run.md](run.md#loja)). Os preços sobem com os estágios. Preços: comum 40, incomum 60, rara 90, loja 70 ryō |
 | **Chefe** | Escolher 1 entre 3 de chefe; com a inicial ainda não evoluída, 50% de chance de uma das 3 ser a evolução dela |
 | **Eventos** | Algumas escolhas dão uma relíquia de evento ou rara ([historia.md](historia.md#eventos), [caminho-ninja.md](caminho-ninja.md#eventos)) |
 
@@ -205,7 +205,7 @@ Só aparecem na escolha depois do chefe, para quem ainda tem a inicial, e tomam 
 | Brasão Uchiha | Leque do clã | O Sharingan (nas duas formas) custa 2 de chakra a menos; técnicas de fogo +20% de dano; +5% de crítico. |
 | Pergaminho dos Oito Trigramas | Pergaminho do Punho Suave | Punho Suave, 64 e 128 Palmas +20% de dano; o Byakugan (nas duas formas) custa 2 de chakra a menos; esquiva 4% dos golpes. |
 
-### Loja (7)
+### Loja (8)
 
 | Relíquia | Efeito |
 |---|---|
@@ -216,6 +216,7 @@ Só aparecem na escolha depois do chefe, para quem ainda tem a inicial, e tomam 
 | Encomenda do ferreiro | +4 de dano no taijutsu. |
 | Carta de recomendação | +30% de XP. |
 | Placa de armadura | +20 de HP máximo. |
+| Sino do mercador | A primeira atualização da prateleira em cada estágio é grátis (proposta, v0.62.0). |
 
 ### Evento (8)
 

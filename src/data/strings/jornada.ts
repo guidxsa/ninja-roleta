@@ -599,6 +599,7 @@ export const jornadaPtBR = {
       smithOrder: { name: 'Encomenda do ferreiro', desc: '+4 de dano no taijutsu.' },
       tutorLetter: { name: 'Carta de recomendação', desc: '+30% de XP.' },
       armorPlate: { name: 'Placa de armadura', desc: '+20 de HP máximo.' },
+      merchantBell: { name: 'Sino do mercador', desc: 'A primeira atualização da prateleira em cada estágio é grátis.' },
       oldLadyCharm: { name: 'Amuleto da velhinha', desc: '+10 de HP máximo; a equipe recupera 1 de HP por rodada.' },
       strangeRing: { name: 'Anel estranho', desc: '+8% de crítico e +4% de acerto.' },
       summonerInk: { name: 'Tinta de invocação', desc: 'Começa as lutas com 1 clone; técnicas de clone criam 1 a mais.' },
@@ -790,6 +791,19 @@ export const jornadaPtBR = {
       text: 'Um sapo velho oferece um contrato, se você fizer os selos certos.',
       options: { contract: 'Fazer os selos (minijogo: relíquia de evento; perdeu: a equipe perde 10% do HP)', share: 'Dividir o almoço com ele (+6 de HP máximo da equipe)' },
     },
+    gBadOmen: {
+      title: 'Mercador de mau agouro',
+      text: 'Um mercador de olhar torto oferece uma barganha. Dizem que quem negocia com ele leva a má sorte junto.',
+      options: {
+        bargain: 'Aceitar a barganha (+35 ryō e a maldição do mercador: cada compra encarece a loja)',
+        ward: 'Afastar a má sorte com selos (minijogo: +20 XP; perdeu: a maldição do mercador)',
+      },
+    },
+    gShrine: {
+      title: 'Santuário na estrada',
+      text: 'Um pequeno santuário, com o incenso ainda aceso.',
+      options: { purify: 'Purificar-se (tira a maldição do mercador)', pray: 'Rezar em silêncio (+30 de HP e +9 de chakra em cada um)' },
+    },
   } as Record<string, { title: string; text: string; options: Record<string, string> }>,
 
   minigames: {
@@ -920,9 +934,16 @@ export const jornadaPtBR = {
     training: 'Treino (+1 ponto de talento)',
     shopBtn: 'Loja',
     shopTitle: 'Loja',
-    shopTip: 'Fica aberta durante toda a run. O estoque de relíquias muda a cada estágio.',
-    shopPriceRule: (purchase: number, stage: number) => `Cada compra encarece a loja em ${purchase}% e cada estágio, em ${stage}%, para a run toda.`,
+    shopTip: 'Fica aberta durante toda a run. O estoque de relíquias muda a cada estágio e melhora com a run.',
+    shopPriceRule: (stage: number) => `Cada estágio encarece a loja em ${stage}%, para a run toda.`,
+    shopCurseRule: (purchase: number) => `Maldição do mercador: cada compra encarece a loja em ${purchase}% até ela sair (santuário ou amuleto da loja).`,
     shopInflation: (pct: number) => `Preços +${pct}%`,
+    refreshBtn: 'Atualizar',
+    refreshFree: 'grátis',
+    refreshTip: (step: number) => `Sorteia de novo as relíquias à venda. Cada uso no estágio custa ${step} ryō a mais; no estágio novo, o preço volta ao inicial.`,
+    curseChip: 'Maldição',
+    cleanse: 'Amuleto de purificação',
+    cleanseDesc: 'Tira a maldição do mercador: os preços voltam ao normal.',
     // Painéis do widescreen (docs/visual.md, "Celular e desktop"): o que vem pela frente e dicas de jogo.
     nextTitle: 'Próxima parada',
     afterTitle: 'Depois',
