@@ -56,7 +56,7 @@ Desde a v0.46.0 o catálogo é **um só** para os dois modos (`src/data/relics.t
 | Bala de chakra | Comum | Começa as lutas com 10% a mais do chakra. |
 | Ferramenta ninja | Comum (só Roleta) | +2 de dano base em todas as técnicas. |
 | Amuleto de velocidade | Comum (só Roleta) | +2 de speed. |
-| Cupom do Ichiraku | Incomum | Cada vitória recupera 10% a mais do HP e do chakra. |
+| Cupom do Ichiraku | Incomum | Começa as lutas com 20% de HP e de chakra acima do máximo (o excedente só se gasta: cura e regeneração param no máximo). |
 | Faixas de mão | Incomum | +10% de dano de taijutsu. |
 | Sacola de ervas | Incomum | Recupera 2% do HP por rodada. |
 | Bandana rasgada | Incomum | Abaixo de 50% do HP, +20% de dano. |

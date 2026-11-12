@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { scaleVillain } from '../src/core/difficulty';
 import { canLevelUp } from '../src/core/player';
-import { levelUp } from '../src/core/progression';
+import { applyAkatsuki, levelUp } from '../src/core/progression';
 import {
   canUseActive,
   dodgeChance,
@@ -25,14 +25,9 @@ import {
   gainRoletaRelic,
   newRoletaRun,
   relicPool,
-  rewardRelic,
   villainFor,
-  applyJackpot,
-  applyRoletaReward,
-  rewardTierFor,
   rewardXp,
   canContinueRoleta,
-  readyForFight,
   relicRewardWeights,
   rollRelicReward,
 } from '../src/core/roleta/run';
@@ -310,7 +305,6 @@ describe('run do Roleta enxuto e relíquias (v0.46.0)', () => {
     };
     let res = finishRoletaFight(run, win(run), data, fixed(0.3));
     expect(res.run.step).toBe(1);
-    expect(res.outcome.tier).toBe(1);
     expect(res.run.player.xp).toBeGreaterThan(0);
     run = { ...res.run, step: 5, villainId: 'orochimaru' };
     res = finishRoletaFight(run, win(run), data, fixed(0.3));
@@ -349,13 +343,34 @@ describe('run do Roleta enxuto e relíquias (v0.46.0)', () => {
     expect(genin.techniques.map((t) => t.id)).toEqual(villainsById[data.categories.genin[0]!]!.techniques.map((t) => t.id));
   });
 
-  it('cada luta começa com HP e chakra cheios; vencer não recupera mais por conta própria', () => {
+  it('a vitória recupera HP e chakra por inteiro (v0.61.0); a luta não cura antes de começar', () => {
     const hurt = { ...p0(), hp: 10, chakra: 1 };
-    const ready = readyForFight(hurt);
-    expect([ready.hp, ready.chakra]).toEqual([ready.maxHp, ready.maxChakra]);
     const run = { ...newRoletaRun(hurt, 'normal'), villainId: 'mizuki' };
-    const b = { ...startRoletaBattle(hurt, villainFor(run, villainsById, data), {}, data, fixed(0.5)), status: 'won' as const };
-    expect(finishRoletaFight(run, b, data, fixed(0.3)).run.player.hp).toBe(b.player.hp);
+    const start = startRoletaBattle(hurt, villainFor(run, villainsById, data), {}, data, fixed(0.5));
+    expect([start.player.hp, start.player.chakra]).toEqual([10, 1]);
+    const after = finishRoletaFight(run, { ...start, status: 'won' as const }, data, fixed(0.3)).run.player;
+    expect([after.hp, after.chakra]).toEqual([after.maxHp, after.maxChakra]);
+  });
+
+  it('Akatsuki: o HP e o chakra cortados no evento chegam à luta seguinte', () => {
+    const weakened = applyAkatsuki({ ...p0(), revives: 0 }, 'meddled', data.base).player;
+    expect(weakened.hp).toBeLessThan(weakened.maxHp);
+    const run = { ...newRoletaRun(p0(), 'normal'), player: weakened, villainId: 'mizuki' };
+    const b = startRoletaBattle(run.player, villainFor(run, villainsById, data), {}, data, fixed(0.5));
+    expect(b.player.hp).toBe(weakened.hp);
+    expect(b.player.chakra).toBe(weakened.chakra);
+  });
+
+  it('Cupom do Ichiraku: começa a luta acima do máximo; cura e regeneração não passam do máximo nem tiram o excedente', () => {
+    const pct = data.relics.find((r) => r.id === 'ichirakuCoupon')!.roleta!.startOverPct!;
+    const p = gainRoletaRelic(p0(), 'ichirakuCoupon', data);
+    const run = { ...newRoletaRun(p, 'normal'), villainId: 'mizuki' };
+    const b = startRoletaBattle(p, villainFor(run, villainsById, data), {}, data, fixed(0.5));
+    expect(b.player.hp).toBe(p.maxHp + Math.floor(p.maxHp * pct));
+    expect(b.player.chakra).toBe(p.maxChakra + Math.floor(p.maxChakra * pct));
+    const next = playRoletaRound(b, 'rest', data, fixed(0.5));
+    expect(next.player.chakra).toBeGreaterThan(p.maxChakra);
+    expect(next.player.chakra).toBeLessThanOrEqual(b.player.chakra);
   });
 
   it('roleta de relíquia pós-luta: pesos da categoria, sobe no infinito e só sorteia relíquia que falta', () => {
@@ -420,10 +435,7 @@ describe('run do Roleta enxuto e relíquias (v0.46.0)', () => {
     expect(contractFor('slug', data)).toBe('slugContract');
   });
 
-  it('a fatia Relíquia sorteia pela raridade e a roleta de itens não tem mais os permanentes', () => {
-    const id = rewardRelic(p0(), 3, data, fixed(0.1))!;
-    expect(data.relics.find((r) => r.id === id)?.tier).toBe('rare');
-    expect(data.base.rewards.some((r) => r.id === 'relic')).toBe(true);
+  it('a roleta de itens não tem mais os permanentes', () => {
     expect(data.base.items.some((i) => ['ninjaTool', 'speedItem', 'resistanceItem', 'trainingWeights', 'smokeBomb'].includes(i.id))).toBe(false);
   });
 });
@@ -474,35 +486,11 @@ describe('mais vilões no sorteio (v0.47.0)', () => {
   });
 });
 
-describe('recompensa forte e escalando (v0.52.0)', () => {
+describe('XP no lugar da relíquia (sem relíquia para sortear)', () => {
   const player = () => createRoletaPlayer({ lineageId: 'common', elements: ['fire'], jinchuuriki: false }, data);
 
-  it('as fatias são Status, Relíquia, XP, Itens e Jackpot', () => {
-    expect(data.base.rewards.map((r) => r.id).sort()).toEqual(['item', 'jackpot', 'relic', 'stages', 'xp']);
-  });
-
-  it('a raridade sobe com o ciclo, até lendária; o chefe segue com o baú', () => {
-    expect(rewardTierFor('genin', 0, data)).toBe(1);
-    expect(rewardTierFor('genin', 1, data)).toBe(2);
-    expect(rewardTierFor('genin', 2, data)).toBe(3);
-    expect(rewardTierFor('genin', 9, data)).toBe(3);
-    expect(rewardTierFor('jounin', 0, data)).toBe(2);
-    expect(rewardTierFor('jounin', 1, data)).toBe(3);
-    expect(rewardTierFor('boss', 5, data)).toBe(0);
-  });
-
-  it('a lendária sai de verdade: relíquia rara na fatia', () => {
-    const id = rewardRelic(player(), 3, data, fixed(0.1))!;
-    expect(data.relics.find((r) => r.id === id)!.tier).toBe('rare');
-  });
-
-  it('Status junta estágios, resistência e crítico', () => {
-    const p = player();
-    const steps = applyRoletaReward(p, 'stages', 2, fixed(0.1), data);
-    const after = steps.at(-1)!.player;
-    expect(steps.map((s) => s.effect.kind)).toEqual(['stages', 'resistance', 'critBonus']);
-    expect(after.critBonus).toBeCloseTo(p.critBonus + data.r.rewards.critBonus[1]!);
-    expect(after.maxHp).toBeGreaterThan(p.maxHp);
+  it('o Roleta não tem mais roleta de recompensa (v0.59.0)', () => {
+    expect(data.base.rewards).toEqual([]);
   });
 
   it('XP acompanha o custo do nível', () => {
@@ -512,18 +500,6 @@ describe('recompensa forte e escalando (v0.52.0)', () => {
     expect(rewardXp(high, 1, data)).toBe(Math.floor(xpToNextLevel(8, data.base) * 0.5));
     expect(rewardXp(high, 1, data)).toBeGreaterThan(rewardXp(low, 1, data));
     expect(rewardXp(low, 3, data)).toBe(Math.floor(xpToNextLevel(1, data.base) * 1.5));
-  });
-
-  it('Jackpot dá relíquia rara e cura; sem relíquia, XP', () => {
-    const hurt = { ...player(), hp: 10 };
-    const out = applyJackpot(hurt, fixed(0.1), data);
-    expect(data.relics.find((r) => r.id === out.relic)!.tier).toBe('rare');
-    expect(out.player.relics).toContain(out.relic);
-    expect(out.healed).toBe(Math.floor(hurt.maxHp * data.r.rewards.jackpotHealPct));
-    const rares = data.relics.filter((r) => r.tier === 'rare').map((r) => r.id);
-    const none = applyJackpot({ ...hurt, relics: rares }, fixed(0.1), data);
-    expect(none.relic).toBeNull();
-    expect(none.player.xp + none.player.level).toBeGreaterThan(hurt.xp + hurt.level);
   });
 
   it('o clássico não muda: a recompensa dele segue com os números antigos', () => {

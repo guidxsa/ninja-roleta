@@ -6,7 +6,7 @@ Como o personagem cresce durante a run: XP, níveis, estágios de status e marco
 
 - Começa no **nível 1**. **Não há nível máximo.**
 - XP para ir do nível N ao N+1: **100 + 25 × (N − 1)**. A sobra passa para o próximo nível.
-- **Subir de nível restaura tudo**: HP, chakra e efeitos negativos (ver [fundamentos.md](fundamentos.md#restauração)). No clássico ([reserva](../reserva/README.md)), a luta não começa restaurada (cada vitória devolve só 25%) e o nível novo é o principal respiro da run. No Roleta, desde a v0.59.0, toda luta já começa com HP e chakra cheios ([roleta/run.md](../roleta/run.md)).
+- **Subir de nível restaura tudo**: HP, chakra e efeitos negativos (ver [fundamentos.md](fundamentos.md#restauração)). No clássico ([reserva](../reserva/README.md)), a luta não começa restaurada (cada vitória devolve só 25%) e o nível novo é o principal respiro da run. No Roleta, desde a v0.61.0, cada vitória recupera tudo ([roleta/run.md](../roleta/run.md)).
 - Ganho por nível, sem roleta:
 
 | Dificuldade | HP máximo | Chakra máximo |

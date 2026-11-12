@@ -1,5 +1,5 @@
 import type { RoletaData } from '../../core/roleta/data';
-import type { ItemId, PreFightEventId, RewardId, Weighted } from '../events';
+import type { ItemId, PreFightEventId, Weighted } from '../events';
 import { gameData } from '../index';
 import { roletaBalance } from './balance';
 import { roletaKits } from './kits';
@@ -34,16 +34,6 @@ export const roletaItems: Weighted<ItemId>[] = [
   { id: 'loadedCoin', weight: 8 },
 ];
 
-/** Recompensa direta: sem "Nova técnica"; com a fatia "Relíquia" (v0.46.0). */
-export const roletaRewards: Weighted<RewardId>[] = [
-  // Status junta estágios, resistência e crítico (v0.52.0).
-  { id: 'stages', weight: 35 },
-  { id: 'relic', weight: 22 },
-  { id: 'xp', weight: 20 },
-  { id: 'item', weight: 18 },
-  { id: 'jackpot', weight: 5 },
-];
-
 export const roletaData: RoletaData = {
   base: {
     ...gameData,
@@ -52,11 +42,11 @@ export const roletaData: RoletaData = {
     levelTechniques: [],
     preFightEvents: roletaPreFightEvents,
     items: roletaItems,
-    rewards: roletaRewards,
+    // Sem roleta de recompensa desde a v0.59.0 (a roleta de relíquia ocupa o lugar).
+    rewards: [],
     balance: {
       ...gameData.balance,
       techniqueUpgrade: { ...gameData.balance.techniqueUpgrade, milestones: [] },
-      rewards: { ...gameData.balance.rewards, critBonus: roletaBalance.rewards.critBonus },
     },
   },
   r: roletaBalance,

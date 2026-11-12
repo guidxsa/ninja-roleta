@@ -66,6 +66,30 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Decisões do usuário e cura depois da luta no Roleta (v0.61.0, 12/11/2026)
+
+O usuário decidiu os itens parados de `decisoes.md`: loja com "atualizar relíquias" (14), base única de origens e classes (22), classes novas na Jornada como protagonistas e suportes (11), ícones próprios das conquistas (18), avatar com os personagens liberados (16), símbolos que faltam esperam as imagens dele (15), perfil fase 2 e 3 depois do 1.0 (8) e Pesos de treino como ativa do prodígio descartado (5). O que entrou nesta versão:
+- **Cura depois da vitória** (decidido com o usuário): a cura total do Roleta passou do começo da luta para o fim da vitória. O que acontece entre as lutas chega na seguinte.
+- **Akatsuki** (decidido com o usuário): o corte de metade do HP e do chakra volta a valer, porque a luta seguinte não cura mais.
+- **Cupom do Ichiraku no Roleta** (efeito escolhido pelo usuário, número decidido sozinho): começa a luta com 20% de HP e de chakra acima do máximo, em vez de recuperar 10% depois da vitória. O excedente só se gasta: cura, regeneração, Concentrar e pílula param no máximo e não o tiram. A Jornada não mudou.
+- **Código morto** (decidido com o usuário): saíram a roleta de recompensa (`applyRoletaReward`, `applyJackpot`, `rewardRelic`, `rewardTierFor`, `autoRoletaReward`, `roletaRewards`) e o rótulo "Recompensa comum/rara" da trilha e da dica da categoria, que virou "Relíquia da vitória".
+- **XP da vitória na Jornada** (bug, decidido sozinho): a tela mostrava o XP sem os bônus de talentos e relíquias; agora mostra o ganho de verdade.
+
+Simulação (`npm run sim:origens -- --runs 1000 --seed 2`), vence o 1º ciclo, v0.60.0 → v0.61.0:
+
+| Origem | Médio | Difícil |
+|---|---|---|
+| Comum | 42 → 48 | 14 → 16 |
+| Akimichi | 73 → 76 | 43 → 47 |
+| Inuzuka | 73 → 74 | 36 → 41 |
+| Prodígio | 85 → 85 | 60 → 63 |
+| Uchiha | 32 → 40 | 10 → 11 |
+| Hyuuga | 60 → 64 | 25 → 29 |
+| Uzumaki | 68 → 71 | 32 → 35 |
+| Senju | 85 → 87 | 58 → 61 |
+
+O Cupom acima do máximo vale mais que a cura de 10% de antes, e a Akatsuki voltar a doer não chega a compensar. Nada foi compensado.
+
 ## Confiabilidade, acessibilidade e offline (v0.60.0, 11/11/2026)
 
 Pedido do usuário: analisar o jogo como produto e escolher as melhorias. Escolhido: corrigir bugs que mudam a regra ou perdem dados, tirar do alcance só do mouse a informação que vive nas dicas, e cumprir o princípio de PWA offline. Balanceamento, visual e composição ficaram de fora (aguardam o usuário).
