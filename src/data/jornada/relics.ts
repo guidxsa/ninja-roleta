@@ -132,6 +132,8 @@ export const relics: RelicDef[] = [
   { id: 'smithOrder', tier: 'shop', mods: { taijutsuFlat: 4 } },
   { id: 'tutorLetter', tier: 'shop', xpMult: 1.3 },
   { id: 'armorPlate', tier: 'shop', stats: { hp: 20 } },
+  // Relíquia de economia da prateleira (v0.62.0, proposta).
+  { id: 'merchantBell', tier: 'shop', freeRefresh: 1 },
 
   // De evento
   { id: 'oldLadyCharm', tier: 'event', stats: { hp: 10 }, teamMods: { regenHp: 1 } },

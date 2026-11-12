@@ -63,9 +63,11 @@ Recompensas interativas no lugar da roleta visual. Ganhar dá o prêmio do event
 
 Sempre aberta (v0.50.0): o botão Loja fica no HUD, no mapa, na trilha e no descanso, sem gastar parada. Não abre no meio da luta. No widescreen (v0.57.1), a loja fica aberta na coluna da build, ao lado da trilha e do mapa, no lugar do botão; abrir conta como acesso (sorteia e salva o estoque), por isso o painel só existe quando aparece.
 
-- **Estoque**: 3 relíquias por estágio, sorteadas no primeiro acesso e salvas na run: fechar e abrir, ou recarregar a página, não troca a prateleira. Muda só no estágio seguinte.
-- **À venda**: relíquias, kits (20, 20 e 35 ryō), treino (+1 ponto de talento, 60 ryō; some com a [árvore completa](talentos.md#árvore-completa)) e tratamento (+50 de HP e +15 de chakra em cada um, 30 ryō).
-- **Preço** = base × (1 + 0,10 × compras + 0,25 × estágios passados) × (1 − desconto), arredondado para baixo (`shop.perPurchase`, `shop.perStage`). Toda compra conta, na run inteira; os estágios somam entre os ciclos do [modo infinito](#modo-infinito). Relíquias de desconto vêm por cima, com teto de 40%.
+- **Estoque**: 3 relíquias por estágio, sorteadas no primeiro acesso e salvas na run: fechar e abrir, ou recarregar a página, não troca a prateleira. Estágio novo traz estoque novo, e a chance de relíquia melhor sobe a cada estágio passado (v0.62.0; [reliquias.md](reliquias.md#de-onde-vêm)).
+- **Atualizar** (v0.62.0): botão pago que sorteia de novo as relíquias à venda. As da prateleira anterior não voltam se houver outras. Custa 20 ryō, +15 a cada uso no estágio, e volta a 20 no estágio novo (`shop.refresh`, proposta). O desconto vale; o Sino do mercador deixa a primeira de cada estágio grátis. O sorteio depende da seed, do estágio e de quantas vezes foi atualizada, e fica salvo.
+- **À venda**: relíquias, kits (20, 20 e 35 ryō), treino (+1 ponto de talento, 60 ryō; some com a [árvore completa](talentos.md#árvore-completa)) e tratamento (+50 de HP e +15 de chakra em cada um, 30 ryō). Com a maldição do mercador, também o **Amuleto de purificação** (60 ryō, `shop.cleansePrice`, proposta), que tira a maldição.
+- **Preço** = base × (1 + 0,25 × estágios passados) × (1 − desconto), arredondado para baixo (`shop.perStage`). Os estágios somam entre os ciclos do [modo infinito](#modo-infinito). Desde a v0.62.0, comprar **não** encarece a loja. Relíquias de desconto vêm por cima, com teto de 40%.
+- **Maldição do mercador** (v0.62.0): evento de má sorte do Caminho Ninja ([caminho-ninja.md](caminho-ninja.md#eventos)). Enquanto durar, cada compra encarece a loja em 10% (`shop.perPurchase`), contando só as compras desde a maldição. Sai pelo Santuário (evento), pelo Amuleto de purificação (loja) ou no fim da run; segue nos ciclos do modo infinito. Ao sair, os preços voltam ao normal.
 - O treino e o tratamento não têm limite: quem segura é o preço.
 
 ## Mapa ramificado

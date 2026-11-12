@@ -3,7 +3,7 @@ import type { GenericDef } from '../../core/jornada/trail';
 // Caminho Ninja (docs/jornada/caminho-ninja.md): classes, suportes e pools de cada estágio do mapa ramificado.
 // Mesma dificuldade da História; um chefe de cada estágio é sorteado no começo da run.
 
-const EVENTS = ['gOldLady', 'gRamen', 'gTraining', 'gJokenpo', 'gGuru', 'gAkatsuki', 'gFoundItem', 'gSummon'];
+const EVENTS = ['gOldLady', 'gRamen', 'gTraining', 'gJokenpo', 'gGuru', 'gAkatsuki', 'gFoundItem', 'gSummon', 'gBadOmen', 'gShrine'];
 
 export const generic: GenericDef = {
   // Cada suporte sorteia a classe entre as liberadas (pode ser a do protagonista), depois uma ficha ainda não

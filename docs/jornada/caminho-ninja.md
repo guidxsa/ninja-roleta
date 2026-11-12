@@ -35,6 +35,8 @@ Saem do **desconhecido** (50% das vezes). Um evento não repete na mesma run enq
 | Mantos de nuvem vermelha | Memória: +40 ryō (perdeu: equipe perde 30% do HP) · Fugir (equipe perde 15% do HP) |
 | Achado | +1 Pílula de reanimação · +50 XP |
 | Contrato de invocação | Selos: relíquia de evento (perdeu: equipe perde 10% do HP) · +6 de HP máximo da equipe |
+| Mercador de mau agouro (má sorte) | Aceitar a barganha (+35 ryō e a [maldição do mercador](run.md#loja)) · Selos: +20 XP (perdeu: a maldição) |
+| Santuário na estrada | Purificar-se (só com a maldição: tira a maldição) · Rezar (+30 de HP e +9 de chakra em cada um) |
 
 - Opção com custo em ryō só aparece com ryō suficiente.
 - Perder HP em evento nunca derruba ninguém (fica pelo menos 1).

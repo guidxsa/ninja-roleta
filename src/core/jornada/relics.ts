@@ -79,6 +79,8 @@ export interface RelicDef {
   openingDamage?: number;
   /** Espaços a mais na bolsa. */
   bagBonus?: number;
+  /** Atualizações da prateleira grátis em cada estágio. */
+  freeRefresh?: number;
   /** Descanso cura este valor a mais. */
   restBonus?: { hp: number; chakra: number };
   /** Recurso ao pegar: consumíveis, Vontades do Fogo, ryō ou pontos de talento. */

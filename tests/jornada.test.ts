@@ -23,7 +23,7 @@ import {
   type BattleSetup,
   type FighterSeed,
 } from '../src/core/jornada/battle';
-import { eventOptions } from '../src/core/jornada/events';
+import { eventOptions, SHOP_CURSE } from '../src/core/jornada/events';
 import { generateMap, reachable, reachableFrom } from '../src/core/jornada/map';
 import { checkSequence, jokenpo, memoryDeck, sealSequence } from '../src/core/jornada/minigames';
 import { newJornadaAchievements } from '../src/data/jornada/achievements';
@@ -72,6 +72,13 @@ import {
   xpToNext,
   HERO,
   type JRun,
+  refreshPrice,
+  canRefreshShelf,
+  refreshShelf,
+  cleansePrice,
+  buyCleanse,
+  isCursed,
+  shopWeights,
 } from '../src/core/jornada/run';
 import { chooseAiAction, chooseAiActive } from '../src/core/jornada/ai';
 import { talentMaxRank, talentState, treeComplete, type TalentNode } from '../src/core/jornada/talents';
@@ -912,12 +919,86 @@ describe('run da Jornada', () => {
       for (let i = 0; i < 30; i++) expect(generateMap(rng, data).nodes.some((n) => (n.kind as string) === 'shop')).toBe(false);
     });
 
-    it('cada compra encarece tudo, para a run toda', () => {
+    it('comprar não encarece a loja (v0.62.0)', () => {
       const once = buy(rich(), { kind: 'training', price: training(rich()) }, data);
       expect(once.shopPurchases).toBe(1);
-      expect(training(once)).toBe(Math.floor(base * 1.1));
+      expect(training(once)).toBe(base);
       const twice = buy(once, { kind: 'item', ...shopOffer(once, data).consumables[0]! }, data);
+      expect(training(twice)).toBe(base);
+    });
+
+    it('maldição do mercador: cada compra encarece até ela sair (evento ou amuleto)', () => {
+      const cursed = rich({ flags: [SHOP_CURSE] });
+      expect(cleansePrice(rich(), data)).toBeNull();
+      const once = buy(cursed, { kind: 'training', price: training(cursed) }, data);
+      expect(training(once)).toBe(Math.floor(base * 1.1));
+      const twice = buy(once, { kind: 'training', price: training(once) }, data);
       expect(training(twice)).toBe(Math.floor(base * 1.2));
+      // Amuleto da loja: os preços voltam ao normal.
+      const clean = buyCleanse(twice, data);
+      expect(clean.ryo).toBe(twice.ryo - cleansePrice(twice, data)!);
+      expect(isCursed(clean)).toBe(false);
+      expect(training(clean)).toBe(base);
+      // Compras de antes da maldição não contam.
+      expect(training({ ...rich({ shopPurchases: 5 }), flags: [SHOP_CURSE] })).toBe(base);
+    });
+
+    it('os eventos amaldiçoam e purificam', () => {
+      const run = { ...newGenericRun(5, 'normal', 'common', data), ryo: 9999 };
+      const def = data.events.gBadOmen!;
+      expect(def.options.find((o) => o.id === 'bargain')!.effects).toContainEqual({ kind: 'curse' });
+      expect(eventOptions(data.events.gShrine!, run.flags).map((o) => o.id)).toEqual(['pray']);
+      expect(eventOptions(data.events.gShrine!, [SHOP_CURSE]).map((o) => o.id)).toEqual(['purify', 'pray']);
+      expect(data.generic.stages.every((st) => st.events.includes('gBadOmen') && st.events.includes('gShrine'))).toBe(true);
+    });
+
+    it('a maldição segue no ciclo seguinte do infinito', () => {
+      const won = { ...newGenericRun(5, data.j.infinite.difficulty, 'common', data), status: 'victory' as const, flags: [SHOP_CURSE, 'ev:gRamen'] };
+      expect(canContinueCycle(won, data)).toBe(true);
+      expect(continueCycle(won, data).flags).toEqual([SHOP_CURSE]);
+    });
+
+    it('atualizar a prateleira: troca as relíquias, fica mais caro a cada uso e volta no estágio novo', () => {
+      const { base: b0, step } = data.j.shop.refresh;
+      const open = openShop(rich(), data);
+      expect(refreshPrice(open, data)).toBe(b0);
+      const r1 = refreshShelf(open, data);
+      expect(r1.ryo).toBe(open.ryo - b0);
+      expect(r1.shop!.refreshes).toBe(1);
+      expect(r1.shop!.relics.length).toBe(data.j.shop.relics);
+      expect(r1.shop!.relics.some((id) => !open.shop!.relics.includes(id))).toBe(true);
+      expect(refreshPrice(r1, data)).toBe(b0 + step);
+      const r2 = refreshShelf(r1, data);
+      expect(r2.ryo).toBe(r1.ryo - (b0 + step));
+      // Determinístico: a mesma run atualiza para a mesma prateleira.
+      expect(refreshShelf(open, data).shop).toEqual(r1.shop);
+      // Comprar e reabrir não desfaz a atualização.
+      expect(openShop(r2, data).shop).toEqual(r2.shop);
+      // Estágio novo: estoque novo e preço inicial.
+      const next = { ...r2, stageIndex: 1 };
+      expect(refreshPrice(next, data)).toBe(b0);
+      expect(openShop(next, data).shop!.refreshes ?? 0).toBe(0);
+      // Sem ryō não atualiza.
+      expect(canRefreshShelf({ ...open, ryo: b0 - 1 }, data)).toBe(false);
+      expect(() => refreshShelf({ ...open, ryo: 0 }, data)).toThrow();
+    });
+
+    it('Sino do mercador: a primeira atualização de cada estágio é grátis; o desconto vale no preço', () => {
+      const bell = openShop(gainRelic(rich(), 'merchantBell', data), data);
+      expect(refreshPrice(bell, data)).toBe(0);
+      const r1 = refreshShelf(bell, data);
+      expect(r1.ryo).toBe(bell.ryo);
+      expect(refreshPrice(r1, data)).toBe(data.j.shop.refresh.base);
+      const token = openShop(gainRelic(rich(), 'merchantToken', data), data);
+      expect(refreshPrice(token, data)).toBe(Math.floor(data.j.shop.refresh.base * 0.85));
+    });
+
+    it('a prateleira melhora a cada estágio, e o último peso vale para os seguintes', () => {
+      const table = data.j.relics.shopWeights;
+      expect(shopWeights(rich(), data)).toEqual(table[0]);
+      expect(shopWeights(rich({ stageIndex: 1 }), data)).toEqual(table[1]);
+      expect(shopWeights(rich({ cycle: 3 }), data)).toEqual(table[table.length - 1]);
+      for (let i = 1; i < table.length; i++) expect(table[i]!.rare).toBeGreaterThan(table[i - 1]!.rare);
     });
 
     it('cada estágio encarece, e os ciclos do infinito contam', () => {
@@ -926,8 +1007,8 @@ describe('run da Jornada', () => {
       expect(training(rich({ cycle: 1, stageIndex: 0 }))).toBe(Math.floor(base * (1 + 0.25 * data.stages.length)));
     });
 
-    it('compra e estágio somam, e o desconto vem por cima', () => {
-      const run = rich({ stageIndex: 1, shopPurchases: 2 });
+    it('estágio e maldição somam, e o desconto vem por cima', () => {
+      const run = rich({ stageIndex: 1, flags: [SHOP_CURSE], cursedPurchases: 2 });
       expect(training(run)).toBe(Math.floor(base * 1.45));
       expect(training(gainRelic(run, 'merchantToken', data))).toBe(Math.floor(base * 1.45 * 0.85));
     });

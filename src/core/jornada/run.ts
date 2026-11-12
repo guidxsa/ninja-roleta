@@ -6,7 +6,7 @@ import { createRng, type Rng } from '../rng';
 import type { Element } from '../types';
 import { allyResults, emptyMods, enemySeed, mergeMods, type BattleSetup, type FighterSeed } from './battle';
 import type { JornadaData } from './data';
-import { eventOptions, type EventEffect } from './events';
+import { eventOptions, SHOP_CURSE, type EventEffect } from './events';
 import { generateMap, mapNode, nextNodes, type StageMap } from './map';
 import { bossChoices, dropRelic, rollRelic, rollRelics, type RelicDef } from './relics';
 import { canBuyTalent, talentRankCost, treeComplete, type TalentContext } from './talents';
@@ -101,14 +101,18 @@ export interface JRun {
   cleared: string[];
   /** Prateleira de relíquias da loja no estágio atual: salva, para fechar e abrir não trocar o estoque. */
   shop: ShopStock | null;
-  /** Compras na loja na run toda: cada uma encarece a próxima. */
+  /** Compras na loja na run toda (estatística; desde a v0.62.0 só encarecem com a maldição). */
   shopPurchases: number;
+  /** Compras desde a maldição do mercador (zera quando ela sai). Sem o campo: 0. */
+  cursedPurchases?: number;
 }
 
 export interface ShopStock {
   /** Ciclo e estágio do estoque. */
   key: string;
   relics: string[];
+  /** Vezes que a prateleira foi atualizada neste estágio. Sem o campo: 0. */
+  refreshes?: number;
 }
 
 export type ElementPick = 'chosen' | 'random' | 'fixed';
@@ -778,7 +782,8 @@ export function continueCycle(prev: JRun, data: JornadaData, unlocked: ReadonlyS
   run.stopIndex = 0;
   run.bossChoice = null;
   run.members = {};
-  run.flags = [];
+  // A maldição do mercador dura a run toda, inclusive os ciclos do infinito.
+  run.flags = run.flags.filter((f) => f === SHOP_CURSE);
   run.cleared = [...new Set(run.cleared)];
   run.willOfFire = Math.max(run.willOfFire, data.j.run.willOfFire[run.difficulty] ?? 0);
   const rng = createRng((run.seed ^ Math.imul(run.cycle, 0x27d4eb2f)) >>> 0);
@@ -849,24 +854,78 @@ const shopKey = (run: JRun) => `${run.cycle ?? 0}:${run.stageIndex}`;
 /** Estágios já passados na run, somando os ciclos do modo infinito. */
 const stagesPassed = (run: JRun, data: JornadaData) => (run.cycle ?? 0) * stageCount(run, data) + run.stageIndex;
 
-/** Quanto a loja está mais cara que no começo da run: cada compra e cada estágio somam. */
-export const shopInflation = (run: JRun, data: JornadaData) => data.j.shop.perPurchase * (run.shopPurchases ?? 0) + data.j.shop.perStage * stagesPassed(run, data);
+export const isCursed = (run: JRun) => run.flags.includes(SHOP_CURSE);
 
-/** Sorteia a prateleira do estágio (depende só da seed, do ciclo e do estágio). */
-function rollShelf(run: JRun, data: JornadaData): string[] {
-  const rng = stopRng({ ...run, stopIndex: 0 }, 5);
-  // Uma vaga fixa de relíquia de loja; se acabarem, a vaga volta para o sorteio comum.
-  const exclusive = rollRelic(data.relics, run.relics, { shop: 1 }, rng);
-  return [
-    ...rollRelics(data.relics, exclusive ? [...run.relics, exclusive] : run.relics, data.j.relics.shopWeights, data.j.shop.relics - (exclusive ? 1 : 0), rng),
-    ...(exclusive ? [exclusive] : []),
-  ];
+/** Quanto a loja está mais cara que no começo da run: cada estágio soma, e com a maldição cada compra também. */
+export const shopInflation = (run: JRun, data: JornadaData) =>
+  data.j.shop.perStage * stagesPassed(run, data) + (isCursed(run) ? data.j.shop.perPurchase * (run.cursedPurchases ?? 0) : 0);
+
+/** Pesos da prateleira: melhoram a cada estágio passado; o último vale para os seguintes. */
+export function shopWeights(run: JRun, data: JornadaData): Record<string, number> {
+  const table = data.j.relics.shopWeights;
+  return table[Math.min(stagesPassed(run, data), table.length - 1)]!;
+}
+
+/**
+ * Sorteia a prateleira do estágio (depende só da seed, do ciclo, do estágio e de quantas vezes foi atualizada).
+ * `avoid`: relíquias da prateleira anterior, que não voltam se houver outras para pôr no lugar.
+ */
+function rollShelf(run: JRun, data: JornadaData, refreshes = 0, avoid: readonly string[] = []): string[] {
+  const rng = stopRng({ ...run, stopIndex: 0 }, refreshes ? 40 + refreshes : 5);
+  const roll = (skip: readonly string[]) => {
+    const owned = [...run.relics, ...skip];
+    // Uma vaga fixa de relíquia de loja; se acabarem, a vaga volta para o sorteio comum.
+    const exclusive = rollRelic(data.relics, owned, { shop: 1 }, rng);
+    return [...rollRelics(data.relics, exclusive ? [...owned, exclusive] : owned, shopWeights(run, data), data.j.shop.relics - (exclusive ? 1 : 0), rng), ...(exclusive ? [exclusive] : [])];
+  };
+  const fresh = roll(avoid);
+  return fresh.length >= data.j.shop.relics || !avoid.length ? fresh : roll([]);
 }
 
 /** Abre a loja: no primeiro acesso do estágio, sorteia e guarda o estoque. */
 export function openShop(prev: JRun, data: JornadaData): JRun {
   if (prev.shop?.key === shopKey(prev)) return prev;
   return { ...clone(prev), shop: { key: shopKey(prev), relics: rollShelf(prev, data) } };
+}
+
+/** Preço de atualizar a prateleira agora: sobe a cada uso no estágio, com as grátis das relíquias e o desconto. */
+export function refreshPrice(run: JRun, data: JornadaData): number {
+  const used = run.shop?.key === shopKey(run) ? (run.shop.refreshes ?? 0) : 0;
+  const free = relicDefs(run, data).reduce((a, r) => a + (r.freeRefresh ?? 0), 0);
+  if (used < free) return 0;
+  const { base, step } = data.j.shop.refresh;
+  return Math.floor((base + step * (used - free)) * (1 - shopDiscount(run, data)));
+}
+
+export const canRefreshShelf = (run: JRun, data: JornadaData) => run.ryo >= refreshPrice(run, data);
+
+/** Atualiza a prateleira: paga e sorteia relíquias novas (as da prateleira anterior não voltam, se houver outras). */
+export function refreshShelf(prev: JRun, data: JornadaData): JRun {
+  if (!canRefreshShelf(prev, data)) throw new Error('ryō insuficiente para atualizar');
+  const run = clone(openShop(prev, data));
+  run.ryo -= refreshPrice(run, data);
+  const refreshes = (run.shop!.refreshes ?? 0) + 1;
+  run.shop = { key: run.shop!.key, relics: rollShelf(run, data, refreshes, run.shop!.relics), refreshes };
+  return run;
+}
+
+/** Preço do amuleto que tira a maldição (null sem maldição: o item não aparece). */
+export const cleansePrice = (run: JRun, data: JornadaData): number | null =>
+  isCursed(run) ? Math.floor(data.j.shop.cleansePrice * (1 - shopDiscount(run, data))) : null;
+
+/** Tira a maldição do mercador (evento ou amuleto da loja): os preços voltam ao normal. */
+function liftCurse(run: JRun): void {
+  run.flags = run.flags.filter((f) => f !== SHOP_CURSE);
+  run.cursedPurchases = 0;
+}
+
+export function buyCleanse(prev: JRun, data: JornadaData): JRun {
+  const price = cleansePrice(prev, data);
+  if (price === null || prev.ryo < price) throw new Error('amuleto indisponível');
+  const run = clone(prev);
+  run.ryo -= price;
+  liftCurse(run);
+  return run;
 }
 
 export function shopOffer(run: JRun, data: JornadaData): ShopOffer {
@@ -904,6 +963,7 @@ export function buy(prev: JRun, p: Purchase, data: JornadaData): JRun {
   let run = clone(openShop(prev, data));
   run.ryo -= p.price;
   run.shopPurchases = (run.shopPurchases ?? 0) + 1;
+  if (isCursed(run)) run.cursedPurchases = (run.cursedPurchases ?? 0) + 1;
   if (p.kind === 'relic') run = gainRelic(run, p.id, data);
   else if (p.kind === 'item') run.bag[p.id]++;
   else if (p.kind === 'training') addTalentPoints(run, 1, data);
@@ -959,6 +1019,10 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
       }
     } else if (e.kind === 'item') run.bag[e.id] = Math.min(run.bag[e.id] + e.n, run.bag[e.id] + Math.max(0, bagLimit(run, data) - bagCount(run)));
     else if (e.kind === 'flag') run.flags = [...new Set([...run.flags, e.id])];
+    else if (e.kind === 'curse') {
+      if (!isCursed(run)) run.cursedPurchases = 0;
+      run.flags = [...new Set([...run.flags, SHOP_CURSE])];
+    } else if (e.kind === 'cleanse') liftCurse(run);
     else if (e.kind === 'relic') {
       relic = dropRelic(data.relics, run.relics, { [e.tier]: 1 }, stopRng(run, 9));
       if (relic) run = gainRelic(run, relic, data);
