@@ -85,7 +85,9 @@ Simulação (`npm run sim:origens -- --runs 1000 --seed 2`): o Roleta ficou idê
 | Uchiha | 100 → 99 | 66 → **40** | 21 → 6 | 15 → 4 |
 | Hyuuga | 100 → 100 | 81 → 74 | 41 → 30 | 34 → 25 |
 
-O Uchiha da origem distribui os ataques por igual (10/12/13), e na Jornada as técnicas dele (Bola de Fogo, Sharingan) são de ninjutsu e taijutsu: com 7/9/9 o dano cai muito. O Hyuuga perdeu taijutsu e HP. Nada foi compensado; as opções estão em `decisoes.md`.
+O Uchiha da origem distribui os ataques por igual (10/12/13), e na Jornada as técnicas dele (Bola de Fogo, Sharingan) são de ninjutsu e taijutsu: com 7/9/9 o dano cai muito. O Hyuuga perdeu taijutsu e HP.
+
+**Ajuste por classe** (escolhido pelo usuário entre as opções): o Uchiha volta ao perfil de antes (+5 HP, +4 chakra, +3 taijutsu, +3 ninjutsu, −1 genjutsu, +1 res. mental → 105, 32, 10/12/8, 7/8) e o Hyuuga ganha +1 taijutsu e +5 HP (105, 12/4/4). Vitória com o ajuste (Fácil/Médio/Difícil/Hardcore): Uchiha 100/72/29/22 (antes da base única 100/66/21/15) e Hyuuga 100/82/42/35 (100/81/41/34). O Uchiha passou um pouco do de antes porque o crescimento por nível agora vem da fórmula (taijutsu 1, ninjutsu 1,2, HP 8,4 por nível, contra 0,9, 1,1 e 7 da tabela antiga). Comum e Prodígio não mudam com o ajuste.
 
 ## Conquistas com ícone e avatar editável (v0.63.0, 12/11/2026)
 

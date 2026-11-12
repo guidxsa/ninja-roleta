@@ -128,7 +128,15 @@ export const lineages: LineageDef[] = [
     dojutsu: 'sharingan',
     // Caminho Ninja: sempre e só Fogo (a regra da origem).
     jornada: {
-      hero: { id: 'uchihaNinja', techniques: ['jStrike', 'jShuriken', 'jFireball', 'jSharingan', 'jBunshin'], ai: 'striker', portrait: 'ninja:uchiha' },
+      hero: {
+        id: 'uchihaNinja',
+        techniques: ['jStrike', 'jShuriken', 'jFireball', 'jSharingan', 'jBunshin'],
+        ai: 'striker',
+        portrait: 'ninja:uchiha',
+        // As técnicas da Jornada são de ninjutsu e taijutsu: o perfil por igual da origem derrubava o Uchiha (v0.64.0,
+        // aprovado pelo usuário). Volta ao perfil de antes da base única.
+        adjust: { hp: 5, chakra: 4, offense: { taijutsu: 3, ninjutsu: 3, genjutsu: -1 }, resistance: { mental: 1 } },
+      },
       class: { id: 'uchiha', unlock: 'j_unlockUchiha', supports: ['uchihaGenin', 'uchihaGeninB'], supportNames: ['ren', 'akane', 'hikaru', 'tetsu', 'kaede', 'ryo', 'suzu', 'jin', 'kiyomi', 'nao'] },
     },
   },
@@ -145,7 +153,14 @@ export const lineages: LineageDef[] = [
     dojutsu: 'byakugan',
     // Caminho Ninja: natureza silenciosa, sem ninjutsu elemental (Byakugan e Punho Suave bastam).
     jornada: {
-      hero: { id: 'hyuugaNinja', techniques: ['jStrike', 'jGentlePalm', 'jShuriken', 'jByakugan', 'jBunshin'], ai: 'striker', portrait: 'ninja:hyuuga' },
+      hero: {
+        id: 'hyuugaNinja',
+        techniques: ['jStrike', 'jGentlePalm', 'jShuriken', 'jByakugan', 'jBunshin'],
+        ai: 'striker',
+        portrait: 'ninja:hyuuga',
+        // Ajuste aprovado na v0.64.0: +1 de taijutsu e +5 de HP sobre a fórmula.
+        adjust: { hp: 5, offense: { taijutsu: 1 } },
+      },
       class: { id: 'hyuuga', unlock: 'j_unlockHyuuga', supports: ['hyuugaGenin', 'hyuugaGeninB'], supportNames: ['mio', 'sei', 'haru', 'yuki', 'kenji', 'emi', 'tomo', 'aya', 'shun', 'mai'] },
     },
   },
