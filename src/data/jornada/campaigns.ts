@@ -12,7 +12,11 @@ export const campaigns: Record<string, CampaignDef> = {
     time: 'day',
     stages,
     // Marcos da história (docs/jornada/roteiro.md#marcos): o Sasuke aprende o Chidori no exame (estágio 1, contando do 0).
-    grants: [{ who: 'sasuke', learn: 'jChidori', at: { stage: 1 } }],
+    grants: [
+      { who: 'sasuke', learn: 'jChidori', at: { stage: 1 } },
+      // Contrato com os sapos (Exame): Kuchiyose no Jutsu, com o sapo sorteado.
+      { who: 'naruto', learn: 'jKuchiyose', at: { stop: 'toadSummon' } },
+    ],
   },
 };
 

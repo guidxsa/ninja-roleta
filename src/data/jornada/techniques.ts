@@ -11,6 +11,27 @@ export const allyTechniques: JTechnique[] = [
 
   // Naruto
   { id: 'jKageBunshin', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 5, clones: 2, active: true },
+  // Kuchiyose no Jutsu (marco do contrato com os sapos): o Naruto clássico não escolhe o sapo. Sorteia a variante pelo
+  // peso; a árvore dos Sapos mexe nos pesos (`rollWeights`).
+  {
+    id: 'jKuchiyose',
+    type: 'ninjutsu',
+    element: null,
+    target: 'enemy',
+    baseDamage: 0,
+    chakraCost: 8,
+    cooldown: 3,
+    roll: [
+      { tech: 'jTadpole', weight: 30 },
+      { tech: 'jGamakichi', weight: 35 },
+      { tech: 'jGamatatsu', weight: 25 },
+      { tech: 'jGamabunta', weight: 10 },
+    ],
+  },
+  { id: 'jTadpole', type: 'ninjutsu', element: 'water', target: 'enemy', baseDamage: 3, chakraCost: 0, accuracy: 0.9 },
+  // Gamabunta aliado (entra pelo roteiro contra o Shukaku).
+  { id: 'jbBlade', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 20, chakraCost: 0, accuracy: 0.85 },
+  { id: 'jbWaterGun', type: 'ninjutsu', element: 'water', target: 'allEnemies', baseDamage: 14, chakraCost: 8 },
   // Garras da Kyuubi: vem com a forma do chakra da raposa (roteiro), não pela árvore.
   { id: 'jKyuubiClaw', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, hits: 2, chakraCost: 0, accuracy: 0.9 },
   { id: 'jSexyJutsu', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 3, accuracy: 0.75, onHit: { effect: 'stun', chance: 0.6, turns: 1 }, cooldown: 3 },

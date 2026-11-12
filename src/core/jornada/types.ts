@@ -170,6 +170,8 @@ export interface CharacterDef {
   portrait: string;
   /** Transformações que o roteiro (ou uma ativa) pode ligar (docs/jornada/roteiro.md). */
   forms?: FormDef[];
+  /** Invocação (Gamabunta): entra pelo roteiro e não segue as regras de ninja (sem Bunshin). */
+  summon?: boolean;
 }
 
 export interface EnemyDef {

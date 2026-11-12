@@ -490,6 +490,30 @@ const PORTRAITS: Record<string, () => string> = {
     // Máscara de caçador.
     '<ellipse cx="50" cy="48" rx="17.5" ry="20.5" fill="#f4f4f2"/><path d="M36 46q5-3 10 0M54 46q5-3 10 0" stroke="#222" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M38 52q-2 6 0 10M62 52q2 6 0 10" stroke="#c0392b" stroke-width="1.6" fill="none"/><path d="M45 34q2.5-1.5 5 0t5 0M45 37q2.5-1.5 5 0t5 0" stroke="#8a929e" stroke-width="1" fill="none"/>' +
     '<path d="M32 42c0-16 8-23 18-23s18 7 18 23c-4-8-10-12-18-12s-14 4-18 12z" fill="#1d2129"/>',
+  // Gamabunta: sapo gigante, cachimbo e cicatriz no olho (desenho próprio).
+  gamabunta: () =>
+    scene('gamabunta', '#b0563a', '#2a120c',
+      '<g fill="#7a3324" opacity=".55"><path d="M0 84q22-12 50-8t50 8v16H0z"/></g>') +
+    '<ellipse cx="50" cy="70" rx="40" ry="28" fill="#c2552f" stroke="#5a2014" stroke-width="1.6"/>' +
+    '<ellipse cx="50" cy="78" rx="26" ry="14" fill="#e8b48a"/>' +
+    '<circle cx="30" cy="40" r="11" fill="#c2552f" stroke="#5a2014" stroke-width="1.4"/><circle cx="70" cy="40" r="11" fill="#c2552f" stroke="#5a2014" stroke-width="1.4"/>' +
+    '<circle cx="30" cy="40" r="6" fill="#f3d36b"/><rect x="29" y="35" width="2" height="10" fill="#1b1b22"/>' +
+    '<circle cx="70" cy="40" r="6" fill="#f3d36b"/><rect x="69" y="35" width="2" height="10" fill="#1b1b22"/>' +
+    '<path d="M64 30l12 20" stroke="#5a2014" stroke-width="2.2" stroke-linecap="round"/>' +
+    '<path d="M28 62q22 10 44 0" stroke="#5a2014" stroke-width="2" fill="none"/>' +
+    '<path d="M66 64l16-6" stroke="#6e4423" stroke-width="3" stroke-linecap="round"/><rect x="80" y="52" width="7" height="8" rx="2" fill="#6e4423"/>' +
+    '<path d="M82 48q3-6 0-12" stroke="#cfcfcf" stroke-width="1.4" fill="none" opacity=".7"/>',
+  // Shukaku: tanuki de areia com as marcas azuis (desenho próprio).
+  shukaku: () =>
+    scene('shukaku', '#c9a06a', '#3b2410',
+      '<g fill="#f3d9a6" opacity=".5"><circle cx="14" cy="22" r="1.4"/><circle cx="86" cy="30" r="1.2"/><circle cx="20" cy="76" r="1"/></g>') +
+    '<path d="M18 100c0-30 14-52 32-52s32 22 32 52z" fill="#d8b07a" stroke="#7a5a33" stroke-width="1.4"/>' +
+    '<path d="M24 30l8-16 8 14z M60 28l8-14 8 16z" fill="#d8b07a" stroke="#7a5a33" stroke-width="1.4"/>' +
+    '<ellipse cx="50" cy="44" rx="24" ry="20" fill="#d8b07a" stroke="#7a5a33" stroke-width="1.4"/>' +
+    '<g fill="none" stroke="#3a5fa0" stroke-width="2"><path d="M30 36q6 4 4 10M70 36q-6 4-4 10"/><path d="M36 70q6 6 0 12M64 70q-6 6 0 12M50 62v14"/></g>' +
+    '<circle cx="40" cy="42" r="5" fill="#f3e9a6"/><path d="M38 40l4 4M42 40l-4 4" stroke="#1b1b22" stroke-width="1.4"/>' +
+    '<circle cx="60" cy="42" r="5" fill="#f3e9a6"/><path d="M58 40l4 4M62 40l-4 4" stroke="#1b1b22" stroke-width="1.4"/>' +
+    '<path d="M40 54q10 6 20 0" stroke="#5a3a1c" stroke-width="2" fill="none"/>',
   gaara: () =>
     scene('gaara', '#d8a75e', '#3b2410',
       // Cabaça de areia atrás.

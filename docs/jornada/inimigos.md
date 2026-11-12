@@ -28,6 +28,7 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Akamaru | 45 | 0 | 15 | 9/0/0 | 4/3 | — | brute | Mordida | — |
 | Neji | 150 | 30 | 14 | 14/6/4 | 9/9 | — | tactician | Punho Suave, Rotação, 64 Palmas | — |
 | Gaara | 230 | 45 | 10 | 8/15/4 | 12/8 | terra | brute | Caixão de areia, Escudo de areia, Tsunami de areia, Garra do Shukaku | escudo inicial 15% |
+| Shukaku | 300 | 60 | 8 | 12/16/4 | 13/9 | areia (Kekkei Genkai) | brute | Garra do Shukaku, Tsunami de areia, Caixão de areia | entra no lugar do Gaara a 40% do HP ([roteiro.md](roteiro.md)) |
 | Ninja do Som | 75 | 16 | 12 | 10/8/6 | 6/6 | — | striker | Lâmina sonora, Onda sonora | — |
 | Orochimaru | 240 | 50 | 13 | 13/15/12 | 10/10 | — | brute | Mãos de cobra, Kusanagi, Manda | fúria abaixo de 50% (dano ×1.2) |
 | Kabuto | 170 | 36 | 14 | 12/13/6 | 9/9 | — | healer | Kunai, Bisturi de chakra, Cura médica, Reanimação proibida | — |

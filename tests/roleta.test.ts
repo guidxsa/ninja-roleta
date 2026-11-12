@@ -563,7 +563,8 @@ describe('Bunshin no Jutsu (src/core/clones.ts, v0.59.0)', () => {
   });
 
   it('Jornada: quem tem ninjutsu começa com Bunshin (o Naruto já tem o Kage Bunshin)', () => {
-    for (const c of Object.values(jornadaData.characters)) {
+    // Invocações (o Gamabunta) não seguem a regra: sapo não faz clone.
+    for (const c of Object.values(jornadaData.characters).filter((x) => !x.summon)) {
       const clone = c.techniques.some((id) => jornadaData.techniques[id]?.clones);
       expect([c.id, clone]).toEqual([c.id, c.offense.ninjutsu > 0]);
     }

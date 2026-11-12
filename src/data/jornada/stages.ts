@@ -83,17 +83,71 @@ export const stages: StageDef[] = [
     stops: [
       { kind: 'event', id: 'writtenTest', event: 'writtenTest' },
       { kind: 'fight', id: 'grass', scene: 'deathForest', enemies: ['grassNinja', 'grassNinja'] },
-      { kind: 'story', id: 'forest', scene: 'deathForest', enemies: ['dosu', 'zaku', 'kin'] },
+      // Orochimaru na Floresta da Morte (v0.67.0): resistir; o Sasuke sai com o selo amaldiçoado.
+      {
+        kind: 'story',
+        id: 'orochimaruForest',
+        scene: 'deathForest',
+        enemies: ['orochimaru'],
+        win: { kind: 'survive', rounds: 4, target: 'orochimaru', pct: 0.8 },
+        script: [
+          { when: { on: 'start' }, do: [{ do: 'say', who: 'orochimaru', line: 'orochiStart' }, { do: 'flag', id: 'curseMark' }] },
+          { when: { on: 'round', round: 2 }, do: [{ do: 'say', who: 'orochimaru', line: 'orochiMark' }] },
+          { when: { on: 'hpBelow', who: 'naruto', pct: 0.5 }, do: [{ do: 'say', who: 'naruto', line: 'orochiNaruto' }, { do: 'form', who: 'naruto', form: 'kyuubiBrief' }] },
+        ],
+      },
+      // Trio do Som: o selo do Sasuke desperta quando ele se fere.
+      {
+        kind: 'story',
+        id: 'forest',
+        scene: 'deathForest',
+        enemies: ['dosu', 'zaku', 'kin'],
+        script: [
+          {
+            when: { on: 'hpBelow', who: 'sasuke', pct: 0.5 },
+            if: { flag: 'curseMark' },
+            do: [{ do: 'say', who: 'sasuke', line: 'forestCurse' }, { do: 'form', who: 'sasuke', form: 'curseMark' }],
+          },
+        ],
+      },
       { kind: 'elite', id: 'rainTrio', scene: 'deathForest', enemies: ['rainNinja', 'rainNinja', 'rainNinja'] },
       { kind: 'event', id: 'preliminaries', event: 'preliminaries' },
       { kind: 'story', id: 'kiba', enemies: ['kiba', 'akamaru'], team: [] },
       { kind: 'event', id: 'toadSummon', event: 'toadSummon' },
       { kind: 'treasure', id: 'treasure2' },
-      { kind: 'story', id: 'neji', enemies: ['neji'], team: [] },
+      // Neji fecha os pontos de chakra; o Naruto pede o chakra da Kyuubi.
+      {
+        kind: 'story',
+        id: 'neji',
+        enemies: ['neji'],
+        team: [],
+        script: [
+          { when: { on: 'start' }, do: [{ do: 'say', who: 'neji', line: 'nejiStart' }] },
+          { when: { on: 'hpBelow', who: 'naruto', pct: 0.4 }, do: [{ do: 'say', who: 'naruto', line: 'nejiKyuubi' }, { do: 'form', who: 'naruto', form: 'kyuubiBrief' }] },
+        ],
+      },
       { kind: 'elite', id: 'kabutoSpy', enemies: ['kabutoSpy', 'soundNinja'] },
       { kind: 'fight', id: 'invasion', scene: 'konoha', enemies: ['soundNinja', 'soundNinja', 'grassNinja'] },
       { kind: 'rest', id: 'rest2', scene: 'konoha' },
-      { kind: 'boss', id: 'gaara', enemies: ['gaara'], team: [] },
+      // Gaara: a 40% vira Shukaku, e o Naruto invoca o Gamabunta (fases numa luta só).
+      {
+        kind: 'boss',
+        id: 'gaara',
+        enemies: ['gaara'],
+        team: [],
+        script: [
+          { when: { on: 'start' }, do: [{ do: 'say', who: 'gaara', line: 'gaaraStart' }] },
+          {
+            when: { on: 'hpBelow', who: 'gaara', pct: 0.4 },
+            do: [
+              { do: 'say', who: 'gaara', line: 'gaaraShukaku' },
+              { do: 'replace', who: 'gaara', with: 'shukaku' },
+              { do: 'say', who: 'naruto', line: 'gaaraSummon' },
+              { do: 'enter', who: 'gamabuntaAlly' },
+            ],
+          },
+        ],
+      },
     ],
   },
   {

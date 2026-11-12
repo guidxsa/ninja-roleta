@@ -52,11 +52,12 @@ export const events: EventDef[] = [
   {
     id: 'toadSummon',
     options: [
+      // O contrato vem de qualquer jeito (marco); a escolha é o bônus.
       {
         id: 'summon',
         minigame: 'seals',
         effects: [{ kind: 'relic', tier: 'event' }],
-        onLose: [{ kind: 'ryo', n: 20 }],
+        onLose: [{ kind: 'xp', n: 30 }],
       },
       { id: 'peek', effects: [{ kind: 'ryo', n: 30 }, { kind: 'flag', id: 'peeked' }] },
     ],

@@ -60,6 +60,23 @@ export const characters: CharacterDef[] = [
     ai: 'striker',
     growth: g(7, 3, 0.6, 1, 1.1, 0.4, 0.5, 0.5),
     portrait: 'ninja:uchiha',
+    // Selo amaldiçoado (depois do Orochimaru na Floresta da Morte): o roteiro liga quando ele fica ferido.
+    forms: [{ id: 'curseMark', statMult: 1.3, healPct: 0.15, turns: 4 }],
+  },
+  // Gamabunta: entra pelo roteiro na luta contra o Shukaku (convidado).
+  {
+    id: 'gamabuntaAlly',
+    hp: 260,
+    chakra: 40,
+    speed: 9,
+    offense: { taijutsu: 16, ninjutsu: 14, genjutsu: 2 },
+    resistance: { physical: 12, mental: 8 },
+    element: 'water',
+    techniques: ['jbBlade', 'jbWaterGun'],
+    ai: 'brute',
+    growth: g(10, 2, 0.2, 0.8, 0.7, 0, 0.6, 0.3),
+    portrait: 'villain:gamabunta',
+    summon: true,
   },
   {
     id: 'sakura',

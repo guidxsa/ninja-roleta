@@ -248,3 +248,42 @@ describe('História canônica: Ondas (v0.67.0)', () => {
     expect(finishFight(run, end, data).run.flags).toContain('kyuubiAwakened');
   });
 });
+
+describe('História canônica: Exame (v0.67.0)', () => {
+  it('Orochimaru na Floresta: resistir vence, e o Sasuke sai com a marca do selo', () => {
+    const run = { ...newRun(3, 'easy', data), ...stopAt('exam', 'orochimaruForest') };
+    const end = playOut(startBattle(battleSetup(run, data), data, createRng(2)), data, createRng(2));
+    expect(says(end)).toContain('orochiStart');
+    if (end.status === 'won') expect(finishFight(run, end, data).run.flags).toContain('curseMark');
+  });
+
+  it('Trio do Som: o selo do Sasuke só desperta com a marca', () => {
+    const at = { ...newRun(3, 'normal', data), ...stopAt('exam', 'forest') };
+    // O roteiro confere todas as regras já na abertura: basta abrir a luta com o Sasuke ferido.
+    const open = (flags: string[]) => {
+      const setupF = battleSetup({ ...at, flags }, data);
+      return openBattle({ ...setupF, allies: setupF.allies.map((a) => (a.defId === 'sasuke' ? { ...a, hp: 10 } : a)) }, data);
+    };
+    expect(open([]).fighters.find((f) => f.defId === 'sasuke')!.form).toBeUndefined();
+    expect(open(['curseMark']).fighters.find((f) => f.defId === 'sasuke')!.form).toBe('curseMark');
+  });
+
+  it('Gaara: a 40% vira Shukaku e o Gamabunta entra; a vitória vem com o Shukaku caído', () => {
+    const run = { ...newRun(3, 'easy', data), ...stopAt('exam', 'gaara'), level: 8 };
+    const end = playOut(startBattle(battleSetup(run, data), data, createRng(4)), data, createRng(4));
+    const shukaku = end.fighters.find((f) => f.defId === 'shukaku');
+    expect(shukaku).toBeDefined();
+    expect(end.fighters.find((f) => f.defId === 'gaara')!.gone).toBe(true);
+    expect(end.fighters.some((f) => f.defId === 'gamabuntaAlly' && f.side === 'ally')).toBe(true);
+    if (end.status === 'won') expect(shukaku!.down).toBe(true);
+  });
+
+  it('o contrato com os sapos dá o Kuchiyose no Jutsu, qualquer que seja a escolha', () => {
+    const at = { ...newRun(3, 'normal', data), ...stopAt('exam', 'toadSummon') };
+    expect(heroKnown(at, data)).not.toContain('jKuchiyose');
+    for (const [opt, won] of [['summon', false], ['peek', true]] as const) {
+      const next = resolveEvent(at, opt, won, data).run;
+      expect(heroKnown(next, data)).toContain('jKuchiyose');
+    }
+  });
+});

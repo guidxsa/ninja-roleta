@@ -438,7 +438,7 @@ describe('trilha da História', () => {
     const story = data.stages.map((s) => s.stops.filter((x) => x.kind === 'story' || x.kind === 'boss').map((x) => x.id));
     expect(story).toEqual([
       ['mizuki', 'bells', 'haku'],
-      ['forest', 'kiba', 'neji', 'gaara'],
+      ['orochimaruForest', 'forest', 'kiba', 'neji', 'gaara'],
       ['tanzaku', 'kabuto'],
       ['hospital', 'kimimaro', 'valley'],
     ]);
@@ -1159,7 +1159,7 @@ describe('run da Jornada', () => {
     const sasuke = memberSheet(run, 'sasuke', data);
     expect(run.members.sasuke!.hp).toBe(Math.min(sasuke.maxHp, 20 + 25));
     // Naruto × Kiba (estágio 2): o Naruto luta sozinho, e a Sakura, fora da luta, também recupera.
-    const kiba: JRun = { ...hurt, stageIndex: 1, stopIndex: 5 };
+    const kiba: JRun = { ...hurt, stageIndex: 1, stopIndex: data.stages[1]!.stops.findIndex((s) => s.id === 'kiba') };
     expect(currentStop(kiba, data)!.id).toBe('kiba');
     const res = finishFight(kiba, won(startBattle(battleSetup(kiba, data), data, createRng(1))), data).run;
     const sakura = memberSheet(res, 'sakura', data);

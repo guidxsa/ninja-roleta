@@ -63,6 +63,8 @@ export const enemies: EnemyDef[] = [
     pct: 0.15,
   }), kekkeiGenkai: 'sand' },
   e('soundNinja', 75, 16, 12, [10, 8, 6], [6, 6], null, ['jeSoundBlade', 'jeSoundWave'], 'striker', 'villain:examSound'),
+  // Shukaku: o Gaara transformado (roteiro: entra no lugar dele a 40% do HP).
+  { ...e('shukaku', 300, 60, 8, [12, 16, 4], [13, 9], 'earth', ['jeShukakuClaw', 'jeSandTsunami', 'jeSandCoffin'], 'brute', 'villain:shukaku'), kekkeiGenkai: 'sand' },
 
   // Estágio 3 · Busca e resgate
   e('orochimaru', 240, 50, 13, [13, 15, 12], [10, 10], null, ['jeSnakeHands', 'jeKusanagi', 'jeManda'], 'brute', 'villain:orochimaru', {
