@@ -13,6 +13,15 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra late
 - **Roleta**: aparece no painel do jogador, com a origem embaixo, e no título da ficha.
 - **Caminho Ninja**: é o nome do protagonista. Comum e prodígio usam o nome; Uchiha e Hyuuga, "Nome Uchiha" e "Nome Hyuuga".
 
+## Avatar
+
+- Desde a v0.63.0, o avatar da Ficha do ninja (Início do PC) e do topo do Registro ninja é editável: tocar nele abre a escolha.
+- Dá para escolher entre os personagens jogáveis **já liberados** (`avatarChoices`, `src/core/avatar.ts`):
+  - o ninja comum, sempre;
+  - cada origem jogada no Roleta (pelo histórico) ou com a vitória registrada (`win_<linhagem>`, que fica mesmo depois de a run sair do histórico);
+  - personagens da Jornada pelas conquistas: Naruto (Sino na mão), Uchiha (Chama do clã), Hyuuga (Olhos abertos) e o visual do Sasuke (Mil pássaros).
+- Fica no perfil (`avatar`) como a chave do retrato (`ninja:<chave>`). Por enquanto é o desenho SVG; quando houver imagem própria com a mesma chave, ela entra no lugar. Se o escolhido deixar de estar liberado, vale o padrão.
+
 ## Recorde do modo infinito
 
 - **Roleta** (v0.46.0): o perfil guarda o ciclo alcançado e as lutas vencidas na melhor run (`roleta`); ciclo maior passa, no mesmo ciclo mais lutas. A tela final mostra "Recorde!" quando bate ([roleta/run.md](../roleta/run.md#modo-infinito)). O "Melhor ciclo" da Ficha do ninja vem desse recorde (e do histórico, para quem jogou antes dele).
@@ -28,6 +37,7 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra late
 - As conquistas são checadas ao começar a campanha (depois do sorteio), depois de cada evento pré-vilão, depois de cada luta e no fim da run. Cada conquista nova aparece num aviso rápido.
 - Na primeira abertura do jogo com o perfil, os marcos que o histórico já prova (vitórias por origem, dificuldade, jinchuuriki, ter passado do Mizuki) são liberados sem aviso.
 - Conquistas escondidas aparecem como "???" até alguém conseguir.
+- **Ícones** (v0.63.0): cada conquista liberada mostra um ícone próprio no selo dourado (desenhos do jogo, `prototype/achievementIcons.ts`); as vitórias por origem usam o símbolo do clã. Bloqueada, mostra o cadeado.
 - **Clássicas** (v0.45.0): as que dependiam de mecânica que saiu do Roleta (Enganado pelo guru, Copiador, Juventude dos portões, Borboleta, Insetos famintos, Domador de bijuu, Princesa lesma) não saem mais. Quem já tem continua tendo; para os outros, não aparecem nem contam no total.
 
 ## Categorias

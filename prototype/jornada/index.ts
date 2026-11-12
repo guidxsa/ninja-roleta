@@ -65,6 +65,7 @@ import { loadJornada, saveJornada } from '../../src/state/jornadaSave';
 import { arcMedia, fighterPortrait, icon, sceneMedia, sceneVars } from '../art';
 import { choose, esc, h, openDialog, show, sleep } from '../dom';
 import { tip } from '../tooltip';
+import { achievementIcon } from '../achievementIcons';
 import { forgetLiveBattle, heroLabel, jornadaBattle, memberLabel } from './battle';
 import { movesetScreen } from './moveset';
 import { openJornadaSheet } from './sheet';
@@ -269,7 +270,7 @@ async function entryScreen(host: JornadaHost, saved: JRun | null): Promise<'cont
         ${
           recent.length
             ? `<section class="parchment jrecent"><h3>${J.start.recentTitle}</h3><ul>${recent
-                .map((a) => `<li><span class="seal" aria-hidden="true">功</span><span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><time>${J.start.when(a.days)}</time></li>`)
+                .map((a) => `<li><span class="seal ach-ico" aria-hidden="true">${achievementIcon(a.id)}</span><span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><time>${J.start.when(a.days)}</time></li>`)
                 .join('')}</ul></section>`
             : ''
         }

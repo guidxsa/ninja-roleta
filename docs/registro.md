@@ -66,6 +66,10 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Conquistas com ícone e avatar editável (v0.63.0, 12/11/2026)
+
+Pedido do usuário (itens 18 e 16): ícone próprio por conquista, por enquanto desenhado por mim, e avatar escolhido entre os personagens jogáveis já liberados, em SVG por enquanto. Decidido sozinho: o ícone de cada conquista (as vitórias por origem usam o símbolo do clã; desenho novo do sino), o que libera cada avatar (origens jogadas ou vencidas no Roleta; na Jornada, Naruto, Uchiha, Hyuuga e o visual do Sasuke pelas conquistas) e onde ele aparece (Ficha do ninja do PC e topo do Registro ninja). Sem mudança de regra nem de balanceamento.
+
 ## Loja da Jornada: atualizar relíquias e maldição do mercador (v0.62.0, 12/11/2026)
 
 Pedido do usuário (item 14): botão pago para atualizar as relíquias da loja, mais caro a cada uso; estoque novo e melhor a cada estágio; comprar não encarece; "cada compra encarece" vira efeito de um evento de má sorte, que sai por outro evento, por um item da loja ou no fim da run. Números propostos por mim e aprovados pelo usuário: Atualizar 20 ryō (+15 por uso, volta no estágio novo), pesos da prateleira 50/33/17 → 40/37/23 → 30/40/30, Amuleto de purificação 60 ryō, maldição +10% por compra, Sino do mercador (primeira atualização do estágio grátis). Decidido sozinho: os eventos novos (Mercador de mau agouro e Santuário na estrada) só no Caminho Ninja, porque a História tem eventos fixos; a maldição segue nos ciclos do infinito; as relíquias da prateleira anterior não voltam ao atualizar, se houver outras.

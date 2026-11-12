@@ -614,7 +614,11 @@ export const ptBR = {
       navLabel: 'Navegação',
       profileTitle: 'Ficha do ninja',
       namePlaceholder: 'Registre seu nome',
-      avatarSoon: 'Avatar editável: em breve.',
+      avatarTitle: 'Avatar',
+      avatarTip: 'Toque para trocar. Dá para escolher entre os personagens que você já liberou: as origens que jogou no Roleta e os personagens da Jornada.',
+      avatarEdit: 'Trocar avatar',
+      avatarPick: 'Escolha o avatar',
+      avatarNames: { sasuke: 'Visual do Sasuke' } as Record<string, string>,
       stats: {
         roletaRuns: 'Runs no Roleta',
         roletaWins: 'Vitórias no Roleta',
