@@ -27,6 +27,26 @@ export const characters: CharacterDef[] = [
     ai: 'striker',
     growth: g(9, 3, 0.5, 1, 1, 0.3, 0.6, 0.5),
     portrait: 'ninja:uzumaki',
+    // Chakra da Kyuubi (docs/jornada/roteiro.md): o roteiro liga nos momentos do mangá.
+    forms: [
+      { id: 'kyuubi', statMult: 1.25, healPct: 0.3, addTechniques: ['jKyuubiClaw'] },
+      { id: 'kyuubiBrief', statMult: 1.2, healPct: 0.15, addTechniques: ['jKyuubiClaw'], turns: 3 },
+      { id: 'oneTail', statMult: 1.35, healPct: 0.3, addTechniques: ['jKyuubiClaw'] },
+    ],
+  },
+  // Kakashi aliado: entra pelo roteiro na luta do Zabuza (convidado, não fica na equipe). Copia o Dragão de Água.
+  {
+    id: 'kakashiAlly',
+    hp: 150,
+    chakra: 40,
+    speed: 15,
+    offense: { taijutsu: 11, ninjutsu: 11, genjutsu: 9 },
+    resistance: { physical: 9, mental: 9 },
+    element: 'lightning',
+    techniques: ['jeKakashiKick', 'jeWaterDragon', 'jeHeadHunter', 'jBunshin'],
+    ai: 'tactician',
+    growth: g(6, 2, 0.3, 0.6, 0.6, 0.4, 0.4, 0.4),
+    portrait: 'ninja:kakashi',
   },
   {
     id: 'sasuke',

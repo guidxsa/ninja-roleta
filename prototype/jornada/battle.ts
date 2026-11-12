@@ -623,8 +623,10 @@ export async function jornadaBattle(
         case 'say': {
           const who = e.uid ? name(e.uid) : esc(J.names[e.who] ?? e.who);
           const line = J.script[e.line] ?? e.line;
-          say(B.line(who, line), 'var(--ink)');
-          pushLog(B.line(who, line));
+          // O narrador fala sem nome.
+          const text = e.who === 'narrator' ? line : B.line(who, line);
+          say(text, 'var(--ink)');
+          pushLog(text);
           wait = host.instant() ? 300 : 1400;
           break;
         }

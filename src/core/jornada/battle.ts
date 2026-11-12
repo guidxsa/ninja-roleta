@@ -835,7 +835,8 @@ function checkEnrage(s: JBattle): void {
 
 /** Resultado da luta para a run: HP e chakra de cada aliado no fim, por defId. */
 export function allyResults(s: JBattle): { defId: string; hp: number; chakra: number; down: boolean }[] {
-  return s.fighters.filter((f) => f.side === 'ally' && !f.guest).map((f) => ({ defId: f.defId, hp: f.hp, chakra: f.chakra, down: f.down }));
+  // Quem saiu pelo roteiro (a Sakura protegendo o Tazuna) volta de pé, com o HP que tinha.
+  return s.fighters.filter((f) => f.side === 'ally' && !f.guest).map((f) => ({ defId: f.defId, hp: f.hp, chakra: f.chakra, down: f.down && !f.gone }));
 }
 
 export type { JEvent };

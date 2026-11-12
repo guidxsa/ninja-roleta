@@ -6,6 +6,7 @@ import type { ScriptRule } from '../src/core/jornada/script';
 import type { JBattle } from '../src/core/jornada/types';
 import { jornadaData as data } from '../src/data/jornada';
 import { chooseAiAction } from '../src/core/jornada/ai';
+import { createRng } from '../src/core/rng';
 
 /** Rng fixo: 0 acerta tudo. */
 const fixed = (v: number) => () => v;
@@ -205,5 +206,45 @@ describe('acréscimos do roteiro (v0.67.0)', () => {
     const b = openBattle({ ...setupK, enemies: [{ ...setupK.enemies[0]!, hp: 5 }] }, d);
     const act = chooseAiAction(b, b.fighters[0]!, d, fixed(0.5));
     expect(act).toMatchObject({ kind: 'tech', techId: 'jRasengan' });
+  });
+});
+
+/** Joga a luta até o fim com a IA no lugar do jogador (como a simulação). */
+function playOut(b0: JBattle, d: JornadaData, rng: () => number): JBattle {
+  let b = b0;
+  for (let i = 0; i < 300 && b.status === 'ongoing'; i++) {
+    const me = b.fighters.find((f) => f.protagonist)!;
+    b = playerAct(b, chooseAiAction(b, me, d, rng), d, rng);
+  }
+  return b;
+}
+const stopAt = (stageId: string, stopId: string) => {
+  const si = data.stages.findIndex((s) => s.id === stageId);
+  return { stageIndex: si, stopIndex: data.stages[si]!.stops.findIndex((s) => s.id === stopId) };
+};
+
+describe('História canônica: Ondas (v0.67.0)', () => {
+  it('Zabuza: a Sakura sai para proteger o Tazuna e o Kakashi entra; ela volta de pé para a run', () => {
+    const run = { ...newRun(3, 'normal', data), ...stopAt('waves', 'zabuza') };
+    const end = playOut(startBattle(battleSetup(run, data), data, createRng(5)), data, createRng(5));
+    expect(end.fighters.some((f) => f.defId === 'kakashiAlly' && f.guest)).toBe(true);
+    expect(end.fighters.find((f) => f.defId === 'sakura')!.gone).toBe(true);
+    if (end.status === 'won') {
+      const next = finishFight(run, end, data).run;
+      expect(next.members.sakura?.hp ?? 1).toBeGreaterThan(0);
+      expect(next.members.kakashiAlly).toBeUndefined();
+    }
+  });
+
+  it('Haku: o Sasuke cai, a Kyuubi desperta antes do fim, e a vitória deixa a marca', () => {
+    const run = { ...newRun(3, 'easy', data), ...stopAt('waves', 'haku') };
+    const end = playOut(startBattle(battleSetup(run, data), data, createRng(7)), data, createRng(7));
+    expect(end.status).toBe('won');
+    const kinds = end.log.map((e) => e.type);
+    expect(kinds.indexOf('form')).toBeGreaterThan(-1);
+    expect(kinds.indexOf('form')).toBeLessThan(kinds.lastIndexOf('end'));
+    expect(end.fighters.find((f) => f.defId === 'sasuke')!.down).toBe(true);
+    expect(end.fighters.find((f) => f.protagonist)!.form).toBe('kyuubi');
+    expect(finishFight(run, end, data).run.flags).toContain('kyuubiAwakened');
   });
 });

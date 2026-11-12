@@ -26,12 +26,54 @@ export const stages: StageDef[] = [
       { kind: 'fight', id: 'thugs', enemies: ['gatoThug', 'gatoThug', 'gatoThug'] },
       { kind: 'event', id: 'tazuna', event: 'tazuna' },
       { kind: 'elite', id: 'demonBrothers', enemies: ['gozu', 'meizu'] },
-      { kind: 'elite', id: 'zabuza', enemies: ['zabuza'] },
+      // Zabuza: o Kakashi preso na Prisão de Água é solto e entra; a Sakura sai para proteger o Tazuna.
+      {
+        kind: 'elite',
+        id: 'zabuza',
+        enemies: ['zabuza'],
+        script: [
+          { when: { on: 'start' }, do: [{ do: 'say', who: 'zabuza', line: 'zabuzaStart' }] },
+          {
+            when: { on: 'hpBelow', who: 'zabuza', pct: 0.6 },
+            do: [
+              { do: 'say', who: 'sakura', line: 'zabuzaSakura' },
+              { do: 'replace', who: 'sakura', with: 'kakashiAlly' },
+              { do: 'say', who: 'kakashiAlly', line: 'zabuzaKakashi' },
+            ],
+          },
+        ],
+      },
       { kind: 'event', id: 'treeClimbing', event: 'treeClimbing' },
       { kind: 'fight', id: 'mistRogues', enemies: ['mistRogue', 'gatoThug', 'mistRogue'] },
       { kind: 'treasure', id: 'treasure1' },
       { kind: 'rest', id: 'rest1' },
-      { kind: 'boss', id: 'haku', enemies: ['haku'], team: ['sasuke'] },
+      // Haku: o Sasuke cai protegendo o Naruto, a Kyuubi desperta, e o Naruto para o golpe ao reconhecer o rosto.
+      {
+        kind: 'boss',
+        id: 'haku',
+        enemies: ['haku'],
+        team: ['sasuke'],
+        script: [
+          { when: { on: 'start' }, do: [{ do: 'say', who: 'haku', line: 'hakuStart' }] },
+          { when: { on: 'hpBelow', who: 'haku', pct: 0.55 }, do: [{ do: 'say', who: 'sasuke', line: 'hakuSasuke' }, { do: 'knock', who: 'sasuke' }] },
+          {
+            when: { on: 'down', who: 'sasuke' },
+            do: [
+              { do: 'say', who: 'naruto', line: 'hakuRage' },
+              { do: 'form', who: 'naruto', form: 'kyuubi' },
+              { do: 'flag', id: 'kyuubiAwakened' },
+            ],
+          },
+          {
+            when: { on: 'hpBelow', who: 'haku', pct: 0.2 },
+            do: [
+              { do: 'say', who: 'naruto', line: 'hakuMask' },
+              { do: 'say', who: 'narrator', line: 'hakuEnd' },
+              { do: 'end', status: 'won' },
+            ],
+          },
+        ],
+      },
     ],
   },
   {

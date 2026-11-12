@@ -134,9 +134,24 @@ export const jornadaPtBR = {
   script: {
     bellsStart: 'Peguem os sinos até o meio-dia. Quem não pegar fica sem almoço.',
     bellsGot: 'Peguei! O sino é nosso, Kakashi-sensei!',
+    zabuzaStart: 'Ninjas de verdade não choram. Vocês não passam de crianças brincando.',
+    zabuzaSakura: 'Eu fico com o Tazuna! Vão, soltem o sensei!',
+    zabuzaKakashi: 'Bom trabalho, vocês dois. Daqui eu assumo.',
+    hakuStart: 'Não quero matar vocês. Mas não vou deixar ninguém tocar no Zabuza.',
+    hakuSasuke: 'Idiota... meu corpo se mexeu sozinho.',
+    hakuRage: 'Eu nunca vou te perdoar!',
+    hakuMask: 'Esse rosto... você é o garoto da floresta?!',
+    hakuEnd: 'O chakra vermelho some. O Naruto cai de joelhos, sem forças, e a névoa se desfaz sobre a ponte.',
   } as Record<string, string>,
   // Nomes das formas (transformações) que o roteiro liga.
-  forms: {} as Record<string, string>,
+  forms: {
+    kyuubi: 'Chakra da Kyuubi',
+    kyuubiBrief: 'Chakra da Kyuubi',
+    oneTail: 'Manto de uma cauda',
+    curseMark: 'Selo amaldiçoado',
+    curseMark2: 'Selo amaldiçoado, nível 2',
+    shukaku: 'Shukaku',
+  } as Record<string, string>,
 
   winConditions: {
     hpThreshold: (pct: number) => `Pegue o sino: leve o HP dele a ${pct}%.`,
@@ -158,6 +173,8 @@ export const jornadaPtBR = {
     nejiAlly: 'Neji',
     mizuki: 'Mizuki',
     kakashi: 'Kakashi',
+    kakashiAlly: 'Kakashi',
+    narrator: '',
     gatoThug: 'Capanga',
     mistRogue: 'Renegado da Névoa',
     gozu: 'Gōzu',
@@ -209,6 +226,7 @@ export const jornadaPtBR = {
     jAkamaruBite: 'Mordida do Akamaru',
     jFangOverFang: 'Presa sobre Presa',
     jKageBunshin: 'Kage Bunshin',
+    jKyuubiClaw: 'Garras da Kyuubi',
     jSexyJutsu: 'Sexy no Jutsu',
     jRendan: 'Rendan Uzumaki',
     jTajuuBunshin: 'Mil Clones',

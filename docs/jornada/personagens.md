@@ -12,6 +12,7 @@ Desde a v0.59.0, quem tem ninjutsu começa com o **Bunshin no Jutsu** (fora do m
 |---|---|---|---|---|---|---|---|---|
 | Naruto | 110 | 30 | 10 | 9/8/3 | 7/5 | vento | striker | Golpe, Shuriken, Sexy no Jutsu, Kage Bunshin |
 | Sasuke | 90 | 28 | 13 | 10/10/5 | 6/7 | fogo | striker | Golpe, Shuriken, Bola de Fogo, Combo do Leão, Bunshin no Jutsu |
+| Kakashi (aliado) | 150 | 40 | 15 | 11/11/9 | 9/9 | raio | tactician | Chute, Dragão de água (copiado com o Sharingan), Decapitação, Bunshin no Jutsu. Só entra pelo roteiro, na luta do Zabuza ([roteiro.md](roteiro.md)) |
 | Sakura | 80 | 26 | 10 | 7/6/8 | 5/9 | terra | tactician | Kunai, Shuriken, Armadilha de fios, Kai (libertar), Bunshin no Jutsu |
 | Jiraiya | 150 | 40 | 12 | 13/14/8 | 10/9 | fogo | striker | Golpe do Sannin, Óleo de sapo em chamas, Cabelo-agulha, Bunshin no Jutsu |
 | Tsunade | 140 | 40 | 12 | 15/12/6 | 10/8 | terra | healer | Soco da Tsunade, Palma mística, Golpe, Reanimação, Bunshin no Jutsu |
@@ -65,6 +66,7 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 | Shuriken | Taijutsu | — | um inimigo | 5 | 0 | 80% | 2 golpes |
 | Kage Bunshin | Ninjutsu | — | em si | — | 5 | 85% | 2 clones; ativa de classe |
 | Sexy no Jutsu | Genjutsu | — | um inimigo | — | 3 | 75% | atordoar 60% (1 t); espera 3 |
+| Garras da Kyuubi | Taijutsu | — | um inimigo | 12 | 0 | 90% | 2 golpes; só com o chakra da Kyuubi ligado (roteiro) |
 | Rendan Uzumaki | Taijutsu | — | um inimigo | 7 | 3 | 85% | +1 golpe por clone (até +3) |
 | Mil Clones | Ninjutsu | — | todos os inimigos | 9 | 12 | 85% | 2 golpes; 3 clones |
 | Manto da Kyuubi | Ninjutsu | — | em si | — | 0 | 85% | custa 8% do HP; escudo 20% do HP de quem usa; espera 4; ativa de classe |

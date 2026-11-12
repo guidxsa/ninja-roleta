@@ -11,6 +11,8 @@ export const allyTechniques: JTechnique[] = [
 
   // Naruto
   { id: 'jKageBunshin', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 5, clones: 2, active: true },
+  // Garras da Kyuubi: vem com a forma do chakra da raposa (roteiro), não pela árvore.
+  { id: 'jKyuubiClaw', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, hits: 2, chakraCost: 0, accuracy: 0.9 },
   { id: 'jSexyJutsu', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 3, accuracy: 0.75, onHit: { effect: 'stun', chance: 0.6, turns: 1 }, cooldown: 3 },
   { id: 'jRendan', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 1, hitsPerClone: 1, maxCloneHits: 3, chakraCost: 3, accuracy: 0.85 },
   { id: 'jTajuuBunshin', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 9, hits: 2, chakraCost: 12, clones: 3 },
