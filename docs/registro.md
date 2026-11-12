@@ -66,6 +66,22 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Loja da Jornada: atualizar relíquias e maldição do mercador (v0.62.0, 12/11/2026)
+
+Pedido do usuário (item 14): botão pago para atualizar as relíquias da loja, mais caro a cada uso; estoque novo e melhor a cada estágio; comprar não encarece; "cada compra encarece" vira efeito de um evento de má sorte, que sai por outro evento, por um item da loja ou no fim da run. Números propostos por mim e aprovados pelo usuário: Atualizar 20 ryō (+15 por uso, volta no estágio novo), pesos da prateleira 50/33/17 → 40/37/23 → 30/40/30, Amuleto de purificação 60 ryō, maldição +10% por compra, Sino do mercador (primeira atualização do estágio grátis). Decidido sozinho: os eventos novos (Mercador de mau agouro e Santuário na estrada) só no Caminho Ninja, porque a História tem eventos fixos; a maldição segue nos ciclos do infinito; as relíquias da prateleira anterior não voltam ao atualizar, se houver outras.
+
+Simulação (`npm run sim:jornada -- 1000 2`), vitória v0.61.0 → v0.62.0. O bot compra a relíquia mais barata, não atualiza e escolhe a primeira opção dos eventos (aceita a barganha e se purifica):
+
+| Run | Fácil | Médio | Difícil | Hardcore |
+|---|---|---|---|---|
+| História | 100 → 100 | 90 → 92 | 61 → 60 | 51 → 54 |
+| Comum | 98 → 98 | 58 → 61 | 23 → 24 | 19 → 21 |
+| Prodígio | 100 → 100 | 91 → 92 | 59 → 61 | 52 → 54 |
+| Uchiha | 99 → 100 | 65 → 66 | 19 → 21 | 16 → 15 |
+| Hyuuga | 100 → 100 | 80 → 81 | 39 → 41 | 32 → 34 |
+
+Até 3 pontos a mais, quase tudo pelo fim do encarecimento por compra. Nada foi compensado.
+
 ## Decisões do usuário e cura depois da luta no Roleta (v0.61.0, 12/11/2026)
 
 O usuário decidiu os itens parados de `decisoes.md`: loja com "atualizar relíquias" (14), base única de origens e classes (22), classes novas na Jornada como protagonistas e suportes (11), ícones próprios das conquistas (18), avatar com os personagens liberados (16), símbolos que faltam esperam as imagens dele (15), perfil fase 2 e 3 depois do 1.0 (8) e Pesos de treino como ativa do prodígio descartado (5). O que entrou nesta versão:
