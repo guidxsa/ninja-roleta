@@ -9,6 +9,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 
 | Arquivo | Conteúdo |
 |---|---|
+| [cronologia.md](cronologia.md) | **Cronologia da História**: cada parada na ordem, com categoria (combate, presenciado, narrativo, treino), acontecimento, mecânica e recompensa |
 | [historia.md](historia.md) | História: estágios, paradas, quem luta, vitórias especiais, eventos |
 | [roteiro.md](roteiro.md) | Roteiro de luta (gatilhos, falas, formas, troca de fase), marcos da história e finalizador |
 | [run.md](run.md) | Tipos de run, paradas, eventos e minijogos, dificuldade, salvamento, mapa ramificado, modo infinito |
