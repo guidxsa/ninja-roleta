@@ -129,7 +129,8 @@ export const jornadaBalance = {
   enemyStrength: { easy: 1, normal: 1.25, hard: 1.4, hardcore: 1.5 } as Record<Difficulty, number>,
   // História: multiplica por cima da dificuldade (v0.65.0). A trilha fixa e os aliados fortes deixavam a História bem
   // mais fácil que o Caminho Ninja na mesma dificuldade.
-  storyStrength: 1.1,
+  // v0.68.0 (escolhido pelo usuário): a cronologia nova tirou 5 lutas de desgaste; 1,1 → 1,2.
+  storyStrength: 1.2,
 
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
   minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },

@@ -66,6 +66,41 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## A jornada do Naruto: cronologia categorizada (v0.68.0, 13/11/2026)
+
+Pedido do usuário: as diretrizes "Jornada do Naruto" (a História é a jornada dele, não uma enciclopédia do mangá; entra o que ele vive, presencia ou descobre; eventos categorizados). Comparado com a cronologia anterior e adaptado com o usuário ponto a ponto:
+- **Categorias**: presenciado sem escolha e narrativo com escolha.
+- **Quarteto do Som**: as separações viram cenas.
+- **Tanzaku**: o Kabuto é o chefe; os Sannin são presenciados.
+- **Kimimaro**: o Lee chega e o Naruto segue.
+- **Gaara**: luta em três fases.
+- **Neji**: a promessa à Hinata dá determinação na luta.
+- **Rasengan**: três treinos.
+- **Cenas**: todas as novas entram.
+- **O que sai**: o ataque ao hospital (o Naruto não estava lá) e a emboscada no lago.
+
+Antes disso, também com o usuário:
+- o Iruka cai protegendo o Naruto no Mizuki;
+- o teste do sino vira derrota inevitável, que libera a raiz dos Laços;
+- o encontro com o Haku na floresta;
+- o Sharingan do Sasuke como marco;
+- os mercenários do Gatō dentro da luta do Haku.
+
+A fonte única é [cronologia.md](jornada/cronologia.md). Motor: categoria de evento, derrota inevitável, formas com modificadores, ação `leave`, reserva com repetição, e a migração de save pelo id da parada (`withJourney`).
+
+Decidido sozinho: as recompensas das cenas e treinos novos (+1 ponto, kits, XP), as falas e textos, as fichas do Iruka, dos mercenários e do Gaara exausto, e os limiares dos gatilhos.
+
+Simulação (`npm run sim:jornada -- 1000 2`), vitória da História; o Caminho Ninja ficou idêntico:
+
+| Versão | Fácil | Médio | Difícil | Hardcore |
+|---|---|---|---|---|
+| v0.67.0 (× 1,1) | 100 | 87 | 46 | 14 |
+| v0.68.0 com × 1,1 | 100 | 95 | 70 | 40 |
+| v0.68.0 com × 1,2 (escolhido) | 100 | 81 | 40 | 13 |
+| v0.68.0 com × 1,3 (testado) | 100 | 61 | 14 | 3 |
+
+Saíram 5 lutas de desgaste e as cenas dão cura, pontos e kits. O usuário escolheu × 1,2, que volta perto do equilíbrio da v0.67.0.
+
 ## A História canônica do Naruto (v0.67.0, 12/11/2026)
 
 Pedido do usuário: a História fiel aos momentos fundamentais do mangá e divertida de jogar; a árvore decide como o Naruto cresce, nunca se o cânone acontece. Decidido com o usuário:

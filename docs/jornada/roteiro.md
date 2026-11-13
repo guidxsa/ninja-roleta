@@ -45,12 +45,14 @@ Uma regra pode ter a condição **`if: { flag }`**: só vale com aquela marca na
 | `knock` | o lutador cai pelo roteiro, sem ser derrotado (o Sasuke protegendo o Naruto do Haku) |
 | `form` | liga uma **forma** do lutador (veja abaixo) |
 | `enter` | um lutador da reserva entra na luta |
+| `leave` | um lutador sai da luta sem ninguém no lugar (o Gamabunta vai embora depois da cabeçada no Shukaku) |
 | `replace` | um lutador sai e outro da reserva entra no lugar: a troca de fase |
 | `heal` | cura uma fração do HP máximo |
 | `flag` | deixa uma marca na run, para eventos e paradas seguintes |
 | `end` | encerra a luta com o resultado declarado (vitória ou derrota roteirizada) |
 
-- A **reserva** sai do próprio roteiro: todo lutador citado em `enter` ou `replace` é montado com a força da run (inimigos) ou a ficha da run (aliados).
+- A **reserva** sai do próprio roteiro: todo lutador citado em `enter` ou `replace` é montado com a força da run (inimigos) ou a ficha da run (aliados), um por ação (três mercenários iguais entram como três).
+- A mesma forma não liga duas vezes no mesmo lutador. Depois que a luta acabou, uma regra que também a encerraria não dispara (duas saídas para o mesmo fim não repetem as falas).
 - Quem **sai** por `replace` não volta nem conta para a vitória. Quem **entra** pelo roteiro é convidado: luta, mas não vira membro da equipe depois.
 - O lutador que entra age a partir da rodada seguinte.
 
@@ -60,6 +62,7 @@ A ficha de um personagem ou inimigo pode declarar **formas** (`forms`): transfor
 
 - Uma forma pode multiplicar ataques e resistências, multiplicar o HP máximo (o HP atual acompanha a proporção), trocar as técnicas e a passiva, **somar técnicas** enquanto dura, curar ao entrar e trocar o retrato.
 - Pode ser **temporária** (`turns`): conta os turnos de quem a usa e, no fim, volta à ficha de antes.
+- Pode trazer **modificadores** (`mods`): dano × um fator e, uma vez, 1 de HP em vez de cair (a determinação da promessa ao Neji ou do "você é meu amigo" no Vale).
 - Hoje: o chakra da Kyuubi do Naruto (permanente na luta contra o Haku; 3 turnos contra o Orochimaru e o Neji), o manto de uma cauda (Vale do Fim), o selo amaldiçoado do Sasuke (4 turnos) e o selo nível 2 (Vale do Fim).
 
 ### Técnica sorteada
@@ -72,6 +75,8 @@ Além das que já existiam ([historia.md](historia.md#vitórias-especiais)):
 
 - **Finalizador** (`finisher`): o alvo só cai com uma técnica. Um golpe fatal de outra técnica deixa o alvo com 1 de HP. A tela mostra o objetivo ("Kabuto só cai com o Rasengan"). A técnica entra na luta mesmo fora do moveset, e a IA (aliados e simulação) a usa com o alvo a 30% ou menos, concentrando chakra se faltar.
 
+- **Derrota inevitável** (`inevitableLoss` na parada, v0.68.0): qualquer fim de luta conta como progresso; não gasta Vontade do Fogo nem encerra a run, e a recompensa da luta continua. A tela mostra "Derrota" com a lição da parada.
+
 ## Exemplo: o teste do sino
 
-O teste do sino já usa o roteiro: o Kakashi abre a luta com uma fala, e o Naruto comemora quando o HP do Kakashi chega a 50%. A regra de vitória continua a mesma (`hpThreshold`).
+O teste do sino é uma derrota inevitável: o Kakashi abre a luta com uma fala e deixa a marca `bellsLesson`; com ele a 50% (Substituição: "foi só um tronco") ou na rodada 4, a luta termina em derrota roteirizada. A marca carimba a raiz do ramo Laços (`grantedBy`).

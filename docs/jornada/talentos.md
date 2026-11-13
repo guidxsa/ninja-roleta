@@ -8,6 +8,7 @@ A árvore **reinicia a cada run** e custa pontos de talento ([progressao.md](pro
 - **Bifurcação**: alguns pontos do ramo oferecem dois caminhos. Escolher um fecha o outro nesta run ("Você escolheu o outro caminho").
 - **Níveis**: a maioria dos talentos é **única**, principalmente os passivos. Alguns, quase sempre técnicas, sobem de nível, com limite de 2 ou 3 e um custo próprio por nível. Dá para voltar e subir um talento antigo a qualquer momento, mesmo depois de avançar no ramo.
 - **Ramos canônicos** (v0.67.0): a raiz de Sapos, Kyuubi e Rasengan é **dada pela história** (`grantedBy`): entra carimbada, sem custo, no marco ([historia.md](historia.md#momentos-canônicos)). Antes disso, aparece tracejada como "Vem pela história", e o resto do ramo fica fechado. Os níveis da raiz continuam pagos.
+- **Laços** (v0.68.0): a raiz (Não vou desistir) também vem pela história: a lição do teste do sino.
 - **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela. As outras classes ganham os seus na v0.68.0.
 - **Nós da conta** ficam liberados de vez por um objetivo (hoje, o ramo do Sasuke no Uchiha). A Ōdama Rasengan saiu na v0.67.0: não pertence ao Naruto clássico e fica guardada para uma campanha Shippuden.
 - O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
@@ -48,7 +49,7 @@ Seis ramos custando cerca de 55 pontos, fora os níveis, para os cerca de 30 que
 | Pegadinhas | Shuriken das sombras | 2 | 3 (+1 cada) | Aprende a Shuriken das sombras (3 golpes). Cada nível: +20% de dano |
 | Pegadinhas | Emboscada | 2 | | +30% de dano em alvo atordoado |
 | Pegadinhas | Mestre da trapaça | 3 | | +15% de chance de aplicar efeitos; +10% de crítico |
-| Laços | Não vou desistir | 1 | | A equipe recupera 1 de HP por rodada |
+| Laços | Não vou desistir | história | | Dado pela lição do teste do sino: a equipe recupera 1 de HP por rodada |
 | Laços | Equipe 7 **ou** | 2 | | +15% de HP máximo dos suportes |
 | Laços | Grito de guerra | 2 | 3 (+1 cada) | Aprende o Grito de guerra: cura 20 de HP de um aliado e tira atordoar e bloqueio. Cada nível: 1 de chakra a menos |
 | Laços | Proteger os amigos | 2 | | +8% de dano da equipe |

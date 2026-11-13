@@ -12,6 +12,7 @@ Desde a v0.59.0, quem tem ninjutsu começa com o **Bunshin no Jutsu** (fora do m
 |---|---|---|---|---|---|---|---|---|
 | Naruto | 110 | 30 | 10 | 9/8/3 | 7/5 | vento | striker | Golpe, Shuriken, Sexy no Jutsu, Kage Bunshin |
 | Sasuke | 90 | 28 | 13 | 10/10/5 | 6/7 | fogo | striker | Golpe, Shuriken, Bola de Fogo, Combo do Leão, Bunshin no Jutsu |
+| Iruka (aliado) | 90 | 30 | 11 | 9/9/5 | 7/7 | água | guardian | Golpe, Shuriken, Bunshin no Jutsu. Só entra pelo roteiro, na luta do Mizuki, e cai protegendo o Naruto |
 | Gamabunta (invocação) | 260 | 40 | 9 | 16/14/2 | 12/8 | água | brute | Lâmina do Gamabunta, Rajada de água. Entra pelo roteiro contra o Shukaku |
 | Kakashi (aliado) | 150 | 40 | 15 | 11/11/9 | 9/9 | raio | tactician | Chute, Dragão de água (copiado com o Sharingan), Decapitação, Bunshin no Jutsu. Só entra pelo roteiro, na luta do Zabuza ([roteiro.md](roteiro.md)) |
 | Sakura | 80 | 26 | 10 | 7/6/8 | 5/9 | terra | tactician | Kunai, Shuriken, Armadilha de fios, Kai (libertar), Bunshin no Jutsu |
