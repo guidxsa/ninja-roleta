@@ -6,6 +6,7 @@ import { SHOP_CURSE, type EventDef } from '../../core/jornada/events';
 export const events: EventDef[] = [
   {
     id: 'graduation',
+    category: 'narrative',
     options: [
       { id: 'ramen', effects: [{ kind: 'healFull' }, { kind: 'ryo', n: 15 }] },
       { id: 'train', effects: [{ kind: 'talent', n: 1 }] },
@@ -13,6 +14,7 @@ export const events: EventDef[] = [
   },
   {
     id: 'tazuna',
+    category: 'narrative',
     options: [
       { id: 'protect', effects: [{ kind: 'flag', id: 'helpedTazuna' }, { kind: 'ryo', n: 20 }] },
       { id: 'charge', effects: [{ kind: 'ryo', n: 45 }] },
@@ -20,6 +22,7 @@ export const events: EventDef[] = [
   },
   {
     id: 'treeClimbing',
+    category: 'training',
     options: [
       {
         id: 'climb',
@@ -32,6 +35,7 @@ export const events: EventDef[] = [
   },
   {
     id: 'writtenTest',
+    category: 'narrative',
     options: [
       {
         id: 'cheat',
@@ -44,6 +48,7 @@ export const events: EventDef[] = [
   },
   {
     id: 'preliminaries',
+    category: 'narrative',
     options: [
       { id: 'ebisu', effects: [{ kind: 'xp', n: 80 }] },
       { id: 'hospital', effects: [{ kind: 'healTeam', hp: 50, chakra: 15 }, { kind: 'item', id: 'hpKit', n: 1 }] },
@@ -51,6 +56,7 @@ export const events: EventDef[] = [
   },
   {
     id: 'toadSummon',
+    category: 'training',
     options: [
       // O contrato vem de qualquer jeito (marco); a escolha é o bônus.
       {
@@ -65,6 +71,7 @@ export const events: EventDef[] = [
   {
     // Itachi e Kisame vêm atrás do Naruto; o Sasuke o enfrenta na pousada e o Jiraiya intervém (cap. 139 a 147).
     id: 'itachiKisame',
+    category: 'narrative',
     options: [
       { id: 'chase', effects: [{ kind: 'xp', n: 50 }, { kind: 'maxStat', who: 'team', stat: 'hp', n: 6 }] },
       { id: 'stay', effects: [{ kind: 'healTeam', hp: 40, chakra: 12 }, { kind: 'ryo', n: 20 }] },
@@ -72,23 +79,81 @@ export const events: EventDef[] = [
   },
   {
     id: 'rasenganTraining',
+    category: 'training',
     options: [
-      {
-        id: 'balloon',
-        minigame: 'seals',
-        effects: [{ kind: 'talent', n: 2 }],
-        onLose: [{ kind: 'talent', n: 1 }],
-      },
-      { id: 'bet', effects: [{ kind: 'ryo', n: 40 }, { kind: 'maxStat', who: 'hero', stat: 'hp', n: 10 }] },
+      // Rasengan III (bola de borracha): o Rasengan vem de qualquer jeito (marco da campanha).
+      { id: 'ball', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] },
     ],
   },
   {
     id: 'sasukeLeft',
+    category: 'narrative',
     options: [
       { id: 'promise', effects: [{ kind: 'talent', n: 1 }, { kind: 'healTeam', hp: 50, chakra: 15 }] },
       { id: 'jokenpo', minigame: 'jokenpo', effects: [{ kind: 'relic', tier: 'event' }], onLose: [{ kind: 'ryo', n: 20 }] },
     ],
   },
+  // Cronologia da v0.68.0 (docs/jornada/cronologia.md): treinos, cenas presenciadas e narrativas novas.
+  { id: 'sealScroll', category: 'training', options: [{ id: 'scroll', minigame: 'seals', effects: [{ kind: 'xp', n: 20 }], onLose: [{ kind: 'xp', n: 10 }] }] },
+  {
+    id: 'team7',
+    category: 'narrative',
+    options: [
+      { id: 'hokage', effects: [{ kind: 'talent', n: 1 }] },
+      { id: 'rival', effects: [{ kind: 'xp', n: 40 }] },
+    ],
+  },
+  {
+    id: 'hakuForest',
+    category: 'narrative',
+    options: [
+      { id: 'precious', effects: [{ kind: 'healTeam', hp: 30, chakra: 9 }] },
+      { id: 'stronger', effects: [{ kind: 'talent', n: 1 }] },
+    ],
+  },
+  { id: 'hakuFarewell', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'talent', n: 1 }] }] },
+  { id: 'leeGaara', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'xp', n: 40 }, { kind: 'flag', id: 'viuGaara' }] }] },
+  {
+    id: 'hinataOintment',
+    category: 'narrative',
+    options: [
+      { id: 'thanks', effects: [{ kind: 'healTeam', hp: 40, chakra: 0 }] },
+      { id: 'weird', effects: [{ kind: 'item', id: 'hpKit', n: 1 }] },
+    ],
+  },
+  { id: 'hinataNeji', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'flag', id: 'promessaNeji' }] }] },
+  {
+    id: 'jiraiyaJourney',
+    category: 'narrative',
+    options: [
+      { id: 'teach', effects: [{ kind: 'xp', n: 40 }] },
+      { id: 'find', effects: [{ kind: 'ryo', n: 20 }] },
+    ],
+  },
+  { id: 'rasengan1', category: 'training', options: [{ id: 'water', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] }] },
+  { id: 'rasengan2', category: 'training', options: [{ id: 'rubber', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] }] },
+  {
+    id: 'tsunade',
+    category: 'narrative',
+    options: [
+      { id: 'challenge', effects: [{ kind: 'maxStat', who: 'hero', stat: 'hp', n: 10 }] },
+      { id: 'bet', effects: [{ kind: 'ryo', n: 40 }] },
+    ],
+  },
+  { id: 'sannin', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'healFull' }, { kind: 'talent', n: 1 }] }] },
+  { id: 'chojiStays', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'item', id: 'chakraKit', n: 1 }] }] },
+  { id: 'nejiStays', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'xp', n: 50 }] }] },
+  { id: 'shikamaruStays', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'talent', n: 1 }] }] },
+  { id: 'kibaStays', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'item', id: 'hpKit', n: 1 }] }] },
+  {
+    id: 'valleyTalk',
+    category: 'narrative',
+    options: [
+      { id: 'friend', effects: [{ kind: 'flag', id: 'valleyFriend' }] },
+      { id: 'force', effects: [{ kind: 'flag', id: 'valleyForce' }] },
+    ],
+  },
+  { id: 'returnKonoha', category: 'witness', options: [{ id: 'continue', effects: [] }] },
 ];
 
 /** Eventos do Caminho Ninja (docs/jornada/caminho-ninja.md#eventos), sorteados pelo desconhecido. */

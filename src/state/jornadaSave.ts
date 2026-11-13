@@ -58,6 +58,43 @@ export function withCanonStory(run: JRun): JRun {
   return next;
 }
 
+/** As paradas da História na v0.67.0, por arco: a migração da v0.68.0 lê a posição antiga pelo id. */
+const V067_STOPS: string[][] = [
+  ['mizuki', 'graduation', 'bells', 'thugs', 'tazuna', 'demonBrothers', 'zabuza', 'treeClimbing', 'mistRogues', 'treasure1', 'rest1', 'haku'],
+  ['writtenTest', 'grass', 'orochimaruForest', 'forest', 'rainTrio', 'preliminaries', 'kiba', 'toadSummon', 'treasure2', 'neji', 'kabutoSpy', 'invasion', 'rest2', 'gaara'],
+  ['itachiKisame', 'rasenganTraining', 'rest4', 'tanzaku', 'kabuto'],
+  ['hospital', 'sasukeLeft', 'soundAmbush', 'jirobo', 'treasure3', 'kidomaruTayuya', 'sakon', 'kimimaro', 'rest3', 'valley'],
+];
+
+/**
+ * Save de antes da cronologia da v0.68.0: a História foi reordenada e ganhou cenas. A run volta na primeira parada nova
+ * que ainda não tinha feito (a menor posição nova entre as paradas antigas que faltavam). Quem já passou do teste do
+ * sino ganha a lição (a raiz do ramo Laços); se tinha comprado o nó, recebe o ponto de volta.
+ */
+export function withJourney(run: JRun): JRun {
+  if (run.journey === 1) return run;
+  const next: JRun = { ...run, journey: 1, talents: [...run.talents], flags: [...run.flags] };
+  if (next.mode === 'canon') {
+    const old = V067_STOPS[next.stageIndex];
+    const stops = storyStages(next, jornadaData)[next.stageIndex]?.stops ?? [];
+    if (old) {
+      const positions = old
+        .slice(next.stopIndex)
+        .map((id) => stops.findIndex((s) => s.id === id))
+        .filter((i) => i >= 0);
+      next.stopIndex = positions.length ? Math.min(...positions) : Math.max(0, stops.length - 1);
+    }
+    const pastBells = next.stageIndex > 0 || V067_STOPS[0]!.indexOf('bells') < run.stopIndex;
+    if (next.hero === 'naruto' && pastBells && !next.flags.includes('bellsLesson')) next.flags.push('bellsLesson');
+  }
+  if (next.talents.includes('tNeverGiveUp')) {
+    next.talentPoints += 1;
+    next.talents = next.talents.filter((t) => t !== 'tNeverGiveUp');
+  }
+  syncGrantedTalents(next, jornadaData);
+  return next;
+}
+
 /** Troca os ids de relíquia que mudaram (v0.43.0: iniciais novas e o Talismã da Vontade do Fogo). */
 export const renameRelicIds = (ids: readonly string[]) => [...new Set(ids.map((id) => RELIC_RENAMES[id] ?? id))];
 
@@ -93,7 +130,7 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     const cycle = typeof run.cycle === 'number' ? run.cycle : 0;
     const unlocks = Array.isArray(run.unlocks) ? run.unlocks : [];
     const loaded: JRun = { ...legacy, ...run, cycle, unlocks, learned: known(run.learned ?? []), moveset: known(run.moveset ?? []), cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
-    return withCanonStory(withSilentNatures(inFourArcs(withoutShopStops(loaded, run.shopPurchases === undefined))));
+    return withJourney(withCanonStory(withSilentNatures(inFourArcs(withoutShopStops(loaded, run.shopPurchases === undefined)))));
   } catch {
     return null;
   }
@@ -131,9 +168,9 @@ function inFourArcs(run: JRun): JRun {
   const next: JRun = { ...run, storyArcs: STORY_ARCS };
   if (run.stageIndex < 2) return next;
   const id = OLD_RETRIEVAL_STOPS[Math.min(run.stopIndex, OLD_RETRIEVAL_STOPS.length - 1)]!;
-  const stages = storyStages(run, jornadaData);
-  for (let stageIndex = 2; stageIndex < stages.length; stageIndex++) {
-    const stopIndex = stages[stageIndex]!.stops.findIndex((s) => s.id === id);
+  // Cada migração dá um passo: aqui, para a ordem da v0.67.0; a da v0.68.0 (`withJourney`) leva para a de hoje.
+  for (let stageIndex = 2; stageIndex < V067_STOPS.length; stageIndex++) {
+    const stopIndex = V067_STOPS[stageIndex]!.indexOf(id);
     if (stopIndex >= 0) return { ...next, stageIndex, stopIndex };
   }
   return next;

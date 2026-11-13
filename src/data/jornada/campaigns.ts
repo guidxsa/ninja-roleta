@@ -13,7 +13,9 @@ export const campaigns: Record<string, CampaignDef> = {
     stages,
     // Marcos da história (docs/jornada/roteiro.md#marcos): o Sasuke aprende o Chidori no exame (estágio 1, contando do 0).
     grants: [
-      { who: 'sasuke', learn: 'jChidori', at: { stage: 1 } },
+      // O Sharingan desperta contra o Haku; o Chidori vem no mês de treino antes da final.
+      { who: 'sasuke', learn: 'jSharingan', at: { stop: 'haku' } },
+      { who: 'sasuke', learn: 'jChidori', at: { stop: 'preliminaries' } },
       // Contrato com os sapos (Exame): Kuchiyose no Jutsu, com o sapo sorteado.
       { who: 'naruto', learn: 'jKuchiyose', at: { stop: 'toadSummon' } },
       // Treino com o Jiraiya (Sannin): o Rasengan, que derruba o Kabuto.

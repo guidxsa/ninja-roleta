@@ -43,6 +43,8 @@ export type ScriptAction =
   | { do: 'form'; who: string; form: string }
   /** Entra um lutador da reserva da luta (montada pela parada). */
   | { do: 'enter'; who: string }
+  /** Sai da luta sem ninguém no lugar (o Gamabunta vai embora depois da cabeçada no Shukaku). */
+  | { do: 'leave'; who: string }
   /** Sai `who` e entra `with` (da reserva) no lugar: troca de fase (Gaara → Shukaku contra o Gamabunta). */
   | { do: 'replace'; who: string; with: string }
   | { do: 'heal'; who: string; pct: number }
@@ -157,9 +159,18 @@ function perform(s: JBattle, a: ScriptAction, data: JornadaData, enterFighter: (
     case 'form': {
       const f = byDef(s, a.who);
       const form = f ? formOf(f.defId, a.form, data) : undefined;
-      if (!f || !form) return;
+      // A mesma forma não liga duas vezes (os status multiplicariam de novo).
+      if (!f || !form || f.form === form.id) return;
       applyForm(f, form);
       s.log.push({ type: 'form', uid: f.uid, form: form.id });
+      return;
+    }
+    case 'leave': {
+      const out = byDef(s, a.who);
+      if (!out) return;
+      out.gone = true;
+      out.down = true;
+      s.log.push({ type: 'leave', uid: out.uid });
       return;
     }
     case 'enter': {
@@ -208,6 +219,8 @@ export function runScript(s: JBattle, data: JornadaData, enterFighter: (s: JBatt
   try {
     s.script.forEach((rule, i) => {
       if (s.fired.includes(i) || (rule.if && !s.runFlags.includes(rule.if.flag)) || !triggered(s, rule.when, ctx)) return;
+      // Luta já acabou: uma regra que também encerraria não dispara (duas saídas para o mesmo fim não repetem as falas).
+      if (s.status !== 'ongoing' && rule.do.some((a) => a.do === 'end')) return;
       s.fired.push(i);
       for (const a of rule.do) perform(s, a, data, enterFighter);
     });

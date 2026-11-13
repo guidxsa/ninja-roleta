@@ -107,6 +107,8 @@ export interface JRun {
   cursedPurchases?: number;
   /** Árvore e História canônicas da v0.67.0 já aplicadas (sem o campo: save antigo, migrado ao carregar). */
   canonTree?: 1;
+  /** Cronologia da v0.68.0 (a jornada pela perspectiva do Naruto) já aplicada (sem o campo: migrado ao carregar). */
+  journey?: 1;
 }
 
 export interface ShopStock {
@@ -168,6 +170,7 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     shop: null,
     shopPurchases: 0,
     canonTree: 1,
+    journey: 1,
   };
 }
 

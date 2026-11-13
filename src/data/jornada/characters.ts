@@ -29,10 +29,28 @@ export const characters: CharacterDef[] = [
     portrait: 'ninja:uzumaki',
     // Chakra da Kyuubi (docs/jornada/roteiro.md): o roteiro liga nos momentos do mangá.
     forms: [
+      // Kage Bunshin em massa (Mizuki): centenas de clones por 3 turnos.
+      { id: 'massClones', statMult: 1.1, addTechniques: ['jTajuuBunshin'], turns: 3 },
+      // Determinação (a promessa à Hinata, ou o "você é meu amigo" no Vale): +10% de dano e aguenta com 1 de HP uma vez.
+      { id: 'resolve', mods: { damageMult: 1.1, surviveOnce: true } },
       { id: 'kyuubi', statMult: 1.25, healPct: 0.3, addTechniques: ['jKyuubiClaw'] },
       { id: 'kyuubiBrief', statMult: 1.2, healPct: 0.15, addTechniques: ['jKyuubiClaw'], turns: 3 },
       { id: 'oneTail', statMult: 1.35, healPct: 0.3, addTechniques: ['jKyuubiClaw'] },
     ],
+  },
+  // Iruka: entra pelo roteiro na luta do Mizuki e cai protegendo o Naruto (convidado).
+  {
+    id: 'iruka',
+    hp: 90,
+    chakra: 30,
+    speed: 11,
+    offense: { taijutsu: 9, ninjutsu: 9, genjutsu: 5 },
+    resistance: { physical: 7, mental: 7 },
+    element: 'water',
+    techniques: ['jStrike', 'jShuriken', 'jBunshin'],
+    ai: 'guardian',
+    growth: g(6, 2, 0.4, 0.6, 0.6, 0.3, 0.4, 0.4),
+    portrait: 'ninja:common',
   },
   // Kakashi aliado: entra pelo roteiro na luta do Zabuza (convidado, não fica na equipe). Copia o Dragão de Água.
   {
@@ -61,7 +79,11 @@ export const characters: CharacterDef[] = [
     growth: g(7, 3, 0.6, 1, 1.1, 0.4, 0.5, 0.5),
     portrait: 'ninja:uchiha',
     // Selo amaldiçoado (depois do Orochimaru na Floresta da Morte): o roteiro liga quando ele fica ferido.
-    forms: [{ id: 'curseMark', statMult: 1.3, healPct: 0.15, turns: 4 }],
+    // Sharingan (desperta contra o Haku) e selo amaldiçoado (depois do Orochimaru).
+    forms: [
+      { id: 'sharingan', statMult: 1.15 },
+      { id: 'curseMark', statMult: 1.3, healPct: 0.15, turns: 4 },
+    ],
   },
   // Gamabunta: entra pelo roteiro na luta contra o Shukaku (convidado).
   {

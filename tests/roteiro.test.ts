@@ -102,7 +102,7 @@ describe('roteiro de luta (v0.66.0)', () => {
   });
 
   it('marca do roteiro vai para a run no fim da luta', () => {
-    const run = newRun(1, 'normal', data);
+    const run = { ...newRun(1, 'normal', data), stopIndex: data.stages[0]!.stops.findIndex((s) => s.id === 'mizuki') };
     const b = startBattle(battleSetup(run, data), data, fixed(0));
     const next = finishFight(run, { ...b, status: 'won', flags: ['viuOMomento'] }, data).run;
     expect(next.flags).toContain('viuOMomento');
@@ -110,11 +110,14 @@ describe('roteiro de luta (v0.66.0)', () => {
 });
 
 describe('marcos da história (v0.66.0)', () => {
-  it('o Sasuke aprende o Chidori no exame (estágio 1), sem a árvore', () => {
+  it('o Sasuke desperta o Sharingan na ponte e aprende o Chidori no mês de treino, sem a árvore', () => {
     const run = newRun(1, 'normal', data);
+    const at = (stage: number, id: string) => ({ ...run, stageIndex: stage, stopIndex: data.stages[stage]!.stops.findIndex((s) => s.id === id) });
     expect(grantedTechniques(run, 'sasuke', data)).toEqual([]);
-    expect(grantedTechniques({ ...run, stageIndex: 1 }, 'sasuke', data)).toEqual(['jChidori']);
-    expect(grantedTechniques({ ...run, mode: 'generic', stageIndex: 1 }, 'sasuke', data)).toEqual([]);
+    expect(grantedTechniques(at(0, 'hakuFarewell'), 'sasuke', data)).toEqual(['jSharingan']);
+    expect(grantedTechniques(at(1, 'preliminaries'), 'sasuke', data)).toEqual(['jSharingan']);
+    expect(grantedTechniques(at(1, 'toadSummon'), 'sasuke', data)).toEqual(['jSharingan', 'jChidori']);
+    expect(grantedTechniques({ ...at(1, 'toadSummon'), mode: 'generic' }, 'sasuke', data)).toEqual([]);
   });
 
   it('marco do protagonista por parada: entra no que ele conhece e no moveset ao passar da parada', () => {
@@ -196,11 +199,11 @@ describe('acréscimos do roteiro (v0.67.0)', () => {
 
   it('finalizador: a técnica entra na luta mesmo fora do moveset, e a IA a usa com o alvo perto de cair', () => {
     const stages = structuredClone(data.campaigns.naruto!.stages);
-    const mizuki = stages[0]!.stops[0]!;
+    const mizuki = stages[0]!.stops.find((s) => s.id === 'mizuki')!;
     if (mizuki.kind !== 'story') throw new Error('a primeira parada mudou');
     mizuki.win = { kind: 'finisher', target: 'mizuki', technique: 'jRasengan' };
     const d: JornadaData = { ...data, stages, campaigns: { naruto: { ...data.campaigns.naruto!, stages } } };
-    const run = { ...newRun(1, 'normal', d), learned: ['jRasengan'], moveset: ['jStrike', 'jShuriken', 'jSexyJutsu'] };
+    const run = { ...newRun(1, 'normal', d), stopIndex: stages[0]!.stops.indexOf(mizuki), learned: ['jRasengan'], moveset: ['jStrike', 'jShuriken', 'jSexyJutsu'] };
     const setupK = battleSetup(run, d);
     expect(setupK.allies[0]!.techniques).toContain('jRasengan');
     const b = openBattle({ ...setupK, enemies: [{ ...setupK.enemies[0]!, hp: 5 }] }, d);
@@ -237,16 +240,39 @@ describe('História canônica: Ondas (v0.67.0)', () => {
     }
   });
 
-  it('Haku: o Sasuke cai, a Kyuubi desperta antes do fim, e a vitória deixa a marca', () => {
-    const run = { ...newRun(3, 'easy', data), ...stopAt('waves', 'haku') };
-    const end = playOut(startBattle(battleSetup(run, data), data, createRng(7)), data, createRng(7));
-    expect(end.status).toBe('won');
-    const kinds = end.log.map((e) => e.type);
-    expect(kinds.indexOf('form')).toBeGreaterThan(-1);
-    expect(kinds.indexOf('form')).toBeLessThan(kinds.lastIndexOf('end'));
+  it('Haku: Sharingan do Sasuke, o Sasuke cai, a Kyuubi; o Haku sai e os mercenários do Gatō entram', () => {
+    const run = { ...newRun(3, 'easy', data), ...stopAt('waves', 'haku'), level: 5 };
+    // A primeira seed vencida (determinístico): a luta inteira, com as três fases.
+    const end = [1, 2, 3, 4, 5].map((seed) => playOut(startBattle(battleSetup(run, data), data, createRng(seed)), data, createRng(seed))).find((b) => b.status === 'won')!;
+    expect(end).toBeDefined();
+    const forms = end.log.filter((e) => e.type === 'form').map((e) => (e.type === 'form' ? e.form : ''));
+    expect(forms).toEqual(['sharingan', 'kyuubi']);
     expect(end.fighters.find((f) => f.defId === 'sasuke')!.down).toBe(true);
+    expect(end.fighters.find((f) => f.defId === 'haku')!.gone).toBe(true);
+    expect(end.fighters.filter((f) => f.defId === 'gatoMerc')).toHaveLength(3);
     expect(end.fighters.find((f) => f.protagonist)!.form).toBe('kyuubi');
     expect(finishFight(run, end, data).run.flags).toContain('kyuubiAwakened');
+  });
+
+  it('teste do sino: a derrota avança a run, não gasta Vontade e carimba a raiz dos Laços', () => {
+    const run = { ...newRun(3, 'easy', data), ...stopAt('waves', 'bells') };
+    const willOfFire = run.willOfFire;
+    const end = playOut(startBattle(battleSetup(run, data), data, createRng(1)), data, createRng(1));
+    expect(end.status).toBe('lost');
+    const { run: next, outcome } = finishFight(run, end, data);
+    expect(outcome.inevitable).toBe(true);
+    expect(next.status).toBe('inProgress');
+    expect(next.willOfFire).toBe(willOfFire);
+    expect(next.stopIndex).toBe(run.stopIndex + 1);
+    expect(next.talents).toContain('tNeverGiveUp');
+  });
+
+  it('cena presenciada: uma opção só, efeito fixo (a promessa à Hinata deixa a marca)', () => {
+    const at = { ...newRun(3, 'normal', data), ...stopAt('exam', 'hinataNeji') };
+    const def = data.events.hinataNeji!;
+    expect(def.category).toBe('witness');
+    expect(def.options.map((o) => o.id)).toEqual(['continue']);
+    expect(resolveEvent(at, 'continue', true, data).run.flags).toContain('promessaNeji');
   });
 });
 
@@ -270,15 +296,16 @@ describe('História canônica: Exame (v0.67.0)', () => {
     expect(open(['curseMark']).fighters.find((f) => f.defId === 'sasuke')!.form).toBe('curseMark');
   });
 
-  it('Gaara: a 40% vira Shukaku e o Gamabunta entra; a vitória vem com o Shukaku caído', () => {
+  it('Gaara em três fases: Shukaku com o Gamabunta e a Kyuubi, depois o Gaara exausto e os laços', () => {
     const run = { ...newRun(3, 'easy', data), ...stopAt('exam', 'gaara'), level: 8 };
     const end = playOut(startBattle(battleSetup(run, data), data, createRng(4)), data, createRng(4));
-    const shukaku = end.fighters.find((f) => f.defId === 'shukaku');
-    expect(shukaku).toBeDefined();
-    expect(end.fighters.find((f) => f.defId === 'gaara')!.gone).toBe(true);
-    expect(end.fighters.some((f) => f.defId === 'gamabuntaAlly' && f.side === 'ally')).toBe(true);
     expect(end.status).toBe('won');
-    expect(shukaku!.down).toBe(true);
+    expect(end.fighters.find((f) => f.defId === 'gaara')!.gone).toBe(true);
+    expect(end.fighters.find((f) => f.defId === 'shukaku')!.gone).toBe(true);
+    expect(end.fighters.find((f) => f.defId === 'gamabuntaAlly')!.gone).toBe(true);
+    expect(end.fighters.find((f) => f.defId === 'gaaraWeak')!.down).toBe(true);
+    expect(end.fighters.find((f) => f.protagonist)!.form).toBe('kyuubi');
+    expect(says(end)).toContain('gaaraBonds');
   });
 
   it('o contrato com os sapos dá o Kuchiyose no Jutsu, qualquer que seja a escolha', () => {
@@ -295,7 +322,7 @@ describe('História canônica: Sannin e Resgate (v0.67.0)', () => {
   it('o treino com o Jiraiya dá o Rasengan', () => {
     const at = { ...newRun(3, 'normal', data), ...stopAt('sannin', 'rasenganTraining') };
     expect(heroKnown(at, data)).not.toContain('jRasengan');
-    expect(heroKnown(resolveEvent(at, 'bet', true, data).run, data)).toContain('jRasengan');
+    expect(heroKnown(resolveEvent(at, 'ball', false, data).run, data)).toContain('jRasengan');
   });
 
   it('Kabuto: aguenta com 1 de HP até o Rasengan, e a IA usa o Rasengan para fechar', () => {
@@ -311,13 +338,36 @@ describe('História canônica: Sannin e Resgate (v0.67.0)', () => {
     }
   });
 
-  it('Kimimaro: o Naruto começa sozinho, o Lee chega na rodada 3 e o Gaara na 5', () => {
+  it('Kimimaro: o Naruto luta sozinho até o Lee chegar e mandá-lo seguir (a luta termina como vitória)', () => {
     const run = { ...newRun(3, 'easy', data), ...stopAt('retrieval', 'kimimaro'), level: 9 };
     const s0 = startBattle(battleSetup(run, data), data, createRng(3));
     expect(s0.fighters.filter((f) => f.side === 'ally').map((f) => f.defId)).toEqual(['naruto']);
     const end = playOut(s0, data, createRng(3));
-    const entered = end.log.filter((e) => e.type === 'enter').map((e) => (e.type === 'enter' ? end.fighters.find((f) => f.uid === e.uid)!.defId : ''));
-    if (end.round >= 5) expect(entered).toEqual(['lee', 'gaaraAlly']);
+    expect(end.status).toBe('won');
+    expect(end.log.at(-1)).toMatchObject({ type: 'end', scripted: true });
+    expect(says(end).filter((l) => l === 'kimimaroLee')).toHaveLength(1);
+    expect(end.round).toBeLessThanOrEqual(4);
+  });
+
+  it('Mizuki: o Iruka entra, cai protegendo o Naruto, e vem o Kage Bunshin em massa', () => {
+    const run = { ...newRun(3, 'easy', data), ...stopAt('waves', 'mizuki') };
+    const end = playOut(startBattle(battleSetup(run, data), data, createRng(2)), data, createRng(2));
+    expect(end.status).toBe('won');
+    const iruka = end.fighters.find((f) => f.defId === 'iruka')!;
+    expect([iruka.guest, iruka.down]).toEqual([true, true]);
+    expect(end.log.some((e) => e.type === 'form' && e.form === 'massClones')).toBe(true);
+    // O Iruka é convidado: não entra na equipe da run.
+    expect(finishFight(run, end, data).run.members.iruka).toBeUndefined();
+  });
+
+  it('Neji: a promessa à Hinata liga a determinação desde o começo', () => {
+    const at = { ...newRun(3, 'normal', data), ...stopAt('exam', 'neji') };
+    const plain = openBattle(battleSetup(at, data), data);
+    expect(plain.fighters[0]!.form).toBeUndefined();
+    const promised = openBattle(battleSetup({ ...at, flags: ['promessaNeji'] }, data), data);
+    expect(promised.fighters[0]!.form).toBe('resolve');
+    expect(promised.fighters[0]!.mods.surviveOnce).toBe(true);
+    expect(promised.fighters[0]!.mods.damageMult).toBeCloseTo(plain.fighters[0]!.mods.damageMult * 1.1);
   });
 
   it('Vale do Fim: selo nível 2 e manto de uma cauda; a 20% o Sasuke parte e a run vence', () => {

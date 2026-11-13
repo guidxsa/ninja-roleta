@@ -21,7 +21,8 @@ export const talents: TalentNode[] = [
   { id: 'tAmbush', owner: 'naruto', branch: 'pranks', tier: 4, cost: 2, mods: { stunnedDamageMult: 1.3 } },
   { id: 'tTrickMaster', owner: 'naruto', branch: 'pranks', tier: 5, cost: 3, capstone: true, mods: { effectChanceBonus: 0.15, critBonus: 0.1 } },
 
-  { id: 'tNeverGiveUp', owner: 'naruto', branch: 'bonds', tier: 1, cost: 1, teamMods: { regenHp: 1 } },
+  // Laços (v0.68.0): a raiz vem da lição do teste do sino.
+  { id: 'tNeverGiveUp', owner: 'naruto', branch: 'bonds', tier: 1, cost: 0, grantedBy: { flag: 'bellsLesson' }, teamMods: { regenHp: 1 } },
   { id: 'tTeam7', owner: 'naruto', branch: 'bonds', tier: 2, col: -1, cost: 2, excludes: ['tWarCry'], allyHpPct: 0.15 },
   { id: 'tWarCry', owner: 'naruto', branch: 'bonds', tier: 2, col: 1, cost: 2, excludes: ['tTeam7'], learn: 'jWarCry', maxRank: 3, rankCost: 1, rankMods: { techChakraDiscount: { jWarCry: 1 } } },
   { id: 'tProtectFriends', owner: 'naruto', branch: 'bonds', tier: 3, cost: 2, requires: ['tTeam7', 'tWarCry'], teamMods: { damageMult: 1.08 } },
