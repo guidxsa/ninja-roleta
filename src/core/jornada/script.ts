@@ -23,6 +23,8 @@ export interface FormDef {
   addTechniques?: string[];
   /** Turnos do lutador que a forma dura; sem o campo, até o fim da luta. Ao acabar, volta à ficha de antes. */
   turns?: number;
+  /** Modificadores enquanto dura: dano × damageMult; uma vez, 1 de HP em vez de cair. */
+  mods?: { damageMult?: number; surviveOnce?: boolean };
 }
 
 /** Quando a regra dispara. `who` é o id da ficha (defId) do lutador. */
@@ -73,7 +75,7 @@ export function formOf(defId: string, formId: string, data: JornadaData): FormDe
 
 /** Liga uma forma no lutador. Guarda a ficha de antes para a forma temporária voltar. */
 export function applyForm(f: Fighter, form: FormDef): void {
-  if (!f.formBase) f.formBase = { offense: { ...f.offense }, resistance: { ...f.resistance }, techniques: [...f.techniques], maxHp: f.maxHp, ...(f.passive ? { passive: f.passive } : {}) };
+  if (!f.formBase) f.formBase = { offense: { ...f.offense }, resistance: { ...f.resistance }, techniques: [...f.techniques], maxHp: f.maxHp, mods: { ...f.mods }, ...(f.passive ? { passive: f.passive } : {}) };
   f.form = form.id;
   f.formTurns = form.turns ?? 0;
   if (form.statMult) {
@@ -90,6 +92,7 @@ export function applyForm(f: Fighter, form: FormDef): void {
   if (form.addTechniques) f.techniques = [...new Set([...f.techniques, ...form.addTechniques])];
   if (form.passive) f.passive = form.passive;
   if (form.healPct) f.hp = Math.min(f.maxHp, f.hp + Math.floor(f.maxHp * form.healPct));
+  if (form.mods) f.mods = { ...f.mods, damageMult: f.mods.damageMult * (form.mods.damageMult ?? 1), surviveOnce: f.mods.surviveOnce || Boolean(form.mods.surviveOnce) };
 }
 
 /** A forma temporária acabou: volta à ficha de antes (o HP acompanha a proporção, nunca abaixo de 1). */
@@ -101,6 +104,7 @@ export function endForm(f: Fighter): void {
   f.resistance = { ...base.resistance };
   f.techniques = [...base.techniques];
   f.maxHp = base.maxHp;
+  f.mods = { ...base.mods };
   if (!f.down) f.hp = Math.max(1, Math.floor(f.maxHp * ratio));
   if (base.passive) f.passive = base.passive;
   else delete f.passive;

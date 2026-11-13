@@ -981,7 +981,9 @@ async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, {
       if (next.status === 'inProgress') lines.push(stop.kind === 'boss' ? U.restoredAll : U.recovered(afterWinRecovery(next, data).hp, afterWinRecovery(next, data).chakra));
       if (outcome.levelUps) lines.push(U.levelUp(next.level, outcome.talentRyo > 0));
       announcedTalentRyo = next.stats.talentRyo ?? 0;
-      await notice(U.victoryTitle, lines.join('\n'));
+      // Derrota inevitável (teste do sino): a tela diz "Derrota", conta a lição e segue a run.
+      if (outcome.inevitable) lines.unshift(J.inevitableLesson[stop.id] ?? U.inevitableLoss);
+      await notice(outcome.inevitable ? U.defeatTitle : U.victoryTitle, lines.join('\n'));
       if (outcome.relic) {
         host.mood('good');
         await relicReveal(U.eliteRelic, outcome.relic);
@@ -996,10 +998,12 @@ async function eventStop(host: JornadaHost, run: JRun): Promise<JRun> {
   if (stop?.kind !== 'event') return run;
   const def = data.events[stop.event]!;
   const txt = J.events[def.id]!;
+  // Categoria da cronologia (docs/jornada/cronologia.md): presenciado, narrativo ou treino.
+  const category = def.category ?? 'narrative';
   const root = show(
-    h(`<div class="screen"><h2>${txt.title}</h2><section class="card"><p>${txt.text}</p></section>
+    h(`<div class="screen"><h2>${txt.title}</h2><p class="center"><span class="chip">${J.eventCategories[category]}</span></p><section class="card"><p>${txt.text}</p></section>
       <div class="joptions">${eventOptions(def, run.flags)
-        .map((o) => `<button class="btn big" data-choice="${o.id}">${o.minigame ? `${icon('card')} ` : ''}${txt.options[o.id] ?? o.id}</button>`)
+        .map((o) => `<button class="btn big" data-choice="${o.id}">${o.minigame ? `${icon('card')} ` : ''}${txt.options[o.id] ?? (o.id === 'continue' ? U.continueScene : o.id)}</button>`)
         .join('')}</div><div data-slot></div></div>`),
   );
   const pick = await choose<string>(root.querySelector('.joptions')!);

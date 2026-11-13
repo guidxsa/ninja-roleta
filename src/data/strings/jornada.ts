@@ -166,6 +166,12 @@ export const jornadaPtBR = {
     valleyChidori: 'Naruto!',
     valleyEnd: 'O Rasengan e o Chidori se chocam e a luz engole o vale. Quando a chuva volta a cair, o Sasuke vai embora. O Naruto ficou, mas a promessa também.',
   } as Record<string, string>,
+  // Categorias dos eventos da cronologia (docs/jornada/cronologia.md).
+  eventCategories: { witness: 'Presenciado', narrative: 'Narrativo', training: 'Treino' } as Record<string, string>,
+  // Lição da derrota inevitável, por parada.
+  inevitableLesson: {
+    bells: 'Ninguém pegou o sino. Mas vocês dividiram o almoço com o Naruto amarrado: quem abandona os amigos é pior que lixo. Vocês passaram.',
+  } as Record<string, string>,
   // Nomes das formas (transformações) que o roteiro liga.
   forms: {
     kyuubi: 'Chakra da Kyuubi',
@@ -1085,6 +1091,8 @@ export const jornadaPtBR = {
     recovered: (hp: number, chakra: number) => `Cada membro da equipe recupera ${hp} de HP e ${chakra} de chakra.`,
     restoredAll: 'Estágio vencido: a equipe volta com HP e chakra cheios.',
     victoryTitle: 'Vitória!',
+    inevitableLoss: 'A luta não podia ser vencida, mas a jornada segue.',
+    continueScene: 'Continuar',
     defeatTitle: 'Derrota',
     rewards: (ryo: number, xp: number, talent: number) => `+${ryo} ryō · +${xp} XP${talent ? ` · +${talent} ponto de talento` : ''}`,
     retry: 'A Vontade do Fogo te levanta: a luta recomeça.',

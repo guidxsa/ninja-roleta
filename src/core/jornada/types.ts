@@ -233,7 +233,7 @@ export interface Fighter {
   /** Entrou pelo roteiro (invocação, convidado): não vai para a equipe da run no fim da luta. */
   guest?: boolean;
   /** Ficha de antes da forma e turnos que ainda restam dela (0 = até o fim da luta). */
-  formBase?: { offense: AttackStats; resistance: Resistances; techniques: string[]; maxHp: number; passive?: EnemyPassive };
+  formBase?: { offense: AttackStats; resistance: Resistances; techniques: string[]; maxHp: number; mods: FighterMods; passive?: EnemyPassive };
   formTurns?: number;
 }
 

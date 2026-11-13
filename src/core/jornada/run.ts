@@ -573,7 +573,8 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
     return opening ? { ...seed, hp: Math.max(1, seed.hp - opening) } : seed;
   });
   // Roteiro: os lutadores que ele pode pôr na luta (inimigos com a força da run; aliados com a ficha da run).
-  const reserveIds = [...new Set((stop.script ?? []).flatMap((r) => r.do.flatMap((a) => (a.do === 'enter' ? [a.who] : a.do === 'replace' ? [a.with] : []))))];
+  // Um lutador por ação (três mercenários iguais entram como três).
+  const reserveIds = (stop.script ?? []).flatMap((r) => r.do.flatMap((a) => (a.do === 'enter' ? [a.who] : a.do === 'replace' ? [a.with] : [])));
   const reserve = reserveIds.map((id) =>
     data.enemies[id]
       ? { side: 'enemy' as const, seed: enemySeed(id, run.difficulty, data, runEnemyMult(run, data)) }
@@ -708,6 +709,8 @@ export interface FightOutcome {
   retry: boolean;
   /** Relíquia deixada pela elite vencida. */
   relic: string | null;
+  /** Derrota inevitável que conta como progresso (teste do sino): a tela mostra "Derrota" e a lição. */
+  inevitable?: boolean;
 }
 
 /** Fecha a luta da parada atual: HP da equipe, recompensas e avanço (ou fim da run). */
@@ -722,7 +725,9 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   // Pílulas usadas sozinhas pelo protagonista saem da bolsa aqui; as usadas pelo botão, a tela já descontou.
   const autoPills = battle.log.filter((e) => e.type === 'revive' && e.pill).length;
   run.bag.reviveKit = Math.max(0, run.bag.reviveKit - autoPills);
-  const won = battle.status === 'won';
+  // Derrota inevitável (teste do sino): qualquer fim conta como progresso.
+  const inevitable = Boolean(stop.inevitableLoss);
+  const won = battle.status === 'won' || inevitable;
   const results = allyResults(battle);
   if (!won) {
     if (run.willOfFire > 0) {
@@ -773,7 +778,7 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   if (relic) run = gainRelic(run, relic, data);
   if (!run.bossChoice) advanceStop(run, data);
   const talentRyo = rewardRyo + levelRyo;
-  return { run, outcome: { won: true, ryo, talent: rewardRyo ? 0 : reward.talent, talentRyo, xp: xpGained, levelUps, retry: false, relic } };
+  return { run, outcome: { won: true, ryo, talent: rewardRyo ? 0 : reward.talent, talentRyo, xp: xpGained, levelUps, retry: false, relic, ...(inevitable ? { inevitable: true } : {}) } };
 }
 
 /** Vai para a próxima parada (ou o próximo estágio, ou a vitória). */

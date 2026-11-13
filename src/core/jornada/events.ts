@@ -41,8 +41,15 @@ export interface EventOption {
   onLose?: EventEffect[];
 }
 
+/**
+ * Categoria do evento na cronologia (docs/jornada/cronologia.md, v0.68.0): presenciado (cena sem escolha: uma opção só,
+ * `continue`), narrativo (reações do Naruto) ou treino (aprender ou evoluir técnica). Sem o campo: narrativo.
+ */
+export type EventCategory = 'witness' | 'narrative' | 'training';
+
 export interface EventDef {
   id: string;
+  category?: EventCategory;
   options: EventOption[];
 }
 

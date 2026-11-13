@@ -16,6 +16,11 @@ export type StopDef = (
       win?: WinCondition;
       /** Roteiro da luta: gatilhos e ações (docs/jornada/roteiro.md). */
       script?: ScriptRule[];
+      /**
+       * Derrota inevitável (teste do sino, v0.68.0): qualquer fim de luta conta como progresso. Não gasta Vontade do
+       * Fogo nem encerra a run; a recompensa da luta continua.
+       */
+      inevitableLoss?: boolean;
     }
   | { kind: 'event'; id: string; event: string }
   | { kind: 'rest'; id: string }
