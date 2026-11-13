@@ -6,7 +6,7 @@
 .jm-title::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--tree) 45%, transparent); }
 
 /* As 4 vagas: selos na cor da técnica, como os da árvore. */
-.jm-slots { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.jm-slots { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .jm-slot, .jm-active {
   position: relative; min-width: 0; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
   background: color-mix(in srgb, var(--c, var(--tree)) 12%, var(--surface)); border: 1px solid var(--line); border-bottom: 2px solid var(--c, var(--tree));

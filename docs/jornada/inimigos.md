@@ -56,18 +56,18 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Projétil de água | Ninjutsu | água | um inimigo | 11 | 3 | 85% | — |
 | Garra envenenada | Taijutsu | — | um inimigo | 9 | 0 | 85% | veneno 35% |
 | Corrente | Taijutsu | — | todos os inimigos | 6 | 2 | 80% | — |
-| Mil Anos de Morte | Taijutsu | — | um inimigo | 6 | 0 | 85% | atordoar 35% (1 t) |
-| Decapitação | Ninjutsu | terra | um inimigo | 13 | 4 | 85% | atordoar 20% (1 t) |
+| Mil Anos de Morte | Taijutsu | — | um inimigo | 6 | 0 | 85% | atordoar 30% (2 t) |
+| Decapitação | Ninjutsu | terra | um inimigo | 13 | 4 | 85% | atordoar 15% (2 t) |
 | Chute | Taijutsu | — | um inimigo | 11 | 0 | 90% | — |
 | Kubikiribōchō | Taijutsu | — | um inimigo | 17 | 0 | 80% | penetração 15% |
 | Prisão de água | Ninjutsu | água | um inimigo | — | 5 | 80% | atordoar 100% (2 t); espera 4 |
 | Dragão de água | Ninjutsu | água | todos os inimigos | 13 | 8 | 85% | — |
 | Senbon | Taijutsu | — | um inimigo | 5 | 0 | 85% | 3 golpes |
 | Espelhos de gelo | Ninjutsu | água | todos os inimigos | 8 | 8 | 85% | 2 golpes; espera 2 |
-| Ponto vital | Taijutsu | — | um inimigo | 6 | 2 | 85% | atordoar 30% (1 t) |
-| Onda sonora | Ninjutsu | — | um inimigo | 11 | 3 | 85% | atordoar 20% (1 t) |
+| Ponto vital | Taijutsu | — | um inimigo | 6 | 2 | 85% | atordoar 25% (2 t) |
+| Onda sonora | Ninjutsu | — | um inimigo | 11 | 3 | 85% | atordoar 15% (2 t) |
 | Rajada de ar | Ninjutsu | vento | todos os inimigos | 8 | 5 | 85% | — |
-| Sino ilusório | Genjutsu | — | um inimigo | 7 | 3 | 85% | atordoar 30% (1 t) |
+| Sino ilusório | Genjutsu | — | um inimigo | 7 | 3 | 85% | atordoar 25% (2 t) |
 | Chuva de agulhas | Taijutsu | — | todos os inimigos | 4 | 3 | 75% | 2 golpes |
 | Clone de névoa | Genjutsu | — | um inimigo | 9 | 2 | 85% | — |
 | Bisturi de chakra | Ninjutsu | — | um inimigo | 13 | 4 | 85% | bloqueio de chakra 40% |
@@ -75,11 +75,11 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Reanimação proibida | Ninjutsu | — | um aliado caído | — | 15 | — | levanta com 30% do HP; espera 3 |
 | Presa sobre presa | Taijutsu | — | um inimigo | 10 | 4 | 80% | 2 golpes |
 | Mordida | Taijutsu | — | um inimigo | 7 | 0 | 90% | — |
-| Bomba de fedor | Taijutsu | — | um inimigo | — | 2 | 85% | atordoar 40% (1 t); espera 3 |
+| Bomba de fedor | Taijutsu | — | um inimigo | — | 2 | 85% | atordoar 40% (2 t); espera 3 |
 | Punho Suave | Taijutsu | — | um inimigo | 12 | 0 | 95% | penetração 30%; bloqueio de chakra 35% |
 | Rotação | Taijutsu | — | em si | — | 4 | 85% | escudo 20% do HP de quem usa; espera 3 |
 | 64 Palmas | Taijutsu | — | um inimigo | 4 | 8 | 95% | 4 golpes; penetração 30%; bloqueio de chakra 50% (3 t); espera 3 |
-| Caixão de areia | Ninjutsu | terra | um inimigo | 18 | 6 | 85% | atordoar 35% (1 t) |
+| Caixão de areia | Ninjutsu | terra | um inimigo | 18 | 6 | 85% | atordoar 30% (2 t) |
 | Escudo de areia | Ninjutsu | terra | em si | — | 4 | 85% | escudo 15% do HP de quem usa; espera 3 |
 | Tsunami de areia | Ninjutsu | terra | todos os inimigos | 14 | 9 | 85% | — |
 | Garra do Shukaku | Taijutsu | — | um inimigo | 22 | 3 | 80% | — |
@@ -91,8 +91,8 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Domo de terra | Ninjutsu | terra | um inimigo | 6 | 5 | 85% | bloqueio de chakra 60% (2 t); espera 2 |
 | Soco pesado | Taijutsu | — | um inimigo | 18 | 0 | 80% | — |
 | Flecha dourada | Taijutsu | — | um inimigo | 24 | 6 | 80% | penetração 20% |
-| Teia | Ninjutsu | — | um inimigo | 4 | 3 | 85% | atordoar 45% (1 t); espera 2 |
-| Flauta demoníaca | Genjutsu | — | todos os inimigos | 9 | 6 | 85% | atordoar 20% (1 t) |
+| Teia | Ninjutsu | — | um inimigo | 4 | 3 | 85% | atordoar 35% (2 t); espera 2 |
+| Flauta demoníaca | Genjutsu | — | todos os inimigos | 9 | 6 | 85% | atordoar 15% (2 t) |
 | Golpe gêmeo | Taijutsu | — | um inimigo | 9 | 0 | 85% | 2 golpes |
 | Broca de osso | Taijutsu | — | um inimigo | 22 | 4 | 85% | penetração 30% |
 | Balas de osso | Taijutsu | — | todos os inimigos | 8 | 6 | 85% | 2 golpes |

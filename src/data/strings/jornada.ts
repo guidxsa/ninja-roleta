@@ -321,6 +321,7 @@ export const jornadaPtBR = {
     jKunai: 'Kunai',
     jWireTrap: 'Armadilha de fios',
     jRelease: 'Kai (libertar)',
+    jFirstAid: 'Primeiros socorros',
     jToadOil: 'Óleo de sapo em chamas',
     jNeedleJizo: 'Cabelo-agulha',
     jSanninStrike: 'Golpe do Sannin',
@@ -425,7 +426,7 @@ export const jornadaPtBR = {
 
   types: { taijutsu: 'Taijutsu', ninjutsu: 'Ninjutsu', genjutsu: 'Genjutsu' } as Record<string, string>,
   targets: { enemy: 'um inimigo', allEnemies: 'todos os inimigos', ally: 'um aliado', self: 'em si' } as Record<string, string>,
-  effects: { stun: 'atordoar', burn: 'queimar', poison: 'veneno', chakraBlock: 'bloqueio de chakra' } as Record<string, string>,
+  effects: { stun: 'atordoar', burn: 'queimar', poison: 'veneno', chakraBlock: 'bloqueio de chakra', stunGuard: 'firme (não pode ser atordoado)' } as Record<string, string>,
 
   // Portões do prodígio (docs/jornada/combate.md#portões). Botão simples; regras e penalidades na dica.
   gates: {
@@ -1167,7 +1168,7 @@ export const jornadaPtBR = {
       recovery: (hp: number, chakra: number) => `Depois de cada vitória, cada membro da equipe recupera ${hp} de HP e ${chakra} de chakra.`,
       elite: 'Elites dão mais ryō e XP, um ponto de talento e uma relíquia.',
       restStop: 'No descanso, escolha entre curar a equipe ou treinar para ganhar um ponto de talento.',
-      moveset: 'O moveset leva 4 técnicas. Troque na tela do Moveset, entre as lutas.',
+      moveset: 'O moveset leva 6 técnicas. Troque na tela do Moveset, entre as lutas.',
       tooltips: 'Passe o mouse numa técnica, relíquia ou lutador para ver a ficha completa.',
     },
     treatment: 'Tratamento (+50 de HP e +15 de chakra em cada um)',
@@ -1185,7 +1186,7 @@ export const jornadaPtBR = {
     movesetSlots: 'Equipadas',
     movesetEmpty: 'Vaga livre',
     movesetKnown: 'Técnicas',
-    movesetFull: 'As 4 vagas estão ocupadas: tire uma técnica antes.',
+    movesetFull: 'As 6 vagas estão ocupadas: tire uma técnica antes.',
     /** Subtítulo da tela de moveset por classe (o elemento do Comum entra no texto). */
     movesetThemes: {
       naruto: () => 'Jutsus do futuro Hokage',
@@ -1244,7 +1245,7 @@ export const jornadaPtBR = {
     pickAlly: 'Escolha o aliado',
     pickDowned: 'Escolha quem levantar',
     cancel: 'Voltar',
-    groups: { techniques: 'Técnicas', actives: 'Ativas', actions: 'Ações' },
+    groups: { raise: 'Aliado caído', techniques: 'Técnicas', actives: 'Ativas', actions: 'Ações' },
     guard: 'Defender',
     guardDesc: 'Usa a resistência inteira até o seu próximo turno.',
     rest: 'Concentrar',
@@ -1279,6 +1280,11 @@ export const jornadaPtBR = {
     heroPill: (name: string) => `A pílula levantou ${name}!`,
     heroUp: (name: string, by: string) => `${by} levantou ${name}!`,
     stunned: 'atordoado',
+    resisted: 'firme',
+    logResist: (who: string) => `${who} não cai no atordoamento de novo`,
+    raise: 'Levantar',
+    raiseDesc: (pct: number) => `Levanta um aliado caído com ${pct}% do HP. Gasta o turno.`,
+    pillDesc: (pct: number) => `Levanta um aliado caído com ${pct}% do HP. Não gasta o turno; um item por turno.`,
     enrage: (name: string) => `${name} entrou em fúria!`,
     survive: (name: string) => `${name} resistiu com 1 de HP!`,
     // Roteiro (docs/jornada/roteiro.md).

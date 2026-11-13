@@ -6,7 +6,7 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 
 ## Fichas
 
-Desde a v0.59.0, quem tem ninjutsu começa com o **Bunshin no Jutsu** (fora do moveset quando já há 4 técnicas; [fundamentos.md](../base/fundamentos.md#clones)); o Lee e o Prodígio ganharam chakra para manter os Portões; o Gaara tem a natureza Areia e o Haku, Gelo ([fundamentos.md](../base/fundamentos.md#kekkei-genkai)). Na coluna Elemento, "—" é natureza silenciosa (sorteada, sem técnica).
+Desde a v0.59.0, quem tem ninjutsu começa com o **Bunshin no Jutsu** (fora do moveset quando já há 6 técnicas; [fundamentos.md](../base/fundamentos.md#clones)); o Lee e o Prodígio ganharam chakra para manter os Portões; o Gaara tem a natureza Areia e o Haku, Gelo ([fundamentos.md](../base/fundamentos.md#kekkei-genkai)). Na coluna Elemento, "—" é natureza silenciosa (sorteada, sem técnica).
 
 | Personagem | HP | Chakra | Speed | Tai/Nin/Gen | Res. física/mental | Elemento | IA | Técnicas |
 |---|---|---|---|---|---|---|---|---|
@@ -15,7 +15,7 @@ Desde a v0.59.0, quem tem ninjutsu começa com o **Bunshin no Jutsu** (fora do m
 | Iruka (aliado) | 90 | 30 | 11 | 9/9/5 | 7/7 | água | guardian | Golpe, Shuriken, Bunshin no Jutsu. Só entra pelo roteiro, na luta do Mizuki, e cai protegendo o Naruto |
 | Gamabunta (invocação) | 260 | 40 | 9 | 16/14/2 | 12/8 | água | brute | Lâmina do Gamabunta, Rajada de água. Entra pelo roteiro contra o Shukaku |
 | Kakashi (aliado) | 150 | 40 | 15 | 11/11/9 | 9/9 | raio | tactician | Chute, Dragão de água (copiado com o Sharingan), Decapitação, Bunshin no Jutsu. Só entra pelo roteiro, na luta do Zabuza ([roteiro.md](roteiro.md)) |
-| Sakura | 80 | 26 | 10 | 7/6/8 | 5/9 | terra | tactician | Kunai, Shuriken, Armadilha de fios, Kai (libertar), Bunshin no Jutsu |
+| Sakura | 80 | 26 | 10 | 7/6/8 | 5/9 | terra | tactician | Kunai, Shuriken, Armadilha de fios, Kai (libertar), Primeiros socorros, Bunshin no Jutsu |
 | Jiraiya | 150 | 40 | 12 | 13/14/8 | 10/9 | fogo | striker | Golpe do Sannin, Óleo de sapo em chamas, Cabelo-agulha, Bunshin no Jutsu |
 | Tsunade | 140 | 40 | 12 | 15/12/6 | 10/8 | terra | healer | Soco da Tsunade, Palma mística, Golpe, Reanimação, Bunshin no Jutsu |
 | Rock Lee | 115 | 20 | 15 | 14/0/0 | 9/5 | — | striker | Redemoinho da Folha, Furacão da Folha, Lótus Primária |
@@ -46,17 +46,26 @@ Desde a v0.59.0, quem tem ninjutsu começa com o **Bunshin no Jutsu** (fora do m
 
 ## Comportamento
 
-Os suportes e os inimigos usam o mesmo motor de decisão. Quem tem técnica de reanimar levanta antes de tudo, o protagonista primeiro ([combate.md](combate.md#cair-e-levantar)). Antes de agir, todo lutador usa uma ativa grátis (uma por turno, `chooseAiActive`): escudo próprio quando está ferido; Portões, com tudo fechado, no maior portão cujo desgaste nos 4 turnos deixe pelo menos 40% do HP (fecha abaixo de 30%); fortalecimento quando não tem um; clones quando não tem. Depois escolhe a ação, e às vezes usa um controle sem dano (35%).
+Os suportes e os inimigos usam o mesmo motor de decisão (`src/core/jornada/ai.ts`). Antes de agir, todo lutador usa uma ativa grátis (uma por turno, `chooseAiActive`): escudo próprio quando está ferido; Portões, com tudo fechado, no maior portão que dê para abrir e manter por 2 turnos com o chakra que tem (fecha sozinho quando o chakra acaba); fortalecimento quando não tem um; clones quando não tem. Depois escolhe a ação.
+
+**Levantar** ([combate.md](combate.md#cair-e-levantar)): com alguém caído, levantar vem antes de tudo, o protagonista primeiro, a não ser que um golpe encerre a luta naquele turno. Quem tem técnica usa a técnica; os suportes sem técnica usam a ação universal (o protagonista sempre; outro suporte, só com 40% do HP ou mais). Inimigo só levanta com técnica.
+
+**Valor útil** (v0.69.0): cada opção ofensiva (dano, controle, técnica sorteada como o Kuchiyose) recebe um valor, e a IA usa a de maior valor:
+- **Dano que conta**: só o HP (e escudo) que o alvo ainda tem. Golpe forte em quem está quase caindo não vale mais que um fraco; por isso, entre as técnicas que derrubam o alvo, vence a mais barata.
+- **Derrubar** soma a ameaça do alvo (o maior ataque dele, com a fúria): tirar alguém de campo vale mais que só ferir.
+- **Efeito**: atordoar vale a ameaça do alvo pelos turnos que ele perde; bloqueio de chakra, metade disso, e só em quem depende de ninjutsu ou genjutsu; queimar e veneno, o HP que tiram. Não vale nada em quem já tem o efeito nem, no atordoamento, em quem está com a trava.
+- **Custo**: o chakra da técnica (já com os descontos) pesa mais quanto menos chakra sobra; recarga longa pesa um pouco.
+- Técnica em área soma o valor em todos os adversários; técnica sorteada usa a média pelos pesos.
 
 | IA | Comportamento |
 |---|---|
-| striker | Ataca o inimigo mais perigoso (maior ataque) com a técnica de mais dano esperado. |
-| tactician | Solta aliado atordoado ou com chakra bloqueado e usa controle no inimigo mais perigoso. |
+| striker | Escolhe entre os dois inimigos mais perigosos (maior ataque). |
+| tactician | Solta aliado atordoado ou com chakra bloqueado; dá 50% a mais de valor ao controle sem dano. |
 | healer | Cura o aliado com menos de 55% do HP. |
 | guardian | Põe escudo no aliado ferido (protagonista primeiro). |
 | brute | Bate no adversário com menos HP. |
 
-Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segunda vale pelo menos 85% da primeira.
+Entre as duas melhores opções, a sorte desempata (30%) quando a segunda vale pelo menos 85% da primeira e a melhor não derruba o alvo.
 
 ## Técnicas
 
@@ -67,7 +76,7 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 | Golpe | Taijutsu | — | um inimigo | 8 | 0 | 90% | — |
 | Shuriken | Taijutsu | — | um inimigo | 5 | 0 | 80% | 2 golpes |
 | Kage Bunshin | Ninjutsu | — | em si | — | 5 | 85% | 2 clones; ativa de classe |
-| Sexy no Jutsu | Genjutsu | — | um inimigo | — | 3 | 75% | atordoar 60% (1 t); espera 3 |
+| Sexy no Jutsu | Genjutsu | — | um inimigo | — | 3 | 75% | atordoar 60% (2 t); espera 3 |
 | Garras da Kyuubi | Taijutsu | — | um inimigo | 12 | 0 | 90% | 2 golpes; só com o chakra da Kyuubi ligado (roteiro) |
 | Kuchiyose no Jutsu | Ninjutsu | — | conforme o sapo | — | 8 | — | sorteia o sapo: Girinos 30, Gamakichi 35, Gamatatsu 25, Gamabunta 10 (pesos; a árvore dos Sapos muda); espera 3. Marco do contrato com os sapos |
 | Girinos | Ninjutsu | água | um inimigo | 3 | 0 | 90% | a invocação que falhou |
@@ -78,36 +87,37 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 | Manto da Kyuubi | Ninjutsu | — | em si | — | 0 | 85% | custa 8% do HP; escudo 20% do HP de quem usa; espera 4; ativa de classe |
 | Explosão de chakra | Ninjutsu | — | todos os inimigos | 14 | 8 | 90% | — |
 | Rasengan | Ninjutsu | — | um inimigo | 28 | 10 | 90% | +5% crítico |
-| Ōdama Rasengan | Ninjutsu | — | um inimigo | 44 | 16 | 85% | penetração 20%; atordoar 30% (1 t). Guardada para o Shippuden: fora da árvore desde a v0.67.0 |
+| Ōdama Rasengan | Ninjutsu | — | um inimigo | 44 | 16 | 85% | penetração 20%; atordoar 25% (2 t). Guardada para o Shippuden: fora da árvore desde a v0.67.0 |
 | Rasengan com clone | Ninjutsu | — | um inimigo | 18 | 8 | 90% | +1 golpe por clone (até +2) |
-| Harem no Jutsu | Genjutsu | — | todos os inimigos | — | 6 | 75% | atordoar 40% (1 t); espera 4 |
+| Harem no Jutsu | Genjutsu | — | todos os inimigos | — | 6 | 75% | atordoar 40% (2 t); espera 4 |
 | Bomba de fumaça | Taijutsu | — | em si | — | 3 | 85% | fortalece 2 turnos (+30% esquiva); espera 4; ativa de classe |
 | Shuriken das sombras | Taijutsu | — | um inimigo | 7 | 3 | 80% | 3 golpes; espera 1 |
 | Grito de guerra | Ninjutsu | — | um aliado | — | 5 | 85% | cura 20 de HP; tira atordoar e bloqueio; espera 2 |
 | Gamakichi | Ninjutsu | fogo | todos os inimigos | 12 | 6 | 85% | queimar 30% |
 | Gamatatsu | Ninjutsu | água | em si | — | 5 | 85% | escudo 25% do HP de quem usa; espera 3; ativa de classe |
-| Gamabunta | Ninjutsu | — | todos os inimigos | 26 | 16 | 90% | atordoar 25% (1 t); espera 4 |
+| Gamabunta | Ninjutsu | — | todos os inimigos | 26 | 16 | 90% | atordoar 20% (2 t); espera 4 |
 | Uma cauda | Ninjutsu | — | em si | — | 0 | 85% | custa 10% do HP; fortalece 3 turnos (dano ×1.35); espera 5; ativa de classe |
 | Bola de Fogo | Ninjutsu | fogo | um inimigo | 16 | 5 | 85% | queimar 25% |
 | Flor de Fênix | Ninjutsu | fogo | todos os inimigos | 8 | 7 | 85% | queimar 20% |
 | Combo do Leão | Taijutsu | — | um inimigo | 18 | 4 | 85% | — |
 | Chidori | Ninjutsu | raio | um inimigo | 30 | 10 | 85% | penetração 30% |
 | Kunai | Taijutsu | — | um inimigo | 9 | 0 | 90% | — |
-| Armadilha de fios | Taijutsu | — | um inimigo | 4 | 3 | 85% | atordoar 40% (1 t); espera 2 |
+| Armadilha de fios | Taijutsu | — | um inimigo | 4 | 3 | 85% | atordoar 30% (2 t); espera 2 |
 | Kai (libertar) | Genjutsu | — | um aliado | — | 2 | 85% | cura 10 de HP; tira atordoar e bloqueio |
 | Óleo de sapo em chamas | Ninjutsu | fogo | todos os inimigos | 14 | 8 | 85% | queimar 30% |
 | Cabelo-agulha | Ninjutsu | — | em si | — | 4 | 85% | escudo 25% do HP de quem usa; espera 3 |
 | Golpe do Sannin | Taijutsu | — | um inimigo | 14 | 0 | 90% | — |
-| Soco da Tsunade | Taijutsu | — | um inimigo | 24 | 3 | 85% | atordoar 25% (1 t) |
+| Soco da Tsunade | Taijutsu | — | um inimigo | 24 | 3 | 85% | atordoar 20% (2 t) |
 | Palma mística | Ninjutsu | — | um aliado | — | 5 | 85% | cura 30 de HP; tira atordoar e bloqueio |
 | Reanimação | Ninjutsu | — | um aliado caído | — | 15 | — | levanta com 50% do HP; espera 2 |
+| Primeiros socorros | Ninjutsu | — | um aliado caído | — | 6 | — | levanta com 35% do HP; espera 2 (Sakura) |
 | Redemoinho da Folha | Taijutsu | — | um inimigo | 12 | 0 | 90% | — |
 | Furacão da Folha | Taijutsu | — | um inimigo | 8 | 0 | 85% | 2 golpes |
-| Lótus Primária | Taijutsu | — | um inimigo | 32 | 0 | 85% | custa 10% do HP; atordoar 30% (1 t); espera 3 |
+| Lótus Primária | Taijutsu | — | um inimigo | 32 | 0 | 85% | custa 10% do HP; atordoar 25% (2 t); espera 3 |
 | Escudo de areia | Ninjutsu | terra | um aliado | — | 5 | 85% | escudo 25% do HP de quem usa; espera 2 |
-| Caixão de areia | Ninjutsu | terra | um inimigo | 20 | 7 | 85% | atordoar 30% (1 t) |
+| Caixão de areia | Ninjutsu | terra | um inimigo | 20 | 7 | 85% | atordoar 25% (2 t) |
 | Shuriken de areia | Ninjutsu | terra | todos os inimigos | 8 | 5 | 85% | — |
-| Possessão das Sombras | Ninjutsu | — | um inimigo | — | 4 | 90% | atordoar 70% (1 t); espera 3 |
+| Possessão das Sombras | Ninjutsu | — | um inimigo | — | 4 | 90% | atordoar 70% (2 t); espera 3 |
 | Tanque de carne humana | Taijutsu | — | um inimigo | 20 | 5 | 80% | — |
 | Expansão parcial | Taijutsu | — | um aliado | — | 4 | 85% | escudo 15% do HP de quem usa; espera 2 |
 | Mordida do Akamaru | Taijutsu | — | um inimigo | 11 | 0 | 90% | — |
@@ -125,11 +135,11 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 | Rajada | Ninjutsu | vento | um inimigo | 9 | 5 | 85% | 2 golpes; +10% crítico |
 | Esfera de vácuo | Ninjutsu | vento | todos os inimigos | 7 | 10 | 85% | 2 golpes; +10% crítico |
 | Faísca elétrica | Ninjutsu | raio | um inimigo | 12 | 2 | 80% | penetração 10% |
-| Corrente elétrica | Ninjutsu | raio | um inimigo | 20 | 6 | 80% | penetração 20%; atordoar 15% (1 t) |
+| Corrente elétrica | Ninjutsu | raio | um inimigo | 20 | 6 | 80% | penetração 20%; atordoar 10% (2 t) |
 | Lâmina de raio | Ninjutsu | raio | um inimigo | 32 | 11 | 75% | penetração 30% |
 | Punho de pedra | Ninjutsu | terra | um inimigo | 9 | 2 | 95% | — |
-| Lança de terra | Ninjutsu | terra | um inimigo | 17 | 5 | 95% | atordoar 20% (1 t) |
-| Dragão de terra | Ninjutsu | terra | todos os inimigos | 13 | 9 | 90% | atordoar 15% (1 t) |
+| Lança de terra | Ninjutsu | terra | um inimigo | 17 | 5 | 95% | atordoar 15% (2 t) |
+| Dragão de terra | Ninjutsu | terra | todos os inimigos | 13 | 9 | 90% | atordoar 10% (2 t) |
 | Projétil de água | Ninjutsu | água | um inimigo | 10 | 2 | 90% | — |
 | Tubarão de água | Ninjutsu | água | um inimigo | 18 | 5 | 90% | — |
 | Cachoeira | Ninjutsu | água | todos os inimigos | 14 | 9 | 90% | — |
@@ -147,8 +157,8 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 | Punho Bêbado | Taijutsu | — | um inimigo | 7 | 0 | 75% | 3 golpes; +15% crítico |
 | Sharingan | Genjutsu | — | em si | — | 3 | 85% | espera 4; fortalece 3 turnos (+15% acerto); ativa de classe |
 | Sharingan (3 tomoe) | Genjutsu | — | em si | — | 4 | 85% | espera 4; fortalece 4 turnos (dano ×1.1) (+20% acerto); ativa de classe |
-| Ilusão dos corvos | Genjutsu | — | um inimigo | 12 | 4 | 85% | atordoar 25% (1 t) |
-| Tsukuyomi | Genjutsu | — | um inimigo | 30 | 12 | 85% | atordoar 50% (1 t); espera 4 |
+| Ilusão dos corvos | Genjutsu | — | um inimigo | 12 | 4 | 85% | atordoar 20% (2 t) |
+| Tsukuyomi | Genjutsu | — | um inimigo | 30 | 12 | 85% | atordoar 40% (2 t); espera 4 |
 | Selo amaldiçoado | Ninjutsu | — | em si | — | 0 | 85% | custa 10% do HP; espera 5; fortalece 3 turnos (dano ×1.4); ativa de classe |
 | Byakugan | Taijutsu | — | em si | — | 3 | 85% | espera 4; fortalece 3 turnos (+100% acerto); ativa de classe |
 | Byakugan (desperto) | Taijutsu | — | em si | — | 4 | 85% | espera 4; fortalece 4 turnos (dano ×1.15) (+100% acerto); ativa de classe |

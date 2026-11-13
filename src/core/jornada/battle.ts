@@ -177,10 +177,14 @@ export const fighter = (s: JBattle, uid: string): Fighter => {
   return f;
 };
 export const alive = (s: JBattle, side: TeamSide) => s.fighters.filter((f) => f.side === side && !f.down);
-export const downed = (s: JBattle, side: TeamSide) => s.fighters.filter((f) => f.side === side && f.down && !f.gone);
+/** Caídos que dá para levantar: fora quem saiu da luta e quem caiu pelo roteiro. */
+export const downed = (s: JBattle, side: TeamSide) => s.fighters.filter((f) => f.side === side && f.down && !f.gone && !f.knocked);
 export const opponentSide = (side: TeamSide): TeamSide => (side === 'ally' ? 'enemy' : 'ally');
 export const protagonist = (s: JBattle) => s.fighters.find((f) => f.protagonist) ?? null;
 export const hasEffect = (f: Fighter, e: JEffect) => f.effects.some((x) => x.kind === e && x.turns > 0);
+
+/** Quem este lutador pode levantar com a ação universal: os caídos da equipe do jogador (inimigos não têm a ação). */
+export const canRaise = (s: JBattle, f: Fighter): Fighter[] => (f.side === 'ally' && !f.down ? downed(s, 'ally') : []);
 
 /** Lutador do turno atual (null fora de turno). */
 export function current(s: JBattle): Fighter | null {
@@ -481,7 +485,10 @@ function startTurn(s: JBattle, f: Fighter, data: JornadaData): boolean {
 
 /** Fim do turno: efeitos e esperas descontam uma rodada; os Portões cobram a manutenção (ou fecham). */
 function endTurn(s: JBattle, f: Fighter, data: JornadaData): void {
+  const wasStunned = hasEffect(f, 'stun');
   f.effects = f.effects.map((e) => ({ ...e, turns: e.turns - 1 })).filter((e) => e.turns > 0);
+  // Saiu do atordoamento: ganha a trava, que vale até o fim do próximo turno em que ele age.
+  if (wasStunned && !hasEffect(f, 'stun') && !f.down) f.effects.push({ kind: 'stunGuard', turns: data.j.combat.stunImmunityTurns });
   // Forma temporária (roteiro ou ativa): conta os turnos de quem a usa.
   if (f.form && f.formTurns && --f.formTurns <= 0) {
     const form = f.form;
@@ -594,7 +601,7 @@ export function useItem(state: JBattle, item: ConsumableId, targetUid: string, d
   const t = fighter(s, targetUid);
   const j = data.j.combat;
   if (item === 'reviveKit') {
-    if (!t.down || t.side !== user.side) throw new Error('alvo inválido');
+    if (!downed(s, user.side).includes(t)) throw new Error('alvo inválido');
     reviveFighter(s, user, t, j.reviveHpPct);
     s.pills = Math.max(0, s.pills - 1);
   } else {
@@ -635,6 +642,12 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
     s.log.push({ type: 'rest', uid: f.uid, chakra: amount });
     return;
   }
+  if (action.kind === 'raise') {
+    const t = fighter(s, action.target);
+    if (!canRaise(s, f).includes(t)) throw new Error('alvo inválido');
+    reviveFighter(s, f, t, j.raiseHpPct, 'raise');
+    return;
+  }
   if (data.techniques[action.techId]?.active) throw new Error(`ativa não gasta o turno: use useActive (${action.techId})`);
   applyTech(s, f, action.techId, action.target, data, rng);
   script(s, data, { tech: action.techId, by: f });
@@ -648,7 +661,7 @@ function applyTech(s: JBattle, f: Fighter, techId: string, targetUid: string, da
   if (blockedReason(f, tech)) throw new Error(`técnica bloqueada: ${tech.id}`);
   const targets = tech.target === 'allEnemies' ? alive(s, opponentSide(f.side)) : tech.target === 'self' ? [f] : [fighter(s, targetUid)];
   if (tech.target === 'downedAlly') {
-    if (targets.some((t) => !t.down || t.side !== f.side)) throw new Error('alvo inválido');
+    if (targets.some((t) => !downed(s, f.side).includes(t))) throw new Error('alvo inválido');
   } else if (targets.some((t) => t.down)) throw new Error('alvo caído');
   const cost = techniqueCost(f, tech);
   f.chakra -= cost;
@@ -760,10 +773,26 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
   }
 }
 
+/** Controle é o que tira ação: atordoar (perde a vez) e bloqueio de chakra (só taijutsu). */
+export const isControl = (e: JEffect) => e === 'stun' || e === 'chakraBlock';
+
+/** Turnos do efeito da técnica; controle dura no mínimo `combat.minControlTurns`. */
+export function effectTurns(tech: JTechnique, data: JornadaData): number {
+  const on = tech.onHit;
+  if (!on) return 0;
+  const turns = on.turns ?? data.j.combat.defaultEffectTurns;
+  return isControl(on.effect) ? Math.max(turns, data.j.combat.minControlTurns) : turns;
+}
+
 function tryEffect(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: JornadaData, rng: Rng): void {
   const on = tech.onHit;
   if (!on || t.down || rng() >= on.chance + f.mods.effectChanceBonus) return;
-  const turns = on.turns ?? data.j.combat.defaultEffectTurns;
+  // A trava de quem acabou de sair de um atordoamento segura o próximo.
+  if (on.effect === 'stun' && hasEffect(t, 'stunGuard')) {
+    s.log.push({ type: 'resist', target: t.uid, effect: on.effect });
+    return;
+  }
+  const turns = effectTurns(tech, data);
   const prev = t.effects.find((e) => e.kind === on.effect);
   if (prev) prev.turns = Math.max(prev.turns, turns);
   else t.effects.push({ kind: on.effect, turns });
@@ -804,7 +833,7 @@ function lose(s: JBattle, t: Fighter, amount: number, techId?: string): void {
   // Pílula na bolsa levanta o protagonista sozinha, antes de conferir a derrota (vale lutando solo).
   if (t.protagonist && s.pills > 0) {
     s.pills--;
-    reviveFighter(s, t, t, s.pillHpPct, true);
+    reviveFighter(s, t, t, s.pillHpPct, 'pill');
     return;
   }
   checkEnd(s);
@@ -817,10 +846,10 @@ function heal(s: JBattle, f: Fighter, t: Fighter, amount: number): void {
   s.log.push({ type: 'heal', uid: f.uid, target: t.uid, amount: real });
 }
 
-function reviveFighter(s: JBattle, f: Fighter, t: Fighter, pct: number, pill = false): void {
+function reviveFighter(s: JBattle, f: Fighter, t: Fighter, pct: number, how?: 'pill' | 'raise'): void {
   t.down = false;
   t.hp = Math.max(1, Math.floor(t.maxHp * Math.min(1, pct + t.mods.reviveHpBonus)));
-  s.log.push({ type: 'revive', uid: f.uid, target: t.uid, hp: t.hp, ...(pill ? { pill: true } : {}) });
+  s.log.push({ type: 'revive', uid: f.uid, target: t.uid, hp: t.hp, ...(how ? { [how]: true } : {}) });
 }
 
 function checkEnrage(s: JBattle): void {

@@ -2,6 +2,8 @@
 // alvo por toque e animação a partir do log de eventos do core. Sem roleta na tela: só o resultado.
 import {
   awaitingPlayer,
+  canRaise,
+  effectTurns,
   battlePower,
   blockedReason,
   current,
@@ -46,7 +48,7 @@ const J = S.jornada;
 const B = J.battle;
 
 /** Ícone de cada efeito de status (dicas, selos do lutador, números flutuantes). */
-export const EFFECT_ICONS: Record<string, string> = { stun: 'stun', burn: 'fire', poison: 'poison', chakraBlock: 'block' };
+export const EFFECT_ICONS: Record<string, string> = { stun: 'stun', burn: 'fire', poison: 'poison', chakraBlock: 'block', stunGuard: 'immune' };
 const fxIcon = (kind: string) => icon(EFFECT_ICONS[kind] ?? 'neutral');
 
 /** Nome do protagonista: o do jogador no Caminho Ninja ("Nome Uchiha"); na História, o Naruto. Sem escapar. */
@@ -181,7 +183,7 @@ export function techTip(tech: JTechnique, f?: Fighter, mods?: FighterMods, s?: J
   const blocked = f ? blockedReason(f, tech) : null;
   const why = blocked ? (blocked === 'cooldown' ? B.cooldown(f!.cooldowns[tech.id]!) : B.blocked[blocked]) : tech.active && s?.activeUsed ? B.activeSpent : '';
   const effect = tech.onHit
-    ? `${fxIcon(tech.onHit.effect)} ${J.effects[tech.onHit.effect]} ${pct(tech.onHit.chance)}${tech.onHit.turns ? ` (${tech.onHit.turns} t)` : ''}`
+    ? `${fxIcon(tech.onHit.effect)} ${J.effects[tech.onHit.effect]} ${pct(tech.onHit.chance)} (${effectTurns(tech, jornadaData)} t)`
     : '';
   const body = lines([
     why ? `<b>${why}</b>` : '',
@@ -228,7 +230,8 @@ function fighterTip(f: Fighter): string {
 }
 
 function statusChips(f: Fighter): string {
-  const chips = f.effects.map((e) => `<span class="jchip bad" title="${J.effects[e.kind]}">${fxIcon(e.kind)}${e.turns}</span>`);
+  // A trava contra atordoamento é a favor de quem a tem.
+  const chips = f.effects.map((e) => `<span class="jchip ${e.kind === 'stunGuard' ? 'good' : 'bad'}" title="${J.effects[e.kind]}">${fxIcon(e.kind)}${e.turns}</span>`);
   if (f.shield > 0) chips.push(`<span class="jchip good">${icon('barrier')}${f.shield}</span>`);
   if (f.clones > 0) chips.push(`<span class="jchip good" title="${B.clonesActive(f.clones, CLONE_PCT)}">${icon('clones')}${f.clones}</span>`);
   if (f.guarding) chips.push(`<span class="jchip good">${icon('stance')}</span>`);
@@ -525,6 +528,10 @@ export async function jornadaBattle(
           float(e.target, `${fxIcon(e.effect)} ${J.effects[e.effect]}`, 'fx');
           pushLog(B.logEffect(name(e.target), J.effects[e.effect]!));
           break;
+        case 'resist':
+          float(e.target, `${fxIcon('stunGuard')} ${B.resisted}`, 'shield');
+          pushLog(B.logResist(name(e.target)));
+          break;
         case 'cleanse':
           float(e.target, icon('sparkle'), 'heal');
           break;
@@ -712,13 +719,26 @@ export async function jornadaBattle(
       render(state);
       const me = current(state)!;
       const techs = me.techniques.map((id) => data.techniques[id]!).filter(Boolean);
-      const moves = techs.filter((t) => !t.active);
+      // Com alguém caído, levantar vem primeiro: a ação de qualquer um, a técnica de quem tem e a pílula, num bloco só.
+      const fallen = canRaise(state, me);
+      const raiseTechs = fallen.length ? techs.filter((t) => !t.active && t.target === 'downedAlly') : [];
+      const moves = techs.filter((t) => !t.active && !raiseTechs.includes(t));
       const actives = techs.filter((t) => t.active);
+      const pill = fallen.length > 0 && state.pills > 0 && !state.itemUsed;
+      const raisePct = Math.round(data.j.combat.raiseHpPct * 100);
+      const raiseBlock = fallen.length
+        ? `<h4 class="act-title">${B.groups.raise}</h4><div class="jb-extra jb-raise">
+          <button class="btn small primary jx" data-act="raise" ${tip(B.raise, B.raiseDesc(raisePct))}>${icon('heart')} ${B.raise} · ${raisePct}%</button>
+          ${raiseTechs.map((t) => techButton(state, me, t)).join('')}
+          ${pill ? `<button class="btn small jx" data-act="pill" ${tip(J.items.reviveKit!.name, B.pillDesc(Math.round(data.j.combat.reviveHpPct * 100)))}>${icon('pill')} ${J.items.reviveKit!.name}</button>` : ''}
+        </div>`
+        : '';
       // A pílula usada sozinha só sai da bolsa no fim da luta: aqui vale a contagem da luta.
       const items = CONSUMABLES.filter((id) => (id === 'reviveKit' ? state.pills : run.bag[id]) > 0 && itemTargets(state, id).length > 0);
       menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
+        ${raiseBlock}
         <h4 class="act-title">${B.groups.techniques}</h4>
-        <div class="jb-moves">${moves.map((t) => techButton(state, me, t)).join('')}</div>
+        <div class="jb-moves${moves.length > 4 ? ' many' : ''}">${moves.map((t) => techButton(state, me, t)).join('')}</div>
         ${actives.length ? `<h4 class="act-title">${B.groups.actives}</h4><div class="jb-extra">${actives.map((t) => (t.gates ? gatesButton(state, me, t) : techButton(state, me, t))).join('')}</div>` : ''}
         <h4 class="act-title">${B.groups.actions}</h4>
         <div class="jb-extra">
@@ -738,6 +758,20 @@ export async function jornadaBattle(
       });
       if (pick.dataset.act === 'guard') return { kind: 'guard' };
       if (pick.dataset.act === 'rest') return { kind: 'rest' };
+      if (pick.dataset.act === 'raise') {
+        const uid = await pickTarget(fallen, B.pickDowned);
+        if (!uid) continue;
+        return { kind: 'raise', target: uid };
+      }
+      if (pick.dataset.act === 'pill') {
+        const uid = await pickTarget(itemTargets(state, 'reviveKit'), B.pickDowned);
+        if (!uid) continue;
+        const before = state;
+        state = useItem(state, 'reviveKit', uid, data);
+        run = spendItem(run, 'reviveKit');
+        await animate(before, state);
+        continue;
+      }
       if (pick.dataset.act === 'abandon') {
         if (window.confirm(J.ui.abandonConfirm)) return 'abandon';
         continue;

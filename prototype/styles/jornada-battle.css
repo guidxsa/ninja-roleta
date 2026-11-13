@@ -137,6 +137,11 @@
 .jb-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .jmove { position: relative; display: flex; align-items: center; gap: 9px; text-align: left; padding: 8px; min-height: 56px; border-left: 3px solid var(--c, var(--line)); }
 .jmove.on { box-shadow: inset 0 0 0 1px var(--gold-2); }
+/* Moveset cheio (5 ou 6 técnicas): botões mais baixos, para o menu caber sem rolar tanto (ainda acima de 44px de toque). */
+.jb-moves.many .jmove { min-height: 46px; padding: 5px 8px; gap: 7px; }
+.jb-moves.many .jmove-ico { width: 26px; height: 26px; }
+/* Aliado caído: o bloco de levantar vem antes das técnicas. */
+.jb-raise .jmove { flex: 1 1 100%; }
 .jmove-ico { position: relative; width: 30px; height: 30px; flex: none; display: grid; place-items: center; background: var(--c); color: #fff; }
 /* Espera (cooldown): selo com as rodadas que faltam e um anel do quanto ainda falta. */
 .jmove.cooling .jmove-ico { background: color-mix(in srgb, var(--c) 35%, var(--surface-3)); }

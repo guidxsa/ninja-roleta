@@ -108,7 +108,7 @@ export const characters: CharacterDef[] = [
     offense: { taijutsu: 7, ninjutsu: 6, genjutsu: 8 },
     resistance: { physical: 5, mental: 9 },
     element: 'earth',
-    techniques: ['jKunai', 'jShuriken', 'jWireTrap', 'jRelease', 'jBunshin'],
+    techniques: ['jKunai', 'jShuriken', 'jWireTrap', 'jRelease', 'jFirstAid', 'jBunshin'],
     ai: 'tactician',
     growth: g(6, 3, 0.4, 0.7, 0.6, 0.9, 0.4, 0.7),
     portrait: 'ninja:sakura',

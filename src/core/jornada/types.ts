@@ -6,7 +6,8 @@ import type { FormDef, ScriptRule } from './script';
 export type TeamSide = 'ally' | 'enemy';
 
 /** Efeitos com duração em turnos de quem sofre (docs/jornada/combate.md#efeitos). */
-export type JEffect = 'stun' | 'burn' | 'poison' | 'chakraBlock';
+/** `stunGuard`: a trava de quem acabou de sair de um atordoamento (não pode ser atordoado de novo enquanto durar). */
+export type JEffect = 'stun' | 'burn' | 'poison' | 'chakraBlock' | 'stunGuard';
 
 /** Bônus temporário em quem usa: dano, acerto, esquiva e penetração por `turns` turnos dele. */
 export interface Boost {
@@ -230,6 +231,8 @@ export interface Fighter {
   form?: string;
   /** Saiu da luta pelo roteiro (troca de fase): não volta nem conta para a vitória. */
   gone?: boolean;
+  /** Caiu pelo roteiro (o Iruka protegendo o Naruto, o Sasuke contra o Haku): é cena, ninguém levanta nesta luta. */
+  knocked?: boolean;
   /** Entrou pelo roteiro (invocação, convidado): não vai para a equipe da run no fim da luta. */
   guest?: boolean;
   /** Ficha de antes da forma e turnos que ainda restam dela (0 = até o fim da luta). */
@@ -265,13 +268,16 @@ export type JEvent =
   | { type: 'shield'; uid: string; target: string; amount: number }
   | { type: 'clones'; uid: string; total: number }
   | { type: 'effect'; target: string; effect: JEffect; turns: number }
+  /** A trava segurou um atordoamento. */
+  | { type: 'resist'; target: string; effect: JEffect }
   | { type: 'cleanse'; uid: string; target: string }
   | { type: 'tick'; target: string; effect: JEffect; amount: number }
   | { type: 'regen'; target: string; amount: number }
   /** `scripted`: caiu pelo roteiro (não foi derrotado). */
   | { type: 'down'; target: string; scripted?: boolean }
   | { type: 'survive'; target: string }
-  | { type: 'revive'; uid: string; target: string; hp: number; pill?: boolean }
+  /** `raise`: levantado pela ação universal (não por técnica nem pílula). */
+  | { type: 'revive'; uid: string; target: string; hp: number; pill?: boolean; raise?: boolean }
   | { type: 'item'; uid: string; item: string; target: string }
   | { type: 'guard'; uid: string }
   | { type: 'rest'; uid: string; chakra: number }
@@ -335,7 +341,9 @@ export interface JBattle {
 export type JAction =
   | { kind: 'tech'; techId: string; target: string }
   | { kind: 'guard' }
-  | { kind: 'rest' };
+  | { kind: 'rest' }
+  /** Levantar um aliado caído: gasta o turno; volta com pouco HP (`combat.raiseHpPct`). Só a equipe do jogador. */
+  | { kind: 'raise'; target: string };
 
 /** Ação grátis (não gasta o turno, uma por turno): ativa de classe ou troca de portão (0 = fechar). */
 export type JFreeAction = { kind: 'active'; techId: string; target: string } | { kind: 'gate'; level: number };

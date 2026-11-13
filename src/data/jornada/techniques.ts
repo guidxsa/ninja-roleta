@@ -34,21 +34,21 @@ export const allyTechniques: JTechnique[] = [
   { id: 'jbWaterGun', type: 'ninjutsu', element: 'water', target: 'allEnemies', baseDamage: 14, chakraCost: 8 },
   // Garras da Kyuubi: vem com a forma do chakra da raposa (roteiro), não pela árvore.
   { id: 'jKyuubiClaw', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, hits: 2, chakraCost: 0, accuracy: 0.9 },
-  { id: 'jSexyJutsu', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 3, accuracy: 0.75, onHit: { effect: 'stun', chance: 0.6, turns: 1 }, cooldown: 3 },
+  { id: 'jSexyJutsu', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 3, accuracy: 0.75, onHit: { effect: 'stun', chance: 0.6 }, cooldown: 3 },
   { id: 'jRendan', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 1, hitsPerClone: 1, maxCloneHits: 3, chakraCost: 3, accuracy: 0.85 },
   { id: 'jTajuuBunshin', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 9, hits: 2, chakraCost: 12, clones: 3 },
   { id: 'jKyuubiCloak', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.08, shieldPct: 0.2, active: true, cooldown: 4 },
   { id: 'jChakraBurst', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 14, chakraCost: 8, accuracy: 0.9 },
   { id: 'jRasengan', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 28, chakraCost: 10, accuracy: 0.9, critBonus: 0.05 },
-  { id: 'jOdama', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 44, chakraCost: 16, accuracy: 0.85, penetration: 0.2, onHit: { effect: 'stun', chance: 0.3, turns: 1 } },
+  { id: 'jOdama', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 44, chakraCost: 16, accuracy: 0.85, penetration: 0.2, onHit: { effect: 'stun', chance: 0.25 } },
   { id: 'jRasenClone', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 18, hits: 1, hitsPerClone: 1, maxCloneHits: 2, chakraCost: 8, accuracy: 0.9 },
-  { id: 'jHarem', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 0, chakraCost: 6, accuracy: 0.75, onHit: { effect: 'stun', chance: 0.4, turns: 1 }, cooldown: 4 },
+  { id: 'jHarem', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 0, chakraCost: 6, accuracy: 0.75, onHit: { effect: 'stun', chance: 0.4 }, cooldown: 4 },
   { id: 'jSmokeBomb', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, boost: { evasion: 0.3, turns: 2 }, active: true, cooldown: 4 },
   { id: 'jShadowShuriken', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 3, chakraCost: 3, accuracy: 0.8, cooldown: 1 },
   { id: 'jWarCry', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healHp: 20, cleanse: true, cooldown: 2 },
   { id: 'jGamakichi', type: 'ninjutsu', element: 'fire', target: 'allEnemies', baseDamage: 12, chakraCost: 6, onHit: { effect: 'burn', chance: 0.3 } },
   { id: 'jGamatatsu', type: 'ninjutsu', element: 'water', target: 'self', baseDamage: 0, chakraCost: 5, shieldPct: 0.25, active: true, cooldown: 3 },
-  { id: 'jGamabunta', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 26, chakraCost: 16, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.25, turns: 1 }, cooldown: 4 },
+  { id: 'jGamabunta', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 26, chakraCost: 16, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.2 }, cooldown: 4 },
   { id: 'jOneTail', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.1, boost: { damageMult: 1.35, turns: 3 }, active: true, cooldown: 5 },
 
   // Sasuke
@@ -59,8 +59,10 @@ export const allyTechniques: JTechnique[] = [
 
   // Sakura (no mangá, antes do timeskip, ela ainda não é médica: apoio tático)
   { id: 'jKunai', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 9, chakraCost: 0, accuracy: 0.9 },
-  { id: 'jWireTrap', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 4, chakraCost: 3, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.4, turns: 1 }, cooldown: 2 },
+  { id: 'jWireTrap', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 4, chakraCost: 3, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.3 }, cooldown: 2 },
   { id: 'jRelease', type: 'genjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 2, cleanse: true, healHp: 10 },
+  // Primeiros socorros da Sakura (v0.69.0): levanta melhor que a ação universal (15%), abaixo da Reanimação da Tsunade (50%). Proposta.
+  { id: 'jFirstAid', type: 'ninjutsu', element: null, target: 'downedAlly', baseDamage: 0, chakraCost: 6, cooldown: 2, reviveHpPct: 0.35 },
 
   // Jiraiya
   { id: 'jToadOil', type: 'ninjutsu', element: 'fire', target: 'allEnemies', baseDamage: 14, chakraCost: 8, onHit: { effect: 'burn', chance: 0.3 } },
@@ -68,7 +70,7 @@ export const allyTechniques: JTechnique[] = [
   { id: 'jSanninStrike', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 14, chakraCost: 0, accuracy: 0.9 },
 
   // Tsunade
-  { id: 'jTsunadePunch', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 24, chakraCost: 3, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.25, turns: 1 } },
+  { id: 'jTsunadePunch', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 24, chakraCost: 3, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.2 } },
   { id: 'jMysticPalm', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healHp: 30, cleanse: true },
   // Reanimar é habilidade, não regra geral: caro em chakra e com espera (docs/jornada/combate.md#cair-e-levantar).
   { id: 'jReanimate', type: 'ninjutsu', element: null, target: 'downedAlly', baseDamage: 0, chakraCost: 15, cooldown: 2, reviveHpPct: 0.5 },
@@ -76,15 +78,15 @@ export const allyTechniques: JTechnique[] = [
   // Rock Lee
   { id: 'jLeafWhirlwind', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, chakraCost: 0, accuracy: 0.9 },
   { id: 'jLeafHurricane', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 8, hits: 2, chakraCost: 0, accuracy: 0.85 },
-  { id: 'jPrimaryLotus', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 32, chakraCost: 0, hpCostPct: 0.1, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.3, turns: 1 }, cooldown: 3 },
+  { id: 'jPrimaryLotus', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 32, chakraCost: 0, hpCostPct: 0.1, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.25 }, cooldown: 3 },
 
   // Gaara (aliado)
   { id: 'jSandShieldAlly', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'ally', baseDamage: 0, chakraCost: 5, shieldPct: 0.25, cooldown: 2 },
-  { id: 'jSandCoffinAlly', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'enemy', baseDamage: 20, chakraCost: 7, onHit: { effect: 'stun', chance: 0.3, turns: 1 } },
+  { id: 'jSandCoffinAlly', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'enemy', baseDamage: 20, chakraCost: 7, onHit: { effect: 'stun', chance: 0.25 } },
   { id: 'jSandShuriken', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'allEnemies', baseDamage: 8, chakraCost: 5 },
 
   // Equipe de resgate (Neji usa as técnicas do Hyuuga, em classTechniques)
-  { id: 'jShadowBind', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 4, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.7, turns: 1 }, cooldown: 3 },
+  { id: 'jShadowBind', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 4, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.7 }, cooldown: 3 },
   { id: 'jMeatTank', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 20, chakraCost: 5, accuracy: 0.8 },
   { id: 'jPartialExpansion', type: 'taijutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 4, shieldPct: 0.15, cooldown: 2 },
   { id: 'jAkamaruBite', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 11, chakraCost: 0, accuracy: 0.9 },
@@ -99,11 +101,11 @@ export const elementalTechniques: JTechnique[] = [
   { id: 'jGale', type: 'ninjutsu', element: 'wind', target: 'enemy', baseDamage: 9, hits: 2, chakraCost: 5, critBonus: 0.1 },
   { id: 'jVacuumSphere', type: 'ninjutsu', element: 'wind', target: 'allEnemies', baseDamage: 7, hits: 2, chakraCost: 10, critBonus: 0.1 },
   { id: 'jSpark', type: 'ninjutsu', element: 'lightning', target: 'enemy', baseDamage: 12, chakraCost: 2, accuracy: 0.8, penetration: 0.1 },
-  { id: 'jLightningCurrent', type: 'ninjutsu', element: 'lightning', target: 'enemy', baseDamage: 20, chakraCost: 6, accuracy: 0.8, penetration: 0.2, onHit: { effect: 'stun', chance: 0.15, turns: 1 } },
+  { id: 'jLightningCurrent', type: 'ninjutsu', element: 'lightning', target: 'enemy', baseDamage: 20, chakraCost: 6, accuracy: 0.8, penetration: 0.2, onHit: { effect: 'stun', chance: 0.1 } },
   { id: 'jLightningBlade', type: 'ninjutsu', element: 'lightning', target: 'enemy', baseDamage: 32, chakraCost: 11, accuracy: 0.75, penetration: 0.3 },
   { id: 'jRockFist', type: 'ninjutsu', element: 'earth', target: 'enemy', baseDamage: 9, chakraCost: 2, accuracy: 0.95 },
-  { id: 'jEarthSpear', type: 'ninjutsu', element: 'earth', target: 'enemy', baseDamage: 17, chakraCost: 5, accuracy: 0.95, onHit: { effect: 'stun', chance: 0.2, turns: 1 } },
-  { id: 'jEarthDragon', type: 'ninjutsu', element: 'earth', target: 'allEnemies', baseDamage: 13, chakraCost: 9, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.15, turns: 1 } },
+  { id: 'jEarthSpear', type: 'ninjutsu', element: 'earth', target: 'enemy', baseDamage: 17, chakraCost: 5, accuracy: 0.95, onHit: { effect: 'stun', chance: 0.15 } },
+  { id: 'jEarthDragon', type: 'ninjutsu', element: 'earth', target: 'allEnemies', baseDamage: 13, chakraCost: 9, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.1 } },
   { id: 'jWaterBullet', type: 'ninjutsu', element: 'water', target: 'enemy', baseDamage: 10, chakraCost: 2, accuracy: 0.9 },
   { id: 'jWaterShark', type: 'ninjutsu', element: 'water', target: 'enemy', baseDamage: 18, chakraCost: 5, accuracy: 0.9 },
   { id: 'jWaterfall', type: 'ninjutsu', element: 'water', target: 'allEnemies', baseDamage: 14, chakraCost: 9, accuracy: 0.9 },
@@ -124,8 +126,8 @@ export const classTechniques: JTechnique[] = [
   // Uchiha (v0.37.0)
   { id: 'jSharingan', type: 'genjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, boost: { accuracy: 0.15, evasion: 0.15, turns: 3 }, active: true, cooldown: 4 },
   { id: 'jSharingan3', type: 'genjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 4, boost: { accuracy: 0.2, evasion: 0.25, damageMult: 1.1, turns: 4 }, active: true, cooldown: 4, evolves: 'jSharingan' },
-  { id: 'jCrowIllusion', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 12, chakraCost: 4, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.25, turns: 1 } },
-  { id: 'jTsukuyomi', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 30, chakraCost: 12, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.5, turns: 1 }, cooldown: 4 },
+  { id: 'jCrowIllusion', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 12, chakraCost: 4, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.2 } },
+  { id: 'jTsukuyomi', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 30, chakraCost: 12, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.4 }, cooldown: 4 },
   { id: 'jCursedSeal', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.1, boost: { damageMult: 1.4, turns: 3 }, active: true, cooldown: 5 },
 
   // Hyuuga (v0.37.0)
@@ -151,8 +153,8 @@ export const enemyTechniques: JTechnique[] = [
   { id: 'jeChainClaw', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 9, chakraCost: 0, accuracy: 0.85, onHit: { effect: 'poison', chance: 0.35 } },
   { id: 'jeChainSweep', type: 'taijutsu', element: null, target: 'allEnemies', baseDamage: 6, chakraCost: 2, accuracy: 0.8 },
   // Kakashi (teste do sino)
-  { id: 'jeThousandYears', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 6, chakraCost: 0, onHit: { effect: 'stun', chance: 0.35, turns: 1 } },
-  { id: 'jeHeadHunter', type: 'ninjutsu', element: 'earth', target: 'enemy', baseDamage: 13, chakraCost: 4, onHit: { effect: 'stun', chance: 0.2, turns: 1 } },
+  { id: 'jeThousandYears', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 6, chakraCost: 0, onHit: { effect: 'stun', chance: 0.3 } },
+  { id: 'jeHeadHunter', type: 'ninjutsu', element: 'earth', target: 'enemy', baseDamage: 13, chakraCost: 4, onHit: { effect: 'stun', chance: 0.15 } },
   { id: 'jeKakashiKick', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 11, chakraCost: 0, accuracy: 0.9 },
   // Zabuza
   { id: 'jeCleaver', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 17, chakraCost: 0, accuracy: 0.8, penetration: 0.15 },
@@ -161,11 +163,11 @@ export const enemyTechniques: JTechnique[] = [
   // Haku
   { id: 'jeSenbon', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 5, hits: 3, chakraCost: 0, accuracy: 0.85 },
   { id: 'jeIceMirrors', type: 'ninjutsu', element: 'water', kekkeiGenkai: 'ice', target: 'allEnemies', baseDamage: 8, hits: 2, chakraCost: 8, cooldown: 2 },
-  { id: 'jePressurePoint', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 6, chakraCost: 2, onHit: { effect: 'stun', chance: 0.3, turns: 1 } },
+  { id: 'jePressurePoint', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 6, chakraCost: 2, onHit: { effect: 'stun', chance: 0.25 } },
   // Exame: Trio do Som
-  { id: 'jeSoundWave', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 11, chakraCost: 3, onHit: { effect: 'stun', chance: 0.2, turns: 1 } },
+  { id: 'jeSoundWave', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 11, chakraCost: 3, onHit: { effect: 'stun', chance: 0.15 } },
   { id: 'jeAirBlast', type: 'ninjutsu', element: 'wind', target: 'allEnemies', baseDamage: 8, chakraCost: 5 },
-  { id: 'jeBellGenjutsu', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 7, chakraCost: 3, onHit: { effect: 'stun', chance: 0.3, turns: 1 } },
+  { id: 'jeBellGenjutsu', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 7, chakraCost: 3, onHit: { effect: 'stun', chance: 0.25 } },
   // Ninjas da Grama e da Chuva
   { id: 'jeUmbrellaNeedles', type: 'taijutsu', element: null, target: 'allEnemies', baseDamage: 4, hits: 2, chakraCost: 3, accuracy: 0.75 },
   { id: 'jeRainClone', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 9, chakraCost: 2 },
@@ -176,13 +178,13 @@ export const enemyTechniques: JTechnique[] = [
   // Kiba e Akamaru
   { id: 'jeFangOverFang', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 10, hits: 2, chakraCost: 4, accuracy: 0.8 },
   { id: 'jeDogBite', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, chakraCost: 0, accuracy: 0.9 },
-  { id: 'jeStinkBomb', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 2, onHit: { effect: 'stun', chance: 0.4, turns: 1 }, cooldown: 3 },
+  { id: 'jeStinkBomb', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 2, onHit: { effect: 'stun', chance: 0.4 }, cooldown: 3 },
   // Neji
   { id: 'jeGentleFist', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, chakraCost: 0, accuracy: 0.95, penetration: 0.3, onHit: { effect: 'chakraBlock', chance: 0.35 } },
   { id: 'jeRotation', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 4, shieldPct: 0.2, cooldown: 3 },
   { id: 'jeSixtyFourPalms', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 4, hits: 4, chakraCost: 8, accuracy: 0.95, penetration: 0.3, onHit: { effect: 'chakraBlock', chance: 0.5, turns: 3 }, cooldown: 3 },
   // Gaara (exame)
-  { id: 'jeSandCoffin', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'enemy', baseDamage: 18, chakraCost: 6, onHit: { effect: 'stun', chance: 0.35, turns: 1 } },
+  { id: 'jeSandCoffin', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'enemy', baseDamage: 18, chakraCost: 6, onHit: { effect: 'stun', chance: 0.3 } },
   { id: 'jeSandShield', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'self', baseDamage: 0, chakraCost: 4, shieldPct: 0.15, cooldown: 3 },
   { id: 'jeSandTsunami', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'allEnemies', baseDamage: 14, chakraCost: 9 },
   { id: 'jeShukakuClaw', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 22, chakraCost: 3, accuracy: 0.8 },
@@ -196,8 +198,8 @@ export const enemyTechniques: JTechnique[] = [
   { id: 'jeEarthDome', type: 'ninjutsu', element: 'earth', target: 'enemy', baseDamage: 6, chakraCost: 5, onHit: { effect: 'chakraBlock', chance: 0.6, turns: 2 }, cooldown: 2 },
   { id: 'jeHeavyPunch', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 18, chakraCost: 0, accuracy: 0.8 },
   { id: 'jeGoldenArrow', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 24, chakraCost: 6, accuracy: 0.8, penetration: 0.2 },
-  { id: 'jeSpiderWeb', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 4, chakraCost: 3, onHit: { effect: 'stun', chance: 0.45, turns: 1 }, cooldown: 2 },
-  { id: 'jeDemonFlute', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 9, chakraCost: 6, onHit: { effect: 'stun', chance: 0.2, turns: 1 } },
+  { id: 'jeSpiderWeb', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 4, chakraCost: 3, onHit: { effect: 'stun', chance: 0.35 }, cooldown: 2 },
+  { id: 'jeDemonFlute', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 9, chakraCost: 6, onHit: { effect: 'stun', chance: 0.15 } },
   { id: 'jeTwinStrike', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 9, hits: 2, chakraCost: 0, accuracy: 0.85 },
   // Kimimaro
   { id: 'jeBoneDrill', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 22, chakraCost: 4, penetration: 0.3 },

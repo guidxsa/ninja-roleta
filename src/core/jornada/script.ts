@@ -153,6 +153,7 @@ function perform(s: JBattle, a: ScriptAction, data: JornadaData, enterFighter: (
       f.shield = 0;
       f.boost = null;
       f.gate = null;
+      f.knocked = true;
       s.log.push({ type: 'down', target: f.uid, scripted: true });
       return;
     }

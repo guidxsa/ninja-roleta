@@ -27,7 +27,7 @@ De cima para baixo: o banner, o card **Progresso da Jornada** (quando há run sa
 
 - Na trilha, o caminho do estágio aparece inteiro abaixo de uma faixa com o local da parada atual ([visual.md](../visual.md)), com a legenda, e o retrato do herói marca a parada atual.
 - Na trilha dá para abrir a árvore de talentos, o moveset e as relíquias a qualquer momento.
-- **Moeda (ryō)**: ganha em lutas e eventos, gasta na [loja](#loja).
+- **Moeda (ryō)**: toda run começa com **60 ryō** (v0.69.0, `run.startRyo`; História e Caminho Ninja, uma vez só, ao criar a run). Ganha em lutas e eventos, gasta na [loja](#loja).
 
 ## Eventos
 

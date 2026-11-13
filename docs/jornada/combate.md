@@ -61,20 +61,27 @@ Ativa do prodígio (v0.42.0; custo em chakra desde a v0.59.0, regra comum em [fu
 
 | Efeito | O que faz | Duração padrão |
 |---|---|---|
-| Atordoar | Perde a vez | a da técnica (geralmente 1) |
+| Atordoar | Perde a vez | 2 (mínimo; a técnica pode dar mais) |
 | Queimar | −5% do HP máximo no começo do turno | 2 |
 | Veneno | −6% do HP máximo no começo do turno | 2 |
 | Bloqueio de chakra | Só taijutsu | 2 (64 Palmas: 3) |
+| Firme (trava) | Não pode ser atordoado | 1 turno próprio, ao sair de um atordoamento |
+
+- **Controle dura no mínimo 2 turnos** (v0.69.0, `combat.minControlTurns`): atordoar e bloqueio de chakra, de aliados e de inimigos. Para compensar, as chances de atordoar das técnicas com dano caíram cerca de 20% (as de controle puro, como o Sexy no Jutsu e a Possessão das Sombras, não mudaram).
+- **Trava** (`combat.stunImmunityTurns`): quem sai de um atordoamento fica **firme** até o fim do próximo turno em que age, e nenhum atordoamento pega nesse intervalo. Ninguém fica preso em cadeia: depois de perder 2 turnos, o lutador age pelo menos uma vez. O bloqueio de chakra não tem trava (quem está bloqueado ainda age com taijutsu).
 
 - **Escudo** absorve dano antes do HP e não some sozinho.
 - **Clones** (Kage Bunshin e Bunshin no Jutsu; regra comum em [fundamentos.md](../base/fundamentos.md#clones)): cada golpe de alvo único tem 50% de chance de acertar um clone no lugar do dono (o clone some). Técnicas em área ignoram os clones, mesmo sobrando um inimigo só. No máximo 5 clones.
-- **Kai** e **Palma mística** tiram atordoar e bloqueio de chakra.
+- **Kai**, **Palma mística** e o **Grito de guerra** tiram atordoar e bloqueio de chakra (não dão a trava).
 
 ## Cair e levantar
 
 - Quem chega a 0 de HP cai: perde efeitos, escudo e clones.
-- **Levantar não é regra geral** (v0.48.0): só a **Pílula de reanimação** e quem tem uma **técnica de reanimar** levantam. Sem isso, quem caiu fica no chão até o fim da luta.
-- **Reanimação** (técnica): gasta o turno, 15 de chakra, espera 2, volta com 50% do HP, alvo aliado caído. Quem tem: Tsunade, a médica de campo Mika ([classes.md](classes.md#suportes-genéricos-versão-suporte)) e quem aprende na árvore (Ninguém fica para trás do Naruto, Primeiros socorros do Comum). Quem tem a técnica levanta antes de tudo, o protagonista primeiro. A técnica do Kabuto é a Reanimação proibida ([inimigos.md](inimigos.md)).
+- **Levantar é de todos** (v0.69.0): qualquer integrante da equipe do jogador, o protagonista incluído, tem a ação **Levantar**: gasta o turno e o aliado caído volta com **15% do HP** (`combat.raiseHpPct`, proposta). Quem levanta escolhe quem; o levantado age a partir da rodada seguinte. Os **inimigos não têm a ação**: só levantam com técnica (Kabuto), como desde a v0.48.0.
+- **Técnicas de levantar** devolvem mais HP: **Primeiros socorros** da Sakura (35%, 6 de chakra, espera 2) e **Reanimação** (50%, 15 de chakra, espera 2; Tsunade, a médica de campo Mika ([classes.md](classes.md#suportes-genéricos-versão-suporte)) e quem aprende na árvore: Ninguém fica para trás do Naruto, Primeiros socorros do Comum). A técnica do Kabuto é a Reanimação proibida ([inimigos.md](inimigos.md)).
+- **Na tela**: com alguém caído, o menu do turno abre com o bloco **Aliado caído** antes das técnicas: a ação Levantar, a técnica de levantar (se tiver) e a Pílula.
+- **Quem cai por cena não levanta**: o Iruka protegendo o Naruto, o Sasuke contra o Haku. Caiu pelo roteiro, fica no chão até o fim daquela luta (nem ação, nem técnica, nem pílula).
+- **Os suportes levantam sozinhos** ([personagens.md](personagens.md#comportamento)): o protagonista sempre; outro suporte, só se quem levanta está com 40% do HP ou mais. Com a técnica, usam a técnica.
 - **Pílula no protagonista**: se ele cair com pílula na bolsa, uma é usada sozinha, sem gastar turno, inclusive lutando solo.
 - **Protagonista caído sem pílula não encerra a luta** enquanto houver suporte de pé: a luta anda sozinha com os suportes, que ainda podem vencer.
 - **Derrota é todos os aliados no chão.** Lutando sozinho, cair é derrota. Fúria da Kyuubi (talento) segura o Naruto com 1 de HP uma vez por luta.
@@ -92,9 +99,9 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 
 ## Moveset
 
-- **4 técnicas** equipadas, mais as **ativas de classe** numa área separada (Kage Bunshin, Manto da Kyuubi).
+- **6 técnicas** equipadas (v0.69.0; eram 4), mais as **ativas de classe** numa área separada (Kage Bunshin, Manto da Kyuubi).
 - O moveset fica salvo entre as lutas; editar (botão Moveset na trilha) é opcional. Técnica nova da árvore entra sozinha se houver espaço.
-- **Tela do moveset** (v0.43.0): tela cheia com o tema da classe, como a árvore de talentos (cor, padrão e brasão; no Comum, a cor do elemento). Em cima, as 4 vagas em selos (tocar tira); depois as ativas de classe, sempre disponíveis; embaixo, as técnicas conhecidas agrupadas por origem (kit inicial, elemento, talentos e eventos), com o dano e o custo da run. Com as 4 vagas cheias, tocar numa técnica nova avisa para tirar uma antes.
+- **Tela do moveset** (v0.43.0): tela cheia com o tema da classe, como a árvore de talentos (cor, padrão e brasão; no Comum, a cor do elemento). Em cima, as 6 vagas em selos (tocar tira); depois as ativas de classe, sempre disponíveis; embaixo, as técnicas conhecidas agrupadas por origem (kit inicial, elemento, talentos e eventos), com o dano e o custo da run. Com as 6 vagas cheias, tocar numa técnica nova avisa para tirar uma antes. Na luta, com 5 ou 6 técnicas os botões ficam mais baixos para o menu caber.
 
 ## Vitória e derrota
 

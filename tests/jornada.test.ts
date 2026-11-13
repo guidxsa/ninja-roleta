@@ -4,6 +4,9 @@ import {
   advance,
   awaitingPlayer,
   battlePower,
+  canRaise,
+  effectTurns,
+  isControl,
   current,
   emptyMods,
   enemySeed,
@@ -273,13 +276,45 @@ describe('combate de equipe da Jornada', () => {
       return () => rolls.shift() ?? 0.99;
     };
 
-    it('sem técnica nem pílula, ninguém levanta: o herói fica no chão e os suportes seguem lutando', () => {
+    it('levantar é de todos (v0.69.0): qualquer suporte gasta o turno e levanta o herói com pouco HP', () => {
       for (const ai of ['striker', 'guardian', 'brute', 'tactician', 'healer'] as const) {
-        const b = advance(startBattle(setup({ allies: [hero({ hp: 5 }), support({ ai })], enemies: [dummy({ ...killer, hp: 900, maxHp: 900 })] }), data, oneHit()), data, oneHit());
-        expect(b.log.some((e) => e.type === 'revive'), ai).toBe(false);
-        expect(b.fighters[0]!.down, ai).toBe(true);
-        expect(b.fighters[1]!.down, ai).toBe(false);
+        const b = startBattle(setup({ allies: [hero({ hp: 5 }), support({ ai })], enemies: [dummy({ ...killer, hp: 900, maxHp: 900 })] }), data, oneHit());
+        expect(b.log.find((e) => e.type === 'revive'), ai).toMatchObject({ uid: 'a1', target: 'a0', hp: 100 * data.j.combat.raiseHpPct, raise: true });
+        // Quem levantou gastou o turno: não atacou nesta rodada.
+        expect(b.log.some((e) => e.type === 'tech' && e.uid === 'a1'), ai).toBe(false);
+        expect(awaitingPlayer(b), ai).toBe(true);
       }
+    });
+
+    it('o protagonista levanta um suporte com a ação universal; inimigo não tem a ação', () => {
+      let b = startBattle(setup({ allies: [hero(), support({ hp: 0 })], enemies: [dummy({ hp: 500, maxHp: 500 }), dummy({ hp: 0 })] }), data, fixed(0.99));
+      expect(canRaise(b, b.fighters[0]!).map((f) => f.uid)).toEqual(['a1']);
+      expect(canRaise(b, b.fighters.find((f) => f.uid === 'e0')!)).toEqual([]);
+      expect(() => playerAct(b, { kind: 'raise', target: 'e1' }, data, fixed(0.99))).toThrow();
+      b = playerAct(b, { kind: 'raise', target: 'a1' }, data, fixed(0.99));
+      expect(b.fighters[1]).toMatchObject({ down: false, hp: Math.floor(500 * data.j.combat.raiseHpPct) });
+      // O inimigo com um parceiro caído segue atacando: nunca levanta sem técnica.
+      expect(b.log.some((e) => e.type === 'revive' && e.target === 'e1')).toBe(false);
+    });
+
+    it('a Sakura levanta melhor que a ação universal (Primeiros socorros)', () => {
+      const aid = data.techniques.jFirstAid!;
+      expect(data.characters.sakura!.techniques).toContain('jFirstAid');
+      expect(aid.reviveHpPct!).toBeGreaterThan(data.j.combat.raiseHpPct);
+      expect(aid.reviveHpPct!).toBeLessThan(data.techniques.jReanimate!.reviveHpPct!);
+      const sakura = support({ techniques: ['jKunai', 'jFirstAid'], chakra: 30, maxChakra: 30 });
+      const b = startBattle(setup({ allies: [hero({ hp: 5 }), sakura], enemies: [killer] }), data, oneHit());
+      expect(b.log.find((e) => e.type === 'revive')).toMatchObject({ uid: 'a1', target: 'a0', hp: 35 });
+    });
+
+    it('quem cai pelo roteiro é cena: ninguém levanta (nem ação, nem técnica, nem pílula)', () => {
+      const b = startBattle(setup({ allies: [hero({ techniques: ['jStrike', 'jReanimate'] }), support()], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.99));
+      const s = structuredClone(b);
+      Object.assign(s.fighters[1]!, { down: true, hp: 0, knocked: true });
+      expect(canRaise(s, s.fighters[0]!)).toEqual([]);
+      expect(validTargets(s, s.fighters[0]!, data.techniques.jReanimate!)).toEqual([]);
+      expect(() => playerAct(s, { kind: 'raise', target: 'a1' }, data, fixed(0.99))).toThrow();
+      expect(() => useItem({ ...s, pills: 1 }, 'reviveKit', 'a1', data)).toThrow();
     });
 
     it('quem tem a técnica levanta o protagonista primeiro, pagando o chakra', () => {
@@ -291,10 +326,11 @@ describe('combate de equipe da Jornada', () => {
       expect(current(b)!.uid).toBe('a0');
     });
 
-    it('sem chakra para a técnica, não levanta', () => {
+    it('sem chakra para a técnica, levanta com a ação universal (menos HP)', () => {
       const medic = support({ techniques: ['jKunai', 'jReanimate'], chakra: 14, maxChakra: 14 });
       const b = startBattle(setup({ allies: [hero({ hp: 5 }), medic], enemies: [killer] }), data, oneHit());
-      expect(b.log.some((e) => e.type === 'revive')).toBe(false);
+      expect(b.log.find((e) => e.type === 'revive')).toMatchObject({ raise: true, hp: 15 });
+      expect(b.fighters[1]!.chakra).toBe(14);
     });
 
     it('o protagonista com a técnica levanta um suporte caído, gastando o turno', () => {
@@ -367,6 +403,63 @@ describe('combate de equipe da Jornada', () => {
     const next = playerAct(withClones, { kind: 'tech', techId: 'jChakraBurst', target: 'e0' }, data, fixed(0.1));
     expect(next.log.some((e) => e.type === 'cloneBlock')).toBe(false);
     expect(next.log.some((e) => e.type === 'damage' && e.target === 'e0')).toBe(true);
+  });
+
+  describe('controle com no mínimo 2 turnos e trava (v0.69.0)', () => {
+    it('todo atordoamento e bloqueio de chakra dos dados dura 2 turnos ou mais', () => {
+      const control = Object.values(data.techniques).filter((t) => t.onHit && isControl(t.onHit.effect));
+      expect(control.length).toBeGreaterThan(20);
+      for (const t of control) expect(effectTurns(t, data), t.id).toBeGreaterThanOrEqual(data.j.combat.minControlTurns);
+    });
+
+    it('o atordoado perde 2 turnos, ganha a trava e o atordoamento seguinte não pega', () => {
+      // O Sexy no Jutsu sempre acerta (rng 0); o alvo tem HP de sobra e nunca derruba o herói.
+      const target = dummy({ hp: 9000, maxHp: 9000, offense: { taijutsu: 0, ninjutsu: 0, genjutsu: 0 } });
+      let b = startBattle(setup({ allies: [hero({ techniques: ['jStrike', 'jSexyJutsu'] })], enemies: [target] }), data, fixed(0));
+      const foe = () => b.fighters.find((f) => f.uid === 'e0')!;
+      b = playerAct(b, { kind: 'tech', techId: 'jSexyJutsu', target: 'e0' }, data, fixed(0));
+      expect(b.log.filter((e) => e.type === 'skip' && e.uid === 'e0')).toHaveLength(1);
+      b = playerAct(b, { kind: 'tech', techId: 'jStrike', target: 'e0' }, data, fixed(0));
+      expect(b.log.filter((e) => e.type === 'skip' && e.uid === 'e0')).toHaveLength(2);
+      // Saiu do atordoamento com a trava: o próximo não pega e ele age.
+      expect(foe().effects).toEqual([{ kind: 'stunGuard', turns: data.j.combat.stunImmunityTurns }]);
+      b = playerAct(b, { kind: 'tech', techId: 'jStrike', target: 'e0' }, data, fixed(0));
+      const s = structuredClone(b);
+      s.fighters[0]!.cooldowns = {};
+      s.fighters.find((f) => f.uid === 'e0')!.effects = [{ kind: 'stunGuard', turns: 1 }];
+      const after = playerAct(s, { kind: 'tech', techId: 'jSexyJutsu', target: 'e0' }, data, fixed(0));
+      expect(after.log.slice(s.log.length).some((e) => e.type === 'resist' && e.target === 'e0')).toBe(true);
+      expect(after.log.slice(s.log.length).some((e) => e.type === 'skip' && e.uid === 'e0')).toBe(false);
+    });
+  });
+
+  describe('IA mais atenta (v0.69.0)', () => {
+    const rich = (over: Partial<FighterSeed> = {}) => hero({ techniques: ['jStrike', 'jRasengan'], chakra: 30, maxChakra: 30, ...over });
+
+    it('alvo quase caindo leva o golpe barato; alvo inteiro leva o forte', () => {
+      const low = startBattle(setup({ allies: [rich()], enemies: [dummy({ hp: 6, maxHp: 200 })] }), data, fixed(0.5));
+      expect(chooseAiAction(low, low.fighters[0]!, data, fixed(0.5))).toMatchObject({ kind: 'tech', techId: 'jStrike' });
+      const full = startBattle(setup({ allies: [rich()], enemies: [dummy({ hp: 200, maxHp: 200 })] }), data, fixed(0.5));
+      expect(chooseAiAction(full, full.fighters[0]!, data, fixed(0.5))).toMatchObject({ kind: 'tech', techId: 'jRasengan' });
+    });
+
+    it('não gasta controle em quem já está atordoado ou com a trava', () => {
+      const b = startBattle(setup({ allies: [hero({ techniques: ['jStrike', 'jSexyJutsu'], ai: 'tactician' })], enemies: [dummy({ hp: 500, maxHp: 500, offense: { taijutsu: 30, ninjutsu: 0, genjutsu: 0 } })] }), data, fixed(0.5));
+      expect(chooseAiAction(b, b.fighters[0]!, data, fixed(0.5))).toMatchObject({ techId: 'jSexyJutsu' });
+      for (const kind of ['stun', 'stunGuard'] as const) {
+        const s = structuredClone(b);
+        s.fighters[1]!.effects = [{ kind, turns: 2 }];
+        expect(chooseAiAction(s, s.fighters[0]!, data, fixed(0.5)), kind).toMatchObject({ techId: 'jStrike' });
+      }
+    });
+
+    it('com um golpe que encerra a luta, bate em vez de levantar', () => {
+      const fallen = { ...dummy(), defId: 'sasuke', hp: 0 };
+      const b = startBattle(setup({ allies: [rich(), fallen], enemies: [dummy({ hp: 3, maxHp: 200 })] }), data, fixed(0.5));
+      expect(chooseAiAction(b, b.fighters[0]!, data, fixed(0.5))).toMatchObject({ kind: 'tech', techId: 'jStrike' });
+      const tough = startBattle(setup({ allies: [rich(), fallen], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.5));
+      expect(chooseAiAction(tough, tough.fighters[0]!, data, fixed(0.5))).toEqual({ kind: 'raise', target: 'a1' });
+    });
   });
 
   it('atordoado perde a vez', () => {
@@ -503,12 +596,23 @@ const won = (b: JBattle): JBattle => ({ ...b, status: 'won' });
 describe('run da Jornada', () => {
   const lost = (b: JBattle): JBattle => ({ ...b, status: 'lost' });
 
+  it('toda run começa com 60 ryō, uma vez só (v0.69.0)', () => {
+    expect(data.j.run.startRyo).toBe(60);
+    expect(newRun(1, 'normal', data).ryo).toBe(60);
+    expect(newGenericRun(1, 'normal', 'uchiha', data, new Set(['j_unlockUchiha'])).ryo).toBe(60);
+    // Carregar o save não soma de novo.
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    saveJornada(storage, { ...newRun(1, 'normal', data), ryo: 7 });
+    expect(loadJornada(storage)!.ryo).toBe(7);
+  });
+
   it('vencer dá ryō, XP e avança a parada', () => {
     const run = newRun(1, 'normal', data);
     const b = startBattle(battleSetup(run, data), data, createRng(1));
     const { run: next, outcome } = finishFight(run, won(b), data);
     expect(outcome.ryo).toBe(data.j.rewards.story.ryo);
-    expect(next.ryo).toBe(data.j.rewards.story.ryo);
+    expect(next.ryo).toBe(run.ryo + data.j.rewards.story.ryo);
     expect(next.stopIndex).toBe(run.stopIndex + 1);
     expect(next.cleared).toEqual(['mizuki']);
   });
@@ -696,7 +800,7 @@ describe('run da Jornada', () => {
     expect(dropRelic(data.relics, everyone, data.j.relics.eliteWeights, rng)).toBe('emptyCharm');
     expect(dropRelic(data.relics, [...everyone, 'emptyCharm'], data.j.relics.eliteWeights, rng)).toBeNull();
     expect(rollRelic(data.relics, everyone, data.j.relics.eliteWeights, rng)).toBeNull();
-    expect(gainRelic(newRun(1, 'normal', data), 'emptyCharm', data).ryo).toBe(25);
+    expect(gainRelic({ ...newRun(1, 'normal', data), ryo: 0 }, 'emptyCharm', data).ryo).toBe(25);
   });
 
   it('ganchos novos das relíquias', () => {
@@ -1836,8 +1940,8 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
       expect(data.techniques.jKageBunshin).toMatchObject({ clones: 2, active: true });
     });
 
-    it('começa com Golpe, Shuriken, Bunshin e o elemento; o Kunai fica conhecido, fora do moveset', () => {
-      expect(run.moveset).toEqual(['jStrike', 'jShuriken', 'jBunshin', data.elementLines.fire[0]]);
+    it('começa com Golpe, Shuriken, Bunshin, o elemento e o Kunai: com 6 vagas, o kit inteiro cabe no moveset', () => {
+      expect(run.moveset).toEqual(['jStrike', 'jShuriken', 'jBunshin', data.elementLines.fire[0], 'jKunai']);
       expect(heroMovable(run, data)).toContain('jKunai');
       expect(heroActives(run, data)).toEqual(['jEffort']);
     });

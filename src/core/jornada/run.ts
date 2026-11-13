@@ -15,7 +15,7 @@ import type { ConsumableId, FighterMods, JBattle } from './types';
 
 /** Protagonista da História. */
 export const HERO = 'naruto';
-export const MOVESET_SIZE = 4;
+export const MOVESET_SIZE = 6;
 export const CONSUMABLES: ConsumableId[] = ['hpKit', 'chakraKit', 'reviveKit'];
 
 export interface MemberState {
@@ -72,7 +72,7 @@ export interface JRun {
   talentRanks: Record<string, number>;
   /** Técnicas do protagonista além do kit inicial (talentos). */
   learned: string[];
-  /** As 4 técnicas equipadas (sem as ativas de classe). */
+  /** As técnicas equipadas (até `MOVESET_SIZE`) (sem as ativas de classe). */
   moveset: string[];
   relics: string[];
   bag: Record<ConsumableId, number>;
@@ -147,7 +147,7 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     storyArcs: STORY_ARCS,
     stageIndex: 0,
     stopIndex: 0,
-    ryo: 0,
+    ryo: data.j.run.startRyo,
     xp: 0,
     level: 1,
     talentPoints: 0,

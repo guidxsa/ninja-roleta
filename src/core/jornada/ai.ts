@@ -5,7 +5,9 @@ import {
   accuracyAgainst,
   alive,
   blockedReason,
+  canRaise,
   downed,
+  effectTurns,
   gateChoices,
   gateOpenCost,
   gateUpkeepAt,
@@ -13,6 +15,7 @@ import {
   hitDamage,
   hitsOf,
   opponentSide,
+  techniqueCost,
   validTargets,
 } from './battle';
 import type { JornadaData } from './data';
@@ -26,28 +29,97 @@ export function expectedDamage(s: JBattle, user: Fighter, target: Fighter, tech:
 }
 
 /** Ameaça de um lutador: o maior ataque dele, mais se estiver em fúria. */
-const threat = (f: Fighter) => Math.max(f.offense.taijutsu, f.offense.ninjutsu, f.offense.genjutsu) * f.mods.damageMult;
+const threat = (f: Fighter) =>
+  Math.max(f.offense.taijutsu, f.offense.ninjutsu, f.offense.genjutsu) *
+  f.mods.damageMult *
+  (f.passive?.kind === 'enrage' && f.hp <= f.maxHp * f.passive.atPct ? f.passive.damageMult : 1);
+
+/** O alvo depende de chakra para atacar (bloquear o chakra dele adianta). */
+const needsChakra = (t: Fighter, data: JornadaData) => t.techniques.some((id) => (data.techniques[id]?.baseDamage ?? 0) > 0 && data.techniques[id]!.type !== 'taijutsu');
+
+/**
+ * Quanto vale o efeito da técnica neste alvo, na mesma escala do dano: controle vale a ameaça do alvo pelos turnos
+ * que ele perde; não vale nada em quem já está controlado ou com a trava.
+ */
+function effectValue(f: Fighter, t: Fighter, tech: JTechnique, data: JornadaData): number {
+  const on = tech.onHit;
+  if (!on || hasEffect(t, on.effect)) return 0;
+  const hits = tech.baseDamage > 0 ? hitsOf(f, tech) : 1;
+  const chance = 1 - (1 - Math.min(1, on.chance + f.mods.effectChanceBonus)) ** hits;
+  const turns = effectTurns(tech, data);
+  if (on.effect === 'stun') return hasEffect(t, 'stunGuard') ? 0 : threat(t) * turns * chance;
+  if (on.effect === 'chakraBlock') return needsChakra(t, data) ? threat(t) * turns * chance * 0.5 : 0;
+  const pct = on.effect === 'burn' ? data.j.combat.burnPct : data.j.combat.poisonPct;
+  return t.maxHp * pct * turns * chance;
+}
+
+/**
+ * Valor útil da técnica num alvo: o dano que de fato tira HP (golpe forte em quem está quase caindo não vale mais
+ * que um fraco), a ameaça que sai de campo se o golpe derruba, e o efeito.
+ */
+function targetValue(f: Fighter, t: Fighter, tech: JTechnique, data: JornadaData): { value: number; kills: boolean } {
+  const acc = accuracyAgainst(f, t, tech, data);
+  if (tech.baseDamage <= 0) return { value: effectValue(f, t, tech, data) * acc, kills: false };
+  const raw = hitDamage(f, t, tech, data) * hitsOf(f, tech);
+  const kills = raw >= t.hp + t.shield;
+  return { value: (Math.min(raw, t.hp + t.shield) + (kills ? threat(t) : 0)) * acc + (kills ? 0 : effectValue(f, t, tech, data)), kills };
+}
 
 /** Técnicas de ação de turno que dá para usar (as ativas são grátis: `chooseAiActive`). */
 const usable = (f: Fighter, data: JornadaData) =>
   f.techniques.map((id) => data.techniques[id]!).filter((t) => t && !t.active && !blockedReason(f, t));
 
-/** Melhor ataque de dano contra os alvos possíveis (com desempate pela sorte entre os dois melhores). */
+/** Valor de uma técnica (ou de uma variante sorteada) contra um alvo escolhido; em área, soma todos os adversários. */
+function techValue(s: JBattle, f: Fighter, tech: JTechnique, t: Fighter, data: JornadaData): { value: number; kills: boolean } {
+  const foes = alive(s, opponentSide(f.side));
+  if (tech.target === 'allEnemies') {
+    const each = foes.map((x) => targetValue(f, x, tech, data));
+    return { value: each.reduce((a, x) => a + x.value, 0), kills: each.some((x) => x.kills) };
+  }
+  if (tech.target === 'self') return { value: tech.shieldPct && f.shield === 0 ? f.maxHp * tech.shieldPct * 0.5 : 0, kills: false };
+  return targetValue(f, t, tech, data);
+}
+
+/**
+ * Melhor ação ofensiva (dano, controle ou técnica sorteada) contra os alvos possíveis. O custo pesa mais com pouco
+ * chakra; entre as opções que derrubam o alvo vence a mais barata. A sorte só desempata quando nenhuma derruba.
+ */
 function bestAttack(s: JBattle, f: Fighter, data: JornadaData, rng: Rng, pick: (opts: Fighter[]) => Fighter[]): JAction | null {
-  const options: { action: JAction; value: number }[] = [];
+  const options: { action: JAction; value: number; kills: boolean }[] = [];
+  const foes = alive(s, opponentSide(f.side));
+  // Tático dá mais valor ao controle.
+  const taste = (tech: JTechnique) => (f.ai === 'tactician' && tech.baseDamage <= 0 ? 1.5 : 1);
+  const scarcity = 0.3 + 0.5 * (1 - f.chakra / Math.max(1, f.maxChakra));
   for (const tech of usable(f, data)) {
-    if (tech.baseDamage <= 0) continue;
-    const targets = tech.target === 'allEnemies' ? alive(s, opponentSide(f.side)).slice(0, 1) : pick(validTargets(s, f, tech));
+    const variants = tech.roll?.map((v) => ({ tech: data.techniques[v.tech]!, w: Math.max(0, v.weight + (f.mods.rollWeights[v.tech] ?? 0)) })).filter((v) => v.tech && v.w > 0);
+    const offensive = variants ? variants.length > 0 : (tech.baseDamage > 0 || Boolean(tech.onHit)) && (tech.target === 'enemy' || tech.target === 'allEnemies');
+    if (!offensive) continue;
+    const targets = tech.target === 'allEnemies' ? foes.slice(0, 1) : pick(validTargets(s, f, tech));
+    const cost = techniqueCost(f, tech) * scarcity + (tech.cooldown ?? 0) * 0.5;
     for (const t of targets) {
-      // Técnicas caras valem um pouco menos (guardar chakra).
-      const value = expectedDamage(s, f, t, tech, data) - tech.chakraCost * 0.3;
-      options.push({ action: { kind: 'tech', techId: tech.id, target: t.uid }, value });
+      let value = 0;
+      let kills = false;
+      if (variants) {
+        const total = variants.reduce((a, v) => a + v.w, 0);
+        for (const v of variants) value += (techValue(s, f, v.tech, t, data).value * v.w) / total;
+      } else ({ value, kills } = techValue(s, f, tech, t, data));
+      if (value <= 0) continue;
+      options.push({ action: { kind: 'tech', techId: tech.id, target: t.uid }, value: value * taste(tech) - cost, kills });
     }
   }
   if (!options.length) return null;
   options.sort((a, b) => b.value - a.value);
-  if (options.length > 1 && options[1]!.value >= options[0]!.value * 0.85 && rng() < 0.3) return options[1]!.action;
+  if (!options[0]!.kills && options.length > 1 && options[1]!.value >= options[0]!.value * 0.85 && rng() < 0.3) return options[1]!.action;
   return options[0]!.action;
+}
+
+/** A ação derruba o último adversário de pé (encerra a luta). */
+function endsFight(s: JBattle, f: Fighter, action: JAction | null, data: JornadaData): boolean {
+  if (action?.kind !== 'tech') return false;
+  const foes = alive(s, opponentSide(f.side));
+  const tech = data.techniques[action.techId]!;
+  if (tech.baseDamage <= 0) return false;
+  return foes.every((t) => (tech.target === 'allEnemies' || t.uid === action.target) && hitDamage(f, t, tech, data) * hitsOf(f, tech) >= t.hp + t.shield);
 }
 
 function firstUsable(f: Fighter, data: JornadaData, test: (t: JTechnique) => boolean): JTechnique | null {
@@ -71,9 +143,21 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
       if (f.techniques.includes(w.technique) && !f.cooldowns[w.technique]) return { kind: 'rest' };
     }
   }
-  // Só quem tem a técnica levanta: antes de tudo, e o protagonista primeiro.
-  const revive = tech((t) => Boolean(t.reviveHpPct));
-  if (revive && fallen.length) return { kind: 'tech', techId: revive.id, target: (fallen.find((x) => x.protagonist) ?? fallen[0]!).uid };
+  const pick =
+    f.ai === 'brute'
+      ? (opts: Fighter[]) => [...opts].sort((a, b) => a.hp - b.hp).slice(0, 1)
+      : f.ai === 'striker'
+        ? (opts: Fighter[]) => [...opts].sort((a, b) => threat(b) - threat(a)).slice(0, 2)
+        : (opts: Fighter[]) => opts;
+  const attack = bestAttack(s, f, data, rng, pick);
+  // Levantar quem caiu vem antes de tudo (o protagonista primeiro), a não ser que um golpe encerre a luta agora.
+  // Com a técnica, sempre; com a ação universal (pouco HP), o protagonista sempre e os outros só se quem levanta não está em perigo.
+  if (fallen.length && !endsFight(s, f, attack, data)) {
+    const target = fallen.find((x) => x.protagonist) ?? fallen[0]!;
+    const revive = tech((t) => Boolean(t.reviveHpPct));
+    if (revive) return { kind: 'tech', techId: revive.id, target: target.uid };
+    if (canRaise(s, f).includes(target) && (target.protagonist || f.hp >= f.maxHp * 0.4)) return { kind: 'raise', target: target.uid };
+  }
   if (f.ai === 'healer') {
     const heal = tech((t) => Boolean(t.healHp) && t.target === 'ally');
     const hurt = [...friends].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
@@ -83,9 +167,6 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
     const cleanse = tech((t) => Boolean(t.cleanse));
     const stuck = friends.find((x) => x !== f && (hasEffect(x, 'stun') || hasEffect(x, 'chakraBlock')));
     if (cleanse && stuck) return { kind: 'tech', techId: cleanse.id, target: stuck.uid };
-    const control = tech((t) => t.onHit?.effect === 'stun' && t.target === 'enemy');
-    const free = [...foes].filter((x) => !hasEffect(x, 'stun')).sort((a, b) => threat(b) - threat(a))[0];
-    if (control && free && rng() < 0.6) return { kind: 'tech', techId: control.id, target: free.uid };
   }
   if (f.ai === 'guardian') {
     const shield = tech((t) => Boolean(t.shieldPct) && t.target === 'ally');
@@ -106,18 +187,7 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
   const makeClone = tech((t) => t.target === 'self' && t.baseDamage === 0 && Boolean(t.clones));
   if (makeClone && f.clones === 0 && f.hp < f.maxHp * 0.7 && rng() < 0.4) return { kind: 'tech', techId: makeClone.id, target: f.uid };
 
-  // Controle sem dano (Prisão de Água, Bomba de fedor): às vezes, no adversário mais perigoso que está livre.
-  const pureControl = tech((t) => t.baseDamage === 0 && t.target === 'enemy' && Boolean(t.onHit));
-  const loose = [...foes].filter((x) => !hasEffect(x, 'stun')).sort((a, b) => threat(b) - threat(a))[0];
-  if (pureControl && loose && rng() < 0.35) return { kind: 'tech', techId: pureControl.id, target: loose.uid };
-
-  const pick =
-    f.ai === 'brute'
-      ? (opts: Fighter[]) => [...opts].sort((a, b) => a.hp - b.hp).slice(0, 1)
-      : f.ai === 'striker'
-        ? (opts: Fighter[]) => [...opts].sort((a, b) => threat(b) - threat(a)).slice(0, 2)
-        : (opts: Fighter[]) => opts;
-  const attack = bestAttack(s, f, data, rng, pick);
+  // Dano, controle e técnica sorteada disputam pelo valor (`bestAttack`, calculado acima).
   // Sem chakra para nada além do básico e com pouco chakra: concentra.
   if (!attack || (f.chakra < f.maxChakra * 0.15 && f.techniques.some((id) => (data.techniques[id]?.chakraCost ?? 0) > f.chakra) && rng() < 0.35)) {
     return { kind: 'rest' };
