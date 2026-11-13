@@ -889,16 +889,19 @@ export function gainRelic(prev: JRun, relicId: string, data: JornadaData): JRun 
   const run = clone(prev);
   const def = data.relics.find((r) => r.id === relicId);
   if (!def || run.relics.includes(relicId)) return run;
-  // Evolução: toma o lugar da relíquia inicial.
-  const replaced = def.evolves ? run.relics.indexOf(def.evolves) : -1;
+  // Evolução (chefe ou história): toma o lugar da relíquia inicial.
+  const from = def.evolves ?? def.storyEvolves;
+  const replaced = from ? run.relics.indexOf(from) : -1;
+  const old = replaced >= 0 ? data.relics.find((r) => r.id === from) : undefined;
   if (replaced >= 0) run.relics[replaced] = relicId;
   else run.relics.push(relicId);
   for (const [k, n] of Object.entries(def.grant?.items ?? {})) run.bag[k as ConsumableId] = (run.bag[k as ConsumableId] ?? 0) + (n ?? 0);
   run.willOfFire += def.grant?.willOfFire ?? 0;
   run.ryo += def.grant?.ryo ?? 0;
   addTalentPoints(run, def.grant?.talentPoints ?? 0, data);
-  // HP a mais (bandana) entra cheio.
-  if (def.stats?.hp && run.members[run.hero]) run.members[run.hero]!.hp += def.stats.hp;
+  // HP a mais (bandana) entra cheio; na evolução, só a diferença para a relíquia que saiu.
+  const hpGain = (def.stats?.hp ?? 0) - (old?.stats?.hp ?? 0);
+  if (hpGain > 0 && run.members[run.hero]) run.members[run.hero]!.hp += hpGain;
   return run;
 }
 
@@ -1102,7 +1105,10 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
       run.learned.push(e.technique);
       addToMoveset(run, e.technique, data);
     }
-    else if (e.kind === 'relic') {
+    else if (e.kind === 'storyRelic' && !run.relics.includes(e.id)) {
+      relic = e.id;
+      run = gainRelic(run, e.id, data);
+    } else if (e.kind === 'relic') {
       relic = dropRelic(data.relics, run.relics, { [e.tier]: 1 }, stopRng(run, 9));
       if (relic) run = gainRelic(run, relic, data);
     } else if (e.kind === 'maxStat') {

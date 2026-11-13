@@ -297,7 +297,8 @@ describe('História canônica: Exame (v0.67.0)', () => {
   });
 
   it('Gaara em três fases: Shukaku com o Gamabunta e a Kyuubi, depois o Gaara exausto e os laços', () => {
-    const run = { ...newRun(3, 'easy', data), ...stopAt('exam', 'gaara'), level: 8 };
+    // Depois da Formatura o Naruto já tem a Bandana do Iruka no lugar dos óculos.
+    const run = { ...newRun(3, 'easy', data), ...stopAt('exam', 'gaara'), level: 8, relics: ['irukaHeadband'] };
     const end = playOut(startBattle(battleSetup(run, data), data, createRng(4)), data, createRng(4));
     expect(end.status).toBe('won');
     expect(end.fighters.find((f) => f.defId === 'gaara')!.gone).toBe(true);

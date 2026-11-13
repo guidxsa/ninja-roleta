@@ -8,8 +8,9 @@ export const events: EventDef[] = [
     id: 'graduation',
     category: 'narrative',
     options: [
-      { id: 'ramen', effects: [{ kind: 'healFull' }, { kind: 'ryo', n: 15 }] },
-      { id: 'train', effects: [{ kind: 'talent', n: 1 }] },
+      // A bandana do Iruka toma o lugar dos óculos de aviador nas duas escolhas.
+      { id: 'ramen', effects: [{ kind: 'storyRelic', id: 'irukaHeadband' }, { kind: 'healFull' }, { kind: 'ryo', n: 15 }] },
+      { id: 'train', effects: [{ kind: 'storyRelic', id: 'irukaHeadband' }, { kind: 'talent', n: 1 }] },
     ],
   },
   {

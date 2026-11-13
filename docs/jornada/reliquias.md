@@ -32,11 +32,13 @@
 
 ## Iniciais e evolução
 
-Cada classe começa com a sua, um objeto que faz sentido na história dela: a bandana que o Iruka deu ao Naruto, o manual da Academia do ninja comum (o mesmo em qualquer elemento), o macacão verde do prodígio, o leque do clã Uchiha e o pergaminho do Punho Suave dos Hyuuga. O bônus fala com o kit da classe (técnicas de fogo, Sharingan, Punho Suave, Byakugan, taijutsu).
+Cada classe começa com a sua, um objeto que faz sentido na história dela: os óculos de aviador do Naruto, o manual da Academia do ninja comum (o mesmo em qualquer elemento), o macacão verde do prodígio, o leque do clã Uchiha e o pergaminho do Punho Suave dos Hyuuga. O bônus fala com o kit da classe (técnicas de fogo, Sharingan, Punho Suave, Byakugan, taijutsu).
 
 A recuperação depois da vitória **não** vem das iniciais: é uma configuração da run, pela dificuldade ([progressao.md](progressao.md#entre-as-lutas)). O Cupom do Ichiraku e o Cartão fidelidade do ramen somam a ela.
 
-A evolução toma o lugar da inicial na barra. A relíquia de chefe que dava a Vontade do Fogo se chamava Colar do Primeiro Hokage; desde a v0.43.0 ela é o **Talismã da Vontade do Fogo**, e o colar virou a evolução da Bandana do Iruka. Saves e a coleção antigos trocam os ids sozinhos (`RELIC_RENAMES`).
+O Naruto tem uma evolução a mais, pela história (v0.68.1): os **óculos de aviador** são uma versão mais fraca da bandana e, na **Formatura** (3ª parada da História, nas duas escolhas), o Iruka dá a **Bandana do Iruka**, que toma o lugar deles (efeito de evento `storyRelic`; campo `storyEvolves` na relíquia). A bandana nunca sai em sorteio e segue podendo evoluir no chefe para o Colar do Primeiro Hokage. Saves de antes dos óculos que já tinham a bandana ficam com ela.
+
+A evolução toma o lugar da inicial na barra; o HP máximo a mais entra cheio, só a diferença para a relíquia que saiu. A relíquia de chefe que dava a Vontade do Fogo se chamava Colar do Primeiro Hokage; desde a v0.43.0 ela é o **Talismã da Vontade do Fogo**, e o colar virou a evolução da Bandana do Iruka. Saves e a coleção antigos trocam os ids sozinhos (`RELIC_RENAMES`).
 
 ## Modos
 
@@ -95,11 +97,12 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 
 ## Lista
 
-### Inicial (5)
+### Inicial (6)
 
 | Relíquia | Personagem | Efeito |
 |---|---|---|
-| Bandana do Iruka | Naruto | +10 de HP máximo; abaixo de 50% do HP, +15% de dano. |
+| Óculos de aviador | Naruto | +5 de HP máximo; abaixo de 50% do HP, +10% de dano. Viram a Bandana do Iruka na Formatura. |
+| Bandana do Iruka | Naruto (desde a Formatura) | +10 de HP máximo; abaixo de 50% do HP, +15% de dano. |
 | Manual da Academia | Comum | +10% de XP; +5% de acerto. |
 | Macacão verde | prodígio | +1 de dano no taijutsu; +1 de speed. |
 | Leque do clã | Uchiha | O Sharingan (nas duas formas) custa 1 de chakra a menos; técnicas de fogo (Faísca de fogo, Bola de Fogo, Flor de Fênix, Grande Labareda) +10% de dano. |

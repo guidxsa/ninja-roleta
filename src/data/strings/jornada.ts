@@ -613,7 +613,8 @@ export const jornadaPtBR = {
     } as Record<string, string>,
     evolution: 'Evolução da inicial',
     list: {
-      irukaHeadband: { name: 'Bandana do Iruka', desc: '+10 de HP máximo; abaixo de 50% do HP, +15% de dano. A bandana que o Iruka deu depois da luta com o Mizuki.' },
+      aviatorGoggles: { name: 'Óculos de aviador', desc: '+5 de HP máximo; abaixo de 50% do HP, +10% de dano. Viram a Bandana do Iruka na Formatura.' },
+      irukaHeadband: { name: 'Bandana do Iruka', desc: '+10 de HP máximo; abaixo de 50% do HP, +15% de dano. A bandana que o Iruka deu na Formatura, no lugar dos óculos de aviador.' },
       goggles: { name: 'Óculos de aprendiz', desc: '+5% de acerto.' },
       leafHeadband: { name: 'Bandana da Folha', desc: '+10 de HP máximo.' },
       frogWallet: { name: 'Carteira de sapo', desc: '+25% de ryō.' },
@@ -807,7 +808,7 @@ export const jornadaPtBR = {
   events: {
     graduation: {
       title: 'Formatura',
-      text: 'O Iruka te leva ao Ichiraku para comemorar a bandana. Ou você pode treinar mais um pouco.',
+      text: 'O Iruka te dá a bandana dele no lugar dos óculos de aviador e te leva ao Ichiraku para comemorar. Ou você pode treinar mais um pouco.',
       options: { ramen: 'Comer ramen (cura tudo, +15 ryō)', train: 'Treinar (+1 ponto de talento)' },
     },
     tazuna: {

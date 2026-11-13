@@ -590,7 +590,7 @@ describe('run da Jornada', () => {
   });
 
   it('cada classe começa com a sua relíquia inicial, que não recupera (a recuperação é da dificuldade)', () => {
-    expect(newRun(1, 'normal', data).relics).toEqual(['irukaHeadband']);
+    expect(newRun(1, 'normal', data).relics).toEqual(['aviatorGoggles']);
     const unlocked = new Set(['j_unlockUchiha', 'j_unlockHyuuga']);
     expect(newGenericRun(1, 'normal', 'uchiha', data, unlocked).relics[0]).toBe('uchihaFan');
     expect(newGenericRun(1, 'normal', 'hyuuga', data, unlocked).relics[0]).toBe('gentleFistScroll');
@@ -599,7 +599,7 @@ describe('run da Jornada', () => {
       expect(r.relics[0]).toBe(r.hero === 'prodigy' ? 'greenJumpsuit' : 'academyManual');
     }
     for (const r of data.relics.filter((x) => x.tier === 'starter' || x.evolves)) {
-      if (r.tier === 'starter') expect(r.starterFor?.length, r.id).toBeGreaterThan(0);
+      if (r.tier === 'starter') expect((r.starterFor?.length ?? 0) + (r.storyEvolves ? 1 : 0), r.id).toBeGreaterThan(0);
       expect(r.afterWin, r.id).toBeUndefined();
     }
   });
@@ -633,7 +633,35 @@ describe('run da Jornada', () => {
     saveJornada(storage, evolved);
     expect(loadJornada(storage)!.relics).toEqual(['firstHokageNecklace']);
     saveJornada(storage, { ...newRun(1, 'normal', data), relics: [] });
+    expect(loadJornada(storage)!.relics).toEqual(['aviatorGoggles']);
+    saveJornada(storage, { ...newRun(1, 'normal', data), relics: [], flags: ['ev:graduation'] });
     expect(loadJornada(storage)!.relics).toEqual(['irukaHeadband']);
+    // Save de antes dos óculos (v0.68.1) que ainda não chegou à Formatura: segue com a bandana, sem duplicar.
+    saveJornada(storage, { ...newRun(1, 'normal', data), relics: ['irukaHeadband'] });
+    expect(loadJornada(storage)!.relics).toEqual(['irukaHeadband']);
+  });
+
+  it('Naruto: os óculos de aviador, mais fracos, viram a Bandana do Iruka na Formatura (nas duas escolhas)', () => {
+    const goggles = data.relics.find((r) => r.id === 'aviatorGoggles')!;
+    const band = data.relics.find((r) => r.id === 'irukaHeadband')!;
+    expect(goggles.stats!.hp!).toBeLessThan(band.stats!.hp!);
+    expect(goggles.mods!.lowHpDamageMult!).toBeLessThan(band.mods!.lowHpDamageMult!);
+    const grad = data.stages[0]!.stops.findIndex((s) => s.id === 'graduation');
+    for (const opt of ['ramen', 'train']) {
+      const at = { ...newRun(1, 'normal', data), stopIndex: grad, relics: ['aviatorGoggles', 'goggles'] };
+      at.members[at.hero] = { hp: 50, chakra: 10 };
+      const { run, relic } = resolveEvent(at, opt, true, data);
+      expect(relic, opt).toBe('irukaHeadband');
+      expect(run.relics, opt).toEqual(['irukaHeadband', 'goggles']);
+      expect(memberSheet(run, run.hero, data).maxHp - memberSheet(at, at.hero, data).maxHp, opt).toBe(5);
+      if (opt === 'train') expect(run.members[run.hero]!.hp).toBe(55);
+    }
+    // A bandana nunca sai em sorteio nem como evolução do chefe; com ela, o chefe oferece o Colar.
+    expect(bossChoices(data.relics, ['aviatorGoggles'], 3, 1, createRng(1))).not.toContain('irukaHeadband');
+    expect(bossChoices(data.relics, ['irukaHeadband'], 3, 1, createRng(1))).toContain('firstHokageNecklace');
+    // Run antiga que já tem a bandana: a Formatura não mexe nela.
+    const old = { ...newRun(1, 'normal', data), stopIndex: grad, relics: ['irukaHeadband'] };
+    expect(resolveEvent(old, 'train', true, data)).toMatchObject({ relic: null, run: { relics: ['irukaHeadband'] } });
   });
 
   it('save: troca os ids de relíquia antigos (v0.43.0) pelos novos', () => {
@@ -906,12 +934,14 @@ describe('run da Jornada', () => {
     expect(shopOffer(tazuna, data).training).toBe(Math.floor(data.j.shop.trainingPrice * 0.8));
   });
 
-  it('a História começa com a Bandana do Iruka, que nunca sai em sorteio', () => {
+  it('a História começa com os óculos de aviador; nem eles nem a Bandana do Iruka saem em sorteio', () => {
     const run = newRun(1, 'normal', data);
-    expect(run.relics).toEqual(['irukaHeadband']);
+    expect(run.relics).toEqual(['aviatorGoggles']);
     for (let s = 0; s < 40; s++) {
       const r = { ...newRun(s, 'normal', data), ryo: 999 };
-      expect(shopOffer(r, data).relics.map((x) => x.id)).not.toContain('irukaHeadband');
+      const offer = shopOffer(r, data).relics.map((x) => x.id);
+      expect(offer).not.toContain('irukaHeadband');
+      expect(offer).not.toContain('aviatorGoggles');
     }
   });
 
@@ -1218,7 +1248,7 @@ describe('run da Jornada', () => {
     expect(loadJornada(storage)).toBeNull();
     // Save de antes da relíquia inicial ganha a relíquia ao carregar.
     saveJornada(storage, { ...run, relics: ['goggles'] });
-    expect(loadJornada(storage)!.relics).toEqual(['irukaHeadband', 'goggles']);
+    expect(loadJornada(storage)!.relics).toEqual(['aviatorGoggles', 'goggles']);
   });
 });
 

@@ -22,7 +22,9 @@ export type EventEffect =
   /** Tira a maldição do mercador. */
   | { kind: 'cleanse' }
   /** O protagonista aprende uma técnica (marco da história ou treino de evento; não passa pela árvore). */
-  | { kind: 'learn'; technique: string };
+  | { kind: 'learn'; technique: string }
+  /** Ganha esta relíquia (marco da história); se ela evolui uma inicial (`storyEvolves`), toma o lugar dela. */
+  | { kind: 'storyRelic'; id: string };
 
 /** Marca da maldição do mercador (docs/jornada/run.md#loja). */
 export const SHOP_CURSE = 'shopCurse';

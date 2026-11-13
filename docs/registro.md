@@ -66,6 +66,10 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Óculos de aviador do Naruto (v0.68.1, 13/11/2026)
+
+Pedido do usuário: o Naruto começa com os **óculos de aviador**, que viram a **Bandana do Iruka** depois da Formatura e são mais fracos que ela. Decidido sozinho (o usuário revisa): os números dos óculos (+5 de HP máximo e +10% de dano abaixo de 50% do HP, metade da bandana em cada efeito, mantendo a mesma família de bônus para a troca parecer evolução); a troca acontece nas duas escolhas da Formatura (efeito de evento `storyRelic`, campo `storyEvolves`); id novo `aviatorGoggles`, porque `goggles` já é a relíquia comum Óculos de aprendiz; a evolução passou a somar ao HP atual só a diferença para a relíquia que saiu (antes o Colar somava os 20 inteiros por cima dos 10 da bandana); saves antigos com a bandana ficam com ela. Simulação da História (`npm run sim:jornada -- 300 2`), antes → depois: Fácil 100 → 100%, Médio 82 → 82%, Difícil 37 → 37%, Hardcore 12 → 11%. Só a luta com o Mizuki usa os óculos, então quase nada muda.
+
 ## A jornada do Naruto: cronologia categorizada (v0.68.0, 13/11/2026)
 
 Pedido do usuário: as diretrizes "Jornada do Naruto" (a História é a jornada dele, não uma enciclopédia do mangá; entra o que ele vive, presencia ou descobre; eventos categorizados). Comparado com a cronologia anterior e adaptado com o usuário ponto a ponto:

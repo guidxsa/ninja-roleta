@@ -9,7 +9,7 @@ import type { KeyValueStorage } from './runHistory';
 // começo da parada.
 
 export const JORNADA_SAVE_KEY = 'jornada_run_v1';
-const STARTER_RELIC = 'irukaHeadband';
+const STARTER_RELICS = ['aviatorGoggles', 'irukaHeadband'];
 const STARTER_EVOLVED = 'firstHokageNecklace';
 /** História: em que parada de cada estágio ficava o mercador, antes de a loja ficar sempre aberta (v0.50.0). */
 const OLD_SHOP_STOPS = [6, 6, 3];
@@ -106,8 +106,8 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     if (run?.version !== 1 || run.status !== 'inProgress' || typeof run.stageIndex !== 'number') return null;
     run.relics = renameRelicIds(run.relics ?? []);
     // Runs da História salvas antes da v0.35.1 não tinham a relíquia inicial (ou a sua evolução).
-    const hasStarter = (run.mode ?? 'canon') !== 'canon' || run.relics.includes(STARTER_RELIC) || run.relics.includes(STARTER_EVOLVED);
-    const relics = hasStarter ? run.relics : [STARTER_RELIC, ...run.relics];
+    const hasStarter = (run.mode ?? 'canon') !== 'canon' || STARTER_RELICS.some((id) => run.relics.includes(id)) || run.relics.includes(STARTER_EVOLVED);
+    const relics = hasStarter ? run.relics : [STARTER_RELICS[(run.flags ?? []).includes('ev:graduation') ? 1 : 0]!, ...run.relics];
     // Runs de antes do Caminho Ninja (v0.36.0) são da História.
     const legacy = {
       mode: 'canon' as const,

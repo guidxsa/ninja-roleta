@@ -25,7 +25,9 @@ const each = (ids: string[], n: number) => Object.fromEntries(ids.map((id) => [i
 
 export const relics: RelicDef[] = [
   // Iniciais: uma por classe, com um objeto da história dela. O Comum leva a mesma em qualquer elemento.
-  { id: 'irukaHeadband', tier: 'starter', starterFor: ['naruto'], stats: { hp: 10 }, mods: { lowHpDamageMult: 1.15 } },
+  // Naruto: os óculos de aviador (mais fracos) viram a Bandana do Iruka na Formatura (efeito `storyRelic`).
+  { id: 'aviatorGoggles', tier: 'starter', starterFor: ['naruto'], stats: { hp: 5 }, mods: { lowHpDamageMult: 1.1 } },
+  { id: 'irukaHeadband', tier: 'starter', storyEvolves: 'aviatorGoggles', stats: { hp: 10 }, mods: { lowHpDamageMult: 1.15 } },
   { id: 'academyManual', tier: 'starter', starterFor: ['commonNinja'], xpMult: 1.1, mods: { accuracyBonus: 0.05 } },
   { id: 'greenJumpsuit', tier: 'starter', starterFor: ['prodigy'], stats: { speed: 1 }, mods: { taijutsuFlat: 1 } },
   { id: 'uchihaFan', tier: 'starter', starterFor: ['uchihaNinja'], mods: { techChakraDiscount: { jSharingan: 1, jSharingan3: 1 }, techDamageMult: each(FIRE, 1.1) } },

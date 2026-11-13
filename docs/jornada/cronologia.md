@@ -29,7 +29,7 @@ Status: **já** (desde a v0.67.0) · **novo** ou **muda** (v0.68.0). Os números
 |---|---|---|---|---|---|---|
 | 1 | Pergaminho dos Selos | Treino | O Naruto rouba o pergaminho e aprende o Tajū Kage Bunshin | Cena com minijogo de selos | Marco: **Kage Bunshin em massa** (a forma do Mizuki) e +20 XP (+10 se errar) | Novo |
 | 2 | Naruto × Mizuki | Combate | O Mizuki revela a Kyuubi; o Iruka se joga na frente da Fūma Shuriken | Naruto e Iruka (ferido). Mizuki a 60% → o Iruka cai protegendo o Naruto → Kage Bunshin em massa (forma de 3 turnos) | Luta de história | Muda |
-| 3 | Formatura | Narrativo | A bandana do Iruka e o Ichiraku | Ramen ou treinar | Cura e +15 ryō, ou +1 ponto | Já |
+| 3 | Formatura | Narrativo | A bandana do Iruka e o Ichiraku | Ramen ou treinar | Nas duas, a Bandana do Iruka no lugar dos óculos de aviador ([reliquias.md](reliquias.md#iniciais-e-evolução)); cura e +15 ryō, ou +1 ponto | Já |
 | 4 | O Time 7 | Narrativo | O Naruto conhece o Kakashi, o Sasuke e a Sakura; quer ser reconhecido | "Vou ser Hokage!" ou "Sasuke, eu vou te superar!" | +1 ponto, ou +40 XP | Novo |
 | 5 | Teste do sino | Combate especial | Ninguém pega o sino; a lição do trabalho em equipe | **Derrota inevitável**: Kakashi a 50% (Substituição) ou rodada 4; não gasta Vontade nem encerra a run | Luta de história e a **raiz do ramo Laços** | Muda |
 | 6 | Irmãos Demônio | Combate (elite) | Emboscada na estrada | Equipe 7 | Elite | Já (vira a 1ª luta) |
