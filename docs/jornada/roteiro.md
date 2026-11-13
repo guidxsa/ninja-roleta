@@ -1,6 +1,6 @@
 # Roteiro de luta e marcos da história
 
-> Implementado na v0.66.0 (infraestrutura). Código em `src/core/jornada/script.ts`; marcos em `src/data/jornada/campaigns.ts`. A História canônica que usa tudo isto (Haku, Gaara, Kabuto, Vale do Fim) entra na v0.67.0.
+> Infraestrutura na v0.66.0; História canônica e os recursos de `knock`, condição de marca, forma temporária e técnica sorteada na v0.67.0. Código em `src/core/jornada/script.ts`; marcos em `src/data/jornada/campaigns.ts`. Os momentos de cada luta estão em [historia.md](historia.md#momentos-canônicos).
 
 A História separa dois tipos de progressão:
 
@@ -33,13 +33,16 @@ Uma parada de luta pode ter um `script`: uma lista de regras **quando → faça*
 | `down` | um lutador cai |
 | `tech` | uma técnica é usada (por qualquer um, ou só por quem for indicado) |
 
-O motor confere as regras em pontos fixos: abertura da luta, toda perda de HP, toda virada de rodada e logo depois de cada técnica. Cada regra dispara **uma vez** por luta, na ordem do dado.
+O motor confere as regras em pontos fixos: abertura da luta, toda perda de HP, toda virada de rodada e logo depois de cada técnica. Cada regra dispara **uma vez** por luta, na ordem do dado; uma regra que derruba alguém já dispara as de queda na mesma checagem.
+
+Uma regra pode ter a condição **`if: { flag }`**: só vale com aquela marca na run (o selo do Sasuke só desperta depois do Orochimaru).
 
 ### Faça (ações)
 
 | Ação | Efeito |
 |---|---|
-| `say` | fala de um personagem no banner e no histórico da luta (o texto fica em `strings/jornada.ts`, `script`) |
+| `say` | fala de um personagem no banner e no histórico da luta (o texto fica em `strings/jornada.ts`, `script`). Com `narrator`, a fala sai sem nome |
+| `knock` | o lutador cai pelo roteiro, sem ser derrotado (o Sasuke protegendo o Naruto do Haku) |
 | `form` | liga uma **forma** do lutador (veja abaixo) |
 | `enter` | um lutador da reserva entra na luta |
 | `replace` | um lutador sai e outro da reserva entra no lugar: a troca de fase |
@@ -55,14 +58,19 @@ O motor confere as regras em pontos fixos: abertura da luta, toda perda de HP, t
 
 A ficha de um personagem ou inimigo pode declarar **formas** (`forms`): transformações que o roteiro liga.
 
-- Uma forma pode multiplicar ataques e resistências, multiplicar o HP máximo (o HP atual acompanha a proporção), trocar as técnicas e a passiva, curar ao entrar e trocar o retrato.
-- Exemplos para a v0.67.0: o manto da Kyuubi do Naruto, o Gaara virando Shukaku. O selo amaldiçoado do Sasuke usa o mesmo molde.
+- Uma forma pode multiplicar ataques e resistências, multiplicar o HP máximo (o HP atual acompanha a proporção), trocar as técnicas e a passiva, **somar técnicas** enquanto dura, curar ao entrar e trocar o retrato.
+- Pode ser **temporária** (`turns`): conta os turnos de quem a usa e, no fim, volta à ficha de antes.
+- Hoje: o chakra da Kyuubi do Naruto (permanente na luta contra o Haku; 3 turnos contra o Orochimaru e o Neji), o manto de uma cauda (Vale do Fim), o selo amaldiçoado do Sasuke (4 turnos) e o selo nível 2 (Vale do Fim).
+
+### Técnica sorteada
+
+Uma técnica pode ter **`roll`**: ao usar, paga o custo dela e sorteia uma variante pelo peso; o efeito e o alvo são os da variante. Os talentos mexem nos pesos (`rollWeights`, um peso a mais ou a menos por variante; peso 0 ou menos sai do sorteio). Hoje: o Kuchiyose no Jutsu do Naruto.
 
 ## Condições de vitória
 
 Além das que já existiam ([historia.md](historia.md#vitórias-especiais)):
 
-- **Finalizador** (`finisher`): o alvo só cai com uma técnica. Um golpe fatal de outra técnica deixa o alvo com 1 de HP. A tela mostra o objetivo ("Kabuto só cai com o Rasengan").
+- **Finalizador** (`finisher`): o alvo só cai com uma técnica. Um golpe fatal de outra técnica deixa o alvo com 1 de HP. A tela mostra o objetivo ("Kabuto só cai com o Rasengan"). A técnica entra na luta mesmo fora do moveset, e a IA (aliados e simulação) a usa com o alvo a 30% ou menos, concentrando chakra se faltar.
 
 ## Exemplo: o teste do sino
 

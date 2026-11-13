@@ -48,7 +48,7 @@ A História é organizada em **campanhas** (`CampaignDef` em `src/core/jornada/d
 ## Perfil e conquistas
 
 - O perfil é um só para os dois modos ([perfil.md](../base/perfil.md)); a aba Conquistas tem a categoria Jornada.
-- Conquistas da Jornada: Sino na mão, Ponte do Naruto, Coração de chunin, Vale do Fim (libera a Ōdama Rasengan), Hokage um dia (libera o Hardcore da Jornada), Lenda de Konoha, Ninguém fica para trás, Gama-chan gordo, Colecionador, Caminho próprio (vencer uma run do Caminho Ninja), Chama do clã (libera o Uchiha), Olhos abertos (libera o Hyuuga), Herdeiro do clã, Destino quebrado, Mais uma volta, Treino sem fim e Vontade inabalável (vencer os ciclos 2, 3 e 5 do modo infinito) e duas secretas.
+- Conquistas da Jornada: Sino na mão, Ponte do Naruto, Coração de chunin, Vale do Fim, Hokage um dia (libera o Hardcore da Jornada), Lenda de Konoha, Ninguém fica para trás, Gama-chan gordo, Colecionador, Caminho próprio (vencer uma run do Caminho Ninja), Chama do clã (libera o Uchiha), Olhos abertos (libera o Hyuuga), Herdeiro do clã, Destino quebrado, Mais uma volta, Treino sem fim e Vontade inabalável (vencer os ciclos 2, 3 e 5 do modo infinito) e duas secretas.
 - Como a Jornada tem progressão permanente, é o modo que mais justifica contas para sincronizar o perfil ([decisoes.md](../decisoes.md), item 8).
 
 ## Simulação

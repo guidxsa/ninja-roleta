@@ -1,7 +1,7 @@
 import type { JRun } from '../../core/jornada/run';
 
 // Conquistas da Jornada (docs/base/perfil.md#categorias): ficam no mesmo perfil, na categoria Jornada.
-// Algumas liberam coisas de vez: `j_canonWin` abre a Ōdama Rasengan na árvore; `j_canonHard`, o Hardcore.
+// Algumas liberam coisas de vez: `j_canonHard` abre o Hardcore da Jornada.
 
 export interface JornadaAchievement {
   id: string;

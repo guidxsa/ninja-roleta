@@ -36,7 +36,7 @@ Desde a v0.59.0, quem tem ninjutsu começa com o **Bunshin no Jutsu** (fora do m
 | Mika | 85 | 36 | 10 | 6/8/5 | 5/7 | — | healer | Kunai, Kai (libertar), Reanimação, Bunshin no Jutsu |
 
 - O Sasuke aprende o **Chidori** ao chegar no exame chunin (estágio 2).
-- As técnicas novas do Naruto vêm da árvore de talentos ([talentos.md](talentos.md)).
+- As técnicas novas do Naruto vêm da árvore de talentos ([talentos.md](talentos.md)) e dos marcos da história: Kuchiyose no Jutsu, Rasengan e o chakra da Kyuubi ([historia.md](historia.md#momentos-canônicos)).
 - No mangá, antes do timeskip, a Sakura ainda não é médica: o papel dela é tático (soltar aliado preso, armadilhas).
 - A equipe de resgate entra no estágio 3 da História ([historia.md](historia.md)). O Akamaru luta dentro do kit do Kiba, porque cada lado tem no máximo 3 lutadores.
 - No Caminho Ninja, o protagonista usa o nome do jogador, quando informado ([perfil.md](../base/perfil.md#nome-do-jogador)).
@@ -77,7 +77,7 @@ Entre as duas melhores opções de dano, a sorte desempata (30%) quando a segund
 | Manto da Kyuubi | Ninjutsu | — | em si | — | 0 | 85% | custa 8% do HP; escudo 20% do HP de quem usa; espera 4; ativa de classe |
 | Explosão de chakra | Ninjutsu | — | todos os inimigos | 14 | 8 | 90% | — |
 | Rasengan | Ninjutsu | — | um inimigo | 28 | 10 | 90% | +5% crítico |
-| Ōdama Rasengan | Ninjutsu | — | um inimigo | 44 | 16 | 85% | penetração 20%; atordoar 30% (1 t) |
+| Ōdama Rasengan | Ninjutsu | — | um inimigo | 44 | 16 | 85% | penetração 20%; atordoar 30% (1 t). Guardada para o Shippuden: fora da árvore desde a v0.67.0 |
 | Rasengan com clone | Ninjutsu | — | um inimigo | 18 | 8 | 90% | +1 golpe por clone (até +2) |
 | Harem no Jutsu | Genjutsu | — | todos os inimigos | — | 6 | 75% | atordoar 40% (1 t); espera 4 |
 | Bomba de fumaça | Taijutsu | — | em si | — | 3 | 85% | fortalece 2 turnos (+30% esquiva); espera 4; ativa de classe |

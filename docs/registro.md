@@ -66,6 +66,42 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## A História canônica do Naruto (v0.67.0, 12/11/2026)
+
+Pedido do usuário: a História fiel aos momentos fundamentais do mangá e divertida de jogar; a árvore decide como o Naruto cresce, nunca se o cânone acontece. Decidido com o usuário:
+- Kyuubi quando o Sasuke cai (Haku), com o desmaio só narrativo;
+- Gaara em fases numa luta só, com o Gamabunta aliado;
+- Kuchiyose com sapo sorteado;
+- Orochimaru como parada nova de resistir;
+- Vale do Fim vencido com o Sasuke a 20%, e ele parte;
+- sem a Ōdama Rasengan, que não pertence ao Naruto clássico;
+- a força da História mantida em × 1,1.
+
+O que entrou:
+- **Motor**: ação `knock`, condição de marca nas regras, formas temporárias e com técnicas a mais, técnica sorteada (`roll`, pesos por talento), finalizador garantido na luta, e a IA fechando com o finalizador (concentra chakra se faltar).
+- **Momentos** (tabela em [historia.md](jornada/historia.md#momentos-canônicos)):
+  - o Kakashi solto contra o Zabuza, no lugar da Sakura;
+  - o Sasuke cai e a Kyuubi desperta no Haku;
+  - Orochimaru e o selo do Sasuke;
+  - a Kyuubi contra o Neji;
+  - Shukaku e Gamabunta;
+  - o Rasengan como finalizador no Kabuto;
+  - reforços em ondas contra o Kimimaro;
+  - selo nível 2 contra o manto de uma cauda no Vale.
+- **Marcos**: Kuchiyose (contrato com os sapos) e Rasengan (treino com o Jiraiya). A marca `kyuubiAwakened` vem do Haku.
+- **Árvore do Naruto**: as raízes de Sapos, Kyuubi e Rasengan são dadas pela história. Os Sapos mexem no sorteio do Kuchiyose. O talento final do Rasengan é o Rasengan da Kyuubi. Os talentos finais ganharam marca na tela.
+- **Migração de save**: a parada nova desloca o Exame, quem já passou do Haku ganha a marca da Kyuubi, e os nós que mudaram devolvem os pontos.
+
+Decidido sozinho: os números das formas (Kyuubi × 1,25, manto de uma cauda × 1,35, selo × 1,3 por 4 turnos, selo nível 2 × 1,2), os pesos do Kuchiyose (girinos 30, Gamakichi 35, Gamatatsu 25, Gamabunta 10) e dos talentos dos Sapos, as fichas do Kakashi aliado, do Gamabunta e do Shukaku, os retratos desenhados do Gamabunta e do Shukaku, as falas (escritas por mim, sem transcrever o mangá), os limiares de cada gatilho, e a Sakura saindo para o Kakashi entrar (cada lado tem no máximo 3 lutadores).
+
+Simulação (`npm run sim:jornada -- 1000 2`), vitória v0.66.0 → v0.67.0. O Caminho Ninja ficou idêntico.
+
+| Run | Fácil | Médio | Difícil | Hardcore |
+|---|---|---|---|---|
+| História | 99 → 100 | 62 → **87** | 18 → 46 | 3 → 14 |
+
+Testado à parte (500 runs): História × 1,18 → 100/69/20/2; × 1,24 → 100/49/5/0. O usuário preferiu manter × 1,1: a História fica acima do alvo, mais festiva.
+
 ## Roteiro de luta e marcos da história (v0.66.0, 12/11/2026)
 
 Pedido do usuário: a História fiel aos acontecimentos fundamentais do mangá, separando progressão narrativa obrigatória de personalização. A proposta de arquitetura foi aprovada, e esta versão entra só com a infraestrutura, sem mudar o conteúdo (a História canônica será discutida antes da v0.67.0):

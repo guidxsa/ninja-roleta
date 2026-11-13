@@ -7,8 +7,9 @@ A árvore **reinicia a cada run** e custa pontos de talento ([progressao.md](pro
 - **Liberar**: cada nó pede o anterior do mesmo ramo, ou um dos nós indicados depois de uma bifurcação. Basta o anterior no **nível 1**.
 - **Bifurcação**: alguns pontos do ramo oferecem dois caminhos. Escolher um fecha o outro nesta run ("Você escolheu o outro caminho").
 - **Níveis**: a maioria dos talentos é **única**, principalmente os passivos. Alguns, quase sempre técnicas, sobem de nível, com limite de 2 ou 3 e um custo próprio por nível. Dá para voltar e subir um talento antigo a qualquer momento, mesmo depois de avançar no ramo.
-- **Ramos canônicos** abrem pelo estágio da história: Sapos e Kyuubi depois do Haku (estágio 2), Rasengan quando o Jiraiya ensina (estágio 3).
-- **Nós da conta** ficam liberados de vez por um objetivo: a Ōdama Rasengan pede a conquista *Vale do Fim* (vencer a História).
+- **Ramos canônicos** (v0.67.0): a raiz de Sapos, Kyuubi e Rasengan é **dada pela história** (`grantedBy`): entra carimbada, sem custo, no marco ([historia.md](historia.md#momentos-canônicos)). Antes disso, aparece tracejada como "Vem pela história", e o resto do ramo fica fechado. Os níveis da raiz continuam pagos.
+- **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela. As outras classes ganham os seus na v0.68.0.
+- **Nós da conta** ficam liberados de vez por um objetivo (hoje, o ramo do Sasuke no Uchiha). A Ōdama Rasengan saiu na v0.67.0: não pertence ao Naruto clássico e fica guardada para uma campanha Shippuden.
 - O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
 - Nós que só existem com um elemento (ramo Raio do Uchiha) ficam escondidos para quem não tem o elemento.
 
@@ -53,21 +54,21 @@ Seis ramos custando cerca de 55 pontos, fora os níveis, para os cerca de 30 que
 | Laços | Proteger os amigos | 2 | | +8% de dano da equipe |
 | Laços | Ninguém fica para trás | 2 | | Aprende Reanimação; a equipe começa as lutas com escudo de 5% |
 | Laços | Futuro Hokage | 3 | | +7% de dano e +5% de acerto da equipe |
-| Sapos | Contrato com os sapos | 1 | | +8% de dano de ninjutsu |
-| Sapos | Gamakichi **ou** | 2 | 3 (+1 cada) | Aprende a invocar o Gamakichi: óleo em chamas em todos os inimigos. Cada nível: +20% de dano |
-| Sapos | Gamatatsu | 2 | | Ativa: escudo de 25% do HP |
-| Sapos | Gamabunta | 3 | 2 (+2) | Aprende a invocar o Gamabunta: dano enorme em todos, pode atordoar. Nível 2: +20% de dano |
-| Sapos | Chefe dos sapos | 2 | | Técnicas custam 1 de chakra a menos; Gamabunta com +20% de dano |
-| Kyuubi | Chakra da raposa | 1 | | Recupera 3 de HP por rodada |
+| Sapos | Kuchiyose no Jutsu | história | | Dado pelo contrato com os sapos: invoca um sapo sorteado |
+| Sapos | Gamakichi **ou** | 2 | 3 (+1 cada) | O Gamakichi sai mais no sorteio (+15 de peso) e o óleo em chamas causa +20% de dano. Cada nível: +20% de dano |
+| Sapos | Gamatatsu | 2 | | O Gamatatsu sai mais no sorteio (+15 de peso); escudo de 5% no começo das lutas |
+| Sapos | Laço com o chefe | 2 | 3 (+2 cada) | O Gamabunta sai mais (+8 de peso). Cada nível: +6 de peso |
+| Sapos | **Chefe dos sapos** (final) | 3 | | Os girinos saem do sorteio; o Kuchiyose custa 3 de chakra a menos; Gamabunta +20% de dano |
+| Kyuubi | Chakra da raposa | história | | Dado depois do Haku: recupera 3 de HP por rodada |
 | Kyuubi | Manto da Kyuubi **ou** | 2 | | Ativa de classe: paga 8% do HP, ganha escudo de 20% |
 | Kyuubi | Uma cauda | 2 | | Ativa: paga 10% do HP, +35% de dano por 3 turnos |
 | Kyuubi | Explosão de chakra | 2 | 2 (+1) | Aprende a Explosão (todos os inimigos); +20% de dano abaixo da metade do HP. Nível 2: +20% de dano da Explosão |
-| Kyuubi | Fúria da Kyuubi | 3 | | Uma vez por luta fica com 1 de HP em vez de cair; +10% de dano com HP baixo |
-| Rasengan | Rasengan | 1 | 3 (+2 cada) | Aprende o Rasengan. Cada nível: +15% de dano e 1 de chakra a menos |
+| Kyuubi | **Fúria da Kyuubi** (final) | 3 | | Uma vez por luta fica com 1 de HP em vez de cair; +10% de dano com HP baixo |
+| Rasengan | Rasengan | história | 3 (+2 cada) | Dado pelo treino com o Jiraiya. Cada nível: +15% de dano e 1 de chakra a menos |
 | Rasengan | Domínio do Rasengan | 2 | | Rasengan: +25% de dano, 2 de chakra a menos |
 | Rasengan | Foco **ou** | 2 | | +10% de crítico |
 | Rasengan | Rasengan com clone | 2 | 2 (+1) | Aprende o Rasengan com clone: +1 golpe por clone (até +2). Nível 2: +20% de dano |
-| Rasengan | Ōdama Rasengan | 3 | | Aprende a Ōdama (conta: vencer a História) |
+| Rasengan | **Rasengan da Kyuubi** (final) | 3 | | O Rasengan vermelho do Vale do Fim: Rasengan +30% de dano; +15% de dano com HP baixo |
 
 ## Níveis nas outras classes
 
