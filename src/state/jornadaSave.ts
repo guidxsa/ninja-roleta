@@ -1,4 +1,4 @@
-import { heroMovable, MOVESET_SIZE, silentNatures, STORY_ARCS, storyStages, type JRun } from '../core/jornada/run';
+import { heroMovable, MOVESET_SIZE, silentNatures, STORY_ARCS, storyStages, syncGrantedTalents, type JRun } from '../core/jornada/run';
 import { jornadaData } from '../data/jornada';
 import { RELIC_RENAMES } from '../data/jornada/relics';
 import { jTechniquesById } from '../data/jornada/techniques';
@@ -15,6 +15,48 @@ const STARTER_EVOLVED = 'firstHokageNecklace';
 const OLD_SHOP_STOPS = [6, 6, 3];
 /** História: as paradas do antigo 3º estágio ("Busca e resgate"), que virou os arcos Sannin e Vale do Fim (v0.58.0). */
 const OLD_RETRIEVAL_STOPS = ['rasenganTraining', 'tanzaku', 'kabuto', 'hospital', 'sasukeLeft', 'soundAmbush', 'jirobo', 'treasure3', 'kidomaruTayuya', 'sakon', 'kimimaro', 'rest3', 'valley'];
+
+/**
+ * História canônica (v0.67.0): o que custava cada nó que virou "dado pela história" ou saiu, para devolver os pontos.
+ * O Contrato com os sapos mudou de lugar e de efeito, então também volta para ser escolhido de novo.
+ */
+const OLD_TREE_COSTS: Record<string, { cost: number; rankCost?: number }> = {
+  tRasengan: { cost: 1 },
+  tKyuubiRegen: { cost: 1 },
+  tToadContract: { cost: 1 },
+  tGamabunta: { cost: 3, rankCost: 2 },
+  tOdama: { cost: 3 },
+};
+/** Técnicas que viraram variantes do Kuchiyose ou saíram (a Ōdama fica guardada para o Shippuden). */
+const OLD_TREE_TECHNIQUES = ['jGamakichi', 'jGamatatsu', 'jGamabunta', 'jOdama'];
+/** Índice da parada nova do Exame (Orochimaru na Floresta da Morte), para deslocar quem estava depois dela. */
+const OROCHIMARU_STOP = 2;
+
+/**
+ * Save de antes da História canônica (v0.67.0): desloca o Exame pela parada nova, dá a marca da Kyuubi a quem já passou
+ * do Haku, devolve os pontos dos nós que mudaram e carimba os nós dados pela história.
+ */
+export function withCanonStory(run: JRun): JRun {
+  if (run.canonTree === 1) return run;
+  const next: JRun = { ...run, canonTree: 1, talents: [...run.talents], talentRanks: { ...run.talentRanks }, flags: [...run.flags] };
+  if (next.mode === 'canon') {
+    if (next.stageIndex === 1 && next.stopIndex >= OROCHIMARU_STOP) next.stopIndex++;
+    if (next.hero === 'naruto' && next.stageIndex >= 1 && !next.flags.includes('kyuubiAwakened')) next.flags.push('kyuubiAwakened');
+  }
+  for (const [id, old] of Object.entries(OLD_TREE_COSTS)) {
+    if (!next.talents.includes(id)) continue;
+    const rank = next.talentRanks[id] ?? 1;
+    next.talentPoints += old.cost + (old.rankCost ? old.rankCost * (rank - 1) : 0);
+    next.talents = next.talents.filter((t) => t !== id);
+    // O Rasengan guarda os níveis comprados: o nó volta carimbado com eles.
+    if (id !== 'tRasengan') delete next.talentRanks[id];
+  }
+  next.learned = next.learned.filter((id) => !OLD_TREE_TECHNIQUES.includes(id));
+  next.moveset = next.moveset.filter((id) => !OLD_TREE_TECHNIQUES.includes(id));
+  syncGrantedTalents(next, jornadaData);
+  if (!next.moveset.length) next.moveset = heroMovable(next, jornadaData).slice(0, MOVESET_SIZE);
+  return next;
+}
 
 /** Troca os ids de relíquia que mudaram (v0.43.0: iniciais novas e o Talismã da Vontade do Fogo). */
 export const renameRelicIds = (ids: readonly string[]) => [...new Set(ids.map((id) => RELIC_RENAMES[id] ?? id))];
@@ -51,7 +93,7 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     const cycle = typeof run.cycle === 'number' ? run.cycle : 0;
     const unlocks = Array.isArray(run.unlocks) ? run.unlocks : [];
     const loaded: JRun = { ...legacy, ...run, cycle, unlocks, learned: known(run.learned ?? []), moveset: known(run.moveset ?? []), cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
-    return withSilentNatures(inFourArcs(withoutShopStops(loaded, run.shopPurchases === undefined)));
+    return withCanonStory(withSilentNatures(inFourArcs(withoutShopStops(loaded, run.shopPurchases === undefined))));
   } catch {
     return null;
   }

@@ -40,6 +40,13 @@ export interface TalentNode {
   rankCost?: number;
   /** Bônus de cada nível acima do 1. */
   rankMods?: Partial<FighterMods>;
+  /**
+   * Nó dado pela história (v0.67.0): entra carimbado, sem custo, quando o marco acontece (a técnica é conhecida ou a run
+   * tem a marca). Antes disso, "vem pela história". Os níveis acima do 1 continuam pagos.
+   */
+  grantedBy?: { technique?: string; flag?: string };
+  /** Talento final do ramo: caro e que muda o estilo de jogo. */
+  capstone?: boolean;
 }
 
 export interface TalentContext {
@@ -54,7 +61,7 @@ export interface TalentContext {
   elements?: readonly (Element | null)[];
 }
 
-export type TalentState = 'owned' | 'upgradable' | 'maxed' | 'available' | 'noPoints' | 'locked' | 'excluded' | 'stageLocked' | 'accountLocked' | 'hidden';
+export type TalentState = 'owned' | 'upgradable' | 'maxed' | 'available' | 'noPoints' | 'locked' | 'excluded' | 'stageLocked' | 'storyLocked' | 'accountLocked' | 'hidden';
 
 export const talentMaxRank = (node: TalentNode) => node.maxRank ?? 1;
 export const talentRankCost = (node: TalentNode) => node.rankCost ?? node.cost;
@@ -74,6 +81,8 @@ export function talentState(node: TalentNode, nodes: readonly TalentNode[], ctx:
     if (rank >= talentMaxRank(node)) return 'maxed';
     return ctx.points >= talentRankCost(node) ? 'upgradable' : 'owned';
   }
+  // Nó da história que ainda não chegou: não se compra (a sincronização da run o carimba no marco).
+  if (node.grantedBy) return 'storyLocked';
   if (node.account && !ctx.unlocked.has(node.account)) return 'accountLocked';
   if (node.fromStage !== undefined && ctx.stageIndex < node.fromStage) return 'stageLocked';
   if (node.excludes?.some((id) => ctx.owned.includes(id))) return 'excluded';
@@ -96,6 +105,8 @@ export function canBuyTalent(node: TalentNode, nodes: readonly TalentNode[], ctx
  */
 export function treeComplete(owner: string, nodes: readonly TalentNode[], ctx: TalentContext): boolean {
   const open: TalentContext = { ...ctx, points: Infinity, stageIndex: Infinity };
+  // Nó da história que ainda não chegou conta como "ainda vem", como o preso a estágio.
+  if (nodes.some((n) => n.owner === owner && n.grantedBy && !ctx.owned.includes(n.id))) return false;
   return !nodes.some((n) => n.owner === owner && canBuyTalent(n, nodes, open));
 }
 

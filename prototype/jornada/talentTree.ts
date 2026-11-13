@@ -102,7 +102,9 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
         const max = talentMaxRank(n);
         const hidden = st === 'accountLocked';
         const pips = max > 1 ? `<span class="jt-pips" aria-label="${T.rank(rank, max)}">${Array.from({ length: max }, (_, i) => `<i class="${i < rank ? 'on' : ''}"></i>`).join('')}</span>` : '';
-        return `<button type="button" class="jt-node st-${st}${n.id === selected ? ' sel' : ''}${n.id === just ? ' just' : ''}" data-node="${n.id}" style="left:${colX(n)}%;top:${rowY(n)}px">
+        // Talento final do ramo (capstone) e nó dado pela história ganham marca própria.
+        const marks = `${n.capstone ? ' capstone' : ''}${n.grantedBy ? ' story' : ''}`;
+        return `<button type="button" class="jt-node st-${st}${marks}${n.id === selected ? ' sel' : ''}${n.id === just ? ' just' : ''}" data-node="${n.id}" style="left:${colX(n)}%;top:${rowY(n)}px">
           <span class="jt-seal"><span>${hidden ? icon('lock') : nodeIcon(run, n)}</span></span>
           <span class="jt-name">${hidden ? T.hiddenName : nodeText(run, n).name}</span>${pips}</button>`;
       })

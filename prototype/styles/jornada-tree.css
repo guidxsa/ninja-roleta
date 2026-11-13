@@ -96,6 +96,9 @@
   box-shadow: 3px 3px 0 var(--ink), 0 0 16px color-mix(in srgb, var(--tree) 70%, transparent);
 }
 .jt-node.st-maxed .jt-seal { outline: 2px solid var(--tree-2); outline-offset: 2px; }
+/* Talento final do ramo: selo maior com aro dourado; nó dado pela história: aro tracejado até chegar o marco. */
+.jt-node.capstone .jt-seal { box-shadow: 3px 3px 0 var(--ink), 0 0 0 3px var(--gold); }
+.jt-node.story.st-storyLocked .jt-seal { border-style: dashed; opacity: .75; }
 .jt-node.st-available .jt-seal, .jt-node.st-upgradable .jt-seal { animation: jtCall 1.5s var(--ease) infinite; }
 .jt-node.st-available .jt-seal { border-color: var(--tree); background: color-mix(in srgb, var(--tree) 20%, var(--surface)); }
 .jt-node.st-noPoints .jt-seal { border-color: color-mix(in srgb, var(--tree) 50%, var(--line-strong)); }

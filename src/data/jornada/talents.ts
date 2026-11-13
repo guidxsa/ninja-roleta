@@ -12,39 +12,43 @@ export const talents: TalentNode[] = [
   { id: 'tCloneGuard', owner: 'naruto', branch: 'clones', tier: 2, col: 1, cost: 2, excludes: ['tRendan'], mods: { startClones: 1, taijutsuFlat: 2 } },
   { id: 'tCloneBlast', owner: 'naruto', branch: 'clones', tier: 3, cost: 2, requires: ['tRendan', 'tCloneGuard'], mods: { cloneCounter: 5 } },
   { id: 'tTajuu', owner: 'naruto', branch: 'clones', tier: 4, cost: 3, learn: 'jTajuuBunshin' },
-  { id: 'tShadowArmy', owner: 'naruto', branch: 'clones', tier: 5, cost: 3, mods: { maxClonesBonus: 2, damagePerClone: 0.03 } },
+  { id: 'tShadowArmy', owner: 'naruto', branch: 'clones', tier: 5, cost: 3, capstone: true, mods: { maxClonesBonus: 2, damagePerClone: 0.03 } },
 
   { id: 'tPrankKing', owner: 'naruto', branch: 'pranks', tier: 1, cost: 1, mods: { evasion: 0.04, techChakraDiscount: { jSexyJutsu: 1 } } },
   { id: 'tHarem', owner: 'naruto', branch: 'pranks', tier: 2, col: -1, cost: 2, excludes: ['tSmokeBomb'], learn: 'jHarem' },
   { id: 'tSmokeBomb', owner: 'naruto', branch: 'pranks', tier: 2, col: 1, cost: 2, excludes: ['tHarem'], learn: 'jSmokeBomb' },
   { id: 'tShadowShuriken', owner: 'naruto', branch: 'pranks', tier: 3, cost: 2, requires: ['tHarem', 'tSmokeBomb'], learn: 'jShadowShuriken', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jShadowShuriken: 1.2 } } },
   { id: 'tAmbush', owner: 'naruto', branch: 'pranks', tier: 4, cost: 2, mods: { stunnedDamageMult: 1.3 } },
-  { id: 'tTrickMaster', owner: 'naruto', branch: 'pranks', tier: 5, cost: 3, mods: { effectChanceBonus: 0.15, critBonus: 0.1 } },
+  { id: 'tTrickMaster', owner: 'naruto', branch: 'pranks', tier: 5, cost: 3, capstone: true, mods: { effectChanceBonus: 0.15, critBonus: 0.1 } },
 
   { id: 'tNeverGiveUp', owner: 'naruto', branch: 'bonds', tier: 1, cost: 1, teamMods: { regenHp: 1 } },
   { id: 'tTeam7', owner: 'naruto', branch: 'bonds', tier: 2, col: -1, cost: 2, excludes: ['tWarCry'], allyHpPct: 0.15 },
   { id: 'tWarCry', owner: 'naruto', branch: 'bonds', tier: 2, col: 1, cost: 2, excludes: ['tTeam7'], learn: 'jWarCry', maxRank: 3, rankCost: 1, rankMods: { techChakraDiscount: { jWarCry: 1 } } },
   { id: 'tProtectFriends', owner: 'naruto', branch: 'bonds', tier: 3, cost: 2, requires: ['tTeam7', 'tWarCry'], teamMods: { damageMult: 1.08 } },
   { id: 'tNoOneLeft', owner: 'naruto', branch: 'bonds', tier: 4, cost: 2, learn: 'jReanimate', teamMods: { startShieldPct: 0.05 } },
-  { id: 'tFutureHokage', owner: 'naruto', branch: 'bonds', tier: 5, cost: 3, teamMods: { damageMult: 1.07, accuracyBonus: 0.05 } },
+  { id: 'tFutureHokage', owner: 'naruto', branch: 'bonds', tier: 5, cost: 3, capstone: true, teamMods: { damageMult: 1.07, accuracyBonus: 0.05 } },
 
-  { id: 'tToadContract', owner: 'naruto', branch: 'toads', tier: 1, cost: 1, fromStage: 1, mods: { typeDamageMult: { ninjutsu: 1.08 } } },
-  { id: 'tGamakichi', owner: 'naruto', branch: 'toads', tier: 2, col: -1, cost: 2, fromStage: 1, excludes: ['tGamatatsu'], learn: 'jGamakichi', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jGamakichi: 1.2 } } },
-  { id: 'tGamatatsu', owner: 'naruto', branch: 'toads', tier: 2, col: 1, cost: 2, fromStage: 1, excludes: ['tGamakichi'], learn: 'jGamatatsu' },
-  { id: 'tGamabunta', owner: 'naruto', branch: 'toads', tier: 3, cost: 3, fromStage: 1, requires: ['tGamakichi', 'tGamatatsu'], learn: 'jGamabunta', maxRank: 2, rankCost: 2, rankMods: { techDamageMult: { jGamabunta: 1.2 } } },
-  { id: 'tToadBoss', owner: 'naruto', branch: 'toads', tier: 4, cost: 2, fromStage: 1, mods: { chakraDiscount: 1, techDamageMult: { jGamabunta: 1.2 } } },
+  // Sapos (v0.67.0): a raiz é o Kuchiyose, dado pelo contrato com os sapos. O resto mexe no sorteio do sapo.
+  { id: 'tKuchiyose', owner: 'naruto', branch: 'toads', tier: 1, cost: 0, grantedBy: { technique: 'jKuchiyose' } },
+  { id: 'tGamakichi', owner: 'naruto', branch: 'toads', tier: 2, col: -1, cost: 2, excludes: ['tGamatatsu'], mods: { rollWeights: { jGamakichi: 15 }, techDamageMult: { jGamakichi: 1.2 } }, maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jGamakichi: 1.2 } } },
+  { id: 'tGamatatsu', owner: 'naruto', branch: 'toads', tier: 2, col: 1, cost: 2, excludes: ['tGamakichi'], mods: { rollWeights: { jGamatatsu: 15 }, startShieldPct: 0.05 } },
+  { id: 'tToadContract', owner: 'naruto', branch: 'toads', tier: 3, cost: 2, requires: ['tGamakichi', 'tGamatatsu'], mods: { rollWeights: { jGamabunta: 8 } }, maxRank: 3, rankCost: 2, rankMods: { rollWeights: { jGamabunta: 6 } } },
+  { id: 'tToadBoss', owner: 'naruto', branch: 'toads', tier: 4, cost: 3, capstone: true, mods: { rollWeights: { jTadpole: -100 }, techChakraDiscount: { jKuchiyose: 3 }, techDamageMult: { jGamabunta: 1.2 } } },
 
-  { id: 'tKyuubiRegen', owner: 'naruto', branch: 'kyuubi', tier: 1, cost: 1, fromStage: 1, mods: { regenHp: 3 } },
-  { id: 'tKyuubiCloak', owner: 'naruto', branch: 'kyuubi', tier: 2, col: -1, cost: 2, fromStage: 1, excludes: ['tOneTail'], learn: 'jKyuubiCloak' },
-  { id: 'tOneTail', owner: 'naruto', branch: 'kyuubi', tier: 2, col: 1, cost: 2, fromStage: 1, excludes: ['tKyuubiCloak'], learn: 'jOneTail' },
-  { id: 'tChakraBurst', owner: 'naruto', branch: 'kyuubi', tier: 3, cost: 2, fromStage: 1, requires: ['tKyuubiCloak', 'tOneTail'], learn: 'jChakraBurst', mods: { lowHpDamageMult: 1.2 }, maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jChakraBurst: 1.2 } } },
-  { id: 'tKyuubiFury', owner: 'naruto', branch: 'kyuubi', tier: 4, cost: 3, fromStage: 1, mods: { surviveOnce: true, lowHpDamageMult: 1.1 } },
+  // Kyuubi (v0.67.0): a raiz é o chakra da raposa, dado depois do Haku. O resto é o uso voluntário.
+  { id: 'tKyuubiRegen', owner: 'naruto', branch: 'kyuubi', tier: 1, cost: 0, grantedBy: { flag: 'kyuubiAwakened' }, mods: { regenHp: 3 } },
+  { id: 'tKyuubiCloak', owner: 'naruto', branch: 'kyuubi', tier: 2, col: -1, cost: 2, excludes: ['tOneTail'], learn: 'jKyuubiCloak' },
+  { id: 'tOneTail', owner: 'naruto', branch: 'kyuubi', tier: 2, col: 1, cost: 2, excludes: ['tKyuubiCloak'], learn: 'jOneTail' },
+  { id: 'tChakraBurst', owner: 'naruto', branch: 'kyuubi', tier: 3, cost: 2, requires: ['tKyuubiCloak', 'tOneTail'], learn: 'jChakraBurst', mods: { lowHpDamageMult: 1.2 }, maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jChakraBurst: 1.2 } } },
+  { id: 'tKyuubiFury', owner: 'naruto', branch: 'kyuubi', tier: 4, cost: 3, capstone: true, mods: { surviveOnce: true, lowHpDamageMult: 1.1 } },
 
-  { id: 'tRasengan', owner: 'naruto', branch: 'rasengan', tier: 1, cost: 1, fromStage: 2, learn: 'jRasengan', maxRank: 3, rankCost: 2, rankMods: { techDamageMult: { jRasengan: 1.15 }, techChakraDiscount: { jRasengan: 1 } } },
-  { id: 'tRasenganMastery', owner: 'naruto', branch: 'rasengan', tier: 2, cost: 2, fromStage: 2, mods: { techDamageMult: { jRasengan: 1.25 }, techChakraDiscount: { jRasengan: 2 } } },
-  { id: 'tRasenganFocus', owner: 'naruto', branch: 'rasengan', tier: 3, col: -1, cost: 2, fromStage: 2, excludes: ['tRasenClone'], mods: { critBonus: 0.1 } },
-  { id: 'tRasenClone', owner: 'naruto', branch: 'rasengan', tier: 3, col: 1, cost: 2, fromStage: 2, excludes: ['tRasenganFocus'], learn: 'jRasenClone', maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jRasenClone: 1.2 } } },
-  { id: 'tOdama', owner: 'naruto', branch: 'rasengan', tier: 4, cost: 3, fromStage: 2, account: 'j_canonWin', requires: ['tRasenganFocus', 'tRasenClone'], learn: 'jOdama' },
+  // Rasengan (v0.67.0): a raiz é o Rasengan, dado pelo treino com o Jiraiya (os níveis são pagos). Sem a Ōdama
+  // (Shippuden): o talento final é o Rasengan com o chakra da Kyuubi, como no Vale do Fim.
+  { id: 'tRasengan', owner: 'naruto', branch: 'rasengan', tier: 1, cost: 0, grantedBy: { technique: 'jRasengan' }, maxRank: 3, rankCost: 2, rankMods: { techDamageMult: { jRasengan: 1.15 }, techChakraDiscount: { jRasengan: 1 } } },
+  { id: 'tRasenganMastery', owner: 'naruto', branch: 'rasengan', tier: 2, cost: 2, mods: { techDamageMult: { jRasengan: 1.25 }, techChakraDiscount: { jRasengan: 2 } } },
+  { id: 'tRasenganFocus', owner: 'naruto', branch: 'rasengan', tier: 3, col: -1, cost: 2, excludes: ['tRasenClone'], mods: { critBonus: 0.1 } },
+  { id: 'tRasenClone', owner: 'naruto', branch: 'rasengan', tier: 3, col: 1, cost: 2, excludes: ['tRasenganFocus'], learn: 'jRasenClone', maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jRasenClone: 1.2 } } },
+  { id: 'tRasenganKyuubi', owner: 'naruto', branch: 'rasengan', tier: 4, cost: 3, capstone: true, requires: ['tRasenganFocus', 'tRasenClone'], mods: { techDamageMult: { jRasengan: 1.3 }, lowHpDamageMult: 1.15 } },
 
   // Comum (Caminho Ninja): o ramo Elemento ensina as técnicas do elemento sorteado.
   { id: 'tElement2', owner: 'commonNinja', branch: 'element', tier: 1, cost: 1, learnByElement: { fire: 'jFireball', wind: 'jGale', lightning: 'jLightningCurrent', earth: 'jEarthSpear', water: 'jWaterShark' }, maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jFireball: 1.2, jGale: 1.2, jLightningCurrent: 1.2, jEarthSpear: 1.2, jWaterShark: 1.2 } } },

@@ -105,6 +105,8 @@ export interface JRun {
   shopPurchases: number;
   /** Compras desde a maldição do mercador (zera quando ela sai). Sem o campo: 0. */
   cursedPurchases?: number;
+  /** Árvore e História canônicas da v0.67.0 já aplicadas (sem o campo: save antigo, migrado ao carregar). */
+  canonTree?: 1;
 }
 
 export interface ShopStock {
@@ -165,6 +167,7 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     cleared: [],
     shop: null,
     shopPurchases: 0,
+    canonTree: 1,
   };
 }
 
@@ -780,6 +783,20 @@ function advanceStop(run: JRun, data: JornadaData): void {
   stepStop(run, data);
   // Marco novo do protagonista entra no moveset se houver espaço.
   for (const id of grantedTechniques(run, run.hero, data)) if (!before.includes(id)) addToMoveset(run, id, data);
+  syncGrantedTalents(run, data);
+}
+
+/**
+ * Nós da árvore dados pela história (v0.67.0): quando o marco acontece (técnica conhecida ou marca na run), o nó entra
+ * carimbado e sem custo. Muda a run no lugar.
+ */
+export function syncGrantedTalents(run: JRun, data: JornadaData): void {
+  const known = heroKnown(run, data);
+  for (const node of data.talents) {
+    if (node.owner !== run.hero || !node.grantedBy || run.talents.includes(node.id)) continue;
+    const g = node.grantedBy;
+    if ((g.technique && known.includes(g.technique)) || (g.flag && run.flags.includes(g.flag))) run.talents.push(node.id);
+  }
 }
 
 function stepStop(run: JRun, data: JornadaData): void {

@@ -80,6 +80,7 @@ import {
   isCursed,
   shopWeights,
   runEnemyMult,
+  syncGrantedTalents,
 } from '../src/core/jornada/run';
 import { chooseAiAction, chooseAiActive } from '../src/core/jornada/ai';
 import { talentMaxRank, talentState, treeComplete, type TalentNode } from '../src/core/jornada/talents';
@@ -727,15 +728,17 @@ describe('run da Jornada', () => {
     expect(loadProfile({ getItem: (k: string) => store[k] ?? null, setItem: () => {} }).relics).toEqual({});
   });
 
-  it('a árvore pede o nó anterior, o estágio e, na Ōdama, a conquista da conta', () => {
+  it('a árvore pede o nó anterior; as raízes canônicas vêm pela história', () => {
     const run = { ...newRun(1, 'normal', data), talentPoints: 20 };
     const node = (id: string) => data.talents.find((t) => t.id === id)!;
     const none = new Set<string>();
     const ctx = { owned: run.talents, points: 20, stageIndex: 0, unlocked: none };
     expect(talentState(node('tMoreClones'), data.talents, ctx)).toBe('available');
     expect(talentState(node('tRendan'), data.talents, ctx)).toBe('locked');
-    expect(talentState(node('tKyuubiRegen'), data.talents, ctx)).toBe('stageLocked');
-    expect(talentState(node('tOdama'), data.talents, { ...ctx, stageIndex: 2 })).toBe('accountLocked');
+    // Kyuubi, Rasengan e Kuchiyose não se compram: vêm pela história (v0.67.0).
+    for (const id of ['tKyuubiRegen', 'tRasengan', 'tKuchiyose']) expect(talentState(node(id), data.talents, ctx)).toBe('storyLocked');
+    expect(talentState(node('tKyuubiCloak'), data.talents, ctx)).toBe('locked');
+    expect(data.talents.some((n) => n.id === 'tOdama')).toBe(false);
     const bought = buyTalent(buyTalent(run, 'tMoreClones', none, data), 'tRendan', none, data);
     expect(bought.learned).toContain('jRendan');
     expect(bought.talentPoints).toBe(17);
@@ -790,8 +793,10 @@ describe('run da Jornada', () => {
 
   it('o nível aumenta o efeito da técnica', () => {
     const none = new Set<string>();
-    let run: JRun = { ...newRun(1, 'normal', data), talentPoints: 30, stageIndex: 2 };
-    run = buyTalent(run, 'tRasengan', none, data);
+    // O Rasengan vem pelo treino com o Jiraiya (nível 1 de graça); os níveis seguintes são pagos.
+    let run: JRun = { ...newRun(1, 'normal', data), talentPoints: 30, stageIndex: 2, learned: ['jRasengan'] };
+    syncGrantedTalents(run, data);
+    expect(run.talents).toContain('tRasengan');
     expect(heroMods(run, data).techDamageMult.jRasengan ?? 1).toBe(1);
     run = buyTalent(run, 'tRasengan', none, data);
     expect(heroMods(run, data).techDamageMult.jRasengan).toBeCloseTo(1.15);
@@ -799,6 +804,7 @@ describe('run da Jornada', () => {
     run = buyTalent(run, 'tRasengan', none, data);
     expect(heroMods(run, data).techDamageMult.jRasengan).toBeCloseTo(1.15 * 1.15);
     expect(heroMods(run, data).techChakraDiscount.jRasengan).toBe(2);
+    expect(run.talentPoints).toBe(26);
   });
 
   it('bifurcação: escolher um caminho fecha o outro, e qualquer um libera o seguinte', () => {
@@ -1858,8 +1864,8 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     const uTree = withTree(uchiha, (n) => !n.account && !n.requiresElement);
     expect(talentTreeComplete(uTree, data)).toBe(true);
     expect(talentTreeComplete(uTree, data, new Set(['j_sasukeEgg']))).toBe(false);
-    // Naruto no estágio 1 com tudo o que já abre: os ramos de estágio ainda vêm.
-    const naruto = withTree(newRun(6, 'normal', data), (n) => n.fromStage === undefined && !n.account);
+    // Naruto no começo com tudo o que já abre: os ramos da história ainda vêm.
+    const naruto = withTree(newRun(6, 'normal', data), (n) => n.fromStage === undefined && !n.account && !n.grantedBy);
     expect(treeComplete('naruto', data.talents, talentContext(naruto, new Set()))).toBe(false);
   });
 
@@ -1895,10 +1901,10 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     expect(syncUnlocks(run, new Set(['j_unlockUchiha']), data)).toBe(run);
   });
 
-  it('a Ōdama abre no ciclo seguinte com a conquista da História no retrato da run', () => {
+  it('as conquistas que a árvore usa vão para o retrato da run (a Ōdama saiu na v0.67.0)', () => {
     const run = { ...newGenericRun(2, 'hardcore', 'uchiha', data, new Set(['j_unlockUchiha'])), status: 'victory' as const };
     expect(continueCycle(run, data, new Set(['j_sasukeEgg', 'j_unlockUchiha'])).unlocks).toEqual(['j_sasukeEgg']);
-    expect(newRun(1, 'normal', data, new Set(['j_canonWin', 'j_bell'])).unlocks).toEqual(['j_canonWin']);
+    expect(newRun(1, 'normal', data, new Set(['j_canonWin', 'j_bell'])).unlocks).toEqual([]);
   });
 
   it('conquistas de ciclo só saem na vitória do ciclo certo, no Caminho Ninja', () => {
@@ -1938,5 +1944,35 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     storage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ ...p1, jornada: { generic: { cycle: 'x' } } }));
     expect(loadProfile(storage).jornada).toBeUndefined();
     expect(loadProfile(memStorage().storage)).toEqual(emptyProfile());
+  });
+});
+
+describe('save de antes da História canônica (v0.67.0)', () => {
+  it('desloca o Exame pela parada nova, dá a marca da Kyuubi e devolve os pontos dos nós que mudaram', () => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const { canonTree: _c, ...old } = {
+      ...newRun(4, 'normal', data),
+      stageIndex: 1,
+      stopIndex: 2,
+      talentPoints: 0,
+      talents: ['tMoreClones', 'tRasengan', 'tOdama'],
+      talentRanks: { tRasengan: 2 },
+      learned: ['jRasengan', 'jOdama'],
+      moveset: ['jStrike', 'jOdama'],
+    };
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+    const run = loadJornada(storage)!;
+    // Antes estava no Trio do Som (índice 2); com o Orochimaru antes dele, o Trio é o índice 3.
+    expect(data.stages[1]!.stops[run.stopIndex]!.id).toBe('forest');
+    expect(run.flags).toContain('kyuubiAwakened');
+    expect(run.talents).toContain('tKyuubiRegen');
+    expect(run.talents).not.toContain('tOdama');
+    // Rasengan (1) e Ōdama (3) voltam; o nível 2 do Rasengan fica guardado para quando ele voltar pela história.
+    expect(run.talentPoints).toBe(4);
+    expect(run.talentRanks.tRasengan).toBe(2);
+    expect(run.learned).not.toContain('jOdama');
+    expect(run.moveset).toEqual(['jStrike']);
+    expect(run.canonTree).toBe(1);
   });
 });
