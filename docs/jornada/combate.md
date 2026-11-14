@@ -84,7 +84,7 @@ Ativa do prodígio (v0.42.0; custo em chakra desde a v0.59.0, regra comum em [fu
 - **Os suportes levantam sozinhos** ([personagens.md](personagens.md#comportamento)): o protagonista sempre; outro suporte, só se quem levanta está com 40% do HP ou mais. Com a técnica, usam a técnica.
 - **Pílula no protagonista**: se ele cair com pílula na bolsa, uma é usada sozinha, sem gastar turno, inclusive lutando solo.
 - **Protagonista caído sem pílula não encerra a luta** enquanto houver suporte de pé: a luta anda sozinha com os suportes, que ainda podem vencer.
-- **Derrota é todos os aliados no chão.** Lutando sozinho, cair é derrota. Fúria da Kyuubi (talento) segura o Naruto com 1 de HP uma vez por luta.
+- **Derrota é todos os aliados no chão.** Lutando sozinho, cair é derrota. Fúria da Kyuubi (talento final) segura o Naruto com 1 de HP uma vez por luta e liga o chakra da Kyuubi por 3 turnos; Futuro Hokage (talento final dos Laços) dá a mesma queda evitada a cada integrante da equipe ([talentos.md](talentos.md#naruto)).
 - Pílula em um suporte: item da bolsa, pelo protagonista de pé. Volta com 50% do HP. Bônus de relíquia (Apito de socorro, Talismã da segunda chance) valem para técnica e pílula.
 
 ## Bolsa

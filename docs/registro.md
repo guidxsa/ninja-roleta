@@ -66,6 +66,46 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Revisão da História, parte 3: árvores de talento do Naruto (v0.71.0, 14/11/2026)
+
+Terceira e última versão do plano. Pedido do usuário ao aprovar: talentos que surgem da combinação de duas árvores, e animação ao selecionar um talento.
+
+O que entrou: a simulação mede builds por ramo (`--ramos`); os seis ramos refeitos com a mesma forma (raiz, bifurcação, junção, final); seis regras novas de combate para os talentos finais (`cloneShield`, `stunnedAlwaysCrit`, `rollTwice`, `surviveForm`, `techOverflow`, e a queda evitada da equipe); seis talentos de combinação em anel (`requiresAll`, mais `lowHpRollWeights`); a tela mostra a combinação no pé dos dois ramos; animações de compra; migração que devolve os pontos gastos (`withNewTree`).
+
+**Medição de antes** (árvore da v0.70.0; História, 300 runs, seed 2; Médio/Difícil): padrão (o mais barato) 88/39; Clones 87/44; Pegadinhas **67/18**; Laços 78/38; Sapos 89/47; Kyuubi 88/44; Rasengan 90/48. Diferença entre a melhor e a pior build de um ramo: 22,7 pontos no Médio e 30,6 no Difícil. Pegadinhas era o ramo fraco, não havia um ramo dominante sozinho.
+
+**O que a medição ensinou** (cada linha foi uma rodada de simulação):
+- Quase toda run que perde cai no **Haku** (fim do primeiro arco), antes de Sapos, Kyuubi e Rasengan abrirem. A build "focada" nesses três joga o primeiro arco igual ao bot padrão: a diferença entre elas e o padrão é ruído mais o que vem depois. A comparação que decide é entre Clones, Pegadinhas e Laços.
+- A primeira versão da árvore nova levou a Shuriken das sombras para uma combinação e Pegadinhas caiu para 50/12: sem ela o ramo só atordoa. A Shuriken voltou a ser a junção do ramo.
+- Atordoar mais confiável (+15% de chance) e trocar o lado da bifurcação não mexeram em Pegadinhas (63/18 e 60/16). **Esquiva** mexeu: 8% → 15% → 20% na raiz deu 63 → 76 → 82 no Médio.
+- Tirar o clone a mais da raiz de Clones não derrubou a build padrão: o peso estava no **Rendan** (até 28 de dano por 3 de chakra, mais 20% por nível). Com o Rendan até +2 golpes e a Shuriken sem espera, Clones e Pegadinhas se aproximaram.
+
+**Medição de depois** (árvore da v0.71.0, mesma simulação):
+
+| Build | Médio | Difícil |
+|---|---|---|
+| padrão (o mais barato) | 82 | 36 |
+| Clones | 91,3 | 52,7 |
+| Pegadinhas | 81 | 46,7 |
+| Laços | 89,3 | 49 |
+| Sapos | 83,3 | 38 |
+| Kyuubi | 85,7 | 42,7 |
+| Rasengan | 84 | 39,7 |
+| Clones + Pegadinhas | 83 | 36,7 |
+| Pegadinhas + Laços | 85,7 | 38 |
+| Laços + Sapos | 89,3 | 49 |
+| Sapos + Kyuubi | 85,3 | 42,7 |
+| Kyuubi + Rasengan | 85,7 | 43 |
+| Rasengan + Clones | 91,3 | 52,7 |
+
+Diferença entre a melhor e a pior build de um ramo: **10,3 pontos no Médio e 14,7 no Difícil** (era 22,7 e 30,6). **O alvo de 5 pontos não foi atingido.** Com 300 runs, o erro de cada número é de uns 3 pontos, então parte da diferença é ruído, mas não toda: Clones e Laços ficam à frente porque abrem cedo e ajudam contra o Haku. As builds de par, na maioria, repetem o ramo que abre primeiro: a combinação custa as duas junções e só chega tarde, depois de onde as runs caem. Parei de afinar aqui para não empilhar números sem o usuário ([decisoes.md](decisoes.md) item 28).
+
+Simulação padrão (`npm run sim:jornada -- 300 2`), v0.70.0 → v0.71.0, Médio/Difícil/Hardcore: **História 87/43/18 → 82/36/15**. O Caminho Ninja não usa a árvore do Naruto (Comum 71/36/11, prodígio 78/40/12, Uchiha 66/25/8, Hyuuga 71/36/11). A História ficou um pouco mais difícil para o bot padrão, que compra o mais barato: o Rendan mais fraco pesa. Nada foi compensado.
+
+Decidido sozinho (o usuário revisa): os efeitos e custos de todos os nós; quais ramos se combinam (anel) e o efeito de cada combinação; o talento final de cada ramo; a combinação pedir a junção (linha 3) e custar 2; Rendan até +2 golpes (era +3) e +15% por nível (era 20%); Shuriken das sombras sem espera e com 85% de acerto (era espera 1 e 80%); Harem com 85% de acerto e 50% de atordoar (era 75% e 40%); a migração devolver todos os pontos gastos e manter os níveis do Rasengan; os kanji dos ramos (todos do recorte).
+
+Verificado no navegador (PC): a árvore com as combinações no pé dos dois ramos, a compra de talentos e o cartão da combinação. Não verificado: as animações quadro a quadro (o kanji do talento final, o risco da bifurcação), a árvore no celular e os talentos finais dentro de uma luta jogada à mão (só pelos testes).
+
 ## Revisão da História, parte 2: narrativa, cenas e progressão canônica (v0.70.0, 14/11/2026)
 
 Segunda das três versões do plano aprovado. Pedidos do usuário ao aprovar: toda escolha com pelo menos 2 opções; talentos de combinação entre árvores (fica para a parte 3); melhoria visual com animação nas interações.

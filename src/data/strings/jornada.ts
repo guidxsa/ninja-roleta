@@ -484,6 +484,13 @@ export const jornadaPtBR = {
       return `${tech}: dano ${cur}${x}${next !== null ? ` → ${next}${x}` : ''}`;
     },
     choiceHint: 'Escolha um dos dois caminhos: o outro fecha nesta run.',
+    // Talentos de combinação (v0.71.0): ligam dois ramos e pedem a junção dos dois.
+    combo: 'Combinação',
+    comboOf: (a: string, b: string) => `Combinação: ${a} + ${b}`,
+    comboNeeds: (names: string) => `Falta aprender: ${names}`,
+    final: 'Talento final',
+    // Kanji do ramo, que aparece atrás do talento final ao ser aprendido (todos do recorte da fonte).
+    branchKanji: { clones: '影', pranks: '幻', bonds: '縁', toads: '油', kyuubi: '火', rasengan: '風' } as Record<string, string>,
     complete: 'Árvore completa',
     completeTip: (ryo: number) => `Nada mais a aprender ou subir: cada ponto de talento ganho vira ${ryo} ryō na hora.`,
     unique: 'Talento único',

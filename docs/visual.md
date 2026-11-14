@@ -48,6 +48,7 @@ O movimento responde a um gesto ou explica uma troca de estado; nada se mexe só
 - **Faixa "O que mudou"**: etiqueta de papel no alto da tela seguinte, com os ganhos entrando um a um (no máximo meio segundo no total).
 - **Troca de relíquia**: a antiga se desfaz em tinta e a nova se revela no mesmo lugar.
 - **Formas na luta**: o retrato acende na cor do perigo ao entrar e desbota ao sair, com o banner nas duas pontas.
+- **Árvore de talentos** (v0.71.0): aprender carimba o selo e pinta o traço; o contador de pontos afunda; o nível novo pinga como tinta; o caminho recusado da bifurcação é riscado da esquerda para a direita; no talento final, o kanji do ramo (影 幻 縁 油 火 風) acende atrás do selo e o aro dourado abre.
 - **Regras**: durações pelos tokens (`--dur-*`), para o modo instantâneo encurtar tudo; o conteúdo já nasce visível (sem animação, nada some); com `prefers-reduced-motion`, saem o deslocamento e a pincelada e ficam a cor e a opacidade. Kanji novo só do recorte (`prototype/fonts/LEIAME.md`): a "Lição" do teste do sino usa 修, que já estava nele.
 
 ## Vagas de ilustração

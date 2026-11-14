@@ -9,7 +9,8 @@ A árvore **reinicia a cada run** e custa pontos de talento ([progressao.md](pro
 - **Níveis**: a maioria dos talentos é **única**, principalmente os passivos. Alguns, quase sempre técnicas, sobem de nível, com limite de 2 ou 3 e um custo próprio por nível. Dá para voltar e subir um talento antigo a qualquer momento, mesmo depois de avançar no ramo.
 - **Ramos canônicos** (v0.67.0): a raiz de Sapos, Kyuubi e Rasengan é **dada pela história** (`grantedBy`): entra carimbada, sem custo, no marco ([historia.md](historia.md#momentos-canônicos)). Antes disso, aparece tracejada como "Vem pela história", e o resto do ramo fica fechado. Os níveis da raiz continuam pagos.
 - **Laços** (v0.68.0): a raiz (Não vou desistir) também vem pela história: a lição do teste do sino.
-- **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela. As outras classes ganham os seus na v0.68.0.
+- **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela; desde a v0.71.0, cada um muda uma regra do combate. As outras classes ainda não têm talento final nem bifurcação (item em aberto em [decisoes.md](../decisoes.md)).
+- **Combinação** (`requiresAll`, v0.71.0): talento que pede a junção de dois ramos ([abaixo](#combinações)).
 - **Nós da conta** ficam liberados de vez por um objetivo (hoje, o ramo do Sasuke no Uchiha). A Ōdama Rasengan saiu na v0.67.0: não pertence ao Naruto clássico e fica guardada para uma campanha Shippuden.
 - O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
 - Nós que só existem com um elemento (ramo Raio do Uchiha) ficam escondidos para quem não tem o elemento.
@@ -29,47 +30,78 @@ Implementada na v0.44.0. Quando não sobra nada para aprender nem subir na árvo
 - Tela cheia com o **tema da classe**: cor, padrão de fundo e brasão (Naruto: laranja e espiral; Comum: folha, na cor do elemento sorteado; prodígio: verde e vermelho com faixas; Uchiha: vermelho e preto com tomoe; Hyuuga: lavanda com hexagrama). Tudo também no tema claro.
 - Cada talento é um selo em losango; os traços entre eles acendem na cor da classe quando aprendidos. Quem dá para aprender pulsa; o caminho fechado fica tracejado e riscado. Talentos com níveis mostram marcas de nível embaixo.
 - **Celular**: um ramo por vez, em abas (com a marca de quem tem algo para comprar). **PC**: todos os ramos lado a lado.
-- Tocar seleciona: o cartão de baixo mostra o efeito, o nível e o botão **Aprender** ou **Subir para o nível N**. Aprender tem um carimbo no selo e a tinta correndo pelo traço.
+- Tocar seleciona: o cartão de baixo mostra o efeito, o nível e o botão **Aprender** ou **Subir para o nível N**. Aprender tem um carimbo no selo e a tinta correndo pelo traço; o contador de pontos afunda, o nível novo pinga como tinta, o caminho recusado da bifurcação é riscado e, no talento final, o kanji do ramo acende atrás do selo ([visual.md](../visual.md#movimento)).
+- **Combinações**: aparecem no pé dos dois ramos que ligam, com selo redondo, linha tracejada e o nome do ramo parceiro; o cartão diz de quais ramos é e o que falta aprender.
 
 ## Naruto
 
-Seis ramos custando cerca de 55 pontos, fora os níveis, para os cerca de 30 que uma run rende: dá para fechar dois ramos ou misturar três. Clones, Pegadinhas e Laços abrem desde o começo, então nenhum ponto fica preso no estágio 1.
+Refeita na v0.71.0. Seis ramos, cada um com um **estilo**, uma **bifurcação**, uma junção e um **talento final que muda uma regra** do combate. Um ramo focado custa de 7 a 10 pontos (fora os níveis) e uma run rende cerca de 30: dá para fechar três ramos, ou dois e as combinações deles. Clones e Pegadinhas abrem desde o começo; as raízes dos outros quatro vêm da história.
+
+| Ramo | Estilo | Bifurcação | Talento final (a regra que muda) |
+|---|---|---|---|
+| Clones | enxame | Rendan (ataque) ou Guarda (defesa) | Com clone ativo, o golpe de alvo único cai **sempre** no clone, sem o sorteio de 50% |
+| Pegadinhas | controle | Harem (área) ou Bomba de fumaça (esquiva) | Todo golpe seu que acerta um alvo atordoado é **crítico** |
+| Laços | suporte | Equipe 7 (vida) ou Grito de guerra (cura) | Uma vez por luta, **cada integrante** da equipe fica com 1 de HP em vez de cair |
+| Sapos | sorteio | Gamakichi ou Gamatatsu | O Kuchiyose **gira duas vezes** e fica com o melhor sapo |
+| Kyuubi | risco | Manto (escudo) ou Uma cauda (dano) | Em vez de cair, fica com 1 de HP e **entra no chakra da Kyuubi** por 3 turnos |
+| Rasengan | golpe único | Foco (precisão) ou Domínio (força) | O dano que sobra de um Rasengan fatal **atravessa** para o próximo inimigo |
 
 | Ramo | Nó | Custo | Níveis | Efeito |
 |---|---|---|---|---|
-| Clones | Multiclones | 1 | | Kage Bunshin cria 1 clone a mais |
-| Clones | Rendan Uzumaki **ou** | 2 | 3 (+1 cada) | Aprende o Rendan: 1 golpe + 1 por clone (até +3). Cada nível: +20% de dano |
+| Clones | Multiclones | 1 | | O Kage Bunshin custa 2 de chakra a menos |
+| Clones | Rendan Uzumaki **ou** | 2 | 3 (+1 cada) | Aprende o Rendan: 1 golpe + 1 por clone (até +2). Cada nível: +15% de dano |
 | Clones | Guarda de clones | 2 | | Começa toda luta com 1 clone; +2 de dano no taijutsu |
-| Clones | Clones explosivos | 2 | | Quem acerta um clone leva 5 de dano |
-| Clones | Mil Clones | 3 | | O Tajū Kage Bunshin causa 20% mais dano. A técnica vem da história (marco do Mizuki, v0.70.0), não do talento |
-| Clones | Exército de sombras | 3 | | Limite de clones +2; +3% de dano por clone ativo |
-| Pegadinhas | Rei das pegadinhas | 1 | | Esquiva 4%; Sexy no Jutsu custa 1 de chakra a menos |
+| Clones | Clones explosivos | 2 | | Quem acerta um clone leva 4 de dano; o Kage Bunshin cria 1 clone a mais |
+| Clones | Mil Clones | 2 | 2 (+1) | O Tajū Kage Bunshin causa 20% mais dano (a técnica vem da história). Nível 2: 2 de chakra a menos |
+| Clones | **Exército de sombras** (final) | 3 | | Com clone ativo, o golpe de alvo único cai sempre nele; limite de clones +2 |
+| Pegadinhas | Rei das pegadinhas | 1 | | Esquiva 14%; +15% de chance de aplicar efeitos; Sexy no Jutsu custa 1 de chakra a menos |
 | Pegadinhas | Harem no Jutsu **ou** | 2 | | Aprende o Harem no Jutsu: pode atordoar todos |
 | Pegadinhas | Bomba de fumaça | 2 | | Ativa: +30% de esquiva por 2 turnos |
-| Pegadinhas | Shuriken das sombras | 2 | 3 (+1 cada) | Aprende a Shuriken das sombras (3 golpes). Cada nível: +20% de dano |
-| Pegadinhas | Emboscada | 2 | | +30% de dano em alvo atordoado |
-| Pegadinhas | Mestre da trapaça | 3 | | +15% de chance de aplicar efeitos; +10% de crítico |
+| Pegadinhas | Shuriken das sombras | 2 | 3 (+1 cada) | Aprende a Shuriken das sombras (3 golpes): o dano do ramo. Cada nível: +20% de dano |
+| Pegadinhas | Emboscada | 2 | | A **equipe** causa +40% de dano em alvo atordoado |
+| Pegadinhas | **Mestre da trapaça** (final) | 3 | | Golpe seu que acerta alvo atordoado é sempre crítico; +5% de crítico |
 | Laços | Não vou desistir | história | | Dado pela lição do teste do sino: a equipe recupera 1 de HP por rodada |
-| Laços | Equipe 7 **ou** | 2 | | +15% de HP máximo dos suportes |
+| Laços | Equipe 7 **ou** | 2 | | +12% de HP máximo dos suportes |
 | Laços | Grito de guerra | 2 | 3 (+1 cada) | Aprende o Grito de guerra: cura 20 de HP de um aliado e tira atordoar e bloqueio. Cada nível: 1 de chakra a menos |
-| Laços | Proteger os amigos | 2 | | +8% de dano da equipe |
+| Laços | Proteger os amigos | 2 | | +6% de dano da equipe |
 | Laços | Ninguém fica para trás | 2 | | Aprende Reanimação; a equipe começa as lutas com escudo de 5% |
-| Laços | Futuro Hokage | 3 | | +7% de dano e +5% de acerto da equipe |
+| Laços | **Futuro Hokage** (final) | 3 | | Uma vez por luta, cada integrante fica com 1 de HP em vez de cair; +5% de acerto da equipe |
 | Sapos | Kuchiyose no Jutsu | história | | Dado pelo contrato com os sapos: invoca um sapo sorteado |
 | Sapos | Gamakichi **ou** | 2 | 3 (+1 cada) | O Gamakichi sai mais no sorteio (+15 de peso) e o óleo em chamas causa +20% de dano. Cada nível: +20% de dano |
 | Sapos | Gamatatsu | 2 | | O Gamatatsu sai mais no sorteio (+15 de peso); escudo de 5% no começo das lutas |
 | Sapos | Laço com o chefe | 2 | 3 (+2 cada) | O Gamabunta sai mais (+8 de peso). Cada nível: +6 de peso |
-| Sapos | **Chefe dos sapos** (final) | 3 | | Os girinos saem do sorteio; o Kuchiyose custa 3 de chakra a menos; Gamabunta +20% de dano |
+| Sapos | Fôlego do contrato | 2 | | O Kuchiyose custa 3 de chakra a menos; Gamabunta +20% de dano |
+| Sapos | **Chefe dos sapos** (final) | 3 | | O Kuchiyose gira duas vezes e fica com o sapo que vem depois na lista (girinos, Gamakichi, Gamatatsu, Gamabunta) |
 | Kyuubi | Chakra da raposa | história | | Dado depois do Haku: recupera 3 de HP por rodada |
 | Kyuubi | Manto da Kyuubi **ou** | 2 | | Ativa de classe: paga 8% do HP, ganha escudo de 20% |
 | Kyuubi | Uma cauda | 2 | | Ativa: paga 10% do HP, +35% de dano por 3 turnos |
 | Kyuubi | Explosão de chakra | 2 | 2 (+1) | Aprende a Explosão (todos os inimigos); +20% de dano abaixo da metade do HP. Nível 2: +20% de dano da Explosão |
-| Kyuubi | **Fúria da Kyuubi** (final) | 3 | | Uma vez por luta fica com 1 de HP em vez de cair; +10% de dano com HP baixo |
+| Kyuubi | Chakra vermelho | 2 | | +10% de dano abaixo da metade do HP; recupera mais 2 de HP por rodada |
+| Kyuubi | **Fúria da Kyuubi** (final) | 3 | | Uma vez por luta, em vez de cair fica com 1 de HP e entra no chakra da Kyuubi por 3 turnos (cura 15%, +20% nos status, Garras da Kyuubi) |
 | Rasengan | Rasengan | história | 3 (+2 cada) | Dado pelo treino com o Jiraiya. Cada nível: +15% de dano e 1 de chakra a menos |
+| Rasengan | Foco **ou** | 2 | | +10% de crítico e +5% de acerto |
 | Rasengan | Domínio do Rasengan | 2 | | Rasengan: +25% de dano, 2 de chakra a menos |
-| Rasengan | Foco **ou** | 2 | | +10% de crítico |
-| Rasengan | Rasengan com clone | 2 | 2 (+1) | Aprende o Rasengan com clone: +1 golpe por clone (até +2). Nível 2: +20% de dano |
-| Rasengan | **Rasengan da Kyuubi** (final) | 3 | | O Rasengan vermelho do Vale do Fim: Rasengan +30% de dano; +15% de dano com HP baixo |
+| Rasengan | Rotação estável | 2 | | Rasengan +10% de dano; derrubar um inimigo devolve 3 de chakra |
+| Rasengan | **Rasengan que atravessa** (final) | 3 | | O dano que sobra de um Rasengan fatal passa para o próximo inimigo de pé (uma vez, sem corrente); Rasengan +15% de dano |
+
+### Combinações
+
+Os ramos não são independentes: seis talentos de **combinação** ligam ramos vizinhos, em anel. Cada um pede a **junção dos dois ramos** (o nó logo depois da bifurcação), custa 2 pontos e aparece no pé dos dois ramos, com selo redondo, linha tracejada e o nome do ramo parceiro. Quem investe em dois ramos ganha um talento que nenhum deles dá sozinho.
+
+| Combinação | Talento | Pede | Efeito |
+|---|---|---|---|
+| Clones + Pegadinhas | Clone disfarçado | Clones explosivos e Shuriken das sombras | O Kage Bunshin cria 1 clone a mais; +10% de chance de aplicar efeitos |
+| Pegadinhas + Laços | Distração | Shuriken das sombras e Proteger os amigos | A equipe inteira ganha +15% de chance de aplicar efeitos |
+| Laços + Sapos | Sapos de guarda | Proteger os amigos e Laço com o chefe | A equipe começa as lutas com mais 8% de escudo |
+| Sapos + Kyuubi | Chakra emprestado | Laço com o chefe e Explosão de chakra | Com o HP abaixo da metade, o Gamabunta sai muito mais no Kuchiyose (+30 de peso) |
+| Kyuubi + Rasengan | Rasengan da Kyuubi | Explosão de chakra e Rotação estável | Rasengan +20% de dano; +15% de dano abaixo da metade do HP |
+| Rasengan + Clones | Rasengan com clone (2 níveis) | Rotação estável e Clones explosivos | Aprende o Rasengan com clone: +1 golpe por clone (até +2). Nível 2: +20% de dano |
+
+No código: `requiresAll` no nó (`src/core/jornada/talents.ts`); as regras dos talentos finais são campos de `FighterMods` (`cloneShield`, `stunnedAlwaysCrit`, `rollTwice`, `surviveForm`, `techOverflow`, `lowHpRollWeights`), com testes em `tests/talentos.test.ts`.
+
+### Medir as builds
+
+`npm run sim:jornada -- 300 2 --ramos` joga a História com uma build focada por ramo e por combinação (gasta primeiro no ramo, guarda pontos para ele e monta o moveset com as técnicas dele) e mostra a vitória de cada uma, onde ela cai e a diferença entre a melhor e a pior. `--so-ramos` deixa as combinações de fora, `--ramo=<nome>` roda uma build só e `--talentos` lista os talentos mais comprados. Os números da v0.71.0 estão no [registro](../registro.md).
 
 ## Níveis nas outras classes
 

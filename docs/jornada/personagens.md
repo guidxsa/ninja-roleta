@@ -85,16 +85,16 @@ Entre as duas melhores opções, a sorte desempata (30%) quando a segunda vale p
 | Presas da raposa | Taijutsu | — | um inimigo | 22 | 0 | 90% | atordoar 50% (2 t); só do Gamabunta transformado em raposa (roteiro do Gaara) |
 | Cabeçada | Taijutsu | — | um inimigo | 10 | 0 | 100% | o roteiro do Gaara dá ao Naruto com a raposa segurando o Shukaku; usar acorda o Gaara |
 | Olho na areia | Taijutsu | — | em si | — | 0 | — | +20% de esquiva por 3 turnos; o roteiro liga na abertura da luta do Gaara para quem guardou os movimentos da areia |
-| Rendan Uzumaki | Taijutsu | — | um inimigo | 7 | 3 | 85% | +1 golpe por clone (até +3) |
+| Rendan Uzumaki | Taijutsu | — | um inimigo | 7 | 3 | 85% | +1 golpe por clone (até +2) |
 | Mil Clones | Ninjutsu | — | todos os inimigos | 9 | 12 | 85% | 2 golpes; 3 clones |
 | Manto da Kyuubi | Ninjutsu | — | em si | — | 0 | 85% | custa 8% do HP; escudo 20% do HP de quem usa; espera 4; ativa de classe |
 | Explosão de chakra | Ninjutsu | — | todos os inimigos | 14 | 8 | 90% | — |
 | Rasengan | Ninjutsu | — | um inimigo | 28 | 10 | 90% | +5% crítico |
 | Ōdama Rasengan | Ninjutsu | — | um inimigo | 44 | 16 | 85% | penetração 20%; atordoar 25% (2 t). Guardada para o Shippuden: fora da árvore desde a v0.67.0 |
 | Rasengan com clone | Ninjutsu | — | um inimigo | 18 | 8 | 90% | +1 golpe por clone (até +2) |
-| Harem no Jutsu | Genjutsu | — | todos os inimigos | — | 6 | 75% | atordoar 40% (2 t); espera 4 |
+| Harem no Jutsu | Genjutsu | — | todos os inimigos | — | 6 | 85% | atordoar 50% (2 t); espera 4 |
 | Bomba de fumaça | Taijutsu | — | em si | — | 3 | 85% | fortalece 2 turnos (+30% esquiva); espera 4; ativa de classe |
-| Shuriken das sombras | Taijutsu | — | um inimigo | 7 | 3 | 80% | 3 golpes; espera 1 |
+| Shuriken das sombras | Taijutsu | — | um inimigo | 7 | 3 | 85% | 3 golpes |
 | Grito de guerra | Ninjutsu | — | um aliado | — | 5 | 85% | cura 20 de HP; tira atordoar e bloqueio; espera 2 |
 | Gamakichi | Ninjutsu | fogo | todos os inimigos | 12 | 6 | 85% | queimar 30% |
 | Gamatatsu | Ninjutsu | água | em si | — | 5 | 85% | escudo 25% do HP de quem usa; espera 3; ativa de classe |

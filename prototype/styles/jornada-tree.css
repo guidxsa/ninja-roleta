@@ -107,12 +107,49 @@
 .jt-node.st-locked .jt-seal, .jt-node.st-stageLocked .jt-seal, .jt-node.st-accountLocked .jt-seal { background: var(--bg); box-shadow: none; }
 .jt-node.st-excluded { color: var(--muted); }
 .jt-node.st-excluded .jt-seal { background: var(--bg); box-shadow: none; border-style: dashed; opacity: .55; }
-.jt-node.st-excluded .jt-name { text-decoration: line-through; }
 .jt-node.sel .jt-seal { transform: rotate(45deg) scale(1.12); outline: 2px solid var(--tree-2); outline-offset: 3px; }
 .jt-node.sel .jt-name { color: var(--tree-2); }
 .jt-node.just .jt-seal { animation: jtStamp .45s cubic-bezier(.2, 1.6, .4, 1); }
 @keyframes jtCall { 0%, 100% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 0 color-mix(in srgb, var(--tree) 70%, transparent); } 50% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 9px transparent; } }
 @keyframes jtStamp { from { transform: rotate(45deg) scale(1.9); opacity: .3; } to { transform: rotate(45deg) scale(1.12); opacity: 1; } }
+
+/* Combinação (v0.71.0): liga dois ramos. Selo redondo de aro duplo, linha tracejada e o nome do ramo parceiro. */
+.jt-lines path.combo { stroke-dasharray: .06 .05; stroke-width: 2.5; }
+.jt-lines path.combo.on { stroke-dasharray: none; stroke-width: 5; }
+.jt-lines path.combo.ink { stroke-dasharray: 1; }
+.jt-node.combo .jt-seal { border-radius: 50%; outline: 1px solid color-mix(in srgb, var(--tree-2) 70%, transparent); outline-offset: 3px; }
+.jt-node.combo.sel .jt-seal { outline: 2px solid var(--tree-2); }
+.jt-link { margin-top: -5px; font: 700 10.5px/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--tree-2); text-shadow: 1px 1px 0 var(--bg); }
+.jt-card .jt-combo { color: var(--tree-2); font: 700 12px/1.25 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; }
+.jt-card .jt-final { color: var(--gold-2); font: 700 12px/1.25 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; }
+
+/* Movimento da compra (docs/visual.md#movimento). O selo já carimba (jtStamp) e a linha já é pintada (jtInk). */
+/* Pontos: o número afunda e volta quando um ponto é gasto. */
+.jt-points.spent b { animation: jtSpend var(--dur-3) cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes jtSpend { from { transform: translateY(-7px) scale(1.35); color: var(--tree); } to { transform: none; } }
+/* Subir de nível: a marca do nível novo pinga como tinta. */
+.jt-node.just .jt-pips i.on:last-of-type { animation: jtPip var(--dur-3) cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes jtPip { from { transform: rotate(45deg) scale(2.6); opacity: 0; } to { transform: rotate(45deg) scale(1); opacity: 1; } }
+/* Talento final: o kanji do ramo acende atrás do selo e some, e o aro dourado abre. */
+.jt-kanji {
+  position: absolute; left: 50%; top: -34px; z-index: 0; translate: -50% 0; pointer-events: none;
+  font: 400 118px/1 var(--font-kanji); color: var(--gold-2); opacity: 0;
+  animation: jtKanji calc(var(--dur-3) * 3.4) cubic-bezier(.16, 1, .3, 1) both;
+}
+@keyframes jtKanji {
+  from { opacity: 0; scale: .5; filter: blur(8px); }
+  22% { opacity: .9; scale: 1; filter: none; }
+  to { opacity: 0; scale: 1.25; filter: blur(2px); }
+}
+.jt-node.capstone.just .jt-seal { animation: jtStamp .45s cubic-bezier(.2, 1.6, .4, 1), jtCrown calc(var(--dur-3) * 3) var(--ease) both; }
+@keyframes jtCrown { from { box-shadow: 3px 3px 0 var(--ink), 0 0 0 16px transparent; } 35% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 9px color-mix(in srgb, var(--gold) 55%, transparent); } to { box-shadow: 3px 3px 0 var(--ink), 0 0 0 3px var(--gold); } }
+/* Bifurcação: o caminho recusado é riscado com tinta, da esquerda para a direita. */
+.jt-node.st-excluded .jt-name { text-decoration: none; background: linear-gradient(currentColor, currentColor) left 55% / 100% 1.5px no-repeat; animation: jtStrike var(--dur-3) var(--ease) both; }
+@keyframes jtStrike { from { background-size: 0 1.5px; } to { background-size: 100% 1.5px; } }
+@media (prefers-reduced-motion: reduce) {
+  .jt-kanji { display: none; }
+  .jt-points.spent b, .jt-node.just .jt-pips i.on:last-of-type, .jt-node.st-excluded .jt-name { animation: none; }
+}
 
 .jt-detail {
   position: sticky; bottom: 0; z-index: 2; margin: auto -16px 0; padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
