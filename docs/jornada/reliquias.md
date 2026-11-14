@@ -38,6 +38,8 @@ A recuperação depois da vitória **não** vem das iniciais: é uma configuraç
 
 O Naruto tem uma evolução a mais, pela história (v0.68.1): os **óculos de aviador** são uma versão mais fraca da bandana e, na **Formatura** (3ª parada da História, nas duas escolhas), o Iruka dá a **Bandana do Iruka**, que toma o lugar deles (efeito de evento `storyRelic`; campo `storyEvolves` na relíquia). A bandana nunca sai em sorteio e segue podendo evoluir no chefe para o Colar do Primeiro Hokage. Saves de antes dos óculos que já tinham a bandana ficam com ela.
 
+Desde a v0.70.0, a segunda evolução do Naruto também é da história: o **Colar do Primeiro Hokage** vem da Tsunade, na cena dos Sannin (nas duas escolhas), no lugar da bandana, e **não sai mais na escolha do chefe**. As duas entregas têm cena própria: quem entrega aparece com a fala, e a relíquia antiga se desfaz dando lugar à nova. As iniciais das classes do Caminho Ninja continuam evoluindo pela escolha do chefe.
+
 A evolução toma o lugar da inicial na barra; o HP máximo a mais entra cheio, só a diferença para a relíquia que saiu. A relíquia de chefe que dava a Vontade do Fogo se chamava Colar do Primeiro Hokage; desde a v0.43.0 ela é o **Talismã da Vontade do Fogo**, e o colar virou a evolução da Bandana do Iruka. Saves e a coleção antigos trocam os ids sozinhos (`RELIC_RENAMES`).
 
 ## Modos

@@ -66,6 +66,27 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Revisão da História, parte 2: narrativa, cenas e progressão canônica (v0.70.0, 14/11/2026)
+
+Segunda das três versões do plano aprovado. Pedidos do usuário ao aprovar: toda escolha com pelo menos 2 opções; talentos de combinação entre árvores (fica para a parte 3); melhoria visual com animação nas interações.
+
+O que entrou: pilha de formas (a forma temporária sai sem levar a permanente: era o bug da determinação contra o Neji); ações de roteiro `effect`, `boost`, `teach` e a condição `ifNot`; evento em etapas na mesma parada, com a lista do que a escolha deu; Kage Bunshin pelo pergaminho e Mil Clones depois do Mizuki, como marcos; Colar do Primeiro Hokage entregue pela Tsunade; falas reescritas; Gaara com o henge em raposa e a Cabeçada do jogador; teste do sino em campo, com "Lição"; cinco sequências de eventos juntadas (54 → 48 paradas) e evento seguido de evento sem voltar à trilha; opções sem a consequência entre parênteses e faixa "O que mudou"; 13 eventos da História e 2 do Caminho Ninja ganharam a segunda opção; cena de relíquia de história; retratos de forma; movimento das interações; migração de saves (`withMergedStops`).
+
+Decidido sozinho (o usuário revisa, [decisoes.md](decisoes.md) item 27):
+- **Aberturas de luta podem ser só fala.** O plano dizia fundir toda fala de abertura numa regra com efeito; ficou "a abertura e o fecho podem vir sozinhos, toda interrupção no meio muda algo" (teste em `tests/roteiro.test.ts`). Ganharam efeito na abertura só as que tinham um natural: névoa do Zabuza e espelhos do Haku (+20% de esquiva por 2 turnos), capanga atordoado pela besta do Inari, esquiva de quem viu o Lee (+20% por 3 turnos).
+- **No meio da luta**: mordida do Orochimaru atordoa o Sasuke por 2 turnos; 64 palmas do Neji na rodada 2 (bloqueio de chakra por 2 turnos, novo); Kabuto cura 15% a 25% do HP; o primeiro Rasengan atordoa o Kabuto por 2 turnos. A fala do disfarce dos Ninjas da Grama saiu.
+- **Gaara**: raposa com status ×1,15 e Presas da raposa (22 de dano, atordoar 50%); Cabeçada com 10 de dano e 100% de acerto; o gatilho da raposa em 50% do Shukaku (era a cabeçada do narrador em 30%); rede de segurança em 15%.
+- **Sino**: quedas em 75/50/25% do Kakashi e limite na rodada 5 (era fim em 50% ou na rodada 4). A equipe derrubada pelo roteiro saía com 30% do HP para os Irmãos Demônio (História 67/29/12 no meio do caminho); por isso **a lição não custa HP nem chakra**: a equipe sai como entrou.
+- **Mil Clones grátis**, e o talento `tTajuu` virou +20% de dano na técnica (mesmo custo; a parte 3 refaz o ramo e devolve os pontos).
+- **Colar garantido** na cena dos Sannin (antes, 50% de chance por chefe vencido).
+- **Segunda opção de cada cena e treino**: a primeira opção mantém o prêmio que a cena dava; a segunda vale parecido, em outra moeda. Os Sannin davam cura total e +1 ponto: as duas opções mantêm o ponto. Treinos: +40 XP certos com −10% do HP (−15% no Rasengan III), contra o ponto de talento do minijogo.
+- **Kanji da Lição**: 修, que já estava no recorte da fonte (o 教 pediria baixar a fonte de novo).
+- **Contagem de paradas**: 48, não as 49 do plano (erro de conta do plano).
+
+Simulação (`npm run sim:jornada -- 300 2`), v0.69.0 → v0.70.0, Médio/Difícil/Hardcore: **História 90/60/27 → 87/43/18**; Fácil 100%. O Caminho Ninja não foi mexido. A História ficou mais difícil no Difícil e no Hardcore; onde o bot para no Difícil: Haku 22%, Trio da Chuva 15%, Kiba 8%, Neji 7%. O bot escolhe sempre a primeira opção dos eventos (o prêmio de antes) e não usa a Cabeçada (a cena do Gaara acontece pela rede de segurança). Nada foi compensado.
+
+Não verificado no navegador: as animações dentro da luta (entrada e saída de forma, banner da Lição, a raposa) e a cena do colar. Verificado: o pergaminho, a faixa "O que mudou" no celular e no PC, a cena da bandana, a Formatura emendada no Time 7 e o carimbo.
+
 ## Revisão da História, parte 1: combate de equipe e economia (v0.69.0, 13/11/2026)
 
 Pedido do usuário depois de testar a v0.68: revisão ampla da História em três versões (plano aprovado: 1. combate e economia; 2. narrativa, cenas e progressão canônica; 3. árvores do Naruto), parando ao fim de cada uma. Decidido com ele: controle com no mínimo 2 turnos para todos (aliados e inimigos), com trava e chances um pouco menores; regras de combate e os 60 ryō valem nos dois modos.

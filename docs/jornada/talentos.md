@@ -41,7 +41,7 @@ Seis ramos custando cerca de 55 pontos, fora os níveis, para os cerca de 30 que
 | Clones | Rendan Uzumaki **ou** | 2 | 3 (+1 cada) | Aprende o Rendan: 1 golpe + 1 por clone (até +3). Cada nível: +20% de dano |
 | Clones | Guarda de clones | 2 | | Começa toda luta com 1 clone; +2 de dano no taijutsu |
 | Clones | Clones explosivos | 2 | | Quem acerta um clone leva 5 de dano |
-| Clones | Mil Clones | 3 | | Aprende o Tajū Kage Bunshin: 2 golpes em todos os inimigos e 3 clones |
+| Clones | Mil Clones | 3 | | O Tajū Kage Bunshin causa 20% mais dano. A técnica vem da história (marco do Mizuki, v0.70.0), não do talento |
 | Clones | Exército de sombras | 3 | | Limite de clones +2; +3% de dano por clone ativo |
 | Pegadinhas | Rei das pegadinhas | 1 | | Esquiva 4%; Sexy no Jutsu custa 1 de chakra a menos |
 | Pegadinhas | Harem no Jutsu **ou** | 2 | | Aprende o Harem no Jutsu: pode atordoar todos |

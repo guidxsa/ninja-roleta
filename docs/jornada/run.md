@@ -33,6 +33,8 @@ De cima para baixo: o banner, o card **Progresso da Jornada** (quando há run sa
 
 - **Condicionais e encadeados**: uma escolha deixa uma marca na run, e a marca muda paradas seguintes (proteger o Tazuna barateia a loja do País das Ondas em 20%).
 - Os eventos da História estão em [historia.md](historia.md#eventos).
+- **Regras das escolhas** (v0.70.0; detalhe em [cronologia.md](cronologia.md#categorias-da-run)): toda escolha tem pelo menos 2 opções; a opção não conta a consequência, e o que ela deu aparece na faixa "O que mudou" da tela seguinte; eventos em sequência abrem um atrás do outro, sem voltar à trilha, e a run é salva a cada etapa.
+- **Efeitos**: além dos de sempre, `learn` (ensina uma técnica) e `storyRelic` (relíquia de história, que toma o lugar da anterior e tem cena própria, com quem entrega).
 
 ## Minijogos
 

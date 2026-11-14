@@ -16,7 +16,7 @@ Desde a v0.68.0, a História segue a **jornada do Naruto**: entra o que ele vive
 
 ## Vitórias especiais
 
-- **Teste do sino**: **derrota inevitável** (v0.68.0). Ninguém pega o sino; com o Kakashi a 50% (Substituição) ou na rodada 4, a luta termina em derrota roteirizada, que não gasta Vontade do Fogo nem encerra a run. A lição carimba a raiz do ramo Laços.
+- **Teste do sino**: **derrota inevitável, em campo** (v0.70.0). Ninguém pega o sino: o Kakashi derruba a Sakura (75% do HP dele), o Sasuke (50%) e o Naruto (25%, ou na rodada 5), e a luta termina. A tela diz "Lição", não "Derrota"; não gasta Vontade do Fogo nem encerra a run, e a equipe sai como entrou. Detalhes em [roteiro.md](roteiro.md#exemplo-o-teste-do-sino).
 - **Orochimaru na Floresta da Morte**: aguentar 4 rodadas, ou levar o HP dele a 80%, vence.
 - **Kabuto**: só cai com o Rasengan (finalizador, [roteiro.md](roteiro.md#condições-de-vitória)).
 - **Hospital**: aguentar 5 rodadas de pé, ou levar o HP do Sasuke a 50%, vence (o Kakashi interrompe).
