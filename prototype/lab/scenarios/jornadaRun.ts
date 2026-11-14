@@ -206,6 +206,9 @@ export const jornadaRun: Scenario[] = [
   { id: 'jornada.talents:uchiha', title: 'Árvore do Uchiha (2º estágio)', group: 'Progressão', profile: profiles.full, mount: tree(() => classMid(pathRun(7, 'normal', 'uchiha'))) },
   { id: 'jornada.talents:hyuuga', title: 'Árvore do Hyuuga (2º estágio)', group: 'Progressão', profile: profiles.full, mount: tree(() => classMid(pathRun(7, 'normal', 'hyuuga'))) },
   { id: 'jornada.talents:prodigy', title: 'Árvore do Prodígio (2º estágio)', group: 'Progressão', profile: profiles.full, mount: tree(() => classMid(prodigyRun())) },
+  { id: 'jornada.moveset:uchiha', title: 'Moveset do Uchiha (2º estágio)', group: 'Progressão', profile: profiles.full, mount: (ctx) => movesetScreen(withRun(ctx, classMid(pathRun(7, 'normal', 'uchiha')))) },
+  { id: 'jornada.moveset:hyuuga', title: 'Moveset do Hyuuga (2º estágio)', group: 'Progressão', profile: profiles.full, mount: (ctx) => movesetScreen(withRun(ctx, classMid(pathRun(7, 'normal', 'hyuuga')))) },
+  { id: 'jornada.moveset:prodigy', title: 'Moveset do Prodígio (2º estágio)', group: 'Progressão', profile: profiles.full, mount: (ctx) => movesetScreen(withRun(ctx, classMid(prodigyRun()))) },
   { id: 'jornada.moveset', title: 'Moveset', group: 'Progressão', mount: (ctx) => movesetScreen(withRun(ctx, WRITTEN())) },
   { id: 'jornada.moveset:path', title: 'Moveset do Caminho Ninja', group: 'Progressão', mount: (ctx) => movesetScreen(withRun(ctx, pathRun(7))) },
 
