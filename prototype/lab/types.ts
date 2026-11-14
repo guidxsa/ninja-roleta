@@ -37,4 +37,9 @@ export interface Scenario {
   setup?: (storage: KeyValueStorage) => void;
   /** Monta a tela real do jogo. Resolve quando a tela termina. */
   mount: (ctx: LabContext) => Promise<unknown>;
+  /**
+   * Para telas que sorteiam ao abrir: confere, com um RNG novo da seed do cenário, que o sorteio dá o resultado que o
+   * título promete. O teste roda todos; se falhar (peso mudou), `npm run lab:seed -- <id>` acha outra seed.
+   */
+  expect?: (rng: Rng) => boolean;
 }

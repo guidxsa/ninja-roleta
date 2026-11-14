@@ -101,13 +101,13 @@ const STOP_ICONS: Record<string, string> = {
 };
 
 /** Nome da parada: o da trilha da História, ou (Caminho Ninja) os inimigos da luta / o tipo da parada. */
-const stopName = (s: StopDef) =>
+export const stopName = (s: StopDef) =>
   J.stops[s.id] ?? (isFight(s) ? [...new Set(s.enemies.map((e) => J.names[e] ?? e))].join(' e ') : J.stopKinds[s.kind] ?? s.id);
 const stageName = (run: JRun) => J.stages[stageId(run, data)] ?? '';
 const portraitSpec = (id: string, run?: JRun) =>
   run?.skin && id === run.hero ? `ninja:${run.skin}` : (data.characters[id]?.portrait ?? 'ninja:common');
 /** Nome de quem protagoniza, com o nome do jogador no Caminho Ninja. Já escapado: vai direto para o HTML. */
-const heroName = (host: JornadaHost, run: JRun) => esc(run.mode === 'generic' ? heroLabel(run.hero, host.playerName()) : (J.names[run.hero] ?? run.hero));
+export const heroName = (host: JornadaHost, run: JRun) => esc(run.mode === 'generic' ? heroLabel(run.hero, host.playerName()) : (J.names[run.hero] ?? run.hero));
 /** Nome com o elemento (Caminho Ninja): "Daichi (Fogo)". Já escapado. */
 function memberName(host: JornadaHost, run: JRun, id: string): string {
   const el = run.mode === 'generic' ? elementOf(run, id, data) : null;

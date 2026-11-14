@@ -90,14 +90,14 @@ Fluxo: Portão → nome → origem → (mapa → evento → luta → recompensas
 |---|---|---|---|---|---|---|---|
 | `roleta.origin` | Roletas de origem + dificuldade | `originScreen()` | Card Roleta no Portão | RNG, `rollOrigin`, perfil (Hardcore liberado?) | Antes, durante e depois dos giros (`rolled`); 1 a N roletas conforme a linhagem (elementos, kekkei genkai, jinchuuriki); Hardcore travado ou liberado; "Girar de novo" | `rwheel`: palco + coluna `rside` lado a lado no PC | Sim (1 clique) / não |
 | `roleta.map` | Mapa do ciclo | `mapScreen(eventDone)` | Depois da origem e entre lutas | `camp.run`, vilão sorteado, `camp.log` | Botão "Evento" ou "Lutar" (`eventDone`); chip de ciclo só do ciclo 2; botão Pesos (equipar/tirar) só com o item; trilha com etapas feitas que expandem (`<details>`); categoria genin/chunin/jounin/chefe muda arte e selo | Ficha em painéis (`sheetPanels`) no PC; `sticky-cta` | Lab (campanha a partir de etapa) / não |
-| `roleta.event` | Evento pré-luta | `eventScreen()` | Botão Evento no mapa | RNG (`preFightEvents`, 9 eventos com peso) | Um subfluxo por evento (abaixo); Moeda viciada oferece girar de novo (`spinRoll`); resultado com efeito e HUD pulsando | `rwheel` | Não / não |
+| `roleta.event` | Evento pré-luta | `eventScreen()` | Botão Evento no mapa | RNG (`roletaPreFightEvents`, 7 eventos com peso, total 100) | Um subfluxo por evento (abaixo); Moeda viciada oferece girar de novo (`spinRoll`); resultado com efeito e HUD pulsando | `rwheel` | Não / não |
 | `roleta.event.training` | Treino | `eventScreen` case `training` | Evento sorteado | RNG | Escolha de foco elemental existe no código mas `focus` está sempre vazio (só a roleta roda) | — | Não / não |
 | `roleta.event.jokenpo` | Jokenpô | `jokenpoFlow()` | Evento sorteado | RNG | Vitória, empate, derrota; animação de embaralhar (pulada no instantâneo) | Mãos em linha | Não / não |
 | `roleta.event.item` | Item encontrado | `itemFlow()` | Evento sorteado | RNG | Pesos de treino perguntam se equipa | — | Não / não |
 | `roleta.event.summon` | Invocação | `summonFlow()` | Evento sorteado | RNG, `player.summon` | Sem invocação: roleta do animal; com invocação: sobe de nível sem roleta | — | Não / não |
 | `roleta.event.akatsuki` | Akatsuki | `eventScreen` case `akatsuki` | Evento sorteado | RNG | Resultados da roleta | — | Não / não |
-| `roleta.event.guru` | Guru | `eventScreen` case `guru` | Evento sorteado | RNG | Charlatão (sem prêmio); 1 ou mais roletas de prêmio; escolha entre prêmios quando há mais de um | — | Não / não |
-| `roleta.event.simple` | Velhinha, Ramen, Lição do clã | `applySimpleEvent`, `applyClanLesson` | Evento sorteado | — | Só o card de resultado | — | Não / não |
+| `roleta.event.guru` | Guru | `eventScreen` case `guru` | **Inalcançável no Roleta atual** (fora de `roletaPreFightEvents`; corrigido na etapa 3) | RNG | Charlatão (sem prêmio); 1 ou mais roletas de prêmio; escolha entre prêmios | — | Não / não |
+| `roleta.event.simple` | Velhinha e Ramen (a Lição do clã está fora da roleta do Roleta) | `applySimpleEvent` | Evento sorteado | — | Só o card de resultado | — | Não / não |
 | `roleta.levelup` | Subiu de nível | `levelUpScreen()` | XP suficiente após luta, evento ou recompensa | `camp.player` | Bloco de despertar existe no código mas está desligado (`awakening` sempre `undefined`) | `rwheel` | Não / não |
 | `roleta.upgrade` | Upgrade de técnica | `upgradeScreen()` | `pendingUpgrades > 0` | `upgradeOptions` | Lista de opções ou "nenhuma" (vira XP) | `rwheel` | Não / não |
 | `roleta.relic` | Relíquia da vitória | `relicRewardScreen(cat)` | Vitória fora do chefe | RNG, categoria, relíquias que faltam | Roleta de raridade + roleta da relíquia; sem relíquia disponível: vira XP | `rwheel` | Não / não |
@@ -158,6 +158,7 @@ Tudo em `prototype/jornada/`, run salva a cada parada (`jornada_run_v1`). Duas v
 | Id | Tela | Onde | Acesso | Dados | Estados alternativos | Direto? / Visto |
 |---|---|---|---|---|---|---|
 | `jornada.treasure` | Tesouro | `treasureStop()` | Parada de tesouro | `openTreasure` | Baú fechado → abrindo → aberto; com relíquia ou vazio | Não / não |
+| `jornada.rest` | Descanso (acrescentado na etapa 3) | `restStop()` | Parada de descanso | `restHeal`, árvore de talentos | Curar ou treinar; treinar vira ryō com a árvore completa | Não / não |
 | `jornada.relic-reveal` | Relíquia revelada (cena) | `relicReveal()` | Relíquia de elite ou de evento | Local, relíquia | Raridade muda o brilho | Não / não |
 | `jornada.boss-choice` | Escolha do chefe | `bossChoiceScreen()` | Depois do chefe (`run.bossChoice`) | 3 relíquias | Nada escolhido; uma destacada; opção de evolução (`jrboss-evo`) | Não / não |
 | `jornada.gains` | Faixa "O que mudou" | `gainsStrip()` | Tela seguinte a um evento | `pendingGains` | Uma ou várias linhas; "nada mudou"; no Caminho Ninja vira toasts | Não / não |
@@ -246,7 +247,7 @@ Dependências entre telas (o que precisa ter acontecido antes):
 | Tela | Pré-condição |
 |---|---|
 | Roleta: qualquer tela de run | `camp` montado (origem ou lab) |
-| `roleta.event.*` específico | Sorteio do evento (peso 10 ou 20 num total de 110) |
+| `roleta.event.*` específico | Sorteio do evento (peso 10 a 25 num total de 100) |
 | `roleta.chest` | Vencer o chefe (fim do ciclo) |
 | `roleta.end` com "Seguir" | Vencer o ciclo 1 no Hardcore (que exige ter liberado o Hardcore) |
 | `roleta.notice` | Ciclo 2 em diante |
@@ -293,7 +294,7 @@ Estados que mudam muito a interface e valem um caso próprio no lab:
 ### Dependem de aleatoriedade
 
 - Origem (linhagem, elementos, kekkei genkai, jinchuuriki) e qual vilão sai em cada categoria.
-- Qual evento pré-luta sai (9 opções) e o resultado de cada roleta interna (treino, akatsuki, guru, prêmios, invocação).
+- Qual evento pré-luta sai (7 opções no Roleta) e o resultado de cada roleta interna (treino, akatsuki, invocação).
 - Acerto, crítico, iniciativa e dano nas duas lutas; vitória ou derrota.
 - Raridade e relíquia da recompensa da Roleta; as 3 do baú e da escolha do chefe.
 - Mapa do Caminho Ninja (nós e "?"), tesouro, minijogos, prateleira da loja.
@@ -314,7 +315,7 @@ Estados que mudam muito a interface e valem um caso próprio no lab:
 
 ### Código que não aparece
 
-Encontrados no código mas inalcançáveis hoje (não contam como telas): foco elemental do treino da Roleta (`focus`
+Encontrados no código mas inalcançáveis hoje (não contam como telas): Guru e Lição do clã no Roleta (a roleta de eventos do modo é `roletaPreFightEvents`, sem os dois; correção da etapa 3), foco elemental do treino da Roleta (`focus`
 sempre vazio), bloco de despertar no nível (`awakening` sempre `undefined`) e lista de técnicas do lab (`learnable`
 sempre vazia). A perspectiva do Sasuke só aparece travada.
 

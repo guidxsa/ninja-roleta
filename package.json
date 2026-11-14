@@ -15,6 +15,7 @@
     "sim:jornada": "tsx scripts/sim-jornada.ts",
     "proto": "tsx scripts/build-prototype.ts",
     "lab": "tsx scripts/build-lab.ts",
+    "lab:seed": "tsx scripts/lab-seed.ts",
     "docs:tabelas": "tsx scripts/doc-tables.ts"
   },
   "devDependencies": {

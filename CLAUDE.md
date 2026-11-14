@@ -58,7 +58,7 @@ scripts/             simulações e build
 tests/               testes do core
 ```
 
-Comandos: `npm test`, `npm run typecheck`, `npm run proto`, `npm run lab` (UI Lab, só local: `dist-lab/`, [docs/ui-lab/](docs/ui-lab/ARCHITECTURE.md)), `npm run sim:origens -- --runs 300 --seed 2` (Roleta), `npm run sim:jornada -- [runs] [seed] [ciclos]`, `npm run sim:classico`.
+Comandos: `npm test`, `npm run typecheck`, `npm run proto`, `npm run lab` (UI Lab, só local: `dist-lab/`, [docs/ui-lab/](docs/ui-lab/ARCHITECTURE.md); `npm run lab:seed -- --all` refaz as seeds dos cenários de sorteio), `npm run sim:origens -- --runs 300 --seed 2` (Roleta), `npm run sim:jornada -- [runs] [seed] [ciclos]`, `npm run sim:classico`.
 
 ## Interface (design system "Shinobi")
 

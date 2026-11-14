@@ -26,13 +26,22 @@ aprovado. Ainda não implementada.
 |---|---|
 | 1. Costuras + retirada do `?teste` | Feito |
 | 2. Lab mínimo | Feito: `npm run lab` → `dist-lab/lab.html`, servido pela configuração `ui-lab` do `.claude/launch.json` (porta 4178). 22 cenários diretos (Portão, nome, avatar, entrada e início da Jornada, Registro), perfis `empty`/`mid`/`full`, histórico de runs e saves da Jornada por fixture. Testes em `tests/uilab.test.ts` |
-| 3. Cenários de prioridade alta | A fazer |
+| 3. Cenários de prioridade alta | Feito: 105 cenários no total. Roleta (origem, mapa, os 7 eventos com resultado garantido pela seed, luta, nível, upgrade, relíquia, baú, aviso, fins e Ficha) e Jornada (revelação, trilha, mapa, avisos, eventos, minijogos, relíquias de história, lutas, talentos, moveset, tesouro, descanso, escolha do chefe, loja, fins, Ficha e relíquias da run) |
 
-Diferenças do que está descrito abaixo, no lab mínimo:
+Diferenças do que está descrito abaixo:
 
 - Parâmetros de URL implementados: `s`, `frame`, `theme`, `instant`, `seed`, `w`. Ficam para depois `still` (menos
   movimento) e `art=0` (sem arte).
-- O campo `expect` do cenário entra com os primeiros cenários que dependem de sorteio (passo 3). Os de agora não sorteiam.
+- `expect(rng)` recebe um RNG novo da seed do cenário e diz se o sorteio dá o resultado do título. `npm run lab:seed --
+  <id>` (ou `--all`) acha a seed; `tests/uilab.test.ts` confere todas.
+- **Runs da Jornada jogadas, não montadas à mão**: `playUntil(run, parada)` joga pelas regras reais, como o bot da
+  simulação (IA nas lutas, primeira opção nos eventos), até a parada pedida. A run chega com equipe, flags, nível e
+  pontos que teria. O bot não gasta talentos, então as paradas do fim da História usam o Fácil. O teste confere que as
+  paradas usadas continuam alcançáveis.
+- Run do Roleta por `roletaCamp(fixture)`: origem por `labOrigin`, nível pelo `levelUp` real, passo e ciclo escolhidos.
+- Lutas no meio: `battleAt(run, downAllies)` e `hpAt(aliados, inimigos)` na Jornada; `from` com HP ajustado na Roleta.
+- Correção do inventário: Guru e Lição do clã não saem na roleta de eventos do Roleta (`roletaPreFightEvents`), e o
+  Descanso da Jornada faltava na lista.
 - O cenário ganhou `setup(storage)`, que prepara histórico de runs e save da Jornada antes da sessão.
 - O relógio congelado vale para `Date.now` (as datas "há N dias"); `new Date()` sem argumento segue o relógio real.
 - A casca do jogo virou `installShell()` em `prototype/shell.ts`, chamada pelo jogo e pelo lab.

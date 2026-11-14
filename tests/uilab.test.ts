@@ -3,12 +3,16 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { createRng } from '../src/core/rng';
 import { loadJornada } from '../src/state/jornadaSave';
 import { loadProfile, PROFILE_STORAGE_KEY } from '../src/state/profile';
 import { loadRuns } from '../src/state/runHistory';
 import { labContext, memoryStorage } from '../prototype/lab/context';
-import { pathRun, saveRun, storyRun } from '../prototype/lab/fixtures/jornada';
+import { pathRun, playToEnd, playUntil, saveRun, storyRun } from '../prototype/lab/fixtures/jornada';
+import { canContinueCycle, continueCycle, currentStop } from '../src/core/jornada/run';
+import { jornadaData } from '../src/data/jornada/index';
 import { profiles, seedRunHistory } from '../prototype/lab/fixtures/profiles';
+import { roletaCamp } from '../prototype/lab/fixtures/roleta';
 import { SCENARIOS } from '../prototype/lab/registry';
 import { ses, SETTINGS_KEY } from '../prototype/roleta/session';
 import { bundleJs } from '../scripts/page-build';
@@ -33,6 +37,10 @@ describe('cenários', () => {
     for (const s of SCENARIOS) expect(known, s.id).toContain(s.id.split(':')[0]);
   });
 
+  it('a seed de cada cenário de sorteio ainda dá o resultado do título (senão: npm run lab:seed -- --all)', () => {
+    for (const s of SCENARIOS) if (s.expect) expect(s.expect(createRng(s.seed ?? 1)), s.id).toBe(true);
+  });
+
   it('o preparo de cada cenário monta a sessão só no armazenamento em memória', () => {
     for (const s of SCENARIOS) {
       const ctx = labContext(s, { theme: 'dark', instant: true });
@@ -44,6 +52,16 @@ describe('cenários', () => {
 });
 
 describe('fixtures', () => {
+  it('a run do Roleta sobe de nível pelas regras e fica na sessão', () => {
+    labContext(SCENARIOS[0]!, { theme: 'dark', instant: true });
+    const c = roletaCamp({ level: 6, step: 5, cycle: 1, lineage: 'uchiha', elements: [] });
+    expect(c.player.level).toBe(6);
+    expect(c.run.step).toBe(5);
+    expect(c.run.used).toHaveLength(5);
+    expect(c.run.villainId).toBeTruthy();
+    expect(ses.camp).toBe(c);
+  });
+
   it('perfis são determinísticos e sobrevivem ao save', () => {
     for (const make of Object.values(profiles)) {
       expect(make()).toEqual(make());
@@ -60,6 +78,20 @@ describe('fixtures', () => {
     expect(n(profiles.full())).toBeGreaterThan(n(profiles.mid()));
   });
 
+  it('a run jogada pela fixture alcança as paradas que os cenários usam', () => {
+    const normal = ['team7', 'bells', 'graduation', 'demonBrothers', 'zabuza', 'treeClimbing', 'thugs', 'treasure1', 'rest1', 'haku', 'writtenTest'];
+    for (const id of normal) expect(currentStop(playUntil(storyRun(7), id), jornadaData)?.id, id).toBe(id);
+    for (const id of ['tsunade', 'valley']) expect(currentStop(playUntil(storyRun(7, 'easy'), id), jornadaData)?.id, id).toBe(id);
+    expect(playUntil(pathRun(7), (r) => Boolean(r.bossChoice)).bossChoice).toHaveLength(3);
+    expect(playToEnd(storyRun(7, 'easy')).status).toBe('victory');
+    expect(playToEnd(storyRun(7)).status).toBe('defeat');
+    expect(playToEnd(pathRun(7)).status).toBe('victory');
+    // Vitória marcada como Hardcore (cenário jornada.end:path-victory-hardcore) libera o ciclo 2, e nele o bot cai.
+    const hardcore = { ...playToEnd(pathRun(7)), difficulty: 'hardcore' as const };
+    expect(canContinueCycle(hardcore, jornadaData)).toBe(true);
+    expect(playToEnd(continueCycle(hardcore, jornadaData))).toMatchObject({ status: 'defeat', cycle: 1 });
+  });
+
   it('histórico e saves da Jornada são lidos como os do jogo', () => {
     const s = memoryStorage();
     seedRunHistory(s, 6);
@@ -74,7 +106,8 @@ describe('fixtures', () => {
 
 describe('isolamento', () => {
   const lab = files('prototype/lab');
-  const outside = [...files('prototype').filter((f) => !f.startsWith('prototype/lab/')), ...files('src'), ...files('scripts')];
+  // As ferramentas do lab (scripts/lab-*.ts) podem importar dele; o jogo e o build do jogo não.
+  const outside = [...files('prototype').filter((f) => !f.startsWith('prototype/lab/')), ...files('src'), ...files('scripts').filter((f) => !/\/lab-[^/]+\.ts$/.test(f))];
 
   it('nada fora de prototype/lab importa do lab', () => {
     for (const f of outside) expect(readFileSync(f, 'utf8'), f).not.toMatch(/from '[^']*\/lab\/[^']*'/);
