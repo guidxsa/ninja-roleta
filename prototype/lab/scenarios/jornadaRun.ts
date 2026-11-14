@@ -83,6 +83,18 @@ const end = (make: () => JRun) => (ctx: LabContext) => {
 
 const WRITTEN = () => story('writtenTest');
 
+/** Árvore de talentos da run, pela tela real. */
+const tree = (make: () => JRun) => (ctx: LabContext) => {
+  const run = withRun(ctx, make());
+  return talentTreeScreen(ctx.jornadaHost, run, heroName(ctx.jornadaHost, run));
+};
+
+/** Caminho Ninja do Prodígio: o Comum que escolhe ficar sem elemento. */
+const prodigyRun = (): JRun => newGenericRun(7, 'normal', 'common', data, new Set(), null, null);
+
+/** Run de classe jogada até a escolha do 1º nó do 2º estágio. */
+const classMid = (run: JRun): JRun => playUntil(run, (r) => choosingNode(r) && r.stageIndex === 1);
+
 /**
  * Caminho Ninja vencido no Hardcore. O bot da fixture não vence o Hardcore; a vitória é a do Médio com a dificuldade
  * marcada como Hardcore, o único campo que o jogo confere para liberar o ciclo seguinte (`canContinueCycle`).
@@ -117,6 +129,8 @@ export const jornadaRun: Scenario[] = [
       return stop(() => story('bells'))(ctx);
     },
   },
+  { id: 'jornada.trail:exam', title: 'Trilha no 2º estágio (Exame Chunin)', group: 'Jornada', mount: stop(() => story('orochimaruForest')) },
+  { id: 'jornada.trail:sannin', title: 'Trilha no 3º estágio (Sannin, Fácil)', group: 'Jornada', mount: stop(() => story('tsunade', 'easy')) },
   { id: 'jornada.trail:late', title: 'Trilha no último estágio (Fácil)', group: 'Jornada', mount: stop(() => story('valley', 'easy')) },
   { id: 'jornada.map', title: 'Mapa do Caminho Ninja (começo)', group: 'Jornada', mount: stop(() => pathRun(7)) },
   { id: 'jornada.map:mid', title: 'Mapa com rota feita', group: 'Jornada', mount: stop(() => path((r) => choosingNode(r) && r.path.length >= 4)) },
@@ -187,7 +201,11 @@ export const jornadaRun: Scenario[] = [
     profile: profiles.full,
     mount: (ctx) => { const run = withRun(ctx, story('valley', 'easy')); return talentTreeScreen(ctx.jornadaHost, run, heroName(ctx.jornadaHost, run)); },
   },
-  { id: 'jornada.talents:path', title: 'Árvore do Comum (cor do elemento)', group: 'Progressão', mount: (ctx) => { const run = withRun(ctx, pathRun(7)); return talentTreeScreen(ctx.jornadaHost, run, heroName(ctx.jornadaHost, run)); } },
+  { id: 'jornada.talents:path', title: 'Árvore do Comum (cor do elemento)', group: 'Progressão', mount: tree(() => pathRun(7)) },
+  // Classes do Caminho Ninja: cada uma tem árvore e tema próprios. Jogadas até o 2º estágio, para ter pontos e nós comprados.
+  { id: 'jornada.talents:uchiha', title: 'Árvore do Uchiha (2º estágio)', group: 'Progressão', profile: profiles.full, mount: tree(() => classMid(pathRun(7, 'normal', 'uchiha'))) },
+  { id: 'jornada.talents:hyuuga', title: 'Árvore do Hyuuga (2º estágio)', group: 'Progressão', profile: profiles.full, mount: tree(() => classMid(pathRun(7, 'normal', 'hyuuga'))) },
+  { id: 'jornada.talents:prodigy', title: 'Árvore do Prodígio (2º estágio)', group: 'Progressão', profile: profiles.full, mount: tree(() => classMid(prodigyRun())) },
   { id: 'jornada.moveset', title: 'Moveset', group: 'Progressão', mount: (ctx) => movesetScreen(withRun(ctx, WRITTEN())) },
   { id: 'jornada.moveset:path', title: 'Moveset do Caminho Ninja', group: 'Progressão', mount: (ctx) => movesetScreen(withRun(ctx, pathRun(7))) },
 

@@ -9,7 +9,7 @@ import { loadProfile, PROFILE_STORAGE_KEY } from '../src/state/profile';
 import { loadRuns } from '../src/state/runHistory';
 import { labContext, memoryStorage } from '../prototype/lab/context';
 import { pathRun, playToEnd, playUntil, saveRun, storyRun } from '../prototype/lab/fixtures/jornada';
-import { canContinueCycle, continueCycle, currentStop } from '../src/core/jornada/run';
+import { canContinueCycle, choosingNode, continueCycle, currentStop } from '../src/core/jornada/run';
 import { jornadaData } from '../src/data/jornada/index';
 import { profiles, seedRunHistory } from '../prototype/lab/fixtures/profiles';
 import { roletaCamp } from '../prototype/lab/fixtures/roleta';
@@ -79,9 +79,11 @@ describe('fixtures', () => {
   });
 
   it('a run jogada pela fixture alcança as paradas que os cenários usam', () => {
-    const normal = ['team7', 'bells', 'graduation', 'demonBrothers', 'zabuza', 'treeClimbing', 'thugs', 'treasure1', 'rest1', 'haku', 'writtenTest'];
+    const normal = ['team7', 'bells', 'graduation', 'demonBrothers', 'zabuza', 'treeClimbing', 'thugs', 'treasure1', 'rest1', 'haku', 'writtenTest', 'orochimaruForest'];
     for (const id of normal) expect(currentStop(playUntil(storyRun(7), id), jornadaData)?.id, id).toBe(id);
     for (const id of ['tsunade', 'valley']) expect(currentStop(playUntil(storyRun(7, 'easy'), id), jornadaData)?.id, id).toBe(id);
+    // Árvores das classes: a run de cada classe chega ao 2º estágio.
+    for (const cls of ['uchiha', 'hyuuga']) expect(playUntil(pathRun(7, 'normal', cls), (r) => choosingNode(r) && r.stageIndex === 1).talentPoints).toBeGreaterThan(0);
     expect(playUntil(pathRun(7), (r) => Boolean(r.bossChoice)).bossChoice).toHaveLength(3);
     expect(playToEnd(storyRun(7, 'easy')).status).toBe('victory');
     expect(playToEnd(storyRun(7)).status).toBe('defeat');
