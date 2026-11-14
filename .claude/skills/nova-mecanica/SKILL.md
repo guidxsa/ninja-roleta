@@ -55,7 +55,7 @@ A simulação (`src/sim/runner.ts`, `scripts/simulate.ts`) é como o projeto med
 
 ## 5. Protótipo
 
-`prototype/main.ts` só tem fluxo e animação; toda regra vem do core.
+O protótipo só tem fluxo e animação; toda regra vem do core. Telas da Roleta em `prototype/roleta/screens/`, estado em `prototype/roleta/session.ts` (`ses`), Jornada em `prototype/jornada/`.
 
 - Estado da campanha vive só em memória (`camp`). Preferência do aparelho (ex.: última dificuldade) vai em `settings`. Histórico de runs: campos novos em `RunRecord` são **opcionais**, porque registros antigos já estão no `localStorage` das pessoas.
 - Textos sempre via `S.*` (ptBR). Layout mobile-first: botões grandes, nada de rolagem horizontal em 360px.

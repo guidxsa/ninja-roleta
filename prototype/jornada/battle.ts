@@ -363,6 +363,11 @@ export interface BattleResult {
   abandoned?: boolean;
 }
 
+/** Opções da luta. `from`: luta já em andamento (UI Lab), que começa deste estado sem animar o que já passou. */
+export interface BattleOptions {
+  from?: JBattle;
+}
+
 /** Luta completa. Devolve o estado final e a run com a bolsa já descontada. */
 export async function jornadaBattle(
   host: JornadaHost,
@@ -373,13 +378,14 @@ export async function jornadaBattle(
   label: string,
   scene: string,
   goal: string | null,
+  opts: BattleOptions = {},
 ): Promise<BattleResult> {
   let run = run0;
   heroSkin = run0.skin;
   heroName = run0.mode === 'generic' ? heroLabel(run0.hero, host.playerName()) : null;
   teamNames = Object.fromEntries(setup.allies.map((a) => [a.defId, memberLabel(run0, a.defId, host.playerName())]));
   // Na abertura ninguém agiu ainda: os turnos antes do protagonista só andam depois da intro, para as barras não adiantarem o dano.
-  let state = openBattle(setup, data);
+  let state = opts.from ?? openBattle(setup, data);
   liveBattle = () => state;
   liveBattleRun = () => run;
   const root = show(
@@ -970,7 +976,7 @@ export async function jornadaBattle(
   state = advance(opening, data, rng);
   // A abertura do roteiro (fala, convidado que entra, forma) já está no registro de `opening`: a animação parte do
   // registro vazio para mostrar também esses eventos (antes, a fala de abertura nunca aparecia).
-  await animate({ ...opening, log: [] }, state);
+  await animate({ ...opening, log: opts.from ? opening.log : [] }, state);
   while (state.status === 'ongoing') {
     if (!awaitingPlayer(state)) break;
     const action = await playerTurn();

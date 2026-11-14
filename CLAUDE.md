@@ -51,7 +51,8 @@ src/core/            regras puras comuns; roleta/ (motor e run do Roleta); jorna
 src/data/            balance e dados; roleta/ e jornada/ com os de cada modo; strings/ptBR.ts
 src/sim/             bots da simulação
 src/state/           save da Jornada
-prototype/           interface jogável (main.ts, jornada/, art.ts com retratos e ícones, styles/)
+prototype/           interface jogável: main.ts (inicialização), roleta/ (session.ts com o estado, telas em screens/), jornada/,
+                     shell.ts, gate.ts, registry.ts, art.ts com retratos e ícones, styles/
 scripts/             simulações e build
 tests/               testes do core
 ```

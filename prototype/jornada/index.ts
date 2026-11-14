@@ -146,6 +146,10 @@ export async function runJornada(host: JornadaHost, opts: { resume?: boolean } =
  * a consequência: o resultado aparece depois, sem tela nem toque a mais.
  */
 let pendingGains: { icon: string; text: string }[] = [];
+/** Faixa "O que mudou" de uma tela aberta fora do fluxo (UI Lab). */
+export function setPendingGains(gains: { icon: string; text: string }[]): void {
+  pendingGains = gains;
+}
 
 function gainLines(gains: readonly EventEffect[], before: JRun, after: JRun): { icon: string; text: string }[] {
   const G = U.gains;
@@ -288,7 +292,7 @@ function persist(host: JornadaHost, run: JRun): void {
   host.notify(S.ui.saveFailed, 'warning');
 }
 
-async function entryScreen(host: JornadaHost, saved: JRun | null): Promise<'continue' | 'story' | 'path' | 'back'> {
+export async function entryScreen(host: JornadaHost, saved: JRun | null): Promise<'continue' | 'story' | 'path' | 'back'> {
   const hardcoreOk = host.unlocked().has('j_canonHard');
   let diff = host.difficulty();
   if (diff === 'hardcore' && !hardcoreOk) diff = 'normal';
@@ -354,7 +358,7 @@ const PERSPECTIVES = [
 ] as const;
 
 /** Modo História: escolher a perspectiva. Dia e noite lado a lado; a do Sasuke fica travada até existir. */
-async function campaignScreen(host: JornadaHost, saved: JRun | null): Promise<JRun | null> {
+export async function campaignScreen(host: JornadaHost, saved: JRun | null): Promise<JRun | null> {
   const C = J.start.campaigns;
   const root = show(
     h(`<div class="screen jcampaigns">
@@ -391,7 +395,7 @@ function currentDifficulty(host: JornadaHost): Difficulty {
 }
 
 /** Caminho Ninja: classe, elemento (só o Comum) e o visual do Sasuke (easter egg), depois a revelação. */
-async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Promise<JRun | null> {
+export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Promise<JRun | null> {
   const root = show(
     h(`<div class="screen jpath">
       <header class="jsub-head"><button class="btn small" data-choice="back">${J.start.back}</button><h2>${G.title}</h2><p class="muted">${G.desc}</p></header>
@@ -519,7 +523,7 @@ function elementChoiceButton(c: (typeof ELEMENT_CHOICES)[number]): string {
  * Revelação do começo do Caminho Ninja (sem roleta): o elemento (sorteado ou escolhido), o prodígio ou o Hyuuga sem
  * elemento, a relíquia bônus de quem sorteou e os parceiros.
  */
-async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
+export async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
   const el = elementOf(run, run.hero, data);
   const [a, b] = run.supports.map((id) => memberName(host, run, id));
   const noElement = data.generic.classes.find((c) => c.id === run.classId)?.noElement;
@@ -544,7 +548,7 @@ async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
 // ---------------------------------------------------------------------------
 // HUD e trilha
 
-function hud(host: JornadaHost, run: JRun): string {
+export function hud(host: JornadaHost, run: JRun): string {
   const need = xpToNext(run.level, data);
   const bag = (['hpKit', 'chakraKit', 'reviveKit'] as const).filter((id) => run.bag[id] > 0).map((id) => `${J.items[id]!.name} ×${run.bag[id]}`);
   return `<section class="card jhud">
@@ -824,7 +828,7 @@ function runStop(host: JornadaHost, run: JRun, stop: StopDef): Promise<JRun> {
   return treasureStop(host, run);
 }
 
-async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
+export async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
   if (run.bossChoice) {
     host.discoverRelics(run.bossChoice);
     return bossChoiceScreen(run);
@@ -974,7 +978,7 @@ function mapView(run: JRun, hudHtml: string): string {
     <div class="jlegend-chips" aria-label="${U.legend}">${legend}</div>`;
 }
 
-async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
+export async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
   let cur = run;
   const root = show(
     h(`<div class="screen jtrail-screen jmap-screen">
@@ -1016,7 +1020,7 @@ function goalText(stop: Extract<StopDef, { enemies: string[] }>): string | null 
   return J.winConditions.survive(w.rounds, Math.round(w.pct * 100));
 }
 
-async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, { enemies: string[] }>): Promise<JRun> {
+export async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, { enemies: string[] }>): Promise<JRun> {
   let run = run0;
   for (let attempt = 0; ; attempt++) {
     const res = await jornadaBattle(host, data, run, battleSetup(run, data), stopRng(run, attempt), stopName(stop), stopScene(run, data), goalText(stop));
@@ -1055,7 +1059,7 @@ async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, {
  * tela seguinte, na faixa "O que mudou". As etapas da mesma parada e um evento logo depois de outro (na História) abrem
  * em sequência, sem voltar à trilha: a run é salva a cada passo.
  */
-async function eventStop(host: JornadaHost, run0: JRun): Promise<JRun> {
+export async function eventStop(host: JornadaHost, run0: JRun): Promise<JRun> {
   let run = run0;
   for (let step = 0; ; step++) {
     const def = currentEvent(run, data);
@@ -1111,7 +1115,7 @@ async function eventStop(host: JornadaHost, run0: JRun): Promise<JRun> {
  * Relíquia de história (a bandana na Formatura, o colar da Tsunade): quem entrega aparece com a fala, e a relíquia nova
  * toma o lugar da antiga à vista do jogador.
  */
-async function storyRelicScene(host: JornadaHost, run: JRun, id: string, replaced?: string): Promise<void> {
+export async function storyRelicScene(host: JornadaHost, run: JRun, id: string, replaced?: string): Promise<void> {
   const { who, line } = U.storyRelicLines[id]!;
   const giver = J.names[who] ?? who;
   const root = show(
@@ -1128,7 +1132,7 @@ async function storyRelicScene(host: JornadaHost, run: JRun, id: string, replace
 }
 
 /** Loja sempre aberta: sobreposição como a árvore e o moveset, chamada pelo HUD (docs/jornada/run.md#loja). */
-function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
+export function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
   let run = keep(openShop(run0, data));
   persist(host, run);
   const root = h(`<div class="jtree-screen jshop-screen ${themeOf(run.hero).cls}" role="dialog" aria-label="${U.shopTitle}"${themeStyle(run)}><div class="jt-body">
@@ -1153,7 +1157,7 @@ function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
   });
 }
 
-async function restStop(host: JornadaHost, run0: JRun): Promise<JRun> {
+export async function restStop(host: JornadaHost, run0: JRun): Promise<JRun> {
   let run = run0;
   const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud>${hud(host, run)}</div>
     <button class="btn big" data-choice="heal">${icon('rest')} ${U.restHeal(restHeal(run, data).hp, restHeal(run, data).chakra)}</button>
@@ -1176,7 +1180,7 @@ function restTrainButton(run: JRun): string {
   return `<button class="btn big" data-choice="train"${tip(U.restTrainRyo(ryo), U.restTrainRyoTip(ryo))}>${icon('coin')} ${U.restTrainRyo(ryo)}</button>`;
 }
 
-async function treasureStop(host: JornadaHost, run: JRun): Promise<JRun> {
+export async function treasureStop(host: JornadaHost, run: JRun): Promise<JRun> {
   const root = show(h(`<div class="screen jrtreasure"><h2>${stopName(currentStop(run, data)!)}</h2>
     <button type="button" class="jrchest" data-choice="open" aria-label="${U.openTreasure}">${chestClosed()}</button>
     <div data-slot></div><button class="btn primary big" data-choice="open">${U.openTreasure}</button></div>`));
@@ -1198,7 +1202,7 @@ async function treasureStop(host: JornadaHost, run: JRun): Promise<JRun> {
 }
 
 /** Relíquia ganha fora do tesouro (evento, elite): a cena do local com o card revelado, no brilho da raridade. */
-async function relicReveal(title: string, id: string, place: string): Promise<void> {
+export async function relicReveal(title: string, id: string, place: string): Promise<void> {
   const root = show(
     h(
       sceneScreen({
@@ -1214,7 +1218,7 @@ async function relicReveal(title: string, id: string, place: string): Promise<vo
 }
 
 /** Escolha do chefe: 3 relíquias lado a lado (uma pode ser a evolução da inicial); tocar destaca, o botão confirma. */
-async function bossChoiceScreen(run: JRun): Promise<JRun> {
+export async function bossChoiceScreen(run: JRun): Promise<JRun> {
   const options = run.bossChoice!;
   let pick: string | undefined;
   const root = show(h(`<div class="screen jrboss"><h2>${U.bossChoice}</h2>
@@ -1256,7 +1260,7 @@ interface NoticeScene {
  * Aviso de um momento da run (vitória, lição, estágio concluído, ciclo): a mesma cena dos eventos, com as linhas
  * entrando uma a uma. Uma linha por `\n`.
  */
-async function notice(title: string, text: string, scene: NoticeScene): Promise<void> {
+export async function notice(title: string, text: string, scene: NoticeScene): Promise<void> {
   const seal = U.sceneSeals[scene.seal]!;
   const root = show(
     h(
@@ -1279,7 +1283,7 @@ async function notice(title: string, text: string, scene: NoticeScene): Promise<
  * Fim da run (ou do ciclo). No Caminho Ninja vencido, `next` é o próximo ciclo (já salvo): "Seguir" continua e "Voltar ao
  * início" guarda para depois. Cair a partir do ciclo 2 não é uma derrota comum: a run já foi vencida.
  */
-async function endScreen(host: JornadaHost, run: JRun, next: JRun | null, record: boolean): Promise<'continue' | 'ok'> {
+export async function endScreen(host: JornadaHost, run: JRun, next: JRun | null, record: boolean): Promise<'continue' | 'ok'> {
   const won = run.status === 'victory';
   const infinite = run.cycle > 0;
   // Do ciclo 2 em diante, o fim é sempre uma conquista: selo dourado.

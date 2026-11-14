@@ -142,8 +142,12 @@ que o lab grava; nenhuma do jogo).
 
 ## 3. Costuras no código do jogo
 
-O lab só funciona se as telas puderem ser chamadas de fora. Hoje a Jornada quase pode; a Roleta não. As mudanças abaixo
-**não mudam comportamento** e vão numa versão própria, antes do lab, testadas jogando.
+O lab só funciona se as telas puderem ser chamadas de fora. Antes, a Jornada quase podia; a Roleta não. As mudanças
+abaixo **não mudam comportamento** e vão numa versão própria, antes do lab, testadas jogando.
+
+**Feito** (branch `feature/ui-lab`): as seis costuras e a retirada do `?teste`. O `main.ts` virou só a inicialização;
+as telas estão nos arquivos de [§5](#5-organização-de-arquivos). Nas lutas, o estado inicial entrou como
+`BattleSetup.from` (Roleta) e `jornadaBattle(..., { from })` (Jornada).
 
 | # | Mudança | Por quê |
 |---|---|---|
@@ -223,12 +227,17 @@ jogo.
 
 ```
 prototype/
-  main.ts                 inicialização do jogo (lê localStorage, chama main)
-  shell.ts                casca compartilhada (costura 4)
+  main.ts                 inicialização do jogo (initSession com o localStorage, liga a casca, abre o Portão)
+  shell.ts                casca compartilhada: tema, cabeçalho, fontes, erro, volta ao Portão (costura 4)
+  gate.ts                 Portão da Vila, barra lateral, avatar, nome do jogador
+  registry.ts             Registro ninja (popup)
+  jornadaHost.ts          o JornadaHost do jogo, ligado à sessão
   roleta/
-    session.ts            estado da Roleta (costura 2)
-    screens/*.ts          telas da Roleta (costura 3)
-  jornada/                como hoje, com as telas exportadas (costura 5)
+    session.ts            estado: `ses` (armazenamento, preferências, perfil, RNG, run) (costura 2)
+    common.ts             textos, painel do jogador, Ficha, trilha, roletas, toast
+    run.ts                laço da run do Roleta
+    screens/              origin, map, event, battle, rewards, end (costura 3)
+  jornada/                como antes, com as telas exportadas (costura 5)
   lab/                    ← só o lab importa daqui
     main.ts               entrada do lab.html: decide catálogo ou quadro
     catalog.ts            lista, filtros, iframe, larguras
