@@ -66,6 +66,230 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Auditoria de design e etapa 1: cena narrativa (v0.72.0, 14/11/2026)
+
+Pedido do usuário: auditoria criteriosa da experiência visual com o Impeccable, sem alterar nada, e um plano de evolução. Depois de aprovar o relatório, escolheu começar pela etapa 1 (narrativa), com falas por toque e os retratos em SVG de hoje.
+
+**Diagnóstico** (o critério é o do próprio `docs/visual.md`): o jogo tem duas linguagens, e a fronteira é a porta da run. Fora dela (Portão, entrada da Jornada, ficha, a roda do Roleta) é pergaminho, selo e tinta; dentro da run da Jornada (trilha, evento, vitória, descanso, fim) era card grafite com texto e botões, que é onde o jogador passa o tempo e de onde vem a sensação de painel com tema. A direção não estava errada: estava aplicada pela metade. Nota nas heurísticas de Nielsen: 25/40.
+
+**Achados medidos**: 48 tamanhos de letra em 304 declarações e 33 regras abaixo de 12 px, sem escala em tokens; sete pares de cor usados como texto abaixo do contraste mínimo (o pior, vermelho sobre superfície no tema escuro, 2,61); 15 componentes clicáveis sem foco próprio; alvos de 26 a 38 px; técnica desenhada de 5 jeitos e relíquia de 5; três linguagens de sombra; no celular, as ações da luta ficam abaixo da dobra; a vantagem de elemento não aparece onde se decide. O detector do Impeccable deu 177 achados, quase todos ruído (cores da arte em SVG e do tema claro, que o DESIGN.md não documenta). A auditoria rodou em contexto único (modo de planejamento), sem o par de subagentes que o método pede.
+
+**Etapa 1, o que entrou**: componente de cena (quadro do local com quem está em cena, pergaminho, selo, opções em tiras de papel) em evento, vitória, lição, estágio concluído, ciclo, desconhecido e relíquia ganha; fala da luta como corte de quadro, com avanço por toque; a regra dos três materiais em `docs/visual.md`. Achado no caminho: **a fala de abertura das lutas nunca aparecia** (a animação partia do registro depois da abertura); agora aparece, com os outros eventos da abertura (o Iruka entrando, a névoa do Zabuza).
+
+Decidido sozinho: quem aparece no quadro de cada evento (quem não tem ficha, como a Hinata e o Tazuna, fica com o rosto de quem está junto); os kanji dos selos (todos do recorte); a faixa do aliado entrar pela esquerda e a do inimigo pela direita; no modo instantâneo, a fala segue sozinha em 0,65 s. Nenhuma regra de jogo nem número mudou; a simulação não foi rodada de novo.
+
+Verificado no navegador: o evento do pergaminho (celular), o corte de quadro do Mizuki (5 falas tocadas até o fim da luta), a cena de vitória (celular e PC). Não verificado: tema claro, tablet, a cena de relíquia de elite, a lição do sino e o narrador.
+
+### Etapa 4: acabamento (v0.76.0, 14/11/2026)
+
+Última etapa do plano. O que entrou: Girar preso ao pé da tela na Roleta no celular; tela do nome em papel; próxima parada e dica da trilha em papel; quatro brilhos difusos trocados por anel e sombra dura (pontos de talento, traço e selo ativos da árvore, nó escolhível do mapa). Detalhe em [visual.md](visual.md#acabamento).
+
+Decidido sozinho: só a próxima parada e a dica viram papel (o HUD, a loja embutida, o resumo da run e os caminhos abertos ficam em laca); os brilhos de golpe e de entrada de forma ficam, por serem efeito de uma batida; o botão Girar fixo usa a largura de até 260px.
+
+**Não feito**: levar os pergaminhos do Início ao celular (item 17 de decisoes.md). É uma reescrita do Portão, que o próprio visual.md deixa "se o desenho do PC agradar"; não há como saber isso sem o seu teste. Também ficou o que a etapa 0 listou (durações fixas, branco sobre as barras, cores soltas).
+
+Conferido no navegador: tela do nome no celular (papel, selo, campo); Girar sticky na primeira roda (no pé da tela, a 750 a 802px de 812); trilha no PC com tema claro (próxima parada, dica e loja em papel, HUD em laca). Não conferido: tema escuro nessas telas, tablet, a árvore e o mapa sem os brilhos, e a Roleta no PC.
+
+### Etapa 3: progressão e fim (v0.75.0, 14/11/2026)
+
+O que entrou: cartão de técnica canônico (`techCard`) no moveset e na ficha; loja num container de papel nos dois tamanhos; fim de run da Jornada como relatório de missão, com caminho percorrido, equipe, relíquias e talentos finais, dentro da cena narrativa. Detalhe em [visual.md](visual.md#cartões).
+
+Decidido sozinho: o botão de luta fica fora do cartão canônico (tem estado); as vagas do moveset seguem como selos; o cartão de relíquia já era um só, então só o container da loja mudou; o relatório do Caminho Ninja não tem o "caminho" (o mapa é sorteado, sem trilha fixa); a vitória e a derrota usam o mesmo relatório. A cor do tema na árvore, no moveset e na loja continua a da classe.
+
+Conferido no navegador (celular, tema claro): moveset com o cartão novo e o realce das vagas; loja em papel com prateleira, bolsa e treino; relatório de derrota (selo 敗, 48 paradas, 21 feitas, a da queda marcada, equipe e relíquias). Não conferido: a ficha com o cartão novo (a tela da Ficha não foi aberta), o relatório de vitória, o do Caminho Ninja, o PC e o tema escuro nessas três telas.
+
+Não feito: a loja do PC com os dois containers unificados só foi vista pelo código; o texto "Quedas da equipe" ficou na lista de strings sem uso.
+
+### Etapa 0: fundamentos (v0.74.0, 14/11/2026)
+
+Pedido do usuário: executar as etapas 0 e 3 do plano, depois de incorporar as mudanças do Impeccable (commit à parte).
+
+O que entrou, medido na auditoria: **contraste**, o que falhava em texto (`--accent` sobre superfície escura 2,61; `--accent-2` 3,95 a 4,37; hover do botão primário 3,81; no claro, dourado 4,38, apoio 4,12, XP 3,54, chakra 4,32, folha 4,40); **escala tipográfica** (48 tamanhos, 33 regras abaixo de 12px, para 11 passos, mínimo de 12); **foco** (15 componentes sem anel); **alvos de toque** de 26 a 40px; **movimento** (pulsos infinitos; número de dano que sumia com menos movimento). Detalhe em [visual.md](visual.md#fundamentos).
+
+Decidido sozinho: os valores novos dos tokens (calculados para passar de 4,5:1: `--accent-text` #f07070 no escuro e #a3121b no claro; no claro, `--gold` #735518, `--muted` #5f5140, `--steel` #5e5a53, `--accent-2` #b3191f, `--xp` #876620, `--ck-2` #2f60b0, `--leaf` #456d2e; no escuro, `--accent-2` #c92a31); a escala de tamanhos (12 a 32); os pontos de corte ao arredondar (12,5 vira 12; 14,5 vira 14; 17 e 19 viram 18); quatro repetições para os pulsos. O dourado e o vermelho do tema claro ficam um pouco mais escuros que antes.
+
+Conferido no navegador (celular): a luta no escuro (bandeja, etiquetas, rótulos de barra) e a árvore no claro. Não conferido: as demais telas com os tamanhos novos (a mudança é de 280 pontos, a maioria de 1 a 2px), o foco por teclado em cada componente e o PC.
+
+Não feito: as durações fixas viram token; o branco sobre as barras; as cores soltas; reescrever os paddings na escala de espaço.
+
+### Etapa 2: combate (v0.73.0, 14/11/2026)
+
+Pedido do usuário: seguir com o plano de design junto do Impeccable. A crítica que ele rodou antes (`.impeccable/critique`, telas da Jornada, 27/40) apontava os mesmos dois P1 da auditoria: ordem de turno e fraqueza elemental invisíveis fora do widescreen, e o menu de combate com 10 a 12 controles e o Desistir colado.
+
+O que entrou: no celular, menu em bandeja fixa no pé da tela, com abas (Técnicas, Ativas, Ações, e Aliado caído quando há), sem rolagem; vantagem de elemento no botão da técnica e em cada alvo; ordem da rodada no celular; confirmação do jogo no lugar do `window.confirm` nas quatro ações da Jornada (abandonar na trilha e no mapa, desistir na luta, começar por cima de um save); nome acessível nos ícones de estado no lugar do `title` nativo. Os estilos ficaram num arquivo novo (`jornada-combat.css`), para não misturar com as folhas alteradas pelo Impeccable, que seguem fora dos commits.
+
+Decidido sozinho: o botão mostra o **melhor** multiplicador entre os alvos de pé (cada alvo mostra o seu na escolha); a aba aberta é lembrada entre turnos, e aliado caído abre a aba dele; o foco da confirmação começa em "Continuar jogando". Nenhuma regra nem número mudou.
+
+Conferido no navegador (celular, 375×812): a bandeja termina no pé da tela sem rolar (ataque à casa do Tazuna, três inimigos); troca de abas; etiquetas ×1,25 nos dois Irmãos Demônio com a Lança de terra, e no botão ×0,8 para a Bola de Fogo; a confirmação de desistir (foco em "Continuar jogando", fecha com Escape, a luta segue na mesma aba). No PC (1280×800), medido sem captura de tela: as abas somem e os três grupos aparecem com título. As capturas de tela falharam no fim por a janela estar oculta.
+
+Não conferido: tema claro, tablet, a aba "Aliado caído" numa luta de verdade, janela baixa e deitada (800×450 usa a bandeja do celular, que ocupa metade da altura).
+
+Adiado: confirmações nativas do modo Roleta; dica própria em cada ícone de estado; as duas cores literais da etiqueta de vantagem (os tons escuros do pergaminho, que ainda não são token).
+
+### Revisão da etapa 1 (v0.72.1, 14/11/2026)
+
+Pedido do usuário: revisar a etapa narrativa antes de seguir, sem funcionalidade nova, sem rosto substituto e sem incorporar as mudanças externas.
+
+Corrigido:
+- **Retrato substituto.** Na v0.72.0, quem não tinha ficha aparecia com o rosto de quem estava junto (o Kakashi no lugar do Tazuna e do Ebisu, o Naruto no da Hinata, o Sasuke no de Itachi e Kisame, o Mizuki numa cena em que o Naruto está sozinho), e o Haku da floresta aparecia de máscara. Agora o dado diz quem está de fato na cena, e quem não tem representação própria aparece só com o nome. O Iruka, que usa o ninja genérico, também. A regra e a tabela por personagem estão em [visual.md](visual.md#quem-aparece-na-cena).
+- **Nome por cima do título**: sem retrato, a tira com o nome ficava pendurada sobre o título do pergaminho; passou para dentro do quadro.
+- **Tema claro**: o pergaminho sumia sobre a página de papel (sombra mais marcada) e o cenário do quadro estava lavado (30% para 50%).
+- **PC sem ninguém em cena** (relíquia ganha): o quadro em pé era um vazio alto; virou uma vista baixa do local.
+
+Conferido no navegador: tema claro e tablet em pé (evento do Tazuna, sem rosto); lição do sino no celular com tema claro (Kakashi em cena, a primeira linha como fala, 3 falas tocadas); relíquia de elite no PC (Irmãos Demônio: vitória, depois a cena da relíquia com o selo 宝); fala do narrador (ataque à casa do Tazuna: sem retrato, recebe o foco, fica na tela até o toque, fecha com Enter); modo instantâneo (a fala fecha sozinha em 0,67 s); luta do Haku inteira (4 falas, do inimigo e dos aliados, todas com retrato, vitória e escolha de chefe).
+
+Não conferido: o **movimento** das animações. O painel do navegador estava oculto durante os testes, e nele as animações só avançam quando há captura de tela; a lógica (aparecer, esperar, fechar) foi medida, o tempo das animações não. Também não foram vistas as cenas de estágio concluído, novo ciclo, nó desconhecido e Vontade do Fogo, que usam o mesmo componente com outro selo.
+
+Adiado: tablet em pé segue em coluna única, com espaço sobrando embaixo (é a regra "celular expandido" do projeto); retratos dos personagens sem recurso.
+
+## Revisão da História, parte 3: árvores de talento do Naruto (v0.71.0, 14/11/2026)
+
+Terceira e última versão do plano. Pedido do usuário ao aprovar: talentos que surgem da combinação de duas árvores, e animação ao selecionar um talento.
+
+O que entrou: a simulação mede builds por ramo (`--ramos`); os seis ramos refeitos com a mesma forma (raiz, bifurcação, junção, final); seis regras novas de combate para os talentos finais (`cloneShield`, `stunnedAlwaysCrit`, `rollTwice`, `surviveForm`, `techOverflow`, e a queda evitada da equipe); seis talentos de combinação em anel (`requiresAll`, mais `lowHpRollWeights`); a tela mostra a combinação no pé dos dois ramos; animações de compra; migração que devolve os pontos gastos (`withNewTree`).
+
+**Medição de antes** (árvore da v0.70.0; História, 300 runs, seed 2; Médio/Difícil): padrão (o mais barato) 88/39; Clones 87/44; Pegadinhas **67/18**; Laços 78/38; Sapos 89/47; Kyuubi 88/44; Rasengan 90/48. Diferença entre a melhor e a pior build de um ramo: 22,7 pontos no Médio e 30,6 no Difícil. Pegadinhas era o ramo fraco, não havia um ramo dominante sozinho.
+
+**O que a medição ensinou** (cada linha foi uma rodada de simulação):
+- Quase toda run que perde cai no **Haku** (fim do primeiro arco), antes de Sapos, Kyuubi e Rasengan abrirem. A build "focada" nesses três joga o primeiro arco igual ao bot padrão: a diferença entre elas e o padrão é ruído mais o que vem depois. A comparação que decide é entre Clones, Pegadinhas e Laços.
+- A primeira versão da árvore nova levou a Shuriken das sombras para uma combinação e Pegadinhas caiu para 50/12: sem ela o ramo só atordoa. A Shuriken voltou a ser a junção do ramo.
+- Atordoar mais confiável (+15% de chance) e trocar o lado da bifurcação não mexeram em Pegadinhas (63/18 e 60/16). **Esquiva** mexeu: 8% → 15% → 20% na raiz deu 63 → 76 → 82 no Médio.
+- Tirar o clone a mais da raiz de Clones não derrubou a build padrão: o peso estava no **Rendan** (até 28 de dano por 3 de chakra, mais 20% por nível). Com o Rendan até +2 golpes e a Shuriken sem espera, Clones e Pegadinhas se aproximaram.
+
+**Medição de depois** (árvore da v0.71.0, mesma simulação):
+
+| Build | Médio | Difícil |
+|---|---|---|
+| padrão (o mais barato) | 82 | 36 |
+| Clones | 91,3 | 52,7 |
+| Pegadinhas | 81 | 46,7 |
+| Laços | 89,3 | 49 |
+| Sapos | 83,3 | 38 |
+| Kyuubi | 85,7 | 42,7 |
+| Rasengan | 84 | 39,7 |
+| Clones + Pegadinhas | 83 | 36,7 |
+| Pegadinhas + Laços | 85,7 | 38 |
+| Laços + Sapos | 89,3 | 49 |
+| Sapos + Kyuubi | 85,3 | 42,7 |
+| Kyuubi + Rasengan | 85,7 | 43 |
+| Rasengan + Clones | 91,3 | 52,7 |
+
+Diferença entre a melhor e a pior build de um ramo: **10,3 pontos no Médio e 14,7 no Difícil** (era 22,7 e 30,6). **O alvo de 5 pontos não foi atingido.** Com 300 runs, o erro de cada número é de uns 3 pontos, então parte da diferença é ruído, mas não toda: Clones e Laços ficam à frente porque abrem cedo e ajudam contra o Haku. As builds de par, na maioria, repetem o ramo que abre primeiro: a combinação custa as duas junções e só chega tarde, depois de onde as runs caem. Parei de afinar aqui para não empilhar números sem o usuário ([decisoes.md](decisoes.md) item 28).
+
+Simulação padrão (`npm run sim:jornada -- 300 2`), v0.70.0 → v0.71.0, Médio/Difícil/Hardcore: **História 87/43/18 → 82/36/15**. O Caminho Ninja não usa a árvore do Naruto (Comum 71/36/11, prodígio 78/40/12, Uchiha 66/25/8, Hyuuga 71/36/11). A História ficou um pouco mais difícil para o bot padrão, que compra o mais barato: o Rendan mais fraco pesa. Nada foi compensado.
+
+Decidido sozinho (o usuário revisa): os efeitos e custos de todos os nós; quais ramos se combinam (anel) e o efeito de cada combinação; o talento final de cada ramo; a combinação pedir a junção (linha 3) e custar 2; Rendan até +2 golpes (era +3) e +15% por nível (era 20%); Shuriken das sombras sem espera e com 85% de acerto (era espera 1 e 80%); Harem com 85% de acerto e 50% de atordoar (era 75% e 40%); a migração devolver todos os pontos gastos e manter os níveis do Rasengan; os kanji dos ramos (todos do recorte).
+
+Verificado no navegador (PC): a árvore com as combinações no pé dos dois ramos, a compra de talentos e o cartão da combinação. Não verificado: as animações quadro a quadro (o kanji do talento final, o risco da bifurcação), a árvore no celular e os talentos finais dentro de uma luta jogada à mão (só pelos testes).
+
+## Revisão da História, parte 2: narrativa, cenas e progressão canônica (v0.70.0, 14/11/2026)
+
+Segunda das três versões do plano aprovado. Pedidos do usuário ao aprovar: toda escolha com pelo menos 2 opções; talentos de combinação entre árvores (fica para a parte 3); melhoria visual com animação nas interações.
+
+O que entrou: pilha de formas (a forma temporária sai sem levar a permanente: era o bug da determinação contra o Neji); ações de roteiro `effect`, `boost`, `teach` e a condição `ifNot`; evento em etapas na mesma parada, com a lista do que a escolha deu; Kage Bunshin pelo pergaminho e Mil Clones depois do Mizuki, como marcos; Colar do Primeiro Hokage entregue pela Tsunade; falas reescritas; Gaara com o henge em raposa e a Cabeçada do jogador; teste do sino em campo, com "Lição"; cinco sequências de eventos juntadas (54 → 48 paradas) e evento seguido de evento sem voltar à trilha; opções sem a consequência entre parênteses e faixa "O que mudou"; 13 eventos da História e 2 do Caminho Ninja ganharam a segunda opção; cena de relíquia de história; retratos de forma; movimento das interações; migração de saves (`withMergedStops`).
+
+Decidido sozinho (o usuário revisa, [decisoes.md](decisoes.md) item 27):
+- **Aberturas de luta podem ser só fala.** O plano dizia fundir toda fala de abertura numa regra com efeito; ficou "a abertura e o fecho podem vir sozinhos, toda interrupção no meio muda algo" (teste em `tests/roteiro.test.ts`). Ganharam efeito na abertura só as que tinham um natural: névoa do Zabuza e espelhos do Haku (+20% de esquiva por 2 turnos), capanga atordoado pela besta do Inari, esquiva de quem viu o Lee (+20% por 3 turnos).
+- **No meio da luta**: mordida do Orochimaru atordoa o Sasuke por 2 turnos; 64 palmas do Neji na rodada 2 (bloqueio de chakra por 2 turnos, novo); Kabuto cura 15% a 25% do HP; o primeiro Rasengan atordoa o Kabuto por 2 turnos. A fala do disfarce dos Ninjas da Grama saiu.
+- **Gaara**: raposa com status ×1,15 e Presas da raposa (22 de dano, atordoar 50%); Cabeçada com 10 de dano e 100% de acerto; o gatilho da raposa em 50% do Shukaku (era a cabeçada do narrador em 30%); rede de segurança em 15%.
+- **Sino**: quedas em 75/50/25% do Kakashi e limite na rodada 5 (era fim em 50% ou na rodada 4). A equipe derrubada pelo roteiro saía com 30% do HP para os Irmãos Demônio (História 67/29/12 no meio do caminho); por isso **a lição não custa HP nem chakra**: a equipe sai como entrou.
+- **Mil Clones grátis**, e o talento `tTajuu` virou +20% de dano na técnica (mesmo custo; a parte 3 refaz o ramo e devolve os pontos).
+- **Colar garantido** na cena dos Sannin (antes, 50% de chance por chefe vencido).
+- **Segunda opção de cada cena e treino**: a primeira opção mantém o prêmio que a cena dava; a segunda vale parecido, em outra moeda. Os Sannin davam cura total e +1 ponto: as duas opções mantêm o ponto. Treinos: +40 XP certos com −10% do HP (−15% no Rasengan III), contra o ponto de talento do minijogo.
+- **Kanji da Lição**: 修, que já estava no recorte da fonte (o 教 pediria baixar a fonte de novo).
+- **Contagem de paradas**: 48, não as 49 do plano (erro de conta do plano).
+
+Simulação (`npm run sim:jornada -- 300 2`), v0.69.0 → v0.70.0, Médio/Difícil/Hardcore: **História 90/60/27 → 87/43/18**; Fácil 100%. O Caminho Ninja não foi mexido. A História ficou mais difícil no Difícil e no Hardcore; onde o bot para no Difícil: Haku 22%, Trio da Chuva 15%, Kiba 8%, Neji 7%. O bot escolhe sempre a primeira opção dos eventos (o prêmio de antes) e não usa a Cabeçada (a cena do Gaara acontece pela rede de segurança). Nada foi compensado.
+
+Não verificado no navegador: as animações dentro da luta (entrada e saída de forma, banner da Lição, a raposa) e a cena do colar. Verificado: o pergaminho, a faixa "O que mudou" no celular e no PC, a cena da bandana, a Formatura emendada no Time 7 e o carimbo.
+
+## Revisão da História, parte 1: combate de equipe e economia (v0.69.0, 13/11/2026)
+
+Pedido do usuário depois de testar a v0.68: revisão ampla da História em três versões (plano aprovado: 1. combate e economia; 2. narrativa, cenas e progressão canônica; 3. árvores do Naruto), parando ao fim de cada uma. Decidido com ele: controle com no mínimo 2 turnos para todos (aliados e inimigos), com trava e chances um pouco menores; regras de combate e os 60 ryō valem nos dois modos.
+
+O que entrou: atordoar e bloqueio de chakra duram no mínimo 2 turnos (`combat.minControlTurns`); quem sai do atordoamento fica firme por 1 turno próprio (`combat.stunImmunityTurns`); **Levantar** como ação de qualquer integrante da equipe (gasta o turno, 15% do HP), sem valer para inimigos; Primeiros socorros da Sakura (35%); IA por valor útil (não desperdiça golpe forte em alvo quase caído, dá valor a efeitos, usa controle em área e o Kuchiyose, não reaplica controle); moveset de 6; 60 ryō iniciais.
+
+Decidido sozinho (o usuário revisa): Levantar com 15% do HP; Primeiros socorros com 35%, 6 de chakra e espera 2; trava de 1 turno e só para o atordoamento (o bloqueio de chakra não tem); chances de atordoar das técnicas com dano × 0,8 arredondado (50→40, 45→35, 40→30, 35→30, 30→25, 25→20, 20→15, 15→10), controle puro igual; quem cai pelo roteiro (Iruka, Sasuke contra o Haku) não pode ser levantado naquela luta; suporte sem técnica levanta o protagonista sempre e outro suporte só com 40% do HP ou mais; ninguém levanta se um golpe encerra a luta; pesos da IA (derrubar soma a ameaça do alvo, bloqueio de chakra vale metade do atordoar, tático dá 1,5× ao controle puro, custo de chakra de 0,3 a 0,8 por ponto conforme o chakra que sobra); botões mais baixos na luta com 5 ou 6 técnicas.
+
+Simulação (`npm run sim:jornada -- 300 2`), v0.68.1 → v0.69.0, Médio/Difícil/Hardcore: História 82/37/11 → 90/60/27; Comum 62/21/5 → 70/35/9; prodígio 69/28/9 → 77/39/11; Uchiha 60/21/6 → 66/26/9; Hyuuga 63/22/5 → 72/33/6. Fácil não muda (98–100%). **O jogo ficou mais fácil nos dois modos**, e nada foi compensado. De onde vem: sem os 60 ryō (mesma versão, `startRyo: 0`), Médio/Difícil ficam em História 86/60, Comum 68/26, prodígio 73/27, Uchiha 61/22, Hyuuga 68/25. Ou seja, no Caminho Ninja quase todo o ganho do Difícil vem dos 60 ryō (kit ou relíquia a mais no começo); na História, o salto do Difícil (37 → 60) vem das regras de combate (equipe que se levanta e IA que não desperdiça). A redução das chances de atordoar quase não pesa (com as chances antigas: História 90/64, Comum 69/38). Alavancas para o usuário escolher: força dos inimigos por dificuldade (`enemyStrength`, `storyStrength`), HP do Levantar, ryō inicial só na História.
+
+Dois testes de roteiro que jogam a luta inteira com a IA trocaram de semente (Gaara e Kimimaro): o cenário do teste (Naruto sem talentos) já vencia o Gaara em só 4 de 30 sementes antes; agora 2 de 30. Não é o cenário de uma run real, mas mostra que a luta solo do Gaara ficou um pouco mais dura com o atordoamento de 2 turnos do Caixão de areia.
+
+## Óculos de aviador do Naruto (v0.68.1, 13/11/2026)
+
+Pedido do usuário: o Naruto começa com os **óculos de aviador**, que viram a **Bandana do Iruka** depois da Formatura e são mais fracos que ela. Decidido sozinho (o usuário revisa): os números dos óculos (+5 de HP máximo e +10% de dano abaixo de 50% do HP, metade da bandana em cada efeito, mantendo a mesma família de bônus para a troca parecer evolução); a troca acontece nas duas escolhas da Formatura (efeito de evento `storyRelic`, campo `storyEvolves`); id novo `aviatorGoggles`, porque `goggles` já é a relíquia comum Óculos de aprendiz; a evolução passou a somar ao HP atual só a diferença para a relíquia que saiu (antes o Colar somava os 20 inteiros por cima dos 10 da bandana); saves antigos com a bandana ficam com ela. Simulação da História (`npm run sim:jornada -- 300 2`), antes → depois: Fácil 100 → 100%, Médio 82 → 82%, Difícil 37 → 37%, Hardcore 12 → 11%. Só a luta com o Mizuki usa os óculos, então quase nada muda.
+
+## A jornada do Naruto: cronologia categorizada (v0.68.0, 13/11/2026)
+
+Pedido do usuário: as diretrizes "Jornada do Naruto" (a História é a jornada dele, não uma enciclopédia do mangá; entra o que ele vive, presencia ou descobre; eventos categorizados). Comparado com a cronologia anterior e adaptado com o usuário ponto a ponto:
+- **Categorias**: presenciado sem escolha e narrativo com escolha.
+- **Quarteto do Som**: as separações viram cenas.
+- **Tanzaku**: o Kabuto é o chefe; os Sannin são presenciados.
+- **Kimimaro**: o Lee chega e o Naruto segue.
+- **Gaara**: luta em três fases.
+- **Neji**: a promessa à Hinata dá determinação na luta.
+- **Rasengan**: três treinos.
+- **Cenas**: todas as novas entram.
+- **O que sai**: o ataque ao hospital (o Naruto não estava lá) e a emboscada no lago.
+
+Antes disso, também com o usuário:
+- o Iruka cai protegendo o Naruto no Mizuki;
+- o teste do sino vira derrota inevitável, que libera a raiz dos Laços;
+- o encontro com o Haku na floresta;
+- o Sharingan do Sasuke como marco;
+- os mercenários do Gatō dentro da luta do Haku.
+
+A fonte única é [cronologia.md](jornada/cronologia.md). Motor: categoria de evento, derrota inevitável, formas com modificadores, ação `leave`, reserva com repetição, e a migração de save pelo id da parada (`withJourney`).
+
+Decidido sozinho: as recompensas das cenas e treinos novos (+1 ponto, kits, XP), as falas e textos, as fichas do Iruka, dos mercenários e do Gaara exausto, e os limiares dos gatilhos.
+
+Simulação (`npm run sim:jornada -- 1000 2`), vitória da História; o Caminho Ninja ficou idêntico:
+
+| Versão | Fácil | Médio | Difícil | Hardcore |
+|---|---|---|---|---|
+| v0.67.0 (× 1,1) | 100 | 87 | 46 | 14 |
+| v0.68.0 com × 1,1 | 100 | 95 | 70 | 40 |
+| v0.68.0 com × 1,2 (escolhido) | 100 | 81 | 40 | 13 |
+| v0.68.0 com × 1,3 (testado) | 100 | 61 | 14 | 3 |
+
+Saíram 5 lutas de desgaste e as cenas dão cura, pontos e kits. O usuário escolheu × 1,2, que volta perto do equilíbrio da v0.67.0.
+
+## A História canônica do Naruto (v0.67.0, 12/11/2026)
+
+Pedido do usuário: a História fiel aos momentos fundamentais do mangá e divertida de jogar; a árvore decide como o Naruto cresce, nunca se o cânone acontece. Decidido com o usuário:
+- Kyuubi quando o Sasuke cai (Haku), com o desmaio só narrativo;
+- Gaara em fases numa luta só, com o Gamabunta aliado;
+- Kuchiyose com sapo sorteado;
+- Orochimaru como parada nova de resistir;
+- Vale do Fim vencido com o Sasuke a 20%, e ele parte;
+- sem a Ōdama Rasengan, que não pertence ao Naruto clássico;
+- a força da História mantida em × 1,1.
+
+O que entrou:
+- **Motor**: ação `knock`, condição de marca nas regras, formas temporárias e com técnicas a mais, técnica sorteada (`roll`, pesos por talento), finalizador garantido na luta, e a IA fechando com o finalizador (concentra chakra se faltar).
+- **Momentos** (tabela em [historia.md](jornada/historia.md#momentos-canônicos)):
+  - o Kakashi solto contra o Zabuza, no lugar da Sakura;
+  - o Sasuke cai e a Kyuubi desperta no Haku;
+  - Orochimaru e o selo do Sasuke;
+  - a Kyuubi contra o Neji;
+  - Shukaku e Gamabunta;
+  - o Rasengan como finalizador no Kabuto;
+  - reforços em ondas contra o Kimimaro;
+  - selo nível 2 contra o manto de uma cauda no Vale.
+- **Marcos**: Kuchiyose (contrato com os sapos) e Rasengan (treino com o Jiraiya). A marca `kyuubiAwakened` vem do Haku.
+- **Árvore do Naruto**: as raízes de Sapos, Kyuubi e Rasengan são dadas pela história. Os Sapos mexem no sorteio do Kuchiyose. O talento final do Rasengan é o Rasengan da Kyuubi. Os talentos finais ganharam marca na tela.
+- **Migração de save**: a parada nova desloca o Exame, quem já passou do Haku ganha a marca da Kyuubi, e os nós que mudaram devolvem os pontos.
+
+Decidido sozinho: os números das formas (Kyuubi × 1,25, manto de uma cauda × 1,35, selo × 1,3 por 4 turnos, selo nível 2 × 1,2), os pesos do Kuchiyose (girinos 30, Gamakichi 35, Gamatatsu 25, Gamabunta 10) e dos talentos dos Sapos, as fichas do Kakashi aliado, do Gamabunta e do Shukaku, os retratos desenhados do Gamabunta e do Shukaku, as falas (escritas por mim, sem transcrever o mangá), os limiares de cada gatilho, e a Sakura saindo para o Kakashi entrar (cada lado tem no máximo 3 lutadores).
+
+Simulação (`npm run sim:jornada -- 1000 2`), vitória v0.66.0 → v0.67.0. O Caminho Ninja ficou idêntico.
+
+| Run | Fácil | Médio | Difícil | Hardcore |
+|---|---|---|---|---|
+| História | 99 → 100 | 62 → **87** | 18 → 46 | 3 → 14 |
+
+Testado à parte (500 runs): História × 1,18 → 100/69/20/2; × 1,24 → 100/49/5/0. O usuário preferiu manter × 1,1: a História fica acima do alvo, mais festiva.
+
 ## Roteiro de luta e marcos da história (v0.66.0, 12/11/2026)
 
 Pedido do usuário: a História fiel aos acontecimentos fundamentais do mangá, separando progressão narrativa obrigatória de personalização. A proposta de arquitetura foi aprovada, e esta versão entra só com a infraestrutura, sem mudar o conteúdo (a História canônica será discutida antes da v0.67.0):

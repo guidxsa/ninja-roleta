@@ -4,6 +4,9 @@ import {
   advance,
   awaitingPlayer,
   battlePower,
+  canRaise,
+  effectTurns,
+  isControl,
   current,
   emptyMods,
   enemySeed,
@@ -40,6 +43,7 @@ import {
   cycleEnemyMult,
   chooseNode,
   choosingNode,
+  currentEvent,
   currentStop,
   finishFight,
   gainRelic,
@@ -50,7 +54,7 @@ import {
   memberSheet,
   supportClass,
   newGenericRun,
-  newRun,
+  newRun as freshRun,
   nextFightTeam,
   nodeChoices,
   resolveEvent,
@@ -80,6 +84,7 @@ import {
   isCursed,
   shopWeights,
   runEnemyMult,
+  syncGrantedTalents,
 } from '../src/core/jornada/run';
 import { chooseAiAction, chooseAiActive } from '../src/core/jornada/ai';
 import { talentMaxRank, talentState, treeComplete, type TalentNode } from '../src/core/jornada/talents';
@@ -105,6 +110,18 @@ import { bossChoices, dropRelic, rollRelic } from '../src/core/jornada/relics';
 import { RELIC_RENAMES } from '../src/data/jornada/relics';
 import { jornadaPtBR } from '../src/data/strings/jornada';
 import { RELIC_ICONS } from '../prototype/jornada/relicIcons';
+
+/**
+ * Run nova da História já na primeira luta (o Mizuki). Desde a v0.68.0 a História abre com o evento do Pergaminho dos
+ * Selos; os testes antigos de luta partem do Mizuki.
+ */
+/** Índice de uma parada do 1º arco pelo id (a ordem mudou na v0.68.0). */
+const at0 = (id: string) => data.stages[0]!.stops.findIndex((s) => s.id === id);
+
+const newRun = (...args: Parameters<typeof freshRun>): JRun => {
+  const run = freshRun(...args);
+  return { ...run, stopIndex: data.stages[0]!.stops.findIndex((s) => s.id === 'mizuki') };
+};
 
 /** Rng que devolve sempre o mesmo valor (0 = acerta tudo e dispara todo efeito; 0,99 = erra). */
 const fixed = (v: number) => () => v;
@@ -144,13 +161,17 @@ describe('equipe de resgate (estágio 4 da História, Vale do Fim)', () => {
   it('o Quarteto do Som é enfrentado por quem estava lá, sem Jiraiya e Sakura', () => {
     expect(team('soundAmbush')).toEqual(['shikamaru', 'kibaAlly']);
     expect(team('jirobo')).toEqual(['choji', 'shikamaru']);
-    expect(team('kidomaruTayuya')).toEqual(['nejiAlly', 'shikamaru']);
-    expect(team('sakon')).toEqual(['kibaAlly', 'nejiAlly']);
+    // Desde a v0.68.0, os outros duelos do Quarteto são cenas: o amigo fica para trás e o Naruto segue.
+    // Desde a v0.70.0, o Neji, o Shikamaru e o Kiba são etapas de uma parada só ("Um a um").
+    expect(stage.stops.find((s) => s.id === 'chojiStays')?.kind).toBe('event');
+    expect(stage.stops.find((s) => s.id === 'kibaStays')).toMatchObject({ kind: 'event', event: 'nejiStays', then: ['shikamaruStays', 'kibaStays'] });
+    expect(stage.stops.some((s) => s.id === 'kidomaruTayuya' || s.id === 'sakon')).toBe(false);
     expect(stage.team).not.toContain('jiraiya');
     expect(stage.team).not.toContain('sakura');
+    // Tanzaku: o Naruto enfrenta o Kabuto sozinho; o conflito dos Sannin é presenciado.
     const sannin = data.stages.find((s) => s.id === 'sannin')!;
-    const tanzaku = sannin.stops.find((s) => s.id === 'tanzaku')!;
-    expect(isFight(tanzaku) && tanzaku.team).toEqual(['jiraiya', 'tsunade']);
+    expect(sannin.stops.some((s) => s.id === 'tanzaku')).toBe(false);
+    expect(sannin.stops.find((s) => s.id === 'sannin')?.kind).toBe('event');
   });
 
   it('todos têm ficha, nome e técnicas com nome', () => {
@@ -165,7 +186,8 @@ describe('equipe de resgate (estágio 4 da História, Vale do Fim)', () => {
   });
 
   it('o HUD mostra quem luta na próxima parada da História', () => {
-    expect(nextFightTeam({ ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 0 }, data)).toEqual(['jiraiya', 'tsunade']);
+    // Sannin: a próxima luta é o Kabuto, e o Naruto vai sozinho.
+    expect(nextFightTeam({ ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 0 }, data)).toEqual([]);
     const run = { ...newRun(1, 'normal', data), stageIndex: 3, stopIndex: 0 };
     const ambush = stage.stops.findIndex((s) => s.id === 'soundAmbush');
     expect(nextFightTeam({ ...run, stopIndex: ambush }, data)).toEqual(['shikamaru', 'kibaAlly']);
@@ -257,13 +279,45 @@ describe('combate de equipe da Jornada', () => {
       return () => rolls.shift() ?? 0.99;
     };
 
-    it('sem técnica nem pílula, ninguém levanta: o herói fica no chão e os suportes seguem lutando', () => {
+    it('levantar é de todos (v0.69.0): qualquer suporte gasta o turno e levanta o herói com pouco HP', () => {
       for (const ai of ['striker', 'guardian', 'brute', 'tactician', 'healer'] as const) {
-        const b = advance(startBattle(setup({ allies: [hero({ hp: 5 }), support({ ai })], enemies: [dummy({ ...killer, hp: 900, maxHp: 900 })] }), data, oneHit()), data, oneHit());
-        expect(b.log.some((e) => e.type === 'revive'), ai).toBe(false);
-        expect(b.fighters[0]!.down, ai).toBe(true);
-        expect(b.fighters[1]!.down, ai).toBe(false);
+        const b = startBattle(setup({ allies: [hero({ hp: 5 }), support({ ai })], enemies: [dummy({ ...killer, hp: 900, maxHp: 900 })] }), data, oneHit());
+        expect(b.log.find((e) => e.type === 'revive'), ai).toMatchObject({ uid: 'a1', target: 'a0', hp: 100 * data.j.combat.raiseHpPct, raise: true });
+        // Quem levantou gastou o turno: não atacou nesta rodada.
+        expect(b.log.some((e) => e.type === 'tech' && e.uid === 'a1'), ai).toBe(false);
+        expect(awaitingPlayer(b), ai).toBe(true);
       }
+    });
+
+    it('o protagonista levanta um suporte com a ação universal; inimigo não tem a ação', () => {
+      let b = startBattle(setup({ allies: [hero(), support({ hp: 0 })], enemies: [dummy({ hp: 500, maxHp: 500 }), dummy({ hp: 0 })] }), data, fixed(0.99));
+      expect(canRaise(b, b.fighters[0]!).map((f) => f.uid)).toEqual(['a1']);
+      expect(canRaise(b, b.fighters.find((f) => f.uid === 'e0')!)).toEqual([]);
+      expect(() => playerAct(b, { kind: 'raise', target: 'e1' }, data, fixed(0.99))).toThrow();
+      b = playerAct(b, { kind: 'raise', target: 'a1' }, data, fixed(0.99));
+      expect(b.fighters[1]).toMatchObject({ down: false, hp: Math.floor(500 * data.j.combat.raiseHpPct) });
+      // O inimigo com um parceiro caído segue atacando: nunca levanta sem técnica.
+      expect(b.log.some((e) => e.type === 'revive' && e.target === 'e1')).toBe(false);
+    });
+
+    it('a Sakura levanta melhor que a ação universal (Primeiros socorros)', () => {
+      const aid = data.techniques.jFirstAid!;
+      expect(data.characters.sakura!.techniques).toContain('jFirstAid');
+      expect(aid.reviveHpPct!).toBeGreaterThan(data.j.combat.raiseHpPct);
+      expect(aid.reviveHpPct!).toBeLessThan(data.techniques.jReanimate!.reviveHpPct!);
+      const sakura = support({ techniques: ['jKunai', 'jFirstAid'], chakra: 30, maxChakra: 30 });
+      const b = startBattle(setup({ allies: [hero({ hp: 5 }), sakura], enemies: [killer] }), data, oneHit());
+      expect(b.log.find((e) => e.type === 'revive')).toMatchObject({ uid: 'a1', target: 'a0', hp: 35 });
+    });
+
+    it('quem cai pelo roteiro é cena: ninguém levanta (nem ação, nem técnica, nem pílula)', () => {
+      const b = startBattle(setup({ allies: [hero({ techniques: ['jStrike', 'jReanimate'] }), support()], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.99));
+      const s = structuredClone(b);
+      Object.assign(s.fighters[1]!, { down: true, hp: 0, knocked: true });
+      expect(canRaise(s, s.fighters[0]!)).toEqual([]);
+      expect(validTargets(s, s.fighters[0]!, data.techniques.jReanimate!)).toEqual([]);
+      expect(() => playerAct(s, { kind: 'raise', target: 'a1' }, data, fixed(0.99))).toThrow();
+      expect(() => useItem({ ...s, pills: 1 }, 'reviveKit', 'a1', data)).toThrow();
     });
 
     it('quem tem a técnica levanta o protagonista primeiro, pagando o chakra', () => {
@@ -275,10 +329,11 @@ describe('combate de equipe da Jornada', () => {
       expect(current(b)!.uid).toBe('a0');
     });
 
-    it('sem chakra para a técnica, não levanta', () => {
+    it('sem chakra para a técnica, levanta com a ação universal (menos HP)', () => {
       const medic = support({ techniques: ['jKunai', 'jReanimate'], chakra: 14, maxChakra: 14 });
       const b = startBattle(setup({ allies: [hero({ hp: 5 }), medic], enemies: [killer] }), data, oneHit());
-      expect(b.log.some((e) => e.type === 'revive')).toBe(false);
+      expect(b.log.find((e) => e.type === 'revive')).toMatchObject({ raise: true, hp: 15 });
+      expect(b.fighters[1]!.chakra).toBe(14);
     });
 
     it('o protagonista com a técnica levanta um suporte caído, gastando o turno', () => {
@@ -353,6 +408,63 @@ describe('combate de equipe da Jornada', () => {
     expect(next.log.some((e) => e.type === 'damage' && e.target === 'e0')).toBe(true);
   });
 
+  describe('controle com no mínimo 2 turnos e trava (v0.69.0)', () => {
+    it('todo atordoamento e bloqueio de chakra dos dados dura 2 turnos ou mais', () => {
+      const control = Object.values(data.techniques).filter((t) => t.onHit && isControl(t.onHit.effect));
+      expect(control.length).toBeGreaterThan(20);
+      for (const t of control) expect(effectTurns(t, data), t.id).toBeGreaterThanOrEqual(data.j.combat.minControlTurns);
+    });
+
+    it('o atordoado perde 2 turnos, ganha a trava e o atordoamento seguinte não pega', () => {
+      // O Sexy no Jutsu sempre acerta (rng 0); o alvo tem HP de sobra e nunca derruba o herói.
+      const target = dummy({ hp: 9000, maxHp: 9000, offense: { taijutsu: 0, ninjutsu: 0, genjutsu: 0 } });
+      let b = startBattle(setup({ allies: [hero({ techniques: ['jStrike', 'jSexyJutsu'] })], enemies: [target] }), data, fixed(0));
+      const foe = () => b.fighters.find((f) => f.uid === 'e0')!;
+      b = playerAct(b, { kind: 'tech', techId: 'jSexyJutsu', target: 'e0' }, data, fixed(0));
+      expect(b.log.filter((e) => e.type === 'skip' && e.uid === 'e0')).toHaveLength(1);
+      b = playerAct(b, { kind: 'tech', techId: 'jStrike', target: 'e0' }, data, fixed(0));
+      expect(b.log.filter((e) => e.type === 'skip' && e.uid === 'e0')).toHaveLength(2);
+      // Saiu do atordoamento com a trava: o próximo não pega e ele age.
+      expect(foe().effects).toEqual([{ kind: 'stunGuard', turns: data.j.combat.stunImmunityTurns }]);
+      b = playerAct(b, { kind: 'tech', techId: 'jStrike', target: 'e0' }, data, fixed(0));
+      const s = structuredClone(b);
+      s.fighters[0]!.cooldowns = {};
+      s.fighters.find((f) => f.uid === 'e0')!.effects = [{ kind: 'stunGuard', turns: 1 }];
+      const after = playerAct(s, { kind: 'tech', techId: 'jSexyJutsu', target: 'e0' }, data, fixed(0));
+      expect(after.log.slice(s.log.length).some((e) => e.type === 'resist' && e.target === 'e0')).toBe(true);
+      expect(after.log.slice(s.log.length).some((e) => e.type === 'skip' && e.uid === 'e0')).toBe(false);
+    });
+  });
+
+  describe('IA mais atenta (v0.69.0)', () => {
+    const rich = (over: Partial<FighterSeed> = {}) => hero({ techniques: ['jStrike', 'jRasengan'], chakra: 30, maxChakra: 30, ...over });
+
+    it('alvo quase caindo leva o golpe barato; alvo inteiro leva o forte', () => {
+      const low = startBattle(setup({ allies: [rich()], enemies: [dummy({ hp: 6, maxHp: 200 })] }), data, fixed(0.5));
+      expect(chooseAiAction(low, low.fighters[0]!, data, fixed(0.5))).toMatchObject({ kind: 'tech', techId: 'jStrike' });
+      const full = startBattle(setup({ allies: [rich()], enemies: [dummy({ hp: 200, maxHp: 200 })] }), data, fixed(0.5));
+      expect(chooseAiAction(full, full.fighters[0]!, data, fixed(0.5))).toMatchObject({ kind: 'tech', techId: 'jRasengan' });
+    });
+
+    it('não gasta controle em quem já está atordoado ou com a trava', () => {
+      const b = startBattle(setup({ allies: [hero({ techniques: ['jStrike', 'jSexyJutsu'], ai: 'tactician' })], enemies: [dummy({ hp: 500, maxHp: 500, offense: { taijutsu: 30, ninjutsu: 0, genjutsu: 0 } })] }), data, fixed(0.5));
+      expect(chooseAiAction(b, b.fighters[0]!, data, fixed(0.5))).toMatchObject({ techId: 'jSexyJutsu' });
+      for (const kind of ['stun', 'stunGuard'] as const) {
+        const s = structuredClone(b);
+        s.fighters[1]!.effects = [{ kind, turns: 2 }];
+        expect(chooseAiAction(s, s.fighters[0]!, data, fixed(0.5)), kind).toMatchObject({ techId: 'jStrike' });
+      }
+    });
+
+    it('com um golpe que encerra a luta, bate em vez de levantar', () => {
+      const fallen = { ...dummy(), defId: 'sasuke', hp: 0 };
+      const b = startBattle(setup({ allies: [rich(), fallen], enemies: [dummy({ hp: 3, maxHp: 200 })] }), data, fixed(0.5));
+      expect(chooseAiAction(b, b.fighters[0]!, data, fixed(0.5))).toMatchObject({ kind: 'tech', techId: 'jStrike' });
+      const tough = startBattle(setup({ allies: [rich(), fallen], enemies: [dummy({ hp: 500, maxHp: 500 })] }), data, fixed(0.5));
+      expect(chooseAiAction(tough, tough.fighters[0]!, data, fixed(0.5))).toEqual({ kind: 'raise', target: 'a1' });
+    });
+  });
+
   it('atordoado perde a vez', () => {
     const stunner = dummy({ speed: 99, techniques: ['jeWaterPrison'], chakra: 30, maxChakra: 30 });
     const b = startBattle(setup({ enemies: [stunner] }), data, fixed(0));
@@ -390,7 +502,7 @@ describe('combate de equipe da Jornada', () => {
 describe('progresso da run (card da entrada)', () => {
   it('História: paradas feitas sobre todas as paradas', () => {
     const total = data.stages.reduce((n, s) => n + s.stops.length, 0);
-    const run = newRun(1, 'normal', data);
+    const run = freshRun(1, 'normal', data);
     expect(journeyProgress(run, data)).toBe(0);
     expect(journeyProgress({ ...run, stageIndex: 1, stopIndex: 0 }, data)).toBeCloseTo(data.stages[0]!.stops.length / total);
     const last = data.stages.length - 1;
@@ -432,16 +544,20 @@ describe('cenário da parada', () => {
 });
 
 describe('trilha da História', () => {
-  it('quatro arcos (Ondas, Exame, Sannin, Vale do Fim), cada um termina no chefe, com os confrontos do mangá na ordem', () => {
+  it('quatro arcos (Ondas, Exame, Sannin, Vale do Fim); a última luta de cada um é o chefe, e as lutas seguem o mangá', () => {
     expect(data.stages.map((s) => s.id)).toEqual(['waves', 'exam', 'sannin', 'retrieval']);
-    expect(data.stages.map((s) => s.stops.at(-1)!.kind)).toEqual(['boss', 'boss', 'boss', 'boss']);
+    // Depois do chefe pode vir uma cena (o adeus ao Haku, os Sannin, a volta a Konoha): a última luta é o chefe.
+    expect(data.stages.map((s) => s.stops.filter(isFight).at(-1)!.kind)).toEqual(['boss', 'boss', 'boss', 'boss']);
     const story = data.stages.map((s) => s.stops.filter((x) => x.kind === 'story' || x.kind === 'boss').map((x) => x.id));
     expect(story).toEqual([
       ['mizuki', 'bells', 'haku'],
-      ['forest', 'kiba', 'neji', 'gaara'],
-      ['tanzaku', 'kabuto'],
+      ['orochimaruForest', 'forest', 'kiba', 'neji', 'gaara'],
+      ['kabuto'],
       ['hospital', 'kimimaro', 'valley'],
     ]);
+    // A História abre no Pergaminho dos Selos e termina na volta a Konoha.
+    expect(data.stages[0]!.stops[0]!.id).toBe('sealScroll');
+    expect(data.stages.at(-1)!.stops.at(-1)!.id).toBe('returnKonoha');
   });
 
   it('campanhas: a do Naruto é a História de sempre, e a run nova e o save antigo caem nela', () => {
@@ -473,7 +589,7 @@ describe('trilha da História', () => {
   it('o Naruto enfrenta o Mizuki sozinho e o Kakashi com a Equipe 7', () => {
     const run = newRun(1, 'normal', data);
     expect(battleSetup(run, data).allies.map((a) => a.defId)).toEqual(['naruto']);
-    const bells = { ...run, stopIndex: 2 };
+    const bells = { ...run, stopIndex: at0('bells') };
     expect(battleSetup(bells, data).allies.map((a) => a.defId)).toEqual(['naruto', 'sasuke', 'sakura']);
   });
 });
@@ -483,13 +599,24 @@ const won = (b: JBattle): JBattle => ({ ...b, status: 'won' });
 describe('run da Jornada', () => {
   const lost = (b: JBattle): JBattle => ({ ...b, status: 'lost' });
 
+  it('toda run começa com 60 ryō, uma vez só (v0.69.0)', () => {
+    expect(data.j.run.startRyo).toBe(60);
+    expect(newRun(1, 'normal', data).ryo).toBe(60);
+    expect(newGenericRun(1, 'normal', 'uchiha', data, new Set(['j_unlockUchiha'])).ryo).toBe(60);
+    // Carregar o save não soma de novo.
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    saveJornada(storage, { ...newRun(1, 'normal', data), ryo: 7 });
+    expect(loadJornada(storage)!.ryo).toBe(7);
+  });
+
   it('vencer dá ryō, XP e avança a parada', () => {
     const run = newRun(1, 'normal', data);
     const b = startBattle(battleSetup(run, data), data, createRng(1));
     const { run: next, outcome } = finishFight(run, won(b), data);
     expect(outcome.ryo).toBe(data.j.rewards.story.ryo);
-    expect(next.ryo).toBe(data.j.rewards.story.ryo);
-    expect(next.stopIndex).toBe(1);
+    expect(next.ryo).toBe(run.ryo + data.j.rewards.story.ryo);
+    expect(next.stopIndex).toBe(run.stopIndex + 1);
     expect(next.cleared).toEqual(['mizuki']);
   });
 
@@ -518,7 +645,7 @@ describe('run da Jornada', () => {
     expect(res.outcome.retry).toBe(true);
     expect(res.run.status).toBe('inProgress');
     expect(res.run.willOfFire).toBe(0);
-    expect(res.run.stopIndex).toBe(0);
+    expect(res.run.stopIndex).toBe(easy.stopIndex);
   });
 
   it('subir de nível dá ponto de talento', () => {
@@ -531,13 +658,14 @@ describe('run da Jornada', () => {
   });
 
   it('o chefe oferece 3 relíquias de chefe e a escolha avança', () => {
-    const run = { ...newRun(1, 'normal', data), stopIndex: data.stages[0]!.stops.length - 1 };
+    const run = { ...newRun(1, 'normal', data), stopIndex: at0('haku') };
     const { run: next } = finishFight(run, won(startBattle(battleSetup(run, data), data, createRng(1))), data);
     expect(next.bossChoice).toHaveLength(3);
     for (const id of next.bossChoice!) expect(data.relics.find((r) => r.id === id)!.tier).toBe('boss');
     const after = chooseBossRelic(next, next.bossChoice![0]!, data);
     expect(after.relics).toContain(next.bossChoice![0]);
-    expect([after.stageIndex, after.stopIndex]).toEqual([1, 0]);
+    // Depois do Haku vem a cena do adeus, ainda no 1º arco.
+    expect([after.stageIndex, after.stopIndex]).toEqual([0, at0('hakuFarewell')]);
   });
 
   it('elite vencida deixa uma relíquia comum, incomum ou rara; luta comum, não', () => {
@@ -569,7 +697,7 @@ describe('run da Jornada', () => {
   });
 
   it('cada classe começa com a sua relíquia inicial, que não recupera (a recuperação é da dificuldade)', () => {
-    expect(newRun(1, 'normal', data).relics).toEqual(['irukaHeadband']);
+    expect(newRun(1, 'normal', data).relics).toEqual(['aviatorGoggles']);
     const unlocked = new Set(['j_unlockUchiha', 'j_unlockHyuuga']);
     expect(newGenericRun(1, 'normal', 'uchiha', data, unlocked).relics[0]).toBe('uchihaFan');
     expect(newGenericRun(1, 'normal', 'hyuuga', data, unlocked).relics[0]).toBe('gentleFistScroll');
@@ -578,19 +706,19 @@ describe('run da Jornada', () => {
       expect(r.relics[0]).toBe(r.hero === 'prodigy' ? 'greenJumpsuit' : 'academyManual');
     }
     for (const r of data.relics.filter((x) => x.tier === 'starter' || x.evolves)) {
-      if (r.tier === 'starter') expect(r.starterFor?.length, r.id).toBeGreaterThan(0);
+      if (r.tier === 'starter') expect((r.starterFor?.length ?? 0) + (r.storyEvolves ? 1 : 0), r.id).toBeGreaterThan(0);
       expect(r.afterWin, r.id).toBeUndefined();
     }
   });
 
   it('evolução: pode aparecer na escolha do chefe, troca a inicial e nunca sai em outro sorteio', () => {
     const relics = data.relics;
-    expect(bossChoices(relics, ['irukaHeadband'], 3, 1, createRng(1))).toContain('firstHokageNecklace');
-    expect(bossChoices(relics, ['irukaHeadband'], 3, 1, createRng(1))).toHaveLength(3);
-    expect(bossChoices(relics, ['irukaHeadband'], 3, 0, createRng(1))).not.toContain('firstHokageNecklace');
-    // Já evoluiu: não aparece de novo, e outras classes não veem a evolução do Naruto.
-    expect(bossChoices(relics, ['firstHokageNecklace'], 3, 1, createRng(1))).not.toContain('firstHokageNecklace');
     expect(bossChoices(relics, ['academyManual'], 3, 1, createRng(1))).toContain('chuninVest');
+    expect(bossChoices(relics, ['academyManual'], 3, 1, createRng(1))).toHaveLength(3);
+    expect(bossChoices(relics, ['academyManual'], 3, 0, createRng(1))).not.toContain('chuninVest');
+    // Já evoluiu: não aparece de novo. O Colar do Naruto não sai de chefe (v0.70.0): a Tsunade entrega na história.
+    expect(bossChoices(relics, ['chuninVest'], 3, 1, createRng(1))).not.toContain('chuninVest');
+    expect(bossChoices(relics, ['irukaHeadband'], 3, 1, createRng(1))).not.toContain('firstHokageNecklace');
 
     const run = gainRelic({ ...newRun(1, 'normal', data), relics: ['irukaHeadband', 'goggles'] }, 'firstHokageNecklace', data);
     expect(run.relics).toEqual(['firstHokageNecklace', 'goggles']);
@@ -612,7 +740,44 @@ describe('run da Jornada', () => {
     saveJornada(storage, evolved);
     expect(loadJornada(storage)!.relics).toEqual(['firstHokageNecklace']);
     saveJornada(storage, { ...newRun(1, 'normal', data), relics: [] });
+    expect(loadJornada(storage)!.relics).toEqual(['aviatorGoggles']);
+    saveJornada(storage, { ...newRun(1, 'normal', data), relics: [], flags: ['ev:graduation'] });
     expect(loadJornada(storage)!.relics).toEqual(['irukaHeadband']);
+    // Save de antes dos óculos (v0.68.1) que ainda não chegou à Formatura: segue com a bandana, sem duplicar.
+    saveJornada(storage, { ...newRun(1, 'normal', data), relics: ['irukaHeadband'] });
+    expect(loadJornada(storage)!.relics).toEqual(['irukaHeadband']);
+  });
+
+  it('Naruto: os óculos de aviador, mais fracos, viram a Bandana do Iruka na Formatura (nas duas escolhas)', () => {
+    const goggles = data.relics.find((r) => r.id === 'aviatorGoggles')!;
+    const band = data.relics.find((r) => r.id === 'irukaHeadband')!;
+    expect(goggles.stats!.hp!).toBeLessThan(band.stats!.hp!);
+    expect(goggles.mods!.lowHpDamageMult!).toBeLessThan(band.mods!.lowHpDamageMult!);
+    const grad = data.stages[0]!.stops.findIndex((s) => s.id === 'graduation');
+    for (const opt of ['ramen', 'train']) {
+      const at = { ...newRun(1, 'normal', data), stopIndex: grad, relics: ['aviatorGoggles', 'goggles'] };
+      at.members[at.hero] = { hp: 50, chakra: 10 };
+      const { run, relic } = resolveEvent(at, opt, true, data);
+      expect(relic, opt).toBe('irukaHeadband');
+      expect(run.relics, opt).toEqual(['irukaHeadband', 'goggles']);
+      expect(memberSheet(run, run.hero, data).maxHp - memberSheet(at, at.hero, data).maxHp, opt).toBe(5);
+      if (opt === 'train') expect(run.members[run.hero]!.hp).toBe(55);
+    }
+    // A bandana nunca sai em sorteio nem como evolução do chefe.
+    expect(bossChoices(data.relics, ['aviatorGoggles'], 3, 1, createRng(1))).not.toContain('irukaHeadband');
+    // O Colar do Primeiro Hokage vem da Tsunade, na cena dos Sannin, nas duas escolhas (v0.70.0).
+    const sannin = data.stages.findIndex((s) => s.id === 'sannin');
+    const scene = data.stages[sannin]!.stops.findIndex((s) => s.id === 'sannin');
+    for (const opt of ['thank', 'spar']) {
+      const at = { ...newRun(1, 'normal', data), stageIndex: sannin, stopIndex: scene, relics: ['irukaHeadband', 'goggles'] };
+      const got = resolveEvent(at, opt, true, data);
+      expect(got.relic, opt).toBe('firstHokageNecklace');
+      expect(got.run.relics, opt).toEqual(['firstHokageNecklace', 'goggles']);
+      expect(got.gains, opt).toContainEqual({ kind: 'storyRelic', id: 'firstHokageNecklace' });
+    }
+    // Run antiga que já tem a bandana: a Formatura não mexe nela.
+    const old = { ...newRun(1, 'normal', data), stopIndex: grad, relics: ['irukaHeadband'] };
+    expect(resolveEvent(old, 'train', true, data)).toMatchObject({ relic: null, run: { relics: ['irukaHeadband'] } });
   });
 
   it('save: troca os ids de relíquia antigos (v0.43.0) pelos novos', () => {
@@ -647,7 +812,7 @@ describe('run da Jornada', () => {
     expect(dropRelic(data.relics, everyone, data.j.relics.eliteWeights, rng)).toBe('emptyCharm');
     expect(dropRelic(data.relics, [...everyone, 'emptyCharm'], data.j.relics.eliteWeights, rng)).toBeNull();
     expect(rollRelic(data.relics, everyone, data.j.relics.eliteWeights, rng)).toBeNull();
-    expect(gainRelic(newRun(1, 'normal', data), 'emptyCharm', data).ryo).toBe(25);
+    expect(gainRelic({ ...newRun(1, 'normal', data), ryo: 0 }, 'emptyCharm', data).ryo).toBe(25);
   });
 
   it('ganchos novos das relíquias', () => {
@@ -727,15 +892,17 @@ describe('run da Jornada', () => {
     expect(loadProfile({ getItem: (k: string) => store[k] ?? null, setItem: () => {} }).relics).toEqual({});
   });
 
-  it('a árvore pede o nó anterior, o estágio e, na Ōdama, a conquista da conta', () => {
+  it('a árvore pede o nó anterior; as raízes canônicas vêm pela história', () => {
     const run = { ...newRun(1, 'normal', data), talentPoints: 20 };
     const node = (id: string) => data.talents.find((t) => t.id === id)!;
     const none = new Set<string>();
     const ctx = { owned: run.talents, points: 20, stageIndex: 0, unlocked: none };
     expect(talentState(node('tMoreClones'), data.talents, ctx)).toBe('available');
     expect(talentState(node('tRendan'), data.talents, ctx)).toBe('locked');
-    expect(talentState(node('tKyuubiRegen'), data.talents, ctx)).toBe('stageLocked');
-    expect(talentState(node('tOdama'), data.talents, { ...ctx, stageIndex: 2 })).toBe('accountLocked');
+    // Kyuubi, Rasengan e Kuchiyose não se compram: vêm pela história (v0.67.0).
+    for (const id of ['tKyuubiRegen', 'tRasengan', 'tKuchiyose']) expect(talentState(node(id), data.talents, ctx)).toBe('storyLocked');
+    expect(talentState(node('tKyuubiCloak'), data.talents, ctx)).toBe('locked');
+    expect(data.talents.some((n) => n.id === 'tOdama')).toBe(false);
     const bought = buyTalent(buyTalent(run, 'tMoreClones', none, data), 'tRendan', none, data);
     expect(bought.learned).toContain('jRendan');
     expect(bought.talentPoints).toBe(17);
@@ -790,8 +957,10 @@ describe('run da Jornada', () => {
 
   it('o nível aumenta o efeito da técnica', () => {
     const none = new Set<string>();
-    let run: JRun = { ...newRun(1, 'normal', data), talentPoints: 30, stageIndex: 2 };
-    run = buyTalent(run, 'tRasengan', none, data);
+    // O Rasengan vem pelo treino com o Jiraiya (nível 1 de graça); os níveis seguintes são pagos.
+    let run: JRun = { ...newRun(1, 'normal', data), talentPoints: 30, stageIndex: 2, learned: ['jRasengan'] };
+    syncGrantedTalents(run, data);
+    expect(run.talents).toContain('tRasengan');
     expect(heroMods(run, data).techDamageMult.jRasengan ?? 1).toBe(1);
     run = buyTalent(run, 'tRasengan', none, data);
     expect(heroMods(run, data).techDamageMult.jRasengan).toBeCloseTo(1.15);
@@ -799,6 +968,7 @@ describe('run da Jornada', () => {
     run = buyTalent(run, 'tRasengan', none, data);
     expect(heroMods(run, data).techDamageMult.jRasengan).toBeCloseTo(1.15 * 1.15);
     expect(heroMods(run, data).techChakraDiscount.jRasengan).toBe(2);
+    expect(run.talentPoints).toBe(26);
   });
 
   it('bifurcação: escolher um caminho fecha o outro, e qualquer um libera o seguinte', () => {
@@ -850,10 +1020,12 @@ describe('run da Jornada', () => {
 
   it('talento de equipe vale para os suportes; run salva sem níveis carrega', () => {
     const none = new Set<string>();
-    let run: JRun = { ...newRun(1, 'normal', data), talentPoints: 30 };
+    // A raiz dos Laços vem da lição do sino (v0.68.0).
+    let run: JRun = { ...newRun(1, 'normal', data), talentPoints: 30, flags: ['bellsLesson'] };
+    syncGrantedTalents(run, data);
     const hp = memberSheet(run, 'sasuke', data).maxHp;
-    run = buyTalent(buyTalent(run, 'tNeverGiveUp', none, data), 'tTeam7', none, data);
-    expect(memberSheet(run, 'sasuke', data).maxHp).toBe(Math.floor(hp * 1.15));
+    run = buyTalent(run, 'tTeam7', none, data);
+    expect(memberSheet(run, 'sasuke', data).maxHp).toBe(Math.floor(hp * 1.12));
     expect(teamMods(run, data).regenHp).toBe(1);
     expect(heroMods(run, data).regenHp).toBe(1);
     const mem = new Map<string, string>();
@@ -873,17 +1045,19 @@ describe('run da Jornada', () => {
     const restAt = data.stages[0]!.stops.findIndex((s) => s.kind === 'rest');
     const resting = rest({ ...run, stopIndex: restAt }, 'train', data);
     expect(resting.talentPoints).toBe(2);
-    const tazuna = resolveEvent({ ...newRun(1, 'normal', data), stopIndex: 4 }, 'protect', false, data).run;
+    const tazuna = resolveEvent({ ...newRun(1, 'normal', data), stopIndex: at0('tazuna') }, 'protect', false, data).run;
     expect(tazuna.flags).toContain('helpedTazuna');
     expect(shopOffer(tazuna, data).training).toBe(Math.floor(data.j.shop.trainingPrice * 0.8));
   });
 
-  it('a História começa com a Bandana do Iruka, que nunca sai em sorteio', () => {
+  it('a História começa com os óculos de aviador; nem eles nem a Bandana do Iruka saem em sorteio', () => {
     const run = newRun(1, 'normal', data);
-    expect(run.relics).toEqual(['irukaHeadband']);
+    expect(run.relics).toEqual(['aviatorGoggles']);
     for (let s = 0; s < 40; s++) {
       const r = { ...newRun(s, 'normal', data), ryo: 999 };
-      expect(shopOffer(r, data).relics.map((x) => x.id)).not.toContain('irukaHeadband');
+      const offer = shopOffer(r, data).relics.map((x) => x.id);
+      expect(offer).not.toContain('irukaHeadband');
+      expect(offer).not.toContain('aviatorGoggles');
     }
   });
 
@@ -958,8 +1132,8 @@ describe('run da Jornada', () => {
       const run = { ...newGenericRun(5, 'normal', 'common', data), ryo: 9999 };
       const def = data.events.gBadOmen!;
       expect(def.options.find((o) => o.id === 'bargain')!.effects).toContainEqual({ kind: 'curse' });
-      expect(eventOptions(data.events.gShrine!, run.flags).map((o) => o.id)).toEqual(['pray']);
-      expect(eventOptions(data.events.gShrine!, [SHOP_CURSE]).map((o) => o.id)).toEqual(['purify', 'pray']);
+      expect(eventOptions(data.events.gShrine!, run.flags).map((o) => o.id)).toEqual(['pray', 'meditate']);
+      expect(eventOptions(data.events.gShrine!, [SHOP_CURSE]).map((o) => o.id)).toEqual(['purify', 'pray', 'meditate']);
       expect(data.generic.stages.every((st) => st.events.includes('gBadOmen') && st.events.includes('gShrine'))).toBe(true);
     });
 
@@ -1061,7 +1235,8 @@ describe('run da Jornada', () => {
     /** Save de antes da v0.50.0: sem os campos da loja. */
     const oldSave = (run: JRun) => {
       const s = storage();
-      const { shop: _s, shopPurchases: _p, storyArcs: _a, ...old } = run;
+      // Save antigo de verdade: sem os campos da loja nem os marcadores das migrações seguintes (v0.67.0 e v0.68.0).
+      const { shop: _s, shopPurchases: _p, storyArcs: _a, canonTree: _c, journey: _j, merged: _m, tree071: _t, ...old } = run;
       s.mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
       return loadJornada(s)!;
     };
@@ -1074,10 +1249,10 @@ describe('run da Jornada', () => {
       expect(after.shopPurchases).toBe(0);
       // Parado no mercador (6): segue para a parada seguinte.
       expect(stops[oldSave({ ...newRun(1, 'normal', data), stopIndex: 6 }).stopIndex]!.id).toBe('zabuza');
-      // Antes do mercador: nada muda.
-      expect(oldSave({ ...newRun(1, 'normal', data), stopIndex: 3 }).stopIndex).toBe(3);
+      // Antes do mercador (os capangas): na ordem da v0.68.0, a primeira parada que faltava são os Irmãos Demônio.
+      expect(stops[oldSave({ ...newRun(1, 'normal', data), stopIndex: 3 }).stopIndex]!.id).toBe('demonBrothers');
       // Estágios 2 e 3.
-      expect(data.stages[1]!.stops[oldSave({ ...newRun(1, 'normal', data), stageIndex: 1, stopIndex: 7 }).stopIndex]!.id).toBe(data.stages[1]!.stops[6]!.id);
+      expect(data.stages[1]!.stops[oldSave({ ...newRun(1, 'normal', data), stageIndex: 1, stopIndex: 7 }).stopIndex]!.id).toBe('toadSummon');
       // Antigo 3º estágio (hoje Sannin e Vale do Fim): o mercador saía depois do Kabuto.
       const at = (r: JRun) => data.stages[r.stageIndex]!.stops[r.stopIndex]!.id;
       expect(at(oldSave({ ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 2 }))).toBe('kabuto');
@@ -1087,18 +1262,19 @@ describe('run da Jornada', () => {
     it('save da trilha em três estágios vai para a mesma parada nos quatro arcos', () => {
       const s = storage();
       const legacy = (stageIndex: number, stopIndex: number) => {
-        const { storyArcs: _a, ...old } = { ...newRun(1, 'normal', data), stageIndex, stopIndex };
+        const { storyArcs: _a, canonTree: _c, journey: _j, ...old } = { ...newRun(1, 'normal', data), stageIndex, stopIndex };
         s.mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
         const r = loadJornada(s)!;
         return [r.stageIndex, data.stages[r.stageIndex]!.stops[r.stopIndex]!.id, r.storyArcs];
       };
-      expect(legacy(2, 0)).toEqual([2, 'rasenganTraining', 4]);
-      expect(legacy(2, 1)).toEqual([2, 'tanzaku', 4]);
+      // Na ordem da v0.68.0: a pousada vem antes do último treino, e a luta de Tanzaku virou cena depois do Kabuto.
+      expect(legacy(2, 0)).toEqual([2, 'rest4', 4]);
+      expect(legacy(2, 1)).toEqual([2, 'kabuto', 4]);
       expect(legacy(2, 2)).toEqual([2, 'kabuto', 4]);
       expect(legacy(2, 3)).toEqual([3, 'hospital', 4]);
       expect(legacy(2, 12)).toEqual([3, 'valley', 4]);
       // Estágios de antes não mudam.
-      expect(legacy(1, 5)).toEqual([1, data.stages[1]!.stops[5]!.id, 4]);
+      expect(legacy(1, 5)).toEqual([1, 'kiba', 4]);
       // Já na trilha nova: nada muda.
       const fresh = { ...newRun(1, 'normal', data), stageIndex: 2, stopIndex: 3 };
       saveJornada(s, fresh);
@@ -1141,7 +1317,7 @@ describe('run da Jornada', () => {
     expect(afterWinRecovery({ ...base, difficulty: 'hardcore' }, data)).toEqual({ hp: 15, chakra: 5 });
     expect(afterWinRecovery(gainRelic(base, 'ichirakuCoupon', data), data)).toEqual({ hp: 35, chakra: 11 });
     // No Difícil, cada um recupera 20 de HP.
-    const hurt: JRun = { ...base, difficulty: 'hard', stopIndex: 3, members: { naruto: { hp: 20, chakra: 5 }, sasuke: { hp: 20, chakra: 5 }, sakura: { hp: 20, chakra: 5 } } };
+    const hurt: JRun = { ...base, difficulty: 'hard', stopIndex: at0('thugs'), members: { naruto: { hp: 20, chakra: 5 }, sasuke: { hp: 20, chakra: 5 }, sakura: { hp: 20, chakra: 5 } } };
     const fought = won(startBattle(battleSetup(hurt, data), data, createRng(1)));
     const { run } = finishFight(hurt, fought, data);
     const sasuke = memberSheet(run, 'sasuke', data);
@@ -1151,15 +1327,15 @@ describe('run da Jornada', () => {
   });
 
   it('a vitória recupera 25 de HP (Médio) da equipe do estágio, inclusive quem não lutou', () => {
-    // Capangas (parada 4): Naruto, Sasuke e Sakura. Depois, o Haku: só Naruto e Sasuke lutam.
-    const base = { ...newRun(1, 'normal', data), stopIndex: 3 };
+    // Capangas na casa do Tazuna: Naruto, Sasuke e Sakura. Depois, o Haku: só Naruto e Sasuke lutam.
+    const base = { ...newRun(1, 'normal', data), stopIndex: at0('thugs') };
     const hurt: JRun = { ...base, members: { naruto: { hp: 20, chakra: 5 }, sasuke: { hp: 20, chakra: 5 }, sakura: { hp: 20, chakra: 5 } } };
     const b = startBattle(battleSetup(hurt, data), data, createRng(1));
     const { run } = finishFight(hurt, won(b), data);
     const sasuke = memberSheet(run, 'sasuke', data);
     expect(run.members.sasuke!.hp).toBe(Math.min(sasuke.maxHp, 20 + 25));
     // Naruto × Kiba (estágio 2): o Naruto luta sozinho, e a Sakura, fora da luta, também recupera.
-    const kiba: JRun = { ...hurt, stageIndex: 1, stopIndex: 5 };
+    const kiba: JRun = { ...hurt, stageIndex: 1, stopIndex: data.stages[1]!.stops.findIndex((s) => s.id === 'kiba') };
     expect(currentStop(kiba, data)!.id).toBe('kiba');
     const res = finishFight(kiba, won(startBattle(battleSetup(kiba, data), data, createRng(1))), data).run;
     const sakura = memberSheet(res, 'sakura', data);
@@ -1167,7 +1343,7 @@ describe('run da Jornada', () => {
   });
 
   it('vencer o chefe deixa toda a equipe cheia, inclusive quem caiu', () => {
-    const run: JRun = { ...newRun(1, 'normal', data), stopIndex: data.stages[0]!.stops.length - 1, members: { naruto: { hp: 3, chakra: 0 }, sakura: { hp: 1, chakra: 0 } } };
+    const run: JRun = { ...newRun(1, 'normal', data), stopIndex: at0('haku'), members: { naruto: { hp: 3, chakra: 0 }, sakura: { hp: 1, chakra: 0 } } };
     const b = startBattle(battleSetup(run, data), data, createRng(1));
     const fallen = { ...won(b), fighters: b.fighters.map((f) => (f.defId === 'sasuke' ? { ...f, hp: 0, down: true } : f)) };
     const { run: next } = finishFight(run, fallen, data);
@@ -1188,7 +1364,7 @@ describe('run da Jornada', () => {
     expect(loadJornada(storage)).toBeNull();
     // Save de antes da relíquia inicial ganha a relíquia ao carregar.
     saveJornada(storage, { ...run, relics: ['goggles'] });
-    expect(loadJornada(storage)!.relics).toEqual(['irukaHeadband', 'goggles']);
+    expect(loadJornada(storage)!.relics).toEqual(['aviatorGoggles', 'goggles']);
   });
 });
 
@@ -1247,7 +1423,7 @@ describe('Caminho Ninja', () => {
       }
       const stop = currentStop(run, data)!;
       if (isFight(stop)) run = finishFight(run, won(startBattle(battleSetup(run, data), data, createRng(1))), data).run;
-      else if (stop.kind === 'event') run = resolveEvent(run, eventOptions(data.events[stop.event]!, run.flags, run.ryo)[0]!.id, true, data).run;
+      else if (stop.kind === 'event') run = resolveEvent(run, eventOptions(currentEvent(run, data)!, run.flags, run.ryo)[0]!.id, true, data).run;
       else if (stop.kind === 'rest') run = rest(run, 'heal', data);
       else run = leaveStop(run, data);
     }
@@ -1706,7 +1882,7 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
       }
       const stop = currentStop(run, data)!;
       if (isFight(stop)) run = finishFight(run, won(startBattle(battleSetup(run, data), data, createRng(1))), data).run;
-      else if (stop.kind === 'event') run = resolveEvent(run, eventOptions(data.events[stop.event]!, run.flags, run.ryo)[0]!.id, true, data).run;
+      else if (stop.kind === 'event') run = resolveEvent(run, eventOptions(currentEvent(run, data)!, run.flags, run.ryo)[0]!.id, true, data).run;
       else if (stop.kind === 'rest') run = rest(run, 'heal', data);
       else run = leaveStop(run, data);
     }
@@ -1776,8 +1952,8 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
       expect(data.techniques.jKageBunshin).toMatchObject({ clones: 2, active: true });
     });
 
-    it('começa com Golpe, Shuriken, Bunshin e o elemento; o Kunai fica conhecido, fora do moveset', () => {
-      expect(run.moveset).toEqual(['jStrike', 'jShuriken', 'jBunshin', data.elementLines.fire[0]]);
+    it('começa com Golpe, Shuriken, Bunshin, o elemento e o Kunai: com 6 vagas, o kit inteiro cabe no moveset', () => {
+      expect(run.moveset).toEqual(['jStrike', 'jShuriken', 'jBunshin', data.elementLines.fire[0], 'jKunai']);
       expect(heroMovable(run, data)).toContain('jKunai');
       expect(heroActives(run, data)).toEqual(['jEffort']);
     });
@@ -1858,8 +2034,8 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     const uTree = withTree(uchiha, (n) => !n.account && !n.requiresElement);
     expect(talentTreeComplete(uTree, data)).toBe(true);
     expect(talentTreeComplete(uTree, data, new Set(['j_sasukeEgg']))).toBe(false);
-    // Naruto no estágio 1 com tudo o que já abre: os ramos de estágio ainda vêm.
-    const naruto = withTree(newRun(6, 'normal', data), (n) => n.fromStage === undefined && !n.account);
+    // Naruto no começo com tudo o que já abre: os ramos da história ainda vêm.
+    const naruto = withTree(newRun(6, 'normal', data), (n) => n.fromStage === undefined && !n.account && !n.grantedBy);
     expect(treeComplete('naruto', data.talents, talentContext(naruto, new Set()))).toBe(false);
   });
 
@@ -1895,10 +2071,10 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     expect(syncUnlocks(run, new Set(['j_unlockUchiha']), data)).toBe(run);
   });
 
-  it('a Ōdama abre no ciclo seguinte com a conquista da História no retrato da run', () => {
+  it('as conquistas que a árvore usa vão para o retrato da run (a Ōdama saiu na v0.67.0)', () => {
     const run = { ...newGenericRun(2, 'hardcore', 'uchiha', data, new Set(['j_unlockUchiha'])), status: 'victory' as const };
     expect(continueCycle(run, data, new Set(['j_sasukeEgg', 'j_unlockUchiha'])).unlocks).toEqual(['j_sasukeEgg']);
-    expect(newRun(1, 'normal', data, new Set(['j_canonWin', 'j_bell'])).unlocks).toEqual(['j_canonWin']);
+    expect(newRun(1, 'normal', data, new Set(['j_canonWin', 'j_bell'])).unlocks).toEqual([]);
   });
 
   it('conquistas de ciclo só saem na vitória do ciclo certo, no Caminho Ninja', () => {
@@ -1938,5 +2114,165 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     storage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ ...p1, jornada: { generic: { cycle: 'x' } } }));
     expect(loadProfile(storage).jornada).toBeUndefined();
     expect(loadProfile(memStorage().storage)).toEqual(emptyProfile());
+  });
+});
+
+describe('save de antes da História canônica (v0.67.0)', () => {
+  it('desloca o Exame pela parada nova, dá a marca da Kyuubi e devolve os pontos dos nós que mudaram', () => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const { canonTree: _c, ...old } = {
+      ...newRun(4, 'normal', data),
+      stageIndex: 1,
+      stopIndex: 2,
+      talentPoints: 0,
+      talents: ['tMoreClones', 'tRasengan', 'tOdama'],
+      talentRanks: { tRasengan: 2 },
+      learned: ['jRasengan', 'jOdama'],
+      moveset: ['jStrike', 'jOdama'],
+    };
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+    const run = loadJornada(storage)!;
+    // Antes estava no Trio do Som (índice 2); com o Orochimaru antes dele, o Trio é o índice 3.
+    expect(data.stages[1]!.stops[run.stopIndex]!.id).toBe('forest');
+    expect(run.flags).toContain('kyuubiAwakened');
+    expect(run.talents).toContain('tKyuubiRegen');
+    expect(run.talents).not.toContain('tOdama');
+    // Rasengan (1) e Ōdama (3) voltam; o nível 2 do Rasengan fica guardado para quando ele voltar pela história.
+    expect(run.talentPoints).toBe(4);
+    expect(run.talentRanks.tRasengan).toBe(2);
+    expect(run.learned).not.toContain('jOdama');
+    expect(run.moveset).toEqual(['jStrike']);
+    expect(run.canonTree).toBe(1);
+  });
+});
+
+describe('save de antes da cronologia (v0.68.0)', () => {
+  const load = (run: JRun) => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const { journey: _j, ...old } = run;
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+    return loadJornada(storage)!;
+  };
+  const V067 = (stage: number, id: string) =>
+    ({
+      0: ['mizuki', 'graduation', 'bells', 'thugs', 'tazuna', 'demonBrothers', 'zabuza', 'treeClimbing', 'mistRogues', 'treasure1', 'rest1', 'haku'],
+      1: ['writtenTest', 'grass', 'orochimaruForest', 'forest', 'rainTrio', 'preliminaries', 'kiba', 'toadSummon', 'treasure2', 'neji', 'kabutoSpy', 'invasion', 'rest2', 'gaara'],
+      3: ['hospital', 'sasukeLeft', 'soundAmbush', 'jirobo', 'treasure3', 'kidomaruTayuya', 'sakon', 'kimimaro', 'rest3', 'valley'],
+    })[stage as 0 | 1 | 3]!.indexOf(id);
+  const idAt = (r: JRun) => data.stages[r.stageIndex]!.stops[r.stopIndex]!.id;
+
+  it('volta na primeira parada nova que ainda faltava, e quem passou do sino ganha a lição', () => {
+    const base = freshRun(5, 'normal', data);
+    // Nos capangas (antes eram a 1ª luta depois do sino): a primeira que faltava são os Irmãos Demônio.
+    const thugs = load({ ...base, stopIndex: V067(0, 'thugs'), talents: ['tNeverGiveUp'], talentPoints: 0 });
+    expect(idAt(thugs)).toBe('demonBrothers');
+    expect(thugs.flags).toContain('bellsLesson');
+    expect(thugs.talents).toContain('tNeverGiveUp');
+    expect(thugs.talentPoints).toBe(1);
+    // A elite do Espião do Som saiu: segue para a Invasão.
+    expect(idAt(load({ ...base, stageIndex: 1, stopIndex: V067(1, 'kabutoSpy') }))).toBe('invasion');
+    // Os duelos do Quarteto viraram cenas: quem estava no Sakon volta na primeira cena que faltava.
+    expect(idAt(load({ ...base, stageIndex: 3, stopIndex: V067(3, 'sakon') }))).toBe('kimimaro');
+    // Antes do sino: sem a lição.
+    expect(load({ ...base, stopIndex: V067(0, 'graduation') }).flags).not.toContain('bellsLesson');
+  });
+});
+
+describe('save de antes das paradas juntadas (v0.70.0)', () => {
+  const load = (run: JRun) => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const { merged: _m, ...old } = run;
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+    return loadJornada(storage)!;
+  };
+  // As paradas da v0.69.0, por arco.
+  const V069 = [
+    ['sealScroll', 'mizuki', 'graduation', 'team7', 'bells', 'demonBrothers', 'tazuna', 'zabuza', 'treeClimbing', 'hakuForest', 'thugs', 'treasure1', 'rest1', 'haku', 'hakuFarewell'],
+    ['writtenTest', 'grass', 'orochimaruForest', 'forest', 'rainTrio', 'leeGaara', 'kiba', 'hinataOintment', 'hinataNeji', 'preliminaries', 'toadSummon', 'treasure2', 'neji', 'invasion', 'rest2', 'gaara'],
+    ['jiraiyaJourney', 'itachiKisame', 'rasengan1', 'rasengan2', 'tsunade', 'rest4', 'rasenganTraining', 'kabuto', 'sannin'],
+    ['hospital', 'sasukeLeft', 'soundAmbush', 'jirobo', 'chojiStays', 'treasure3', 'nejiStays', 'shikamaruStays', 'kibaStays', 'kimimaro', 'rest3', 'valleyTalk', 'valley', 'returnKonoha'],
+  ];
+  const at = (stage: number, id: string) => ({ ...freshRun(5, 'normal', data), stageIndex: stage, stopIndex: V069[stage]!.indexOf(id) });
+  const where = (r: JRun) => [data.stages[r.stageIndex]!.stops[r.stopIndex]!.id, currentEvent(r, data)?.id ?? null, r.beat ?? 0];
+
+  it('quem estava no meio de uma sequência volta na mesma cena, como etapa da parada nova', () => {
+    expect(where(load(at(1, 'hinataOintment')))).toEqual(['hinataNeji', 'hinataOintment', 0]);
+    expect(where(load(at(1, 'hinataNeji')))).toEqual(['hinataNeji', 'hinataNeji', 1]);
+    expect(where(load(at(1, 'toadSummon')))).toEqual(['toadSummon', 'toadSummon', 1]);
+    expect(where(load(at(2, 'itachiKisame')))).toEqual(['itachiKisame', 'itachiKisame', 1]);
+    expect(where(load(at(2, 'rasengan1')))).toEqual(['rasengan2', 'rasengan1', 0]);
+    expect(where(load(at(3, 'shikamaruStays')))).toEqual(['kibaStays', 'shikamaruStays', 1]);
+    expect(where(load(at(3, 'kibaStays')))).toEqual(['kibaStays', 'kibaStays', 2]);
+  });
+
+  it('as outras paradas continuam as mesmas, achadas pelo id', () => {
+    for (const [stage, ids] of V069.entries()) {
+      for (const id of ids) {
+        const r = load(at(stage, id));
+        const stop = data.stages[r.stageIndex]!.stops[r.stopIndex]!;
+        const events = stop.kind === 'event' ? [stop.event, ...(stop.then ?? [])] : [stop.id];
+        expect(stop.id === id || events.includes(id), `${id} → ${stop.id}`).toBe(true);
+        expect(r.merged).toBe(1);
+      }
+    }
+  });
+
+  it('quem já passou da cena dos Sannin com a bandana recebe o colar; antes dela, não', () => {
+    const band = (r: JRun) => ({ ...r, relics: ['irukaHeadband', 'goggles'] });
+    expect(load(band(at(3, 'hospital'))).relics).toEqual(['firstHokageNecklace', 'goggles']);
+    expect(load(band(at(2, 'sannin'))).relics).toEqual(['irukaHeadband', 'goggles']);
+    expect(load(band(at(2, 'kabuto'))).relics).toEqual(['irukaHeadband', 'goggles']);
+  });
+
+  it('quem já passou do Mizuki ganha o Mil Clones no moveset, se houver vaga; o save novo não muda', () => {
+    const past = load({ ...at(0, 'graduation'), moveset: ['jStrike', 'jShuriken', 'jSexyJutsu'] });
+    expect(past.moveset).toContain('jTajuuBunshin');
+    const full = load({ ...at(0, 'graduation'), learned: ['jRendan', 'jHarem', 'jWarCry'], moveset: ['jStrike', 'jShuriken', 'jSexyJutsu', 'jRendan', 'jHarem', 'jWarCry'] });
+    expect(full.moveset).not.toContain('jTajuuBunshin');
+    expect(load({ ...at(0, 'sealScroll'), moveset: ['jStrike'] }).moveset).toEqual(['jStrike']);
+    const fresh = { ...freshRun(5, 'normal', data), stageIndex: 1, stopIndex: 3 };
+    const mem = new Map<string, string>([[JORNADA_SAVE_KEY, JSON.stringify(fresh)]]);
+    expect(loadJornada({ getItem: (k: string) => mem.get(k) ?? null, setItem: () => undefined })).toMatchObject({ stageIndex: 1, stopIndex: 3 });
+  });
+});
+
+describe('save de antes da árvore refeita (v0.71.0)', () => {
+  const load = (run: JRun) => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const { tree071: _t, ...old } = run;
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+    return loadJornada(storage)!;
+  };
+
+  it('devolve os pontos gastos nos ramos (com os níveis), tira as técnicas da árvore e mantém as raízes da história', () => {
+    const base = { ...freshRun(5, 'normal', data), stageIndex: 3, stopIndex: 0, flags: ['bellsLesson', 'kyuubiAwakened'] };
+    const old = {
+      ...base,
+      talentPoints: 2,
+      talents: ['tNeverGiveUp', 'tKyuubiRegen', 'tRasengan', 'tMoreClones', 'tRendan', 'tCloneBlast', 'tTajuu', 'tPrankKing', 'tHarem'],
+      talentRanks: { tRendan: 3, tRasengan: 2 },
+      learned: ['jRendan', 'jHarem'],
+      moveset: ['jStrike', 'jShuriken', 'jRendan', 'jHarem', 'jRasengan'],
+    };
+    const run = load(old);
+    // 1 + (2 + 2 níveis) + 2 + 3 + 1 + 2 = 13 pontos de volta.
+    expect(run.talentPoints).toBe(2 + 13);
+    expect([...run.talents].sort()).toEqual(['tKuchiyose', 'tKyuubiRegen', 'tNeverGiveUp', 'tRasengan'].sort());
+    expect(run.talentRanks).toEqual({ tRasengan: 2 });
+    expect(run.learned).toEqual([]);
+    expect(run.moveset).toEqual(['jStrike', 'jShuriken', 'jRasengan']);
+    expect(run.tree071).toBe(1);
+  });
+
+  it('save sem ponto gasto, de outra classe ou já migrado não muda', () => {
+    const plain = load({ ...freshRun(5, 'normal', data), talentPoints: 4 });
+    expect(plain.talentPoints).toBe(4);
+    const fresh = { ...freshRun(5, 'normal', data), talentPoints: 1, talents: ['tMoreClones'] };
+    const mem = new Map<string, string>([[JORNADA_SAVE_KEY, JSON.stringify(fresh)]]);
+    expect(loadJornada({ getItem: (k: string) => mem.get(k) ?? null, setItem: () => undefined })).toMatchObject({ talentPoints: 1, talents: ['tMoreClones'] });
   });
 });

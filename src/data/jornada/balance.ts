@@ -20,6 +20,12 @@ export const jornadaBalance = {
     burnPct: 0.05,
     poisonPct: 0.06,
     defaultEffectTurns: 2,
+    // Controle (atordoar e bloqueio de chakra) dura no mínimo isto, de qualquer lutador (v0.69.0).
+    minControlTurns: 2,
+    // Trava: ao sair de um atordoamento, não pode ser atordoado de novo por este número de turnos próprios.
+    stunImmunityTurns: 1,
+    // Levantar um aliado caído (ação de qualquer integrante da equipe, gasta o turno): volta com esta fração do HP. Proposta.
+    raiseHpPct: 0.15,
     // Pílula de reanimação: volta com esta fração do HP máximo. As técnicas de reanimar têm a própria (`reviveHpPct`).
     reviveHpPct: 0.5,
     // Regen em valor fixo (v0.49.0): não cresce com o HP e o chakra máximos, para não virar muleta no fim da run.
@@ -63,6 +69,8 @@ export const jornadaBalance = {
       hard: { hp: 20, chakra: 6 },
       hardcore: { hp: 15, chakra: 5 },
     } as Record<string, { hp: number; chakra: number }>,
+    // Ryō com que toda run começa (História e Caminho Ninja), uma vez só, ao criar a run (v0.69.0).
+    startRyo: 60,
     bagLimit: 5,
     startConsumables: { hpKit: 1, chakraKit: 1 } as Record<string, number>,
     // Vontades do Fogo por dificuldade (só o Fácil tem).
@@ -129,7 +137,8 @@ export const jornadaBalance = {
   enemyStrength: { easy: 1, normal: 1.25, hard: 1.4, hardcore: 1.5 } as Record<Difficulty, number>,
   // História: multiplica por cima da dificuldade (v0.65.0). A trilha fixa e os aliados fortes deixavam a História bem
   // mais fácil que o Caminho Ninja na mesma dificuldade.
-  storyStrength: 1.1,
+  // v0.68.0 (escolhido pelo usuário): a cronologia nova tirou 5 lutas de desgaste; 1,1 → 1,2.
+  storyStrength: 1.2,
 
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
   minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },

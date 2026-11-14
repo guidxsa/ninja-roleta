@@ -25,14 +25,17 @@ const each = (ids: string[], n: number) => Object.fromEntries(ids.map((id) => [i
 
 export const relics: RelicDef[] = [
   // Iniciais: uma por classe, com um objeto da história dela. O Comum leva a mesma em qualquer elemento.
-  { id: 'irukaHeadband', tier: 'starter', starterFor: ['naruto'], stats: { hp: 10 }, mods: { lowHpDamageMult: 1.15 } },
+  // Naruto: os óculos de aviador (mais fracos) viram a Bandana do Iruka na Formatura (efeito `storyRelic`).
+  { id: 'aviatorGoggles', tier: 'starter', starterFor: ['naruto'], stats: { hp: 5 }, mods: { lowHpDamageMult: 1.1 } },
+  { id: 'irukaHeadband', tier: 'starter', storyEvolves: 'aviatorGoggles', stats: { hp: 10 }, mods: { lowHpDamageMult: 1.15 } },
   { id: 'academyManual', tier: 'starter', starterFor: ['commonNinja'], xpMult: 1.1, mods: { accuracyBonus: 0.05 } },
   { id: 'greenJumpsuit', tier: 'starter', starterFor: ['prodigy'], stats: { speed: 1 }, mods: { taijutsuFlat: 1 } },
   { id: 'uchihaFan', tier: 'starter', starterFor: ['uchihaNinja'], mods: { techChakraDiscount: { jSharingan: 1, jSharingan3: 1 }, techDamageMult: each(FIRE, 1.1) } },
   { id: 'gentleFistScroll', tier: 'starter', starterFor: ['hyuugaNinja'], mods: { techChakraDiscount: { jByakugan: 1, jByakugan2: 1 }, techDamageMult: each(GENTLE_FIST, 1.1) } },
 
   // Evoluções: aparecem só na escolha depois do chefe e substituem a inicial.
-  { id: 'firstHokageNecklace', tier: 'boss', evolves: 'irukaHeadband', stats: { hp: 20 }, mods: { lowHpDamageMult: 1.3 } },
+  // Colar do Primeiro Hokage (v0.70.0): a Tsunade entrega na cena dos Sannin, no lugar da bandana (não sai mais de chefe).
+  { id: 'firstHokageNecklace', tier: 'starter', storyEvolves: 'irukaHeadband', stats: { hp: 20 }, mods: { lowHpDamageMult: 1.3 } },
   { id: 'chuninVest', tier: 'boss', evolves: 'academyManual', stats: { hp: 15 }, xpMult: 1.15, mods: { accuracyBonus: 0.08 } },
   { id: 'youthJumpsuit', tier: 'boss', evolves: 'greenJumpsuit', stats: { speed: 2 }, mods: { taijutsuFlat: 3, critBonus: 0.05 } },
   {

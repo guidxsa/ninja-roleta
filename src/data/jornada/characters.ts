@@ -23,10 +23,49 @@ export const characters: CharacterDef[] = [
     offense: { taijutsu: 9, ninjutsu: 8, genjutsu: 3 },
     resistance: { physical: 7, mental: 5 },
     element: 'wind',
-    techniques: ['jStrike', 'jShuriken', 'jSexyJutsu', 'jKageBunshin'],
+    // O Kage Bunshin vem do pergaminho proibido e o Mil Clones, da luta com o Mizuki (marcos da campanha, v0.70.0).
+    techniques: ['jStrike', 'jShuriken', 'jSexyJutsu'],
     ai: 'striker',
     growth: g(9, 3, 0.5, 1, 1, 0.3, 0.6, 0.5),
     portrait: 'ninja:uzumaki',
+    // Chakra da Kyuubi (docs/jornada/roteiro.md): o roteiro liga nos momentos do mangá.
+    forms: [
+      // Kage Bunshin em massa (Mizuki): centenas de clones por 3 turnos. A técnica fica depois da luta (marco).
+      { id: 'massClones', statMult: 1.1, addTechniques: ['jTajuuBunshin'], turns: 3, exitLine: 'massClonesEnd' },
+      // Determinação (a promessa à Hinata, ou o "você é meu amigo" no Vale): +10% de dano e aguenta com 1 de HP uma vez.
+      { id: 'resolve', mods: { damageMult: 1.1, surviveOnce: true } },
+      { id: 'kyuubi', statMult: 1.25, healPct: 0.3, addTechniques: ['jKyuubiClaw'], portrait: 'villain:narutoKyuubi' },
+      { id: 'kyuubiBrief', statMult: 1.2, healPct: 0.15, addTechniques: ['jKyuubiClaw'], turns: 3, exitLine: 'kyuubiEnd', portrait: 'villain:narutoKyuubi' },
+      { id: 'oneTail', statMult: 1.35, healPct: 0.3, addTechniques: ['jKyuubiClaw'], portrait: 'villain:narutoOneTail' },
+    ],
+  },
+  // Iruka: entra pelo roteiro na luta do Mizuki e cai protegendo o Naruto (convidado).
+  {
+    id: 'iruka',
+    hp: 90,
+    chakra: 30,
+    speed: 11,
+    offense: { taijutsu: 9, ninjutsu: 9, genjutsu: 5 },
+    resistance: { physical: 7, mental: 7 },
+    element: 'water',
+    techniques: ['jStrike', 'jShuriken', 'jBunshin'],
+    ai: 'guardian',
+    growth: g(6, 2, 0.4, 0.6, 0.6, 0.3, 0.4, 0.4),
+    portrait: 'ninja:common',
+  },
+  // Kakashi aliado: entra pelo roteiro na luta do Zabuza (convidado, não fica na equipe). Copia o Dragão de Água.
+  {
+    id: 'kakashiAlly',
+    hp: 150,
+    chakra: 40,
+    speed: 15,
+    offense: { taijutsu: 11, ninjutsu: 11, genjutsu: 9 },
+    resistance: { physical: 9, mental: 9 },
+    element: 'lightning',
+    techniques: ['jeKakashiKick', 'jeWaterDragon', 'jeHeadHunter', 'jBunshin'],
+    ai: 'tactician',
+    growth: g(6, 2, 0.3, 0.6, 0.6, 0.4, 0.4, 0.4),
+    portrait: 'ninja:kakashi',
   },
   {
     id: 'sasuke',
@@ -40,6 +79,29 @@ export const characters: CharacterDef[] = [
     ai: 'striker',
     growth: g(7, 3, 0.6, 1, 1.1, 0.4, 0.5, 0.5),
     portrait: 'ninja:uchiha',
+    // Selo amaldiçoado (depois do Orochimaru na Floresta da Morte): o roteiro liga quando ele fica ferido.
+    // Sharingan (desperta contra o Haku) e selo amaldiçoado (depois do Orochimaru).
+    forms: [
+      { id: 'sharingan', statMult: 1.15 },
+      { id: 'curseMark', statMult: 1.3, healPct: 0.15, turns: 4, exitLine: 'curseMarkEnd' },
+    ],
+  },
+  // Gamabunta: entra pelo roteiro na luta contra o Shukaku (convidado).
+  {
+    id: 'gamabuntaAlly',
+    hp: 260,
+    chakra: 40,
+    speed: 9,
+    offense: { taijutsu: 16, ninjutsu: 14, genjutsu: 2 },
+    resistance: { physical: 12, mental: 8 },
+    element: 'water',
+    techniques: ['jbBlade', 'jbWaterGun'],
+    ai: 'brute',
+    growth: g(10, 2, 0.2, 0.8, 0.7, 0, 0.6, 0.3),
+    portrait: 'villain:gamabunta',
+    summon: true,
+    // Henge em raposa de nove caudas, a pedido do Naruto: só assim ele tem garras e presas para segurar o Shukaku.
+    forms: [{ id: 'foxHenge', statMult: 1.15, techniques: ['jbFoxFang', 'jbWaterGun'], portrait: 'villain:foxHenge' }],
   },
   {
     id: 'sakura',
@@ -49,7 +111,7 @@ export const characters: CharacterDef[] = [
     offense: { taijutsu: 7, ninjutsu: 6, genjutsu: 8 },
     resistance: { physical: 5, mental: 9 },
     element: 'earth',
-    techniques: ['jKunai', 'jShuriken', 'jWireTrap', 'jRelease', 'jBunshin'],
+    techniques: ['jKunai', 'jShuriken', 'jWireTrap', 'jRelease', 'jFirstAid', 'jBunshin'],
     ai: 'tactician',
     growth: g(6, 3, 0.4, 0.7, 0.6, 0.9, 0.4, 0.7),
     portrait: 'ninja:sakura',

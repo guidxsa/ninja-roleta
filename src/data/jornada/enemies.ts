@@ -34,6 +34,8 @@ export const enemies: EnemyDef[] = [
   e('mizuki', 65, 10, 9, [7, 5, 3], [6, 6], 'wind', ['jeKunai', 'jeGiantShuriken'], 'brute', 'villain:mizuki'),
   e('kakashi', 170, 40, 15, [11, 11, 9], [9, 9], 'lightning', ['jeKakashiKick', 'jeThousandYears', 'jeHeadHunter'], 'tactician', 'ninja:kakashi'),
   e('gatoThug', 38, 0, 7, [6, 0, 0], [3, 2], null, ['jeClub', 'jeKatana'], 'brute', 'ninja:thug'),
+  // Mercenários do Gatō: chegam à ponte depois do sacrifício do Haku (roteiro).
+  e('gatoMerc', 45, 0, 8, [7, 0, 0], [4, 3], null, ['jeClub', 'jeKatana'], 'brute', 'ninja:thug'),
   e('bandit', 42, 0, 9, [7, 0, 0], [3, 3], null, ['jeAmbush', 'jeClub'], 'brute', 'ninja:thug'),
   e('missingNin', 70, 18, 11, [9, 9, 4], [6, 5], null, ['jeKunai', 'jeMissingStrike'], 'striker', 'ninja:mist'),
   e('mistRogue', 55, 14, 10, [6, 8, 2], [5, 4], 'water', ['jeKunai', 'jeWaterBullet'], 'striker', 'ninja:mist'),
@@ -63,6 +65,10 @@ export const enemies: EnemyDef[] = [
     pct: 0.15,
   }), kekkeiGenkai: 'sand' },
   e('soundNinja', 75, 16, 12, [10, 8, 6], [6, 6], null, ['jeSoundBlade', 'jeSoundWave'], 'striker', 'villain:examSound'),
+  // Gaara exausto: volta no lugar do Shukaku depois da cabeçada do Naruto (última fase).
+  { ...e('gaaraWeak', 90, 20, 8, [6, 10, 3], [8, 6], 'earth', ['jeSandShield', 'jeSandCoffin'], 'brute', 'villain:gaara'), kekkeiGenkai: 'sand' },
+  // Shukaku: o Gaara transformado (roteiro: entra no lugar dele a 40% do HP).
+  { ...e('shukaku', 300, 60, 8, [12, 16, 4], [13, 9], 'earth', ['jeShukakuClaw', 'jeSandTsunami', 'jeSandCoffin'], 'brute', 'villain:shukaku'), kekkeiGenkai: 'sand' },
 
   // Estágio 3 · Busca e resgate
   e('orochimaru', 240, 50, 13, [13, 15, 12], [10, 10], null, ['jeSnakeHands', 'jeKusanagi', 'jeManda'], 'brute', 'villain:orochimaru', {
@@ -82,11 +88,15 @@ export const enemies: EnemyDef[] = [
     atPct: 0.5,
     damageMult: 1.25,
   }),
-  e('sasukeFinal', 330, 50, 16, [15, 16, 8], [10, 10], 'fire', ['jeSasukeChidori', 'jeDragonFlame', 'jeSasukeLion', 'jeSasukeFireball'], 'striker', 'ninja:uchiha', {
-    kind: 'enrage',
-    atPct: 0.5,
-    damageMult: 1.3,
-  }),
+  // Vale do Fim: o selo nível 2 entra pelo roteiro (forma), por cima da fúria.
+  {
+    ...e('sasukeFinal', 330, 50, 16, [15, 16, 8], [10, 10], 'fire', ['jeSasukeChidori', 'jeDragonFlame', 'jeSasukeLion', 'jeSasukeFireball'], 'striker', 'ninja:uchiha', {
+      kind: 'enrage',
+      atPct: 0.5,
+      damageMult: 1.3,
+    }),
+    forms: [{ id: 'curseMark2', statMult: 1.2, healPct: 0.2 }],
+  },
 ];
 
 export const enemiesById: Record<string, EnemyDef> = Object.fromEntries(enemies.map((x) => [x.id, x]));

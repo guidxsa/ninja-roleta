@@ -1,6 +1,6 @@
 # Roteiro de luta e marcos da história
 
-> Implementado na v0.66.0 (infraestrutura). Código em `src/core/jornada/script.ts`; marcos em `src/data/jornada/campaigns.ts`. A História canônica que usa tudo isto (Haku, Gaara, Kabuto, Vale do Fim) entra na v0.67.0.
+> Infraestrutura na v0.66.0; História canônica e os recursos de `knock`, condição de marca, forma temporária e técnica sorteada na v0.67.0. Código em `src/core/jornada/script.ts`; marcos em `src/data/jornada/campaigns.ts`. Os momentos de cada luta estão em [historia.md](historia.md#momentos-canônicos).
 
 A História separa dois tipos de progressão:
 
@@ -14,7 +14,7 @@ A árvore decide *como* o personagem cresce, nunca *se* os acontecimentos fundam
 Um marco é uma técnica que a campanha dá a um personagem, protagonista ou aliado, sem passar pela árvore (`grants` na campanha).
 
 - Fica preso a um **estágio** (índice contando do 0: estágio 1 é o Exame) ou a uma **parada** (vale depois que ela passa).
-- Hoje: o Sasuke aprende o Chidori no Exame (era o antigo `stageTechniques`).
+- Hoje, do Naruto: o **Kage Bunshin** no pergaminho proibido (ele começa a História sem a técnica), o **Mil Clones** depois do Mizuki (v0.70.0), o Kuchiyose e o Rasengan. Do Sasuke: o Sharingan e o Chidori.
 - Marco novo do protagonista entra no moveset se houver espaço; senão fica disponível na tela de moveset.
 - Os marcos valem só na História. O Caminho Ninja não tem cânone a seguir.
 - Um evento também pode ensinar uma técnica ao protagonista: efeito `learn` ([run.md](run.md#eventos)).
@@ -33,21 +33,32 @@ Uma parada de luta pode ter um `script`: uma lista de regras **quando → faça*
 | `down` | um lutador cai |
 | `tech` | uma técnica é usada (por qualquer um, ou só por quem for indicado) |
 
-O motor confere as regras em pontos fixos: abertura da luta, toda perda de HP, toda virada de rodada e logo depois de cada técnica. Cada regra dispara **uma vez** por luta, na ordem do dado.
+O motor confere as regras em pontos fixos: abertura da luta, toda perda de HP, toda virada de rodada e logo depois de cada técnica. Cada regra dispara **uma vez** por luta, na ordem do dado; uma regra que derruba alguém já dispara as de queda na mesma checagem.
+
+Uma regra pode ter a condição **`if: { flag }`**: só vale com aquela marca (o selo do Sasuke só desperta depois do Orochimaru). **`ifNot: { flag }`** é o contrário: a regra some com a marca. As duas olham as marcas da run e as postas nesta luta pela ação `flag`.
+
+**Regra de conteúdo** (v0.70.0): a fala de abertura e a de fecho (depois que o último inimigo cai) podem vir sozinhas; **toda interrupção no meio da luta muda algo nela** (um estado, uma forma, uma troca, uma cura). Um teste confere isso, e que toda fala e toda forma têm texto.
 
 ### Faça (ações)
 
 | Ação | Efeito |
 |---|---|
-| `say` | fala de um personagem no banner e no histórico da luta (o texto fica em `strings/jornada.ts`, `script`) |
+| `say` | fala de um personagem no banner e no histórico da luta (o texto fica em `strings/jornada.ts`, `script`). Com `narrator`, a fala sai sem nome |
+| `knock` | o lutador cai pelo roteiro, sem ser derrotado (o Sasuke protegendo o Naruto do Haku) |
 | `form` | liga uma **forma** do lutador (veja abaixo) |
 | `enter` | um lutador da reserva entra na luta |
+| `leave` | um lutador sai da luta sem ninguém no lugar (o Gamabunta vai embora depois da cabeçada no Shukaku) |
 | `replace` | um lutador sai e outro da reserva entra no lugar: a troca de fase |
 | `heal` | cura uma fração do HP máximo |
+| `effect` | põe um estado que já existe (atordoar, bloqueio de chakra, queimadura, veneno) no lutador, por N turnos dele |
+| `boost` | liga no lutador o fortalecimento de uma técnica, sem custo nem turno (a névoa do Zabuza, os espelhos do Haku) |
+| `teach` | o lutador ganha uma técnica até o fim da luta (a Cabeçada contra o Shukaku) |
 | `flag` | deixa uma marca na run, para eventos e paradas seguintes |
 | `end` | encerra a luta com o resultado declarado (vitória ou derrota roteirizada) |
 
-- A **reserva** sai do próprio roteiro: todo lutador citado em `enter` ou `replace` é montado com a força da run (inimigos) ou a ficha da run (aliados).
+- A **reserva** sai do próprio roteiro: todo lutador citado em `enter` ou `replace` é montado com a força da run (inimigos) ou a ficha da run (aliados), um por ação (três mercenários iguais entram como três).
+- A mesma forma não liga duas vezes no mesmo lutador. Depois que a luta acabou, uma regra que também a encerraria não dispara (duas saídas para o mesmo fim não repetem as falas).
+- `replace` não faz nada se quem sairia já não está na luta (outra regra fez a troca).
 - Quem **sai** por `replace` não volta nem conta para a vitória. Quem **entra** pelo roteiro é convidado: luta, mas não vira membro da equipe depois.
 - O lutador que entra age a partir da rodada seguinte.
 
@@ -55,15 +66,24 @@ O motor confere as regras em pontos fixos: abertura da luta, toda perda de HP, t
 
 A ficha de um personagem ou inimigo pode declarar **formas** (`forms`): transformações que o roteiro liga.
 
-- Uma forma pode multiplicar ataques e resistências, multiplicar o HP máximo (o HP atual acompanha a proporção), trocar as técnicas e a passiva, curar ao entrar e trocar o retrato.
-- Exemplos para a v0.67.0: o manto da Kyuubi do Naruto, o Gaara virando Shukaku. O selo amaldiçoado do Sasuke usa o mesmo molde.
+- Uma forma pode multiplicar ataques e resistências, multiplicar o HP máximo (o HP atual acompanha a proporção), trocar as técnicas e a passiva, **somar técnicas** enquanto dura, curar ao entrar e trocar o retrato.
+- Pode ser **temporária** (`turns`): conta os turnos de quem a usa e, no fim, sai. Com `exitLine`, o lutador diz uma fala ao sair, e a tela mostra a saída no banner, como a entrada.
+- **Pilha de formas** (v0.70.0): as formas ligadas se somam, na ordem em que entraram, sobre a ficha de antes. Quando uma acaba, sai só ela: a determinação continua depois que a Kyuubi de 3 turnos acaba (antes, a saída da Kyuubi apagava a determinação junto). A forma à mostra (retrato e nome) é a última que entrou. A cura da forma vale só na entrada.
+- Pode trazer **modificadores** (`mods`): dano × um fator e, uma vez, 1 de HP em vez de cair (a determinação da promessa ao Neji ou do "você é meu amigo" no Vale).
+- Hoje: do Naruto, o Mil Clones (3 turnos contra o Mizuki), a determinação, o chakra da Kyuubi (permanente contra o Haku e o Gaara; 3 turnos contra o Orochimaru e o Neji) e o manto de uma cauda (Vale do Fim), os dois últimos com retrato próprio; do Sasuke, o Sharingan, o selo amaldiçoado (4 turnos) e o selo nível 2 (Vale do Fim); do Gamabunta, o henge em raposa de nove caudas (contra o Shukaku).
+
+### Técnica sorteada
+
+Uma técnica pode ter **`roll`**: ao usar, paga o custo dela e sorteia uma variante pelo peso; o efeito e o alvo são os da variante. Os talentos mexem nos pesos (`rollWeights`, um peso a mais ou a menos por variante; peso 0 ou menos sai do sorteio). Hoje: o Kuchiyose no Jutsu do Naruto.
 
 ## Condições de vitória
 
 Além das que já existiam ([historia.md](historia.md#vitórias-especiais)):
 
-- **Finalizador** (`finisher`): o alvo só cai com uma técnica. Um golpe fatal de outra técnica deixa o alvo com 1 de HP. A tela mostra o objetivo ("Kabuto só cai com o Rasengan").
+- **Finalizador** (`finisher`): o alvo só cai com uma técnica. Um golpe fatal de outra técnica deixa o alvo com 1 de HP. A tela mostra o objetivo ("Kabuto só cai com o Rasengan"). A técnica entra na luta mesmo fora do moveset, e a IA (aliados e simulação) a usa com o alvo a 30% ou menos, concentrando chakra se faltar.
+
+- **Derrota inevitável** (`inevitableLoss` na parada, v0.68.0): qualquer fim de luta conta como progresso; não gasta Vontade do Fogo nem encerra a run, e a recompensa da luta continua. Desde a v0.70.0 a tela mostra **"Lição"** (kanji 修) com o que o Naruto aprendeu, e a equipe sai da luta com o HP e o chakra com que entrou.
 
 ## Exemplo: o teste do sino
 
-O teste do sino já usa o roteiro: o Kakashi abre a luta com uma fala, e o Naruto comemora quando o HP do Kakashi chega a 50%. A regra de vitória continua a mesma (`hpThreshold`).
+O teste do sino é uma derrota inevitável que acontece em campo: o Kakashi abre a luta com uma fala e deixa a marca `bellsLesson`; a 75% do HP ele derruba a Sakura (`knock`), a 50% o Sasuke e a 25% o Naruto, e aí a luta termina (`end`). Se a equipe não chegar lá, a rodada 5 encerra do mesmo jeito. A marca carimba a raiz do ramo Laços (`grantedBy`).

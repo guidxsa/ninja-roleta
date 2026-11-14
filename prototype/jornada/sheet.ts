@@ -16,15 +16,15 @@ import {
   teamMods,
   type JRun,
 } from '../../src/core/jornada/run';
-import { techPower } from '../../src/core/jornada/battle';
 import { jornadaData as data } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clanSymbol, fighterPortrait, icon } from '../art';
 import { esc, h, openDialog } from '../dom';
-import { ELEMENT_COLORS, elementChip } from '../tips';
+import { elementChip } from '../tips';
 import { tip } from '../tooltip';
-import { liveBattle, liveBattleRun, memberLabel, techName, techTip } from './battle';
+import { liveBattle, liveBattleRun, memberLabel, techName } from './battle';
 import type { JornadaHost } from './host';
+import { techCard } from './cards';
 import { relicSlot } from './relics';
 import { themeOf } from './theme';
 
@@ -83,23 +83,8 @@ function modChips(m: FighterMods): string[] {
   return out;
 }
 
-/** Linha de técnica: ícone na cor do elemento (ou do tipo), nome e os números principais; o resto na dica. */
-function techRow(t: JTechnique, mods: FighterMods): string {
-  const power = techPower(t, mods);
-  const cost = Math.max(0, t.chakraCost - mods.chakraDiscount - (mods.techChakraDiscount[t.id] ?? 0));
-  const bits = [
-    t.baseDamage > 0 ? `${J.battle.damage(power)}${(t.hits ?? 1) > 1 ? `×${t.hits}` : ''}` : '',
-    t.healHp ? F.heal(t.healHp) : '',
-    t.shieldPct ? F.shield(pct(t.shieldPct)) : '',
-    t.clones ? `${icon('clones')} +${t.clones + mods.extraClones}` : '',
-    cost ? J.battle.chakra(cost) : '',
-    t.hpCostPct ? `${pct(t.hpCostPct)}% HP` : '',
-  ].filter(Boolean);
-  const color = t.element ? ELEMENT_COLORS[t.element] : `var(--t-${t.type})`;
-  const ico = t.gates ? 'gates' : t.clones ? 'clones' : t.boost ? 'sparkle' : (t.element ?? t.type);
-  return `<li class="tech-card" style="--c:${color}"${techTip(t, undefined, mods)}><span class="tc-ico">${icon(ico)}</span>
-    <span class="tc-txt"><b>${techName(t.id)}</b><small>${[J.types[t.type] ?? t.type, ...bits].join(' · ')}</small></span></li>`;
-}
+/** Linha de técnica: o cartão canônico (docs/visual.md#cartões), com o tipo antes dos números. */
+const techRow = (t: JTechnique, mods: FighterMods): string => techCard(t, mods, { showType: true });
 
 function bar(kind: 'hp' | 'ck', cur: number, max: number): string {
   const label = kind === 'hp' ? S.stats.hp : S.stats.chakra;

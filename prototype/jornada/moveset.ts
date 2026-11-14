@@ -1,40 +1,18 @@
 // Tela de moveset da Jornada (v0.43.0): tela cheia com o tema da classe, como a árvore de talentos. As 4 vagas em
 // cima, as ativas de classe (sempre disponíveis) e as técnicas conhecidas agrupadas por origem. Só interface: as
 // regras são as de setMoveset/heroMovable/heroActives.
-import { techPower } from '../../src/core/jornada/battle';
 import { heroActives, heroMods, heroMovable, MOVESET_SIZE, setMoveset, type JRun } from '../../src/core/jornada/run';
-import type { FighterMods, JTechnique } from '../../src/core/jornada/types';
+import type { JTechnique } from '../../src/core/jornada/types';
 import { jornadaData as data } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clanSymbol, fighterPortrait, icon } from '../art';
 import { h, openDialog } from '../dom';
-import { ELEMENT_COLORS } from '../tips';
 import { techName, techTip } from './battle';
+import { techBits, techCard, techColor, techIcon } from './cards';
 import { themeOf, themeStyle } from './theme';
 
 const J = S.jornada;
 const U = J.ui;
-
-/** Ícone da técnica: clones, fortalecimento, portões, escudo, cura, ou o elemento/tipo. */
-function techIcon(t: JTechnique): string {
-  return icon(t.gates ? 'gates' : t.clones || t.hitsPerClone ? 'clones' : t.boost ? 'sparkle' : t.shieldPct ? 'barrier' : t.healHp ? 'medical' : (t.element ?? t.type));
-}
-
-const techColor = (t: JTechnique) => (t.element ? ELEMENT_COLORS[t.element] : `var(--t-${t.type})`);
-
-/** Números principais: dano (com os bônus da run), golpes, clones e custo. */
-function techBits(t: JTechnique, mods: FighterMods): string {
-  const power = techPower(t, mods);
-  const cost = Math.max(0, t.chakraCost - mods.chakraDiscount - (mods.techChakraDiscount[t.id] ?? 0));
-  return [
-    t.baseDamage > 0 ? `<span${power > t.baseDamage ? ' class="up"' : ''}>${J.battle.damage(power)}${(t.hits ?? 1) > 1 ? `×${t.hits}` : ''}</span>` : '',
-    t.clones ? `${icon('clones')} +${t.clones + mods.extraClones}` : '',
-    cost ? J.battle.chakra(cost) : '',
-    t.hpCostPct ? `${Math.round(t.hpCostPct * 100)}% HP` : '',
-  ]
-    .filter(Boolean)
-    .join(' · ');
-}
 
 /** De onde a técnica veio: kit da ficha, elemento ou talentos/eventos. */
 function groupOf(run: JRun, id: string): 'kit' | 'element' | 'talents' {
@@ -67,10 +45,8 @@ export function movesetScreen(run: JRun): Promise<JRun> {
       <span class="jm-seal"><span>${techIcon(t)}</span></span><b>${techName(t.id)}</b><small>${techBits(t, mods)}</small></button>`;
   };
   const card = (t: JTechnique) => {
-    const on = picked.includes(t.id);
-    return `<button type="button" class="jm-card${on ? ' on' : ''}" data-move="${t.id}" aria-pressed="${on}" style="--c:${techColor(t)}"${techTip(t, undefined, mods)}>
-      <span class="jm-ico">${techIcon(t)}</span><span class="jm-txt"><b>${techName(t.id)}</b><small>${techBits(t, mods)}</small></span>
-      ${on ? `<span class="jm-mark" aria-hidden="true">${picked.indexOf(t.id) + 1}</span>` : ''}</button>`;
+    const at = picked.indexOf(t.id);
+    return techCard(t, mods, { tag: 'button', ...(at >= 0 ? { slot: at } : {}), attrs: `data-move="${t.id}" aria-pressed="${at >= 0}"` });
   };
 
   const render = () => {

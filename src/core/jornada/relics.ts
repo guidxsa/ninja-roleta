@@ -59,6 +59,8 @@ export interface RelicDef {
   starterFor?: string[];
   /** Evolução: substitui esta relíquia inicial. Só aparece na escolha depois do chefe. */
   evolves?: string;
+  /** Evolução pela história: substitui esta inicial num evento (efeito `storyRelic`), nunca na escolha do chefe. */
+  storyEvolves?: string;
   /** Bônus no protagonista. */
   mods?: Partial<FighterMods>;
   /** Bônus em toda a equipe (protagonista incluído). */

@@ -7,11 +7,11 @@ import { choose, h, show } from './dom';
 export async function askPlayerName(): Promise<string> {
   const N = S.ui.playerName;
   const root = show(
-    h(`<div class="screen jname"><h2>${N.title}</h2>
-      <section class="card"><form data-form>
+    h(`<div class="screen jname"><section class="parchment jc-paper jname-paper"><span class="seal jc-seal" aria-hidden="true">忍</span>
+      <h2 class="jc-title">${N.title}</h2><form data-form>
         <label class="field"><span>${N.label}</span>
           <input type="text" data-input maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" enterkeyhint="done" placeholder="${N.placeholder}"></label>
-      </form><p class="muted small">${N.hint}</p></section>
+      </form><p class="jname-hint">${N.hint}</p></section>
       <button class="btn primary big" data-choice="ok">${N.confirm}</button>
       <button class="btn small jname-skip" data-choice="skip">${N.skip}</button></div>`),
   );

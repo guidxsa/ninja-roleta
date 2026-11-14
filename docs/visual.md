@@ -39,6 +39,93 @@ Referências do usuário (07/11/2026): o painel do Project Rasengan, o logo de S
 - **Casca do PC** (pedido do usuário, a partir de uma referência de composição): **barra lateral** persistente em todas as telas (Início, Jornada, Roleta; Histórico, Livro Bingo, Relíquias, Conquistas); o **Início** em painéis, com o destaque (imagem `portao`, logo e citação) e os dois modos lado a lado no centro e, à direita, a **Ficha do ninja** (nome, avatar padrão e números do perfil), o **Progresso da Jornada** (o botão continua a run direto) e as **Conquistas recentes**; o **Registro abre em popup** em qualquer tela e em qualquer entrada (barra lateral, botão Registro, barra do Portão no celular), uma seção por vez, num pergaminho vertical com rolos; o Histórico filtra por Geral, Origens e Dificuldade; a janela antiga de abas saiu (pedido do usuário: um padrão só); no pé, a **faixa de frases** sorteadas. O Portão "Vila com placas" foi tentado antes e rejeitado. **Direção de arte** (pedido do usuário: "menos caixas, mais composição"; revista em 11/11/2026, quando ele apontou que as peças brigavam entre si em outras resoluções): **cada peça no seu espaço**. A ilustração do destaque é a cena, sem moldura, com a borda dissolvida em tinta, e o logo e a citação ficam dentro dela, em cantos opostos; os modos são pergaminhos desenrolados com rolos de madeira, em células próprias abaixo da cena, com a arte **dentro** do papel (moldura de tinta), um selo (道, 運) no canto e a ação numa pincelada vermelha; a coluna direita são pergaminhos levemente desalinhados, um abaixo do outro, com a kunai, o selo e a miniatura dentro do próprio pergaminho, títulos sublinhados a pincel e o avatar num medalhão; o papel dos pergaminhos do Início é envelhecido (mais quente, queimado nas bordas, com manchas e tinta mais escura); as pinceladas têm falhas de cerda. Saíram os cards subindo sobre a cena, a arte vazando do papel, a citação cruzando a borda e a pilha sobreposta. **Vagas de textura** em `public/img/ui/` (`papel`, `madeira`, `pincel`, `fundo`): cada imagem que existir entra no lugar do desenho do CSS. Se o PC agradar, o usuário pretende levar essa linguagem ao celular.
 - **Entrada da Jornada**: banner com a chamada, card **Progresso da Jornada** (capítulo, parada, miniatura, % de conclusão e o botão Continuar), painéis em pergaminho e **Conquistas recentes** (as 3 mais novas do perfil).
 
+## Três materiais
+
+Regra de quando usar cada superfície (auditoria de design, v0.72.0). O jogo tinha duas linguagens, o mundo fora da run e o painel grafite dentro dela; a regra abaixo fecha essa fronteira.
+
+| Material | Papel | Onde |
+|---|---|---|
+| **Papel** (pergaminho, tinta escura, selo) | história, decisão e recompensa | evento, fala, lição, vitória, relíquia, fim de run |
+| **Noite** (fundo de tinta, cenário em nanquim) | o palco onde as coisas acontecem | combate, mapa, trilha, o quadro das cenas |
+| **Laca** (grafite chanfrado, filete dourado) | ferramenta e navegação | HUD, barra lateral, menus de ação, dicas |
+
+O card grafite não carrega história: é ferramenta.
+
+## Cena narrativa
+
+Um componente só (`prototype/jornada/scene.ts`, `styles/jornada-scene.css`) para evento, vitória, lição, estágio concluído, ciclo e relíquia ganha:
+
+- **Quadro**: o local da parada como requadro de mangá (margem grossa de tinta, o cenário em nanquim) e **quem está em cena** no canto, com o nome numa tira de papel. Cada evento da História diz quem está de fato na cena (`face` no dado); a regra do retrato está em [Quem aparece na cena](#quem-aparece-na-cena).
+- **Pergaminho**: o título em letra de mão, o texto e um **selo** no canto com o tipo do momento (話 presenciado, 縁 narrativo, 修 treino ou lição, 勝 vitória, 巻 estágio, 宝 relíquia, 火 Vontade do Fogo, 道 ciclo, 謎 desconhecido).
+- **Opções** como tiras de papel, não botões de painel; a escolhida leva o carimbo.
+- **Vitória e lição**: as linhas entram uma a uma; na lição, quem está em cena é quem a deu, e a primeira linha lê como fala.
+- **PC**: o quadro é a página da esquerda e o pergaminho, a da direita.
+
+**Fala na luta: corte de quadro.** A luta escurece, quem fala entra numa faixa de papel em diagonal com o retrato (pela esquerda o aliado, pela direita o inimigo; o narrador, sem retrato) e **o jogador toca para seguir** (Enter e espaço também; no modo instantâneo segue sozinha). A faixa de pincel fica só para os jutsus. A fala de abertura das lutas passou a aparecer: antes, a animação pulava os eventos da abertura.
+
+### Quem aparece na cena
+
+Regra (revisão da etapa 1, v0.72.1): **a cena nunca usa o rosto de outro personagem no lugar de alguém, nem o ninja genérico.** Quem não tem representação própria aparece só com o nome, na tira de papel, até existir um recurso visual. Pôr uma imagem em `public/img/jornada/<id>` resolve o caso sem mudar código (`hasOwnPortrait` em `prototype/art.ts`). O corte de quadro da luta segue a mesma regra para quem fala sem estar em campo.
+
+| Situação | Personagens | Na cena |
+|---|---|---|
+| **Desenho próprio** | Mizuki, Zabuza, Haku (com a máscara), Gaara, Shukaku, Gamabunta (e a raposa), Kabuto, Orochimaru, Jirobo, Kidomaru, Tayuya, Sakon; Naruto no chakra da Kyuubi e no manto de uma cauda | Retrato |
+| **Traje próprio sobre o molde** (alternativa aceita) | Naruto, Sakura, Kakashi, Jiraiya, Tsunade, Kimimaro | Retrato. O Kakashi está sem a máscara, a semelhança mais fraca do grupo |
+| **Molde do clã** (alternativa aceita: é como ele aparece na luta) | Sasuke (Uchiha), Neji (Hyuuga), Shikamaru (Nara), Chōji (Akimichi), Kiba (Inuzuka), Lee (prodígio) | Retrato |
+| **Sem recurso: só o nome** | Iruka (hoje é o ninja genérico), Hinata, Tazuna, Ebisu, Ibiki, Itachi e Kisame, o Haku sem máscara (na floresta) | Tira de papel com o nome, quadro só com o local |
+
+Dosu, Zaku e Kin dividem um desenho só, e os capangas e ninjas comuns usam moldes genéricos: valem na luta, mas nenhum deles é rosto de cena.
+
+## Acabamento
+
+Etapa 4 da evolução visual (v0.76.0), em `prototype/styles/acabamento.css`.
+
+- **Roleta no celular**: o botão Girar fica preso ao pé da tela, mesmo com a legenda empurrando a roda para baixo.
+- **Tela do nome**: o registro ninja em papel, com o selo 忍, em vez do card escuro com formulário.
+- **Trilha**: a próxima parada e a dica ninja são papel; o HUD, a loja embutida e o resumo da run continuam em laca (ferramenta), como a regra dos três materiais manda.
+- **Sombras**: sem brilho difuso. Estado ativo na árvore, no mapa e nos pontos de talento se marca com anel e sombra dura (a linguagem do carimbo e do papel); sobram só os brilhos de dano e de entrada de forma, que são efeitos de uma batida.
+
+## Cartões
+
+Etapa 3 da evolução visual (v0.75.0), em `prototype/jornada/cards.ts` e `styles/jornada-cards.css`.
+
+- **Cartão de técnica canônico** (`techCard`): ícone quadrado na cor do elemento ou do tipo, nome e os números principais (dano com os bônus, cura, escudo, clones, custo). Moveset e ficha usam o mesmo desenho (na ficha, sobre papel, com o tipo antes dos números); antes eram dois. O **botão de luta** (`.jmove`) continua à parte de propósito: carrega estado (espera, bloqueio, vantagem). As vagas do moveset são selos, não cartões.
+- **Cartão de relíquia**: já era um só (`relicCard`, com variações de tamanho: `reveal`, `pop`, `stack`); o que variava era o container, e isso agora segue a regra dos [três materiais](#três-materiais).
+- **Loja**: um container só, o de papel, no celular (tela cheia) e no PC (painel ao lado da trilha).
+- **Fim da run como relatório de missão**, na mesma cena da narrativa: números (lutas vencidas, nível, melhor golpe), o **caminho percorrido** (um selo por parada na História, a derrota em vermelho e o que faltou tracejado), a equipe (quem caiu fica cinza), as relíquias e os talentos finais. Os números e o caminho entram em sequência.
+
+## Fundamentos
+
+Etapa 0 da evolução visual (v0.74.0), em `prototype/styles/tokens.css` e `a11y.css`.
+
+- **Escala tipográfica** em tokens (`--fs-xs` 12px a `--fs-6xl` 32px). **Nada de texto abaixo de 12px**; os 280 tamanhos soltos dos CSS de tela foram para a escala (display e kanji seguem os próprios `clamp`). Tamanho novo entra na escala, não em px solto.
+- **Escala de espaço** (`--sp-1` 4px a `--sp-6` 32px) para o que for escrito daqui em diante; os paddings antigos não foram reescritos.
+- **Contraste** (WCAG AA, 4,5:1 para texto): `--accent-text` é o vermelho para texto e ícone sobre superfície (o fundo vermelho segue com `--accent`); o hover do vermelho e, no tema claro, dourado, cinza de apoio, XP, chakra e folha foram escurecidos até passar. O selo dourado do tema claro usa tinta clara.
+- **Foco**: todo controle tem anel visível (regra de especificidade zero, que não atrapalha os que já tinham o seu); selos da árvore, cards de lutador, nós do mapa e as barras de navegação ganharam anel próprio.
+- **Alvos de toque**: a área que responde tem 44px mesmo quando o desenho é menor (recolher painel, nó do mapa, relíquias na luta); botões pequenos e de fechar sobem para 44px em tela de toque.
+- **Movimento**: os pulsos de chamada tocam algumas vezes e param; com menos movimento, o número de dano aparece parado em vez de sumir.
+
+## Combate
+
+Etapa 2 da evolução visual (v0.73.0), em `prototype/styles/jornada-combat.css`. O campo é o palco (noite); o menu é ferramenta (laca).
+
+- **Celular**: o menu é uma bandeja de laca presa ao pé da tela, com abas. As ações de todo turno ficam ao alcance do polegar, sem rolar; a bandeja tem altura mínima fixa para não pular ao trocar de aba.
+- **A informação que decide fica onde se decide**: a vantagem de elemento aparece no botão da técnica e numa etiqueta de papel em cada alvo, e a ordem da rodada sobe para o celular.
+- **Confirmações** são do jogo: um aviso em papel com duas ações, no lugar do diálogo do navegador.
+- Detalhes da tela em [combate.md](jornada/combate.md#interface).
+
+## Movimento
+
+O movimento responde a um gesto ou explica uma troca de estado; nada se mexe só por enfeite (v0.70.0, `prototype/styles/jornada-motion.css` e `prototype/jornada/motion.ts`).
+
+- **O carimbo é o momento de autoria.** Ao escolher numa cena, a opção leva o hanko 道 ("o caminho") e as outras esmaecem, antes de a tela seguir. É como o mundo shinobi firma uma decisão.
+- **Pincelada** entre um evento e o seguinte, quando abrem em sequência: a tela entra da esquerda para a direita, como tinta.
+- **Faixa "O que mudou"**: etiqueta de papel no alto da tela seguinte, com os ganhos entrando um a um (no máximo meio segundo no total).
+- **Troca de relíquia**: a antiga se desfaz em tinta e a nova se revela no mesmo lugar.
+- **Formas na luta**: o retrato acende na cor do perigo ao entrar e desbota ao sair, com o banner nas duas pontas.
+- **Árvore de talentos** (v0.71.0): aprender carimba o selo e pinta o traço; o contador de pontos afunda; o nível novo pinga como tinta; o caminho recusado da bifurcação é riscado da esquerda para a direita; no talento final, o kanji do ramo (影 幻 縁 油 火 風) acende atrás do selo e o aro dourado abre.
+- **Regras**: durações pelos tokens (`--dur-*`), para o modo instantâneo encurtar tudo; o conteúdo já nasce visível (sem animação, nada some); com `prefers-reduced-motion`, saem o deslocamento e a pincelada e ficam a cor e a opacidade. Kanji novo só do recorte (`prototype/fonts/LEIAME.md`): a "Lição" do teste do sino usa 修, que já estava nele.
+
 ## Vagas de ilustração
 
 O jogador pode pôr ilustrações em `public/img/cenas/` ([instruções](../public/img/LEIAME.md)). Sem a imagem, vale o desenho próprio. Hoje as vagas têm **imagens provisórias** (`.svg` com o nome do arquivo escrito), para ver o efeito: troque por uma imagem com o mesmo nome e apague o `.svg`. Cada vaga aceita também um **vídeo curto em loop** (`.webm` ou `.mp4`, sem som) com o mesmo nome: o botão **Animado** da barra superior (só aparece quando há vídeo) troca entre o modo **Leve**, com a imagem parada e padrão, e o animado; com `prefers-reduced-motion`, sempre a imagem.

@@ -13,18 +13,18 @@
 }
 .mg-card.up { background: var(--grain-dark), var(--paper); color: var(--paper-ink); animation: pop var(--dur-2) var(--ease); }
 .mg-card.match { border-color: var(--gold); opacity: .65; }
-.seal-glyph { font: 400 28px/1 var(--font-kanji); display: block; }
-.mg-card small { font: 600 11px/1 var(--font-hud); letter-spacing: .06em; color: inherit; opacity: .8; }
+.seal-glyph { font: 400 var(--fs-5xl)/1 var(--font-kanji); display: block; }
+.mg-card small { font: 600 var(--fs-xs)/1 var(--font-hud); letter-spacing: .06em; color: inherit; opacity: .8; }
 .mg-seq { min-height: 74px; display: flex; justify-content: center; align-items: center; gap: 6px; }
 .mg-show { display: grid; place-items: center; width: 70px; height: 70px; background: var(--grain-dark), var(--paper); color: var(--paper-ink); border: 1px solid var(--gold); animation: stamp .3s var(--ease); }
-.mg-typed { font: 400 24px/1 var(--font-kanji); letter-spacing: .1em; }
+.mg-typed { font: 400 var(--fs-4xl)/1 var(--font-kanji); letter-spacing: .1em; }
 .mg-duel { display: flex; justify-content: center; gap: 18px; min-height: 56px; align-items: center; }
 .mg-duel b { display: grid; place-items: center; }
 .mg-duel .ico { width: 48px; height: 48px; color: var(--text); }
-.mg-duel span { font: 400 20px/1 var(--font-display); color: var(--accent-2); }
+.mg-duel span { font: 400 var(--fs-2xl)/1 var(--font-display); color: var(--accent-text); }
 .big-hand { min-width: 76px; min-height: 76px; display: grid !important; place-items: center; }
 .big-hand .ico { width: 38px; height: 38px; color: var(--text); }
 .center-row { justify-content: center; }
-.mg-result { font: 400 24px/1.2 var(--font-display); }
+.mg-result { font: 400 var(--fs-4xl)/1.2 var(--font-display); }
 .mg-result.good { color: var(--gold-2); }
 .mg-result.bad { color: var(--bad); }

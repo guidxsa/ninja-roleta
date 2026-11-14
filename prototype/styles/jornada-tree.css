@@ -43,12 +43,12 @@
 .jt-head { position: relative; display: flex; align-items: center; gap: 10px; }
 .jt-head .portrait { flex: none; border-color: var(--tree); box-shadow: 2px 2px 0 var(--ink); }
 .jt-title { flex: 1; min-width: 0; }
-.jt-title h2 { margin: 0; font: 400 21px/1.05 var(--font-display); text-align: left; text-shadow: var(--title-shadow); }
+.jt-title h2 { margin: 0; font: 400 var(--fs-2xl)/1.05 var(--font-display); text-align: left; text-shadow: var(--title-shadow); }
 .jt-title h2::after { display: none; }
-.jt-title small { display: block; color: var(--muted); font: 600 13px/1.2 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jt-title small { display: block; color: var(--muted); font: 600 var(--fs-sm)/1.2 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jt-points { flex: none; display: flex; flex-direction: column; align-items: center; min-width: 50px; padding: 3px 8px; border: 1px solid var(--line-strong); background: var(--surface); }
-.jt-points b { font: 700 23px/1 var(--font-hud); }
-.jt-points small { font: 600 10px/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.jt-points b { font: 700 var(--fs-3xl)/1 var(--font-hud); }
+.jt-points small { font: 600 var(--fs-xs)/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .jt-points.has { border-color: var(--tree); box-shadow: 0 0 12px color-mix(in srgb, var(--tree) 55%, transparent); }
 .jt-points.has b { color: var(--tree-2); }
 
@@ -57,15 +57,15 @@
   position: relative; flex: 1 0 auto; min-width: 74px; min-height: 44px; padding: 5px 8px; display: flex; flex-direction: column; align-items: center; gap: 1px;
   background: var(--surface); color: var(--muted); border: 1px solid var(--line); border-bottom: 2px solid var(--line); cursor: pointer; font: inherit;
 }
-.jt-tab b { font: 700 14px/1.1 var(--font-hud); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
-.jt-tab small { font: 600 11px/1 var(--font-hud); }
+.jt-tab b { font: 700 var(--fs-md)/1.1 var(--font-hud); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.jt-tab small { font: 600 var(--fs-xs)/1 var(--font-hud); }
 .jt-tab.on { color: var(--text); border-bottom-color: var(--tree); background: color-mix(in srgb, var(--tree) 18%, var(--surface)); }
 .jt-tab.can::after { content: ''; position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; transform: rotate(45deg); background: var(--tree-2); }
 
 .jt-branch { position: relative; display: none; }
 .jt-branch.on { display: block; }
-.jt-branch h3 { display: none; margin: 4px 0 2px; text-align: center; font: 700 16px/1.1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--tree-2); }
-.jt-branch h3 small { color: var(--muted); font-size: 12px; letter-spacing: 0; }
+.jt-branch h3 { display: none; margin: 4px 0 2px; text-align: center; font: 700 var(--fs-lg)/1.1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--tree-2); }
+.jt-branch h3 small { color: var(--muted); font-size: var(--fs-xs); letter-spacing: 0; }
 .jt-grid { position: relative; width: 100%; max-width: 420px; margin: 0 auto; }
 .jt-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .jt-lines path { fill: none; stroke: var(--line-strong); stroke-width: 3; vector-effect: non-scaling-stroke; stroke-linecap: round; }
@@ -86,7 +86,7 @@
 }
 .jt-seal > span { transform: rotate(-45deg); display: grid; place-items: center; }
 .jt-seal .ico { width: 24px; height: 24px; }
-.jt-name { position: relative; z-index: 1; font: 700 13.5px/1.1 var(--font-hud); letter-spacing: .02em; text-align: center; text-shadow: 1px 1px 0 var(--bg), -1px 1px 0 var(--bg), 1px -1px 0 var(--bg), -1px -1px 0 var(--bg); }
+.jt-name { position: relative; z-index: 1; font: 700 var(--fs-sm)/1.1 var(--font-hud); letter-spacing: .02em; text-align: center; text-shadow: 1px 1px 0 var(--bg), -1px 1px 0 var(--bg), 1px -1px 0 var(--bg), -1px -1px 0 var(--bg); }
 .jt-pips { display: flex; gap: 3px; margin-top: -4px; }
 .jt-pips i { width: 8px; height: 8px; transform: rotate(45deg); border: 1px solid var(--tree); background: var(--bg); }
 .jt-pips i.on { background: var(--tree-2); border-color: var(--tree-2); }
@@ -96,6 +96,9 @@
   box-shadow: 3px 3px 0 var(--ink), 0 0 16px color-mix(in srgb, var(--tree) 70%, transparent);
 }
 .jt-node.st-maxed .jt-seal { outline: 2px solid var(--tree-2); outline-offset: 2px; }
+/* Talento final do ramo: selo maior com aro dourado; nó dado pela história: aro tracejado até chegar o marco. */
+.jt-node.capstone .jt-seal { box-shadow: 3px 3px 0 var(--ink), 0 0 0 3px var(--gold); }
+.jt-node.story.st-storyLocked .jt-seal { border-style: dashed; opacity: .75; }
 .jt-node.st-available .jt-seal, .jt-node.st-upgradable .jt-seal { animation: jtCall 1.5s var(--ease) infinite; }
 .jt-node.st-available .jt-seal { border-color: var(--tree); background: color-mix(in srgb, var(--tree) 20%, var(--surface)); }
 .jt-node.st-noPoints .jt-seal { border-color: color-mix(in srgb, var(--tree) 50%, var(--line-strong)); }
@@ -104,29 +107,66 @@
 .jt-node.st-locked .jt-seal, .jt-node.st-stageLocked .jt-seal, .jt-node.st-accountLocked .jt-seal { background: var(--bg); box-shadow: none; }
 .jt-node.st-excluded { color: var(--muted); }
 .jt-node.st-excluded .jt-seal { background: var(--bg); box-shadow: none; border-style: dashed; opacity: .55; }
-.jt-node.st-excluded .jt-name { text-decoration: line-through; }
 .jt-node.sel .jt-seal { transform: rotate(45deg) scale(1.12); outline: 2px solid var(--tree-2); outline-offset: 3px; }
 .jt-node.sel .jt-name { color: var(--tree-2); }
-.jt-node.just .jt-seal { animation: jtStamp .45s cubic-bezier(.2, 1.6, .4, 1); }
+.jt-node.just .jt-seal { animation: jtStamp .45s var(--ease-out); }
 @keyframes jtCall { 0%, 100% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 0 color-mix(in srgb, var(--tree) 70%, transparent); } 50% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 9px transparent; } }
 @keyframes jtStamp { from { transform: rotate(45deg) scale(1.9); opacity: .3; } to { transform: rotate(45deg) scale(1.12); opacity: 1; } }
+
+/* Combinação (v0.71.0): liga dois ramos. Selo redondo de aro duplo, linha tracejada e o nome do ramo parceiro. */
+.jt-lines path.combo { stroke-dasharray: .06 .05; stroke-width: 2.5; }
+.jt-lines path.combo.on { stroke-dasharray: none; stroke-width: 5; }
+.jt-lines path.combo.ink { stroke-dasharray: 1; }
+.jt-node.combo .jt-seal { border-radius: 50%; outline: 1px solid color-mix(in srgb, var(--tree-2) 70%, transparent); outline-offset: 3px; }
+.jt-node.combo.sel .jt-seal { outline: 2px solid var(--tree-2); }
+.jt-link { margin-top: -5px; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--tree-2); text-shadow: 1px 1px 0 var(--bg); }
+.jt-card .jt-combo { color: var(--tree-2); font: 700 var(--fs-xs)/1.25 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; }
+.jt-card .jt-final { color: var(--gold-2); font: 700 var(--fs-xs)/1.25 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; }
+
+/* Movimento da compra (docs/visual.md#movimento). O selo já carimba (jtStamp) e a linha já é pintada (jtInk). */
+/* Pontos: o número afunda e volta quando um ponto é gasto. */
+.jt-points.spent b { animation: jtSpend var(--dur-3) cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes jtSpend { from { transform: translateY(-7px) scale(1.35); color: var(--tree); } to { transform: none; } }
+/* Subir de nível: a marca do nível novo pinga como tinta. */
+.jt-node.just .jt-pips i.on:last-of-type { animation: jtPip var(--dur-3) cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes jtPip { from { transform: rotate(45deg) scale(2.6); opacity: 0; } to { transform: rotate(45deg) scale(1); opacity: 1; } }
+/* Talento final: o kanji do ramo acende atrás do selo e some, e o aro dourado abre. */
+.jt-kanji {
+  position: absolute; left: 50%; top: -34px; z-index: 0; translate: -50% 0; pointer-events: none;
+  font: 400 118px/1 var(--font-kanji); color: var(--gold-2); opacity: 0;
+  animation: jtKanji calc(var(--dur-3) * 3.4) cubic-bezier(.16, 1, .3, 1) both;
+}
+@keyframes jtKanji {
+  from { opacity: 0; scale: .5; filter: blur(8px); }
+  22% { opacity: .9; scale: 1; filter: none; }
+  to { opacity: 0; scale: 1.25; filter: blur(2px); }
+}
+.jt-node.capstone.just .jt-seal { animation: jtStamp .45s var(--ease-out), jtCrown calc(var(--dur-3) * 3) var(--ease) both; }
+@keyframes jtCrown { from { box-shadow: 3px 3px 0 var(--ink), 0 0 0 16px transparent; } 35% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 9px color-mix(in srgb, var(--gold) 55%, transparent); } to { box-shadow: 3px 3px 0 var(--ink), 0 0 0 3px var(--gold); } }
+/* Bifurcação: o caminho recusado é riscado com tinta, da esquerda para a direita. */
+.jt-node.st-excluded .jt-name { text-decoration: none; background: linear-gradient(currentColor, currentColor) left 55% / 100% 1.5px no-repeat; animation: jtStrike var(--dur-3) var(--ease) both; }
+@keyframes jtStrike { from { background-size: 0 1.5px; } to { background-size: 100% 1.5px; } }
+@media (prefers-reduced-motion: reduce) {
+  .jt-kanji { display: none; }
+  .jt-points.spent b, .jt-node.just .jt-pips i.on:last-of-type, .jt-node.st-excluded .jt-name { animation: none; }
+}
 
 .jt-detail {
   position: sticky; bottom: 0; z-index: 2; margin: auto -16px 0; padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
   display: flex; flex-direction: column; gap: 8px; min-height: 96px;
-  background: var(--surface); border-top: 2px solid var(--tree); box-shadow: 0 -8px 20px rgba(0, 0, 0, .35);
+  background: var(--surface); border-top: 2px solid var(--tree); box-shadow: 0 -3px 0 var(--ink);
 }
 .jt-card { display: flex; flex-direction: column; gap: 3px; }
-.jt-card > b { font: 400 20px/1.1 var(--font-display); letter-spacing: .02em; color: var(--tree-2); }
-.jt-card > small { font-size: 13.5px; line-height: 1.3; color: var(--muted); }
-.jt-card .jt-rank { font: 700 13px/1.2 var(--font-hud); letter-spacing: .04em; color: var(--tree-2); }
-.jt-card .jt-power { font: 700 13px/1.2 var(--font-hud); letter-spacing: .04em; }
+.jt-card > b { font: 400 var(--fs-2xl)/1.1 var(--font-display); letter-spacing: .02em; color: var(--tree-2); }
+.jt-card > small { font-size: var(--fs-sm); line-height: 1.3; color: var(--muted); }
+.jt-card .jt-rank { font: 700 var(--fs-sm)/1.2 var(--font-hud); letter-spacing: .04em; color: var(--tree-2); }
+.jt-card .jt-power { font: 700 var(--fs-sm)/1.2 var(--font-hud); letter-spacing: .04em; }
 .jt-card .jt-choice { color: var(--gold-2); }
-.jt-card .jt-status { font: 700 12px/1.2 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }
+.jt-card .jt-status { font: 700 var(--fs-xs)/1.2 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }
 
 @media (min-width: 900px) and (min-height: 560px) {
   .jt-body { padding: 20px 24px 0; }
-  .jt-title h2 { font-size: 30px; }
+  .jt-title h2 { font-size: var(--fs-6xl); }
   .jt-crest { top: 40px; right: 10px; width: 340px; height: 340px; }
   .jt-tabs { display: none; }
   .jt-branches { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; align-items: start; }

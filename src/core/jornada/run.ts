@@ -6,7 +6,7 @@ import { createRng, type Rng } from '../rng';
 import type { Element } from '../types';
 import { allyResults, emptyMods, enemySeed, mergeMods, type BattleSetup, type FighterSeed } from './battle';
 import type { JornadaData, StoryGrant } from './data';
-import { eventOptions, SHOP_CURSE, type EventEffect } from './events';
+import { eventOptions, SHOP_CURSE, type EventDef, type EventEffect } from './events';
 import { generateMap, mapNode, nextNodes, type StageMap } from './map';
 import { bossChoices, dropRelic, rollRelic, rollRelics, type RelicDef } from './relics';
 import { canBuyTalent, talentRankCost, treeComplete, type TalentContext } from './talents';
@@ -15,7 +15,7 @@ import type { ConsumableId, FighterMods, JBattle } from './types';
 
 /** Protagonista da História. */
 export const HERO = 'naruto';
-export const MOVESET_SIZE = 4;
+export const MOVESET_SIZE = 6;
 export const CONSUMABLES: ConsumableId[] = ['hpKit', 'chakraKit', 'reviveKit'];
 
 export interface MemberState {
@@ -72,7 +72,7 @@ export interface JRun {
   talentRanks: Record<string, number>;
   /** Técnicas do protagonista além do kit inicial (talentos). */
   learned: string[];
-  /** As 4 técnicas equipadas (sem as ativas de classe). */
+  /** As técnicas equipadas (até `MOVESET_SIZE`) (sem as ativas de classe). */
   moveset: string[];
   relics: string[];
   bag: Record<ConsumableId, number>;
@@ -105,6 +105,16 @@ export interface JRun {
   shopPurchases: number;
   /** Compras desde a maldição do mercador (zera quando ela sai). Sem o campo: 0. */
   cursedPurchases?: number;
+  /** Árvore e História canônicas da v0.67.0 já aplicadas (sem o campo: save antigo, migrado ao carregar). */
+  canonTree?: 1;
+  /** Cronologia da v0.68.0 (a jornada pela perspectiva do Naruto) já aplicada (sem o campo: migrado ao carregar). */
+  journey?: 1;
+  /** Paradas juntadas e colar da Tsunade da v0.70.0 já aplicados (sem o campo: migrado ao carregar). */
+  merged?: 1;
+  /** Árvore do Naruto refeita na v0.71.0 já aplicada (sem o campo: os pontos gastos voltam ao carregar). */
+  tree071?: 1;
+  /** Etapa do evento em andamento na parada atual (paradas com mais de um evento, v0.70.0); sem o campo, a primeira. */
+  beat?: number;
 }
 
 export interface ShopStock {
@@ -143,7 +153,7 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     storyArcs: STORY_ARCS,
     stageIndex: 0,
     stopIndex: 0,
-    ryo: 0,
+    ryo: data.j.run.startRyo,
     xp: 0,
     level: 1,
     talentPoints: 0,
@@ -165,6 +175,10 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     cleared: [],
     shop: null,
     shopPurchases: 0,
+    canonTree: 1,
+    journey: 1,
+    merged: 1,
+    tree071: 1,
   };
 }
 
@@ -557,9 +571,12 @@ export function nextFightTeam(run: JRun, data: JornadaData): string[] {
 export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
   const stop = currentStop(run, data);
   if (!stop || !isFight(stop)) throw new Error('a parada atual não é uma luta');
+  const win = stop.win ?? { kind: 'defeatAll' as const };
   const allies = [run.hero, ...fightTeam(run, stop, data)].map((id) => {
     const seed = memberSeed(run, id, data);
-    return { ...seed, hp: Math.max(1, seed.hp) };
+    // Finalizador: a técnica exigida entra na luta mesmo fora do moveset (ninguém fica preso).
+    const finisher = win.kind === 'finisher' && seed.protagonist && heroKnown(run, data).includes(win.technique) && !seed.techniques.includes(win.technique);
+    return { ...seed, hp: Math.max(1, seed.hp), ...(finisher ? { techniques: [...seed.techniques, win.technique] } : {}) };
   });
   const opening = relicDefs(run, data).reduce((a, r) => a + (r.openingDamage ?? 0), 0);
   const foes = stop.enemies.map((id) => {
@@ -567,7 +584,8 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
     return opening ? { ...seed, hp: Math.max(1, seed.hp - opening) } : seed;
   });
   // Roteiro: os lutadores que ele pode pôr na luta (inimigos com a força da run; aliados com a ficha da run).
-  const reserveIds = [...new Set((stop.script ?? []).flatMap((r) => r.do.flatMap((a) => (a.do === 'enter' ? [a.who] : a.do === 'replace' ? [a.with] : []))))];
+  // Um lutador por ação (três mercenários iguais entram como três).
+  const reserveIds = (stop.script ?? []).flatMap((r) => r.do.flatMap((a) => (a.do === 'enter' ? [a.who] : a.do === 'replace' ? [a.with] : [])));
   const reserve = reserveIds.map((id) =>
     data.enemies[id]
       ? { side: 'enemy' as const, seed: enemySeed(id, run.difficulty, data, runEnemyMult(run, data)) }
@@ -576,9 +594,9 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
   return {
     allies,
     enemies: foes,
-    win: stop.win ?? { kind: 'defeatAll' },
+    win,
     pills: run.bag.reviveKit,
-    ...(stop.script ? { script: stop.script, reserve } : {}),
+    ...(stop.script ? { script: stop.script, reserve, runFlags: [...run.flags] } : {}),
   };
 }
 
@@ -702,6 +720,8 @@ export interface FightOutcome {
   retry: boolean;
   /** Relíquia deixada pela elite vencida. */
   relic: string | null;
+  /** Derrota inevitável que conta como progresso (teste do sino): a tela mostra "Derrota" e a lição. */
+  inevitable?: boolean;
 }
 
 /** Fecha a luta da parada atual: HP da equipe, recompensas e avanço (ou fim da run). */
@@ -716,7 +736,9 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   // Pílulas usadas sozinhas pelo protagonista saem da bolsa aqui; as usadas pelo botão, a tela já descontou.
   const autoPills = battle.log.filter((e) => e.type === 'revive' && e.pill).length;
   run.bag.reviveKit = Math.max(0, run.bag.reviveKit - autoPills);
-  const won = battle.status === 'won';
+  // Derrota inevitável (teste do sino): qualquer fim conta como progresso.
+  const inevitable = Boolean(stop.inevitableLoss);
+  const won = battle.status === 'won' || inevitable;
   const results = allyResults(battle);
   if (!won) {
     if (run.willOfFire > 0) {
@@ -741,7 +763,10 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   healAll(run, rec, data, membersSeen(run, data).filter((id) => !fought.has(id)));
   for (const r of results) {
     const sheet = memberSheet(run, r.defId, data);
-    if (r.down) {
+    if (inevitable) {
+      // A lição não custa nada (v0.70.0): o Kakashi derruba a equipe pelo roteiro, e ela sai como entrou.
+      run.members[r.defId] = memberState(prev, r.defId, data);
+    } else if (r.down) {
       run.stats.alliesLost++;
       run.members[r.defId] = { hp: Math.floor(sheet.maxHp * data.j.run.downedAllyReturnPct), chakra: r.chakra };
     } else {
@@ -767,7 +792,7 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   if (relic) run = gainRelic(run, relic, data);
   if (!run.bossChoice) advanceStop(run, data);
   const talentRyo = rewardRyo + levelRyo;
-  return { run, outcome: { won: true, ryo, talent: rewardRyo ? 0 : reward.talent, talentRyo, xp: xpGained, levelUps, retry: false, relic } };
+  return { run, outcome: { won: true, ryo, talent: rewardRyo ? 0 : reward.talent, talentRyo, xp: xpGained, levelUps, retry: false, relic, ...(inevitable ? { inevitable: true } : {}) } };
 }
 
 /** Vai para a próxima parada (ou o próximo estágio, ou a vitória). */
@@ -777,6 +802,20 @@ function advanceStop(run: JRun, data: JornadaData): void {
   stepStop(run, data);
   // Marco novo do protagonista entra no moveset se houver espaço.
   for (const id of grantedTechniques(run, run.hero, data)) if (!before.includes(id)) addToMoveset(run, id, data);
+  syncGrantedTalents(run, data);
+}
+
+/**
+ * Nós da árvore dados pela história (v0.67.0): quando o marco acontece (técnica conhecida ou marca na run), o nó entra
+ * carimbado e sem custo. Muda a run no lugar.
+ */
+export function syncGrantedTalents(run: JRun, data: JornadaData): void {
+  const known = heroKnown(run, data);
+  for (const node of data.talents) {
+    if (node.owner !== run.hero || !node.grantedBy || run.talents.includes(node.id)) continue;
+    const g = node.grantedBy;
+    if ((g.technique && known.includes(g.technique)) || (g.flag && run.flags.includes(g.flag))) run.talents.push(node.id);
+  }
 }
 
 function stepStop(run: JRun, data: JornadaData): void {
@@ -861,16 +900,19 @@ export function gainRelic(prev: JRun, relicId: string, data: JornadaData): JRun 
   const run = clone(prev);
   const def = data.relics.find((r) => r.id === relicId);
   if (!def || run.relics.includes(relicId)) return run;
-  // Evolução: toma o lugar da relíquia inicial.
-  const replaced = def.evolves ? run.relics.indexOf(def.evolves) : -1;
+  // Evolução (chefe ou história): toma o lugar da relíquia inicial.
+  const from = def.evolves ?? def.storyEvolves;
+  const replaced = from ? run.relics.indexOf(from) : -1;
+  const old = replaced >= 0 ? data.relics.find((r) => r.id === from) : undefined;
   if (replaced >= 0) run.relics[replaced] = relicId;
   else run.relics.push(relicId);
   for (const [k, n] of Object.entries(def.grant?.items ?? {})) run.bag[k as ConsumableId] = (run.bag[k as ConsumableId] ?? 0) + (n ?? 0);
   run.willOfFire += def.grant?.willOfFire ?? 0;
   run.ryo += def.grant?.ryo ?? 0;
   addTalentPoints(run, def.grant?.talentPoints ?? 0, data);
-  // HP a mais (bandana) entra cheio.
-  if (def.stats?.hp && run.members[run.hero]) run.members[run.hero]!.hp += def.stats.hp;
+  // HP a mais (bandana) entra cheio; na evolução, só a diferença para a relíquia que saiu.
+  const hpGain = (def.stats?.hp ?? 0) - (old?.stats?.hp ?? 0);
+  if (hpGain > 0 && run.members[run.hero]) run.members[run.hero]!.hp += hpGain;
   return run;
 }
 
@@ -1041,21 +1083,51 @@ export function rest(prev: JRun, choice: RestChoice, data: JornadaData): JRun {
 // ---------------------------------------------------------------------------
 // Eventos
 
-/** Aplica uma escolha de evento (com o resultado do minijogo, se houver) e avança. */
-export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean, data: JornadaData): { run: JRun; relic: string | null } {
+/** Eventos de uma parada, na ordem: o principal e as etapas seguintes (`then`, v0.70.0). */
+export const stopEvents = (stop: Extract<StopDef, { kind: 'event' }>): string[] => [stop.event, ...(stop.then ?? [])];
+
+/** O evento da vez na parada atual (a etapa em que a run está), ou null fora de uma parada de evento. */
+export function currentEvent(run: JRun, data: JornadaData): EventDef | null {
+  const stop = currentStop(run, data);
+  if (stop?.kind !== 'event') return null;
+  const ids = stopEvents(stop);
+  return data.events[ids[Math.min(run.beat ?? 0, ids.length - 1)]!] ?? null;
+}
+
+export interface EventOutcome {
+  run: JRun;
+  relic: string | null;
+  /** O que a escolha deu, com os valores de verdade (a interface mostra depois da escolha: "O que mudou"). */
+  gains: EventEffect[];
+  /** A parada acabou (não há outra etapa): a run avançou. */
+  done: boolean;
+}
+
+/**
+ * Aplica uma escolha de evento (com o resultado do minijogo, se houver). Na última etapa da parada, avança; antes
+ * disso, só passa para a etapa seguinte (`run.beat`), para o F5 no meio não repetir o que já foi dado.
+ */
+export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean, data: JornadaData): EventOutcome {
   const stop = currentStop(prev, data);
   if (stop?.kind !== 'event') throw new Error('a parada atual não é um evento');
-  const def = data.events[stop.event]!;
+  const def = currentEvent(prev, data)!;
   const opt = eventOptions(def, prev.flags, prev.ryo).find((o) => o.id === optionId);
   if (!opt) throw new Error(`opção indisponível: ${optionId}`);
   let run = clone(prev);
   let relic: string | null = null;
+  const gains: EventEffect[] = [];
   run.ryo -= opt.cost ?? 0;
   run.flags = [...new Set([...run.flags, `ev:${def.id}`])];
   const effects: EventEffect[] = opt.minigame && !wonMinigame ? (opt.onLose ?? []) : opt.effects;
   for (const e of effects) {
-    if (e.kind === 'ryo') run.ryo += ryoGain(run, e.n, data);
-    else if (e.kind === 'talent') addTalentPoints(run, e.n, data);
+    const relicBefore: string | null = relic;
+    if (e.kind === 'ryo') {
+      const n = ryoGain(run, e.n, data);
+      run.ryo += n;
+      gains.push({ kind: 'ryo', n });
+      continue;
+    }
+    if (e.kind === 'talent') addTalentPoints(run, e.n, data);
     else if (e.kind === 'xp') gainXp(run, e.n, data);
     else if (e.kind === 'healTeam') healAll(run, e, data, membersSeen(run, data));
     else if (e.kind === 'healFull') healFull(run, data, membersSeen(run, data));
@@ -1074,7 +1146,10 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
       run.learned.push(e.technique);
       addToMoveset(run, e.technique, data);
     }
-    else if (e.kind === 'relic') {
+    else if (e.kind === 'storyRelic' && !run.relics.includes(e.id)) {
+      relic = e.id;
+      run = gainRelic(run, e.id, data);
+    } else if (e.kind === 'relic') {
       relic = dropRelic(data.relics, run.relics, { [e.tier]: 1 }, stopRng(run, 9));
       if (relic) run = gainRelic(run, relic, data);
     } else if (e.kind === 'maxStat') {
@@ -1084,9 +1159,18 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
         if (run.members[id]) run.members[id] = { ...run.members[id], [e.stat]: run.members[id][e.stat] + e.n };
       }
     }
+    // Relíquia: entra no resultado a que veio de verdade (a sorteada pode não sair; a de história pode já estar na run).
+    if (e.kind === 'relic' || e.kind === 'storyRelic') {
+      if (relic && relic !== relicBefore) gains.push({ kind: 'storyRelic', id: relic });
+    } else gains.push(e);
   }
-  advanceStop(run, data);
-  return { run, relic };
+  const beat = (prev.beat ?? 0) + 1;
+  const done = beat >= stopEvents(stop).length;
+  if (done) {
+    delete run.beat;
+    advanceStop(run, data);
+  } else run.beat = beat;
+  return { run, relic, gains, done };
 }
 
 // ---------------------------------------------------------------------------

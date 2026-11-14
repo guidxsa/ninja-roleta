@@ -6,7 +6,8 @@ import type { FormDef, ScriptRule } from './script';
 export type TeamSide = 'ally' | 'enemy';
 
 /** Efeitos com duração em turnos de quem sofre (docs/jornada/combate.md#efeitos). */
-export type JEffect = 'stun' | 'burn' | 'poison' | 'chakraBlock';
+/** `stunGuard`: a trava de quem acabou de sair de um atordoamento (não pode ser atordoado de novo enquanto durar). */
+export type JEffect = 'stun' | 'burn' | 'poison' | 'chakraBlock' | 'stunGuard';
 
 /** Bônus temporário em quem usa: dano, acerto, esquiva e penetração por `turns` turnos dele. */
 export interface Boost {
@@ -63,6 +64,11 @@ export interface JTechnique {
   gates?: boolean;
   /** Forma evoluída desta técnica: quem conhece as duas fica só com a evolução (3 tomoe substitui o Sharingan). */
   evolves?: string;
+  /**
+   * Técnica sorteada (Kuchiyose no Jutsu): ao usar, paga o custo desta e sorteia uma das variantes pelo peso; o efeito é
+   * o da variante. Talentos mexem nos pesos (`rollWeights`).
+   */
+  roll?: { tech: string; weight: number }[];
 }
 
 /** Um dos Portões: números brutos, que se somam aos dos portões de baixo. */
@@ -135,6 +141,21 @@ export interface FighterMods {
   healMult: number;
   /** Portões a mais liberados além do 1º (Portão da Vida, Lótus Oculta). */
   gateLevels: number;
+  /** Peso a mais (ou a menos) de cada variante de técnica sorteada (Sapos do Naruto). */
+  rollWeights: Record<string, number>;
+  // Regras dos talentos finais e de combinação do Naruto (v0.71.0, docs/jornada/talentos.md).
+  /** Clones: com clone ativo, o golpe de alvo único cai sempre no clone (sem o sorteio de bloqueio). */
+  cloneShield: boolean;
+  /** Pegadinhas: golpe que acerta um alvo atordoado é sempre crítico. */
+  stunnedAlwaysCrit: boolean;
+  /** Sapos: a técnica sorteada gira duas vezes e fica com a variante que vem depois na lista (a melhor). */
+  rollTwice: boolean;
+  /** Kyuubi: ao ficar com 1 de HP em vez de cair (`surviveOnce`), liga esta forma da ficha ('' = nenhuma). */
+  surviveForm: string;
+  /** Rasengan: fração do dano que sobra de um golpe fatal desta técnica e passa para o próximo inimigo de pé. */
+  techOverflow: Record<string, number>;
+  /** Sapos + Kyuubi: peso a mais das variantes sorteadas com o HP abaixo da metade. */
+  lowHpRollWeights: Record<string, number>;
 }
 
 export interface CharacterDef {
@@ -163,6 +184,8 @@ export interface CharacterDef {
   portrait: string;
   /** Transformações que o roteiro (ou uma ativa) pode ligar (docs/jornada/roteiro.md). */
   forms?: FormDef[];
+  /** Invocação (Gamabunta): entra pelo roteiro e não segue as regras de ninja (sem Bunshin). */
+  summon?: boolean;
 }
 
 export interface EnemyDef {
@@ -217,12 +240,18 @@ export interface Fighter {
   boost: (Boost & { techId: string }) | null;
   /** Portão aberto e turnos já mantidos (a próxima manutenção é a de número rounds + 1; trocar não zera). */
   gate: { level: number; rounds: number } | null;
-  /** Forma ligada (roteiro), quando houver. */
+  /** Forma à mostra (a última que entrou), quando houver. */
   form?: string;
   /** Saiu da luta pelo roteiro (troca de fase): não volta nem conta para a vitória. */
   gone?: boolean;
+  /** Caiu pelo roteiro (o Iruka protegendo o Naruto, o Sasuke contra o Haku): é cena, ninguém levanta nesta luta. */
+  knocked?: boolean;
   /** Entrou pelo roteiro (invocação, convidado): não vai para a equipe da run no fim da luta. */
   guest?: boolean;
+  /** Ficha de antes das formas. */
+  formBase?: { offense: AttackStats; resistance: Resistances; techniques: string[]; maxHp: number; mods: FighterMods; passive?: EnemyPassive };
+  /** Formas ligadas, na ordem em que entraram, e os turnos que restam de cada uma (0 = até o fim da luta). */
+  forms?: { def: FormDef; turns: number }[];
 }
 
 /** Lutador pronto para entrar (sem uid, lado e estado de luta). */
@@ -253,12 +282,16 @@ export type JEvent =
   | { type: 'shield'; uid: string; target: string; amount: number }
   | { type: 'clones'; uid: string; total: number }
   | { type: 'effect'; target: string; effect: JEffect; turns: number }
+  /** A trava segurou um atordoamento. */
+  | { type: 'resist'; target: string; effect: JEffect }
   | { type: 'cleanse'; uid: string; target: string }
   | { type: 'tick'; target: string; effect: JEffect; amount: number }
   | { type: 'regen'; target: string; amount: number }
-  | { type: 'down'; target: string }
+  /** `scripted`: caiu pelo roteiro (não foi derrotado). */
+  | { type: 'down'; target: string; scripted?: boolean }
   | { type: 'survive'; target: string }
-  | { type: 'revive'; uid: string; target: string; hp: number; pill?: boolean }
+  /** `raise`: levantado pela ação universal (não por técnica nem pílula). */
+  | { type: 'revive'; uid: string; target: string; hp: number; pill?: boolean; raise?: boolean }
   | { type: 'item'; uid: string; item: string; target: string }
   | { type: 'guard'; uid: string }
   | { type: 'rest'; uid: string; chakra: number }
@@ -274,8 +307,13 @@ export type JEvent =
   | { type: 'gateUpkeep'; uid: string; amount: number }
   /** Fala do roteiro (`line`: chave em strings/jornada.ts; `uid` null quando quem fala não está na luta). */
   | { type: 'say'; uid: string | null; who: string; line: string }
-  /** Ligou uma forma (roteiro). */
+  /** Ligou uma forma (roteiro) ou a forma temporária acabou. */
   | { type: 'form'; uid: string; form: string }
+  | { type: 'formEnd'; uid: string; form: string }
+  /** Ganhou uma técnica pelo roteiro, até o fim da luta. */
+  | { type: 'teach'; uid: string; techId: string }
+  /** Técnica sorteada: qual variante saiu. */
+  | { type: 'roll'; uid: string; techId: string; variant: string }
   /** Entrou ou saiu da luta pelo roteiro. */
   | { type: 'enter'; uid: string }
   | { type: 'leave'; uid: string }
@@ -309,6 +347,8 @@ export interface JBattle {
   reserve: { side: TeamSide; seed: FighterSeed }[];
   /** Marcas que o roteiro deixa na run (copiadas para `run.flags` no fim da luta). */
   flags: string[];
+  /** Marcas que a run já tinha ao abrir a luta (condição `if` das regras do roteiro). */
+  runFlags: string[];
   /** Trava contra recursão enquanto o roteiro executa. */
   scripting?: boolean;
 }
@@ -317,7 +357,9 @@ export interface JBattle {
 export type JAction =
   | { kind: 'tech'; techId: string; target: string }
   | { kind: 'guard' }
-  | { kind: 'rest' };
+  | { kind: 'rest' }
+  /** Levantar um aliado caído: gasta o turno; volta com pouco HP (`combat.raiseHpPct`). Só a equipe do jogador. */
+  | { kind: 'raise'; target: string };
 
 /** Ação grátis (não gasta o turno, uma por turno): ativa de classe ou troca de portão (0 = fechar). */
 export type JFreeAction = { kind: 'active'; techId: string; target: string } | { kind: 'gate'; level: number };

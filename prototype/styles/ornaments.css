@@ -34,7 +34,7 @@
 .parchment:nth-child(even)::after { transform: scaleX(-1) translate(-2px, 4px); }
 .parchment .btn.primary { --gold: #dcbd78; --gold-2: #f3d38b; }
 .parchment h3 {
-  margin: 0 0 8px; text-align: left; font: 700 22px/1.1 var(--font-hand); letter-spacing: 0; text-transform: none; color: var(--paper-ink);
+  margin: 0 0 8px; text-align: left; font: 700 var(--fs-3xl)/1.1 var(--font-hand); letter-spacing: 0; text-transform: none; color: var(--paper-ink);
 }
 
 /* Nuvem em espiral (cloud() em art.ts): ornamento, nunca botão. */
@@ -61,6 +61,6 @@
 .scroll-banner:active { transform: translateY(1px); }
 .scroll-banner:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; }
 .scroll-banner .seal { --s: 40px; }
-.scroll-banner b { display: block; font: 700 23px/1.1 var(--font-hand); }
-.scroll-banner small { display: block; color: var(--paper-muted); font-size: 13px; line-height: 1.3; }
+.scroll-banner b { display: block; font: 700 var(--fs-3xl)/1.1 var(--font-hand); }
+.scroll-banner small { display: block; color: var(--paper-muted); font-size: var(--fs-sm); line-height: 1.3; }
 .scroll-banner > .ico { width: 24px; height: 24px; }

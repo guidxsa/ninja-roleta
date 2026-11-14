@@ -2,9 +2,12 @@
 // alvo por toque e animação a partir do log de eventos do core. Sem roleta na tela: só o resultado.
 import {
   awaitingPlayer,
+  canRaise,
+  effectTurns,
   battlePower,
   blockedReason,
   current,
+  elementMult,
   fighter,
   gateChoices,
   gateOpenCost,
@@ -25,17 +28,17 @@ import {
   validTargets,
 } from '../../src/core/jornada/battle';
 import type { JornadaData } from '../../src/core/jornada/data';
-import { CONSUMABLES, spendItem, supportClass, type JRun } from '../../src/core/jornada/run';
+import { CONSUMABLES, currentStop, spendItem, supportClass, type JRun } from '../../src/core/jornada/run';
 import type { BattleSetup } from '../../src/core/jornada/battle';
 import type { Boost, ConsumableId, Fighter, FighterMods, JAction, JBattle, JEvent, JTechnique } from '../../src/core/jornada/types';
 import type { Rng } from '../../src/core/rng';
 import { jornadaData } from '../../src/data/jornada';
 import { BEATS } from '../../src/data/elements';
 import { ptBR as S } from '../../src/data/strings/ptBR';
-import { fighterPortrait, icon } from '../art';
+import { fighterPortrait, hasOwnPortrait, icon } from '../art';
 import { barLayers, barPct, barTone, captureTrails, patchBar, restoreTrails } from '../bars';
 import { swish, land } from '../audio';
-import { esc, h, show, sleep } from '../dom';
+import { confirmDialog, esc, h, show, sleep } from '../dom';
 import { ELEMENT_COLORS, lines } from '../tips';
 import { tip } from '../tooltip';
 import { flashRelics, relicStrip, startRelics, winRelics } from './relics';
@@ -46,7 +49,7 @@ const J = S.jornada;
 const B = J.battle;
 
 /** Ícone de cada efeito de status (dicas, selos do lutador, números flutuantes). */
-export const EFFECT_ICONS: Record<string, string> = { stun: 'stun', burn: 'fire', poison: 'poison', chakraBlock: 'block' };
+export const EFFECT_ICONS: Record<string, string> = { stun: 'stun', burn: 'fire', poison: 'poison', chakraBlock: 'block', stunGuard: 'immune' };
 const fxIcon = (kind: string) => icon(EFFECT_ICONS[kind] ?? 'neutral');
 
 /** Nome do protagonista: o do jogador no Caminho Ninja ("Nome Uchiha"); na História, o Naruto. Sem escapar. */
@@ -98,7 +101,8 @@ function portraitOf(f: Fighter, data: JornadaData): string {
   // Forma ligada pelo roteiro (manto, Shukaku) com retrato próprio.
   const formArt = f.form ? (data.characters[f.defId] ?? data.enemies[f.defId])?.forms?.find((x) => x.id === f.form)?.portrait : undefined;
   const spec = formArt ?? (f.protagonist && heroSkin ? `ninja:${heroSkin}` : (data.characters[f.defId]?.portrait ?? data.enemies[f.defId]?.portrait ?? 'ninja:common'));
-  return fighterPortrait(f.defId, spec, 'md');
+  // Na forma, o retrato é o dela: a imagem própria do personagem não passa por cima (a da forma seria `<id>-<forma>`).
+  return fighterPortrait(formArt ? `${f.defId}-${f.form}` : f.defId, spec, 'md');
 }
 
 function miniBar(kind: 'hp' | 'ck', cur: number, max: number): string {
@@ -181,7 +185,7 @@ export function techTip(tech: JTechnique, f?: Fighter, mods?: FighterMods, s?: J
   const blocked = f ? blockedReason(f, tech) : null;
   const why = blocked ? (blocked === 'cooldown' ? B.cooldown(f!.cooldowns[tech.id]!) : B.blocked[blocked]) : tech.active && s?.activeUsed ? B.activeSpent : '';
   const effect = tech.onHit
-    ? `${fxIcon(tech.onHit.effect)} ${J.effects[tech.onHit.effect]} ${pct(tech.onHit.chance)}${tech.onHit.turns ? ` (${tech.onHit.turns} t)` : ''}`
+    ? `${fxIcon(tech.onHit.effect)} ${J.effects[tech.onHit.effect]} ${pct(tech.onHit.chance)} (${effectTurns(tech, jornadaData)} t)`
     : '';
   const body = lines([
     why ? `<b>${why}</b>` : '',
@@ -228,7 +232,8 @@ function fighterTip(f: Fighter): string {
 }
 
 function statusChips(f: Fighter): string {
-  const chips = f.effects.map((e) => `<span class="jchip bad" title="${J.effects[e.kind]}">${fxIcon(e.kind)}${e.turns}</span>`);
+  // A trava contra atordoamento é a favor de quem a tem.
+  const chips = f.effects.map((e) => `<span class="jchip ${e.kind === 'stunGuard' ? 'good' : 'bad'}" role="img" aria-label="${J.effects[e.kind]}: ${e.turns}">${fxIcon(e.kind)}${e.turns}</span>`);
   if (f.shield > 0) chips.push(`<span class="jchip good">${icon('barrier')}${f.shield}</span>`);
   if (f.clones > 0) chips.push(`<span class="jchip good" title="${B.clonesActive(f.clones, CLONE_PCT)}">${icon('clones')}${f.clones}</span>`);
   if (f.guarding) chips.push(`<span class="jchip good">${icon('stance')}</span>`);
@@ -295,6 +300,26 @@ function intelRow(f: Fighter, data: JornadaData): string {
   </div>`;
 }
 
+const fmtAdv = (m: number) => String(Math.round(m * 100) / 100).replace('.', ',');
+
+/** Marca de vantagem (ou desvantagem) de elemento: o multiplicador, com seta e cor. */
+function advantageBadge(mult: number): string {
+  const up = mult > 1;
+  return `<span class="jadv ${up ? 'up' : 'down'}" aria-label="${up ? B.advantageUp(fmtAdv(mult)) : B.advantageDown(fmtAdv(mult))}">${icon(up ? 'advantage' : 'disadvantage')}${B.advantage(fmtAdv(mult))}</span>`;
+}
+
+/**
+ * Multiplicador de elemento da técnica contra os alvos possíveis: o maior deles, ou 0 quando não há encontro de
+ * naturezas (técnica sem elemento, sem dano, ou todos neutros). É a informação que decide a escolha, à vista no botão.
+ */
+function advantageOf(s: JBattle, f: Fighter, tech: JTechnique): number {
+  if (tech.baseDamage <= 0 || !(tech.element || tech.kekkeiGenkai)) return 0;
+  const foes = s.fighters.filter((x) => x.side !== f.side && !x.down && !x.gone);
+  if (!foes.length) return 0;
+  const best = Math.max(...foes.map((x) => elementMult(tech, x, jornadaData)));
+  return best === 1 ? 0 : best;
+}
+
 /** Botão de técnica: nome e os números principais (dano e custo). O resto fica na dica. */
 function techButton(s: JBattle, f: Fighter, tech: JTechnique): string {
   const blocked = blockedReason(f, tech);
@@ -303,8 +328,11 @@ function techButton(s: JBattle, f: Fighter, tech: JTechnique): string {
   const hp = hpCost(f, tech);
   const hits = hitsOf(f, tech);
   const power = battlePower(f, tech, jornadaData);
+  // Vantagem de elemento contra quem está de pé: o melhor caso entre os alvos (a escolha do alvo mostra cada um).
+  const adv = advantageOf(s, f, tech);
   const bits = [
     tech.baseDamage > 0 ? `<span${power > tech.baseDamage ? ' class="up"' : ''}>${B.damage(power)}${hits > 1 ? `×${hits}` : ''}</span>` : '',
+    adv ? advantageBadge(adv) : '',
     tech.clones ? `${icon('clones')} +${clonesMade(tech, f)}` : '',
     cost ? `<span${f.chakra < cost ? ' class="short"' : ''}>${B.chakra(cost)}</span>` : '',
     hp ? `<span${hp >= f.hp ? ' class="short"' : ''}>${B.hpCost(hp)}</span>` : '',
@@ -431,6 +459,32 @@ export async function jornadaBattle(
     el.classList.add(cls);
     setTimeout(() => el.classList.remove(cls), host.instant() ? 150 : 450);
   };
+  /**
+   * Fala do roteiro em corte de quadro (docs/visual.md#cena-narrativa): a luta escurece, quem fala entra numa faixa em
+   * diagonal com o retrato e o jogador toca (ou Enter, espaço) para seguir. No modo instantâneo, segue sozinha.
+   */
+  const cutIn = (whoId: string, f: Fighter | null, who: string, line: string): Promise<void> =>
+    new Promise((resolve) => {
+      const narrator = whoId === 'narrator';
+      const side = narrator ? 'narrator' : f ? (f.side === 'ally' ? 'ally' : 'foe') : data.enemies[whoId] ? 'foe' : 'ally';
+      const def = data.characters[whoId] ?? data.enemies[whoId];
+      // Quem fala sem estar na luta só ganha retrato se tiver um próprio (nunca o ninja genérico no lugar de alguém).
+      const face = narrator ? '' : f ? portraitOf(f, data) : hasOwnPortrait(whoId, def?.portrait) ? fighterPortrait(whoId, def!.portrait, 'md') : '';
+      const el = h(`<button type="button" class="jb-cut ${side}" aria-label="${esc(`${narrator ? '' : `${who}: `}${line}. ${S.jornada.ui.tapToContinue}`)}">
+        <span class="jb-cut-band">${face}<span class="jb-cut-txt">${narrator ? '' : `<b class="jb-cut-who">${who}</b>`}<span class="jb-cut-line">${esc(line)}</span></span>
+        <i class="jb-cut-next" aria-hidden="true"></i></span></button>`) as HTMLButtonElement;
+      let done = false;
+      const close = () => {
+        if (done) return;
+        done = true;
+        el.remove();
+        resolve();
+      };
+      el.addEventListener('click', close);
+      root.appendChild(el);
+      el.focus({ preventScroll: true });
+      if (host.instant()) setTimeout(close, 650);
+    });
   const say = (text: string, color = '') => {
     banner.innerHTML = `<span style="${color ? `--c:${color}` : ''}">${text}</span>`;
     banner.classList.remove('show');
@@ -524,6 +578,10 @@ export async function jornadaBattle(
         case 'effect':
           float(e.target, `${fxIcon(e.effect)} ${J.effects[e.effect]}`, 'fx');
           pushLog(B.logEffect(name(e.target), J.effects[e.effect]!));
+          break;
+        case 'resist':
+          float(e.target, `${fxIcon('stunGuard')} ${B.resisted}`, 'shield');
+          pushLog(B.logResist(name(e.target)));
           break;
         case 'cleanse':
           float(e.target, icon('sparkle'), 'heal');
@@ -623,9 +681,12 @@ export async function jornadaBattle(
         case 'say': {
           const who = e.uid ? name(e.uid) : esc(J.names[e.who] ?? e.who);
           const line = J.script[e.line] ?? e.line;
-          say(B.line(who, line), 'var(--ink)');
-          pushLog(B.line(who, line));
-          wait = host.instant() ? 300 : 1400;
+          // O narrador fala sem nome.
+          const text = e.who === 'narrator' ? line : B.line(who, line);
+          pushLog(text);
+          // A fala é um corte de quadro e espera o toque; a faixa de pincel fica só para os jutsus.
+          await cutIn(e.who, e.uid ? fighter(next, e.uid) : null, who, line);
+          wait = 0;
           break;
         }
         case 'form': {
@@ -633,11 +694,19 @@ export async function jornadaBattle(
           const el = card(e.uid);
           if (el) el.outerHTML = fighterCard({ ...f, hp: shown.get(e.uid)?.hp ?? f.hp, chakra: shown.get(e.uid)?.chakra ?? f.chakra }, data);
           shown.set(e.uid, { hp: shown.get(e.uid)?.hp ?? f.hp, max: f.maxHp, chakra: shown.get(e.uid)?.chakra ?? f.chakra, maxChakra: f.maxChakra });
+          // Entrada visível: o card pisca na cor da forma enquanto o retrato troca.
+          card(e.uid)?.classList.add('form-in');
           say(B.form(name(e.uid), J.forms[e.form] ?? e.form), 'var(--accent)');
           pushLog(B.form(name(e.uid), J.forms[e.form] ?? e.form));
           wait = host.instant() ? 300 : 1100;
           break;
         }
+        case 'teach':
+          float(e.uid, icon('sparkle'), 'fx');
+          say(B.teach(name(e.uid), techName(e.techId)), 'var(--accent-2)');
+          pushLog(B.teach(name(e.uid), techName(e.techId)));
+          wait = host.instant() ? 300 : 1100;
+          break;
         case 'enter':
         case 'leave': {
           // Quem entra ou sai muda a fileira: redesenha e devolve as barras ao ponto da animação.
@@ -651,6 +720,21 @@ export async function jornadaBattle(
           say(msg, 'var(--accent-2)');
           pushLog(msg);
           wait = host.instant() ? 300 : 1000;
+          break;
+        }
+        case 'roll':
+          say(B.roll(name(e.uid), techName(e.variant)), 'var(--accent-2)');
+          pushLog(B.roll(name(e.uid), techName(e.variant)));
+          break;
+        case 'formEnd': {
+          const f = fighter(next, e.uid);
+          const el = card(e.uid);
+          // Sai só esta forma: o card fica com a que sobrou na pilha (a determinação continua depois da Kyuubi).
+          if (el) el.outerHTML = fighterCard({ ...f, hp: shown.get(e.uid)?.hp ?? f.hp, chakra: shown.get(e.uid)?.chakra ?? f.chakra }, data);
+          card(e.uid)?.classList.add('form-out');
+          say(B.formEnd(name(e.uid), J.forms[e.form] ?? e.form), 'var(--ink)');
+          pushLog(B.formEnd(name(e.uid), J.forms[e.form] ?? e.form));
+          wait = host.instant() ? 300 : 900;
           break;
         }
         case 'endure':
@@ -668,11 +752,18 @@ export async function jornadaBattle(
   }
 
   /** Espera o toque num lutador válido (ou no Voltar). */
-  function pickTarget(options: Fighter[], prompt: string): Promise<string | null> {
+  function pickTarget(options: Fighter[], prompt: string, tech?: JTechnique): Promise<string | null> {
     if (options.length === 1) return Promise.resolve(options[0]!.uid);
     return new Promise((resolve) => {
       const ids = new Set(options.map((f) => f.uid));
       root.querySelectorAll<HTMLElement>('.jf').forEach((el) => el.classList.toggle('targetable', ids.has(el.dataset.uid!)));
+      // Com uma técnica de elemento, cada alvo mostra o multiplicador contra ele.
+      if (tech && tech.baseDamage > 0 && (tech.element || tech.kekkeiGenkai)) {
+        for (const f of options) {
+          const mult = elementMult(tech, f, data);
+          if (mult !== 1) card(f.uid)?.querySelector('.jf-art')?.insertAdjacentHTML('beforeend', `<span class="jf-adv">${advantageBadge(mult)}</span>`);
+        }
+      }
       menu.innerHTML = `<p class="jb-prompt">${prompt}</p><button class="btn small" data-cancel>${B.cancel}</button>`;
       const onClick = (ev: Event) => {
         const t = ev.target as HTMLElement;
@@ -683,6 +774,7 @@ export async function jornadaBattle(
       const done = (v: string | null) => {
         root.removeEventListener('click', onClick);
         root.querySelectorAll('.jf.targetable').forEach((el) => el.classList.remove('targetable'));
+        root.querySelectorAll('.jf-adv').forEach((el) => el.remove());
         resolve(v);
       };
       root.addEventListener('click', onClick);
@@ -693,29 +785,80 @@ export async function jornadaBattle(
    * Menu do turno do protagonista. Itens, ativas e Portões são aplicados aqui (não gastam o turno). Devolve null se a
    * luta acabou no meio do turno.
    */
+  /** Aba do menu em que o jogador estava (celular): volta nela no turno seguinte. */
+  let menuTab = 'moves';
   async function playerTurn(): Promise<JAction | 'abandon' | null> {
     for (;;) {
       if (!awaitingPlayer(state)) return null;
       render(state);
       const me = current(state)!;
       const techs = me.techniques.map((id) => data.techniques[id]!).filter(Boolean);
-      const moves = techs.filter((t) => !t.active);
+      // Com alguém caído, levantar vem primeiro: a ação de qualquer um, a técnica de quem tem e a pílula, num bloco só.
+      const fallen = canRaise(state, me);
+      const raiseTechs = fallen.length ? techs.filter((t) => !t.active && t.target === 'downedAlly') : [];
+      const moves = techs.filter((t) => !t.active && !raiseTechs.includes(t));
       const actives = techs.filter((t) => t.active);
+      const pill = fallen.length > 0 && state.pills > 0 && !state.itemUsed;
+      const raisePct = Math.round(data.j.combat.raiseHpPct * 100);
+      const raiseBlock = fallen.length
+        ? `<h4 class="act-title">${B.groups.raise}</h4><div class="jb-extra jb-raise">
+          <button class="btn small primary jx" data-act="raise" ${tip(B.raise, B.raiseDesc(raisePct))}>${icon('heart')} ${B.raise} · ${raisePct}%</button>
+          ${raiseTechs.map((t) => techButton(state, me, t)).join('')}
+          ${pill ? `<button class="btn small jx" data-act="pill" ${tip(J.items.reviveKit!.name, B.pillDesc(Math.round(data.j.combat.reviveHpPct * 100)))}>${icon('pill')} ${J.items.reviveKit!.name}</button>` : ''}
+        </div>`
+        : '';
       // A pílula usada sozinha só sai da bolsa no fim da luta: aqui vale a contagem da luta.
       const items = CONSUMABLES.filter((id) => (id === 'reviveKit' ? state.pills : run.bag[id]) > 0 && itemTargets(state, id).length > 0);
-      menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
-        <h4 class="act-title">${B.groups.techniques}</h4>
-        <div class="jb-moves">${moves.map((t) => techButton(state, me, t)).join('')}</div>
-        ${actives.length ? `<h4 class="act-title">${B.groups.actives}</h4><div class="jb-extra">${actives.map((t) => (t.gates ? gatesButton(state, me, t) : techButton(state, me, t))).join('')}</div>` : ''}
-        <h4 class="act-title">${B.groups.actions}</h4>
+      // No celular o menu é uma bandeja fixa embaixo, com uma aba por grupo: nada de rolar a cada turno
+      // (docs/jornada/combate.md#interface). No PC as abas somem e os grupos aparecem todos, com o título de cada um.
+      const panes: { id: string; label: string; count?: number; html: string }[] = [
+        ...(fallen.length ? [{ id: 'raise', label: B.groups.raise, html: raiseBlock }] : []),
+        {
+          id: 'moves',
+          label: B.groups.techniques,
+          html: `<h4 class="act-title">${B.groups.techniques}</h4><div class="jb-moves${moves.length > 4 ? ' many' : ''}">${moves.map((t) => techButton(state, me, t)).join('')}</div>`,
+        },
+        ...(actives.length
+          ? [
+              {
+                id: 'actives',
+                label: B.groups.actives,
+                count: actives.length,
+                html: `<h4 class="act-title">${B.groups.actives}</h4><div class="jb-extra">${actives.map((t) => (t.gates ? gatesButton(state, me, t) : techButton(state, me, t))).join('')}</div>`,
+              },
+            ]
+          : []),
+        {
+          id: 'actions',
+          label: B.groups.actions,
+          html: `<h4 class="act-title">${B.groups.actions}</h4>
         <div class="jb-extra">
           <button class="btn small jx" data-act="guard" ${tip(B.guard, B.guardDesc)}>${icon('stance')} ${B.guard}</button>
           <button class="btn small jx" data-act="rest" ${tip(B.rest, B.restDesc)}>${icon('rest')} ${B.rest}</button>
           <button class="btn small jx" data-act="bag" ${tip(B.bag, B.bagDesc)} ${items.length && !state.itemUsed ? '' : 'aria-disabled="true"'}>${icon('kit')} ${B.bag}</button>
         </div>
-        <button class="btn small jgiveup" data-act="abandon" ${tip(B.giveUp, B.giveUpDesc)}>${icon('warning')} ${B.giveUp}</button>`;
+        <button class="btn small jgiveup" data-act="abandon" ${tip(B.giveUp, B.giveUpDesc)}>${icon('warning')} ${B.giveUp}</button>`,
+        },
+      ];
+      // Aliado caído abre na aba dele; senão, a aba em que o jogador estava (ou Técnicas).
+      const open = fallen.length ? 'raise' : panes.some((p) => p.id === menuTab) ? menuTab : 'moves';
+      menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
+        <div class="jb-tabs" role="tablist">${panes
+          .map((p) => `<button type="button" class="jb-tab${p.id === open ? ' on' : ''}" role="tab" aria-selected="${p.id === open}" data-tab="${p.id}">${p.label}${p.count ? `<small>${p.count}</small>` : ''}</button>`)
+          .join('')}</div>
+        ${panes.map((p) => `<div class="jb-pane${p.id === open ? ' on' : ''}" role="tabpanel" data-pane="${p.id}">${p.html}</div>`).join('')}`;
       const pick = await new Promise<HTMLElement>((resolve) => {
         const onClick = (ev: Event) => {
+          const tab = (ev.target as HTMLElement).closest<HTMLElement>('[data-tab]');
+          if (tab && menu.contains(tab)) {
+            menuTab = tab.dataset.tab!;
+            menu.querySelectorAll<HTMLElement>('[data-tab]').forEach((el) => {
+              el.classList.toggle('on', el === tab);
+              el.setAttribute('aria-selected', String(el === tab));
+            });
+            menu.querySelectorAll<HTMLElement>('[data-pane]').forEach((el) => el.classList.toggle('on', el.dataset.pane === menuTab));
+            return;
+          }
           const b = (ev.target as HTMLElement).closest<HTMLElement>('[data-tech],[data-act],[data-gates]');
           if (!b || !menu.contains(b) || b.getAttribute('aria-disabled') === 'true') return;
           menu.removeEventListener('click', onClick);
@@ -725,8 +868,22 @@ export async function jornadaBattle(
       });
       if (pick.dataset.act === 'guard') return { kind: 'guard' };
       if (pick.dataset.act === 'rest') return { kind: 'rest' };
+      if (pick.dataset.act === 'raise') {
+        const uid = await pickTarget(fallen, B.pickDowned);
+        if (!uid) continue;
+        return { kind: 'raise', target: uid };
+      }
+      if (pick.dataset.act === 'pill') {
+        const uid = await pickTarget(itemTargets(state, 'reviveKit'), B.pickDowned);
+        if (!uid) continue;
+        const before = state;
+        state = useItem(state, 'reviveKit', uid, data);
+        run = spendItem(run, 'reviveKit');
+        await animate(before, state);
+        continue;
+      }
       if (pick.dataset.act === 'abandon') {
-        if (window.confirm(J.ui.abandonConfirm)) return 'abandon';
+        if (await confirmDialog(J.ui.abandonConfirm, J.ui.abandonYes, J.ui.keepPlaying)) return 'abandon';
         continue;
       }
       if (pick.dataset.act === 'bag') {
@@ -752,7 +909,7 @@ export async function jornadaBattle(
       const uid =
         tech.target === 'allEnemies' || tech.target === 'self'
           ? me.uid
-          : await pickTarget(validTargets(state, me, tech), tech.target === 'downedAlly' ? B.pickDowned : tech.target === 'ally' ? B.pickAlly : B.pickTarget);
+          : await pickTarget(validTargets(state, me, tech), tech.target === 'downedAlly' ? B.pickDowned : tech.target === 'ally' ? B.pickAlly : B.pickTarget, tech);
       if (!uid) continue;
       // Ativa: aplica e o turno continua.
       if (tech.active) {
@@ -811,7 +968,9 @@ export async function jornadaBattle(
   await flashRelics(root, startRelics(run0), host.instant());
   const opening = state;
   state = advance(opening, data, rng);
-  await animate(opening, state);
+  // A abertura do roteiro (fala, convidado que entra, forma) já está no registro de `opening`: a animação parte do
+  // registro vazio para mostrar também esses eventos (antes, a fala de abertura nunca aparecia).
+  await animate({ ...opening, log: [] }, state);
   while (state.status === 'ongoing') {
     if (!awaitingPlayer(state)) break;
     const action = await playerTurn();
@@ -828,8 +987,12 @@ export async function jornadaBattle(
   }
   render(state);
   const won = state.status === 'won';
-  host.mood(won ? 'good' : 'bad');
-  say(`<b class="kanji end-kanji" aria-hidden="true">${won ? '勝' : '敗'}</b>${won ? B.won : B.lost}`, won ? 'var(--gold)' : 'var(--accent-deep)');
+  // Derrota inevitável (teste do sino): não é derrota, é lição. O kanji 修 (aprender, treinar) já está no recorte.
+  const stopNow = currentStop(run0, data);
+  const lesson = !won && Boolean(stopNow && 'inevitableLoss' in stopNow && stopNow.inevitableLoss);
+  host.mood(won ? 'good' : lesson ? 'neutral' : 'bad');
+  if (lesson) say(`<b class="kanji end-kanji" aria-hidden="true">修</b>${B.lesson}`, 'var(--gold)');
+  else say(`<b class="kanji end-kanji" aria-hidden="true">${won ? '勝' : '敗'}</b>${won ? B.won : B.lost}`, won ? 'var(--gold)' : 'var(--accent-deep)');
   if (won) void flashRelics(root, winRelics(run0), host.instant());
   menu.innerHTML = '';
   await sleep(host.instant() ? 200 : 900);

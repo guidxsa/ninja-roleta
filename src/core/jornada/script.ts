@@ -1,7 +1,7 @@
 // Roteiro de luta (docs/jornada/roteiro.md, v0.66.0): momentos canônicos declarados no dado da parada, sem código por
 // luta. Uma regra é "quando → faça": o motor confere as regras em três pontos fixos (abertura, perda de HP, virada de
 // rodada, e ao usar uma técnica) e cada regra dispara uma vez. Funções puras sobre o estado da luta.
-import type { EnemyPassive, Fighter, JBattle } from './types';
+import type { EnemyPassive, Fighter, JBattle, JEffect } from './types';
 import type { JornadaData } from './data';
 
 /** Transformação de um lutador (manto da Kyuubi, Shukaku, selo amaldiçoado). Declarada na ficha (`forms`). */
@@ -19,6 +19,14 @@ export interface FormDef {
   healPct?: number;
   /** Retrato da forma (a interface usa no lugar do da ficha). */
   portrait?: string;
+  /** Técnicas a mais enquanto a forma dura (Garras da Kyuubi). */
+  addTechniques?: string[];
+  /** Turnos do lutador que a forma dura; sem o campo, até o fim da luta. Ao acabar, volta à ficha de antes. */
+  turns?: number;
+  /** Fala do lutador quando a forma temporária acaba (chave em `strings/jornada.ts`, `script`). */
+  exitLine?: string;
+  /** Modificadores enquanto dura: dano × damageMult; uma vez, 1 de HP em vez de cair. */
+  mods?: { damageMult?: number; surviveOnce?: boolean };
 }
 
 /** Quando a regra dispara. `who` é o id da ficha (defId) do lutador. */
@@ -32,12 +40,22 @@ export type ScriptTrigger =
 /** O que a regra faz. `line` é a chave da fala em `strings/jornada.ts` (`script`). */
 export type ScriptAction =
   | { do: 'say'; who: string; line: string }
+  /** O lutador cai pelo roteiro (o Sasuke protegendo o Naruto do Haku). */
+  | { do: 'knock'; who: string }
   | { do: 'form'; who: string; form: string }
   /** Entra um lutador da reserva da luta (montada pela parada). */
   | { do: 'enter'; who: string }
+  /** Sai da luta sem ninguém no lugar (o Gamabunta vai embora depois da cabeçada no Shukaku). */
+  | { do: 'leave'; who: string }
   /** Sai `who` e entra `with` (da reserva) no lugar: troca de fase (Gaara → Shukaku contra o Gamabunta). */
   | { do: 'replace'; who: string; with: string }
   | { do: 'heal'; who: string; pct: number }
+  /** Põe um estado no lutador por `turns` turnos dele (v0.70.0): a fala do roteiro passa a mudar a luta. */
+  | { do: 'effect'; who: string; effect: JEffect; turns: number }
+  /** Liga no lutador o fortalecimento de uma técnica (`boost`), sem custo nem turno (a névoa do Zabuza). */
+  | { do: 'boost'; who: string; tech: string }
+  /** O lutador ganha uma técnica até o fim da luta (a cabeçada que acorda o Gaara). */
+  | { do: 'teach'; who: string; tech: string }
   /** Marca na run (vai para `run.flags` no fim da luta). */
   | { do: 'flag'; id: string }
   /** Encerra a luta com o resultado roteirizado (o desmaio que ainda conta como vitória). */
@@ -45,6 +63,10 @@ export type ScriptAction =
 
 export interface ScriptRule {
   when: ScriptTrigger;
+  /** A regra só vale com esta marca, da run ou posta nesta luta (o selo do Sasuke só desperta depois da Floresta da Morte). */
+  if?: { flag: string };
+  /** A regra não vale com esta marca, da run ou posta nesta luta (outra regra já cuidou do momento). */
+  ifNot?: { flag: string };
   do: ScriptAction[];
 }
 
@@ -63,22 +85,62 @@ export function formOf(defId: string, formId: string, data: JornadaData): FormDe
   return def?.forms?.find((x) => x.id === formId);
 }
 
-/** Liga uma forma no lutador. */
+/**
+ * Refaz o lutador a partir da ficha de antes mais as formas ligadas, na ordem em que entraram (v0.70.0: pilha de
+ * formas). Tirar uma forma não leva as outras junto. O HP acompanha a proporção quando o HP máximo muda.
+ */
+function rebuildForms(f: Fighter): void {
+  const base = f.formBase;
+  if (!base) return;
+  const hpBefore = f.maxHp;
+  const ratio = f.maxHp > 0 ? f.hp / f.maxHp : 1;
+  f.offense = { ...base.offense };
+  f.resistance = { ...base.resistance };
+  f.techniques = [...base.techniques];
+  f.maxHp = base.maxHp;
+  f.mods = { ...base.mods };
+  if (base.passive) f.passive = base.passive;
+  else delete f.passive;
+  for (const { def: form } of f.forms ?? []) {
+    if (form.statMult) {
+      const m = form.statMult;
+      f.offense = { taijutsu: Math.floor(f.offense.taijutsu * m), ninjutsu: Math.floor(f.offense.ninjutsu * m), genjutsu: Math.floor(f.offense.genjutsu * m) };
+      f.resistance = { physical: Math.floor(f.resistance.physical * m), mental: Math.floor(f.resistance.mental * m) };
+    }
+    if (form.maxHpMult) f.maxHp = Math.max(1, Math.floor(f.maxHp * form.maxHpMult));
+    if (form.techniques) f.techniques = [...form.techniques];
+    if (form.addTechniques) f.techniques = [...new Set([...f.techniques, ...form.addTechniques])];
+    if (form.passive) f.passive = form.passive;
+    if (form.mods) f.mods = { ...f.mods, damageMult: f.mods.damageMult * (form.mods.damageMult ?? 1), surviveOnce: f.mods.surviveOnce || Boolean(form.mods.surviveOnce) };
+  }
+  if (f.maxHp !== hpBefore && !f.down) f.hp = Math.max(1, Math.floor(f.maxHp * ratio));
+  // A forma à mostra (retrato e chip) é a última que entrou.
+  const top = f.forms?.at(-1);
+  if (top) f.form = top.def.id;
+  else delete f.form;
+}
+
+/** A forma está ligada no lutador? */
+export const hasForm = (f: Fighter, formId: string): boolean => Boolean(f.forms?.some((x) => x.def.id === formId));
+
+/** Liga uma forma no lutador, por cima das que já estão ligadas. Guarda a ficha de antes para as formas saírem. */
 export function applyForm(f: Fighter, form: FormDef): void {
-  f.form = form.id;
-  if (form.statMult) {
-    const m = form.statMult;
-    f.offense = { taijutsu: Math.floor(f.offense.taijutsu * m), ninjutsu: Math.floor(f.offense.ninjutsu * m), genjutsu: Math.floor(f.offense.genjutsu * m) };
-    f.resistance = { physical: Math.floor(f.resistance.physical * m), mental: Math.floor(f.resistance.mental * m) };
-  }
-  if (form.maxHpMult) {
-    const ratio = f.maxHp > 0 ? f.hp / f.maxHp : 1;
-    f.maxHp = Math.max(1, Math.floor(f.maxHp * form.maxHpMult));
-    f.hp = Math.max(1, Math.floor(f.maxHp * ratio));
-  }
-  if (form.techniques) f.techniques = [...form.techniques];
-  if (form.passive) f.passive = form.passive;
+  if (!f.formBase) f.formBase = { offense: { ...f.offense }, resistance: { ...f.resistance }, techniques: [...f.techniques], maxHp: f.maxHp, mods: { ...f.mods }, ...(f.passive ? { passive: f.passive } : {}) };
+  f.forms = [...(f.forms ?? []), { def: form, turns: form.turns ?? 0 }];
+  rebuildForms(f);
+  // A cura vale só na entrada (refazer a pilha não cura de novo).
   if (form.healPct) f.hp = Math.min(f.maxHp, f.hp + Math.floor(f.maxHp * form.healPct));
+}
+
+/** A forma acabou: sai da pilha e o lutador é refeito com as que ficaram (sem nenhuma, volta à ficha de antes). */
+export function endForm(f: Fighter, formId: string): void {
+  if (!f.formBase || !hasForm(f, formId)) return;
+  f.forms = (f.forms ?? []).filter((x) => x.def.id !== formId);
+  rebuildForms(f);
+  if (!f.forms.length) {
+    delete f.forms;
+    delete f.formBase;
+  }
 }
 
 function triggered(s: JBattle, w: ScriptTrigger, ctx: ScriptContext): boolean {
@@ -109,12 +171,35 @@ function perform(s: JBattle, a: ScriptAction, data: JornadaData, enterFighter: (
       s.log.push({ type: 'say', uid: f?.uid ?? null, who: a.who, line: a.line });
       return;
     }
+    case 'knock': {
+      const f = byDef(s, a.who);
+      if (!f || f.down) return;
+      f.down = true;
+      f.hp = 0;
+      f.effects = [];
+      f.clones = 0;
+      f.shield = 0;
+      f.boost = null;
+      f.gate = null;
+      f.knocked = true;
+      s.log.push({ type: 'down', target: f.uid, scripted: true });
+      return;
+    }
     case 'form': {
       const f = byDef(s, a.who);
       const form = f ? formOf(f.defId, a.form, data) : undefined;
-      if (!f || !form) return;
+      // A mesma forma não liga duas vezes (os status multiplicariam de novo).
+      if (!f || !form || hasForm(f, form.id)) return;
       applyForm(f, form);
       s.log.push({ type: 'form', uid: f.uid, form: form.id });
+      return;
+    }
+    case 'leave': {
+      const out = byDef(s, a.who);
+      if (!out) return;
+      out.gone = true;
+      out.down = true;
+      s.log.push({ type: 'leave', uid: out.uid });
       return;
     }
     case 'enter': {
@@ -123,12 +208,12 @@ function perform(s: JBattle, a: ScriptAction, data: JornadaData, enterFighter: (
       return;
     }
     case 'replace': {
+      // Quem sairia já não está na luta (outra regra fez a troca): nada entra no lugar.
       const out = byDef(s, a.who);
-      if (out) {
-        out.gone = true;
-        out.down = true;
-        s.log.push({ type: 'leave', uid: out.uid });
-      }
+      if (!out) return;
+      out.gone = true;
+      out.down = true;
+      s.log.push({ type: 'leave', uid: out.uid });
       const f = enterFighter(s, a.with);
       if (f) s.log.push({ type: 'enter', uid: f.uid });
       return;
@@ -140,6 +225,32 @@ function perform(s: JBattle, a: ScriptAction, data: JornadaData, enterFighter: (
       if (amount <= 0) return;
       f.hp += amount;
       s.log.push({ type: 'heal', uid: f.uid, target: f.uid, amount });
+      return;
+    }
+    case 'effect': {
+      const f = byDef(s, a.who);
+      if (!f || f.down) return;
+      const prev = f.effects.find((e) => e.kind === a.effect);
+      if (prev) prev.turns = Math.max(prev.turns, a.turns);
+      else f.effects.push({ kind: a.effect, turns: a.turns });
+      s.log.push({ type: 'effect', target: f.uid, effect: a.effect, turns: a.turns });
+      return;
+    }
+    case 'boost': {
+      const f = byDef(s, a.who);
+      const boost = data.techniques[a.tech]?.boost;
+      if (!f || f.down || !boost) return;
+      f.boost = { ...boost, techId: a.tech };
+      s.log.push({ type: 'boost', uid: f.uid, techId: a.tech, turns: boost.turns });
+      return;
+    }
+    case 'teach': {
+      const f = byDef(s, a.who);
+      if (!f || f.techniques.includes(a.tech)) return;
+      f.techniques = [...f.techniques, a.tech];
+      // Com forma ligada, a técnica entra também na ficha de antes (refazer a pilha de formas não a perde).
+      if (f.formBase && !f.formBase.techniques.includes(a.tech)) f.formBase.techniques = [...f.formBase.techniques, a.tech];
+      s.log.push({ type: 'teach', uid: f.uid, techId: a.tech });
       return;
     }
     case 'flag':
@@ -161,8 +272,11 @@ export function runScript(s: JBattle, data: JornadaData, enterFighter: (s: JBatt
   if (!s.script.length || s.scripting) return;
   s.scripting = true;
   try {
+    const has = (flag: string) => s.runFlags.includes(flag) || s.flags.includes(flag);
     s.script.forEach((rule, i) => {
-      if (s.fired.includes(i) || !triggered(s, rule.when, ctx)) return;
+      if (s.fired.includes(i) || (rule.if && !has(rule.if.flag)) || (rule.ifNot && has(rule.ifNot.flag)) || !triggered(s, rule.when, ctx)) return;
+      // Luta já acabou: uma regra que também encerraria não dispara (duas saídas para o mesmo fim não repetem as falas).
+      if (s.status !== 'ongoing' && rule.do.some((a) => a.do === 'end')) return;
       s.fired.push(i);
       for (const a of rule.do) perform(s, a, data, enterFighter);
     });

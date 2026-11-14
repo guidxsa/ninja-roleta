@@ -3,11 +3,11 @@
 .battle { gap: 8px; }
 .battle-head {
   display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted);
-  font: 600 14px/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase;
+  font: 600 var(--fs-md)/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase;
   padding-bottom: 6px; border-bottom: 1px solid var(--line);
 }
 .battle-head span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.battle-head .ico { color: var(--accent-2); }
+.battle-head .ico { color: var(--accent-text); }
 #round { color: var(--gold-2); }
 .badges { display: flex; flex-wrap: wrap; gap: 4px; min-height: 0; }
 .badges:empty { display: none; }
@@ -18,11 +18,11 @@
 .hud-main { display: flex; align-items: flex-start; gap: 10px; }
 .hud-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .hud-plate { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.hud-plate .name { flex: 1; min-width: 0; font: 400 21px/1.1 var(--font-display); letter-spacing: .02em; text-shadow: var(--title-shadow); overflow-wrap: break-word; }
+.hud-plate .name { flex: 1; min-width: 0; font: 400 var(--fs-2xl)/1.1 var(--font-display); letter-spacing: .02em; text-shadow: var(--title-shadow); overflow-wrap: break-word; }
 .hud-face { flex: none; position: relative; }
 .hud .bar-hp { height: 18px; }
 .hud .bar-ck { height: 11px; }
-.hud .bar-ck span { font-size: 10.5px; }
+.hud .bar-ck span { font-size: var(--fs-xs); }
 .hud-extra { display: flex; flex-direction: column; gap: 4px; }
 .hud .passive-row:empty, .hud .kit:empty { display: none; }
 
@@ -35,15 +35,15 @@
 .foe-hud .bar span { justify-content: flex-end; }
 .foe-hud .hud-face .portrait { width: 82px; height: 82px; border: 1px solid var(--accent); box-shadow: 3px 3px 0 var(--accent-deep); }
 .foe-hud #vstats { display: flex; justify-content: flex-end; }
-.foe-hud .stat-pill { padding: 0 6px; font-size: 12px; background: transparent; }
-.foe-hud .kit-chip { font-size: 12px; }
+.foe-hud .stat-pill { padding: 0 6px; font-size: var(--fs-xs); background: transparent; }
+.foe-hud .kit-chip { font-size: var(--fs-xs); }
 
 /* Jogador: degradê dourado vindo da esquerda. */
 .ally-hud::before { background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 13%, transparent), transparent 75%); border-left: 2px solid var(--gold); }
-.ally-hud .hud-plate .name { font-size: 19px; }
+.ally-hud .hud-plate .name { font-size: var(--fs-xl); }
 .ally-hud .sheet-btn { min-height: 32px; min-width: 32px; padding: 0; background: transparent; border-color: var(--line); }
 .ally-hud .avatar-sm .portrait { width: 64px; height: 64px; }
-.player-mini .chip.passive-chip { font-size: 12px; padding: 0 7px; }
+.player-mini .chip.passive-chip { font-size: var(--fs-xs); padding: 0 7px; }
 
 /* Arena: palco da roleta de combate, com o selo 戦 em marca d'água. */
 .arena {
@@ -62,7 +62,7 @@
 .log {
   list-style: none; margin: 0; padding: 6px 10px; height: 64px; overflow: hidden; cursor: pointer;
   background: var(--log-bg); border-left: 2px solid var(--line-strong);
-  font-size: 13px; line-height: 1.35; display: flex; flex-direction: column; gap: 2px;
+  font-size: var(--fs-sm); line-height: 1.35; display: flex; flex-direction: column; gap: 2px;
   -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent);
   mask-image: linear-gradient(180deg, #000 55%, transparent);
   transition: height var(--dur-3) var(--ease);
@@ -70,7 +70,7 @@
 .log.open { height: 220px; overflow-y: auto; -webkit-mask-image: none; mask-image: none; }
 .log li .ico { width: 15px; height: 15px; margin-right: 4px; vertical-align: -.22em; }
 .log li.round {
-  color: var(--muted); font: 600 12px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; text-align: center;
+  color: var(--muted); font: 600 var(--fs-xs)/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; text-align: center;
   display: flex; align-items: center; gap: 8px; margin: 3px 0;
 }
 .log li.round::before, .log li.round::after { content: ''; flex: 1; height: 1px; background: var(--line); }
@@ -90,7 +90,7 @@
 /* Título de seção das ações, nos dois modos. */
 .act-title {
   display: flex; align-items: center; gap: 8px; margin: 0;
-  font: 700 12px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
 }
 .act-title::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .act-group.compact .btn.act { min-height: 48px; padding-top: 5px; padding-bottom: 5px; }
@@ -112,9 +112,9 @@
   padding: 8px 9px 8px 10px; min-height: 64px;
   background: var(--surface-2);
   border: 1px solid color-mix(in srgb, var(--c) 40%, var(--line));
-  border-left: 3px solid var(--c);
+  border-top: 3px solid var(--c);
 }
-.btn.act:hover:not(:disabled):not([aria-disabled='true']) { border-color: color-mix(in srgb, var(--c) 70%, var(--line)); border-left-color: var(--c); background: color-mix(in srgb, var(--c) 10%, var(--surface-2)); }
+.btn.act:hover:not(:disabled):not([aria-disabled='true']) { border-color: color-mix(in srgb, var(--c) 70%, var(--line)); border-top-color: var(--c); background: color-mix(in srgb, var(--c) 10%, var(--surface-2)); }
 /* Textura do elemento, bem discreta, no canto da placa. */
 .btn.act::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: .35; pointer-events: none; }
 .btn.act.el-fire::before { background: radial-gradient(circle at 100% 120%, color-mix(in srgb, var(--c) 60%, transparent), transparent 50%); }
@@ -130,20 +130,20 @@
 }
 .act-ico .ico { width: 20px; height: 20px; }
 .act-txt { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.btn.act b { font: 700 16px/1.1 var(--font-hud); letter-spacing: .03em; overflow-wrap: break-word; hyphens: auto; }
-.btn.act .act-txt > span { font: 600 13px/1.25 var(--font-hud); letter-spacing: .02em; }
-.btn.act small { font-size: 11.5px; font-weight: 400; color: var(--muted); line-height: 1.3; }
+.btn.act b { font: 700 var(--fs-lg)/1.1 var(--font-hud); letter-spacing: .03em; overflow-wrap: break-word; hyphens: auto; }
+.btn.act .act-txt > span { font: 600 var(--fs-sm)/1.25 var(--font-hud); letter-spacing: .02em; }
+.btn.act small { font-size: var(--fs-xs); font-weight: 400; color: var(--muted); line-height: 1.3; }
 .btn.act.el-lightning .act-ico, .btn.act.act-gates .act-ico, .btn.act.act-dojutsu .act-ico { color: #2a1c00; }
 .btn.act.tip-on { outline: 1px solid var(--c); outline-offset: 1px; }
 
 /* Reação: o vilão atacou; Resistir (grátis) vem em destaque. */
 .react-head { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 4px 0 10px; }
-.react-box h3 { text-align: left; margin: 0; font-size: 16px; }
+.react-box h3 { text-align: left; margin: 0; font-size: var(--fs-lg); }
 .react-tech { text-decoration: underline dotted color-mix(in srgb, var(--text) 45%, transparent); text-underline-offset: 3px; }
 .btn.act.primary {
   --c: var(--primary-deep);
   clip-path: none; box-shadow: none; text-transform: none; letter-spacing: 0;
-  background: var(--primary); border-color: var(--primary-2); border-left-color: var(--gold-2);
+  background: var(--primary); border-color: var(--primary-2); border-top-color: var(--gold-2);
 }
 .btn.act.primary .act-ico { background: var(--ink); color: var(--gold-2); }
 .btn.act.primary b { color: var(--primary-ink); }
@@ -151,25 +151,25 @@
 
 /* Escolhas grátis: Foco, Clones, Pavor, dōjutsu, portões. */
 .free-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
-.btn.focus-btn { display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; text-align: left; min-height: 50px; font: 700 15px/1.15 var(--font-hud); letter-spacing: .02em; }
+.btn.focus-btn { display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; text-align: left; min-height: 50px; font: 700 var(--fs-base)/1.15 var(--font-hud); letter-spacing: .02em; }
 .btn.focus-btn .ico { width: 22px; height: 22px; color: var(--gold-2); }
-.btn.focus-btn small { display: block; font: 400 11.5px/1.3 var(--font-body); color: var(--muted); }
+.btn.focus-btn small { display: block; font: 400 var(--fs-xs)/1.3 var(--font-body); color: var(--muted); }
 .btn.focus-btn.on { background: color-mix(in srgb, var(--gold) 18%, var(--surface-2)); border-color: var(--gold-2); box-shadow: inset 3px 0 0 var(--gold-2); }
 .btn.focus-btn .armed { width: 16px; height: 16px; color: var(--gold-2); margin-left: 2px; vertical-align: -.15em; }
 
 /* Números e golpes. */
 .float {
   position: absolute; left: 50%; top: 6px; transform: translateX(-50%); z-index: 3; pointer-events: none;
-  font: 700 26px/1 var(--font-hud); letter-spacing: .02em; white-space: nowrap;
+  font: 700 var(--fs-5xl)/1 var(--font-hud); letter-spacing: .02em; white-space: nowrap;
   color: #fff; -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill;
   animation: floatUp 1.05s var(--ease) forwards;
 }
 .float .ico { width: .9em; height: .9em; vertical-align: -.1em; }
 .float.dmg { color: #ff8c7d; }
 .float.crit { color: var(--gold-2); font-size: 34px; }
-.float.miss { color: #c9c3b8; font-size: 18px; letter-spacing: .1em; text-transform: uppercase; }
+.float.miss { color: #c9c3b8; font-size: var(--fs-xl); letter-spacing: .1em; text-transform: uppercase; }
 .float.heal { color: #a8e09b; }
-.float.ck { color: var(--ck-2); font-size: 18px; }
+.float.ck { color: var(--ck-2); font-size: var(--fs-xl); }
 .float small { display: block; font-size: .42em; letter-spacing: .2em; text-transform: uppercase; text-align: center; -webkit-text-stroke-width: 2px; }
 .shake { animation: shake .35s; }
 /* Crítico: corte diagonal dourado atravessando o HUD. */
@@ -190,5 +190,5 @@
   .btn.act { grid-template-columns: 28px 1fr; gap: 7px; padding-left: 8px; }
   .act-ico { width: 28px; height: 28px; }
   .act-ico .ico { width: 17px; height: 17px; }
-  .btn.act b { font-size: 15px; }
+  .btn.act b { font-size: var(--fs-base); }
 }
