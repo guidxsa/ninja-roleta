@@ -14,7 +14,7 @@
 .jb-intel, .jb-order { display: none; }
 
 .jb-goal {
-  margin: 0; text-align: center; font: 600 14px/1.3 var(--font-hud); letter-spacing: .04em; padding: 4px 8px;
+  margin: 0; text-align: center; font: 600 var(--fs-md)/1.3 var(--font-hud); letter-spacing: .04em; padding: 4px 8px;
   border-top: 1px solid color-mix(in srgb, var(--gold) 50%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--gold) 50%, transparent);
   background: color-mix(in srgb, var(--gold) 10%, transparent);
 }
@@ -70,34 +70,34 @@
 @keyframes clonePoof { to { opacity: 0; scale: 1.5; filter: blur(5px) brightness(2); } }
 @media (prefers-reduced-motion: reduce) { .jf-clone.fresh, .jf-clone.poof { animation-duration: 1ms; } }
 .jf-info { width: 100%; display: flex; flex-direction: column; gap: 3px; }
-.jf-name { font: 700 14px/1.1 var(--font-hud); letter-spacing: .05em; text-transform: uppercase; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 1px 1px 0 var(--ink); }
+.jf-name { font: 700 var(--fs-md)/1.1 var(--font-hud); letter-spacing: .05em; text-transform: uppercase; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 1px 1px 0 var(--ink); }
 .jbar { height: 13px; clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%); }
 .jbar.bar-ck { height: 7px; }
-.jbar span { font-size: 11px; padding: 0 7px; }
+.jbar span { font-size: var(--fs-xs); padding: 0 7px; }
 .jbar.bar-ck span { display: none; }
 .jf-chips { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; min-height: 16px; }
-.jchip { display: inline-flex; align-items: center; gap: 2px; font: 700 12px/1.3 var(--font-hud); padding: 0 4px; background: var(--surface-3); border: 1px solid var(--line); }
+.jchip { display: inline-flex; align-items: center; gap: 2px; font: 700 var(--fs-xs)/1.3 var(--font-hud); padding: 0 4px; background: var(--surface-3); border: 1px solid var(--line); }
 .jchip.bad { border-color: color-mix(in srgb, var(--bad) 60%, var(--line)); color: var(--foe); }
 .jchip.good { border-color: color-mix(in srgb, var(--good) 60%, var(--line)); color: var(--good); }
 .jchip .ico { width: 11px; height: 11px; }
 /* Portão aberto: bônus com penalidade (desgaste), na cor de destaque. */
-.jchip.gate { border-color: color-mix(in srgb, var(--accent-2) 70%, var(--line)); color: var(--accent-2); }
+.jchip.gate { border-color: color-mix(in srgb, var(--accent-2) 70%, var(--line)); color: var(--accent-text); }
 .jf-floats { position: absolute; inset: 0; pointer-events: none; display: flex; justify-content: center; }
 /* Camada de efeitos por cima da cena: números e cortes não somem quando os cartões são redesenhados. */
 .jbattle > .jb-fx { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
 .jfloat {
-  position: absolute; top: 4px; transform: translateX(-50%); font: 700 20px/1 var(--font-hud); white-space: nowrap;
+  position: absolute; top: 4px; transform: translateX(-50%); font: 700 var(--fs-2xl)/1 var(--font-hud); white-space: nowrap;
   color: #fff; -webkit-text-stroke: 3.5px var(--ink); paint-order: stroke fill;
   animation: floatUp 1s var(--ease) forwards;
 }
 .jfloat .ico { width: 16px; height: 16px; vertical-align: -.15em; }
 .jfloat.dmg { color: #ff8c7d; }
-.jfloat.crit { color: var(--gold-2); font-size: 26px; }
+.jfloat.crit { color: var(--gold-2); font-size: var(--fs-5xl); }
 .jfloat.heal { color: #a8e09b; }
 .jfloat.ck { color: var(--ck-2); }
-.jfloat.shield, .jfloat.fx { color: #ece6ff; font-size: 15px; }
-.jfloat.cost { color: var(--jin); font-size: 17px; }
-.jfloat.miss { color: #c9c3b8; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; }
+.jfloat.shield, .jfloat.fx { color: #ece6ff; font-size: var(--fs-base); }
+.jfloat.cost { color: var(--jin); font-size: var(--fs-xl); }
+.jfloat.miss { color: #c9c3b8; font-size: var(--fs-base); letter-spacing: .08em; text-transform: uppercase; }
 .jf.lunge-up { animation: lungeUp .42s var(--ease); }
 .jf.lunge-down { animation: lungeDown .42s var(--ease); }
 .jf.hit { animation: shake .4s; }
@@ -109,7 +109,7 @@
 .jb-banner { min-height: 34px; display: flex; justify-content: center; align-items: center; }
 .jb-banner span {
   position: relative; isolation: isolate; padding: 4px 22px; max-width: 100%; text-align: center;
-  font: 400 17px/1.15 var(--font-display); letter-spacing: .02em; color: #fff;
+  font: 400 var(--fs-xl)/1.15 var(--font-display); letter-spacing: .02em; color: #fff;
   -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill;
 }
 .jb-banner span::before {
@@ -123,7 +123,7 @@
 @keyframes bannerIn { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 
 .jb-log {
-  width: 100%; text-align: left; font: inherit; font-size: 12.5px; color: var(--muted); background: var(--log-bg);
+  width: 100%; text-align: left; font: inherit; font-size: var(--fs-xs); color: var(--muted); background: var(--log-bg);
   border: 1px solid var(--line); border-left: 2px solid var(--line-strong); padding: 4px 8px; max-height: 42px; overflow: hidden; cursor: pointer;
 }
 .jb-log.open { max-height: 220px; overflow-y: auto; }
@@ -131,8 +131,8 @@
 .jb-log .ico { width: 13px; height: 13px; vertical-align: -.15em; }
 .jb-menu { display: flex; flex-direction: column; gap: 6px; }
 .jb-menu:empty { visibility: hidden; }
-.jb-prompt { margin: 0; text-align: center; font: 600 14px/1.2 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2); }
-.jb-hint { margin: 0; text-align: center; font-size: 12.5px; line-height: 1.3; color: var(--muted); }
+.jb-prompt { margin: 0; text-align: center; font: 600 var(--fs-md)/1.2 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2); }
+.jb-hint { margin: 0; text-align: center; font-size: var(--fs-xs); line-height: 1.3; color: var(--muted); }
 .jb-hint .ico { width: 13px; height: 13px; vertical-align: -.15em; color: var(--good); }
 .jb-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .jmove { position: relative; display: flex; align-items: center; gap: 9px; text-align: left; padding: 8px; min-height: 56px; border-top: 3px solid var(--c, var(--line)); }
@@ -148,7 +148,7 @@
 .jmove.cooling .jmove-ico > .ico { opacity: .35; }
 .jmove .cd {
   position: absolute; inset: -5px; display: grid; place-items: center;
-  font: 700 17px/1 var(--font-hud); color: #fff; -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill;
+  font: 700 var(--fs-xl)/1 var(--font-hud); color: #fff; -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill;
 }
 .jmove .cd::before {
   content: ''; position: absolute; inset: 0; border-radius: 50%;
@@ -157,20 +157,20 @@
 }
 .jmove-ico .ico { width: 19px; height: 19px; }
 .jmove-txt { min-width: 0; }
-.jmove-txt b { display: block; font: 700 16px/1.1 var(--font-hud); letter-spacing: .03em; }
-.jmove-txt small { display: block; color: var(--muted); font-size: 11.5px; font-weight: 400; line-height: 1.3; }
+.jmove-txt b { display: block; font: 700 var(--fs-lg)/1.1 var(--font-hud); letter-spacing: .03em; }
+.jmove-txt small { display: block; color: var(--muted); font-size: var(--fs-xs); font-weight: 400; line-height: 1.3; }
 .jmove-txt small .ico { width: 12px; height: 12px; vertical-align: -.15em; }
 /* Dano acima do base (talentos, níveis, portão) e custo que não dá agora. */
 .jmove-txt small .up { color: var(--gold-2); font-weight: 700; }
 .jmove-txt small .short { color: var(--bad); }
-.jmove-ico .gate-n { font: 700 13px/1 var(--font-hud); letter-spacing: .02em; }
+.jmove-ico .gate-n { font: 700 var(--fs-sm)/1 var(--font-hud); letter-spacing: .02em; }
 .jb-extra { display: flex; flex-wrap: wrap; gap: 6px; }
 .jb-extra .jmove { flex: 1 1 100%; }
 .jb-extra .jx { flex: 1 1 0; justify-content: center; }
 /* Desistir da jornada: botão próprio no pé do menu, em cor de perigo (acaba a run inteira; pede confirmação). */
 .jb-menu .jgiveup {
   margin-top: 10px; width: 100%; justify-content: center; gap: 6px;
-  color: var(--accent-2); border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, transparent);
+  color: var(--accent-text); border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 .jb-menu .jgiveup:hover { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 .jb-menu .jgiveup .ico { width: 16px; height: 16px; }
@@ -178,7 +178,7 @@
 .jb-intro {
   position: absolute; inset: 0; display: grid; place-items: center; z-index: 4;
   background: var(--grain-dark), var(--paper); color: var(--paper-ink); animation: scrollAway .9s ease-in forwards;
-  font: 400 28px/1.2 var(--font-display); text-align: center; padding: 20px;
+  font: 400 var(--fs-5xl)/1.2 var(--font-display); text-align: center; padding: 20px;
 }
 @keyframes scrollAway { 0%, 55% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); } }
 
@@ -189,7 +189,7 @@
     grid-template-areas: 'head head' 'relics relics' 'goal goal' 'enemies menu' 'banner menu' 'allies menu' 'log menu';
     grid-template-rows: auto auto auto 1fr auto 1fr auto; align-items: center; min-height: 0; padding: 16px;
   }
-  .jbattle .jb-head { grid-area: head; font-size: 15px; }
+  .jbattle .jb-head { grid-area: head; font-size: var(--fs-base); }
   .jbattle .jb-goal { grid-area: goal; }
   .jbattle .jb-relics { grid-area: relics; }
   .jbattle .jb-enemies { grid-area: enemies; }
@@ -204,13 +204,13 @@
   .jf { max-width: 200px; padding: 10px; }
   .jbattle { flex: 1 1 0; min-height: 0; }
   .jf-art .portrait-md { width: clamp(64px, 10vh, 92px); height: clamp(64px, 10vh, 92px); }
-  .jf-name { font-size: 16px; }
+  .jf-name { font-size: var(--fs-lg); }
   .jbar { height: 16px; }
-  .jbar span { font-size: 12px; }
+  .jbar span { font-size: var(--fs-xs); }
   .jbar.bar-ck { height: 9px; }
-  .jfloat { font-size: 24px; }
-  .jfloat.crit { font-size: 32px; }
-  .jb-banner span { font-size: 24px; }
+  .jfloat { font-size: var(--fs-4xl); }
+  .jfloat.crit { font-size: var(--fs-6xl); }
+  .jb-banner span { font-size: var(--fs-4xl); }
 }
 
 /*
@@ -234,16 +234,16 @@
   .jbattle .jb-team { border-top: 2px solid var(--gold); }
   .jbattle .jb-intel::before, .jbattle .jb-log::before {
     content: attr(data-title); display: block; padding-bottom: 6px; border-bottom: 1px solid var(--line);
-    font: 700 12px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2);
+    font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2);
   }
   .jb-row { display: flex; gap: 10px; align-items: flex-start; }
   .jb-row > .portrait { flex: none; width: 40px; height: 40px; }
   .jb-row-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .jb-row-info b { font: 700 14px/1.1 var(--font-hud); letter-spacing: .03em; }
+  .jb-row-info b { font: 700 var(--fs-md)/1.1 var(--font-hud); letter-spacing: .03em; }
   .jb-row-info .jbar { height: 12px; }
-  .jb-row-info .jbar span { font-size: 10.5px; }
+  .jb-row-info .jbar span { font-size: var(--fs-xs); }
   .jb-row-info .jbar.bar-ck { height: 7px; }
-  .jb-row-traits { color: var(--muted); font-size: 12px; line-height: 1.3; }
+  .jb-row-traits { color: var(--muted); font-size: var(--fs-xs); line-height: 1.3; }
   .jb-row-traits .ico { width: 12px; height: 12px; vertical-align: -.15em; }
   .jb-row .jf-chips:empty { display: none; }
   .jb-row.acting b { color: var(--gold-2); }
@@ -253,7 +253,7 @@
   .jbattle .jb-log {
     display: flex; flex-direction: column; justify-content: flex-start; flex: 0 0 auto;
     max-height: calc(4 * 1.4em * 1.25 + 40px); min-height: 0; overflow: hidden; cursor: pointer; padding: 10px 12px;
-    font-size: 12.5px; line-height: 1.4; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
+    font-size: var(--fs-xs); line-height: 1.4; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
   }
   .jbattle .jb-log { margin-top: auto; }
   .jbattle .jb-log.open { flex: 1 1 0; max-height: none; overflow-y: auto; }
@@ -268,7 +268,7 @@
   .jbattle .jb-order { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; flex: none; padding: 8px 12px 10px;
     background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); }
   .jbattle .jb-order::before { content: attr(data-title); flex: 1 0 100%; padding-bottom: 6px; margin-bottom: 2px; border-bottom: 1px solid var(--line);
-    font: 700 12px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2); }
+    font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2); }
   .jb-order-it { display: inline-flex; }
   .jb-order-it .portrait { width: 30px; height: 30px; border-width: 2px; }
   .jb-order-it.enemy .portrait { border-color: var(--accent-2); }
@@ -278,10 +278,10 @@
   .jb-row-match { display: flex; flex-direction: column; gap: 1px; }
   .jb-row-match .weak { color: var(--leaf); }
   .jb-row-techs { display: none; list-style: none; margin: 4px 0 0; padding: 0; flex-direction: column; gap: 2px; }
-  .jb-row-techs li { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .jb-row-techs li { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); }
   .jb-row-techs li .ico { width: 13px; height: 13px; flex: none; color: var(--c); }
   .jb-row-techs li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .jb-row-techs li b { font: 700 12.5px/1 var(--font-hud); }
+  .jb-row-techs li b { font: 700 var(--fs-xs)/1 var(--font-hud); }
   .jbattle .jb-log .jl { padding: 3px 0; border-bottom: 1px dashed color-mix(in srgb, var(--line) 60%, transparent); }
   .jbattle .jb-log .jl:first-child { color: var(--text); }
   .jbattle .jb-menu { flex: 1 1 0; min-height: 0; overflow-y: auto; justify-content: flex-start; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
@@ -300,7 +300,7 @@
   .jb-row-techs { display: flex; }
 }
 @media (min-width: 1280px) and (min-height: 1100px) {
-  .jbattle .jf-name { font-size: 18px; }
+  .jbattle .jf-name { font-size: var(--fs-xl); }
   .jbattle .jbar { height: 18px; }
 }
 
@@ -331,7 +331,7 @@
   .jbattle .jb-moves { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 4px; }
   .jbattle .jmove { min-height: 44px; padding: 5px 6px; gap: 6px; }
   .jbattle .jmove-ico { width: 24px; height: 24px; }
-  .jbattle .jmove-txt b { font-size: 14px; }
+  .jbattle .jmove-txt b { font-size: var(--fs-md); }
   .jbattle .jb-menu .jgiveup { margin-top: 4px; min-height: 40px; }
   .jbattle .jb-extra .jx { min-height: 40px; padding: 6px 8px; }
 }

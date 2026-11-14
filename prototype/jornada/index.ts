@@ -15,6 +15,7 @@ import {
   choosingNode,
   currentStage,
   currentEvent,
+  membersSeen,
   currentStop,
   elementOf,
   fightTeam,
@@ -628,7 +629,7 @@ function hintText(run: JRun, salt: number): string {
 }
 
 function hintCard(run: JRun, salt: number): string {
-  return `<section class="card jhint"${foldAttrs('hint')}>${foldButton('hint')}<h3>${icon('scroll')} ${U.hintTitle}</h3><p>${hintText(run, salt)}</p></section>`;
+  return `<section class="parchment jhint"${foldAttrs('hint')}>${foldButton('hint')}<h3>${icon('scroll')} ${U.hintTitle}</h3><p>${hintText(run, salt)}</p></section>`;
 }
 
 /** Próxima parada da História: quem espera na luta (ou o que é a parada) e as seguintes. */
@@ -648,7 +649,7 @@ function trailNext(run: JRun, stop: StopDef): string {
       .join('')}</ul>${goal ? `<p class="jnext-goal">${esc(goal)}</p>` : ''}`;
   } else body = `<p class="muted small">${J.stopKindDesc[stop.kind] ?? ''}</p>`;
   const after = currentStage(run, data).stops.slice(run.stopIndex + 1, run.stopIndex + 4);
-  return `<section class="card jnext"${foldAttrs('next')}>${foldButton('next')}
+  return `<section class="parchment jnext"${foldAttrs('next')}>${foldButton('next')}
     <h3>${U.nextTitle}</h3>
     <div class="jnext-stop k-${stop.kind}">${icon(STOP_ICONS[stop.kind]!)}<span><b>${stopName(stop)}</b><small>${J.stopKinds[stop.kind]}</small></span></div>
     ${body}
@@ -847,7 +848,7 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
   const root = show(
     h(`<div class="screen jtrail-screen">
       ${stageTitle(run, 'data-choice="abandon"', '', gainsStrip())}
-      <div class="jcol jcol-l"><div data-hud>${hud(host, cur)}</div><section class="card jshop-dock" data-shop-dock hidden${foldAttrs('shop')}></section></div>
+      <div class="jcol jcol-l"><div data-hud>${hud(host, cur)}</div><section class="parchment jshop-dock" data-shop-dock hidden${foldAttrs('shop')}></section></div>
       ${trail(cur)}
       <div class="jcol jcol-r">${trailNext(cur, stop)}${hintCard(cur, cur.stopIndex)}${trailLegend()}
         <div class="sticky-cta">${teamLine}<button class="btn primary big" data-choice="go">${icon(STOP_ICONS[stop.kind]!)} ${U.go(stopName(stop))}</button></div></div>
@@ -1132,7 +1133,7 @@ function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
   persist(host, run);
   const root = h(`<div class="jtree-screen jshop-screen ${themeOf(run.hero).cls}" role="dialog" aria-label="${U.shopTitle}"${themeStyle(run)}><div class="jt-body">
     <div class="jt-head"><h2>${icon('tag')} ${U.shopTitle}</h2><span class="chip" data-ryo></span><span class="chip" data-inflation></span></div>
-    <div data-shop></div>
+    <section class="parchment jshop-paper"><div data-shop></div></section>
     <div class="sticky-cta"><button class="btn primary big" data-close>${U.leave}</button></div></div></div>`);
   openDialog(root);
   const chips = () => {
@@ -1298,12 +1299,49 @@ async function endScreen(host: JornadaHost, run: JRun, next: JRun | null, record
     ? `<button class="btn primary big" data-choice="continue"${tip(U.nextCycle(next.cycle + 1), U.nextCycleTip(pct))}>${icon('cycle')} ${U.nextCycle(next.cycle + 1)}</button>
        <button class="btn big" data-choice="ok"${tip(U.home, U.homeSavedTip(next.cycle + 1))}>${U.home}</button>`
     : `<button class="btn primary big" data-choice="ok">${U.home}</button>`;
-  const root = show(h(`<div class="screen jend ${good ? 'win' : 'lose'}"><h2>${title}</h2>
-    <div class="jstart-face end-seal">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'md')}<span class="seal stamp end-stamp${good ? ' gold' : ''}" aria-hidden="true">${good ? '勝' : '敗'}</span></div>
-    <p class="center">${text}${record && (infinite || won) && run.mode === 'generic' ? ` <span class="chip jrecord">${icon('medal')} ${U.record}</span>` : ''}</p>
-    <p class="center muted">${U.runStats(run.stats.fights, run.stats.wins, run.level)}</p>
-    ${run.relics.length ? `<div class="jrbar jrbar-end">${run.relics.map((id) => relicSlot(id, 'span')).join('')}</div>` : ''}
-    ${buttons}</div>`));
+  const root = show(
+    h(
+      sceneScreen({
+        cls: `jreport ${good ? 'win' : 'lose'}`,
+        place: run.mode === 'generic' ? stageScene(run, data) : stopScene(run, data),
+        ...heroFace(host, run),
+        title,
+        seal: { ...(good ? U.sceneSeals.victory! : U.sceneSeals.defeat!), gold: good },
+        body: `<p>${esc(text)}${record && (infinite || won) && run.mode === 'generic' ? ` <span class="chip jrecord">${icon('medal')} ${U.record}</span>` : ''}</p>${missionReport(host, run, won)}`,
+        footer: buttons,
+      }),
+    ),
+  );
   await sleep(host.instant() ? 0 : 300);
   return choose<'continue' | 'ok'>(root);
 }
+
+/**
+ * Relatório de missão (docs/visual.md#cartões): números, o caminho percorrido (um selo por parada, a derrota marcada),
+ * a equipe, as relíquias e os talentos finais. Só lê o que a run já guarda.
+ */
+function missionReport(host: JornadaHost, run: JRun, won: boolean): string {
+  const R = U.report;
+  const stat = (n: number | string, label: string, i: number) => `<div class="jreport-stat jreport-line" style="--i:${i}"><b>${n}</b><small>${label}</small></div>`;
+  const grid = `<div class="jreport-grid">${stat(`${run.stats.wins}/${run.stats.fights}`, R.wins, 0)}${stat(run.level, R.level, 1)}${stat(run.stats.bestHit || '–', R.bestHit, 2)}</div>`;
+  // Caminho: só na História, onde a trilha é fixa. Cada parada é um selo; o da derrota fica vermelho.
+  let path = '';
+  if (run.mode !== 'generic') {
+    const stages = storyStages(run, data);
+    const flat = stages.flatMap((st) => st.stops);
+    const at = won ? flat.length : stages.slice(0, run.stageIndex).reduce((n, st) => n + st.stops.length, 0) + run.stopIndex;
+    path = `<h3 class="jreport-head">${R.path}</h3><ol class="jreport-path" aria-label="${R.path}">${flat
+      .map((_, i) => `<li class="${i < at ? '' : i === at ? 'fell' : 'todo'}">${i < at ? icon('check') : i === at ? icon('warning') : ''}</li>`)
+      .join('')}</ol>`;
+  }
+  const team = membersSeen(run, data);
+  const members = `<h3 class="jreport-head">${R.team}</h3><ul class="jreport-team">${team
+    .map((id) => `<li class="${(run.members[id]?.hp ?? 1) <= 0 ? 'down' : ''}">${fighterPortrait(id, portraitSpec(id, run), 'sm')}${esc(heroNameOf(host, run, id))}</li>`)
+    .join('')}</ul>`;
+  const relics = run.relics.length ? `<h3 class="jreport-head">${R.relics}</h3><div class="jreport-relics">${run.relics.map((id) => relicSlot(id, 'span')).join('')}</div>` : '';
+  const finals = data.talents.filter((t) => t.capstone && run.talents.includes(t.id));
+  const finalsHtml = finals.length ? `<h3 class="jreport-head">${R.finals}</h3><ul class="jreport-finals">${finals.map((t) => `<li>${esc(J.talents.list[t.id]?.name ?? t.id)}</li>`).join('')}</ul>` : '';
+  return `${grid}${path}${members}${relics}${finalsHtml}`;
+}
+
+const heroNameOf = (host: JornadaHost, run: JRun, id: string) => (id === run.hero ? (run.mode === 'generic' ? heroLabel(id, host.playerName()) : (J.names[id] ?? id)) : memberLabel(run, id, host.playerName()));

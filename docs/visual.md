@@ -76,6 +76,35 @@ Regra (revisão da etapa 1, v0.72.1): **a cena nunca usa o rosto de outro person
 
 Dosu, Zaku e Kin dividem um desenho só, e os capangas e ninjas comuns usam moldes genéricos: valem na luta, mas nenhum deles é rosto de cena.
 
+## Acabamento
+
+Etapa 4 da evolução visual (v0.76.0), em `prototype/styles/acabamento.css`.
+
+- **Roleta no celular**: o botão Girar fica preso ao pé da tela, mesmo com a legenda empurrando a roda para baixo.
+- **Tela do nome**: o registro ninja em papel, com o selo 忍, em vez do card escuro com formulário.
+- **Trilha**: a próxima parada e a dica ninja são papel; o HUD, a loja embutida e o resumo da run continuam em laca (ferramenta), como a regra dos três materiais manda.
+- **Sombras**: sem brilho difuso. Estado ativo na árvore, no mapa e nos pontos de talento se marca com anel e sombra dura (a linguagem do carimbo e do papel); sobram só os brilhos de dano e de entrada de forma, que são efeitos de uma batida.
+
+## Cartões
+
+Etapa 3 da evolução visual (v0.75.0), em `prototype/jornada/cards.ts` e `styles/jornada-cards.css`.
+
+- **Cartão de técnica canônico** (`techCard`): ícone quadrado na cor do elemento ou do tipo, nome e os números principais (dano com os bônus, cura, escudo, clones, custo). Moveset e ficha usam o mesmo desenho (na ficha, sobre papel, com o tipo antes dos números); antes eram dois. O **botão de luta** (`.jmove`) continua à parte de propósito: carrega estado (espera, bloqueio, vantagem). As vagas do moveset são selos, não cartões.
+- **Cartão de relíquia**: já era um só (`relicCard`, com variações de tamanho: `reveal`, `pop`, `stack`); o que variava era o container, e isso agora segue a regra dos [três materiais](#três-materiais).
+- **Loja**: um container só, o de papel, no celular (tela cheia) e no PC (painel ao lado da trilha).
+- **Fim da run como relatório de missão**, na mesma cena da narrativa: números (lutas vencidas, nível, melhor golpe), o **caminho percorrido** (um selo por parada na História, a derrota em vermelho e o que faltou tracejado), a equipe (quem caiu fica cinza), as relíquias e os talentos finais. Os números e o caminho entram em sequência.
+
+## Fundamentos
+
+Etapa 0 da evolução visual (v0.74.0), em `prototype/styles/tokens.css` e `a11y.css`.
+
+- **Escala tipográfica** em tokens (`--fs-xs` 12px a `--fs-6xl` 32px). **Nada de texto abaixo de 12px**; os 280 tamanhos soltos dos CSS de tela foram para a escala (display e kanji seguem os próprios `clamp`). Tamanho novo entra na escala, não em px solto.
+- **Escala de espaço** (`--sp-1` 4px a `--sp-6` 32px) para o que for escrito daqui em diante; os paddings antigos não foram reescritos.
+- **Contraste** (WCAG AA, 4,5:1 para texto): `--accent-text` é o vermelho para texto e ícone sobre superfície (o fundo vermelho segue com `--accent`); o hover do vermelho e, no tema claro, dourado, cinza de apoio, XP, chakra e folha foram escurecidos até passar. O selo dourado do tema claro usa tinta clara.
+- **Foco**: todo controle tem anel visível (regra de especificidade zero, que não atrapalha os que já tinham o seu); selos da árvore, cards de lutador, nós do mapa e as barras de navegação ganharam anel próprio.
+- **Alvos de toque**: a área que responde tem 44px mesmo quando o desenho é menor (recolher painel, nó do mapa, relíquias na luta); botões pequenos e de fechar sobem para 44px em tela de toque.
+- **Movimento**: os pulsos de chamada tocam algumas vezes e param; com menos movimento, o número de dano aparece parado em vez de sumir.
+
 ## Combate
 
 Etapa 2 da evolução visual (v0.73.0), em `prototype/styles/jornada-combat.css`. O campo é o palco (noite); o menu é ferramenta (laca).

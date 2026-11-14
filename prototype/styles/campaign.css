@@ -3,9 +3,9 @@
 /* Painel do ninja (HUD fora da luta). */
 .panel-head { display: flex; align-items: center; gap: 12px; }
 .panel-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.panel-id .name { font: 400 19px/1.15 var(--font-display); letter-spacing: .02em; overflow-wrap: break-word; }
+.panel-id .name { font: 400 var(--fs-xl)/1.15 var(--font-display); letter-spacing: .02em; overflow-wrap: break-word; }
 /* Com o nome do jogador, a origem vira a linha de baixo. */
-.panel-id .name-sub { font: 700 13px/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.panel-id .name-sub { font: 700 var(--fs-sm)/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .sheet-btn { flex: none; }
 .player-panel { --tab: var(--gold); }
 
@@ -19,23 +19,23 @@
 .trail li:last-child { border-bottom: 0; }
 .rrow { display: flex; gap: 10px; align-items: center; min-width: 0; }
 .rrow > div { display: flex; flex-direction: column; min-width: 0; }
-.rrow.ev { padding: 0 0 3px 2px; font-size: 13px; color: color-mix(in srgb, var(--text) 80%, transparent); }
+.rrow.ev { padding: 0 0 3px 2px; font-size: var(--fs-sm); color: color-mix(in srgb, var(--text) 80%, transparent); }
 .rrow.ev > div { flex-direction: row; align-items: baseline; gap: 6px; flex-wrap: wrap; }
 .rrow-ico { position: relative; z-index: 1; flex: none; width: 22px; height: 22px; display: grid; place-items: center; background: var(--bg); border: 1px dashed var(--line-strong); border-radius: 50%; color: var(--gold-2); }
 .rrow-ico .ico { width: 13px; height: 13px; }
-.rtag { font: 700 10.5px/1 var(--font-hud) !important; letter-spacing: .12em !important; text-transform: uppercase; color: var(--muted); }
+.rtag { font: 700 var(--fs-xs)/1 var(--font-hud) !important; letter-spacing: .12em !important; text-transform: uppercase; color: var(--muted); }
 .rrow.ev .rtag { color: var(--gold-2); }
-.rrow.fight .rtag { color: var(--accent-2); }
+.rrow.fight .rtag { color: var(--accent-text); }
 .rrow.fight > i {
   position: relative; z-index: 1; flex: none; width: 26px; height: 26px; display: grid; place-items: center;
-  font: 700 14px/1 var(--font-hud); font-style: normal; background: var(--bg); border: 1px solid var(--line-strong);
+  font: 700 var(--fs-md)/1 var(--font-hud); font-style: normal; background: var(--bg); border: 1px solid var(--line-strong);
   transform: rotate(45deg) scale(.82);
 }
 .rrow.fight > i > * { transform: rotate(-45deg); }
 .rrow.fight > i > span { display: block; }
 .rrow.fight > i .ico { width: 15px; height: 15px; }
 .trail li b { overflow-wrap: break-word; font-weight: 700; }
-.trail li small:not(.rtag) { color: var(--muted); font-family: var(--font-hud); font-size: 13px; letter-spacing: .03em; }
+.trail li small:not(.rtag) { color: var(--muted); font-family: var(--font-hud); font-size: var(--fs-sm); letter-spacing: .03em; }
 .trail-faces { display: flex; flex: none; }
 .trail-faces .portrait + .portrait { margin-left: -10px; }
 .trail-ico { width: 30px; height: 30px; display: grid; place-items: center; flex: none; color: var(--gold); }
@@ -45,7 +45,7 @@
 .trail li.current { background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 16%, transparent), transparent 85%); }
 .trail li.current::before { content: ''; position: absolute; left: -14px; top: 0; bottom: 0; width: 3px; background: var(--primary); }
 .trail li.current .rrow.fight > i { background: var(--primary); border-color: var(--primary-2); color: var(--primary-ink); }
-.trail li.current .rrow.fight b { font: 400 17px/1.2 var(--font-display); }
+.trail li.current .rrow.fight b { font: 400 var(--fs-xl)/1.2 var(--font-display); }
 .trail li.todo { opacity: .72; }
 /* Etapa vencida: o resumo abre o que ela deu. */
 .rstep details > summary { list-style: none; cursor: pointer; position: relative; padding-right: 22px; }
@@ -55,8 +55,8 @@
 .rstep details[open] .rstep-more { rotate: 90deg; }
 .rstep details > summary:hover .rstep-more, .rstep details > summary:focus-visible .rstep-more { color: var(--text); }
 .rstep-log { margin: 6px 0 2px 36px; padding: 8px 10px; background: color-mix(in srgb, var(--surface) 80%, transparent); border-left: 2px solid var(--gold); }
-.rstep-log h4 { margin: 0 0 4px; font: 700 11px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-.rstep-log ul { margin: 0; padding-left: 16px; font-size: 13.5px; line-height: 1.4; }
+.rstep-log h4 { margin: 0 0 4px; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.rstep-log ul { margin: 0; padding-left: 16px; font-size: var(--fs-sm); line-height: 1.4; }
 .rstep-log li { padding: 1px 0; border: 0; }
 .rstep-log .compare { display: none; }
 .trail li.done:has(details[open]) { opacity: 1; }
@@ -67,22 +67,22 @@
 .foe-head { display: flex; gap: 12px; align-items: flex-start; }
 .foe-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .foe-id .name, .villain-panel .name {
-  font: 400 21px/1.1 var(--font-display); letter-spacing: .02em; color: var(--text);
+  font: 400 var(--fs-2xl)/1.1 var(--font-display); letter-spacing: .02em; color: var(--text);
   text-shadow: var(--title-shadow); overflow-wrap: break-word;
 }
-.villain-card .name { font-size: 22px; }
+.villain-card .name { font-size: var(--fs-3xl); }
 .stat-pills { display: flex; flex-wrap: wrap; gap: 4px; }
 .stat-pill {
   display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: var(--radius);
-  background: var(--surface-2); border: 1px solid var(--line); font: 600 13px/1.4 var(--font-hud); -webkit-touch-callout: none;
+  background: var(--surface-2); border: 1px solid var(--line); font: 600 var(--fs-sm)/1.4 var(--font-hud); -webkit-touch-callout: none;
 }
 .stat-pill .ico { width: 13px; height: 13px; color: var(--muted); }
-.stat-pill small { color: var(--muted); font-size: 12px; letter-spacing: .04em; }
-.stat-pill b { font-variant-numeric: tabular-nums; font-size: 14px; }
+.stat-pill small { color: var(--muted); font-size: var(--fs-xs); letter-spacing: .04em; }
+.stat-pill b { font-variant-numeric: tabular-nums; font-size: var(--fs-md); }
 .kit { display: flex; flex-wrap: wrap; gap: 4px; }
 .kit-chip {
   display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 2px; max-width: 100%;
-  font: 600 13px/1.3 var(--font-hud); letter-spacing: .02em;
+  font: 600 var(--fs-sm)/1.3 var(--font-hud); letter-spacing: .02em;
   background: color-mix(in srgb, var(--c) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
   border-left: 2px solid var(--c); -webkit-touch-callout: none;
 }
@@ -106,12 +106,12 @@
 .hands { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
 .btn.hand { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 92px; }
 .btn.hand .ico { width: 40px; height: 40px; color: var(--text); }
-.btn.hand small { font: 600 14px/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }
+.btn.hand small { font: 600 var(--fs-md)/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }
 .btn.hand.picked { opacity: 1; border-color: var(--gold-2); box-shadow: inset 0 -3px 0 var(--accent); }
 .duel { display: flex; justify-content: center; align-items: center; gap: 20px; text-align: center; min-height: 10px; }
 .duel b { display: grid; place-items: center; }
 .duel b .ico { width: 52px; height: 52px; color: var(--text); }
-.duel span { color: var(--accent-2); font: 400 22px/1 var(--font-display); }
+.duel span { color: var(--accent-text); font: 400 var(--fs-3xl)/1 var(--font-display); }
 .duel small { font-family: var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .result-win { color: var(--good); }
 .result-loss { color: var(--bad); }
@@ -119,7 +119,7 @@
 /* Fim da run: selo grande carimbado. */
 .end-seal { position: relative; display: grid; place-items: center; margin: 8px auto 4px; }
 .end-seal .end-stamp { --s: 46px; position: absolute; right: -26px; bottom: -10px; animation-delay: .25s; }
-.end-seal > .ico { width: 96px; height: 96px; color: var(--accent); }
+.end-seal > .ico { width: 96px; height: 96px; color: var(--accent-text); }
 /* O carimbo também é .seal: sem o :not ele crescia junto e cobria o selo. */
 .end-seal > .seal:not(.end-stamp) { --s: 84px; }
 .end.win h2 { color: var(--gold-2); }
@@ -128,7 +128,7 @@
 
 /* Laboratório (modo de teste): formulário sóbrio. */
 .lab-box { background: var(--surface); border: 1px solid var(--line); border-left: 2px solid var(--gold); padding: 10px 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
-.lab-box h3 { font-size: 14px; color: var(--muted); margin: 0; text-align: left; letter-spacing: .12em; }
+.lab-box h3 { font-size: var(--fs-md); color: var(--muted); margin: 0; text-align: left; letter-spacing: .12em; }
 .lab-elements { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
 .lab-elements > span { width: 100%; }
 .lab-box .lab-elements label { justify-content: flex-start; gap: 4px; }
@@ -155,7 +155,7 @@
 .ctip-sum { margin: 4px 0 6px; }
 .ctip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; max-width: 320px; }
 .ctip-v { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
-.ctip-v small { font-size: 11px; line-height: 1.15; }
+.ctip-v small { font-size: var(--fs-xs); line-height: 1.15; }
 .ctip-v .portrait { width: 40px; height: 40px; }
-.ctip-q { display: grid; place-items: center; width: 40px; height: 40px; border: 1px dashed currentColor; opacity: .55; font: 700 20px/1 var(--font-hud); }
+.ctip-q { display: grid; place-items: center; width: 40px; height: 40px; border: 1px dashed currentColor; opacity: .55; font: 700 var(--fs-2xl)/1 var(--font-hud); }
 .ctip-v.unknown small { opacity: .6; }

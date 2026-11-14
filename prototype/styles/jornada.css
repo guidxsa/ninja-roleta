@@ -4,7 +4,7 @@
 .jmode-panel { --tab: var(--gold); }
 .jmode-card { display: flex; gap: 12px; align-items: center; }
 .jdiff-both { margin: 6px 0 2px; color: var(--gold-2); font-weight: 700; }
-.jmode-card h3 { margin: 0 0 4px; text-align: left; font: 400 21px/1.1 var(--font-display); letter-spacing: .02em; text-transform: none; text-shadow: var(--title-shadow); }
+.jmode-card h3 { margin: 0 0 4px; text-align: left; font: 400 var(--fs-2xl)/1.1 var(--font-display); letter-spacing: .02em; text-transform: none; text-shadow: var(--title-shadow); }
 .jstart-face { display: flex; justify-content: center; }
 
 /* HUD da run */
@@ -14,7 +14,7 @@
 .jhud-team { display: grid; gap: 6px; }
 .jhud-member { display: flex; align-items: center; gap: 8px; }
 .jhud-member > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.jhud-member b { font: 700 15px/1.1 var(--font-hud); letter-spacing: .03em; }
+.jhud-member b { font: 700 var(--fs-base)/1.1 var(--font-hud); letter-spacing: .03em; }
 
 /* Trilha linear (História) */
 .jtrail { list-style: none; margin: 0; padding: 0 0 0 12px; display: flex; flex-direction: column; gap: 2px; border-left: 1px solid var(--line-strong); }
@@ -25,22 +25,22 @@
 }
 .jstop-ico > * { transform: rotate(-45deg); }
 .jstop-ico .ico { width: 16px; height: 16px; }
-.jstop-txt b { display: block; font: 700 15px/1.2 var(--font-hud); letter-spacing: .03em; }
-.jstop-txt small { color: var(--muted); font-size: 12px; }
+.jstop-txt b { display: block; font: 700 var(--fs-base)/1.2 var(--font-hud); letter-spacing: .03em; }
+.jstop-txt small { color: var(--muted); font-size: var(--fs-xs); }
 .jstop.done { opacity: .55; }
 .jstop.done .jstop-ico { background: var(--gold); color: var(--ink); border-color: var(--gold); }
 .jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 16%, transparent), transparent 85%); }
 .jstop.here .jstop-ico { border-color: var(--primary-2); background: var(--primary); color: var(--primary-ink); }
-.jstop.here .jstop-txt b { font: 400 17px/1.2 var(--font-display); letter-spacing: .02em; }
+.jstop.here .jstop-txt b { font: 400 var(--fs-xl)/1.2 var(--font-display); letter-spacing: .02em; }
 .jstop.k-boss .jstop-ico { border-color: var(--accent-2); }
 .jstop.k-elite .jstop-ico { border-color: var(--gold-2); }
 .jstop.k-story .jstop-ico { border-color: var(--ck); }
-.jlegend { font-size: 13px; color: var(--muted); }
+.jlegend { font-size: var(--fs-sm); color: var(--muted); }
 .jlegend ul { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 4px; }
 .jlegend .ico { width: 14px; height: 14px; vertical-align: -2px; }
 .jb-head {
   display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted);
-  font: 600 14px/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase;
+  font: 600 var(--fs-md)/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase;
 }
 .jb-head span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .jb-head [data-round] { white-space: nowrap; }
@@ -110,9 +110,9 @@
 .jrcard-ico { position: relative; width: 60px; height: 60px; flex: none; display: grid; place-items: center; background: var(--surface-3); border: 1px solid var(--tier); }
 .jrcard-ico .ico { width: 42px; height: 42px; }
 .jrcard-txt { flex: 1; min-width: 0; }
-.jrcard-txt b { display: block; font: 400 19px/1.15 var(--font-display); letter-spacing: .02em; }
+.jrcard-txt b { display: block; font: 400 var(--fs-xl)/1.15 var(--font-display); letter-spacing: .02em; }
 .jrcard-txt small { display: block; color: var(--muted); }
-.jrcard-txt .jrcard-tier { color: var(--tier); font: 700 12px/1.3 var(--font-hud); text-transform: uppercase; letter-spacing: .12em; }
+.jrcard-txt .jrcard-tier { color: var(--tier); font: 700 var(--fs-xs)/1.3 var(--font-hud); text-transform: uppercase; letter-spacing: .12em; }
 .jrcard.tier-common .jrcard-tier { color: var(--muted); }
 .jrcard > .btn { flex: none; }
 .jrcard.stack { flex-wrap: wrap; }
@@ -122,8 +122,8 @@
 .jrcard.reveal { animation: relicReveal .7s var(--ease-out) both; }
 @keyframes relicReveal { from { transform: rotateY(90deg) scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
 
-.jrpanel h2 small { font-family: var(--font-body); font-size: 13px; }
-.jrgroup h3 { margin: 12px 0 6px; font-size: 14px; color: var(--tier); text-align: left; letter-spacing: .14em; }
+.jrpanel h2 small { font-family: var(--font-body); font-size: var(--fs-sm); }
+.jrgroup h3 { margin: 12px 0 6px; font-size: var(--fs-md); color: var(--tier); text-align: left; letter-spacing: .14em; }
 .jrgroup.tier-common h3 { color: var(--muted); }
 .jrgrid { display: grid; grid-template-columns: repeat(auto-fill, 54px); gap: 8px; }
 .jrgrid .jrslot.on { transform: translateY(-3px); box-shadow: 0 0 0 2px var(--tier); }
@@ -131,7 +131,7 @@
 .jrwill { margin: 12px 0 0; display: flex; align-items: center; gap: 6px; }
 /* Coleção: contagem geral e relíquia ainda escondida. */
 .jrcollection { display: flex; flex-direction: column; gap: 6px; }
-.jrcount { margin: 4px 0 2px; text-align: center; font: 700 15px/1.2 var(--font-hud); letter-spacing: .06em; }
+.jrcount { margin: 4px 0 2px; text-align: center; font: 700 var(--fs-base)/1.2 var(--font-hud); letter-spacing: .06em; }
 .jrcount-bar { height: 8px; }
 .jrgroup-desc { margin: -2px 0 8px; }
 .jrhidden { cursor: default; background: var(--bg); border-style: dashed; border-color: var(--line); box-shadow: none; }
@@ -149,7 +149,7 @@
 
 /* Escolha do chefe: 3 relíquias lado a lado; a evolução da inicial ganha um selo. */
 .jrboss-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
-.jrboss-evo { font: 700 11px/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--gold-2); text-align: center; }
+.jrboss-evo { font: 700 var(--fs-xs)/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--gold-2); text-align: center; }
 .jrboss-opt {
   --tier: var(--accent-2);
   display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 4px; min-width: 0;
@@ -159,7 +159,7 @@
 }
 .jrboss-opt:nth-child(2) { animation-delay: .12s; }
 .jrboss-opt:nth-child(3) { animation-delay: .24s; }
-.jrboss-opt b { font: 700 14px/1.2 var(--font-hud); letter-spacing: .02em; text-align: center; overflow-wrap: anywhere; }
+.jrboss-opt b { font: 700 var(--fs-md)/1.2 var(--font-hud); letter-spacing: .02em; text-align: center; overflow-wrap: anywhere; }
 .jrboss-opt.on { border-color: var(--tier); transform: translateY(-4px); box-shadow: inset 0 -3px 0 var(--tier); }
 .jrboss-opt .jrslot { pointer-events: none; }
 
@@ -176,7 +176,7 @@
 .jrshelf-item .jrslot { pointer-events: none; }
 .jrshelf-item.on { box-shadow: inset 0 0 0 1px var(--tier); background: var(--surface-3); }
 .jrshelf-item.sold { opacity: .45; }
-.jrprice { font: 700 14px/1 var(--font-hud); letter-spacing: .04em; padding: 3px 8px; background: var(--ink); color: var(--gold-2); border-left: 2px solid var(--gold); white-space: nowrap; }
+.jrprice { font: 700 var(--fs-md)/1 var(--font-hud); letter-spacing: .04em; padding: 3px 8px; background: var(--ink); color: var(--gold-2); border-left: 2px solid var(--gold); white-space: nowrap; }
 
 /* Painel das relíquias e visual do Sasuke */
 .jmodal { max-height: 86vh; overflow-y: auto; }
@@ -189,8 +189,8 @@
   text-align: left; padding: 10px; border: 1px solid var(--line); border-top: 2px solid var(--line-strong);
   background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer;
 }
-.jclass b { display: block; font: 700 16px/1.15 var(--font-hud); letter-spacing: .03em; }
-.jclass small { display: block; font-size: 11.5px; color: var(--muted); }
+.jclass b { display: block; font: 700 var(--fs-lg)/1.15 var(--font-hud); letter-spacing: .03em; }
+.jclass small { display: block; font-size: var(--fs-xs); color: var(--muted); }
 .jclass[aria-pressed='true'] { border-top-color: var(--primary-2); background: color-mix(in srgb, var(--primary) 14%, var(--surface-2)); }
 .jclass.off { opacity: .5; cursor: default; }
 .jclass .lock, .lock-note .ico { width: 14px; height: 14px; color: var(--muted); vertical-align: -.15em; }
@@ -201,7 +201,7 @@
 .jel {
   display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; min-width: 0;
   border: 1px solid var(--line); border-top: 2px solid var(--c, var(--line-strong)); background: var(--surface-2);
-  color: var(--text); font: 600 13px/1.1 var(--font-hud); letter-spacing: .03em; cursor: pointer;
+  color: var(--text); font: 600 var(--fs-sm)/1.1 var(--font-hud); letter-spacing: .03em; cursor: pointer;
 }
 .jel .ico { width: 20px; height: 20px; color: var(--c, var(--muted)); }
 .jel[aria-pressed='true'] { background: color-mix(in srgb, var(--c, var(--accent)) 18%, var(--surface-2)); box-shadow: inset 0 -2px 0 var(--c, var(--accent)); }
@@ -219,8 +219,8 @@
 }
 .jmap-boss .portrait { flex: none; border-color: var(--accent-2); box-shadow: 2px 2px 0 var(--accent-deep); }
 .jmap-boss span:not(.portrait) { display: flex; flex-direction: column; gap: 1px; }
-.jmap-boss small { font: 700 11px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.jmap-boss b { font: 400 21px/1.1 var(--font-display); color: var(--accent-2); letter-spacing: .02em; }
+.jmap-boss small { font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.jmap-boss b { font: 400 var(--fs-2xl)/1.1 var(--font-display); color: var(--accent-text); letter-spacing: .02em; }
 /* Altura pela quantidade de linhas (--rows, vindo do mapa); nós e herói ficam em % dela. */
 .jmap { width: 100%; height: calc(var(--rows, 12) * 74px + 104px); }
 .jmap-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -261,15 +261,15 @@
 @keyframes heroBob { 50% { margin-top: -4px; } }
 .jstop-hero { flex: none; width: 32px; height: 32px; margin-left: -2px; }
 .jstop-hero .portrait { width: 32px; height: 32px; border: 2px solid var(--gold-2); box-shadow: 2px 2px 0 var(--ink); }
-.jq { font: 400 18px/1 var(--font-kanji); color: var(--accent-2); }
-.jlegend .jq { font-size: 14px; }
+.jq { font: 400 var(--fs-xl)/1 var(--font-kanji); color: var(--accent-text); }
+.jlegend .jq { font-size: var(--fs-md); }
 .jlegend-chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
-.jlegend-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; background: var(--surface-2); border: 1px solid var(--line); font: 600 12px/1 var(--font-hud); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.jlegend-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; background: var(--surface-2); border: 1px solid var(--line); font: 600 var(--fs-xs)/1 var(--font-hud); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .jlegend-chip .ico { width: 13px; height: 13px; }
-.jlegend-chip .jq { font-size: 13px; }
+.jlegend-chip .jq { font-size: var(--fs-sm); }
 .jlegend-chip.k-elite, .jlegend-chip.k-treasure { color: var(--gold-2); }
 .jlegend-chip.k-rest { color: var(--leaf); }
-.jlegend-chip.k-boss { color: var(--accent-2); }
+.jlegend-chip.k-boss { color: var(--accent-text); }
 /*
  * Colunas da trilha e do mapa: build (.jcol-l: HUD e loja) e o que vem (.jcol-r). No celular elas se desfazem
  * (display: contents) e cada peça volta a ser item da tela, na ordem do HTML: título, HUD, (chefe,) trilha ou carta, legenda.
@@ -280,13 +280,13 @@
 /* Título do estágio: "Estágio n/t", o nome em destaque e, à direita, ciclo, dificuldade e o Abandonar discreto. */
 .jstage-title { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; }
 .jstage-name { min-width: 0; }
-.jstage-name small { display: block; font: 700 12px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.jstage-name small { display: block; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .jstage-name h2 { margin: 3px 0 0; font: 400 clamp(22px, 3.2vh, 34px)/1.1 var(--font-display); letter-spacing: .02em; color: var(--text); text-shadow: var(--title-shadow); }
 .jstage-name .jb-prompt { margin: 4px 0 0; text-align: left; }
 .jstage-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 /* Abandonar jornada: em cor de perigo, como o Desistir da luta (acaba a run inteira; pede confirmação). */
 .jstage-meta .jgiveup {
-  gap: 6px; color: var(--accent-2); border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, transparent);
+  gap: 6px; color: var(--accent-text); border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 .jstage-meta .jgiveup:hover { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 .jstage-meta .jgiveup .ico { width: 15px; height: 15px; }
@@ -298,8 +298,8 @@
 
 /* Card "Sua run" (widescreen). */
 .jrun dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0; }
-.jrun dt { color: var(--muted); font-size: 13.5px; }
-.jrun dd { margin: 0; text-align: right; font: 700 14px/1.4 var(--font-hud); letter-spacing: .03em; }
+.jrun dt { color: var(--muted); font-size: var(--fs-sm); }
+.jrun dd { margin: 0; text-align: right; font: 700 var(--fs-md)/1.4 var(--font-hud); letter-spacing: .03em; }
 
 .jend.win h2 { color: var(--gold-2); }
 .jend.lose h2 { color: var(--bad); }
@@ -337,11 +337,11 @@
   .jstop { padding: clamp(3px, .8vh, 8px) 10px; }
   /* A carta preenche a área e só rola abaixo de 48px por linha. */
   .jtrail-screen > .jtrail-map > .jmap { height: max(100%, calc(var(--rows, 12) * 48px + 104px)); }
-  .jstop-txt b { font-size: 16px; }
+  .jstop-txt b { font-size: var(--fs-lg); }
   .jrgrid { grid-template-columns: repeat(auto-fill, 60px); }
   .jrboss-row { gap: 16px; }
   .jrboss-opt { padding: 18px 10px; }
-  .jrboss-opt b { font-size: 16px; }
+  .jrboss-opt b { font-size: var(--fs-lg); }
   .jrboss-opt .jrslot.huge { width: 96px; height: 96px; }
   .jrboss-opt .jrslot.huge .ico { width: 66px; height: 66px; }
 }
@@ -378,28 +378,28 @@
 }
 
 /* Painéis do widescreen: loja embutida, próxima parada e dica. */
-.jdock-title { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font: 400 22px/1.1 var(--font-hand); }
+.jdock-title { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font: 400 var(--fs-3xl)/1.1 var(--font-hand); }
 .jdock-title .chip { margin-left: auto; }
-.jshop-dock h3:not(.jdock-title) { margin: 8px 0 6px; font: 700 12px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-.jnext h3, .jhint h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font: 400 22px/1.1 var(--font-hand); }
-.jnext h4 { margin: 10px 0 4px; font: 700 12px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.jshop-dock h3:not(.jdock-title) { margin: 8px 0 6px; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.jnext h3, .jhint h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font: 400 var(--fs-3xl)/1.1 var(--font-hand); }
+.jnext h4 { margin: 10px 0 4px; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .jnext-stop { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface-2); border-top: 3px solid var(--accent); }
-.jnext-stop > .ico { width: 22px; height: 22px; flex: none; color: var(--accent-2); }
-.jnext-stop b { display: block; font: 400 18px/1.15 var(--font-display); }
-.jnext-stop small, .jnext-list small { display: block; color: var(--muted); font-size: 12.5px; }
+.jnext-stop > .ico { width: 22px; height: 22px; flex: none; color: var(--accent-text); }
+.jnext-stop b { display: block; font: 400 var(--fs-xl)/1.15 var(--font-display); }
+.jnext-stop small, .jnext-list small { display: block; color: var(--muted); font-size: var(--fs-xs); }
 .jnext-foes, .jnext-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .jnext-foes li { display: flex; align-items: center; gap: 10px; }
 .jnext-foes li > span:last-child { display: flex; flex-direction: column; min-width: 0; }
-.jnext-foes b { font: 700 15px/1.15 var(--font-hud); letter-spacing: .03em; }
-.jnext-foes small { font-size: 12.5px; }
+.jnext-foes b { font: 700 var(--fs-base)/1.15 var(--font-hud); letter-spacing: .03em; }
+.jnext-foes small { font-size: var(--fs-xs); }
 .jnext-foes .ico { width: 13px; height: 13px; vertical-align: -.15em; }
-.jnext-goal { margin: 8px 0 0; font: 600 13px/1.3 var(--font-hud); color: var(--gold-2); }
-.jnext-list li { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; }
+.jnext-goal { margin: 8px 0 0; font: 600 var(--fs-sm)/1.3 var(--font-hud); color: var(--gold-2); }
+.jnext-list li { display: flex; align-items: flex-start; gap: 8px; font-size: var(--fs-md); }
 .jnext-list li > .ico, .jnext-list li > .jq { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--muted); }
 .jnext-list li.k-elite > .ico, .jnext-list li.k-treasure > .ico { color: var(--gold-2); }
-.jnext-list li.k-boss > .ico, .jnext-list li.k-fight > .ico, .jnext-list li.k-story > .ico { color: var(--accent-2); }
+.jnext-list li.k-boss > .ico, .jnext-list li.k-fight > .ico, .jnext-list li.k-story > .ico { color: var(--accent-text); }
 .jnext-list li.k-rest > .ico { color: var(--leaf); }
-.jhint p { margin: 0; font-size: 14px; line-height: 1.45; }
+.jhint p { margin: 0; font-size: var(--fs-md); line-height: 1.45; }
 
 /* Fim da Jornada: o selo fica no canto do retrato. */
 .jstart-face.end-seal { width: max-content; margin: 8px auto; }
@@ -441,7 +441,7 @@
 .jmap .jnode-map.k-treasure { --stamp: #94712c; color: #fff4d6; border-color: var(--stamp); }
 .jmap .jnode-map.k-shop { --stamp: var(--wood); color: #f3d38b; border-color: var(--stamp); }
 .jmap .jnode-map.k-unknown { --stamp: var(--paper); color: var(--paper-ink); border-color: var(--paper-ink); box-shadow: 2px 2px 0 rgba(36, 25, 15, .35); }
-.jmap .jnode-map.k-unknown .jq { color: var(--accent); }
+.jmap .jnode-map.k-unknown .jq { color: var(--accent-text); }
 .jmap .jnode-map.k-boss { --stamp: var(--accent); box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--accent); }
 .jmap .jnode-map.done { --stamp: var(--paper-2); color: var(--paper-ink); border-color: var(--paper-muted); box-shadow: none; opacity: .75; }
 .jmap .jnode-map.done::before { background: var(--paper-2); border-color: var(--paper-muted); }
@@ -453,13 +453,13 @@
 
 /* Entrada da Jornada (docs/visual.md): progresso e conquistas recentes (a composição é a do Início, shell.css). */
 .jprogress-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
-.jprogress-row small { font: 700 12px/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.jprogress-row b { display: block; margin: 3px 0 2px; font: 700 26px/1.05 var(--font-hand); }
+.jprogress-row small { font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.jprogress-row b { display: block; margin: 3px 0 2px; font: 700 var(--fs-5xl)/1.05 var(--font-hand); }
 .jprogress-row p { margin: 0; color: var(--muted); }
 .jthumb { flex: none; position: relative; width: 108px; height: 72px; overflow: hidden; border: 2px solid var(--paper-ink); box-shadow: 2px 3px 0 rgba(0, 0, 0, .3); }
 .jprogress-bar { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 5px 8px; margin: 12px 0 14px; }
-.jprogress-bar span { font-size: 13px; color: var(--muted); }
-.jprogress-bar b { font: 700 24px/1 var(--font-hand); }
+.jprogress-bar span { font-size: var(--fs-sm); color: var(--muted); }
+.jprogress-bar b { font: 700 var(--fs-4xl)/1 var(--font-hand); }
 .jprogress-bar > i { grid-column: 1 / -1; display: block; height: 12px; background: #3a2a1a; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .6); }
 .jprogress-bar > i > i { display: block; height: 100%; background: linear-gradient(180deg, #f39a3d, #e8701a); }
 .jrecent ul { list-style: none; margin: 0; padding: 0; }
@@ -467,8 +467,8 @@
 .jrecent li:first-child { border-top: 0; padding-top: 2px; }
 .jrecent .seal { --s: 42px; border-radius: 50%; }
 .jrecent b { display: block; }
-.jrecent small { display: block; color: var(--muted); font-size: 13px; line-height: 1.35; }
-.jrecent time { align-self: start; font: 400 14px/1.2 var(--font-hand); color: var(--muted); white-space: nowrap; }
+.jrecent small { display: block; color: var(--muted); font-size: var(--fs-sm); line-height: 1.35; }
+.jrecent time { align-self: start; font: 400 var(--fs-md)/1.2 var(--font-hand); color: var(--muted); white-space: nowrap; }
 /* Painéis minimizáveis (prototype/jornada/fold.ts): só no widescreen; fora dele, o botão some e nada dobra. */
 .jfold, .jhud-extra > .jfold-title { display: none; }
 @media (min-width: 1280px) and (min-height: 560px) {
@@ -483,7 +483,7 @@
   .jfold:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
   [data-fold] > h3, .jhud-extra > .jfold-title { padding-right: 28px; }
   .jhud-extra { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--line); }
-  .jhud-extra > .jfold-title { display: block; margin: 0 0 6px; font: 700 12px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .jhud-extra > .jfold-title { display: block; margin: 0 0 6px; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
   .jhud-extra > .jfold { top: 2px; right: -4px; }
   /* Minimizado: fica o título (h3, o título da bolsa ou o ::before das fichas da luta). */
   [data-folded] > :not(h3):not(.jfold):not(.jfold-title) { display: none !important; }
@@ -504,13 +504,13 @@
 .jarc:nth-child(even) { rotate: 1.2deg; }
 .jarc-art { position: relative; display: block; width: 100%; aspect-ratio: 3 / 4; overflow: hidden; clip-path: var(--torn); background-color: var(--bg-2); box-shadow: 0 4px 0 rgba(0, 0, 0, .2); }
 .jarc-n { --s: 28px; position: absolute; left: 4px; top: 4px; z-index: 1; }
-.jarc b { max-width: 100%; padding: 2px 8px; font: 700 15px/1.1 var(--font-hand); text-align: center; color: var(--paper-ink); background: var(--grain-dark), var(--paper); clip-path: var(--torn); }
-.jarc small { display: inline-flex; align-items: center; gap: 3px; font: 700 11px/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.jarc b { max-width: 100%; padding: 2px 8px; font: 700 var(--fs-base)/1.1 var(--font-hand); text-align: center; color: var(--paper-ink); background: var(--grain-dark), var(--paper); clip-path: var(--torn); }
+.jarc small { display: inline-flex; align-items: center; gap: 3px; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .jarc small .ico { width: 12px; height: 12px; }
 .jarc.is-done { filter: sepia(.55) saturate(.7) brightness(.92); }
 .jarc.is-now { z-index: 1; }
 .jarc.is-now .jarc-art { outline: 3px solid var(--accent); outline-offset: -3px; box-shadow: 0 8px 14px rgba(0, 0, 0, .35); }
-.jarc.is-now small { color: var(--accent); }
+.jarc.is-now small { color: var(--accent-text); }
 @media (min-width: 900px) and (min-height: 560px) {
   .jarcs { overflow: visible; justify-content: center; padding-inline: 8px; }
   .jarc { flex: 1 1 0; min-width: 0; max-width: 170px; }
@@ -554,7 +554,7 @@
 /* Telas de escolha (Modo História e Caminho Ninja): cabeçalho com o Voltar e o título. */
 .jsub-head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 12px; }
 .jsub-head h2 { grid-column: 2; margin: 0; text-align: center; }
-.jsub-head p { grid-column: 1 / -1; margin: 0; text-align: center; font-size: 14px; }
+.jsub-head p { grid-column: 1 / -1; margin: 0; text-align: center; font-size: var(--fs-md); }
 
 /*
  * Escolher a perspectiva: Naruto (dia) e Sasuke (noite) lado a lado, cada um um pôster: a arte do Portão numa célula
@@ -566,13 +566,13 @@
 .jc-art { aspect-ratio: clamp(1.3, var(--ratio, 1.6), 2.2); clip-path: var(--torn); background: var(--bg-2); }
 .jc-body { position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 14px 16px 16px; }
 .jc-body > * { min-width: 0; }
-.jc-body h3 { margin: 0; padding-right: 44px; font: 700 30px/1 var(--font-hand); color: var(--paper-ink); }
+.jc-body h3 { margin: 0; padding-right: 44px; font: 700 var(--fs-6xl)/1 var(--font-hand); color: var(--paper-ink); }
 .jc-body p { margin: 0; color: var(--paper-muted); }
 .jc-seal { --s: 38px; position: absolute; right: 12px; top: 10px; rotate: 6deg; }
 .jc-night .jc-body { --paper: #cfd2d6; --paper-2: #a9aeb6; --paper-ink: #141822; --paper-muted: #3a4150; }
 .jc-night .jc-seal { background: var(--grain-dark), #1d2333; color: #e8e2d4; box-shadow: inset 0 0 0 2px #1d2333, inset 0 0 0 3px #e8e2d499; }
 .jc-panel.is-locked .jc-art :is(img, video) { filter: saturate(.55) brightness(.75); }
-.jc-soon { display: flex; align-items: center; gap: 8px; margin-top: 4px !important; font: 700 13px/1.3 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; color: var(--paper-ink) !important; }
+.jc-soon { display: flex; align-items: center; gap: 8px; margin-top: 4px !important; font: 700 var(--fs-sm)/1.3 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; color: var(--paper-ink) !important; }
 .jc-soon .ico { width: 16px; height: 16px; }
 .jc-body .jarcs { --arc-w: clamp(84px, 24vw, 120px); margin-top: 4px; }
 @media (min-width: 900px) and (min-height: 560px) {
@@ -598,7 +598,7 @@
 /* Preparar o Caminho Ninja: o pôster com os estágios ao lado da preparação (classe, elemento, Começar). */
 .jpath .jmode-generic { display: flex; flex-direction: column; gap: 12px; }
 .jpath-stages { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 4px 0 0; padding: 0; list-style: none; }
-.jpath-stages li { display: inline-flex; align-items: center; gap: 6px; font: 700 15px/1.1 var(--font-hand); color: var(--paper-ink); }
+.jpath-stages li { display: inline-flex; align-items: center; gap: 6px; font: 700 var(--fs-base)/1.1 var(--font-hand); color: var(--paper-ink); }
 .jpath-stages .seal { --s: 24px; }
 @media (min-width: 900px) and (min-height: 560px) {
   body:has(.jpath) { height: max(100dvh, var(--floor-h)); }
@@ -619,7 +619,7 @@
 .jtrail-art > .scene-media > :is(img, video) {
   -webkit-mask: linear-gradient(#000 60%, transparent); mask: linear-gradient(#000 60%, transparent); }
 .jtrail-art figcaption { position: absolute; left: 14px; bottom: 18px; display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px;
-  font: 700 22px/1.1 var(--font-hand); color: var(--paper-ink); background: var(--grain-dark), var(--paper); clip-path: var(--torn); }
+  font: 700 var(--fs-3xl)/1.1 var(--font-hand); color: var(--paper-ink); background: var(--grain-dark), var(--paper); clip-path: var(--torn); }
 .jtrail-art .seal { --s: 30px; }
 @media (min-width: 600px) and (max-width: 899px) {
   .jtrail-art { height: clamp(220px, 34vw, 320px); }
@@ -661,7 +661,7 @@
   .jc-duo .jc-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; padding: 10px 14px 12px; }
   .jc-duo .jc-body > * { grid-column: 1 / -1; }
   .jc-duo .jc-body > h3 { grid-column: 1; padding-right: 0; }
-  .jc-duo .jc-body > .btn.primary { grid-column: 2; grid-row: 1; width: auto; min-height: 44px; padding: 6px 18px; margin-right: 48px; font-size: 15px; }
+  .jc-duo .jc-body > .btn.primary { grid-column: 2; grid-row: 1; width: auto; min-height: 44px; padding: 6px 18px; margin-right: 48px; font-size: var(--fs-base); }
   .jc-duo .jc-body .jarc small { display: none; }
   .jc-duo .jc-body .jarcs { padding-top: 6px; padding-bottom: 2px; }
 }

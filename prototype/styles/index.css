@@ -22,7 +22,10 @@
 @import './jornada-motion.css';
 @import './jornada-scene.css';
 @import './jornada-combat.css';
+@import './jornada-cards.css';
 @import './minigames.css';
 @import './roleta-desk.css';
 @import './shell.css';
 @import './instant.css';
+@import './acabamento.css';
+@import './a11y.css';

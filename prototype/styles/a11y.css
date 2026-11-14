@@ -1,0 +1,44 @@
+/*
+ * Fundamentos de acessibilidade (v0.74.0, etapa 0 da evolução visual). Vem por último: ajusta foco, alvos de toque e
+ * movimento sem mexer na composição das telas. Ver docs/visual.md#fundamentos.
+ */
+
+/* --- Foco de teclado: todo controle tem um anel visível; o que já tem o seu (botões, selos) não muda -------------- */
+:where(button, [role='button'], [role='tab'], a[href], summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--gold-2); outline-offset: 2px;
+}
+.gate-nav button:focus-visible { outline: 2px solid var(--gold-2); outline-offset: -3px; }
+@media (min-width: 900px) { .side-nav button:focus-visible { outline: 2px solid var(--gold-2); outline-offset: -3px; } }
+/* Selos e nós em losango: o anel acompanha o losango, não a caixa do botão. */
+.jt-node:focus-visible { outline: none; }
+.jt-node:focus-visible .jt-seal { outline: 3px solid var(--gold-2); outline-offset: 3px; }
+.jf:focus-visible .jf-art .portrait { outline: 3px solid var(--gold-2); outline-offset: 2px; }
+.jnode-map:focus-visible { outline: 3px solid var(--gold-2); outline-offset: 3px; }
+
+/* --- Alvos de toque: a área que responde tem 44px, mesmo quando o desenho é menor -------------------------------- */
+.jfold { width: 44px; height: 44px; top: 0; right: 0; }
+.jnode-map { position: absolute; }
+.jnode-map::after { content: ''; position: absolute; inset: -4px; }
+.jrstrip .jrslot { position: relative; }
+.jrstrip .jrslot::after { content: ''; position: absolute; inset: -9px -3px; }
+@media (pointer: coarse) {
+  .top-actions .btn.small { min-width: 44px; }
+  .btn.close { min-width: 44px; min-height: 44px; }
+  .jb-log { min-height: 44px; }
+}
+
+/* --- Movimento -------------------------------------------------------------------------------------------------------- */
+/* Pulsos de chamada (nó disponível, nó do mapa, herói) tocam algumas vezes e param: nada pisca para sempre. */
+.jt-node.st-available .jt-seal, .jt-node.st-upgradable .jt-seal { animation-iteration-count: 4; }
+.jnode-map.choice, .jmap .jnode-map.choice, .jmap-hero { animation-iteration-count: 4; }
+.jmap-lines path.open { animation-iteration-count: 6; }
+@media (prefers-reduced-motion: reduce) {
+  /* Número de dano é informação: com menos movimento ele aparece parado em vez de sumir em 0,01 ms. */
+  .jfloat { animation: none !important; opacity: 1; }
+  .jt-node.st-available .jt-seal, .jt-node.st-upgradable .jt-seal, .jnode-map.choice, .jmap-hero, .jmap-lines path.open { animation: none; }
+}
+
+/* --- Contraste que o token sozinho não resolve ----------------------------------------------------------------------- */
+/* Selo dourado no tema claro: tinta clara sobre o dourado escuro (a tinta escura dava 3,26:1). */
+:root[data-theme='light'] .seal.gold { color: var(--accent-ink); }
+.seal.ghost { color: var(--steel); }

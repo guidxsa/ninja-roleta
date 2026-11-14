@@ -33,7 +33,7 @@
 .jc-name {
   margin-bottom: 28px; padding: 3px 10px 4px; rotate: -2deg;
   background: var(--paper); color: var(--paper-ink); border: 1px solid var(--paper-ink);
-  font: 700 17px/1.1 var(--font-hand); box-shadow: 2px 2px 0 var(--ink);
+  font: 700 var(--fs-xl)/1.1 var(--font-hand); box-shadow: 2px 2px 0 var(--ink);
 }
 /* Sem retrato próprio: só o nome, dentro do quadro (pendurado, ele cobria o título do pergaminho). */
 .jc-cast.no-face { bottom: 10px; }
@@ -43,15 +43,15 @@
 /* Pergaminho: sobe um pouco sobre o quadro, com espaço para o retrato que desce do canto. */
 .jc-paper { margin-top: -6px; padding: 30px 18px 18px; }
 .jc-panel.empty + .jc-side .jc-paper { padding-top: 18px; }
-.jc-title { margin: 0 44px 8px 0; text-align: left; font: 700 24px/1.12 var(--font-hand); letter-spacing: 0; color: var(--paper-ink); text-shadow: none; text-wrap: balance; }
+.jc-title { margin: 0 44px 8px 0; text-align: left; font: 700 var(--fs-4xl)/1.12 var(--font-hand); letter-spacing: 0; color: var(--paper-ink); text-shadow: none; text-wrap: balance; }
 .jc-title::after { display: none; }
-.jc-paper p { margin: 0 0 8px; max-width: 62ch; font: 400 16px/1.5 var(--font-body); color: var(--paper-ink); text-wrap: pretty; }
+.jc-paper p { margin: 0 0 8px; max-width: 62ch; font: 400 var(--fs-lg)/1.5 var(--font-body); color: var(--paper-ink); text-wrap: pretty; }
 .jc-paper p:last-child { margin-bottom: 0; }
 .jc-seal { --s: 38px; position: absolute; right: 12px; top: 12px; rotate: 5deg; animation: stamp .45s var(--ease) both; }
 
 /* Linhas que entram uma a uma (ganhos da vitória). A primeira (a lição, quando há) lê como fala. */
 .jc-line { animation: gainIn var(--dur-3) var(--ease-out, var(--ease)) both; animation-delay: calc(min(var(--i), 7) * 90ms + 120ms); }
-.jc-line.lead { font: 700 18px/1.4 var(--font-hand); }
+.jc-line.lead { font: 700 var(--fs-xl)/1.4 var(--font-hand); }
 .jc-paper .jrcard { margin-top: 4px; }
 
 /* Opções da cena: tiras de papel, não botões de painel. A tinta à esquerda marca que é uma escolha. */
@@ -61,7 +61,7 @@
   background: var(--grain-dark), var(--paper); color: var(--paper-ink);
   border: 1px solid color-mix(in srgb, var(--paper-ink) 55%, transparent);
   box-shadow: 3px 3px 0 var(--ink);
-  font: 600 16px/1.3 var(--font-body); letter-spacing: 0; text-transform: none;
+  font: 600 var(--fs-lg)/1.3 var(--font-body); letter-spacing: 0; text-transform: none;
 }
 .jcene .joptions .btn::before, .jcene .joptions .btn::after { display: none; }
 .jcene .joptions .btn .ico { color: var(--stamp, var(--accent)); flex: none; }
@@ -83,11 +83,11 @@
   .jc-panel::before { background-size: cover; background-position: center bottom; }
   .jc-cast { left: 18px; bottom: 18px; flex-direction: column; align-items: flex-start; gap: 8px; }
   .jc-cast .portrait { width: clamp(120px, 15vh, 168px); height: clamp(120px, 15vh, 168px); }
-  .jc-name { margin: 0; font-size: 19px; }
+  .jc-name { margin: 0; font-size: var(--fs-xl); }
   .jc-cast.no-face { bottom: 18px; }
   .jc-paper, .jc-panel.empty + .jc-side .jc-paper { margin-top: 0; padding: 22px 24px 22px; }
-  .jc-title { font-size: 30px; }
-  .jc-paper p { font-size: 17px; }
+  .jc-title { font-size: var(--fs-6xl); }
+  .jc-paper p { font-size: var(--fs-xl); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -122,11 +122,11 @@
 .jb-cut.ally .portrait { box-shadow: 4px 4px 0 var(--gold-deep); }
 .jb-cut.foe .portrait { box-shadow: -4px 4px 0 var(--accent-deep); }
 .jb-cut-txt { position: relative; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.jb-cut-who { font: 700 13px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--paper-muted); }
-.jb-cut-line { font: 700 20px/1.25 var(--font-hand); text-wrap: balance; }
+.jb-cut-who { font: 700 var(--fs-sm)/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--paper-muted); }
+.jb-cut-line { font: 700 var(--fs-2xl)/1.25 var(--font-hand); text-wrap: balance; }
 /* Narrador: sem retrato, texto corrido no meio da faixa. */
 .jb-cut.narrator .jb-cut-band { justify-content: center; text-align: center; clip-path: polygon(0 6%, 100% 0, 100% 94%, 0 100%); }
-.jb-cut.narrator .jb-cut-line { font: 400 17px/1.45 var(--font-body); max-width: 56ch; }
+.jb-cut.narrator .jb-cut-line { font: 400 var(--fs-xl)/1.45 var(--font-body); max-width: 56ch; }
 /* Aviso de que a fala espera o toque: um losango que pisca três vezes e para. */
 .jb-cut-next { position: absolute; right: 14px; bottom: 20px; width: 9px; height: 9px; rotate: 45deg; background: var(--accent); animation: cutNext 1s var(--ease) 3 both; animation-delay: .5s; }
 .jb-cut.foe .jb-cut-next { right: auto; left: 14px; }
@@ -139,8 +139,8 @@
 @media (min-width: 900px) and (min-height: 560px) {
   .jb-cut-band { min-height: 190px; padding: 26px 8% 26px 6%; gap: 26px; }
   .jb-cut .portrait { width: 148px; height: 148px; }
-  .jb-cut-line { font-size: 28px; }
-  .jb-cut.narrator .jb-cut-line { font-size: 20px; }
+  .jb-cut-line { font-size: var(--fs-5xl); }
+  .jb-cut.narrator .jb-cut-line { font-size: var(--fs-2xl); }
 }
 @media (prefers-reduced-motion: reduce) {
   .jb-cut, .jb-cut-band, .jb-cut-next { animation: none; }

@@ -80,6 +80,38 @@ Decidido sozinho: quem aparece no quadro de cada evento (quem não tem ficha, co
 
 Verificado no navegador: o evento do pergaminho (celular), o corte de quadro do Mizuki (5 falas tocadas até o fim da luta), a cena de vitória (celular e PC). Não verificado: tema claro, tablet, a cena de relíquia de elite, a lição do sino e o narrador.
 
+### Etapa 4: acabamento (v0.76.0, 14/11/2026)
+
+Última etapa do plano. O que entrou: Girar preso ao pé da tela na Roleta no celular; tela do nome em papel; próxima parada e dica da trilha em papel; quatro brilhos difusos trocados por anel e sombra dura (pontos de talento, traço e selo ativos da árvore, nó escolhível do mapa). Detalhe em [visual.md](visual.md#acabamento).
+
+Decidido sozinho: só a próxima parada e a dica viram papel (o HUD, a loja embutida, o resumo da run e os caminhos abertos ficam em laca); os brilhos de golpe e de entrada de forma ficam, por serem efeito de uma batida; o botão Girar fixo usa a largura de até 260px.
+
+**Não feito**: levar os pergaminhos do Início ao celular (item 17 de decisoes.md). É uma reescrita do Portão, que o próprio visual.md deixa "se o desenho do PC agradar"; não há como saber isso sem o seu teste. Também ficou o que a etapa 0 listou (durações fixas, branco sobre as barras, cores soltas).
+
+Conferido no navegador: tela do nome no celular (papel, selo, campo); Girar sticky na primeira roda (no pé da tela, a 750 a 802px de 812); trilha no PC com tema claro (próxima parada, dica e loja em papel, HUD em laca). Não conferido: tema escuro nessas telas, tablet, a árvore e o mapa sem os brilhos, e a Roleta no PC.
+
+### Etapa 3: progressão e fim (v0.75.0, 14/11/2026)
+
+O que entrou: cartão de técnica canônico (`techCard`) no moveset e na ficha; loja num container de papel nos dois tamanhos; fim de run da Jornada como relatório de missão, com caminho percorrido, equipe, relíquias e talentos finais, dentro da cena narrativa. Detalhe em [visual.md](visual.md#cartões).
+
+Decidido sozinho: o botão de luta fica fora do cartão canônico (tem estado); as vagas do moveset seguem como selos; o cartão de relíquia já era um só, então só o container da loja mudou; o relatório do Caminho Ninja não tem o "caminho" (o mapa é sorteado, sem trilha fixa); a vitória e a derrota usam o mesmo relatório. A cor do tema na árvore, no moveset e na loja continua a da classe.
+
+Conferido no navegador (celular, tema claro): moveset com o cartão novo e o realce das vagas; loja em papel com prateleira, bolsa e treino; relatório de derrota (selo 敗, 48 paradas, 21 feitas, a da queda marcada, equipe e relíquias). Não conferido: a ficha com o cartão novo (a tela da Ficha não foi aberta), o relatório de vitória, o do Caminho Ninja, o PC e o tema escuro nessas três telas.
+
+Não feito: a loja do PC com os dois containers unificados só foi vista pelo código; o texto "Quedas da equipe" ficou na lista de strings sem uso.
+
+### Etapa 0: fundamentos (v0.74.0, 14/11/2026)
+
+Pedido do usuário: executar as etapas 0 e 3 do plano, depois de incorporar as mudanças do Impeccable (commit à parte).
+
+O que entrou, medido na auditoria: **contraste**, o que falhava em texto (`--accent` sobre superfície escura 2,61; `--accent-2` 3,95 a 4,37; hover do botão primário 3,81; no claro, dourado 4,38, apoio 4,12, XP 3,54, chakra 4,32, folha 4,40); **escala tipográfica** (48 tamanhos, 33 regras abaixo de 12px, para 11 passos, mínimo de 12); **foco** (15 componentes sem anel); **alvos de toque** de 26 a 40px; **movimento** (pulsos infinitos; número de dano que sumia com menos movimento). Detalhe em [visual.md](visual.md#fundamentos).
+
+Decidido sozinho: os valores novos dos tokens (calculados para passar de 4,5:1: `--accent-text` #f07070 no escuro e #a3121b no claro; no claro, `--gold` #735518, `--muted` #5f5140, `--steel` #5e5a53, `--accent-2` #b3191f, `--xp` #876620, `--ck-2` #2f60b0, `--leaf` #456d2e; no escuro, `--accent-2` #c92a31); a escala de tamanhos (12 a 32); os pontos de corte ao arredondar (12,5 vira 12; 14,5 vira 14; 17 e 19 viram 18); quatro repetições para os pulsos. O dourado e o vermelho do tema claro ficam um pouco mais escuros que antes.
+
+Conferido no navegador (celular): a luta no escuro (bandeja, etiquetas, rótulos de barra) e a árvore no claro. Não conferido: as demais telas com os tamanhos novos (a mudança é de 280 pontos, a maioria de 1 a 2px), o foco por teclado em cada componente e o PC.
+
+Não feito: as durações fixas viram token; o branco sobre as barras; as cores soltas; reescrever os paddings na escala de espaço.
+
 ### Etapa 2: combate (v0.73.0, 14/11/2026)
 
 Pedido do usuário: seguir com o plano de design junto do Impeccable. A crítica que ele rodou antes (`.impeccable/critique`, telas da Jornada, 27/40) apontava os mesmos dois P1 da auditoria: ordem de turno e fraqueza elemental invisíveis fora do widescreen, e o menu de combate com 10 a 12 controles e o Desistir colado.

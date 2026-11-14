@@ -1,0 +1,60 @@
+/*
+ * Cartões e relatório da progressão (etapa 3 da evolução visual, docs/visual.md#cartões). Um cartão de técnica só
+ * (moveset e ficha), a loja num container de papel e o fim da run como relatório de missão.
+ */
+
+/* --- Cartão de técnica canônico: ícone quadrado na cor do elemento, nome e números ---------------------------------- */
+.tcard {
+  position: relative; display: grid; grid-template-columns: 32px 1fr; gap: 8px; align-items: center; padding: 6px 10px; min-width: 0;
+  background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--c, var(--line));
+  color: var(--text); font: inherit; text-align: left;
+}
+button.tcard { cursor: pointer; transition: background var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease); }
+button.tcard:hover { background: var(--surface-2); }
+.tcard .tc-ico { width: 32px; height: 32px; display: grid; place-items: center; background: var(--c); color: #fff; }
+.tcard .tc-ico .ico { width: 18px; height: 18px; }
+.tcard .tc-txt { min-width: 0; display: flex; flex-direction: column; }
+.tcard .tc-txt b { font: 700 var(--fs-lg)/1.15 var(--font-hud); letter-spacing: .02em; overflow-wrap: anywhere; }
+.tcard .tc-txt small { font: 600 var(--fs-xs)/1.2 var(--font-hud); color: var(--muted); }
+.tcard small .up { color: var(--gold-2); }
+.tcard small .ico { width: 12px; height: 12px; vertical-align: -.15em; }
+.tcard.on { background: color-mix(in srgb, var(--tree, var(--gold)) 18%, var(--surface)); box-shadow: inset 0 0 0 1px var(--tree, var(--gold)); }
+.tc-mark {
+  position: absolute; top: -7px; right: -5px; min-width: 22px; padding: 0 5px; rotate: 4deg;
+  font: 700 var(--fs-sm)/1.5 var(--font-hud); text-align: center; color: var(--tree-ink, var(--ink)); background: var(--tree, var(--gold));
+  box-shadow: 2px 2px 0 var(--ink);
+}
+/* Na ficha (papel): o cartão é uma tira clara sobre o pergaminho, e os tons de apoio são os da tinta. */
+:is(.scroll-paper, .rsheet-panel) .tcard { background: rgba(255, 255, 255, .22); border-color: rgba(36, 25, 15, .18); border-top-color: var(--c); padding: 5px 8px; grid-template-columns: 28px 1fr; }
+:is(.scroll-paper, .rsheet-panel) .tcard .tc-ico { width: 28px; height: 28px; }
+:is(.scroll-paper, .rsheet-panel) .tcard .tc-ico .ico { width: 17px; height: 17px; }
+:is(.scroll-paper, .rsheet-panel) .tcard .tc-txt small { color: var(--paper-muted); }
+:is(.scroll-paper, .rsheet-panel) .tcard small .up { color: #7a5a14; }
+
+/* --- Loja: um container só, o de papel, no celular (tela cheia) e no PC (dock) ---------------------------------------- */
+.jshop-paper { margin-top: 2px; padding: 18px 16px 16px; }
+.jshop-paper .jrcard { background: rgba(255, 255, 255, .28); }
+.jshop-dock.parchment { padding: 18px 16px 16px; }
+.jshop-dock.parchment .jdock-title { color: var(--paper-ink); }
+
+/* --- Fim da run: relatório de missão ------------------------------------------------------------------------------------ */
+.jreport-head { margin: 0 0 6px; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .16em; text-transform: uppercase; color: var(--paper-muted); }
+.jreport-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 12px; }
+.jreport-stat { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; background: rgba(255, 255, 255, .28); border: 1px solid rgba(36, 25, 15, .18); }
+.jreport-stat b { font: 700 var(--fs-3xl)/1 var(--font-hud); color: var(--paper-ink); }
+.jreport-stat small { font: 600 var(--fs-xs)/1.1 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; color: var(--paper-muted); }
+/* A trilha percorrida: um selo por parada, vazio onde a run não chegou (a derrota fica marcada). */
+.jreport-path { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 12px; padding: 0; list-style: none; }
+.jreport-path li { width: 22px; height: 22px; display: grid; place-items: center; background: color-mix(in srgb, var(--paper-ink) 70%, transparent); color: var(--paper); }
+.jreport-path li .ico { width: 13px; height: 13px; }
+.jreport-path li.todo { background: transparent; border: 1px dashed color-mix(in srgb, var(--paper-ink) 50%, transparent); color: var(--paper-muted); }
+.jreport-path li.fell { background: var(--accent); color: var(--accent-ink); }
+.jreport-team { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+.jreport-team li { display: flex; align-items: center; gap: 6px; font: 700 var(--fs-md)/1 var(--font-hud); color: var(--paper-ink); }
+.jreport-team .portrait { width: 34px; height: 34px; border: 2px solid var(--paper-ink); box-shadow: 2px 2px 0 var(--ink); }
+.jreport-team li.down .portrait { filter: grayscale(1); opacity: .6; }
+.jreport-relics { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.jreport-finals { margin: 0 0 4px; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.jreport-finals li { padding: 3px 8px; background: var(--gold); color: var(--accent-ink); font: 700 var(--fs-sm)/1.2 var(--font-hud); letter-spacing: .04em; }
+.jreport-line { animation: gainIn var(--dur-3) var(--ease-out, var(--ease)) both; animation-delay: calc(var(--i, 0) * 110ms + 150ms); }
+@media (prefers-reduced-motion: reduce) { .jreport-line { animation: none; } }

@@ -3,14 +3,14 @@
 .profile-body { display: flex; flex-direction: column; gap: 8px; }
 .ach-cat {
   display: flex; align-items: center; gap: 10px; margin: 10px 0 2px;
-  font: 700 14px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); text-align: left;
+  font: 700 var(--fs-md)/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); text-align: left;
 }
 .ach-cat::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .ach-list, .bingo, .history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
 .ach, .bingo-card, .history li { display: flex; gap: 12px; align-items: center; padding: 9px 4px; border-bottom: 1px solid var(--line); }
 .history li { flex-direction: column; align-items: stretch; gap: 3px; }
 .ach > span:last-child, .bingo-card > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.ach b, .bingo-card b { font: 700 16px/1.2 var(--font-hud); letter-spacing: .02em; }
+.ach b, .bingo-card b { font: 700 var(--fs-lg)/1.2 var(--font-hud); letter-spacing: .02em; }
 .ach.off { opacity: .58; }
 .ach-ico { flex: none; }
 .ach-ico.seal { --s: 34px; }
@@ -25,7 +25,7 @@
   display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 44px; padding: 8px 4px;
   border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer;
 }
-.avatar-opt small { font: 600 12px/1.2 var(--font-hud); text-align: center; overflow-wrap: anywhere; }
+.avatar-opt small { font: 600 var(--fs-xs)/1.2 var(--font-hud); text-align: center; overflow-wrap: anywhere; }
 .avatar-opt[aria-pressed="true"] { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); }
 /* Ícone da conquista dentro do selo (no lugar do 功). */
 .seal.ach-ico .ico { width: 58%; height: 58%; transform: rotate(3deg); }
@@ -37,16 +37,16 @@
 .bingo-card > span:not(.bingo-stamp):not(.portrait) { flex: 1; }
 /* Carimbo do Livro Bingo: 勝 (derrotado) em vermelho, 謎 (desconhecido) apagado. */
 .bingo-stamp {
-  flex: none; display: grid; place-items: center; width: 34px; height: 34px; font-size: 21px;
-  color: var(--accent-2); border: 2px solid currentColor; transform: rotate(-8deg); opacity: .8;
+  flex: none; display: grid; place-items: center; width: 34px; height: 34px; font-size: var(--fs-2xl);
+  color: var(--accent-text); border: 2px solid currentColor; transform: rotate(-8deg); opacity: .8;
 }
 .bingo-card.unknown .bingo-stamp { color: var(--line-strong); opacity: .6; }
 /* Histórico como livro-razão: linhas finas e data condensada. */
-.history li small { font-family: var(--font-hud); font-size: 13px; letter-spacing: .02em; }
+.history li small { font-family: var(--font-hud); font-size: var(--fs-sm); letter-spacing: .02em; }
 
 /* Campo de texto do nome do jogador (pergunta inicial e Registro ninja). */
 .field { display: flex; flex-direction: column; gap: 4px; }
-.field > span { font: 700 13px/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.field > span { font: 700 var(--fs-sm)/1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .field input {
   width: 100%; min-height: 44px; padding: 8px 10px; background: var(--surface-2); color: inherit;
   border: 1px solid var(--line-strong); border-radius: var(--radius); font: inherit;

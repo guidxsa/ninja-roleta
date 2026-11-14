@@ -13,7 +13,7 @@
 .jf-adv {
   position: absolute; right: -6px; top: -8px; z-index: 3; padding: 2px 6px 3px; rotate: 4deg;
   background: var(--paper); border: 1px solid var(--paper-ink); box-shadow: 2px 2px 0 var(--ink);
-  font: 700 14px/1 var(--font-hud); letter-spacing: .02em;
+  font: 700 var(--fs-md)/1 var(--font-hud); letter-spacing: .02em;
   animation: advIn var(--dur-2) var(--ease-out, var(--ease)) both;
 }
 /* Sobre o papel, os tons de bom e ruim são os escuros do pergaminho. */
@@ -28,7 +28,7 @@
 /* --- Confirmação do jogo (no lugar do diálogo do navegador) -------------------------------------------------------- */
 .modal.jconfirm { align-items: center; padding: 16px; z-index: 80; }
 .jconfirm-paper { width: min(100%, 420px); padding: 22px 20px 18px; display: flex; flex-direction: column; gap: 16px; }
-.jconfirm-paper p { margin: 0; font: 700 19px/1.35 var(--font-hand); color: var(--paper-ink); text-wrap: balance; }
+.jconfirm-paper p { margin: 0; font: 700 var(--fs-xl)/1.35 var(--font-hand); color: var(--paper-ink); text-wrap: balance; }
 .jconfirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .jconfirm-actions .btn { min-height: 48px; display: flex; align-items: center; justify-content: center; }
 .jconfirm-actions .btn.danger { background: var(--accent); color: var(--accent-ink); border-color: var(--accent-deep); }
@@ -66,16 +66,16 @@
     gap: 6px;
   }
   .jbattle .jb-menu:empty { display: none; }
-  .jbattle .jb-menu .jb-prompt { font-size: 13px; }
+  .jbattle .jb-menu .jb-prompt { font-size: var(--fs-sm); }
 
   .jb-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
   .jb-tab {
     min-height: 44px; padding: 4px 6px; display: flex; align-items: center; justify-content: center; gap: 6px;
     background: var(--bg-2); color: var(--muted); border: 1px solid var(--line); border-bottom: 2px solid var(--line);
-    font: 700 14px/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; cursor: pointer;
+    font: 700 var(--fs-md)/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; cursor: pointer;
     transition: color var(--dur-1) var(--ease), background var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
   }
-  .jb-tab small { font: 700 12px/1 var(--font-hud); padding: 2px 5px; background: var(--surface-3); color: var(--text); }
+  .jb-tab small { font: 700 var(--fs-xs)/1 var(--font-hud); padding: 2px 5px; background: var(--surface-3); color: var(--text); }
   .jb-tab.on { color: var(--text); background: var(--surface-3); border-bottom-color: var(--accent); }
   .jb-tab:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
 

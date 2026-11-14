@@ -1,0 +1,40 @@
+/*
+ * Acabamento (etapa 4 da evolução visual, docs/visual.md#acabamento): a Roleta no celular, a tela do nome, a próxima
+ * parada em papel e os brilhos difusos trocados por sombra dura, que é a linguagem do resto do jogo.
+ */
+
+/* --- Roleta no celular: o Girar fica sempre à mão, mesmo com a legenda empurrando a roda para baixo -------------------- */
+@media not ((min-width: 900px) and (min-height: 560px)) {
+  .wheel-box .btn.spin {
+    position: sticky; bottom: 10px; z-index: 4; min-height: 52px; min-width: min(100%, 260px);
+    box-shadow: 0 0 0 3px var(--bg), 3px 3px 0 3px var(--ink);
+  }
+}
+
+/* --- Tela do nome: o registro ninja em papel ------------------------------------------------------------------------------- */
+.jname-paper { margin-top: 8px; padding: 22px 18px 18px; }
+.jname-paper .field > span { color: var(--paper-muted); }
+.jname-paper .field input { background: rgba(255, 255, 255, .45); border: 1px solid var(--paper-ink); color: var(--paper-ink); box-shadow: inset 0 2px 0 rgba(36, 25, 15, .12); }
+.jname-paper .field input::placeholder { color: var(--paper-muted); opacity: 1; }
+.jname-paper .field input:focus { outline: 3px solid var(--gold-2); outline-offset: 1px; }
+.jname-paper form { margin-top: 6px; }
+.jname-hint { margin: 10px 0 0; font: 400 var(--fs-md)/1.4 var(--font-body); color: var(--paper-muted); }
+
+/* --- Próxima parada e dica: papel; o HUD e o resto seguem em laca, como ferramenta --------------------------------------- */
+.parchment.jnext, .parchment.jhint { padding: 16px 16px 14px; }
+.parchment .jnext-stop { background: rgba(255, 255, 255, .3); border-top-color: var(--accent); }
+.parchment .jnext-stop b { color: var(--paper-ink); }
+.parchment .jnext-stop > .ico { color: var(--accent-text); }
+.parchment .jfold::after { border-color: var(--paper-ink); }
+
+/* --- Sombras: sem brilho difuso. Estado ativo se marca com anel e sombra dura. ------------------------------------------- */
+.jt-points.has { box-shadow: 2px 2px 0 var(--ink), 0 0 0 1px var(--tree); }
+.jt-lines path.on { filter: none; }
+.jt-node.st-owned .jt-seal, .jt-node.st-upgradable .jt-seal, .jt-node.st-maxed .jt-seal { box-shadow: 3px 3px 0 var(--ink), 0 0 0 2px var(--tree-2); }
+.jt-node.capstone .jt-seal { box-shadow: 3px 3px 0 var(--ink), 0 0 0 3px var(--gold); }
+.jnode-map.choice { box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px var(--accent); }
+@keyframes formIn {
+  from { filter: brightness(2.2) saturate(1.6); transform: scale(1.14); }
+  40% { filter: brightness(1.5) saturate(1.4); }
+  to { filter: none; transform: none; }
+}

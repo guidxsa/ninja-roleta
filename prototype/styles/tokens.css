@@ -19,9 +19,12 @@
 
   /* Acentos: vermelho é ação e perigo; dourado é conquista e destaque raro; pergaminho é documento. */
   --accent: #b5161f;
-  --accent-2: #db3a40;
+  /* Hover do vermelho: escurecido para o texto claro passar de 4,5:1 (antes #db3a40, 3,81). */
+  --accent-2: #c92a31;
   --accent-deep: #5e0b10;
   --accent-ink: #f6ecd6;
+  /* Vermelho como TEXTO ou ícone sobre superfície escura (o fundo vermelho usa --accent). 6,1:1 sobre --surface. */
+  --accent-text: #f07070;
   --seal: #b5161f;
   /* Ação e navegação (botão principal, abas, progresso). Hoje é o mesmo vermelho; fica separado do perigo
      para poder mudar sem tocar em chefe, vilão e carimbo. Resolve no próprio elemento: segue o tema. */
@@ -38,6 +41,26 @@
   --paper-ink: #24190f;
   --paper-muted: #574632;
   --wood: #4a2f1c;
+
+  /* Escala tipográfica (v0.74.0): nada abaixo de 12px em texto. Display e kanji seguem os próprios clamp. */
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-base: 15px;
+  --fs-lg: 16px;
+  --fs-xl: 18px;
+  --fs-2xl: 20px;
+  --fs-3xl: 22px;
+  --fs-4xl: 24px;
+  --fs-5xl: 28px;
+  --fs-6xl: 32px;
+  /* Escala de espaço (múltiplos de 4): para o que for escrito daqui em diante. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
 
   /* Funcionais (dessaturados para viver na paleta) */
   --hp: #5f9a5c;
@@ -126,17 +149,18 @@
   --surface-3: #ddcfad;
   --line: #cbbb95;
   --line-strong: #8d8170;
-  --steel: #6c675f;
+  --steel: #5e5a53;
   --text: #1f1812;
-  --muted: #6c5d4a;
+  --muted: #5f5140;
 
   --accent: #a3121b;
-  --accent-2: #c21d26;
+  --accent-2: #b3191f;
   --accent-deep: #6b0c12;
   --accent-ink: #f8efdc;
+  --accent-text: #a3121b;
   --seal: #a3121b;
   /* Dourado no papel claro: escuro o bastante para ler (antes #94712c/#ad8636 quase sumiam). */
-  --gold: #7d5d1f;
+  --gold: #735518;
   --gold-2: #684c15;
   --gold-deep: #5e4720;
 
@@ -144,13 +168,13 @@
   --hp-mid: #ad852b;
   --hp-low: #b8392a;
   --ck: #2f60b0;
-  --ck-2: #3e6fc0;
-  --xp: #9c792a;
+  --ck-2: #2f60b0;
+  --xp: #876620;
   --good: #3c7a37;
   --bad: #b3352b;
   --jin: #c0501f;
   --foe: #8f1a14;
-  --leaf: #4f7a35;
+  --leaf: #456d2e;
   --leaf-deep: #2f5f34;
   --orange: #c2550f;
   --navy: #2c3a52;
