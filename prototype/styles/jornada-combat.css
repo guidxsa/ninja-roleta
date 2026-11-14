@@ -1,0 +1,96 @@
+/*
+ * Combate da Jornada, etapa 2 da evolução visual (docs/visual.md#combate): no celular, o menu é uma bandeja de laca
+ * fixa embaixo, com uma aba por grupo; a vantagem de elemento aparece no botão e no alvo; a ordem da rodada sobe para o
+ * celular. Fica num arquivo próprio, depois de jornada-battle.css, que continua dono do campo e do PC.
+ */
+
+/* --- Vantagem de elemento: seta e multiplicador, na cor de bom ou ruim ------------------------------------------- */
+.jadv { display: inline-flex; align-items: center; gap: 1px; font-weight: 700; white-space: nowrap; }
+.jadv .ico { width: 1em; height: 1em; }
+.jadv.up { color: var(--good); }
+.jadv.down { color: var(--bad); }
+/* No alvo: uma etiqueta de papel presa ao canto do retrato, enquanto se escolhe em quem bater. */
+.jf-adv {
+  position: absolute; right: -6px; top: -8px; z-index: 3; padding: 2px 6px 3px; rotate: 4deg;
+  background: var(--paper); border: 1px solid var(--paper-ink); box-shadow: 2px 2px 0 var(--ink);
+  font: 700 14px/1 var(--font-hud); letter-spacing: .02em;
+  animation: advIn var(--dur-2) var(--ease-out, var(--ease)) both;
+}
+/* Sobre o papel, os tons de bom e ruim são os escuros do pergaminho. */
+.jf-adv .jadv.up { color: #30692c; }
+.jf-adv .jadv.down { color: #9e2a21; }
+@keyframes advIn { from { opacity: 0; scale: 1.5; } to { opacity: 1; scale: 1; } }
+
+/* --- Abas do menu: só existem no celular; no PC os grupos aparecem todos, com título -------------------------------- */
+.jb-tabs { display: none; }
+.jb-pane { display: contents; }
+
+/* --- Confirmação do jogo (no lugar do diálogo do navegador) -------------------------------------------------------- */
+.modal.jconfirm { align-items: center; padding: 16px; z-index: 80; }
+.jconfirm-paper { width: min(100%, 420px); padding: 22px 20px 18px; display: flex; flex-direction: column; gap: 16px; }
+.jconfirm-paper p { margin: 0; font: 700 19px/1.35 var(--font-hand); color: var(--paper-ink); text-wrap: balance; }
+.jconfirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.jconfirm-actions .btn { min-height: 48px; display: flex; align-items: center; justify-content: center; }
+.jconfirm-actions .btn.danger { background: var(--accent); color: var(--accent-ink); border-color: var(--accent-deep); }
+.jconfirm-actions .btn.danger:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
+.jconfirm-actions .btn:focus-visible { outline: 3px solid var(--gold-2); outline-offset: 2px; }
+
+/* --- Celular e tablet em pé ------------------------------------------------------------------------------------------ */
+@media not ((min-width: 900px) and (min-height: 560px)) {
+  /* A ordem das peças: a ordem da rodada sobe para junto do cabeçalho; o menu fica por último, fixo embaixo. */
+  .jbattle .jb-head { order: 1; }
+  .jbattle .jb-relics { order: 2; }
+  .jbattle .jb-order { order: 3; }
+  .jbattle .jb-goal { order: 4; }
+  .jbattle .jb-enemies { order: 5; }
+  .jbattle .jb-banner { order: 6; }
+  .jbattle .jb-allies { order: 7; }
+  .jbattle .jb-log { order: 8; }
+  .jbattle .jb-menu { order: 9; }
+
+  /* Ordem da rodada: uma fileira de rostos pequenos, o da vez maior, sem título nem botão de recolher. */
+  .jbattle .jb-order { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 30px; }
+  .jbattle .jb-order[hidden] { display: flex; }
+  .jbattle .jb-order .jfold { display: none; }
+  .jb-order-it { display: inline-flex; }
+  .jb-order-it .portrait { width: 24px; height: 24px; border-width: 1px; box-shadow: none; }
+  .jb-order-it.enemy .portrait { border-color: var(--accent-2); }
+  .jb-order-it.ally .portrait { border-color: var(--gold); }
+  .jb-order-it.now .portrait { width: 30px; height: 30px; box-shadow: 0 0 0 2px var(--gold-2); }
+
+  /* Bandeja do menu: laca, presa ao pé da tela. O campo rola por trás, as ações nunca saem do alcance do polegar. */
+  .jbattle { padding-bottom: 0; overflow: visible; }
+  .jbattle .jb-menu {
+    position: sticky; bottom: 0; z-index: 5; margin: 4px -8px 0; padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    background: var(--surface); border-top: 2px solid var(--accent); box-shadow: 0 -6px 0 color-mix(in srgb, var(--ink) 35%, transparent);
+    gap: 6px;
+  }
+  .jbattle .jb-menu:empty { display: none; }
+  .jbattle .jb-menu .jb-prompt { font-size: 13px; }
+
+  .jb-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
+  .jb-tab {
+    min-height: 44px; padding: 4px 6px; display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--bg-2); color: var(--muted); border: 1px solid var(--line); border-bottom: 2px solid var(--line);
+    font: 700 14px/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; cursor: pointer;
+    transition: color var(--dur-1) var(--ease), background var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
+  }
+  .jb-tab small { font: 700 12px/1 var(--font-hud); padding: 2px 5px; background: var(--surface-3); color: var(--text); }
+  .jb-tab.on { color: var(--text); background: var(--surface-3); border-bottom-color: var(--accent); }
+  .jb-tab:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
+
+  /* Uma aba por vez, e todas com a mesma altura mínima para a bandeja não pular ao trocar. */
+  .jb-pane { display: none; }
+  .jb-pane.on { display: flex; flex-direction: column; gap: 6px; min-height: 148px; justify-content: flex-start; }
+  .jb-pane .act-title { display: none; }
+  /* Técnicas em duas colunas, sempre compactas na bandeja (até 6 cabem em três linhas). */
+  .jb-pane .jb-moves .jmove { min-height: 44px; padding: 5px 8px; gap: 7px; }
+  .jb-pane .jb-moves .jmove-ico { width: 26px; height: 26px; }
+  .jb-pane .jb-extra .jx { min-height: 48px; }
+  /* Desistir fica no fim da aba de ações, longe do que se toca a cada turno. */
+  .jb-pane .jgiveup { margin-top: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jf-adv { animation: none; }
+}

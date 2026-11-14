@@ -76,6 +76,15 @@ Regra (revisão da etapa 1, v0.72.1): **a cena nunca usa o rosto de outro person
 
 Dosu, Zaku e Kin dividem um desenho só, e os capangas e ninjas comuns usam moldes genéricos: valem na luta, mas nenhum deles é rosto de cena.
 
+## Combate
+
+Etapa 2 da evolução visual (v0.73.0), em `prototype/styles/jornada-combat.css`. O campo é o palco (noite); o menu é ferramenta (laca).
+
+- **Celular**: o menu é uma bandeja de laca presa ao pé da tela, com abas. As ações de todo turno ficam ao alcance do polegar, sem rolar; a bandeja tem altura mínima fixa para não pular ao trocar de aba.
+- **A informação que decide fica onde se decide**: a vantagem de elemento aparece no botão da técnica e numa etiqueta de papel em cada alvo, e a ordem da rodada sobe para o celular.
+- **Confirmações** são do jogo: um aviso em papel com duas ações, no lugar do diálogo do navegador.
+- Detalhes da tela em [combate.md](jornada/combate.md#interface).
+
 ## Movimento
 
 O movimento responde a um gesto ou explica uma troca de estado; nada se mexe só por enfeite (v0.70.0, `prototype/styles/jornada-motion.css` e `prototype/jornada/motion.ts`).

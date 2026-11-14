@@ -65,7 +65,7 @@ import { newJornadaAchievements } from '../../src/data/jornada/achievements';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { loadJornada, saveJornada } from '../../src/state/jornadaSave';
 import { arcMedia, fighterPortrait, icon, sceneMedia, sceneVars } from '../art';
-import { choose, esc, h, openDialog, show, sleep } from '../dom';
+import { choose, confirmDialog, esc, h, openDialog, show, sleep } from '../dom';
 import { tip } from '../tooltip';
 import { achievementIcon } from '../achievementIcons';
 import { forgetLiveBattle, heroLabel, jornadaBattle, memberLabel, techName } from './battle';
@@ -272,9 +272,9 @@ async function startScreen(host: JornadaHost): Promise<JRun | null> {
  * Confirma trocar a run salva (o recorde dela conta antes) e libera o começo de uma nova. A salva não é apagada aqui:
  * a nova a substitui quando é salva pela primeira vez, então sair no meio (nome, revelação) não perde as duas.
  */
-function replaceSaved(host: JornadaHost, saved: JRun | null): boolean {
+async function replaceSaved(host: JornadaHost, saved: JRun | null): Promise<boolean> {
   if (!saved) return true;
-  if (!window.confirm(J.start.overwrite)) return false;
+  if (!(await confirmDialog(J.start.overwrite, U.overwriteYes, J.battle.cancel))) return false;
   if (saved.cycle > 0 || saved.stageIndex > 0 || saved.stopIndex > 0) host.recordJornada(saved);
   return true;
 }
@@ -378,7 +378,7 @@ async function campaignScreen(host: JornadaHost, saved: JRun | null): Promise<JR
   for (;;) {
     const c = await choose<string>(root);
     if (c === 'back') return null;
-    if (!data.campaigns[c] || !replaceSaved(host, saved)) continue;
+    if (!data.campaigns[c] || !(await replaceSaved(host, saved))) continue;
     return newRun(host.nextSeed(), currentDifficulty(host), data, host.unlocked());
   }
 }
@@ -446,7 +446,7 @@ async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Promise<J
   for (;;) {
     const c = await choose<'generic' | 'back'>(root);
     if (c === 'back') return null;
-    if (!replaceSaved(host, saved)) continue;
+    if (!(await replaceSaved(host, saved))) continue;
     await host.ensurePlayerName();
     const run = newGenericRun(host.nextSeed(), currentDifficulty(host), classId, data, host.unlocked(), classId === 'uchiha' ? skin : null, classId === 'common' ? element : 'random');
     await revealScreen(host, run);
@@ -865,7 +865,7 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
   for (;;) {
     const c = await choose<'go' | 'abandon'>(root);
     if (c === 'go') break;
-    if (window.confirm(U.abandonConfirm)) return { ...cur, status: 'defeat' };
+    if (await confirmDialog(U.abandonConfirm, U.abandonYes, U.keepPlaying)) return { ...cur, status: 'defeat' };
   }
   return runStop(host, cur, stop);
 }
@@ -995,7 +995,7 @@ async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
     root.addEventListener('click', (e) => {
       const t = e.target as HTMLElement;
       if (t.closest('[data-abandon]')) {
-        if (window.confirm(U.abandonConfirm)) resolve({ ...cur, status: 'defeat' });
+        void confirmDialog(U.abandonConfirm, U.abandonYes, U.keepPlaying).then((yes) => yes && resolve({ ...cur, status: 'defeat' }));
         return;
       }
       const b = t.closest<HTMLElement>('.jnode-map.choice');

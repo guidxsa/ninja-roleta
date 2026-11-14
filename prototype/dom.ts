@@ -83,6 +83,31 @@ export function announce(text: string): void {
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /**
+ * Confirmação do próprio jogo, no lugar do `window.confirm` do navegador (que quebra o tema e a ambientação):
+ * um aviso em papel com duas ações. Escape e "voltar" respondem não. `danger`: a ação de confirmar é destrutiva.
+ */
+export function confirmDialog(text: string, yes: string, no: string, danger = true): Promise<boolean> {
+  return new Promise((resolve) => {
+    const el = h(`<div class="modal jconfirm" role="alertdialog" aria-label="${esc(text)}"><div class="parchment jconfirm-paper">
+      <p>${esc(text)}</p>
+      <div class="jconfirm-actions"><button class="btn" data-close>${esc(no)}</button><button class="btn ${danger ? 'danger' : 'primary'}" data-yes>${esc(yes)}</button></div>
+    </div></div>`);
+    const done = (v: boolean) => {
+      el.remove();
+      resolve(v);
+    };
+    el.addEventListener('click', (e) => {
+      const t = e.target as HTMLElement;
+      if (t.closest('[data-yes]')) done(true);
+      else if (t.closest('[data-close]') || t === el) done(false);
+    });
+    openDialog(el);
+    // O foco começa no "não": confirmar uma ação destrutiva pede um gesto a mais.
+    el.querySelector<HTMLElement>('[data-close]')?.focus({ preventScroll: true });
+  });
+}
+
+/**
  * Janela por cima da tela (Ficha, Registro, loja, árvore...): marca como diálogo modal, põe o foco nela, mantém o Tab
  * dentro, fecha com Escape (aperta o `[data-close]` dela, o mesmo caminho do botão) e devolve o foco a quem abriu.
  * Os fechamentos de cada janela seguem iguais: ela só percebe que saiu do DOM.

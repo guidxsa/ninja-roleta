@@ -7,6 +7,7 @@ import {
   battlePower,
   blockedReason,
   current,
+  elementMult,
   fighter,
   gateChoices,
   gateOpenCost,
@@ -37,7 +38,7 @@ import { ptBR as S } from '../../src/data/strings/ptBR';
 import { fighterPortrait, hasOwnPortrait, icon } from '../art';
 import { barLayers, barPct, barTone, captureTrails, patchBar, restoreTrails } from '../bars';
 import { swish, land } from '../audio';
-import { esc, h, show, sleep } from '../dom';
+import { confirmDialog, esc, h, show, sleep } from '../dom';
 import { ELEMENT_COLORS, lines } from '../tips';
 import { tip } from '../tooltip';
 import { flashRelics, relicStrip, startRelics, winRelics } from './relics';
@@ -232,7 +233,7 @@ function fighterTip(f: Fighter): string {
 
 function statusChips(f: Fighter): string {
   // A trava contra atordoamento é a favor de quem a tem.
-  const chips = f.effects.map((e) => `<span class="jchip ${e.kind === 'stunGuard' ? 'good' : 'bad'}" title="${J.effects[e.kind]}">${fxIcon(e.kind)}${e.turns}</span>`);
+  const chips = f.effects.map((e) => `<span class="jchip ${e.kind === 'stunGuard' ? 'good' : 'bad'}" role="img" aria-label="${J.effects[e.kind]}: ${e.turns}">${fxIcon(e.kind)}${e.turns}</span>`);
   if (f.shield > 0) chips.push(`<span class="jchip good">${icon('barrier')}${f.shield}</span>`);
   if (f.clones > 0) chips.push(`<span class="jchip good" title="${B.clonesActive(f.clones, CLONE_PCT)}">${icon('clones')}${f.clones}</span>`);
   if (f.guarding) chips.push(`<span class="jchip good">${icon('stance')}</span>`);
@@ -299,6 +300,26 @@ function intelRow(f: Fighter, data: JornadaData): string {
   </div>`;
 }
 
+const fmtAdv = (m: number) => String(Math.round(m * 100) / 100).replace('.', ',');
+
+/** Marca de vantagem (ou desvantagem) de elemento: o multiplicador, com seta e cor. */
+function advantageBadge(mult: number): string {
+  const up = mult > 1;
+  return `<span class="jadv ${up ? 'up' : 'down'}" aria-label="${up ? B.advantageUp(fmtAdv(mult)) : B.advantageDown(fmtAdv(mult))}">${icon(up ? 'advantage' : 'disadvantage')}${B.advantage(fmtAdv(mult))}</span>`;
+}
+
+/**
+ * Multiplicador de elemento da técnica contra os alvos possíveis: o maior deles, ou 0 quando não há encontro de
+ * naturezas (técnica sem elemento, sem dano, ou todos neutros). É a informação que decide a escolha, à vista no botão.
+ */
+function advantageOf(s: JBattle, f: Fighter, tech: JTechnique): number {
+  if (tech.baseDamage <= 0 || !(tech.element || tech.kekkeiGenkai)) return 0;
+  const foes = s.fighters.filter((x) => x.side !== f.side && !x.down && !x.gone);
+  if (!foes.length) return 0;
+  const best = Math.max(...foes.map((x) => elementMult(tech, x, jornadaData)));
+  return best === 1 ? 0 : best;
+}
+
 /** Botão de técnica: nome e os números principais (dano e custo). O resto fica na dica. */
 function techButton(s: JBattle, f: Fighter, tech: JTechnique): string {
   const blocked = blockedReason(f, tech);
@@ -307,8 +328,11 @@ function techButton(s: JBattle, f: Fighter, tech: JTechnique): string {
   const hp = hpCost(f, tech);
   const hits = hitsOf(f, tech);
   const power = battlePower(f, tech, jornadaData);
+  // Vantagem de elemento contra quem está de pé: o melhor caso entre os alvos (a escolha do alvo mostra cada um).
+  const adv = advantageOf(s, f, tech);
   const bits = [
     tech.baseDamage > 0 ? `<span${power > tech.baseDamage ? ' class="up"' : ''}>${B.damage(power)}${hits > 1 ? `×${hits}` : ''}</span>` : '',
+    adv ? advantageBadge(adv) : '',
     tech.clones ? `${icon('clones')} +${clonesMade(tech, f)}` : '',
     cost ? `<span${f.chakra < cost ? ' class="short"' : ''}>${B.chakra(cost)}</span>` : '',
     hp ? `<span${hp >= f.hp ? ' class="short"' : ''}>${B.hpCost(hp)}</span>` : '',
@@ -728,11 +752,18 @@ export async function jornadaBattle(
   }
 
   /** Espera o toque num lutador válido (ou no Voltar). */
-  function pickTarget(options: Fighter[], prompt: string): Promise<string | null> {
+  function pickTarget(options: Fighter[], prompt: string, tech?: JTechnique): Promise<string | null> {
     if (options.length === 1) return Promise.resolve(options[0]!.uid);
     return new Promise((resolve) => {
       const ids = new Set(options.map((f) => f.uid));
       root.querySelectorAll<HTMLElement>('.jf').forEach((el) => el.classList.toggle('targetable', ids.has(el.dataset.uid!)));
+      // Com uma técnica de elemento, cada alvo mostra o multiplicador contra ele.
+      if (tech && tech.baseDamage > 0 && (tech.element || tech.kekkeiGenkai)) {
+        for (const f of options) {
+          const mult = elementMult(tech, f, data);
+          if (mult !== 1) card(f.uid)?.querySelector('.jf-art')?.insertAdjacentHTML('beforeend', `<span class="jf-adv">${advantageBadge(mult)}</span>`);
+        }
+      }
       menu.innerHTML = `<p class="jb-prompt">${prompt}</p><button class="btn small" data-cancel>${B.cancel}</button>`;
       const onClick = (ev: Event) => {
         const t = ev.target as HTMLElement;
@@ -743,6 +774,7 @@ export async function jornadaBattle(
       const done = (v: string | null) => {
         root.removeEventListener('click', onClick);
         root.querySelectorAll('.jf.targetable').forEach((el) => el.classList.remove('targetable'));
+        root.querySelectorAll('.jf-adv').forEach((el) => el.remove());
         resolve(v);
       };
       root.addEventListener('click', onClick);
@@ -753,6 +785,8 @@ export async function jornadaBattle(
    * Menu do turno do protagonista. Itens, ativas e Portões são aplicados aqui (não gastam o turno). Devolve null se a
    * luta acabou no meio do turno.
    */
+  /** Aba do menu em que o jogador estava (celular): volta nela no turno seguinte. */
+  let menuTab = 'moves';
   async function playerTurn(): Promise<JAction | 'abandon' | null> {
     for (;;) {
       if (!awaitingPlayer(state)) return null;
@@ -775,20 +809,56 @@ export async function jornadaBattle(
         : '';
       // A pílula usada sozinha só sai da bolsa no fim da luta: aqui vale a contagem da luta.
       const items = CONSUMABLES.filter((id) => (id === 'reviveKit' ? state.pills : run.bag[id]) > 0 && itemTargets(state, id).length > 0);
-      menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
-        ${raiseBlock}
-        <h4 class="act-title">${B.groups.techniques}</h4>
-        <div class="jb-moves${moves.length > 4 ? ' many' : ''}">${moves.map((t) => techButton(state, me, t)).join('')}</div>
-        ${actives.length ? `<h4 class="act-title">${B.groups.actives}</h4><div class="jb-extra">${actives.map((t) => (t.gates ? gatesButton(state, me, t) : techButton(state, me, t))).join('')}</div>` : ''}
-        <h4 class="act-title">${B.groups.actions}</h4>
+      // No celular o menu é uma bandeja fixa embaixo, com uma aba por grupo: nada de rolar a cada turno
+      // (docs/jornada/combate.md#interface). No PC as abas somem e os grupos aparecem todos, com o título de cada um.
+      const panes: { id: string; label: string; count?: number; html: string }[] = [
+        ...(fallen.length ? [{ id: 'raise', label: B.groups.raise, html: raiseBlock }] : []),
+        {
+          id: 'moves',
+          label: B.groups.techniques,
+          html: `<h4 class="act-title">${B.groups.techniques}</h4><div class="jb-moves${moves.length > 4 ? ' many' : ''}">${moves.map((t) => techButton(state, me, t)).join('')}</div>`,
+        },
+        ...(actives.length
+          ? [
+              {
+                id: 'actives',
+                label: B.groups.actives,
+                count: actives.length,
+                html: `<h4 class="act-title">${B.groups.actives}</h4><div class="jb-extra">${actives.map((t) => (t.gates ? gatesButton(state, me, t) : techButton(state, me, t))).join('')}</div>`,
+              },
+            ]
+          : []),
+        {
+          id: 'actions',
+          label: B.groups.actions,
+          html: `<h4 class="act-title">${B.groups.actions}</h4>
         <div class="jb-extra">
           <button class="btn small jx" data-act="guard" ${tip(B.guard, B.guardDesc)}>${icon('stance')} ${B.guard}</button>
           <button class="btn small jx" data-act="rest" ${tip(B.rest, B.restDesc)}>${icon('rest')} ${B.rest}</button>
           <button class="btn small jx" data-act="bag" ${tip(B.bag, B.bagDesc)} ${items.length && !state.itemUsed ? '' : 'aria-disabled="true"'}>${icon('kit')} ${B.bag}</button>
         </div>
-        <button class="btn small jgiveup" data-act="abandon" ${tip(B.giveUp, B.giveUpDesc)}>${icon('warning')} ${B.giveUp}</button>`;
+        <button class="btn small jgiveup" data-act="abandon" ${tip(B.giveUp, B.giveUpDesc)}>${icon('warning')} ${B.giveUp}</button>`,
+        },
+      ];
+      // Aliado caído abre na aba dele; senão, a aba em que o jogador estava (ou Técnicas).
+      const open = fallen.length ? 'raise' : panes.some((p) => p.id === menuTab) ? menuTab : 'moves';
+      menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
+        <div class="jb-tabs" role="tablist">${panes
+          .map((p) => `<button type="button" class="jb-tab${p.id === open ? ' on' : ''}" role="tab" aria-selected="${p.id === open}" data-tab="${p.id}">${p.label}${p.count ? `<small>${p.count}</small>` : ''}</button>`)
+          .join('')}</div>
+        ${panes.map((p) => `<div class="jb-pane${p.id === open ? ' on' : ''}" role="tabpanel" data-pane="${p.id}">${p.html}</div>`).join('')}`;
       const pick = await new Promise<HTMLElement>((resolve) => {
         const onClick = (ev: Event) => {
+          const tab = (ev.target as HTMLElement).closest<HTMLElement>('[data-tab]');
+          if (tab && menu.contains(tab)) {
+            menuTab = tab.dataset.tab!;
+            menu.querySelectorAll<HTMLElement>('[data-tab]').forEach((el) => {
+              el.classList.toggle('on', el === tab);
+              el.setAttribute('aria-selected', String(el === tab));
+            });
+            menu.querySelectorAll<HTMLElement>('[data-pane]').forEach((el) => el.classList.toggle('on', el.dataset.pane === menuTab));
+            return;
+          }
           const b = (ev.target as HTMLElement).closest<HTMLElement>('[data-tech],[data-act],[data-gates]');
           if (!b || !menu.contains(b) || b.getAttribute('aria-disabled') === 'true') return;
           menu.removeEventListener('click', onClick);
@@ -813,7 +883,7 @@ export async function jornadaBattle(
         continue;
       }
       if (pick.dataset.act === 'abandon') {
-        if (window.confirm(J.ui.abandonConfirm)) return 'abandon';
+        if (await confirmDialog(J.ui.abandonConfirm, J.ui.abandonYes, J.ui.keepPlaying)) return 'abandon';
         continue;
       }
       if (pick.dataset.act === 'bag') {
@@ -839,7 +909,7 @@ export async function jornadaBattle(
       const uid =
         tech.target === 'allEnemies' || tech.target === 'self'
           ? me.uid
-          : await pickTarget(validTargets(state, me, tech), tech.target === 'downedAlly' ? B.pickDowned : tech.target === 'ally' ? B.pickAlly : B.pickTarget);
+          : await pickTarget(validTargets(state, me, tech), tech.target === 'downedAlly' ? B.pickDowned : tech.target === 'ally' ? B.pickAlly : B.pickTarget, tech);
       if (!uid) continue;
       // Ativa: aplica e o turno continua.
       if (tech.active) {

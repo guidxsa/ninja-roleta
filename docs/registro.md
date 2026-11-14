@@ -80,6 +80,20 @@ Decidido sozinho: quem aparece no quadro de cada evento (quem não tem ficha, co
 
 Verificado no navegador: o evento do pergaminho (celular), o corte de quadro do Mizuki (5 falas tocadas até o fim da luta), a cena de vitória (celular e PC). Não verificado: tema claro, tablet, a cena de relíquia de elite, a lição do sino e o narrador.
 
+### Etapa 2: combate (v0.73.0, 14/11/2026)
+
+Pedido do usuário: seguir com o plano de design junto do Impeccable. A crítica que ele rodou antes (`.impeccable/critique`, telas da Jornada, 27/40) apontava os mesmos dois P1 da auditoria: ordem de turno e fraqueza elemental invisíveis fora do widescreen, e o menu de combate com 10 a 12 controles e o Desistir colado.
+
+O que entrou: no celular, menu em bandeja fixa no pé da tela, com abas (Técnicas, Ativas, Ações, e Aliado caído quando há), sem rolagem; vantagem de elemento no botão da técnica e em cada alvo; ordem da rodada no celular; confirmação do jogo no lugar do `window.confirm` nas quatro ações da Jornada (abandonar na trilha e no mapa, desistir na luta, começar por cima de um save); nome acessível nos ícones de estado no lugar do `title` nativo. Os estilos ficaram num arquivo novo (`jornada-combat.css`), para não misturar com as folhas alteradas pelo Impeccable, que seguem fora dos commits.
+
+Decidido sozinho: o botão mostra o **melhor** multiplicador entre os alvos de pé (cada alvo mostra o seu na escolha); a aba aberta é lembrada entre turnos, e aliado caído abre a aba dele; o foco da confirmação começa em "Continuar jogando". Nenhuma regra nem número mudou.
+
+Conferido no navegador (celular, 375×812): a bandeja termina no pé da tela sem rolar (ataque à casa do Tazuna, três inimigos); troca de abas; etiquetas ×1,25 nos dois Irmãos Demônio com a Lança de terra, e no botão ×0,8 para a Bola de Fogo; a confirmação de desistir (foco em "Continuar jogando", fecha com Escape, a luta segue na mesma aba). No PC (1280×800), medido sem captura de tela: as abas somem e os três grupos aparecem com título. As capturas de tela falharam no fim por a janela estar oculta.
+
+Não conferido: tema claro, tablet, a aba "Aliado caído" numa luta de verdade, janela baixa e deitada (800×450 usa a bandeja do celular, que ocupa metade da altura).
+
+Adiado: confirmações nativas do modo Roleta; dica própria em cada ícone de estado; as duas cores literais da etiqueta de vantagem (os tons escuros do pergaminho, que ainda não são token).
+
 ### Revisão da etapa 1 (v0.72.1, 14/11/2026)
 
 Pedido do usuário: revisar a etapa narrativa antes de seguir, sem funcionalidade nova, sem rosto substituto e sem incorporar as mudanças externas.
