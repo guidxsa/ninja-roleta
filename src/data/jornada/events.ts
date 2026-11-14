@@ -2,11 +2,13 @@ import { SHOP_CURSE, type EventDef } from '../../core/jornada/events';
 
 // Eventos da História (docs/jornada/historia.md#eventos). Textos em strings/jornada.ts.
 // Marcas (`flag`) ligam um evento a outro: ajudar o Tazuna dá desconto no mercador do País das Ondas.
+// `face` é quem aparece no quadro da cena (só apresentação; quem não tem ficha fica com o rosto de quem está junto).
 
 export const events: EventDef[] = [
   {
     id: 'graduation',
     category: 'narrative',
+    face: 'iruka',
     options: [
       // A bandana do Iruka toma o lugar dos óculos de aviador nas duas escolhas.
       { id: 'ramen', effects: [{ kind: 'storyRelic', id: 'irukaHeadband' }, { kind: 'healFull' }, { kind: 'ryo', n: 15 }] },
@@ -16,6 +18,7 @@ export const events: EventDef[] = [
   {
     id: 'tazuna',
     category: 'narrative',
+    face: 'kakashiAlly',
     options: [
       { id: 'protect', effects: [{ kind: 'flag', id: 'helpedTazuna' }, { kind: 'ryo', n: 20 }] },
       { id: 'charge', effects: [{ kind: 'ryo', n: 45 }] },
@@ -24,6 +27,7 @@ export const events: EventDef[] = [
   {
     id: 'treeClimbing',
     category: 'training',
+    face: 'kakashiAlly',
     options: [
       {
         id: 'climb',
@@ -37,6 +41,7 @@ export const events: EventDef[] = [
   {
     id: 'writtenTest',
     category: 'narrative',
+    face: 'naruto',
     options: [
       {
         id: 'cheat',
@@ -50,6 +55,7 @@ export const events: EventDef[] = [
   {
     id: 'preliminaries',
     category: 'narrative',
+    face: 'kakashiAlly',
     options: [
       { id: 'ebisu', effects: [{ kind: 'xp', n: 80 }] },
       { id: 'hospital', effects: [{ kind: 'healTeam', hp: 50, chakra: 15 }, { kind: 'item', id: 'hpKit', n: 1 }] },
@@ -58,6 +64,7 @@ export const events: EventDef[] = [
   {
     id: 'toadSummon',
     category: 'training',
+    face: 'jiraiya',
     options: [
       // O contrato vem de qualquer jeito (marco); a escolha é o bônus.
       {
@@ -73,6 +80,7 @@ export const events: EventDef[] = [
     // Itachi e Kisame vêm atrás do Naruto; o Sasuke o enfrenta na pousada e o Jiraiya intervém (cap. 139 a 147).
     id: 'itachiKisame',
     category: 'narrative',
+    face: 'sasuke',
     options: [
       { id: 'chase', effects: [{ kind: 'xp', n: 50 }, { kind: 'maxStat', who: 'team', stat: 'hp', n: 6 }] },
       { id: 'stay', effects: [{ kind: 'healTeam', hp: 40, chakra: 12 }, { kind: 'ryo', n: 20 }] },
@@ -81,6 +89,7 @@ export const events: EventDef[] = [
   {
     id: 'rasenganTraining',
     category: 'training',
+    face: 'jiraiya',
     options: [
       // Rasengan III (bola de borracha): o Rasengan vem de qualquer jeito (marco da campanha).
       { id: 'ball', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] },
@@ -90,6 +99,7 @@ export const events: EventDef[] = [
   {
     id: 'sasukeLeft',
     category: 'narrative',
+    face: 'sakura',
     options: [
       { id: 'promise', effects: [{ kind: 'talent', n: 1 }, { kind: 'healTeam', hp: 50, chakra: 15 }] },
       { id: 'jokenpo', minigame: 'jokenpo', effects: [{ kind: 'relic', tier: 'event' }], onLose: [{ kind: 'ryo', n: 20 }] },
@@ -103,6 +113,7 @@ export const events: EventDef[] = [
     // O pergaminho proibido: o Kage Bunshin vem de qualquer jeito (marco da campanha).
     id: 'sealScroll',
     category: 'training',
+    face: 'mizuki',
     options: [
       { id: 'scroll', minigame: 'seals', effects: [{ kind: 'xp', n: 20 }], onLose: [{ kind: 'xp', n: 10 }] },
       { id: 'stubborn', effects: [{ kind: 'xp', n: 12 }, { kind: 'hurtTeam', pct: 0.1 }] },
@@ -111,6 +122,7 @@ export const events: EventDef[] = [
   {
     id: 'team7',
     category: 'narrative',
+    face: 'kakashiAlly',
     options: [
       { id: 'hokage', effects: [{ kind: 'talent', n: 1 }] },
       { id: 'rival', effects: [{ kind: 'xp', n: 40 }] },
@@ -119,6 +131,7 @@ export const events: EventDef[] = [
   {
     id: 'hakuForest',
     category: 'narrative',
+    face: 'haku',
     options: [
       { id: 'precious', effects: [{ kind: 'healTeam', hp: 30, chakra: 9 }] },
       { id: 'stronger', effects: [{ kind: 'talent', n: 1 }] },
@@ -127,6 +140,7 @@ export const events: EventDef[] = [
   {
     id: 'hakuFarewell',
     category: 'witness',
+    face: 'zabuza',
     options: [
       { id: 'ownWay', effects: [{ kind: 'talent', n: 1 }] },
       { id: 'bury', effects: [{ kind: 'healTeam', hp: 50, chakra: 15 }, { kind: 'xp', n: 20 }] },
@@ -136,6 +150,7 @@ export const events: EventDef[] = [
     // Quem guarda os movimentos da areia entra na luta do Gaara já sabendo desviar dela (marca `viuGaara`).
     id: 'leeGaara',
     category: 'witness',
+    face: 'gaara',
     options: [
       { id: 'watch', effects: [{ kind: 'xp', n: 40 }, { kind: 'flag', id: 'viuGaara' }] },
       { id: 'visit', effects: [{ kind: 'healTeam', hp: 40, chakra: 12 }, { kind: 'item', id: 'hpKit', n: 1 }] },
@@ -144,6 +159,7 @@ export const events: EventDef[] = [
   {
     id: 'hinataOintment',
     category: 'narrative',
+    face: 'naruto',
     options: [
       { id: 'thanks', effects: [{ kind: 'healTeam', hp: 40, chakra: 0 }] },
       { id: 'weird', effects: [{ kind: 'item', id: 'hpKit', n: 1 }] },
@@ -153,6 +169,7 @@ export const events: EventDef[] = [
     // A promessa liga a determinação na luta contra o Neji (marca `promessaNeji`).
     id: 'hinataNeji',
     category: 'witness',
+    face: 'neji',
     options: [
       { id: 'promise', effects: [{ kind: 'flag', id: 'promessaNeji' }] },
       { id: 'carry', effects: [{ kind: 'healTeam', hp: 40, chakra: 12 }, { kind: 'xp', n: 30 }] },
@@ -161,6 +178,7 @@ export const events: EventDef[] = [
   {
     id: 'jiraiyaJourney',
     category: 'narrative',
+    face: 'jiraiya',
     options: [
       { id: 'teach', effects: [{ kind: 'xp', n: 40 }] },
       { id: 'find', effects: [{ kind: 'ryo', n: 20 }] },
@@ -169,6 +187,7 @@ export const events: EventDef[] = [
   {
     id: 'rasengan1',
     category: 'training',
+    face: 'jiraiya',
     options: [
       { id: 'water', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] },
       { id: 'grind', effects: [{ kind: 'xp', n: 40 }, { kind: 'hurtTeam', pct: 0.1 }] },
@@ -177,6 +196,7 @@ export const events: EventDef[] = [
   {
     id: 'rasengan2',
     category: 'training',
+    face: 'jiraiya',
     options: [
       { id: 'rubber', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] },
       { id: 'grind', effects: [{ kind: 'xp', n: 40 }, { kind: 'hurtTeam', pct: 0.1 }] },
@@ -185,6 +205,7 @@ export const events: EventDef[] = [
   {
     id: 'tsunade',
     category: 'narrative',
+    face: 'tsunade',
     options: [
       { id: 'challenge', effects: [{ kind: 'maxStat', who: 'hero', stat: 'hp', n: 10 }] },
       { id: 'bet', effects: [{ kind: 'ryo', n: 40 }] },
@@ -194,6 +215,7 @@ export const events: EventDef[] = [
     // A Tsunade entrega o colar do Primeiro Hokage nas duas escolhas (toma o lugar da bandana do Iruka).
     id: 'sannin',
     category: 'witness',
+    face: 'tsunade',
     options: [
       { id: 'thank', effects: [{ kind: 'storyRelic', id: 'firstHokageNecklace' }, { kind: 'healFull' }, { kind: 'talent', n: 1 }] },
       { id: 'spar', effects: [{ kind: 'storyRelic', id: 'firstHokageNecklace' }, { kind: 'talent', n: 1 }, { kind: 'maxStat', who: 'hero', stat: 'hp', n: 8 }] },
@@ -202,6 +224,7 @@ export const events: EventDef[] = [
   {
     id: 'chojiStays',
     category: 'witness',
+    face: 'choji',
     options: [
       { id: 'pills', effects: [{ kind: 'item', id: 'chakraKit', n: 1 }] },
       { id: 'promise', effects: [{ kind: 'xp', n: 40 }] },
@@ -210,6 +233,7 @@ export const events: EventDef[] = [
   {
     id: 'nejiStays',
     category: 'witness',
+    face: 'nejiAlly',
     options: [
       { id: 'trust', effects: [{ kind: 'xp', n: 50 }] },
       { id: 'kit', effects: [{ kind: 'item', id: 'hpKit', n: 1 }] },
@@ -218,6 +242,7 @@ export const events: EventDef[] = [
   {
     id: 'shikamaruStays',
     category: 'witness',
+    face: 'shikamaru',
     options: [
       { id: 'go', effects: [{ kind: 'talent', n: 1 }] },
       { id: 'plan', effects: [{ kind: 'xp', n: 50 }] },
@@ -226,6 +251,7 @@ export const events: EventDef[] = [
   {
     id: 'kibaStays',
     category: 'witness',
+    face: 'kibaAlly',
     options: [
       { id: 'kit', effects: [{ kind: 'item', id: 'hpKit', n: 1 }] },
       { id: 'shout', effects: [{ kind: 'xp', n: 40 }] },
@@ -234,6 +260,7 @@ export const events: EventDef[] = [
   {
     id: 'valleyTalk',
     category: 'narrative',
+    face: 'sasuke',
     options: [
       { id: 'friend', effects: [{ kind: 'flag', id: 'valleyFriend' }] },
       { id: 'force', effects: [{ kind: 'flag', id: 'valleyForce' }] },
@@ -243,6 +270,7 @@ export const events: EventDef[] = [
     // A última fala muda o texto da tela de vitória (marcas `endPromise` e `endStronger`).
     id: 'returnKonoha',
     category: 'witness',
+    face: 'kakashiAlly',
     options: [
       { id: 'promise', effects: [{ kind: 'flag', id: 'endPromise' }] },
       { id: 'stronger', effects: [{ kind: 'flag', id: 'endStronger' }] },

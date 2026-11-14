@@ -76,6 +76,7 @@ import { playMinigame } from './minigames';
 import { themeOf, themeStyle } from './theme';
 import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
 import { inkWipe, stampChoice } from './motion';
+import { sceneLines, sceneScreen } from './scene';
 import { relicIcon } from './relicIcons';
 import { talentTreeScreen } from './talentTree';
 import { foldAttrs, foldButton, installFolds } from './fold';
@@ -178,6 +179,14 @@ function gainsStrip(): string {
   return `<aside class="jgains" role="status" aria-label="${U.whatChanged}"><b class="jgains-title">${U.whatChanged}</b><ul>${items}</ul></aside>`;
 }
 
+/** O protagonista como rosto de uma cena (com a skin e o nome do jogador). */
+const heroFace = (host: JornadaHost, run: JRun) => ({
+  face: run.hero,
+  faceSpec: portraitSpec(run.hero, run),
+  // Nome cru: a cena escapa o texto ao desenhar.
+  faceName: run.mode === 'generic' ? heroLabel(run.hero, host.playerName()) : (J.names[run.hero] ?? run.hero),
+});
+
 /** Ryō de pontos convertidos (árvore completa) já avisado na tela: o resto vira um toast. */
 let announcedTalentRyo = 0;
 
@@ -209,7 +218,7 @@ async function jornadaLoop(host: JornadaHost, resume: boolean): Promise<void> {
       if (run.status === 'inProgress' && run.stageIndex !== shownStage && !run.bossChoice) {
         const prev = run.mode === 'generic' ? data.generic.stages[shownStage]!.id : storyStages(run, data)[shownStage]!.id;
         shownStage = run.stageIndex;
-        await notice(U.stageClear(J.stages[prev] ?? ''), stageName(run));
+        await notice(U.stageClear(J.stages[prev] ?? ''), stageName(run), { place: stageScene(run, data), seal: 'stage', ...heroFace(host, run) });
       }
     }
     const record = host.recordJornada(run);
@@ -220,7 +229,7 @@ async function jornadaLoop(host: JornadaHost, resume: boolean): Promise<void> {
     if ((await endScreen(host, run, next, record)) !== 'continue' || !next) return;
     run = keep(next);
     host.mood('good');
-    await notice(U.cycle(run.cycle + 1), U.cycleStartText(cyclePct(run)));
+    await notice(U.cycle(run.cycle + 1), U.cycleStartText(cyclePct(run)), { place: stageScene(run, data), seal: 'cycle', ...heroFace(host, run) });
   }
 }
 
@@ -825,7 +834,7 @@ async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
     if (choosingNode(run)) return mapScreen(host, run);
     const stop = currentStop(run, data)!;
     const node = run.map!.nodes.find((n) => n.id === run.nodeId)!;
-    if (node.kind === 'unknown') await notice(M.unknown, M.became(J.stopKinds[stop.kind] ?? stop.kind));
+    if (node.kind === 'unknown') await notice(M.unknown, M.became(J.stopKinds[stop.kind] ?? stop.kind), { place: stageScene(run, data), seal: 'unknown' });
     return runStop(host, run, stop);
   }
   const stop = currentStop(run, data)!;
@@ -1015,7 +1024,7 @@ async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, {
     if (res.abandoned) return { ...run, status: 'defeat' };
     const { run: next, outcome } = finishFight(run, res.battle, data);
     if (outcome.retry) {
-      await notice(J.battle.lost, U.retry);
+      await notice(J.battle.lost, U.retry, { place: stopScene(run, data), seal: 'retry', ...heroFace(host, run) });
       run = next;
       continue;
     }
@@ -1027,10 +1036,13 @@ async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<StopDef, {
       announcedTalentRyo = next.stats.talentRyo ?? 0;
       // Derrota inevitável (teste do sino): a tela diz "Lição", conta o que o Naruto aprendeu e segue a run.
       if (outcome.inevitable) lines.unshift(J.inevitableLesson[stop.id] ?? U.inevitableLoss);
-      await notice(outcome.inevitable ? U.lessonTitle : U.victoryTitle, lines.join('\n'));
+      // Na lição, quem está em cena é quem a deu (o Kakashi do teste do sino), e a primeira linha lê como fala.
+      const place = stopScene(run0, data);
+      if (outcome.inevitable) await notice(U.lessonTitle, lines.join('\n'), { place, seal: 'lesson', face: stop.enemies[0] ?? null, lead: 1 });
+      else await notice(U.victoryTitle, lines.join('\n'), { place, seal: 'victory', ...heroFace(host, next) });
       if (outcome.relic) {
         host.mood('good');
-        await relicReveal(U.eliteRelic, outcome.relic);
+        await relicReveal(U.eliteRelic, outcome.relic, stopScene(run, data));
       }
     }
     return next;
@@ -1050,11 +1062,23 @@ async function eventStop(host: JornadaHost, run0: JRun): Promise<JRun> {
     const txt = J.events[def.id]!;
     // Categoria da cronologia (docs/jornada/cronologia.md): presenciado, narrativo ou treino.
     const category = def.category ?? 'narrative';
+    // A cena: o local da parada no quadro, quem está nela e o texto no pergaminho (docs/visual.md#cena-narrativa).
     const root = show(
-      h(`<div class="screen jevent">${gainsStrip()}<h2>${txt.title}</h2><p class="center"><span class="chip">${J.eventCategories[category]}</span></p><section class="card"><p>${txt.text}</p></section>
-        <div class="joptions">${eventOptions(def, run.flags, run.ryo)
-          .map((o) => `<button class="btn big" data-choice="${o.id}">${o.minigame ? `${icon('card')} ` : ''}${txt.options[o.id] ?? (o.id === 'continue' ? U.continueScene : o.id)}</button>`)
-          .join('')}</div><div data-slot></div></div>`),
+      h(
+        sceneScreen({
+          cls: 'jevent',
+          above: gainsStrip(),
+          place: stopScene(run, data),
+          face: def.face ?? null,
+          ...(def.face === run.hero ? heroFace(host, run) : {}),
+          title: txt.title,
+          seal: U.sceneSeals[category]!,
+          body: `<p>${txt.text}</p>`,
+          footer: `<div class="joptions">${eventOptions(def, run.flags, run.ryo)
+            .map((o) => `<button class="btn big" data-choice="${o.id}">${o.minigame ? `${icon('card')} ` : ''}${txt.options[o.id] ?? (o.id === 'continue' ? U.continueScene : o.id)}</button>`)
+            .join('')}</div><div data-slot></div>`,
+        }),
+      ),
     );
     // Um evento emendado no outro entra com a pincelada de tinta (a troca seca parecia a mesma tela).
     if (step > 0) inkWipe(root, host.instant());
@@ -1071,7 +1095,7 @@ async function eventStop(host: JornadaHost, run0: JRun): Promise<JRun> {
     if (out.relic) {
       const replaced = run.relics.find((id) => !out.run.relics.includes(id));
       if (U.storyRelicLines[out.relic]) await storyRelicScene(host, out.run, out.relic, replaced);
-      else await relicReveal(U.gotRelic(relicName(out.relic)), out.relic);
+      else await relicReveal(U.gotRelic(relicName(out.relic)), out.relic, stopScene(run, data));
     }
     run = out.run;
     if (run.status !== 'inProgress') return run;
@@ -1172,10 +1196,19 @@ async function treasureStop(host: JornadaHost, run: JRun): Promise<JRun> {
   return leaveStop(next, data);
 }
 
-/** Relíquia ganha fora do tesouro (evento): card revelado com brilho da raridade. */
-async function relicReveal(title: string, id: string): Promise<void> {
-  const root = show(h(`<div class="screen jrtreasure"><h2>${esc(title)}</h2>${relicCard(id, '', 'reveal')}
-    <button class="btn primary big" data-choice="ok">${U.continue}</button></div>`));
+/** Relíquia ganha fora do tesouro (evento, elite): a cena do local com o card revelado, no brilho da raridade. */
+async function relicReveal(title: string, id: string, place: string): Promise<void> {
+  const root = show(
+    h(
+      sceneScreen({
+        place,
+        title,
+        seal: U.sceneSeals.relic!,
+        body: relicCard(id, '', 'reveal'),
+        footer: `<button class="btn primary big" data-choice="ok">${U.continue}</button>`,
+      }),
+    ),
+  );
   await choose(root);
 }
 
@@ -1207,9 +1240,37 @@ async function bossChoiceScreen(run: JRun): Promise<JRun> {
 // ---------------------------------------------------------------------------
 // Modais
 
-async function notice(title: string, text: string): Promise<void> {
-  const root = show(h(`<div class="screen"><h2>${esc(title)}</h2><section class="card"><p class="pre">${esc(text)}</p></section>
-    <button class="btn primary big" data-choice="ok">${U.continue}</button></div>`));
+/** O que a cena de aviso mostra além do texto: o local, quem está nela e o selo do momento. */
+interface NoticeScene {
+  place: string;
+  seal: keyof typeof U.sceneSeals;
+  face?: string | null;
+  faceSpec?: string;
+  faceName?: string;
+  /** Quantas linhas do começo leem como fala (a lição do teste do sino). */
+  lead?: number;
+}
+
+/**
+ * Aviso de um momento da run (vitória, lição, estágio concluído, ciclo): a mesma cena dos eventos, com as linhas
+ * entrando uma a uma. Uma linha por `\n`.
+ */
+async function notice(title: string, text: string, scene: NoticeScene): Promise<void> {
+  const seal = U.sceneSeals[scene.seal]!;
+  const root = show(
+    h(
+      sceneScreen({
+        place: scene.place,
+        face: scene.face ?? null,
+        ...(scene.faceSpec ? { faceSpec: scene.faceSpec } : {}),
+        ...(scene.faceName ? { faceName: scene.faceName } : {}),
+        title,
+        seal: { ...seal, gold: scene.seal === 'victory' || scene.seal === 'stage' },
+        body: sceneLines(text.split('\n'), scene.lead ?? 0),
+        footer: `<button class="btn primary big" data-choice="ok">${U.continue}</button>`,
+      }),
+    ),
+  );
   await choose(root);
 }
 

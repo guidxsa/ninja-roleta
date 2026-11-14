@@ -435,6 +435,31 @@ export async function jornadaBattle(
     el.classList.add(cls);
     setTimeout(() => el.classList.remove(cls), host.instant() ? 150 : 450);
   };
+  /**
+   * Fala do roteiro em corte de quadro (docs/visual.md#cena-narrativa): a luta escurece, quem fala entra numa faixa em
+   * diagonal com o retrato e o jogador toca (ou Enter, espaço) para seguir. No modo instantâneo, segue sozinha.
+   */
+  const cutIn = (whoId: string, f: Fighter | null, who: string, line: string): Promise<void> =>
+    new Promise((resolve) => {
+      const narrator = whoId === 'narrator';
+      const side = narrator ? 'narrator' : f ? (f.side === 'ally' ? 'ally' : 'foe') : data.enemies[whoId] ? 'foe' : 'ally';
+      const def = data.characters[whoId] ?? data.enemies[whoId];
+      const face = narrator ? '' : f ? portraitOf(f, data) : fighterPortrait(whoId, def?.portrait ?? 'ninja:common', 'md');
+      const el = h(`<button type="button" class="jb-cut ${side}" aria-label="${esc(`${narrator ? '' : `${who}: `}${line}. ${S.jornada.ui.tapToContinue}`)}">
+        <span class="jb-cut-band">${face}<span class="jb-cut-txt">${narrator ? '' : `<b class="jb-cut-who">${who}</b>`}<span class="jb-cut-line">${esc(line)}</span></span>
+        <i class="jb-cut-next" aria-hidden="true"></i></span></button>`) as HTMLButtonElement;
+      let done = false;
+      const close = () => {
+        if (done) return;
+        done = true;
+        el.remove();
+        resolve();
+      };
+      el.addEventListener('click', close);
+      root.appendChild(el);
+      el.focus({ preventScroll: true });
+      if (host.instant()) setTimeout(close, 650);
+    });
   const say = (text: string, color = '') => {
     banner.innerHTML = `<span style="${color ? `--c:${color}` : ''}">${text}</span>`;
     banner.classList.remove('show');
@@ -633,9 +658,10 @@ export async function jornadaBattle(
           const line = J.script[e.line] ?? e.line;
           // O narrador fala sem nome.
           const text = e.who === 'narrator' ? line : B.line(who, line);
-          say(text, 'var(--ink)');
           pushLog(text);
-          wait = host.instant() ? 300 : 1400;
+          // A fala é um corte de quadro e espera o toque; a faixa de pincel fica só para os jutsus.
+          await cutIn(e.who, e.uid ? fighter(next, e.uid) : null, who, line);
+          wait = 0;
           break;
         }
         case 'form': {
@@ -871,7 +897,9 @@ export async function jornadaBattle(
   await flashRelics(root, startRelics(run0), host.instant());
   const opening = state;
   state = advance(opening, data, rng);
-  await animate(opening, state);
+  // A abertura do roteiro (fala, convidado que entra, forma) já está no registro de `opening`: a animação parte do
+  // registro vazio para mostrar também esses eventos (antes, a fala de abertura nunca aparecia).
+  await animate({ ...opening, log: [] }, state);
   while (state.status === 'ongoing') {
     if (!awaitingPlayer(state)) break;
     const action = await playerTurn();

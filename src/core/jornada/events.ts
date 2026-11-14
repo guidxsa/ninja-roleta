@@ -53,6 +53,8 @@ export type EventCategory = 'witness' | 'narrative' | 'training';
 export interface EventDef {
   id: string;
   category?: EventCategory;
+  /** Quem está em cena (id de personagem ou inimigo): só apresentação, o retrato no quadro do evento. */
+  face?: string;
   options: EventOption[];
 }
 

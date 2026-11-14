@@ -39,6 +39,30 @@ Referências do usuário (07/11/2026): o painel do Project Rasengan, o logo de S
 - **Casca do PC** (pedido do usuário, a partir de uma referência de composição): **barra lateral** persistente em todas as telas (Início, Jornada, Roleta; Histórico, Livro Bingo, Relíquias, Conquistas); o **Início** em painéis, com o destaque (imagem `portao`, logo e citação) e os dois modos lado a lado no centro e, à direita, a **Ficha do ninja** (nome, avatar padrão e números do perfil), o **Progresso da Jornada** (o botão continua a run direto) e as **Conquistas recentes**; o **Registro abre em popup** em qualquer tela e em qualquer entrada (barra lateral, botão Registro, barra do Portão no celular), uma seção por vez, num pergaminho vertical com rolos; o Histórico filtra por Geral, Origens e Dificuldade; a janela antiga de abas saiu (pedido do usuário: um padrão só); no pé, a **faixa de frases** sorteadas. O Portão "Vila com placas" foi tentado antes e rejeitado. **Direção de arte** (pedido do usuário: "menos caixas, mais composição"; revista em 11/11/2026, quando ele apontou que as peças brigavam entre si em outras resoluções): **cada peça no seu espaço**. A ilustração do destaque é a cena, sem moldura, com a borda dissolvida em tinta, e o logo e a citação ficam dentro dela, em cantos opostos; os modos são pergaminhos desenrolados com rolos de madeira, em células próprias abaixo da cena, com a arte **dentro** do papel (moldura de tinta), um selo (道, 運) no canto e a ação numa pincelada vermelha; a coluna direita são pergaminhos levemente desalinhados, um abaixo do outro, com a kunai, o selo e a miniatura dentro do próprio pergaminho, títulos sublinhados a pincel e o avatar num medalhão; o papel dos pergaminhos do Início é envelhecido (mais quente, queimado nas bordas, com manchas e tinta mais escura); as pinceladas têm falhas de cerda. Saíram os cards subindo sobre a cena, a arte vazando do papel, a citação cruzando a borda e a pilha sobreposta. **Vagas de textura** em `public/img/ui/` (`papel`, `madeira`, `pincel`, `fundo`): cada imagem que existir entra no lugar do desenho do CSS. Se o PC agradar, o usuário pretende levar essa linguagem ao celular.
 - **Entrada da Jornada**: banner com a chamada, card **Progresso da Jornada** (capítulo, parada, miniatura, % de conclusão e o botão Continuar), painéis em pergaminho e **Conquistas recentes** (as 3 mais novas do perfil).
 
+## Três materiais
+
+Regra de quando usar cada superfície (auditoria de design, v0.72.0). O jogo tinha duas linguagens, o mundo fora da run e o painel grafite dentro dela; a regra abaixo fecha essa fronteira.
+
+| Material | Papel | Onde |
+|---|---|---|
+| **Papel** (pergaminho, tinta escura, selo) | história, decisão e recompensa | evento, fala, lição, vitória, relíquia, fim de run |
+| **Noite** (fundo de tinta, cenário em nanquim) | o palco onde as coisas acontecem | combate, mapa, trilha, o quadro das cenas |
+| **Laca** (grafite chanfrado, filete dourado) | ferramenta e navegação | HUD, barra lateral, menus de ação, dicas |
+
+O card grafite não carrega história: é ferramenta.
+
+## Cena narrativa
+
+Um componente só (`prototype/jornada/scene.ts`, `styles/jornada-scene.css`) para evento, vitória, lição, estágio concluído, ciclo e relíquia ganha:
+
+- **Quadro**: o local da parada como requadro de mangá (margem grossa de tinta, o cenário em nanquim) e **quem está em cena** no canto, com o nome numa tira de papel. Cada evento da História diz quem aparece (`face` no dado); quem não tem ficha fica com o rosto de quem está junto.
+- **Pergaminho**: o título em letra de mão, o texto e um **selo** no canto com o tipo do momento (話 presenciado, 縁 narrativo, 修 treino ou lição, 勝 vitória, 巻 estágio, 宝 relíquia, 火 Vontade do Fogo, 道 ciclo, 謎 desconhecido).
+- **Opções** como tiras de papel, não botões de painel; a escolhida leva o carimbo.
+- **Vitória e lição**: as linhas entram uma a uma; na lição, quem está em cena é quem a deu, e a primeira linha lê como fala.
+- **PC**: o quadro é a página da esquerda e o pergaminho, a da direita.
+
+**Fala na luta: corte de quadro.** A luta escurece, quem fala entra numa faixa de papel em diagonal com o retrato (pela esquerda o aliado, pela direita o inimigo; o narrador, sem retrato) e **o jogador toca para seguir** (Enter e espaço também; no modo instantâneo segue sozinha). A faixa de pincel fica só para os jutsus. A fala de abertura das lutas passou a aparecer: antes, a animação pulava os eventos da abertura.
+
 ## Movimento
 
 O movimento responde a um gesto ou explica uma troca de estado; nada se mexe só por enfeite (v0.70.0, `prototype/styles/jornada-motion.css` e `prototype/jornada/motion.ts`).

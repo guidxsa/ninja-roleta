@@ -1,0 +1,138 @@
+/*
+ * Cena narrativa da Jornada (docs/visual.md#cena-narrativa). Três materiais, cada um com um papel:
+ * a noite (o requadro com o local) é o palco, o papel (pergaminho) carrega a história e a decisão, e a laca
+ * (botão grafite) fica para ferramenta. Evento, vitória, lição, estágio e relíquia usam esta mesma cena.
+ */
+.jcene { gap: 10px; }
+.jc-frame { display: flex; flex-direction: column; }
+.jc-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+/* Requadro de mangá: o local em nanquim, com a margem grossa de tinta e quem está em cena no canto de baixo. */
+.jc-panel {
+  position: relative; z-index: 2; margin: 0; height: clamp(132px, 24vh, 220px);
+  /* O retrato desce do quadro por cima do pergaminho (o `.jscene` corta o que sai; aqui não). */
+  overflow: visible;
+  border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
+}
+.jc-panel::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .9;
+  background: var(--scene-art, none) bottom / 100% auto no-repeat;
+}
+/* Sem ninguém em cena, o quadro é só a vista do local: mais baixo, para o texto subir. */
+.jc-panel.empty { height: clamp(84px, 14vh, 150px); }
+[data-theme='light'] .jc-panel { border-color: var(--paper-ink); box-shadow: 4px 4px 0 var(--paper-ink); }
+[data-theme='light'] .jc-panel::before { opacity: .3; }
+
+.jc-cast { position: absolute; left: 14px; bottom: -22px; z-index: 2; display: flex; align-items: flex-end; gap: 10px; }
+.jc-cast .portrait { width: 96px; height: 96px; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); animation: castIn var(--dur-3) var(--ease-out, var(--ease)) both; }
+[data-theme='light'] .jc-cast .portrait { border-color: var(--paper-ink); box-shadow: 4px 4px 0 var(--paper-ink); }
+/* O nome de quem está em cena, numa tira de papel presa ao quadro. */
+.jc-name {
+  margin-bottom: 28px; padding: 3px 10px 4px; rotate: -2deg;
+  background: var(--paper); color: var(--paper-ink); border: 1px solid var(--paper-ink);
+  font: 700 17px/1.1 var(--font-hand); box-shadow: 2px 2px 0 var(--ink);
+}
+@keyframes castIn { from { opacity: 0; translate: -14px 0; } to { opacity: 1; translate: 0 0; } }
+
+/* Pergaminho: sobe um pouco sobre o quadro, com espaço para o retrato que desce do canto. */
+.jc-paper { margin-top: -6px; padding: 30px 18px 18px; }
+.jc-panel.empty + .jc-side .jc-paper { padding-top: 18px; }
+.jc-title { margin: 0 44px 8px 0; text-align: left; font: 700 24px/1.12 var(--font-hand); letter-spacing: 0; color: var(--paper-ink); text-shadow: none; text-wrap: balance; }
+.jc-title::after { display: none; }
+.jc-paper p { margin: 0 0 8px; max-width: 62ch; font: 400 16px/1.5 var(--font-body); color: var(--paper-ink); text-wrap: pretty; }
+.jc-paper p:last-child { margin-bottom: 0; }
+.jc-seal { --s: 38px; position: absolute; right: 12px; top: 12px; rotate: 5deg; animation: stamp .45s var(--ease) both; }
+
+/* Linhas que entram uma a uma (ganhos da vitória). A primeira (a lição, quando há) lê como fala. */
+.jc-line { animation: gainIn var(--dur-3) var(--ease-out, var(--ease)) both; animation-delay: calc(min(var(--i), 7) * 90ms + 120ms); }
+.jc-line.lead { font: 700 18px/1.4 var(--font-hand); }
+.jc-paper .jrcard { margin-top: 4px; }
+
+/* Opções da cena: tiras de papel, não botões de painel. A tinta à esquerda marca que é uma escolha. */
+.jc-foot { display: flex; flex-direction: column; gap: 8px; }
+.jcene .joptions .btn {
+  justify-content: flex-start; text-align: left; padding: 12px 54px 12px 18px; min-height: 52px;
+  background: var(--grain-dark), var(--paper); color: var(--paper-ink);
+  border: 1px solid color-mix(in srgb, var(--paper-ink) 55%, transparent);
+  box-shadow: 3px 3px 0 var(--ink);
+  font: 600 16px/1.3 var(--font-body); letter-spacing: 0; text-transform: none;
+}
+.jcene .joptions .btn::before, .jcene .joptions .btn::after { display: none; }
+.jcene .joptions .btn .ico { color: var(--stamp, var(--accent)); flex: none; }
+.jcene .joptions .btn:hover:not([aria-disabled='true']) { background: var(--grain-dark), color-mix(in srgb, var(--paper) 86%, var(--gold)); border-color: var(--paper-ink); translate: -1px -1px; box-shadow: 4px 4px 0 var(--ink); }
+.jcene .joptions .btn:active:not([aria-disabled='true']) { translate: 2px 2px; box-shadow: 1px 1px 0 var(--ink); transform: none; }
+.jcene .joptions .btn:focus-visible { outline: 3px solid var(--gold-2); outline-offset: 2px; }
+.jcene .joptions .btn.chosen[aria-disabled='true'] { background: var(--grain-dark), var(--paper); border-color: var(--accent); }
+.jcene .joptions .btn.passed[aria-disabled='true'] { opacity: .32; box-shadow: none; }
+/* O minijogo entra no lugar das opções, dentro da mesma cena. */
+.jcene [data-slot]:empty { display: none; }
+
+/* PC e tablet deitado: o quadro vira a página da esquerda e o pergaminho a da direita. */
+@media (min-width: 900px) and (min-height: 560px) {
+  .jc-frame { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: 0 26px; align-items: start; }
+  .jc-panel, .jc-panel.empty { height: clamp(280px, 52vh, 460px); }
+  /* Quadro em pé: o desenho do local cobre a altura toda, ancorado embaixo. */
+  .jc-panel::before { background-size: cover; background-position: center bottom; }
+  .jc-cast { left: 18px; bottom: 18px; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .jc-cast .portrait { width: clamp(120px, 15vh, 168px); height: clamp(120px, 15vh, 168px); }
+  .jc-name { margin: 0; font-size: 19px; }
+  .jc-paper, .jc-panel.empty + .jc-side .jc-paper { margin-top: 0; padding: 22px 24px 22px; }
+  .jc-title { font-size: 30px; }
+  .jc-paper p { font-size: 17px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jc-cast .portrait, .jc-line, .jc-seal { animation: none; }
+}
+
+/*
+ * Fala dentro da luta: corte de quadro. A luta escurece, quem fala entra numa faixa em diagonal com o retrato grande,
+ * e o jogador toca para seguir (no modo instantâneo, segue sozinha). A faixa de pincel fica só para os jutsus.
+ */
+.jb-cut {
+  position: absolute; inset: 0; z-index: 6; display: grid; align-items: center; padding: 0; margin: 0; width: 100%;
+  border: 0; background: color-mix(in srgb, var(--ink) 62%, transparent); color: inherit; font: inherit; text-align: left; cursor: pointer;
+  animation: cutDim var(--dur-2) var(--ease) both;
+}
+.jb-cut-band {
+  position: relative; display: flex; align-items: center; gap: 14px; padding: 18px 18px 18px 14px; min-height: 132px;
+  background: var(--grain-dark), var(--paper); color: var(--paper-ink);
+  border-block: 3px solid var(--ink);
+  clip-path: polygon(0 12%, 100% 0, 100% 88%, 0 100%);
+  animation: cutIn var(--dur-3) var(--ease-out, var(--ease)) both;
+}
+/* Linhas de velocidade atrás do retrato, do lado de quem fala. */
+.jb-cut-band::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .16;
+  background: repeating-linear-gradient(172deg, var(--paper-ink) 0 1px, transparent 1px 11px);
+  -webkit-mask: linear-gradient(90deg, #000, transparent 46%); mask: linear-gradient(90deg, #000, transparent 46%);
+}
+.jb-cut.foe .jb-cut-band { flex-direction: row-reverse; text-align: right; clip-path: polygon(0 0, 100% 12%, 100% 100%, 0 88%); animation-name: cutInRight; }
+.jb-cut.foe .jb-cut-band::before { -webkit-mask: linear-gradient(270deg, #000, transparent 46%); mask: linear-gradient(270deg, #000, transparent 46%); }
+.jb-cut .portrait { position: relative; flex: none; width: 92px; height: 92px; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+.jb-cut.ally .portrait { box-shadow: 4px 4px 0 var(--gold-deep); }
+.jb-cut.foe .portrait { box-shadow: -4px 4px 0 var(--accent-deep); }
+.jb-cut-txt { position: relative; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.jb-cut-who { font: 700 13px/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--paper-muted); }
+.jb-cut-line { font: 700 20px/1.25 var(--font-hand); text-wrap: balance; }
+/* Narrador: sem retrato, texto corrido no meio da faixa. */
+.jb-cut.narrator .jb-cut-band { justify-content: center; text-align: center; clip-path: polygon(0 6%, 100% 0, 100% 94%, 0 100%); }
+.jb-cut.narrator .jb-cut-line { font: 400 17px/1.45 var(--font-body); max-width: 56ch; }
+/* Aviso de que a fala espera o toque: um losango que pisca três vezes e para. */
+.jb-cut-next { position: absolute; right: 14px; bottom: 20px; width: 9px; height: 9px; rotate: 45deg; background: var(--accent); animation: cutNext 1s var(--ease) 3 both; animation-delay: .5s; }
+.jb-cut.foe .jb-cut-next { right: auto; left: 14px; }
+.jb-cut:focus-visible { outline: none; }
+.jb-cut:focus-visible .jb-cut-band { border-block-color: var(--gold-2); }
+@keyframes cutDim { from { background: transparent; } }
+@keyframes cutIn { from { translate: -100% 0; } to { translate: 0 0; } }
+@keyframes cutInRight { from { translate: 100% 0; } to { translate: 0 0; } }
+@keyframes cutNext { 0%, 100% { opacity: 1; } 50% { opacity: .2; } }
+@media (min-width: 900px) and (min-height: 560px) {
+  .jb-cut-band { min-height: 190px; padding: 26px 8% 26px 6%; gap: 26px; }
+  .jb-cut .portrait { width: 148px; height: 148px; }
+  .jb-cut-line { font-size: 28px; }
+  .jb-cut.narrator .jb-cut-line { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jb-cut, .jb-cut-band, .jb-cut-next { animation: none; }
+}

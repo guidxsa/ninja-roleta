@@ -66,6 +66,20 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Auditoria de design e etapa 1: cena narrativa (v0.72.0, 14/11/2026)
+
+Pedido do usuário: auditoria criteriosa da experiência visual com o Impeccable, sem alterar nada, e um plano de evolução. Depois de aprovar o relatório, escolheu começar pela etapa 1 (narrativa), com falas por toque e os retratos em SVG de hoje.
+
+**Diagnóstico** (o critério é o do próprio `docs/visual.md`): o jogo tem duas linguagens, e a fronteira é a porta da run. Fora dela (Portão, entrada da Jornada, ficha, a roda do Roleta) é pergaminho, selo e tinta; dentro da run da Jornada (trilha, evento, vitória, descanso, fim) era card grafite com texto e botões, que é onde o jogador passa o tempo e de onde vem a sensação de painel com tema. A direção não estava errada: estava aplicada pela metade. Nota nas heurísticas de Nielsen: 25/40.
+
+**Achados medidos**: 48 tamanhos de letra em 304 declarações e 33 regras abaixo de 12 px, sem escala em tokens; sete pares de cor usados como texto abaixo do contraste mínimo (o pior, vermelho sobre superfície no tema escuro, 2,61); 15 componentes clicáveis sem foco próprio; alvos de 26 a 38 px; técnica desenhada de 5 jeitos e relíquia de 5; três linguagens de sombra; no celular, as ações da luta ficam abaixo da dobra; a vantagem de elemento não aparece onde se decide. O detector do Impeccable deu 177 achados, quase todos ruído (cores da arte em SVG e do tema claro, que o DESIGN.md não documenta). A auditoria rodou em contexto único (modo de planejamento), sem o par de subagentes que o método pede.
+
+**Etapa 1, o que entrou**: componente de cena (quadro do local com quem está em cena, pergaminho, selo, opções em tiras de papel) em evento, vitória, lição, estágio concluído, ciclo, desconhecido e relíquia ganha; fala da luta como corte de quadro, com avanço por toque; a regra dos três materiais em `docs/visual.md`. Achado no caminho: **a fala de abertura das lutas nunca aparecia** (a animação partia do registro depois da abertura); agora aparece, com os outros eventos da abertura (o Iruka entrando, a névoa do Zabuza).
+
+Decidido sozinho: quem aparece no quadro de cada evento (quem não tem ficha, como a Hinata e o Tazuna, fica com o rosto de quem está junto); os kanji dos selos (todos do recorte); a faixa do aliado entrar pela esquerda e a do inimigo pela direita; no modo instantâneo, a fala segue sozinha em 0,65 s. Nenhuma regra de jogo nem número mudou; a simulação não foi rodada de novo.
+
+Verificado no navegador: o evento do pergaminho (celular), o corte de quadro do Mizuki (5 falas tocadas até o fim da luta), a cena de vitória (celular e PC). Não verificado: tema claro, tablet, a cena de relíquia de elite, a lição do sino e o narrador.
+
 ## Revisão da História, parte 3: árvores de talento do Naruto (v0.71.0, 14/11/2026)
 
 Terceira e última versão do plano. Pedido do usuário ao aprovar: talentos que surgem da combinação de duas árvores, e animação ao selecionar um talento.

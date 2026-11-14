@@ -587,6 +587,18 @@ describe('revisão da História, parte 2 (v0.70.0)', () => {
     }
   });
 
+  it('cena narrativa (v0.72.0): todo evento da História tem quem aparece no quadro, com ficha e nome', () => {
+    const played = data.stages.flatMap((st) => st.stops).flatMap((s) => (s.kind === 'event' ? [s.event, ...(s.then ?? [])] : []));
+    for (const id of played) {
+      const face = data.events[id]!.face;
+      expect(face, id).toBeTruthy();
+      expect(data.characters[face!] ?? data.enemies[face!], `${id}: ${face}`).toBeDefined();
+      expect(J.names[face!], `${id}: ${face}`).toBeTruthy();
+    }
+    // Todo selo de cena é um kanji só (do recorte da fonte) com o que quer dizer.
+    for (const seal of Object.values(J.ui.sceneSeals)) expect([seal.kanji.length, Boolean(seal.label)]).toEqual([1, true]);
+  });
+
   it('paradas juntadas: cada sequência virou uma parada de etapas, e todo evento da História ainda acontece', () => {
     const stops = data.stages.flatMap((st) => st.stops);
     const merged = Object.fromEntries(stops.flatMap((s) => (s.kind === 'event' && s.then ? [[s.id, [s.event, ...s.then]]] : [])));
