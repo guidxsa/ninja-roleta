@@ -76,11 +76,12 @@ export function withJourney(run: JRun): JRun {
   const next: JRun = { ...run, journey: 1, talents: [...run.talents], flags: [...run.flags] };
   if (next.mode === 'canon') {
     const old = V067_STOPS[next.stageIndex];
-    const stops = storyStages(next, jornadaData)[next.stageIndex]?.stops ?? [];
+    // Cada migração dá um passo: aqui, para a ordem da v0.69.0; a da v0.70.0 (`withMergedStops`) leva para a de hoje.
+    const stops = V069_STOPS[next.stageIndex] ?? [];
     if (old) {
       const positions = old
         .slice(next.stopIndex)
-        .map((id) => stops.findIndex((s) => s.id === id))
+        .map((id) => stops.indexOf(id))
         .filter((i) => i >= 0);
       next.stopIndex = positions.length ? Math.min(...positions) : Math.max(0, stops.length - 1);
     }
@@ -92,6 +93,58 @@ export function withJourney(run: JRun): JRun {
     next.talents = next.talents.filter((t) => t !== 'tNeverGiveUp');
   }
   syncGrantedTalents(next, jornadaData);
+  // A posição agora está na ordem da v0.69.0: o passo seguinte (paradas juntadas) ainda tem de rodar.
+  delete next.merged;
+  return next;
+}
+
+/** As paradas da História na v0.69.0, por arco: a migração da v0.70.0 lê a posição antiga pelo id. */
+const V069_STOPS: string[][] = [
+  ['sealScroll', 'mizuki', 'graduation', 'team7', 'bells', 'demonBrothers', 'tazuna', 'zabuza', 'treeClimbing', 'hakuForest', 'thugs', 'treasure1', 'rest1', 'haku', 'hakuFarewell'],
+  ['writtenTest', 'grass', 'orochimaruForest', 'forest', 'rainTrio', 'leeGaara', 'kiba', 'hinataOintment', 'hinataNeji', 'preliminaries', 'toadSummon', 'treasure2', 'neji', 'invasion', 'rest2', 'gaara'],
+  ['jiraiyaJourney', 'itachiKisame', 'rasengan1', 'rasengan2', 'tsunade', 'rest4', 'rasenganTraining', 'kabuto', 'sannin'],
+  ['hospital', 'sasukeLeft', 'soundAmbush', 'jirobo', 'chojiStays', 'treasure3', 'nejiStays', 'shikamaruStays', 'kibaStays', 'kimimaro', 'rest3', 'valleyTalk', 'valley', 'returnKonoha'],
+];
+/** Paradas que viraram etapa de outra na v0.70.0 (eventos em sequência na mesma parada): id antigo → parada e etapa. */
+const MERGED_STOPS: Record<string, { stop: string; beat: number }> = {
+  hinataOintment: { stop: 'hinataNeji', beat: 0 },
+  hinataNeji: { stop: 'hinataNeji', beat: 1 },
+  preliminaries: { stop: 'toadSummon', beat: 0 },
+  toadSummon: { stop: 'toadSummon', beat: 1 },
+  jiraiyaJourney: { stop: 'itachiKisame', beat: 0 },
+  itachiKisame: { stop: 'itachiKisame', beat: 1 },
+  rasengan1: { stop: 'rasengan2', beat: 0 },
+  rasengan2: { stop: 'rasengan2', beat: 1 },
+  nejiStays: { stop: 'kibaStays', beat: 0 },
+  shikamaruStays: { stop: 'kibaStays', beat: 1 },
+  kibaStays: { stop: 'kibaStays', beat: 2 },
+};
+
+/**
+ * Save de antes da v0.70.0. As sequências de eventos viraram uma parada de etapas: a run volta na mesma cena, agora
+ * como etapa da parada nova. Quem já passou da cena dos Sannin com a Bandana do Iruka recebe o Colar do Primeiro Hokage
+ * (antes ele só saía, com sorte, na escolha do chefe), e quem já passou do Mizuki ganha o Mil Clones no moveset, se
+ * houver vaga. O Kage Bunshin e o Mil Clones vêm dos marcos da campanha, sem nada a migrar.
+ */
+export function withMergedStops(run: JRun): JRun {
+  if (run.merged === 1) return run;
+  const next: JRun = { ...run, merged: 1, relics: [...run.relics], moveset: [...run.moveset] };
+  if (next.mode !== 'canon') return next;
+  const oldId = V069_STOPS[next.stageIndex]?.[next.stopIndex];
+  const stops = storyStages(next, jornadaData)[next.stageIndex]?.stops ?? [];
+  if (oldId) {
+    const to = MERGED_STOPS[oldId] ?? { stop: oldId, beat: 0 };
+    const at = stops.findIndex((s) => s.id === to.stop);
+    if (at >= 0) {
+      next.stopIndex = at;
+      if (to.beat > 0) next.beat = to.beat;
+    }
+  }
+  if (next.hero !== 'naruto') return next;
+  const sannin = V069_STOPS.findIndex((arc) => arc.includes('sannin'));
+  const pastSannin = run.stageIndex > sannin || (run.stageIndex === sannin && run.stopIndex > V069_STOPS[sannin]!.indexOf('sannin'));
+  if (pastSannin) next.relics = next.relics.map((id) => (id === STARTER_RELICS[1] ? STARTER_EVOLVED : id));
+  if (heroMovable(next, jornadaData).includes('jTajuuBunshin') && !next.moveset.includes('jTajuuBunshin') && next.moveset.length < MOVESET_SIZE) next.moveset.push('jTajuuBunshin');
   return next;
 }
 
@@ -130,7 +183,7 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     const cycle = typeof run.cycle === 'number' ? run.cycle : 0;
     const unlocks = Array.isArray(run.unlocks) ? run.unlocks : [];
     const loaded: JRun = { ...legacy, ...run, cycle, unlocks, learned: known(run.learned ?? []), moveset: known(run.moveset ?? []), cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
-    return withJourney(withCanonStory(withSilentNatures(inFourArcs(withoutShopStops(loaded, run.shopPurchases === undefined)))));
+    return withMergedStops(withJourney(withCanonStory(withSilentNatures(inFourArcs(withoutShopStops(loaded, run.shopPurchases === undefined))))));
   } catch {
     return null;
   }

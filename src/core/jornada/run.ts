@@ -109,6 +109,8 @@ export interface JRun {
   canonTree?: 1;
   /** Cronologia da v0.68.0 (a jornada pela perspectiva do Naruto) já aplicada (sem o campo: migrado ao carregar). */
   journey?: 1;
+  /** Paradas juntadas e colar da Tsunade da v0.70.0 já aplicados (sem o campo: migrado ao carregar). */
+  merged?: 1;
   /** Etapa do evento em andamento na parada atual (paradas com mais de um evento, v0.70.0); sem o campo, a primeira. */
   beat?: number;
 }
@@ -173,6 +175,7 @@ function baseRun(seed: number, difficulty: Difficulty, hero: string, data: Jorna
     shopPurchases: 0,
     canonTree: 1,
     journey: 1,
+    merged: 1,
   };
 }
 

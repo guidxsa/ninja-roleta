@@ -1236,7 +1236,7 @@ describe('run da Jornada', () => {
     const oldSave = (run: JRun) => {
       const s = storage();
       // Save antigo de verdade: sem os campos da loja nem os marcadores das migrações seguintes (v0.67.0 e v0.68.0).
-      const { shop: _s, shopPurchases: _p, storyArcs: _a, canonTree: _c, journey: _j, ...old } = run;
+      const { shop: _s, shopPurchases: _p, storyArcs: _a, canonTree: _c, journey: _j, merged: _m, ...old } = run;
       s.mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
       return loadJornada(s)!;
     };
@@ -2177,5 +2177,64 @@ describe('save de antes da cronologia (v0.68.0)', () => {
     expect(idAt(load({ ...base, stageIndex: 3, stopIndex: V067(3, 'sakon') }))).toBe('kimimaro');
     // Antes do sino: sem a lição.
     expect(load({ ...base, stopIndex: V067(0, 'graduation') }).flags).not.toContain('bellsLesson');
+  });
+});
+
+describe('save de antes das paradas juntadas (v0.70.0)', () => {
+  const load = (run: JRun) => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const { merged: _m, ...old } = run;
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+    return loadJornada(storage)!;
+  };
+  // As paradas da v0.69.0, por arco.
+  const V069 = [
+    ['sealScroll', 'mizuki', 'graduation', 'team7', 'bells', 'demonBrothers', 'tazuna', 'zabuza', 'treeClimbing', 'hakuForest', 'thugs', 'treasure1', 'rest1', 'haku', 'hakuFarewell'],
+    ['writtenTest', 'grass', 'orochimaruForest', 'forest', 'rainTrio', 'leeGaara', 'kiba', 'hinataOintment', 'hinataNeji', 'preliminaries', 'toadSummon', 'treasure2', 'neji', 'invasion', 'rest2', 'gaara'],
+    ['jiraiyaJourney', 'itachiKisame', 'rasengan1', 'rasengan2', 'tsunade', 'rest4', 'rasenganTraining', 'kabuto', 'sannin'],
+    ['hospital', 'sasukeLeft', 'soundAmbush', 'jirobo', 'chojiStays', 'treasure3', 'nejiStays', 'shikamaruStays', 'kibaStays', 'kimimaro', 'rest3', 'valleyTalk', 'valley', 'returnKonoha'],
+  ];
+  const at = (stage: number, id: string) => ({ ...freshRun(5, 'normal', data), stageIndex: stage, stopIndex: V069[stage]!.indexOf(id) });
+  const where = (r: JRun) => [data.stages[r.stageIndex]!.stops[r.stopIndex]!.id, currentEvent(r, data)?.id ?? null, r.beat ?? 0];
+
+  it('quem estava no meio de uma sequência volta na mesma cena, como etapa da parada nova', () => {
+    expect(where(load(at(1, 'hinataOintment')))).toEqual(['hinataNeji', 'hinataOintment', 0]);
+    expect(where(load(at(1, 'hinataNeji')))).toEqual(['hinataNeji', 'hinataNeji', 1]);
+    expect(where(load(at(1, 'toadSummon')))).toEqual(['toadSummon', 'toadSummon', 1]);
+    expect(where(load(at(2, 'itachiKisame')))).toEqual(['itachiKisame', 'itachiKisame', 1]);
+    expect(where(load(at(2, 'rasengan1')))).toEqual(['rasengan2', 'rasengan1', 0]);
+    expect(where(load(at(3, 'shikamaruStays')))).toEqual(['kibaStays', 'shikamaruStays', 1]);
+    expect(where(load(at(3, 'kibaStays')))).toEqual(['kibaStays', 'kibaStays', 2]);
+  });
+
+  it('as outras paradas continuam as mesmas, achadas pelo id', () => {
+    for (const [stage, ids] of V069.entries()) {
+      for (const id of ids) {
+        const r = load(at(stage, id));
+        const stop = data.stages[r.stageIndex]!.stops[r.stopIndex]!;
+        const events = stop.kind === 'event' ? [stop.event, ...(stop.then ?? [])] : [stop.id];
+        expect(stop.id === id || events.includes(id), `${id} → ${stop.id}`).toBe(true);
+        expect(r.merged).toBe(1);
+      }
+    }
+  });
+
+  it('quem já passou da cena dos Sannin com a bandana recebe o colar; antes dela, não', () => {
+    const band = (r: JRun) => ({ ...r, relics: ['irukaHeadband', 'goggles'] });
+    expect(load(band(at(3, 'hospital'))).relics).toEqual(['firstHokageNecklace', 'goggles']);
+    expect(load(band(at(2, 'sannin'))).relics).toEqual(['irukaHeadband', 'goggles']);
+    expect(load(band(at(2, 'kabuto'))).relics).toEqual(['irukaHeadband', 'goggles']);
+  });
+
+  it('quem já passou do Mizuki ganha o Mil Clones no moveset, se houver vaga; o save novo não muda', () => {
+    const past = load({ ...at(0, 'graduation'), moveset: ['jStrike', 'jShuriken', 'jSexyJutsu'] });
+    expect(past.moveset).toContain('jTajuuBunshin');
+    const full = load({ ...at(0, 'graduation'), learned: ['jRendan', 'jHarem', 'jWarCry'], moveset: ['jStrike', 'jShuriken', 'jSexyJutsu', 'jRendan', 'jHarem', 'jWarCry'] });
+    expect(full.moveset).not.toContain('jTajuuBunshin');
+    expect(load({ ...at(0, 'sealScroll'), moveset: ['jStrike'] }).moveset).toEqual(['jStrike']);
+    const fresh = { ...freshRun(5, 'normal', data), stageIndex: 1, stopIndex: 3 };
+    const mem = new Map<string, string>([[JORNADA_SAVE_KEY, JSON.stringify(fresh)]]);
+    expect(loadJornada({ getItem: (k: string) => mem.get(k) ?? null, setItem: () => undefined })).toMatchObject({ stageIndex: 1, stopIndex: 3 });
   });
 });
