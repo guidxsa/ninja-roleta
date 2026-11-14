@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyLabStats, buildLabPlayer, labLearnable, labStatsOf, labOrigin, parseLabParams, type LabConfig } from '../src/core/lab';
+import { applyLabStats, buildLabPlayer, labLearnable, labStatsOf, labOrigin, parseSeedParam, type LabConfig } from '../src/core/lab';
 import { createPlayer } from '../src/core/player';
 import { formulaData as data } from './helpers';
 
@@ -13,16 +13,16 @@ const base: LabConfig = {
   bag: {},
 };
 
-describe('parseLabParams', () => {
-  it('lê ?teste e ?seed', () => {
-    expect(parseLabParams('?teste&seed=42')).toEqual({ lab: true, seed: 42 });
-    expect(parseLabParams('?seed=7')).toEqual({ lab: false, seed: 7 });
-    expect(parseLabParams('')).toEqual({ lab: false, seed: null });
+describe('parseSeedParam', () => {
+  it('lê ?seed e ignora o resto', () => {
+    expect(parseSeedParam('?seed=42')).toBe(42);
+    expect(parseSeedParam('?teste&seed=7')).toBe(7);
+    expect(parseSeedParam('')).toBeNull();
   });
 
   it('ignora seed inválida', () => {
-    expect(parseLabParams('?seed=abc').seed).toBeNull();
-    expect(parseLabParams('?seed=-3').seed).toBeNull();
+    expect(parseSeedParam('?seed=abc')).toBeNull();
+    expect(parseSeedParam('?seed=-3')).toBeNull();
   });
 });
 

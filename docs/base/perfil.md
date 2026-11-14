@@ -8,7 +8,7 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra late
 
 ## Nome do jogador
 
-- Perguntado **uma vez**, na primeira entrada no Roleta ou no Caminho Ninja. Dá para pular; o Laboratório não pergunta. Na História, o protagonista continua sendo o Naruto.
+- Perguntado **uma vez**, na primeira entrada no Roleta ou no Caminho Ninja. Dá para pular. Na História, o protagonista continua sendo o Naruto.
 - Fica no perfil (`playerName`), com até 16 caracteres, e dá para mudar no topo do Registro ninja. Sem o campo, ainda não foi perguntado; vazio, a pessoa preferiu não dizer. É só cosmético e, no futuro, pode vir do login (Fase 3 do roteiro).
 - **Roleta**: aparece no painel do jogador, com a origem embaixo, e no título da ficha.
 - **Caminho Ninja**: é o nome do protagonista. Comum e prodígio usam o nome; Uchiha e Hyuuga, "Nome Uchiha" e "Nome Hyuuga".
@@ -33,7 +33,6 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra late
 
 ## Regras gerais
 
-- Runs do Laboratório (`?teste`) não contam para nada do perfil.
 - As conquistas são checadas ao começar a campanha (depois do sorteio), depois de cada evento pré-vilão, depois de cada luta e no fim da run. Cada conquista nova aparece num aviso rápido.
 - Na primeira abertura do jogo com o perfil, os marcos que o histórico já prova (vitórias por origem, dificuldade, jinchuuriki, ter passado do Mizuki) são liberados sem aviso.
 - Conquistas escondidas aparecem como "???" até alguém conseguir.

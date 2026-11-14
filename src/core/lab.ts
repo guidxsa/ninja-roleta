@@ -59,18 +59,10 @@ export function applyLabStats(player: PlayerState, stats: LabStats): PlayerState
   };
 }
 
-export interface LabParams {
-  lab: boolean;
-  /** Seed do RNG (`?seed=42`); null = aleatório. */
-  seed: number | null;
-}
-
-/** Lê `?teste` e `?seed=N` da URL. */
-export function parseLabParams(search: string): LabParams {
-  const params = new URLSearchParams(search);
-  const raw = params.get('seed');
-  const seed = raw !== null && /^\d+$/.test(raw.trim()) ? Number(raw.trim()) : null;
-  return { lab: params.has('teste'), seed };
+/** Lê `?seed=N` da URL (replay do Compartilhar); null = aleatório. */
+export function parseSeedParam(search: string): number | null {
+  const raw = new URLSearchParams(search).get('seed');
+  return raw !== null && /^\d+$/.test(raw.trim()) ? Number(raw.trim()) : null;
 }
 
 /**
