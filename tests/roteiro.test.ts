@@ -507,6 +507,11 @@ describe('revisão da História, parte 2 (v0.70.0)', () => {
     const lines = says(end);
     expect(lines[0]).toBe('bellsStart');
     expect(lines.some((l) => l === 'bellsNaruto' || l === 'bellsTime')).toBe(true);
+    // A lição não custa nada: a equipe sai da luta com o HP e o chakra com que entrou, mesmo derrubada pelo roteiro.
+    const before = { ...run, members: { naruto: { hp: 60, chakra: 11 }, sasuke: { hp: 50, chakra: 9 }, sakura: { hp: 40, chakra: 7 } } };
+    const after = finishFight(before, end, data).run;
+    expect(after.members).toMatchObject(before.members);
+    expect(after.stats.alliesLost).toBe(0);
     expect(J.inevitableLesson.bells).toBeTruthy();
   });
 

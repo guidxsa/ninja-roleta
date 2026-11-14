@@ -760,7 +760,10 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   healAll(run, rec, data, membersSeen(run, data).filter((id) => !fought.has(id)));
   for (const r of results) {
     const sheet = memberSheet(run, r.defId, data);
-    if (r.down) {
+    if (inevitable) {
+      // A lição não custa nada (v0.70.0): o Kakashi derruba a equipe pelo roteiro, e ela sai como entrou.
+      run.members[r.defId] = memberState(prev, r.defId, data);
+    } else if (r.down) {
       run.stats.alliesLost++;
       run.members[r.defId] = { hp: Math.floor(sheet.maxHp * data.j.run.downedAllyReturnPct), chakra: r.chakra };
     } else {
