@@ -17,6 +17,7 @@ Dois modos: **Roleta** (rápido e simples; run em ciclos infinitos) e **Jornada*
 | [docs/visual.md](docs/visual.md) | Direção visual: identidade por modo, locais e regra da arte. Ler antes de mexer na interface |
 | [docs/registro.md](docs/registro.md) | Histórico das decisões e das simulações por versão. Só consulta: não ler inteiro sem motivo |
 | `CHANGELOG.md` | Histórico de versões (o que mudou para quem joga) |
+| [docs/ui-lab/](docs/ui-lab/ARCHITECTURE.md) | UI Lab: inventário das telas e arquitetura do laboratório (cenários em `prototype/lab/`) |
 | `.claude/skills/` | `nova-mecanica` (fluxo de regra nova) e `lancar-versao` (preparar e, com aprovação, publicar) |
 
 Pastas dos docs: `base/` (regras dos dois modos), `roleta/`, `jornada/` e `reserva/` (combate clássico guardado para a Jornada).
@@ -57,7 +58,7 @@ scripts/             simulações e build
 tests/               testes do core
 ```
 
-Comandos: `npm test`, `npm run typecheck`, `npm run proto`, `npm run sim:origens -- --runs 300 --seed 2` (Roleta), `npm run sim:jornada -- [runs] [seed] [ciclos]`, `npm run sim:classico`.
+Comandos: `npm test`, `npm run typecheck`, `npm run proto`, `npm run lab` (UI Lab, só local: `dist-lab/`, [docs/ui-lab/](docs/ui-lab/ARCHITECTURE.md)), `npm run sim:origens -- --runs 300 --seed 2` (Roleta), `npm run sim:jornada -- [runs] [seed] [ciclos]`, `npm run sim:classico`.
 
 ## Interface (design system "Shinobi")
 

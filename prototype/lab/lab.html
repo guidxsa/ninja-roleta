@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <title>UI Lab · Ninja Roleta</title>
+    <script>
+      // Tema antes da primeira pintura, pela URL (o lab não lê as preferências do jogo).
+      (function () {
+        var p = new URLSearchParams(location.search);
+        var t = p.get('theme');
+        document.documentElement.dataset.theme = t === 'light' || t === 'dark' ? t : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        if (p.get('instant') === '1') document.documentElement.dataset.instant = '';
+      })();
+    </script>
+    <style>
+/*STYLE*/
+    </style>
+  </head>
+  <body>
+    <!-- Mesma casca do jogo (prototype/index.html): as telas reais dependem destes ids. -->
+    <header class="top">
+      <div class="top-bar">
+        <span class="brand" aria-hidden="true"><span class="seal">忍</span><span class="brand-name">Ninja Roleta</span></span>
+        <button class="btn small" id="home-btn" title="Portão da Vila" aria-label="Portão da Vila"></button>
+        <div class="top-actions">
+          <div class="tool-group">
+            <button class="btn small" id="instant-btn"></button>
+            <button class="btn small" id="anim-btn" hidden></button>
+            <button class="btn small" id="theme-btn"></button>
+            <button class="btn small" id="sfx-btn"></button>
+            <button class="btn small" id="music-btn"></button>
+          </div>
+          <div class="tool-group">
+            <button class="btn small" id="sheet-btn" title="Ficha ninja" aria-label="Ficha ninja"></button>
+            <button class="btn small" id="history-btn" title="Registro ninja" aria-label="Registro ninja"></button>
+          </div>
+        </div>
+      </div>
+      <div class="dots" id="dots"></div>
+    </header>
+    <nav class="side-nav" id="side-nav"></nav>
+    <main id="screen" tabindex="-1"></main>
+    <nav class="gate-nav" id="gate-nav"></nav>
+    <footer><p class="quote-strip" id="quote-strip"></p><span class="foot-legal"><small id="disclaimer"></small> <small id="version" class="version"></small></span></footer>
+    <script>
+/*SCRIPT*/
+    </script>
+  </body>
+</html>

@@ -20,6 +20,24 @@ aprovado. Ainda não implementada.
 - O laboratório antigo (`?teste`) **sai do jogo**, junto com as costuras (§3.1). O `?seed=N` **fica**: é o replay do
   Compartilhar e não é laboratório.
 
+## Estado da implementação
+
+| Passo ([§10](#10-ordem-de-implementação)) | Situação |
+|---|---|
+| 1. Costuras + retirada do `?teste` | Feito |
+| 2. Lab mínimo | Feito: `npm run lab` → `dist-lab/lab.html`, servido pela configuração `ui-lab` do `.claude/launch.json` (porta 4178). 22 cenários diretos (Portão, nome, avatar, entrada e início da Jornada, Registro), perfis `empty`/`mid`/`full`, histórico de runs e saves da Jornada por fixture. Testes em `tests/uilab.test.ts` |
+| 3. Cenários de prioridade alta | A fazer |
+
+Diferenças do que está descrito abaixo, no lab mínimo:
+
+- Parâmetros de URL implementados: `s`, `frame`, `theme`, `instant`, `seed`, `w`. Ficam para depois `still` (menos
+  movimento) e `art=0` (sem arte).
+- O campo `expect` do cenário entra com os primeiros cenários que dependem de sorteio (passo 3). Os de agora não sorteiam.
+- O cenário ganhou `setup(storage)`, que prepara histórico de runs e save da Jornada antes da sessão.
+- O relógio congelado vale para `Date.now` (as datas "há N dias"); `new Date()` sem argumento segue o relógio real.
+- A casca do jogo virou `installShell()` em `prototype/shell.ts`, chamada pelo jogo e pelo lab.
+- O empacotamento comum está em `scripts/page-build.ts`; o HTML do jogo saiu byte a byte igual depois da extração.
+
 ## 1. Como se encaixa no projeto
 
 O projeto já tem as peças que o lab precisa:

@@ -1,9 +1,13 @@
 // Casca comum às telas: tema, botões do cabeçalho, fontes, erro, volta ao Portão, service worker e faixa de frases.
 import { ptBR as S } from '../src/data/strings/ptBR';
-import { icon, applySceneMode, hasSceneVideos } from './art';
-import { setSfx, setMusic, mood } from './audio';
+import { icon, applySceneMode, hasSceneVideos, installSceneRatios, uiTextureVars } from './art';
+import { installAudio, setSfx, setMusic, mood } from './audio';
+import { installSideNav } from './gate';
+import { installFolds } from './jornada/fold';
+import { openProfile, type ProfileTab } from './registry';
+import { installTooltips } from './tooltip';
 import { sleep, h, goHome, show, esc, choose } from './dom';
-import { VERSION, toast, track, syncSheetBtn } from './roleta/common';
+import { VERSION, openSheet, toast, track, syncSheetBtn } from './roleta/common';
 import { type Theme, ses, saveSettings } from './roleta/session';
 
 /** Tema aplicado: o escolhido no botão ou o do aparelho. */
@@ -157,4 +161,73 @@ export function installQuoteStrip(): void {
   };
   next();
   setInterval(next, 20_000);
+}
+
+/**
+ * Casca das telas: som, botões do cabeçalho, atalhos (Registro, Ficha, toque na roleta), textos fixos, barras de navegação,
+ * dicas, faixa de frases e fontes. O jogo e o UI Lab chamam a mesma, depois de montar a sessão.
+ */
+export async function installShell(): Promise<void> {
+  installAudio(ses.settings);
+  installHeaderToggles();
+  document.getElementById('history-btn')!.addEventListener('click', () => openProfile());
+  // Atalhos do Portão da Vila para o registro ninja.
+  document.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-profile]');
+    if (el) openProfile(el.dataset.profile as ProfileTab);
+  });
+  document.getElementById('sheet-btn')!.addEventListener('click', openSheet);
+  // Botões "Ficha" dentro das telas (painel do jogador, card da luta).
+  document.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('[data-sheet]')) openSheet();
+  });
+  // Tocar na roleta prossegue: aperta o botão principal dela ("Girar"), o que veio junto do resultado
+  // ou o "Continuar" da tela. Nada acontece enquanto ela gira; escolhas de verdade (equipar) não entram.
+  document.addEventListener('click', (e) => {
+    const block = (e.target as HTMLElement).closest<HTMLElement>('.wheel-block');
+    if (!block || block.dataset.spinning) return;
+    const box = block.closest('.wheel-box');
+    const scopes = [box, box?.parentElement, document.querySelector('#screen .sticky-cta')];
+    const pick = ['spin', 'keep', 'ok', 'go', 'start']
+      .map((c) => `button.primary[data-choice="${c}"]:not([disabled])`)
+      .join(',');
+    for (const scope of scopes) {
+      const btn = scope?.querySelector<HTMLButtonElement>(pick);
+      if (btn) {
+        btn.click();
+        return;
+      }
+    }
+  });
+  document.getElementById('disclaimer')!.textContent = S.ui.disclaimer;
+  document.getElementById('version')!.textContent = S.ui.version(VERSION);
+  document.getElementById('sheet-btn')!.innerHTML = `${icon('scroll')}${toolLabel('sheet')}`;
+  document.getElementById('home-btn')!.innerHTML = `${icon('home')}<span>${S.ui.homeShort}</span>`;
+  document.getElementById('home-btn')!.title = S.ui.home;
+  document.getElementById('home-btn')!.setAttribute('aria-label', S.ui.home);
+  const gateNav = document.getElementById('gate-nav')!;
+  gateNav.setAttribute('aria-label', S.ui.gate.registry);
+  const navItem = (kanji: string, label: string, attr = '') =>
+    `<button type="button" ${attr}><span class="kanji${kanji.length > 1 ? ' two' : ''}" aria-hidden="true">${kanji}</span>${label}</button>`;
+  gateNav.innerHTML =
+    navItem('忍', S.ui.gate.home, 'aria-current="page"') +
+    (
+      [
+        ['history', '歴'],
+        ['bingo', '手配'],
+        ['relics', '宝'],
+        ['origins', '族'],
+      ] as const
+    )
+      .map(([tab, kanji]) => navItem(kanji, S.profile.tabs[tab], `data-profile="${tab}"`))
+      .join('');
+  document.getElementById('history-btn')!.innerHTML = `${icon('book')}${toolLabel('history')}`;
+
+  installTooltips();
+  for (const [k, v] of Object.entries(uiTextureVars())) document.documentElement.style.setProperty(k, v);
+  installSideNav();
+  installQuoteStrip();
+  installSceneRatios();
+  installFolds();
+  await loadFonts();
 }
