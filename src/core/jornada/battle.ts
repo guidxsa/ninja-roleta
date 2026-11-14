@@ -24,7 +24,7 @@ import type {
   WinCondition,
   FighterSeed,
 } from './types';
-import { endForm, runScript, type ScriptContext, type ScriptRule } from './script';
+import { applyForm, endForm, formOf, hasForm, runScript, type ScriptContext, type ScriptRule } from './script';
 
 export function emptyMods(): FighterMods {
   return {
@@ -57,6 +57,12 @@ export function emptyMods(): FighterMods {
     healMult: 1,
     gateLevels: 0,
     rollWeights: {},
+    cloneShield: false,
+    stunnedAlwaysCrit: false,
+    rollTwice: false,
+    surviveForm: '',
+    techOverflow: {},
+    lowHpRollWeights: {},
   };
 }
 
@@ -102,6 +108,12 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     healMult: a.healMult * (b.healMult ?? 1),
     gateLevels: a.gateLevels + (b.gateLevels ?? 0),
     rollWeights: addMap(a.rollWeights, b.rollWeights),
+    cloneShield: a.cloneShield || Boolean(b.cloneShield),
+    stunnedAlwaysCrit: a.stunnedAlwaysCrit || Boolean(b.stunnedAlwaysCrit),
+    rollTwice: a.rollTwice || Boolean(b.rollTwice),
+    surviveForm: b.surviveForm || a.surviveForm,
+    techOverflow: addMap(a.techOverflow, b.techOverflow),
+    lowHpRollWeights: addMap(a.lowHpRollWeights, b.lowHpRollWeights),
   };
 }
 
@@ -687,9 +699,21 @@ function applyTech(s: JBattle, f: Fighter, techId: string, targetUid: string, da
 
 /** Sorteia a variante da técnica pelo peso (com os pesos a mais dos talentos; peso 0 ou menos sai do sorteio). */
 function rollVariant(f: Fighter, tech: JTechnique, rng: Rng): string {
-  const opts = tech.roll!.map((v) => ({ id: v.tech, w: Math.max(0, v.weight + (f.mods.rollWeights[v.tech] ?? 0)) })).filter((v) => v.w > 0);
-  let x = rng() * opts.reduce((a, v) => a + v.w, 0);
-  return (opts.find((v) => (x -= v.w) < 0) ?? opts[opts.length - 1] ?? { id: tech.roll![0]!.tech }).id;
+  // Com o HP abaixo da metade, entram os pesos de HP baixo (Chakra emprestado: a raposa ajuda a chamar o chefe).
+  const low = f.hp < f.maxHp * 0.5;
+  const opts = tech.roll!
+    .map((v) => ({ id: v.tech, w: Math.max(0, v.weight + (f.mods.rollWeights[v.tech] ?? 0) + (low ? (f.mods.lowHpRollWeights[v.tech] ?? 0) : 0)) }))
+    .filter((v) => v.w > 0);
+  const spin = () => {
+    let x = rng() * opts.reduce((a, v) => a + v.w, 0);
+    return opts.find((v) => (x -= v.w) < 0) ?? opts[opts.length - 1] ?? { id: tech.roll![0]!.tech, w: 0 };
+  };
+  const first = spin();
+  if (!f.mods.rollTwice) return first.id;
+  // Gira duas vezes e fica com a que vem depois na lista da técnica (do sapo mais fraco ao mais forte).
+  const second = spin();
+  const order = (id: string) => tech.roll!.findIndex((v) => v.tech === id);
+  return order(second.id) > order(first.id) ? second.id : first.id;
 }
 
 /** Efeitos da técnica nos alvos (depois de pagar o custo). */
@@ -746,12 +770,15 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     // Um sorteio só: abaixo do crítico é crítico, abaixo do acerto é acerto (crítico contido no acerto).
     const r = rng();
     const gateCrit = f.gate ? gateTotals(f.gate.level, data).critBonus : 0;
-    const outcome = r < critChance((tech.critBonus ?? 0) + f.mods.critBonus + gateCrit, data.base.crit, chance) ? 'crit' : r < chance ? 'hit' : 'miss';
+    // Mestre da trapaça: quem acerta um alvo atordoado acerta em cheio.
+    const sureCrit = f.mods.stunnedAlwaysCrit && hasEffect(t, 'stun');
+    const outcome = r < (sureCrit ? chance : critChance((tech.critBonus ?? 0) + f.mods.critBonus + gateCrit, data.base.crit, chance)) ? 'crit' : r < chance ? 'hit' : 'miss';
     if (outcome === 'miss') {
       s.log.push({ type: 'miss', uid: f.uid, target: t.uid });
       continue;
     }
-    if (cloneTakesHit(t.clones, single, data.base.clones, rng)) {
+    // Exército de sombras: com clone ativo, o golpe de alvo único cai sempre nele (sem sorteio).
+    if (t.mods.cloneShield && single && t.clones > 0 ? true : cloneTakesHit(t.clones, single, data.base.clones, rng)) {
       t.clones--;
       s.log.push({ type: 'cloneBlock', target: t.uid, left: t.clones });
       if (t.mods.cloneCounter) {
@@ -764,7 +791,17 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     const absorbed = Math.min(t.shield, amount);
     t.shield -= absorbed;
     s.log.push({ type: 'damage', uid: f.uid, target: t.uid, amount: amount - absorbed, crit: outcome === 'crit', elementMult: elementMult(tech, t, data), absorbed });
+    const hpBefore = t.hp;
     applyHpLoss(s, t, amount - absorbed, data, tech.id);
+    // Rasengan que atravessa: o dano que sobrou do golpe fatal passa para o próximo inimigo de pé (uma vez, sem corrente).
+    const spill = t.down ? Math.floor((amount - absorbed - hpBefore) * (f.mods.techOverflow[tech.id] ?? 0)) : 0;
+    const nextFoe = spill > 0 && s.status === 'ongoing' ? alive(s, t.side).find((x) => x.uid !== t.uid) : undefined;
+    if (nextFoe) {
+      const soaked = Math.min(nextFoe.shield, spill);
+      nextFoe.shield -= soaked;
+      s.log.push({ type: 'damage', uid: f.uid, target: nextFoe.uid, amount: spill - soaked, crit: false, elementMult: 1, absorbed: soaked });
+      applyHpLoss(s, nextFoe, spill - soaked, data, tech.id);
+    }
     if (t.down && f.mods.onKillChakra) {
       const amount = Math.min(f.maxChakra - f.chakra, f.mods.onKillChakra);
       f.chakra += amount;
@@ -802,11 +839,11 @@ function tryEffect(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: J
 
 /** Perde HP e confere o fim; depois, o roteiro (HP abaixo de X%, alguém caiu). `techId`: o golpe que causou. */
 function applyHpLoss(s: JBattle, t: Fighter, amount: number, data: JornadaData, techId?: string): void {
-  lose(s, t, amount, techId);
+  lose(s, t, amount, data, techId);
   script(s, data);
 }
 
-function lose(s: JBattle, t: Fighter, amount: number, techId?: string): void {
+function lose(s: JBattle, t: Fighter, amount: number, data: JornadaData, techId?: string): void {
   if (amount <= 0) return;
   t.hp = Math.max(0, t.hp - amount);
   // Finalizador: o alvo só cai com a técnica certa; outro golpe fatal deixa 1 de HP.
@@ -821,6 +858,12 @@ function lose(s: JBattle, t: Fighter, amount: number, techId?: string): void {
     t.survivedOnce = true;
     t.hp = 1;
     s.log.push({ type: 'survive', target: t.uid });
+    // Fúria da Kyuubi: em vez de cair, o chakra da raposa toma conta (a forma da ficha, com a cura e os turnos dela).
+    const form = t.mods.surviveForm ? formOf(t.defId, t.mods.surviveForm, data) : undefined;
+    if (form && !hasForm(t, form.id)) {
+      applyForm(t, form);
+      s.log.push({ type: 'form', uid: t.uid, form: form.id });
+    }
     return;
   }
   t.down = true;

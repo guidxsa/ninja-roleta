@@ -1025,7 +1025,7 @@ describe('run da Jornada', () => {
     syncGrantedTalents(run, data);
     const hp = memberSheet(run, 'sasuke', data).maxHp;
     run = buyTalent(run, 'tTeam7', none, data);
-    expect(memberSheet(run, 'sasuke', data).maxHp).toBe(Math.floor(hp * 1.15));
+    expect(memberSheet(run, 'sasuke', data).maxHp).toBe(Math.floor(hp * 1.12));
     expect(teamMods(run, data).regenHp).toBe(1);
     expect(heroMods(run, data).regenHp).toBe(1);
     const mem = new Map<string, string>();
@@ -1236,7 +1236,7 @@ describe('run da Jornada', () => {
     const oldSave = (run: JRun) => {
       const s = storage();
       // Save antigo de verdade: sem os campos da loja nem os marcadores das migrações seguintes (v0.67.0 e v0.68.0).
-      const { shop: _s, shopPurchases: _p, storyArcs: _a, canonTree: _c, journey: _j, merged: _m, ...old } = run;
+      const { shop: _s, shopPurchases: _p, storyArcs: _a, canonTree: _c, journey: _j, merged: _m, tree071: _t, ...old } = run;
       s.mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
       return loadJornada(s)!;
     };
@@ -2236,5 +2236,43 @@ describe('save de antes das paradas juntadas (v0.70.0)', () => {
     const fresh = { ...freshRun(5, 'normal', data), stageIndex: 1, stopIndex: 3 };
     const mem = new Map<string, string>([[JORNADA_SAVE_KEY, JSON.stringify(fresh)]]);
     expect(loadJornada({ getItem: (k: string) => mem.get(k) ?? null, setItem: () => undefined })).toMatchObject({ stageIndex: 1, stopIndex: 3 });
+  });
+});
+
+describe('save de antes da árvore refeita (v0.71.0)', () => {
+  const load = (run: JRun) => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    const { tree071: _t, ...old } = run;
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify(old));
+    return loadJornada(storage)!;
+  };
+
+  it('devolve os pontos gastos nos ramos (com os níveis), tira as técnicas da árvore e mantém as raízes da história', () => {
+    const base = { ...freshRun(5, 'normal', data), stageIndex: 3, stopIndex: 0, flags: ['bellsLesson', 'kyuubiAwakened'] };
+    const old = {
+      ...base,
+      talentPoints: 2,
+      talents: ['tNeverGiveUp', 'tKyuubiRegen', 'tRasengan', 'tMoreClones', 'tRendan', 'tCloneBlast', 'tTajuu', 'tPrankKing', 'tHarem'],
+      talentRanks: { tRendan: 3, tRasengan: 2 },
+      learned: ['jRendan', 'jHarem'],
+      moveset: ['jStrike', 'jShuriken', 'jRendan', 'jHarem', 'jRasengan'],
+    };
+    const run = load(old);
+    // 1 + (2 + 2 níveis) + 2 + 3 + 1 + 2 = 13 pontos de volta.
+    expect(run.talentPoints).toBe(2 + 13);
+    expect([...run.talents].sort()).toEqual(['tKuchiyose', 'tKyuubiRegen', 'tNeverGiveUp', 'tRasengan'].sort());
+    expect(run.talentRanks).toEqual({ tRasengan: 2 });
+    expect(run.learned).toEqual([]);
+    expect(run.moveset).toEqual(['jStrike', 'jShuriken', 'jRasengan']);
+    expect(run.tree071).toBe(1);
+  });
+
+  it('save sem ponto gasto, de outra classe ou já migrado não muda', () => {
+    const plain = load({ ...freshRun(5, 'normal', data), talentPoints: 4 });
+    expect(plain.talentPoints).toBe(4);
+    const fresh = { ...freshRun(5, 'normal', data), talentPoints: 1, talents: ['tMoreClones'] };
+    const mem = new Map<string, string>([[JORNADA_SAVE_KEY, JSON.stringify(fresh)]]);
+    expect(loadJornada({ getItem: (k: string) => mem.get(k) ?? null, setItem: () => undefined })).toMatchObject({ talentPoints: 1, talents: ['tMoreClones'] });
   });
 });

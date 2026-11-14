@@ -143,6 +143,19 @@ export interface FighterMods {
   gateLevels: number;
   /** Peso a mais (ou a menos) de cada variante de técnica sorteada (Sapos do Naruto). */
   rollWeights: Record<string, number>;
+  // Regras dos talentos finais e de combinação do Naruto (v0.71.0, docs/jornada/talentos.md).
+  /** Clones: com clone ativo, o golpe de alvo único cai sempre no clone (sem o sorteio de bloqueio). */
+  cloneShield: boolean;
+  /** Pegadinhas: golpe que acerta um alvo atordoado é sempre crítico. */
+  stunnedAlwaysCrit: boolean;
+  /** Sapos: a técnica sorteada gira duas vezes e fica com a variante que vem depois na lista (a melhor). */
+  rollTwice: boolean;
+  /** Kyuubi: ao ficar com 1 de HP em vez de cair (`surviveOnce`), liga esta forma da ficha ('' = nenhuma). */
+  surviveForm: string;
+  /** Rasengan: fração do dano que sobra de um golpe fatal desta técnica e passa para o próximo inimigo de pé. */
+  techOverflow: Record<string, number>;
+  /** Sapos + Kyuubi: peso a mais das variantes sorteadas com o HP abaixo da metade. */
+  lowHpRollWeights: Record<string, number>;
 }
 
 export interface CharacterDef {

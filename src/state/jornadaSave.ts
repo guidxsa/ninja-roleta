@@ -148,6 +148,69 @@ export function withMergedStops(run: JRun): JRun {
   return next;
 }
 
+/**
+ * A árvore do Naruto como era na v0.70.0: o custo de cada nó pago (e de cada nível acima do 1), para devolver os pontos
+ * quando a árvore foi refeita (v0.71.0). As raízes dadas pela história não custavam nada e ficam.
+ */
+const V070_TREE_COSTS: Record<string, { cost: number; rankCost?: number }> = {
+  tMoreClones: { cost: 1 },
+  tRendan: { cost: 2, rankCost: 1 },
+  tCloneGuard: { cost: 2 },
+  tCloneBlast: { cost: 2 },
+  tTajuu: { cost: 3 },
+  tShadowArmy: { cost: 3 },
+  tPrankKing: { cost: 1 },
+  tHarem: { cost: 2 },
+  tSmokeBomb: { cost: 2 },
+  tShadowShuriken: { cost: 2, rankCost: 1 },
+  tAmbush: { cost: 2 },
+  tTrickMaster: { cost: 3 },
+  tTeam7: { cost: 2 },
+  tWarCry: { cost: 2, rankCost: 1 },
+  tProtectFriends: { cost: 2 },
+  tNoOneLeft: { cost: 2 },
+  tFutureHokage: { cost: 3 },
+  tGamakichi: { cost: 2, rankCost: 1 },
+  tGamatatsu: { cost: 2 },
+  tToadContract: { cost: 2, rankCost: 2 },
+  tToadBoss: { cost: 3 },
+  tKyuubiCloak: { cost: 2 },
+  tOneTail: { cost: 2 },
+  tChakraBurst: { cost: 2, rankCost: 1 },
+  tKyuubiFury: { cost: 3 },
+  tRasenganMastery: { cost: 2 },
+  tRasenganFocus: { cost: 2 },
+  tRasenClone: { cost: 2, rankCost: 1 },
+  tRasenganKyuubi: { cost: 3 },
+};
+/** Técnicas que esses talentos ensinavam: saem com eles e voltam quando o jogador escolher o talento de novo. */
+const V070_TREE_TECHNIQUES = ['jRendan', 'jHarem', 'jSmokeBomb', 'jShadowShuriken', 'jWarCry', 'jReanimate', 'jKyuubiCloak', 'jOneTail', 'jChakraBurst', 'jRasenClone'];
+
+/**
+ * Save de antes da árvore refeita (v0.71.0): os ramos do Naruto mudaram de forma, de números e de regras, então todo
+ * ponto gasto neles volta para ser distribuído de novo. As raízes da história ficam (o Rasengan guarda os níveis, que
+ * não mudaram), e as técnicas aprendidas pela árvore saem até o talento ser escolhido de novo.
+ */
+export function withNewTree(run: JRun): JRun {
+  if (run.tree071 === 1) return run;
+  const next: JRun = { ...run, tree071: 1, talents: [...run.talents], talentRanks: { ...run.talentRanks } };
+  if (next.hero !== 'naruto') return next;
+  let refund = 0;
+  for (const [id, old] of Object.entries(V070_TREE_COSTS)) {
+    if (!next.talents.includes(id)) continue;
+    refund += old.cost + (old.rankCost ?? 0) * ((next.talentRanks[id] ?? 1) - 1);
+    next.talents = next.talents.filter((t) => t !== id);
+    delete next.talentRanks[id];
+  }
+  if (!refund) return next;
+  next.talentPoints += refund;
+  next.learned = next.learned.filter((id) => !V070_TREE_TECHNIQUES.includes(id));
+  next.moveset = next.moveset.filter((id) => !V070_TREE_TECHNIQUES.includes(id));
+  syncGrantedTalents(next, jornadaData);
+  if (!next.moveset.length) next.moveset = heroMovable(next, jornadaData).slice(0, MOVESET_SIZE);
+  return next;
+}
+
 /** Troca os ids de relíquia que mudaram (v0.43.0: iniciais novas e o Talismã da Vontade do Fogo). */
 export const renameRelicIds = (ids: readonly string[]) => [...new Set(ids.map((id) => RELIC_RENAMES[id] ?? id))];
 
@@ -183,7 +246,7 @@ export function loadJornada(storage: KeyValueStorage): JRun | null {
     const cycle = typeof run.cycle === 'number' ? run.cycle : 0;
     const unlocks = Array.isArray(run.unlocks) ? run.unlocks : [];
     const loaded: JRun = { ...legacy, ...run, cycle, unlocks, learned: known(run.learned ?? []), moveset: known(run.moveset ?? []), cleared: run.cleared ?? [], relics, talentRanks: run.talentRanks ?? {} };
-    return withMergedStops(withJourney(withCanonStory(withSilentNatures(inFourArcs(withoutShopStops(loaded, run.shopPurchases === undefined))))));
+    return withNewTree(withMergedStops(withJourney(withCanonStory(withSilentNatures(inFourArcs(withoutShopStops(loaded, run.shopPurchases === undefined)))))));
   } catch {
     return null;
   }
