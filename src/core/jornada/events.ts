@@ -44,8 +44,9 @@ export interface EventOption {
 }
 
 /**
- * Categoria do evento na cronologia (docs/jornada/cronologia.md, v0.68.0): presenciado (cena sem escolha: uma opção só,
- * `continue`), narrativo (reações do Naruto) ou treino (aprender ou evoluir técnica). Sem o campo: narrativo.
+ * Categoria do evento na cronologia (docs/jornada/cronologia.md, v0.68.0): presenciado (o Naruto assiste e escolhe como
+ * reage), narrativo (o Naruto decide) ou treino (aprender ou evoluir técnica). Sem o campo: narrativo. Toda escolha tem
+ * pelo menos duas opções (v0.70.0).
  */
 export type EventCategory = 'witness' | 'narrative' | 'training';
 

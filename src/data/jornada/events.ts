@@ -84,6 +84,7 @@ export const events: EventDef[] = [
     options: [
       // Rasengan III (bola de borracha): o Rasengan vem de qualquer jeito (marco da campanha).
       { id: 'ball', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] },
+      { id: 'allNight', effects: [{ kind: 'xp', n: 40 }, { kind: 'hurtTeam', pct: 0.15 }] },
     ],
   },
   {
@@ -95,7 +96,18 @@ export const events: EventDef[] = [
     ],
   },
   // Cronologia da v0.68.0 (docs/jornada/cronologia.md): treinos, cenas presenciadas e narrativas novas.
-  { id: 'sealScroll', category: 'training', options: [{ id: 'scroll', minigame: 'seals', effects: [{ kind: 'xp', n: 20 }], onLose: [{ kind: 'xp', n: 10 }] }] },
+  // Toda escolha tem pelo menos duas opções (v0.70.0). Treino: o minijogo (prêmio maior se acertar) ou a insistência
+  // (prêmio certo, com custo de HP). Cena presenciada: duas reações do Naruto, de valor parecido e tipos diferentes; a
+  // primeira é o prêmio que a cena já dava.
+  {
+    // O pergaminho proibido: o Kage Bunshin vem de qualquer jeito (marco da campanha).
+    id: 'sealScroll',
+    category: 'training',
+    options: [
+      { id: 'scroll', minigame: 'seals', effects: [{ kind: 'xp', n: 20 }], onLose: [{ kind: 'xp', n: 10 }] },
+      { id: 'stubborn', effects: [{ kind: 'xp', n: 12 }, { kind: 'hurtTeam', pct: 0.1 }] },
+    ],
+  },
   {
     id: 'team7',
     category: 'narrative',
@@ -112,8 +124,23 @@ export const events: EventDef[] = [
       { id: 'stronger', effects: [{ kind: 'talent', n: 1 }] },
     ],
   },
-  { id: 'hakuFarewell', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'talent', n: 1 }] }] },
-  { id: 'leeGaara', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'xp', n: 40 }, { kind: 'flag', id: 'viuGaara' }] }] },
+  {
+    id: 'hakuFarewell',
+    category: 'witness',
+    options: [
+      { id: 'ownWay', effects: [{ kind: 'talent', n: 1 }] },
+      { id: 'bury', effects: [{ kind: 'healTeam', hp: 50, chakra: 15 }, { kind: 'xp', n: 20 }] },
+    ],
+  },
+  {
+    // Quem guarda os movimentos da areia entra na luta do Gaara já sabendo desviar dela (marca `viuGaara`).
+    id: 'leeGaara',
+    category: 'witness',
+    options: [
+      { id: 'watch', effects: [{ kind: 'xp', n: 40 }, { kind: 'flag', id: 'viuGaara' }] },
+      { id: 'visit', effects: [{ kind: 'healTeam', hp: 40, chakra: 12 }, { kind: 'item', id: 'hpKit', n: 1 }] },
+    ],
+  },
   {
     id: 'hinataOintment',
     category: 'narrative',
@@ -122,7 +149,15 @@ export const events: EventDef[] = [
       { id: 'weird', effects: [{ kind: 'item', id: 'hpKit', n: 1 }] },
     ],
   },
-  { id: 'hinataNeji', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'flag', id: 'promessaNeji' }] }] },
+  {
+    // A promessa liga a determinação na luta contra o Neji (marca `promessaNeji`).
+    id: 'hinataNeji',
+    category: 'witness',
+    options: [
+      { id: 'promise', effects: [{ kind: 'flag', id: 'promessaNeji' }] },
+      { id: 'carry', effects: [{ kind: 'healTeam', hp: 40, chakra: 12 }, { kind: 'xp', n: 30 }] },
+    ],
+  },
   {
     id: 'jiraiyaJourney',
     category: 'narrative',
@@ -131,8 +166,22 @@ export const events: EventDef[] = [
       { id: 'find', effects: [{ kind: 'ryo', n: 20 }] },
     ],
   },
-  { id: 'rasengan1', category: 'training', options: [{ id: 'water', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] }] },
-  { id: 'rasengan2', category: 'training', options: [{ id: 'rubber', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] }] },
+  {
+    id: 'rasengan1',
+    category: 'training',
+    options: [
+      { id: 'water', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] },
+      { id: 'grind', effects: [{ kind: 'xp', n: 40 }, { kind: 'hurtTeam', pct: 0.1 }] },
+    ],
+  },
+  {
+    id: 'rasengan2',
+    category: 'training',
+    options: [
+      { id: 'rubber', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] },
+      { id: 'grind', effects: [{ kind: 'xp', n: 40 }, { kind: 'hurtTeam', pct: 0.1 }] },
+    ],
+  },
   {
     id: 'tsunade',
     category: 'narrative',
@@ -141,11 +190,47 @@ export const events: EventDef[] = [
       { id: 'bet', effects: [{ kind: 'ryo', n: 40 }] },
     ],
   },
-  { id: 'sannin', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'healFull' }, { kind: 'talent', n: 1 }] }] },
-  { id: 'chojiStays', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'item', id: 'chakraKit', n: 1 }] }] },
-  { id: 'nejiStays', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'xp', n: 50 }] }] },
-  { id: 'shikamaruStays', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'talent', n: 1 }] }] },
-  { id: 'kibaStays', category: 'witness', options: [{ id: 'continue', effects: [{ kind: 'item', id: 'hpKit', n: 1 }] }] },
+  {
+    // A Tsunade entrega o colar do Primeiro Hokage nas duas escolhas (toma o lugar da bandana do Iruka).
+    id: 'sannin',
+    category: 'witness',
+    options: [
+      { id: 'thank', effects: [{ kind: 'storyRelic', id: 'firstHokageNecklace' }, { kind: 'healFull' }, { kind: 'talent', n: 1 }] },
+      { id: 'spar', effects: [{ kind: 'storyRelic', id: 'firstHokageNecklace' }, { kind: 'talent', n: 1 }, { kind: 'maxStat', who: 'hero', stat: 'hp', n: 8 }] },
+    ],
+  },
+  {
+    id: 'chojiStays',
+    category: 'witness',
+    options: [
+      { id: 'pills', effects: [{ kind: 'item', id: 'chakraKit', n: 1 }] },
+      { id: 'promise', effects: [{ kind: 'xp', n: 40 }] },
+    ],
+  },
+  {
+    id: 'nejiStays',
+    category: 'witness',
+    options: [
+      { id: 'trust', effects: [{ kind: 'xp', n: 50 }] },
+      { id: 'kit', effects: [{ kind: 'item', id: 'hpKit', n: 1 }] },
+    ],
+  },
+  {
+    id: 'shikamaruStays',
+    category: 'witness',
+    options: [
+      { id: 'go', effects: [{ kind: 'talent', n: 1 }] },
+      { id: 'plan', effects: [{ kind: 'xp', n: 50 }] },
+    ],
+  },
+  {
+    id: 'kibaStays',
+    category: 'witness',
+    options: [
+      { id: 'kit', effects: [{ kind: 'item', id: 'hpKit', n: 1 }] },
+      { id: 'shout', effects: [{ kind: 'xp', n: 40 }] },
+    ],
+  },
   {
     id: 'valleyTalk',
     category: 'narrative',
@@ -154,7 +239,15 @@ export const events: EventDef[] = [
       { id: 'force', effects: [{ kind: 'flag', id: 'valleyForce' }] },
     ],
   },
-  { id: 'returnKonoha', category: 'witness', options: [{ id: 'continue', effects: [] }] },
+  {
+    // A última fala muda o texto da tela de vitória (marcas `endPromise` e `endStronger`).
+    id: 'returnKonoha',
+    category: 'witness',
+    options: [
+      { id: 'promise', effects: [{ kind: 'flag', id: 'endPromise' }] },
+      { id: 'stronger', effects: [{ kind: 'flag', id: 'endStronger' }] },
+    ],
+  },
 ];
 
 /** Eventos do Caminho Ninja (docs/jornada/caminho-ninja.md#eventos), sorteados pelo desconhecido. */
@@ -171,6 +264,8 @@ export const genericEvents: EventDef[] = [
     options: [
       { id: 'eat', cost: 15, effects: [{ kind: 'healTeam', hp: 60, chakra: 18 }] },
       { id: 'grateful', requires: 'helpedOldLady', effects: [{ kind: 'healTeam', hp: 60, chakra: 18 }] },
+      // Sem ryō e sem a velhinha, ainda há escolha (toda escolha tem pelo menos duas opções, v0.70.0).
+      { id: 'dishes', effects: [{ kind: 'healTeam', hp: 30, chakra: 9 }] },
       { id: 'skip', effects: [{ kind: 'xp', n: 20 }] },
     ],
   },
@@ -230,6 +325,8 @@ export const genericEvents: EventDef[] = [
     options: [
       { id: 'purify', requires: SHOP_CURSE, effects: [{ kind: 'cleanse' }] },
       { id: 'pray', effects: [{ kind: 'healTeam', hp: 30, chakra: 9 }] },
+      // Sem a maldição, a escolha é entre descansar e treinar a concentração (pelo menos duas opções, v0.70.0).
+      { id: 'meditate', effects: [{ kind: 'xp', n: 25 }] },
     ],
   },
 ];

@@ -562,9 +562,11 @@ describe('Bunshin no Jutsu (src/core/clones.ts, v0.59.0)', () => {
     expect(kit(origin('taijutsuProdigy', ['earth']))).not.toContain('rBunshin');
   });
 
-  it('Jornada: quem tem ninjutsu começa com Bunshin (o Naruto já tem o Kage Bunshin)', () => {
-    // Invocações (o Gamabunta) não seguem a regra: sapo não faz clone.
-    for (const c of Object.values(jornadaData.characters).filter((x) => !x.summon)) {
+  it('Jornada: quem tem ninjutsu começa com Bunshin (o Naruto aprende o Kage Bunshin no pergaminho proibido)', () => {
+    // Invocações (o Gamabunta) não seguem a regra: sapo não faz clone. O Naruto também não (v0.70.0): ele nunca
+    // acertou o Bunshin da Academia, e o clone dele vem do primeiro evento da História (marco da campanha).
+    expect(jornadaData.campaigns.naruto!.grants).toContainEqual({ who: 'naruto', learn: 'jKageBunshin', at: { stop: 'sealScroll' } });
+    for (const c of Object.values(jornadaData.characters).filter((x) => !x.summon && x.id !== 'naruto')) {
       const clone = c.techniques.some((id) => jornadaData.techniques[id]?.clones);
       expect([c.id, clone]).toEqual([c.id, c.offense.ninjutsu > 0]);
     }

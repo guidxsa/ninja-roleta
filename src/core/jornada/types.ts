@@ -297,6 +297,8 @@ export type JEvent =
   /** Ligou uma forma (roteiro) ou a forma temporária acabou. */
   | { type: 'form'; uid: string; form: string }
   | { type: 'formEnd'; uid: string; form: string }
+  /** Ganhou uma técnica pelo roteiro, até o fim da luta. */
+  | { type: 'teach'; uid: string; techId: string }
   /** Técnica sorteada: qual variante saiu. */
   | { type: 'roll'; uid: string; techId: string; variant: string }
   /** Entrou ou saiu da luta pelo roteiro. */

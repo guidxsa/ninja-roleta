@@ -62,8 +62,10 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Kubikiribōchō | Taijutsu | — | um inimigo | 17 | 0 | 80% | penetração 15% |
 | Prisão de água | Ninjutsu | água | um inimigo | — | 5 | 80% | atordoar 100% (2 t); espera 4 |
 | Dragão de água | Ninjutsu | água | todos os inimigos | 13 | 8 | 85% | — |
+| Névoa oculta | Ninjutsu | água | em si | — | 0 | — | +20% de esquiva por 2 turnos; o roteiro do Zabuza liga na abertura |
 | Senbon | Taijutsu | — | um inimigo | 5 | 0 | 85% | 3 golpes |
 | Espelhos de gelo | Ninjutsu | água | todos os inimigos | 8 | 8 | 85% | 2 golpes; espera 2 |
+| Passo dos espelhos | Ninjutsu | água | em si | — | 0 | — | +20% de esquiva por 2 turnos; o roteiro do Haku liga na abertura |
 | Ponto vital | Taijutsu | — | um inimigo | 6 | 2 | 85% | atordoar 25% (2 t) |
 | Onda sonora | Ninjutsu | — | um inimigo | 11 | 3 | 85% | atordoar 15% (2 t) |
 | Rajada de ar | Ninjutsu | vento | todos os inimigos | 8 | 5 | 85% | — |

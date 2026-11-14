@@ -54,6 +54,8 @@ export type ScriptAction =
   | { do: 'effect'; who: string; effect: JEffect; turns: number }
   /** Liga no lutador o fortalecimento de uma técnica (`boost`), sem custo nem turno (a névoa do Zabuza). */
   | { do: 'boost'; who: string; tech: string }
+  /** O lutador ganha uma técnica até o fim da luta (a cabeçada que acorda o Gaara). */
+  | { do: 'teach'; who: string; tech: string }
   /** Marca na run (vai para `run.flags` no fim da luta). */
   | { do: 'flag'; id: string }
   /** Encerra a luta com o resultado roteirizado (o desmaio que ainda conta como vitória). */
@@ -61,9 +63,9 @@ export type ScriptAction =
 
 export interface ScriptRule {
   when: ScriptTrigger;
-  /** A regra só vale com esta marca na run (o selo do Sasuke só desperta depois da Floresta da Morte). */
+  /** A regra só vale com esta marca, da run ou posta nesta luta (o selo do Sasuke só desperta depois da Floresta da Morte). */
   if?: { flag: string };
-  /** A regra não vale com esta marca na run (a outra regra, a da marca, já cuida do momento). */
+  /** A regra não vale com esta marca, da run ou posta nesta luta (outra regra já cuidou do momento). */
   ifNot?: { flag: string };
   do: ScriptAction[];
 }
@@ -206,12 +208,12 @@ function perform(s: JBattle, a: ScriptAction, data: JornadaData, enterFighter: (
       return;
     }
     case 'replace': {
+      // Quem sairia já não está na luta (outra regra fez a troca): nada entra no lugar.
       const out = byDef(s, a.who);
-      if (out) {
-        out.gone = true;
-        out.down = true;
-        s.log.push({ type: 'leave', uid: out.uid });
-      }
+      if (!out) return;
+      out.gone = true;
+      out.down = true;
+      s.log.push({ type: 'leave', uid: out.uid });
       const f = enterFighter(s, a.with);
       if (f) s.log.push({ type: 'enter', uid: f.uid });
       return;
@@ -242,6 +244,15 @@ function perform(s: JBattle, a: ScriptAction, data: JornadaData, enterFighter: (
       s.log.push({ type: 'boost', uid: f.uid, techId: a.tech, turns: boost.turns });
       return;
     }
+    case 'teach': {
+      const f = byDef(s, a.who);
+      if (!f || f.techniques.includes(a.tech)) return;
+      f.techniques = [...f.techniques, a.tech];
+      // Com forma ligada, a técnica entra também na ficha de antes (refazer a pilha de formas não a perde).
+      if (f.formBase && !f.formBase.techniques.includes(a.tech)) f.formBase.techniques = [...f.formBase.techniques, a.tech];
+      s.log.push({ type: 'teach', uid: f.uid, techId: a.tech });
+      return;
+    }
     case 'flag':
       if (!s.flags.includes(a.id)) s.flags.push(a.id);
       return;
@@ -261,8 +272,9 @@ export function runScript(s: JBattle, data: JornadaData, enterFighter: (s: JBatt
   if (!s.script.length || s.scripting) return;
   s.scripting = true;
   try {
+    const has = (flag: string) => s.runFlags.includes(flag) || s.flags.includes(flag);
     s.script.forEach((rule, i) => {
-      if (s.fired.includes(i) || (rule.if && !s.runFlags.includes(rule.if.flag)) || (rule.ifNot && s.runFlags.includes(rule.ifNot.flag)) || !triggered(s, rule.when, ctx)) return;
+      if (s.fired.includes(i) || (rule.if && !has(rule.if.flag)) || (rule.ifNot && has(rule.ifNot.flag)) || !triggered(s, rule.when, ctx)) return;
       // Luta já acabou: uma regra que também encerraria não dispara (duas saídas para o mesmo fim não repetem as falas).
       if (s.status !== 'ongoing' && rule.do.some((a) => a.do === 'end')) return;
       s.fired.push(i);

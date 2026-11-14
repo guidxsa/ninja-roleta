@@ -3,6 +3,9 @@ import type { StageDef } from '../../core/jornada/trail';
 // História do Naruto (docs/jornada/cronologia.md): a jornada dele, na ordem do mangá. Entra o que o Naruto vive,
 // presencia ou descobre; luta de outros personagens vira cena presenciada (evento sem escolha). Linear, sem escolha de
 // caminho. Os roteiros das lutas (falas, formas, fases) seguem docs/jornada/roteiro.md.
+// Regra dos roteiros (v0.70.0): a fala de abertura pode vir sozinha; toda interrupção no meio da luta muda algo nela.
+// Paradas com `then` abrem os eventos em sequência, sem voltar à trilha; o id é o do último evento (os marcos da
+// campanha apontam para ele).
 
 export const stages: StageDef[] = [
   {
@@ -34,7 +37,7 @@ export const stages: StageDef[] = [
       },
       { kind: 'event', id: 'graduation', scene: 'konoha', event: 'graduation' },
       { kind: 'event', id: 'team7', scene: 'konoha', event: 'team7' },
-      // Teste do sino: derrota inevitável. Ninguém pega o sino; a lição libera a raiz do ramo Laços.
+      // Teste do sino: derrota inevitável, em campo. O Kakashi derruba um por vez; a lição libera a raiz do ramo Laços.
       {
         kind: 'story',
         id: 'bells',
@@ -43,19 +46,24 @@ export const stages: StageDef[] = [
         inevitableLoss: true,
         script: [
           { when: { on: 'start' }, do: [{ do: 'say', who: 'kakashi', line: 'bellsStart' }, { do: 'flag', id: 'bellsLesson' }] },
-          { when: { on: 'hpBelow', who: 'kakashi', pct: 0.5 }, do: [{ do: 'say', who: 'kakashi', line: 'bellsLog' }, { do: 'end', status: 'lost' }] },
-          { when: { on: 'round', round: 4 }, do: [{ do: 'say', who: 'kakashi', line: 'bellsTime' }, { do: 'end', status: 'lost' }] },
+          { when: { on: 'hpBelow', who: 'kakashi', pct: 0.75 }, do: [{ do: 'say', who: 'kakashi', line: 'bellsSakura' }, { do: 'knock', who: 'sakura' }] },
+          { when: { on: 'hpBelow', who: 'kakashi', pct: 0.5 }, do: [{ do: 'say', who: 'kakashi', line: 'bellsSasuke' }, { do: 'knock', who: 'sasuke' }] },
+          {
+            when: { on: 'hpBelow', who: 'kakashi', pct: 0.25 },
+            do: [{ do: 'say', who: 'kakashi', line: 'bellsNaruto' }, { do: 'knock', who: 'naruto' }, { do: 'end', status: 'lost' }],
+          },
+          { when: { on: 'round', round: 5 }, do: [{ do: 'say', who: 'kakashi', line: 'bellsTime' }, { do: 'end', status: 'lost' }] },
         ],
       },
       { kind: 'elite', id: 'demonBrothers', enemies: ['gozu', 'meizu'] },
       { kind: 'event', id: 'tazuna', event: 'tazuna' },
-      // Zabuza: o Kakashi preso na Prisão de Água é solto e entra; a Sakura sai para proteger o Tazuna.
+      // Zabuza: some na névoa na abertura; o Kakashi preso na Prisão de Água é solto e entra; a Sakura sai com o Tazuna.
       {
         kind: 'elite',
         id: 'zabuza',
         enemies: ['zabuza'],
         script: [
-          { when: { on: 'start' }, do: [{ do: 'say', who: 'zabuza', line: 'zabuzaStart' }] },
+          { when: { on: 'start' }, do: [{ do: 'say', who: 'zabuza', line: 'zabuzaStart' }, { do: 'boost', who: 'zabuza', tech: 'jeHiddenMist' }] },
           {
             when: { on: 'hpBelow', who: 'zabuza', pct: 0.6 },
             do: [
@@ -68,12 +76,12 @@ export const stages: StageDef[] = [
       },
       { kind: 'event', id: 'treeClimbing', event: 'treeClimbing' },
       { kind: 'event', id: 'hakuForest', event: 'hakuForest' },
-      // Os capangas do Gatō atacam a casa do Tazuna (a Tsunami e o Inari).
+      // Os capangas do Gatō atacam a casa do Tazuna; a besta do Inari tira um deles do começo da luta.
       {
         kind: 'fight',
         id: 'thugs',
         enemies: ['gatoThug', 'gatoThug', 'gatoThug'],
-        script: [{ when: { on: 'start' }, do: [{ do: 'say', who: 'narrator', line: 'thugsInari' }] }],
+        script: [{ when: { on: 'start' }, do: [{ do: 'say', who: 'narrator', line: 'thugsInari' }, { do: 'effect', who: 'gatoThug', effect: 'stun', turns: 2 }] }],
       },
       { kind: 'treasure', id: 'treasure1' },
       { kind: 'rest', id: 'rest1' },
@@ -84,7 +92,7 @@ export const stages: StageDef[] = [
         enemies: ['haku'],
         team: ['sasuke'],
         script: [
-          { when: { on: 'start' }, do: [{ do: 'say', who: 'haku', line: 'hakuStart' }] },
+          { when: { on: 'start' }, do: [{ do: 'say', who: 'haku', line: 'hakuStart' }, { do: 'boost', who: 'haku', tech: 'jeMirrorStep' }] },
           { when: { on: 'hpBelow', who: 'haku', pct: 0.75 }, do: [{ do: 'say', who: 'sasuke', line: 'hakuSharingan' }, { do: 'form', who: 'sasuke', form: 'sharingan' }] },
           // Se o Sasuke ainda estiver de pé, ele se joga na frente do Naruto; se já caiu, a regra seguinte já disparou.
           { when: { on: 'hpBelow', who: 'haku', pct: 0.55 }, do: [{ do: 'knock', who: 'sasuke' }] },
@@ -119,14 +127,7 @@ export const stages: StageDef[] = [
     scene: 'arena',
     stops: [
       { kind: 'event', id: 'writtenTest', event: 'writtenTest' },
-      // Um dos ninjas da Grama é o Orochimaru disfarçado.
-      {
-        kind: 'fight',
-        id: 'grass',
-        scene: 'deathForest',
-        enemies: ['grassNinja', 'grassNinja'],
-        script: [{ when: { on: 'down', who: 'grassNinja' }, do: [{ do: 'say', who: 'narrator', line: 'grassDisguise' }] }],
-      },
+      { kind: 'fight', id: 'grass', scene: 'deathForest', enemies: ['grassNinja', 'grassNinja'] },
       // Orochimaru na Floresta da Morte: resistir; o Sasuke sai com o selo amaldiçoado.
       {
         kind: 'story',
@@ -136,7 +137,8 @@ export const stages: StageDef[] = [
         win: { kind: 'survive', rounds: 4, target: 'orochimaru', pct: 0.8 },
         script: [
           { when: { on: 'start' }, do: [{ do: 'say', who: 'orochimaru', line: 'orochiStart' }, { do: 'flag', id: 'curseMark' }] },
-          { when: { on: 'round', round: 2 }, do: [{ do: 'say', who: 'orochimaru', line: 'orochiMark' }] },
+          // A mordida do selo: o Sasuke fica fora da luta por dois turnos.
+          { when: { on: 'round', round: 2 }, do: [{ do: 'say', who: 'orochimaru', line: 'orochiMark' }, { do: 'effect', who: 'sasuke', effect: 'stun', turns: 2 }] },
           { when: { on: 'hpBelow', who: 'naruto', pct: 0.5 }, do: [{ do: 'say', who: 'naruto', line: 'orochiNaruto' }, { do: 'form', who: 'naruto', form: 'kyuubiBrief' }] },
         ],
       },
@@ -157,10 +159,9 @@ export const stages: StageDef[] = [
       { kind: 'elite', id: 'rainTrio', scene: 'deathForest', enemies: ['rainNinja', 'rainNinja', 'rainNinja'] },
       { kind: 'event', id: 'leeGaara', event: 'leeGaara' },
       { kind: 'story', id: 'kiba', enemies: ['kiba', 'akamaru'], team: [] },
-      { kind: 'event', id: 'hinataOintment', event: 'hinataOintment' },
-      { kind: 'event', id: 'hinataNeji', event: 'hinataNeji' },
-      { kind: 'event', id: 'preliminaries', event: 'preliminaries' },
-      { kind: 'event', id: 'toadSummon', event: 'toadSummon' },
+      // As preliminares (a pomada e a luta da Hinata) e o mês de treino (Ebisu ou hospital, depois o Jiraiya).
+      { kind: 'event', id: 'hinataNeji', event: 'hinataOintment', then: ['hinataNeji'] },
+      { kind: 'event', id: 'toadSummon', event: 'preliminaries', then: ['toadSummon'] },
       { kind: 'treasure', id: 'treasure2' },
       // Neji fecha os pontos de chakra; o Naruto pede o chakra da Kyuubi. A promessa à Hinata dá determinação.
       {
@@ -170,6 +171,8 @@ export const stages: StageDef[] = [
         team: [],
         script: [
           { when: { on: 'start' }, do: [{ do: 'say', who: 'neji', line: 'nejiStart' }] },
+          // As 64 palmas fecham os pontos de chakra: dois turnos só de taijutsu.
+          { when: { on: 'round', round: 2 }, do: [{ do: 'say', who: 'neji', line: 'nejiPalms' }, { do: 'effect', who: 'naruto', effect: 'chakraBlock', turns: 2 }] },
           { when: { on: 'start' }, if: { flag: 'promessaNeji' }, do: [{ do: 'say', who: 'naruto', line: 'nejiPromise' }, { do: 'form', who: 'naruto', form: 'resolve' }] },
           { when: { on: 'hpBelow', who: 'naruto', pct: 0.4 }, do: [{ do: 'say', who: 'naruto', line: 'nejiKyuubi' }, { do: 'form', who: 'naruto', form: 'kyuubiBrief' }] },
         ],
@@ -177,6 +180,8 @@ export const stages: StageDef[] = [
       { kind: 'fight', id: 'invasion', scene: 'konoha', enemies: ['soundNinja', 'soundNinja', 'grassNinja'] },
       { kind: 'rest', id: 'rest2', scene: 'konoha' },
       // Gaara em três fases: Gaara, Shukaku contra o Gamabunta (com a Kyuubi), e o Gaara exausto depois da cabeçada.
+      // Com o Shukaku a 50%, o Gamabunta vira raposa e o segura; o jogador dá a cabeçada (`jHeadbutt`) que acorda o
+      // Gaara. Sem a cabeçada, a 15% a cena acontece sozinha.
       {
         kind: 'boss',
         id: 'gaara',
@@ -184,7 +189,7 @@ export const stages: StageDef[] = [
         team: [],
         script: [
           { when: { on: 'start' }, do: [{ do: 'say', who: 'gaara', line: 'gaaraStart' }] },
-          { when: { on: 'start' }, if: { flag: 'viuGaara' }, do: [{ do: 'say', who: 'naruto', line: 'gaaraLee' }] },
+          { when: { on: 'start' }, if: { flag: 'viuGaara' }, do: [{ do: 'say', who: 'naruto', line: 'gaaraLee' }, { do: 'boost', who: 'naruto', tech: 'jReadSand' }] },
           {
             when: { on: 'hpBelow', who: 'gaara', pct: 0.4 },
             do: [
@@ -196,9 +201,30 @@ export const stages: StageDef[] = [
             ],
           },
           {
-            when: { on: 'hpBelow', who: 'shukaku', pct: 0.3 },
+            when: { on: 'hpBelow', who: 'shukaku', pct: 0.5 },
+            do: [
+              { do: 'say', who: 'gamabuntaAlly', line: 'gaaraHenge' },
+              { do: 'form', who: 'gamabuntaAlly', form: 'foxHenge' },
+              { do: 'effect', who: 'shukaku', effect: 'stun', turns: 2 },
+              { do: 'teach', who: 'naruto', tech: 'jHeadbutt' },
+            ],
+          },
+          {
+            when: { on: 'tech', tech: 'jHeadbutt', who: 'naruto' },
+            ifNot: { flag: 'gaaraAwake' },
+            do: [
+              { do: 'say', who: 'naruto', line: 'gaaraWake' },
+              { do: 'flag', id: 'gaaraAwake' },
+              { do: 'replace', who: 'shukaku', with: 'gaaraWeak' },
+              { do: 'leave', who: 'gamabuntaAlly' },
+            ],
+          },
+          {
+            when: { on: 'hpBelow', who: 'shukaku', pct: 0.15 },
+            ifNot: { flag: 'gaaraAwake' },
             do: [
               { do: 'say', who: 'narrator', line: 'gaaraHeadbutt' },
+              { do: 'flag', id: 'gaaraAwake' },
               { do: 'replace', who: 'shukaku', with: 'gaaraWeak' },
               { do: 'leave', who: 'gamabuntaAlly' },
             ],
@@ -214,10 +240,8 @@ export const stages: StageDef[] = [
     team: ['jiraiya'],
     scene: 'forest',
     stops: [
-      { kind: 'event', id: 'jiraiyaJourney', scene: 'konoha', event: 'jiraiyaJourney' },
-      { kind: 'event', id: 'itachiKisame', scene: 'konoha', event: 'itachiKisame' },
-      { kind: 'event', id: 'rasengan1', event: 'rasengan1' },
-      { kind: 'event', id: 'rasengan2', event: 'rasengan2' },
+      { kind: 'event', id: 'itachiKisame', scene: 'konoha', event: 'jiraiyaJourney', then: ['itachiKisame'] },
+      { kind: 'event', id: 'rasengan2', event: 'rasengan1', then: ['rasengan2'] },
       { kind: 'event', id: 'tsunade', event: 'tsunade' },
       { kind: 'rest', id: 'rest4' },
       { kind: 'event', id: 'rasenganTraining', event: 'rasenganTraining' },
@@ -230,8 +254,9 @@ export const stages: StageDef[] = [
         win: { kind: 'finisher', target: 'kabuto', technique: 'jRasengan' },
         script: [
           { when: { on: 'start' }, do: [{ do: 'say', who: 'kabuto', line: 'kabutoStart' }] },
-          { when: { on: 'hpBelow', who: 'kabuto', pct: 0.25 }, do: [{ do: 'say', who: 'kabuto', line: 'kabutoHeal' }] },
-          { when: { on: 'tech', tech: 'jRasengan', who: 'naruto' }, do: [{ do: 'say', who: 'naruto', line: 'kabutoRasengan' }] },
+          { when: { on: 'hpBelow', who: 'kabuto', pct: 0.25 }, do: [{ do: 'say', who: 'kabuto', line: 'kabutoHeal' }, { do: 'heal', who: 'kabuto', pct: 0.15 }] },
+          // O primeiro Rasengan pega o Kabuto de surpresa: dois turnos atordoado.
+          { when: { on: 'tech', tech: 'jRasengan', who: 'naruto' }, do: [{ do: 'say', who: 'naruto', line: 'kabutoRasengan' }, { do: 'effect', who: 'kabuto', effect: 'stun', turns: 2 }] },
           { when: { on: 'down', who: 'kabuto' }, do: [{ do: 'say', who: 'narrator', line: 'kabutoExhausted' }] },
         ],
       },
@@ -258,9 +283,8 @@ export const stages: StageDef[] = [
       { kind: 'elite', id: 'jirobo', enemies: ['jirobo'], team: ['choji', 'shikamaru'] },
       { kind: 'event', id: 'chojiStays', event: 'chojiStays' },
       { kind: 'treasure', id: 'treasure3' },
-      { kind: 'event', id: 'nejiStays', event: 'nejiStays' },
-      { kind: 'event', id: 'shikamaruStays', event: 'shikamaruStays' },
-      { kind: 'event', id: 'kibaStays', event: 'kibaStays' },
+      // Um a um: o Neji, o Shikamaru e o Kiba ficam para trás, em sequência.
+      { kind: 'event', id: 'kibaStays', event: 'nejiStays', then: ['shikamaruStays', 'kibaStays'] },
       // Kimimaro: o Naruto luta sozinho até o Lee chegar e mandá-lo seguir atrás do Sasuke.
       {
         kind: 'story',
@@ -287,7 +311,7 @@ export const stages: StageDef[] = [
           { when: { on: 'start' }, if: { flag: 'valleyFriend' }, do: [{ do: 'form', who: 'naruto', form: 'resolve' }] },
           { when: { on: 'hpBelow', who: 'sasukeFinal', pct: 0.6 }, do: [{ do: 'say', who: 'sasukeFinal', line: 'valleyCurse' }, { do: 'form', who: 'sasukeFinal', form: 'curseMark2' }] },
           { when: { on: 'hpBelow', who: 'naruto', pct: 0.6 }, if: { flag: 'valleyForce' }, do: [{ do: 'say', who: 'naruto', line: 'valleyKyuubi' }, { do: 'form', who: 'naruto', form: 'oneTail' }] },
-          { when: { on: 'hpBelow', who: 'naruto', pct: 0.45 }, do: [{ do: 'say', who: 'naruto', line: 'valleyKyuubi' }, { do: 'form', who: 'naruto', form: 'oneTail' }] },
+          { when: { on: 'hpBelow', who: 'naruto', pct: 0.45 }, ifNot: { flag: 'valleyForce' }, do: [{ do: 'say', who: 'naruto', line: 'valleyKyuubi' }, { do: 'form', who: 'naruto', form: 'oneTail' }] },
           {
             when: { on: 'hpBelow', who: 'sasukeFinal', pct: 0.2 },
             do: [

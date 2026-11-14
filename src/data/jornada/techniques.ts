@@ -32,6 +32,12 @@ export const allyTechniques: JTechnique[] = [
   // Gamabunta aliado (entra pelo roteiro contra o Shukaku).
   { id: 'jbBlade', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 20, chakraCost: 0, accuracy: 0.85 },
   { id: 'jbWaterGun', type: 'ninjutsu', element: 'water', target: 'allEnemies', baseDamage: 14, chakraCost: 8 },
+  // Gamabunta transformado em raposa (roteiro do Gaara, v0.70.0): as presas seguram o Shukaku.
+  { id: 'jbFoxFang', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 22, chakraCost: 0, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.5 } },
+  // Cabeçada no Gaara adormecido: o roteiro dá ao Naruto com a raposa segurando o Shukaku; usar acorda o Gaara.
+  { id: 'jHeadbutt', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 10, chakraCost: 0, accuracy: 1 },
+  // Quem viu o Lee enfrentar o Gaara já conhece a areia (roteiro: liga na abertura da luta).
+  { id: 'jReadSand', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, boost: { evasion: 0.2, turns: 3 }, active: true },
   // Garras da Kyuubi: vem com a forma do chakra da raposa (roteiro), não pela árvore.
   { id: 'jKyuubiClaw', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, hits: 2, chakraCost: 0, accuracy: 0.9 },
   { id: 'jSexyJutsu', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 3, accuracy: 0.75, onHit: { effect: 'stun', chance: 0.6 }, cooldown: 3 },
@@ -159,6 +165,9 @@ export const enemyTechniques: JTechnique[] = [
   // Zabuza
   { id: 'jeCleaver', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 17, chakraCost: 0, accuracy: 0.8, penetration: 0.15 },
   { id: 'jeWaterPrison', type: 'ninjutsu', element: 'water', target: 'enemy', baseDamage: 0, chakraCost: 5, accuracy: 0.8, onHit: { effect: 'stun', chance: 1, turns: 2 }, cooldown: 4 },
+  // Névoa do Zabuza e espelhos do Haku: o roteiro liga na abertura (não são ações da IA).
+  { id: 'jeHiddenMist', type: 'ninjutsu', element: 'water', target: 'self', baseDamage: 0, chakraCost: 0, boost: { evasion: 0.2, turns: 2 }, active: true },
+  { id: 'jeMirrorStep', type: 'ninjutsu', element: 'water', kekkeiGenkai: 'ice', target: 'self', baseDamage: 0, chakraCost: 0, boost: { evasion: 0.2, turns: 2 }, active: true },
   { id: 'jeWaterDragon', type: 'ninjutsu', element: 'water', target: 'allEnemies', baseDamage: 13, chakraCost: 8 },
   // Haku
   { id: 'jeSenbon', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 5, hits: 3, chakraCost: 0, accuracy: 0.85 },

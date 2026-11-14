@@ -82,6 +82,9 @@ Entre as duas melhores opções, a sorte desempata (30%) quando a segunda vale p
 | Girinos | Ninjutsu | água | um inimigo | 3 | 0 | 90% | a invocação que falhou |
 | Lâmina do Gamabunta | Taijutsu | — | um inimigo | 20 | 0 | 85% | só do Gamabunta aliado |
 | Rajada de água | Ninjutsu | água | todos os inimigos | 14 | 8 | 85% | só do Gamabunta aliado |
+| Presas da raposa | Taijutsu | — | um inimigo | 22 | 0 | 90% | atordoar 50% (2 t); só do Gamabunta transformado em raposa (roteiro do Gaara) |
+| Cabeçada | Taijutsu | — | um inimigo | 10 | 0 | 100% | o roteiro do Gaara dá ao Naruto com a raposa segurando o Shukaku; usar acorda o Gaara |
+| Olho na areia | Taijutsu | — | em si | — | 0 | — | +20% de esquiva por 3 turnos; o roteiro liga na abertura da luta do Gaara para quem guardou os movimentos da areia |
 | Rendan Uzumaki | Taijutsu | — | um inimigo | 7 | 3 | 85% | +1 golpe por clone (até +3) |
 | Mil Clones | Ninjutsu | — | todos os inimigos | 9 | 12 | 85% | 2 golpes; 3 clones |
 | Manto da Kyuubi | Ninjutsu | — | em si | — | 0 | 85% | custa 8% do HP; escudo 20% do HP de quem usa; espera 4; ativa de classe |

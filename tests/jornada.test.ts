@@ -162,7 +162,9 @@ describe('equipe de resgate (estágio 4 da História, Vale do Fim)', () => {
     expect(team('soundAmbush')).toEqual(['shikamaru', 'kibaAlly']);
     expect(team('jirobo')).toEqual(['choji', 'shikamaru']);
     // Desde a v0.68.0, os outros duelos do Quarteto são cenas: o amigo fica para trás e o Naruto segue.
-    for (const id of ['chojiStays', 'nejiStays', 'shikamaruStays', 'kibaStays']) expect(stage.stops.find((s) => s.id === id)?.kind, id).toBe('event');
+    // Desde a v0.70.0, o Neji, o Shikamaru e o Kiba são etapas de uma parada só ("Um a um").
+    expect(stage.stops.find((s) => s.id === 'chojiStays')?.kind).toBe('event');
+    expect(stage.stops.find((s) => s.id === 'kibaStays')).toMatchObject({ kind: 'event', event: 'nejiStays', then: ['shikamaruStays', 'kibaStays'] });
     expect(stage.stops.some((s) => s.id === 'kidomaruTayuya' || s.id === 'sakon')).toBe(false);
     expect(stage.team).not.toContain('jiraiya');
     expect(stage.team).not.toContain('sakura');
@@ -711,12 +713,12 @@ describe('run da Jornada', () => {
 
   it('evolução: pode aparecer na escolha do chefe, troca a inicial e nunca sai em outro sorteio', () => {
     const relics = data.relics;
-    expect(bossChoices(relics, ['irukaHeadband'], 3, 1, createRng(1))).toContain('firstHokageNecklace');
-    expect(bossChoices(relics, ['irukaHeadband'], 3, 1, createRng(1))).toHaveLength(3);
-    expect(bossChoices(relics, ['irukaHeadband'], 3, 0, createRng(1))).not.toContain('firstHokageNecklace');
-    // Já evoluiu: não aparece de novo, e outras classes não veem a evolução do Naruto.
-    expect(bossChoices(relics, ['firstHokageNecklace'], 3, 1, createRng(1))).not.toContain('firstHokageNecklace');
     expect(bossChoices(relics, ['academyManual'], 3, 1, createRng(1))).toContain('chuninVest');
+    expect(bossChoices(relics, ['academyManual'], 3, 1, createRng(1))).toHaveLength(3);
+    expect(bossChoices(relics, ['academyManual'], 3, 0, createRng(1))).not.toContain('chuninVest');
+    // Já evoluiu: não aparece de novo. O Colar do Naruto não sai de chefe (v0.70.0): a Tsunade entrega na história.
+    expect(bossChoices(relics, ['chuninVest'], 3, 1, createRng(1))).not.toContain('chuninVest');
+    expect(bossChoices(relics, ['irukaHeadband'], 3, 1, createRng(1))).not.toContain('firstHokageNecklace');
 
     const run = gainRelic({ ...newRun(1, 'normal', data), relics: ['irukaHeadband', 'goggles'] }, 'firstHokageNecklace', data);
     expect(run.relics).toEqual(['firstHokageNecklace', 'goggles']);
@@ -761,9 +763,18 @@ describe('run da Jornada', () => {
       expect(memberSheet(run, run.hero, data).maxHp - memberSheet(at, at.hero, data).maxHp, opt).toBe(5);
       if (opt === 'train') expect(run.members[run.hero]!.hp).toBe(55);
     }
-    // A bandana nunca sai em sorteio nem como evolução do chefe; com ela, o chefe oferece o Colar.
+    // A bandana nunca sai em sorteio nem como evolução do chefe.
     expect(bossChoices(data.relics, ['aviatorGoggles'], 3, 1, createRng(1))).not.toContain('irukaHeadband');
-    expect(bossChoices(data.relics, ['irukaHeadband'], 3, 1, createRng(1))).toContain('firstHokageNecklace');
+    // O Colar do Primeiro Hokage vem da Tsunade, na cena dos Sannin, nas duas escolhas (v0.70.0).
+    const sannin = data.stages.findIndex((s) => s.id === 'sannin');
+    const scene = data.stages[sannin]!.stops.findIndex((s) => s.id === 'sannin');
+    for (const opt of ['thank', 'spar']) {
+      const at = { ...newRun(1, 'normal', data), stageIndex: sannin, stopIndex: scene, relics: ['irukaHeadband', 'goggles'] };
+      const got = resolveEvent(at, opt, true, data);
+      expect(got.relic, opt).toBe('firstHokageNecklace');
+      expect(got.run.relics, opt).toEqual(['firstHokageNecklace', 'goggles']);
+      expect(got.gains, opt).toContainEqual({ kind: 'storyRelic', id: 'firstHokageNecklace' });
+    }
     // Run antiga que já tem a bandana: a Formatura não mexe nela.
     const old = { ...newRun(1, 'normal', data), stopIndex: grad, relics: ['irukaHeadband'] };
     expect(resolveEvent(old, 'train', true, data)).toMatchObject({ relic: null, run: { relics: ['irukaHeadband'] } });
@@ -1121,8 +1132,8 @@ describe('run da Jornada', () => {
       const run = { ...newGenericRun(5, 'normal', 'common', data), ryo: 9999 };
       const def = data.events.gBadOmen!;
       expect(def.options.find((o) => o.id === 'bargain')!.effects).toContainEqual({ kind: 'curse' });
-      expect(eventOptions(data.events.gShrine!, run.flags).map((o) => o.id)).toEqual(['pray']);
-      expect(eventOptions(data.events.gShrine!, [SHOP_CURSE]).map((o) => o.id)).toEqual(['purify', 'pray']);
+      expect(eventOptions(data.events.gShrine!, run.flags).map((o) => o.id)).toEqual(['pray', 'meditate']);
+      expect(eventOptions(data.events.gShrine!, [SHOP_CURSE]).map((o) => o.id)).toEqual(['purify', 'pray', 'meditate']);
       expect(data.generic.stages.every((st) => st.events.includes('gBadOmen') && st.events.includes('gShrine'))).toBe(true);
     });
 

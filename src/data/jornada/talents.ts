@@ -11,7 +11,8 @@ export const talents: TalentNode[] = [
   { id: 'tRendan', owner: 'naruto', branch: 'clones', tier: 2, col: -1, cost: 2, excludes: ['tCloneGuard'], learn: 'jRendan', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jRendan: 1.2 } } },
   { id: 'tCloneGuard', owner: 'naruto', branch: 'clones', tier: 2, col: 1, cost: 2, excludes: ['tRendan'], mods: { startClones: 1, taijutsuFlat: 2 } },
   { id: 'tCloneBlast', owner: 'naruto', branch: 'clones', tier: 3, cost: 2, requires: ['tRendan', 'tCloneGuard'], mods: { cloneCounter: 5 } },
-  { id: 'tTajuu', owner: 'naruto', branch: 'clones', tier: 4, cost: 3, learn: 'jTajuuBunshin' },
+  // O Mil Clones vem da história (marco do Mizuki, v0.70.0); o talento só o deixa mais forte.
+  { id: 'tTajuu', owner: 'naruto', branch: 'clones', tier: 4, cost: 3, mods: { techDamageMult: { jTajuuBunshin: 1.2 } } },
   { id: 'tShadowArmy', owner: 'naruto', branch: 'clones', tier: 5, cost: 3, capstone: true, mods: { maxClonesBonus: 2, damagePerClone: 0.03 } },
 
   { id: 'tPrankKing', owner: 'naruto', branch: 'pranks', tier: 1, cost: 1, mods: { evasion: 0.04, techChakraDiscount: { jSexyJutsu: 1 } } },

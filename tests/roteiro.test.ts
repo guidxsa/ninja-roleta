@@ -5,6 +5,8 @@ import { battleSetup, currentEvent, finishFight, grantedTechniques, heroKnown, n
 import type { ScriptRule } from '../src/core/jornada/script';
 import type { JBattle } from '../src/core/jornada/types';
 import { jornadaData as data } from '../src/data/jornada';
+import { eventOptions } from '../src/core/jornada/events';
+import { ptBR } from '../src/data/strings/ptBR';
 import { chooseAiAction } from '../src/core/jornada/ai';
 import { createRng } from '../src/core/rng';
 
@@ -115,9 +117,10 @@ describe('marcos da história (v0.66.0)', () => {
     const at = (stage: number, id: string) => ({ ...run, stageIndex: stage, stopIndex: data.stages[stage]!.stops.findIndex((s) => s.id === id) });
     expect(grantedTechniques(run, 'sasuke', data)).toEqual([]);
     expect(grantedTechniques(at(0, 'hakuFarewell'), 'sasuke', data)).toEqual(['jSharingan']);
-    expect(grantedTechniques(at(1, 'preliminaries'), 'sasuke', data)).toEqual(['jSharingan']);
-    expect(grantedTechniques(at(1, 'toadSummon'), 'sasuke', data)).toEqual(['jSharingan', 'jChidori']);
-    expect(grantedTechniques({ ...at(1, 'toadSummon'), mode: 'generic' }, 'sasuke', data)).toEqual([]);
+    // O mês de treino é uma parada só desde a v0.70.0 (Ebisu ou hospital, depois o Jiraiya): o Chidori vem ao passar dela.
+    expect(grantedTechniques(at(1, 'toadSummon'), 'sasuke', data)).toEqual(['jSharingan']);
+    expect(grantedTechniques(at(1, 'treasure2'), 'sasuke', data)).toEqual(['jSharingan', 'jChidori']);
+    expect(grantedTechniques({ ...at(1, 'treasure2'), mode: 'generic' }, 'sasuke', data)).toEqual([]);
   });
 
   it('marco do protagonista por parada: entra no que ele conhece e no moveset ao passar da parada', () => {
@@ -328,12 +331,16 @@ describe('História canônica: Ondas (v0.67.0)', () => {
     expect(next.talents).toContain('tNeverGiveUp');
   });
 
-  it('cena presenciada: uma opção só, efeito fixo (a promessa à Hinata deixa a marca)', () => {
-    const at = { ...newRun(3, 'normal', data), ...stopAt('exam', 'hinataNeji') };
-    const def = data.events.hinataNeji!;
-    expect(def.category).toBe('witness');
-    expect(def.options.map((o) => o.id)).toEqual(['continue']);
-    expect(resolveEvent(at, 'continue', true, data).run.flags).toContain('promessaNeji');
+  it('cena presenciada: o Naruto escolhe como reage (só a promessa à Hinata deixa a marca)', () => {
+    // As preliminares são uma parada de duas etapas (v0.70.0): a pomada e, depois, Hinata × Neji.
+    const at = { ...newRun(3, 'normal', data), ...stopAt('exam', 'hinataNeji'), beat: 1 };
+    const def = currentEvent(at, data)!;
+    expect([def.id, def.category]).toEqual(['hinataNeji', 'witness']);
+    expect(def.options.map((o) => o.id)).toEqual(['promise', 'carry']);
+    expect(resolveEvent(at, 'promise', true, data).run.flags).toContain('promessaNeji');
+    const carried = resolveEvent(at, 'carry', true, data);
+    expect(carried.run.flags).not.toContain('promessaNeji');
+    expect(carried.done).toBe(true);
   });
 });
 
@@ -371,7 +378,8 @@ describe('História canônica: Exame (v0.67.0)', () => {
   });
 
   it('o contrato com os sapos dá o Kuchiyose no Jutsu, qualquer que seja a escolha', () => {
-    const at = { ...newRun(3, 'normal', data), ...stopAt('exam', 'toadSummon') };
+    // Segunda etapa do mês de treino (a primeira é o Ebisu ou o hospital).
+    const at = { ...newRun(3, 'normal', data), ...stopAt('exam', 'toadSummon'), beat: 1 };
     expect(heroKnown(at, data)).not.toContain('jKuchiyose');
     for (const [opt, won] of [['summon', false], ['peek', true]] as const) {
       const next = resolveEvent(at, opt, won, data).run;
@@ -443,5 +451,151 @@ describe('História canônica: Sannin e Resgate (v0.67.0)', () => {
       expect(end.log.at(-1)).toMatchObject({ type: 'end', scripted: true });
       expect(says(end)).toContain('valleyEnd');
     }
+  });
+});
+
+describe('revisão da História, parte 2 (v0.70.0)', () => {
+  const J = ptBR.jornada;
+  const scripts = data.stages.flatMap((st) => st.stops).flatMap((stop) => ('script' in stop ? (stop.script ?? []) : []));
+
+  it('Kage Bunshin: o Naruto começa sem ele e aprende no pergaminho proibido, qualquer que seja a escolha', () => {
+    const run = newRun(1, 'normal', data);
+    expect(heroKnown(run, data)).not.toContain('jKageBunshin');
+    for (const [opt, won] of [['scroll', true], ['scroll', false], ['stubborn', true]] as const) {
+      expect(heroKnown(resolveEvent(run, opt, won, data).run, data), opt).toContain('jKageBunshin');
+    }
+  });
+
+  it('Mil Clones: depois do Mizuki fica no kit e entra no moveset; o talento só deixa a técnica mais forte', () => {
+    const at = { ...newRun(3, 'easy', data), ...stopAt('waves', 'mizuki') };
+    expect(heroKnown(at, data)).not.toContain('jTajuuBunshin');
+    const end = playOut(startBattle(battleSetup(at, data), data, createRng(2)), data, createRng(2));
+    const next = finishFight(at, end, data).run;
+    expect(heroKnown(next, data)).toContain('jTajuuBunshin');
+    expect(next.moveset).toContain('jTajuuBunshin');
+    const talent = data.talents.find((t) => t.id === 'tTajuu')!;
+    expect(talent.learn).toBeUndefined();
+    expect(talent.mods?.techDamageMult).toEqual({ jTajuuBunshin: 1.2 });
+  });
+
+  it('Neji: a Kyuubi de 3 turnos acaba e a determinação da promessa continua', () => {
+    const at = { ...newRun(3, 'normal', data), ...stopAt('exam', 'neji'), flags: ['promessaNeji'] };
+    const b = openBattle(battleSetup(at, data), data);
+    const me = b.fighters[0]!;
+    const naruto = data.characters.naruto!;
+    const brief = naruto.forms!.find((f) => f.id === 'kyuubiBrief')!;
+    expect(me.forms!.map((f) => f.def.id)).toEqual(['resolve']);
+    const plain = openBattle(battleSetup({ ...at, flags: [] }, data), data).fighters[0]!.mods.damageMult;
+    // Liga a Kyuubi por cima (como o roteiro faz a 40% do HP) e deixa os turnos dela passarem.
+    let s = hit(startBattle({ ...battleSetup(at, data), script: [rule({ on: 'start' }, { do: 'form', who: 'naruto', form: 'resolve' }, { do: 'form', who: 'naruto', form: 'kyuubiBrief' })], enemies: [foe({ hp: 9999, maxHp: 9999 })] }, data, fixed(0)));
+    for (let i = 1; i < brief.turns!; i++) s = hit(s);
+    const after = s.fighters[0]!;
+    expect(after.form).toBe('resolve');
+    expect(after.mods.surviveOnce).toBe(true);
+    expect(after.mods.damageMult).toBeCloseTo(plain * 1.1);
+    expect(says(s)).toContain('kyuubiEnd');
+  });
+
+  it('teste do sino: o Kakashi derruba a equipe por etapas e a luta acaba como lição', () => {
+    const run = { ...newRun(3, 'easy', data), ...stopAt('waves', 'bells') };
+    const end = playOut(startBattle(battleSetup(run, data), data, createRng(1)), data, createRng(1));
+    expect(end.status).toBe('lost');
+    expect(end.log.at(-1)).toMatchObject({ type: 'end', status: 'lost', scripted: true });
+    // Ninguém cai por dano antes da cena: cada queda da equipe vem do roteiro, na ordem Sakura, Sasuke, Naruto.
+    const knocked = end.log.flatMap((e) => (e.type === 'down' && e.scripted ? [end.fighters.find((f) => f.uid === e.target)!.defId] : []));
+    expect(['sakura', 'sasuke', 'naruto'].slice(0, knocked.length)).toEqual(knocked);
+    const lines = says(end);
+    expect(lines[0]).toBe('bellsStart');
+    expect(lines.some((l) => l === 'bellsNaruto' || l === 'bellsTime')).toBe(true);
+    expect(J.inevitableLesson.bells).toBeTruthy();
+  });
+
+  it('Gaara: o Gamabunta vira raposa, segura o Shukaku, e a cabeçada do jogador acorda o Gaara', () => {
+    const run = { ...newRun(3, 'easy', data), ...stopAt('exam', 'gaara'), level: 8, relics: ['irukaHeadband'] };
+    const rng = createRng(26);
+    let b = startBattle(battleSetup(run, data), data, createRng(26));
+    const naruto = () => b.fighters.find((f) => f.protagonist)!;
+    for (let i = 0; i < 300 && b.status === 'ongoing' && !naruto().techniques.includes('jHeadbutt'); i++) b = playerAct(b, chooseAiAction(b, naruto(), data, rng), data, rng);
+    expect(b.status).toBe('ongoing');
+    const toad = b.fighters.find((f) => f.defId === 'gamabuntaAlly')!;
+    expect(toad.form).toBe('foxHenge');
+    expect(toad.techniques).toContain('jbFoxFang');
+    expect(says(b)).toContain('gaaraHenge');
+    const shukaku = b.fighters.find((f) => f.defId === 'shukaku' && !f.gone)!;
+    expect(shukaku.effects.some((e) => e.kind === 'stun')).toBe(true);
+    // A cabeçada é do jogador: usar a técnica troca o Shukaku pelo Gaara acordado e manda o Gamabunta embora.
+    b = playerAct(b, { kind: 'tech', techId: 'jHeadbutt', target: shukaku.uid }, data, fixed(0));
+    expect(says(b)).toContain('gaaraWake');
+    expect(says(b)).not.toContain('gaaraHeadbutt');
+    expect(b.fighters.find((f) => f.defId === 'shukaku')!.gone).toBe(true);
+    expect(b.fighters.find((f) => f.defId === 'gamabuntaAlly')!.gone).toBe(true);
+    expect(b.fighters.filter((f) => f.defId === 'gaaraWeak')).toHaveLength(1);
+  });
+
+  it('Gaara sem a cabeçada: a 15% do Shukaku a cena acontece sozinha, uma vez só', () => {
+    const run = { ...newRun(3, 'easy', data), ...stopAt('exam', 'gaara'), level: 8, relics: ['irukaHeadband'] };
+    const end = playOut(startBattle(battleSetup(run, data), data, createRng(26)), data, createRng(26));
+    expect(end.status).toBe('won');
+    expect(end.fighters.filter((f) => f.defId === 'gaaraWeak')).toHaveLength(1);
+    expect(says(end).filter((l) => l === 'gaaraHeadbutt' || l === 'gaaraWake')).toHaveLength(1);
+  });
+
+  it('quem guardou os movimentos da areia entra na luta do Gaara com esquiva', () => {
+    const at = { ...newRun(3, 'normal', data), ...stopAt('exam', 'gaara') };
+    expect(openBattle(battleSetup(at, data), data).fighters[0]!.boost).toBeNull();
+    expect(openBattle(battleSetup({ ...at, flags: ['viuGaara'] }, data), data).fighters[0]!.boost).toMatchObject({ techId: 'jReadSand', evasion: 0.2 });
+  });
+
+  it('roteiros: toda interrupção no meio da luta muda algo (só a abertura e o fim podem ser só fala)', () => {
+    const onlyTalk = scripts.filter((r) => r.do.every((a) => a.do === 'say') && r.when.on !== 'start' && r.when.on !== 'down');
+    expect(onlyTalk).toEqual([]);
+    // Fala depois de uma queda só vale como fecho da luta (o último inimigo caiu), nunca no meio.
+    const afterDown = scripts.filter((r) => r.when.on === 'down' && r.do.every((a) => a.do === 'say')).map((r) => (r.when.on === 'down' ? r.when.who : ''));
+    expect(afterDown.sort()).toEqual(['gaaraWeak', 'kabuto']);
+  });
+
+  it('textos: toda fala e toda forma do roteiro têm texto', () => {
+    const lines = scripts.flatMap((r) => r.do).flatMap((a) => (a.do === 'say' ? [a.line] : []));
+    const defs = [...Object.values(data.characters), ...Object.values(data.enemies)];
+    const forms = defs.flatMap((d) => d.forms ?? []);
+    const exits = forms.flatMap((f) => (f.exitLine ? [f.exitLine] : []));
+    expect([...lines, ...exits].filter((l) => !J.script[l])).toEqual([]);
+    expect(forms.map((f) => f.id).filter((id) => !J.forms[id])).toEqual([]);
+    // Nenhuma fala sobrando nos textos.
+    expect(Object.keys(J.script).filter((k) => !lines.includes(k) && !exits.includes(k))).toEqual([]);
+  });
+
+  it('escolhas: pelo menos duas opções em todo evento, com qualquer marca e sem ryō, e nenhuma pista entre parênteses', () => {
+    const flags = [...new Set(Object.values(data.events).flatMap((e) => e.options).flatMap((o) => [o.requires, o.hiddenBy]).filter((f): f is string => Boolean(f)))];
+    for (const def of Object.values(data.events)) {
+      // Cada marca que mexe nas opções, ligada ou desligada.
+      for (let mask = 0; mask < 1 << flags.length; mask++) {
+        const on = flags.filter((_, i) => mask & (1 << i));
+        expect(eventOptions(def, on, 0).length, `${def.id} com [${on.join(', ')}]`).toBeGreaterThanOrEqual(2);
+      }
+      const txt = J.events[def.id]!;
+      expect(txt, def.id).toBeDefined();
+      for (const o of def.options) {
+        expect(txt.options[o.id], `${def.id}.${o.id}`).toBeTruthy();
+        expect(txt.options[o.id], `${def.id}.${o.id}`).not.toMatch(/[()]/);
+      }
+    }
+  });
+
+  it('paradas juntadas: cada sequência virou uma parada de etapas, e todo evento da História ainda acontece', () => {
+    const stops = data.stages.flatMap((st) => st.stops);
+    const merged = Object.fromEntries(stops.flatMap((s) => (s.kind === 'event' && s.then ? [[s.id, [s.event, ...s.then]]] : [])));
+    expect(merged).toEqual({
+      hinataNeji: ['hinataOintment', 'hinataNeji'],
+      toadSummon: ['preliminaries', 'toadSummon'],
+      itachiKisame: ['jiraiyaJourney', 'itachiKisame'],
+      rasengan2: ['rasengan1', 'rasengan2'],
+      kibaStays: ['nejiStays', 'shikamaruStays', 'kibaStays'],
+    });
+    expect(stops).toHaveLength(48);
+    const played = stops.flatMap((s) => (s.kind === 'event' ? [s.event, ...(s.then ?? [])] : []));
+    expect(new Set(played).size).toBe(played.length);
+    for (const id of played) expect(data.events[id], id).toBeDefined();
+    for (const s of stops) expect(J.stops[s.id], s.id).toBeTruthy();
   });
 });
