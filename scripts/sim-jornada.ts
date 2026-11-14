@@ -17,6 +17,7 @@ import {
   buyTalent,
   chooseBossRelic,
   continueCycle,
+  currentEvent,
   currentStop,
   finishFight,
   gainRelic,
@@ -128,7 +129,7 @@ function playCycle(run0: JRun, rng: Rng, mode: Mode): { run: JRun; stop: string 
     }
     const stop = currentStop(run, data)!;
     if (stop.kind === 'event') {
-      const opt = eventOptions(data.events[stop.event]!, run.flags, run.ryo)[0]!;
+      const opt = eventOptions(currentEvent(run, data)!, run.flags, run.ryo)[0]!;
       run = resolveEvent(run, opt.id, rng() < 0.6, data).run;
     } else if (stop.kind === 'rest') {
       const hero = memberSheet(run, run.hero, data);

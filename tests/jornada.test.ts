@@ -43,6 +43,7 @@ import {
   cycleEnemyMult,
   chooseNode,
   choosingNode,
+  currentEvent,
   currentStop,
   finishFight,
   gainRelic,
@@ -1411,7 +1412,7 @@ describe('Caminho Ninja', () => {
       }
       const stop = currentStop(run, data)!;
       if (isFight(stop)) run = finishFight(run, won(startBattle(battleSetup(run, data), data, createRng(1))), data).run;
-      else if (stop.kind === 'event') run = resolveEvent(run, eventOptions(data.events[stop.event]!, run.flags, run.ryo)[0]!.id, true, data).run;
+      else if (stop.kind === 'event') run = resolveEvent(run, eventOptions(currentEvent(run, data)!, run.flags, run.ryo)[0]!.id, true, data).run;
       else if (stop.kind === 'rest') run = rest(run, 'heal', data);
       else run = leaveStop(run, data);
     }
@@ -1870,7 +1871,7 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
       }
       const stop = currentStop(run, data)!;
       if (isFight(stop)) run = finishFight(run, won(startBattle(battleSetup(run, data), data, createRng(1))), data).run;
-      else if (stop.kind === 'event') run = resolveEvent(run, eventOptions(data.events[stop.event]!, run.flags, run.ryo)[0]!.id, true, data).run;
+      else if (stop.kind === 'event') run = resolveEvent(run, eventOptions(currentEvent(run, data)!, run.flags, run.ryo)[0]!.id, true, data).run;
       else if (stop.kind === 'rest') run = rest(run, 'heal', data);
       else run = leaveStop(run, data);
     }

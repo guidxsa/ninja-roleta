@@ -22,7 +22,8 @@ export type StopDef = (
        */
       inevitableLoss?: boolean;
     }
-  | { kind: 'event'; id: string; event: string }
+  /** `then`: eventos seguintes na mesma parada (etapas), abertos em sequência sem voltar à trilha (v0.70.0). */
+  | { kind: 'event'; id: string; event: string; then?: string[] }
   | { kind: 'rest'; id: string }
   | { kind: 'treasure'; id: string }
 ) & {

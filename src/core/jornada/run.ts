@@ -6,7 +6,7 @@ import { createRng, type Rng } from '../rng';
 import type { Element } from '../types';
 import { allyResults, emptyMods, enemySeed, mergeMods, type BattleSetup, type FighterSeed } from './battle';
 import type { JornadaData, StoryGrant } from './data';
-import { eventOptions, SHOP_CURSE, type EventEffect } from './events';
+import { eventOptions, SHOP_CURSE, type EventDef, type EventEffect } from './events';
 import { generateMap, mapNode, nextNodes, type StageMap } from './map';
 import { bossChoices, dropRelic, rollRelic, rollRelics, type RelicDef } from './relics';
 import { canBuyTalent, talentRankCost, treeComplete, type TalentContext } from './talents';
@@ -109,6 +109,8 @@ export interface JRun {
   canonTree?: 1;
   /** Cronologia da v0.68.0 (a jornada pela perspectiva do Naruto) já aplicada (sem o campo: migrado ao carregar). */
   journey?: 1;
+  /** Etapa do evento em andamento na parada atual (paradas com mais de um evento, v0.70.0); sem o campo, a primeira. */
+  beat?: number;
 }
 
 export interface ShopStock {
@@ -1072,21 +1074,51 @@ export function rest(prev: JRun, choice: RestChoice, data: JornadaData): JRun {
 // ---------------------------------------------------------------------------
 // Eventos
 
-/** Aplica uma escolha de evento (com o resultado do minijogo, se houver) e avança. */
-export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean, data: JornadaData): { run: JRun; relic: string | null } {
+/** Eventos de uma parada, na ordem: o principal e as etapas seguintes (`then`, v0.70.0). */
+export const stopEvents = (stop: Extract<StopDef, { kind: 'event' }>): string[] => [stop.event, ...(stop.then ?? [])];
+
+/** O evento da vez na parada atual (a etapa em que a run está), ou null fora de uma parada de evento. */
+export function currentEvent(run: JRun, data: JornadaData): EventDef | null {
+  const stop = currentStop(run, data);
+  if (stop?.kind !== 'event') return null;
+  const ids = stopEvents(stop);
+  return data.events[ids[Math.min(run.beat ?? 0, ids.length - 1)]!] ?? null;
+}
+
+export interface EventOutcome {
+  run: JRun;
+  relic: string | null;
+  /** O que a escolha deu, com os valores de verdade (a interface mostra depois da escolha: "O que mudou"). */
+  gains: EventEffect[];
+  /** A parada acabou (não há outra etapa): a run avançou. */
+  done: boolean;
+}
+
+/**
+ * Aplica uma escolha de evento (com o resultado do minijogo, se houver). Na última etapa da parada, avança; antes
+ * disso, só passa para a etapa seguinte (`run.beat`), para o F5 no meio não repetir o que já foi dado.
+ */
+export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean, data: JornadaData): EventOutcome {
   const stop = currentStop(prev, data);
   if (stop?.kind !== 'event') throw new Error('a parada atual não é um evento');
-  const def = data.events[stop.event]!;
+  const def = currentEvent(prev, data)!;
   const opt = eventOptions(def, prev.flags, prev.ryo).find((o) => o.id === optionId);
   if (!opt) throw new Error(`opção indisponível: ${optionId}`);
   let run = clone(prev);
   let relic: string | null = null;
+  const gains: EventEffect[] = [];
   run.ryo -= opt.cost ?? 0;
   run.flags = [...new Set([...run.flags, `ev:${def.id}`])];
   const effects: EventEffect[] = opt.minigame && !wonMinigame ? (opt.onLose ?? []) : opt.effects;
   for (const e of effects) {
-    if (e.kind === 'ryo') run.ryo += ryoGain(run, e.n, data);
-    else if (e.kind === 'talent') addTalentPoints(run, e.n, data);
+    const relicBefore: string | null = relic;
+    if (e.kind === 'ryo') {
+      const n = ryoGain(run, e.n, data);
+      run.ryo += n;
+      gains.push({ kind: 'ryo', n });
+      continue;
+    }
+    if (e.kind === 'talent') addTalentPoints(run, e.n, data);
     else if (e.kind === 'xp') gainXp(run, e.n, data);
     else if (e.kind === 'healTeam') healAll(run, e, data, membersSeen(run, data));
     else if (e.kind === 'healFull') healFull(run, data, membersSeen(run, data));
@@ -1118,9 +1150,18 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
         if (run.members[id]) run.members[id] = { ...run.members[id], [e.stat]: run.members[id][e.stat] + e.n };
       }
     }
+    // Relíquia: entra no resultado a que veio de verdade (a sorteada pode não sair; a de história pode já estar na run).
+    if (e.kind === 'relic' || e.kind === 'storyRelic') {
+      if (relic && relic !== relicBefore) gains.push({ kind: 'storyRelic', id: relic });
+    } else if (e.kind !== 'flag') gains.push(e);
   }
-  advanceStop(run, data);
-  return { run, relic };
+  const beat = (prev.beat ?? 0) + 1;
+  const done = beat >= stopEvents(stop).length;
+  if (done) {
+    delete run.beat;
+    advanceStop(run, data);
+  } else run.beat = beat;
+  return { run, relic, gains, done };
 }
 
 // ---------------------------------------------------------------------------

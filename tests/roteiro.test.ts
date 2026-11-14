@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { downed, emptyMods, openBattle, playerAct, startBattle, type BattleSetup, type FighterSeed } from '../src/core/jornada/battle';
 import type { JornadaData } from '../src/core/jornada/data';
-import { battleSetup, finishFight, grantedTechniques, heroKnown, newRun, resolveEvent } from '../src/core/jornada/run';
+import { battleSetup, currentEvent, finishFight, grantedTechniques, heroKnown, newRun, resolveEvent } from '../src/core/jornada/run';
 import type { ScriptRule } from '../src/core/jornada/script';
 import type { JBattle } from '../src/core/jornada/types';
 import { jornadaData as data } from '../src/data/jornada';
@@ -228,6 +228,22 @@ describe('acréscimos do roteiro (v0.67.0)', () => {
     expect(s.fighters[0]!.boost).toMatchObject({ techId: 'jSharingan' });
     expect(says(s)).toEqual(['so-sem-a-marca']);
     expect(says(openBattle(setup({ script, runFlags: ['valleyForce'] }), data))).toEqual([]);
+  });
+
+  it('evento em etapas (v0.70.0): a parada só avança na última etapa, e a escolha devolve o que deu', () => {
+    const stages = structuredClone(data.campaigns.naruto!.stages);
+    stages[0]!.stops[0] = { kind: 'event', id: 'duo', event: 'graduation', then: ['team7'] };
+    const d: JornadaData = { ...data, stages, campaigns: { naruto: { ...data.campaigns.naruto!, stages } } };
+    const run = newRun(1, 'normal', d);
+    expect(currentEvent(run, d)!.id).toBe('graduation');
+    const first = resolveEvent(run, 'train', true, d);
+    expect([first.done, first.run.stopIndex, first.run.beat]).toEqual([false, 0, 1]);
+    expect(first.gains).toContainEqual({ kind: 'talent', n: 1 });
+    expect(first.gains).toContainEqual({ kind: 'storyRelic', id: 'irukaHeadband' });
+    expect(currentEvent(first.run, d)!.id).toBe('team7');
+    const second = resolveEvent(first.run, d.events.team7!.options[0]!.id, true, d);
+    expect([second.done, second.run.stopIndex, second.run.beat]).toEqual([true, 1, undefined]);
+    expect(second.run.flags).toEqual(expect.arrayContaining(['ev:graduation', 'ev:team7']));
   });
 
   it('técnica sorteada: paga uma vez e resolve a variante; os pesos dos talentos mudam o sorteio', () => {
