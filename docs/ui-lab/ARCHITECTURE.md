@@ -14,6 +14,12 @@ aprovado. Ainda não implementada.
 - Para isso o jogo precisa de **poucas costuras** (ver [§3](#3-costuras-no-código-do-jogo)), sem mudar comportamento:
   separar a inicialização das telas da Roleta e exportar as telas da Jornada.
 
+**Decidido com o usuário (14/11/2026):**
+
+- O lab é **só local**. Não vai para o Pages, nem agora nem como `/lab.html`.
+- O laboratório antigo (`?teste`) **sai do jogo**, junto com as costuras (§3.1). O `?seed=N` **fica**: é o replay do
+  Compartilhar e não é laboratório.
+
 ## 1. Como se encaixa no projeto
 
 O projeto já tem as peças que o lab precisa:
@@ -149,6 +155,28 @@ O lab só funciona se as telas puderem ser chamadas de fora. Hoje a Jornada quas
 | 6 | `jornadaBattle` e `battleScreen` aceitam um **estado inicial opcional** da luta | Para abrir uma luta no meio (aliado caído, forma ativa, Portões). Sem ele, igual a hoje |
 
 Fica de fora de propósito: nenhuma regra, número, texto ou classe CSS muda. Ids, `data-*` e classes continuam contrato.
+
+### 3.1 Retirada do `?teste`
+
+Vai na mesma versão das costuras: é menos código para mover na separação do `main.ts`.
+
+| Sai | Onde |
+|---|---|
+| `labScreen`, `labFlow`, `loadLab`, `saveLab`, `LAB_KEY` (`proto_lab_v1`) e o desvio `if (LAB.lab) return labFlow()` | `prototype/main.ts` |
+| As guardas `LAB.lab` (recorde, conquistas, relíquias, nome do jogador, rótulo "Laboratório" no rodapé) | `prototype/main.ts` |
+| O campo `lab` de `parseLabParams` (fica só a seed; a função pode virar `parseSeedParam`) | `src/core/lab.ts` |
+| Textos `S.lab` | `src/data/strings/ptBR.ts` |
+| Estilo do formulário do laboratório | `prototype/styles/campaign.css` |
+| Menções ao `?teste` | `README.md`, `docs/base/perfil.md`, comentário de `prototype/jornada/host.ts` |
+
+| Fica | Por quê |
+|---|---|
+| `?seed=N` e o `replayUrl` do Compartilhar | Reproduz a run de quem compartilhou |
+| `buildLabPlayer`, `labOrigin`, `applyLabStats`, `labStatsOf` e `tests/lab.test.ts` | Funções puras que o lab novo usa para montar o jogador da Roleta nas fixtures |
+| Histórico (`CHANGELOG.md`, `docs/registro.md`, exemplos da skill `lancar-versao`) | É registro do passado, não instrução |
+
+A chave `proto_lab_v1` que já está nos aparelhos fica órfã e não atrapalha (nada mais a lê). Entre essa versão e a
+chegada do lab novo, o projeto fica sem laboratório; a ordem foi escolhida assim.
 
 ## 4. Dados de demonstração
 
@@ -315,15 +343,14 @@ URL ?s=jornada.shop:cursed
 | Fixture fora do alcançável (ex.: 9.999 ryō) | A tela aparece num estado que o jogador nunca vê | Permitido para testar limites, mas nomeado como tal no id (`:overflow`) |
 | Telas interativas terminam | Depois de um toque o cenário segue o fluxo e sai do estado | "Repetir" remonta do zero; instantâneo ajuda a capturar |
 | Menos movimento não se força | O `matchMedia` real não muda | `still=1` liga a mesma classe que o CSS usa onde possível; o resto fica anotado |
-| Service worker guarda qualquer navegação como a página do jogo | Se o lab fosse servido no mesmo endereço do jogo instalado, o SW poderia guardar o lab no lugar do jogo | Lab só local, noutra porta. Se um dia for publicado, o SW precisa passar a guardar só a raiz (decisão sua) |
-| Lab antigo (`?teste`) convivendo com o novo | Duas ferramentas e o antigo grava `proto_lab_v1` no aparelho | Manter até o novo cobrir o que ele faz; depois remover (decisão sua, ver abaixo) |
+| Service worker guarda qualquer navegação como a página do jogo | Se o lab fosse servido no mesmo endereço do jogo instalado, o SW poderia guardar o lab no lugar do jogo | Lab só local, noutra porta (decidido). Se um dia mudar de ideia, o SW precisa passar a guardar só a raiz |
+| Sem laboratório entre a retirada do `?teste` e o lab novo | Testar uma ficha montada à mão fica sem ferramenta nesse intervalo | Intervalo curto: as costuras e o lab entram em versões seguidas |
 | Captura de save com dados pessoais (nome do jogador) | Nome real numa fixture versionada | `lab:capture` troca o nome por um fixo |
 
-### Decisões para você
+## 10. Ordem de implementação
 
-1. **Publicar o lab?** A proposta é só local. O `?teste` de hoje é público; se quiser o novo publicado (ex.:
-   `/lab.html`), precisa de proteção no service worker e de decidir se fica visível para jogadores.
-2. **Remover o `?teste` antigo** quando o novo cobrir montar a ficha, lutar contra um vilão e começar a campanha numa
-   etapa. O `?seed=` fica (é o replay do Compartilhar).
-3. **Ordem**: primeiro as costuras (uma versão sem mudança visível), depois o lab com os cenários de prioridade alta do
-   inventário.
+1. **Costuras + retirada do `?teste`** (§3 e §3.1): uma versão sem mudança visível para o jogador, fora o `?teste` que
+   deixa de existir.
+2. **Lab mínimo**: build, catálogo, quadro, contexto em memória, isolamento e os testes de `tests/uilab.test.ts`, com
+   os cenários diretos (Portão, entrada da Jornada, Registro).
+3. **Cenários de prioridade alta** do inventário: as duas lutas, trilha, mapa e loja da Jornada, eventos e fins de run.
