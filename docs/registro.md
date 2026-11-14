@@ -80,6 +80,22 @@ Decidido sozinho: quem aparece no quadro de cada evento (quem não tem ficha, co
 
 Verificado no navegador: o evento do pergaminho (celular), o corte de quadro do Mizuki (5 falas tocadas até o fim da luta), a cena de vitória (celular e PC). Não verificado: tema claro, tablet, a cena de relíquia de elite, a lição do sino e o narrador.
 
+### Revisão da etapa 1 (v0.72.1, 14/11/2026)
+
+Pedido do usuário: revisar a etapa narrativa antes de seguir, sem funcionalidade nova, sem rosto substituto e sem incorporar as mudanças externas.
+
+Corrigido:
+- **Retrato substituto.** Na v0.72.0, quem não tinha ficha aparecia com o rosto de quem estava junto (o Kakashi no lugar do Tazuna e do Ebisu, o Naruto no da Hinata, o Sasuke no de Itachi e Kisame, o Mizuki numa cena em que o Naruto está sozinho), e o Haku da floresta aparecia de máscara. Agora o dado diz quem está de fato na cena, e quem não tem representação própria aparece só com o nome. O Iruka, que usa o ninja genérico, também. A regra e a tabela por personagem estão em [visual.md](visual.md#quem-aparece-na-cena).
+- **Nome por cima do título**: sem retrato, a tira com o nome ficava pendurada sobre o título do pergaminho; passou para dentro do quadro.
+- **Tema claro**: o pergaminho sumia sobre a página de papel (sombra mais marcada) e o cenário do quadro estava lavado (30% para 50%).
+- **PC sem ninguém em cena** (relíquia ganha): o quadro em pé era um vazio alto; virou uma vista baixa do local.
+
+Conferido no navegador: tema claro e tablet em pé (evento do Tazuna, sem rosto); lição do sino no celular com tema claro (Kakashi em cena, a primeira linha como fala, 3 falas tocadas); relíquia de elite no PC (Irmãos Demônio: vitória, depois a cena da relíquia com o selo 宝); fala do narrador (ataque à casa do Tazuna: sem retrato, recebe o foco, fica na tela até o toque, fecha com Enter); modo instantâneo (a fala fecha sozinha em 0,67 s); luta do Haku inteira (4 falas, do inimigo e dos aliados, todas com retrato, vitória e escolha de chefe).
+
+Não conferido: o **movimento** das animações. O painel do navegador estava oculto durante os testes, e nele as animações só avançam quando há captura de tela; a lógica (aparecer, esperar, fechar) foi medida, o tempo das animações não. Também não foram vistas as cenas de estágio concluído, novo ciclo, nó desconhecido e Vontade do Fogo, que usam o mesmo componente com outro selo.
+
+Adiado: tablet em pé segue em coluna única, com espaço sobrando embaixo (é a regra "celular expandido" do projeto); retratos dos personagens sem recurso.
+
 ## Revisão da História, parte 3: árvores de talento do Naruto (v0.71.0, 14/11/2026)
 
 Terceira e última versão do plano. Pedido do usuário ao aprovar: talentos que surgem da combinação de duas árvores, e animação ao selecionar um talento.

@@ -4,7 +4,7 @@
 // Nada aqui muda regra: é só apresentação.
 import { jornadaData as data } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
-import { fighterPortrait } from '../art';
+import { fighterPortrait, hasOwnPortrait } from '../art';
 import { esc } from '../dom';
 
 const J = S.jornada;
@@ -31,22 +31,25 @@ export interface SceneView {
   cls?: string;
 }
 
-/** Retrato de quem está em cena, pela ficha (personagem ou inimigo). */
+/**
+ * Retrato de quem está em cena, ou '' quando não há representação própria. A cena nunca usa o rosto de outro
+ * personagem nem o ninja genérico no lugar de alguém: sem recurso visual, fica só o nome na tira de papel
+ * (docs/visual.md#quem-aparece-na-cena). Uma imagem em img/jornada/<id> resolve o caso sem mudar código.
+ */
 export function scenePortrait(id: string, spec?: string): string {
-  const def = data.characters[id] ?? data.enemies[id];
-  return fighterPortrait(id, spec ?? def?.portrait ?? 'ninja:common', 'lg');
+  const own = spec ?? (data.characters[id] ?? data.enemies[id])?.portrait;
+  return hasOwnPortrait(id, own) ? fighterPortrait(id, own ?? 'ninja:common', 'lg') : '';
 }
 
 /** A tela da cena: quadro do local com quem está em cena, pergaminho e o rodapé de ações. */
 export function sceneScreen(v: SceneView): string {
   const name = v.face ? (v.faceName ?? J.names[v.face] ?? '') : '';
-  const cast = v.face
-    ? `<span class="jc-cast">${scenePortrait(v.face, v.faceSpec)}${name ? `<b class="jc-name">${esc(name)}</b>` : ''}</span>`
-    : '';
+  const portrait = v.face ? scenePortrait(v.face, v.faceSpec) : '';
+  const cast = portrait || name ? `<span class="jc-cast${portrait ? '' : ' no-face'}">${portrait}${name ? `<b class="jc-name">${esc(name)}</b>` : ''}</span>` : '';
   const seal = v.seal ? `<span class="seal jc-seal${v.seal.gold ? ' gold' : ''}" role="img" aria-label="${esc(v.seal.label)}">${v.seal.kanji}</span>` : '';
   return `<div class="screen jcene${v.cls ? ` ${v.cls}` : ''}">${v.above ?? ''}
     <div class="jc-frame">
-      <figure class="jc-panel jscene scene-${v.place}${v.face ? '' : ' empty'}" aria-hidden="${v.face ? 'false' : 'true'}">${cast}</figure>
+      <figure class="jc-panel jscene scene-${v.place}${portrait ? '' : ' empty'}" aria-hidden="${cast ? 'false' : 'true'}">${cast}</figure>
       <div class="jc-side">
         <section class="parchment jc-paper">${seal}<h2 class="jc-title">${esc(v.title)}</h2>${v.body}</section>
         <div class="jc-foot">${v.footer}</div>

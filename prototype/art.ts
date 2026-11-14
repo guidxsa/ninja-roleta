@@ -700,6 +700,14 @@ export function ninjaPortrait(lineageId: string | null, jinchuuriki: boolean, si
 }
 
 /**
+ * O personagem tem representação própria? Uma imagem em img/jornada/<id>, um desenho próprio (`villain:`) ou um traje
+ * dele sobre o molde (`ninja:<chave>`). O molde comum (`ninja:common`) é o ninja genérico: não representa ninguém.
+ */
+export function hasOwnPortrait(defId: string, spec: string | undefined): boolean {
+  return Boolean(customImage('jornada', defId)) || (spec !== undefined && spec !== 'ninja:common');
+}
+
+/**
  * Retrato de um lutador da Jornada: imagem própria (img/jornada/<id>.webp) ou a arte já existente
  * indicada nos dados (`villain:<id>` ou `ninja:<chave>`).
  */

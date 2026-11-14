@@ -76,7 +76,7 @@ import { playMinigame } from './minigames';
 import { themeOf, themeStyle } from './theme';
 import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
 import { inkWipe, stampChoice } from './motion';
-import { sceneLines, sceneScreen } from './scene';
+import { sceneLines, scenePortrait, sceneScreen } from './scene';
 import { relicIcon } from './relicIcons';
 import { talentTreeScreen } from './talentTree';
 import { foldAttrs, foldButton, installFolds } from './fold';
@@ -1115,7 +1115,7 @@ async function storyRelicScene(host: JornadaHost, run: JRun, id: string, replace
   const giver = J.names[who] ?? who;
   const root = show(
     h(`<div class="screen jreveal jstory-relic"><h2>${esc(U.storyRelicTitle(relicName(id)))}</h2>
-      <div class="jstart-face pop">${fighterPortrait(who, data.characters[who]?.portrait ?? 'ninja:common', 'lg')}</div>
+      ${scenePortrait(who) ? `<div class="jstart-face pop">${scenePortrait(who)}</div>` : ''}
       <blockquote class="parchment gate-quote"><p>${esc(line)}</p><cite>${esc(giver)}</cite></blockquote>
       <div class="jswap">${replaced ? `<span class="jswap-old" aria-label="${esc(U.storyRelicFrom(relicName(replaced)))}">${relicSlot(replaced, 'span')}</span>` : ''}${relicCard(id, '', 'reveal')}</div>
       ${replaced ? `<p class="center muted small">${esc(U.storyRelicFrom(relicName(replaced)))}</p>` : ''}

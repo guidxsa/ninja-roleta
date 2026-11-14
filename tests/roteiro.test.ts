@@ -587,14 +587,16 @@ describe('revisão da História, parte 2 (v0.70.0)', () => {
     }
   });
 
-  it('cena narrativa (v0.72.0): todo evento da História tem quem aparece no quadro, com ficha e nome', () => {
+  it('cena narrativa (v0.72.0): todo evento da História diz quem está em cena, sempre com nome e nunca com substituto', () => {
     const played = data.stages.flatMap((st) => st.stops).flatMap((s) => (s.kind === 'event' ? [s.event, ...(s.then ?? [])] : []));
     for (const id of played) {
       const face = data.events[id]!.face;
       expect(face, id).toBeTruthy();
-      expect(data.characters[face!] ?? data.enemies[face!], `${id}: ${face}`).toBeDefined();
       expect(J.names[face!], `${id}: ${face}`).toBeTruthy();
     }
+    // Quem não luta não tem ficha: aparece só com o nome (sem pegar o retrato de quem está junto).
+    const noSheet = (id: string) => !data.characters[data.events[id]!.face!] && !data.enemies[data.events[id]!.face!];
+    expect(played.filter(noSheet).sort()).toEqual(['hakuForest', 'hinataOintment', 'itachiKisame', 'preliminaries', 'tazuna', 'writtenTest']);
     // Todo selo de cena é um kanji só (do recorte da fonte) com o que quer dizer.
     for (const seal of Object.values(J.ui.sceneSeals)) expect([seal.kanji.length, Boolean(seal.label)]).toEqual([1, true]);
   });

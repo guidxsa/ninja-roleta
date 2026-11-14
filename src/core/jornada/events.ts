@@ -53,7 +53,10 @@ export type EventCategory = 'witness' | 'narrative' | 'training';
 export interface EventDef {
   id: string;
   category?: EventCategory;
-  /** Quem está em cena (id de personagem ou inimigo): só apresentação, o retrato no quadro do evento. */
+  /**
+   * Quem está em cena: só apresentação. É um id de ficha (personagem ou inimigo) ou só de nome (`strings/jornada.ts`,
+   * `names`); sem retrato próprio, a cena mostra só o nome. Nunca o rosto de outro personagem.
+   */
   face?: string;
   options: EventOption[];
 }

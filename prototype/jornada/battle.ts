@@ -34,7 +34,7 @@ import type { Rng } from '../../src/core/rng';
 import { jornadaData } from '../../src/data/jornada';
 import { BEATS } from '../../src/data/elements';
 import { ptBR as S } from '../../src/data/strings/ptBR';
-import { fighterPortrait, icon } from '../art';
+import { fighterPortrait, hasOwnPortrait, icon } from '../art';
 import { barLayers, barPct, barTone, captureTrails, patchBar, restoreTrails } from '../bars';
 import { swish, land } from '../audio';
 import { esc, h, show, sleep } from '../dom';
@@ -444,7 +444,8 @@ export async function jornadaBattle(
       const narrator = whoId === 'narrator';
       const side = narrator ? 'narrator' : f ? (f.side === 'ally' ? 'ally' : 'foe') : data.enemies[whoId] ? 'foe' : 'ally';
       const def = data.characters[whoId] ?? data.enemies[whoId];
-      const face = narrator ? '' : f ? portraitOf(f, data) : fighterPortrait(whoId, def?.portrait ?? 'ninja:common', 'md');
+      // Quem fala sem estar na luta só ganha retrato se tiver um próprio (nunca o ninja genérico no lugar de alguém).
+      const face = narrator ? '' : f ? portraitOf(f, data) : hasOwnPortrait(whoId, def?.portrait) ? fighterPortrait(whoId, def!.portrait, 'md') : '';
       const el = h(`<button type="button" class="jb-cut ${side}" aria-label="${esc(`${narrator ? '' : `${who}: `}${line}. ${S.jornada.ui.tapToContinue}`)}">
         <span class="jb-cut-band">${face}<span class="jb-cut-txt">${narrator ? '' : `<b class="jb-cut-who">${who}</b>`}<span class="jb-cut-line">${esc(line)}</span></span>
         <i class="jb-cut-next" aria-hidden="true"></i></span></button>`) as HTMLButtonElement;

@@ -55,13 +55,26 @@ O card grafite não carrega história: é ferramenta.
 
 Um componente só (`prototype/jornada/scene.ts`, `styles/jornada-scene.css`) para evento, vitória, lição, estágio concluído, ciclo e relíquia ganha:
 
-- **Quadro**: o local da parada como requadro de mangá (margem grossa de tinta, o cenário em nanquim) e **quem está em cena** no canto, com o nome numa tira de papel. Cada evento da História diz quem aparece (`face` no dado); quem não tem ficha fica com o rosto de quem está junto.
+- **Quadro**: o local da parada como requadro de mangá (margem grossa de tinta, o cenário em nanquim) e **quem está em cena** no canto, com o nome numa tira de papel. Cada evento da História diz quem está de fato na cena (`face` no dado); a regra do retrato está em [Quem aparece na cena](#quem-aparece-na-cena).
 - **Pergaminho**: o título em letra de mão, o texto e um **selo** no canto com o tipo do momento (話 presenciado, 縁 narrativo, 修 treino ou lição, 勝 vitória, 巻 estágio, 宝 relíquia, 火 Vontade do Fogo, 道 ciclo, 謎 desconhecido).
 - **Opções** como tiras de papel, não botões de painel; a escolhida leva o carimbo.
 - **Vitória e lição**: as linhas entram uma a uma; na lição, quem está em cena é quem a deu, e a primeira linha lê como fala.
 - **PC**: o quadro é a página da esquerda e o pergaminho, a da direita.
 
 **Fala na luta: corte de quadro.** A luta escurece, quem fala entra numa faixa de papel em diagonal com o retrato (pela esquerda o aliado, pela direita o inimigo; o narrador, sem retrato) e **o jogador toca para seguir** (Enter e espaço também; no modo instantâneo segue sozinha). A faixa de pincel fica só para os jutsus. A fala de abertura das lutas passou a aparecer: antes, a animação pulava os eventos da abertura.
+
+### Quem aparece na cena
+
+Regra (revisão da etapa 1, v0.72.1): **a cena nunca usa o rosto de outro personagem no lugar de alguém, nem o ninja genérico.** Quem não tem representação própria aparece só com o nome, na tira de papel, até existir um recurso visual. Pôr uma imagem em `public/img/jornada/<id>` resolve o caso sem mudar código (`hasOwnPortrait` em `prototype/art.ts`). O corte de quadro da luta segue a mesma regra para quem fala sem estar em campo.
+
+| Situação | Personagens | Na cena |
+|---|---|---|
+| **Desenho próprio** | Mizuki, Zabuza, Haku (com a máscara), Gaara, Shukaku, Gamabunta (e a raposa), Kabuto, Orochimaru, Jirobo, Kidomaru, Tayuya, Sakon; Naruto no chakra da Kyuubi e no manto de uma cauda | Retrato |
+| **Traje próprio sobre o molde** (alternativa aceita) | Naruto, Sakura, Kakashi, Jiraiya, Tsunade, Kimimaro | Retrato. O Kakashi está sem a máscara, a semelhança mais fraca do grupo |
+| **Molde do clã** (alternativa aceita: é como ele aparece na luta) | Sasuke (Uchiha), Neji (Hyuuga), Shikamaru (Nara), Chōji (Akimichi), Kiba (Inuzuka), Lee (prodígio) | Retrato |
+| **Sem recurso: só o nome** | Iruka (hoje é o ninja genérico), Hinata, Tazuna, Ebisu, Ibiki, Itachi e Kisame, o Haku sem máscara (na floresta) | Tira de papel com o nome, quadro só com o local |
+
+Dosu, Zaku e Kin dividem um desenho só, e os capangas e ninjas comuns usam moldes genéricos: valem na luta, mas nenhum deles é rosto de cena.
 
 ## Movimento
 

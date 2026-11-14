@@ -252,6 +252,13 @@ export const jornadaPtBR = {
     gamabuntaAlly: 'Gamabunta',
     shukaku: 'Shukaku',
     narrator: '',
+    // Quem aparece nas cenas e não luta (sem ficha nem retrato: a cena mostra só o nome).
+    hinata: 'Hinata',
+    tazuna: 'Tazuna',
+    ebisu: 'Ebisu',
+    ibiki: 'Ibiki',
+    itachiKisame: 'Itachi e Kisame',
+    hakuUnmasked: 'Haku',
     gatoThug: 'Capanga',
     mistRogue: 'Renegado da Névoa',
     gozu: 'Gōzu',

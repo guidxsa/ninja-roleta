@@ -2,7 +2,8 @@ import { SHOP_CURSE, type EventDef } from '../../core/jornada/events';
 
 // Eventos da História (docs/jornada/historia.md#eventos). Textos em strings/jornada.ts.
 // Marcas (`flag`) ligam um evento a outro: ajudar o Tazuna dá desconto no mercador do País das Ondas.
-// `face` é quem aparece no quadro da cena (só apresentação; quem não tem ficha fica com o rosto de quem está junto).
+// `face` é quem está de fato na cena (só apresentação). Nunca é um substituto: quem não tem retrato próprio (Hinata,
+// Tazuna, Ebisu, Ibiki, Itachi e Kisame, o Haku sem máscara, o Iruka) aparece só com o nome, até existir um recurso visual.
 
 export const events: EventDef[] = [
   {
@@ -18,7 +19,7 @@ export const events: EventDef[] = [
   {
     id: 'tazuna',
     category: 'narrative',
-    face: 'kakashiAlly',
+    face: 'tazuna',
     options: [
       { id: 'protect', effects: [{ kind: 'flag', id: 'helpedTazuna' }, { kind: 'ryo', n: 20 }] },
       { id: 'charge', effects: [{ kind: 'ryo', n: 45 }] },
@@ -41,7 +42,7 @@ export const events: EventDef[] = [
   {
     id: 'writtenTest',
     category: 'narrative',
-    face: 'naruto',
+    face: 'ibiki',
     options: [
       {
         id: 'cheat',
@@ -55,7 +56,7 @@ export const events: EventDef[] = [
   {
     id: 'preliminaries',
     category: 'narrative',
-    face: 'kakashiAlly',
+    face: 'ebisu',
     options: [
       { id: 'ebisu', effects: [{ kind: 'xp', n: 80 }] },
       { id: 'hospital', effects: [{ kind: 'healTeam', hp: 50, chakra: 15 }, { kind: 'item', id: 'hpKit', n: 1 }] },
@@ -80,7 +81,7 @@ export const events: EventDef[] = [
     // Itachi e Kisame vêm atrás do Naruto; o Sasuke o enfrenta na pousada e o Jiraiya intervém (cap. 139 a 147).
     id: 'itachiKisame',
     category: 'narrative',
-    face: 'sasuke',
+    face: 'itachiKisame',
     options: [
       { id: 'chase', effects: [{ kind: 'xp', n: 50 }, { kind: 'maxStat', who: 'team', stat: 'hp', n: 6 }] },
       { id: 'stay', effects: [{ kind: 'healTeam', hp: 40, chakra: 12 }, { kind: 'ryo', n: 20 }] },
@@ -113,7 +114,7 @@ export const events: EventDef[] = [
     // O pergaminho proibido: o Kage Bunshin vem de qualquer jeito (marco da campanha).
     id: 'sealScroll',
     category: 'training',
-    face: 'mizuki',
+    face: 'naruto',
     options: [
       { id: 'scroll', minigame: 'seals', effects: [{ kind: 'xp', n: 20 }], onLose: [{ kind: 'xp', n: 10 }] },
       { id: 'stubborn', effects: [{ kind: 'xp', n: 12 }, { kind: 'hurtTeam', pct: 0.1 }] },
@@ -131,7 +132,7 @@ export const events: EventDef[] = [
   {
     id: 'hakuForest',
     category: 'narrative',
-    face: 'haku',
+    face: 'hakuUnmasked',
     options: [
       { id: 'precious', effects: [{ kind: 'healTeam', hp: 30, chakra: 9 }] },
       { id: 'stronger', effects: [{ kind: 'talent', n: 1 }] },
@@ -159,7 +160,7 @@ export const events: EventDef[] = [
   {
     id: 'hinataOintment',
     category: 'narrative',
-    face: 'naruto',
+    face: 'hinata',
     options: [
       { id: 'thanks', effects: [{ kind: 'healTeam', hp: 40, chakra: 0 }] },
       { id: 'weird', effects: [{ kind: 'item', id: 'hpKit', n: 1 }] },
