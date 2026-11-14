@@ -34,9 +34,9 @@ export const characters: CharacterDef[] = [
       { id: 'massClones', statMult: 1.1, addTechniques: ['jTajuuBunshin'], turns: 3, exitLine: 'massClonesEnd' },
       // Determinação (a promessa à Hinata, ou o "você é meu amigo" no Vale): +10% de dano e aguenta com 1 de HP uma vez.
       { id: 'resolve', mods: { damageMult: 1.1, surviveOnce: true } },
-      { id: 'kyuubi', statMult: 1.25, healPct: 0.3, addTechniques: ['jKyuubiClaw'] },
-      { id: 'kyuubiBrief', statMult: 1.2, healPct: 0.15, addTechniques: ['jKyuubiClaw'], turns: 3, exitLine: 'kyuubiEnd' },
-      { id: 'oneTail', statMult: 1.35, healPct: 0.3, addTechniques: ['jKyuubiClaw'] },
+      { id: 'kyuubi', statMult: 1.25, healPct: 0.3, addTechniques: ['jKyuubiClaw'], portrait: 'villain:narutoKyuubi' },
+      { id: 'kyuubiBrief', statMult: 1.2, healPct: 0.15, addTechniques: ['jKyuubiClaw'], turns: 3, exitLine: 'kyuubiEnd', portrait: 'villain:narutoKyuubi' },
+      { id: 'oneTail', statMult: 1.35, healPct: 0.3, addTechniques: ['jKyuubiClaw'], portrait: 'villain:narutoOneTail' },
     ],
   },
   // Iruka: entra pelo roteiro na luta do Mizuki e cai protegendo o Naruto (convidado).

@@ -1156,7 +1156,7 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
     // Relíquia: entra no resultado a que veio de verdade (a sorteada pode não sair; a de história pode já estar na run).
     if (e.kind === 'relic' || e.kind === 'storyRelic') {
       if (relic && relic !== relicBefore) gains.push({ kind: 'storyRelic', id: relic });
-    } else if (e.kind !== 'flag') gains.push(e);
+    } else gains.push(e);
   }
   const beat = (prev.beat ?? 0) + 1;
   const done = beat >= stopEvents(stop).length;

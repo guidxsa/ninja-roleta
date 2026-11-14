@@ -503,6 +503,41 @@ const PORTRAITS: Record<string, () => string> = {
     '<path d="M28 62q22 10 44 0" stroke="#5a2014" stroke-width="2" fill="none"/>' +
     '<path d="M66 64l16-6" stroke="#6e4423" stroke-width="3" stroke-linecap="round"/><rect x="80" y="52" width="7" height="8" rx="2" fill="#6e4423"/>' +
     '<path d="M82 48q3-6 0-12" stroke="#cfcfcf" stroke-width="1.4" fill="none" opacity=".7"/>',
+  // Gamabunta transformado em raposa de nove caudas (henge a pedido do Naruto, contra o Shukaku): desenho próprio.
+  foxHenge: () =>
+    scene('foxHenge', '#e0763a', '#2a0f08',
+      // As nove caudas abertas em leque atrás.
+      '<g fill="#c9531f" stroke="#5a2010" stroke-width="1"><path d="M50 78C20 70 4 46 6 18c8 16 20 30 44 44z"/><path d="M50 78C30 62 22 36 28 8c4 18 12 34 22 54z"/><path d="M50 78C44 56 44 30 50 4c6 26 6 52 0 74z"/><path d="M50 78C70 62 78 36 72 8c-4 18-12 34-22 54z"/><path d="M50 78C80 70 96 46 94 18c-8 16-20 30-44 44z"/></g>') +
+    '<path d="M22 100c2-26 12-40 28-40s26 14 28 40z" fill="#d9642a" stroke="#5a2010" stroke-width="1.4"/>' +
+    // Orelhas, cabeça e focinho.
+    '<path d="M28 44l-4-24 16 12zM72 44l4-24-16 12z" fill="#d9642a" stroke="#5a2010" stroke-width="1.4"/><path d="M29 38l-1-11 8 6zM71 38l1-11-8 6z" fill="#2a0f08"/>' +
+    '<path d="M26 46q24-22 48 0q0 20-24 34q-24-14-24-34z" fill="#d9642a" stroke="#5a2010" stroke-width="1.4"/>' +
+    '<path d="M38 62q12 10 24 0l-12 18z" fill="#f4dcc0"/>' +
+    '<path d="M32 48l12 5-10 4zM68 48l-12 5 10 4z" fill="#f3d36b"/><path d="M38 49v6M62 49v6" stroke="#1b1b22" stroke-width="1.6"/>' +
+    '<path d="M47 68h6l-3 4z" fill="#1b1b22"/><path d="M42 74q8 4 16 0" stroke="#5a2010" stroke-width="1.4" fill="none"/><path d="M44 74l1.5 4 1.5-3.4M56 74l-1.5 4-1.5-3.4" fill="#fff"/>' +
+    // A cicatriz e o cachimbo denunciam quem está por baixo da transformação.
+    '<path d="M64 40l8 18" stroke="#5a2010" stroke-width="2" stroke-linecap="round"/><path d="M60 74l14-4" stroke="#6e4423" stroke-width="2.6" stroke-linecap="round"/><rect x="73" y="64" width="6" height="7" rx="2" fill="#6e4423"/>',
+  // Naruto com o chakra da Kyuubi: olhos em fenda, marcas mais fundas e o chakra vermelho em volta.
+  narutoKyuubi: () =>
+    scene('narutoKyuubi', '#d1232a', '#1c0507',
+      '<g fill="none" stroke="#ff7a4a" stroke-width="2" opacity=".65" stroke-linecap="round"><path d="M10 96q-4-30 10-52M90 96q4-30-10-52M22 30q10-18 28-22M78 30q-10-18-28-22"/></g>') +
+    body('#f07a1a', SKIN, '<path d="M34 64q16 6 32 0l2 14q-18 6-36 0z" fill="#2c3a5c"/>') +
+    head({ eyes: 'narrow', eyeColor: '#c0392b', mouth: 'grin' }) +
+    '<path d="M33 52l10 2M33 56.5l10 0M33 61l10-2M67 52l-10 2M67 56.5l-10 0M67 61l-10-2" stroke="#3a1410" stroke-width="2" stroke-linecap="round"/>' +
+    '<path d="M30 46l-7-14 9 2-2-12 9 6 3-12 7 9 5-10 4 11 9-6-2 12 9-2-6 14c-4-8-11-12-19-12s-15 4-19 14z" fill="#e8b33a"/>' +
+    headband('leaf', '#24324f'),
+  // Manto de uma cauda: a capa de chakra com orelhas de raposa e a cauda (Vale do Fim).
+  narutoOneTail: () =>
+    scene('narutoOneTail', '#f0541e', '#1c0507',
+      '<path d="M78 100c14-18 16-44 4-66 0 20-8 36-22 48z" fill="#ff7a4a" opacity=".75"/>') +
+    // A capa de chakra envolve o corpo e forma as orelhas.
+    '<path d="M4 100c0-26 14-40 22-52l-4-30 16 14q12-6 24 0l16-14-4 30c8 12 22 26 22 52z" fill="#ff5a2a" opacity=".45"/>' +
+    body('#f07a1a', SKIN, '<path d="M34 64q16 6 32 0l2 14q-18 6-36 0z" fill="#2c3a5c"/>') +
+    head({ eyes: 'narrow', eyeColor: '#c0392b', mouth: 'grin' }) +
+    '<path d="M33 52l10 2M33 56.5l10 0M33 61l10-2M67 52l-10 2M67 56.5l-10 0M67 61l-10-2" stroke="#3a1410" stroke-width="2.2" stroke-linecap="round"/>' +
+    '<path d="M30 46l-7-14 9 2-2-12 9 6 3-12 7 9 5-10 4 11 9-6-2 12 9-2-6 14c-4-8-11-12-19-12s-15 4-19 14z" fill="#e8b33a"/>' +
+    headband('leaf', '#24324f') +
+    '<g fill="none" stroke="#ffb08a" stroke-width="1.6" opacity=".8" stroke-linecap="round"><path d="M14 92q-2-20 10-36M86 92q2-20-10-36"/></g>',
   // Shukaku: tanuki de areia com as marcas azuis (desenho próprio).
   shukaku: () =>
     scene('shukaku', '#c9a06a', '#3b2410',

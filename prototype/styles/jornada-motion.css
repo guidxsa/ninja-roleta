@@ -1,0 +1,80 @@
+/*
+ * Movimento das interações da Jornada (docs/visual.md#movimento). Cada animação responde a um gesto ou explica uma
+ * troca de estado; o conteúdo já nasce visível, então sem animação (menos movimento, modo instantâneo) nada some.
+ * Durações pelos tokens: o modo instantâneo encurta tudo de uma vez.
+ */
+
+/* --- Escolha de evento: o carimbo -------------------------------------------------------------------------------- */
+.jevent .joptions .btn { position: relative; transition: opacity var(--dur-3) var(--ease), filter var(--dur-3) var(--ease), border-color var(--dur-2) var(--ease), background var(--dur-2) var(--ease); }
+/* O escolhido fica aceso mesmo com `aria-disabled` (a regra geral do botão desbotaria). */
+.jevent .joptions .btn.chosen[aria-disabled='true'] { opacity: 1; filter: none; border-color: var(--accent-2); background: var(--surface-3); }
+.jevent .joptions .btn.passed[aria-disabled='true'] { opacity: .28; filter: saturate(.2); }
+.choice-seal {
+  --s: 38px;
+  position: absolute; right: 10px; top: 50%; margin-top: calc(var(--s) / -2);
+  animation: choiceStamp var(--dur-3) cubic-bezier(.16, 1, .3, 1) both;
+}
+/* O carimbo desce de cima, grande e torto, e assenta: o peso vem da escala, sem quique. */
+@keyframes choiceStamp {
+  from { transform: rotate(-22deg) scale(2.4); opacity: 0; filter: blur(3px); }
+  60% { opacity: 1; filter: none; }
+  to { transform: rotate(-7deg) scale(1); opacity: .96; }
+}
+
+/* --- Evento emendado: a pincelada ---------------------------------------------------------------------------------- */
+.screen.ink-in { animation: inkIn var(--dur-3) cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes inkIn {
+  from { clip-path: polygon(0 0, 0 0, -8% 100%, 0 100%); }
+  to { clip-path: polygon(0 0, 108% 0, 100% 100%, 0 100%); }
+}
+
+/* --- Faixa "O que mudou" ------------------------------------------------------------------------------------------- */
+/* Etiqueta de arquivo presa no alto da tela seguinte: fundo de papel, tinta escura nos dois temas. */
+.jgains {
+  position: relative; margin: 0 0 12px; padding: 8px 12px 9px;
+  background: var(--grain-dark), var(--paper); color: var(--paper-ink);
+  border: 1px solid color-mix(in srgb, var(--paper-ink) 45%, transparent);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--ink) 35%, transparent);
+}
+.jgains-title { display: block; margin-bottom: 4px; font: 700 13px/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: color-mix(in srgb, var(--paper-ink) 72%, transparent); }
+.jgains ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.jgains li {
+  display: inline-flex; align-items: center; gap: 6px; font: 600 15px/1.25 var(--font-hud); letter-spacing: .02em;
+  /* Um ganho por vez, em sequência curta (no máximo meio segundo no total). */
+  animation: gainIn var(--dur-3) cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(min(var(--i), 6) * 70ms);
+}
+.jgains li .ico { width: 1.1em; height: 1.1em; flex: none; color: var(--stamp, var(--accent)); }
+@keyframes gainIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+/* Na trilha, a faixa vai dentro do bloco do título, na linha de baixo, nos três arranjos (celular, tablet, PC). */
+.jstage-title { flex-wrap: wrap; }
+.jstage-title > .jgains { flex: 1 0 100%; margin: 8px 0 0; }
+
+/* --- Cena de relíquia: a antiga se desfaz em tinta, a nova toma o lugar -------------------------------------------- */
+.jstory-relic .gate-quote { margin: 10px auto 14px; max-width: 46ch; }
+.jswap { position: relative; display: grid; justify-items: center; }
+.jswap > * { grid-area: 1 / 1; }
+.jswap-old { z-index: 1; align-self: start; margin-top: 10px; pointer-events: none; animation: relicDissolve calc(var(--dur-3) * 2) var(--ease) both; }
+.jswap-old .jrslot { width: 56px; height: 56px; cursor: default; }
+.jswap .jrcard.reveal { animation-delay: calc(var(--dur-3) * 1.4); }
+@keyframes relicDissolve {
+  from { opacity: 1; filter: none; transform: none; }
+  55% { opacity: 1; filter: blur(0) contrast(1.4) saturate(.2); transform: scale(1.06); }
+  to { opacity: 0; filter: blur(7px) contrast(2) saturate(0); transform: scale(1.5); }
+}
+
+/* --- Formas na luta: entrada e saída ------------------------------------------------------------------------------- */
+/* Entrada: o retrato acende na cor do perigo e assenta; saída: um desbotado rápido. */
+.jf.form-in .jf-art { animation: formIn calc(var(--dur-3) * 2) cubic-bezier(.16, 1, .3, 1) both; }
+.jf.form-out .jf-art { animation: formOut var(--dur-3) var(--ease) both; }
+@keyframes formIn {
+  from { filter: brightness(2.2) saturate(1.6) drop-shadow(0 0 0 var(--accent-2)); transform: scale(1.14); }
+  40% { filter: brightness(1.5) saturate(1.4) drop-shadow(0 0 10px var(--accent-2)); }
+  to { filter: none; transform: none; }
+}
+@keyframes formOut { from { filter: grayscale(1) brightness(.7); } to { filter: none; } }
+
+/* Menos movimento: ficam a cor e a opacidade (o carimbo e os ganhos continuam legíveis), sai o deslocamento. */
+@media (prefers-reduced-motion: reduce) {
+  .choice-seal, .jgains li, .jswap-old, .jf.form-in .jf-art, .jf.form-out .jf-art, .screen.ink-in { animation: none; }
+  .jswap-old { display: none; }
+}

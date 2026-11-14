@@ -27,7 +27,7 @@ import {
   validTargets,
 } from '../../src/core/jornada/battle';
 import type { JornadaData } from '../../src/core/jornada/data';
-import { CONSUMABLES, spendItem, supportClass, type JRun } from '../../src/core/jornada/run';
+import { CONSUMABLES, currentStop, spendItem, supportClass, type JRun } from '../../src/core/jornada/run';
 import type { BattleSetup } from '../../src/core/jornada/battle';
 import type { Boost, ConsumableId, Fighter, FighterMods, JAction, JBattle, JEvent, JTechnique } from '../../src/core/jornada/types';
 import type { Rng } from '../../src/core/rng';
@@ -100,7 +100,8 @@ function portraitOf(f: Fighter, data: JornadaData): string {
   // Forma ligada pelo roteiro (manto, Shukaku) com retrato próprio.
   const formArt = f.form ? (data.characters[f.defId] ?? data.enemies[f.defId])?.forms?.find((x) => x.id === f.form)?.portrait : undefined;
   const spec = formArt ?? (f.protagonist && heroSkin ? `ninja:${heroSkin}` : (data.characters[f.defId]?.portrait ?? data.enemies[f.defId]?.portrait ?? 'ninja:common'));
-  return fighterPortrait(f.defId, spec, 'md');
+  // Na forma, o retrato é o dela: a imagem própria do personagem não passa por cima (a da forma seria `<id>-<forma>`).
+  return fighterPortrait(formArt ? `${f.defId}-${f.form}` : f.defId, spec, 'md');
 }
 
 function miniBar(kind: 'hp' | 'ck', cur: number, max: number): string {
@@ -642,11 +643,19 @@ export async function jornadaBattle(
           const el = card(e.uid);
           if (el) el.outerHTML = fighterCard({ ...f, hp: shown.get(e.uid)?.hp ?? f.hp, chakra: shown.get(e.uid)?.chakra ?? f.chakra }, data);
           shown.set(e.uid, { hp: shown.get(e.uid)?.hp ?? f.hp, max: f.maxHp, chakra: shown.get(e.uid)?.chakra ?? f.chakra, maxChakra: f.maxChakra });
+          // Entrada visível: o card pisca na cor da forma enquanto o retrato troca.
+          card(e.uid)?.classList.add('form-in');
           say(B.form(name(e.uid), J.forms[e.form] ?? e.form), 'var(--accent)');
           pushLog(B.form(name(e.uid), J.forms[e.form] ?? e.form));
           wait = host.instant() ? 300 : 1100;
           break;
         }
+        case 'teach':
+          float(e.uid, icon('sparkle'), 'fx');
+          say(B.teach(name(e.uid), techName(e.techId)), 'var(--accent-2)');
+          pushLog(B.teach(name(e.uid), techName(e.techId)));
+          wait = host.instant() ? 300 : 1100;
+          break;
         case 'enter':
         case 'leave': {
           // Quem entra ou sai muda a fileira: redesenha e devolve as barras ao ponto da animação.
@@ -669,8 +678,12 @@ export async function jornadaBattle(
         case 'formEnd': {
           const f = fighter(next, e.uid);
           const el = card(e.uid);
-          if (el) el.outerHTML = fighterCard({ ...f, form: undefined, hp: shown.get(e.uid)?.hp ?? f.hp, chakra: shown.get(e.uid)?.chakra ?? f.chakra }, data);
+          // Sai só esta forma: o card fica com a que sobrou na pilha (a determinação continua depois da Kyuubi).
+          if (el) el.outerHTML = fighterCard({ ...f, hp: shown.get(e.uid)?.hp ?? f.hp, chakra: shown.get(e.uid)?.chakra ?? f.chakra }, data);
+          card(e.uid)?.classList.add('form-out');
+          say(B.formEnd(name(e.uid), J.forms[e.form] ?? e.form), 'var(--ink)');
           pushLog(B.formEnd(name(e.uid), J.forms[e.form] ?? e.form));
+          wait = host.instant() ? 300 : 900;
           break;
         }
         case 'endure':
@@ -875,8 +888,12 @@ export async function jornadaBattle(
   }
   render(state);
   const won = state.status === 'won';
-  host.mood(won ? 'good' : 'bad');
-  say(`<b class="kanji end-kanji" aria-hidden="true">${won ? '勝' : '敗'}</b>${won ? B.won : B.lost}`, won ? 'var(--gold)' : 'var(--accent-deep)');
+  // Derrota inevitável (teste do sino): não é derrota, é lição. O kanji 修 (aprender, treinar) já está no recorte.
+  const stopNow = currentStop(run0, data);
+  const lesson = !won && Boolean(stopNow && 'inevitableLoss' in stopNow && stopNow.inevitableLoss);
+  host.mood(won ? 'good' : lesson ? 'neutral' : 'bad');
+  if (lesson) say(`<b class="kanji end-kanji" aria-hidden="true">修</b>${B.lesson}`, 'var(--gold)');
+  else say(`<b class="kanji end-kanji" aria-hidden="true">${won ? '勝' : '敗'}</b>${won ? B.won : B.lost}`, won ? 'var(--gold)' : 'var(--accent-deep)');
   if (won) void flashRelics(root, winRelics(run0), host.instant());
   menu.innerHTML = '';
   await sleep(host.instant() ? 200 : 900);
