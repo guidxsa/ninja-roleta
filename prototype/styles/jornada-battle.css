@@ -135,7 +135,7 @@
 .jb-hint { margin: 0; text-align: center; font-size: 12.5px; line-height: 1.3; color: var(--muted); }
 .jb-hint .ico { width: 13px; height: 13px; vertical-align: -.15em; color: var(--good); }
 .jb-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.jmove { position: relative; display: flex; align-items: center; gap: 9px; text-align: left; padding: 8px; min-height: 56px; border-left: 3px solid var(--c, var(--line)); }
+.jmove { position: relative; display: flex; align-items: center; gap: 9px; text-align: left; padding: 8px; min-height: 56px; border-top: 3px solid var(--c, var(--line)); }
 .jmove.on { box-shadow: inset 0 0 0 1px var(--gold-2); }
 /* Moveset cheio (5 ou 6 técnicas): botões mais baixos, para o menu caber sem rolar tanto (ainda acima de 44px de toque). */
 .jb-moves.many .jmove { min-height: 46px; padding: 5px 8px; gap: 7px; }

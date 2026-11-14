@@ -112,9 +112,9 @@
   padding: 8px 9px 8px 10px; min-height: 64px;
   background: var(--surface-2);
   border: 1px solid color-mix(in srgb, var(--c) 40%, var(--line));
-  border-left: 3px solid var(--c);
+  border-top: 3px solid var(--c);
 }
-.btn.act:hover:not(:disabled):not([aria-disabled='true']) { border-color: color-mix(in srgb, var(--c) 70%, var(--line)); border-left-color: var(--c); background: color-mix(in srgb, var(--c) 10%, var(--surface-2)); }
+.btn.act:hover:not(:disabled):not([aria-disabled='true']) { border-color: color-mix(in srgb, var(--c) 70%, var(--line)); border-top-color: var(--c); background: color-mix(in srgb, var(--c) 10%, var(--surface-2)); }
 /* Textura do elemento, bem discreta, no canto da placa. */
 .btn.act::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: .35; pointer-events: none; }
 .btn.act.el-fire::before { background: radial-gradient(circle at 100% 120%, color-mix(in srgb, var(--c) 60%, transparent), transparent 50%); }
@@ -143,7 +143,7 @@
 .btn.act.primary {
   --c: var(--primary-deep);
   clip-path: none; box-shadow: none; text-transform: none; letter-spacing: 0;
-  background: var(--primary); border-color: var(--primary-2); border-left-color: var(--gold-2);
+  background: var(--primary); border-color: var(--primary-2); border-top-color: var(--gold-2);
 }
 .btn.act.primary .act-ico { background: var(--ink); color: var(--gold-2); }
 .btn.act.primary b { color: var(--primary-ink); }

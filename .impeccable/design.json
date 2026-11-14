@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-14T00:00:00Z",
+  "title": "Design System: Ninja Roleta",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Vermelho Laca", "canonical": "#b5161f", "tonalRamp": ["#2a0508", "#5e0b10", "#80101a", "#a3121b", "#b5161f", "#db3a40", "#e88a8c", "#f6d9d9"] },
+      "gold": { "role": "secondary", "displayName": "Dourado Envelhecido", "canonical": "#b8954f", "tonalRamp": ["#2b2210", "#4a3a1a", "#6e5428", "#8f6f34", "#b8954f", "#dcbd78", "#ecd9a8", "#f7efd8"] },
+      "sumi-bg": { "role": "neutral", "displayName": "Sumi", "canonical": "#0d0c0b", "tonalRamp": ["#0d0c0b", "#151312", "#1a1817", "#232120", "#2f2c29", "#36332f", "#5a5f66", "#8a919a"] },
+      "paper": { "role": "neutral", "displayName": "Pergaminho", "canonical": "#e8dcc0", "tonalRamp": ["#24190f", "#574632", "#8d8170", "#bfae88", "#d4c39e", "#e8dcc0", "#efe5cf", "#f6efde"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Pincel", "purpose": "Letreiro grande apenas." },
+      "hand": { "displayName": "Manuscrita", "purpose": "Títulos de pergaminho, citações e nome dos modos." },
+      "body": { "displayName": "Corpo", "purpose": "Texto corrido." },
+      "hud": { "displayName": "HUD", "purpose": "Números, rótulos, botão primário, chips." },
+      "kanji": { "displayName": "Kanji", "purpose": "Selos e carimbos." }
+    },
+    "shadows": [
+      { "name": "title-hard", "value": "2px 2px 0 #5e0b10", "purpose": "Sombra dura dos letreiros em pincel." },
+      { "name": "parchment-offset", "value": "translate(2px, 4px) do mesmo recorte rasgado", "purpose": "Sombra do pergaminho." },
+      { "name": "tip", "value": "0 8px 22px rgba(0,0,0,.45)", "purpose": "Dica flutuante." }
+    ],
+    "motion": [
+      { "name": "ease", "value": "cubic-bezier(.2, .7, .2, 1)", "purpose": "Easing padrão." },
+      { "name": "dur-1", "value": "120ms", "purpose": "Hover e toque." },
+      { "name": "dur-2", "value": "200ms", "purpose": "Opacidade e estado." },
+      { "name": "dur-3", "value": "320ms", "purpose": "Entradas (pop)." },
+      { "name": "dur-dawn", "value": "1600ms", "purpose": "Troca dia e noite no Portão." }
+    ],
+    "breakpoints": [
+      { "name": "tablet", "value": "600px" },
+      { "name": "desktop", "value": "900px (e altura mínima 560px)" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal: laca vermelha chanfrada com filete dourado.",
+      "html": "<button class=\"ds-btn-primary\">Girar</button>",
+      "css": ".ds-btn-primary { appearance: none; border: 0; min-height: 48px; padding: 11px 24px; background: #b5161f; color: #f6ecd6; font: 700 18px/1.25 'Barlow Condensed', sans-serif; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); box-shadow: inset 0 0 0 1px rgba(220,189,120,.55), inset 0 -3px 0 rgba(94,11,16,.7); transition: background 120ms; } .ds-btn-primary:hover { background: #db3a40; } .ds-btn-primary:active { background: #5e0b10; } .ds-btn-primary:focus-visible { outline: none; box-shadow: inset 0 0 0 2px #dcbd78, inset 0 0 0 4px #5e0b10; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ação secundária: grafite com filete de aço.",
+      "html": "<button class=\"ds-btn\">Histórico</button>",
+      "css": ".ds-btn { border: 1px solid #5a5f66; border-radius: 2px; background: #232120; color: #ece3d0; padding: 11px 14px; min-height: 48px; font: 700 15px/1.25 'Zen Kaku Gothic New', sans-serif; cursor: pointer; transition: background 120ms, border-color 120ms; } .ds-btn:hover { border-color: #b8954f; background: #2f2c29; } .ds-btn:focus-visible { outline: 2px solid #dcbd78; outline-offset: 2px; }"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Etiqueta reta em HUD; cor só no filete.",
+      "html": "<span class=\"ds-chip\">Nível 3</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 2px; border: 1px solid #b8954f; background: transparent; color: #dcbd78; font: 600 13px/1.4 'Barlow Condensed', sans-serif; letter-spacing: .03em; white-space: nowrap; }"
+    },
+    {
+      "name": "Seal",
+      "kind": "custom",
+      "refersTo": "seal",
+      "description": "Hanko: quadrado laqueado com kanji, torto como carimbo.",
+      "html": "<span class=\"ds-seal\">道</span>",
+      "css": ".ds-seal { display: inline-grid; place-items: center; width: 40px; height: 40px; background: #b5161f; color: #f6ecd6; font: 400 26px/1 'Yuji Boku', serif; border-radius: 3px; transform: rotate(-3deg); box-shadow: inset 0 0 0 2px #b5161f, inset 0 0 0 3px rgba(246,236,214,.7); }"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Painel laqueado com aba vermelha no topo.",
+      "html": "<div class=\"ds-panel\">Ficha do ninja</div>",
+      "css": ".ds-panel { position: relative; isolation: isolate; padding: 12px; color: #ece3d0; font: 15px/1.5 'Zen Kaku Gothic New', sans-serif; } .ds-panel::before { content: ''; position: absolute; inset: 0; z-index: -1; background: #5a5f66; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); } .ds-panel::after { content: ''; position: absolute; inset: 1px; z-index: -1; background: linear-gradient(#b5161f, #b5161f) 15px 0 / 36px 2px no-repeat, #1a1817; clip-path: polygon(9.5px 0, 100% 0, 100% calc(100% - 9.5px), calc(100% - 9.5px) 100%, 0 100%, 0 9.5px); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Mesa do Escriba Ninja",
+    "overview": "A interface é um conjunto de objetos de papel, tinta, madeira e laca pousados numa mesa: pergaminhos de borda rasgada, selos (hanko) carimbados, pinceladas, placas e cartas de mapa. Dois temas contrastam como Naruto e Sasuke: Pergaminho (dia, quente) e Sumi (noite, frio). A voz é artesanal e ritual, tensa e contida, direta e legível, com a roleta como exceção festiva.",
+    "keyCharacteristics": [
+      "Objetos do universo no lugar de cards, gradientes e sombras difusas.",
+      "Cantos retos com chanfro como assinatura dos painéis.",
+      "Vermelho laca para ação e perigo; dourado para conquista.",
+      "Cada peça no seu espaço: arte preenche a célula e nunca vaza do papel.",
+      "Movimento só explica gesto ou troca de estado."
+    ],
+    "rules": [
+      { "name": "The Lacquer Rarity Rule", "body": "O vermelho é ação ou perigo, nunca decoração.", "section": "colors" },
+      { "name": "The Tokens Only Rule", "body": "Cor, fonte, duração e forma só por var(--...). Cor solta apenas em arte.", "section": "colors" },
+      { "name": "The Two Moods Rule", "body": "Os temas só trocam tokens; nenhuma tela tem versão própria para dia ou noite.", "section": "colors" },
+      { "name": "The One Brush Rule", "body": "Pincel (display) só em letreiro grande; texto de leitura nunca usa display nem hand.", "section": "typography" },
+      { "name": "The Hard Shadow Rule", "body": "Sombra é o próprio recorte deslocado ou um letreiro duro; nada de sombra difusa genérica em painel.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar objetos do universo (pergaminho, selo, carimbo, placa, carta de mapa) no lugar de componentes genéricos.",
+      "Do usar só tokens var(--...); o tema troca só os tokens.",
+      "Do manter o chanfro em ::before/::after e o foco por dentro quando o elemento é chanfrado.",
+      "Do usar SVG de ICONS em art.ts (icon(nome)) para todo ícone.",
+      "Do manter botões simples (ícone, nome, números) e levar regras e motivos de bloqueio para a dica.",
+      "Do preservar ids, data-* e classes que o TS consulta.",
+      "Do garantir teclado, leitor de tela e prefers-reduced-motion em todo gesto novo."
+    ],
+    "donts": [
+      "Don't usar emoji como ícone (exceção: o texto de compartilhar).",
+      "Don't usar cantos arredondados, cards genéricos, gradientes modernos ou sombras difusas.",
+      "Don't usar neon, glassmorphism ou estética de painel gamer/e-sports.",
+      "Don't reintroduzir as cores Verde, Laranja e Marrom de tema.",
+      "Don't voltar ao Portão \"Vila com placas\".",
+      "Don't sobrepor peças, deixar a arte vazar do papel ou cruzar a borda.",
+      "Don't usar o pincel (display) ou a manuscrita em texto de leitura.",
+      "Don't pôr cor solta no CSS fora de arte, nem deixar o visual mudar regra, fórmula ou balanceamento.",
+      "Don't depender de arte de terceiros: retratos são opcionais e o SVG próprio sempre fecha a tela."
+    ]
+  }
+}

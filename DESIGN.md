@@ -1,0 +1,248 @@
+---
+name: Ninja Roleta
+description: Mesa de escriba shinobi em papel, tinta e laca vermelha, com dois temas (Sumi, noite fria; Pergaminho, dia quente).
+colors:
+  primary: "#b5161f"
+  primary-bright: "#db3a40"
+  primary-deep: "#5e0b10"
+  primary-ink: "#f6ecd6"
+  gold: "#b8954f"
+  gold-bright: "#dcbd78"
+  gold-deep: "#6e5428"
+  sumi-bg: "#0d0c0b"
+  sumi-bg-raised: "#151312"
+  sumi-surface: "#1a1817"
+  sumi-surface-2: "#232120"
+  sumi-surface-3: "#2f2c29"
+  sumi-line: "#36332f"
+  steel: "#8a919a"
+  sumi-text: "#ece3d0"
+  sumi-muted: "#9a9286"
+  paper: "#e8dcc0"
+  paper-deep: "#d4c39e"
+  paper-ink: "#24190f"
+  paper-muted: "#574632"
+  wood: "#4a2f1c"
+  pergaminho-bg: "#e6dac0"
+  pergaminho-surface: "#f6efde"
+  pergaminho-text: "#1f1812"
+  hp: "#5f9a5c"
+  hp-low: "#c4412c"
+  chakra: "#3d6fc4"
+  good: "#7fb476"
+  bad: "#dc5a4f"
+  jinchuuriki: "#e0682e"
+typography:
+  display:
+    fontFamily: "Shojumaru, Impact, 'Arial Black', serif"
+    fontSize: "clamp(28px, 6vw, 56px)"
+    fontWeight: 400
+    lineHeight: 1.05
+  hand:
+    fontFamily: "Kalam, 'Segoe Print', 'Comic Sans MS', cursive"
+    fontSize: "22px"
+    fontWeight: 700
+    lineHeight: 1.1
+  body:
+    fontFamily: "'Zen Kaku Gothic New', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "15px"
+    fontWeight: 400
+    lineHeight: 1.5
+  hud:
+    fontFamily: "'Barlow Condensed', 'Roboto Condensed', 'Arial Narrow', sans-serif"
+    fontSize: "18px"
+    fontWeight: 700
+    letterSpacing: "0.08em"
+  kanji:
+    fontFamily: "'Yuji Boku', 'Hiragino Mincho ProN', 'Yu Mincho', serif"
+    fontSize: "26px"
+    fontWeight: 400
+    lineHeight: 1
+rounded:
+  base: "2px"
+spacing:
+  gap: "12px"
+  gap-lg: "clamp(14px, 1.6vw, 28px)"
+  tap: "36px"
+  tap-touch: "44px"
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.primary-ink}"
+    typography: "{typography.hud}"
+    rounded: "{rounded.base}"
+    padding: "11px 14px"
+    height: "48px"
+  button-primary-hover:
+    backgroundColor: "{colors.primary-bright}"
+  button-primary-active:
+    backgroundColor: "{colors.primary-deep}"
+  button-secondary:
+    backgroundColor: "{colors.sumi-surface-2}"
+    textColor: "{colors.sumi-text}"
+    rounded: "{rounded.base}"
+    padding: "11px 14px"
+    height: "48px"
+  button-ghost:
+    backgroundColor: "transparent"
+    textColor: "{colors.sumi-muted}"
+    rounded: "{rounded.base}"
+  panel:
+    backgroundColor: "{colors.sumi-surface}"
+    textColor: "{colors.sumi-text}"
+    rounded: "{rounded.base}"
+    padding: "12px"
+  parchment:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.paper-ink}"
+    padding: "16px 16px 14px"
+  chip:
+    backgroundColor: "{colors.sumi-surface-3}"
+    textColor: "{colors.sumi-text}"
+    typography: "{typography.hud}"
+    rounded: "{rounded.base}"
+    padding: "1px 7px"
+  seal:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.primary-ink}"
+    size: "40px"
+---
+
+# Design System: Ninja Roleta
+
+## Overview
+
+**Creative North Star: "A Mesa do Escriba Ninja"**
+
+A interface é um conjunto de objetos de papel, tinta, madeira e laca pousados numa mesa: pergaminhos de borda rasgada, selos (hanko) carimbados, pinceladas, placas e cartas de mapa. Nada parece componente de site. Quem conhece a obra deve sentir que está navegando pelo mundo shinobi, mesmo sem nenhum personagem na tela.
+
+O projeto tem dois temas que contrastam de propósito, como a dualidade Naruto e Sasuke: **Pergaminho** (dia, papel quente, tinta sumi) e **Sumi** (noite, carvão frio, vermelho Sharingan e dourado envelhecido). Só os tokens trocam; a composição é a mesma. Sem escolha do jogador, o jogo segue o aparelho.
+
+A voz é artesanal e ritual (cada ação tem gesto: carimbar, desenrolar, pingar tinta), tensa e contida (vermelho raro, dourado só para conquista) e direta e legível (toque grande, números claros, a ambientação nunca atrapalha a função). A exceção festiva é a roleta, que ganha cor e ritmo de barraca de festival contra o resto sóbrio. Celular e desktop são pares, cada um com composição própria.
+
+**Key Characteristics:**
+- Objetos do universo no lugar de cards, gradientes e sombras difusas.
+- Cantos retos com chanfro como assinatura dos painéis.
+- Vermelho laca para ação e perigo; dourado para conquista.
+- Cada peça no seu espaço: arte preenche a célula e nunca vaza do papel.
+- Movimento só explica gesto ou troca de estado.
+
+## Colors
+
+Paleta de tinta e papel: grafite quase preto, papel envelhecido, vermelho laca e dourado fosco, com poucas cores funcionais dessaturadas para viver nela.
+
+### Primary
+- **Vermelho Laca** (#b5161f): ação e navegação (botão principal, abas, progresso) e também perigo, chefe e carimbo. Hoje `--primary` e `--accent` apontam para o mesmo vermelho, mas ficam separados para poder divergir. No tema claro vira #a3121b.
+- **Laca Viva** (#db3a40): hover. **Laca Funda** (#5e0b10): pressionado e sombra dura dos letreiros. **Marfim de Carimbo** (#f6ecd6): texto sobre o vermelho.
+
+### Secondary
+- **Dourado Envelhecido** (#b8954f): conquista e destaque raro, filetes e foco. **Ouro Claro** (#dcbd78) para brilho; **Ouro Fundo** (#6e5428). No papel claro escurece para #7d5d1f, para ler.
+
+### Neutral
+- **Sumi** (#0d0c0b): fundo noturno; camadas de superfície em #151312, #1a1817, #232120 e #2f2c29; filete #36332f e aço #8a919a.
+- **Texto Marfim** (#ece3d0) e **Cinza de Cinza** (#9a9286) para texto secundário.
+- **Pergaminho** (#e8dcc0 / #d4c39e) com **Tinta de Papel** (#24190f) e #574632 para texto: dentro de `.parchment` os tons de texto são sempre os escuros do papel, nos dois temas.
+- Tema claro: fundo #e6dac0, superfície #f6efde, texto #1f1812.
+- **Madeira** (#4a2f1c) para rolos e placas.
+
+### Functional
+- Vida #5f9a5c, vida baixa #c4412c, chakra #3d6fc4, bom #7fb476, ruim #dc5a4f, jinchuuriki #e0682e. Tipos de técnica têm cor própria (taijutsu, ninjutsu, genjutsu, médico, especial).
+
+### Named Rules
+**The Lacquer Rarity Rule.** O vermelho é ação ou perigo, nunca decoração. Se tudo na tela é vermelho, nada é ação.
+
+**The Tokens Only Rule.** Cor, fonte, duração e forma só por `var(--...)`. Cor solta existe apenas em arte: cenário, roda, cards de modo, barraca, carta do mapa e barra do Portão.
+
+**The Two Moods Rule.** Os temas só trocam tokens. Nenhuma tela tem versão própria para dia ou noite.
+
+## Typography
+
+**Display Font:** Shojumaru (com Impact, Arial Black)
+**Body Font:** Zen Kaku Gothic New (com system-ui)
+**Label/HUD Font:** Barlow Condensed
+**Hand Font:** Kalam
+**Kanji Font:** Yuji Boku (recorte; kanji novo entra no recorte)
+
+**Character:** pincel grande nos letreiros, caligrafia à mão nos títulos de pergaminho, e uma voz condensada de HUD para números e rótulos. O corpo é neutro e legível.
+
+### Hierarchy
+- **Display** (Shojumaru 400, escala fluida, 1.05): só letreiro grande, com sombra dura `2px 2px 0` em vermelho fundo (no tema claro, sombra suave).
+- **Hand** (Kalam 700, 22 a 23px, 1.1): título de pergaminho, citação e nome dos modos.
+- **Body** (Zen Kaku 400/700, 15px, 1.5): texto corrido.
+- **HUD** (Barlow Condensed 600/700, 13 a 18px, caixa alta, +0.05 a +0.14em): números, rótulos, botão primário, chips, títulos de seção.
+- **Kanji** (Yuji Boku, 64% do lado do selo): selos e carimbos, nunca texto corrido.
+
+### Named Rules
+**The One Brush Rule.** Pincel (display) só em letreiro grande. Texto de leitura nunca usa display nem hand.
+
+## Layout
+
+Celular e desktop são pares, não ampliação um do outro. Celular: coluna vertical (largura útil até 520px, 860px em tablet), um toque por ação, botões grandes e CTA fixo no pé (`.sticky-cta`). Desktop: casca com barra lateral persistente e painéis em colunas, largura máxima 2240px, com piso de altura de 620px abaixo do qual a página rola em vez de espremer. As faixas consideram largura e altura.
+
+Ritmo: espaço entre peças `--gap` 12px (`--gap-lg` fluido no desktop), o mesmo em toda grade. Alvo de toque mínimo 36px, 44px em ponteiro grosseiro.
+
+**Cada peça no seu espaço.** A arte preenche a célula com foco nos rostos, sem moldura e sem vazar; peças não se sobrepõem nem cruzam bordas. A forma de cada imagem é lida no build e reservada, para nada pular ao carregar.
+
+## Elevation & Depth
+
+Profundidade vem de camadas de papel e do deslocamento, não de sombra difusa. Painéis são chapados com filete; pergaminhos têm sombra dura, o mesmo recorte rasgado deslocado (`translate(2px, 4px)`), e os vizinhos alternam o espelho do rasgo. Dicas usam sombra larga e escura só por serem flutuantes.
+
+### Named Rules
+**The Hard Shadow Rule.** Sombra é o próprio recorte deslocado ou um letreiro duro. Nada de sombra difusa genérica em painel.
+
+## Shapes
+
+Cantos retos (`--radius: 2px`) e **chanfro** (`--cut` 10px, 6px pequeno, 14px em janelas) como assinatura dos painéis. O recorte vive em `::before` e `::after`, nunca no elemento, para não cortar números flutuantes e o foco. Bordas de pergaminho são rasgadas e queimadas (polígono `--torn`). Selos são quadrados laqueados levemente tortos (-3°); o selo do clã é um losango. Etiquetas são retas, com cor só no filete e no ícone. Ícones são SVG 24×24 em `currentColor`, traço único, nunca emoji.
+
+## Components
+
+### Buttons
+- **Shape:** reto com chanfro nos dois cantos opostos (10px) no primário.
+- **Primary:** laca vermelha, HUD caixa alta 18px, filete dourado interno e base mais escura (inset), mínimo 48px (56px em `.big`). Foco: anel dourado por dentro, porque o chanfro cortaria o contorno.
+- **Hover / Active:** laca viva no hover, laca funda e 1px para baixo no toque.
+- **Secondary:** grafite com filete de aço; hover leva o filete ao dourado. Foco por contorno dourado de 2px.
+- **Ghost:** transparente, mutado; hover sublinha em vermelho.
+- **Segmentado** (`.seg`): dificuldade pinta o selecionado (folha, dourado, vermelho, tinta).
+- **Regra:** botão tem ícone, nome e números principais; efeitos e bloqueios vão para a dica.
+
+### Panels
+- **Painel laqueado** (`.card`, `.panel`, `.chamfer`): grafite com grão, filete de aço desenhado pela camada de baixo, aba vermelha curta no topo marcando o dono. Padding 12px.
+- **Pergaminho** (`.parchment`): papel com grão, manchas e borda queimada; título em Kalam. Botão primário dentro usa dourado claro.
+- **Faixa de pergaminho** (`.scroll-banner`): rolos de madeira nas pontas, título em hand, selo à esquerda.
+
+### Chips
+Etiquetas retas em HUD 13px; cor só no filete e no ícone; variantes de bom, ruim, jinchuuriki, dificuldade e tier.
+
+### Seal (Hanko)
+Quadrado laqueado com kanji em pincel, torto como carimbo; variantes ouro e fantasma; entrada animada de carimbo.
+
+### Tips
+Tira de pergaminho clara com borda superior vermelha, título em HUD vermelho, sem cantos arredondados; abre por mouse, toque, foco por teclado e botão bloqueado.
+
+### Roda (assinatura)
+A roleta é a peça central do Roleta: barraca de festival de cor fixa, onde a identidade festiva vive. O resultado é lido pelo leitor de tela; com menos movimento, a roda para direto no resultado.
+
+### Movimento
+Responde a um gesto ou explica troca de estado. O carimbo (hanko 道) firma a escolha; pincelada liga cenas em sequência; a relíquia antiga se desfaz em tinta. Durações pelos tokens `--dur-*`; o conteúdo já nasce visível; com `prefers-reduced-motion` saem deslocamento e pincelada e ficam cor e opacidade.
+
+## Do's and Don'ts
+
+### Do:
+- **Do** usar objetos do universo (pergaminho, selo, carimbo, placa, carta de mapa) no lugar de componentes genéricos.
+- **Do** usar só tokens `var(--...)`; o tema troca só os tokens.
+- **Do** manter o chanfro em `::before`/`::after` e o foco por dentro quando o elemento é chanfrado.
+- **Do** usar SVG de `ICONS` em `art.ts` (`icon(nome)`) para todo ícone.
+- **Do** manter botões simples (ícone, nome, números) e levar regras e motivos de bloqueio para a dica.
+- **Do** preservar ids, `data-*` e classes que o TS consulta (`.primary`, `.jf`, `.sticky-cta`); o visual não mexe nelas.
+- **Do** garantir teclado, leitor de tela e `prefers-reduced-motion` em todo gesto novo.
+
+### Don't:
+- **Don't** usar emoji como ícone (exceção: o texto de compartilhar).
+- **Don't** usar cantos arredondados, cards genéricos, gradientes modernos ou sombras difusas.
+- **Don't** usar neon, glassmorphism ou estética de painel gamer/e-sports.
+- **Don't** reintroduzir as cores Verde, Laranja e Marrom de tema (v0.55.0, retiradas na v0.56.0).
+- **Don't** voltar ao Portão "Vila com placas", rejeitado.
+- **Don't** sobrepor peças, deixar a arte vazar do papel ou cruzar a borda; cada peça fica no seu espaço.
+- **Don't** usar o pincel (display) ou a manuscrita em texto de leitura.
+- **Don't** pôr cor solta no CSS fora de arte, nem deixar o visual mudar regra, fórmula ou balanceamento.
+- **Don't** depender de arte de terceiros: retratos são opcionais e o desenho em SVG próprio sempre fecha a tela.

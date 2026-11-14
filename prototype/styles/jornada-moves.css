@@ -40,7 +40,7 @@
 .jm-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 6px; }
 .jm-card {
   position: relative; display: grid; grid-template-columns: 32px 1fr; gap: 8px; align-items: center; padding: 7px 10px; min-width: 0;
-  background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--c); color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--c); color: var(--text); font: inherit; text-align: left; cursor: pointer;
   transition: background var(--dur-1), box-shadow var(--dur-1);
 }
 .jm-ico { width: 32px; height: 32px; display: grid; place-items: center; background: var(--c); color: #fff; }

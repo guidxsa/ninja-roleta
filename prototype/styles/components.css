@@ -96,7 +96,7 @@
   display: inline-grid; place-items: center; flex: none; width: var(--s); height: var(--s);
   background: var(--grain-dark), var(--accent); color: var(--accent-ink);
   font: 400 calc(var(--s) * .64)/1 var(--font-kanji);
-  border-radius: 3px; transform: rotate(-3deg);
+  border-radius: var(--radius); transform: rotate(-3deg);
   box-shadow: inset 0 0 0 2px var(--accent), inset 0 0 0 3px color-mix(in srgb, var(--accent-ink) 70%, transparent);
 }
 .seal.two { writing-mode: vertical-rl; font-size: calc(var(--s) * .4); letter-spacing: -.04em; }
@@ -317,7 +317,7 @@ button[data-tip] { cursor: pointer; }
 .toast {
   position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 50; max-width: calc(100% - 32px);
   display: flex; align-items: center; gap: 10px;
-  background: var(--surface); border: 1px solid var(--gold); border-left: 4px solid var(--gold);
+  background: var(--surface); border: 1px solid var(--gold); border-top: 3px solid var(--gold);
   padding: 10px 14px; box-shadow: 0 10px 28px rgba(0, 0, 0, .55);
   font: 600 15px/1.3 var(--font-hud); letter-spacing: .03em; animation: slideUp var(--dur-3) var(--ease);
 }
@@ -325,12 +325,12 @@ button[data-tip] { cursor: pointer; }
 
 /* Bloco de efeito/resultado (texto de um sorteio). */
 .result-card {
-  background: var(--surface-2); border: 1px solid var(--line); border-left: 3px solid var(--gold);
+  background: var(--surface-2); border: 1px solid var(--line); border-top: 3px solid var(--gold);
   padding: 12px; text-align: center;
 }
 .effect {
   background: color-mix(in srgb, var(--gold) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
-  border-left: 3px solid var(--gold); padding: 10px 12px; text-align: center; font-weight: 700; margin-top: 8px;
+  border-top: 3px solid var(--gold); padding: 10px 12px; text-align: center; font-weight: 700; margin-top: 8px;
 }
 
 /* Atual → novo (melhoria de equipamento, invocação ou técnica). */

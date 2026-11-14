@@ -109,7 +109,7 @@
 .jt-node.st-excluded .jt-seal { background: var(--bg); box-shadow: none; border-style: dashed; opacity: .55; }
 .jt-node.sel .jt-seal { transform: rotate(45deg) scale(1.12); outline: 2px solid var(--tree-2); outline-offset: 3px; }
 .jt-node.sel .jt-name { color: var(--tree-2); }
-.jt-node.just .jt-seal { animation: jtStamp .45s cubic-bezier(.2, 1.6, .4, 1); }
+.jt-node.just .jt-seal { animation: jtStamp .45s var(--ease-out); }
 @keyframes jtCall { 0%, 100% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 0 color-mix(in srgb, var(--tree) 70%, transparent); } 50% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 9px transparent; } }
 @keyframes jtStamp { from { transform: rotate(45deg) scale(1.9); opacity: .3; } to { transform: rotate(45deg) scale(1.12); opacity: 1; } }
 
@@ -141,7 +141,7 @@
   22% { opacity: .9; scale: 1; filter: none; }
   to { opacity: 0; scale: 1.25; filter: blur(2px); }
 }
-.jt-node.capstone.just .jt-seal { animation: jtStamp .45s cubic-bezier(.2, 1.6, .4, 1), jtCrown calc(var(--dur-3) * 3) var(--ease) both; }
+.jt-node.capstone.just .jt-seal { animation: jtStamp .45s var(--ease-out), jtCrown calc(var(--dur-3) * 3) var(--ease) both; }
 @keyframes jtCrown { from { box-shadow: 3px 3px 0 var(--ink), 0 0 0 16px transparent; } 35% { box-shadow: 3px 3px 0 var(--ink), 0 0 0 9px color-mix(in srgb, var(--gold) 55%, transparent); } to { box-shadow: 3px 3px 0 var(--ink), 0 0 0 3px var(--gold); } }
 /* Bifurcação: o caminho recusado é riscado com tinta, da esquerda para a direita. */
 .jt-node.st-excluded .jt-name { text-decoration: none; background: linear-gradient(currentColor, currentColor) left 55% / 100% 1.5px no-repeat; animation: jtStrike var(--dur-3) var(--ease) both; }
@@ -154,7 +154,7 @@
 .jt-detail {
   position: sticky; bottom: 0; z-index: 2; margin: auto -16px 0; padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
   display: flex; flex-direction: column; gap: 8px; min-height: 96px;
-  background: var(--surface); border-top: 2px solid var(--tree); box-shadow: 0 -8px 20px rgba(0, 0, 0, .35);
+  background: var(--surface); border-top: 2px solid var(--tree); box-shadow: 0 -3px 0 var(--ink);
 }
 .jt-card { display: flex; flex-direction: column; gap: 3px; }
 .jt-card > b { font: 400 20px/1.1 var(--font-display); letter-spacing: .02em; color: var(--tree-2); }
