@@ -490,10 +490,11 @@ function endTurn(s: JBattle, f: Fighter, data: JornadaData): void {
   // Saiu do atordoamento: ganha a trava, que vale até o fim do próximo turno em que ele age.
   if (wasStunned && !hasEffect(f, 'stun') && !f.down) f.effects.push({ kind: 'stunGuard', turns: data.j.combat.stunImmunityTurns });
   // Forma temporária (roteiro ou ativa): conta os turnos de quem a usa.
-  if (f.form && f.formTurns && --f.formTurns <= 0) {
-    const form = f.form;
-    endForm(f);
-    s.log.push({ type: 'formEnd', uid: f.uid, form });
+  for (const x of [...(f.forms ?? [])]) {
+    if (!x.turns || --x.turns > 0) continue;
+    endForm(f, x.def.id);
+    s.log.push({ type: 'formEnd', uid: f.uid, form: x.def.id });
+    if (x.def.exitLine && !f.down) s.log.push({ type: 'say', uid: f.uid, who: f.defId, line: x.def.exitLine });
   }
   if (f.boost && --f.boost.turns <= 0) f.boost = null;
   if (f.gate && !f.down) {

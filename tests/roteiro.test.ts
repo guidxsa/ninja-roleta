@@ -185,6 +185,51 @@ describe('acréscimos do roteiro (v0.67.0)', () => {
     expect(s1.log.some((e) => e.type === 'formEnd')).toBe(true);
   });
 
+  it('pilha de formas (v0.70.0): a temporária acaba e a permanente continua, com a fala de saída', () => {
+    const d: JornadaData = {
+      ...data,
+      characters: {
+        ...data.characters,
+        naruto: {
+          ...data.characters.naruto!,
+          forms: [
+            { id: 'resolve', mods: { damageMult: 1.1, surviveOnce: true } },
+            { id: 'kyuubiBrief', statMult: 2, addTechniques: ['jRasengan'], turns: 1, exitLine: 'acabou' },
+          ],
+        },
+      },
+    };
+    const script = [rule({ on: 'start' }, { do: 'form', who: 'naruto', form: 'resolve' }, { do: 'form', who: 'naruto', form: 'kyuubiBrief' })];
+    const s0 = startBattle(setup({ enemies: [foe({ hp: 999, maxHp: 999 })], script }), d, fixed(0));
+    const me0 = s0.fighters[0]!;
+    expect(me0.form).toBe('kyuubiBrief');
+    expect(me0.offense.taijutsu).toBe(20);
+    expect(me0.mods.surviveOnce).toBe(true);
+    const s1 = hit(s0, 'jStrike', 'e0', d);
+    const me1 = s1.fighters[0]!;
+    // A Kyuubi saiu: os status e as técnicas voltam, a determinação fica (e volta a ser a forma à mostra).
+    expect(me1.form).toBe('resolve');
+    expect(me1.offense.taijutsu).toBe(10);
+    expect(me1.techniques).not.toContain('jRasengan');
+    expect(me1.mods.surviveOnce).toBe(true);
+    expect(me1.mods.damageMult).toBeCloseTo(1.1);
+    expect(says(s1)).toContain('acabou');
+    // A forma que acabou pode voltar; a que está ligada não liga de novo.
+    expect(s1.log.filter((e) => e.type === 'form')).toHaveLength(2);
+  });
+
+  it('ações novas (v0.70.0): estado e fortalecimento pelo roteiro; a regra some com a marca contrária', () => {
+    const script: ScriptRule[] = [
+      rule({ on: 'start' }, { do: 'effect', who: 'gatoThug', effect: 'stun', turns: 2 }, { do: 'boost', who: 'naruto', tech: 'jSharingan' }),
+      { when: { on: 'start' }, ifNot: { flag: 'valleyForce' }, do: [{ do: 'say', who: 'naruto', line: 'so-sem-a-marca' }] },
+    ];
+    const s = openBattle(setup({ script }), data);
+    expect(s.fighters.find((f) => f.uid === 'e0')!.effects).toEqual([{ kind: 'stun', turns: 2 }]);
+    expect(s.fighters[0]!.boost).toMatchObject({ techId: 'jSharingan' });
+    expect(says(s)).toEqual(['so-sem-a-marca']);
+    expect(says(openBattle(setup({ script, runFlags: ['valleyForce'] }), data))).toEqual([]);
+  });
+
   it('técnica sorteada: paga uma vez e resolve a variante; os pesos dos talentos mudam o sorteio', () => {
     const roll = { ...data.techniques.jShuriken!, id: 'jTestRoll', baseDamage: 0, chakraCost: 3, roll: [{ tech: 'jStrike', weight: 1 }, { tech: 'jShuriken', weight: 0 }] };
     const d: JornadaData = { ...data, techniques: { ...data.techniques, jTestRoll: roll } };

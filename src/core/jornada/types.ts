@@ -227,7 +227,7 @@ export interface Fighter {
   boost: (Boost & { techId: string }) | null;
   /** Portão aberto e turnos já mantidos (a próxima manutenção é a de número rounds + 1; trocar não zera). */
   gate: { level: number; rounds: number } | null;
-  /** Forma ligada (roteiro), quando houver. */
+  /** Forma à mostra (a última que entrou), quando houver. */
   form?: string;
   /** Saiu da luta pelo roteiro (troca de fase): não volta nem conta para a vitória. */
   gone?: boolean;
@@ -235,9 +235,10 @@ export interface Fighter {
   knocked?: boolean;
   /** Entrou pelo roteiro (invocação, convidado): não vai para a equipe da run no fim da luta. */
   guest?: boolean;
-  /** Ficha de antes da forma e turnos que ainda restam dela (0 = até o fim da luta). */
+  /** Ficha de antes das formas. */
   formBase?: { offense: AttackStats; resistance: Resistances; techniques: string[]; maxHp: number; mods: FighterMods; passive?: EnemyPassive };
-  formTurns?: number;
+  /** Formas ligadas, na ordem em que entraram, e os turnos que restam de cada uma (0 = até o fim da luta). */
+  forms?: { def: FormDef; turns: number }[];
 }
 
 /** Lutador pronto para entrar (sem uid, lado e estado de luta). */
