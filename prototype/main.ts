@@ -15,7 +15,7 @@ import {
   type RBattleOptions,
   type REvent,
 } from '../src/core/roleta/battle';
-import { createRoletaPlayer, playerTechniques, roletaKit } from '../src/core/roleta/player';
+import { createRoletaPlayer, playerTechniques } from '../src/core/roleta/player';
 import { roletaData as rdata } from '../src/data/roleta/index';
 import { hasElementalNinjutsu } from '../src/core/nature';
 import { gateUpkeep } from '../src/core/gates';
@@ -84,7 +84,7 @@ import {
   type Step,
   xpStep,
 } from '../src/core/progression';
-import { buildLabPlayer, LAB_STAT_KEYS, labLearnable, labOrigin, labStatsOf, parseLabParams, type LabConfig } from '../src/core/lab';
+import { parseSeedParam } from '../src/core/lab';
 import { lineageKey, newAchievements, type AchievementCategory } from '../src/core/achievements';
 import { addEffect, addFight, addJokenpo, addPreEvent, emptyRunStats, type RunStats } from '../src/core/runStats';
 import { summarizeRoletaFight } from '../src/core/roleta/stats';
@@ -161,17 +161,17 @@ const data = rdata.base;
 declare const __VERSION__: string;
 const VERSION = typeof __VERSION__ === 'undefined' ? 'dev' : __VERSION__;
 
-/** `?teste` abre o laboratório; `?seed=N` fixa as roletas (reproduz uma run ou um bug). */
-const LAB = parseLabParams(window.location.search);
+/** `?seed=N` fixa as roletas (reproduz uma run ou um bug; é o replay do Compartilhar). */
+const SEED = parseSeedParam(window.location.search);
 /** Sem `?seed=`, cada run sorteia a própria seed (`nextRunSeed`), para o Compartilhar. */
-let rng: Rng = LAB.seed !== null ? createRng(LAB.seed) : () => Math.random();
-let labSeedUsed = false;
+let rng: Rng = SEED !== null ? createRng(SEED) : () => Math.random();
+let seedUsed = false;
 
 /** Seed da run que começa agora. Com `?seed=`, só a primeira run da página repete a seed. */
 function nextRunSeed(): number | null {
-  if (LAB.seed !== null) {
-    const seed = labSeedUsed ? null : LAB.seed;
-    labSeedUsed = true;
+  if (SEED !== null) {
+    const seed = seedUsed ? null : SEED;
+    seedUsed = true;
     return seed;
   }
   const seed = Math.floor(Math.random() * 2 ** 31);
@@ -477,7 +477,7 @@ function hardcoreUnlocked(): boolean {
 
 /** Uma luta da campanha: entra nas estatísticas da run e no Livro Bingo. */
 function noteFight(villainId: string, exam: boolean, battle: RBattle) {
-  if (!camp || LAB.lab) return;
+  if (!camp) return;
   const fight = summarizeRoletaFight(villainId, exam, battle);
   camp.stats = addFight(camp.stats, fight);
   profile = recordFight(profile, fight);
@@ -487,7 +487,7 @@ function noteFight(villainId: string, exam: boolean, battle: RBattle) {
 
 /** Libera as conquistas novas e avisa cada uma. O laboratório não conta. */
 function checkAchievements(result: 'inProgress' | 'victory' | 'defeat', fallenTo: string | null) {
-  if (!camp || LAB.lab) return;
+  if (!camp) return;
   const ids = newAchievements(achievements, {
     stats: camp.stats,
     origin: camp.origin,
@@ -510,7 +510,7 @@ function checkAchievements(result: 'inProgress' | 'victory' | 'defeat', fallenTo
 function track(patch: { status?: RunStatus; furthestStage?: number; difficulty?: Difficulty; cycle?: number; fights?: number }) {
 
   // Runs do laboratório não entram no histórico.
-  if (!camp || LAB.lab) return;
+  if (!camp) return;
   updateRun(storage, camp.runId, { ...patch, revivesUsed: camp.player.revivesUsed }, new Date(), data.balance.history.maxRuns);
 }
 
@@ -664,7 +664,7 @@ function roletaRelicBar(p: PlayerState): string {
 
 /** Relíquias que apareceram no Roleta entram na coleção do perfil. */
 function discoverRoletaRelics(ids: readonly string[]) {
-  if (LAB.lab || !ids.length) return;
+  if (!ids.length) return;
   const next = discoverRelics(profile, ids, new Date());
   if (next === profile) return;
   profile = next;
@@ -2322,178 +2322,6 @@ function historyTab(container: HTMLElement) {
 // ---------------------------------------------------------------------------
 // Fluxo da campanha
 
-// ---------------------------------------------------------------------------
-// Tela: laboratório (modo de teste, `?teste`)
-
-const LAB_KEY = 'proto_lab_v1';
-type LabTarget = { kind: 'fight'; villainId: string } | { kind: 'campaign'; from: number };
-/** Última montagem do laboratório (preferência do aparelho, não é campanha). */
-interface LabSaved {
-  config: LabConfig;
-  villainId: string;
-  stage: number;
-}
-
-function loadLab(): LabSaved {
-  const fallback: LabSaved = {
-    config: { lineageId: 'common', elements: ['fire'], jinchuuriki: false, difficulty: DEFAULT_DIFFICULTY, level: 1, techniques: [], bag: {} },
-    villainId: villains[0]!.id,
-    stage: 0,
-  };
-  try {
-    const raw = storage.getItem(LAB_KEY);
-    const saved = (raw ? JSON.parse(raw) : {}) as Partial<LabSaved>;
-    const merged = { ...fallback, ...saved, config: { ...fallback.config, ...saved.config } };
-    // Montagens de antes da v0.30 guardam `affinity` no lugar de `elements`.
-    const old = saved.config as { affinity?: Element | null } | undefined;
-    if (!Array.isArray(merged.config.elements)) merged.config.elements = old?.affinity ? [old.affinity] : [];
-    // Dados que mudaram de versão (linhagem ou vilão removido) voltam ao padrão.
-    if (!data.lineages.some((l) => l.id === merged.config.lineageId)) merged.config.lineageId = fallback.config.lineageId;
-    if (!villainsById[merged.villainId]) merged.villainId = fallback.villainId;
-    if (!campaign[merged.stage]) merged.stage = 0;
-    return merged;
-  } catch {
-    return fallback;
-  }
-}
-
-function saveLab(saved: LabSaved) {
-  try {
-    storage.setItem(LAB_KEY, JSON.stringify(saved));
-  } catch {
-    /* conveniência */
-  }
-}
-
-const ALL_ELEMENTS = Object.keys(data.elementWeights) as Element[];
-
-/** Monta a ficha à mão e escolhe o destino. Deixa `camp` com a ficha montada (a Ficha funciona). */
-
-async function labScreen(): Promise<LabTarget> {
-  const saved = loadLab();
-  const cfg = saved.config;
-  const opt = (value: string, label: string, selected: boolean) =>
-    `<option value="${esc(value)}"${selected ? ' selected' : ''}>${esc(label)}</option>`;
-  const root = show(
-    h(`<div class="screen lab">
-      <h2>${S.lab.title}</h2>
-      <p class="muted small center">${S.lab.intro}</p>
-      <section class="lab-box"><h3>${S.lab.origin}</h3>
-        <label>${S.lab.lineage}<select name="lineage">${data.lineages.map((l) => opt(l.id, S.lineages[l.id] ?? l.id, l.id === cfg.lineageId)).join('')}</select></label>
-        <label>${S.lab.primary}<select name="primary">${opt('', S.lab.noElement, cfg.elements.length === 0)}${ALL_ELEMENTS.map((e) => opt(e, S.elements[e], e === cfg.elements[0])).join('')}</select></label>
-        <div class="lab-elements"><span>${S.lab.elements}</span>${ALL_ELEMENTS.map((e) => `<label class="lab-check"><input type="checkbox" name="extra-el" value="${e}"${cfg.elements.slice(1).includes(e) ? ' checked' : ''}> ${S.elements[e]}</label>`).join('')}</div>
-        <p class="muted small">${S.lab.elementsHint}</p>
-        <label>${S.lab.difficulty}<select name="difficulty">${DIFFICULTIES.map((d) => opt(d, S.difficulty[d].name, d === cfg.difficulty)).join('')}</select></label>
-        <label>${S.lab.level}<input type="number" name="level" min="1" max="20" inputmode="numeric" value="${cfg.level}"></label>
-        <label class="lab-check"><input type="checkbox" name="jin"${cfg.jinchuuriki ? ' checked' : ''}> ${S.lab.jinchuuriki}</label>
-      </section>
-      <section class="lab-box"><h3>${S.lab.stats}</h3>
-        <p class="muted small">${S.lab.statsHint}</p>
-        ${LAB_STAT_KEYS.map((k) => `<label>${S.stats[k]}<input type="number" name="stat-${k}" min="0" inputmode="numeric" value="${cfg.stats?.[k] ?? ''}"></label>`).join('')}
-        <button class="btn" data-stats-reset>${S.lab.statsReset}</button>
-      </section>
-      <div id="lab-preview"></div>
-      <section class="lab-box"><h3>${S.lab.techniques}</h3><div id="lab-techs" class="lab-techs"></div></section>
-      <section class="lab-box"><h3>${S.lab.bag}</h3>
-        ${CONSUMABLES.map((id) => `<label>${S.consumables[id]!.name}<input type="number" name="bag-${id}" min="0" max="${data.balance.items.bagMax}" inputmode="numeric" value="${cfg.bag[id] ?? 0}"></label>`).join('')}
-      </section>
-      <section class="lab-box"><h3>${S.lab.destination}</h3>
-        <label>${S.lab.villain}<select name="villain">${villains.map((v) => opt(v.id, villainName(v.id), v.id === saved.villainId)).join('')}</select></label>
-        <button class="btn primary" data-go="fight">${icon('swords')} ${S.lab.fight}</button>
-        <label>${S.lab.stage}<select name="stage">${campaign.map((st, i) => opt(String(i), `${i + 1}. ${stageName(st)}`, i === saved.stage)).join('')}</select></label>
-        <button class="btn" data-go="campaign">${S.lab.campaign}</button>
-      </section>
-    </div>`),
-  );
-  const field = (name: string) => root.querySelector<HTMLInputElement>(`[name="${name}"]`)!;
-  const read = (): LabSaved => ({
-    config: {
-      lineageId: field('lineage').value,
-      elements: [
-        ...(field('primary').value ? [field('primary').value as Element] : []),
-        ...[...root.querySelectorAll<HTMLInputElement>('[name="extra-el"]:checked')].map((i) => i.value as Element),
-      ],
-      jinchuuriki: field('jin').checked,
-      difficulty: field('difficulty').value as Difficulty,
-      level: Math.max(1, Math.floor(Number(field('level').value)) || 1),
-      techniques: [...root.querySelectorAll<HTMLInputElement>('[name="tech"]:checked')].map((i) => i.value),
-      bag: Object.fromEntries(CONSUMABLES.map((id) => [id, Number(field(`bag-${id}`).value) || 0])),
-      // Só os status escritos; em branco segue a ficha montada.
-      stats: Object.fromEntries(LAB_STAT_KEYS.filter((k) => field(`stat-${k}`).value.trim() !== '').map((k) => [k, Number(field(`stat-${k}`).value)])),
-    },
-    villainId: field('villain').value,
-    stage: Number(field('stage').value),
-  });
-  const render = () => {
-    const current = read();
-    const c = current.config;
-    const elementRule = lineageOf(c.lineageId, data).elements;
-    const noChoice = elementRule.countWeights.length <= 1 || (elementRule.fixed !== undefined && elementRule.countWeights.length <= 2);
-    field('primary').disabled = noChoice || elementRule.fixed !== undefined;
-    root.querySelectorAll<HTMLInputElement>('[name="extra-el"]').forEach((i) => (i.disabled = noChoice));
-    // Roleta enxuto: o kit é fixo pela origem (as técnicas sobem sozinhas com o nível).
-    const enxuto = (p: PlayerState): PlayerState => ({ ...p, techniques: roletaKit(p.origin, rdata), techniqueLevels: {}, pendingUpgrades: 0 });
-    const player = enxuto(buildLabPlayer({ ...c, techniques: [] }, data));
-    const auto = labStatsOf(buildLabPlayer({ ...c, stats: {} }, data));
-    for (const k of LAB_STAT_KEYS) field(`stat-${k}`).placeholder = String(auto[k]);
-    // As opções de técnica dependem da origem e do nível, não das extras já marcadas.
-    const learnable: ReturnType<typeof labLearnable> = [];
-    root.querySelector<HTMLElement>('#lab-techs')!.innerHTML = learnable.length
-      ? learnable
-          .map(
-            (t) =>
-              `<label class="lab-check"><input type="checkbox" name="tech" value="${t.id}"${c.techniques.includes(t.id) ? ' checked' : ''}> ${esc(techName(t.id))}${elChip(t.element === 'affinity' ? (player.elements[0] ?? null) : t.element, false)}</label>`,
-          )
-          .join('')
-      : `<p class="muted small">${S.lab.noTechniques}</p>`;
-    camp = {
-      runId: 'lab',
-      origin: labOrigin(c, data),
-      player,
-      difficulty: c.difficulty,
-      run: newRoletaRun(player, c.difficulty),
-      mods: { ...NO_MODS },
-      seed: LAB.seed,
-      trail: [],
-      log: {},
-      stats: emptyRunStats(),
-    };
-    campLive = true;
-    syncSheetBtn();
-    root.querySelector<HTMLElement>('#lab-preview')!.innerHTML = playerPanel(player);
-    saveLab(current);
-  };
-  render();
-  root.addEventListener('change', render);
-  return new Promise((resolve) => {
-    root.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('[data-stats-reset]')) {
-        for (const k of LAB_STAT_KEYS) field(`stat-${k}`).value = '';
-        render();
-        return;
-      }
-      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-go]');
-      if (!btn) return;
-      render();
-      const s = read();
-      resolve(btn.dataset.go === 'fight' ? { kind: 'fight', villainId: s.villainId } : { kind: 'campaign', from: s.stage });
-    });
-  });
-}
-
-/** Uma volta do laboratório: monta, resolve os upgrades de marco, luta ou joga a campanha e volta. */
-async function labFlow(): Promise<void> {
-  progressDots(-1);
-  const target = await labScreen();
-  await levelUps();
-  if (target.kind === 'fight') {
-    const name = villainName(target.villainId);
-    await battleScreen({ villainId: target.villainId, options: {}, label: S.lab.fightLabel(esc(name)), exam: false });
-    return;
-  }
-  await runCampaign();
-}
-
 /**
  * Run do Roleta enxuto (docs/roleta/run.md): a cada passo, sorteia o vilão da categoria, gira o evento, luta, ganha o
  * XP e a recompensa. Depois do chefe: baú e o próximo ciclo (no 1º, a tela de vitória pergunta se segue).
@@ -2583,7 +2411,7 @@ async function abandonRun(): Promise<void> {
 
 /** Recorde do Roleta (ciclo alcançado e lutas vencidas); devolve se bateu. */
 function recordRoleta(): boolean {
-  if (!camp || LAB.lab) return false;
+  if (!camp) return false;
   const next = recordRoletaReach(profile, { cycle: camp.run.cycle + 1, fights: camp.run.wins });
   if (next === profile) return false;
   profile = next;
@@ -2737,11 +2565,9 @@ async function main() {
   installFolds();
   await loadFonts();
 
-  if (LAB.lab) document.getElementById('version')!.textContent += ` · ${S.lab.badge}`;
-  if (LAB.seed !== null) document.getElementById('version')!.textContent += ` · ${S.lab.seed(LAB.seed)}`;
+  if (SEED !== null) document.getElementById('version')!.textContent += ` · ${S.ui.seedBadge(SEED)}`;
   document.getElementById('home-btn')!.addEventListener('click', askHome);
   const round = async () => {
-    if (LAB.lab) return labFlow();
     const pick = await modeScreen();
     if (pick !== 'roleta') return runJornada(jornadaHost, { resume: pick === 'jornada-continue' });
     await ensurePlayerName();
@@ -3061,9 +2887,9 @@ function setPlayerName(raw: string): void {
   saveProfile(storage, profile);
 }
 
-/** Pergunta o nome uma vez, na primeira entrada no Roleta ou no Caminho Ninja. O Laboratório não pergunta. */
+/** Pergunta o nome uma vez, na primeira entrada no Roleta ou no Caminho Ninja. */
 async function ensurePlayerName(): Promise<void> {
-  if (profile.playerName !== undefined || LAB.lab) return;
+  if (profile.playerName !== undefined) return;
   setPlayerName(await askPlayerName());
 }
 
@@ -3074,7 +2900,7 @@ const jornadaHost: JornadaHost = {
   nextSeed: () => nextRunSeed() ?? Math.floor(Math.random() * 2 ** 31),
   unlocked: () => new Set(Object.keys(profile.achievements)),
   unlock: (ids) => {
-    if (!ids.length || LAB.lab) return;
+    if (!ids.length) return;
     profile = unlockAchievements(profile, ids, new Date());
     saveProfile(storage, profile);
     const name = (id: string) => S.jornada.achievements.list[id]?.name ?? S.achievements.list[id]?.name ?? id;
@@ -3093,7 +2919,6 @@ const jornadaHost: JornadaHost = {
     syncSheetBtn();
   },
   discoverRelics: (ids) => {
-    if (LAB.lab) return;
     const next = discoverRelics(profile, ids, new Date());
     if (next === profile) return;
     profile = next;
@@ -3101,7 +2926,7 @@ const jornadaHost: JornadaHost = {
   },
   jornadaRecord: () => profile.jornada?.generic ?? null,
   recordJornada: (run) => {
-    if (LAB.lab || run.mode !== 'generic') return false;
+    if (run.mode !== 'generic') return false;
     const next = recordJornadaReach(profile, reachOf(run));
     if (next === profile) return false;
     profile = next;

@@ -28,7 +28,7 @@ export interface JornadaHost {
   setSheet: (open: (() => void) | null) => void;
   /** Recorde do modo infinito do Caminho Ninja (null = nenhum). */
   jornadaRecord: () => JornadaReach | null;
-  /** Grava até onde a run do Caminho Ninja chegou; devolve se bateu o recorde. Nada no Laboratório. */
+  /** Grava até onde a run do Caminho Ninja chegou; devolve se bateu o recorde. */
   recordJornada: (run: JRun) => boolean;
   /** As conquistas mais recentes do perfil, da mais nova para a mais antiga (dias desde que saíram). */
   /** `onlyJornada`: só as conquistas da Jornada (a entrada da Jornada); sem ele, todas (o Início). */

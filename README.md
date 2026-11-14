@@ -21,14 +21,11 @@ npm run sim:origens -- --runs 300          # campanha completa por origem, com e
 npm run proto                              # gera dist/prototipo.html (abre direto no navegador, funciona offline), sw.js e manifesto
 ```
 
-## Modo de teste
+## Reproduzir uma run
 
-Dois parâmetros na URL do protótipo, para testar e reproduzir bugs:
+`?seed=42` na URL fixa as roletas: a mesma seed dá a mesma sequência de sorteios. É o link que o Compartilhar gera, e serve para reproduzir um bug. Exemplo: https://guidxsa.github.io/ninja-roleta/?seed=42
 
-- `?seed=42`: fixa as roletas. A mesma seed dá a mesma sequência de sorteios.
-- `?teste`: abre o **Laboratório** no lugar da roleta de origem. Ali se monta a ficha à mão (linhagem, afinidade, jinchuuriki, dificuldade, nível, status, técnicas extras e bolsa) e se escolhe uma luta avulsa contra qualquer vilão ou uma etapa da campanha para começar. A última montagem fica salva no aparelho. Runs do laboratório não entram no histórico.
-
-Os dois combinam: https://guidxsa.github.io/ninja-roleta/?teste&seed=42
+O laboratório de telas (UI Lab) roda só no computador de quem desenvolve: ver [docs/ui-lab/ARCHITECTURE.md](docs/ui-lab/ARCHITECTURE.md).
 
 ## Estrutura
 

@@ -525,6 +525,8 @@ export const ptBR = {
     failed: 'Falha',
   } as Record<string, string>,
   ui: {
+    /** Rótulo da versão com `?seed=N` (replay do Compartilhar). */
+    seedBadge: (n: number) => `seed ${n}`,
     title: 'Ninja Roleta',
     subtitle: 'protótipo',
     /** O aparelho não guardou a Jornada (cheio ou bloqueado). Avisado uma vez por sessão. */
@@ -1187,34 +1189,6 @@ export const ptBR = {
       genjutsuImmune: { name: 'Imune a genjutsu', desc: 'Ilusões não fazem efeito.' },
     },
     hint: 'Segure o dedo (ou passe o mouse) sobre técnicas, selos e condições para ver o que fazem.',
-  },
-  /** Laboratório (modo de teste, `?teste`). */
-  lab: {
-    title: 'Laboratório',
-    intro: 'Modo de teste: monte a ficha e escolha a luta. Nada daqui entra no histórico.',
-    badge: 'teste',
-    seed: (n: number) => `seed ${n}`,
-    origin: 'Origem',
-    lineage: 'Linhagem',
-    primary: 'Elemento principal',
-    noElement: '— nenhum —',
-    elements: 'Outros elementos',
-    elementsHint: 'O fixo da origem (fogo do Uchiha) entra sozinho, e a ficha corta no máximo da roleta da origem.',
-    jinchuuriki: 'Jinchuuriki',
-    difficulty: 'Dificuldade',
-    level: 'Nível',
-    techniques: 'Técnicas extras',
-    noTechniques: 'Nenhuma técnica a mais para esta origem.',
-    bag: 'Bolsa',
-    stats: 'Status',
-    statsHint: 'Em branco = valor da ficha montada. HP e chakra são os máximos.',
-    statsReset: 'Limpar status',
-    destination: 'Destino',
-    villain: 'Vilão',
-    stage: 'Etapa',
-    fight: 'Luta avulsa',
-    campaign: 'Começar na etapa',
-    fightLabel: (name: string) => `Laboratório · ${name}`,
   },
   /** Texto de compartilhar a run no fim (estilo Wordle). */
   share: {
