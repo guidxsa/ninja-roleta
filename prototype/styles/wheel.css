@@ -74,7 +74,11 @@
   font-size: var(--fs-xs); line-height: 1.05; letter-spacing: 0; text-align: center; white-space: normal; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
-.strip-bar .seg.dim { opacity: .25; }
+/* Fatia que não saiu: o fundo escurece e o nome continua legível (com opacidade, o texto sumia no tema claro). */
+.strip-bar .seg.dim { filter: saturate(.3) brightness(.55); }
+.strip-bar .seg.label-start { justify-content: flex-start; }
+.strip-bar .seg.label-end { justify-content: flex-end; }
+.strip-bar .seg:is(.label-start, .label-end) span { padding: 0 8px; }
 .strip-marker {
   position: absolute; top: -7px; bottom: -7px; width: 4px; margin-left: -2px; left: 0;
   background: var(--text); box-shadow: 0 0 0 1px var(--ink);

@@ -18,7 +18,7 @@
 .hud-main { display: flex; align-items: flex-start; gap: 10px; }
 .hud-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .hud-plate { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.hud-plate .name { flex: 1; min-width: 0; font: 400 var(--fs-2xl)/1.1 var(--font-display); letter-spacing: .02em; text-shadow: var(--title-shadow); overflow-wrap: break-word; }
+.hud-plate .name { flex: 1; min-width: 0; font: 700 var(--fs-3xl)/1.15 var(--font-hand); overflow-wrap: break-word; }
 .hud-face { flex: none; position: relative; }
 .hud .bar-hp { height: 18px; }
 .hud .bar-ck { height: 11px; }

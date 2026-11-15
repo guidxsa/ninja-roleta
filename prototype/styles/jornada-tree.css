@@ -45,7 +45,7 @@
 .jt-head { position: relative; display: flex; align-items: center; gap: 10px; }
 .jt-head .portrait { flex: none; border-color: var(--tree); box-shadow: 2px 2px 0 var(--ink); }
 .jt-title { flex: 1; min-width: 0; }
-.jt-title h2 { margin: 0; font: 400 var(--fs-2xl)/1.05 var(--font-display); text-align: left; text-shadow: var(--title-shadow); }
+.jt-title h2 { margin: 0; font: 400 var(--fs-4xl)/1.05 var(--font-display); text-align: left; text-shadow: var(--title-shadow); }
 .jt-title h2::after { display: none; }
 .jt-title small { display: block; color: var(--muted); font: 600 var(--fs-sm)/1.2 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jt-points { flex: none; display: flex; flex-direction: column; align-items: center; min-width: 50px; padding: 3px 8px; border: 1px solid var(--line-strong); background: var(--surface); }
@@ -159,7 +159,7 @@
   background: var(--surface); border-top: 2px solid var(--tree); box-shadow: 0 -3px 0 var(--ink);
 }
 .jt-card { display: flex; flex-direction: column; gap: 3px; }
-.jt-card > b { font: 400 var(--fs-2xl)/1.1 var(--font-display); letter-spacing: .02em; color: var(--tree-2); }
+.jt-card > b { font: 700 var(--fs-3xl)/1.15 var(--font-hand); color: var(--tree-2); }
 .jt-card > small { font-size: var(--fs-sm); line-height: 1.3; color: var(--muted); }
 .jt-card .jt-rank { font: 700 var(--fs-sm)/1.2 var(--font-hud); letter-spacing: .04em; color: var(--tree-2); }
 .jt-card .jt-power { font: 700 var(--fs-sm)/1.2 var(--font-hud); letter-spacing: .04em; }

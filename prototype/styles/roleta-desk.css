@@ -124,7 +124,7 @@
   .rsheet-panel > h3 { margin: 0 0 8px; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-align: left; }
   .rsheet-body { display: flex; flex-direction: column; gap: 6px; }
   .rsheet-body .sheet-head { display: flex; gap: 10px; align-items: center; }
-  .rsheet-body .sheet-name { margin: 0; font: 400 var(--fs-2xl)/1.1 var(--font-display); }
+  .rsheet-body .sheet-name { margin: 0; font: 700 var(--fs-3xl)/1.15 var(--font-hand); }
   .rsheet-body .sheet-fields { margin: 4px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; font-size: var(--fs-sm); }
   .rsheet-body .sheet-fields > div { display: contents; }
   .rsheet-body .sheet-fields dt { color: var(--muted); font: 700 var(--fs-xs)/1.6 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }

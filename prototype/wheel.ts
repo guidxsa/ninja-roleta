@@ -112,6 +112,26 @@ function tickOnPegs(svg: SVGElement, ranges: [number, number][]): () => void {
   return () => cancelAnimationFrame(frame);
 }
 
+interface SliceLabel {
+  text: SVGTextElement;
+  /** Meio da fatia, em graus no desenho (0 = topo, sentido horário). */
+  mid: number;
+  x: number;
+  y: number;
+}
+
+/**
+ * Texto ao longo do raio, começando na borda e indo para o centro. A metade em que ele lê de pé depende de onde a fatia
+ * está na tela, não no desenho: com a roda girada `rotation` graus, a fatia do lado direito pode parar do lado
+ * esquerdo, e o rótulo ficava de cabeça para baixo. Por isso a orientação é refeita quando a roda para.
+ */
+function orientLabel(l: SliceLabel, rotation: number): void {
+  const screen = (((l.mid + rotation) % 360) + 360) % 360;
+  const right = screen <= 180;
+  l.text.setAttribute('transform', `rotate(${right ? l.mid - 90 : l.mid + 90} ${l.x} ${l.y})`);
+  l.text.setAttribute('text-anchor', right ? 'end' : 'start');
+}
+
 export function createWheel(slices: WheelSlice[]): Wheel {
   const el = document.createElement('div');
   el.className = 'wheel-block';
@@ -124,6 +144,7 @@ export function createWheel(slices: WheelSlice[]): Wheel {
   svg.setAttribute('aria-hidden', 'true');
   const ranges = spans(slices);
   const paths: SVGElement[] = [];
+  const labels: SliceLabel[] = [];
   const rim = document.createElementNS(SVG_NS, 'circle');
   rim.setAttribute('cx', `${C}`);
   rim.setAttribute('cy', `${C}`);
@@ -162,10 +183,8 @@ export function createWheel(slices: WheelSlice[]): Wheel {
       text.setAttribute('x', `${x}`);
       text.setAttribute('y', `${y}`);
       text.setAttribute('class', 'slice-label');
-      // Texto ao longo do raio, começando na borda e indo para o centro, sempre legível.
-      const right = mid <= 180;
-      text.setAttribute('transform', `rotate(${right ? mid - 90 : mid + 90} ${x} ${y})`);
-      text.setAttribute('text-anchor', right ? 'end' : 'start');
+      labels.push({ text, mid, x, y });
+      orientLabel(labels[labels.length - 1]!, 0);
       writeLabel(
         text,
         x,
@@ -241,6 +260,8 @@ export function createWheel(slices: WheelSlice[]): Wheel {
         stop();
       }
       land(ms === 0);
+      // Parada: cada rótulo lê de pé onde a fatia ficou.
+      labels.forEach((l) => orientLabel(l, target));
       delete el.dataset.spinning;
       paths.forEach((path, i) => path.classList.toggle('dim', i !== index));
       items.forEach((li, i) => li.classList.toggle('win', i === index));
@@ -288,4 +309,8 @@ export async function stripRoulette(
   container.querySelectorAll<HTMLElement>('.seg').forEach((seg) => {
     seg.classList.toggle('dim', seg.dataset.i !== `${index}`);
   });
+  // O marcador parado não corta o nome: o rótulo da fatia sorteada vai para o lado oposto ao dele.
+  const [a, b] = ranges[index]!;
+  const inSeg = (pos / 100 - a) / Math.max(b - a, 1e-6);
+  container.querySelector<HTMLElement>(`.seg[data-i="${index}"]`)?.classList.add(inSeg < 0.5 ? 'label-end' : 'label-start');
 }

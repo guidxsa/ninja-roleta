@@ -4,7 +4,7 @@
 .jmode-panel { --tab: var(--gold); }
 .jmode-card { display: flex; gap: 12px; align-items: center; }
 .jdiff-both { margin: 6px 0 2px; color: var(--gold-2); font-weight: 700; }
-.jmode-card h3 { margin: 0 0 4px; text-align: left; font: 400 var(--fs-2xl)/1.1 var(--font-display); letter-spacing: .02em; text-transform: none; text-shadow: var(--title-shadow); }
+.jmode-card h3 { margin: 0 0 4px; text-align: left; font: 700 var(--fs-3xl)/1.15 var(--font-hand); text-transform: none; }
 .jstart-face { display: flex; justify-content: center; }
 
 /* HUD da run */
@@ -31,7 +31,7 @@
 .jstop.done .jstop-ico { background: var(--gold); color: var(--ink); border-color: var(--gold); }
 .jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 16%, transparent), transparent 85%); }
 .jstop.here .jstop-ico { border-color: var(--primary-2); background: var(--primary); color: var(--primary-ink); }
-.jstop.here .jstop-txt b { font: 400 var(--fs-xl)/1.2 var(--font-display); letter-spacing: .02em; }
+.jstop.here .jstop-txt b { font: 700 var(--fs-2xl)/1.15 var(--font-hand); }
 .jstop.k-boss .jstop-ico { border-color: var(--accent-2); }
 .jstop.k-elite .jstop-ico { border-color: var(--gold-2); }
 .jstop.k-story .jstop-ico { border-color: var(--ck); }
@@ -110,7 +110,7 @@
 .jrcard-ico { position: relative; width: 60px; height: 60px; flex: none; display: grid; place-items: center; background: var(--surface-3); border: 1px solid var(--tier); }
 .jrcard-ico .ico { width: 42px; height: 42px; }
 .jrcard-txt { flex: 1; min-width: 0; }
-.jrcard-txt b { display: block; font: 400 var(--fs-xl)/1.15 var(--font-display); letter-spacing: .02em; }
+.jrcard-txt b { display: block; font: 700 var(--fs-2xl)/1.15 var(--font-hand); }
 .jrcard-txt small { display: block; color: var(--muted); }
 .jrcard-txt .jrcard-tier { color: var(--tier); font: 700 var(--fs-xs)/1.3 var(--font-hud); text-transform: uppercase; letter-spacing: .12em; }
 .jrcard.tier-common .jrcard-tier { color: var(--muted); }
@@ -223,7 +223,7 @@
 .jmap-boss .portrait { flex: none; border-color: var(--accent-2); box-shadow: 2px 2px 0 var(--accent-deep); }
 .jmap-boss span:not(.portrait) { display: flex; flex-direction: column; gap: 1px; }
 .jmap-boss small { font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.jmap-boss b { font: 400 var(--fs-2xl)/1.1 var(--font-display); color: var(--accent-text); letter-spacing: .02em; }
+.jmap-boss b { font: 700 var(--fs-3xl)/1.15 var(--font-hand); color: var(--accent-text); }
 /* Altura pela quantidade de linhas (--rows, vindo do mapa); nós e herói ficam em % dela. */
 .jmap { width: 100%; height: calc(var(--rows, 12) * 74px + 104px); }
 .jmap-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -388,7 +388,7 @@
 .jnext h4 { margin: 10px 0 4px; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .jnext-stop { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface-2); border-top: 3px solid var(--accent); }
 .jnext-stop > .ico { width: 22px; height: 22px; flex: none; color: var(--accent-text); }
-.jnext-stop b { display: block; font: 400 var(--fs-xl)/1.15 var(--font-display); }
+.jnext-stop b { display: block; font: 700 var(--fs-2xl)/1.15 var(--font-hand); }
 .jnext-stop small, .jnext-list small { display: block; color: var(--muted); font-size: var(--fs-xs); }
 .jnext-foes, .jnext-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .jnext-foes li { display: flex; align-items: center; gap: 10px; }
