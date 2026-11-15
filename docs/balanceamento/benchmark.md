@@ -1,6 +1,6 @@
 # Benchmark de balanceamento
 
-Cenários padronizados para acompanhar o desempenho dos três modos a cada mudança de balanceamento. O diagnóstico atual está em [diagnostico.md](diagnostico.md). A coleta fica em `src/sim/audit.ts` (funções puras que leem o log das lutas, sem gastar o rng); os números sem as flags de auditoria não mudam.
+Cenários padronizados para acompanhar o desempenho dos três modos a cada mudança de balanceamento. O diagnóstico atual está em [diagnostico-2.md](diagnostico-2.md) (v0.87.0); o primeiro, em [diagnostico.md](diagnostico.md) (v0.77.0). A coleta fica em `src/sim/audit.ts` (funções puras que leem o log das lutas, sem gastar o rng); os números sem as flags de auditoria não mudam.
 
 ## Como rodar
 
