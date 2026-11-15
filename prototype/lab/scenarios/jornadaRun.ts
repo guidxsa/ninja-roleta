@@ -81,7 +81,8 @@ const end = (make: () => JRun) => (ctx: LabContext) => {
   return endScreen(ctx.jornadaHost, run, next, run.mode === 'generic');
 };
 
-const WRITTEN = () => story('writtenTest');
+// No Médio a run da seed 7 cai antes do exame (v0.77.0): o 2º estágio vem do Fácil.
+const WRITTEN = () => story('writtenTest', 'easy');
 
 /** Árvore de talentos da run, pela tela real. */
 const tree = (make: () => JRun) => (ctx: LabContext) => {
@@ -129,7 +130,7 @@ export const jornadaRun: Scenario[] = [
       return stop(() => story('bells'))(ctx);
     },
   },
-  { id: 'jornada.trail:exam', title: 'Trilha no 2º estágio (Exame Chunin)', group: 'Jornada', mount: stop(() => story('orochimaruForest')) },
+  { id: 'jornada.trail:exam', title: 'Trilha no 2º estágio (Exame Chunin)', group: 'Jornada', mount: stop(() => story('orochimaruForest', 'easy')) },
   { id: 'jornada.trail:sannin', title: 'Trilha no 3º estágio (Sannin, Fácil)', group: 'Jornada', mount: stop(() => story('tsunade', 'easy')) },
   { id: 'jornada.trail:late', title: 'Trilha no último estágio (Fácil)', group: 'Jornada', mount: stop(() => story('valley', 'easy')) },
   { id: 'jornada.map', title: 'Mapa do Caminho Ninja (começo)', group: 'Jornada', mount: stop(() => pathRun(7)) },

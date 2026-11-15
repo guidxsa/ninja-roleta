@@ -1,10 +1,13 @@
 import type { AttackType, Element, KekkeiGenkaiId } from '../../core/types';
+import type { EffectKind } from '../../core/effects';
+import type { CloneKind } from '../../core/clones';
 
 // Técnicas do Roleta enxuto (docs/roleta/combate.md#técnicas). Nomes visíveis em strings/roleta.ts.
 // Cada técnica sobe sozinha com o nível: dano base = `base` + `perLevel` × (nível − 1). Sem multiplicador de elemento:
 // o elemento só diz quem tem a técnica. Efeito no acerto com chance (Queimar, Veneno, Atordoar, Medo).
 
-export type REffectKind = 'burn' | 'poison' | 'stun' | 'fear';
+/** Os efeitos comuns aos dois modos (src/core/effects.ts, números em `balance.effects`). */
+export type REffectKind = EffectKind;
 
 export interface RTechniqueDef {
   id: string;
@@ -25,8 +28,13 @@ export interface RTechniqueDef {
   element?: Element;
   kekkeiGenkai?: KekkeiGenkaiId;
   lineage?: string;
-  /** Bunshin no Jutsu: cria um clone (sem dano). Entra no kit de quem tem ninjutsu (v0.59.0). */
-  clone?: boolean;
+  /**
+   * Técnica de clone (src/core/clones.ts): cria um clone deste tipo, sem dano (no máximo 1; um novo substitui). Uma por
+   * kit, no lugar do Bunshin: Kage no Uzumaki e no jinchuuriki, o elemental de quem tem a natureza (v0.77.0).
+   */
+  clone?: CloneKind;
+  /** Barreira (src/core/barriers.ts): ergue um escudo do elemento da técnica com esta fração do HP máximo (v0.77.0). */
+  barrierPct?: number;
 }
 
 export const BASIC = 'rBasic';
@@ -35,14 +43,25 @@ export const BUNSHIN = 'rBunshin';
 
 export const roletaTechniques: RTechniqueDef[] = [
   { id: BASIC, type: 'taijutsu', base: 8, perLevel: 1, chakra: 0, accuracy: 0.9 },
-  // Bunshin no Jutsu (src/core/clones.ts): um clone que pode receber um golpe do vilão e some ao levar dano.
-  { id: BUNSHIN, type: 'ninjutsu', base: 0, perLevel: 0, chakra: 5, clone: true },
+  // Clones (src/core/clones.ts): o Bunshin é ilusão (só distrai); os outros têm o traço do tipo (balance.clones.kinds).
+  { id: BUNSHIN, type: 'ninjutsu', base: 0, perLevel: 0, chakra: 5, clone: 'bunshin' },
+  { id: 'rKageBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 8, clone: 'kage' },
+  { id: 'rMizuBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 6, clone: 'mizu' },
+  { id: 'rDotonBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 6, clone: 'doton' },
+  { id: 'rMokutonBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 7, clone: 'mokuton' },
+  { id: 'rRaitonBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 7, clone: 'raiton' },
+  { id: 'rSunaBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 6, clone: 'suna' },
   // Um por elemento.
   { id: 'rFire', type: 'ninjutsu', element: 'fire', base: 12, perLevel: 2, chakra: 6, effect: { kind: 'burn', chance: 0.25 } },
   { id: 'rWind', type: 'ninjutsu', element: 'wind', base: 11, perLevel: 2, chakra: 6, accuracy: 0.9, critBonus: 0.1 },
   { id: 'rLightning', type: 'ninjutsu', element: 'lightning', base: 13, perLevel: 2, chakra: 6, accuracy: 0.8, penetration: 0.25 },
   { id: 'rEarth', type: 'ninjutsu', element: 'earth', base: 11, perLevel: 2, chakra: 6, accuracy: 0.95, effect: { kind: 'stun', chance: 0.1 } },
   { id: 'rWater', type: 'ninjutsu', element: 'water', base: 6, perLevel: 1, hits: 2, chakra: 6, accuracy: 0.9 },
+  // Barreiras (v0.77.0): uma por elemento, menos o raio. Ação de turno; o escudo dura 3 turnos de quem ergue.
+  { id: 'rEarthWall', type: 'ninjutsu', element: 'earth', base: 0, perLevel: 0, chakra: 6, barrierPct: 0.28 },
+  { id: 'rWaterWall', type: 'ninjutsu', element: 'water', base: 0, perLevel: 0, chakra: 6, barrierPct: 0.24 },
+  { id: 'rFireWall', type: 'ninjutsu', element: 'fire', base: 0, perLevel: 0, chakra: 5, barrierPct: 0.2 },
+  { id: 'rWindShield', type: 'ninjutsu', element: 'wind', base: 0, perLevel: 0, chakra: 5, barrierPct: 0.2 },
   // Linhagens.
   { id: 'rShadowSlash', type: 'ninjutsu', lineage: 'nara', base: 10, perLevel: 2, chakra: 6 },
   { id: 'rExpandedHand', type: 'taijutsu', lineage: 'akimichi', base: 11, perLevel: 2, chakra: 4, effect: { kind: 'stun', chance: 0.1 } },
@@ -51,7 +70,7 @@ export const roletaTechniques: RTechniqueDef[] = [
   { id: 'rFangs', type: 'taijutsu', lineage: 'inuzuka', base: 6, perLevel: 1, hits: 2, chakra: 6 },
   { id: 'rLeafHurricane', type: 'taijutsu', lineage: 'taijutsuProdigy', base: 6, perLevel: 1, hits: 2, chakra: 4, accuracy: 0.9 },
   { id: 'rPainIllusion', type: 'genjutsu', lineage: 'uchiha', base: 13, perLevel: 2, chakra: 6, effect: { kind: 'fear', chance: 0.2 } },
-  { id: 'rVitalSeal', type: 'taijutsu', lineage: 'hyuuga', base: 9, perLevel: 2, chakra: 4, effect: { kind: 'stun', chance: 0.2 } },
+  { id: 'rVitalSeal', type: 'taijutsu', lineage: 'hyuuga', base: 9, perLevel: 2, chakra: 4, effect: { kind: 'chakraBlock', chance: 0.25 } },
   // Uzumaki: a Etiqueta Explosiva saiu do kit (v0.59.0); a natureza elemental ocupa o lugar dela.
   // Kekkei genkai: no lugar das técnicas dos dois elementos-pai.
   { id: 'rIce', type: 'ninjutsu', kekkeiGenkai: 'ice', base: 5, perLevel: 1, hits: 3, chakra: 6, accuracy: 0.9, effect: { kind: 'stun', chance: 0.15 } },

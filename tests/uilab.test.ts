@@ -79,9 +79,9 @@ describe('fixtures', () => {
   });
 
   it('a run jogada pela fixture alcança as paradas que os cenários usam', () => {
-    const normal = ['team7', 'bells', 'graduation', 'demonBrothers', 'zabuza', 'treeClimbing', 'thugs', 'treasure1', 'rest1', 'haku', 'writtenTest', 'orochimaruForest'];
+    const normal = ['team7', 'bells', 'graduation', 'demonBrothers', 'zabuza', 'treeClimbing', 'thugs', 'treasure1', 'rest1', 'haku'];
     for (const id of normal) expect(currentStop(playUntil(storyRun(7), id), jornadaData)?.id, id).toBe(id);
-    for (const id of ['tsunade', 'valley']) expect(currentStop(playUntil(storyRun(7, 'easy'), id), jornadaData)?.id, id).toBe(id);
+    for (const id of ['writtenTest', 'orochimaruForest', 'tsunade', 'valley']) expect(currentStop(playUntil(storyRun(7, 'easy'), id), jornadaData)?.id, id).toBe(id);
     // Árvores das classes: a run de cada classe chega ao 2º estágio.
     for (const cls of ['uchiha', 'hyuuga']) expect(playUntil(pathRun(7, 'normal', cls), (r) => choosingNode(r) && r.stageIndex === 1).talentPoints).toBeGreaterThan(0);
     expect(playUntil(pathRun(7), (r) => Boolean(r.bossChoice)).bossChoice).toHaveLength(3);

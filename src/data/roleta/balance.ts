@@ -16,14 +16,7 @@ export const roletaBalance = {
   rest: { chakraPct: 0.3 },
   chakraRegen: { pct: 0.03, min: 1 },
   villainChakra: { restPct: 0.25, regenPct: 0.05 },
-  // Os 4 efeitos, com duração fixa (turnos de quem sofre). Queimar e Veneno: fração do HP máximo por turno.
-  // Medo: dano × damageMult e acerto + accuracy.
-  effects: {
-    burn: { turns: 2, pct: 0.05 },
-    poison: { turns: 3, pct: 0.04 },
-    stun: { turns: 1 },
-    fear: { turns: 2, damageMult: 0.75, accuracy: -0.15 },
-  },
+  // Efeitos: os mesmos da Jornada, em `balance.effects` (v0.77.0).
   // Passivas das linhagens (kits enxutos).
   passives: {
     heavyBodyMult: 1.15,

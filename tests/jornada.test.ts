@@ -13,6 +13,7 @@ import {
   gateChoices,
   gateTotals,
   hitDamage,
+  elementMult,
   maxGate,
   mergeMods,
   openBattle,
@@ -241,12 +242,13 @@ describe('combate de equipe da Jornada', () => {
     expect(next.log.some((e) => e.type === 'damage' && e.target === 'e0' && e.amount === 15)).toBe(true);
   });
 
-  it('elemento da técnica contra o elemento do alvo muda o dano', () => {
+  it('o elemento não muda o dano no HP (v0.77.0): só pesa contra barreira', () => {
     const b = startBattle(setup({ allies: [hero({ techniques: ['jFireball'] })], enemies: [dummy({ element: 'wind' })] }), data, fixed(0.5));
     const base = hitDamage(b.fighters[0]!, { ...b.fighters[1]!, element: null }, data.techniques.jFireball!, data);
-    const strong = hitDamage(b.fighters[0]!, b.fighters[1]!, data.techniques.jFireball!, data);
-    expect(strong).toBe(Math.floor((16 + 10 - 3) * data.j.combat.elementAdvantage));
-    expect(strong).toBeGreaterThan(base);
+    const vsWind = hitDamage(b.fighters[0]!, b.fighters[1]!, data.techniques.jFireball!, data);
+    expect(vsWind).toBe(base);
+    expect(vsWind).toBe(16 + 10 - 3);
+    expect(elementMult(data.techniques.jFireball!, b.fighters[1]!, data)).toBe(1);
   });
 
   it('postura defensiva usa a resistência inteira', () => {
@@ -412,7 +414,7 @@ describe('combate de equipe da Jornada', () => {
     it('todo atordoamento e bloqueio de chakra dos dados dura 2 turnos ou mais', () => {
       const control = Object.values(data.techniques).filter((t) => t.onHit && isControl(t.onHit.effect));
       expect(control.length).toBeGreaterThan(20);
-      for (const t of control) expect(effectTurns(t, data), t.id).toBeGreaterThanOrEqual(data.j.combat.minControlTurns);
+      for (const t of control) expect(effectTurns(t, data), t.id).toBeGreaterThanOrEqual(data.base.effects.minControlTurns);
     });
 
     it('o atordoado perde 2 turnos, ganha a trava e o atordoamento seguinte não pega', () => {
@@ -425,7 +427,7 @@ describe('combate de equipe da Jornada', () => {
       b = playerAct(b, { kind: 'tech', techId: 'jStrike', target: 'e0' }, data, fixed(0));
       expect(b.log.filter((e) => e.type === 'skip' && e.uid === 'e0')).toHaveLength(2);
       // Saiu do atordoamento com a trava: o próximo não pega e ele age.
-      expect(foe().effects).toEqual([{ kind: 'stunGuard', turns: data.j.combat.stunImmunityTurns }]);
+      expect(foe().effects).toEqual([{ kind: 'stunGuard', turns: data.base.effects.stunImmunityTurns }]);
       b = playerAct(b, { kind: 'tech', techId: 'jStrike', target: 'e0' }, data, fixed(0));
       const s = structuredClone(b);
       s.fighters[0]!.cooldowns = {};
@@ -637,15 +639,22 @@ describe('run da Jornada', () => {
     expect(outcome.xp).toBeGreaterThanOrEqual(Math.floor(data.j.rewards.story.xp * 1.15));
   });
 
-  it('perder acaba a run; no Fácil a Vontade do Fogo recomeça a luta', () => {
-    const normal = newRun(1, 'normal', data);
-    expect(finishFight(normal, lost(startBattle(battleSetup(normal, data), data, createRng(1))), data).run.status).toBe('defeat');
-    const easy = newRun(1, 'easy', data);
-    const res = finishFight(easy, lost(startBattle(battleSetup(easy, data), data, createRng(1))), data);
-    expect(res.outcome.retry).toBe(true);
-    expect(res.run.status).toBe('inProgress');
-    expect(res.run.willOfFire).toBe(0);
-    expect(res.run.stopIndex).toBe(easy.stopIndex);
+  it('perder acaba a run; até o Difícil a Vontade do Fogo recomeça a luta (v0.77.0: Fácil 2, Médio 1, Difícil 1)', () => {
+    const hardcore = newRun(1, 'hardcore', data);
+    expect(hardcore.willOfFire).toBe(0);
+    expect(finishFight(hardcore, lost(startBattle(battleSetup(hardcore, data), data, createRng(1))), data).run.status).toBe('defeat');
+    for (const [diff, n] of [['easy', 2], ['normal', 1], ['hard', 1]] as const) {
+      const run = newRun(1, diff, data);
+      expect(run.willOfFire, diff).toBe(n);
+      const res = finishFight(run, lost(startBattle(battleSetup(run, data), data, createRng(1))), data);
+      expect(res.outcome.retry, diff).toBe(true);
+      expect(res.run.status, diff).toBe('inProgress');
+      expect(res.run.willOfFire, diff).toBe(n - 1);
+      expect(res.run.stopIndex, diff).toBe(run.stopIndex);
+    }
+    // A última gasta: a próxima derrota acaba a run.
+    const spent = { ...newRun(1, 'normal', data), willOfFire: 0 };
+    expect(finishFight(spent, lost(startBattle(battleSetup(spent, data), data, createRng(1))), data).run.status).toBe('defeat');
   });
 
   it('subir de nível dá ponto de talento', () => {

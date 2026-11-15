@@ -2,6 +2,7 @@
 // O bot joga pior que um humano: escolhe o golpe de mais dano esperado, usa a ativa logo e quase não defende.
 import { gateUpkeep } from '../core/gates';
 import type { Difficulty } from '../core/difficulty';
+import type { ConsumableId } from '../core/types';
 import { canLevelUp, equipTrainingWeights, gainXp, recoverAfterWin, trainingWeightsWin, type PlayerState } from '../core/player';
 import {
   applyAkatsuki,
@@ -21,6 +22,7 @@ import {
 } from '../core/progression';
 import {
   canUseActive,
+  canUseItem,
   canUseTechnique,
   kitOf,
   playerAttackOdds,
@@ -28,6 +30,7 @@ import {
   playRoletaRound,
   startRoletaBattle,
   useActive,
+  useRoletaItem,
   type RAction,
   type RBattle,
   type RBattleOptions,
@@ -63,13 +66,26 @@ function expected(s: RBattle, id: string, data: RoletaData): number {
   return (odds.hit - odds.crit + odds.crit * critMult) * per * (t.hits ?? 1);
 }
 
-/** Ação do bot: itens nos apertos, o golpe de mais dano esperado que dá para pagar, ou Concentrar se valer a pena. */
+/** Item do bot antes da ação (não gasta a ação, um por turno): só nos apertos ou para pagar o golpe mais forte. */
+export function chooseRoletaItem(s: RBattle, data: RoletaData): ConsumableId | null {
+  const p = s.player;
+  const ok = (id: ConsumableId) => canUseItem(s, id);
+  if (ok('explosiveTag') && s.villain.hp <= data.r.items.explosiveTagDamage) return 'explosiveTag';
+  if (ok('medKit') && p.hp < p.maxHp * 0.3 && s.fx.effects.some((e) => e.kind !== 'stunGuard')) return 'medKit';
+  if (ok('smokeBomb') && p.hp < p.maxHp * 0.25) return 'smokeBomb';
+  if (ok('soldierPill')) {
+    const techs = playerTechniques(p, data).filter((t) => !t.clone);
+    const best = (list: typeof techs) => list.map((t) => ({ t, e: expected(s, t.id, data) })).sort((a, b) => b.e - a.e)[0];
+    const bestNow = best(techs.filter((t) => canUseTechnique(s, t, data)));
+    const bestAll = best(techs);
+    if (bestAll && bestAll.t.id !== bestNow?.t.id && bestAll.e > (bestNow?.e ?? 0) * 1.5 && p.hp > p.maxHp * 0.5) return 'soldierPill';
+  }
+  return null;
+}
+
+/** Ação do bot: o golpe de mais dano esperado que dá para pagar, ou Concentrar se valer a pena. */
 export function chooseRoletaAction(s: RBattle, data: RoletaData): RAction {
   const p = s.player;
-  const bag = p.bag;
-  if (bag.explosiveTag > 0 && s.villain.hp <= data.r.items.explosiveTagDamage) return 'item:explosiveTag';
-  if (bag.medKit > 0 && p.hp < p.maxHp * 0.3 && s.fx.effects.length > 0) return 'item:medKit';
-  if (bag.smokeBomb > 0 && p.hp < p.maxHp * 0.25) return 'item:smokeBomb';
   const all = playerTechniques(p, data);
   const bunshin = all.find((t) => t.clone);
   if (bunshin && !s.fx.clone && p.hp < p.maxHp * 0.7 && canUseTechnique(s, bunshin, data)) return `tech:${bunshin.id}`;
@@ -78,10 +94,7 @@ export function chooseRoletaAction(s: RBattle, data: RoletaData): RAction {
   const best = (list: typeof techs) => list.map((t) => ({ t, e: expected(s, t.id, data) })).sort((a, b) => b.e - a.e)[0];
   const bestNow = best(affordable);
   const bestAll = best(techs);
-  if (bestAll && bestNow && bestAll.t.id !== bestNow.t.id && bestAll.e > bestNow.e * 1.5 && p.hp > p.maxHp * 0.5) {
-    if (bag.soldierPill > 0) return 'item:soldierPill';
-    return 'rest';
-  }
+  if (bestAll && bestNow && bestAll.t.id !== bestNow.t.id && bestAll.e > bestNow.e * 1.5 && p.hp > p.maxHp * 0.5) return 'rest';
   return bestNow ? `tech:${bestNow.t.id}` : 'rest';
 }
 
@@ -101,6 +114,9 @@ export function runRoletaBattle(player: PlayerState, villain: VillainDef, rng: R
   let s = startRoletaBattle(player, villain, options, data, rng);
   while (s.status === 'ongoing' && s.round < MAX_ROUNDS) {
     if (wantsActive(s, data)) s = useActive(s, data, rng);
+    if (s.status !== 'ongoing') break;
+    const item = chooseRoletaItem(s, data);
+    if (item) s = useRoletaItem(s, item, data, rng);
     if (s.status !== 'ongoing') break;
     s = playRoletaRound(s, chooseRoletaAction(s, data), data, rng);
   }

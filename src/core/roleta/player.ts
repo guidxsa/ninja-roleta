@@ -4,9 +4,20 @@ import type { Difficulty } from '../difficulty';
 import { hasElementalNinjutsu } from '../nature';
 import { lineageOf } from '../origin';
 import { createPlayer, type PlayerState } from '../player';
-import type { Origin } from '../types';
+import type { KekkeiGenkaiId, LineageDef, Origin } from '../types';
+import { cloneKindFor, type CloneKind } from '../clones';
 import type { RoletaData } from './data';
-import { BASIC, BUNSHIN, type RTechniqueDef } from '../../data/roleta/techniques';
+import { BASIC, type RTechniqueDef } from '../../data/roleta/techniques';
+
+/**
+ * Tipo de clone da origem (docs/base/fundamentos.md#clones): Kage Bunshin no Uzumaki e no jinchuuriki; o clone da
+ * natureza em quem tem ninjutsu elemental (Mizu, Doton, Raiton, Mokuton, Suna); Bunshin nos outros.
+ */
+export function cloneKindOf(origin: Origin, lineage: LineageDef, kekkeiGenkai: KekkeiGenkaiId | null, data: RoletaData): CloneKind {
+  if (origin.lineageId === 'uzumaki' || origin.jinchuuriki) return 'kage';
+  if (!hasElementalNinjutsu(lineage)) return 'bunshin';
+  return cloneKindFor(kekkeiGenkai ?? origin.elements[0] ?? null, data.base.balance.clones);
+}
 
 /**
  * Técnicas da origem: Taijutsu básico, 1 técnica por elemento (a kekkei genkai toma o lugar das dos dois elementos-pai)
@@ -22,8 +33,8 @@ export function roletaKit(origin: Origin, data: RoletaData): string[] {
   const pick = (f: (t: RTechniqueDef) => boolean) => all.filter((t) => f(t) && !forbidden.has(t.type)).map((t) => t.id);
   return [
     BASIC,
-    // Bunshin no Jutsu: todo mundo que pode usar ninjutsu (o Prodígio, proibido, fica sem).
-    ...pick((t) => t.id === BUNSHIN),
+    // Clone: todo mundo que pode usar ninjutsu (o Prodígio, proibido, fica sem). Um só, no lugar do Bunshin.
+    ...pick((t) => t.clone === cloneKindOf(origin, lineage, kg?.id ?? null, data)).slice(0, 1),
     ...elements.flatMap((el) => pick((t) => t.element === el)),
     ...(kg && hasElementalNinjutsu(lineage) ? pick((t) => t.kekkeiGenkai === kg.id) : []),
     ...(origin.lineageId ? pick((t) => t.lineage === origin.lineageId) : []),

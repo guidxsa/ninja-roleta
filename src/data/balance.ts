@@ -1,5 +1,6 @@
 // Todos os números de balanceamento. Valores provisórios: ajustar com `npm run sim`.
 // O design de cada regra está em docs/ (o arquivo indicado em cada bloco).
+import type { CloneKind, CloneKindRules } from '../core/clones';
 
 /** Bônus permanente da Lição do clã. */
 export interface ClanLessonBonus {
@@ -13,8 +14,36 @@ export interface ClanLessonBonus {
 }
 
 export const balance = {
-  // Clones do Bunshin no Jutsu (src/core/clones.ts): a mesma chance no Roleta e na Jornada (v0.59.0).
-  clones: { blockChance: 0.5 },
+  // Clones (src/core/clones.ts, docs/base/fundamentos.md#clones): os mesmos tipos no Roleta e na Jornada (v0.77.0,
+  // proposta). Bunshin é ilusão (só distrai); Kage é físico (bate junto no Roleta; na Jornada, pelas técnicas com
+  // golpe por clone); os elementais têm o traço do elemento. `byNature`: quem tem a natureza cria o clone dela.
+  clones: {
+    blockChance: 0.5,
+    kinds: {
+      bunshin: { blockChance: 0.5, durability: 1, strikePct: 0 },
+      kage: { blockChance: 0.5, durability: 1, strikePct: 0.5, jornadaStrikePct: 0 },
+      tajuu: { blockChance: 0.5, durability: 1, strikePct: 0.5, jornadaStrikePct: 0 },
+      mizu: { blockChance: 0.5, durability: 1, strikePct: 0.35 },
+      doton: { blockChance: 0.65, durability: 2, strikePct: 0 },
+      mokuton: { blockChance: 0.5, durability: 1, strikePct: 0.35, accuracyBonus: 0.1, revealsIntent: true },
+      raiton: { blockChance: 0.5, durability: 1, strikePct: 0, onBreak: { damagePct: 0.06, effect: 'stun', chance: 0.3 } },
+      suna: { blockChance: 0.5, durability: 1, strikePct: 0, onBreak: { effect: 'chakraBlock', chance: 0.3 } },
+    } as Record<CloneKind, CloneKindRules>,
+    byNature: { water: 'mizu', earth: 'doton', lightning: 'raiton', wood: 'mokuton', sand: 'suna' } as Partial<Record<string, CloneKind>>,
+  },
+  // Efeitos de combate, os mesmos no Roleta e na Jornada (docs/base/efeitos.md, v0.77.0). Duração em turnos de quem
+  // sofre. Queimar e Veneno: fração do HP máximo no começo do turno. Medo: dano × damageMult e acerto + accuracy.
+  // Controle (atordoar e bloqueio de chakra) dura no mínimo `minControlTurns`; quem sai de um atordoamento fica firme
+  // (`stunImmunityTurns` turno próprio) e não pode ser atordoado de novo nesse intervalo.
+  effects: {
+    burn: { turns: 2, pct: 0.05 },
+    poison: { turns: 3, pct: 0.05 },
+    stun: { turns: 2 },
+    chakraBlock: { turns: 2 },
+    fear: { turns: 2, damageMult: 0.75, accuracy: -0.15 },
+    minControlTurns: 2,
+    stunImmunityTurns: 1,
+  },
   // Portões (src/core/gates.ts): manutenção por rodada mantida = ceil(base × crescimento^(n−1)) → 2, 3, 5, 7, 11...
   // A mesma regra no Roleta e na Jornada; a abertura custa por modo (proposta v0.59.0).
   gateCosts: { upkeepBase: 2, upkeepGrowth: 1.5 },
@@ -83,6 +112,10 @@ export const balance = {
 
   // Barreiras (tecnicas.md#barreiras): ação de turno; o escudo dura `turns` rodadas a partir da seguinte.
   barrier: { turns: 3 },
+  // Especiais das barreiras por elemento, nos dois modos (src/core/barriers.ts, v0.77.0; proposta): Muralha de Chamas
+  // pode queimar quem bate com taijutsu; Escudo de Vento aguenta mais contra vários golpes. Os pontos ficam na técnica
+  // (`barrierPct`, fração do HP máximo de quem ergue).
+  barrierSpecials: { fire: { burnOnTouch: 0.3 }, wind: { multiHitResist: 0.25 } } as Partial<Record<string, { burnOnTouch?: number; multiHitResist?: number }>>,
 
   // Golpe carregado dos vilões: dano × `damageMult`, sem crítico.
   charged: { damageMult: 2 },

@@ -444,7 +444,7 @@ describe('História canônica: Sannin e Resgate (v0.67.0)', () => {
   it('Vale do Fim: selo nível 2 e manto de uma cauda; a 20% o Sasuke parte e a run vence', () => {
     // No jogo, o Naruto chega ao Vale já com o Rasengan (marco dos Sannin).
     const run = { ...newRun(3, 'easy', data), ...stopAt('retrieval', 'valley'), level: 10, learned: ['jRasengan'] };
-    const end = playOut(startBattle(battleSetup(run, data), data, createRng(1)), data, createRng(1));
+    const end = playOut(startBattle(battleSetup(run, data), data, createRng(3)), data, createRng(3));
     expect(end.status).toBe('won');
     {
       expect(end.fighters.find((f) => f.defId === 'sasukeFinal')!.form).toBe('curseMark2');

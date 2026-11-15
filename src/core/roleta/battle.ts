@@ -1,11 +1,15 @@
 // Combate do Roleta enxuto (docs/roleta/combate.md). Funções puras: estado entra, estado sai; o log de eventos é o que
-// a interface anima. Um toque por turno: técnica, Defender, Concentrar ou Item; a ativa da linhagem é grátis.
-// Sem reações, sem disputa de ninjutsu, sem barreiras nem multiplicador de elemento. Quatro efeitos com duração fixa.
+// a interface anima. Um toque por turno: técnica, Defender ou Concentrar; a ativa da linhagem e um item são grátis.
+// Sem reações nem disputa de ninjutsu. Efeitos, barreiras e clones seguem as regras comuns com a Jornada
+// (src/core/effects.ts, barriers.ts, clones.ts; docs/base/fundamentos.md): o elemento só pesa contra a barreira.
 import { damage } from '../damage';
 import { critChance, hitChance, rollHit, type HitOutcome } from '../hit';
 import { rollInitiative, initiativeChance } from '../initiative';
 import { clamp, type Rng } from '../rng';
-import { cloneTakesHit } from '../clones';
+import { wearClone, type CloneKind } from '../clones';
+import { dotDamage, effectDuration } from '../effects';
+import { absorbIntoBarrier, barrierMult, raiseBarrier, type BarrierAttack, type BarrierContext, type BarrierSpec, type BarrierState } from '../barriers';
+import type { Nature } from '../nature';
 import { payGateUpkeep } from '../gates';
 import type { AttackType, ConsumableId, ResistanceKind, VillainDef, VillainTechnique } from '../types';
 import type { PlayerState } from '../player';
@@ -17,7 +21,7 @@ import { relicEffects } from './run';
 export type Side = 'player' | 'villain';
 
 export interface REffect {
-  kind: REffectKind;
+  kind: REffectKind | 'stunGuard';
   turns: number;
 }
 
@@ -45,6 +49,8 @@ export interface RVillain {
   revivesUsed: number;
   /** Escudo de areia do vilão (natureza Areia): absorve dano antes do HP. */
   shield: number;
+  /** Barreira elemental de pé (src/core/barriers.ts), ou null. */
+  barrier: BarrierState | null;
 }
 
 export interface RPlayerFx {
@@ -59,29 +65,38 @@ export interface RPlayerFx {
   /** Bomba de fumaça: esquiva garantida do próximo ataque. */
   dodgeNext: boolean;
   shield: number;
+  /** Barreira elemental de pé (src/core/barriers.ts), ou null. */
+  barrier: BarrierState | null;
   cloakTurns: number;
   cloakUsed: boolean;
   vitalTurns: number;
   vitalUsed: boolean;
   /** Pena de fênix já usada nesta luta. */
   survivedOnce: boolean;
-  /** Clone do Bunshin ativo (no máximo 1). */
-  clone: boolean;
+  /** Clone ativo (no máximo 1) e quantos golpes já segurou (src/core/clones.ts). */
+  clone: { kind: CloneKind; wear: number } | null;
 }
 
-export type RAction = `tech:${string}` | 'guard' | 'rest' | `item:${ConsumableId}`;
+/** Ação do turno. O item não é ação: usa-se antes, com `useRoletaItem` (um por turno). */
+export type RAction = `tech:${string}` | 'guard' | 'rest';
 
 export type REvent =
   | { type: 'initiative'; playerFirst: boolean; chance: number; forced: boolean }
   | { type: 'round'; round: number }
-  | { type: 'clone'; side: Side; action: 'create' | 'block' }
+  /** Clone: criado, segurou um golpe (`broken`: desfez-se) ou bateu junto. */
+  | { type: 'clone'; side: Side; action: 'create' | 'block' | 'strike'; kind: CloneKind; broken?: boolean }
   | { type: 'gates'; action: 'upkeep'; cost: number }
   | { type: 'gates'; action: 'close'; reason: 'manual' | 'chakra' }
-  | { type: 'attack'; side: Side; techId: string; hitChance: number; critChance: number; outcome: HitOutcome; hits: number; auto?: boolean }
-  | { type: 'damage'; side: Side; amount: number; crit?: boolean; source: 'attack' | 'burn' | 'poison' | 'toad' | 'dog' | 'tag' | 'self' | 'opening' }
+  /** Uma roleta: `strike` de `of` golpes da técnica (cada golpe rola, v0.77.0). */
+  | { type: 'attack'; side: Side; techId: string; hitChance: number; critChance: number; outcome: HitOutcome; hits: number; strike?: number; of?: number; auto?: boolean }
+  | { type: 'damage'; side: Side; amount: number; crit?: boolean; source: 'attack' | 'burn' | 'poison' | 'toad' | 'dog' | 'tag' | 'self' | 'opening' | 'clone' }
   | { type: 'shield'; side: Side; absorbed: number }
+  /** Barreira elemental: erguida, golpeada (com o encontro de elementos no escudo), quebrada, apagou o fogo ou acabou. */
+  | { type: 'barrier'; side: Side; action: 'raise' | 'hit' | 'break' | 'douse' | 'end'; techId: string; points?: number; absorbed?: number; left?: number; mult?: number }
   | { type: 'heal'; side: Side; amount: number; source: string }
-  | { type: 'effect'; side: Side; kind: REffectKind; turns: number }
+  | { type: 'effect'; side: Side; kind: REffectKind | 'stunGuard'; turns: number }
+  /** A trava (firme) segurou um atordoamento, ou o alvo é imune ao efeito. */
+  | { type: 'resist'; side: Side; kind: REffectKind }
   | { type: 'skip'; side: Side; reason: 'stun' | 'seal' | 'mind' | 'trickster' }
   | { type: 'dodge'; side: Side }
   | { type: 'rest'; side: Side; amount: number }
@@ -110,6 +125,8 @@ export interface RBattle {
   status: 'ongoing' | 'won' | 'lost';
   log: REvent[];
   options: RBattleOptions;
+  /** Um item da bolsa já foi usado neste turno (não gasta a ação). */
+  itemUsed: boolean;
   /** A ativa da linhagem já foi usada neste turno. */
   activeUsed: boolean;
 }
@@ -127,7 +144,7 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
     maxHp: def.hp,
     chakra: def.chakra,
     effects: [],
-    techniques: def.techniques.filter((t) => t.barrier === undefined),
+    techniques: def.techniques,
     intent: null,
     skipNext: null,
     survived: false,
@@ -140,6 +157,7 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
     revivesUsed: 0,
     // Natureza Areia (jogador ou vilão): escudo de areia no começo da luta (`sandShieldPct`).
     shield: def.kekkeiGenkai === 'sand' ? Math.floor(def.hp * b.sandShieldPct) : 0,
+    barrier: null,
   };
   const s: RBattle = {
     player: { ...player, hp: Math.max(1, player.hp) },
@@ -152,12 +170,13 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
       guarding: false,
       dodgeNext: false,
       shield: player.kekkeiGenkai === 'sand' ? Math.floor(player.maxHp * b.sandShieldPct) : 0,
+      barrier: null,
       cloakTurns: 0,
       cloakUsed: false,
       vitalTurns: 0,
       vitalUsed: false,
       survivedOnce: false,
-      clone: false,
+      clone: null,
     },
     round: 0,
     playerFirst: true,
@@ -165,6 +184,7 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
     log: [],
     options: { allowRevive: true, ...options },
     activeUsed: false,
+    itemUsed: false,
   };
   // Marca da maldição desde o começo (hardcore).
   if (passive?.kind === 'cloak' && passive.fromStart) openVillainCloak(s);
@@ -203,7 +223,7 @@ export function techBase(p: PlayerState, t: RTechniqueDef, data: RoletaData): nu
 }
 
 const buff = (s: RBattle, kind: RActive) => s.fx.buff?.kind === kind && s.fx.buff.turns > 0;
-const has = (effects: REffect[], kind: REffectKind) => effects.some((e) => e.kind === kind && e.turns > 0);
+const has = (effects: REffect[], kind: REffect['kind']) => effects.some((e) => e.kind === kind && e.turns > 0);
 
 export function effectiveSpeed(s: RBattle, side: Side, data: RoletaData): number {
   if (side === 'villain') return s.villain.def.speed;
@@ -244,10 +264,12 @@ export function playerAttackOdds(s: RBattle, t: RTechniqueDef, data: RoletaData)
   const k = data.r.kits;
   const auto = t.type === 'taijutsu' && buff(s, 'byakugan');
   let bonus = buff(s, 'sharingan') ? k.sharingan.accuracy : 0;
-  if (has(s.fx.effects, 'fear')) bonus += data.r.effects.fear.accuracy;
+  if (has(s.fx.effects, 'fear')) bonus += data.base.balance.effects.fear.accuracy;
   bonus -= dodgeChance(s.villain.def.speed, effectiveSpeed(s, 'player', data), data);
   const relic = relicEffects(s.player, data);
   bonus += relic.accuracyBonus;
+  // Mokuton: o clone compartilha o que vê.
+  if (s.fx.clone) bonus += cloneRules(data).kinds[s.fx.clone.kind].accuracyBonus ?? 0;
   let hit = auto ? 1 : hitChance(t.accuracy, bonus, cfg.hit);
   // Névoa (Zabuza): a chance de erro do jogador × evasionMult.
   const p = s.villain.def.passive;
@@ -267,7 +289,7 @@ function playerExtraMult(s: RBattle, t: RTechniqueDef, data: RoletaData): number
     if (buff(s, 'expansion')) m *= k.expansion.taijutsuMult;
     if (buff(s, 'gates')) m *= k.gates.taijutsuMult;
   }
-  if (has(s.fx.effects, 'fear')) m *= data.r.effects.fear.damageMult;
+  if (has(s.fx.effects, 'fear')) m *= data.base.balance.effects.fear.damageMult;
   // Relíquias: dano geral, por tipo e com HP baixo.
   const relic = relicEffects(s.player, data);
   m *= relic.damageMult * (relic.typeDamageMult[t.type] ?? 1);
@@ -293,7 +315,8 @@ export function playerHitDamage(s: RBattle, t: RTechniqueDef, data: RoletaData, 
 /** Técnicas que o jogador pode usar agora (com chakra). */
 /** Custo da técnica com as relíquias (nunca abaixo de 0). */
 export const techCost = (s: RBattle, t: RTechniqueDef, data: RoletaData) => Math.max(0, t.chakra - (t.chakra > 0 ? relicEffects(s.player, data).chakraDiscount : 0));
-export const canUseTechnique = (s: RBattle, t: RTechniqueDef, data: RoletaData) => s.player.chakra >= techCost(s, t, data);
+export const canUseTechnique = (s: RBattle, t: RTechniqueDef, data: RoletaData) =>
+  s.player.chakra >= techCost(s, t, data) && !(t.type !== 'taijutsu' && chakraBlocked(s.fx.effects)) && !(t.barrierPct && s.fx.barrier);
 
 // ---------------------------------------------------------------------------
 // Ativa da linhagem (grátis, uma por turno)
@@ -483,6 +506,7 @@ function endOfRound(s: RBattle, data: RoletaData, rng: Rng): void {
   if (s.villain.mistTurns > 0) s.villain.mistTurns--;
   if (s.villain.cloakTurns > 0) s.villain.cloakTurns--;
   s.activeUsed = false;
+  s.itemUsed = false;
   s.villain.intent = rollIntent(s, rng);
   void data;
 }
@@ -493,36 +517,53 @@ function tickEffects(s: RBattle, side: Side, data: RoletaData, rng: Rng): void {
   const max = side === 'player' ? s.player.maxHp : s.villain.maxHp;
   for (const e of effects) {
     if (e.turns <= 0 || (e.kind !== 'burn' && e.kind !== 'poison')) continue;
-    let pct = e.kind === 'burn' ? data.r.effects.burn.pct : data.r.effects.poison.pct;
     // Aburame: a Praga dobra o veneno no vilão.
-    if (side === 'villain' && e.kind === 'poison' && buff(s, 'plague')) pct *= 2;
-    const amount = Math.max(1, Math.floor(max * pct));
+    const mult = side === 'villain' && e.kind === 'poison' && buff(s, 'plague') ? 2 : 1;
+    const amount = dotDamage(e.kind, max, data.base.balance.effects, mult);
     if (side === 'player') hurtPlayer(s, amount, e.kind, data);
     else hurtVillain(s, amount, e.kind, data, rng);
     if (s.status !== 'ongoing') return;
   }
 }
 
-/** Perde a vez se estiver atordoado (o efeito acaba aí). Os efeitos com tempo perdem um turno. */
-function consumeTurnEffects(effects: REffect[]): boolean {
-  let stunned = false;
-  for (const e of effects) {
-    if (e.turns <= 0) continue;
-    if (e.kind === 'stun') stunned = true;
-    e.turns--;
-  }
+/**
+ * Fim do turno de quem sofre (agiu ou perdeu a vez): os efeitos perdem um turno. Saiu do atordoamento: ganha a trava
+ * (firme) até o fim do próximo turno em que age (a mesma regra da Jornada, docs/base/efeitos.md).
+ */
+function endSideTurn(s: RBattle, side: Side, data: RoletaData): void {
+  const effects = side === 'player' ? s.fx.effects : s.villain.effects;
+  const wasStunned = has(effects, 'stun');
+  for (const e of effects) if (e.turns > 0) e.turns--;
   for (let i = effects.length - 1; i >= 0; i--) if (effects[i]!.turns <= 0) effects.splice(i, 1);
-  return stunned;
+  if (wasStunned && !has(effects, 'stun') && s.status === 'ongoing') {
+    const turns = data.base.balance.effects.stunImmunityTurns;
+    effects.push({ kind: 'stunGuard', turns });
+    s.log.push({ type: 'effect', side, kind: 'stunGuard', turns });
+  }
+  // Barreira: conta os turnos de quem ergueu.
+  const b = side === 'player' ? s.fx.barrier : s.villain.barrier;
+  if (b && --b.turns <= 0) {
+    if (side === 'player') s.fx.barrier = null;
+    else s.villain.barrier = null;
+    s.log.push({ type: 'barrier', side, action: 'end', techId: b.techId });
+  }
 }
 
 function addEffect(s: RBattle, side: Side, kind: REffectKind, data: RoletaData): void {
-  const turns = data.r.effects[kind].turns;
   const effects = side === 'player' ? s.fx.effects : s.villain.effects;
+  if (kind === 'stun' && has(effects, 'stunGuard')) {
+    s.log.push({ type: 'resist', side, kind });
+    return;
+  }
+  const turns = effectDuration(kind, data.base.balance.effects);
   const cur = effects.find((e) => e.kind === kind);
   if (cur) cur.turns = Math.max(cur.turns, turns);
   else effects.push({ kind, turns });
   s.log.push({ type: 'effect', side, kind, turns });
 }
+
+/** Bloqueio de chakra: só taijutsu. */
+const chakraBlocked = (effects: REffect[]) => has(effects, 'chakraBlock');
 
 const genjutsuImmune = (s: RBattle) => {
   const p = s.villain.def.passive;
@@ -536,17 +577,18 @@ function playerTurn(s: RBattle, action: RAction, data: RoletaData, rng: Rng): vo
   s.fx.guarding = false;
   tickEffects(s, 'player', data, rng);
   if (s.status !== 'ongoing') return;
-  if (consumeTurnEffects(s.fx.effects)) {
-    s.log.push({ type: 'skip', side: 'player', reason: 'stun' });
-    return;
-  }
+  if (has(s.fx.effects, 'stun')) s.log.push({ type: 'skip', side: 'player', reason: 'stun' });
+  else playerAction(s, action, data, rng);
+  endSideTurn(s, 'player', data);
+}
+
+function playerAction(s: RBattle, action: RAction, data: RoletaData, rng: Rng): void {
   if (action === 'guard') {
     s.fx.guarding = true;
     s.log.push({ type: 'guard' });
     return;
   }
   if (action === 'rest') return concentrate(s, data);
-  if (action.startsWith('item:')) return useItem(s, action.slice(5) as ConsumableId, data, rng);
   const t = data.techniques[action.slice(5)];
   if (!t || !s.player.techniques.includes(t.id)) throw new Error(`técnica desconhecida: ${action}`);
   // Sem chakra (a manutenção dos Portões, no começo da rodada, pode ter gasto depois da escolha): concentra no lugar,
@@ -564,8 +606,21 @@ function concentrate(s: RBattle, data: RoletaData): void {
   s.log.push({ type: 'rest', side: 'player', amount });
 }
 
-function useItem(s: RBattle, id: ConsumableId, data: RoletaData, rng: Rng): void {
-  if ((s.player.bag[id] ?? 0) <= 0) throw new Error('item acabou');
+/** Item da bolsa: não gasta a ação, um por turno (como na Jornada). Atordoado não usa (perde o turno inteiro). */
+export function canUseItem(s: RBattle, id: ConsumableId): boolean {
+  return s.status === 'ongoing' && !s.itemUsed && (s.player.bag[id] ?? 0) > 0 && !has(s.fx.effects, 'stun');
+}
+
+/** Usa um item antes da ação do turno (como a ativa): o efeito vale na hora. */
+export function useRoletaItem(prev: RBattle, id: ConsumableId, data: RoletaData, rng: Rng): RBattle {
+  if (!canUseItem(prev, id)) throw new Error('item indisponível agora');
+  const s = clone(prev);
+  s.itemUsed = true;
+  applyItem(s, id, data, rng);
+  return s;
+}
+
+function applyItem(s: RBattle, id: ConsumableId, data: RoletaData, rng: Rng): void {
   s.player.bag = { ...s.player.bag, [id]: s.player.bag[id] - 1 };
   s.log.push({ type: 'item', id });
   const it = data.r.items;
@@ -580,23 +635,40 @@ function useItem(s: RBattle, id: ConsumableId, data: RoletaData, rng: Rng): void
 }
 
 function playerAttack(s: RBattle, t: RTechniqueDef, data: RoletaData, rng: Rng): void {
-  // Bunshin no Jutsu: cria o clone (no máximo 1), sem roleta de acerto.
+  // Clone: cria (no máximo 1; um novo substitui), sem roleta de acerto.
   if (t.clone) {
-    s.fx.clone = true;
-    s.log.push({ type: 'clone', side: 'player', action: 'create' });
+    s.fx.clone = { kind: t.clone, wear: 0 };
+    s.log.push({ type: 'clone', side: 'player', action: 'create', kind: t.clone });
     return;
   }
-  const odds = playerAttackOdds(s, t, data);
-  const outcome = odds.auto ? (rng() < odds.crit ? 'crit' : 'hit') : rollHit(odds.hit, odds.crit, rng);
+  // Barreira: ergue o escudo do elemento, sem roleta.
+  if (t.barrierPct) return raiseSideBarrier(s, 'player', t.id, barrierSpec(t.barrierPct, t.element, data), t.kekkeiGenkai ?? t.element ?? null, data);
+  // Cada golpe tem a sua roleta (v0.77.0, como na Jornada): acerto, erro ou crítico vale só para aquele golpe.
   const hits = t.hits ?? 1;
-  s.log.push({ type: 'attack', side: 'player', techId: t.id, hitChance: odds.hit, critChance: odds.crit, outcome, hits, ...(odds.auto ? { auto: true } : {}) });
-  if (outcome === 'miss') return;
-  const crit = outcome === 'crit';
-  const per = playerHitDamage(s, t, data, crit ? data.base.balance.crit.multiplier : 1);
-  const dealt = hurtVillain(s, per * hits, 'attack', data, rng, crit);
+  let dealt = 0;
+  let landed = 0;
+  for (let i = 0; i < hits && s.status === 'ongoing'; i++) {
+    const odds = playerAttackOdds(s, t, data);
+    const outcome = odds.auto ? (rng() < odds.crit ? 'crit' : 'hit') : rollHit(odds.hit, odds.crit, rng);
+    s.log.push({ type: 'attack', side: 'player', techId: t.id, hitChance: odds.hit, critChance: odds.crit, outcome, hits: 1, strike: i + 1, of: hits, ...(odds.auto ? { auto: true } : {}) });
+    if (outcome === 'miss') continue;
+    landed++;
+    const crit = outcome === 'crit';
+    dealt += hurtVillain(s, playerHitDamage(s, t, data, crit ? data.base.balance.crit.multiplier : 1), 'attack', data, rng, crit, t);
+  }
+  if (!landed) return;
+  const per = playerHitDamage(s, t, data);
+  // Clone que bate junto (Kage, Mizu, Mokuton): um golpe a mais, com uma fração do dano de um golpe, sem roleta.
+  const cl = s.fx.clone;
+  const strikePct = cl ? cloneRules(data).kinds[cl.kind].strikePct : 0;
+  if (cl && strikePct > 0 && s.status === 'ongoing') {
+    s.log.push({ type: 'clone', side: 'player', action: 'strike', kind: cl.kind });
+    dealt += hurtVillain(s, Math.max(1, Math.floor(per * strikePct)), 'clone', data, rng, false, t);
+  }
   if (t.lifesteal && dealt > 0) healPlayer(s, Math.floor(dealt * t.lifesteal), 'lifesteal');
   if (s.status !== 'ongoing') return;
-  // Efeito da técnica (Aburame com a Praga: o Enxame sempre envenena). Imune a genjutsu ignora efeito de genjutsu.
+  // Efeito da técnica, uma chance por técnica que acertou pelo menos um golpe (Aburame com a Praga: o Enxame sempre
+  // envenena). Imune a genjutsu ignora efeito de genjutsu.
   const plague = t.id === 'rSwarm' && buff(s, 'plague');
   if (t.effect && !(t.type === 'genjutsu' && genjutsuImmune(s)) && (plague || rng() < t.effect.chance)) addEffect(s, 'villain', t.effect.kind, data);
   // Invocações e o cão do Inuzuka.
@@ -619,7 +691,12 @@ function playerAttack(s: RBattle, t: RTechniqueDef, data: RoletaData, rng: Rng):
 function rollIntent(s: RBattle, rng: Rng): RIntent {
   const v = s.villain;
   const options = v.techniques.filter(
-    (t) => t.chakraCost <= v.chakra && (t.healPct === undefined || (v.hp < v.maxHp * (t.useBelowHpPct ?? 1) && v.hp < v.maxHp)),
+    (t) =>
+      t.chakraCost <= v.chakra &&
+      (t.type === 'taijutsu' || !chakraBlocked(v.effects)) &&
+      // Barreira só sem uma de pé.
+      (t.barrier === undefined || !v.barrier) &&
+      (t.healPct === undefined || (v.hp < v.maxHp * (t.useBelowHpPct ?? 1) && v.hp < v.maxHp)),
   );
   if (!options.length) return { kind: 'rest' };
   let x = rng() * options.reduce((a, t) => a + t.weight, 0);
@@ -631,14 +708,20 @@ function villainTurn(s: RBattle, data: RoletaData, rng: Rng): void {
   const v = s.villain;
   tickEffects(s, 'villain', data, rng);
   if (s.status !== 'ongoing') return;
-  const stunned = consumeTurnEffects(v.effects);
-  if (v.skipNext || stunned) {
+  if (v.skipNext || has(v.effects, 'stun')) {
     s.log.push({ type: 'skip', side: 'villain', reason: v.skipNext ?? 'stun' });
     v.skipNext = null;
-    return;
-  }
-  const intent = v.intent ?? rollIntent(s, rng);
-  const tech = intent.kind === 'tech' ? v.techniques.find((t) => t.id === intent.id) : undefined;
+  } else villainAction(s, data, rng);
+  endSideTurn(s, 'villain', data);
+}
+
+function villainAction(s: RBattle, data: RoletaData, rng: Rng): void {
+  const v = s.villain;
+  const first = v.intent ?? rollIntent(s, rng);
+  const find = (i: RIntent) => (i.kind === 'tech' ? v.techniques.find((t) => t.id === i.id) : undefined);
+  // Bloqueio de chakra depois do sorteio: a técnica que não é taijutsu sai, e ele sorteia de novo.
+  const planned = find(first);
+  const tech = planned && planned.type !== 'taijutsu' && chakraBlocked(v.effects) ? find(rollIntent(s, rng)) : planned;
   if (!tech || tech.chakraCost > v.chakra) {
     const amount = Math.min(v.def.chakra - v.chakra, Math.max(1, Math.floor(v.def.chakra * data.r.villainChakra.restPct)));
     v.chakra += amount;
@@ -647,6 +730,10 @@ function villainTurn(s: RBattle, data: RoletaData, rng: Rng): void {
   }
   v.chakra -= tech.chakraCost;
   if (tech.chakraCost > 0) logChakra(s, 'villain');
+  if (tech.barrier !== undefined) {
+    if (v.barrier) return;
+    return raiseSideBarrier(s, 'villain', tech.id, { points: tech.barrier }, tech.element ?? villainNature(v.def), data);
+  }
   if (tech.healPct !== undefined) {
     const amount = Math.min(v.maxHp - v.hp, Math.floor(v.maxHp * tech.healPct));
     v.hp += amount;
@@ -663,7 +750,7 @@ export function villainAttackOdds(s: RBattle, tech: VillainTechnique, data: Role
   let bonus = -dodgeChance(effectiveSpeed(s, 'player', data), s.villain.def.speed, data) - relicEffects(s.player, data).dodgeBonus;
   if (kit.passive === 'mindReading') bonus -= data.r.passives.mindReadingAccuracy;
   if (buff(s, 'sharingan')) bonus -= data.r.kits.sharingan.dodge;
-  if (has(s.villain.effects, 'fear')) bonus += data.r.effects.fear.accuracy;
+  if (has(s.villain.effects, 'fear')) bonus += data.base.balance.effects.fear.accuracy;
   const hit = hitChance(tech.accuracy, bonus, cfg.hit);
   const p = s.villain.def.passive;
   const scalpel = p?.kind === 'scalpel' ? p.critBonus : 0;
@@ -674,49 +761,52 @@ export function villainAttackOdds(s: RBattle, tech: VillainTechnique, data: Role
 function villainAttack(s: RBattle, tech: VillainTechnique, data: RoletaData, rng: Rng): void {
   const v = s.villain;
   const p = v.def.passive;
-  // Espelhos: os golpes extras são do mesmo ataque (uma roleta só, como toda técnica de vários golpes).
+  // Espelhos: os golpes extras são do mesmo ataque; cada golpe tem a sua roleta (v0.77.0).
   const mirrors = p?.kind === 'mirrors' ? p : null;
   const hits = (tech.hits ?? 1) * (mirrors?.actions ?? 1);
+  // Bomba de fumaça: esquiva o ataque inteiro (todos os golpes).
   if (s.fx.dodgeNext) {
     s.fx.dodgeNext = false;
     s.log.push({ type: 'attack', side: 'villain', techId: tech.id, hitChance: 0, critChance: 0, outcome: 'miss', hits });
     s.log.push({ type: 'dodge', side: 'player' });
     return;
   }
-  const odds = villainAttackOdds(s, tech, data);
-  const outcome = rollHit(odds.hit, odds.crit, rng);
-  if (v.counterCrit) v.counterCrit = false;
-  s.log.push({ type: 'attack', side: 'villain', techId: tech.id, hitChance: odds.hit, critChance: odds.crit, outcome, hits });
-  if (outcome === 'miss') return;
-  // Clone do Bunshin: o golpe (alvo único) pode cair nele; o clone some (src/core/clones.ts).
-  if (cloneTakesHit(s.fx.clone ? 1 : 0, true, data.base.balance.clones, rng)) {
-    s.fx.clone = false;
-    s.log.push({ type: 'clone', side: 'player', action: 'block' });
-    return;
-  }
   const kit = kitOf(s.player, data);
-  // Genjutsu sem dano: só o efeito (Medo). Uchiha e jinchuuriki são imunes.
-  if (tech.baseDamage <= 0) {
-    if (kit.passive !== 'trainedEyes' && !s.player.jinchuuriki) addEffect(s, 'player', 'fear', data);
-    return;
-  }
   const kind = resistanceKind(tech.type);
   const cloakOn = p?.kind === 'cloak' && (v.cloakTurns > 0 || v.monster);
   let extra = (mirrors?.damageMult ?? 1) * (cloakOn ? p.cloak.statMult : 1) * (v.lastStand && p?.kind === 'mist' && p.lastStand ? p.lastStand.damageMult : 1);
-  if (has(v.effects, 'fear')) extra *= data.r.effects.fear.damageMult;
+  if (has(v.effects, 'fear')) extra *= data.base.balance.effects.fear.damageMult;
   const pierce = p?.kind === 'scalpel' ? (p.resistancePierce ?? 0) : 0;
-  const per = damage({
-    baseDamage: tech.baseDamage,
-    offense: v.def.offense[tech.type],
-    resistance: playerResistance(s, kind, data),
-    fraction: s.fx.guarding ? data.r.resistance.guard : data.r.resistance.passive,
-    penetration: pierce,
-    elementMult: 1,
-    critMult: outcome === 'crit' ? data.base.balance.crit.multiplier : 1,
-    extraMult: extra,
-  });
-  hurtPlayer(s, per * hits, 'attack', data, outcome === 'crit');
-  if (s.status !== 'ongoing') return;
+  let landed = 0;
+  for (let i = 0; i < hits && s.status === 'ongoing'; i++) {
+    const odds = villainAttackOdds(s, tech, data);
+    const outcome = rollHit(odds.hit, odds.crit, rng);
+    // Contra-ataque do Kabuto: só o primeiro golpe é crítico garantido.
+    if (v.counterCrit) v.counterCrit = false;
+    s.log.push({ type: 'attack', side: 'villain', techId: tech.id, hitChance: odds.hit, critChance: odds.crit, outcome, hits: 1, strike: i + 1, of: hits });
+    if (outcome === 'miss') continue;
+    // Clone: o golpe (alvo único) pode cair nele (src/core/clones.ts).
+    if (cloneBlocks(s, data, rng)) continue;
+    landed++;
+    // Genjutsu sem dano: só o efeito (Medo), uma vez. Uchiha e jinchuuriki são imunes.
+    if (tech.baseDamage <= 0) {
+      if (kit.passive === 'trainedEyes' || s.player.jinchuuriki) s.log.push({ type: 'resist', side: 'player', kind: 'fear' });
+      else addEffect(s, 'player', 'fear', data);
+      return;
+    }
+    const per = damage({
+      baseDamage: tech.baseDamage,
+      offense: v.def.offense[tech.type],
+      resistance: playerResistance(s, kind, data),
+      fraction: s.fx.guarding ? data.r.resistance.guard : data.r.resistance.passive,
+      penetration: pierce,
+      elementMult: 1,
+      critMult: outcome === 'crit' ? data.base.balance.crit.multiplier : 1,
+      extraMult: extra,
+    });
+    hurtPlayer(s, per, 'attack', data, outcome === 'crit', { tech, rng });
+  }
+  if (!landed || s.status !== 'ongoing') return;
   // Cobra do Orochimaru e bisturi do Kabuto (hardcore): veneno no acerto.
   if ((p?.kind === 'insane' && p.snakeBonus > 0) || (p?.kind === 'scalpel' && p.bleedOnHit)) {
     if (!has(s.fx.effects, 'poison')) addEffect(s, 'player', 'poison', data);
@@ -740,8 +830,104 @@ function healPlayer(s: RBattle, amount: number, source: string): void {
   s.log.push({ type: 'heal', side: 'player', amount: n, source });
 }
 
-function hurtPlayer(s: RBattle, amount: number, source: 'attack' | 'burn' | 'poison', data: RoletaData, crit = false): void {
-  let n = amount;
+// ---------------------------------------------------------------------------
+// Clones (src/core/clones.ts)
+
+const cloneRules = (data: RoletaData) => data.base.balance.clones;
+
+/**
+ * O golpe do vilão cai no clone? Se cair, o clone se gasta (o Doton aguenta 2) e, ao se desfazer, o do raio dá uma
+ * descarga em quem bateu e o de areia pode bloquear o chakra dele.
+ */
+function cloneBlocks(s: RBattle, data: RoletaData, rng: Rng): boolean {
+  const cl = s.fx.clone;
+  if (!cl) return false;
+  const rules = cloneRules(data);
+  const kind = rules.kinds[cl.kind];
+  if (rng() >= kind.blockChance) return false;
+  const worn = wearClone(cl.wear, cl.kind, rules);
+  s.log.push({ type: 'clone', side: 'player', action: 'block', kind: cl.kind, ...(worn.broken ? { broken: true } : {}) });
+  if (!worn.broken) {
+    cl.wear = worn.wear;
+    return true;
+  }
+  s.fx.clone = null;
+  const brk = kind.onBreak;
+  if (brk?.damagePct) hurtVillain(s, Math.max(1, Math.floor(s.villain.maxHp * brk.damagePct)), 'clone', data, rng);
+  if (brk?.effect && s.status === 'ongoing' && rng() < (brk.chance ?? 1)) addEffect(s, 'villain', brk.effect, data);
+  return true;
+}
+
+/** O clone mostra a próxima ação do vilão (Mokuton), como o Gênio do Nara. */
+export const cloneRevealsIntent = (s: RBattle, data: RoletaData) => Boolean(s.fx.clone && cloneRules(data).kinds[s.fx.clone.kind].revealsIntent);
+
+// ---------------------------------------------------------------------------
+// Barreiras elementais (src/core/barriers.ts)
+
+const barrierCtx = (data: RoletaData): BarrierContext => ({ kekkeiGenkai: data.base.kekkeiGenkai, beats: data.base.beats, elements: data.base.balance.elements });
+
+/** Natureza do vilão: a Kekkei Genkai, senão o elemento. */
+const villainNature = (def: VillainDef): Nature | null => def.kekkeiGenkai ?? def.element ?? null;
+
+/** O golpe do vilão contra uma barreira: taijutsu é neutro; o ninjutsu tem o elemento da técnica ou o dele. */
+function villainAttackInfo(s: RBattle, tech: VillainTechnique): BarrierAttack {
+  const mirrors = s.villain.def.passive?.kind === 'mirrors' ? s.villain.def.passive.actions : 1;
+  return { type: tech.type, nature: tech.type === 'taijutsu' ? null : (tech.element ?? villainNature(s.villain.def)), hits: (tech.hits ?? 1) * mirrors };
+}
+
+/** Multiplicador do golpe do jogador na barreira do vilão (1 sem barreira): a interface mostra a seta. */
+export function playerBarrierMult(s: RBattle, t: RTechniqueDef, data: RoletaData): number {
+  const b = s.villain.barrier;
+  return b ? barrierMult(b, { type: t.type, nature: t.kekkeiGenkai ?? t.element ?? null, hits: t.hits ?? 1 }, barrierCtx(data)) : 1;
+}
+
+/** A barreira de quem é atingido (`owner`) recebe o golpe; devolve o que passa para o HP. */
+function hitBarrier(s: RBattle, owner: Side, amount: number, atk: BarrierAttack, data: RoletaData, rng: Rng): number {
+  const b = owner === 'player' ? s.fx.barrier : s.villain.barrier;
+  if (!b || amount <= 0) return amount;
+  const r = absorbIntoBarrier(b, amount, atk, barrierCtx(data));
+  if (r.absorbed <= 0) return r.passes;
+  s.log.push({ type: 'barrier', side: owner, action: 'hit', techId: b.techId, absorbed: r.absorbed, left: b.points, mult: r.mult });
+  const effects = owner === 'player' ? s.fx.effects : s.villain.effects;
+  // Parede d'Água que absorve fogo apaga a queimadura de quem a ergueu.
+  if (r.douse && has(effects, 'burn')) {
+    const i = effects.findIndex((e) => e.kind === 'burn');
+    effects.splice(i, 1);
+    s.log.push({ type: 'barrier', side: owner, action: 'douse', techId: b.techId });
+  }
+  // Muralha de Chamas: quem bate com taijutsu pode queimar.
+  if (r.touched && rng() < (b.burnOnTouch ?? 0)) addEffect(s, owner === 'player' ? 'villain' : 'player', 'burn', data);
+  if (r.broken) {
+    if (owner === 'player') s.fx.barrier = null;
+    else s.villain.barrier = null;
+    s.log.push({ type: 'barrier', side: owner, action: 'break', techId: b.techId });
+  }
+  return r.passes;
+}
+
+/** Ergue a barreira do lado `side` (uma de pé por vez). */
+function raiseSideBarrier(s: RBattle, side: Side, techId: string, spec: BarrierSpec | { points: number }, nature: Nature | null, data: RoletaData): void {
+  const maxHp = side === 'player' ? s.player.maxHp : s.villain.maxHp;
+  // +1: o fim do turno em que ergueu já desconta; o escudo vale pelos `barrier.turns` turnos seguintes.
+  const b = raiseBarrier(techId, spec, maxHp, nature, data.base.balance.barrier.turns + 1);
+  if (side === 'player') s.fx.barrier = b;
+  else s.villain.barrier = b;
+  s.log.push({ type: 'barrier', side, action: 'raise', techId, points: b.points });
+}
+
+/** Especiais da barreira pelo elemento (Muralha de Chamas, Escudo de Vento). */
+const barrierSpec = (pct: number, element: string | null | undefined, data: RoletaData): BarrierSpec => ({ pct, ...(element ? data.base.balance.barrierSpecials[element] ?? {} : {}) });
+
+function hurtPlayer(
+  s: RBattle,
+  amount: number,
+  source: 'attack' | 'burn' | 'poison',
+  data: RoletaData,
+  crit = false,
+  hit?: { tech: VillainTechnique; rng: Rng },
+): void {
+  // Barreira elemental primeiro (só golpes de técnica), depois o escudo comum.
+  let n = hit ? hitBarrier(s, 'player', amount, villainAttackInfo(s, hit.tech), data, hit.rng) : amount;
   if (s.fx.shield > 0) {
     const absorbed = Math.min(s.fx.shield, n);
     s.fx.shield -= absorbed;
@@ -772,9 +958,17 @@ function hurtPlayer(s: RBattle, amount: number, source: 'attack' | 'burn' | 'poi
 }
 
 /** Fere o vilão e resolve as passivas de queda (Enganador, Último fôlego, Shukaku, Insano). Devolve o dano causado. */
-function hurtVillain(s: RBattle, amount: number, source: 'attack' | 'burn' | 'poison' | 'toad' | 'dog' | 'tag' | 'self', data: RoletaData, rng: Rng, crit = false): number {
+function hurtVillain(
+  s: RBattle,
+  amount: number,
+  source: 'attack' | 'burn' | 'poison' | 'toad' | 'dog' | 'tag' | 'self' | 'clone',
+  data: RoletaData,
+  rng: Rng,
+  crit = false,
+  tech?: RTechniqueDef,
+): number {
   const v = s.villain;
-  let left = amount;
+  let left = tech ? hitBarrier(s, 'villain', amount, { type: tech.type, nature: tech.kekkeiGenkai ?? tech.element ?? null, hits: tech.hits ?? 1 }, data, rng) : amount;
   if (v.shield > 0 && left > 0) {
     const absorbed = Math.min(v.shield, left);
     v.shield -= absorbed;
@@ -803,7 +997,7 @@ function hurtVillain(s: RBattle, amount: number, source: 'attack' | 'burn' | 'po
   if (p?.kind === 'cloak' && p.monster && !v.monster) {
     v.monster = true;
     v.hp = Math.floor(v.maxHp * p.monster.healPct);
-    v.techniques = p.monster.techniques.filter((t) => t.barrier === undefined);
+    v.techniques = p.monster.techniques;
     v.intent = rollIntent(s, rng);
     s.log.push({ type: 'passive', side: 'villain', kind: 'monster' });
     return n;

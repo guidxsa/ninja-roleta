@@ -2,12 +2,14 @@
 // só as fórmulas puras (acerto, dano, elementos) são compartilhadas.
 import type { AttackStats, AttackType, Element, KekkeiGenkaiId, Resistances } from '../types';
 import type { FormDef, ScriptRule } from './script';
+import type { BarrierState } from '../barriers';
+import type { CloneKind } from '../clones';
 
 export type TeamSide = 'ally' | 'enemy';
 
 /** Efeitos com duração em turnos de quem sofre (docs/jornada/combate.md#efeitos). */
 /** `stunGuard`: a trava de quem acabou de sair de um atordoamento (não pode ser atordoado de novo enquanto durar). */
-export type JEffect = 'stun' | 'burn' | 'poison' | 'chakraBlock' | 'stunGuard';
+export type JEffect = 'stun' | 'burn' | 'poison' | 'chakraBlock' | 'fear' | 'stunGuard';
 
 /** Bônus temporário em quem usa: dano, acerto, esquiva e penetração por `turns` turnos dele. */
 export interface Boost {
@@ -50,10 +52,17 @@ export interface JTechnique {
   reviveHpPct?: number;
   /** Escudo no alvo, em fração do HP máximo de quem usa. */
   shieldPct?: number;
+  /**
+   * O escudo é uma barreira elemental (src/core/barriers.ts, v0.77.0): tem o elemento (ou a Kekkei Genkai) da técnica,
+   * dura `balance.barrier.turns` turnos de quem a recebe e só ele sente a vantagem de elemento.
+   */
+  barrier?: boolean;
   /** Tira atordoamento e bloqueio de chakra do alvo. */
   cleanse?: boolean;
   /** Clones criados em quem usa. */
   clones?: number;
+  /** Tipo dos clones criados (src/core/clones.ts). Sem o campo: Kage Bunshin. */
+  cloneKind?: CloneKind;
   /** Rodadas de espera depois de usar. */
   cooldown?: number;
   /** Ativa de classe: fica fora do moveset e não gasta o turno, uma por turno (docs/jornada/combate.md#turno). */
@@ -228,7 +237,12 @@ export interface Fighter {
   mods: FighterMods;
   effects: { kind: JEffect; turns: number }[];
   shield: number;
+  /** Barreira elemental de pé (src/core/barriers.ts), ou null. */
+  barrier: BarrierState | null;
   clones: number;
+  /** Tipo dos clones (todos do mesmo: o último criado manda) e golpes que o da frente já segurou. */
+  cloneKind: CloneKind;
+  cloneWear: number;
   down: boolean;
   /** Postura defensiva até o próximo turno dele: usa a resistência inteira. */
   guarding: boolean;
@@ -255,7 +269,7 @@ export interface Fighter {
 }
 
 /** Lutador pronto para entrar (sem uid, lado e estado de luta). */
-export type FighterSeed = Omit<Fighter, 'uid' | 'side' | 'effects' | 'shield' | 'clones' | 'down' | 'guarding' | 'cooldowns' | 'survivedOnce' | 'enraged' | 'boost' | 'gate'>;
+export type FighterSeed = Omit<Fighter, 'uid' | 'side' | 'effects' | 'shield' | 'barrier' | 'clones' | 'cloneKind' | 'cloneWear' | 'down' | 'guarding' | 'cooldowns' | 'survivedOnce' | 'enraged' | 'boost' | 'gate'>;
 
 /** Como a luta se vence (docs/jornada/historia.md#vitórias-especiais). */
 export type WinCondition =
@@ -277,7 +291,12 @@ export type JEvent =
   | { type: 'tech'; uid: string; techId: string; targets: string[]; cost: number }
   | { type: 'miss'; uid: string; target: string }
   | { type: 'damage'; uid: string; target: string; amount: number; crit: boolean; elementMult: number; absorbed: number }
-  | { type: 'cloneBlock'; target: string; left: number }
+  /** Um clone segurou o golpe (`left`: os que sobram; `broken`: o clone da frente se desfez). */
+  | { type: 'cloneBlock'; target: string; left: number; kind?: CloneKind; broken?: boolean }
+  /** Clones bateram junto com o dono (Mizu, Mokuton). */
+  | { type: 'cloneStrike'; uid: string; target: string; amount: number }
+  /** Barreira elemental: erguida, golpeada (encontro de elementos no escudo), quebrada, apagou o fogo ou acabou. */
+  | { type: 'barrier'; uid: string; action: 'raise' | 'hit' | 'break' | 'douse' | 'end'; techId: string; points?: number; absorbed?: number; left?: number; mult?: number }
   | { type: 'heal'; uid: string; target: string; amount: number }
   | { type: 'shield'; uid: string; target: string; amount: number }
   | { type: 'clones'; uid: string; total: number }

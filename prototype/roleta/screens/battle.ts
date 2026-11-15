@@ -3,7 +3,9 @@ import { scaleVillain } from '../../../src/core/difficulty';
 import { gateUpkeep } from '../../../src/core/gates';
 import { hitSlices } from '../../../src/core/hit';
 import { xpGain } from '../../../src/core/player';
-import { type RBattleOptions, type RBattle, kitOf, playerAttackOdds, playerHitDamage, techCost, canUseTechnique, canUseActive, startRoletaBattle, useActive, playRoletaRound, type RAction, type REvent } from '../../../src/core/roleta/battle';
+import { type RBattleOptions, type RBattle, kitOf, playerAttackOdds, playerHitDamage, playerBarrierMult, techCost, canUseTechnique, canUseActive, canUseItem, cloneRevealsIntent, startRoletaBattle, useActive, useRoletaItem, playRoletaRound, type RAction, type REvent } from '../../../src/core/roleta/battle';
+import type { CloneKind } from '../../../src/core/clones';
+import type { BarrierState } from '../../../src/core/barriers';
 import { playerTechniques } from '../../../src/core/roleta/player';
 import { type VillainDef, type ConsumableId } from '../../../src/core/types';
 import { CONSUMABLES } from '../../../src/data/events';
@@ -134,7 +136,7 @@ export function villainLiveStats(s: RBattle): string {
 }
 
 export const R = S.roleta;
-export const EFFECT_ICONS: Record<string, string> = { burn: 'fire', poison: 'poison', stun: 'stun', fear: 'fear' };
+export const EFFECT_ICONS: Record<string, string> = { burn: 'fire', poison: 'poison', stun: 'stun', chakraBlock: 'block', fear: 'fear', stunGuard: 'immune' };
 export const RACTIVE_ICONS: Record<string, string> = {
   effort: 'weights',
   shadow: 'prison',
@@ -148,10 +150,25 @@ export const RACTIVE_ICONS: Record<string, string> = {
   seal: 'scroll',
 };
 
+/** Técnica do Roleta que cria este tipo de clone (para o nome na tela). */
+const cloneTechId = (kind: CloneKind) => Object.values(rdata.techniques).find((t) => t.clone === kind)?.id ?? 'rBunshin';
+
+/** Dica do clone: o que o tipo faz e quanto segura. */
+function cloneDesc(kind: CloneKind, wear = 0): string {
+  const k = rdata.base.balance.clones.kinds[kind];
+  return `${R.ui.cloneKinds[kind] ?? ''} ${R.ui.cloneKindTip(Math.round(k.blockChance * 100), wear, k.durability)}`.trim();
+}
+
+/** Dica da barreira de pé: pontos, turnos e o especial do elemento. */
+function barrierDesc(b: BarrierState): string {
+  const special = b.nature ? (R.ui.barrierSpecial[b.nature] ?? '') : '';
+  return `${R.ui.barrierTip(b.points, b.turns)} ${special}`.trim();
+}
+
 export function effectChips(effects: RBattle['fx']['effects'], tone: 'good' | 'bad'): Condition[] {
   return effects
     .filter((e) => e.turns > 0)
-    .map((e) => ({ icon: EFFECT_ICONS[e.kind] ?? 'warning', label: R.ui.effectOn(R.effects[e.kind]!.name, e.turns), tone, ...R.effects[e.kind]! }));
+    .map((e) => ({ icon: EFFECT_ICONS[e.kind] ?? 'warning', label: R.ui.effectOn(R.effects[e.kind]!.name, e.turns), tone: e.kind === 'stunGuard' ? (tone === 'good' ? 'bad' : 'good') : tone, ...R.effects[e.kind]! }));
 }
 
 export function badgesHtml(s: RBattle, side: 'player' | 'villain'): string {
@@ -165,8 +182,9 @@ export function badgesHtml(s: RBattle, side: 'player' | 'villain'): string {
     if (v.lastStand) add('heartbreak', S.ui.lastStand, 'bad', St.lastStand);
     if (v.monster) add('claw', S.ui.monster, 'bad', St.monster);
     if (v.skipNext === 'seal') add('scroll', R.actives.seal!.name, 'good', R.actives.seal!);
-    // Gênio (Nara): vê a próxima ação do vilão.
-    if (kitOf(s.player, rdata).passive === 'genius' && v.intent) {
+    if (v.barrier) add('barrier', R.ui.barrierOn(v.barrier.points, v.barrier.turns), 'bad', { name: techName(v.barrier.techId), desc: barrierDesc(v.barrier) });
+    // Gênio (Nara) e clone de madeira (Mokuton): vê a próxima ação do vilão.
+    if ((kitOf(s.player, rdata).passive === 'genius' || cloneRevealsIntent(s, rdata)) && v.intent) {
       const what = v.intent.kind === 'rest' ? R.ui.intentRest : techName(v.intent.id);
       add('intent', R.ui.intent(what), '', St.intent);
     }
@@ -187,7 +205,8 @@ export function badgesHtml(s: RBattle, side: 'player' | 'villain'): string {
   if (fx.vitalTurns > 0) add('heart', R.ui.buffOn(R.passives.vitalForce!.name, fx.vitalTurns), 'good', R.passives.vitalForce!);
   if (fx.guarding) add('stance', R.ui.guard, 'good', { name: R.ui.guard, desc: R.ui.guardTip });
   if (fx.dodgeNext) add('dodge', S.ui.dodge, 'good', St.dodge);
-  if (fx.clone) add('clones', R.ui.cloneOn, 'good', { name: techName('rBunshin'), desc: R.ui.cloneTip(Math.round(rdata.base.balance.clones.blockChance * 100)) });
+  if (fx.clone) add('clones', R.ui.cloneOn, 'good', { name: techName(cloneTechId(fx.clone.kind)), desc: cloneDesc(fx.clone.kind, fx.clone.wear) });
+  if (fx.barrier) add('barrier', R.ui.barrierOn(fx.barrier.points, fx.barrier.turns), 'good', { name: techName(fx.barrier.techId), desc: barrierDesc(fx.barrier) });
   if (fx.shield > 0) add('sandArmor', `${fx.shield}`, 'good', R.ui.shieldTip);
   add('willOfFire', `×${s.player.revives}`, '', St.revives);
   return out.map(conditionChip).join('');
@@ -227,11 +246,24 @@ export function techButton(s: RBattle, t: RTechniqueDef, enabled: boolean): stri
     style: look.style,
     ico: icon(techIconName(t.type, t.element ?? null)),
     title: esc(techName(t.id)),
-    // Bunshin: sem dano nem roleta de acerto; mostra o clone e o custo.
-    extra: t.clone ? `${R.ui.cloneLine} · ${costTag(s, techCost(s, t, rdata))}` : `${R.ui.techLine(dmg, t.hits ?? 1, Math.round(odds.hit * 100))} · ${costTag(s, techCost(s, t, rdata))}`,
-    tip: t.clone ? tip(techName(t.id), R.ui.cloneTip(Math.round(rdata.base.balance.clones.blockChance * 100))) : rTechTip(s.player, t),
+    // Clone e barreira: sem dano nem roleta de acerto; mostram o que fazem e o custo. Contra a barreira do vilão, o
+    // golpe mostra o encontro de elementos no escudo.
+    extra: `${t.clone ? R.ui.cloneLine : t.barrierPct ? R.ui.barrierLine(barrierPoints(s, t)) : `${R.ui.techLine(dmg, t.hits ?? 1, Math.round(odds.hit * 100))}${vsBarrier(s, t)}`} · ${costTag(s, techCost(s, t, rdata))}`,
+    tip: t.clone
+      ? tip(techName(t.id), cloneDesc(t.clone))
+      : t.barrierPct
+        ? tip(techName(t.id), `${R.ui.barrierTip(barrierPoints(s, t), rdata.base.balance.barrier.turns)} ${t.element ? (R.ui.barrierSpecial[t.element] ?? '') : ''}`)
+        : rTechTip(s.player, t),
     enabled: enabled && canUseTechnique(s, t, rdata) && !(t.clone && s.fx.clone),
   });
+}
+
+const barrierPoints = (s: RBattle, t: RTechniqueDef) => Math.max(1, Math.floor(s.player.maxHp * (t.barrierPct ?? 0)));
+
+/** "×1,5 no escudo" quando o vilão tem barreira e o elemento pesa nela. */
+function vsBarrier(s: RBattle, t: RTechniqueDef): string {
+  const m = playerBarrierMult(s, t, rdata);
+  return m === 1 ? '' : ` · ${R.ui.barrierVs(String(m).replace('.', ','))}`;
 }
 
 export const actionGroup = (title: string, body: string, compact = false) =>
@@ -246,7 +278,8 @@ export function actionGrid(s: RBattle, enabled: boolean): string {
   const rest = actionCell({ choice: 'rest', cls: 'act-rest', ico: icon('rest'), title: R.ui.rest, extra: `+${restN} ck`, tip: tip(R.ui.rest, R.ui.restTip(restN)), enabled });
   const items = CONSUMABLES.filter((id) => p.bag[id] > 0).map((id) => {
     const it = S.consumables[id]!;
-    return actionCell({ choice: `item:${id}`, cls: 'act-item', ico: icon(ITEM_ICONS[id]), title: `${it.name} ×${p.bag[id]}`, extra: '', tip: tip(it.name, it.desc), enabled });
+    // Item não gasta a ação (um por turno): usado antes da técnica, Defender ou Concentrar.
+    return actionCell({ choice: `item:${id}`, cls: 'act-item', ico: icon(ITEM_ICONS[id]), title: `${it.name} ×${p.bag[id]}`, extra: '', tip: tip(it.name, `${it.desc} ${R.ui.itemFree}`), enabled: enabled && canUseItem(s, id) });
   });
   const grid = (cells: string[]) => `<div class="act-grid">${cells.join('')}</div>`;
   const G = R.ui.actionGroups;
@@ -391,7 +424,9 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
     }
     renderActions(state, false);
     let next: RBattle;
+    const choice = btn.dataset.choice ?? '';
     if (btn.hasAttribute('data-active')) next = useActive(state, rdata, ses.rng);
+    else if (choice.startsWith('item:')) next = useRoletaItem(state, choice.slice(5) as ConsumableId, rdata, ses.rng);
     else next = playRoletaRound(state, btn.dataset.choice as RAction, rdata, ses.rng);
     await animate(next.log.slice(state.log.length), next, state);
     state = next;
@@ -453,9 +488,11 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
           // Golpe que não erra (Byakugan) ou fumaça: sem roleta de acerto.
           if (!ev.auto && ev.hitChance > 0) {
             const hs = hitSlices(ev.hitChance, ev.critChance);
+            // Cada golpe tem a sua roleta (v0.77.0): o título diz qual golpe é.
+            const strike = ev.of && ev.of > 1 ? ` · ${ev.strike}/${ev.of}` : '';
             await stripRoulette(
               dice,
-              `${S.roulettes.hit} · ${who(ev.side)}`,
+              `${S.roulettes.hit} · ${who(ev.side)}${strike}`,
               [
                 { label: S.sliceLabels.miss!, weight: hs[0]!.weight, color: SIDE_COLORS.miss },
                 { label: S.sliceLabels.hit!, weight: hs[1]!.weight, color: mine ? SIDE_COLORS.hit : SIDE_COLORS.foeHit },
@@ -488,6 +525,7 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
           else if (ev.source === 'dog') log(RL.dog(ev.amount), 'good', 'beast');
           else if (ev.source === 'tag') log(RL.tag(ev.amount), 'good', 'tag');
           else if (ev.source === 'self') log(RL.selfHit(who(target), ev.amount), 'good', 'mind');
+          else if (ev.source === 'clone') log(RL.cloneHit(ev.amount), 'good', 'clones');
           if (crit) floatNumber(card(target), `−${ev.amount}<small>${S.ui.floats.crit}</small>`, 'crit', 'slash');
           else floatNumber(card(target), `−${ev.amount}`, 'dmg');
           break;
@@ -502,8 +540,14 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
           floatNumber(card(ev.side), `+${ev.amount}`, 'heal');
           log(RL.heal(who(ev.side), ev.amount), ev.side === 'player' ? 'good' : 'bad');
           break;
-        case 'effect':
-          log(RL.effect[ev.kind]!(who(ev.side)), ev.side === 'villain' ? 'good' : 'bad', EFFECT_ICONS[ev.kind]);
+        case 'effect': {
+          // A trava (firme) é boa para quem a ganha; os outros efeitos são ruins para quem sofre.
+          const good = (ev.side === 'villain') !== (ev.kind === 'stunGuard');
+          log(RL.effect[ev.kind]!(who(ev.side)), good ? 'good' : 'bad', EFFECT_ICONS[ev.kind]);
+          break;
+        }
+        case 'resist':
+          log(RL.resist(who(ev.side), R.effects[ev.kind]!.name), ev.side === 'villain' ? 'bad' : 'good', 'immune');
           break;
         case 'skip':
           log(RL.skip[ev.reason]!(who(ev.side)), 'sys', ev.reason === 'stun' ? 'stun' : ev.reason === 'seal' ? 'scroll' : 'mind');
@@ -517,10 +561,26 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
           else log(ev.reason === 'chakra' ? RL.gatesExhausted : RL.gatesClose, 'muted', 'gates');
           break;
         case 'clone':
-          // Bunshin: o clone aparece, ou recebe o golpe e some.
+          // Clone: aparece, recebe o golpe (e some, ou o de terra aguenta) ou bate junto.
           if (ev.action === 'block') floatNumber(pcard, icon('clones'), 'miss', 'evade');
-          log(ev.action === 'block' ? RL.cloneBlock : RL.cloneCreate, 'good', 'clones');
+          if (ev.action === 'create') log(RL.cloneCreateKind(techName(cloneTechId(ev.kind))), 'good', 'clones');
+          else if (ev.action === 'block') log(ev.broken ? RL.cloneBlock : RL.cloneHold, 'good', 'clones');
+          else log(RL.cloneStrike, 'good', 'clones');
           break;
+        case 'barrier': {
+          // Barreira elemental: boa para quem a ergueu.
+          const mine = ev.side === 'player';
+          const tone = mine ? 'good' : 'bad';
+          if (ev.action === 'raise') log(RL.barrierRaise(who(ev.side), techName(ev.techId), ev.points ?? 0), tone, 'barrier');
+          else if (ev.action === 'hit') {
+            const mult = ev.mult && ev.mult !== 1 ? R.ui.barrierVs(String(ev.mult).replace('.', ',')) : '';
+            floatNumber(card(ev.side), `${icon('barrier')}${ev.absorbed}`, 'miss', 'evade');
+            log(RL.barrierHit(ev.absorbed ?? 0, ev.left ?? 0, mult), tone, 'barrier');
+          } else if (ev.action === 'break') log(RL.barrierBreak(mine, who(ev.side)), mine ? 'bad' : 'good', 'barrier');
+          else if (ev.action === 'end') log(RL.barrierEnd(mine, who(ev.side)), 'muted', 'barrier');
+          else log(RL.barrierDouse, tone, 'water');
+          break;
+        }
         case 'rest':
           if (ev.side === 'player') disp.pck += ev.amount;
           else disp.vck += ev.amount;

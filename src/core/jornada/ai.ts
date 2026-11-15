@@ -8,6 +8,7 @@ import {
   canRaise,
   downed,
   effectTurns,
+  fearImmune,
   gateChoices,
   gateOpenCost,
   gateUpkeepAt,
@@ -37,6 +38,9 @@ const threat = (f: Fighter) =>
 /** O alvo depende de chakra para atacar (bloquear o chakra dele adianta). */
 const needsChakra = (t: Fighter, data: JornadaData) => t.techniques.some((id) => (data.techniques[id]?.baseDamage ?? 0) > 0 && data.techniques[id]!.type !== 'taijutsu');
 
+/** O alvo já tem o escudo que a técnica daria (barreira elemental ou escudo comum). */
+const shielded = (x: Fighter, tech: JTechnique) => (tech.barrier ? Boolean(x.barrier) : x.shield > 0);
+
 /**
  * Quanto vale o efeito da técnica neste alvo, na mesma escala do dano: controle vale a ameaça do alvo pelos turnos
  * que ele perde; não vale nada em quem já está controlado ou com a trava.
@@ -49,8 +53,10 @@ function effectValue(f: Fighter, t: Fighter, tech: JTechnique, data: JornadaData
   const turns = effectTurns(tech, data);
   if (on.effect === 'stun') return hasEffect(t, 'stunGuard') ? 0 : threat(t) * turns * chance;
   if (on.effect === 'chakraBlock') return needsChakra(t, data) ? threat(t) * turns * chance * 0.5 : 0;
-  const pct = on.effect === 'burn' ? data.j.combat.burnPct : data.j.combat.poisonPct;
-  return t.maxHp * pct * turns * chance;
+  // Medo: um quarto do dano do alvo pelos turnos (vale como controle fraco); imune não conta.
+  if (on.effect === 'fear') return fearImmune(t, data) ? 0 : threat(t) * turns * chance * (1 - data.base.effects.fear.damageMult);
+  if (on.effect !== 'burn' && on.effect !== 'poison') return 0;
+  return t.maxHp * data.base.effects[on.effect].pct * turns * chance;
 }
 
 /**
@@ -76,7 +82,7 @@ function techValue(s: JBattle, f: Fighter, tech: JTechnique, t: Fighter, data: J
     const each = foes.map((x) => targetValue(f, x, tech, data));
     return { value: each.reduce((a, x) => a + x.value, 0), kills: each.some((x) => x.kills) };
   }
-  if (tech.target === 'self') return { value: tech.shieldPct && f.shield === 0 ? f.maxHp * tech.shieldPct * 0.5 : 0, kills: false };
+  if (tech.target === 'self') return { value: tech.shieldPct && !shielded(f, tech) ? f.maxHp * tech.shieldPct * 0.5 : 0, kills: false };
   return targetValue(f, t, tech, data);
 }
 
@@ -171,13 +177,13 @@ export function chooseAiAction(s: JBattle, f: Fighter, data: JornadaData, rng: R
   if (f.ai === 'guardian') {
     const shield = tech((t) => Boolean(t.shieldPct) && t.target === 'ally');
     const exposed = friends
-      .filter((x) => x.shield === 0 && x.hp < x.maxHp * 0.7)
+      .filter((x) => shield && !shielded(x, shield) && x.hp < x.maxHp * 0.7)
       .sort((a, b) => Number(b.protagonist) - Number(a.protagonist) || a.hp / a.maxHp - b.hp / b.maxHp)[0];
     if (shield && exposed) return { kind: 'tech', techId: shield.id, target: exposed.uid };
   }
   // Defesa própria: escudo quando está ferido (Agulhas de Jizō, Rotação; os escudos ativos vão em chooseAiActive).
   const selfShield = tech((t) => t.target === 'self' && Boolean(t.shieldPct));
-  if (selfShield && f.shield === 0 && f.hp < f.maxHp * 0.6) return { kind: 'tech', techId: selfShield.id, target: f.uid };
+  if (selfShield && !shielded(f, selfShield) && f.hp < f.maxHp * 0.6) return { kind: 'tech', techId: selfShield.id, target: f.uid };
   // Inimigo que cura o próprio time (Kabuto) com aliado ferido.
   const allyHeal = tech((t) => Boolean(t.healHp) && t.target === 'ally');
   const hurtFriend = friends.find((x) => x.hp < x.maxHp * 0.45);
@@ -215,7 +221,7 @@ export function chooseAiActive(s: JBattle, f: Fighter, data: JornadaData, _rng: 
   const actives = f.techniques.map((id) => data.techniques[id]!).filter((t) => t?.active && !t.gates && !blockedReason(f, t));
   const self = (test: (t: JTechnique) => boolean) => actives.find((t) => t.target === 'self' && test(t));
   const shield = self((t) => Boolean(t.shieldPct));
-  if (shield && f.shield === 0 && f.hp < f.maxHp * 0.6) return { kind: 'active', techId: shield.id, target: f.uid };
+  if (shield && !shielded(f, shield) && f.hp < f.maxHp * 0.6) return { kind: 'active', techId: shield.id, target: f.uid };
   const gate = aiGate(s, f, data);
   if (gate !== null) return { kind: 'gate', level: gate };
   const boost = self((t) => Boolean(t.boost));

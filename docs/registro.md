@@ -66,6 +66,39 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Combate unificado: efeitos, barreiras, clones (v0.77.0, 15/11/2026)
+
+Pedido do usuário, depois do relatório de diferenças entre os modos: cada golpe rola no Roleta; o elemento não multiplica o dano no HP, só contra barreiras; item sem gastar a vez no Roleta; os mesmos efeitos nos dois modos (atordoar com trava, mais o Medo); 8 tipos de clone; Vontade do Fogo da Jornada até o Difícil. Escolhido com ele: trazer as 4 barreiras do clássico para os dois modos; Veneno 5% por 3; os 8 clones com donos; Vontade Fácil 2, Médio 1, Difícil 1. Regras em [fundamentos.md](base/fundamentos.md#efeitos-roleta-e-jornada).
+
+**Decidido sozinho**, para revisar ([decisoes.md](decisoes.md) item 33): números de clone e de barreira (tabelas em fundamentos.md); no Roleta, o efeito da técnica rola uma vez por técnica que acertou (não por golpe) e a Bomba de fumaça esquiva o ataque inteiro; o Selo dos Pontos Vitais do Hyuuga troca 20% de atordoar por 25% de bloqueio de chakra; na Jornada, o Sino ilusório, a Flauta demoníaca e a Ilusão dos corvos trocam atordoar por Medo (35/30/30%), e os imunes a Medo são Naruto, Sasuke, Kakashi, os Uchiha e Gaara/Shukaku; na Jornada os clones de um lutador são todos de um tipo e erguer outra barreira troca a de pé; o Mokuton dá +10% de acerto (na Jornada não há "próxima ação" para mostrar); as chances de atordoar do Roleta não caíram, embora o atordoar tenha passado de 1 para 2 turnos; os vilões do Roleta não ganharam clones.
+
+**Roleta** (`npm run sim:origens -- --runs 300 --seed 2`, vitória no 1º ciclo, Médio e Difícil, antes → depois):
+
+| Origem | Médio | Difícil |
+|---|---|---|
+| Comum | 47 → 47 | 19 → 21 |
+| Akimichi | 81 → 70 | 47 → 43 |
+| Inuzuka | 74 → 72 | 44 → 39 |
+| Prodígio | 85 → 84 | 56 → 63 |
+| Uchiha | 38 → 33 | 12 → 10 |
+| Hyuuga | 63 → 45 | 29 → 18 |
+| Uzumaki | 73 → 71 | 44 → 40 |
+| Senju | 86 → 84 | 57 → 63 |
+
+O Hyuuga foi quem mais caiu (o Selo dos Pontos Vitais deixou de atordoar, e o bot não escolhe quando bloquear vale mais); no Fácil, 90 → 75. Akimichi e Inuzuka perderam alguns pontos (os golpes duplos dos vilões e dos cães agora erram separados). Prodígio e Senju subiram no Difícil.
+
+**Jornada** (`npm run sim:jornada -- 300 2`, Médio/Difícil/Hardcore; antes → só o combate novo, com a Vontade antiga → com a Vontade nova):
+
+| Run | Antes | Só o combate | Depois |
+|---|---|---|---|
+| História | 82/36/15 | 87/44/12 | 97/67/12 |
+| Comum | 71/36/11 | 77/40/14 | 84/53/14 |
+| Prodígio | 78/40/12 | 82/37/12 | 89/48/12 |
+| Uchiha | 66/25/8 | 70/25/11 | 75/34/11 |
+| Hyuuga | 71/36/11 | 77/39/12 | 81/43/12 |
+
+O combate novo sobe o Médio de 4 a 6 pontos (sem o ×0,8 da desvantagem de elemento, as lutas contra Haku e Zabuza ficaram mais fáceis); a Vontade do Fogo no Médio e no Difícil soma de 5 a 10 pontos no Médio e até 23 no Difícil. O Hardcore quase não muda (não tem Vontade). Nada foi compensado.
+
 ## Crítica no UI Lab: celular e desktop (v0.76.2, 14/11/2026)
 
 Crítica de design dos 113 cenários do UI Lab, com captura de tela de cada um (390×844 e, numa amostra, 360, 1024, 1440 e tema claro). O usuário pediu as correções de prioridade P0 e P1, celular primeiro. Só visual: nenhuma regra nem número de balanceamento mudou; testes (703) iguais.

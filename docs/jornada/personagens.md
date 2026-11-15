@@ -97,7 +97,7 @@ Entre as duas melhores opções, a sorte desempata (30%) quando a segunda vale p
 | Shuriken das sombras | Taijutsu | — | um inimigo | 7 | 3 | 85% | 3 golpes |
 | Grito de guerra | Ninjutsu | — | um aliado | — | 5 | 85% | cura 20 de HP; tira atordoar e bloqueio; espera 2 |
 | Gamakichi | Ninjutsu | fogo | todos os inimigos | 12 | 6 | 85% | queimar 30% |
-| Gamatatsu | Ninjutsu | água | em si | — | 5 | 85% | escudo 25% do HP de quem usa; espera 3; ativa de classe |
+| Gamatatsu | Ninjutsu | água | em si | — | 5 | 85% | barreira de água de 25% do HP de quem usa (3 turnos); espera 3; ativa de classe |
 | Gamabunta | Ninjutsu | — | todos os inimigos | 26 | 16 | 90% | atordoar 20% (2 t); espera 4 |
 | Uma cauda | Ninjutsu | — | em si | — | 0 | 85% | custa 10% do HP; fortalece 3 turnos (dano ×1.35); espera 5; ativa de classe |
 | Bola de Fogo | Ninjutsu | fogo | um inimigo | 16 | 5 | 85% | queimar 25% |
@@ -117,7 +117,7 @@ Entre as duas melhores opções, a sorte desempata (30%) quando a segunda vale p
 | Redemoinho da Folha | Taijutsu | — | um inimigo | 12 | 0 | 90% | — |
 | Furacão da Folha | Taijutsu | — | um inimigo | 8 | 0 | 85% | 2 golpes |
 | Lótus Primária | Taijutsu | — | um inimigo | 32 | 0 | 85% | custa 10% do HP; atordoar 25% (2 t); espera 3 |
-| Escudo de areia | Ninjutsu | terra | um aliado | — | 5 | 85% | escudo 25% do HP de quem usa; espera 2 |
+| Escudo de areia | Ninjutsu | terra | um aliado | — | 5 | 85% | barreira de areia de 25% do HP de quem usa (3 turnos); espera 2 |
 | Caixão de areia | Ninjutsu | terra | um inimigo | 20 | 7 | 85% | atordoar 25% (2 t) |
 | Shuriken de areia | Ninjutsu | terra | todos os inimigos | 8 | 5 | 85% | — |
 | Possessão das Sombras | Ninjutsu | — | um inimigo | — | 4 | 90% | atordoar 70% (2 t); espera 3 |
@@ -151,7 +151,16 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 
 | Técnica | Tipo | Elemento | Alvo | Dano | Chakra | Precisão | Extra |
 |---|---|---|---|---|---|---|---|
-| Bunshin no Jutsu | Ninjutsu | — | em si | — | 3 | 85% | 1 clone; gasta o turno |
+| Bunshin no Jutsu | Ninjutsu | — | em si | — | 3 | 85% | 1 clone ilusório; gasta o turno. Na luta, quem tem ninjutsu elemental usa o clone da natureza no lugar |
+| Mizu Bunshin no Jutsu | Ninjutsu | água | em si | — | 4 | 85% | 1 clone de água: bate junto (35% do dano de um golpe) |
+| Doton Kage Bunshin | Ninjutsu | terra | em si | — | 4 | 85% | 1 clone de terra: segura 65% e aguenta 2 golpes |
+| Raiton Kage Bunshin | Ninjutsu | raio | em si | — | 5 | 85% | 1 clone de raio: ao se desfazer, descarga de 6% do HP de quem bateu e 30% de atordoar |
+| Mokuton Bunshin | Ninjutsu | madeira (Kekkei Genkai) | em si | — | 5 | 85% | 1 clone de madeira: bate junto (35%) e dá +10% de acerto |
+| Suna Bunshin | Ninjutsu | areia (Kekkei Genkai) | em si | — | 4 | 85% | 1 clone de areia: ao se desfazer, 30% de bloqueio de chakra em quem bateu |
+| Muralha de Terra | Ninjutsu | terra | em si | — | 5 | 85% | barreira de 28% do HP (3 turnos); espera 3. Comum de terra, no talento Poder elemental |
+| Parede d'Água | Ninjutsu | água | em si | — | 5 | 85% | barreira de 24% do HP; apaga a queimadura se absorver fogo; espera 3 |
+| Muralha de Chamas | Ninjutsu | fogo | em si | — | 4 | 85% | barreira de 20% do HP; 30% de queimar quem bate com taijutsu; espera 3 |
+| Escudo de Vento | Ninjutsu | vento | em si | — | 4 | 85% | barreira de 20% do HP; vários golpes gastam 25% a menos; espera 3 |
 | Esforço | Taijutsu | — | em si | — | 3 | 85% | espera 4; fortalece 3 turnos (+3 nos ataques); ativa de classe |
 | Selo explosivo | Taijutsu | — | todos os inimigos | 11 | 4 | 85% | espera 2 |
 | Portões | Taijutsu | — | em si | — | 0 | — | abre, troca ou fecha um portão (Abertura, Descanso, Vida, Dor, Limite): dano ×1,15 a ×1,68 com desgaste de 2% a 8% do HP por turno ([combate.md](combate.md#portões)); ativa de classe |
@@ -160,7 +169,7 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 | Punho Bêbado | Taijutsu | — | um inimigo | 7 | 0 | 75% | 3 golpes; +15% crítico |
 | Sharingan | Genjutsu | — | em si | — | 3 | 85% | espera 4; fortalece 3 turnos (+15% acerto); ativa de classe |
 | Sharingan (3 tomoe) | Genjutsu | — | em si | — | 4 | 85% | espera 4; fortalece 4 turnos (dano ×1.1) (+20% acerto); ativa de classe |
-| Ilusão dos corvos | Genjutsu | — | um inimigo | 12 | 4 | 85% | atordoar 20% (2 t) |
+| Ilusão dos corvos | Genjutsu | — | um inimigo | 12 | 4 | 85% | medo 30% (2 t) |
 | Tsukuyomi | Genjutsu | — | um inimigo | 30 | 12 | 85% | atordoar 40% (2 t); espera 4 |
 | Selo amaldiçoado | Ninjutsu | — | em si | — | 0 | 85% | custa 10% do HP; espera 5; fortalece 3 turnos (dano ×1.4); ativa de classe |
 | Byakugan | Taijutsu | — | em si | — | 3 | 85% | espera 4; fortalece 3 turnos (+100% acerto); ativa de classe |

@@ -625,7 +625,7 @@ function hintText(run: JRun, salt: number): string {
   const H = U.hints;
   const rec = afterWinRecovery(run, data);
   const all = [
-    H.elements(fmt(c.elementAdvantage), fmt(c.elementDisadvantage)),
+    H.elements(fmt(data.base.elements.advantage), fmt(data.base.elements.disadvantage)),
     H.clones(pct(data.base.clones.blockChance)),
     H.guard,
     H.rest(c.restChakra),

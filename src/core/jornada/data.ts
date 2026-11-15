@@ -34,7 +34,7 @@ export interface CampaignDef {
 /** Pacote de dados que o core da Jornada recebe por parâmetro (nunca importa os dados diretamente). */
 export interface JornadaData {
   /** `balance` do jogo: acerto, crítico, penetração e dificuldade são os mesmos do Roleta. */
-  base: Pick<Balance, 'hit' | 'crit' | 'penetration' | 'difficulty' | 'clones' | 'gateCosts'>;
+  base: Pick<Balance, 'hit' | 'crit' | 'penetration' | 'difficulty' | 'clones' | 'gateCosts' | 'effects' | 'elements' | 'barrier' | 'barrierSpecials'>;
   j: JornadaBalance;
   beats: Record<Element, Element>;
   techniques: Record<string, JTechnique>;

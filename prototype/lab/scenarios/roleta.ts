@@ -105,6 +105,23 @@ export const roleta: Scenario[] = [
   { id: 'roleta.battle', title: 'Luta contra genin (início)', group: 'Combate', mount: fight({}) },
   { id: 'roleta.battle:boss', title: 'Luta contra o chefe', group: 'Combate', mount: fight({ step: 5, level: 6, lineage: 'uchiha' }) },
   {
+    // v0.77.0: técnica de 2 golpes (uma roleta por golpe), Mizu Bunshin, Parede d'Água e item que não gasta a vez.
+    id: 'roleta.battle:water',
+    title: 'Luta com a água: 2 golpes, clone, barreira e item',
+    group: 'Combate',
+    mount: fight({ step: 1, level: 3, elements: ['water'] }, (s) => ({ ...s, player: { ...s.player, bag: { ...s.player.bag, soldierPill: 1, medKit: 1 } } })),
+  },
+  {
+    // v0.77.0: o vilão de terra com a Muralha de Terra de pé; o botão mostra o encontro de elementos no escudo.
+    id: 'roleta.battle:barrier',
+    title: 'Vilão atrás da barreira (raio contra terra)',
+    group: 'Combate',
+    mount: fight({ step: 3, level: 4, elements: ['lightning'] }, (s) => ({
+      ...s,
+      villain: { ...s.villain, barrier: { points: 28, max: 28, nature: 'earth', turns: 3, techId: 'earthWall' } },
+    })),
+  },
+  {
     id: 'roleta.battle:low-hp',
     title: 'Luta no meio, os dois com pouco HP',
     group: 'Combate',

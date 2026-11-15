@@ -11,19 +11,15 @@ export const jornadaBalance = {
     // Fração da resistência usada normalmente e em postura defensiva.
     resistanceFraction: 0.5,
     guardFraction: 1,
-    // Elemento da técnica contra o elemento do alvo.
-    elementAdvantage: 1.25,
-    elementDisadvantage: 0.8,
-    // Chance de um clone receber o golpe no lugar de quem tem clones (o clone some).
+    // Elemento: só contra barreira, a regra comum (src/core/barriers.ts, `balance.elements`; v0.77.0).
+    // Clones: no máximo este número por lutador (os tipos e as chances ficam em `balance.clones`).
     maxClones: 5,
-    // Queimar e veneno tiram esta fração do HP máximo no começo do turno de quem sofre.
-    burnPct: 0.05,
-    poisonPct: 0.06,
-    defaultEffectTurns: 2,
-    // Controle (atordoar e bloqueio de chakra) dura no mínimo isto, de qualquer lutador (v0.69.0).
-    minControlTurns: 2,
-    // Trava: ao sair de um atordoamento, não pode ser atordoado de novo por este número de turnos próprios.
-    stunImmunityTurns: 1,
+    // Efeitos (queimar, veneno, atordoar, bloqueio de chakra, medo e a trava): os mesmos do Roleta, em `balance.effects`.
+    // Imunes a Medo (v0.77.0), como no Roleta: Uchiha (Sharingan) e jinchuuriki. Por id de personagem ou inimigo.
+    fearImmune: [
+      'naruto', 'sasuke', 'sasukeHospital', 'sasukeFinal', 'kakashi', 'kakashiAlly', 'uchihaNinja', 'uchihaGenin', 'uchihaGeninB',
+      'gaara', 'gaaraAlly', 'gaaraWeak', 'shukaku',
+    ] as string[],
     // Levantar um aliado caído (ação de qualquer integrante da equipe, gasta o turno): volta com esta fração do HP. Proposta.
     raiseHpPct: 0.15,
     // Pílula de reanimação: volta com esta fração do HP máximo. As técnicas de reanimar têm a própria (`reviveHpPct`).
@@ -73,8 +69,8 @@ export const jornadaBalance = {
     startRyo: 60,
     bagLimit: 5,
     startConsumables: { hpKit: 1, chakraKit: 1 } as Record<string, number>,
-    // Vontades do Fogo por dificuldade (só o Fácil tem).
-    willOfFire: { easy: 1, normal: 0, hard: 0, hardcore: 0 } as Record<string, number>,
+    // Vontades do Fogo por dificuldade, até o Difícil (v0.77.0): recomeçam uma luta perdida. O Hardcore não tem.
+    willOfFire: { easy: 2, normal: 1, hard: 1, hardcore: 0 } as Record<string, number>,
   },
 
   // Recompensa por tipo de luta (docs/jornada/progressao.md).

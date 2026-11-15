@@ -4,6 +4,16 @@ export const roletaPtBR = {
   techniques: {
     rBasic: 'Taijutsu básico',
     rBunshin: 'Bunshin no Jutsu',
+    rKageBunshin: 'Kage Bunshin no Jutsu',
+    rMizuBunshin: 'Mizu Bunshin no Jutsu',
+    rDotonBunshin: 'Doton Kage Bunshin',
+    rMokutonBunshin: 'Mokuton Bunshin',
+    rRaitonBunshin: 'Raiton Kage Bunshin',
+    rSunaBunshin: 'Suna Bunshin',
+    rEarthWall: 'Muralha de Terra',
+    rWaterWall: "Parede d'Água",
+    rFireWall: 'Muralha de Chamas',
+    rWindShield: 'Escudo de Vento',
     rFire: 'Bola de Fogo',
     rWind: 'Lâmina de Vento',
     rLightning: 'Corrente Elétrica',
@@ -76,9 +86,11 @@ export const roletaPtBR = {
 
   effects: {
     burn: { name: 'Queimar', desc: 'Perde 5% do HP no começo do turno, por 2 turnos.' },
-    poison: { name: 'Veneno', desc: 'Perde 4% do HP no começo do turno, por 3 turnos.' },
-    stun: { name: 'Atordoar', desc: 'Perde o próximo turno.' },
+    poison: { name: 'Veneno', desc: 'Perde 5% do HP no começo do turno, por 3 turnos.' },
+    stun: { name: 'Atordoar', desc: 'Perde os próximos 2 turnos. Ao sair, fica firme: não pode ser atordoado de novo até agir uma vez.' },
+    chakraBlock: { name: 'Bloqueio de chakra', desc: 'Só usa taijutsu por 2 turnos.' },
     fear: { name: 'Medo', desc: '−25% de dano e −15% de acerto por 2 turnos.' },
+    stunGuard: { name: 'Firme', desc: 'Acabou de sair de um atordoamento: não pode ser atordoado de novo até agir uma vez.' },
   } as Record<string, { name: string; desc: string }>,
 
   run: {
@@ -136,6 +148,7 @@ export const roletaPtBR = {
     actionGroups: { techniques: 'Técnicas', actions: 'Ações', items: 'Consumíveis' },
     guard: 'Defender',
     guardTip: 'Usa a resistência inteira até o seu próximo turno.',
+    itemFree: 'Não gasta a vez: um item por turno, antes da ação.',
     rest: 'Concentrar',
     restTip: (n: number) => `Recupera ${n} de chakra.`,
     activeLabel: (name: string, uses: number) => `${name} ×${uses}`,
@@ -160,7 +173,25 @@ export const roletaPtBR = {
     cloneLine: 'cria um clone',
     cloneOn: 'Clone',
     cloneTip: (pct: number) => `Cria um clone (no máximo 1). Cada golpe do vilão tem ${pct}% de chance de cair nele; o clone some ao receber dano. Queimar e veneno não pegam o clone.`,
+    /** O que cada tipo de clone faz a mais (docs/base/fundamentos.md#clones). */
+    cloneKinds: {
+      bunshin: 'Ilusão: só distrai, não bate.',
+      kage: 'Físico: bate junto em cada técnica que acerta (metade do dano de um golpe).',
+      tajuu: 'Físico, em massa: bate junto em cada técnica que acerta.',
+      mizu: 'Água: bate junto (35% do dano de um golpe), mas é mais fraco que o original.',
+      doton: 'Terra: segura mais golpes (65%) e aguenta 2 antes de se desfazer.',
+      mokuton: 'Madeira: bate junto (35%), dá +10% de acerto e mostra a próxima ação do vilão.',
+      raiton: 'Raio: ao se desfazer, dá uma descarga em quem bateu (6% do HP dele) e pode atordoar (30%).',
+      suna: 'Areia: ao se desfazer, pode prender o chakra de quem bateu (30% de Bloqueio de chakra).',
+    } as Record<string, string>,
+    cloneKindTip: (pct: number, wear: number, durability: number) => `Segura ${pct}% dos golpes do vilão. ${durability > 1 ? `Aguenta ${durability} golpes (já levou ${wear}).` : ''}`,
     shieldTip: { name: 'Escudo de areia', desc: 'Absorve dano antes do HP. Começa cada luta com 10% do HP máximo.' },
+    barrierLine: (pts: number) => `escudo de ${pts}`,
+    barrierOn: (pts: number, turns: number) => `${pts} (${turns})`,
+    barrierTip: (pts: number, turns: number) =>
+      `Ação de turno: ergue um escudo de ${pts} pontos por ${turns} turnos (um de pé por vez). Absorve taijutsu e ninjutsu; genjutsu, queimar e veneno passam direto. Só aqui o elemento pesa: golpe com vantagem gasta o escudo ×1,5, com desvantagem ×0,75 (raio contra terra, ×2).`,
+    barrierSpecial: { fire: 'Quem bate nela com taijutsu pode queimar (30%).', wind: 'Técnicas de vários golpes gastam 25% a menos.', water: 'Se absorver fogo, apaga a sua queimadura.', earth: 'O escudo mais forte.' } as Record<string, string>,
+    barrierVs: (mult: string) => `×${mult} no escudo`,
   },
 
   /** Relíquias no Roleta: efeito lá (as exclusivas também levam o nome). */
@@ -211,8 +242,11 @@ export const roletaPtBR = {
       burn: (who: string) => `${who} está queimando.`,
       poison: (who: string) => `${who} foi envenenado.`,
       stun: (who: string) => `${who} ficou atordoado.`,
+      chakraBlock: (who: string) => `${who} teve o chakra bloqueado: só taijutsu.`,
       fear: (who: string) => `${who} está com medo.`,
+      stunGuard: (who: string) => `${who} se firma: o próximo atordoamento não pega.`,
     } as Record<string, (who: string) => string>,
+    resist: (who: string, effect: string) => `${who} resistiu: ${effect} não pegou.`,
     tick: {
       burn: (who: string, n: number) => `${who} queima: ${n} de dano.`,
       poison: (who: string, n: number) => `O veneno corrói ${who}: ${n} de dano.`,
@@ -237,7 +271,16 @@ export const roletaPtBR = {
     shield: (n: number) => `O escudo de areia absorve ${n}.`,
     shieldFoe: (n: number) => `A areia do vilão absorve ${n}.`,
     cloneCreate: 'Bunshin no Jutsu: um clone entra na luta.',
+    cloneCreateKind: (tech: string) => `${tech}: um clone entra na luta.`,
     cloneBlock: 'O golpe acerta o clone, que se desfaz em fumaça!',
+    cloneHold: 'O clone de terra segura o golpe e continua de pé.',
+    cloneStrike: 'O clone ataca junto!',
+    cloneHit: (n: number) => `O clone acerta: ${n} de dano.`,
+    barrierRaise: (who: string, tech: string, pts: number) => `${who} ergue ${tech}: escudo de ${pts}.`,
+    barrierHit: (absorbed: number, left: number, mult: string) => `O escudo segura ${absorbed}${mult ? ` (${mult})` : ''}; restam ${left}.`,
+    barrierBreak: (mine: boolean, who: string) => (mine ? 'Sua barreira se quebra!' : `A barreira de ${who} se quebra!`),
+    barrierEnd: (mine: boolean, who: string) => (mine ? 'Sua barreira se desfaz.' : `A barreira de ${who} se desfaz.`),
+    barrierDouse: 'A água apaga as chamas.',
     dodge: 'Bomba de fumaça! O ataque passa direto.',
     item: {
       soldierPill: 'Pílula de soldado: chakra recuperado.',

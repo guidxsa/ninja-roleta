@@ -212,9 +212,27 @@ dano_no_HP     = (dano_no_escudo − absorvido) ÷ encontro
 
 Configuração: `barrier: { turns: 3 }`.
 
+### Barreiras no Roleta e na Jornada
+
+Desde a v0.77.0 a mesma regra vale nos dois modos (`src/core/barriers.ts`), com estas diferenças do clássico:
+
+- Os pontos são uma **fração do HP máximo** de quem ergue (campo da técnica), para acompanhar o crescimento da ficha. Os vilões do Roleta usam os pontos fixos da ficha deles.
+- Dura **3 turnos de quem recebe** depois daquele em que foi erguida. Uma de pé por vez: no Roleta, a técnica fica bloqueada enquanto houver uma; na Jornada, erguer de novo troca a que estava.
+- O golpe passa primeiro pela barreira e depois pelo escudo comum (Escudo de areia, relíquias, Kyuubi).
+- Não há disputa nem estados elementais nos modos: **o escudo é o único lugar onde o elemento pesa**.
+
+| Barreira | Pontos (do HP máximo) | Chakra (Roleta / Jornada) | Especial |
+|---|---|---|---|
+| Muralha de Terra | 28% | 6 / 5 | O escudo mais forte; raio fura (×2 no escudo) |
+| Parede d'Água | 24% | 6 / 5 | Se absorver fogo, apaga a queimadura de quem está atrás dela |
+| Muralha de Chamas | 20% | 5 / 4 | Quem bate nela com taijutsu tem 30% de chance de queimar |
+| Escudo de Vento | 20% | 5 / 4 | Técnicas de vários golpes gastam 25% a menos |
+
+Raio não tem barreira. Quem tem: no Roleta, as origens de ninjutsu elemental, a do próprio elemento; Gaara (Escudo de areia, 30) e Jirobo (Muralha de Terra, 28) voltam a erguer a deles. Na Jornada, o Comum aprende a do elemento no talento Poder elemental; o Escudo de areia (Gaara) e o Gamatatsu viram barreiras do elemento deles; o Jirobo ganha a Muralha de Terra. Especiais em `balance.barrierSpecials` (proposta).
+
 ## Elementos
 
-**Não existe tabela de tipos contra o personagem.** O elemento do vilão é o tema dele e define as técnicas que usa. Um golpe direto em quem não tem um estado elemental ativo é neutro.
+**Não existe tabela de tipos contra o personagem.** O elemento do vilão é o tema dele e define as técnicas que usa. Um golpe direto em quem não tem um estado elemental ativo é neutro. Vale também no Roleta e na Jornada (v0.77.0; a Jornada tinha ×1,25 e ×0,8 contra o elemento do alvo): lá, o único encontro é a [barreira](#barreiras-no-roleta-e-na-jornada).
 
 O elemento só pesa quando **dois elementos se encontram**:
 
@@ -272,9 +290,42 @@ Dois elementos-pai fundidos numa natureza nova. No encontro de elementos, conta 
 - Como a luta não começa restaurada, o chakra que sobra de uma luta é o que se tem na próxima.
 - Vilões também têm reserva de chakra, concentram chakra com a mesma fórmula e sorteiam a técnica e a reação só entre as que podem pagar (ver [viloes.md](viloes.md)).
 
+## Efeitos (Roleta e Jornada)
+
+Desde a v0.77.0 os dois modos usam os mesmos efeitos e os mesmos números (`balance.effects`, `src/core/effects.ts`). A duração conta os turnos de quem sofre e desconta no fim de cada turno dele (agindo ou não). O combate clássico segue com os efeitos de [efeitos.md](efeitos.md).
+
+| Efeito | Duração | O que faz |
+|---|---|---|
+| Atordoar | 2 (mínimo) | Perde a vez. Ao sair, fica **firme**: nenhum atordoamento pega até o fim do próximo turno em que age |
+| Bloqueio de chakra | 2 (mínimo) | Só usa taijutsu. Sem trava |
+| Queimar | 2 | Perde 5% do HP máximo no começo do turno |
+| Veneno | 3 | Perde 5% do HP máximo no começo do turno |
+| Medo | 2 | −25% de dano e −15% de acerto. Uchiha e jinchuuriki são imunes |
+
+- **Controle** (atordoar e bloqueio de chakra) dura no mínimo 2 turnos, de qualquer lutador, mesmo que a técnica peça menos (`minControlTurns`).
+- Repetir um efeito que já está no alvo renova a duração (fica a maior).
+- Na Jornada, Kai, Palma mística e Grito de guerra tiram atordoar, bloqueio de chakra e Medo; no Roleta, o Kit médico limpa todos.
+- Antes da v0.77.0: o Roleta tinha Atordoar de 1 turno, Veneno de 4% por 3 e não tinha bloqueio nem trava; a Jornada tinha Veneno de 6% por 2 e não tinha Medo.
+
 ## Clones
 
-Regra comum ao Roleta e à Jornada (v0.59.0, `src/core/clones.ts`). O **Bunshin no Jutsu** está no kit inicial de quem tem ninjutsu (Roleta: todas as origens menos o Prodígio; Jornada: quem tem ninjutsu acima de 0, menos o Naruto, que já tem o Kage Bunshin). Gasta o turno e cria **1 clone** (no máximo 1). Cada golpe de alvo único tem **50%** de chance de cair no clone, que some ao receber qualquer dano. Queimar e veneno não pegam o clone. Custo: 5 de chakra no Roleta, 3 na Jornada.
+Regra comum ao Roleta e à Jornada (`src/core/clones.ts`, tipos desde a v0.77.0; números em `balance.clones`, proposta). Criar um clone gasta o turno (o Kage Bunshin da Jornada é ativa). Cada golpe de alvo único pode cair no clone em vez do ninja; técnicas em área passam por eles. Queimar e veneno não pegam o clone.
+
+| Tipo | Natureza | Segura o golpe | Aguenta | Bate junto | Ao se desfazer |
+|---|---|---|---|---|---|
+| Bunshin no Jutsu | Ilusória: só distrai | 50% | 1 golpe | não | — |
+| Kage Bunshin no Jutsu | Física | 50% | 1 | Roleta: um golpe a mais com 50% do dano de um golpe; Jornada: pelas técnicas com golpe por clone (Rendan, Rasengan) | — |
+| Tajuu Kage Bunshin (Mil Clones) | Física, em massa | 50% | 1 | como o Kage Bunshin; só na Jornada (ataque em área que cria 3 clones) | — |
+| Mizu Bunshin | Água | 50% | 1 | 35% do dano de um golpe, por clone | — |
+| Doton Kage Bunshin | Terra | 65% | **2** | não | — |
+| Mokuton Bunshin | Madeira | 50% | 1 | 35% | Enquanto existe: +10% de acerto do dono e, no Roleta, mostra a próxima ação do vilão |
+| Raiton Kage Bunshin | Raio | 50% | 1 | não | Descarga: 6% do HP máximo de quem bateu e 30% de atordoar |
+| Suna Bunshin | Areia | 50% | 1 | não | Contenção: 30% de bloqueio de chakra em quem bateu |
+
+- O golpe junto não tem roleta: sai quando a técnica de dano de alvo único acerta pelo menos um golpe.
+- **Quem tem**, no lugar do Bunshin: Kage Bunshin no Uzumaki e no jinchuuriki (Roleta) e no Naruto (Jornada, com o Mil Clones); o clone da natureza em quem tem ninjutsu elemental (água: Mizu; terra: Doton; raio: Raiton; madeira: Mokuton; areia: Suna); Bunshin em fogo, vento e em quem tem natureza silenciosa. Na Jornada a troca é feita na luta (o moveset salvo continua com o Bunshin): o Kakashi luta com o Raiton e o Gaara aliado com o Suna. Inimigos: Zabuza (Mizu), Kakashi (Raiton), Gaara (Suna), Jirobo (Doton).
+- Roleta: no máximo 1 clone (o novo substitui). Jornada: até 5, todos do mesmo tipo (o último criado manda). Talentos e relíquias de clone (contra-ataque, Exército de sombras, dano por clone) valem para qualquer tipo.
+- Custo de chakra (Roleta / Jornada): Bunshin 5 / 3; Kage 8 / 5 (ativa); Mizu, Doton e Suna 6 / 4; Raiton e Mokuton 7 / 5.
 
 ## Portões
 
@@ -290,5 +341,6 @@ O combate clássico (reserva) mantém os Portões antigos.
 ## Vontade do Fogo (revive)
 
 - Ao chegar a 0 de HP com uma Vontade do Fogo, ela é consumida e o jogador volta à luta com HP e chakra cheios e sem efeitos negativos.
+- Na Jornada ela funciona diferente: recomeça a luta perdida, e vem por dificuldade (Fácil 2, Médio 1, Difícil 1, Hardcore nenhuma; v0.77.0) ([jornada/run.md](../jornada/run.md#dificuldade)).
 - Sem nenhuma: fim da run. No exame chunin a derrota não consome o item nem encerra a run (ver [campanha.md](../roleta/campanha.md#exame-chunin)).
 - Como conseguir: [itens.md](../roleta/itens.md).

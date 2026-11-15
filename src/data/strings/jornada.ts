@@ -49,7 +49,7 @@ export const jornadaPtBR = {
     difficultyBoth: 'Vale para as duas runs: História e Caminho Ninja.',
     recovery: (hp: number, chakra: number) => `Depois de cada vitória, cada membro da equipe recupera ${hp} de HP e ${chakra} de chakra.`,
     hardcoreLocked: 'O Hardcore libera ao vencer a História no Difícil.',
-    willOfFireNote: 'No Fácil, a Vontade do Fogo recomeça uma luta perdida (1 vez por ciclo).',
+    willOfFireNote: 'Até o Difícil, a Vontade do Fogo recomeça uma luta perdida (Fácil 2, Médio 1, Difícil 1; o Hardcore não tem).',
     infiniteNote: 'O modo infinito do Caminho Ninja é só no Hardcore.',
     back: 'Voltar',
     /** Recorde do modo infinito do Caminho Ninja (ciclo e estágio contando do 1). */
@@ -371,6 +371,15 @@ export const jornadaPtBR = {
     jWaterShark: 'Tubarão de água',
     jWaterfall: 'Cachoeira',
     jBunshin: 'Bunshin no Jutsu',
+    jMizuBunshin: 'Mizu Bunshin no Jutsu',
+    jDotonBunshin: 'Doton Kage Bunshin',
+    jRaitonBunshin: 'Raiton Kage Bunshin',
+    jMokutonBunshin: 'Mokuton Bunshin',
+    jSunaBunshin: 'Suna Bunshin',
+    jEarthWall: 'Muralha de Terra',
+    jWaterWall: "Parede d'Água",
+    jFireWall: 'Muralha de Chamas',
+    jWindShield: 'Escudo de Vento',
     jEffort: 'Esforço',
     jExplosiveTag: 'Selo explosivo',
     jGates: 'Portões',
@@ -448,7 +457,7 @@ export const jornadaPtBR = {
 
   types: { taijutsu: 'Taijutsu', ninjutsu: 'Ninjutsu', genjutsu: 'Genjutsu' } as Record<string, string>,
   targets: { enemy: 'um inimigo', allEnemies: 'todos os inimigos', ally: 'um aliado', self: 'em si' } as Record<string, string>,
-  effects: { stun: 'atordoar', burn: 'queimar', poison: 'veneno', chakraBlock: 'bloqueio de chakra', stunGuard: 'firme (não pode ser atordoado)' } as Record<string, string>,
+  effects: { stun: 'atordoar', burn: 'queimar', poison: 'veneno', chakraBlock: 'bloqueio de chakra', fear: 'medo', stunGuard: 'firme (não pode ser atordoado)' } as Record<string, string>,
 
   // Portões do prodígio (docs/jornada/combate.md#portões). Botão simples; regras e penalidades na dica.
   gates: {
@@ -1196,7 +1205,7 @@ export const jornadaPtBR = {
     recoveryShort: (hp: number, chakra: number) => `+${hp} HP · +${chakra} chakra`,
     // Tiradas das regras (docs/jornada/combate.md e run.md); os números vêm do balance.
     hints: {
-      elements: (adv: string, dis: string) => `Técnica com vantagem de elemento causa ×${adv} de dano; com desvantagem, ×${dis}. O ciclo: Fogo > Vento > Raio > Terra > Água > Fogo.`,
+      elements: (adv: string, dis: string) => `O elemento só pesa contra barreiras: com vantagem, a técnica gasta o escudo ×${adv}; com desvantagem, ×${dis} (raio contra terra, ×2). O ciclo: Fogo > Vento > Raio > Terra > Água > Fogo.`,
       clones: (pct: number) => `Cada clone tem ${pct}% de chance de receber um golpe de alvo único no lugar do dono. Técnicas em área ignoram os clones.`,
       guard: 'Defender usa a resistência inteira até o seu próximo turno: vale a pena antes do golpe forte de um chefe.',
       rest: (chakra: number) => `Concentrar recupera ${chakra} de chakra, mas gasta o turno.`,
@@ -1433,6 +1442,14 @@ export const jornadaPtBR = {
     logRest: (who: string, n: number) => `${who} concentra chakra (+${n})`,
     logItem: (who: string, item: string) => `${who} usou ${item}`,
     logShield: (who: string, n: number) => `${who} ganhou escudo ${n}`,
+    logBarrierRaise: (who: string, tech: string, n: number) => `${who} ergue ${tech}: escudo ${n}`,
+    logBarrierHit: (who: string, n: number, left: number, mult: string) => `A barreira de ${who} segura ${n}${mult ? ` (×${mult} no escudo)` : ''}; restam ${left}`,
+    logBarrierBreak: (who: string) => `A barreira de ${who} se quebra!`,
+    logBarrierEnd: (who: string) => `A barreira de ${who} se desfaz`,
+    logBarrierDouse: (who: string) => `A água apaga as chamas de ${who}`,
+    logCloneHold: (who: string) => `O clone de terra de ${who} segura o golpe e continua de pé`,
+    logCloneStrike: (who: string, n: number) => `Os clones de ${who} atacam junto: ${n} de dano`,
+    barrierChip: (n: number, turns: number) => `Barreira ${n} (${turns} turnos)`,
     logClones: (who: string, n: number) => `${who} agora tem ${n} ${n === 1 ? 'clone' : 'clones'}: cada um pode receber um golpe`,
     logTick: (who: string, e: string, n: number) => `${who} −${n} (${e})`,
     logRegen: (who: string, n: number) => `${who} +${n} HP`,

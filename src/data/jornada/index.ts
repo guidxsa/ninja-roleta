@@ -14,7 +14,7 @@ import { generic } from './generic';
 import { elementLines, jTechniquesById } from './techniques';
 
 export const jornadaData: JornadaData = {
-  base: { hit: balance.hit, crit: balance.crit, penetration: balance.penetration, difficulty: balance.difficulty, clones: balance.clones, gateCosts: balance.gateCosts },
+  base: { hit: balance.hit, crit: balance.crit, penetration: balance.penetration, difficulty: balance.difficulty, clones: balance.clones, gateCosts: balance.gateCosts, effects: balance.effects, elements: balance.elements, barrier: balance.barrier, barrierSpecials: balance.barrierSpecials },
   j: jornadaBalance,
   beats: BEATS,
   techniques: jTechniquesById,

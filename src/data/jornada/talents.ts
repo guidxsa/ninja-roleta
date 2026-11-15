@@ -71,7 +71,8 @@ export const talents: TalentNode[] = [
 
   // Comum (Caminho Ninja): o ramo Elemento ensina as técnicas do elemento sorteado.
   { id: 'tElement2', owner: 'commonNinja', branch: 'element', tier: 1, cost: 1, learnByElement: { fire: 'jFireball', wind: 'jGale', lightning: 'jLightningCurrent', earth: 'jEarthSpear', water: 'jWaterShark' }, maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jFireball: 1.2, jGale: 1.2, jLightningCurrent: 1.2, jEarthSpear: 1.2, jWaterShark: 1.2 } } },
-  { id: 'tElementPower', owner: 'commonNinja', branch: 'element', tier: 2, cost: 2, mods: { typeDamageMult: { ninjutsu: 1.15 } } },
+  // Poder elemental também ensina a barreira do elemento (v0.77.0; o raio não tem).
+  { id: 'tElementPower', owner: 'commonNinja', branch: 'element', tier: 2, cost: 2, mods: { typeDamageMult: { ninjutsu: 1.15 } }, learnByElement: { fire: 'jFireWall', wind: 'jWindShield', earth: 'jEarthWall', water: 'jWaterWall' } },
   { id: 'tElement3', owner: 'commonNinja', branch: 'element', tier: 3, cost: 2, learnByElement: { fire: 'jGreatBlaze', wind: 'jVacuumSphere', lightning: 'jLightningBlade', earth: 'jEarthDragon', water: 'jWaterfall' } },
   { id: 'tElementMaster', owner: 'commonNinja', branch: 'element', tier: 4, cost: 3, mods: { chakraDiscount: 2, critBonus: 0.05 } },
   { id: 'tKunaiPro', owner: 'commonNinja', branch: 'tools', tier: 1, cost: 1, mods: { taijutsuFlat: 2 } },

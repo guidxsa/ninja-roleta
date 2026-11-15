@@ -3,7 +3,8 @@
 // Dois modos: História (trilha linear do Naruto) e Caminho Ninja (mapa ramificado, classe, elemento sorteado).
 import type { Difficulty } from '../difficulty';
 import { createRng, type Rng } from '../rng';
-import type { Element } from '../types';
+import type { Element, KekkeiGenkaiId } from '../types';
+import { cloneKindFor } from '../clones';
 import { allyResults, emptyMods, enemySeed, mergeMods, type BattleSetup, type FighterSeed } from './battle';
 import type { JornadaData, StoryGrant } from './data';
 import { eventOptions, SHOP_CURSE, type EventDef, type EventEffect } from './events';
@@ -548,10 +549,22 @@ function memberSeed(run: JRun, id: string, data: JornadaData): FighterSeed {
     resistance: sheet.resistance,
     element: elementOf(run, id, data),
     ...(def.kekkeiGenkai ? { kekkeiGenkai: def.kekkeiGenkai } : {}),
-    techniques: hero ? [...run.moveset, ...heroActives(run, data)] : allyTechniques(run, id, data),
+    techniques: withNatureClone(hero ? [...run.moveset, ...heroActives(run, data)] : allyTechniques(run, id, data), def, elementOf(run, id, data), data),
     ai: def.ai,
     mods: hero ? heroMods(run, data) : teamMods(run, data),
   };
+}
+
+/**
+ * Clone da natureza (v0.77.0, docs/base/fundamentos.md#clones): na luta, quem tem ninjutsu elemental troca o Bunshin
+ * pelo clone dela (Mizu na água, Doton na terra, Raiton no raio, Mokuton na madeira, Suna na areia). O moveset salvo
+ * continua com o Bunshin; quem não tem ninjutsu elemental (natureza silenciosa) segue com ele.
+ */
+export function withNatureClone(techniques: string[], def: { kekkeiGenkai?: KekkeiGenkaiId; noElement?: boolean }, element: Element | null, data: JornadaData): string[] {
+  if (def.noElement || !techniques.includes('jBunshin')) return techniques;
+  const kind = cloneKindFor(def.kekkeiGenkai ?? element, data.base.clones);
+  const tech = kind === 'bunshin' ? undefined : Object.values(data.techniques).find((t) => t.cloneKind === kind && !t.active);
+  return tech ? techniques.map((id) => (id === 'jBunshin' ? tech.id : id)) : techniques;
 }
 
 /** Suportes de uma luta: na História, os da parada ou do estágio; no Caminho Ninja, os da run. */
