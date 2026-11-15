@@ -574,6 +574,8 @@
 }
 @media (min-width: 900px) and (min-height: 560px) {
   body:has(.jgate) { height: max(100dvh, var(--floor-h)); }
+  /* A sombra dos cards de modo (::after deslocado) passava da borda: rolagem lateral de 8px a 1024. */
+  html:has(.jgate), body:has(.jgate) { overflow-x: clip; }
   body:has(.jgate) main { display: flex; flex-direction: column; min-height: 0; max-width: var(--shell-max); }
   .jgate .gate-aside { display: flex; }
   .jgate .gate-hero { aspect-ratio: auto; }

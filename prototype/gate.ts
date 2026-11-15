@@ -194,13 +194,15 @@ export function profileCard(): string {
   const wins = runs.filter((r) => r.status === 'victory').length;
   const bestCycle = bestRoletaCycle(ses.profile, runs);
   const best = ses.profile.jornada?.generic ?? null;
-  const counted = achievements.filter((a) => !a.legacy).length + jornadaAchievements.length;
+  const countedIds = [...achievements.filter((a) => !a.legacy), ...jornadaAchievements].map((a) => a.id);
+  const counted = countedIds.length;
   const rows: [string, string][] = [
     [D.stats.roletaRuns, String(runs.length)],
     [D.stats.roletaWins, String(wins)],
     [D.stats.bestCycle, bestCycle !== null ? String(bestCycle) : D.none],
     [D.stats.jornada, best ? S.jornada.start.best(best.cycle, best.stage, best.won) : D.none],
-    [D.stats.achievements, `${Object.keys(ses.profile.achievements).length}/${counted}`],
+    // Só as do catálogo atual: ids antigos no perfil davam 78/64.
+    [D.stats.achievements, `${countedIds.filter((id) => id in ses.profile.achievements).length}/${counted}`],
     [D.stats.villains, String(Object.keys(ses.profile.villains).length)],
     [D.stats.relics, String(Object.keys(ses.profile.relics).length)],
   ];

@@ -27,7 +27,7 @@
   .jb-log { min-height: 44px; }
   /* Medidos no UI Lab abaixo de 44px: Ficha na luta (32), avatar do Registro (30), "Mostrar re-rolls" (24) e as abas da
      Ficha da equipe (40). O desenho fica igual; cresce a área que responde. */
-  .sheet-btn { min-width: 44px; min-height: 44px; }
+  .sheet-btn, .ally-hud .sheet-btn { min-width: 44px; min-height: 44px; }
   .avatar-btn { min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; }
   .toggle { min-height: 44px; }
   .jsheet-tab { min-height: 44px; }

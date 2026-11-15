@@ -52,7 +52,7 @@
   body.at-gate:has(.gate) { height: max(100dvh, var(--floor-h)); }
   /* A vinheta do Início (.gate::before) passa 24px da borda: sem o corte, a página ganhava rolagem lateral e, com ela,
      uma vertical de 15px (as duas barras a 1024px). `clip` corta sem virar contêiner de rolagem. */
-  body.at-gate:has(.gate) { overflow-x: clip; }
+  html:has(body.at-gate .gate), body.at-gate:has(.gate) { overflow-x: clip; }
   body.at-gate:has(.gate) main { display: flex; flex-direction: column; min-height: 0; }
   /* Cada peça no seu espaço (docs/visual.md): cena e modos no centro, coluna direita ao lado; nada cruza a borda de nada. */
   .gate {

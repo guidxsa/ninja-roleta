@@ -126,6 +126,26 @@ export function effectMood(e: ProgressEffect): Mood {
 export function showEffect(container: HTMLElement, e: ProgressEffect) {
   container.insertAdjacentHTML('beforeend', `<div class="effect pop">${effectText(e)}${effectCompare(e)}</div>`);
   mood(effectMood(e));
+  revealAboveCta(container);
+}
+
+/**
+ * Celular: depois do giro, rola até o resultado ficar acima da faixa presa no pé (Voltar ao mapa | Lutar). Sem isso o
+ * que se ganhou ficava escondido atrás do botão, e o "Lutar" convidava a pular. No PC o resultado já abre num popup.
+ */
+function revealAboveCta(el: HTMLElement): void {
+  if (matchMedia('(min-width: 900px) and (min-height: 560px)').matches) return;
+  // Dois quadros: a faixa do CTA entra logo depois do efeito, e a altura dela entra na conta.
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      const cta = document.querySelector<HTMLElement>('#screen .sticky-cta');
+      const ctaH = cta ? cta.getBoundingClientRect().height : 0;
+      const overflow = el.getBoundingClientRect().bottom - (innerHeight - ctaH - 8);
+      if (overflow <= 0) return;
+      const still = ses.settings.instant || matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollBy({ top: overflow, behavior: still ? 'auto' : 'smooth' });
+    }),
+  );
 }
 
 /** Melhoria de equipamento, invocação ou técnica: o atual ao lado do novo. */

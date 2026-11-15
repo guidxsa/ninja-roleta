@@ -789,7 +789,16 @@ export async function jornadaBattle(
           if (mult !== 1) card(f.uid)?.querySelector('.jf-art')?.insertAdjacentHTML('beforeend', `<span class="jf-adv">${advantageBadge(mult)}</span>`);
         }
       }
-      menu.innerHTML = `<p class="jb-prompt">${prompt}</p><button class="btn small" data-cancel>${B.cancel}</button>`;
+      // A bandeja continua no lugar (apagada) e o pedido de alvo entra no topo dela: a altura não muda (antes caía de
+      // 238px para 84px e as técnicas pulavam ao voltar).
+      const bar = `<div class="jb-target-bar"><p class="jb-prompt">${prompt}</p><button class="btn small" data-cancel>${B.cancel}</button></div>`;
+      if (trayHtml) {
+        menu.innerHTML = trayHtml;
+        menu.classList.add('targeting');
+        const head = menu.querySelector('.jb-prompt');
+        if (head) head.outerHTML = bar;
+        else menu.insertAdjacentHTML('afterbegin', bar);
+      } else menu.innerHTML = bar;
       const onClick = (ev: Event) => {
         const t = ev.target as HTMLElement;
         if (t.closest('[data-cancel]')) return done(null);
@@ -798,6 +807,7 @@ export async function jornadaBattle(
       };
       const done = (v: string | null) => {
         root.removeEventListener('click', onClick);
+        menu.classList.remove('targeting');
         root.querySelectorAll('.jf.targetable').forEach((el) => el.classList.remove('targetable'));
         root.querySelectorAll('.jf-adv').forEach((el) => el.remove());
         resolve(v);

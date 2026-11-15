@@ -196,3 +196,20 @@
   .act-ico .ico { width: 17px; height: 17px; }
   .btn.act b { font-size: var(--fs-base); }
 }
+
+/* Chefe: o 将 da arena aparece (com 0,06 de opacidade ninguém via). */
+.rb-boss .arena-mark { color: var(--accent); opacity: .2; }
+
+/* Celular: a luta cabe numa tela. As ações (Defender, Concentrar) ficavam em y≈840 num celular de 844px; o registro
+   abre em uma linha (tocar expande) e o retrato do vilão encolhe para o tamanho do seu. */
+@media (max-width: 899px), (max-height: 559px) {
+  .battle { gap: 6px; }
+  .battle .log:not(.open) { height: 40px; padding-top: 4px; padding-bottom: 4px; }
+  .foe-hud .hud-face .portrait { width: 64px; height: 64px; }
+  .rb-boss .foe-hud .hud-face .portrait { width: 76px; height: 76px; }
+  .battle .arena { min-height: 64px; padding: 4px 0; }
+  /* Resistências e speed numa linha só (quebravam em duas a 390px). */
+  .foe-hud .stat-pills { flex-wrap: nowrap; gap: 3px; }
+  .foe-hud .stat-pill { padding: 0 4px; white-space: nowrap; }
+  .battle .actions { padding-top: 4px; }
+}
