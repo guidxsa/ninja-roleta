@@ -179,10 +179,18 @@
   .jt-title h2 { font-size: var(--fs-6xl); }
   .jt-crest { top: 40px; right: 10px; width: 340px; height: 340px; }
   .jt-tabs { display: none; }
-  .jt-branches { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; align-items: start; }
-  .jt-branch, .jt-branch.on { display: block; }
+  /* Até seis ramos numa fileira: a 1024px a segunda fileira (Kyuubi, Rasengan) ficava atrás do painel de detalhe. */
+  .jt-branches { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; align-items: start; }
+  .jt-branch, .jt-branch.on { display: block; min-width: 0; }
   .jt-branch h3 { display: block; }
   .jt-detail { margin: auto -24px 0; padding: 12px 24px; flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; min-height: 84px; }
   .jt-detail .jt-card { flex: 1; }
   .jt-detail .btn { flex: none; width: auto; min-width: 280px; }
+}
+
+/* Notebook (900–1279px): com os seis ramos numa fileira, a coluna fica com ~150px; os nós lado a lado encolhem o
+   rótulo (que quebra em duas linhas) para não encostar no vizinho. */
+@media (min-width: 900px) and (min-height: 560px) and (max-width: 1279px) {
+  .jt-node { width: 74px; margin-left: -37px; }
+  .jt-name { font-size: var(--fs-xs); overflow-wrap: anywhere; }
 }

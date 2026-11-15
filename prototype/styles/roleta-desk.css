@@ -93,13 +93,12 @@
      entram as opções centradas (a Ficha à esquerda; a Dificuldade, o Re-rolar e o Começar à direita). */
   .rorigin:not(.rolled) > .rstage-box { grid-column: 1 / -1; }
   .rorigin:not(.rolled) > .rside { display: none; }
-  .rorigin.rolled > .rstage-box { display: none; }
-  .rorigin.rolled { grid-template-rows: auto auto auto; align-content: start; }
-  .rorigin.rolled > .rside {
-    grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(18px, 2vw, 36px); align-items: start;
-    width: min(100%, 1100px); justify-self: center; overflow: visible;
-  }
-  .rorigin.rolled #origin-chips { width: min(100%, 1100px); justify-self: center; }
+  /* Com os resultados, a última roda fica parada no palco à esquerda (a roleta é a identidade do modo) e a Ficha, a
+     Dificuldade e o Começar vêm à direita. Antes o palco sumia e metade da tela ficava vazia. */
+  .rorigin.rolled > .rstage-box { grid-column: 1; grid-row: 3; }
+  .rorigin.rolled #slot.done { display: block; }
+  .rorigin.rolled > .rside { grid-column: 2; grid-row: 3; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+  .rorigin.rolled #origin-chips { justify-self: center; }
   /* Cenário desenhado (sem arte na vaga): recortado e apagado, para a roda ser o foco. */
   .rstage.jscene::before { background-size: contain; background-position: center bottom; background-repeat: no-repeat; opacity: .55; }
   .rmap-art.jscene::before { background-size: contain; background-position: center bottom; background-repeat: no-repeat; opacity: .6; }
