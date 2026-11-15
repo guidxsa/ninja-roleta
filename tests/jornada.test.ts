@@ -1604,15 +1604,11 @@ describe('Caminho Ninja', () => {
     }
   });
 
-  it('easter egg: o Chidori (aprendido no treino; o Uchiha é só Fogo) libera o ramo do Sasuke', () => {
-    const base = { ...newGenericRun(1, 'normal', 'uchiha', data), talentPoints: 20 };
-    const node = (id: string) => data.talents.find((t) => t.id === id)!;
-    const lightning = base;
-    expect(talentState(node('tChidoriU'), data.talents, talentContext(lightning, new Set()))).toBe('available');
-    expect(talentState(node('tLionU'), data.talents, talentContext(lightning, new Set()))).toBe('accountLocked');
-    const learned = buyTalent(lightning, 'tChidoriU', new Set(), data);
-    expect(newJornadaAchievements(learned, new Set())).toContain('j_sasukeEgg');
-    expect(talentState(node('tLionU'), data.talents, talentContext(learned, new Set(['j_sasukeEgg'])))).toBe('available');
+  it('o easter egg do Sasuke saiu (v0.86.0): sem ramo Sasuke, sem ramo Raio e sem a conquista', () => {
+    const uchiha = data.talents.filter((t) => t.owner === 'uchihaNinja');
+    expect(uchiha.some((t) => t.branch === 'sasuke' || t.branch === 'lightning' || t.account)).toBe(false);
+    const run = { ...newGenericRun(1, 'normal', 'uchiha', data), learned: ['jChidori'] };
+    expect(newJornadaAchievements(run, new Set())).not.toContain('j_sasukeEgg');
   });
 
   it('o visual escolhido fica na run', () => {
@@ -2042,11 +2038,10 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     const leveled = data.talents.find((n) => n.owner === common.hero && talentMaxRank(n) > 1)!;
     const full = withTree(common);
     expect(talentTreeComplete({ ...full, talentRanks: { ...full.talentRanks, [leveled.id]: 1 } }, data)).toBe(false);
-    // Uchiha sem raio e sem o easter egg: as 3 árvores bastam; com o ramo do Sasuke liberado, não.
+    // Uchiha: a árvore inteira (o ramo do Sasuke, preso à conta, saiu na v0.86.0).
     const uchiha = { ...newGenericRun(6, 'normal', 'uchiha', data, new Set(['j_unlockUchiha'])), secondElement: 'water' as const };
     const uTree = withTree(uchiha, (n) => !n.account && !n.requiresElement);
     expect(talentTreeComplete(uTree, data)).toBe(true);
-    expect(talentTreeComplete(uTree, data, new Set(['j_sasukeEgg']))).toBe(false);
     // Naruto no começo com tudo o que já abre: os ramos da história ainda vêm.
     const naruto = withTree(newRun(6, 'normal', data), (n) => n.fromStage === undefined && !n.account && !n.grantedBy);
     expect(treeComplete('naruto', data.talents, talentContext(naruto, new Set()))).toBe(false);
@@ -2086,7 +2081,8 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
 
   it('as conquistas que a árvore usa vão para o retrato da run (a Ōdama saiu na v0.67.0)', () => {
     const run = { ...newGenericRun(2, 'hardcore', 'uchiha', data, new Set(['j_unlockUchiha'])), status: 'victory' as const };
-    expect(continueCycle(run, data, new Set(['j_sasukeEgg', 'j_unlockUchiha'])).unlocks).toEqual(['j_sasukeEgg']);
+    // Nenhuma árvore usa nó preso à conta desde a v0.86.0 (o ramo do Sasuke saiu): nada a guardar.
+    expect(continueCycle(run, data, new Set(['j_sasukeEgg', 'j_unlockUchiha'])).unlocks).toEqual([]);
     expect(newRun(1, 'normal', data, new Set(['j_canonWin', 'j_bell'])).unlocks).toEqual([]);
   });
 

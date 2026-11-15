@@ -39,6 +39,11 @@ function nodeIcon(run: JRun, n: TalentNode): string {
   const m = { ...n.mods, ...n.teamMods };
   if (m.gateLevels || m.gateOpenDiscount || m.gateAutoUp || m.hpCostFreeAtGate) return icon('gates');
   if (m.fallenRally) return icon('sparkle');
+  if (m.readNullChance || m.readCounterDamage || m.vengeanceAccuracy) return icon('sharingan');
+  if (m.burnMult || m.burningDamageMult) return icon('fire');
+  if (m.genjutsuStunChance || m.illusionSureHit || m.fearOnHit) return icon('genjutsu');
+  if (m.techSplash && Object.keys(m.techSplash).length) return icon('kunai');
+  if (m.vengeanceMult) return icon('heartbreak');
   if (m.counterChance) return icon('stance');
   if (m.critMultBonus || m.critChakra || m.openingCrit) return icon('crit');
   if (m.techExtraHits && Object.keys(m.techExtraHits).length) return icon('taijutsu');

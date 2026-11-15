@@ -9,11 +9,11 @@ A árvore **reinicia a cada run** e custa pontos de talento ([progressao.md](pro
 - **Níveis**: a maioria dos talentos é **única**, principalmente os passivos. Alguns, quase sempre técnicas, sobem de nível, com limite de 2 ou 3 e um custo próprio por nível. Dá para voltar e subir um talento antigo a qualquer momento, mesmo depois de avançar no ramo.
 - **Ramos canônicos** (v0.67.0): a raiz de Sapos, Kyuubi e Rasengan é **dada pela história** (`grantedBy`): entra carimbada, sem custo, no marco ([historia.md](historia.md#momentos-canônicos)). Antes disso, aparece tracejada como "Vem pela história", e o resto do ramo fica fechado. Os níveis da raiz continuam pagos.
 - **Laços** (v0.68.0): a raiz (Não vou desistir) também vem pela história: a lição do teste do sino.
-- **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela; desde a v0.71.0, cada um muda uma regra do combate. Desde a v0.84.0 o Comum também tem, e o prodígio desde a v0.85.0; Uchiha e Hyuuga ainda não (item em aberto em [decisoes.md](../decisoes.md)).
+- **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela; desde a v0.71.0, cada um muda uma regra do combate. Desde a v0.84.0 o Comum também tem, o prodígio desde a v0.85.0 e o Uchiha desde a v0.86.0; o Hyuuga ainda não (item em aberto em [decisoes.md](../decisoes.md)).
 - **Combinação** (`requiresAll`, v0.71.0): talento que pede a junção de dois ramos ([abaixo](#combinações)).
-- **Nós da conta** ficam liberados de vez por um objetivo (hoje, o ramo do Sasuke no Uchiha). A Ōdama Rasengan saiu na v0.67.0: não pertence ao Naruto clássico e fica guardada para uma campanha Shippuden.
+- **Nós da conta** ficam liberados de vez por um objetivo (o ramo do Sasuke no Uchiha, o único, saiu na v0.86.0; o campo `account` segue no código). A Ōdama Rasengan saiu na v0.67.0: não pertence ao Naruto clássico e fica guardada para uma campanha Shippuden.
 - O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
-- Nós que só existem com um elemento (ramo Raio do Uchiha) ficam escondidos para quem não tem o elemento.
+- Nós que só existem com um elemento (`requiresElement`) ficam escondidos para quem não tem o elemento (o ramo Raio do Uchiha saiu na v0.86.0).
 
 ## Árvore completa
 
@@ -115,7 +115,7 @@ No código: `requiresAll` no nó (`src/core/jornada/talents.ts`); as regras dos 
 | Prodígio | Entrada dinâmica | 2 (+1) | +25% de dano |
 | Uchiha | Flor de Fênix | 3 (+1 cada) | +20% de dano |
 | Uchiha | Ilusão dos corvos | 3 (+1 cada) | +20% de dano |
-| Uchiha | Combo do Leão | 2 (+1) | +25% de dano |
+| Uchiha | Shuriken giratória | 3 (+1 cada) | +25% de dano |
 | Hyuuga | 64 Palmas | 2 (+2) | +25% de dano |
 | Hyuuga | Palma do Vácuo | 3 (+1 cada) | +20% de dano |
 
@@ -259,25 +259,71 @@ No código: `gateOpenDiscount`, `gateAutoUp`, `critMultBonus`, `critChakra`, `te
 
 ## Uchiha (Caminho Ninja)
 
-| Ramo | Nó | Custo | Efeito |
+Refeita na v0.86.0, no molde do Comum: um ninja genérico do clã. **Seis ramos em anel**, bifurcação e talento final em cada, **seis combinações** e **três assinaturas**. O ramo do Sasuke (easter egg da conta) e o ramo Raio (Chidori) saíram: o Sasuke vai ganhar a própria História.
+
+| Ramo | Estilo | Bifurcação | Talento final (a regra que muda) |
 |---|---|---|---|
-| Sharingan | 3 tomoe | 1 | Evolui o Sharingan (substitui a forma básica): +20% de acerto, +25% de esquiva e +10% de dano por 4 turnos |
-| Sharingan | Olhar copiador | 2 | +5% de crítico e de acerto |
-| Sharingan | Previsão | 2 | Esquiva 7% |
-| Sharingan | Fluxo do Sharingan | 3 | +10% de dano; recupera 2 de HP por rodada |
-| Fogo | Flor de Fênix | 1 | Aprende a Flor de Fênix |
-| Fogo | Chama do clã | 2 | +15% de dano de ninjutsu |
-| Fogo | Grande Labareda | 2 | Aprende a Grande Labareda |
-| Fogo | Mestre do fogo | 3 | Técnicas custam 2 de chakra a menos |
-| Ilusões | Ilusão dos corvos | 1 | Aprende a Ilusão dos corvos |
-| Ilusões | Mestre das ilusões | 2 | +20% de dano de genjutsu |
-| Ilusões | Olhar do medo | 2 | +5% de acerto e de crítico |
-| Ilusões | Tsukuyomi | 3 | Aprende o Tsukuyomi |
-| Raio (só com raio) | Chidori | 2 | Aprende o Chidori; libera o easter egg do Sasuke ([classes.md](classes.md#easter-eggs)) |
-| Sasuke (conta) | Combo do Leão | 1 | Aprende o Combo do Leão |
-| Sasuke (conta) | Lâmina de raio | 2 | Aprende a Lâmina de raio |
-| Sasuke (conta) | Vingador | 2 | +25% de dano abaixo da metade do HP |
-| Sasuke (conta) | Selo amaldiçoado | 3 | Ativa: dano ×1,4 por 3 turnos, paga 10% do HP |
+| Sharingan | leitura | Olhar copiador (crítico e acerto) ou Previsão (esquiva) | Com o Sharingan ligado, **30% de chance de anular** um golpe de alvo único |
+| Fogo do clã | dano em área | Chama do clã (ninjutsu) ou Fagulha rápida (custo e efeito) | A queimadura que você aplica **dói em dobro**; os efeitos duram +1 turno |
+| Ilusões | controle | Olhar do medo (Medo) ou Prisão (atordoar) | Genjutsu contra alvo controlado **não erra**; +35% de dano contra eles |
+| Armas do clã | precisão | Shuriken dupla (+1 golpe) ou Fios de aço (Armadilha de fios) | As técnicas de arma acertam **também os outros inimigos** com 50% do dano |
+| Orgulho do clã | duelo e vingança | Frieza (crítico) ou Raiva (HP baixo) | Abaixo de 30% do HP ou com alguém da equipe caído: **+50% de dano** |
+| Polícia do clã | suporte e ordem | Vigia (HP dos suportes) ou Interrogatório (efeitos +1 turno) | Inimigo controlado leva **+30% de dano de toda a equipe** |
+
+| Ramo | Nó | Custo | Níveis | Efeito |
+|---|---|---|---|---|
+| Sharingan | 3 tomoe | 1 | | Evolui o Sharingan: +20% de acerto, +25% de esquiva e +10% de dano por 4 turnos |
+| Sharingan | Olhar copiador **ou** | 2 | | +5% de crítico e de acerto |
+| Sharingan | Previsão | 2 | | Esquiva 8% |
+| Sharingan | Leitura de movimento | 2 | | +5% de acerto; esquiva 5% |
+| Sharingan | Fluxo do Sharingan | 2 | | +10% de dano; 2 de HP por rodada |
+| Sharingan | **Leitura total** (final) | 3 | | Com o Sharingan ligado, 30% de anular um golpe de alvo único |
+| Fogo do clã | Flor de Fênix | 1 | 3 (+1 cada) | Aprende a Flor de Fênix. Cada nível: +20% de dano |
+| Fogo do clã | Chama do clã **ou** | 2 | | +15% de dano de ninjutsu |
+| Fogo do clã | Fagulha rápida | 2 | | Técnicas custam 1 a menos; +10% de chance de efeito |
+| Fogo do clã | Grande Labareda | 2 | | Aprende a Grande Labareda |
+| Fogo do clã | Mestre do fogo | 2 | | Técnicas custam 1 a menos |
+| Fogo do clã | **Fogo que não apaga** (final) | 3 | | Queimadura em dobro; efeitos +1 turno |
+| Ilusões | Ilusão dos corvos | 1 | 3 (+1 cada) | Aprende a Ilusão dos corvos. Cada nível: +20% de dano |
+| Ilusões | Olhar do medo **ou** | 2 | | Cada golpe que acerta: 20% de Medo |
+| Ilusões | Prisão | 2 | | Cada golpe de genjutsu que acerta: 20% de atordoar |
+| Ilusões | Mestre das ilusões | 2 | | +25% de dano de genjutsu |
+| Ilusões | Tsukuyomi | 2 | | Aprende o Tsukuyomi |
+| Ilusões | **Mundo da ilusão** (final) | 3 | | Genjutsu em alvo controlado não erra; +35% de dano contra eles |
+| Armas do clã | Mãos rápidas | 1 | | Shuriken giratória e Armadilha de fios custam 1 a menos; +5% de acerto |
+| Armas do clã | Shuriken dupla **ou** | 2 | | A Shuriken giratória ganha 1 golpe |
+| Armas do clã | Fios de aço | 2 | | Aprende a Armadilha de fios |
+| Armas do clã | Shuriken giratória | 2 | 3 (+1 cada) | Aprende a Shuriken giratória (4 ×3, 3 de chakra). Cada nível: +25% de dano |
+| Armas do clã | Lâmina afiada | 2 | | +2 de dano no taijutsu; +5% de crítico |
+| Armas do clã | **Chuva de shuriken** (final) | 3 | | As técnicas de arma acertam também os outros inimigos com 50% |
+| Orgulho do clã | Orgulho do clã | 1 | | +8% de dano |
+| Orgulho do clã | Frieza **ou** | 2 | | +8% de crítico |
+| Orgulho do clã | Raiva | 2 | | +30% de dano abaixo da metade do HP |
+| Orgulho do clã | Olhar frio | 2 | | +5% de acerto e de crítico |
+| Orgulho do clã | Orgulho ferido | 2 | | Defender cura 8%; 1 de HP por rodada |
+| Orgulho do clã | **Vingança** (final) | 3 | | Abaixo de 30% do HP ou com aliado caído: +50% de dano |
+| Polícia do clã | Patrulha | 1 | | A equipe +5% de acerto |
+| Polícia do clã | Vigia **ou** | 2 | | +10% de HP máximo dos suportes |
+| Polícia do clã | Interrogatório | 2 | | Os efeitos que você aplica duram 1 turno a mais |
+| Polícia do clã | Disciplina do clã | 2 | | A equipe +5% de crítico e +10% de dano |
+| Polícia do clã | Custódia | 2 | | A equipe +10% de chance de efeito |
+| Polícia do clã | **Ordem do clã** (final) | 3 | | Inimigo controlado leva +30% de dano da equipe |
+
+### Combinações e assinaturas do Uchiha
+
+| Tipo | Talento | Pede | Efeito |
+|---|---|---|---|
+| Combinação | Olho da chama | Leitura de movimento e Grande Labareda | +5% de acerto; +10% de dano de ninjutsu |
+| Combinação | Chama ilusória | Grande Labareda e Mestre das ilusões | Mais 10% de chance de dar Medo por golpe |
+| Combinação | Arma ilusória | Mestre das ilusões e Shuriken giratória | Todo golpe em alvo atordoado é crítico |
+| Combinação | Precisão fria | Shuriken giratória e Olhar frio | +10% de crítico |
+| Combinação | Honra do clã | Olhar frio e Disciplina do clã | Abaixo da metade do HP, cada integrante +10% de dano |
+| Combinação | Vigilância | Disciplina do clã e Leitura de movimento | A equipe esquiva 5% |
+| Assinatura | **Inferno ilusório** | Fogo que não apaga e Mestre das ilusões | Inimigo queimando leva +30% de dano |
+| Assinatura | **Leitura de lâminas** | Leitura total e Shuriken giratória | Ao anular um golpe, revida com 8 de dano |
+| Assinatura | **Olhos da vingança** | Vingança e Leitura de movimento | Com a Vingança valendo, +20% de acerto |
+
+No código: `readNullChance`/`readCounterDamage`, `burnMult`, `genjutsuStunChance`, `illusionSureHit`, `techSplash`, `vengeanceMult`/`vengeanceAccuracy` e `burningDamageMult` em `FighterMods`. Builds: `npm run sim:jornada -- 300 2 --ramos --classe=uchihaNinja`.
 
 ## Hyuuga (Caminho Ninja)
 

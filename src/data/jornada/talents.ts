@@ -187,26 +187,65 @@ export const talents: TalentNode[] = [
   { id: 'tPDrunkenHurricane', owner: 'prodigy', branch: 'drunken', tier: 7, cost: 3, requiresAll: ['tPTrueDrunk', 'tLeafHurricane'], mods: { techExtraHits: { jLeafHurricane: 1 }, critBonus: 0.1 } },
   { id: 'tPSharedVigor', owner: 'prodigy', branch: 'mentor', tier: 7, cost: 3, requiresAll: ['tPMasterLesson', 'tLeafHurricane'], teamMods: { regenHp: 2 } },
 
-  // Uchiha (v0.37.0). O ramo Raio só existe para quem sorteou raio como segundo elemento; aprender o Chidori
-  // ali libera o easter egg do Sasuke (conquista `j_sasukeEgg`), que abre o ramo Sasuke de vez.
+  // Uchiha (Caminho Ninja), refeito na v0.86.0 no molde do Comum: seis ramos em anel (Sharingan, Fogo do clã, Ilusões,
+  // Armas do clã, Orgulho do clã, Polícia do clã), bifurcação e talento final em cada, seis combinações e três
+  // assinaturas. Personagem genérico do clã. O ramo do Sasuke (easter egg da conta) e o ramo Raio saíram: o Sasuke vai
+  // ganhar a própria História.
+  // Sharingan (leitura). Final: com o Sharingan ligado, chance de anular o golpe recebido.
   { id: 'tSharingan3', owner: 'uchihaNinja', branch: 'sharingan', tier: 1, cost: 1, learn: 'jSharingan3' },
-  { id: 'tCopyEye', owner: 'uchihaNinja', branch: 'sharingan', tier: 2, cost: 2, mods: { critBonus: 0.05, accuracyBonus: 0.05 } },
-  { id: 'tInsight', owner: 'uchihaNinja', branch: 'sharingan', tier: 3, cost: 2, mods: { evasion: 0.07 } },
-  { id: 'tSharinganFlow', owner: 'uchihaNinja', branch: 'sharingan', tier: 4, cost: 3, mods: { damageMult: 1.1, regenHp: 2 } },
+  { id: 'tCopyEye', owner: 'uchihaNinja', branch: 'sharingan', tier: 2, col: -1, cost: 2, excludes: ['tInsight'], mods: { critBonus: 0.05, accuracyBonus: 0.05 } },
+  { id: 'tInsight', owner: 'uchihaNinja', branch: 'sharingan', tier: 2, col: 1, cost: 2, excludes: ['tCopyEye'], mods: { evasion: 0.08 } },
+  { id: 'tUReading', owner: 'uchihaNinja', branch: 'sharingan', tier: 3, cost: 2, requires: ['tCopyEye', 'tInsight'], mods: { accuracyBonus: 0.05, evasion: 0.05 } },
+  { id: 'tSharinganFlow', owner: 'uchihaNinja', branch: 'sharingan', tier: 4, cost: 2, mods: { damageMult: 1.1, regenHp: 2 } },
+  { id: 'tUTotalRead', owner: 'uchihaNinja', branch: 'sharingan', tier: 5, cost: 3, capstone: true, mods: { readNullChance: 0.3 } },
+  // Fogo do clã (dano em área). Final: a queimadura dói em dobro e dura mais.
   { id: 'tPhoenix', owner: 'uchihaNinja', branch: 'fire', tier: 1, cost: 1, learn: 'jPhoenixFlower', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jPhoenixFlower: 1.2 } } },
-  { id: 'tFirePower', owner: 'uchihaNinja', branch: 'fire', tier: 2, cost: 2, mods: { typeDamageMult: { ninjutsu: 1.15 } } },
-  { id: 'tGreatBlazeU', owner: 'uchihaNinja', branch: 'fire', tier: 3, cost: 2, learn: 'jGreatBlaze' },
-  { id: 'tFireMaster', owner: 'uchihaNinja', branch: 'fire', tier: 4, cost: 3, mods: { chakraDiscount: 2 } },
+  { id: 'tFirePower', owner: 'uchihaNinja', branch: 'fire', tier: 2, col: -1, cost: 2, excludes: ['tUQuickSpark'], mods: { typeDamageMult: { ninjutsu: 1.15 } } },
+  { id: 'tUQuickSpark', owner: 'uchihaNinja', branch: 'fire', tier: 2, col: 1, cost: 2, excludes: ['tFirePower'], mods: { chakraDiscount: 1, effectChanceBonus: 0.1 } },
+  { id: 'tGreatBlazeU', owner: 'uchihaNinja', branch: 'fire', tier: 3, cost: 2, requires: ['tFirePower', 'tUQuickSpark'], learn: 'jGreatBlaze' },
+  { id: 'tFireMaster', owner: 'uchihaNinja', branch: 'fire', tier: 4, cost: 2, mods: { chakraDiscount: 1 } },
+  { id: 'tUEternalFlame', owner: 'uchihaNinja', branch: 'fire', tier: 5, cost: 3, capstone: true, mods: { burnMult: 2, effectTurnsBonus: 1 } },
+  // Ilusões (controle). Final: genjutsu contra alvo controlado não erra e todo golpe nele bate mais.
   { id: 'tCrow', owner: 'uchihaNinja', branch: 'illusions', tier: 1, cost: 1, learn: 'jCrowIllusion', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jCrowIllusion: 1.2 } } },
-  { id: 'tGenjutsuPower', owner: 'uchihaNinja', branch: 'illusions', tier: 2, cost: 2, mods: { typeDamageMult: { genjutsu: 1.2 } } },
-  { id: 'tFearGaze', owner: 'uchihaNinja', branch: 'illusions', tier: 3, cost: 2, mods: { accuracyBonus: 0.05, critBonus: 0.05 } },
-  { id: 'tTsukuyomi', owner: 'uchihaNinja', branch: 'illusions', tier: 4, cost: 3, learn: 'jTsukuyomi' },
-  // O Uchiha é sempre Fogo (v0.59.0): o Chidori virou técnica aprendida no treino (como o do Sasuke com o Kakashi).
-  { id: 'tChidoriU', owner: 'uchihaNinja', branch: 'lightning', tier: 1, cost: 2, learn: 'jChidori' },
-  { id: 'tLionU', owner: 'uchihaNinja', branch: 'sasuke', tier: 1, cost: 1, account: 'j_sasukeEgg', learn: 'jLionBarrage', maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jLionBarrage: 1.25 } } },
-  { id: 'tLightningBladeU', owner: 'uchihaNinja', branch: 'sasuke', tier: 2, cost: 2, account: 'j_sasukeEgg', learn: 'jLightningBlade' },
-  { id: 'tAvenger', owner: 'uchihaNinja', branch: 'sasuke', tier: 3, cost: 2, account: 'j_sasukeEgg', mods: { lowHpDamageMult: 1.25 } },
-  { id: 'tCursedSeal', owner: 'uchihaNinja', branch: 'sasuke', tier: 4, cost: 3, account: 'j_sasukeEgg', learn: 'jCursedSeal' },
+  { id: 'tFearGaze', owner: 'uchihaNinja', branch: 'illusions', tier: 2, col: -1, cost: 2, excludes: ['tUPrison'], mods: { fearOnHit: 0.2 } },
+  { id: 'tUPrison', owner: 'uchihaNinja', branch: 'illusions', tier: 2, col: 1, cost: 2, excludes: ['tFearGaze'], mods: { genjutsuStunChance: 0.2 } },
+  { id: 'tGenjutsuPower', owner: 'uchihaNinja', branch: 'illusions', tier: 3, cost: 2, requires: ['tFearGaze', 'tUPrison'], mods: { typeDamageMult: { genjutsu: 1.25 } } },
+  { id: 'tTsukuyomi', owner: 'uchihaNinja', branch: 'illusions', tier: 4, cost: 2, learn: 'jTsukuyomi' },
+  { id: 'tUIllusionWorld', owner: 'uchihaNinja', branch: 'illusions', tier: 5, cost: 3, capstone: true, mods: { illusionSureHit: true, controlledDamageMult: 1.35 } },
+  // Armas do clã (precisão). Final: as técnicas de arma acertam também os outros inimigos.
+  // A técnica vem na junção: na raiz, 3 golpes baratos logo no começo dominavam a run (medição v0.86.0, como o Punho
+  // Bêbado do prodígio).
+  { id: 'tUQuickHands', owner: 'uchihaNinja', branch: 'weapons', tier: 1, cost: 1, mods: { techChakraDiscount: { jUWindmill: 1, jWireTrap: 1 }, accuracyBonus: 0.05 } },
+  { id: 'tUTwinShuriken', owner: 'uchihaNinja', branch: 'weapons', tier: 2, col: -1, cost: 2, excludes: ['tUSteelWire'], mods: { techExtraHits: { jUWindmill: 1 } } },
+  { id: 'tUSteelWire', owner: 'uchihaNinja', branch: 'weapons', tier: 2, col: 1, cost: 2, excludes: ['tUTwinShuriken'], learn: 'jWireTrap' },
+  { id: 'tUWindmill', owner: 'uchihaNinja', branch: 'weapons', tier: 3, cost: 2, requires: ['tUTwinShuriken', 'tUSteelWire'], learn: 'jUWindmill', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jUWindmill: 1.25 } } },
+  { id: 'tUSharpEdge', owner: 'uchihaNinja', branch: 'weapons', tier: 4, cost: 2, mods: { taijutsuFlat: 2, critBonus: 0.05 } },
+  { id: 'tUShurikenRain', owner: 'uchihaNinja', branch: 'weapons', tier: 5, cost: 3, capstone: true, mods: { techSplash: { jUWindmill: 0.5, jWireTrap: 0.5 } } },
+  // Orgulho do clã (duelo e vingança). Final: no aperto ou com um aliado caído, bate muito mais.
+  { id: 'tUClanPride', owner: 'uchihaNinja', branch: 'pride', tier: 1, cost: 1, mods: { damageMult: 1.08 } },
+  { id: 'tUCold', owner: 'uchihaNinja', branch: 'pride', tier: 2, col: -1, cost: 2, excludes: ['tURage'], mods: { critBonus: 0.08 } },
+  { id: 'tURage', owner: 'uchihaNinja', branch: 'pride', tier: 2, col: 1, cost: 2, excludes: ['tUCold'], mods: { lowHpDamageMult: 1.3 } },
+  { id: 'tUColdEyes', owner: 'uchihaNinja', branch: 'pride', tier: 3, cost: 2, requires: ['tUCold', 'tURage'], mods: { accuracyBonus: 0.05, critBonus: 0.05 } },
+  { id: 'tUWoundedPride', owner: 'uchihaNinja', branch: 'pride', tier: 4, cost: 2, mods: { guardHealPct: 0.08, regenHp: 1 } },
+  { id: 'tUVengeance', owner: 'uchihaNinja', branch: 'pride', tier: 5, cost: 3, capstone: true, mods: { vengeanceMult: 1.5 } },
+  // Polícia do clã (suporte e ordem). Final: quem a equipe controla leva mais dano de todos.
+  { id: 'tUPatrol', owner: 'uchihaNinja', branch: 'police', tier: 1, cost: 1, teamMods: { accuracyBonus: 0.05 } },
+  { id: 'tUWatch', owner: 'uchihaNinja', branch: 'police', tier: 2, col: -1, cost: 2, excludes: ['tUInterrogation'], allyHpPct: 0.1 },
+  { id: 'tUInterrogation', owner: 'uchihaNinja', branch: 'police', tier: 2, col: 1, cost: 2, excludes: ['tUWatch'], mods: { effectTurnsBonus: 1 } },
+  { id: 'tUClanDiscipline', owner: 'uchihaNinja', branch: 'police', tier: 3, cost: 2, requires: ['tUWatch', 'tUInterrogation'], teamMods: { critBonus: 0.05, damageMult: 1.1 } },
+  { id: 'tUCustody', owner: 'uchihaNinja', branch: 'police', tier: 4, cost: 2, teamMods: { effectChanceBonus: 0.1 } },
+  { id: 'tUClanOrder', owner: 'uchihaNinja', branch: 'police', tier: 5, cost: 3, capstone: true, teamMods: { controlledDamageMult: 1.3 } },
+  // Combinações (anel).
+  { id: 'tUFlameEye', owner: 'uchihaNinja', branch: 'sharingan', tier: 6, cost: 2, requiresAll: ['tUReading', 'tGreatBlazeU'], mods: { accuracyBonus: 0.05, typeDamageMult: { ninjutsu: 1.1 } } },
+  { id: 'tUIllusoryFlame', owner: 'uchihaNinja', branch: 'fire', tier: 6, cost: 2, requiresAll: ['tGreatBlazeU', 'tGenjutsuPower'], mods: { fearOnHit: 0.1 } },
+  { id: 'tUIllusoryBlade', owner: 'uchihaNinja', branch: 'illusions', tier: 6, cost: 2, requiresAll: ['tGenjutsuPower', 'tUWindmill'], mods: { stunnedAlwaysCrit: true } },
+  { id: 'tUColdPrecision', owner: 'uchihaNinja', branch: 'weapons', tier: 6, cost: 2, requiresAll: ['tUWindmill', 'tUColdEyes'], mods: { critBonus: 0.1 } },
+  { id: 'tUClanHonor', owner: 'uchihaNinja', branch: 'pride', tier: 6, cost: 2, requiresAll: ['tUColdEyes', 'tUClanDiscipline'], teamMods: { lowHpDamageMult: 1.1 } },
+  { id: 'tUVigilance', owner: 'uchihaNinja', branch: 'police', tier: 6, cost: 2, requiresAll: ['tUClanDiscipline', 'tUReading'], teamMods: { evasion: 0.05 } },
+  // Assinaturas.
+  { id: 'tUIllusoryInferno', owner: 'uchihaNinja', branch: 'fire', tier: 7, cost: 3, requiresAll: ['tUEternalFlame', 'tGenjutsuPower'], mods: { burningDamageMult: 1.3 } },
+  { id: 'tUBladeReading', owner: 'uchihaNinja', branch: 'sharingan', tier: 7, cost: 3, requiresAll: ['tUTotalRead', 'tUWindmill'], mods: { readCounterDamage: 8 } },
+  { id: 'tUVengefulEyes', owner: 'uchihaNinja', branch: 'pride', tier: 7, cost: 3, requiresAll: ['tUVengeance', 'tUReading'], mods: { vengeanceAccuracy: 0.2 } },
 
   // Hyuuga (v0.37.0): a Palma do Vácuo, pendente desde o Roleta, entra no ramo Rotação.
   { id: 'tByakuganRange', owner: 'hyuugaNinja', branch: 'byakugan', tier: 1, cost: 1, mods: { accuracyBonus: 0.05, techChakraDiscount: { jByakugan: 1, jByakugan2: 1 } } },

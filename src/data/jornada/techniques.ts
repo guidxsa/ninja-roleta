@@ -138,6 +138,8 @@ export const classTechniques: JTechnique[] = [
   { id: 'jGates', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, active: true, gates: true },
   { id: 'jDynamicEntry', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 15, chakraCost: 0, accuracy: 0.9, critBonus: 0.1, cooldown: 2 },
   { id: 'jHiddenLotus', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, hits: 4, chakraCost: 0, hpCostPct: 0.15, accuracy: 0.85, cooldown: 4 },
+  // Shuriken giratória (Uchiha, ramo Armas do clã, v0.86.0): a arma do clã, 3 golpes baratos.
+  { id: 'jUWindmill', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 4, hits: 3, chakraCost: 3, accuracy: 0.9 },
   { id: 'jDrunkenFist', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 3, chakraCost: 0, accuracy: 0.75, critBonus: 0.15 },
 
   // Uchiha (v0.37.0)

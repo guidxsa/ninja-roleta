@@ -91,6 +91,15 @@ export function emptyMods(): FighterMods {
     healthyTargetMult: 1,
     fallenRally: 0,
     hpCostFreeAtGate: 0,
+    readNullChance: 0,
+    readCounterDamage: 0,
+    burnMult: 1,
+    genjutsuStunChance: 0,
+    illusionSureHit: false,
+    techSplash: {},
+    vengeanceMult: 1,
+    vengeanceAccuracy: 0,
+    burningDamageMult: 1,
   };
 }
 
@@ -170,6 +179,15 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     healthyTargetMult: a.healthyTargetMult * (b.healthyTargetMult ?? 1),
     fallenRally: a.fallenRally + (b.fallenRally ?? 0),
     hpCostFreeAtGate: b.hpCostFreeAtGate ? (a.hpCostFreeAtGate ? Math.min(a.hpCostFreeAtGate, b.hpCostFreeAtGate) : b.hpCostFreeAtGate) : a.hpCostFreeAtGate,
+    readNullChance: a.readNullChance + (b.readNullChance ?? 0),
+    readCounterDamage: a.readCounterDamage + (b.readCounterDamage ?? 0),
+    burnMult: a.burnMult * (b.burnMult ?? 1),
+    genjutsuStunChance: a.genjutsuStunChance + (b.genjutsuStunChance ?? 0),
+    illusionSureHit: a.illusionSureHit || Boolean(b.illusionSureHit),
+    techSplash: addMap(a.techSplash, b.techSplash),
+    vengeanceMult: a.vengeanceMult * (b.vengeanceMult ?? 1),
+    vengeanceAccuracy: a.vengeanceAccuracy + (b.vengeanceAccuracy ?? 0),
+    burningDamageMult: a.burningDamageMult * (b.burningDamageMult ?? 1),
   };
 }
 
@@ -326,9 +344,17 @@ function attackerMult(f: Fighter, tech: JTechnique, data: JornadaData): number {
   if (f.boost?.damageMult) mult *= f.boost.damageMult;
   if (f.gate) mult *= gateTotals(f.gate.level, data).damageMult;
   if (m.damagePerClone) mult *= 1 + m.damagePerClone * f.clones;
+  if (vengeful(f)) mult *= m.vengeanceMult;
   if (hasEffect(f, 'fear')) mult *= data.base.effects.fear.damageMult;
   return mult;
 }
+
+/** Vingança (Uchiha): abaixo de 30% do HP, ou com alguém da equipe caído nesta luta. */
+const vengeful = (f: Fighter) => f.mods.vengeanceMult > 1 && (f.hp < f.maxHp * VENGEANCE_BELOW || Boolean(f.vengeful));
+const VENGEANCE_BELOW = 0.3;
+/** Sharingan ligado (o fortalecimento de uma das técnicas do Sharingan). */
+const sharinganOn = (f: Fighter) => Boolean(f.boost?.techId.startsWith('jSharingan'));
+const controlled = (t: Fighter) => hasEffect(t, 'stun') || hasEffect(t, 'fear') || hasEffect(t, 'chakraBlock');
 
 /** Base por golpe com o dano plano de taijutsu. */
 const powerBase = (tech: JTechnique, m: FighterMods) => tech.baseDamage + (tech.type === 'taijutsu' ? m.taijutsuFlat : 0);
@@ -438,7 +464,9 @@ export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data
       (hasEffect(target, 'stun') || hasEffect(target, 'fear') || hasEffect(target, 'chakraBlock') ? user.mods.controlledDamageMult : 1) *
       // Duelo (prodígio): contra quem tem mais HP máximo que você. Desafio: contra quem está acima da metade do HP.
       (target.maxHp > user.maxHp ? user.mods.duelDamageMult : 1) *
-      (target.hp > target.maxHp * 0.5 ? user.mods.healthyTargetMult : 1),
+      (target.hp > target.maxHp * 0.5 ? user.mods.healthyTargetMult : 1) *
+      // Inferno ilusório (Uchiha): contra quem está queimando.
+      (hasEffect(target, 'burn') ? user.mods.burningDamageMult : 1),
   });
 }
 
@@ -463,7 +491,9 @@ export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique
   const fear = hasEffect(user, 'fear') ? data.base.effects.fear.accuracy : 0;
   // Mokuton: o clone compartilha o que vê.
   const cloneAcc = user.clones > 0 ? (data.base.clones.kinds[user.cloneKind].accuracyBonus ?? 0) : 0;
-  const duel = target.maxHp > user.maxHp ? user.mods.duelAccuracy : 0;
+  // Mundo da ilusão (Uchiha): genjutsu contra alvo controlado não erra.
+  if (tech.type === 'genjutsu' && user.mods.illusionSureHit && controlled(target)) return 1;
+  const duel = (target.maxHp > user.maxHp ? user.mods.duelAccuracy : 0) + (vengeful(user) ? user.mods.vengeanceAccuracy : 0);
   const acc = user.mods.accuracyBonus + (user.boost?.accuracy ?? 0) + (user.gate ? gateTotals(user.gate.level, data).accuracy : 0) + fear + cloneAcc + duel;
   // Ilusão perfeita (Comum): com clone de pé, quem ataca erra mais.
   const eva = target.mods.evasion + (target.boost?.evasion ?? 0) + (target.clones > 0 ? target.mods.cloneEnemyAccuracy : 0);
@@ -582,7 +612,7 @@ function startTurn(s: JBattle, f: Fighter, data: JornadaData): boolean {
   s.log.push({ type: 'turn', uid: f.uid });
   for (const e of ['burn', 'poison'] as const) {
     if (!hasEffect(f, e)) continue;
-    const amount = dotDamage(e, f.maxHp, data.base.effects);
+    const amount = dotDamage(e, f.maxHp, data.base.effects, f.effects.find((x) => x.kind === e)?.mult ?? 1);
     s.log.push({ type: 'tick', target: f.uid, effect: e, amount });
     applyHpLoss(s, f, amount, data);
     if (f.down) return false;
@@ -907,6 +937,15 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
       s.log.push({ type: 'miss', uid: f.uid, target: t.uid });
       continue;
     }
+    // Leitura total (Uchiha): com o Sharingan ligado, chance de anular o golpe (e, com a Leitura de lâminas, revidar).
+    if (single && sharinganOn(t) && t.mods.readNullChance > 0 && rng() < t.mods.readNullChance) {
+      s.log.push({ type: 'miss', uid: f.uid, target: t.uid });
+      if (t.mods.readCounterDamage > 0 && !f.down) {
+        s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: t.mods.readCounterDamage, crit: false, elementMult: 1, absorbed: 0 });
+        applyHpLoss(s, f, t.mods.readCounterDamage, data);
+      }
+      continue;
+    }
     if (cloneBlocks(s, f, t, single, data, rng)) continue;
     landed++;
     if (outcome === 'crit' && f.mods.critChakra > 0) {
@@ -936,8 +975,10 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
       applyHpLoss(s, nextFoe, spill - soaked, data, tech.id);
     }
     // Explosão em cadeia (Comum): ninjutsu em alvo atordoado espalha parte do dano nos outros inimigos.
-    if (stunnedBefore && tech.type === 'ninjutsu' && f.mods.stunnedSplashPct > 0 && s.status === 'ongoing') {
-      const splash = Math.floor((amount - absorbed) * f.mods.stunnedSplashPct);
+    // Chuva de shuriken (Uchiha): a técnica de arma acerta também os outros inimigos com uma fração do dano.
+    const splashPct = (stunnedBefore && tech.type === 'ninjutsu' ? f.mods.stunnedSplashPct : 0) + (f.mods.techSplash[tech.id] ?? 0);
+    if (splashPct > 0 && s.status === 'ongoing') {
+      const splash = Math.floor((amount - absorbed) * splashPct);
       for (const o of splash > 0 ? alive(s, t.side).filter((x) => x.uid !== t.uid) : []) {
         s.log.push({ type: 'damage', uid: f.uid, target: o.uid, amount: splash, crit: false, elementMult: 1, absorbed: 0 });
         applyHpLoss(s, o, splash, data, tech.id);
@@ -950,6 +991,8 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
       if (amount > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount });
     }
     if (!t.down) tryEffect(s, f, t, tech, data, rng);
+    // Prisão (Uchiha): as ilusões podem atordoar.
+    if (!t.down && tech.type === 'genjutsu' && f.mods.genjutsuStunChance > 0 && s.status === 'ongoing' && rng() < f.mods.genjutsuStunChance) addStatus(s, t, 'stun', data);
     // Contra-ataque (prodígio): quem apanha de golpe de alvo único pode revidar na hora (perda de HP direta).
     if (single && !t.down && !f.down && t.mods.counterChance > 0 && s.status === 'ongoing' && rng() < t.mods.counterChance) {
       s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: t.mods.counterDamage, crit: false, elementMult: 1, absorbed: 0 });
@@ -1074,8 +1117,12 @@ function tryEffect(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: J
   }
   const turns = effectTurns(tech, data) + f.mods.effectTurnsBonus;
   const prev = t.effects.find((e) => e.kind === on.effect);
-  if (prev) prev.turns = Math.max(prev.turns, turns);
-  else t.effects.push({ kind: on.effect, turns });
+  // Fogo que não apaga (Uchiha): a queimadura de quem tem `burnMult` dói mais.
+  const mult = on.effect === 'burn' && f.mods.burnMult > 1 ? f.mods.burnMult : undefined;
+  if (prev) {
+    prev.turns = Math.max(prev.turns, turns);
+    if (mult) prev.mult = Math.max(prev.mult ?? 1, mult);
+  } else t.effects.push({ kind: on.effect, turns, ...(mult ? { mult } : {}) });
   s.log.push({ type: 'effect', target: t.uid, effect: on.effect, turns });
 }
 
@@ -1124,6 +1171,7 @@ function lose(s: JBattle, t: Fighter, amount: number, data: JornadaData, techId?
   t.boost = null;
   t.gate = null;
   s.log.push({ type: 'down', target: t.uid });
+  for (const x of alive(s, t.side)) if (x.mods.vengeanceMult > 1) x.vengeful = true;
   // Lição do mestre (prodígio): uma vez por luta, quando alguém da equipe cai, os de pé ganham dano por 3 turnos.
   const mentor = alive(s, t.side).find((x) => x.mods.fallenRally > 0 && !x.rallied);
   if (mentor) {

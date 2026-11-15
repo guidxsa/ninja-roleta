@@ -267,6 +267,45 @@ describe('Fase 6 · árvore do prodígio (C2, v0.85.0)', () => {
   });
 });
 
+describe('Fase 6 · árvore do Uchiha (C2, v0.86.0)', () => {
+  const tree = data.talents.filter((t) => t.owner === 'uchihaNinja');
+  const foe = (over: Partial<FighterSeed> = {}): FighterSeed => ({ ...hero(), defId: 'gatoThug', protagonist: false, techniques: ['jeClub'], ai: 'brute', ...over });
+  const duo = (me: Partial<FighterSeed>, them: Partial<FighterSeed> = {}) => {
+    const b = startBattle({ allies: [hero(me)], enemies: [foe(them)], win: { kind: 'defeatAll' } }, data, fixed(0.5));
+    return [b.fighters[0]!, b.fighters[1]!] as const;
+  };
+
+  it('seis ramos em anel, sem o ramo do Sasuke; seis combinações e três assinaturas', () => {
+    expect(branchesOf('uchihaNinja', data.talents)).toEqual(['sharingan', 'fire', 'illusions', 'weapons', 'pride', 'police']);
+    for (const b of branchesOf('uchihaNinja', data.talents)) {
+      const nodes = tree.filter((t) => t.branch === b && !t.requiresAll);
+      expect(nodes.filter((t) => t.capstone), b).toHaveLength(1);
+      expect(nodes.filter((t) => t.excludes?.length), b).toHaveLength(2);
+    }
+    expect(tree.filter((t) => t.requiresAll)).toHaveLength(9);
+    for (const t of tree) expect(ptBR.jornada.talents.list[t.id], t.id).toBeTruthy();
+  });
+
+  it('Vingança no aperto; Inferno ilusório contra quem queima; Mundo da ilusão não erra em alvo controlado', () => {
+    const strike = data.techniques.jStrike!;
+    const [me, them] = duo({ mods: mergeMods(emptyMods(), { vengeanceMult: 1.4, burningDamageMult: 1.3, illusionSureHit: true }) });
+    const [plain] = duo({});
+    expect(hitDamage({ ...me, hp: 10 }, them, strike, data)).toBeGreaterThan(hitDamage({ ...plain, hp: 10 }, them, strike, data));
+    expect(hitDamage(me, them, strike, data)).toBe(hitDamage(plain, them, strike, data));
+    expect(hitDamage(me, { ...them, effects: [{ kind: 'burn', turns: 2 }] }, strike, data)).toBeGreaterThan(hitDamage(me, them, strike, data));
+    const crow = data.techniques.jCrowIllusion!;
+    expect(accuracyAgainst(me, { ...them, effects: [{ kind: 'stun', turns: 1 }] }, crow, data)).toBe(1);
+    expect(accuracyAgainst(me, them, crow, data)).toBeLessThan(1);
+  });
+
+  it('Leitura total: com o Sharingan ligado, o golpe recebido pode ser anulado', () => {
+    const mods = mergeMods(emptyMods(), { readNullChance: 1, readCounterDamage: 8 });
+    const b = startBattle({ allies: [hero({ mods, speed: 1 })], enemies: [foe({ speed: 99 })], win: { kind: 'defeatAll' } }, data, fixed(0.3));
+    // Sem o Sharingan ligado, a leitura não vale.
+    expect(b.fighters[0]!.hp).toBeLessThan(b.fighters[0]!.maxHp);
+  });
+});
+
 describe('Fase 6 · Caminho Ninja (C3)', () => {
   it('no 1º chefe, a evolução da relíquia inicial vem entre as opções', () => {
     for (const seed of [3, 7, 11]) {

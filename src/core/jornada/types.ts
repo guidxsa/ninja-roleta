@@ -220,6 +220,23 @@ export interface FighterMods {
   fallenRally: number;
   /** Com o portão deste nível ou acima aberto, as técnicas não cobram HP (Lótus Oculta perfeita). */
   hpCostFreeAtGate: number;
+  // Árvore do Uchiha (v0.86.0, docs/jornada/talentos.md#uchiha-caminho-ninja).
+  /** Com o Sharingan ligado: chance de anular um golpe de alvo único (Leitura total) e o revide (Leitura de lâminas). */
+  readNullChance: number;
+  readCounterDamage: number;
+  /** A queimadura que você aplica dói × isto (Fogo que não apaga). */
+  burnMult: number;
+  /** Cada golpe de genjutsu que acerta pode atordoar (Prisão). */
+  genjutsuStunChance: number;
+  /** Genjutsu contra alvo com Medo, atordoado ou com chakra bloqueado não erra (Mundo da ilusão). */
+  illusionSureHit: boolean;
+  /** A técnica acerta também os outros inimigos com esta fração do dano (Chuva de shuriken). */
+  techSplash: Record<string, number>;
+  /** Abaixo de 30% do HP ou com alguém da equipe caído: dano × e acerto + (Vingança, Olhos da vingança). */
+  vengeanceMult: number;
+  vengeanceAccuracy: number;
+  /** Dano × contra quem está queimando (Inferno ilusório). */
+  burningDamageMult: number;
 }
 
 export interface CharacterDef {
@@ -290,7 +307,8 @@ export interface Fighter {
   ai: AiProfile;
   passive?: EnemyPassive;
   mods: FighterMods;
-  effects: { kind: JEffect; turns: number }[];
+  /** `mult`: queimadura mais forte (Fogo que não apaga). */
+  effects: { kind: JEffect; turns: number; mult?: number }[];
   shield: number;
   /** Barreira elemental de pé (src/core/barriers.ts), ou null. */
   barrier: BarrierState | null;
@@ -315,6 +333,8 @@ export interface Fighter {
   openerUsed?: boolean;
   /** A Lição do mestre já disparou nesta luta. */
   rallied?: boolean;
+  /** Alguém da equipe caiu nesta luta (Vingança). */
+  vengeful?: boolean;
   /** Saiu da luta pelo roteiro (troca de fase): não volta nem conta para a vitória. */
   gone?: boolean;
   /** Caiu pelo roteiro (o Iruka protegendo o Naruto, o Sasuke contra o Haku): é cena, ninguém levanta nesta luta. */

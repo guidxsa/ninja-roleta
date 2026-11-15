@@ -102,6 +102,7 @@ Entre as duas melhores opções, a sorte desempata (30%) quando a segunda vale p
 | Uma cauda | Ninjutsu | — | em si | — | 0 | 85% | custa 10% do HP; fortalece 3 turnos (dano ×1.35); espera 5; ativa de classe |
 | Bola de Fogo | Ninjutsu | fogo | um inimigo | 16 | 5 | 85% | queimar 25% |
 | Flor de Fênix | Ninjutsu | fogo | todos os inimigos | 8 | 7 | 85% | queimar 20% |
+| Shuriken giratória | Taijutsu | — | um inimigo | 4 ×3 | 3 | 90% | arma do clã (ramo Armas do clã, v0.86.0) |
 | Combo do Leão | Taijutsu | — | um inimigo | 18 | 4 | 85% | — |
 | Chidori | Ninjutsu | raio | um inimigo | 30 | 10 | 85% | penetração 30% |
 | Kunai | Taijutsu | — | um inimigo | 9 | 0 | 90% | — |
