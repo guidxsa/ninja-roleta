@@ -187,7 +187,8 @@
 .jrshelf-item .jrslot { pointer-events: none; }
 .jrshelf-item.on { box-shadow: inset 0 0 0 1px var(--tier); background: var(--surface-3); }
 .jrshelf-item.sold { opacity: .45; }
-.jrprice { font: 700 var(--fs-md)/1 var(--font-hud); letter-spacing: .04em; padding: 3px 8px; background: var(--ink); color: var(--gold-2); border-left: 2px solid var(--gold); white-space: nowrap; }
+/* Etiqueta escura: o ouro claro fixo (no papel, --gold-2 vira tinta marrom e dava 2,5:1 sobre o fundo escuro). */
+.jrprice { font: 700 var(--fs-md)/1 var(--font-hud); letter-spacing: .04em; padding: 3px 8px; background: var(--ink); color: #f3d38b; border-left: 2px solid var(--gold); white-space: nowrap; }
 
 /* Painel das relíquias e visual do Sasuke */
 .jmodal { max-height: 86vh; overflow-y: auto; }

@@ -89,6 +89,14 @@ Crítica de design dos 113 cenários do UI Lab, com captura de tela de cada um (
 
 Ficam para depois: tela de erro e toasts (sem cenário no lab), `prefers-reduced-motion` e teclado, retratos próprios (os placeholders são o mesmo rosto) e a revisão do estado "Já tem" da loja.
 
+**Segunda crítica e v0.76.8 a v0.76.11.** Nova crítica no UI Lab depois da v0.76.7: 28/40 (antes 23/40), P0 1 → 0, P1 7 → 3. O usuário escolheu: P1 do celular primeiro, variações de retrato em SVG (sem esperar arte) e tudo da nova crítica neste PR. Decidido sozinho, o usuário revisa no PR:
+- v0.76.8: depois do giro a tela rola até o resultado ficar acima do Lutar (regressão do CTA fixo); luta da Roleta compacta a 390×844 (registro em uma linha, retrato de 64px, status do vilão numa linha); luta da Jornada até 760px de altura sem a faixa de relíquias e com retratos de 54px; bandeja no lugar durante a escolha de alvo; Ficha com 44px também no `.ally-hud`; conquistas do Início só do catálogo; `overflow-x: clip` no `html` do Início e da entrada da Jornada; moldura dourada dupla na elite; 将 da arena da Roleta visível (0,2).
+- v0.76.9: carimbo grande (`.jc-peak`) em vitória, estágio, ciclo e fim da run; o herói do Caminho Ninja mostra o retrato da classe na cena (exceção registrada no visual.md); traços próprios em SVG (`NINJA_STYLE`) para Kakashi, Irmãos Demônio (`ninja:gozu`/`ninja:meizu`) e capangas.
+- v0.76.10: origem da Roleta no PC com a última roda parada no palco; árvore no notebook em seis colunas com rótulos menores.
+- v0.76.11: "R. física"/"R. mental" também na ficha do vilão; fim do infinito e abandono da Roleta com 報; ícone de dado com pips vazados; preço da loja em ouro claro sobre a etiqueta escura; etapas futuras do mapa apagam só os ícones (texto em `--muted`); botões de treino e tratamento sem parênteses (detalhe na dica ou no subtítulo); pé da coluna do Início esmaece só quando rola.
+
+Ficaram de fora: rolagem interna da loja acoplada a 1440 (a seção já é dobrável), o nome do ninja repetido nas abas do Registro no celular, o rótulo vencedor da roda na vertical (o carimbo sobre a roda já mostra o resultado na horizontal) e os parceiros genéricos do Caminho Ninja (são o molde da classe).
+
 ## Auditoria de design e etapa 1: cena narrativa (v0.72.0, 14/11/2026)
 
 Pedido do usuário: auditoria criteriosa da experiência visual com o Impeccable, sem alterar nada, e um plano de evolução. Depois de aprovar o relatório, escolheu começar pela etapa 1 (narrativa), com falas por toque e os retratos em SVG de hoje.

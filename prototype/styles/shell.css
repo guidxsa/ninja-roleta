@@ -64,8 +64,9 @@
     grid-area: aside; display: flex; flex-direction: column; gap: var(--gap); min-height: 0; overflow: hidden auto; padding: 14px 8px 30px;
     container: gate-aside / size; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
     /* O pé esmaece: quando a coluna rola, o corte avisa que há mais; sem rolagem, só o respiro de baixo some. */
-    -webkit-mask: linear-gradient(180deg, #000 calc(100% - 30px), transparent); mask: linear-gradient(180deg, #000 calc(100% - 30px), transparent);
   }
+  /* O pé só esmaece quando a coluna rola (classe posta pelo gate.ts): sem rolagem, nada fica cortado. */
+  .gate-aside.scrolls { -webkit-mask: linear-gradient(180deg, #000 calc(100% - 30px), transparent); mask: linear-gradient(180deg, #000 calc(100% - 30px), transparent); }
   /* Com Jornada salva, as três peças passam da altura da janela. O progresso nunca sai (docs/visual.md, "Cada peça no
      seu espaço") e vem primeiro; as conquistas recentes, as primeiras a sair, ficam no pé, esmaecidas, para a rolagem. */
   .gate-aside > .desk-prog { order: -1; }

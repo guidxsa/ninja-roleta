@@ -87,7 +87,8 @@ export function villainStats(phys: number, mental: number, speed: number): strin
   const pill = (key: 'physical' | 'mental' | 'speed', ico: string, v: number) => {
     const T = S.tips.stats;
     const desc = T[key];
-    return `<span class="stat-pill"${tip(S.stats[key], desc)}>${icon(ico)}<small>${S.stats[key]}</small><b>${v}</b></span>`;
+    // Rótulo curto igual ao da ficha do jogador ("R. física"); o nome inteiro fica na dica.
+    return `<span class="stat-pill"${tip(S.stats[key], desc)}>${icon(ico)}<small>${(S.statsShort as Partial<Record<string, string>>)[key] ?? S.stats[key]}</small><b>${v}</b></span>`;
   };
   return `<div class="stat-pills">${pill('physical', 'barrier', phys)}${pill('mental', 'genjutsu', mental)}${pill('speed', 'dodge', speed)}</div>`;
 }

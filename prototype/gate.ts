@@ -81,6 +81,9 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
   );
   // A barra lateral escolhe o modo pelo mesmo botão do card enquanto o Início está na tela.
   gateApi = { root };
+  // A coluna direita (PC) só esmaece o pé quando de fato rola.
+  const aside = root.querySelector<HTMLElement>('.gate-aside');
+  if (aside) requestAnimationFrame(() => aside.classList.toggle('scrolls', aside.scrollHeight > aside.clientHeight + 1));
   root.querySelector('[data-desk-name]')?.addEventListener('change', (e) => setPlayerName((e.target as HTMLInputElement).value));
   root.querySelector('.desk-id [data-avatar]')?.addEventListener('click', openAvatarPicker);
   markNav('home');

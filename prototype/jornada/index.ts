@@ -716,7 +716,7 @@ function shopPanel(el: HTMLElement, host: JornadaHost, get: () => JRun, set: (r:
         .map((c) => `<div class="jrelic"><span class="jrelic-ico">${icon('kit')}</span><span class="jrelic-txt"><b>${J.items[c.id]!.name}</b><small>${J.items[c.id]!.desc}</small></span>${btn({ kind: 'item', ...c }, `i:${c.id}`)}</div>`)
         .join('')}
       ${talentTreeComplete(run, data) ? '' : `<div class="jrelic"><span class="jrelic-ico">${icon('scroll')}</span><span class="jrelic-txt"><b>${U.training}</b></span>${btn({ kind: 'training', price: offer.training }, 't')}</div>`}
-      <div class="jrelic"><span class="jrelic-ico">${icon('medical')}</span><span class="jrelic-txt"><b>${U.treatment}</b></span>${btn({ kind: 'treatment', price: offer.treatment }, 'heal')}</div>
+      <div class="jrelic"><span class="jrelic-ico">${icon('medical')}</span><span class="jrelic-txt"><b>${U.treatment}</b><small>${U.treatmentDesc}</small></span>${btn({ kind: 'treatment', price: offer.treatment }, 'heal')}</div>
       ${cleanseRow}`;
   };
   el.addEventListener('click', (e) => {

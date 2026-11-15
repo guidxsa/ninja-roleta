@@ -46,7 +46,9 @@
 .trail li.current::before { content: ''; position: absolute; left: -14px; top: 0; bottom: 0; width: 3px; background: var(--primary); }
 .trail li.current .rrow.fight > i { background: var(--primary); border-color: var(--primary-2); color: var(--primary-ink); }
 .trail li.current .rrow.fight b { font: 700 var(--fs-2xl)/1.15 var(--font-hand); }
-.trail li.todo { opacity: .72; }
+.trail li.todo { color: var(--muted); }
+/* Etapas futuras: apaga só os ícones e o retrato; o texto em opacidade ficava abaixo de 4,5:1. */
+.trail li.todo :is(.rrow-ico, .trail-ico, .trail-faces, .rrow.fight > i) { opacity: .6; }
 /* Etapa vencida: o resumo abre o que ela deu. */
 .rstep details > summary { list-style: none; cursor: pointer; position: relative; padding-right: 22px; }
 .rstep details > summary::-webkit-details-marker { display: none; }
