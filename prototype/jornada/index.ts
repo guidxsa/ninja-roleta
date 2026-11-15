@@ -97,7 +97,7 @@ const STOP_ICONS: Record<string, string> = {
   boss: 'intent',
   event: 'focus',
   rest: 'rest',
-  treasure: 'item',
+  treasure: 'chest',
 };
 
 /** Nome da parada: o da trilha da História, ou (Caminho Ninja) os inimigos da luta / o tipo da parada. */
@@ -1135,10 +1135,11 @@ export async function storyRelicScene(host: JornadaHost, run: JRun, id: string, 
 export function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
   let run = keep(openShop(run0, data));
   persist(host, run);
+  // Sair é secundário: o vermelho é das compras; com ele em destaque, o maior chamado da loja era ir embora.
   const root = h(`<div class="jtree-screen jshop-screen ${themeOf(run.hero).cls}" role="dialog" aria-label="${U.shopTitle}"${themeStyle(run)}><div class="jt-body">
     <div class="jt-head"><h2>${icon('tag')} ${U.shopTitle}</h2><span class="chip" data-ryo></span><span class="chip" data-inflation></span></div>
     <section class="parchment jshop-paper"><div data-shop></div></section>
-    <div class="sticky-cta"><button class="btn primary big" data-close>${U.leave}</button></div></div></div>`);
+    <div class="sticky-cta"><button class="btn big" data-close>${U.leave}</button></div></div></div>`);
   openDialog(root);
   const chips = () => {
     root.querySelector('[data-ryo]')!.innerHTML = `${icon('coin')} ${U.ryo(run.ryo)}`;

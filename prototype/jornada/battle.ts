@@ -88,8 +88,15 @@ let heroName: string | null = null;
 /** Nomes da equipe desta luta (suportes com nome sorteado), por ficha. */
 let teamNames: Record<string, string> = {};
 
-export const fighterName = (f: { defId: string; protagonist?: boolean; side?: string }) =>
-  f.protagonist && heroName ? heroName : ((f.side !== 'enemy' && teamNames[f.defId]) || (J.names[f.defId] ?? f.defId));
+/** Número dos inimigos repetidos desta luta, por uid ("Capanga 1", "Capanga 2"): três iguais não davam para distinguir no alvo. */
+let enemyNumbers: Record<string, number> = {};
+
+export const fighterName = (f: { defId: string; protagonist?: boolean; side?: string; uid?: string }) => {
+  if (f.protagonist && heroName) return heroName;
+  const base = (f.side !== 'enemy' && teamNames[f.defId]) || (J.names[f.defId] ?? f.defId);
+  const n = f.side === 'enemy' && f.uid ? enemyNumbers[f.uid] : undefined;
+  return n ? `${base} ${n}` : base;
+};
 export const techName = (id: string) => J.techniques[id] ?? id;
 
 /** Visual do protagonista desta luta (personalização da run). */
@@ -384,6 +391,13 @@ export async function jornadaBattle(
   heroSkin = run0.skin;
   heroName = run0.mode === 'generic' ? heroLabel(run0.hero, host.playerName()) : null;
   teamNames = Object.fromEntries(setup.allies.map((a) => [a.defId, memberLabel(run0, a.defId, host.playerName())]));
+  // Inimigos com a mesma ficha ganham número na ordem em que entram (o uid é 'e' + a posição).
+  enemyNumbers = {};
+  const seen: Record<string, number> = {};
+  const repeated = new Set(setup.enemies.map((e) => e.defId).filter((id, i, all) => all.indexOf(id) !== i));
+  setup.enemies.forEach((e, i) => {
+    if (repeated.has(e.defId)) enemyNumbers[`e${i}`] = seen[e.defId] = (seen[e.defId] ?? 0) + 1;
+  });
   // Na abertura ninguém agiu ainda: os turnos antes do protagonista só andam depois da intro, para as barras não adiantarem o dano.
   let state = opts.from ?? openBattle(setup, data);
   liveBattle = () => state;
@@ -808,7 +822,10 @@ export async function jornadaBattle(
       const raisePct = Math.round(data.j.combat.raiseHpPct * 100);
       const raiseBlock = fallen.length
         ? `<h4 class="act-title">${B.groups.raise}</h4><div class="jb-extra jb-raise">
-          <button class="btn small primary jx" data-act="raise" ${tip(B.raise, B.raiseDesc(raisePct))}>${icon('heart')} ${B.raise} · ${raisePct}%</button>
+          ${fallen
+            // Um botão por caído, com o nome: com dois no chão, "Levantar" sozinho não dizia em quem.
+            .map((f) => `<button class="btn small primary jx" data-act="raise" data-uid="${f.uid}" ${tip(B.raise, B.raiseDesc(raisePct))}>${icon('heart')} ${B.raiseWho(esc(fighterName(f)))} · ${raisePct}%</button>`)
+            .join('')}
           ${raiseTechs.map((t) => techButton(state, me, t)).join('')}
           ${pill ? `<button class="btn small jx" data-act="pill" ${tip(J.items.reviveKit!.name, B.pillDesc(Math.round(data.j.combat.reviveHpPct * 100)))}>${icon('pill')} ${J.items.reviveKit!.name}</button>` : ''}
         </div>`
@@ -877,7 +894,7 @@ export async function jornadaBattle(
       if (pick.dataset.act === 'guard') return { kind: 'guard' };
       if (pick.dataset.act === 'rest') return { kind: 'rest' };
       if (pick.dataset.act === 'raise') {
-        const uid = await pickTarget(fallen, B.pickDowned);
+        const uid = pick.dataset.uid ?? (await pickTarget(fallen, B.pickDowned));
         if (!uid) continue;
         return { kind: 'raise', target: uid };
       }

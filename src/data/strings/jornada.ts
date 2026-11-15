@@ -1351,7 +1351,7 @@ export const jornadaPtBR = {
     pickAlly: 'Escolha o aliado',
     pickDowned: 'Escolha quem levantar',
     cancel: 'Voltar',
-    groups: { raise: 'Aliado caído', techniques: 'Técnicas', actives: 'Ativas', actions: 'Ações' },
+    groups: { raise: 'Caídos', techniques: 'Técnicas', actives: 'Ativas', actions: 'Ações' },
     // Vantagem de elemento no botão da técnica e no alvo (v0.73.0): o multiplicador contra quem está de pé.
     advantage: (mult: string) => `×${mult}`,
     advantageUp: (mult: string) => `Vantagem de elemento: dano ×${mult}`,
@@ -1393,6 +1393,7 @@ export const jornadaPtBR = {
     resisted: 'firme',
     logResist: (who: string) => `${who} não cai no atordoamento de novo`,
     raise: 'Levantar',
+    raiseWho: (name: string) => `Levantar ${name}`,
     raiseDesc: (pct: number) => `Levanta um aliado caído com ${pct}% do HP. Gasta o turno.`,
     pillDesc: (pct: number) => `Levanta um aliado caído com ${pct}% do HP. Não gasta o turno; um item por turno.`,
     enrage: (name: string) => `${name} entrou em fúria!`,
