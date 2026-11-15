@@ -1,6 +1,6 @@
 // Balanceamento aprovado pelo usuário (docs/balanceamento/diagnostico.md): regras novas de cada fase.
 import { describe, expect, it } from 'vitest';
-import { accuracyAgainst, emptyMods, hitDamage, hitsOf, mergeMods, playerAct, startBattle } from '../src/core/jornada/battle';
+import { accuracyAgainst, emptyMods, gateOpenCost, hitDamage, hitsOf, hpCost, mergeMods, playerAct, startBattle } from '../src/core/jornada/battle';
 import { branchesOf } from '../src/core/jornada/talents';
 import { ptBR } from '../src/data/strings/ptBR';
 import { evolutionFor, relicFits, relicNeeds } from '../src/core/jornada/relics';
@@ -210,6 +210,60 @@ describe('Fase 6 · árvore do Comum (C2, v0.84.0)', () => {
     expect(b.log.some((e) => e.type === 'survive')).toBe(true);
     expect(me.hp).toBe(1 + Math.floor(me.maxHp * 0.25));
     expect(me.effects.some((e) => e.kind === 'stunGuard')).toBe(true);
+  });
+});
+
+describe('Fase 6 · árvore do prodígio (C2, v0.85.0)', () => {
+  const tree = data.talents.filter((t) => t.owner === 'prodigy');
+  const foe = (over: Partial<FighterSeed> = {}): FighterSeed => ({ ...hero(), defId: 'gatoThug', protagonist: false, techniques: ['jeClub'], ai: 'brute', ...over });
+  const duo = (me: Partial<FighterSeed>, them: Partial<FighterSeed> = {}) => {
+    const b = startBattle({ allies: [hero(me)], enemies: [foe(them)], win: { kind: 'defeatAll' } }, data, fixed(0.5));
+    return [b.fighters[0]!, b.fighters[1]!] as const;
+  };
+
+  it('seis ramos em anel, com bifurcação e talento final; seis combinações e três assinaturas; sem nomes de personagens', () => {
+    expect(branchesOf('prodigy', data.talents)).toEqual(['gates', 'youth', 'drunken', 'training', 'rivalry', 'mentor']);
+    for (const b of branchesOf('prodigy', data.talents)) {
+      const nodes = tree.filter((t) => t.branch === b && !t.requiresAll);
+      expect(nodes.filter((t) => t.capstone), b).toHaveLength(1);
+      expect(nodes.filter((t) => t.excludes?.length), b).toHaveLength(2);
+    }
+    expect(tree.filter((t) => t.requiresAll)).toHaveLength(9);
+    const names = tree.map((t) => `${ptBR.jornada.talents.list[t.id]!.name} ${ptBR.jornada.talents.list[t.id]!.desc}`).join(' ');
+    for (const who of ['Gai', 'Lee', 'Kakashi', 'Neji']) expect(names).not.toContain(who);
+  });
+
+  it('Abertura rápida barateia o portão; com o 5º portão e a Lótus perfeita, a técnica não cobra HP', () => {
+    const [me] = duo({ mods: mergeMods(emptyMods(), { gateOpenDiscount: 1, hpCostFreeAtGate: 5 }) });
+    const [plain] = duo({});
+    expect(gateOpenCost(me, 2, data)).toBe(2 * (data.j.gates.activationPerLevel - 1));
+    expect(gateOpenCost(plain, 2, data)).toBe(2 * data.j.gates.activationPerLevel);
+    const lotus = data.techniques.jHiddenLotus!;
+    expect(hpCost({ ...me, gate: { level: 4, rounds: 0 } }, lotus)).toBeGreaterThan(0);
+    expect(hpCost({ ...me, gate: { level: 5, rounds: 0 } }, lotus)).toBe(0);
+  });
+
+  it('Chama da juventude, Duelo e Desafio no dano; Bêbado de verdade dá golpes ao Punho Bêbado', () => {
+    const strike = data.techniques.jStrike!;
+    const [base, foeBig] = duo({}, { maxHp: 300, hp: 300 });
+    const flame = { ...base, mods: mergeMods(base.mods, { critMultBonus: 0.5 }) };
+    expect(hitDamage(flame, foeBig, strike, data, true)).toBeGreaterThan(hitDamage(base, foeBig, strike, data, true));
+    const duel = { ...base, mods: mergeMods(base.mods, { duelDamageMult: 1.25, duelAccuracy: 0.1 }) };
+    expect(hitDamage(duel, foeBig, strike, data)).toBeGreaterThan(hitDamage(base, foeBig, strike, data));
+    expect(accuracyAgainst(duel, foeBig, strike, data)).toBeGreaterThan(accuracyAgainst(base, foeBig, strike, data));
+    const challenge = { ...base, mods: mergeMods(base.mods, { healthyTargetMult: 1.15 }) };
+    expect(hitDamage(challenge, { ...foeBig, hp: 100 }, strike, data)).toBe(hitDamage(base, { ...foeBig, hp: 100 }, strike, data));
+    expect(hitsOf({ ...base, mods: mergeMods(base.mods, { techExtraHits: { jDrunkenFist: 2 } }) }, data.techniques.jDrunkenFist!)).toBe(5);
+  });
+
+  it('Lição do mestre: quando alguém da equipe cai, os de pé ganham dano por 3 turnos', () => {
+    const b = startBattle(
+      { allies: [hero({ mods: mergeMods(emptyMods(), { fallenRally: 0.2 }) }), { ...hero(), defId: 'sakura', protagonist: false, hp: 1, speed: 1, ai: 'striker' }], enemies: [foe({ speed: 99, offense: { taijutsu: 40, ninjutsu: 0, genjutsu: 0 } })], win: { kind: 'defeatAll' } },
+      data,
+      fixed(0.3),
+    );
+    if (b.fighters[1]!.down) expect(b.fighters[0]!.boost).toMatchObject({ damageMult: 1.2, techId: 'masterLesson' });
+    else expect(b.fighters[0]!.rallied).toBeFalsy();
   });
 });
 

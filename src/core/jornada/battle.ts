@@ -78,6 +78,19 @@ export function emptyMods(): FighterMods {
     stunnedSplashPct: 0,
     surviveHealPct: 0,
     surviveTeamHealPct: 0,
+    gateOpenDiscount: 0,
+    gateAutoUp: false,
+    critMultBonus: 0,
+    critChakra: 0,
+    techExtraHits: {},
+    openingCrit: false,
+    counterChance: 0,
+    counterDamage: 0,
+    duelDamageMult: 1,
+    duelAccuracy: 0,
+    healthyTargetMult: 1,
+    fallenRally: 0,
+    hpCostFreeAtGate: 0,
   };
 }
 
@@ -144,6 +157,19 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     stunnedSplashPct: a.stunnedSplashPct + (b.stunnedSplashPct ?? 0),
     surviveHealPct: a.surviveHealPct + (b.surviveHealPct ?? 0),
     surviveTeamHealPct: a.surviveTeamHealPct + (b.surviveTeamHealPct ?? 0),
+    gateOpenDiscount: a.gateOpenDiscount + (b.gateOpenDiscount ?? 0),
+    gateAutoUp: a.gateAutoUp || Boolean(b.gateAutoUp),
+    critMultBonus: a.critMultBonus + (b.critMultBonus ?? 0),
+    critChakra: a.critChakra + (b.critChakra ?? 0),
+    techExtraHits: addMap(a.techExtraHits, b.techExtraHits),
+    openingCrit: a.openingCrit || Boolean(b.openingCrit),
+    counterChance: a.counterChance + (b.counterChance ?? 0),
+    counterDamage: a.counterDamage + (b.counterDamage ?? 0),
+    duelDamageMult: a.duelDamageMult * (b.duelDamageMult ?? 1),
+    duelAccuracy: a.duelAccuracy + (b.duelAccuracy ?? 0),
+    healthyTargetMult: a.healthyTargetMult * (b.healthyTargetMult ?? 1),
+    fallenRally: a.fallenRally + (b.fallenRally ?? 0),
+    hpCostFreeAtGate: b.hpCostFreeAtGate ? (a.hpCostFreeAtGate ? Math.min(a.hpCostFreeAtGate, b.hpCostFreeAtGate) : b.hpCostFreeAtGate) : a.hpCostFreeAtGate,
   };
 }
 
@@ -249,6 +275,8 @@ export function techniqueCost(f: Fighter, tech: JTechnique): number {
 }
 
 export function hpCost(f: Fighter, tech: JTechnique): number {
+  // Lótus Oculta perfeita (prodígio, v0.85.0): com o portão alto aberto, as técnicas não cobram HP.
+  if (f.mods.hpCostFreeAtGate && f.gate && f.gate.level >= f.mods.hpCostFreeAtGate) return 0;
   return tech.hpCostPct ? Math.max(1, Math.floor(f.maxHp * tech.hpCostPct)) : 0;
 }
 
@@ -347,7 +375,8 @@ export function maxGate(f: Fighter, data: JornadaData): number {
 }
 
 /** Chakra para ir do portão aberto (0 = fechado) ao `level`: cada portão a mais custa a abertura; descer é grátis. */
-export const gateOpenCost = (f: Fighter, level: number, data: JornadaData) => Math.max(0, level - (f.gate?.level ?? 0)) * data.j.gates.activationPerLevel;
+export const gateOpenCost = (f: Fighter, level: number, data: JornadaData) =>
+  Math.max(0, level - (f.gate?.level ?? 0)) * Math.max(1, data.j.gates.activationPerLevel - f.mods.gateOpenDiscount);
 
 /** Manutenção da rodada `n` mantida no portão `level` (src/core/gates.ts, com o peso do nível). */
 export const gateUpkeepAt = (level: number, n: number, data: JornadaData) =>
@@ -401,11 +430,15 @@ export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data
     penetration: Math.min(data.base.penetration.max, (tech.penetration ?? 0) + (user.boost?.penetration ?? 0) + (user.mods.typePen[tech.type] ?? 0)),
     // Sem multiplicador de elemento no HP (v0.77.0): ele só vale contra a barreira, na hora do golpe.
     elementMult: 1,
-    critMult: crit ? data.base.crit.multiplier : 1,
+    // Chama da juventude (prodígio): o crítico bate mais.
+    critMult: crit ? data.base.crit.multiplier + user.mods.critMultBonus : 1,
     extraMult:
       attackerMult(user, tech, data) *
       (hasEffect(target, 'stun') ? user.mods.stunnedDamageMult : 1) *
-      (hasEffect(target, 'stun') || hasEffect(target, 'fear') || hasEffect(target, 'chakraBlock') ? user.mods.controlledDamageMult : 1),
+      (hasEffect(target, 'stun') || hasEffect(target, 'fear') || hasEffect(target, 'chakraBlock') ? user.mods.controlledDamageMult : 1) *
+      // Duelo (prodígio): contra quem tem mais HP máximo que você. Desafio: contra quem está acima da metade do HP.
+      (target.maxHp > user.maxHp ? user.mods.duelDamageMult : 1) *
+      (target.hp > target.maxHp * 0.5 ? user.mods.healthyTargetMult : 1),
   });
 }
 
@@ -414,9 +447,13 @@ export function hitsOf(user: Fighter, tech: JTechnique): number {
   // Combo da Folha e Mil golpes (Comum, v0.84.0): técnicas de taijutsu de dano ganham golpes (até +2 pelos clones).
   const m = user.mods;
   const taiExtra = tech.type === 'taijutsu' && tech.baseDamage > 0 ? m.taijutsuExtraHits + Math.min(TAI_CLONE_HITS_MAX, user.clones * m.taijutsuHitsPerClone) : 0;
-  return (tech.hits ?? 1) + extra + taiExtra;
+  return (tech.hits ?? 1) + extra + taiExtra + (m.techExtraHits[tech.id] ?? 0);
 }
 
+/** HP abaixo do qual os Portões sem freio sobem sozinhos. */
+const GATE_AUTO_BELOW = 0.25;
+/** Turnos do fortalecimento da Lição do mestre. */
+const RALLY_TURNS = 3;
 /** Teto dos golpes de taijutsu a mais pelos clones (Mil golpes). */
 const TAI_CLONE_HITS_MAX = 2;
 /** Teto do bônus da sequência de taijutsu (Combo da Folha). */
@@ -426,7 +463,8 @@ export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique
   const fear = hasEffect(user, 'fear') ? data.base.effects.fear.accuracy : 0;
   // Mokuton: o clone compartilha o que vê.
   const cloneAcc = user.clones > 0 ? (data.base.clones.kinds[user.cloneKind].accuracyBonus ?? 0) : 0;
-  const acc = user.mods.accuracyBonus + (user.boost?.accuracy ?? 0) + (user.gate ? gateTotals(user.gate.level, data).accuracy : 0) + fear + cloneAcc;
+  const duel = target.maxHp > user.maxHp ? user.mods.duelAccuracy : 0;
+  const acc = user.mods.accuracyBonus + (user.boost?.accuracy ?? 0) + (user.gate ? gateTotals(user.gate.level, data).accuracy : 0) + fear + cloneAcc + duel;
   // Ilusão perfeita (Comum): com clone de pé, quem ataca erra mais.
   const eva = target.mods.evasion + (target.boost?.evasion ?? 0) + (target.clones > 0 ? target.mods.cloneEnemyAccuracy : 0);
   return hitChance(tech.accuracy, acc - eva, data.base.hit);
@@ -550,6 +588,11 @@ function startTurn(s: JBattle, f: Fighter, data: JornadaData): boolean {
     if (f.down) return false;
   }
   if (s.status !== 'ongoing') return false;
+  // Portões sem freio (prodígio): abaixo de 25% do HP, o portão aberto sobe um nível sozinho, sem custo.
+  if (f.gate && f.mods.gateAutoUp && f.hp < f.maxHp * GATE_AUTO_BELOW && f.gate.level < maxGate(f, data)) {
+    f.gate = { ...f.gate, level: f.gate.level + 1 };
+    s.log.push({ type: 'gate', uid: f.uid, level: f.gate.level });
+  }
   if (hasEffect(f, 'stun')) {
     s.log.push({ type: 'skip', uid: f.uid, reason: 'stun' });
     return false;
@@ -855,7 +898,10 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     const r = rng();
     const gateCrit = f.gate ? gateTotals(f.gate.level, data).critBonus : 0;
     // Mestre da trapaça: quem acerta um alvo atordoado acerta em cheio.
-    const sureCrit = f.mods.stunnedAlwaysCrit && hasEffect(t, 'stun');
+    // Tirar os pesos (prodígio): o primeiro golpe da luta que acerta é crítico.
+    const opener = f.mods.openingCrit && !f.openerUsed;
+    if (opener) f.openerUsed = true;
+    const sureCrit = (f.mods.stunnedAlwaysCrit && hasEffect(t, 'stun')) || opener;
     const outcome = r < (sureCrit ? chance : critChance((tech.critBonus ?? 0) + f.mods.critBonus + gateCrit, data.base.crit, chance)) ? 'crit' : r < chance ? 'hit' : 'miss';
     if (outcome === 'miss') {
       s.log.push({ type: 'miss', uid: f.uid, target: t.uid });
@@ -863,6 +909,11 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     }
     if (cloneBlocks(s, f, t, single, data, rng)) continue;
     landed++;
+    if (outcome === 'crit' && f.mods.critChakra > 0) {
+      const gain = Math.min(f.maxChakra - f.chakra, f.mods.critChakra);
+      f.chakra += gain;
+      if (gain > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount: gain });
+    }
     // Combo da Folha: cada golpe de taijutsu seguido que acerta bate mais forte (+10% por golpe, até +30%).
     const combo = tech.type === 'taijutsu' && f.mods.comboStepPct > 0 ? 1 + Math.min(COMBO_MAX, f.mods.comboStepPct * (landed - 1)) : 1;
     const stunnedBefore = hasEffect(t, 'stun');
@@ -899,6 +950,11 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
       if (amount > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount });
     }
     if (!t.down) tryEffect(s, f, t, tech, data, rng);
+    // Contra-ataque (prodígio): quem apanha de golpe de alvo único pode revidar na hora (perda de HP direta).
+    if (single && !t.down && !f.down && t.mods.counterChance > 0 && s.status === 'ongoing' && rng() < t.mods.counterChance) {
+      s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: t.mods.counterDamage, crit: false, elementMult: 1, absorbed: 0 });
+      applyHpLoss(s, f, t.mods.counterDamage, data);
+    }
     // Incenso dos sonhos: cada golpe que acerta pode dar Medo.
     if (!t.down && f.mods.fearOnHit > 0 && s.status === 'ongoing' && rng() < f.mods.fearOnHit) addStatus(s, t, 'fear', data);
   }
@@ -1068,6 +1124,15 @@ function lose(s: JBattle, t: Fighter, amount: number, data: JornadaData, techId?
   t.boost = null;
   t.gate = null;
   s.log.push({ type: 'down', target: t.uid });
+  // Lição do mestre (prodígio): uma vez por luta, quando alguém da equipe cai, os de pé ganham dano por 3 turnos.
+  const mentor = alive(s, t.side).find((x) => x.mods.fallenRally > 0 && !x.rallied);
+  if (mentor) {
+    mentor.rallied = true;
+    for (const x of alive(s, t.side)) {
+      x.boost = { damageMult: 1 + mentor.mods.fallenRally, turns: RALLY_TURNS, techId: 'masterLesson' };
+      s.log.push({ type: 'boost', uid: x.uid, techId: 'masterLesson', turns: RALLY_TURNS });
+    }
+  }
   // Pílula na bolsa levanta o protagonista sozinha, antes de conferir a derrota (vale lutando solo).
   if (t.protagonist && s.pills > 0) {
     s.pills--;

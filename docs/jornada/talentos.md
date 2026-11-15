@@ -9,7 +9,7 @@ A árvore **reinicia a cada run** e custa pontos de talento ([progressao.md](pro
 - **Níveis**: a maioria dos talentos é **única**, principalmente os passivos. Alguns, quase sempre técnicas, sobem de nível, com limite de 2 ou 3 e um custo próprio por nível. Dá para voltar e subir um talento antigo a qualquer momento, mesmo depois de avançar no ramo.
 - **Ramos canônicos** (v0.67.0): a raiz de Sapos, Kyuubi e Rasengan é **dada pela história** (`grantedBy`): entra carimbada, sem custo, no marco ([historia.md](historia.md#momentos-canônicos)). Antes disso, aparece tracejada como "Vem pela história", e o resto do ramo fica fechado. Os níveis da raiz continuam pagos.
 - **Laços** (v0.68.0): a raiz (Não vou desistir) também vem pela história: a lição do teste do sino.
-- **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela; desde a v0.71.0, cada um muda uma regra do combate. Desde a v0.84.0 o Comum também tem; prodígio, Uchiha e Hyuuga ainda não (item em aberto em [decisoes.md](../decisoes.md)).
+- **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela; desde a v0.71.0, cada um muda uma regra do combate. Desde a v0.84.0 o Comum também tem, e o prodígio desde a v0.85.0; Uchiha e Hyuuga ainda não (item em aberto em [decisoes.md](../decisoes.md)).
 - **Combinação** (`requiresAll`, v0.71.0): talento que pede a junção de dois ramos ([abaixo](#combinações)).
 - **Nós da conta** ficam liberados de vez por um objetivo (hoje, o ramo do Sasuke no Uchiha). A Ōdama Rasengan saiu na v0.67.0: não pertence ao Naruto clássico e fica guardada para uma campanha Shippuden.
 - O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
@@ -191,20 +191,71 @@ No código: os talentos finais e as assinaturas usam campos de `FighterMods` (`t
 
 ## Prodígio (Caminho Ninja)
 
-| Ramo | Nó | Custo | Efeito |
+Refeita na v0.85.0, no molde do Comum. O prodígio é um personagem genérico: os nomes não citam personagens da obra (as técnicas do kit, Lótus, Furacão da Folha e Punho Bêbado, são as mesmas do Roleta). **Seis ramos em anel**, bifurcação e talento final em cada, **seis combinações** e **três assinaturas**. Começa com o Portão da Abertura; Portão da Vida libera até o 3º portão e a Lótus Oculta até o 5º.
+
+| Ramo | Estilo | Bifurcação | Talento final (a regra que muda) |
 |---|---|---|---|
-| Portões | Portão da Vida | 1 | Libera o 2º e o 3º portão (Descanso e Vida) |
-| Portões | Corpo treinado | 2 | Começa as lutas com escudo de 10% do HP |
-| Portões | Lótus Primária | 2 | Aprende a Lótus Primária |
-| Portões | Lótus Oculta | 3 | Aprende a Lótus Oculta (4 golpes, paga 15% do HP) e libera o 4º e o 5º portão (Dor e Limite) |
-| Juventude | Juventude | 1 | +5% de crítico e de acerto |
-| Juventude | Furacão da Folha | 2 | Aprende o Furacão da Folha |
-| Juventude | Punho Bêbado | 2 | Aprende o Punho Bêbado (3 golpes, crítico alto) |
-| Juventude | Primavera | 3 | +10% de dano; recupera 2 de HP por rodada |
-| Treino | Pesos fora | 1 | Esquiva 5% |
-| Treino | Entrada dinâmica | 2 | Aprende a Entrada dinâmica |
-| Treino | Mestre do taijutsu | 2 | +15% de dano de taijutsu |
-| Treino | Resistência | 3 | Uma vez por luta fica com 1 de HP |
+| Portões | risco | Abertura rápida (abrir custa menos) ou Corpo treinado (escudo) | Abaixo de 25% do HP, o portão aberto **sobe um nível sozinho**, sem custo |
+| Juventude | moral e crítico | Vigor (regeneração) ou Promessa (HP baixo) | O crítico causa **×2** (em vez de ×1,5) e devolve 2 de chakra |
+| Punho Bêbado | caos | Gole extra (crítico) ou Cambalear (esquiva) | O Punho Bêbado ganha **2 golpes** e +15% de dano |
+| Treino | preparo | Mil voltas (escudo) ou Flexões (dano) | O **primeiro golpe de cada luta** é crítico; +10% de dano |
+| Rivalidade | duelo | Contra-ataque (revide) ou Desafio (alvo saudável) | Contra quem tem **mais HP máximo** que você: +30% de dano e +10% de acerto |
+| Mestre e pupilo | suporte | Treino em dupla (dano) ou Olho do mestre (HP dos suportes) | Uma vez por luta, quando alguém da equipe cai, **os de pé ganham +20% de dano** por 3 turnos |
+
+| Ramo | Nó | Custo | Níveis | Efeito |
+|---|---|---|---|---|
+| Portões | Portão da Vida | 1 | | Libera o 2º e o 3º portão |
+| Portões | Abertura rápida **ou** | 2 | | Abrir cada portão custa 1 de chakra a menos |
+| Portões | Corpo treinado | 2 | | Começa as lutas com escudo de 10% |
+| Portões | Lótus Primária | 2 | 2 (+2) | Aprende a Lótus Primária. Nível 2: +20% de dano |
+| Portões | Lótus Oculta | 2 | | Aprende a Lótus Oculta e libera o 4º e o 5º portão |
+| Portões | **Portões sem freio** (final) | 3 | | Abaixo de 25% do HP, o portão sobe sozinho |
+| Juventude | Juventude | 1 | | +5% de crítico e de acerto |
+| Juventude | Vigor **ou** | 2 | | 2 de HP por rodada |
+| Juventude | Promessa | 2 | | +25% de dano abaixo da metade do HP |
+| Juventude | Furacão da Folha | 2 | 3 (+1 cada) | Aprende o Furacão da Folha. Cada nível: +20% de dano |
+| Juventude | Espírito incansável | 2 | | +10% de dano |
+| Juventude | **Chama da juventude** (final) | 3 | | Crítico ×2 e devolve 2 de chakra |
+| Punho Bêbado | Corpo solto | 1 | | +5% de acerto |
+| Punho Bêbado | Gole extra **ou** | 2 | | +8% de crítico |
+| Punho Bêbado | Cambalear | 2 | | Esquiva 8% |
+| Punho Bêbado | Punho Bêbado | 2 | | Aprende o Punho Bêbado (3 golpes, crítico alto) |
+| Punho Bêbado | Garrafa vazia | 2 | | Derrubar um inimigo devolve 3 de chakra |
+| Punho Bêbado | **Bêbado de verdade** (final) | 3 | | Punho Bêbado +2 golpes e +15% de dano |
+| Treino | Pesos fora | 1 | | Esquiva 5% |
+| Treino | Mil voltas **ou** | 2 | | Escudo de 10% no começo das lutas |
+| Treino | Flexões | 2 | | +3 de dano no taijutsu |
+| Treino | Mestre do taijutsu | 2 | | +20% de dano de taijutsu |
+| Treino | Resistência | 2 | | Uma vez por luta fica com 1 de HP |
+| Treino | **Tirar os pesos** (final) | 3 | | 1º golpe da luta crítico; +10% de dano; esquiva +5% |
+| Rivalidade | Entrada dinâmica | 1 | 2 (+1) | Aprende a Entrada dinâmica. Nível 2: +25% de dano |
+| Rivalidade | Contra-ataque **ou** | 2 | | 30% de revidar com 8 de dano ao apanhar de golpe de alvo único |
+| Rivalidade | Desafio | 2 | | +20% de dano contra inimigo acima da metade do HP |
+| Rivalidade | Espírito de rival | 2 | | +5% de acerto e de crítico; +10% de dano |
+| Rivalidade | Não vou perder | 2 | | +25% de dano abaixo da metade do HP; Defender cura 6% |
+| Rivalidade | **Duelo** (final) | 3 | | Contra quem tem mais HP máximo: +30% de dano, +10% de acerto |
+| Mestre e pupilo | Grito de incentivo | 1 | | A equipe +5% de acerto |
+| Mestre e pupilo | Treino em dupla **ou** | 2 | | A equipe +2 de dano no taijutsu |
+| Mestre e pupilo | Olho do mestre | 2 | | +10% de HP máximo dos suportes |
+| Mestre e pupilo | Aula prática | 2 | | A equipe +5% de crítico e +10% de dano |
+| Mestre e pupilo | Espírito de equipe | 2 | | A equipe recupera 2 de HP por rodada |
+| Mestre e pupilo | **Lição do mestre** (final) | 3 | | Quando alguém cai, os de pé +20% de dano por 3 turnos |
+
+### Combinações e assinaturas do prodígio
+
+| Tipo | Talento | Pede | Efeito |
+|---|---|---|---|
+| Combinação | Lótus da juventude | Lótus Primária e Furacão da Folha | Lótus Primária e Oculta +20% de dano |
+| Combinação | Euforia | Furacão da Folha e Punho Bêbado | Punho Bêbado e Furacão +20% de dano |
+| Combinação | Golpe solto | Punho Bêbado e Mestre do taijutsu | O taijutsu ignora 15% da resistência |
+| Combinação | Disciplina | Mestre do taijutsu e Espírito de rival | Esquiva 8%; +2 de dano no taijutsu |
+| Combinação | Nunca perder | Espírito de rival e Aula prática | Contra quem tem mais HP máximo, a equipe +10% de dano |
+| Combinação | Fogo compartilhado | Aula prática e Lótus Primária | A equipe começa as lutas com escudo de 5% |
+| Assinatura | **Lótus Oculta perfeita** | Portões sem freio e Espírito de rival | Com o 5º portão aberto, as técnicas não cobram HP |
+| Assinatura | **Furacão embriagado** | Bêbado de verdade e Furacão da Folha | Furacão +1 golpe; +10% de crítico |
+| Assinatura | **Vigor compartilhado** | Lição do mestre e Furacão da Folha | A equipe recupera 2 de HP por rodada |
+
+No código: `gateOpenDiscount`, `gateAutoUp`, `critMultBonus`, `critChakra`, `techExtraHits`, `openingCrit`, `counterChance`/`counterDamage`, `duelDamageMult`/`duelAccuracy`, `healthyTargetMult`, `fallenRally` e `hpCostFreeAtGate` em `FighterMods`. Builds: `npm run sim:jornada -- 300 2 --ramos --classe=prodigy`.
 
 ## Uchiha (Caminho Ninja)
 

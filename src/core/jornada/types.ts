@@ -195,6 +195,31 @@ export interface FighterMods {
   surviveHealPct: number;
   /** Ao sobreviver com 1 de HP: a equipe recupera esta fração (Nunca sozinho). */
   surviveTeamHealPct: number;
+  // Árvore do prodígio (v0.85.0, docs/jornada/talentos.md#prodígio-caminho-ninja).
+  /** Abrir cada portão custa menos chakra (Abertura rápida). */
+  gateOpenDiscount: number;
+  /** Abaixo de 25% do HP, o portão aberto sobe um nível sozinho (Portões sem freio). */
+  gateAutoUp: boolean;
+  /** Somado ao multiplicador do crítico (Chama da juventude). */
+  critMultBonus: number;
+  /** Chakra devolvido por crítico (Chama da juventude). */
+  critChakra: number;
+  /** Golpes a mais em técnicas específicas (Bêbado de verdade, Furacão embriagado). */
+  techExtraHits: Record<string, number>;
+  /** O primeiro golpe da luta é crítico, se acertar (Tirar os pesos). */
+  openingCrit: boolean;
+  /** Chance de revidar ao apanhar de golpe de alvo único, e o dano do revide (Contra-ataque). */
+  counterChance: number;
+  counterDamage: number;
+  /** Contra quem tem mais HP máximo que você: dano × e acerto + (Duelo). */
+  duelDamageMult: number;
+  duelAccuracy: number;
+  /** Dano × contra quem está acima da metade do HP (Desafio). */
+  healthyTargetMult: number;
+  /** Quando alguém da equipe cai (1 vez por luta): os de pé ganham este dano por 3 turnos (Lição do mestre). */
+  fallenRally: number;
+  /** Com o portão deste nível ou acima aberto, as técnicas não cobram HP (Lótus Oculta perfeita). */
+  hpCostFreeAtGate: number;
 }
 
 export interface CharacterDef {
@@ -286,6 +311,10 @@ export interface Fighter {
   gate: { level: number; rounds: number } | null;
   /** Forma à mostra (a última que entrou), quando houver. */
   form?: string;
+  /** Já rolou o golpe de abertura (Tirar os pesos). */
+  openerUsed?: boolean;
+  /** A Lição do mestre já disparou nesta luta. */
+  rallied?: boolean;
   /** Saiu da luta pelo roteiro (troca de fase): não volta nem conta para a vitória. */
   gone?: boolean;
   /** Caiu pelo roteiro (o Iruka protegendo o Naruto, o Sasuke contra o Haku): é cena, ninguém levanta nesta luta. */

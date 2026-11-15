@@ -37,7 +37,11 @@ function nodeIcon(run: JRun, n: TalentNode): string {
   const tech = learn ? data.techniques[learn] : null;
   if (tech) return icon(tech.clones || tech.hitsPerClone ? 'clones' : tech.shieldPct ? 'barrier' : tech.healHp ? 'medical' : tech.boost ? 'sparkle' : (tech.element ?? tech.type));
   const m = { ...n.mods, ...n.teamMods };
-  if (m.gateLevels) return icon('gates');
+  if (m.gateLevels || m.gateOpenDiscount || m.gateAutoUp || m.hpCostFreeAtGate) return icon('gates');
+  if (m.fallenRally) return icon('sparkle');
+  if (m.counterChance) return icon('stance');
+  if (m.critMultBonus || m.critChakra || m.openingCrit) return icon('crit');
+  if (m.techExtraHits && Object.keys(m.techExtraHits).length) return icon('taijutsu');
   if (m.surviveOnce) return icon('willOfFire');
   if (m.startClones || m.extraClones || m.maxClonesBonus || m.cloneCounter || m.damagePerClone || m.cloneStrikePct || m.cloneEnemyAccuracy || m.taijutsuHitsPerClone) return icon('clones');
   if (m.taijutsuExtraHits || m.comboStepPct || m.taijutsuHitChakra || m.typePen?.taijutsu) return icon('taijutsu');

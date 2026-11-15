@@ -128,20 +128,64 @@ export const talents: TalentNode[] = [
   { id: 'tCThousandBlows', owner: 'commonNinja', branch: 'leafStyle', tier: 7, cost: 3, requiresAll: ['tCLeafCombo', 'tCMultiClones'], mods: { taijutsuHitsPerClone: 1 } },
   { id: 'tCNeverAlone', owner: 'commonNinja', branch: 'will', tier: 7, cost: 3, requiresAll: ['tWillOfFire', 'tFieldMedic'], mods: { surviveTeamHealPct: 0.15 } },
 
-  // Prodígio (Comum sem elemento): o kit do prodígio do Roleta. Começa com o Portão da Abertura; o talento Portão da
+  // Prodígio (Comum sem elemento), refeito na v0.85.0 no molde do Comum: seis ramos em anel (Portões, Juventude, Punho
+  // Bêbado, Treino, Rivalidade, Mestre e pupilo), bifurcação e talento final em cada, seis combinações e três
+  // assinaturas. Personagem genérico: nada de nomes de personagens da obra. Começa com o Portão da Abertura; Portão da
   // Vida libera até o 3º portão e a Lótus Oculta até o 5º (Limite).
+  // Portões (risco). Final: abaixo de 25% do HP, o portão sobe sozinho.
   { id: 'tGateOpen', owner: 'prodigy', branch: 'gates', tier: 1, cost: 1, mods: { gateLevels: 2 } },
-  { id: 'tGateBody', owner: 'prodigy', branch: 'gates', tier: 2, cost: 2, mods: { startShieldPct: 0.1 } },
-  { id: 'tPrimaryLotus', owner: 'prodigy', branch: 'gates', tier: 3, cost: 2, learn: 'jPrimaryLotus', maxRank: 2, rankCost: 2, rankMods: { techDamageMult: { jPrimaryLotus: 1.2 } } },
-  { id: 'tHiddenLotus', owner: 'prodigy', branch: 'gates', tier: 4, cost: 3, learn: 'jHiddenLotus', mods: { gateLevels: 2 } },
+  { id: 'tPQuickOpen', owner: 'prodigy', branch: 'gates', tier: 2, col: -1, cost: 2, excludes: ['tGateBody'], mods: { gateOpenDiscount: 1 } },
+  { id: 'tGateBody', owner: 'prodigy', branch: 'gates', tier: 2, col: 1, cost: 2, excludes: ['tPQuickOpen'], mods: { startShieldPct: 0.1 } },
+  { id: 'tPrimaryLotus', owner: 'prodigy', branch: 'gates', tier: 3, cost: 2, requires: ['tPQuickOpen', 'tGateBody'], learn: 'jPrimaryLotus', maxRank: 2, rankCost: 2, rankMods: { techDamageMult: { jPrimaryLotus: 1.2 } } },
+  { id: 'tHiddenLotus', owner: 'prodigy', branch: 'gates', tier: 4, cost: 2, learn: 'jHiddenLotus', mods: { gateLevels: 2 } },
+  { id: 'tPUnbound', owner: 'prodigy', branch: 'gates', tier: 5, cost: 3, capstone: true, mods: { gateAutoUp: true } },
+  // Juventude (moral e crítico). Final: o crítico bate mais e devolve chakra.
   { id: 'tYouth', owner: 'prodigy', branch: 'youth', tier: 1, cost: 1, mods: { critBonus: 0.05, accuracyBonus: 0.05 } },
-  { id: 'tLeafHurricane', owner: 'prodigy', branch: 'youth', tier: 2, cost: 2, learn: 'jLeafHurricane', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jLeafHurricane: 1.2 } } },
-  { id: 'tDrunkenFist', owner: 'prodigy', branch: 'youth', tier: 3, cost: 2, learn: 'jDrunkenFist' },
-  { id: 'tSpringtime', owner: 'prodigy', branch: 'youth', tier: 4, cost: 3, mods: { damageMult: 1.1, regenHp: 2 } },
+  { id: 'tSpringtime', owner: 'prodigy', branch: 'youth', tier: 2, col: -1, cost: 2, excludes: ['tPPromise'], mods: { regenHp: 2 } },
+  { id: 'tPPromise', owner: 'prodigy', branch: 'youth', tier: 2, col: 1, cost: 2, excludes: ['tSpringtime'], mods: { lowHpDamageMult: 1.25 } },
+  { id: 'tLeafHurricane', owner: 'prodigy', branch: 'youth', tier: 3, cost: 2, requires: ['tSpringtime', 'tPPromise'], learn: 'jLeafHurricane', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jLeafHurricane: 1.2 } } },
+  { id: 'tPTireless', owner: 'prodigy', branch: 'youth', tier: 4, cost: 2, mods: { damageMult: 1.1 } },
+  { id: 'tPYouthFlame', owner: 'prodigy', branch: 'youth', tier: 5, cost: 3, capstone: true, mods: { critMultBonus: 0.5, critChakra: 2 } },
+  // Punho Bêbado (caos). Final: o Punho Bêbado ganha golpes.
+  // A técnica vem na junção: na raiz (1 ponto), 3 golpes sem chakra logo no começo dominavam a run (medição v0.85.0).
+  { id: 'tPLooseBody', owner: 'prodigy', branch: 'drunken', tier: 1, cost: 1, mods: { accuracyBonus: 0.05 } },
+  { id: 'tPExtraSip', owner: 'prodigy', branch: 'drunken', tier: 2, col: -1, cost: 2, excludes: ['tPStagger'], mods: { critBonus: 0.08 } },
+  { id: 'tPStagger', owner: 'prodigy', branch: 'drunken', tier: 2, col: 1, cost: 2, excludes: ['tPExtraSip'], mods: { evasion: 0.08 } },
+  { id: 'tDrunkenFist', owner: 'prodigy', branch: 'drunken', tier: 3, cost: 2, requires: ['tPExtraSip', 'tPStagger'], learn: 'jDrunkenFist' },
+  { id: 'tPEmptyBottle', owner: 'prodigy', branch: 'drunken', tier: 4, cost: 2, mods: { onKillChakra: 3 } },
+  { id: 'tPTrueDrunk', owner: 'prodigy', branch: 'drunken', tier: 5, cost: 3, capstone: true, mods: { techExtraHits: { jDrunkenFist: 2 }, techDamageMult: { jDrunkenFist: 1.15 } } },
+  // Treino (preparo). Final: o primeiro golpe da luta é crítico.
   { id: 'tWeights', owner: 'prodigy', branch: 'training', tier: 1, cost: 1, mods: { evasion: 0.05 } },
-  { id: 'tDynamicEntry', owner: 'prodigy', branch: 'training', tier: 2, cost: 2, learn: 'jDynamicEntry', maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jDynamicEntry: 1.25 } } },
-  { id: 'tTaijutsuMaster', owner: 'prodigy', branch: 'training', tier: 3, cost: 2, mods: { typeDamageMult: { taijutsu: 1.15 } } },
-  { id: 'tEndurance', owner: 'prodigy', branch: 'training', tier: 4, cost: 3, mods: { surviveOnce: true } },
+  { id: 'tPLaps', owner: 'prodigy', branch: 'training', tier: 2, col: -1, cost: 2, excludes: ['tPPushups'], mods: { startShieldPct: 0.1 } },
+  { id: 'tPPushups', owner: 'prodigy', branch: 'training', tier: 2, col: 1, cost: 2, excludes: ['tPLaps'], mods: { taijutsuFlat: 3 } },
+  { id: 'tTaijutsuMaster', owner: 'prodigy', branch: 'training', tier: 3, cost: 2, requires: ['tPLaps', 'tPPushups'], mods: { typeDamageMult: { taijutsu: 1.2 } } },
+  { id: 'tEndurance', owner: 'prodigy', branch: 'training', tier: 4, cost: 2, mods: { surviveOnce: true } },
+  { id: 'tPDropWeights', owner: 'prodigy', branch: 'training', tier: 5, cost: 3, capstone: true, mods: { openingCrit: true, evasion: 0.05, damageMult: 1.1 } },
+  // Rivalidade (duelo). Final: contra quem tem mais HP máximo, bate mais e acerta mais.
+  { id: 'tDynamicEntry', owner: 'prodigy', branch: 'rivalry', tier: 1, cost: 1, learn: 'jDynamicEntry', maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jDynamicEntry: 1.25 } } },
+  { id: 'tPCounter', owner: 'prodigy', branch: 'rivalry', tier: 2, col: -1, cost: 2, excludes: ['tPChallenge'], mods: { counterChance: 0.3, counterDamage: 8 } },
+  { id: 'tPChallenge', owner: 'prodigy', branch: 'rivalry', tier: 2, col: 1, cost: 2, excludes: ['tPCounter'], mods: { healthyTargetMult: 1.2 } },
+  { id: 'tPRivalSpirit', owner: 'prodigy', branch: 'rivalry', tier: 3, cost: 2, requires: ['tPCounter', 'tPChallenge'], mods: { accuracyBonus: 0.05, critBonus: 0.05, damageMult: 1.1 } },
+  { id: 'tPNeverYield', owner: 'prodigy', branch: 'rivalry', tier: 4, cost: 2, mods: { lowHpDamageMult: 1.25, guardHealPct: 0.06 } },
+  { id: 'tPDuel', owner: 'prodigy', branch: 'rivalry', tier: 5, cost: 3, capstone: true, mods: { duelDamageMult: 1.3, duelAccuracy: 0.1 } },
+  // Mestre e pupilo (suporte). Final: quando alguém cai, a equipe ganha dano.
+  { id: 'tPCheer', owner: 'prodigy', branch: 'mentor', tier: 1, cost: 1, teamMods: { accuracyBonus: 0.05 } },
+  { id: 'tPPairTraining', owner: 'prodigy', branch: 'mentor', tier: 2, col: -1, cost: 2, excludes: ['tPWatchful'], teamMods: { taijutsuFlat: 2 } },
+  { id: 'tPWatchful', owner: 'prodigy', branch: 'mentor', tier: 2, col: 1, cost: 2, excludes: ['tPPairTraining'], allyHpPct: 0.1 },
+  { id: 'tPFieldLesson', owner: 'prodigy', branch: 'mentor', tier: 3, cost: 2, requires: ['tPPairTraining', 'tPWatchful'], teamMods: { critBonus: 0.05, damageMult: 1.1 } },
+  { id: 'tPTeamSpirit', owner: 'prodigy', branch: 'mentor', tier: 4, cost: 2, teamMods: { regenHp: 2 } },
+  { id: 'tPMasterLesson', owner: 'prodigy', branch: 'mentor', tier: 5, cost: 3, capstone: true, mods: { fallenRally: 0.2 } },
+  // Combinações (anel): a junção dos dois ramos vizinhos.
+  { id: 'tPYouthLotus', owner: 'prodigy', branch: 'gates', tier: 6, cost: 2, requiresAll: ['tPrimaryLotus', 'tLeafHurricane'], mods: { techDamageMult: { jPrimaryLotus: 1.2, jHiddenLotus: 1.2 } } },
+  { id: 'tPEuphoria', owner: 'prodigy', branch: 'youth', tier: 6, cost: 2, requiresAll: ['tLeafHurricane', 'tDrunkenFist'], mods: { techDamageMult: { jDrunkenFist: 1.2, jLeafHurricane: 1.2 } } },
+  { id: 'tPLooseStrike', owner: 'prodigy', branch: 'drunken', tier: 6, cost: 2, requiresAll: ['tDrunkenFist', 'tTaijutsuMaster'], mods: { typePen: { taijutsu: 0.15 } } },
+  { id: 'tPDiscipline', owner: 'prodigy', branch: 'training', tier: 6, cost: 2, requiresAll: ['tTaijutsuMaster', 'tPRivalSpirit'], mods: { evasion: 0.08, taijutsuFlat: 2 } },
+  { id: 'tPNeverLose', owner: 'prodigy', branch: 'rivalry', tier: 6, cost: 2, requiresAll: ['tPRivalSpirit', 'tPFieldLesson'], teamMods: { duelDamageMult: 1.1 } },
+  { id: 'tPSharedFire', owner: 'prodigy', branch: 'mentor', tier: 6, cost: 2, requiresAll: ['tPFieldLesson', 'tPrimaryLotus'], teamMods: { startShieldPct: 0.05 } },
+  // Assinaturas: o talento final de um ramo e a junção do outro.
+  { id: 'tPPerfectLotus', owner: 'prodigy', branch: 'gates', tier: 7, cost: 3, requiresAll: ['tPUnbound', 'tPRivalSpirit'], mods: { hpCostFreeAtGate: 5 } },
+  { id: 'tPDrunkenHurricane', owner: 'prodigy', branch: 'drunken', tier: 7, cost: 3, requiresAll: ['tPTrueDrunk', 'tLeafHurricane'], mods: { techExtraHits: { jLeafHurricane: 1 }, critBonus: 0.1 } },
+  { id: 'tPSharedVigor', owner: 'prodigy', branch: 'mentor', tier: 7, cost: 3, requiresAll: ['tPMasterLesson', 'tLeafHurricane'], teamMods: { regenHp: 2 } },
 
   // Uchiha (v0.37.0). O ramo Raio só existe para quem sorteou raio como segundo elemento; aprender o Chidori
   // ali libera o easter egg do Sasuke (conquista `j_sasukeEgg`), que abre o ramo Sasuke de vez.
