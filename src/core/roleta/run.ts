@@ -99,14 +99,18 @@ export function villainFor(run: RRun, villains: Record<string, VillainDef>, data
   const cat = currentCategory(run, data);
   const v = scaleVillain(villains[run.villainId!]!, run.difficulty, scaled);
   // Força da categoria (as lutas começam com HP cheio, v0.59.0): × HP e ataques.
+  // Forma da categoria (v0.81.0): o chefe com menos HP e mais ataque.
   const pow = data.r.villainPower[cat] ?? 1;
+  const shape = data.r.villainShape[cat] ?? { hp: 1, offense: 1 };
+  const hpMult = pow * shape.hp;
+  const offMult = pow * shape.offense;
   let out: VillainDef =
-    pow === 1
+    hpMult === 1 && offMult === 1
       ? v
       : {
           ...v,
-          hp: Math.floor(v.hp * pow),
-          offense: { taijutsu: Math.floor(v.offense.taijutsu * pow), ninjutsu: Math.floor(v.offense.ninjutsu * pow), genjutsu: Math.floor(v.offense.genjutsu * pow) },
+          hp: Math.floor(v.hp * hpMult),
+          offense: { taijutsu: Math.floor(v.offense.taijutsu * offMult), ninjutsu: Math.floor(v.offense.ninjutsu * offMult), genjutsu: Math.floor(v.offense.genjutsu * offMult) },
         };
   // Modo infinito: o ciclo novo parte dos status do último chefe (cada status ≥ o do chefe × piso da categoria).
   const last = run.cycle > 0 ? run.lastBoss : null;

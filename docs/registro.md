@@ -10,7 +10,9 @@ Escolhas do usuário sobre o [diagnóstico](balanceamento/diagnostico.md), imple
 - **v0.79.0 (fase 2)**: Portões com custo misto nos dois modos (C4): manter custa metade do chakra e 1% do HP máximo por nível do portão.
 - **v0.80.0 (fase 3)**: Roleta com os kits completos do clássico nas 8 origens do sorteio (R1), adaptados ([roleta/combate.md](roleta/combate.md#kits)). Decidido sozinho: os números das técnicas que voltam na escala do Roleta (Rolo Colossal 14+3, Lótus Primária 16+3, Lótus Oculta 6+1 ×5, Tsukuyomi 20+3, 64 Palmas 5+1 ×4, Etiqueta 12+2), Olhar Hipnótico e Correntes como atordoamento sem dano, isca da Fera como +10% de esquiva, Cópia só no turno, Selamento tirando a técnica da roleta do vilão, e o bot das ativas novas.
 
-Roleta, vitória por origem (Fácil / Médio / Difícil / Hardcore):
+- **v0.81.0 (fase 4)**: chefe do Roleta com 15% menos HP e 10% mais ataque (R2) e a run começando com 1 Kit médico e 1 Pílula de soldado (R4). Decidido sozinho: o bot passa a usar o Kit médico abaixo de 35% do HP ou com efeito ruim abaixo de 70%, e a Pílula quando a melhor técnica não cabe e vale 20% a mais. Médio v0.80.0 → v0.81.0: Comum 57 → 69, Akimichi 59 → 73, Inuzuka 75 → 83, prodígio 91 → 94, Uchiha 38 → 53, Hyuuga 58 → 68, Uzumaki 66 → 74, Senju 92 → 94. Difícil: Comum 29 → 39, Akimichi 23 → 37, Uchiha 15 → 21, Hyuuga 28 → 35. Hardcore: Comum 16 → 25, Uchiha 6 → 15, Senju 59 → 70. O chefe dura 1 a 2 rodadas a menos (Comum 12,7 → 11,2) e os itens usados por luta contra ele sobem de ~0,2 para 0,4–1,3.
+
+Roleta, vitória por origem (Fácil / Médio / Difícil / Hardcore), até a v0.80.0:
 
 | Origem | Linha de base | v0.78.0 | v0.79.0 | v0.80.0 |
 |---|---|---|---|---|

@@ -51,6 +51,11 @@ export const roletaBalance = {
   // simulação (`npm run sim:origens`): sem a roleta de recompensa o jogador cresce menos, e o Médio só volta a ~65% com o
   // chefe a ×0,9. Proposta para o usuário.
   villainPower: { genin: 1, chunin: 1, jounin: 1, boss: 0.9 } as Record<string, number>,
+  // Forma da categoria por cima da força (v0.81.0, R2 aprovado pelo usuário): o chefe com 15% menos HP e 10% mais
+  // ataque, para a luta ficar mais curta e mais perigosa (antes durava ~13 rodadas no Médio).
+  villainShape: { boss: { hp: 0.85, offense: 1.1 } } as Record<string, { hp: number; offense: number }>,
+  // Bolsa no começo da run (v0.81.0, R4 aprovado pelo usuário).
+  startBag: { medKit: 1, soldierPill: 1 },
   // Roleta de relíquia depois da luta (fora o chefe): pesos da raridade por categoria; cada ciclo do infinito passa
   // `cycleShift` pontos de Comum para Rara (proposta, v0.59.0).
   relicReward: {

@@ -10,7 +10,7 @@ import { battleTechniques, gateForceChance, heavyBodyMult, kitActives, playerAtt
 import { scaleVillain } from '../src/core/difficulty';
 import { roletaVillainsById } from '../src/data/roleta/villains';
 import type { Origin } from '../src/core/types';
-import { relicEffects, relicPool, gainRoletaRelic } from '../src/core/roleta/run';
+import { relicEffects, relicPool, gainRoletaRelic, newRoletaRun, villainFor } from '../src/core/roleta/run';
 import { jornadaData as data } from '../src/data/jornada';
 import { roletaData } from '../src/data/roleta/index';
 
@@ -232,6 +232,16 @@ describe('Fase 3 · Roleta com os kits completos do clássico (R1)', () => {
   it('Senju: curas rendem +25%', () => {
     expect(rbattle(org('senju', ['fire'])).fx.healMult).toBe(1.25);
     expect(rbattle(org(null, ['fire'])).fx.healMult).toBe(1);
+  });
+
+  it('Fase 4 · chefe com 15% menos HP e 10% mais ataque (R2); bolsa com Kit médico e Pílula (R4)', () => {
+    const p = createRoletaPlayer(org(null, ['fire']), roletaData);
+    expect([p.bag.medKit, p.bag.soldierPill]).toEqual([1, 1]);
+    const run = { ...newRoletaRun(p, 'normal'), step: 5, villainId: 'orochimaru' };
+    const base = scaleVillain(roletaVillainsById.orochimaru!, 'normal', roletaData.base);
+    const boss = villainFor(run, roletaVillainsById, roletaData);
+    expect(boss.hp).toBe(Math.floor(base.hp * 0.9 * 0.85));
+    expect(boss.offense.ninjutsu).toBe(Math.floor(base.offense.ninjutsu * 0.9 * 1.1));
   });
 
   it('Yamanaka, Aburame e Nara seguem fora do sorteio do Roleta', () => {

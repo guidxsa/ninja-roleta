@@ -48,6 +48,8 @@ export function createRoletaPlayer(origin: Origin, data: RoletaData, difficulty:
   return {
     ...p,
     techniques: roletaKit(origin, data),
+    // Começa a run com 1 Kit médico e 1 Pílula de soldado (v0.81.0).
+    bag: { ...p.bag, medKit: p.bag.medKit + data.r.startBag.medKit, soldierPill: p.bag.soldierPill + data.r.startBag.soldierPill },
     techniqueLevels: {},
     pendingUpgrades: 0,
     dojutsu: null,

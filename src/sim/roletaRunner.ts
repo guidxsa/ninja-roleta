@@ -84,19 +84,24 @@ function expected(s: RBattle, t: RTechniqueDef, data: RoletaData): number {
   return playerAttackOdds(s, t, data).hit * best * 1.5;
 }
 
-/** Item do bot antes da ação (não gasta a ação, um por turno): só nos apertos ou para pagar o golpe mais forte. */
+/**
+ * Item do bot antes da ação (não gasta a ação, um por turno). Kit médico: HP abaixo de 35%, ou um efeito ruim
+ * (Queimar, Veneno, Medo, Bloqueio de chakra) com o HP abaixo de 70%. Pílula de soldado: quando a melhor técnica não
+ * cabe no chakra e vale 20% a mais que a que cabe (v0.81.0).
+ */
 export function chooseRoletaItem(s: RBattle, data: RoletaData): ConsumableId | null {
   const p = s.player;
   const ok = (id: ConsumableId) => canUseItem(s, id);
   if (ok('explosiveTag') && s.villain.hp <= data.r.items.explosiveTagDamage) return 'explosiveTag';
-  if (ok('medKit') && p.hp < p.maxHp * 0.3 && s.fx.effects.some((e) => e.kind !== 'stunGuard')) return 'medKit';
+  const bad = s.fx.effects.some((e) => e.turns > 0 && e.kind !== 'stunGuard' && e.kind !== 'stun');
+  if (ok('medKit') && (p.hp < p.maxHp * 0.35 || (bad && p.hp < p.maxHp * 0.7))) return 'medKit';
   if (ok('smokeBomb') && p.hp < p.maxHp * 0.25) return 'smokeBomb';
   if (ok('soldierPill')) {
     const techs = battleTechniques(s, data).filter((t) => !t.clone);
     const best = (list: typeof techs) => list.map((t) => ({ t, e: expected(s, t, data) })).sort((a, b) => b.e - a.e)[0];
     const bestNow = best(techs.filter((t) => canUseTechnique(s, t, data)));
     const bestAll = best(techs);
-    if (bestAll && bestAll.t.id !== bestNow?.t.id && bestAll.e > (bestNow?.e ?? 0) * 1.5 && p.hp > p.maxHp * 0.5) return 'soldierPill';
+    if (bestAll && bestAll.t.id !== bestNow?.t.id && bestAll.e > (bestNow?.e ?? 0) * 1.2 && !bestAll.t.requiresBuff && !bestAll.t.requiresGate) return 'soldierPill';
   }
   return null;
 }
