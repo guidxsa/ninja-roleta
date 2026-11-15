@@ -421,7 +421,7 @@ describe('run do Roleta enxuto e relíquias (v0.46.0)', () => {
     p = gainRoletaRelic(gainRoletaRelic(gainRoletaRelic(p, 'samuraiArmor', data), 'explosiveTags', data), 'phoenixFeather', data);
     const s = startRoletaBattle(p, villain('zabuza'), { playerStartsFirst: true }, data, fixed(0.5));
     expect(s.fx.shield).toBe(Math.floor(p.maxHp * 0.2));
-    expect(s.villain.hp).toBe(s.villain.maxHp - 10);
+    expect(s.villain.hp).toBe(s.villain.maxHp - 20);
     const low = { ...s, fx: { ...s.fx, shield: 0 }, player: { ...s.player, hp: 1, revives: 0 }, playerFirst: false };
     const next = playRoletaRound(low, 'guard', data, fixed(0.5));
     expect(next.status).toBe('ongoing');
@@ -437,9 +437,25 @@ describe('run do Roleta enxuto e relíquias (v0.46.0)', () => {
     expect(toad.summon).toEqual({ animal: 'toad', level: 1 });
     // Com um contrato, os outros não saem mais.
     expect(relicPool(toad, data).some((r) => r.id === 'snakeContract')).toBe(false);
+    // Pesos de treino (v0.78.0): passiva, sem equipar nem perder speed.
     const weights = gainRoletaRelic(p0(), 'trainingWeights', data);
-    expect(weights.trainingWeights).toBe('stored');
+    expect(weights.trainingWeights).toBe('none');
+    expect(weights.speed).toBe(p0().speed);
     expect(contractFor('slug', data)).toBe('slugContract');
+  });
+
+  it('Pesos de treino: +1 de taijutsu a cada 2 vitórias', () => {
+    let run = newRoletaRun(gainRoletaRelic(p0(), 'trainingWeights', data), 'normal');
+    const tai = run.player.offense.taijutsu;
+    const win = () => {
+      if (!run.villainId) run = drawVillain(run, data, createRng(1));
+      const b = startRoletaBattle(run.player, villainFor(run, villainsById, data), { playerStartsFirst: true }, data, createRng(1));
+      run = finishRoletaFight(run, { ...b, status: 'won' }, data, createRng(1)).run;
+    };
+    win();
+    expect(run.player.offense.taijutsu).toBe(tai);
+    win();
+    expect(run.player.offense.taijutsu).toBe(tai + 1);
   });
 
   it('a roleta de itens não tem mais os permanentes', () => {

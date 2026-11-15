@@ -6,6 +6,8 @@
 - Saem tanto na História quanto no Caminho Ninja, então o texto não cita personagem: efeito sem sujeito vale para o protagonista; "a equipe" inclui o protagonista; "os suportes" são só os aliados. Os nomes de artefatos marcantes (Sino do Kakashi, Chapéu do Hokage, Cachimbo do Gamabunta…) ficam. As iniciais e as evoluções são a exceção: são de uma classe só e contam a história dela.
 - Os itens permanentes do Roleta viraram relíquias (Pesos de treino). A bolsa de consumíveis continua à parte ([combate.md](combate.md#bolsa)).
 - O desconto da loja soma o das relíquias com o do Tazuna (História, País das Ondas), com teto de 40% (`shop.maxDiscount`).
+- **Dano geral soma** (v0.78.0): os bônus de "+x% de dano" de relíquias e talentos somam entre si (+25% e +15% dão +40%). Bônus de um tipo de ataque, de uma técnica, de HP baixo, de fortalecimento, de portão e de forma continuam multiplicando.
+- **Filtro de compatibilidade** (v0.78.0, `relicNeeds` em `src/core/jornada/relics.ts`): a relíquia só sai (elite, tesouro, loja, chefe, evento) se o kit puder usá-la. Bônus de um tipo de ataque pede uma técnica de dano desse tipo, conhecida ou ensinada pela árvore; bônus de clone (fora começar com clones) pede uma técnica ou um talento de clone. Efeitos de equipe não filtram. No Roleta, o filtro olha as técnicas da origem: o Incenso dos sonhos, por exemplo, só sai para quem tem genjutsu de dano.
 
 ## Classificações
 
@@ -48,10 +50,10 @@ Desde a v0.46.0 o catálogo é **um só** para os dois modos (`src/data/relics.t
 
 | Relíquia | Classificação | Efeito no Roleta |
 |---|---|---|
-| Óculos de aprendiz | Comum | +5% de acerto. |
+| Óculos de aprendiz | Comum | +8% de acerto. |
 | Bandana da Folha | Comum | +10 de HP máximo. |
 | Bolsa de kunai | Comum | +8% de dano de taijutsu. |
-| Pesos de treino | Comum | Equipar: −2 de speed e +1 de taijutsu por vitória; tirar devolve a speed e dá +3. |
+| Pesos de treino | Comum | +1 de taijutsu a cada 2 vitórias (desde a v0.78.0, sem equipar nem perder speed). |
 | Pílulas de soldado | Comum | +4 de chakra máximo. |
 | Fio de aço | Comum | +3% de esquiva. |
 | Caderno de treino | Comum | +15% de XP das lutas. |
@@ -66,13 +68,13 @@ Desde a v0.46.0 o catálogo é **um só** para os dois modos (`src/data/relics.t
 | Bandana rasgada | Incomum | Abaixo de 50% do HP, +20% de dano. |
 | Amuleto de resistência | Incomum (só Roleta) | +3 de resistência física e mental. |
 | Sino do Kakashi | Rara | +8% de crítico. |
-| Selos explosivos | Rara | Começo de cada luta: 10 de dano no vilão. |
+| Selos explosivos | Rara | Começo de cada luta: 20 de dano no vilão. |
 | Cabaça de areia | Rara | Começa as lutas com escudo de 10% do HP. |
 | Contrato dos sapos | Rara | Invocação do sapo. |
 | Pedra de chakra | Rara | As técnicas custam 1 de chakra a menos. |
 | Kunai do mestre | Rara | +8% de dano. |
 | Incenso dos sonhos | Rara | +20% de dano de genjutsu. |
-| Reserva de chakra | Rara | Começa as lutas com 25% a mais do chakra. |
+| Reserva de chakra | Rara | Começa as lutas com 40% a mais do chakra. |
 | Pergaminho vital | Rara | +20 de HP máximo. |
 | Contrato das cobras | Rara (só Roleta) | Invocação da cobra (ataque que acerta envenena). |
 | Contrato das lesmas | Rara (só Roleta) | Invocação da lesma (recupera 3% do HP por rodada, +1% por nível). |
@@ -81,7 +83,7 @@ Desde a v0.46.0 o catálogo é **um só** para os dois modos (`src/data/relics.t
 | Lâmina de chakra | Chefe | +15% de dano. |
 | Armadura samurai | Chefe | Começa as lutas com escudo de 20% do HP. |
 | Pena de fênix | Chefe | Uma vez por luta, ao cair, fica com 1 de HP. |
-| Núcleo de chakra | Chefe | +8 de chakra máximo. |
+| Núcleo de chakra | Chefe | +8 de chakra máximo; recupera 2 de chakra por rodada. |
 | Estandarte de guerra | Chefe | +8% de crítico. |
 | Manto de Kage | Chefe | +5% de esquiva e +5% de acerto. |
 
@@ -130,10 +132,10 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 | Bolinhos de arroz | Os kits curam 25% a mais. |
 | Pedra de amolar | +4% de crítico. |
 | Contas de meditação | Concentrar recupera 3 de chakra a mais. |
-| Colete acolchoado | Defender recupera 3 de HP. |
+| Colete acolchoado | Defender recupera 8% do HP máximo. |
 | Bala de chakra | Começa as lutas com 3 de chakra a mais. |
-| Cobertor de campanha | O descanso cura 10 de HP e 3 de chakra a mais. |
-| Bolsa reforçada | +2 espaços na bolsa. |
+| Cobertor de campanha | O descanso cura 10 de HP e 3 de chakra a mais, e deixa todos com pelo menos 60% do HP. |
+| Bolsa reforçada | +2 espaços na bolsa; na hora, 1 kit de HP. |
 
 ### Incomum (17)
 
@@ -148,11 +150,11 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 | Estojo de senbon | A equipe ganha +5% de crítico. |
 | Selo de armazenamento | Na hora: 2 kits de HP e 1 Pílula de reanimação. |
 | Pílulas de reanimação | Na hora: 2 kits de levantar. |
-| Diário do mestre | Na hora: +1 ponto de talento. |
+| Diário do mestre | Na hora: +1 ponto de talento e +60 de XP. |
 | Bandana rasgada | Abaixo de 50% do HP, +25% de dano. |
 | Marca de caça | Derrubar um inimigo recupera 3 de chakra. |
-| Frasco de toxina | +10% de chance de aplicar o efeito das técnicas. |
-| Linha de sombra | +20% de dano em alvo atordoado. |
+| Frasco de toxina | +20% de chance de aplicar o efeito das técnicas, que dura 1 turno a mais. |
+| Linha de sombra | +20% de dano em alvo atordoado, com Medo ou com o chakra bloqueado. |
 | Apito de socorro | A equipe volta com 15% a mais de HP ao ser levantada. |
 | Caco de espelho | Quem acerta um dos seus clones leva 4 de dano. |
 | Kunai gêmea | +3% de dano por clone ativo. |
@@ -165,15 +167,15 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 | Sino do Kakashi | +10% de crítico. |
 | Selos explosivos | Começo de cada luta: 10 de dano em todos os inimigos. |
 | Máscara de caçador | A equipe esquiva 6% dos golpes. |
-| Cabaça de areia | A equipe começa as lutas com escudo de 10% do HP. |
+| Cabaça de areia | Começa as lutas com escudo de 10% do HP; os suportes, com 6%. |
 | Contrato dos sapos | +15% de dano de ninjutsu. |
 | Leque de guerra | A equipe causa +10% de dano de ninjutsu. |
 | Pedra de chakra | As técnicas custam 1 de chakra a menos. |
 | Pergaminho dos mil | O limite de clones sobe em 2; +2% de dano por clone ativo. |
 | Kunai do mestre | +10% de dano. |
 | Pacto de sangue | Abaixo de 50% do HP, +35% de dano. |
-| Incenso dos sonhos | +25% de dano de genjutsu. |
-| Amuleto da longevidade | A equipe recupera 2 de HP por rodada. |
+| Incenso dos sonhos | A equipe causa +15% de dano de genjutsu; seus golpes têm 10% de chance de dar Medo. |
+| Amuleto da longevidade | Recupera 2 de HP por rodada; os suportes, 1. |
 | Reserva de chakra | Começa as lutas com 8 de chakra a mais. |
 | Pergaminho vital | +25 de HP máximo. |
 
@@ -187,13 +189,13 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 | Bandana dos Sannin | +25% de HP máximo dos suportes. |
 | Cachimbo do Gamabunta | As técnicas custam 2 de chakra a menos. |
 | Lâmina de chakra | +25% de dano. |
-| Armadura samurai | A equipe começa as lutas com escudo de 20% do HP. |
+| Armadura samurai | Começa as lutas com escudo de 20% do HP; os suportes, com 10%. |
 | Pergaminhos do Céu e da Terra | Na hora: +2 pontos de talento. |
-| Lótus eterna | A equipe recupera 3 de HP por rodada. |
+| Lótus eterna | Recupera 3 de HP por rodada; os suportes, 2. |
 | Bolsa sem fundo | +50% de ryō e o mercador cobra 25% a menos. |
 | Pena de fênix | Uma vez por luta, ao cair, fica com 1 de HP. |
 | Selo do exército | Começa as lutas com 2 clones; o limite de clones sobe em 1. |
-| Manto de Kage | A equipe esquiva 8% dos golpes e ganha +5% de acerto. |
+| Manto de Kage | Esquiva 8% dos golpes (os suportes, 5%); a equipe ganha +5% de acerto. |
 | Núcleo de chakra | +10 de chakra máximo; começa as lutas com 15 de chakra a mais. |
 | Talismã da segunda chance | A equipe volta com 30% a mais de HP ao ser levantada. |
 | Estandarte de guerra | A equipe ganha +10% de crítico. |
@@ -221,7 +223,7 @@ Só aparecem na escolha depois do chefe, para quem ainda tem a inicial, e tomam 
 | Encomenda do ferreiro | +4 de dano no taijutsu. |
 | Carta de recomendação | +30% de XP. |
 | Placa de armadura | +20 de HP máximo. |
-| Sino do mercador | A primeira atualização da prateleira em cada estágio é grátis (proposta, v0.62.0). |
+| Sino do mercador | A primeira atualização da prateleira em cada estágio é grátis; o mercador cobra 10% a menos (v0.78.0). |
 
 ### Evento (8)
 

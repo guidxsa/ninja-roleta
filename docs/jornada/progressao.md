@@ -35,7 +35,6 @@
 
 Por classe, reinicia a cada run; alguns ramos abrem pela história e outros por objetivos da conta. Tem bifurcações e alguns talentos sobem de nível: [talentos.md](talentos.md).
 
-## Futuro (Caminho Ninja)
+## Quanto se ganha numa run
 
-- Árvore por classe (Comum, prodígio, Uchiha, Hyuuga), com material já pronto: o kit do prodígio e a Palma do Vácuo do Hyuuga ([classes.md](classes.md)).
-- Sem bônus comprados entre runs, por enquanto.
+Na auditoria da v0.77.0 ([benchmark](../balanceamento/benchmark.md)), no Médio: a História termina perto do nível 9 com uns 34 pontos de talento; as classes do Caminho Ninja, perto do nível 7 a 8 com 15 a 18 pontos (as lutas de história dão 1 ponto cada, e o Caminho Ninja não tem). As árvores das classes ([talentos.md](talentos.md)) ainda são lineares; mais diversidade está em decisão com o usuário, uma classe por vez ([decisoes.md](../decisoes.md)). Não há bônus comprados entre runs.

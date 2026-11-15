@@ -3,7 +3,7 @@
 // Depois do chefe: cura total, baú com 3 relíquias de chefe e o próximo ciclo, com os vilões mais fortes.
 import { scaleVillain, type Difficulty } from '../difficulty';
 import type { GameData } from '../gameData';
-import { bossChoices, type RelicDef, type RoletaRelicEffect } from '../jornada/relics';
+import { bossChoices, relicFits, type RelicDef, type RelicNeed, type RoletaRelicEffect } from '../jornada/relics';
 import { spin, type Slice } from '../roulette';
 import { fullRestore, gainXp, trainingWeightsWin, xpGain, xpToNextLevel, type PlayerState } from '../player';
 import type { NextFightMods } from '../progression';
@@ -129,7 +129,7 @@ export function villainFor(run: RRun, villains: Record<string, VillainDef>, data
 // Relíquias
 
 /** Efeitos das relíquias do jogador no Roleta, somados (multiplicadores multiplicam). */
-export function relicEffects(player: PlayerState, data: RoletaData): Required<Pick<RoletaRelicEffect, 'damageMult' | 'flatDamage' | 'critBonus' | 'accuracyBonus' | 'dodgeBonus' | 'regenPct' | 'startShieldPct' | 'startChakraPct' | 'openingDamage' | 'startOverPct' | 'chakraDiscount' | 'lowHpDamageMult' | 'xpMult'>> & {
+export function relicEffects(player: PlayerState, data: RoletaData): Required<Pick<RoletaRelicEffect, 'damageMult' | 'flatDamage' | 'critBonus' | 'accuracyBonus' | 'dodgeBonus' | 'regenPct' | 'startShieldPct' | 'startChakraPct' | 'openingDamage' | 'startOverPct' | 'chakraDiscount' | 'lowHpDamageMult' | 'xpMult' | 'chakraRegen'>> & {
   typeDamageMult: Record<string, number>;
   surviveOnce: boolean;
 } {
@@ -145,6 +145,7 @@ export function relicEffects(player: PlayerState, data: RoletaData): Required<Pi
     openingDamage: 0,
     startOverPct: 0,
     chakraDiscount: 0,
+    chakraRegen: 0,
     lowHpDamageMult: 1,
     xpMult: 1,
     typeDamageMult: {} as Record<string, number>,
@@ -153,10 +154,11 @@ export function relicEffects(player: PlayerState, data: RoletaData): Required<Pi
   for (const id of player.relics ?? []) {
     const e = data.relics.find((r) => r.id === id)?.roleta;
     if (!e) continue;
-    out.damageMult *= e.damageMult ?? 1;
+    // Dano geral soma (v0.78.0, G1 do diagnóstico); tipo e HP baixo seguem multiplicando.
+    out.damageMult += (e.damageMult ?? 1) - 1;
     out.lowHpDamageMult *= e.lowHpDamageMult ?? 1;
     out.xpMult *= e.xpMult ?? 1;
-    for (const k of ['flatDamage', 'critBonus', 'accuracyBonus', 'dodgeBonus', 'regenPct', 'startShieldPct', 'startChakraPct', 'openingDamage', 'startOverPct', 'chakraDiscount'] as const) out[k] += e[k] ?? 0;
+    for (const k of ['flatDamage', 'critBonus', 'accuracyBonus', 'dodgeBonus', 'regenPct', 'startShieldPct', 'startChakraPct', 'openingDamage', 'startOverPct', 'chakraDiscount', 'chakraRegen'] as const) out[k] += e[k] ?? 0;
     for (const [t, m] of Object.entries(e.typeDamageMult ?? {})) out.typeDamageMult[t] = (out.typeDamageMult[t] ?? 1) * (m ?? 1);
     if (e.surviveOnce) out.surviveOnce = true;
   }
@@ -169,7 +171,14 @@ const ownedContract = (player: PlayerState, data: RoletaData) => (player.relics 
 /** Relíquias que ainda podem sair para o jogador (com um contrato, os outros contratos ficam de fora). */
 export function relicPool(player: PlayerState, data: RoletaData): RelicDef[] {
   const contract = ownedContract(player, data);
-  return data.relics.filter((r) => !(contract && r.roleta?.summon && r.id !== contract));
+  // Filtro de compatibilidade (v0.78.0): bônus de um tipo de ataque só sai para quem tem técnica de dano desse tipo.
+  const has = new Set<RelicNeed>(
+    player.techniques.flatMap((id) => {
+      const t = data.techniques[id];
+      return t && t.base > 0 ? [t.type] : [];
+    }),
+  );
+  return data.relics.filter((r) => !(contract && r.roleta?.summon && r.id !== contract) && relicFits(r, 'roleta', has));
 }
 
 /** Ganha a relíquia: status na ficha, Vontades, invocação e Pesos de treino. */
@@ -190,7 +199,7 @@ export function gainRoletaRelic(player: PlayerState, id: string, data: RoletaDat
     revives: player.revives + (e.grant?.revives ?? 0),
   };
   if (e.summon && p.summon?.animal !== e.summon) p = { ...p, summon: { animal: e.summon, level: 1 } };
-  if (e.weights && p.trainingWeights === 'none') p = { ...p, trainingWeights: 'stored' };
+
   return p;
 }
 
@@ -256,6 +265,9 @@ export function finishRoletaFight(prev: RRun, battle: RBattle, data: RoletaData,
   // XP do vilão (a ficha da base; o ciclo não muda o XP), com as relíquias de XP.
   const xp = Math.floor(battle.villain.def.xp * fx.xpMult);
   p = gainXp(p, xp, data.base);
+  // Pesos de treino (v0.78.0): +1 de taijutsu a cada N vitórias, sem equipar nem perder speed.
+  const every = (p.relics ?? []).map((id) => data.relics.find((r) => r.id === id)?.roleta?.taijutsuEveryWins ?? 0).find((n) => n > 0);
+  if (every && (prev.wins + 1) % every === 0) p = { ...p, offense: { ...p.offense, taijutsu: p.offense.taijutsu + 1 } };
   const run: RRun = { ...prev, player: p, wins: prev.wins + 1, used: [...prev.used, prev.villainId!], villainId: null, mods: { villainStartsFirst: false, playerStartsFirst: false } };
   if (boss) {
     run.lastBoss = statsOf(battle.villain.def);

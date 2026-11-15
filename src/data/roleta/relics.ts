@@ -7,11 +7,12 @@ import type { RelicDef, RoletaRelicEffect } from '../../core/jornada/relics';
 /** Efeito no Roleta das relíquias da Jornada que também saem nele (id da Jornada → efeito). */
 export const roletaEffects: Record<string, RoletaRelicEffect> = {
   // Comuns
-  goggles: { accuracyBonus: 0.05 },
+  // v0.78.0: refeitas as que valiam quase nada no Roleta (docs/balanceamento/diagnostico.md, P5).
+  goggles: { accuracyBonus: 0.08 },
   leafHeadband: { stats: { hp: 10 } },
   kunaiPouch: { typeDamageMult: { taijutsu: 1.08 } },
-  // Pesos de treino: no Roleta, a mecânica de equipar e tirar (na Jornada, +2 de speed).
-  trainingWeights: { weights: true },
+  // Pesos de treino: no Roleta, +1 de taijutsu a cada 2 vitórias, sem equipar (v0.78.0; na Jornada, +2 de speed).
+  trainingWeights: { taijutsuEveryWins: 2 },
   soldierPills: { stats: { chakra: 4 } },
   steelWire: { dodgeBonus: 0.03 },
   trainingLog: { xpMult: 1.15 },
@@ -25,14 +26,14 @@ export const roletaEffects: Record<string, RoletaRelicEffect> = {
   tornHeadband: { lowHpDamageMult: 1.2 },
   // Raras
   kakashiBell: { critBonus: 0.08 },
-  explosiveTags: { openingDamage: 10 },
+  explosiveTags: { openingDamage: 20 },
   sandGourd: { startShieldPct: 0.1 },
   // Contrato dos sapos: no Roleta, a invocação do sapo (na Jornada, +15% de ninjutsu).
   toadContract: { summon: 'toad' },
   chakraStone: { chakraDiscount: 1 },
   masterKunai: { damageMult: 1.08 },
   dreamIncense: { typeDamageMult: { genjutsu: 1.2 } },
-  reserveChakra: { startChakraPct: 0.25 },
+  reserveChakra: { startChakraPct: 0.4 },
   vitalScroll: { stats: { hp: 20 } },
   // Chefe (baú do chefe)
   willOfFireCharm: { grant: { revives: 1 } },
@@ -40,7 +41,7 @@ export const roletaEffects: Record<string, RoletaRelicEffect> = {
   chakraBlade: { damageMult: 1.15 },
   samuraiArmor: { startShieldPct: 0.2 },
   phoenixFeather: { surviveOnce: true },
-  chakraCore: { stats: { chakra: 8 } },
+  chakraCore: { stats: { chakra: 8 }, chakraRegen: 2 },
   warBanner: { critBonus: 0.08 },
   kageRobe: { dodgeBonus: 0.05, accuracyBonus: 0.05 },
 };

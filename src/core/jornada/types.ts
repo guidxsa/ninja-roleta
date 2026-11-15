@@ -165,6 +165,15 @@ export interface FighterMods {
   techOverflow: Record<string, number>;
   /** Sapos + Kyuubi: peso a mais das variantes sorteadas com o HP abaixo da metade. */
   lowHpRollWeights: Record<string, number>;
+  // Relíquias refeitas (v0.78.0, docs/balanceamento/diagnostico.md P3).
+  /** Turnos a mais nos efeitos que as técnicas aplicam (Frasco de toxina). */
+  effectTurnsBonus: number;
+  /** Dano × este valor contra alvo atordoado, com Medo ou com o chakra bloqueado (Linha de sombra). */
+  controlledDamageMult: number;
+  /** Chance de dar Medo em cada golpe que acerta (Incenso dos sonhos). */
+  fearOnHit: number;
+  /** Defender cura esta fração do HP máximo (Colete acolchoado). */
+  guardHealPct: number;
 }
 
 export interface CharacterDef {

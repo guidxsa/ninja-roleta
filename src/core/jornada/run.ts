@@ -9,7 +9,7 @@ import { allyResults, emptyMods, enemySeed, mergeMods, type BattleSetup, type Fi
 import type { JornadaData, StoryGrant } from './data';
 import { eventOptions, SHOP_CURSE, type EventDef, type EventEffect } from './events';
 import { generateMap, mapNode, nextNodes, type StageMap } from './map';
-import { bossChoices, dropRelic, rollRelic, rollRelics, type RelicDef } from './relics';
+import { bossChoices, dropRelic, relicFits, rollRelic, rollRelics, type RelicDef, type RelicNeed } from './relics';
 import { canBuyTalent, talentRankCost, treeComplete, type TalentContext } from './talents';
 import { isFight, teamFor, type FightKind, type StopDef } from './trail';
 import type { ConsumableId, FighterMods, JBattle } from './types';
@@ -249,7 +249,7 @@ export function newGenericRun(
   // O nível I do elemento entra no moveset.
   run.moveset = heroMovable(run, data).slice(0, MOVESET_SIZE);
   if (run.elementPick === 'random') {
-    const bonus = rollRelic(data.relics, run.relics, data.j.elementDraw.randomBonus, rng);
+    const bonus = rollRelic(fitRelics(run, data), run.relics, data.j.elementDraw.randomBonus, rng);
     if (bonus) run = gainRelic(run, bonus, data);
   }
   return run;
@@ -482,6 +482,31 @@ export function grantedTechniques(run: JRun, who: string, data: JornadaData): st
 }
 
 /** Técnicas que o protagonista conhece (kit inicial + elemento + segundo elemento + marcos da história + talentos). */
+/**
+ * O que o kit do protagonista usa, para o filtro de compatibilidade das relíquias (v0.78.0): os tipos das técnicas de
+ * dano que ele conhece ou que a árvore dele ensina, e clones (técnica de clone ou talento de clone).
+ */
+export function heroNeeds(run: JRun, data: JornadaData): Set<RelicNeed> {
+  const tree = data.talents.filter((n) => n.owner === run.hero);
+  const ids = [...heroKnown(run, data), ...tree.flatMap((n) => [n.learn, ...Object.values(n.learnByElement ?? {})]).filter((id): id is string => Boolean(id))];
+  const out = new Set<RelicNeed>();
+  for (const id of ids) {
+    const t = data.techniques[id];
+    if (!t) continue;
+    if (t.baseDamage > 0) out.add(t.type);
+    if (t.clones) out.add('clones');
+  }
+  const cloneTalent = tree.some((n) => n.mods && (n.mods.startClones || n.mods.extraClones || n.mods.cloneCounter || n.mods.cloneShield));
+  if (cloneTalent) out.add('clones');
+  return out;
+}
+
+/** Relíquias que podem sair para esta run (o filtro de compatibilidade pelo kit do protagonista). */
+export const fitRelics = (run: JRun, data: JornadaData): RelicDef[] => {
+  const has = heroNeeds(run, data);
+  return data.relics.filter((r) => relicFits(r, 'jornada', has));
+};
+
 export function heroKnown(run: JRun, data: JornadaData): string[] {
   const second = run.secondElement ? [data.elementLines[run.secondElement][0]] : [];
   const def = data.characters[run.hero]!;
@@ -797,11 +822,11 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   if (stop.kind === 'boss') {
     // Estágio vencido: toda a equipe volta cheia, inclusive quem caiu.
     healFull(run, data, membersSeen(run, data));
-    run.bossChoice = bossChoices(data.relics, run.relics, data.j.relics.bossChoices, data.j.relics.starterEvolveChance, stopRng(run, 7));
+    run.bossChoice = bossChoices(fitRelics(run, data), run.relics, data.j.relics.bossChoices, data.j.relics.starterEvolveChance, stopRng(run, 7));
     if (!run.bossChoice.length) run.bossChoice = null;
   }
   // Elite vencida deixa uma relíquia (o sorteio vem antes de avançar: a seed é a da parada).
-  const relic = stop.kind === 'elite' ? dropRelic(data.relics, run.relics, data.j.relics.eliteWeights, stopRng(run, 13)) : null;
+  const relic = stop.kind === 'elite' ? dropRelic(fitRelics(run, data), run.relics, data.j.relics.eliteWeights, stopRng(run, 13)) : null;
   if (relic) run = gainRelic(run, relic, data);
   if (!run.bossChoice) advanceStop(run, data);
   const talentRyo = rewardRyo + levelRyo;
@@ -923,6 +948,7 @@ export function gainRelic(prev: JRun, relicId: string, data: JornadaData): JRun 
   run.willOfFire += def.grant?.willOfFire ?? 0;
   run.ryo += def.grant?.ryo ?? 0;
   addTalentPoints(run, def.grant?.talentPoints ?? 0, data);
+  if (def.grant?.xp) gainXp(run, def.grant.xp, data);
   // HP a mais (bandana) entra cheio; na evolução, só a diferença para a relíquia que saiu.
   const hpGain = (def.stats?.hp ?? 0) - (old?.stats?.hp ?? 0);
   if (hpGain > 0 && run.members[run.hero]) run.members[run.hero]!.hp += hpGain;
@@ -931,7 +957,7 @@ export function gainRelic(prev: JRun, relicId: string, data: JornadaData): JRun 
 
 /** Tesouro: relíquia sorteada pela classificação. */
 export function openTreasure(run: JRun, data: JornadaData): string | null {
-  return dropRelic(data.relics, run.relics, data.j.relics.treasureWeights, stopRng(run, 3));
+  return dropRelic(fitRelics(run, data), run.relics, data.j.relics.treasureWeights, stopRng(run, 3));
 }
 
 // ---------------------------------------------------------------------------
@@ -977,8 +1003,9 @@ function rollShelf(run: JRun, data: JornadaData, refreshes = 0, avoid: readonly 
   const roll = (skip: readonly string[]) => {
     const owned = [...run.relics, ...skip];
     // Uma vaga fixa de relíquia de loja; se acabarem, a vaga volta para o sorteio comum.
-    const exclusive = rollRelic(data.relics, owned, { shop: 1 }, rng);
-    return [...rollRelics(data.relics, exclusive ? [...owned, exclusive] : owned, shopWeights(run, data), data.j.shop.relics - (exclusive ? 1 : 0), rng), ...(exclusive ? [exclusive] : [])];
+    const pool = fitRelics(run, data);
+    const exclusive = rollRelic(pool, owned, { shop: 1 }, rng);
+    return [...rollRelics(pool, exclusive ? [...owned, exclusive] : owned, shopWeights(run, data), data.j.shop.relics - (exclusive ? 1 : 0), rng), ...(exclusive ? [exclusive] : [])];
   };
   const fresh = roll(avoid);
   return fresh.length >= data.j.shop.relics || !avoid.length ? fresh : roll([]);
@@ -1087,8 +1114,18 @@ export function restHeal(run: JRun, data: JornadaData): Heal {
 
 export function rest(prev: JRun, choice: RestChoice, data: JornadaData): JRun {
   const run = clone(prev);
-  if (choice === 'heal') healAll(run, restHeal(run, data), data, membersSeen(run, data));
-  else addTalentPoints(run, 1, data);
+  if (choice === 'heal') {
+    healAll(run, restHeal(run, data), data, membersSeen(run, data));
+    // Cobertor de campanha: no descanso, todos ficam com pelo menos esta fração do HP.
+    const floor = relicDefs(run, data).reduce((a, r) => Math.max(a, r.restFloorPct ?? 0), 0);
+    if (floor > 0) {
+      for (const id of membersSeen(run, data)) {
+        const min = Math.floor(memberSheet(run, id, data).maxHp * floor);
+        const m = run.members[id];
+        if (m && m.hp < min) m.hp = min;
+      }
+    }
+  } else addTalentPoints(run, 1, data);
   advanceStop(run, data);
   return run;
 }
@@ -1163,7 +1200,7 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
       relic = e.id;
       run = gainRelic(run, e.id, data);
     } else if (e.kind === 'relic') {
-      relic = dropRelic(data.relics, run.relics, { [e.tier]: 1 }, stopRng(run, 9));
+      relic = dropRelic(fitRelics(run, data), run.relics, { [e.tier]: 1 }, stopRng(run, 9));
       if (relic) run = gainRelic(run, relic, data);
     } else if (e.kind === 'maxStat') {
       for (const id of e.who === 'hero' ? [run.hero] : membersSeen(run, data)) {

@@ -64,6 +64,10 @@ export function emptyMods(): FighterMods {
     surviveForm: '',
     techOverflow: {},
     lowHpRollWeights: {},
+    effectTurnsBonus: 0,
+    controlledDamageMult: 1,
+    fearOnHit: 0,
+    guardHealPct: 0,
   };
 }
 
@@ -80,7 +84,8 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     return out;
   };
   return {
-    damageMult: a.damageMult * (b.damageMult ?? 1),
+    // Dano geral soma (v0.78.0, G1 do diagnóstico): +25% e +15% dão +40%. Os outros grupos seguem multiplicando.
+    damageMult: a.damageMult + ((b.damageMult ?? 1) - 1),
     typeDamageMult: mulMap(a.typeDamageMult, b.typeDamageMult),
     taijutsuFlat: a.taijutsuFlat + (b.taijutsuFlat ?? 0),
     critBonus: a.critBonus + (b.critBonus ?? 0),
@@ -115,6 +120,10 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     surviveForm: b.surviveForm || a.surviveForm,
     techOverflow: addMap(a.techOverflow, b.techOverflow),
     lowHpRollWeights: addMap(a.lowHpRollWeights, b.lowHpRollWeights),
+    effectTurnsBonus: a.effectTurnsBonus + (b.effectTurnsBonus ?? 0),
+    controlledDamageMult: a.controlledDamageMult * (b.controlledDamageMult ?? 1),
+    fearOnHit: a.fearOnHit + (b.fearOnHit ?? 0),
+    guardHealPct: a.guardHealPct + (b.guardHealPct ?? 0),
   };
 }
 
@@ -373,7 +382,10 @@ export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data
     // Sem multiplicador de elemento no HP (v0.77.0): ele só vale contra a barreira, na hora do golpe.
     elementMult: 1,
     critMult: crit ? data.base.crit.multiplier : 1,
-    extraMult: attackerMult(user, tech, data) * (hasEffect(target, 'stun') ? user.mods.stunnedDamageMult : 1),
+    extraMult:
+      attackerMult(user, tech, data) *
+      (hasEffect(target, 'stun') ? user.mods.stunnedDamageMult : 1) *
+      (hasEffect(target, 'stun') || hasEffect(target, 'fear') || hasEffect(target, 'chakraBlock') ? user.mods.controlledDamageMult : 1),
   });
 }
 
@@ -673,6 +685,7 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
     f.guarding = true;
     s.log.push({ type: 'guard', uid: f.uid });
     if (f.mods.guardHeal) heal(s, f, f, f.mods.guardHeal);
+    if (f.mods.guardHealPct) heal(s, f, f, Math.floor(f.maxHp * f.mods.guardHealPct));
     return;
   }
   if (action.kind === 'rest') {
@@ -842,6 +855,8 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
       if (amount > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount });
     }
     if (!t.down) tryEffect(s, f, t, tech, data, rng);
+    // Incenso dos sonhos: cada golpe que acerta pode dar Medo.
+    if (!t.down && f.mods.fearOnHit > 0 && s.status === 'ongoing' && rng() < f.mods.fearOnHit) addStatus(s, t, 'fear', data);
   }
   // Clones que batem junto (Mizu, Mokuton): cada um, uma fração do dano de um golpe, sem rolagem; a soma não passa do
   // teto (`clones.strikeCap`, 70% de um golpe). Kage e Tajuu batem pelas técnicas com golpe por clone (`hitsPerClone`).
@@ -885,7 +900,11 @@ function cloneBlocks(s: JBattle, f: Fighter, t: Fighter, single: boolean, data: 
 }
 
 /** Aplica um efeito fora de técnica (descarga do clone de raio, areia que prende), com a trava e as imunidades. */
-function addStatus(s: JBattle, t: Fighter, effect: 'stun' | 'chakraBlock', data: JornadaData): void {
+function addStatus(s: JBattle, t: Fighter, effect: 'stun' | 'chakraBlock' | 'fear', data: JornadaData): void {
+  if (effect === 'fear' && fearImmune(t, data)) {
+    s.log.push({ type: 'resist', target: t.uid, effect });
+    return;
+  }
   if (effect === 'stun' && hasEffect(t, 'stunGuard')) {
     s.log.push({ type: 'resist', target: t.uid, effect });
     return;
@@ -946,7 +965,7 @@ function tryEffect(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: J
     s.log.push({ type: 'resist', target: t.uid, effect: on.effect });
     return;
   }
-  const turns = effectTurns(tech, data);
+  const turns = effectTurns(tech, data) + f.mods.effectTurnsBonus;
   const prev = t.effects.find((e) => e.kind === on.effect);
   if (prev) prev.turns = Math.max(prev.turns, turns);
   else t.effects.push({ kind: on.effect, turns });

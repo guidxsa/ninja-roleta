@@ -443,7 +443,7 @@ function startOfRound(s: RBattle, data: RoletaData): void {
   const regen = (max: number, pct = r.chakraRegen.pct) => Math.max(r.chakraRegen.min, Math.floor(max * pct));
   const playerChakra = s.player.chakra;
   const villainChakra = s.villain.chakra;
-  gainPlayerChakra(s, regen(s.player.maxChakra));
+  gainPlayerChakra(s, regen(s.player.maxChakra) + relicEffects(s.player, data).chakraRegen);
   s.villain.chakra = Math.min(s.villain.def.chakra, s.villain.chakra + regen(s.villain.def.chakra, r.villainChakra.regenPct));
   if (s.player.chakra !== playerChakra) logChakra(s, 'player');
   if (s.villain.chakra !== villainChakra) logChakra(s, 'villain');

@@ -1182,7 +1182,8 @@ describe('run da Jornada', () => {
       expect(refreshPrice(bell, data)).toBe(0);
       const r1 = refreshShelf(bell, data);
       expect(r1.ryo).toBe(bell.ryo);
-      expect(refreshPrice(r1, data)).toBe(data.j.shop.refresh.base);
+      // O Sino também dá 10% de desconto (v0.78.0), que vale no preço da atualização.
+    expect(refreshPrice(r1, data)).toBe(Math.floor(data.j.shop.refresh.base * 0.9));
       const token = openShop(gainRelic(rich(), 'merchantToken', data), data);
       expect(refreshPrice(token, data)).toBe(Math.floor(data.j.shop.refresh.base * 0.85));
     });
