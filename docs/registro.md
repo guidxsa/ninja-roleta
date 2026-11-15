@@ -79,7 +79,15 @@ Crítica de design dos 113 cenários do UI Lab, com captura de tela de cada um (
 - **Estampa Hyuuga**: os dois triângulos sobrepostos liam, em grade, como uma estrela de seis pontas (símbolo religioso). Decidido sozinho: os Oito Trigramas, um círculo com oito traços.
 - **Selo "Difícil" no Registro**: o papel do Registro ganhou os mesmos tons escuros do `.parchment` (`--foe`, `--jin`, `--ck-2`); o selo ia de cerca de 1,3:1 para legível.
 
-Ficaram para depois (P2 e P3 da crítica): picos emocionais (chefe, revelação, vitória; o usuário pediu animação própria da Jornada, sem roleta), textos e fontes de pincel em tamanho pequeno, rótulos invertidos na roda, alvos de toque menores que 44px, entre outros.
+**v0.76.3 a v0.76.7** (mesma branch, PR WIP; o usuário pediu os P2 e P3 em seguida). Decidido sozinho, o usuário revisa no PR:
+- Textos: o título do evento virou "Vilão à frente" ("Rumo a Ninja da Grama" pedia artigo); "Vontade do Fogo usada" só com uma ou mais; o fim do infinito da Roleta não diz mais "Vitória"; o chip do ciclo mostra o bônus dos vilões; o botão do baú diz só "Pegar"; "Melhorar técnica"; rótulos curtos "R. física"/"R. mental" na caixa de status; o total de conquistas do Registro conta as da Jornada.
+- Leitura: rótulos da roda reorientados quando ela para; na faixa de iniciativa o nome sorteado vai para o lado oposto ao marcador e a fatia perdedora escurece sem opacidade no texto; nomes abaixo de 24px passam de `--font-display` para `--font-hand`.
+- Jornada: atalhos do HUD numa linha no celular; Abandonar e Desistir discretos (cor de perigo só no foco); um "Levantar <nome>" por caído; inimigos repetidos numerados; elite em losango de borda dupla; ícone novo de baú (`chest`) no tesouro; nós adiante apagados; "Sair" da loja secundário.
+- Picos: palco de chefe e elite na luta (selo, moldura, retrato maior, carimbo 将 na entrada do chefe); revelação do Caminho Ninja com o elemento em kanji carimbado (火水風雷土; prodígio 体, Hyuuga 天), sem roleta, como pediu o usuário; fim da Jornada com letreiro grande, trilha com o tipo da parada e selo 報 no fim do infinito; carimbo 昇 no "Subiu de nível" e 道 no aviso de ciclo.
+- Polimento: vinheta do Início cortada (as barras duplas a 1024px); brasão da árvore cortado no corpo; casas vazias na sequência de selos; nomes nas mãos do jokenpô; botão de descanso curto com a dica; Registro com altura fixa; sombra de tinta mais marcada no pergaminho do tema claro; alvos de toque de 44px no toque.
+- UI Lab: a fixture de vitória da Roleta passa o chefe para os vencidos (como no jogo); o "chefe anônimo" no fim da run era da fixture.
+
+Ficam para depois: tela de erro e toasts (sem cenário no lab), `prefers-reduced-motion` e teclado, retratos próprios (os placeholders são o mesmo rosto) e a revisão do estado "Já tem" da loja.
 
 ## Auditoria de design e etapa 1: cena narrativa (v0.72.0, 14/11/2026)
 

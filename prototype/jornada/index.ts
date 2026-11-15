@@ -1170,7 +1170,7 @@ export function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
 export async function restStop(host: JornadaHost, run0: JRun): Promise<JRun> {
   let run = run0;
   const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud>${hud(host, run)}</div>
-    <button class="btn big" data-choice="heal">${icon('rest')} ${U.restHeal(restHeal(run, data).hp, restHeal(run, data).chakra)}</button>
+    <button class="btn big" data-choice="heal"${tip(J.stopKinds.rest!, U.restHealTip(restHeal(run, data).hp, restHeal(run, data).chakra))}>${icon('rest')} ${U.restHeal(restHeal(run, data).hp, restHeal(run, data).chakra)}</button>
     <span data-train>${restTrainButton(run)}</span></div>`));
   // Talentos e loja continuam à mão: o HUD muda a run (e a árvore pode fechar, trocando o Treinar).
   wireHud(root, host, () => run, (r) => (run = r), () => {

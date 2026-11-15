@@ -1210,7 +1210,9 @@ export const jornadaPtBR = {
       tooltips: 'Passe o mouse numa técnica, relíquia ou lutador para ver a ficha completa.',
     },
     treatment: 'Tratamento (+50 de HP e +15 de chakra em cada um)',
-    restHeal: (hp: number, chakra: number) => `Descansar (+${hp} de HP e +${chakra} de chakra em cada um)`,
+    // Botão curto (números principais); o "em cada um" vai na dica.
+    restHeal: (hp: number, chakra: number) => `Descansar · +${hp} HP · +${chakra} chakra`,
+    restHealTip: (hp: number, chakra: number) => `Cada membro da equipe recupera ${hp} de HP e ${chakra} de chakra.`,
     restTrain: 'Treinar (+1 ponto de talento)',
     openTreasure: 'Abrir',
     treasureEmpty: 'Vazio: você já tem todas as relíquias.',
