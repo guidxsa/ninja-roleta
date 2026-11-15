@@ -59,7 +59,8 @@
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none;
   font-size: 64px; color: var(--text); opacity: .06;
 }
-.arena .dice { position: relative; min-height: 0; }
+/* A altura da faixa fica reservada antes da primeira rolagem: a arena não cresce e os cards não descem. */
+.arena .dice { position: relative; min-height: 66px; }
 .arena .strip { background: color-mix(in srgb, var(--surface) 92%, transparent); }
 
 /* Log: três linhas com o fim esmaecido; tocar abre o histórico da luta. */

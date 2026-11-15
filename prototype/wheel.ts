@@ -288,7 +288,9 @@ export async function stripRoulette(
       return `<div class="seg" data-i="${i}" style="flex-basis:${(b - a) * 100}%;background:${s.color}"><span>${label}</span></div>`;
     })
     .join('');
-  container.innerHTML = `<div class="strip"><div class="strip-title">${title}</div><div class="strip-bar">${segs}<div class="strip-marker"></div></div></div>`;
+  // Só a primeira faixa entra com o pop; as seguintes trocam no lugar (recriada com o pop, a faixa parecia pular).
+  const still = container.querySelector('.strip') ? ' still' : '';
+  container.innerHTML = `<div class="strip${still}"><div class="strip-title">${title}</div><div class="strip-bar">${segs}<div class="strip-marker"></div></div></div>`;
   container.querySelectorAll<HTMLElement>('.seg').forEach((seg) => {
     const span = seg.querySelector('span')!;
     if (span.scrollWidth > span.clientWidth) seg.classList.add('tight');

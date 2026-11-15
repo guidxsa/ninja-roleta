@@ -368,7 +368,9 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
   renderBadges(state);
   if (setup.options.villainStartsFirst) log(S.ui.villainFirst, 'sys');
   if (setup.options.playerStartsFirst) log(S.ui.playerFirst, 'sys');
-  // A iniciativa sai no começo da luta (uma roleta só).
+  // A iniciativa sai no começo da luta (uma roleta só). As ações já aparecem, desativadas: entrando só depois, o painel
+  // mudava a altura da grade e a arena e os cards pulavam no fim da rolagem.
+  renderActions(state, false);
   await animate(setup.from ? [] : state.log, state);
 
   while (state.status === 'ongoing') {

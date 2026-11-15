@@ -21,6 +21,10 @@
 .actions .rabandon { width: 100%; margin-top: 10px; }
 /* Celular: depois das roletas da origem, a ficha toma o lugar delas (como antes). */
 .rorigin #slot.done { display: none; }
+/* Durante as roletas da origem, os resultados numa linha só (rola de lado): quebrando, a linha crescia acima da roda
+   e a roleta seguinte nascia mais abaixo. */
+.rorigin:not(.rolled) #origin-chips { min-height: 26px; flex-wrap: nowrap; justify-content: safe center; overflow-x: auto; scrollbar-width: none; }
+.rorigin:not(.rolled) #origin-chips > * { flex: none; }
 /* Celular: a ação das telas de roleta (#cta) é filha direta da tela, para o .sticky-cta ter onde grudar. Dentro do
    invólucro, da altura do próprio botão, ela não grudava e ficava abaixo da dobra. */
 @media (max-width: 899px), (max-height: 559px) {
@@ -54,7 +58,9 @@
   .rwheel > :not(.rstage-box):not(.rside) { grid-column: 1 / -1; }
   .rwheel > h2 { margin-bottom: 0; }
   .rstage-box {
-    display: grid; place-items: center; position: relative; isolation: isolate; grid-column: 1; grid-row: 3; align-self: stretch;
+    /* A roda presa no alto do palco: centrada, ela subia e descia quando a caixa mudava de altura (o Girar saindo, a
+       legenda de outra roleta, a Moeda viciada embaixo). */
+    display: grid; place-items: start center; align-content: start; position: relative; isolation: isolate; grid-column: 1; grid-row: 3; align-self: stretch;
     min-height: 0; padding: clamp(14px, 3vh, 40px) clamp(14px, 3vw, 56px); rotate: -.4deg;
   }
   .rstage { inset: 0; z-index: -1; }
@@ -77,7 +83,13 @@
   .rwheel:not(.rorigin) > .rside {
     grid-column: 1 / -1; grid-row: 3; z-index: 3; align-self: start; justify-self: center; width: min(100%, 560px); overflow: visible; padding: 0; margin-top: 8px;
   }
-  .rwheel:not(.rorigin):has(.rside #detail:not(:empty)) > .rstage-box { padding-top: 120px; }
+  /* Evento: o espaço da etiqueta do evento fica reservado desde a primeira roleta (ligar só depois empurrava a segunda
+     roda 120px para baixo). */
+  .rwheel.revent > .rstage-box { padding-top: 120px; }
+  /* A roda menor no evento, para a legenda caber no palco abaixo da etiqueta; e o Girar usado sai de vez (com a roda
+     presa no alto, ele sair embaixo não a move). */
+  .rwheel.revent .rstage-box .wheel-wrap { width: min(calc(42vh - 110px), 100%, 420px); }
+  .rstage-box .btn.spin.spent { display: none; }
   .rwheel:not(.rorigin):has(.rside .sticky-cta) > .rside {
     align-self: center; margin: 0; padding: 18px 20px 16px; gap: 12px; max-height: 100%; overflow-y: auto;
     background: var(--grain), var(--surface); border: 1px solid var(--line-strong); border-top: 3px solid var(--accent);
@@ -256,6 +268,7 @@
 }
 @media (min-width: 900px) and (min-height: 560px) and (max-height: 760px) {
   .rstage-box .wheel-wrap { width: min(30vh, 100%, 300px); margin: 16px auto 6px; }
+  .rwheel.revent .rstage-box .wheel-wrap { width: min(calc(30vh - 60px), 100%, 300px); }
   .rb-desk #vcard .hud-face .portrait, .rb-desk #pcard .hud-face .portrait { width: clamp(60px, 10vh, 90px); height: clamp(60px, 10vh, 90px); }
 }
 
@@ -282,5 +295,6 @@
 @media (min-width: 900px) and (min-height: 560px) and (max-height: 680px) {
   .rstage-box { padding-top: 10px; padding-bottom: 10px; }
   .rstage-box .wheel-wrap { width: min(22vh, 100%, 220px); margin: 6px auto 2px; }
+  .rwheel.revent .rstage-box .wheel-wrap { width: min(calc(22vh - 20px), 100%, 220px); }
   .rwheel > h2 { font-size: var(--fs-2xl); }
 }

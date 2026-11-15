@@ -58,8 +58,9 @@
 .strip { background: var(--surface); border: 1px solid var(--line); border-left: 2px solid var(--gold); padding: 6px 10px 9px; animation: pop var(--dur-2) var(--ease); }
 .strip-title {
   font: 600 var(--fs-sm)/1.2 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
-  margin-bottom: 5px;
+  margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.strip.still { animation: none; }
 .strip-bar { position: relative; display: flex; height: 26px; overflow: visible; }
 .strip-bar .seg {
   height: 100%; min-width: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;
