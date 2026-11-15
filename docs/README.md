@@ -12,6 +12,8 @@ O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e
 | [decisoes.md](decisoes.md) | Decisões em aberto: o que espera o usuário |
 | [visual.md](visual.md) | Direção visual: identidade por modo, locais e regra da arte |
 | [registro.md](registro.md) | Histórico das decisões e simulações por versão (consulta) |
+| [balanceamento/diagnostico.md](balanceamento/diagnostico.md) | Diagnóstico de balanceamento (Etapa 1): problemas, evidências e recomendações por prioridade |
+| [balanceamento/benchmark.md](balanceamento/benchmark.md) | Cenários de referência, indicadores, comandos de auditoria e linha de base |
 | [base/fundamentos.md](base/fundamentos.md) | Status, roleta, restauração, iniciativa, acerto, dano, elementos, chakra, Vontade do Fogo |
 | [base/origens.md](base/origens.md) | Sorteio de origem, status iniciais, linhagens, habilidades, jinchuuriki |
 | [base/tecnicas.md](base/tecnicas.md) | Ficha padrão, ações universais, catálogo de técnicas |

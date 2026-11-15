@@ -53,6 +53,7 @@ import type { RCategory } from '../data/roleta/villains';
 import { playerTechniques } from '../core/roleta/player';
 import type { Rng } from '../core/rng';
 import type { VillainDef } from '../core/types';
+import { auditRoletaFight, type FightAudit } from './audit';
 
 /** Teto de segurança contra lutas infinitas. */
 export const MAX_ROUNDS = 200;
@@ -110,8 +111,17 @@ function wantsActive(s: RBattle, data: RoletaData): boolean {
   return true;
 }
 
-export function runRoletaBattle(player: PlayerState, villain: VillainDef, rng: Rng, data: RoletaData, options: Partial<RBattleOptions> = {}): RBattle {
+export function runRoletaBattle(
+  player: PlayerState,
+  villain: VillainDef,
+  rng: Rng,
+  data: RoletaData,
+  options: Partial<RBattleOptions> = {},
+  /** Auditoria: recebe o estado da abertura (depois da iniciativa), sem mexer no rng. */
+  onStart?: (s: RBattle) => void,
+): RBattle {
   let s = startRoletaBattle(player, villain, options, data, rng);
+  onStart?.(s);
   while (s.status === 'ongoing' && s.round < MAX_ROUNDS) {
     if (wantsActive(s, data)) s = useActive(s, data, rng);
     if (s.status !== 'ongoing') break;
@@ -192,7 +202,14 @@ export interface RoletaRunResult {
   villainReached: string | null;
   rounds: number[];
   level: number;
+  /** Relíquias ao fim da run. */
+  relics: string[];
+  /** Vontades do Fogo usadas na run. */
+  revivesUsed: number;
 }
+
+/** Auditoria (docs/balanceamento/benchmark.md): cada luta, com a categoria do vilão e o ciclo. */
+export type RoletaFightHook = (fight: FightAudit, category: RCategory, cycle: number, itemsUsed: number) => void;
 
 /** Run do Roleta enxuto com o bot: ciclos de lutas sorteadas por categoria, até cair ou vencer `maxCycles` ciclos. */
 export function runRoletaRun(
@@ -203,31 +220,43 @@ export function runRoletaRun(
   difficulty: Difficulty = 'normal',
   maxCycles = 1,
   progression = true,
+  onFight?: RoletaFightHook,
 ): RoletaRunResult {
   let run = newRoletaRun(initial, difficulty);
   const rounds: number[] = [];
   let cyclesWon = 0;
+  const done = (won: boolean, villainReached: string | null): RoletaRunResult => ({
+    won,
+    cyclesWon,
+    villainReached,
+    rounds,
+    level: run.player.level,
+    relics: run.player.relics ?? [],
+    revivesUsed: run.player.revivesUsed,
+  });
   for (let guard = 0; guard < 400; guard++) {
     if (!run.villainId) run = drawVillain(run, data, rng);
     if (progression) {
       const ev = autoRoletaEvent(run.player, rng, data);
       run = { ...run, player: roletaLevelUps(ev.player, data), mods: { ...run.mods, ...ev.mods } };
     }
-    const fight = runRoletaBattle(run.player, villainFor(run, villainsById, data), rng, data, run.mods);
+    let start: RBattle | null = null;
+    const fight = runRoletaBattle(run.player, villainFor(run, villainsById, data), rng, data, run.mods, onFight ? (s) => (start = s) : undefined);
     rounds.push(fight.round);
+    if (onFight && start) onFight(auditRoletaFight(start, fight), data.cycle[run.step] ?? 'genin', run.cycle, fight.log.filter((e) => e.type === 'item').length);
     const villainId = run.villainId;
     const res = finishRoletaFight(run, fight, data, rng);
     run = res.run;
-    if (!res.outcome.won) return { won: cyclesWon > 0, cyclesWon, villainReached: villainId, rounds, level: run.player.level };
+    if (!res.outcome.won) return done(cyclesWon > 0, villainId);
     run = { ...run, player: roletaLevelUps(run.player, data) };
     if (progression && !res.outcome.boss) run = { ...run, player: autoRelicReward(run.player, data.cycle[run.step - 1] ?? 'genin', run.cycle, rng, data) };
     if (run.bossChoice) run = chooseChest(run, run.bossChoice[0]!, data);
     if (res.outcome.boss) {
       cyclesWon++;
-      if (cyclesWon >= maxCycles) return { won: true, cyclesWon, villainReached: null, rounds, level: run.player.level };
+      if (cyclesWon >= maxCycles) return done(true, null);
       if (run.status === 'victory') {
         // O modo infinito existe só no Hardcore.
-        if (!canContinueRoleta(run)) return { won: true, cyclesWon, villainReached: null, rounds, level: run.player.level };
+        if (!canContinueRoleta(run)) return done(true, null);
         run = continueRoletaCycle(run);
       }
     }

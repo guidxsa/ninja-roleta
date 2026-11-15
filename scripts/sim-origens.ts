@@ -12,6 +12,8 @@ import { roletaData } from '../src/data/roleta/index';
 import { ptBR } from '../src/data/strings/ptBR';
 import { roletaVillainsById as villainsById } from '../src/data/roleta/villains';
 import { runRoletaRun } from '../src/sim/roletaRunner';
+import { relicCategory, Tally } from '../src/sim/audit';
+import { gainRoletaRelic } from '../src/core/roleta/run';
 
 const gameData = roletaData.base;
 
@@ -50,6 +52,62 @@ const origins = gameData.lineages.map((l) => ({
 }));
 const pct = (x: number) => `${Math.round(x * 100)}%`.padStart(5);
 const difficulties = Object.keys(gameData.balance.difficulty.multipliers) as Difficulty[];
+
+// `--reliquias` (docs/balanceamento/benchmark.md): valor marginal de cada relíquia do Roleta, dada no começo da run, no
+// Comum do Médio (a vitória perto de 50% mostra melhor a diferença). As mesmas seeds em todas as medidas.
+if (process.argv.includes('--reliquias')) {
+  const common = origins[0]!;
+  const seed = arg('seed', 1);
+  // As mesmas origens (elementos sorteados) e o mesmo rng em toda medida: a diferença é só a relíquia.
+  const made = Array.from({ length: runs }, () => common.make());
+  const rate = (give: string | null) => {
+    const r2 = createRng(seed);
+    let wins = 0;
+    for (let i = 0; i < runs; i++) {
+      const p0 = createRoletaPlayer(made[i]!, roletaData, 'normal');
+      const p = give ? gainRoletaRelic(p0, give, roletaData) : p0;
+      if (runRoletaRun(p, villainsById, r2, roletaData, 'normal', 1, progression).won) wins++;
+    }
+    return (wins / runs) * 100;
+  };
+  const base = rate(null);
+  console.log(`\nValor marginal das relíquias do Roleta · Comum · Médio · ${runs} runs · linha de base ${base.toFixed(1)}%`);
+  console.log('relíquia | classificação | categoria | Δ');
+  for (const r of roletaData.relics) console.log(`${r.id} | ${r.tier} | ${relicCategory(r.roleta ?? r)} | ${(rate(r.id) - base).toFixed(1)}`);
+  console.log('');
+  process.exit(0);
+}
+
+// `--auditoria` (docs/balanceamento/benchmark.md): uma tabela por dificuldade com nível, relíquias por raridade e como
+// as lutas correm (entrada, rodadas, dano por rodada, itens, Vontades), sem mudar o jogo nem o rng.
+if (process.argv.includes('--auditoria')) {
+  const tierOf = (id: string) => roletaData.relics.find((r) => r.id === id)?.tier ?? '?';
+  for (const d of difficulties) {
+    console.log(`\nAuditoria do Roleta · ${ptBR.difficulty[d].name} · ${runs} runs por origem`);
+    console.log('  origem | vitória | nível fim | relíquias com/inc/rara/chefe | Vontades usadas | por luta (genin · chunin · jounin · chefe): entrada HP, rodadas, dano dado/recebido por rodada, itens');
+    for (const o of origins) {
+      const t = new Tally();
+      let wins = 0;
+      for (let i = 0; i < runs; i++) {
+        const r = runRoletaRun(createRoletaPlayer(o.make(), roletaData, d), villainsById, rng, roletaData, d, 1, progression, (f, cat, _cycle, items) => {
+          t.addFight(`${cat}:`, f);
+          t.add(`${cat}:items`, items);
+        });
+        if (r.won) wins++;
+        t.add('level', r.level);
+        t.add('revives', r.revivesUsed);
+        for (const tier of ['common', 'uncommon', 'rare', 'boss']) t.add(`relic:${tier}`, r.relics.filter((id) => tierOf(id) === tier).length);
+      }
+      const cats = ['genin', 'chunin', 'jounin', 'boss']
+        .map((c) => `${Math.round(t.mean(`${c}:hpPct`) * 100)}% ${t.mean(`${c}:rounds`).toFixed(1)}r ${t.mean(`${c}:dealtPerRound`).toFixed(1)}/${t.mean(`${c}:takenPerRound`).toFixed(1)} ${t.mean(`${c}:items`).toFixed(2)}`)
+        .join(' · ');
+      const relics = ['common', 'uncommon', 'rare', 'boss'].map((k) => t.mean(`relic:${k}`).toFixed(1)).join('/');
+      console.log(`  ${o.label} | ${pct(wins / runs).trim()} | ${t.mean('level').toFixed(1)} | ${relics} | ${t.mean('revives').toFixed(2)} | ${cats}`);
+    }
+  }
+  console.log('');
+  process.exit(0);
+}
 
 console.log(
   `\nRun do Roleta por origem: ${runs} runs por célula, ${progression ? 'com eventos e recompensas' : 'sem eventos nem recompensas'} (vence o 1º ciclo · rodadas por luta · onde mais parou · vence os ciclos 2..${cycles})\n`,
