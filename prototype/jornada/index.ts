@@ -523,6 +523,9 @@ function elementChoiceButton(c: (typeof ELEMENT_CHOICES)[number]): string {
  * Revelação do começo do Caminho Ninja (sem roleta): o elemento (sorteado ou escolhido), o prodígio ou o Hyuuga sem
  * elemento, a relíquia bônus de quem sorteou e os parceiros.
  */
+/** Kanji do carimbo da revelação por elemento (todos no recorte da fonte, prototype/fonts/LEIAME.md). */
+const REVEAL_KANJI: Partial<Record<string, string>> = { fire: '火', water: '水', wind: '風', lightning: '雷', earth: '土' };
+
 export async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
   const el = elementOf(run, run.hero, data);
   const [a, b] = run.supports.map((id) => memberName(host, run, id));
@@ -530,14 +533,20 @@ export async function revealScreen(host: JornadaHost, run: JRun): Promise<void> 
   const line = el ? `${icon(el)} ${G.revealElement(S.elements[el])}` : noElement ? G.revealHyuuga : G.revealProdigy;
   // A relíquia bônus é a que veio além da inicial.
   const bonus = run.elementPick === 'random' ? run.relics.find((id) => data.relics.find((r) => r.id === id)?.tier !== 'starter') : undefined;
+  // O momento da Jornada não é uma roleta (identidade do outro modo): o elemento cai como um carimbo de tinta sobre o
+  // retrato, e a equipe aparece inteira, com o elemento de cada um. Prodígio: 体 (corpo); Hyuuga: 天 (o céu do Kaiten).
+  const seal = el ? REVEAL_KANJI[el] ?? '忍' : noElement ? '天' : '体';
+  // O nome do parceiro já traz o elemento ("Kenta (Água)"); o protagonista está no alto, então a fileira mostra os dois.
+  const member = (id: string) => `<li>${fighterPortrait(id, portraitSpec(id, run), 'md')}<b>${memberName(host, run, id)}</b></li>`;
   const root = show(
-    h(`<div class="screen jreveal"><h2>${run.elementPick === 'random' ? G.revealTitle : G.revealChosen}</h2>
-      <div class="jstart-face pop">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'lg')}</div>
-      <h3 class="center">${heroName(host, run)}</h3>
-      <p class="center">${line}</p>
+    h(`<div class="screen jreveal jreveal-path"><h2>${run.elementPick === 'random' ? G.revealTitle : G.revealChosen}</h2>
+      <div class="jreveal-stage"><div class="jstart-face pop">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'lg')}</div>
+        <span class="seal stamp jreveal-seal el-${el ?? 'none'}" aria-hidden="true">${seal}</span></div>
+      <h3 class="center jreveal-name">${heroName(host, run)}</h3>
+      <p class="center jreveal-line">${line}</p>
       ${run.classId === 'uchiha' && run.secondElement ? `<p class="center">${icon(run.secondElement)} ${G.revealSecond(S.elements[run.secondElement])}</p>` : ''}
       ${bonus ? `<h3 class="center">${G.randomBonus}</h3>${relicCard(bonus, '', 'reveal')}` : ''}
-      <p class="center muted">${G.revealTeam(a ?? '', b ?? '')}</p>
+      <ul class="jreveal-team" aria-label="${esc(G.revealTeam(a ?? '', b ?? ''))}">${run.supports.map(member).join('')}</ul>
       <button class="btn primary big" data-choice="ok">${U.continue}</button></div>`),
   );
   host.mood(el || noElement ? 'neutral' : 'good');
@@ -1311,7 +1320,7 @@ export async function endScreen(host: JornadaHost, run: JRun, next: JRun | null,
         place: run.mode === 'generic' ? stageScene(run, data) : stopScene(run, data),
         ...heroFace(host, run),
         title,
-        seal: { ...(good ? U.sceneSeals.victory! : U.sceneSeals.defeat!), gold: good },
+        seal: { ...(won ? U.sceneSeals.victory! : infinite ? U.sceneSeals.infinite! : U.sceneSeals.defeat!), gold: good },
         body: `<p>${esc(text)}${record && (infinite || won) && run.mode === 'generic' ? ` <span class="chip jrecord">${icon('medal')} ${U.record}</span>` : ''}</p>${missionReport(host, run, won)}`,
         footer: buttons,
       }),
@@ -1336,7 +1345,8 @@ function missionReport(host: JornadaHost, run: JRun, won: boolean): string {
     const flat = stages.flatMap((st) => st.stops);
     const at = won ? flat.length : stages.slice(0, run.stageIndex).reduce((n, st) => n + st.stops.length, 0) + run.stopIndex;
     path = `<h3 class="jreport-head">${R.path}</h3><ol class="jreport-path" aria-label="${R.path}">${flat
-      .map((_, i) => `<li class="${i < at ? '' : i === at ? 'fell' : 'todo'}">${i < at ? icon('check') : i === at ? icon('warning') : ''}</li>`)
+      // Cada selo com o ícone do tipo da parada (luta, elite, evento, chefe...): 40 ✓ iguais não contavam o caminho.
+      .map((st, i) => `<li class="k-${st.kind} ${i < at ? '' : i === at ? 'fell' : 'todo'}" title="${esc(stopName(st))}">${i === at ? icon('warning') : icon(STOP_ICONS[st.kind] ?? 'check')}</li>`)
       .join('')}</ol>`;
   }
   const team = membersSeen(run, data);

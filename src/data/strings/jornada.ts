@@ -1305,6 +1305,8 @@ export const jornadaPtBR = {
       cycle: { kanji: '道', label: 'Novo ciclo' },
       unknown: { kanji: '謎', label: 'Desconhecido' },
       defeat: { kanji: '敗', label: 'Derrota' },
+      // Fim do modo infinito: não é vitória (勝) nem derrota (敗); 報 é o relatório do que se alcançou.
+      infinite: { kanji: '報', label: 'Fim do modo infinito' },
       relic: { kanji: '宝', label: 'Relíquia' },
     } as Record<string, { kanji: string; label: string }>,
     tapToContinue: 'Toque para continuar',

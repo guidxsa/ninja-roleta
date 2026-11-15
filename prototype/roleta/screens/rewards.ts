@@ -64,8 +64,9 @@ export async function upgradeScreen(): Promise<void> {
 export async function levelUpScreen(): Promise<void> {
   const c = ses.camp!;
   const root = show(
-    h(`<div class="screen rwheel"><h2>${S.ui.levelUpTitle}</h2><p class="center"><span class="chip tier tier-2">${S.ui.levelLabel(c.player.level + 1)}</span></p>
-      <div class="rstage-box">${rstage()}<div id="slot"></div></div><div class="rside"><div id="results"></div><div id="hud"></div><div id="cta"></div></div></div>`),
+    // O palco, antes vazio, recebe o carimbo do nível novo: é o momento da subida, não uma linha de texto.
+    h(`<div class="screen rwheel"><h2>${S.ui.levelUpTitle}</h2>
+      <div class="rstage-box">${rstage()}<div id="slot">${stageStamp('昇', S.ui.levelLabel(c.player.level + 1))}</div></div><div class="rside"><div id="results"></div><div id="hud"></div><div id="cta"></div></div></div>`),
   );
   const hud = root.querySelector<HTMLElement>('#hud')!;
   hud.innerHTML = playerPanel(c.player, c.mods);
@@ -90,10 +91,15 @@ export async function levelUpScreen(): Promise<void> {
 }
 
 /** Aviso simples entre telas (ex.: restauração do fim do exame). */
-export async function noticeScreen(title: string, text: string): Promise<void> {
+/** Carimbo grande no palco das telas sem roda (nível, ciclo novo): selo de laca e o rótulo embaixo. */
+function stageStamp(kanji: string, label: string): string {
+  return `<div class="stage-stamp"><span class="seal stamp gold" aria-hidden="true">${kanji}</span>${label ? `<b>${label}</b>` : ''}</div>`;
+}
+
+export async function noticeScreen(title: string, text: string, kanji = '道'): Promise<void> {
   const c = ses.camp!;
   const root = show(
-    h(`<div class="screen rwheel"><h2>${title}</h2><div class="rstage-box">${rstage()}</div>
+    h(`<div class="screen rwheel"><h2>${title}</h2><div class="rstage-box">${rstage()}<div id="slot">${stageStamp(kanji, '')}</div></div>
       <div class="rside"><div class="effect pop">${text}</div><div id="hud">${playerPanel(c.player, c.mods)}</div>
       <div class="sticky-cta"><button class="btn rsheet-open" data-sheet>${icon('scroll')} ${S.ui.openSheet}</button><button class="btn primary big" data-choice="ok">${S.ui.continue}</button></div></div></div>`),
   );

@@ -120,3 +120,9 @@
 .wheel .peg { fill: #f3c970; }
 .wheel .hub { fill: #ea6f14; stroke: #120a06; }
 .wheel .hub-leaf { stroke: #160a03; stroke-width: 2.4; }
+
+/* Carimbo do palco nas telas sem roda (subiu de nível, ciclo novo). */
+.stage-stamp { display: grid; justify-items: center; gap: 10px; padding: 18px 0 10px; }
+.stage-stamp .seal { --s: 96px; rotate: -6deg; box-shadow: 0 0 0 4px var(--bg), 4px 6px 0 4px rgba(0, 0, 0, .35); animation: stamp var(--dur-3) var(--ease) .15s both; }
+.stage-stamp b { font: 400 var(--fs-5xl)/1.05 var(--font-display); letter-spacing: .02em; color: var(--text); text-shadow: var(--title-shadow); }
+@media (prefers-reduced-motion: reduce) { .stage-stamp .seal { animation: none; } }

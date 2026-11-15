@@ -402,9 +402,14 @@ export async function jornadaBattle(
   let state = opts.from ?? openBattle(setup, data);
   liveBattle = () => state;
   liveBattleRun = () => run;
+  // Elite e chefe têm palco próprio: selo no cabeçalho, varrida de entrada e (chefe) retrato maior. Antes eram iguais a
+  // uma luta comum, só com outro nome.
+  const kind = currentStop(run0, data)?.kind;
+  const big = kind === 'boss' || kind === 'elite' ? kind : null;
+  const kindChip = big ? `<b class="jb-kind">${J.stopKinds[big]}</b>` : '';
   const root = show(
-    h(`<div class="screen jbattle scene-${scene}">
-      <div class="jb-head"><span>${icon('swords')} ${esc(label)}</span><span data-round></span></div>
+    h(`<div class="screen jbattle scene-${scene}${big ? ` jb-k-${big}` : ''}">
+      <div class="jb-head"><span>${icon(big === 'boss' ? 'intent' : big === 'elite' ? 'warning' : 'swords')} ${kindChip}${esc(label)}</span><span data-round></span></div>
       ${run0.relics.length ? `<div class="jb-relics">${relicStrip(run0)}</div>` : ''}
       ${goal ? `<p class="jb-goal">${esc(goal)}</p>` : ''}
       <div class="jb-side jb-enemies" data-side="enemy"></div>
@@ -415,7 +420,7 @@ export async function jornadaBattle(
         <button class="jb-log" type="button" data-log data-title="${B.logTitle}"${tip(B.logTitle, B.logTip)}><span></span></button></div>
       <div class="jb-right"><aside class="jb-intel jb-team" data-intel="ally" data-title="${B.teamTitle}"${foldAttrs('team')}></aside>
         <div class="jb-menu"></div></div>
-      <div class="jb-intro"><div>${esc(label)}</div></div>
+      <div class="jb-intro">${big === 'boss' ? '<span class="seal stamp jb-intro-seal" aria-hidden="true">将</span>' : ''}<div>${esc(label)}</div></div>
       <div class="jb-fx" aria-hidden="true"></div>
     </div>`),
   );

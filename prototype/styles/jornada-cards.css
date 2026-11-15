@@ -49,6 +49,12 @@ button.tcard:hover { background: var(--surface-2); }
 .jreport-path li .ico { width: 13px; height: 13px; }
 .jreport-path li.todo { background: transparent; border: 1px dashed color-mix(in srgb, var(--paper-ink) 50%, transparent); color: var(--paper-muted); }
 .jreport-path li.fell { background: var(--accent); color: var(--accent-ink); }
+.jreport-path li.todo .ico { opacity: .55; }
+.jreport-path li.k-boss:not(.todo) { background: var(--accent); color: var(--accent-ink); }
+.jreport-path li.k-elite:not(.todo) { background: var(--gold-deep); color: var(--paper); }
+/* Fim da run: o resultado é letreiro (pincel grande), não título de pergaminho. */
+.jreport .jc-title { font: 400 var(--fs-6xl)/1.05 var(--font-display); letter-spacing: .02em; color: var(--paper-ink); }
+.jreport.win .jc-title { color: var(--seal); }
 .jreport-team { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
 .jreport-team li { display: flex; align-items: center; gap: 6px; font: 700 var(--fs-md)/1 var(--font-hud); color: var(--paper-ink); }
 .jreport-team .portrait { width: 34px; height: 34px; border: 2px solid var(--paper-ink); box-shadow: 2px 2px 0 var(--ink); }

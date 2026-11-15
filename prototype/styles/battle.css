@@ -9,6 +9,10 @@
 .battle-head span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .battle-head .ico { color: var(--accent-text); }
 #round { color: var(--gold-2); }
+/* Chefe do ciclo: título em cor de perigo, fio vermelho no cabeçalho e retrato maior numa moldura dupla. */
+.rb-boss .battle-head { color: var(--accent-text); border-bottom: 2px solid var(--accent); }
+.rb-boss .foe-hud .hud-face .portrait { width: 100px; height: 100px; border-width: 2px; box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px var(--accent), 4px 6px 0 var(--accent-deep); }
+.rb-boss.rb-desk { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent-deep); }
 .badges { display: flex; flex-wrap: wrap; gap: 4px; min-height: 0; }
 .badges:empty { display: none; }
 
