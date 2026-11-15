@@ -100,6 +100,8 @@ export const jornadaBalance = {
     bossChoices: 3,
     // Chance de uma das opções do chefe ser a evolução da relíquia inicial.
     starterEvolveChance: 0.5,
+    // No 1º chefe a evolução vem garantida (v0.83.0, C3 aprovado pelo usuário).
+    starterEvolveFirstBoss: 1,
   },
 
   // Mapa ramificado do Caminho Ninja (docs/jornada/run.md#mapa-ramificado). 12 linhas: começo, 10 do meio, chefe.

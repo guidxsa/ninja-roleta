@@ -823,7 +823,9 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
   if (stop.kind === 'boss') {
     // Estágio vencido: toda a equipe volta cheia, inclusive quem caiu.
     healFull(run, data, membersSeen(run, data));
-    run.bossChoice = bossChoices(fitRelics(run, data), run.relics, data.j.relics.bossChoices, data.j.relics.starterEvolveChance, stopRng(run, 7));
+    // C3 (v0.83.0): no 1º chefe, a evolução da relíquia inicial vem garantida entre as opções.
+    const evolve = run.stageIndex === 0 ? data.j.relics.starterEvolveFirstBoss : data.j.relics.starterEvolveChance;
+    run.bossChoice = bossChoices(fitRelics(run, data), run.relics, data.j.relics.bossChoices, evolve, stopRng(run, 7));
     if (!run.bossChoice.length) run.bossChoice = null;
   }
   // Elite vencida deixa uma relíquia (o sorteio vem antes de avançar: a seed é a da parada).

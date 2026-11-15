@@ -19,6 +19,8 @@ Escolhas do usuário sobre o [diagnóstico](balanceamento/diagnostico.md), imple
   - Preço da loja por estágio (J6): 0,25 → 0,15 (medido, não aplicado) dá ~0,4 a 0,6 compra a mais nos estágios 2 e 3 do Comum e muda a vitória em 0 a 4 pontos.
   - Valor marginal das relíquias refeitas na v0.78.0 (pontos no Difícil, linha de base → v0.79.0): Armadura samurai 30,8 → 20,5; Manto de Kage 23,4 → 20,1; Cabaça de areia 18,0 → 10,1; Lótus eterna 19,3 → 15,8; Amuleto da longevidade 14,5 → 10,6; Diário do mestre 0,8 → 9,5; Frasco de toxina 0,0 → 5,9; Sino do mercador 1,1 → 4,3; Incenso dos sonhos 0,6 → 4,1; Bolsa reforçada 0,6 → 3,4; Cobertor de campanha 0,5 → 2,9; Colete acolchoado −0,1 → −0,8 e Linha de sombra 0,0 → −0,9 seguem sem valor para o bot (ele não usa Defender nem joga para atordoar).
 
+- **v0.83.0 (fase 6, parte 1)**: C3, a evolução da relíquia inicial vem garantida entre as 3 opções do 1º chefe (antes 50%). Médio v0.82.0 → v0.83.0: Comum 90 → 91, prodígio 94 → 93, Uchiha 81 → 82, Hyuuga 88 → 88; História igual (74%). O bot quase não muda porque escolhe pelo valor medido e as evoluções não estão na tabela dele (valem o padrão, 3).
+
 Roleta, vitória por origem (Fácil / Médio / Difícil / Hardcore), até a v0.80.0:
 
 | Origem | Linha de base | v0.78.0 | v0.79.0 | v0.80.0 |

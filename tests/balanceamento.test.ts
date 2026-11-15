@@ -1,7 +1,8 @@
 // Balanceamento aprovado pelo usuário (docs/balanceamento/diagnostico.md): regras novas de cada fase.
 import { describe, expect, it } from 'vitest';
 import { emptyMods, hitDamage, mergeMods, playerAct, startBattle } from '../src/core/jornada/battle';
-import { relicFits, relicNeeds } from '../src/core/jornada/relics';
+import { evolutionFor, relicFits, relicNeeds } from '../src/core/jornada/relics';
+import { pathRun, playUntil } from '../prototype/lab/fixtures/jornada';
 import { gateHpUpkeep, payGateUpkeep } from '../src/core/gates';
 import { fitRelics, gainRelic, heroMods, heroNeeds, newGenericRun, newRun, resolveEvent, runEnemyMult } from '../src/core/jornada/run';
 import type { FighterSeed } from '../src/core/jornada/types';
@@ -162,6 +163,18 @@ describe('Fase 5 · Jornada e História (H1, H2, H3, J5)', () => {
     const out = resolveEvent(run, opt.id, true, data);
     const own = opt.effects.filter((e) => e.kind === 'ryo').reduce((a, e) => a + (e as { n: number }).n, 0);
     expect(out.run.ryo - run.ryo).toBeGreaterThanOrEqual(own + 20);
+  });
+});
+
+describe('Fase 6 · Caminho Ninja (C3)', () => {
+  it('no 1º chefe, a evolução da relíquia inicial vem entre as opções', () => {
+    for (const seed of [3, 7, 11]) {
+      const run = playUntil(pathRun(seed, 'easy'), (r) => Boolean(r.bossChoice));
+      expect(run.stageIndex).toBe(0);
+      const evo = evolutionFor(data.relics, run.relics);
+      expect(evo, `seed ${seed}`).toBeTruthy();
+      expect(run.bossChoice, `seed ${seed}`).toContain(evo);
+    }
   });
 });
 

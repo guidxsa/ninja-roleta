@@ -29,7 +29,7 @@
 | **Elite** vencida | Comum 50%, incomum 33%, rara 17% |
 | **Tesouro** | Comum 40%, incomum 35%, rara 25% |
 | **Loja** | 3 à venda por estágio: 2 sorteadas e 1 de loja. A chance melhora a cada estágio passado (comum/incomum/rara): 50/33/17 no 1º, 40/37/23 no 2º, 30/40/30 do 3º em diante (proposta, v0.62.0). Dá para atualizar a prateleira pagando ([run.md](run.md#loja)). Os preços sobem com os estágios. Preços: comum 40, incomum 60, rara 90, loja 70 ryō |
-| **Chefe** | Escolher 1 entre 3 de chefe; com a inicial ainda não evoluída, 50% de chance de uma das 3 ser a evolução dela |
+| **Chefe** | Escolher 1 entre 3 de chefe; com a inicial ainda não evoluída, uma das 3 é a evolução dela: garantida no 1º chefe (v0.83.0, `starterEvolveFirstBoss`), 50% nos outros |
 | **Eventos** | Algumas escolhas dão uma relíquia de evento ou rara ([historia.md](historia.md#eventos), [caminho-ninja.md](caminho-ninja.md#eventos)) |
 
 ## Iniciais e evolução
