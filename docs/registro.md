@@ -21,6 +21,8 @@ Escolhas do usuário sobre o [diagnóstico](balanceamento/diagnostico.md), imple
 
 - **v0.83.0 (fase 6, parte 1)**: C3, a evolução da relíquia inicial vem garantida entre as 3 opções do 1º chefe (antes 50%). Médio v0.82.0 → v0.83.0: Comum 90 → 91, prodígio 94 → 93, Uchiha 81 → 82, Hyuuga 88 → 88; História igual (74%). O bot quase não muda porque escolhe pelo valor medido e as evoluções não estão na tabela dele (valem o padrão, 3).
 
+- **v0.84.0 (fase 6, parte 2)**: C2, árvore do Comum refeita no molde do Naruto, a pedido do usuário (mais ramos, conexões entre ramos, combos fortes; custo total acima do que a run rende): seis ramos em anel (Elemento, Ferramentas, Estilo da Folha, Clones, Equipe, Determinação), bifurcação e talento final em cada, seis combinações e três assinaturas ([talentos.md](jornada/talentos.md#comum-caminho-ninja)). Decidido sozinho: todos os nós e números (o usuário aprovou o desenho e pediu para seguir). Builds (`--ramos --classe=commonNinja`, 300 runs, Médio / Difícil): padrão 91 / 64; Elemento 91 / 66; Ferramentas 91 / 63; **Estilo da Folha 95 / 78**; Clones 93 / 59; Equipe 93 / 68; Determinação 92 / 67; diferença entre ramos 4,6 / 18,7 pontos. Primeira medição, antes do ajuste: Clones 87 / 51 e Estilo da Folha 96 / 80 (29 pontos no Difícil); ajustei os meus próprios números (Kawarimi 12%, Multiclones começa com 1 clone, Ilusão perfeita −25%, Mestre das armadilhas +40%, Bolsa ninja +5 de chakra, Treino básico +1, Reflexos 6%, Furacão +15% e Combo +7% por golpe). O Estilo da Folha segue na frente porque o Furacão (2 golpes sem chakra) pesa no começo da run.
+
 Roleta, vitória por origem (Fácil / Médio / Difícil / Hardcore), até a v0.80.0:
 
 | Origem | Linha de base | v0.78.0 | v0.79.0 | v0.80.0 |

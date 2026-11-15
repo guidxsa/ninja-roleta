@@ -69,21 +69,64 @@ export const talents: TalentNode[] = [
   { id: 'tRasenganKyuubi', owner: 'naruto', branch: 'kyuubi', tier: 6, cost: 2, requiresAll: ['tChakraBurst', 'tRasenganSpin'], mods: { techDamageMult: { jRasengan: 1.2 }, lowHpDamageMult: 1.15 } },
   { id: 'tRasenClone', owner: 'naruto', branch: 'rasengan', tier: 6, cost: 2, requiresAll: ['tRasenganSpin', 'tCloneBlast'], learn: 'jRasenClone', maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jRasenClone: 1.2 } } },
 
-  // Comum (Caminho Ninja): o ramo Elemento ensina as técnicas do elemento sorteado.
+  // Comum (Caminho Ninja), refeito na v0.84.0: o ninja que faz de tudo. Seis ramos em anel (Elemento, Ferramentas,
+  // Estilo da Folha, Clones, Equipe, Determinação), cada um com raiz, bifurcação, junção, um nó a mais e um talento
+  // final que muda uma regra. Seis combinações ligam ramos vizinhos (pedem as duas junções) e três assinaturas premiam
+  // combos fortes (pedem o talento final de um ramo e a junção do outro). A árvore toda custa ~80; uma run rende ~18.
+  // Elemento (poder): as técnicas do elemento sorteado. Final: o ninjutsu atravessa a resistência.
   { id: 'tElement2', owner: 'commonNinja', branch: 'element', tier: 1, cost: 1, learnByElement: { fire: 'jFireball', wind: 'jGale', lightning: 'jLightningCurrent', earth: 'jEarthSpear', water: 'jWaterShark' }, maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jFireball: 1.2, jGale: 1.2, jLightningCurrent: 1.2, jEarthSpear: 1.2, jWaterShark: 1.2 } } },
-  // Poder elemental também ensina a barreira do elemento (v0.77.0; o raio não tem).
-  { id: 'tElementPower', owner: 'commonNinja', branch: 'element', tier: 2, cost: 2, mods: { typeDamageMult: { ninjutsu: 1.15 } }, learnByElement: { fire: 'jFireWall', wind: 'jWindShield', earth: 'jEarthWall', water: 'jWaterWall' } },
-  { id: 'tElement3', owner: 'commonNinja', branch: 'element', tier: 3, cost: 2, learnByElement: { fire: 'jGreatBlaze', wind: 'jVacuumSphere', lightning: 'jLightningBlade', earth: 'jEarthDragon', water: 'jWaterfall' } },
-  { id: 'tElementMaster', owner: 'commonNinja', branch: 'element', tier: 4, cost: 3, mods: { chakraDiscount: 2, critBonus: 0.05 } },
+  // Afinidade também ensina a barreira do elemento (v0.77.0; o raio não tem).
+  { id: 'tElementPower', owner: 'commonNinja', branch: 'element', tier: 2, col: -1, cost: 2, excludes: ['tCChakraFlow'], mods: { typeDamageMult: { ninjutsu: 1.15 } }, learnByElement: { fire: 'jFireWall', wind: 'jWindShield', earth: 'jEarthWall', water: 'jWaterWall' } },
+  { id: 'tCChakraFlow', owner: 'commonNinja', branch: 'element', tier: 2, col: 1, cost: 2, excludes: ['tElementPower'], mods: { chakraDiscount: 1, effectChanceBonus: 0.1 } },
+  { id: 'tElement3', owner: 'commonNinja', branch: 'element', tier: 3, cost: 2, requires: ['tElementPower', 'tCChakraFlow'], learnByElement: { fire: 'jGreatBlaze', wind: 'jVacuumSphere', lightning: 'jLightningBlade', earth: 'jEarthDragon', water: 'jWaterfall' } },
+  { id: 'tCNatureMastery', owner: 'commonNinja', branch: 'element', tier: 4, cost: 2, mods: { effectTurnsBonus: 1 } },
+  { id: 'tElementMaster', owner: 'commonNinja', branch: 'element', tier: 5, cost: 3, capstone: true, mods: { typePen: { ninjutsu: 0.3 }, chakraDiscount: 1 } },
+  // Ferramentas (controle): área ou atordoar. Final: inimigo atordoado leva mais dano de toda a equipe.
   { id: 'tKunaiPro', owner: 'commonNinja', branch: 'tools', tier: 1, cost: 1, mods: { taijutsuFlat: 2 } },
-  { id: 'tExplosiveTag', owner: 'commonNinja', branch: 'tools', tier: 2, cost: 2, learn: 'jExplosiveTag', maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jExplosiveTag: 1.25 } } },
-  { id: 'tWireTrap', owner: 'commonNinja', branch: 'tools', tier: 3, cost: 2, learn: 'jWireTrap' },
-  { id: 'tSubstitution', owner: 'commonNinja', branch: 'tools', tier: 4, cost: 3, mods: { evasion: 0.1, extraClones: 1 } },
+  { id: 'tExplosiveTag', owner: 'commonNinja', branch: 'tools', tier: 2, col: -1, cost: 2, excludes: ['tWireTrap'], learn: 'jExplosiveTag', maxRank: 2, rankCost: 1, rankMods: { techDamageMult: { jExplosiveTag: 1.25 } } },
+  { id: 'tWireTrap', owner: 'commonNinja', branch: 'tools', tier: 2, col: 1, cost: 2, excludes: ['tExplosiveTag'], learn: 'jWireTrap', mods: { effectTurnsBonus: 1 } },
+  { id: 'tCNinjaPouch', owner: 'commonNinja', branch: 'tools', tier: 3, cost: 2, requires: ['tExplosiveTag', 'tWireTrap'], mods: { kitBonusPct: 0.25, startChakra: 5 } },
+  { id: 'tCArsenal', owner: 'commonNinja', branch: 'tools', tier: 4, cost: 2, mods: { techChakraDiscount: { jExplosiveTag: 2, jWireTrap: 2 }, effectChanceBonus: 0.1 } },
+  { id: 'tCTrapMaster', owner: 'commonNinja', branch: 'tools', tier: 5, cost: 3, capstone: true, teamMods: { stunnedDamageMult: 1.4 } },
+  // Estilo da Folha (sequência): taijutsu de vários golpes. Final: +1 golpe e cada golpe seguido bate mais.
+  { id: 'tCBasicTraining', owner: 'commonNinja', branch: 'leafStyle', tier: 1, cost: 1, mods: { taijutsuFlat: 1, accuracyBonus: 0.05 } },
+  { id: 'tCHurricane', owner: 'commonNinja', branch: 'leafStyle', tier: 2, col: -1, cost: 2, excludes: ['tCFirmFist'], learn: 'jLeafHurricane', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jLeafHurricane: 1.15 } } },
+  { id: 'tCFirmFist', owner: 'commonNinja', branch: 'leafStyle', tier: 2, col: 1, cost: 2, excludes: ['tCHurricane'], mods: { typePen: { taijutsu: 0.2 } } },
+  { id: 'tCFightRhythm', owner: 'commonNinja', branch: 'leafStyle', tier: 3, cost: 2, requires: ['tCHurricane', 'tCFirmFist'], mods: { taijutsuHitChakra: 1 } },
+  { id: 'tCReflexes', owner: 'commonNinja', branch: 'leafStyle', tier: 4, cost: 2, mods: { evasion: 0.06, critBonus: 0.05 } },
+  { id: 'tCLeafCombo', owner: 'commonNinja', branch: 'leafStyle', tier: 5, cost: 3, capstone: true, mods: { taijutsuExtraHits: 1, comboStepPct: 0.07 } },
+  // Clones (enganação): esquiva ou clone que bate. Final: com clone de pé, o inimigo erra mais.
+  { id: 'tCCloneBasics', owner: 'commonNinja', branch: 'clones', tier: 1, cost: 1, mods: { techChakraDiscount: { jBunshin: 1, jMizuBunshin: 1, jDotonBunshin: 1, jRaitonBunshin: 1, jMokutonBunshin: 1, jSunaBunshin: 1 } } },
+  { id: 'tSubstitution', owner: 'commonNinja', branch: 'clones', tier: 2, col: -1, cost: 2, excludes: ['tCAttackClone'], mods: { evasion: 0.12 } },
+  { id: 'tCAttackClone', owner: 'commonNinja', branch: 'clones', tier: 2, col: 1, cost: 2, excludes: ['tSubstitution'], mods: { cloneStrikePct: 0.25 } },
+  { id: 'tCMultiClones', owner: 'commonNinja', branch: 'clones', tier: 3, cost: 2, requires: ['tSubstitution', 'tCAttackClone'], mods: { extraClones: 1, startClones: 1 } },
+  { id: 'tCCloneBlast', owner: 'commonNinja', branch: 'clones', tier: 4, cost: 2, mods: { cloneCounter: 4 } },
+  { id: 'tCPerfectIllusion', owner: 'commonNinja', branch: 'clones', tier: 5, cost: 3, capstone: true, mods: { cloneEnemyAccuracy: 0.25, maxClonesBonus: 1 } },
+  // Equipe (suporte): suportes fortes e protegidos. Final: uma vez por luta, ninguém da equipe cai de primeira.
+  { id: 'tCTeamwork', owner: 'commonNinja', branch: 'team', tier: 1, cost: 1, allyHpPct: 0.08 },
+  { id: 'tCCommand', owner: 'commonNinja', branch: 'team', tier: 2, col: -1, cost: 2, excludes: ['tCCare'], teamMods: { damageMult: 1.1 } },
+  { id: 'tCCare', owner: 'commonNinja', branch: 'team', tier: 2, col: 1, cost: 2, excludes: ['tCCommand'], teamMods: { healMult: 1.25 } },
+  { id: 'tFieldMedic', owner: 'commonNinja', branch: 'team', tier: 3, cost: 2, requires: ['tCCommand', 'tCCare'], learn: 'jReanimate' },
+  { id: 'tCFormation', owner: 'commonNinja', branch: 'team', tier: 4, cost: 2, teamMods: { startShieldPct: 0.08 } },
+  { id: 'tCBornLeader', owner: 'commonNinja', branch: 'team', tier: 5, cost: 3, capstone: true, teamMods: { surviveOnce: true } },
+  // Determinação (resistência): crescer e aguentar. Final: cai de pé, recupera e fica firme.
   { id: 'tDetermination', owner: 'commonNinja', branch: 'will', tier: 1, cost: 1, xpMult: 1.25 },
-  { id: 'tGrit', owner: 'commonNinja', branch: 'will', tier: 2, cost: 2, mods: { lowHpDamageMult: 1.25 } },
-  { id: 'tHardWork', owner: 'commonNinja', branch: 'will', tier: 3, cost: 2, mods: { damageMult: 1.1 } },
-  { id: 'tWillOfFire', owner: 'commonNinja', branch: 'will', tier: 4, cost: 3, mods: { surviveOnce: true, regenHp: 2 } },
-  { id: 'tFieldMedic', owner: 'commonNinja', branch: 'will', tier: 5, cost: 2, learn: 'jReanimate' },
+  { id: 'tGrit', owner: 'commonNinja', branch: 'will', tier: 2, col: -1, cost: 2, excludes: ['tCStubborn'], mods: { lowHpDamageMult: 1.25 } },
+  { id: 'tCStubborn', owner: 'commonNinja', branch: 'will', tier: 2, col: 1, cost: 2, excludes: ['tGrit'], mods: { regenHp: 2, guardHealPct: 0.08 } },
+  { id: 'tHardWork', owner: 'commonNinja', branch: 'will', tier: 3, cost: 2, requires: ['tGrit', 'tCStubborn'], mods: { damageMult: 1.1 } },
+  { id: 'tCResilience', owner: 'commonNinja', branch: 'will', tier: 4, cost: 2, mods: { evasion: 0.06, regenHp: 1 } },
+  { id: 'tWillOfFire', owner: 'commonNinja', branch: 'will', tier: 5, cost: 3, capstone: true, mods: { surviveOnce: true, surviveHealPct: 0.25 } },
+  // Combinações (anel): pedem a junção dos dois ramos vizinhos.
+  { id: 'tCElementalSeal', owner: 'commonNinja', branch: 'element', tier: 6, cost: 2, requiresAll: ['tElement3', 'tCNinjaPouch'], mods: { techDamageMult: { jExplosiveTag: 1.2, jWireTrap: 1.2 }, effectChanceBonus: 0.1 } },
+  { id: 'tCKunaiFist', owner: 'commonNinja', branch: 'tools', tier: 6, cost: 2, requiresAll: ['tCNinjaPouch', 'tCFightRhythm'], mods: { taijutsuFlat: 3, critBonus: 0.05 } },
+  { id: 'tCLeafShadow', owner: 'commonNinja', branch: 'leafStyle', tier: 6, cost: 2, requiresAll: ['tCFightRhythm', 'tCMultiClones'], mods: { cloneStrikePct: 0.35 } },
+  { id: 'tCCover', owner: 'commonNinja', branch: 'clones', tier: 6, cost: 2, requiresAll: ['tCMultiClones', 'tFieldMedic'], teamMods: { startClones: 1 } },
+  { id: 'tCSteelBond', owner: 'commonNinja', branch: 'team', tier: 6, cost: 2, requiresAll: ['tFieldMedic', 'tHardWork'], teamMods: { lowHpDamageMult: 1.15 } },
+  { id: 'tCInnerFlame', owner: 'commonNinja', branch: 'will', tier: 6, cost: 2, requiresAll: ['tHardWork', 'tElement3'], mods: { lowHpDamageMult: 1.15, chakraDiscount: 1 } },
+  // Assinaturas: combos fortes entre si (o talento final de um ramo e a junção do outro).
+  { id: 'tCChainBlast', owner: 'commonNinja', branch: 'tools', tier: 7, cost: 3, requiresAll: ['tCTrapMaster', 'tElement3'], mods: { stunnedSplashPct: 0.5 } },
+  { id: 'tCThousandBlows', owner: 'commonNinja', branch: 'leafStyle', tier: 7, cost: 3, requiresAll: ['tCLeafCombo', 'tCMultiClones'], mods: { taijutsuHitsPerClone: 1 } },
+  { id: 'tCNeverAlone', owner: 'commonNinja', branch: 'will', tier: 7, cost: 3, requiresAll: ['tWillOfFire', 'tFieldMedic'], mods: { surviveTeamHealPct: 0.15 } },
 
   // Prodígio (Comum sem elemento): o kit do prodígio do Roleta. Começa com o Portão da Abertura; o talento Portão da
   // Vida libera até o 3º portão e a Lótus Oculta até o 5º (Limite).

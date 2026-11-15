@@ -9,7 +9,7 @@ A árvore **reinicia a cada run** e custa pontos de talento ([progressao.md](pro
 - **Níveis**: a maioria dos talentos é **única**, principalmente os passivos. Alguns, quase sempre técnicas, sobem de nível, com limite de 2 ou 3 e um custo próprio por nível. Dá para voltar e subir um talento antigo a qualquer momento, mesmo depois de avançar no ramo.
 - **Ramos canônicos** (v0.67.0): a raiz de Sapos, Kyuubi e Rasengan é **dada pela história** (`grantedBy`): entra carimbada, sem custo, no marco ([historia.md](historia.md#momentos-canônicos)). Antes disso, aparece tracejada como "Vem pela história", e o resto do ramo fica fechado. Os níveis da raiz continuam pagos.
 - **Laços** (v0.68.0): a raiz (Não vou desistir) também vem pela história: a lição do teste do sino.
-- **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela; desde a v0.71.0, cada um muda uma regra do combate. As outras classes ainda não têm talento final nem bifurcação (item em aberto em [decisoes.md](../decisoes.md)).
+- **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela; desde a v0.71.0, cada um muda uma regra do combate. Desde a v0.84.0 o Comum também tem; prodígio, Uchiha e Hyuuga ainda não (item em aberto em [decisoes.md](../decisoes.md)).
 - **Combinação** (`requiresAll`, v0.71.0): talento que pede a junção de dois ramos ([abaixo](#combinações)).
 - **Nós da conta** ficam liberados de vez por um objetivo (hoje, o ramo do Sasuke no Uchiha). A Ōdama Rasengan saiu na v0.67.0: não pertence ao Naruto clássico e fica guardada para uma campanha Shippuden.
 - O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
@@ -109,6 +109,7 @@ No código: `requiresAll` no nó (`src/core/jornada/talents.ts`); as regras dos 
 |---|---|---|---|
 | Comum | Nível II (ramo Elemento) | 3 (+1 cada) | +20% de dano |
 | Comum | Selo explosivo | 2 (+1) | +25% de dano |
+| Comum | Furacão da Folha (Estilo da Folha) | 3 (+1 cada) | +15% de dano |
 | Prodígio | Furacão da Folha | 3 (+1 cada) | +20% de dano |
 | Prodígio | Lótus Primária | 2 (+2) | +20% de dano |
 | Prodígio | Entrada dinâmica | 2 (+1) | +25% de dano |
@@ -120,23 +121,73 @@ No código: `requiresAll` no nó (`src/core/jornada/talents.ts`); as regras dos 
 
 ## Comum (Caminho Ninja)
 
-O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.md#sorteio-do-elemento)).
+Refeita na v0.84.0, no molde do Naruto: o ninja que faz de tudo. **Seis ramos em anel**, cada um com raiz, **bifurcação**, junção, um nó a mais e um **talento final** que muda uma regra; **seis combinações** ligam ramos vizinhos e **três assinaturas** premiam combos fortes. Um ramo custa 10 pontos; a árvore toda, uns 80, e uma run rende ~18: dá para fechar um ramo e meio, ou montar um combo. O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.md#sorteio-do-elemento)).
 
-| Ramo | Nó | Custo | Efeito |
+| Ramo | Estilo | Bifurcação | Talento final (a regra que muda) |
 |---|---|---|---|
-| Elemento | Nível II | 1 | Aprende o nível II do elemento (Bola de Fogo, Rajada, Corrente elétrica, Lança de terra, Tubarão de água) |
-| Elemento | Afinidade | 2 | +15% de dano de ninjutsu |
-| Elemento | Nível III | 2 | Aprende o nível III (Grande Labareda, Esfera de vácuo, Lâmina de raio, Dragão de terra, Cachoeira) |
-| Elemento | Mestre do elemento | 3 | Técnicas custam 2 de chakra a menos; +5% de crítico |
-| Ferramentas | Kunai afiada | 1 | +2 de dano no taijutsu |
-| Ferramentas | Selo explosivo | 2 | Aprende o Selo explosivo (todos os inimigos) |
-| Ferramentas | Armadilha de fios | 2 | Aprende a Armadilha de fios |
-| Ferramentas | Substituição | 3 | Esquiva 10%; o Bunshin no Jutsu cria 1 clone a mais |
-| Determinação | Determinação | 1 | +25% de XP |
-| Determinação | Garra | 2 | +25% de dano abaixo da metade do HP |
-| Determinação | Trabalho duro | 2 | +10% de dano |
-| Determinação | Vontade do Fogo | 3 | Uma vez por luta fica com 1 de HP; recupera 2 de HP por rodada |
-| Determinação | Primeiros socorros | 2 | Aprende Reanimação |
+| Elemento | poder | Afinidade (dano) ou Fluxo de chakra (custo e efeito) | O ninjutsu **ignora 30% da resistência** |
+| Ferramentas | controle | Selo explosivo (área) ou Armadilha de fios (atordoar) | Inimigo atordoado leva **+40% de dano de toda a equipe** |
+| Estilo da Folha | sequência | Furacão da Folha (golpes) ou Punho firme (penetração) | Técnicas de taijutsu ganham **1 golpe** e cada golpe seguido bate +7% (até +30%) |
+| Clones | enganação | Kawarimi (esquiva) ou Clone de ataque (o clone bate) | Com clone de pé, os inimigos têm **−25% de acerto** em você |
+| Equipe | suporte | Comando (dano) ou Cuidado (cura) | Uma vez por luta, **cada integrante** fica com 1 de HP em vez de cair |
+| Determinação | resistência | Garra (HP baixo) ou Teimosia (regeneração) | Fica com 1 de HP em vez de cair, **recupera 25% e fica firme** |
+
+| Ramo | Nó | Custo | Níveis | Efeito |
+|---|---|---|---|---|
+| Elemento | Nível II | 1 | 3 (+1 cada) | Aprende o nível II do elemento. Cada nível: +20% de dano |
+| Elemento | Afinidade **ou** | 2 | | +15% de dano de ninjutsu; a barreira do elemento (o raio não tem) |
+| Elemento | Fluxo de chakra | 2 | | Técnicas custam 1 a menos; +10% de chance de efeito |
+| Elemento | Nível III | 2 | | Aprende o nível III do elemento |
+| Elemento | Natureza dominada | 2 | | Os efeitos que você aplica duram 1 turno a mais |
+| Elemento | **Mestre do elemento** (final) | 3 | | Ninjutsu ignora 30% da resistência; técnicas custam 1 a menos |
+| Ferramentas | Kunai afiada | 1 | | +2 de dano no taijutsu |
+| Ferramentas | Selo explosivo **ou** | 2 | 2 (+1) | Aprende o Selo explosivo (todos os inimigos). Nível 2: +25% de dano |
+| Ferramentas | Armadilha de fios | 2 | | Aprende a Armadilha de fios; os efeitos duram 1 turno a mais |
+| Ferramentas | Bolsa ninja | 2 | | Kits rendem +25%; começa as lutas com +5 de chakra |
+| Ferramentas | Arsenal | 2 | | Selo e Armadilha custam 2 a menos; +10% de chance de efeito |
+| Ferramentas | **Mestre das armadilhas** (final) | 3 | | Inimigo atordoado leva +40% de dano da equipe |
+| Estilo da Folha | Treino básico | 1 | | +1 de dano no taijutsu; +5% de acerto |
+| Estilo da Folha | Furacão da Folha **ou** | 2 | 3 (+1 cada) | Aprende o Furacão da Folha (2 golpes, sem chakra). Cada nível: +15% de dano |
+| Estilo da Folha | Punho firme | 2 | | O taijutsu ignora 20% da resistência |
+| Estilo da Folha | Ritmo de luta | 2 | | Cada golpe de taijutsu que acerta devolve 1 de chakra |
+| Estilo da Folha | Reflexos | 2 | | Esquiva 6%; +5% de crítico |
+| Estilo da Folha | **Combo da Folha** (final) | 3 | | Taijutsu +1 golpe; cada golpe seguido +7% (até +30%) |
+| Clones | Bunshin aprimorado | 1 | | O clone custa 1 de chakra a menos |
+| Clones | Kawarimi **ou** | 2 | | Esquiva 12% |
+| Clones | Clone de ataque | 2 | | O clone bate junto com 25% do dano de um golpe |
+| Clones | Multiclones | 2 | | O clone sai com 1 a mais; começa as lutas com 1 clone |
+| Clones | Clone explosivo | 2 | | Quem acerta um clone leva 4 de dano |
+| Clones | **Ilusão perfeita** (final) | 3 | | Com clone de pé, −25% de acerto dos inimigos; limite de clones +1 |
+| Equipe | Trabalho em equipe | 1 | | +8% de HP máximo dos suportes |
+| Equipe | Comando **ou** | 2 | | A equipe causa +10% de dano |
+| Equipe | Cuidado | 2 | | Curas na equipe rendem +25% |
+| Equipe | Primeiros socorros | 2 | | Aprende Reanimação |
+| Equipe | Formação | 2 | | A equipe começa as lutas com escudo de 8% |
+| Equipe | **Líder nato** (final) | 3 | | Uma vez por luta, cada integrante fica com 1 de HP em vez de cair |
+| Determinação | Determinação | 1 | | +25% de XP |
+| Determinação | Garra **ou** | 2 | | +25% de dano abaixo da metade do HP |
+| Determinação | Teimosia | 2 | | 2 de HP por rodada; Defender cura 8% |
+| Determinação | Trabalho duro | 2 | | +10% de dano |
+| Determinação | Resiliência | 2 | | Esquiva 6%; 1 de HP por rodada |
+| Determinação | **Vontade do Fogo** (final) | 3 | | Uma vez por luta fica com 1 de HP, recupera 25% e fica firme |
+
+### Combinações e assinaturas do Comum
+
+As combinações (2 pontos) pedem a junção dos dois ramos vizinhos, em anel. As assinaturas (3 pontos) pedem o talento final de um ramo e a junção do outro: são os combos fortes entre si.
+
+| Tipo | Talento | Pede | Efeito |
+|---|---|---|---|
+| Combinação | Selo elemental | Nível III e Bolsa ninja | Selo e Armadilha +20% de dano; +10% de chance de efeito |
+| Combinação | Kunai e punho | Bolsa ninja e Ritmo de luta | +3 de dano no taijutsu; +5% de crítico |
+| Combinação | Sombra da Folha | Ritmo de luta e Multiclones | O clone bate junto com 35% do dano |
+| Combinação | Cobertura | Multiclones e Primeiros socorros | Cada integrante começa as lutas com 1 clone |
+| Combinação | Laço de aço | Primeiros socorros e Trabalho duro | Abaixo da metade do HP, cada integrante causa +15% |
+| Combinação | Chama interior | Trabalho duro e Nível III | +15% de dano abaixo da metade do HP; técnicas custam 1 a menos |
+| Assinatura | **Explosão em cadeia** | Mestre das armadilhas e Nível III | Ninjutsu em inimigo atordoado espalha 50% do dano nos outros. *A armadilha prende, o elemento castiga em área.* |
+| Assinatura | **Mil golpes** | Combo da Folha e Multiclones | Cada clone de pé dá 1 golpe a mais ao taijutsu (até +2). *O combo vira uma sequência enorme.* |
+| Assinatura | **Nunca sozinho** | Vontade do Fogo e Primeiros socorros | Ao ficar de pé com 1 de HP, o resto da equipe recupera 15%. *Vira o jogo na beira da derrota.* |
+
+No código: os talentos finais e as assinaturas usam campos de `FighterMods` (`typePen`, `cloneEnemyAccuracy`, `taijutsuExtraHits`, `taijutsuHitsPerClone`, `comboStepPct`, `taijutsuHitChakra`, `cloneStrikePct`, `stunnedSplashPct`, `surviveHealPct`, `surviveTeamHealPct`), com testes em `tests/balanceamento.test.ts`. Builds: `npm run sim:jornada -- 300 2 --ramos --classe=commonNinja`.
 
 ## Prodígio (Caminho Ninja)
 

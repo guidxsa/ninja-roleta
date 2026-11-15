@@ -68,6 +68,16 @@ export function emptyMods(): FighterMods {
     controlledDamageMult: 1,
     fearOnHit: 0,
     guardHealPct: 0,
+    typePen: {},
+    cloneEnemyAccuracy: 0,
+    taijutsuExtraHits: 0,
+    taijutsuHitsPerClone: 0,
+    comboStepPct: 0,
+    taijutsuHitChakra: 0,
+    cloneStrikePct: 0,
+    stunnedSplashPct: 0,
+    surviveHealPct: 0,
+    surviveTeamHealPct: 0,
   };
 }
 
@@ -124,6 +134,16 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     controlledDamageMult: a.controlledDamageMult * (b.controlledDamageMult ?? 1),
     fearOnHit: a.fearOnHit + (b.fearOnHit ?? 0),
     guardHealPct: a.guardHealPct + (b.guardHealPct ?? 0),
+    typePen: addMap(a.typePen, b.typePen),
+    cloneEnemyAccuracy: a.cloneEnemyAccuracy + (b.cloneEnemyAccuracy ?? 0),
+    taijutsuExtraHits: a.taijutsuExtraHits + (b.taijutsuExtraHits ?? 0),
+    taijutsuHitsPerClone: a.taijutsuHitsPerClone + (b.taijutsuHitsPerClone ?? 0),
+    comboStepPct: a.comboStepPct + (b.comboStepPct ?? 0),
+    taijutsuHitChakra: a.taijutsuHitChakra + (b.taijutsuHitChakra ?? 0),
+    cloneStrikePct: Math.max(a.cloneStrikePct, b.cloneStrikePct ?? 0),
+    stunnedSplashPct: a.stunnedSplashPct + (b.stunnedSplashPct ?? 0),
+    surviveHealPct: a.surviveHealPct + (b.surviveHealPct ?? 0),
+    surviveTeamHealPct: a.surviveTeamHealPct + (b.surviveTeamHealPct ?? 0),
   };
 }
 
@@ -378,7 +398,7 @@ export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data
     offense: user.offense[tech.type] + (user.boost?.offense ?? 0),
     resistance: target.resistance[resistanceKind(tech.type)],
     fraction: target.guarding ? j.guardFraction : j.resistanceFraction,
-    penetration: Math.min(data.base.penetration.max, (tech.penetration ?? 0) + (user.boost?.penetration ?? 0)),
+    penetration: Math.min(data.base.penetration.max, (tech.penetration ?? 0) + (user.boost?.penetration ?? 0) + (user.mods.typePen[tech.type] ?? 0)),
     // Sem multiplicador de elemento no HP (v0.77.0): ele só vale contra a barreira, na hora do golpe.
     elementMult: 1,
     critMult: crit ? data.base.crit.multiplier : 1,
@@ -391,15 +411,24 @@ export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data
 
 export function hitsOf(user: Fighter, tech: JTechnique): number {
   const extra = tech.hitsPerClone ? Math.min(tech.maxCloneHits ?? Infinity, user.clones * tech.hitsPerClone) : 0;
-  return (tech.hits ?? 1) + extra;
+  // Combo da Folha e Mil golpes (Comum, v0.84.0): técnicas de taijutsu de dano ganham golpes (até +2 pelos clones).
+  const m = user.mods;
+  const taiExtra = tech.type === 'taijutsu' && tech.baseDamage > 0 ? m.taijutsuExtraHits + Math.min(TAI_CLONE_HITS_MAX, user.clones * m.taijutsuHitsPerClone) : 0;
+  return (tech.hits ?? 1) + extra + taiExtra;
 }
+
+/** Teto dos golpes de taijutsu a mais pelos clones (Mil golpes). */
+const TAI_CLONE_HITS_MAX = 2;
+/** Teto do bônus da sequência de taijutsu (Combo da Folha). */
+const COMBO_MAX = 0.3;
 
 export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique, data: JornadaData): number {
   const fear = hasEffect(user, 'fear') ? data.base.effects.fear.accuracy : 0;
   // Mokuton: o clone compartilha o que vê.
   const cloneAcc = user.clones > 0 ? (data.base.clones.kinds[user.cloneKind].accuracyBonus ?? 0) : 0;
   const acc = user.mods.accuracyBonus + (user.boost?.accuracy ?? 0) + (user.gate ? gateTotals(user.gate.level, data).accuracy : 0) + fear + cloneAcc;
-  const eva = target.mods.evasion + (target.boost?.evasion ?? 0);
+  // Ilusão perfeita (Comum): com clone de pé, quem ataca erra mais.
+  const eva = target.mods.evasion + (target.boost?.evasion ?? 0) + (target.clones > 0 ? target.mods.cloneEnemyAccuracy : 0);
   return hitChance(tech.accuracy, acc - eva, data.base.hit);
 }
 
@@ -834,7 +863,10 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     }
     if (cloneBlocks(s, f, t, single, data, rng)) continue;
     landed++;
-    const raw = hitDamage(f, t, tech, data, outcome === 'crit');
+    // Combo da Folha: cada golpe de taijutsu seguido que acerta bate mais forte (+10% por golpe, até +30%).
+    const combo = tech.type === 'taijutsu' && f.mods.comboStepPct > 0 ? 1 + Math.min(COMBO_MAX, f.mods.comboStepPct * (landed - 1)) : 1;
+    const stunnedBefore = hasEffect(t, 'stun');
+    const raw = Math.floor(hitDamage(f, t, tech, data, outcome === 'crit') * combo);
     // Barreira elemental primeiro (o elemento só pesa nela), depois o escudo comum.
     const bMult = elementMult(tech, t, data, f);
     const amount = hitBarrier(s, t, raw, barrierAttack(f, tech), data, rng);
@@ -852,6 +884,15 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
       s.log.push({ type: 'damage', uid: f.uid, target: nextFoe.uid, amount: spill - soaked, crit: false, elementMult: 1, absorbed: soaked });
       applyHpLoss(s, nextFoe, spill - soaked, data, tech.id);
     }
+    // Explosão em cadeia (Comum): ninjutsu em alvo atordoado espalha parte do dano nos outros inimigos.
+    if (stunnedBefore && tech.type === 'ninjutsu' && f.mods.stunnedSplashPct > 0 && s.status === 'ongoing') {
+      const splash = Math.floor((amount - absorbed) * f.mods.stunnedSplashPct);
+      for (const o of splash > 0 ? alive(s, t.side).filter((x) => x.uid !== t.uid) : []) {
+        s.log.push({ type: 'damage', uid: f.uid, target: o.uid, amount: splash, crit: false, elementMult: 1, absorbed: 0 });
+        applyHpLoss(s, o, splash, data, tech.id);
+        if (s.status !== 'ongoing') break;
+      }
+    }
     if (t.down && f.mods.onKillChakra) {
       const amount = Math.min(f.maxChakra - f.chakra, f.mods.onKillChakra);
       f.chakra += amount;
@@ -861,10 +902,17 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     // Incenso dos sonhos: cada golpe que acerta pode dar Medo.
     if (!t.down && f.mods.fearOnHit > 0 && s.status === 'ongoing' && rng() < f.mods.fearOnHit) addStatus(s, t, 'fear', data);
   }
+  // Ritmo de luta (Comum): cada golpe de taijutsu que acertou devolve chakra.
+  if (landed && tech.type === 'taijutsu' && f.mods.taijutsuHitChakra > 0 && !f.down) {
+    const gain = Math.min(f.maxChakra - f.chakra, landed * f.mods.taijutsuHitChakra);
+    f.chakra += gain;
+    if (gain > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount: gain });
+  }
   // Clones que batem junto (Mizu, Mokuton): cada um, uma fração do dano de um golpe, sem rolagem; a soma não passa do
   // teto (`clones.strikeCap`, 70% de um golpe). Kage e Tajuu batem pelas técnicas com golpe por clone (`hitsPerClone`).
+  // Clone de ataque e Sombra da Folha (Comum): o clone de qualquer tipo bate com pelo menos `cloneStrikePct`.
   const kind = data.base.clones.kinds[f.cloneKind];
-  const pct = Math.min((kind.jornadaStrikePct ?? kind.strikePct) * f.clones, data.base.clones.strikeCap);
+  const pct = Math.min(Math.max(kind.jornadaStrikePct ?? kind.strikePct, f.mods.cloneStrikePct) * f.clones, data.base.clones.strikeCap);
   if (landed && single && f.clones > 0 && pct > 0 && !t.down && !f.down && s.status === 'ongoing') {
     const amount = Math.max(1, Math.floor(hitDamage(f, t, tech, data) * pct));
     const passes = hitBarrier(s, t, amount, barrierAttack(f, tech), data, rng);
@@ -996,6 +1044,12 @@ function lose(s: JBattle, t: Fighter, amount: number, data: JornadaData, techId?
     t.survivedOnce = true;
     t.hp = 1;
     s.log.push({ type: 'survive', target: t.uid });
+    // Vontade do Fogo (Comum): fica de pé com parte do HP e firme; Nunca sozinho: a equipe se recupera junto.
+    if (t.mods.surviveHealPct > 0) {
+      heal(s, t, t, Math.floor(t.maxHp * t.mods.surviveHealPct));
+      if (!hasEffect(t, 'stunGuard')) t.effects.push({ kind: 'stunGuard', turns: data.base.effects.stunImmunityTurns });
+    }
+    if (t.mods.surviveTeamHealPct > 0) for (const a of alive(s, t.side)) if (a.uid !== t.uid) heal(s, t, a, Math.floor(a.maxHp * t.mods.surviveTeamHealPct));
     // Fúria da Kyuubi: em vez de cair, o chakra da raposa toma conta (a forma da ficha, com a cura e os turnos dela).
     const form = t.mods.surviveForm ? formOf(t.defId, t.mods.surviveForm, data) : undefined;
     if (form && !hasForm(t, form.id)) {

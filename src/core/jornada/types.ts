@@ -174,6 +174,27 @@ export interface FighterMods {
   fearOnHit: number;
   /** Defender cura esta fração do HP máximo (Colete acolchoado). */
   guardHealPct: number;
+  // Árvore do Comum (v0.84.0, docs/jornada/talentos.md#comum-caminho-ninja).
+  /** Penetração a mais por tipo de ataque (Punho firme, Mestre do elemento). */
+  typePen: Partial<Record<AttackType, number>>;
+  /** Com clone de pé, quem ataca tem este acerto a menos (Ilusão perfeita). */
+  cloneEnemyAccuracy: number;
+  /** Golpes a mais nas técnicas de taijutsu de dano (Combo da Folha). */
+  taijutsuExtraHits: number;
+  /** Golpes a mais no taijutsu por clone de pé, até 2 (Mil golpes). */
+  taijutsuHitsPerClone: number;
+  /** Cada golpe de taijutsu seguido que acerta na mesma técnica: +este dano, até +30% (Combo da Folha). */
+  comboStepPct: number;
+  /** Chakra devolvido por golpe de taijutsu que acerta (Ritmo de luta). */
+  taijutsuHitChakra: number;
+  /** O clone de qualquer tipo bate junto com pelo menos esta fração do dano de um golpe (Clone de ataque). */
+  cloneStrikePct: number;
+  /** Ninjutsu em alvo atordoado: esta fração do dano vai para os outros inimigos (Explosão em cadeia). */
+  stunnedSplashPct: number;
+  /** Ao sobreviver com 1 de HP: recupera esta fração e fica firme (Vontade do Fogo). */
+  surviveHealPct: number;
+  /** Ao sobreviver com 1 de HP: a equipe recupera esta fração (Nunca sozinho). */
+  surviveTeamHealPct: number;
 }
 
 export interface CharacterDef {

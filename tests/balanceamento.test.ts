@@ -1,6 +1,8 @@
 // Balanceamento aprovado pelo usuário (docs/balanceamento/diagnostico.md): regras novas de cada fase.
 import { describe, expect, it } from 'vitest';
-import { emptyMods, hitDamage, mergeMods, playerAct, startBattle } from '../src/core/jornada/battle';
+import { accuracyAgainst, emptyMods, hitDamage, hitsOf, mergeMods, playerAct, startBattle } from '../src/core/jornada/battle';
+import { branchesOf } from '../src/core/jornada/talents';
+import { ptBR } from '../src/data/strings/ptBR';
 import { evolutionFor, relicFits, relicNeeds } from '../src/core/jornada/relics';
 import { pathRun, playUntil } from '../prototype/lab/fixtures/jornada';
 import { gateHpUpkeep, payGateUpkeep } from '../src/core/gates';
@@ -163,6 +165,51 @@ describe('Fase 5 · Jornada e História (H1, H2, H3, J5)', () => {
     const out = resolveEvent(run, opt.id, true, data);
     const own = opt.effects.filter((e) => e.kind === 'ryo').reduce((a, e) => a + (e as { n: number }).n, 0);
     expect(out.run.ryo - run.ryo).toBeGreaterThanOrEqual(own + 20);
+  });
+});
+
+describe('Fase 6 · árvore do Comum (C2, v0.84.0)', () => {
+  const tree = data.talents.filter((t) => t.owner === 'commonNinja');
+  const foe = (over: Partial<FighterSeed> = {}): FighterSeed => ({ ...hero(), defId: 'gatoThug', protagonist: false, techniques: ['jeClub'], ai: 'brute', ...over });
+
+  it('seis ramos em anel, cada um com bifurcação e talento final; seis combinações e três assinaturas', () => {
+    expect(branchesOf('commonNinja', data.talents)).toEqual(['element', 'tools', 'leafStyle', 'clones', 'team', 'will']);
+    for (const b of branchesOf('commonNinja', data.talents)) {
+      const nodes = tree.filter((t) => t.branch === b && !t.requiresAll);
+      expect(nodes.filter((t) => t.capstone), b).toHaveLength(1);
+      expect(nodes.filter((t) => t.excludes?.length), b).toHaveLength(2);
+    }
+    const combos = tree.filter((t) => t.requiresAll);
+    expect(combos).toHaveLength(9);
+    for (const c of combos) for (const id of c.requiresAll!) expect(tree.some((t) => t.id === id), `${c.id} → ${id}`).toBe(true);
+    for (const t of tree) expect(ptBR.jornada.talents.list[t.id], t.id).toBeTruthy();
+  });
+
+  it('Combo da Folha e Mil golpes: golpes a mais no taijutsu (até +2 pelos clones); o ninjutsu não ganha', () => {
+    const f = startBattle({ allies: [hero({ mods: mergeMods(emptyMods(), { taijutsuExtraHits: 1, taijutsuHitsPerClone: 1 }) })], enemies: [foe()], win: { kind: 'defeatAll' } }, data, fixed(0.5)).fighters[0]!;
+    const hurricane = data.techniques.jLeafHurricane!;
+    expect(hitsOf({ ...f, clones: 0 }, hurricane)).toBe(3);
+    expect(hitsOf({ ...f, clones: 5 }, hurricane)).toBe(5);
+    expect(hitsOf({ ...f, clones: 5 }, data.techniques.jFireball!)).toBe(1);
+  });
+
+  it('penetração por tipo e Ilusão perfeita (acerto menor com clone de pé)', () => {
+    const b = startBattle({ allies: [hero()], enemies: [foe({ resistance: { physical: 20, mental: 20 } })], win: { kind: 'defeatAll' } }, data, fixed(0.5));
+    const me = b.fighters[0]!;
+    const them = b.fighters[1]!;
+    const pen = { ...me, mods: mergeMods(me.mods, { typePen: { taijutsu: 0.2 } }) };
+    expect(hitDamage(pen, them, data.techniques.jStrike!, data)).toBeGreaterThan(hitDamage(me, them, data.techniques.jStrike!, data));
+    const shy = { ...me, mods: mergeMods(me.mods, { cloneEnemyAccuracy: 0.2 }) };
+    expect(accuracyAgainst(them, { ...shy, clones: 1 }, data.techniques.jeClub!, data)).toBeLessThan(accuracyAgainst(them, { ...shy, clones: 0 }, data.techniques.jeClub!, data));
+  });
+
+  it('Vontade do Fogo: fica de pé com 1 de HP, recupera 25% e fica firme', () => {
+    const mods = mergeMods(emptyMods(), { surviveOnce: true, surviveHealPct: 0.25 });
+    const b = startBattle({ allies: [hero({ hp: 1, speed: 1, mods })], enemies: [foe({ speed: 99, offense: { taijutsu: 60, ninjutsu: 0, genjutsu: 0 } })], win: { kind: 'defeatAll' } }, data, fixed(0.3));
+    const me = b.fighters[0]!;
+    expect(b.log.some((e) => e.type === 'survive')).toBe(true);
+    expect(me.hp).toBe(1 + Math.floor(me.maxHp * 0.25));
+    expect(me.effects.some((e) => e.kind === 'stunGuard')).toBe(true);
   });
 });
 

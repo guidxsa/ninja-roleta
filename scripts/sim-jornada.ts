@@ -355,9 +355,14 @@ function playInfinite(first: JRun, rng: Rng, mode: Mode): { cyclesWon: number; l
 }
 
 if (BRANCHES) {
-  const branches = branchesOf('naruto', data.talents);
+  // `--classe=commonNinja` (ou prodigy, uchihaNinja, hyuugaNinja) mede as builds de uma classe no Caminho Ninja (v0.84.0);
+  // sem ela, as do Naruto na História.
+  const owner = process.argv.find((a) => a.startsWith('--classe='))?.slice(9) ?? 'naruto';
+  const classMode = { commonNinja: 'generic:common', prodigy: 'generic:prodigy', uchihaNinja: 'generic:uchiha', hyuugaNinja: 'generic:hyuuga' } as Record<string, Mode>;
+  const buildMode: Mode = owner === 'naruto' ? 'canon' : classMode[owner]!;
+  const branches = branchesOf(owner, data.talents);
   // Uma build por ramo e uma por par de ramos que têm talento de combinação.
-  const pairs = data.talents.filter((n) => n.owner === 'naruto' && n.requiresAll?.length).map((n) => [...new Set(n.requiresAll!.map((id) => data.talents.find((t) => t.id === id)!.branch))]);
+  const pairs = [...new Map(data.talents.filter((n) => n.owner === owner && n.requiresAll?.length).map((n) => [...new Set(n.requiresAll!.map((id) => data.talents.find((t) => t.id === id)!.branch))]).map((p) => [[...p].sort().join('+'), p] as const)).values()];
   const solo = process.argv.includes('--so-ramos');
   const only = process.argv.find((a) => a.startsWith('--ramo='))?.slice(7);
   const builds: { name: string; focus: string[] }[] = [{ name: 'padrão (mais barato)', focus: [] }, ...branches.map((b) => ({ name: b, focus: [b] })), ...(solo ? [] : pairs.map((p) => ({ name: p.join('+'), focus: p })))].filter((b) => !only || b.name === only);
@@ -370,7 +375,7 @@ if (BRANCHES) {
     const pct = diffs.map((d) => {
       let wins = 0;
       for (let i = 0; i < RUNS; i++) {
-        const { run, stop } = play(SEED * 100003 + i, d, 'canon');
+        const { run, stop } = play(SEED * 100003 + i, d, buildMode);
         if (run.status === 'victory') wins++;
         else falls.set(stop, (falls.get(stop) ?? 0) + 1);
         for (const id of run.talents) bought.set(id, (bought.get(id) ?? 0) + 1);
