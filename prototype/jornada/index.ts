@@ -1123,6 +1123,12 @@ export async function eventStop(host: JornadaHost, run0: JRun): Promise<JRun> {
 }
 
 /**
+ * Fundo das paradas e recompensas no PC (descanso, tesouro, relíquia de história, escolha do chefe): o local da parada
+ * atrás do conteúdo, como na cena (styles/jornada-scene.css, `.jstaged`). No celular não aparece.
+ */
+const stageBg = (run: JRun) => `<figure class="jstage-bg jscene scene-${stopScene(run, data)}" aria-hidden="true"></figure>`;
+
+/**
  * Relíquia de história (a bandana na Formatura, o colar da Tsunade): quem entrega aparece com a fala, e a relíquia nova
  * toma o lugar da antiga à vista do jogador.
  */
@@ -1130,7 +1136,7 @@ export async function storyRelicScene(host: JornadaHost, run: JRun, id: string, 
   const { who, line } = U.storyRelicLines[id]!;
   const giver = J.names[who] ?? who;
   const root = show(
-    h(`<div class="screen jreveal jstory-relic"><h2>${esc(U.storyRelicTitle(relicName(id)))}</h2>
+    h(`<div class="screen jreveal jstory-relic jstaged">${stageBg(run)}<h2>${esc(U.storyRelicTitle(relicName(id)))}</h2>
       ${scenePortrait(who) ? `<div class="jstart-face pop">${scenePortrait(who)}</div>` : ''}
       <blockquote class="parchment gate-quote"><p>${esc(line)}</p><cite>${esc(giver)}</cite></blockquote>
       <div class="jswap">${replaced ? `<span class="jswap-old" aria-label="${esc(U.storyRelicFrom(relicName(replaced)))}">${relicSlot(replaced, 'span')}</span>` : ''}${relicCard(id, '', 'reveal')}</div>
@@ -1171,7 +1177,7 @@ export function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
 
 export async function restStop(host: JornadaHost, run0: JRun): Promise<JRun> {
   let run = run0;
-  const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud>${hud(host, run)}</div>
+  const root = show(h(`<div class="screen jrest jstaged">${stageBg(run)}<h2>${stopName(currentStop(run, data)!)}</h2><div data-hud>${hud(host, run)}</div>
     <button class="btn big" data-choice="heal"${tip(J.stopKinds.rest!, U.restHealTip(restHeal(run, data).hp, restHeal(run, data).chakra))}>${icon('rest')} ${U.restHeal(restHeal(run, data).hp, restHeal(run, data).chakra)}</button>
     <span data-train>${restTrainButton(run)}</span></div>`));
   // Talentos e loja continuam à mão: o HUD muda a run (e a árvore pode fechar, trocando o Treinar).
@@ -1193,7 +1199,7 @@ function restTrainButton(run: JRun): string {
 }
 
 export async function treasureStop(host: JornadaHost, run: JRun): Promise<JRun> {
-  const root = show(h(`<div class="screen jrtreasure"><h2>${stopName(currentStop(run, data)!)}</h2>
+  const root = show(h(`<div class="screen jrtreasure jstaged">${stageBg(run)}<h2>${stopName(currentStop(run, data)!)}</h2>
     <button type="button" class="jrchest" data-choice="open" aria-label="${U.openTreasure}">${chestClosed()}</button>
     <div data-slot></div><button class="btn primary big" data-choice="open">${U.openTreasure}</button></div>`));
   await choose(root);
@@ -1233,7 +1239,7 @@ export async function relicReveal(title: string, id: string, place: string): Pro
 export async function bossChoiceScreen(run: JRun): Promise<JRun> {
   const options = run.bossChoice!;
   let pick: string | undefined;
-  const root = show(h(`<div class="screen jrboss"><h2>${U.bossChoice}</h2>
+  const root = show(h(`<div class="screen jrboss jstaged">${stageBg(run)}<h2>${U.bossChoice}</h2>
     <div class="jrboss-row">${options
       .map((id) => `<button type="button" class="jrboss-opt tier-${relicTier(id)}" data-opt="${id}" aria-label="${relicName(id)}">
         <span class="jrslot huge tier-${relicTier(id)}">${relicIcon(id)}</span><b>${relicName(id)}</b>${isEvolution(id) ? `<small class="jrboss-evo">${J.relics.evolution}</small>` : ''}</button>`)

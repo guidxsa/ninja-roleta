@@ -703,7 +703,7 @@
 /* Telas simples da Jornada (sorteio, nome, descanso, baú, evento, fim) no desktop: coluna central de leitura, não a
    largura toda da casca. As telas compostas (entrada, perspectiva, preparo, trilha, mapa, luta) têm a sua grade. */
 @media (min-width: 900px) and (min-height: 560px) {
-  body.mode-jornada main > .screen:not(.gate, .jcampaigns, .jpath, .jtrail-screen, .jbattle, .jrboss, .jcene) {
+  body.mode-jornada main > .screen:not(.gate, .jcampaigns, .jpath, .jtrail-screen, .jbattle, .jrboss, .jcene, .jstaged) {
     width: 100%; max-width: clamp(560px, 46vw, 860px); margin-left: auto; margin-right: auto;
   }
 }

@@ -91,18 +91,19 @@
   .jc-panel.jscene, .jc-panel.jscene.empty { position: absolute; inset: 0; z-index: 0; height: auto; }
   .jc-panel.jscene::before { background-size: cover; background-position: center bottom; opacity: .5; }
   [data-theme='light'] .jc-panel.jscene::before { opacity: .35; }
-  .jc-panel.jscene::after {
+  /* Vinheta centrada: escurece atrás do pergaminho e deixa o local mais à vista nas bordas. */
+  .jc-panel.jscene::after, .jstaged > .jstage-bg::after {
     content: ''; position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(90deg, transparent 12%, color-mix(in srgb, var(--bg) 72%, transparent) 62%);
+    background: radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--bg) 70%, transparent) 0 40%, color-mix(in srgb, var(--bg) 35%, transparent) 75%, transparent);
   }
   .jc-cast { z-index: 1; left: clamp(18px, 1.6vw, 32px); bottom: clamp(18px, 2.4vh, 36px); flex-direction: column; align-items: flex-start; gap: 8px; }
   .jc-cast .portrait { width: clamp(110px, 14vh, 170px); height: clamp(110px, 14vh, 170px); }
   .jc-name { margin: 0; font-size: var(--fs-xl); }
   .jc-cast.no-face { bottom: clamp(18px, 2.4vh, 36px); }
-  /* O evento: o pergaminho grande, à direita, na frente do local. */
+  /* O evento: o pergaminho grande, centrado, na frente do local (quem está em cena fica na margem, no canto). */
   .jc-side {
-    position: relative; z-index: 2; align-self: center; justify-self: end; width: min(62%, 860px);
-    margin: clamp(24px, 4vh, 56px) clamp(24px, 3vw, 64px); gap: clamp(12px, 1.6vh, 20px);
+    position: relative; z-index: 2; align-self: center; justify-self: center; width: min(62%, 860px);
+    margin: clamp(24px, 4vh, 56px) auto; gap: clamp(12px, 1.6vh, 20px);
   }
   .jc-paper, .jc-panel.jscene.empty + .jc-side .jc-paper { margin-top: 0; padding: clamp(28px, 3.4vh, 48px) clamp(28px, 2.6vw, 52px); }
   .jc-title { font-size: clamp(var(--fs-6xl), 3.2vw, 72px); }
@@ -112,11 +113,37 @@
 
   /* Minijogo: o pergaminho alarga e o tabuleiro fica dentro dele; o local e quem está em cena sobram na faixa da
      esquerda. As opções que não foram escolhidas saem (a escolhida fica, com o carimbo). */
-  .jcene:has([data-slot] .mg) .jc-side { width: min(78%, 1180px); margin-block: clamp(12px, 2vh, 32px); }
+  /* Centrado, sem encostar no retrato do canto (retrato + recuo de cada lado). */
+  .jcene:has([data-slot] .mg) .jc-side { width: min(1180px, calc(100% - 2 * (clamp(96px, 12vh, 140px) + 48px))); margin-block: clamp(12px, 2vh, 32px); }
   .jcene:has([data-slot] .mg) .jc-paper { padding-block: 18px; }
   .jcene:has([data-slot] .mg) .jc-paper p { max-width: none; font-size: var(--fs-lg); }
   .jcene:has([data-slot] .mg) .joptions .btn.passed { display: none; }
   .jcene:has([data-slot] .mg) .jc-cast .portrait { width: clamp(96px, 12vh, 140px); height: clamp(96px, 12vh, 140px); }
+}
+
+/*
+ * Paradas e recompensas (descanso, tesouro, relíquia de história, escolha do chefe): o mesmo palco da cena no PC, com o
+ * local da parada ao fundo (apagado, com a vinheta) e o conteúdo centrado na frente. No celular o fundo não aparece.
+ */
+.jstage-bg { display: none; }
+@media (min-width: 900px) and (min-height: 560px) {
+  body.mode-jornada:has(.jstaged) main { display: flex; flex-direction: column; }
+  .screen.jstaged {
+    position: relative; isolation: isolate; flex: 1 0 auto; width: 100%; max-width: min(100%, 1560px); margin-inline: auto;
+    min-height: clamp(480px, 72vh, 1100px); justify-content: center; align-items: center;
+    padding: clamp(10px, 2.4vh, 64px) clamp(24px, 5vw, 96px); gap: clamp(8px, 1.4vh, 16px);
+  }
+  .jstaged > :not(.jstage-bg) { position: relative; z-index: 1; width: min(100%, 860px); }
+  .jstaged.jrboss > :not(.jstage-bg) { width: min(100%, 1100px); }
+  /* A escolha do chefe da Jornada usa o palco largo; o 1100px de roleta-desk.css fica para o baú da Roleta. */
+  .screen.jstaged.jrboss:not(.jboss) { max-width: min(100%, 1560px); }
+  .jstaged > .jstage-bg {
+    display: block; position: absolute; inset: 0; z-index: 0; margin: 0; overflow: hidden;
+    border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
+  }
+  .jstaged > .jstage-bg::before { background-size: cover; background-position: center bottom; opacity: .5; }
+  [data-theme='light'] .jstaged > .jstage-bg { border-color: var(--paper-ink); box-shadow: 4px 4px 0 var(--paper-ink); }
+  [data-theme='light'] .jstaged > .jstage-bg::before { opacity: .35; }
 }
 
 @media (prefers-reduced-motion: reduce) {
