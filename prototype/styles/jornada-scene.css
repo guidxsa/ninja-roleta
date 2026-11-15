@@ -74,41 +74,49 @@
 .jcene [data-slot]:empty { display: none; }
 
 /*
- * PC e tablet deitado: página dupla na altura da janela. O quadro do local é a página da esquerda, alta, com quem está
- * em cena grande no pé; o pergaminho e as opções são a da direita, centrados na altura. Antes a cena era a coluna do
- * celular presa em 46vw (662px a 1440, com o quadro de 266px) e o resto da tela ficava vazio.
- * Quando o conteúdo passa da altura (o relatório do fim da run), a página rola: nada rola por dentro, para o carimbo
- * dos picos poder passar da borda.
+ * PC e tablet deitado: o local ao fundo, o evento à frente (referência: os eventos de Slay the Spire, com a imagem
+ * cobrindo a tela e o texto na frente). O quadro de mangá vira o palco inteiro, com o desenho apagado e um véu do lado
+ * do texto; o pergaminho grande fica à direita, com título, texto, opções e o minijogo, e quem está em cena fica
+ * pequeno no canto. Na v0.76.12 (página dupla) o quadro tinha a maior coluna e o retrato de 260px tirava o foco do
+ * evento. Quando o conteúdo passa da altura (o relatório do fim), o palco cresce e a página rola.
  */
 @media (min-width: 900px) and (min-height: 560px) {
   body.mode-jornada:has(.jcene) main { display: flex; flex-direction: column; }
-  .jcene { --jc-gap: clamp(24px, 2.6vw, 52px); flex: 1 0 auto; width: 100%; max-width: min(100%, 1560px); margin-inline: auto; }
+  .jcene { flex: 1 0 auto; width: 100%; max-width: min(100%, 1560px); margin-inline: auto; }
   .jc-frame {
-    flex: 1 0 auto; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(400px, .85fr); grid-template-rows: minmax(0, 1fr);
-    gap: 0 var(--jc-gap); align-items: stretch;
+    position: relative; isolation: isolate; flex: 1 0 auto; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    min-height: clamp(480px, 72vh, 1100px);
   }
-  .jc-panel.jscene, .jc-panel.jscene.empty { height: auto; min-height: clamp(360px, 62vh, 980px); }
-  /* Quadro em pé: o desenho do local cobre a altura toda, ancorado embaixo. */
-  .jc-panel.jscene::before { background-size: cover; background-position: center bottom; }
-  .jc-cast { left: clamp(18px, 1.6vw, 32px); bottom: clamp(18px, 2.4vh, 36px); flex-direction: column; align-items: flex-start; gap: 10px; }
-  .jc-cast .portrait { width: clamp(150px, 20vh, 260px); height: clamp(150px, 20vh, 260px); }
-  .jc-name { margin: 0; font-size: clamp(var(--fs-2xl), 1.5vw, 32px); }
+  /* O local: o palco inteiro, atrás do pergaminho. */
+  .jc-panel.jscene, .jc-panel.jscene.empty { position: absolute; inset: 0; z-index: 0; height: auto; }
+  .jc-panel.jscene::before { background-size: cover; background-position: center bottom; opacity: .5; }
+  [data-theme='light'] .jc-panel.jscene::before { opacity: .35; }
+  .jc-panel.jscene::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, transparent 12%, color-mix(in srgb, var(--bg) 72%, transparent) 62%);
+  }
+  .jc-cast { z-index: 1; left: clamp(18px, 1.6vw, 32px); bottom: clamp(18px, 2.4vh, 36px); flex-direction: column; align-items: flex-start; gap: 8px; }
+  .jc-cast .portrait { width: clamp(110px, 14vh, 170px); height: clamp(110px, 14vh, 170px); }
+  .jc-name { margin: 0; font-size: var(--fs-xl); }
   .jc-cast.no-face { bottom: clamp(18px, 2.4vh, 36px); }
-  .jc-side { align-self: center; justify-self: start; width: 100%; max-width: 660px; gap: clamp(12px, 1.6vh, 20px); padding-block: 12px; }
-  .jc-paper, .jc-panel.jscene.empty + .jc-side .jc-paper { margin-top: 0; padding: clamp(22px, 2.6vh, 36px) clamp(24px, 2vw, 40px); }
-  .jc-title { font-size: clamp(var(--fs-5xl), 2.6vw, 56px); }
-  .jc-paper p { font-size: clamp(var(--fs-xl), 1.1vw, 24px); }
-  .jc-seal { --s: clamp(38px, 2.8vw, 54px); }
-  .jcene .joptions .btn { min-height: clamp(52px, 6vh, 72px); padding-left: 22px; font-size: clamp(var(--fs-lg), 1vw, 22px); }
+  /* O evento: o pergaminho grande, à direita, na frente do local. */
+  .jc-side {
+    position: relative; z-index: 2; align-self: center; justify-self: end; width: min(62%, 860px);
+    margin: clamp(24px, 4vh, 56px) clamp(24px, 3vw, 64px); gap: clamp(12px, 1.6vh, 20px);
+  }
+  .jc-paper, .jc-panel.jscene.empty + .jc-side .jc-paper { margin-top: 0; padding: clamp(28px, 3.4vh, 48px) clamp(28px, 2.6vw, 52px); }
+  .jc-title { font-size: clamp(var(--fs-6xl), 3.2vw, 72px); }
+  .jc-paper p { max-width: 60ch; font-size: clamp(var(--fs-xl), 1.25vw, 26px); }
+  .jc-seal { --s: clamp(42px, 3vw, 60px); }
+  .jcene .joptions .btn { min-height: clamp(60px, 7vh, 84px); padding-left: 22px; font-size: clamp(var(--fs-lg), 1.1vw, 24px); }
 
-  /* Minijogo: o tabuleiro fica com a maior parte da tela; o quadro vira uma faixa com o local e quem está em cena. As
-     opções que não foram escolhidas saem (a escolhida fica, com o carimbo). */
-  .jcene:has([data-slot] .mg) .jc-frame { grid-template-columns: minmax(220px, .42fr) minmax(0, 1.58fr); }
-  .jcene:has([data-slot] .mg) .jc-side { justify-self: stretch; max-width: none; }
+  /* Minijogo: o pergaminho alarga e o tabuleiro fica dentro dele; o local e quem está em cena sobram na faixa da
+     esquerda. As opções que não foram escolhidas saem (a escolhida fica, com o carimbo). */
+  .jcene:has([data-slot] .mg) .jc-side { width: min(78%, 1180px); margin-block: clamp(12px, 2vh, 32px); }
   .jcene:has([data-slot] .mg) .jc-paper { padding-block: 18px; }
   .jcene:has([data-slot] .mg) .jc-paper p { max-width: none; font-size: var(--fs-lg); }
   .jcene:has([data-slot] .mg) .joptions .btn.passed { display: none; }
-  .jcene:has([data-slot] .mg) .jc-cast .portrait { width: clamp(120px, 16vh, 200px); height: clamp(120px, 16vh, 200px); }
+  .jcene:has([data-slot] .mg) .jc-cast .portrait { width: clamp(96px, 12vh, 140px); height: clamp(96px, 12vh, 140px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -179,19 +187,19 @@
 .jc-peak .jc-title { margin: 0 0 8px; text-align: center; font: 400 var(--fs-6xl)/1.05 var(--font-display); letter-spacing: .02em; text-wrap: balance; }
 .jc-peak .jc-line { text-align: center; }
 .jc-peak .jreport-grid, .jc-peak .jreport-head, .jc-peak .jreport-path, .jc-peak .jreport-team, .jc-peak .jreport-relics, .jc-peak .jreport-finals { text-align: left; }
-/* PC: o carimbo é batido na dobra entre as duas páginas, no alto do pergaminho, metade sobre o quadro. */
+/* PC: o carimbo é batido no canto de cima à esquerda do pergaminho, passando da borda para o lado do local. */
 @media (min-width: 900px) and (min-height: 560px) {
-  /* O carimbo passa da borda de cima: folga para ele não subir na barra quando o pergaminho é longo (relatório). */
-  .jc-peak .jc-side { padding-top: 40px; }
-  /* O carimbo entra (s/2 - gap/2) no pergaminho: o texto começa depois dele. */
+  /* O carimbo sobe 35% acima do papel: folga para ele não encostar na barra quando o pergaminho é longo (relatório). */
+  .jc-peak .jc-side { padding-top: 28px; }
+  /* O carimbo entra 60% no pergaminho: o texto começa depois dele. */
   .jc-peak .jc-paper {
     --peak-s: clamp(96px, 8vw, 150px); position: relative; padding-top: clamp(30px, 4vh, 52px);
-    padding-left: max(clamp(24px, 2vw, 40px), calc(var(--peak-s) / 2 - var(--jc-gap) / 2 + 16px));
+    padding-left: calc(var(--peak-s) * .6 + 20px);
   }
   .jc-peak .jc-seal {
-    --s: var(--peak-s); position: absolute; top: clamp(-30px, -2vh, -16px); left: calc(var(--s) / -2 - var(--jc-gap) / 2); margin: 0; z-index: 4;
+    --s: var(--peak-s); position: absolute; top: calc(var(--s) * -.35); left: calc(var(--s) * -.4); margin: 0; z-index: 4;
   }
   /* Títulos longos ("Estágio concluído: Academia e País das Ondas") quebram entre palavras, nunca no meio delas. */
-  .jc-peak .jc-title { font-size: clamp(30px, 3vw, 72px); overflow-wrap: normal; hyphens: manual; }
+  .jc-peak .jc-title { font-size: clamp(36px, 3.6vw, 92px); overflow-wrap: normal; hyphens: manual; }
 }
 @media (prefers-reduced-motion: reduce) { .jc-peak .jc-seal { animation: none; } }

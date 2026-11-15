@@ -103,6 +103,8 @@ Ficaram de fora: rolagem interna da loja acoplada a 1440 (a seção já é dobr�
 - Roleta no PC: no aviso e no "Subiu de nível", o popup cobria o carimbo. Agora o carimbo fica no palco e o card ao lado. O jokenpô do evento ganhou mãos maiores.
 - Conferido a 1024×768, 1280×720, 1440×900, 1920×1080 e 2560×1440 (tema claro numa amostra), sem rolagem lateral. O celular (375×812) não mudou.
 
+**Evento em destaque (v0.76.13).** Na página dupla, o quadro do local tinha foco demais (a 1440: quadro 734×774, pergaminho 537×184, retrato de 180px). Pedido do usuário: "composição, mas não o foco". Mostrei três referências: A, o pergaminho com vinheta (Fallen London e Sunless Skies); B, o local ao fundo (eventos de Slay the Spire); C, uma faixa no alto. Ele escolheu B. O local agora cobre o palco, apagado (opacidade .5 e véu do lado do texto). O pergaminho fica à frente, à direita, com 806px a 1440 (62% do palco), e o retrato tem até 170px no canto. O carimbo dos picos fica no canto do pergaminho. No minijogo, o pergaminho vai a 78% e leva o tabuleiro. Conferido nas mesmas larguras, sem rolagem lateral e sem rolagem vertical no minijogo a 1280×720. O celular não mudou.
+
 ## Auditoria de design e etapa 1: cena narrativa (v0.72.0, 14/11/2026)
 
 Pedido do usuário: auditoria criteriosa da experiência visual com o Impeccable, sem alterar nada, e um plano de evolução. Depois de aprovar o relatório, escolheu começar pela etapa 1 (narrativa), com falas por toque e os retratos em SVG de hoje.
