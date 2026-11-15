@@ -40,6 +40,8 @@
   font: 600 var(--fs-base)/1 var(--font-hud); letter-spacing: .05em; text-transform: uppercase;
 }
 .btn.spin { display: flex; align-items: center; justify-content: center; margin: 4px auto 10px; min-width: 170px; }
+/* Depois do toque o "Girar" some, mas guarda o lugar: a roda não muda de posição. */
+.btn.spin.spent { visibility: hidden; }
 .actions-row { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }
 .actions-row .btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
 /* Ação principal presa ao pé da tela no celular. O degradê até o fundo esconde o que rola por baixo (antes o conteúdo

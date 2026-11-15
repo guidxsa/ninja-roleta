@@ -124,6 +124,7 @@ export async function originScreen(): Promise<void> {
     for (const step of roll.steps) {
       await bigWheel(slot, S.roulettes[step.kind], originStepSlices(step), step.index);
       chips.insertAdjacentHTML('beforeend', `<span class="chip origin-chip pop">${stepResultText(step)}</span>`);
+      chips.scrollLeft = chips.scrollWidth;
       await sleep(ses.settings.instant ? 0 : 500);
     }
     syncSheetBtn();

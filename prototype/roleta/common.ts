@@ -708,10 +708,12 @@ export async function bigWheel(slot: HTMLElement, title: string, slices: WheelSl
   box.appendChild(wheel.el);
   slot.replaceChildren(box);
   if (!ses.settings.instant) {
-    const btn = h(`<button class="btn primary spin" data-choice="spin">${S.ui.spin}</button>`);
+    const btn = h(`<button class="btn primary spin" data-choice="spin">${S.ui.spin}</button>`) as HTMLButtonElement;
     box.insertBefore(btn, wheel.el.nextSibling);
     await choose(box);
-    btn.remove();
+    // Some sem tirar o espaço: com a caixa encolhendo, a roda (centrada no palco) mudava de lugar ao girar.
+    btn.disabled = true;
+    btn.classList.add('spent');
   }
   await wheel.spinTo(index, pace.wheel());
   // Carimbo do resultado por cima da roda; não muda o tempo do giro e não bloqueia o toque.

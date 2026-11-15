@@ -19,7 +19,7 @@ import { levelUps } from './rewards';
 export async function eventScreen(name: string): Promise<'back' | 'fight'> {
   const c = ses.camp!;
   const root = show(
-    h(`<div class="screen rwheel">
+    h(`<div class="screen rwheel revent">
       <h2>${S.ui.towards(name)}</h2>
       <div class="rstage-box">${rstage()}<div id="slot"></div></div><div class="rside"><div id="detail"></div><div id="hud"></div><div id="cta"></div></div>
     </div>`),
