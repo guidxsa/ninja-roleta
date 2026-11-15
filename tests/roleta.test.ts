@@ -598,13 +598,13 @@ describe('Bunshin no Jutsu (src/core/clones.ts, v0.59.0)', () => {
 });
 
 describe('Portões (src/core/gates.ts, v0.59.0)', () => {
-  it('manutenção comum: 2, 3, 5, 7, 11, 16 (com peso de nível, arredonda para cima)', () => {
+  it('manutenção comum em chakra: metade de 2, 3, 5, 7, 11, 16 (custo misto, v0.79.0)', () => {
     const g = data.base.balance.gateCosts;
-    expect([1, 2, 3, 4, 5, 6].map((n) => gateUpkeep(n, g))).toEqual([2, 3, 5, 7, 11, 16]);
-    expect(gateUpkeep(1, g, 1.25)).toBe(3);
+    expect([1, 2, 3, 4, 5, 6].map((n) => gateUpkeep(n, g))).toEqual([1, 2, 3, 4, 6, 8]);
+    expect(gateUpkeep(1, g, 1.25)).toBe(2);
   });
 
-  it('Roleta: abrir custa chakra e não HP; manutenção a cada rodada; fecha sozinho sem chakra e pode reabrir', () => {
+  it('Roleta: abrir custa chakra; manter custa chakra e HP a cada rodada; fecha sozinho sem como pagar e pode reabrir', () => {
     const b = battle(origin('taijutsuProdigy', ['earth']));
     const hp0 = b.player.hp;
     const ck0 = b.player.chakra;
@@ -614,11 +614,18 @@ describe('Portões (src/core/gates.ts, v0.59.0)', () => {
     // Fechar é grátis e também é a ativa do turno.
     expect(canUseActive(s, data)).toBe(false);
     const ups: number[] = [];
-    for (let i = 0; i < 12 && s.status === 'ongoing' && s.fx.buff; i++) {
-      s = playRoletaRound(s, 'rest', data, fixed(0.99));
-      for (const e of s.log) if (e.type === 'gates' && e.action === 'upkeep') ups.push(e.cost);
+    const hpCosts: number[] = [];
+    // Defende (não recupera chakra): a manutenção crescente acaba com o chakra.
+    for (let i = 0; i < 20 && s.status === 'ongoing' && s.fx.buff; i++) {
+      const before = s.log.length;
+      s = playRoletaRound(s, 'guard', data, fixed(0.99));
+      for (const e of s.log.slice(before)) if (e.type === 'gates' && e.action === 'upkeep') {
+        ups.push(e.cost);
+        hpCosts.push(e.hpCost ?? 0);
+      }
     }
-    expect([...new Set(ups)].slice(0, 3)).toEqual([2, 3, 5]);
+    expect(ups.slice(0, 3)).toEqual([1, 2, 3]);
+    expect(hpCosts[0]).toBe(Math.max(1, Math.floor(b.player.maxHp * data.base.balance.gateCosts.hpPctPerLevel)));
     expect(s.log.some((e) => e.type === 'gates' && e.action === 'close' && e.reason === 'chakra')).toBe(true);
     // Fechado e com chakra: abre de novo.
     if (s.status === 'ongoing') {

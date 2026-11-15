@@ -85,7 +85,8 @@ export type REvent =
   | { type: 'round'; round: number }
   /** Clone: criado, segurou um golpe (`broken`: desfez-se) ou bateu junto. */
   | { type: 'clone'; side: Side; action: 'create' | 'block' | 'strike'; kind: CloneKind; broken?: boolean }
-  | { type: 'gates'; action: 'upkeep'; cost: number }
+  /** Manutenção dos Portões: chakra e, desde a v0.79.0, HP. */
+  | { type: 'gates'; action: 'upkeep'; cost: number; hpCost?: number }
   | { type: 'gates'; action: 'close'; reason: 'manual' | 'chakra' }
   /** Uma roleta: `strike` de `of` golpes da técnica (cada golpe rola, v0.77.0). */
   | { type: 'attack'; side: Side; techId: string; hitChance: number; critChance: number; outcome: HitOutcome; hits: number; strike?: number; of?: number; auto?: boolean }
@@ -447,13 +448,14 @@ function startOfRound(s: RBattle, data: RoletaData): void {
   s.villain.chakra = Math.min(s.villain.def.chakra, s.villain.chakra + regen(s.villain.def.chakra, r.villainChakra.regenPct));
   if (s.player.chakra !== playerChakra) logChakra(s, 'player');
   if (s.villain.chakra !== villainChakra) logChakra(s, 'villain');
-  // Portões abertos: manutenção crescente; sem chakra para ela, fecham sozinhos.
+  // Portões abertos: manutenção crescente em chakra e HP (custo misto, v0.79.0); sem como pagar, fecham sozinhos.
   if (buff(s, 'gates')) {
     s.fx.gateRounds++;
-    const paid = payGateUpkeep(s.player.chakra, s.fx.gateRounds, data.base.balance.gateCosts);
+    const paid = payGateUpkeep({ chakra: s.player.chakra, hp: s.player.hp, maxHp: s.player.maxHp }, s.fx.gateRounds, 1, data.base.balance.gateCosts);
     if (paid) {
       s.player.chakra = paid.chakra;
-      s.log.push({ type: 'gates', action: 'upkeep', cost: paid.cost });
+      s.player.hp = paid.hp;
+      s.log.push({ type: 'gates', action: 'upkeep', cost: paid.cost, hpCost: paid.hpCost });
       logChakra(s, 'player');
     } else {
       s.fx.buff = null;

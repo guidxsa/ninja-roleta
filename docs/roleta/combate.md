@@ -91,7 +91,7 @@ Yamanaka, Nara e Aburame saíram do sorteio na v0.52.0: funcionam melhor como su
 | Yamanaka (guardado) | Leitura mental: o vilão tem −10% de acerto | Transferência de Mente (1): 75% de chance; o vilão perde a vez e se fere com a técnica mais forte dele (não pega quem é imune a genjutsu) |
 | Aburame (guardado) | Colônia: o Enxame pode envenenar | Praga (1): envenena; o veneno dói em dobro e o Enxame sempre envenena |
 | Inuzuka | Dupla: 25% de chance de o cão bater junto (40% do dano) | Fera de quatro patas (1): +3 de speed e Dupla com 60% |
-| Prodígio | Juventude: +5% de crítico; sem ninjutsu e genjutsu | Portões: taijutsu ×1,3 enquanto abertos; abrir custa 4 de chakra e manter custa 2, 3, 5, 7, 11... por rodada; sem chakra, fecham sozinhos; podem reabrir ([fundamentos.md](../base/fundamentos.md#portões)) |
+| Prodígio | Juventude: +5% de crítico; sem ninjutsu e genjutsu | Portões: taijutsu ×1,3 enquanto abertos; abrir custa 4 de chakra e manter custa, por rodada, 1, 2, 3, 4, 6... de chakra e 1% do HP máximo (custo misto, v0.79.0); sem como pagar, fecham sozinhos; podem reabrir ([fundamentos.md](../base/fundamentos.md#portões)) |
 | Uchiha | Olhos treinados: imune a Medo | Sharingan (1): +15% de acerto, +10% de esquiva e +3 nos ataques |
 | Hyuuga | Punho preciso: o taijutsu ignora 30% da resistência | Byakugan (1): o taijutsu não erra (o crítico rola) |
 | Uzumaki | Vitalidade: recupera 2% do HP por rodada | Selamento (1): o vilão perde a próxima ação |

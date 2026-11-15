@@ -1,6 +1,7 @@
 // Tela de batalha da Jornada (docs/jornada/combate.md#interface): inimigos em cima, equipe embaixo,
 // alvo por toque e animação a partir do log de eventos do core. Sem roleta na tela: só o resultado.
 import type { CloneKind } from '../../src/core/clones';
+import { gateHpUpkeep } from '../../src/core/gates';
 import {
   awaitingPlayer,
   canRaise,
@@ -152,7 +153,7 @@ function boostParts(b: Boost): string {
 /** Bônus e próxima manutenção de um portão, para as dicas. */
 function gateLines(f: Fighter, level: number): string[] {
   const t = gateTotals(level, jornadaData);
-  return [G.bonus(fmtMult(t.damageMult), pctN(t.accuracy), pctN(t.critBonus), level > 1), G.upkeep(nextGateUpkeep(f, level, jornadaData))];
+  return [G.bonus(fmtMult(t.damageMult), pctN(t.accuracy), pctN(t.critBonus), level > 1), G.upkeep(nextGateUpkeep(f, level, jornadaData), gateHpUpkeep(level, f.maxHp, jornadaData.base.gateCosts))];
 }
 
 /** Dica do botão Portões: o que está aberto, o desgaste e as regras. */
@@ -232,7 +233,7 @@ function fighterTip(f: Fighter): string {
     f.shield ? `${icon('barrier')} ${f.shield}` : '',
     f.barrier ? `${icon(barrierIcon(f))} ${techName(f.barrier.techId)}: ${B.barrierChip(f.barrier.points, f.barrier.turns)}` : '',
     f.clones ? `${icon('clones')} ${B.clonesActive(f.clones, clonePct(f.cloneKind))}` : '',
-    f.gate ? `${icon('gates')} ${B.gateTip(gateName(f.gate.level), nextGateUpkeep(f, f.gate.level, jornadaData))}` : '',
+    f.gate ? `${icon('gates')} ${B.gateTip(gateName(f.gate.level), nextGateUpkeep(f, f.gate.level, jornadaData), gateHpUpkeep(f.gate.level, f.maxHp, jornadaData.base.gateCosts))}` : '',
     ...(f.gate ? gateLines(f, f.gate.level) : []),
     f.boost ? `${icon('sparkle')} ${B.boostTip(techName(f.boost.techId), f.boost.turns)}: ${boostParts(f.boost)}` : '',
     effects.length ? `${U.tipEffects}: ${effects.join(', ')}` : '',
@@ -251,7 +252,7 @@ function statusChips(f: Fighter): string {
   if (f.barrier) chips.push(`<span class="jchip good" title="${B.barrierChip(f.barrier.points, f.barrier.turns)}">${icon(barrierIcon(f))}${f.barrier.points}</span>`);
   if (f.clones > 0) chips.push(`<span class="jchip good" title="${B.clonesActive(f.clones, clonePct(f.cloneKind))}">${icon('clones')}${f.clones}</span>`);
   if (f.guarding) chips.push(`<span class="jchip good">${icon('stance')}</span>`);
-  if (f.gate) chips.push(`<span class="jchip gate" title="${B.gateTip(gateName(f.gate.level), nextGateUpkeep(f, f.gate.level, jornadaData))}">${icon('gates')}${G.numeral[f.gate.level - 1]}</span>`);
+  if (f.gate) chips.push(`<span class="jchip gate" title="${B.gateTip(gateName(f.gate.level), nextGateUpkeep(f, f.gate.level, jornadaData), gateHpUpkeep(f.gate.level, f.maxHp, jornadaData.base.gateCosts))}">${icon('gates')}${G.numeral[f.gate.level - 1]}</span>`);
   if (f.boost) chips.push(`<span class="jchip good" title="${B.boostTip(techName(f.boost.techId), f.boost.turns)}">${icon('sparkle')}${f.boost.turns}</span>`);
   return chips.join('');
 }

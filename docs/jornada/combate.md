@@ -41,8 +41,8 @@ Ativa do prodígio (v0.42.0; custo em chakra desde a v0.59.0, regra comum em [fu
 
 - **Uma troca por turno** (é a ativa do turno): com tudo fechado, abrir qualquer portão liberado; aberto, subir ou descer para qualquer outro, ou fechar. Não gasta a vez.
 - **Abrir ou subir** custa **3 de chakra por portão a mais** (abrir o 5º direto custa 15); descer é grátis. Só aparecem os portões que dá para pagar.
-- **Manutenção** no fim de cada turno aberto (inclusive atordoado): 2, 3, 5, 7, 11, 16... de chakra, × o peso do portão atual (arredondado para cima). Trocar de portão não zera a contagem.
-- **Sem limite de turnos e sem custo de HP**: sem chakra para a manutenção, fecham sozinhos.
+- **Manutenção** no fim de cada turno aberto (inclusive atordoado), em chakra e HP (custo misto, v0.79.0; [fundamentos.md](../base/fundamentos.md#portões)): chakra 1, 2, 3, 4, 6, 8... × o peso do portão atual (arredondado para cima), e 1% do HP máximo por nível do portão. Trocar de portão não zera a contagem.
+- **Sem limite de turnos**: sem chakra, ou sem HP para pagar e ficar com 1, fecham sozinhos.
 - Fechou (pelo jogador ou por falta de chakra): **espera 3 turnos** para abrir de novo. Caiu: os portões fecham, sem espera.
 - Liberação: o prodígio começa com a Abertura; o talento Portão da Vida libera até o 3º e a Lótus Oculta, até o 5º ([talentos.md](talentos.md#prodígio-caminho-ninja)).
 - Chakra: o Prodígio tem 22 e o Lee 20 (eram 12 e 10), porque a Jornada não regenera chakra na luta.

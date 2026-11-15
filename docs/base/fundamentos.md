@@ -346,8 +346,11 @@ Regra comum ao Roleta e à Jornada (`src/core/clones.ts`, tipos desde a v0.77.0;
 Regra comum ao Roleta e à Jornada (v0.59.0, `src/core/gates.ts`):
 
 - **abrir** custa chakra (Roleta: 4; Jornada: 3 por portão aberto a mais, descer é grátis);
-- **manter** custa chakra a cada rodada, crescendo rápido: `ceil(2 × 1,5^(n−1))` → **2, 3, 5, 7, 11, 16...** (na Jornada, × 1 + 0,25 × (nível − 1));
-- **sem limite de rodadas** e **sem custo de HP**: sem chakra para a manutenção, fecham sozinhos;
+- **manter** custa, a cada rodada, **chakra e HP** (custo misto, v0.79.0, proposta):
+  - chakra: metade da conta antiga, `ceil(2 × 1,5^(n−1) × 0,5)` → **1, 2, 3, 4, 6, 8...** (na Jornada, × 1 + 0,25 × (nível − 1) antes da metade);
+  - HP: **1% do HP máximo por nível** do portão aberto (o 5º portão custa 5% por rodada), no mínimo 1;
+  - o HP nunca chega a 0 pelos Portões: sem chakra, ou sem HP para pagar e ficar com 1, fecham sozinhos;
+- **sem limite de rodadas**; até a v0.78.0 a manutenção era só em chakra (2, 3, 5, 7, 11, 16...);
 - abrir e fechar não gastam a vez. No Roleta dá para reabrir na mesma luta; na Jornada, fechar põe 3 turnos de espera.
 
 O combate clássico (reserva) mantém os Portões antigos.

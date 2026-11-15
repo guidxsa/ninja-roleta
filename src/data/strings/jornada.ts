@@ -470,7 +470,7 @@ export const jornadaPtBR = {
     perTurn: (ck: number) => `−${ck} ck/turno`,
     bonus: (mult: string, acc: number, crit: number, stacked: boolean) =>
       `Dano ×${mult}${acc ? `, +${acc}% de acerto` : ''}${crit ? `, +${crit}% de crítico` : ''}${stacked ? ' (soma os portões de baixo)' : ''}.`,
-    upkeep: (ck: number) => `Próxima manutenção: ${ck} de chakra no fim do turno.`,
+    upkeep: (ck: number, hp = 0) => `Próxima manutenção: ${ck} de chakra${hp ? ` e ${hp} de HP` : ''} no fim do turno.`,
     open: (ck: number) => `Abrir custa ${ck} de chakra por portão (descer é grátis).`,
     growth: 'Aberto, paga chakra no fim de cada turno, cada vez mais (e mais nos portões altos). Sem limite de turnos: sem chakra para manter, fecha sozinho.',
     cooldown: (n: number) => `Ao fechar (à mão ou sem chakra): espera ${n} turnos para abrir de novo.`,
@@ -1383,7 +1383,7 @@ export const jornadaPtBR = {
     powerTip: 'Dano por golpe com os seus bônus; o ataque e a resistência do alvo mudam o valor final.',
     boostLine: (turns: number, parts: string) => `Fortalece por ${turns} turnos, contando o da ativação: ${parts}.`,
     boostTip: (tech: string, n: number) => `${tech}: ${n} ${n === 1 ? 'turno' : 'turnos'}`,
-    gateTip: (gate: string, ck: number) => `${gate}: próxima manutenção ${ck} ck`,
+    gateTip: (gate: string, ck: number, hp = 0) => `${gate}: próxima manutenção ${ck} ck${hp ? ` e ${hp} HP` : ''}`,
     gateOpen: (who: string, gate: string) => `${who}: ${gate}!`,
     gateTimeout: (who: string) => `Sem chakra, os portões de ${who} se fecharam`,
     logGateUpkeep: (who: string, n: number) => `${who} −${n} chakra (portões)`,

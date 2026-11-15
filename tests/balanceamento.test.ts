@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { emptyMods, hitDamage, mergeMods, playerAct, startBattle } from '../src/core/jornada/battle';
 import { relicFits, relicNeeds } from '../src/core/jornada/relics';
+import { gateHpUpkeep, payGateUpkeep } from '../src/core/gates';
 import { fitRelics, gainRelic, heroMods, heroNeeds, newGenericRun, newRun } from '../src/core/jornada/run';
 import type { FighterSeed } from '../src/core/jornada/types';
 import { createRoletaPlayer } from '../src/core/roleta/player';
@@ -108,5 +109,26 @@ describe('Fase 1 · relíquias refeitas e de equipe (J3, J4, R3)', () => {
   it('Roleta: Núcleo de chakra recupera 2 por rodada', () => {
     const p0 = createRoletaPlayer({ lineageId: null, elements: ['fire'], jinchuuriki: false }, roletaData);
     expect(relicEffects(gainRoletaRelic(p0, 'chakraCore', roletaData), roletaData).chakraRegen).toBe(2);
+  });
+});
+
+describe('Fase 2 · Portões com custo misto (C4)', () => {
+  const g = { upkeepBase: 2, upkeepGrowth: 1.5, chakraShare: 0.5, hpPctPerLevel: 0.01 };
+
+  it('manter custa metade em chakra e 1% do HP máximo por nível do portão', () => {
+    expect(payGateUpkeep({ chakra: 10, hp: 100, maxHp: 100 }, 1, 1, g)).toEqual({ chakra: 9, hp: 99, cost: 1, hpCost: 1 });
+    expect(payGateUpkeep({ chakra: 10, hp: 100, maxHp: 120 }, 3, 5, g)).toEqual({ chakra: 7, hp: 94, cost: 3, hpCost: 6 });
+    expect(gateHpUpkeep(5, 50, g)).toBe(2);
+  });
+
+  it('sem chakra ou sem HP para ficar com 1, os Portões fecham', () => {
+    expect(payGateUpkeep({ chakra: 0, hp: 100, maxHp: 100 }, 1, 1, g)).toBeNull();
+    expect(payGateUpkeep({ chakra: 10, hp: 1, maxHp: 100 }, 1, 1, g)).toBeNull();
+    expect(payGateUpkeep({ chakra: 10, hp: 2, maxHp: 100 }, 1, 1, g)).toEqual({ chakra: 9, hp: 1, cost: 1, hpCost: 1 });
+  });
+
+  it('o jogo usa a regra nova nos dois modos', () => {
+    expect(data.base.gateCosts).toMatchObject({ chakraShare: 0.5, hpPctPerLevel: 0.01 });
+    expect(roletaData.base.balance.gateCosts).toBe(data.base.gateCosts);
   });
 });

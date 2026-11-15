@@ -1688,30 +1688,30 @@ describe('ativas grátis e Portões (v0.42.0)', () => {
     expect(plain).toBe(15);
     let n = b.log.length;
     b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
-    expect(b.log.slice(n).filter((e) => e.type === 'gateUpkeep')).toEqual([{ type: 'gateUpkeep', uid: 'a0', amount: 2 }]);
+    expect(b.log.slice(n).filter((e) => e.type === 'gateUpkeep')).toEqual([{ type: 'gateUpkeep', uid: 'a0', amount: 1 }]);
     expect(me(b).gate).toEqual({ level: 1, rounds: 1 });
     expect(gateChoices(b, me(b), data)).toEqual([2, 3, 4, 5, 0]);
     const ck1 = me(b).chakra;
     b = setGate(b, 5, data, fixed(0.5));
     expect([me(b).gate, me(b).chakra]).toEqual([{ level: 5, rounds: 1 }, ck1 - 12]);
     n = b.log.length;
-    // 2ª manutenção (3) no 5º portão (× 2): 6.
+    // 2ª manutenção no 5º portão: metade de 3 × 2 em chakra (custo misto, v0.79.0): 3.
     b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
-    expect(b.log.slice(n).filter((e) => e.type === 'gateUpkeep')).toEqual([{ type: 'gateUpkeep', uid: 'a0', amount: 6 }]);
+    expect(b.log.slice(n).filter((e) => e.type === 'gateUpkeep')).toEqual([{ type: 'gateUpkeep', uid: 'a0', amount: 3 }]);
     const ck2 = me(b).chakra;
     b = setGate(b, 2, data, fixed(0.5));
     expect([me(b).gate, me(b).chakra]).toEqual([{ level: 2, rounds: 2 }, ck2]);
   });
 
-  it('manutenção crescente e sem limite de turnos; sem chakra, fecha e entra em espera (sem custo de HP)', () => {
+  it('manutenção crescente e sem limite de turnos, em chakra e HP (v0.79.0); sem como pagar, fecha e entra em espera', () => {
     let b = fight(prodigy({ maxChakra: 100, chakra: 100 }));
     b = setGate(b, 1, data, fixed(0.5));
     for (let i = 0; i < 6; i++) b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
-    expect(b.log.filter((e) => e.type === 'gateUpkeep').map((e) => (e.type === 'gateUpkeep' ? e.amount : 0))).toEqual([2, 3, 5, 7, 11, 16]);
+    expect(b.log.filter((e) => e.type === 'gateUpkeep').map((e) => (e.type === 'gateUpkeep' ? e.amount : 0))).toEqual([1, 2, 3, 4, 6, 8]);
     expect(me(b).gate).toEqual({ level: 1, rounds: 6 });
-    expect(b.log.some((e) => e.type === 'hpCost' && e.source === 'gates')).toBe(false);
+    expect(b.log.some((e) => e.type === 'hpCost' && e.source === 'gates')).toBe(true);
 
-    let low = fight(prodigy({ chakra: 6 }));
+    let low = fight(prodigy({ chakra: 5 }));
     low = setGate(low, 1, data, fixed(0.5));
     low = playerAct(low, { kind: 'guard' }, data, fixed(0.99));
     expect(me(low).gate).toEqual({ level: 1, rounds: 1 });
@@ -1732,7 +1732,7 @@ describe('ativas grátis e Portões (v0.42.0)', () => {
 
     // Caiu com o portão aberto: fecha sem espera (levantado, pode abrir de novo).
     const ally = hero({ defId: 'sakura', protagonist: false, speed: 1, techniques: ['jKunai'] });
-    let d = startBattle(setup({ allies: [prodigy({ hp: 1 }), ally], enemies: [dummy({ offense: { taijutsu: 50, ninjutsu: 0, genjutsu: 0 } })] }), data, fixed(0.5));
+    let d = startBattle(setup({ allies: [prodigy({ hp: 2 }), ally], enemies: [dummy({ offense: { taijutsu: 50, ninjutsu: 0, genjutsu: 0 } })] }), data, fixed(0.5));
     d = setGate(d, 1, data, fixed(0.5));
     const n = d.log.length;
     d = playerAct(d, { kind: 'guard' }, data, fixed(0.1));
@@ -1744,11 +1744,11 @@ describe('ativas grátis e Portões (v0.42.0)', () => {
 
   it('a IA abre o portão mais alto que dá para abrir e manter por 2 turnos', () => {
     const b = fight(prodigy({ mods: { ...emptyMods(), gateLevels: 4 } }));
-    // 30 de chakra: o 5º custa 15 + 4 + 6 = 25.
+    // 30 de chakra: o 5º custa 15 + 2 + 3 = 20.
     expect(chooseAiActive(b, me(b), data, fixed(0.5))).toEqual({ kind: 'gate', level: 5 });
     const low = fight(prodigy({ chakra: 12, mods: { ...emptyMods(), gateLevels: 4 } }));
-    // 12: o 1º (3 + 2 + 3 = 8) cabe; o 2º (6 + 3 + 4 = 13) não.
-    expect(chooseAiActive(low, me(low), data, fixed(0.5))).toEqual({ kind: 'gate', level: 1 });
+    // 12: o 2º (6 + 2 + 2 = 10) cabe; o 3º (9 + 2 + 3 = 14) não.
+    expect(chooseAiActive(low, me(low), data, fixed(0.5))).toEqual({ kind: 'gate', level: 2 });
   });
 
   it('save com o Quinto portão antigo carrega sem a técnica', () => {

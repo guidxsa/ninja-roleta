@@ -549,11 +549,14 @@ function endTurn(s: JBattle, f: Fighter, data: JornadaData): void {
   }
   if (f.gate && !f.down) {
     const n = f.gate.rounds + 1;
-    const paid = payGateUpkeep(f.chakra, n, data.base.gateCosts, 1 + data.j.gates.upkeepLevelStep * (f.gate.level - 1));
+    // Custo misto (v0.79.0): chakra crescente e HP pelo nível do portão; sem como pagar, fecham.
+    const paid = payGateUpkeep({ chakra: f.chakra, hp: f.hp, maxHp: f.maxHp }, n, f.gate.level, data.base.gateCosts, 1 + data.j.gates.upkeepLevelStep * (f.gate.level - 1));
     if (paid) {
       f.chakra = paid.chakra;
+      f.hp = paid.hp;
       f.gate.rounds = n;
       s.log.push({ type: 'gateUpkeep', uid: f.uid, amount: paid.cost });
+      s.log.push({ type: 'hpCost', uid: f.uid, amount: paid.hpCost, source: 'gates' });
     } else closeGates(s, f, data, true);
   }
   for (const id of Object.keys(f.cooldowns)) {

@@ -1,6 +1,6 @@
 // Roleta: luta 1×1, com as roletas de iniciativa e acerto.
 import { scaleVillain } from '../../../src/core/difficulty';
-import { gateUpkeep } from '../../../src/core/gates';
+import { gateHpUpkeep, gateUpkeep } from '../../../src/core/gates';
 import { hitSlices } from '../../../src/core/hit';
 import { xpGain } from '../../../src/core/player';
 import { type RBattleOptions, type RBattle, kitOf, playerAttackOdds, playerHitDamage, playerBarrierMult, techCost, canUseTechnique, canUseActive, canUseItem, cloneRevealsIntent, startRoletaBattle, useActive, useRoletaItem, playRoletaRound, type RAction, type REvent } from '../../../src/core/roleta/battle';
@@ -196,7 +196,8 @@ export function badgesHtml(s: RBattle, side: 'player' | 'villain'): string {
     // Portões: sem contagem de rodadas; o selo mostra a próxima manutenção.
     const a = R.actives.gates!;
     const next = gateUpkeep(fx.gateRounds + 1, rdata.base.balance.gateCosts);
-    add('gates', R.ui.gatesOn(a.name, next), 'good', { name: a.name, desc: `${a.desc} ${R.ui.gatesNext(next)}` });
+    const hp = gateHpUpkeep(1, s.player.maxHp, rdata.base.balance.gateCosts);
+    add('gates', R.ui.gatesOn(a.name, next, hp), 'good', { name: a.name, desc: `${a.desc} ${R.ui.gatesNext(next, hp)}` });
   } else if (fx.buff) {
     const a = R.actives[fx.buff.kind]!;
     add(RACTIVE_ICONS[fx.buff.kind] ?? 'ninjutsu', R.ui.buffOn(a.name, fx.buff.turns), 'good', a);
@@ -301,7 +302,8 @@ export function activeButton(s: RBattle, enabled: boolean): string {
     const open = s.fx.buff?.kind === 'gates';
     const label = open ? R.ui.gatesCloseLabel(a.name) : R.ui.gatesOpen(a.name, rdata.r.kits.gates.activation);
     const next = gateUpkeep(open ? s.fx.gateRounds + 1 : 1, rdata.base.balance.gateCosts);
-    return `<div class="free-row"><button class="btn focus-btn" data-active ${ok ? '' : 'aria-disabled="true"'}${tip(a.name, `${a.desc} ${R.ui.gatesNext(next)}`)}>${icon('gates')}<span>${label}</span></button></div>`;
+    const hp = gateHpUpkeep(1, s.player.maxHp, rdata.base.balance.gateCosts);
+    return `<div class="free-row"><button class="btn focus-btn" data-active ${ok ? '' : 'aria-disabled="true"'}${tip(a.name, `${a.desc} ${R.ui.gatesNext(next, hp)}`)}>${icon('gates')}<span>${label}</span></button></div>`;
   }
   return `<div class="free-row"><button class="btn focus-btn" data-active ${ok ? '' : 'aria-disabled="true"'}${tip(a.name, `${a.desc} ${R.ui.activeTip}`)}>${icon(RACTIVE_ICONS[kind] ?? 'ninjutsu')}<span>${R.ui.activeLabel(a.name, s.fx.activeUses)}</span></button></div>`;
 }
@@ -557,7 +559,13 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
           log(RL.dodge, 'good');
           break;
         case 'gates':
-          if (ev.action === 'upkeep') log(RL.gatesUpkeep(ev.cost), 'muted', 'gates');
+          if (ev.action === 'upkeep') {
+            if (ev.hpCost) {
+              disp.php -= ev.hpCost;
+              floatNumber(pcard, `−${ev.hpCost}`, 'dmg');
+            }
+            log(RL.gatesUpkeep(ev.cost, ev.hpCost ?? 0), 'muted', 'gates');
+          }
           else log(ev.reason === 'chakra' ? RL.gatesExhausted : RL.gatesClose, 'muted', 'gates');
           break;
         case 'clone':

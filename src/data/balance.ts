@@ -48,8 +48,10 @@ export const balance = {
     stunImmunityTurns: 1,
   },
   // Portões (src/core/gates.ts): manutenção por rodada mantida = ceil(base × crescimento^(n−1)) → 2, 3, 5, 7, 11...
+  // Custo misto (v0.79.0, proposta): `chakraShare` dela em chakra (1, 2, 3, 4, 6...) e `hpPctPerLevel` do HP máximo
+  // por nível do portão aberto, a cada rodada.
   // A mesma regra no Roleta e na Jornada; a abertura custa por modo (proposta v0.59.0).
-  gateCosts: { upkeepBase: 2, upkeepGrowth: 1.5 },
+  gateCosts: { upkeepBase: 2, upkeepGrowth: 1.5, chakraShare: 0.5, hpPctPerLevel: 0.01 },
   origin: {
     // Jinchuuriki: roleta independente da linhagem (origens.md). Os pesos das linhagens ficam em lineages.ts.
     jinchuurikiChance: 0.1,
