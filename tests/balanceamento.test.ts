@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { emptyMods, hitDamage, mergeMods, playerAct, startBattle } from '../src/core/jornada/battle';
 import { relicFits, relicNeeds } from '../src/core/jornada/relics';
 import { gateHpUpkeep, payGateUpkeep } from '../src/core/gates';
-import { fitRelics, gainRelic, heroMods, heroNeeds, newGenericRun, newRun } from '../src/core/jornada/run';
+import { fitRelics, gainRelic, heroMods, heroNeeds, newGenericRun, newRun, resolveEvent, runEnemyMult } from '../src/core/jornada/run';
 import type { FighterSeed } from '../src/core/jornada/types';
 import { createRoletaPlayer, playerTechniques } from '../src/core/roleta/player';
 import { battleTechniques, gateForceChance, heavyBodyMult, kitActives, playerAttackOdds, playRoletaRound, sharinganStage, startRoletaBattle, techBlock, useActive, type RBattle } from '../src/core/roleta/battle';
@@ -134,6 +134,34 @@ describe('Fase 2 · Portões com custo misto (C4)', () => {
   it('o jogo usa a regra nova nos dois modos', () => {
     expect(data.base.gateCosts).toMatchObject({ chakraShare: 0.5, hpPctPerLevel: 0.01 });
     expect(roletaData.base.balance.gateCosts).toBe(data.base.gateCosts);
+  });
+});
+
+describe('Fase 5 · Jornada e História (H1, H2, H3, J5)', () => {
+  it('a força da História muda por estágio (H1); o Caminho Ninja não', () => {
+    const run = newRun(1, 'normal', data);
+    expect([0, 1, 2, 3].map((i) => runEnemyMult({ ...run, stageIndex: i }, data))).toEqual(data.j.storyStageStrength.map((m) => data.j.storyStrength * m));
+    expect(runEnemyMult({ ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 2 }, data)).toBe(1);
+  });
+
+  it('XP 100 + 30 por nível (J5); Harem atordoa 60% e a Shuriken das sombras +25% por nível (H2)', () => {
+    expect(data.j.xp).toMatchObject({ base: 100, perLevel: 30 });
+    expect(data.techniques.jHarem!.onHit).toEqual({ effect: 'stun', chance: 0.6 });
+    const t = data.talents.find((x) => x.id === 'tShadowShuriken')!;
+    expect(t.rankMods?.techDamageMult?.jShadowShuriken).toBe(1.25);
+  });
+
+  it('cena presenciada do estágio 3 da História dá +20 ryō (H3)', () => {
+    const stages = data.stages;
+    const si = 2;
+    const pi = stages[si]!.stops.findIndex((s) => s.kind === 'event' && data.events[(s as { event: string }).event]?.category === 'witness');
+    expect(pi).toBeGreaterThanOrEqual(0);
+    const run = { ...newRun(1, 'normal', data), stageIndex: si, stopIndex: pi };
+    const def = data.events[(stages[si]!.stops[pi] as { event: string }).event]!;
+    const opt = def.options.find((o) => !o.minigame && !o.cost)!;
+    const out = resolveEvent(run, opt.id, true, data);
+    const own = opt.effects.filter((e) => e.kind === 'ryo').reduce((a, e) => a + (e as { n: number }).n, 0);
+    expect(out.run.ryo - run.ryo).toBeGreaterThanOrEqual(own + 20);
   });
 });
 

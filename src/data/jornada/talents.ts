@@ -23,7 +23,7 @@ export const talents: TalentNode[] = [
   { id: 'tHarem', owner: 'naruto', branch: 'pranks', tier: 2, col: -1, cost: 2, excludes: ['tSmokeBomb'], learn: 'jHarem' },
   { id: 'tSmokeBomb', owner: 'naruto', branch: 'pranks', tier: 2, col: 1, cost: 2, excludes: ['tHarem'], learn: 'jSmokeBomb' },
   // A Shuriken das sombras é o dano do ramo (sem ela, a build de Pegadinhas só atordoa e não derruba ninguém).
-  { id: 'tShadowShuriken', owner: 'naruto', branch: 'pranks', tier: 3, cost: 2, requires: ['tHarem', 'tSmokeBomb'], learn: 'jShadowShuriken', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jShadowShuriken: 1.2 } } },
+  { id: 'tShadowShuriken', owner: 'naruto', branch: 'pranks', tier: 3, cost: 2, requires: ['tHarem', 'tSmokeBomb'], learn: 'jShadowShuriken', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jShadowShuriken: 1.25 } } },
   // Emboscada vale para a equipe: quem controla abre o alvo para os outros baterem.
   { id: 'tAmbush', owner: 'naruto', branch: 'pranks', tier: 4, cost: 2, teamMods: { stunnedDamageMult: 1.4 } },
   { id: 'tTrickMaster', owner: 'naruto', branch: 'pranks', tier: 5, cost: 3, capstone: true, mods: { stunnedAlwaysCrit: true, critBonus: 0.05 } },

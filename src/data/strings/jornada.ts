@@ -552,7 +552,7 @@ export const jornadaPtBR = {
       tPrankKing: { name: 'Rei das pegadinhas', desc: 'Esquiva 14% dos golpes; +15% de chance de aplicar efeitos; o Sexy no Jutsu custa 1 de chakra a menos.' },
       tHarem: { name: 'Harem no Jutsu', desc: 'Aprende o Harem no Jutsu: pode atordoar todos os inimigos.' },
       tSmokeBomb: { name: 'Bomba de fumaça', desc: 'Ativa nova: +30% de esquiva por 2 turnos.' },
-      tShadowShuriken: { name: 'Shuriken das sombras', desc: 'Aprende a Shuriken das sombras: 3 golpes. É o dano do ramo.', rank: 'Cada nível: +20% de dano.' },
+      tShadowShuriken: { name: 'Shuriken das sombras', desc: 'Aprende a Shuriken das sombras: 3 golpes. É o dano do ramo.', rank: 'Cada nível: +25% de dano.' },
       tCloneDecoy: { name: 'Clone disfarçado', desc: 'Combinação de Clones e Pegadinhas: os clones se disfarçam. O Kage Bunshin cria 1 clone a mais; +10% de chance de aplicar efeitos.' },
       tAmbush: { name: 'Emboscada', desc: 'A equipe causa +40% de dano em alvo atordoado.' },
       tTrickMaster: { name: 'Mestre da trapaça', desc: 'Talento final: todo golpe seu que acerta um alvo atordoado é crítico; +5% de crítico.' },

@@ -625,10 +625,13 @@ describe('run da Jornada', () => {
   it('a História tem força própria por cima da dificuldade (v0.65.0)', () => {
     const canon = newRun(1, 'normal', data);
     const generic = { ...canon, mode: 'generic' as const };
-    expect(runEnemyMult(canon, data)).toBeCloseTo(data.j.storyStrength);
+    // Por estágio desde a v0.82.0 (H1): o 1º estágio ×0,9.
+    const mult = data.j.storyStrength * data.j.storyStageStrength[0]!;
+    expect(runEnemyMult(canon, data)).toBeCloseTo(mult);
+    expect(runEnemyMult({ ...canon, stageIndex: 3 }, data)).toBeCloseTo(data.j.storyStrength * data.j.storyStageStrength[3]!);
     expect(runEnemyMult(generic, data)).toBe(1);
     const foe = battleSetup(canon, data).enemies[0]!;
-    expect(foe.maxHp).toBe(enemySeed(foe.defId!, 'normal', data, data.j.storyStrength).maxHp);
+    expect(foe.maxHp).toBe(enemySeed(foe.defId!, 'normal', data, mult).maxHp);
     expect(data.j.enemyStrength.hardcore).toBeGreaterThan(data.j.enemyStrength.hard);
   });
 

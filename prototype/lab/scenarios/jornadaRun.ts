@@ -45,7 +45,9 @@ const withRun = (ctx: LabContext, run: JRun): JRun => {
 };
 
 /** História jogada até a parada `until` (id da parada ou teste). */
-const story = (until: Until, difficulty: 'normal' | 'easy' = 'normal') => playUntil(storyRun(7, difficulty), until);
+// No Fácil, a seed 2: com a força por estágio da História (v0.82.0), a run de seed 7 do bot da fixture cai no 2º estágio.
+const EASY_SEED = 2;
+const story = (until: Until, difficulty: 'normal' | 'easy' = 'normal') => playUntil(storyRun(difficulty === 'easy' ? EASY_SEED : 7, difficulty), until);
 /** Caminho Ninja jogado até a condição. */
 const path = (until: Until) => playUntil(pathRun(7), until);
 
@@ -238,7 +240,7 @@ export const jornadaRun: Scenario[] = [
   },
 
   // Fim da run
-  { id: 'jornada.end:story-victory', title: 'Fim: História vencida (Fácil)', group: 'Fim da run', mount: end(() => playToEnd(storyRun(7, 'easy'))) },
+  { id: 'jornada.end:story-victory', title: 'Fim: História vencida (Fácil)', group: 'Fim da run', mount: end(() => playToEnd(storyRun(EASY_SEED, 'easy'))) },
   { id: 'jornada.end:story-defeat', title: 'Fim: derrota na História', group: 'Fim da run', mount: end(() => playToEnd(storyRun(7))) },
   { id: 'jornada.end:path-victory', title: 'Fim: Caminho Ninja vencido no Médio', group: 'Fim da run', mount: end(() => playToEnd(pathRun(7))) },
   { id: 'jornada.end:path-victory-hardcore', title: 'Fim: Caminho Ninja vencido no Hardcore (Seguir ciclo)', group: 'Fim da run', mount: end(hardcoreWin) },

@@ -330,7 +330,8 @@ export function stopRng(run: JRun, salt = 0): Rng {
 export const cycleEnemyMult = (run: JRun, data: JornadaData) => data.j.infinite.enemyCycleMult ** (run.cycle ?? 0);
 
 /** Força dos inimigos da run por cima da dificuldade: o ciclo do infinito e, na História, `storyStrength` (v0.65.0). */
-export const runEnemyMult = (run: JRun, data: JornadaData) => cycleEnemyMult(run, data) * (run.mode === 'canon' ? data.j.storyStrength : 1);
+export const runEnemyMult = (run: JRun, data: JornadaData) =>
+  cycleEnemyMult(run, data) * (run.mode === 'canon' ? data.j.storyStrength * (data.j.storyStageStrength[run.stageIndex] ?? 1) : 1);
 
 // ---------------------------------------------------------------------------
 // Estágio e parada
@@ -1168,7 +1169,11 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
   const gains: EventEffect[] = [];
   run.ryo -= opt.cost ?? 0;
   run.flags = [...new Set([...run.flags, `ev:${def.id}`])];
-  const effects: EventEffect[] = opt.minigame && !wonMinigame ? (opt.onLose ?? []) : opt.effects;
+  const picked: EventEffect[] = opt.minigame && !wonMinigame ? (opt.onLose ?? []) : opt.effects;
+  // H3 (v0.82.0): as cenas presenciadas do estágio 3 da História dão ryō a mais.
+  const w = data.j.storyWitnessRyo;
+  const witness = prev.mode === 'canon' && def.category === 'witness' && prev.stageIndex === w.stageIndex && w.ryo > 0;
+  const effects: EventEffect[] = witness ? [...picked, { kind: 'ryo', n: w.ryo }] : picked;
   for (const e of effects) {
     const relicBefore: string | null = relic;
     if (e.kind === 'ryo') {

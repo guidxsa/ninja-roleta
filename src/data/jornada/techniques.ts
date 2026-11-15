@@ -48,7 +48,7 @@ export const allyTechniques: JTechnique[] = [
   { id: 'jRasengan', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 28, chakraCost: 10, accuracy: 0.9, critBonus: 0.05 },
   { id: 'jOdama', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 44, chakraCost: 16, accuracy: 0.85, penetration: 0.2, onHit: { effect: 'stun', chance: 0.25 } },
   { id: 'jRasenClone', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 18, hits: 1, hitsPerClone: 1, maxCloneHits: 2, chakraCost: 8, accuracy: 0.9 },
-  { id: 'jHarem', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 0, chakraCost: 6, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.5 }, cooldown: 4 },
+  { id: 'jHarem', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 0, chakraCost: 6, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.6 }, cooldown: 4 },
   { id: 'jSmokeBomb', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, boost: { evasion: 0.3, turns: 2 }, active: true, cooldown: 4 },
   { id: 'jShadowShuriken', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 3, chakraCost: 3, accuracy: 0.85 },
   { id: 'jWarCry', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healHp: 20, cleanse: true, cooldown: 2 },

@@ -57,7 +57,7 @@ Refeita na v0.71.0. Seis ramos, cada um com um **estilo**, uma **bifurcação**,
 | Pegadinhas | Rei das pegadinhas | 1 | | Esquiva 14%; +15% de chance de aplicar efeitos; Sexy no Jutsu custa 1 de chakra a menos |
 | Pegadinhas | Harem no Jutsu **ou** | 2 | | Aprende o Harem no Jutsu: pode atordoar todos |
 | Pegadinhas | Bomba de fumaça | 2 | | Ativa: +30% de esquiva por 2 turnos |
-| Pegadinhas | Shuriken das sombras | 2 | 3 (+1 cada) | Aprende a Shuriken das sombras (3 golpes): o dano do ramo. Cada nível: +20% de dano |
+| Pegadinhas | Shuriken das sombras | 2 | 3 (+1 cada) | Aprende a Shuriken das sombras (3 golpes): o dano do ramo. Cada nível: +25% de dano |
 | Pegadinhas | Emboscada | 2 | | A **equipe** causa +40% de dano em alvo atordoado |
 | Pegadinhas | **Mestre da trapaça** (final) | 3 | | Golpe seu que acerta alvo atordoado é sempre crítico; +5% de crítico |
 | Laços | Não vou desistir | história | | Dado pela lição do teste do sino: a equipe recupera 1 de HP por rodada |

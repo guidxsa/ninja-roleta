@@ -36,6 +36,8 @@ import {
   resolveEvent,
   rest,
   shopOffer,
+  refreshShelf,
+  refreshPrice,
   spendItem,
   stopRng,
   talentContext,
@@ -45,6 +47,7 @@ import { branchesOf, canBuyTalent, talentState } from '../src/core/jornada/talen
 import { createRng, type Rng } from '../src/core/rng';
 import type { Difficulty } from '../src/core/difficulty';
 import { jornadaData as data } from '../src/data/jornada';
+import { DEFAULT_RELIC_VALUE, relicValues } from '../src/sim/relicValues';
 
 const ARGS = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const BRANCHES = process.argv.includes('--ramos');
@@ -116,13 +119,35 @@ function auditStep(before: JRun, after: JRun, kind: 'shop' | 'talents' | 'rest' 
 }
 const bagSize = (run: JRun) => Object.values(run.bag).reduce((a, n) => a + n, 0);
 
-/** Loja a cada parada: kit de HP se a vida está abaixo da metade; senão, a relíquia mais barata que couber. */
+/** Valor medido da relíquia (src/sim/relicValues.ts). */
+const relicValue = (id: string) => relicValues[id] ?? DEFAULT_RELIC_VALUE;
+/** Relíquia abaixo disto não vale o ryō (o bot guarda para a próxima loja). */
+const MIN_RELIC_VALUE = 2;
+
+/**
+ * Loja a cada parada (v0.82.0, J6): com o protagonista abaixo de 50% do HP, o tratamento (ou o kit de HP, se não der);
+ * depois, a relíquia de maior valor medido que couber; se nada na prateleira vale a pena e sobra ryō, atualiza uma vez.
+ */
 function shopTurn(run0: JRun): JRun {
   let run = openShop(run0, data);
   const hero = memberSheet(run, run.hero, data);
-  const kit = shopOffer(run, data).consumables.find((c) => c.id === 'hpKit')!;
-  if ((run.members[run.hero]?.hp ?? hero.maxHp) < hero.maxHp * 0.5 && canBuy(run, { kind: 'item', ...kit }, data)) run = buy(run, { kind: 'item', ...kit }, data);
-  const relic = shopOffer(run, data).relics.filter((r) => canBuy(run, { kind: 'relic', ...r }, data)).sort((a, b) => a.price - b.price)[0];
+  if ((run.members[run.hero]?.hp ?? hero.maxHp) < hero.maxHp * 0.5) {
+    const offer = shopOffer(run, data);
+    const treat = { kind: 'treatment' as const, price: offer.treatment };
+    const kit = { kind: 'item' as const, ...offer.consumables.find((c) => c.id === 'hpKit')! };
+    if (canBuy(run, treat, data)) run = buy(run, treat, data);
+    else if (canBuy(run, kit, data)) run = buy(run, kit, data);
+  }
+  const best = () =>
+    shopOffer(run, data)
+      .relics.filter((r) => canBuy(run, { kind: 'relic', ...r }, data) && relicValue(r.id) >= MIN_RELIC_VALUE)
+      .sort((a, b) => relicValue(b.id) - relicValue(a.id))[0];
+  let relic = best();
+  const cheapest = Math.min(...Object.values(data.j.relics.price));
+  if (!relic && (run.shop?.refreshes ?? 0) === 0 && run.ryo - refreshPrice(run, data) >= cheapest) {
+    run = refreshShelf(run, data);
+    relic = best();
+  }
   return relic ? buy(run, { kind: 'relic', ...relic }, data) : run;
 }
 
@@ -265,7 +290,8 @@ function playCycle(run0: JRun, rng: Rng, mode: Mode): { run: JRun; stop: string 
     auditStep(s0, run, 'shop');
     const before = run;
     if (run.bossChoice) {
-      run = chooseBossRelic(run, run.bossChoice[0]!, data);
+      // Baú do chefe pela mesma regra: a de maior valor medido (v0.82.0).
+      run = chooseBossRelic(run, [...run.bossChoice].sort((a, b) => relicValue(b) - relicValue(a))[0]!, data);
       auditStep(before, run, 'other');
       closeStage(before, run);
       continue;

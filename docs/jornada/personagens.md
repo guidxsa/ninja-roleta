@@ -92,7 +92,7 @@ Entre as duas melhores opções, a sorte desempata (30%) quando a segunda vale p
 | Rasengan | Ninjutsu | — | um inimigo | 28 | 10 | 90% | +5% crítico |
 | Ōdama Rasengan | Ninjutsu | — | um inimigo | 44 | 16 | 85% | penetração 20%; atordoar 25% (2 t). Guardada para o Shippuden: fora da árvore desde a v0.67.0 |
 | Rasengan com clone | Ninjutsu | — | um inimigo | 18 | 8 | 90% | +1 golpe por clone (até +2) |
-| Harem no Jutsu | Genjutsu | — | todos os inimigos | — | 6 | 85% | atordoar 50% (2 t); espera 4 |
+| Harem no Jutsu | Genjutsu | — | todos os inimigos | — | 6 | 85% | atordoar 60% (2 t); espera 4 |
 | Bomba de fumaça | Taijutsu | — | em si | — | 3 | 85% | fortalece 2 turnos (+30% esquiva); espera 4; ativa de classe |
 | Shuriken das sombras | Taijutsu | — | um inimigo | 7 | 3 | 85% | 3 golpes |
 | Grito de guerra | Ninjutsu | — | um aliado | — | 5 | 85% | cura 20 de HP; tira atordoar e bloqueio; espera 2 |

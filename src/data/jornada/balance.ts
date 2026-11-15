@@ -82,7 +82,7 @@ export const jornadaBalance = {
   },
 
   // XP para o próximo nível: base + porNível × (nível − 1). Cada nível dá 1 ponto de talento.
-  xp: { base: 100, perLevel: 40, talentPerLevel: 1 },
+  xp: { base: 100, perLevel: 30, talentPerLevel: 1 },
 
   // Relíquias por classificação (docs/jornada/reliquias.md).
   relics: {
@@ -135,6 +135,13 @@ export const jornadaBalance = {
   // mais fácil que o Caminho Ninja na mesma dificuldade.
   // v0.68.0 (escolhido pelo usuário): a cronologia nova tirou 5 lutas de desgaste; 1,1 → 1,2.
   storyStrength: 1.2,
+  // Força por estágio da História, por cima da `storyStrength` (v0.82.0, H1 aprovado pelo usuário). Calibrada junto do
+  // XP 100 + 30 (J5) e do bot novo da loja (J6): o ponto de partida 0,9 / 0,95 / 1,25 / 1,3 deixava o Médio em 100%.
+  // As derrotas ficam quase todas nos estágios 1 e 2; o fim quase não pesa (×2 nele muda ~4 pontos). Proposta para o
+  // usuário (tabela em docs/registro.md).
+  storyStageStrength: [1.15, 1.2, 1.7, 1.9] as readonly number[],
+  // H3 (v0.82.0): cada cena presenciada do estágio 3 da História (índice 2) dá este ryō a mais.
+  storyWitnessRyo: { stageIndex: 2, ryo: 20 },
 
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
   minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },
