@@ -188,6 +188,8 @@ function gainsStrip(): string {
 const heroFace = (host: JornadaHost, run: JRun) => ({
   face: run.hero,
   faceSpec: portraitSpec(run.hero, run),
+  // O herói do Caminho Ninja é o ninja da classe: esse retrato é dele, não o de outro (docs/visual.md#quem-aparece-na-cena).
+  ownFace: run.mode === 'generic',
   // Nome cru: a cena escapa o texto ao desenhar.
   faceName: run.mode === 'generic' ? heroLabel(run.hero, host.playerName()) : (J.names[run.hero] ?? run.hero),
 });
@@ -1262,6 +1264,7 @@ interface NoticeScene {
   face?: string | null;
   faceSpec?: string;
   faceName?: string;
+  ownFace?: boolean;
   /** Quantas linhas do começo leem como fala (a lição do teste do sino). */
   lead?: number;
 }
@@ -1270,6 +1273,8 @@ interface NoticeScene {
  * Aviso de um momento da run (vitória, lição, estágio concluído, ciclo): a mesma cena dos eventos, com as linhas
  * entrando uma a uma. Uma linha por `\n`.
  */
+const PEAK_SEALS = new Set<string>(['victory', 'stage', 'cycle']);
+
 export async function notice(title: string, text: string, scene: NoticeScene): Promise<void> {
   const seal = U.sceneSeals[scene.seal]!;
   const root = show(
@@ -1279,8 +1284,11 @@ export async function notice(title: string, text: string, scene: NoticeScene): P
         face: scene.face ?? null,
         ...(scene.faceSpec ? { faceSpec: scene.faceSpec } : {}),
         ...(scene.faceName ? { faceName: scene.faceName } : {}),
+        ...(scene.ownFace ? { ownFace: true } : {}),
         title,
         seal: { ...seal, gold: scene.seal === 'victory' || scene.seal === 'stage' },
+        // Vitória, estágio e ciclo são picos: carimbo grande no alto do pergaminho e o título em letreiro.
+        ...(PEAK_SEALS.has(String(scene.seal)) ? { cls: 'jc-peak' } : {}),
         body: sceneLines(text.split('\n'), scene.lead ?? 0),
         footer: `<button class="btn primary big" data-choice="ok">${U.continue}</button>`,
       }),
@@ -1316,7 +1324,7 @@ export async function endScreen(host: JornadaHost, run: JRun, next: JRun | null,
   const root = show(
     h(
       sceneScreen({
-        cls: `jreport ${good ? 'win' : 'lose'}`,
+        cls: `jreport jc-peak ${good ? 'win' : 'lose'}`,
         place: run.mode === 'generic' ? stageScene(run, data) : stopScene(run, data),
         ...heroFace(host, run),
         title,

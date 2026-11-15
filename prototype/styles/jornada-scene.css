@@ -145,3 +145,21 @@
 @media (prefers-reduced-motion: reduce) {
   .jb-cut, .jb-cut-band, .jb-cut-next { animation: none; }
 }
+
+/* Picos (vitória, estágio concluído, ciclo novo, fim da run): o selo vira o carimbo grande, batido no alto do pergaminho
+   e passando da borda, e o título é letreiro. Antes a vitória de um capítulo tinha um selo de 38px, menor que o 将 da
+   entrada de um chefe. */
+.jc-peak .jc-paper { z-index: 3; text-align: center; }
+.jc-peak .jc-seal {
+  /* À direita: à esquerda fica quem está em cena, com a tira do nome. */
+  --s: 96px; position: relative; right: auto; top: auto; display: grid; margin: -54px 2px 8px auto; rotate: -6deg;
+  box-shadow: 0 0 0 4px var(--paper), 4px 7px 0 4px rgba(36, 25, 15, .35); animation: stamp var(--dur-3) var(--ease) .2s both;
+}
+.jc-peak .jc-title { margin: 0 0 8px; text-align: center; font: 400 var(--fs-6xl)/1.05 var(--font-display); letter-spacing: .02em; text-wrap: balance; }
+.jc-peak .jc-line { text-align: center; }
+.jc-peak .jreport-grid, .jc-peak .jreport-head, .jc-peak .jreport-path, .jc-peak .jreport-team, .jc-peak .jreport-relics, .jc-peak .jreport-finals { text-align: left; }
+@media (min-width: 900px) and (min-height: 560px) {
+  .jc-peak .jc-seal { --s: 128px; margin: -72px auto 8px; }
+  .jc-peak .jc-title { font-size: clamp(40px, 4vw, 64px); }
+}
+@media (prefers-reduced-motion: reduce) { .jc-peak .jc-seal { animation: none; } }

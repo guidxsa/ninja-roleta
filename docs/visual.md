@@ -67,6 +67,10 @@ Um componente só (`prototype/jornada/scene.ts`, `styles/jornada-scene.css`) par
 
 Regra (revisão da etapa 1, v0.72.1): **a cena nunca usa o rosto de outro personagem no lugar de alguém, nem o ninja genérico.** Quem não tem representação própria aparece só com o nome, na tira de papel, até existir um recurso visual. Pôr uma imagem em `public/img/jornada/<id>` resolve o caso sem mudar código (`hasOwnPortrait` em `prototype/art.ts`). O corte de quadro da luta segue a mesma regra para quem fala sem estar em campo.
 
+Exceção (v0.76.9): o herói do **Caminho Ninja** é o ninja da classe; o retrato dele é esse molde, então a cena mostra o retrato (antes o fim da run ficava com o nome solto, sem rosto). Personagens nomeados ganharam traços próprios sobre o molde (`NINJA_STYLE` em `prototype/art.ts`): máscara e bandana torta do Kakashi, cabelo curto e bandana de pano dos capangas, respirador e chifres dos Irmãos Demônio.
+
+**Picos da Jornada** (v0.76.9): vitória, estágio concluído, ciclo novo e fim da run usam o selo como **carimbo grande** (96 a 128px), batido no alto do pergaminho, e o título em letreiro (`.jc-peak`). Os outros momentos mantêm o selo pequeno no canto.
+
 | Situação | Personagens | Na cena |
 |---|---|---|
 | **Desenho próprio** | Mizuki, Zabuza, Haku (com a máscara), Gaara, Shukaku, Gamabunta (e a raposa), Kabuto, Orochimaru, Jirobo, Kidomaru, Tayuya, Sakon; Naruto no chakra da Kyuubi e no manto de uma cauda | Retrato |
