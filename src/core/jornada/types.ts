@@ -237,6 +237,39 @@ export interface FighterMods {
   vengeanceAccuracy: number;
   /** Dano × contra quem está queimando (Inferno ilusório). */
   burningDamageMult: number;
+  // Árvore do Hyuuga (v0.87.0, docs/jornada/talentos.md#hyuuga-caminho-ninja).
+  /** A esquiva do alvo não conta (Visão de 360°). */
+  ignoreEvasion: boolean;
+  /** Chakra que o alvo perde a cada golpe de taijutsu que acerta (Fechar pontos, Campo dos trigramas). */
+  taiHitDrain: number;
+  /** Dano × contra quem está com o chakra bloqueado (Fluxo interrompido, Ordem do patriarca). */
+  chakraBlockedDamageMult: number;
+  /** Cada golpe de taijutsu que acerta pode bloquear o chakra (Tenketsu selado). */
+  taiChakraBlockChance: number;
+  /** O seu escudo devolve esta fração do que segura (Defesa absoluta) e tira chakra de quem bate (Giro suave). */
+  shieldReflectPct: number;
+  shieldDrain: number;
+  /** Dano × contra quem está sem chakra (Campo dos trigramas). */
+  noChakraDamageMult: number;
+  /** O acerto do seu fortalecimento vale para a equipe (Herdeiro do clã). */
+  shareBoost: boolean;
+  /** Turnos a mais nos fortalecimentos (Byakugan do herdeiro). */
+  boostTurnsBonus: number;
+  /** Chance de tomar o golpe de alvo único no lugar de um aliado (Guardião). */
+  protectChance: number;
+  /** Defendendo, toma os golpes de alvo único no lugar do aliado mais ferido (Guarda-costas). */
+  guardProtect: boolean;
+  /** Dano do revide ao proteger um aliado (Olhos do guardião). */
+  protectCounter: number;
+  /** O escudo que ergue em si vale também para a equipe, com esta fração (Esfera absoluta). */
+  shieldShare: number;
+  /** A técnica que acerta dá escudo desta fração do HP (Trigrama defensivo); ao aliado mais ferido, com `allyShieldOnHit`. */
+  techShieldOnHit: Record<string, number>;
+  allyShieldOnHit: boolean;
+  /** Todo golpe em alvo com chakra bloqueado é crítico (Mira nos pontos). */
+  blockedAlwaysCrit: boolean;
+  /** Chance de atordoar com a técnica quando o alvo está sem chakra (Oito Trigramas, 128 Palmas). */
+  techStunNoChakra: Record<string, number>;
 }
 
 export interface CharacterDef {
@@ -397,6 +430,8 @@ export type JEvent =
   | { type: 'chakraGain'; uid: string; amount: number }
   | { type: 'enrage'; uid: string }
   | { type: 'boost'; uid: string; techId: string; turns: number }
+  /** Guardião ou Guarda-costas: `uid` tomou o golpe no lugar de `target`. */
+  | { type: 'protect'; uid: string; target: string }
   /** Custo em HP de uma técnica (`source` = id) ou desgaste dos Portões (`source` = 'gates'). */
   | { type: 'hpCost'; uid: string; amount: number; source: string }
   /** Abriu ou trocou de portão (`level` 1–5; `cost` de chakra) ou fechou (0; `exhausted` quando faltou chakra). */

@@ -1,12 +1,12 @@
 // Balanceamento aprovado pelo usuário (docs/balanceamento/diagnostico.md): regras novas de cada fase.
 import { describe, expect, it } from 'vitest';
 import { accuracyAgainst, emptyMods, gateOpenCost, hitDamage, hitsOf, hpCost, mergeMods, playerAct, startBattle } from '../src/core/jornada/battle';
-import { branchesOf } from '../src/core/jornada/talents';
+import { branchesOf, talentState } from '../src/core/jornada/talents';
 import { ptBR } from '../src/data/strings/ptBR';
 import { evolutionFor, relicFits, relicNeeds } from '../src/core/jornada/relics';
 import { pathRun, playUntil } from '../prototype/lab/fixtures/jornada';
 import { gateHpUpkeep, payGateUpkeep } from '../src/core/gates';
-import { fitRelics, gainRelic, heroMods, heroNeeds, newGenericRun, newRun, resolveEvent, runEnemyMult } from '../src/core/jornada/run';
+import { buyTalent, talentContext, fitRelics, gainRelic, heroMods, heroNeeds, newGenericRun, newRun, resolveEvent, runEnemyMult } from '../src/core/jornada/run';
 import type { FighterSeed } from '../src/core/jornada/types';
 import { createRoletaPlayer, playerTechniques } from '../src/core/roleta/player';
 import { battleTechniques, gateForceChance, heavyBodyMult, kitActives, playerAttackOdds, playRoletaRound, sharinganStage, startRoletaBattle, techBlock, useActive, type RBattle } from '../src/core/roleta/battle';
@@ -303,6 +303,52 @@ describe('Fase 6 · árvore do Uchiha (C2, v0.86.0)', () => {
     const b = startBattle({ allies: [hero({ mods, speed: 1 })], enemies: [foe({ speed: 99 })], win: { kind: 'defeatAll' } }, data, fixed(0.3));
     // Sem o Sharingan ligado, a leitura não vale.
     expect(b.fighters[0]!.hp).toBeLessThan(b.fighters[0]!.maxHp);
+  });
+});
+
+describe('Fase 6 · árvore do Hyuuga (C2 e C4, v0.87.0)', () => {
+  const tree = data.talents.filter((t) => t.owner === 'hyuugaNinja');
+  const foe = (over: Partial<FighterSeed> = {}): FighterSeed => ({ ...hero(), defId: 'gatoThug', protagonist: false, techniques: ['jeClub'], ai: 'brute', ...over });
+
+  it('seis ramos, com as duas casas se excluindo pela raiz; sete combinações e três assinaturas', () => {
+    expect(branchesOf('hyuugaNinja', data.talents)).toEqual(['byakugan', 'gentleFist', 'rotation', 'trigrams', 'mainHouse', 'branchHouse']);
+    for (const b of branchesOf('hyuugaNinja', data.talents)) expect(tree.filter((t) => t.branch === b && t.capstone), b).toHaveLength(1);
+    expect(tree.filter((t) => t.requiresAll)).toHaveLength(10);
+    const run = { ...newGenericRun(3, 'normal', 'hyuuga', data, new Set(['j_unlockHyuuga'])), talentPoints: 10 };
+    const main = buyTalent(run, 'tHMainHeritage', new Set(), data);
+    expect(talentState(tree.find((t) => t.id === 'tHBranchDuty')!, data.talents, talentContext(main, new Set()))).toBe('excluded');
+    const branch = buyTalent(run, 'tHBranchDuty', new Set(), data);
+    expect(talentState(tree.find((t) => t.id === 'tHMainHeritage')!, data.talents, talentContext(branch, new Set()))).toBe('excluded');
+  });
+
+  it('Guardião: o golpe de alvo único contra o aliado cai em quem protege', () => {
+    const b = startBattle(
+      {
+        allies: [hero({ speed: 1, mods: mergeMods(emptyMods(), { protectChance: 1 }) }), { ...hero(), defId: 'sakura', protagonist: false, speed: 1, ai: 'striker' }],
+        enemies: [foe({ speed: 99 })],
+        win: { kind: 'defeatAll' },
+      },
+      data,
+      fixed(0.3),
+    );
+    const [guard, ally] = [b.fighters[0]!, b.fighters[1]!];
+    // Quem quer que o inimigo mire, o golpe cai no Guardião.
+    expect(ally.hp).toBe(ally.maxHp);
+    if (b.log.some((e) => e.type === 'protect')) expect(guard.hp).toBeLessThan(guard.maxHp);
+  });
+
+  it('Visão de 360° ignora a esquiva; Defesa absoluta devolve o que o escudo segura', () => {
+    const b = startBattle({ allies: [hero({ mods: mergeMods(emptyMods(), { ignoreEvasion: true }) })], enemies: [foe({ mods: mergeMods(emptyMods(), { evasion: 0.3 }) })], win: { kind: 'defeatAll' } }, data, fixed(0.5));
+    const [me, them] = [b.fighters[0]!, b.fighters[1]!];
+    const plain = { ...me, mods: emptyMods() };
+    expect(accuracyAgainst(me, them, data.techniques.jStrike!, data)).toBeGreaterThan(accuracyAgainst(plain, them, data.techniques.jStrike!, data));
+    const wall = startBattle(
+      { allies: [hero({ speed: 1, mods: mergeMods(emptyMods(), { shieldReflectPct: 0.5, startShieldPct: 0.5 }) })], enemies: [foe({ speed: 99 })], win: { kind: 'defeatAll' } },
+      data,
+      fixed(0.3),
+    );
+    const hitsMe = wall.log.some((e) => e.type === 'damage' && e.target === wall.fighters[0]!.uid && e.absorbed > 0);
+    if (hitsMe) expect(wall.fighters[1]!.hp).toBeLessThan(wall.fighters[1]!.maxHp);
   });
 });
 

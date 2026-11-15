@@ -38,7 +38,12 @@ function nodeIcon(run: JRun, n: TalentNode): string {
   if (tech) return icon(tech.clones || tech.hitsPerClone ? 'clones' : tech.shieldPct ? 'barrier' : tech.healHp ? 'medical' : tech.boost ? 'sparkle' : (tech.element ?? tech.type));
   const m = { ...n.mods, ...n.teamMods };
   if (m.gateLevels || m.gateOpenDiscount || m.gateAutoUp || m.hpCostFreeAtGate) return icon('gates');
-  if (m.fallenRally) return icon('sparkle');
+  if (m.fallenRally || m.shareBoost || m.boostTurnsBonus) return icon('sparkle');
+  if (m.protectChance || m.guardProtect || m.protectCounter) return icon('stance');
+  if (m.shieldReflectPct || m.shieldShare || m.shieldDrain || (m.techShieldOnHit && Object.keys(m.techShieldOnHit).length)) return icon('barrier');
+  if (m.ignoreEvasion) return icon('byakugan');
+  if (m.taiHitDrain || m.taiChakraBlockChance || m.chakraBlockedDamageMult || m.blockedAlwaysCrit || m.noChakraDamageMult) return icon('block');
+  if (m.techStunNoChakra && Object.keys(m.techStunNoChakra).length) return icon('stun');
   if (m.readNullChance || m.readCounterDamage || m.vengeanceAccuracy) return icon('sharingan');
   if (m.burnMult || m.burningDamageMult) return icon('fire');
   if (m.genjutsuStunChance || m.illusionSureHit || m.fearOnHit) return icon('genjutsu');

@@ -9,7 +9,7 @@ A árvore **reinicia a cada run** e custa pontos de talento ([progressao.md](pro
 - **Níveis**: a maioria dos talentos é **única**, principalmente os passivos. Alguns, quase sempre técnicas, sobem de nível, com limite de 2 ou 3 e um custo próprio por nível. Dá para voltar e subir um talento antigo a qualquer momento, mesmo depois de avançar no ramo.
 - **Ramos canônicos** (v0.67.0): a raiz de Sapos, Kyuubi e Rasengan é **dada pela história** (`grantedBy`): entra carimbada, sem custo, no marco ([historia.md](historia.md#momentos-canônicos)). Antes disso, aparece tracejada como "Vem pela história", e o resto do ramo fica fechado. Os níveis da raiz continuam pagos.
 - **Laços** (v0.68.0): a raiz (Não vou desistir) também vem pela história: a lição do teste do sino.
-- **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela; desde a v0.71.0, cada um muda uma regra do combate. Desde a v0.84.0 o Comum também tem, o prodígio desde a v0.85.0 e o Uchiha desde a v0.86.0; o Hyuuga ainda não (item em aberto em [decisoes.md](../decisoes.md)).
+- **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela; desde a v0.71.0, cada um muda uma regra do combate. Desde a v0.84.0 o Comum também tem, o prodígio desde a v0.85.0, o Uchiha desde a v0.86.0 e o Hyuuga desde a v0.87.0 (revisão em [decisoes.md](../decisoes.md)).
 - **Combinação** (`requiresAll`, v0.71.0): talento que pede a junção de dois ramos ([abaixo](#combinações)).
 - **Nós da conta** ficam liberados de vez por um objetivo (o ramo do Sasuke no Uchiha, o único, saiu na v0.86.0; o campo `account` segue no código). A Ōdama Rasengan saiu na v0.67.0: não pertence ao Naruto clássico e fica guardada para uma campanha Shippuden.
 - O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
@@ -327,19 +327,71 @@ No código: `readNullChance`/`readCounterDamage`, `burnMult`, `genjutsuStunChanc
 
 ## Hyuuga (Caminho Ninja)
 
-A Palma do Vácuo, que estava pendente desde o Roleta, entra no ramo Rotação.
+Reformulado na v0.87.0, no molde do Comum: um ninja genérico do clã. **Seis ramos**, bifurcação e talento final em cada, **sete combinações** e **três assinaturas**. **Casa principal e Casa secundária se excluem pela raiz**: o Hyuuga nasce numa só, então cada run usa cinco ramos (cinco das sete combinações). A Palma do Vácuo, pendente desde o Roleta, fica na bifurcação dos Oito Trigramas.
 
-| Ramo | Nó | Custo | Efeito |
+| Ramo | Estilo | Bifurcação | Talento final (a regra que muda) |
 |---|---|---|---|
-| Byakugan | Visão ampla | 1 | +5% de acerto; Byakugan (nas duas formas) custa 1 de chakra a menos |
-| Byakugan | Pontos vitais | 2 | +10% de crítico |
-| Byakugan | Byakugan desperto | 2 | Evolui o Byakugan (substitui a forma básica): não erra, +30% de penetração e +15% de dano por 4 turnos |
-| Byakugan | Olhos que tudo veem | 3 | Esquiva 10% |
-| Punho Suave | Punho Suave | 1 | +10% de dano de taijutsu |
-| Punho Suave | 64 Palmas | 2 | Aprende as 64 Palmas |
-| Punho Suave | Tenketsu | 2 | Palma Suave: +30% de dano |
-| Punho Suave | 128 Palmas | 3 | Aprende as 128 Palmas |
-| Rotação | Rotação | 1 | Aprende a Rotação (escudo) |
-| Rotação | Postura do clã | 2 | Começa as lutas com escudo de 10% do HP |
-| Rotação | Palma do Vácuo | 2 | Aprende a Palma do Vácuo |
-| Rotação | Paredão de vácuo | 3 | Aprende o Paredão de vácuo (todos os inimigos) |
+| Byakugan | visão | Byakugan desperto (evolui o olho) ou Pontos vitais (crítico) | Os seus golpes **ignoram a esquiva** dos inimigos; esquiva +10% |
+| Punho Suave | chakra do alvo | Fechar pontos (drena 2 de chakra por golpe) ou Golpe interno (penetração) | Todo taijutsu que acerta tem **30% de bloquear o chakra** |
+| Rotação | defesa | Postura do clã (escudo) ou Giro rápido (Rotação mais barata) | O seu escudo **devolve 75%** do dano que segura |
+| Oito Trigramas | sequência | Palma do Vácuo (à distância) ou Ritmo das palmas (+1 golpe) | Cada taijutsu que acerta tira 1 de chakra; contra alvo **sem chakra, +30% de dano** |
+| Casa principal | comando | Ordem (equipe +dano) ou Linhagem (HP dos suportes) | Ao ligar o Byakugan, **a equipe ganha o acerto dele** |
+| Casa secundária | proteção | Guarda-costas (Defendendo, protege o mais ferido) ou Vigília (equipe +esquiva) | **35% dos golpes** de alvo único contra aliados **caem em você** |
+
+| Ramo | Nó | Custo | Níveis | Efeito |
+|---|---|---|---|---|
+| Byakugan | Visão ampla | 1 | | +5% de acerto; o Byakugan custa 1 a menos |
+| Byakugan | Byakugan desperto **ou** | 2 | | Evolui o Byakugan: não erra, +30% de penetração e +15% de dano por 4 turnos |
+| Byakugan | Pontos vitais | 2 | | +10% de crítico |
+| Byakugan | Olhos que tudo veem | 2 | | Esquiva 8% |
+| Byakugan | Leitura do chakra | 2 | | +5% de acerto e de dano; derrubar um inimigo devolve 3 de chakra |
+| Byakugan | **Visão de 360°** (final) | 3 | | Ignora a esquiva dos inimigos; esquiva +10% |
+| Punho Suave | Punho Suave | 1 | | +15% de dano de taijutsu |
+| Punho Suave | Fechar pontos **ou** | 2 | | Cada taijutsu que acerta tira 2 de chakra do alvo |
+| Punho Suave | Golpe interno | 2 | | O taijutsu ignora 25% da resistência |
+| Punho Suave | Tenketsu | 2 | | Palma Suave +30% de dano |
+| Punho Suave | Fluxo interrompido | 2 | | +30% de dano em alvo com o chakra bloqueado |
+| Punho Suave | **Tenketsu selado** (final) | 3 | | Taijutsu que acerta: 30% de bloquear o chakra |
+| Rotação | Rotação | 1 | | Aprende a Rotação (escudo) |
+| Rotação | Postura do clã **ou** | 2 | | Escudo de 12% no começo das lutas |
+| Rotação | Giro rápido | 2 | | A Rotação custa 2 a menos |
+| Rotação | Paredão de vácuo | 2 | | Aprende o Paredão de vácuo |
+| Rotação | Equilíbrio | 2 | | Defender cura 8%; 2 de HP por rodada |
+| Rotação | **Defesa absoluta** (final) | 3 | | O escudo devolve 75% do que segura |
+| Oito Trigramas | Postura dos trigramas | 1 | | +5% de acerto; +1 de dano no taijutsu |
+| Oito Trigramas | Palma do Vácuo **ou** | 2 | 3 (+1 cada) | Aprende a Palma do Vácuo. Cada nível: +20% de dano |
+| Oito Trigramas | Ritmo das palmas | 2 | | 64 e 128 Palmas +1 golpe |
+| Oito Trigramas | 64 Palmas | 2 | 2 (+2) | Aprende as 64 Palmas. Nível 2: +25% de dano |
+| Oito Trigramas | 128 Palmas | 2 | | Aprende as 128 Palmas |
+| Oito Trigramas | **Campo dos trigramas** (final) | 3 | | Taijutsu tira 1 de chakra; +30% contra alvo sem chakra |
+| Casa principal | Herança da casa principal | 1 | | A equipe +5% de acerto. **Fecha a Casa secundária** |
+| Casa principal | Ordem **ou** | 2 | | A equipe +15% de dano |
+| Casa principal | Linhagem | 2 | | +10% de HP máximo dos suportes |
+| Casa principal | Autoridade | 2 | | A equipe +5% de crítico |
+| Casa principal | Postura de comando | 2 | | A equipe recupera 2 de HP por rodada |
+| Casa principal | **Herdeiro do clã** (final) | 3 | | O acerto do seu Byakugan vale para a equipe |
+| Casa secundária | Dever da casa secundária | 1 | | Esquiva 8%; Defender cura 5%. **Fecha a Casa principal** |
+| Casa secundária | Guarda-costas **ou** | 2 | | Defendendo, toma os golpes de alvo único no lugar do aliado mais ferido |
+| Casa secundária | Vigília | 2 | | A equipe esquiva 5% |
+| Casa secundária | Lealdade | 2 | | Esquiva 5%; 2 de HP por rodada |
+| Casa secundária | Corpo de escudo | 2 | | Escudo de 12% no começo das lutas |
+| Casa secundária | **Guardião** (final) | 3 | | 35% dos golpes contra aliados caem em você; 2 de HP por rodada |
+
+### Combinações e assinaturas do Hyuuga
+
+O anel passa pela casa escolhida: Byakugan, Punho Suave, Rotação, Oito Trigramas, a casa e de volta ao Byakugan.
+
+| Tipo | Talento | Pede | Efeito |
+|---|---|---|---|
+| Combinação | Mira nos pontos | Olhos que tudo veem e Tenketsu | Todo golpe em alvo com o chakra bloqueado é crítico |
+| Combinação | Giro suave | Tenketsu e Paredão de vácuo | Quem bate no seu escudo perde 3 de chakra |
+| Combinação | Trigrama defensivo | Paredão de vácuo e 64 Palmas | As Palmas que acertam dão escudo de 5% |
+| Combinação | Técnica do clã | 64 Palmas e Autoridade (casa principal) | Palmas +20% de dano |
+| Combinação | Trigrama protetor | 64 Palmas e Lealdade (casa secundária) | As Palmas que acertam dão escudo de 5% ao aliado mais ferido |
+| Combinação | Byakugan do herdeiro | Autoridade (casa principal) e Olhos que tudo veem | Fortalecimentos +2 turnos; a equipe +10% de crítico |
+| Combinação | Olhos do guardião | Lealdade (casa secundária) e Olhos que tudo veem | Ao tomar um golpe por um aliado, revida com 8 |
+| Assinatura | **Oito Trigramas, 128 Palmas** | Campo dos trigramas e Tenketsu | Contra alvo sem chakra, cada golpe das Palmas: 30% de atordoar |
+| Assinatura | **Ordem do patriarca** | Herdeiro do clã e Tenketsu | Efeitos +1 turno; a equipe +20% de dano em alvo bloqueado |
+| Assinatura | **Esfera absoluta** | Guardião e Paredão de vácuo | O escudo que você ergue vale também para a equipe (metade) |
+
+No código: `ignoreEvasion`, `taiHitDrain`, `chakraBlockedDamageMult`, `taiChakraBlockChance`, `shieldReflectPct`, `shieldDrain`, `noChakraDamageMult`, `shareBoost`, `boostTurnsBonus`, `protectChance`, `guardProtect`, `protectCounter`, `shieldShare`, `techShieldOnHit`/`allyShieldOnHit`, `blockedAlwaysCrit` e `techStunNoChakra` em `FighterMods`; a exclusão das casas usa `excludes` nas raízes. Builds: `npm run sim:jornada -- 300 2 --ramos --classe=hyuugaNinja`.

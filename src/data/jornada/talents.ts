@@ -247,17 +247,62 @@ export const talents: TalentNode[] = [
   { id: 'tUBladeReading', owner: 'uchihaNinja', branch: 'sharingan', tier: 7, cost: 3, requiresAll: ['tUTotalRead', 'tUWindmill'], mods: { readCounterDamage: 8 } },
   { id: 'tUVengefulEyes', owner: 'uchihaNinja', branch: 'pride', tier: 7, cost: 3, requiresAll: ['tUVengeance', 'tUReading'], mods: { vengeanceAccuracy: 0.2 } },
 
-  // Hyuuga (v0.37.0): a Palma do Vácuo, pendente desde o Roleta, entra no ramo Rotação.
+  // Hyuuga (Caminho Ninja), reformulado na v0.87.0 no molde do Comum: seis ramos (Byakugan, Punho Suave, Rotação, Oito
+  // Trigramas, Casa principal, Casa secundária), bifurcação e talento final em cada, combinações e assinaturas. As duas
+  // casas se excluem pela raiz: o Hyuuga nasce numa delas, então cada run usa cinco ramos. Personagem genérico do clã.
+  // Byakugan (visão). Final: os seus golpes ignoram a esquiva.
   { id: 'tByakuganRange', owner: 'hyuugaNinja', branch: 'byakugan', tier: 1, cost: 1, mods: { accuracyBonus: 0.05, techChakraDiscount: { jByakugan: 1, jByakugan2: 1 } } },
-  { id: 'tVitalPoints', owner: 'hyuugaNinja', branch: 'byakugan', tier: 2, cost: 2, mods: { critBonus: 0.1 } },
-  { id: 'tByakugan2', owner: 'hyuugaNinja', branch: 'byakugan', tier: 3, cost: 2, learn: 'jByakugan2' },
-  { id: 'tAllSeeing', owner: 'hyuugaNinja', branch: 'byakugan', tier: 4, cost: 3, mods: { evasion: 0.1 } },
-  { id: 'tGentleFist', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 1, cost: 1, mods: { typeDamageMult: { taijutsu: 1.1 } } },
-  { id: 'tSixtyFour', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 2, cost: 2, learn: 'jSixtyFourPalms', maxRank: 2, rankCost: 2, rankMods: { techDamageMult: { jSixtyFourPalms: 1.25 } } },
-  { id: 'tChakraPoints', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 3, cost: 2, mods: { techDamageMult: { jGentlePalm: 1.3 } } },
-  { id: 'tHundredTwentyEight', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 4, cost: 3, learn: 'jHundredTwentyEight' },
+  { id: 'tByakugan2', owner: 'hyuugaNinja', branch: 'byakugan', tier: 2, col: -1, cost: 2, excludes: ['tVitalPoints'], learn: 'jByakugan2' },
+  { id: 'tVitalPoints', owner: 'hyuugaNinja', branch: 'byakugan', tier: 2, col: 1, cost: 2, excludes: ['tByakugan2'], mods: { critBonus: 0.1 } },
+  { id: 'tAllSeeing', owner: 'hyuugaNinja', branch: 'byakugan', tier: 3, cost: 2, requires: ['tByakugan2', 'tVitalPoints'], mods: { evasion: 0.08 } },
+  { id: 'tHChakraSight', owner: 'hyuugaNinja', branch: 'byakugan', tier: 4, cost: 2, mods: { accuracyBonus: 0.05, onKillChakra: 3, damageMult: 1.05 } },
+  { id: 'tH360', owner: 'hyuugaNinja', branch: 'byakugan', tier: 5, cost: 3, capstone: true, mods: { ignoreEvasion: true, evasion: 0.1 } },
+  // Punho Suave (chakra do alvo). Final: o taijutsu bloqueia o chakra.
+  { id: 'tGentleFist', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 1, cost: 1, mods: { typeDamageMult: { taijutsu: 1.15 } } },
+  { id: 'tHClosePoints', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 2, col: -1, cost: 2, excludes: ['tHInnerStrike'], mods: { taiHitDrain: 2 } },
+  { id: 'tHInnerStrike', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 2, col: 1, cost: 2, excludes: ['tHClosePoints'], mods: { typePen: { taijutsu: 0.25 } } },
+  { id: 'tChakraPoints', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 3, cost: 2, requires: ['tHClosePoints', 'tHInnerStrike'], mods: { techDamageMult: { jGentlePalm: 1.3 } } },
+  { id: 'tHBrokenFlow', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 4, cost: 2, mods: { chakraBlockedDamageMult: 1.3 } },
+  { id: 'tHSealedTenketsu', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 5, cost: 3, capstone: true, mods: { taiChakraBlockChance: 0.3 } },
+  // Rotação (defesa). Final: o escudo devolve metade do que segura.
   { id: 'tRotation', owner: 'hyuugaNinja', branch: 'rotation', tier: 1, cost: 1, learn: 'jRotation' },
-  { id: 'tGuardStance', owner: 'hyuugaNinja', branch: 'rotation', tier: 2, cost: 2, mods: { startShieldPct: 0.1 } },
-  { id: 'tVacuumPalm', owner: 'hyuugaNinja', branch: 'rotation', tier: 3, cost: 2, learn: 'jVacuumPalm', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jVacuumPalm: 1.2 } } },
-  { id: 'tVacuumWall', owner: 'hyuugaNinja', branch: 'rotation', tier: 4, cost: 3, learn: 'jVacuumWall' },
+  { id: 'tGuardStance', owner: 'hyuugaNinja', branch: 'rotation', tier: 2, col: -1, cost: 2, excludes: ['tHQuickSpin'], mods: { startShieldPct: 0.12 } },
+  { id: 'tHQuickSpin', owner: 'hyuugaNinja', branch: 'rotation', tier: 2, col: 1, cost: 2, excludes: ['tGuardStance'], mods: { techChakraDiscount: { jRotation: 2 } } },
+  { id: 'tVacuumWall', owner: 'hyuugaNinja', branch: 'rotation', tier: 3, cost: 2, requires: ['tGuardStance', 'tHQuickSpin'], learn: 'jVacuumWall' },
+  { id: 'tHBalance', owner: 'hyuugaNinja', branch: 'rotation', tier: 4, cost: 2, mods: { guardHealPct: 0.08, regenHp: 2 } },
+  { id: 'tHAbsoluteDefense', owner: 'hyuugaNinja', branch: 'rotation', tier: 5, cost: 3, capstone: true, mods: { shieldReflectPct: 0.75 } },
+  // Oito Trigramas (sequência). Final: as Palmas drenam chakra e batem mais em quem ficou sem.
+  // As 64 Palmas vêm na junção e as 128 no nó extra: na bifurcação, as Palmas cedo dominavam a run (medição v0.87.0).
+  { id: 'tHTrigramStance', owner: 'hyuugaNinja', branch: 'trigrams', tier: 1, cost: 1, mods: { accuracyBonus: 0.05, taijutsuFlat: 1 } },
+  { id: 'tVacuumPalm', owner: 'hyuugaNinja', branch: 'trigrams', tier: 2, col: -1, cost: 2, excludes: ['tHPalmRhythm'], learn: 'jVacuumPalm', maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jVacuumPalm: 1.2 } } },
+  { id: 'tHPalmRhythm', owner: 'hyuugaNinja', branch: 'trigrams', tier: 2, col: 1, cost: 2, excludes: ['tVacuumPalm'], mods: { techExtraHits: { jSixtyFourPalms: 1, jHundredTwentyEight: 1 } } },
+  { id: 'tSixtyFour', owner: 'hyuugaNinja', branch: 'trigrams', tier: 3, cost: 2, requires: ['tVacuumPalm', 'tHPalmRhythm'], learn: 'jSixtyFourPalms', maxRank: 2, rankCost: 2, rankMods: { techDamageMult: { jSixtyFourPalms: 1.25 } } },
+  { id: 'tHundredTwentyEight', owner: 'hyuugaNinja', branch: 'trigrams', tier: 4, cost: 2, learn: 'jHundredTwentyEight' },
+  { id: 'tHTrigramField', owner: 'hyuugaNinja', branch: 'trigrams', tier: 5, cost: 3, capstone: true, mods: { taiHitDrain: 1, noChakraDamageMult: 1.3 } },
+  // Casa principal (comando). Fecha a Casa secundária. Final: a equipe ganha o acerto do seu Byakugan.
+  { id: 'tHMainHeritage', owner: 'hyuugaNinja', branch: 'mainHouse', tier: 1, cost: 1, excludes: ['tHBranchDuty'], teamMods: { accuracyBonus: 0.05 } },
+  { id: 'tHOrder', owner: 'hyuugaNinja', branch: 'mainHouse', tier: 2, col: -1, cost: 2, excludes: ['tHLineage'], teamMods: { damageMult: 1.15 } },
+  { id: 'tHLineage', owner: 'hyuugaNinja', branch: 'mainHouse', tier: 2, col: 1, cost: 2, excludes: ['tHOrder'], allyHpPct: 0.1 },
+  { id: 'tHAuthority', owner: 'hyuugaNinja', branch: 'mainHouse', tier: 3, cost: 2, requires: ['tHOrder', 'tHLineage'], teamMods: { critBonus: 0.05 } },
+  { id: 'tHCommandStance', owner: 'hyuugaNinja', branch: 'mainHouse', tier: 4, cost: 2, teamMods: { regenHp: 2 } },
+  { id: 'tHClanHeir', owner: 'hyuugaNinja', branch: 'mainHouse', tier: 5, cost: 3, capstone: true, mods: { shareBoost: true } },
+  // Casa secundária (proteção). Fecha a Casa principal. Final: toma golpes no lugar dos aliados.
+  { id: 'tHBranchDuty', owner: 'hyuugaNinja', branch: 'branchHouse', tier: 1, cost: 1, excludes: ['tHMainHeritage'], mods: { evasion: 0.08, guardHealPct: 0.05 } },
+  { id: 'tHBodyguard', owner: 'hyuugaNinja', branch: 'branchHouse', tier: 2, col: -1, cost: 2, excludes: ['tHVigil'], mods: { guardProtect: true } },
+  { id: 'tHVigil', owner: 'hyuugaNinja', branch: 'branchHouse', tier: 2, col: 1, cost: 2, excludes: ['tHBodyguard'], teamMods: { evasion: 0.05 } },
+  { id: 'tHLoyalty', owner: 'hyuugaNinja', branch: 'branchHouse', tier: 3, cost: 2, requires: ['tHBodyguard', 'tHVigil'], mods: { evasion: 0.05, regenHp: 2 } },
+  { id: 'tHShieldBody', owner: 'hyuugaNinja', branch: 'branchHouse', tier: 4, cost: 2, mods: { startShieldPct: 0.12 } },
+  { id: 'tHGuardian', owner: 'hyuugaNinja', branch: 'branchHouse', tier: 5, cost: 3, capstone: true, mods: { protectChance: 0.35, regenHp: 2 } },
+  // Combinações (anel: Byakugan, Punho Suave, Rotação, Oito Trigramas, a casa escolhida e de volta ao Byakugan).
+  { id: 'tHVitalAim', owner: 'hyuugaNinja', branch: 'byakugan', tier: 6, cost: 2, requiresAll: ['tAllSeeing', 'tChakraPoints'], mods: { blockedAlwaysCrit: true } },
+  { id: 'tHSoftSpin', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 6, cost: 2, requiresAll: ['tChakraPoints', 'tVacuumWall'], mods: { shieldDrain: 3 } },
+  { id: 'tHDefensiveTrigram', owner: 'hyuugaNinja', branch: 'rotation', tier: 6, cost: 2, requiresAll: ['tVacuumWall', 'tSixtyFour'], mods: { techShieldOnHit: { jSixtyFourPalms: 0.05, jHundredTwentyEight: 0.05 } } },
+  { id: 'tHClanTechnique', owner: 'hyuugaNinja', branch: 'trigrams', tier: 6, cost: 2, requiresAll: ['tSixtyFour', 'tHAuthority'], mods: { techDamageMult: { jSixtyFourPalms: 1.2, jHundredTwentyEight: 1.2 } } },
+  { id: 'tHProtectiveTrigram', owner: 'hyuugaNinja', branch: 'trigrams', tier: 6, cost: 2, requiresAll: ['tSixtyFour', 'tHLoyalty'], mods: { techShieldOnHit: { jSixtyFourPalms: 0.05, jHundredTwentyEight: 0.05 }, allyShieldOnHit: true } },
+  { id: 'tHHeirByakugan', owner: 'hyuugaNinja', branch: 'mainHouse', tier: 6, cost: 2, requiresAll: ['tHAuthority', 'tAllSeeing'], mods: { boostTurnsBonus: 2 }, teamMods: { critBonus: 0.1 } },
+  { id: 'tHGuardianEyes', owner: 'hyuugaNinja', branch: 'branchHouse', tier: 6, cost: 2, requiresAll: ['tHLoyalty', 'tAllSeeing'], mods: { protectCounter: 8 } },
+  // Assinaturas.
+  { id: 'tH128Trigrams', owner: 'hyuugaNinja', branch: 'trigrams', tier: 7, cost: 3, requiresAll: ['tHTrigramField', 'tChakraPoints'], mods: { techStunNoChakra: { jSixtyFourPalms: 0.3, jHundredTwentyEight: 0.3 } } },
+  { id: 'tHPatriarchOrder', owner: 'hyuugaNinja', branch: 'mainHouse', tier: 7, cost: 3, requiresAll: ['tHClanHeir', 'tChakraPoints'], mods: { effectTurnsBonus: 1 }, teamMods: { chakraBlockedDamageMult: 1.2 } },
+  { id: 'tHAbsoluteSphere', owner: 'hyuugaNinja', branch: 'branchHouse', tier: 7, cost: 3, requiresAll: ['tHGuardian', 'tVacuumWall'], mods: { shieldShare: 0.5 } },
 ];

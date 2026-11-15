@@ -691,7 +691,8 @@ export async function jornadaBattle(
           pushLog(B.logRest(name(e.uid), e.chakra));
           break;
         case 'chakraGain':
-          float(e.uid, `+${e.amount}`, 'ck');
+          // Negativo: chakra drenado (Punho Suave do Hyuuga).
+          float(e.uid, e.amount < 0 ? `−${-e.amount}` : `+${e.amount}`, 'ck');
           setChakra(e.uid, shown.get(e.uid)!.chakra + e.amount);
           wait = 0;
           break;
@@ -725,6 +726,10 @@ export async function jornadaBattle(
           break;
         case 'gateUpkeep':
           pushLog(B.logGateUpkeep(name(e.uid), e.amount));
+          break;
+        case 'protect':
+          float(e.uid, icon('stance'), 'fx');
+          pushLog(B.logProtect(name(e.uid), name(e.target)));
           break;
         case 'boost':
           float(e.uid, icon('sparkle'), 'fx');

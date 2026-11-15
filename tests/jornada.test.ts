@@ -1020,7 +1020,8 @@ describe('run da Jornada', () => {
   it('nós depois de bifurcação dizem quem libera; toda exclusão é mútua; nós e textos existem', () => {
     for (const t of data.talents) {
       const same = data.talents.filter((n) => n.owner === t.owner && n.branch === t.branch && n.tier === t.tier - 1);
-      if (same.length > 1) expect(t.requires, t.id).toBeTruthy();
+      // Combinações e assinaturas são liberadas por `requiresAll`.
+      if (same.length > 1 && !t.requiresAll) expect(t.requires, t.id).toBeTruthy();
       for (const r of t.requires ?? []) expect(data.talents.some((n) => n.id === r), r).toBe(true);
       for (const x of t.excludes ?? []) expect(data.talents.find((n) => n.id === x)?.excludes, x).toContain(t.id);
       expect(jornadaPtBR.talents.list[t.id]?.name, t.id).toBeTruthy();
