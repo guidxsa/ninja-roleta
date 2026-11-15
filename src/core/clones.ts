@@ -26,6 +26,8 @@ export interface CloneKindRules {
 export interface CloneRules {
   /** Chance padrão (Bunshin), mantida para quem ainda lê só ela. */
   blockChance: number;
+  /** Jornada: teto da soma dos golpes junto de todos os clones, em fração de um golpe (por técnica). */
+  strikeCap: number;
   kinds: Record<CloneKind, CloneKindRules>;
   /** Natureza → tipo de clone elemental. Sem entrada: Bunshin. */
   byNature: Partial<Record<Nature, CloneKind>>;

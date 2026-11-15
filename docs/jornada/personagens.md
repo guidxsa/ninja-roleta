@@ -152,11 +152,11 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 | Técnica | Tipo | Elemento | Alvo | Dano | Chakra | Precisão | Extra |
 |---|---|---|---|---|---|---|---|
 | Bunshin no Jutsu | Ninjutsu | — | em si | — | 3 | 85% | 1 clone ilusório; gasta o turno. Na luta, quem tem ninjutsu elemental usa o clone da natureza no lugar |
-| Mizu Bunshin no Jutsu | Ninjutsu | água | em si | — | 4 | 85% | 1 clone de água: bate junto (35% do dano de um golpe) |
-| Doton Kage Bunshin | Ninjutsu | terra | em si | — | 4 | 85% | 1 clone de terra: segura 65% e aguenta 2 golpes |
-| Raiton Kage Bunshin | Ninjutsu | raio | em si | — | 5 | 85% | 1 clone de raio: ao se desfazer, descarga de 6% do HP de quem bateu e 30% de atordoar |
-| Mokuton Bunshin | Ninjutsu | madeira (Kekkei Genkai) | em si | — | 5 | 85% | 1 clone de madeira: bate junto (35%) e dá +10% de acerto |
-| Suna Bunshin | Ninjutsu | areia (Kekkei Genkai) | em si | — | 4 | 85% | 1 clone de areia: ao se desfazer, 30% de bloqueio de chakra em quem bateu |
+| Mizu Bunshin no Jutsu | Ninjutsu | água | em si | — | 4 | 85% | 1 clone de água (eficiência): bate junto, 25% de um golpe por clone, até 70% somados |
+| Doton Kage Bunshin | Ninjutsu | terra | em si | — | 4 | 85% | 1 clone de terra (resistência): segura 65% e aguenta 2 golpes |
+| Raiton Kage Bunshin | Ninjutsu | raio | em si | — | 5 | 85% | 1 clone de raio (contra-ataque): ao se desfazer, descarga de 5% do HP de quem bateu e 25% de atordoar |
+| Mokuton Bunshin | Ninjutsu | madeira (Kekkei Genkai) | em si | — | 6 | 85% | 1 clone de madeira (versatilidade): segura 65%, aguenta 2, bate junto (25% por clone, até 70%) e dá +10% de acerto |
+| Suna Bunshin | Ninjutsu | areia (Kekkei Genkai) | em si | — | 4 | 85% | 1 clone de areia (controle): ao se desfazer, 25% de bloqueio de chakra em quem bateu |
 | Muralha de Terra | Ninjutsu | terra | em si | — | 5 | 85% | barreira de 28% do HP (3 turnos); espera 3. Comum de terra, no talento Poder elemental |
 | Parede d'Água | Ninjutsu | água | em si | — | 5 | 85% | barreira de 24% do HP; apaga a queimadura se absorver fogo; espera 3 |
 | Muralha de Chamas | Ninjutsu | fogo | em si | — | 4 | 85% | barreira de 20% do HP; 30% de queimar quem bate com taijutsu; espera 3 |

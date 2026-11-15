@@ -309,23 +309,37 @@ Desde a v0.77.0 os dois modos usam os mesmos efeitos e os mesmos números (`bala
 
 ## Clones
 
-Regra comum ao Roleta e à Jornada (`src/core/clones.ts`, tipos desde a v0.77.0; números em `balance.clones`, proposta). Criar um clone gasta o turno (o Kage Bunshin da Jornada é ativa). Cada golpe de alvo único pode cair no clone em vez do ninja; técnicas em área passam por eles. Queimar e veneno não pegam o clone.
+Regra comum ao Roleta e à Jornada (`src/core/clones.ts`, tipos desde a v0.77.0; números em `balance.clones`, da especificação de balanceamento dos clones de 15/11/2026). Cada clone resolve um problema diferente: nenhum é a versão mais forte do anterior. O nível de especialização orienta a raridade e o custo, não é escala de poder.
 
-| Tipo | Natureza | Segura o golpe | Aguenta | Bate junto | Ao se desfazer |
-|---|---|---|---|---|---|
-| Bunshin no Jutsu | Ilusória: só distrai | 50% | 1 golpe | não | — |
-| Kage Bunshin no Jutsu | Física | 50% | 1 | Roleta: um golpe a mais com 50% do dano de um golpe; Jornada: pelas técnicas com golpe por clone (Rendan, Rasengan) | — |
-| Tajuu Kage Bunshin (Mil Clones) | Física, em massa | 50% | 1 | como o Kage Bunshin; só na Jornada (ataque em área que cria 3 clones) | — |
-| Mizu Bunshin | Água | 50% | 1 | 35% do dano de um golpe, por clone | — |
-| Doton Kage Bunshin | Terra | 65% | **2** | não | — |
-| Mokuton Bunshin | Madeira | 50% | 1 | 35% | Enquanto existe: +10% de acerto do dono e, no Roleta, mostra a próxima ação do vilão |
-| Raiton Kage Bunshin | Raio | 50% | 1 | não | Descarga: 6% do HP máximo de quem bateu e 30% de atordoar |
-| Suna Bunshin | Areia | 50% | 1 | não | Contenção: 30% de bloqueio de chakra em quem bateu |
+- Criar um clone é uma técnica sem dano e sem roleta de acerto. Gasta o turno (o Kage Bunshin da Jornada é ativa).
+- Cada golpe de alvo único pode cair no clone em vez do ninja: **uma rolagem por golpe**, com a chance do tipo, por mais clones que haja. Técnicas em área, queimar e veneno passam direto.
+- **Golpe junto**: quando o dono acerta pelo menos um golpe de uma técnica de dano de alvo único, sai uma fração do dano de um golpe, sem roleta e sem crítico, que passa pela barreira do alvo.
+- O atordoar do Raiton respeita a trava (quem acabou de sair de um atordoamento fica firme).
 
-- O golpe junto não tem roleta: sai quando a técnica de dano de alvo único acerta pelo menos um golpe.
-- **Quem tem**, no lugar do Bunshin: Kage Bunshin no Uzumaki e no jinchuuriki (Roleta) e no Naruto (Jornada, com o Mil Clones); o clone da natureza em quem tem ninjutsu elemental (água: Mizu; terra: Doton; raio: Raiton; madeira: Mokuton; areia: Suna); Bunshin em fogo, vento e em quem tem natureza silenciosa. Na Jornada a troca é feita na luta (o moveset salvo continua com o Bunshin): o Kakashi luta com o Raiton e o Gaara aliado com o Suna. Inimigos: Zabuza (Mizu), Kakashi (Raiton), Gaara (Suna), Jirobo (Doton).
-- Roleta: no máximo 1 clone (o novo substitui). Jornada: até 5, todos do mesmo tipo (o último criado manda). Talentos e relíquias de clone (contra-ataque, Exército de sombras, dano por clone) valem para qualquer tipo.
-- Custo de chakra (Roleta / Jornada): Bunshin 5 / 3; Kage 8 / 5 (ativa); Mizu, Doton e Suna 6 / 4; Raiton e Mokuton 7 / 5.
+| Nível | Técnica | Identidade | Segura | Aguenta | Golpe junto | Ao se desfazer | Chakra (Roleta / Jornada) |
+|---|---|---|---|---|---|---|---|
+| I | Bunshin no Jutsu | Enganação: ilusão, sem dano | 50% | 1 | — | — | 5 / 3 |
+| II | Mizu Bunshin | Eficiência: barato | 50% | 1 | 25% por clone | — | 6 / 4 |
+| III | Doton Kage Bunshin | Resistência | 65% | **2** | — | — | 6 / 4 |
+| III | Suna Bunshin | Controle | 50% | 1 | — | 25% de bloqueio de chakra em quem bateu | 6 / 4 |
+| IV | Raiton Kage Bunshin | Contra-ataque | 50% | 1 | — | Descarga: 5% do HP máximo de quem bateu e 25% de atordoar | 7 / 5 |
+| V | Kage Bunshin no Jutsu | Autonomia e multiplicação | 50% | 1 | Roleta: 35%, uma vez por técnica. Jornada: só pelas técnicas com golpe por clone (Rendan, Rasengan) | — | 8 / 5 (ativa) |
+| VI | Mokuton Bunshin | Versatilidade e estratégia | 65% | **2** | 25% por clone | Enquanto existe: +10% de acerto do dono (uma vez, com qualquer número de clones) e, no Roleta, mostra a próxima ação do vilão | 8 / 6 |
+| VII | Tajuu Kage Bunshin (Mil Clones) | Superioridade numérica | 50% | 1 | como o Kage: nada passivo na Jornada | — | — / 12 (ataque em área que cria 3 clones) |
+
+**Roleta**: no máximo 1 clone, que começa cada luta zerado; não dá para recriar enquanto ele está de pé. Só o jogador tem clone. O clone não tem progressão própria (o golpe junto cresce com o dano da técnica usada).
+
+**Jornada**: até 5 clones (mais com talentos e relíquias), todos do mesmo tipo (o último criado manda); dá para criar mais até o limite.
+- **Teto do golpe junto**: a soma de todos os clones não passa de **70% de um golpe** por técnica (`clones.strikeCap`). Mizu e Mokuton: 1 clone dá 25%, 2 dão 50%, 3 ou mais ficam em 70%.
+- **Exército de sombras** (talento final dos Clones): o golpe sempre vai para um clone, mas cada golpe gasta um; acabaram os clones, o dono volta a apanhar.
+- **Um contra-ataque por golpe**: o contra-ataque do talento ou da relíquia e a descarga do clone de raio não somam; vale o maior. O contra-ataque é perda de HP direta, então não aciona clones nem barreiras de novo.
+- Talentos e relíquias de clone (quantos começam, quantos cada técnica cria, limite, dano por clone) valem para qualquer tipo.
+
+**Quem tem**, no lugar do Bunshin:
+- Kage Bunshin: Uzumaki e jinchuuriki (Roleta); Naruto (Jornada, com o Mil Clones depois do Mizuki).
+- O clone da natureza em quem tem ninjutsu elemental: água, Mizu; terra, Doton; raio, Raiton; madeira, Mokuton; areia, Suna. Fogo, vento e natureza silenciosa ficam com o Bunshin.
+- **Kekkei Genkai** não dá clone elemental sozinha: gelo, lava, tempestade, vapor e explosão ficam com o Bunshin. O Mokuton é raro (só o Senju que tira a madeira, no Roleta; ninguém na Jornada) e o Suna fica com quem domina a areia (os dois Gaara).
+- Na Jornada a troca é feita na luta (o moveset salvo continua com o Bunshin): o Iruka luta com o Mizu, o Kakashi com o Raiton, a Sakura e a Tsunade com o Doton, o Gaara aliado com o Suna. Inimigos: Zabuza (Mizu), Kakashi (Raiton), Gaara (Suna), Jirobo (Doton).
 
 ## Portões
 

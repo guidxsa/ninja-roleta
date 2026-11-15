@@ -48,7 +48,7 @@ export const roletaTechniques: RTechniqueDef[] = [
   { id: 'rKageBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 8, clone: 'kage' },
   { id: 'rMizuBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 6, clone: 'mizu' },
   { id: 'rDotonBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 6, clone: 'doton' },
-  { id: 'rMokutonBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 7, clone: 'mokuton' },
+  { id: 'rMokutonBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 8, clone: 'mokuton' },
   { id: 'rRaitonBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 7, clone: 'raiton' },
   { id: 'rSunaBunshin', type: 'ninjutsu', base: 0, perLevel: 0, chakra: 6, clone: 'suna' },
   // Um por elemento.

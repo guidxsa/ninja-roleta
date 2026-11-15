@@ -99,6 +99,8 @@ O Hyuuga foi quem mais caiu (o Selo dos Pontos Vitais deixou de atordoar, e o bo
 
 O combate novo sobe o Médio de 4 a 6 pontos (sem o ×0,8 da desvantagem de elemento, as lutas contra Haku e Zabuza ficaram mais fáceis); a Vontade do Fogo no Médio e no Difícil soma de 5 a 10 pontos no Médio e até 23 no Difícil. O Hardcore quase não muda (não tem Vontade). Nada foi compensado.
 
+**Especificação dos clones** (do usuário, mesmo dia): cada clone com nível de especialização e identidade; Mizu 25% de golpe junto, Suna 25% de bloqueio, Raiton 5% e 25%, Kage do Roleta 35%, Mokuton 65% / 2 golpes / 25% e custo 8 / 6; teto de 70% na soma dos golpes junto da Jornada; um contra-ataque por golpe (decidi: vale o maior entre o do talento e a descarga); no Roleta, recriar o clone de pé passou a ser bloqueado no core (antes, só na tela). Simulação (Médio/Difícil, depois da v0.77.0 → com a spec): Roleta Uzumaki 71/40 → 68/34, Comum 47/21 → 48/23, Senju 84/63 → 85/63, as outras iguais ou com 2 pontos de diferença; Jornada Comum 84/53 → 80/53, as outras com até 1 ponto. Nada foi compensado.
+
 ## Crítica no UI Lab: celular e desktop (v0.76.2, 14/11/2026)
 
 Crítica de design dos 113 cenários do UI Lab, com captura de tela de cada um (390×844 e, numa amostra, 360, 1024, 1440 e tema claro). O usuário pediu as correções de prioridade P0 e P1, celular primeiro. Só visual: nenhuma regra nem número de balanceamento mudou; testes (703) iguais.

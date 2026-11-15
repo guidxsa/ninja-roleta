@@ -45,13 +45,13 @@ Fixas pela origem e **sobem sozinhas com o nível**: dano base = base + por nív
 | Técnica | Quem | Tipo | Dano (por nível) | Golpes | Chakra | Precisão | Extra |
 |---|---|---|---|---|---|---|---|
 | Taijutsu básico | todos | taijutsu | 8 (+1) | 1 | 0 | 90% | — |
-| Bunshin no Jutsu | quem usa ninjutsu | ninjutsu | — | — | 5 | — | cria um clone ilusório (até 1) |
-| Kage Bunshin no Jutsu | Uzumaki, jinchuuriki | ninjutsu | — | — | 8 | — | clone que bate junto (50%) |
-| Mizu Bunshin no Jutsu | água | ninjutsu | — | — | 6 | — | clone que bate junto (35%) |
-| Doton Kage Bunshin | terra | ninjutsu | — | — | 6 | — | clone que segura 65% e aguenta 2 golpes |
-| Raiton Kage Bunshin | raio | ninjutsu | — | — | 7 | — | clone que dá a descarga ao se desfazer |
-| Mokuton Bunshin | madeira | ninjutsu | — | — | 7 | — | clone que bate junto, +10% de acerto, mostra a ação do vilão |
-| Suna Bunshin | areia (guardada) | ninjutsu | — | — | 6 | — | clone que pode bloquear o chakra de quem bate |
+| Bunshin no Jutsu | quem usa ninjutsu | ninjutsu | — | — | 5 | — | enganação: clone ilusório (até 1) |
+| Kage Bunshin no Jutsu | Uzumaki, jinchuuriki | ninjutsu | — | — | 8 | — | autonomia: clone que bate junto (35%, uma vez por técnica) |
+| Mizu Bunshin no Jutsu | água | ninjutsu | — | — | 6 | — | eficiência: clone que bate junto (25%) |
+| Doton Kage Bunshin | terra | ninjutsu | — | — | 6 | — | resistência: clone que segura 65% e aguenta 2 golpes |
+| Raiton Kage Bunshin | raio | ninjutsu | — | — | 7 | — | contra-ataque: ao se desfazer, descarga de 5% do HP e 25% de atordoar |
+| Mokuton Bunshin | madeira | ninjutsu | — | — | 8 | — | versatilidade: segura 65%, aguenta 2, bate junto (25%), +10% de acerto, mostra a ação do vilão |
+| Suna Bunshin | areia (guardada) | ninjutsu | — | — | 6 | — | controle: 25% de bloquear o chakra de quem o destrói |
 | Muralha de Terra | terra | ninjutsu | — | — | 6 | — | barreira de 28% do HP |
 | Parede d'Água | água | ninjutsu | — | — | 6 | — | barreira de 24% do HP |
 | Muralha de Chamas | fogo | ninjutsu | — | — | 5 | — | barreira de 20% do HP |

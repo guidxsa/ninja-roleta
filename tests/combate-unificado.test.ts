@@ -2,13 +2,13 @@
 // modos. As regras comuns estão em src/core/effects.ts, barriers.ts e clones.ts; os docs em docs/base/.
 import { describe, expect, it } from 'vitest';
 import { absorbIntoBarrier, raiseBarrier } from '../src/core/barriers';
-import { cloneKindFor, wearClone } from '../src/core/clones';
+import { cloneKindFor, wearClone, type CloneKind } from '../src/core/clones';
 import { scaleVillain } from '../src/core/difficulty';
 import { dotDamage, effectDuration } from '../src/core/effects';
 import { accuracyAgainst, emptyMods, hitDamage, playerAct, startBattle, type BattleSetup } from '../src/core/jornada/battle';
 import { battleSetup, chooseNode, newGenericRun, nodeChoices, withNatureClone } from '../src/core/jornada/run';
 import type { FighterSeed } from '../src/core/jornada/types';
-import { canUseItem, canUseTechnique, playRoletaRound, startRoletaBattle, useRoletaItem, type RBattle } from '../src/core/roleta/battle';
+import { canUseItem, canUseTechnique, playerHitDamage, playRoletaRound, startRoletaBattle, useRoletaItem, type RBattle } from '../src/core/roleta/battle';
 import { createRoletaPlayer } from '../src/core/roleta/player';
 import type { Origin } from '../src/core/types';
 import { balance } from '../src/data/balance';
@@ -173,7 +173,7 @@ describe('tipos de clone', () => {
     const s = battle(origin(null, ['lightning']));
     const made = playRoletaRound(s, 'tech:rRaitonBunshin', data, fixed(0.99));
     expect(made.fx.clone).toEqual({ kind: 'raiton', wear: 0 });
-    // Vilão acerta (0,3), o clone segura (0,3 < 50%), a descarga fere e o atordoar (0,3 < 30%? não: 0,3 não é < 0,3).
+    // Vilão acerta (0,3), o clone segura (0,3 < 50%) e a descarga fere; o atordoar (25%) não pega com 0,3.
     const hp = made.villain.hp;
     const next = playRoletaRound(made, 'guard', data, fixed(0.3));
     const events = next.log.slice(made.log.length);
@@ -184,12 +184,121 @@ describe('tipos de clone', () => {
     }
   });
 
-  it('Roleta: o Kage Bunshin bate junto (metade do dano de um golpe)', () => {
-    const s = battle(origin('uzumaki', ['wind']));
+  it('Roleta: o Kage Bunshin bate junto uma vez por técnica (35% de um golpe), mesmo com 2 golpes', () => {
+    const s = battle(origin('uzumaki', ['water']));
     const withClone = { ...s, fx: { ...s.fx, clone: { kind: 'kage' as const, wear: 0 } } };
-    const next = playRoletaRound(withClone, 'tech:rBasic', data, fixed(HIT));
-    expect(next.log.some((e) => e.type === 'clone' && e.action === 'strike')).toBe(true);
-    expect(next.log.some((e) => e.type === 'damage' && e.side === 'villain' && e.source === 'clone')).toBe(true);
+    const per = playerHitDamage(withClone, data.techniques.rWater!, data);
+    const next = playRoletaRound(withClone, 'tech:rWater', data, fixed(HIT));
+    const strikes = next.log.filter((e) => e.type === 'damage' && e.side === 'villain' && e.source === 'clone');
+    expect(strikes).toHaveLength(1);
+    expect(strikes[0]).toMatchObject({ amount: Math.floor(per * 0.35) });
+  });
+
+  it('Roleta: um clone por vez, sem recriar enquanto ele está de pé', () => {
+    const s = battle(origin(null, ['earth']));
+    const made = playRoletaRound(s, 'tech:rDotonBunshin', data, fixed(0.99));
+    expect(made.fx.clone).toEqual({ kind: 'doton', wear: 0 });
+    expect(canUseTechnique(made, data.techniques.rDotonBunshin!, data)).toBe(false);
+  });
+});
+
+describe('especificação de balanceamento dos clones (15/11/2026)', () => {
+  const k = balance.clones.kinds;
+
+  it('números de cada tipo: interceptação, resistência, golpe junto e efeito ao se desfazer', () => {
+    expect(k.bunshin).toMatchObject({ blockChance: 0.5, durability: 1, strikePct: 0 });
+    expect(k.mizu).toMatchObject({ blockChance: 0.5, durability: 1, strikePct: 0.25 });
+    expect(k.doton).toMatchObject({ blockChance: 0.65, durability: 2, strikePct: 0 });
+    expect(k.suna).toMatchObject({ blockChance: 0.5, durability: 1, onBreak: { effect: 'chakraBlock', chance: 0.25 } });
+    expect(k.raiton).toMatchObject({ blockChance: 0.5, durability: 1, onBreak: { damagePct: 0.05, effect: 'stun', chance: 0.25 } });
+    expect(k.kage).toMatchObject({ blockChance: 0.5, durability: 1, strikePct: 0.35, jornadaStrikePct: 0 });
+    expect(k.mokuton).toMatchObject({ blockChance: 0.65, durability: 2, strikePct: 0.25, accuracyBonus: 0.1, revealsIntent: true });
+    expect(k.tajuu).toMatchObject({ blockChance: 0.5, durability: 1, jornadaStrikePct: 0 });
+    expect(wearClone(0, 'mokuton', balance.clones)).toEqual({ wear: 1, broken: false });
+    expect(balance.clones.strikeCap).toBe(0.7);
+  });
+
+  it('custos da tabela (Roleta / Jornada)', () => {
+    const cost = (r: string, j: string) => [data.techniques[r]!.chakra, jdata.techniques[j]!.chakraCost];
+    expect(cost('rBunshin', 'jBunshin')).toEqual([5, 3]);
+    expect(cost('rMizuBunshin', 'jMizuBunshin')).toEqual([6, 4]);
+    expect(cost('rDotonBunshin', 'jDotonBunshin')).toEqual([6, 4]);
+    expect(cost('rSunaBunshin', 'jSunaBunshin')).toEqual([6, 4]);
+    expect(cost('rRaitonBunshin', 'jRaitonBunshin')).toEqual([7, 5]);
+    expect(cost('rKageBunshin', 'jKageBunshin')).toEqual([8, 5]);
+    expect(cost('rMokutonBunshin', 'jMokutonBunshin')).toEqual([8, 6]);
+    expect(jdata.techniques.jTajuuBunshin!.chakraCost).toBe(12);
+  });
+
+  /** Jornada: o herói (com clones prontos) contra um boneco; o herói age primeiro. */
+  function withClones(kind: CloneKind, clones: number, mods: Partial<FighterSeed['mods']> = {}) {
+    const b = startBattle({ allies: [hero({ mods: { ...emptyMods(), ...mods } })], enemies: [dummy()], win: { kind: 'defeatAll' } }, jdata, fixed(HIT));
+    return { ...b, fighters: [{ ...b.fighters[0]!, clones, cloneKind: kind }, b.fighters[1]!] };
+  }
+  const strikeOf = (s: ReturnType<typeof withClones>) => {
+    const next = playerAct(s, { kind: 'tech', techId: 'jStrike', target: s.fighters[1]!.uid }, jdata, fixed(HIT));
+    return next.log.filter((e) => e.type === 'cloneStrike').map((e) => (e as { amount: number }).amount);
+  };
+
+  it('Jornada: Mizu e Mokuton somam 25% por clone até o teto de 70%; Kage e Tajuu não batem junto', () => {
+    const one = withClones('mizu', 1);
+    const per = hitDamage(one.fighters[0]!, one.fighters[1]!, jdata.techniques.jStrike!, jdata);
+    expect(strikeOf(one)).toEqual([Math.floor(per * 0.25)]);
+    expect(strikeOf(withClones('mizu', 2))).toEqual([Math.floor(per * 0.5)]);
+    for (const n of [3, 4, 5]) {
+      expect(strikeOf(withClones('mizu', n)), `mizu ${n}`).toEqual([Math.floor(per * 0.7)]);
+      expect(strikeOf(withClones('mokuton', n)), `mokuton ${n}`).toEqual([Math.floor(per * 0.7)]);
+    }
+    expect(strikeOf(withClones('kage', 3))).toEqual([]);
+    expect(strikeOf(withClones('tajuu', 5))).toEqual([]);
+  });
+
+  it('Jornada: o acerto do Mokuton vale uma vez, com 1 ou 5 clones', () => {
+    const strike = jdata.techniques.jStrike!;
+    const acc = (n: number) => {
+      const s = withClones('mokuton', n);
+      return accuracyAgainst(s.fighters[0]!, s.fighters[1]!, strike, jdata);
+    };
+    expect(acc(1)).toBeCloseTo(acc(0) + 0.1, 10);
+    expect(acc(5)).toBe(acc(1));
+  });
+
+  /** O boneco ataca o herói: o herói descansa e o boneco age com o rng dado. */
+  const foeAttacks = (s: ReturnType<typeof withClones>, v: number) => playerAct(s, { kind: 'rest' }, jdata, fixed(v));
+
+  it('Jornada: uma só rolagem de interceptação por golpe, com 1 ou 5 clones', () => {
+    // 0,6: o boneco acerta, mas fica acima dos 50% do Bunshin: nenhum dos 5 clones segura.
+    const missed = foeAttacks(withClones('bunshin', 5), 0.6);
+    expect(missed.fighters[0]!.clones).toBe(5);
+    expect(missed.log.some((e) => e.type === 'cloneBlock')).toBe(false);
+    // 0,3: segura, e só um clone se gasta.
+    const held = foeAttacks(withClones('bunshin', 5), 0.3);
+    expect(held.fighters[0]!.clones).toBe(4);
+    expect(held.log.filter((e) => e.type === 'cloneBlock')).toHaveLength(1);
+  });
+
+  it('Jornada: o Exército de sombras manda o golpe para um clone, mas cada golpe gasta um (sem imunidade)', () => {
+    let s = withClones('bunshin', 2, { cloneShield: true });
+    const hp = s.fighters[0]!.hp;
+    s = foeAttacks(s, 0.6);
+    s = foeAttacks(s, 0.6);
+    expect(s.fighters[0]!.clones).toBe(0);
+    expect(s.fighters[0]!.hp).toBe(hp);
+    s = foeAttacks(s, 0.6);
+    expect(s.fighters[0]!.hp).toBeLessThan(hp);
+  });
+
+  it('Jornada: um contra-ataque por golpe (vale o maior entre o do talento e a descarga do raio)', () => {
+    const counters = (counter: number) => {
+      const s = withClones('raiton', 1, { cloneCounter: counter });
+      const heroUid = s.fighters[0]!.uid;
+      const next = foeAttacks(s, 0.3);
+      return next.log.filter((e) => e.type === 'damage' && e.uid === heroUid).map((e) => (e as { amount: number }).amount);
+    };
+    // Boneco de 100 de HP: descarga de 5.
+    expect(counters(0)).toEqual([5]);
+    expect(counters(4)).toEqual([5]);
+    expect(counters(8)).toEqual([8]);
   });
 
   it('Jornada: o Bunshin vira o clone da natureza na luta (Kakashi: Raiton; Gaara: Suna)', () => {

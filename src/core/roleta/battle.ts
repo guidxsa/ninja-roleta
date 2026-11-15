@@ -316,7 +316,11 @@ export function playerHitDamage(s: RBattle, t: RTechniqueDef, data: RoletaData, 
 /** Custo da técnica com as relíquias (nunca abaixo de 0). */
 export const techCost = (s: RBattle, t: RTechniqueDef, data: RoletaData) => Math.max(0, t.chakra - (t.chakra > 0 ? relicEffects(s.player, data).chakraDiscount : 0));
 export const canUseTechnique = (s: RBattle, t: RTechniqueDef, data: RoletaData) =>
-  s.player.chakra >= techCost(s, t, data) && !(t.type !== 'taijutsu' && chakraBlocked(s.fx.effects)) && !(t.barrierPct && s.fx.barrier);
+  s.player.chakra >= techCost(s, t, data) &&
+  !(t.type !== 'taijutsu' && chakraBlocked(s.fx.effects)) &&
+  // Uma barreira e um clone por vez: não dá para erguer outra nem recriar o clone enquanto o atual está de pé.
+  !(t.barrierPct && s.fx.barrier) &&
+  !(t.clone && s.fx.clone);
 
 // ---------------------------------------------------------------------------
 // Ativa da linhagem (grátis, uma por turno)

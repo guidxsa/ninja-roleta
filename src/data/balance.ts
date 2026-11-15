@@ -17,17 +17,20 @@ export const balance = {
   // Clones (src/core/clones.ts, docs/base/fundamentos.md#clones): os mesmos tipos no Roleta e na Jornada (v0.77.0,
   // proposta). Bunshin é ilusão (só distrai); Kage é físico (bate junto no Roleta; na Jornada, pelas técnicas com
   // golpe por clone); os elementais têm o traço do elemento. `byNature`: quem tem a natureza cria o clone dela.
+  // Números da especificação de balanceamento dos clones (15/11/2026): cada tipo resolve um problema diferente.
+  // `strikeCap`: na Jornada, a soma dos golpes junto de todos os clones não passa desta fração de um golpe.
   clones: {
     blockChance: 0.5,
+    strikeCap: 0.7,
     kinds: {
-      bunshin: { blockChance: 0.5, durability: 1, strikePct: 0 },
-      kage: { blockChance: 0.5, durability: 1, strikePct: 0.5, jornadaStrikePct: 0 },
-      tajuu: { blockChance: 0.5, durability: 1, strikePct: 0.5, jornadaStrikePct: 0 },
-      mizu: { blockChance: 0.5, durability: 1, strikePct: 0.35 },
-      doton: { blockChance: 0.65, durability: 2, strikePct: 0 },
-      mokuton: { blockChance: 0.5, durability: 1, strikePct: 0.35, accuracyBonus: 0.1, revealsIntent: true },
-      raiton: { blockChance: 0.5, durability: 1, strikePct: 0, onBreak: { damagePct: 0.06, effect: 'stun', chance: 0.3 } },
-      suna: { blockChance: 0.5, durability: 1, strikePct: 0, onBreak: { effect: 'chakraBlock', chance: 0.3 } },
+      bunshin: { blockChance: 0.5, durability: 1, strikePct: 0 }, // I: enganação
+      mizu: { blockChance: 0.5, durability: 1, strikePct: 0.25 }, // II: eficiência
+      doton: { blockChance: 0.65, durability: 2, strikePct: 0 }, // III: resistência
+      suna: { blockChance: 0.5, durability: 1, strikePct: 0, onBreak: { effect: 'chakraBlock', chance: 0.25 } }, // III: controle
+      raiton: { blockChance: 0.5, durability: 1, strikePct: 0, onBreak: { damagePct: 0.05, effect: 'stun', chance: 0.25 } }, // IV: contra-ataque
+      kage: { blockChance: 0.5, durability: 1, strikePct: 0.35, jornadaStrikePct: 0 }, // V: autonomia e multiplicação
+      mokuton: { blockChance: 0.65, durability: 2, strikePct: 0.25, accuracyBonus: 0.1, revealsIntent: true }, // VI: versatilidade
+      tajuu: { blockChance: 0.5, durability: 1, strikePct: 0.35, jornadaStrikePct: 0 }, // VII: superioridade numérica
     } as Record<CloneKind, CloneKindRules>,
     byNature: { water: 'mizu', earth: 'doton', lightning: 'raiton', wood: 'mokuton', sand: 'suna' } as Partial<Record<string, CloneKind>>,
   },

@@ -843,12 +843,12 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
     }
     if (!t.down) tryEffect(s, f, t, tech, data, rng);
   }
-  // Clones que batem junto (Mizu, Mokuton): cada um, uma fração do dano de um golpe, sem rolagem. Kage e Tajuu batem
-  // pelas técnicas com golpe por clone (`hitsPerClone`).
+  // Clones que batem junto (Mizu, Mokuton): cada um, uma fração do dano de um golpe, sem rolagem; a soma não passa do
+  // teto (`clones.strikeCap`, 70% de um golpe). Kage e Tajuu batem pelas técnicas com golpe por clone (`hitsPerClone`).
   const kind = data.base.clones.kinds[f.cloneKind];
-  const pct = kind.jornadaStrikePct ?? kind.strikePct;
+  const pct = Math.min((kind.jornadaStrikePct ?? kind.strikePct) * f.clones, data.base.clones.strikeCap);
   if (landed && single && f.clones > 0 && pct > 0 && !t.down && !f.down && s.status === 'ongoing') {
-    const amount = Math.max(1, Math.floor(hitDamage(f, t, tech, data) * pct)) * f.clones;
+    const amount = Math.max(1, Math.floor(hitDamage(f, t, tech, data) * pct));
     const passes = hitBarrier(s, t, amount, barrierAttack(f, tech), data, rng);
     const absorbed = Math.min(t.shield, passes);
     t.shield -= absorbed;
@@ -871,15 +871,14 @@ function cloneBlocks(s: JBattle, f: Fighter, t: Fighter, single: boolean, data: 
   t.cloneWear = worn.wear;
   if (worn.broken) t.clones--;
   s.log.push({ type: 'cloneBlock', target: t.uid, left: t.clones, kind: t.cloneKind, ...(worn.broken ? { broken: true } : {}) });
-  if (t.mods.cloneCounter) {
-    s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: t.mods.cloneCounter, crit: false, elementMult: 1, absorbed: 0 });
-    applyHpLoss(s, f, t.mods.cloneCounter, data);
-  }
+  // Um contra-ataque por golpe: o do talento ou relíquia (`cloneCounter`) e a descarga do clone de raio não somam;
+  // vale o maior. É perda de HP direta (não é golpe), então não aciona clones nem barreiras de novo.
   const brk = worn.broken ? kind.onBreak : undefined;
-  if (brk?.damagePct && !f.down && s.status === 'ongoing') {
-    const amount = Math.max(1, Math.floor(f.maxHp * brk.damagePct));
-    s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount, crit: false, elementMult: 1, absorbed: 0 });
-    applyHpLoss(s, f, amount, data);
+  const discharge = brk?.damagePct ? Math.max(1, Math.floor(f.maxHp * brk.damagePct)) : 0;
+  const counter = Math.max(t.mods.cloneCounter, discharge);
+  if (counter > 0 && !f.down && s.status === 'ongoing') {
+    s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: counter, crit: false, elementMult: 1, absorbed: 0 });
+    applyHpLoss(s, f, counter, data);
   }
   if (brk?.effect && !f.down && s.status === 'ongoing' && rng() < (brk.chance ?? 1)) addStatus(s, f, brk.effect, data);
   return true;

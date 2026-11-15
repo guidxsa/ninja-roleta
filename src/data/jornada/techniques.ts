@@ -125,7 +125,7 @@ export const classTechniques: JTechnique[] = [
   { id: 'jMizuBunshin', type: 'ninjutsu', element: 'water', target: 'self', baseDamage: 0, chakraCost: 4, clones: 1, cloneKind: 'mizu' },
   { id: 'jDotonBunshin', type: 'ninjutsu', element: 'earth', target: 'self', baseDamage: 0, chakraCost: 4, clones: 1, cloneKind: 'doton' },
   { id: 'jRaitonBunshin', type: 'ninjutsu', element: 'lightning', target: 'self', baseDamage: 0, chakraCost: 5, clones: 1, cloneKind: 'raiton' },
-  { id: 'jMokutonBunshin', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'wood', target: 'self', baseDamage: 0, chakraCost: 5, clones: 1, cloneKind: 'mokuton' },
+  { id: 'jMokutonBunshin', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'wood', target: 'self', baseDamage: 0, chakraCost: 6, clones: 1, cloneKind: 'mokuton' },
   { id: 'jSunaBunshin', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'self', baseDamage: 0, chakraCost: 4, clones: 1, cloneKind: 'suna' },
   // Barreiras elementais (v0.77.0): escudo do elemento por 3 turnos; só ele sente a vantagem de elemento. O raio não tem.
   { id: 'jEarthWall', type: 'ninjutsu', element: 'earth', target: 'self', baseDamage: 0, chakraCost: 5, shieldPct: 0.28, barrier: true, cooldown: 3 },
