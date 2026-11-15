@@ -848,11 +848,13 @@ export async function jornadaBattle(
       ];
       // Aliado caído abre na aba dele; senão, a aba em que o jogador estava (ou Técnicas).
       const open = fallen.length ? 'raise' : panes.some((p) => p.id === menuTab) ? menuTab : 'moves';
+      releaseMenu();
       menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
         <div class="jb-tabs" role="tablist">${panes
           .map((p) => `<button type="button" class="jb-tab${p.id === open ? ' on' : ''}" role="tab" aria-selected="${p.id === open}" data-tab="${p.id}">${p.label}${p.count ? `<small>${p.count}</small>` : ''}</button>`)
           .join('')}</div>
         ${panes.map((p) => `<div class="jb-pane${p.id === open ? ' on' : ''}" role="tabpanel" data-pane="${p.id}">${p.html}</div>`).join('')}`;
+      trayHtml = menu.innerHTML;
       const pick = await new Promise<HTMLElement>((resolve) => {
         const onClick = (ev: Event) => {
           const tab = (ev.target as HTMLElement).closest<HTMLElement>('[data-tab]');
@@ -967,6 +969,22 @@ export async function jornadaBattle(
     });
   }
 
+  /** A última bandeja de turno montada (abas e técnicas), para ficar no lugar enquanto os outros agem. */
+  let trayHtml = '';
+  /** Fim do turno do jogador: a bandeja fica no lugar, apagada e inerte, até a próxima vez dele. */
+  function holdMenu(): void {
+    // Saindo da escolha de alvo (ou da bolsa, dos portões), volta a bandeja inteira: a altura não muda entre os turnos.
+    if (trayHtml) menu.innerHTML = trayHtml;
+    menu.inert = true;
+    menu.classList.add('waiting');
+    const prompt = menu.querySelector('.jb-prompt');
+    if (prompt) prompt.textContent = B.othersTurn;
+  }
+  function releaseMenu(): void {
+    menu.inert = false;
+    menu.classList.remove('waiting');
+  }
+
   // Entrada: varrida de pergaminho, depois os turnos que vieram antes do protagonista.
   render(state);
   await sleep(host.instant() ? 150 : 900);
@@ -986,7 +1004,7 @@ export async function jornadaBattle(
       return { battle: state, run, abandoned: true };
     }
     if (!action) break;
-    menu.innerHTML = '';
+    holdMenu();
     const before = state;
     state = playerAct(state, action, data, rng);
     await animate(before, state);

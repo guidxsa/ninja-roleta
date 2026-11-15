@@ -44,7 +44,8 @@ export async function mapScreen(eventDone: boolean): Promise<'event' | 'fight' |
         eventDone
           ? `<button class="btn primary big" data-choice="fight">${icon('swords')} ${RR.go(villainName(id))}</button>`
           : `<button class="btn primary big" data-choice="event">${icon('dice')} ${RR.toEvent}</button>`
-      }<button class="btn small jgiveup rabandon" data-choice="abandon">${icon('warning')} ${RR.abandon}</button></div>
+      }</div>
+      <div class="rmap-quit"><button class="btn small jgiveup rabandon" data-choice="abandon">${icon('warning')} ${RR.abandon}</button></div>
     </div>`),
   );
   for (;;) {

@@ -1338,6 +1338,7 @@ export const jornadaPtBR = {
   battle: {
     round: (n: number) => `Rodada ${n}`,
     yourTurn: 'Sua vez',
+    othersTurn: 'Vez dos outros…',
     logTitle: 'Registro da luta',
     foesTitle: 'Inimigos',
     teamTitle: 'Sua equipe',

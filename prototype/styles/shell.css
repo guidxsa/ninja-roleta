@@ -33,6 +33,8 @@
   }
   /* O Menu da barra superior sai (a barra lateral tem o Início); a barra inferior do Portão é só do celular. */
   #home-btn { display: none !important; }
+  /* O progresso da Jornada salva fica na coluna direita; o card do celular (acima dos modos) sai. */
+  .gate-resume { display: none; }
   body.at-gate { padding-bottom: 0; }
   body.at-gate .gate-nav { display: none; }
 
@@ -56,9 +58,14 @@
   }
   .gate-main { grid-area: main; display: grid; grid-template-rows: minmax(120px, 1fr) auto; gap: var(--gap-lg); min-height: 0; container: gate-main / inline-size; }
   .gate-aside {
-    grid-area: aside; display: flex; flex-direction: column; gap: var(--gap); min-height: 0; overflow: hidden auto; padding: 14px 8px 10px;
+    grid-area: aside; display: flex; flex-direction: column; gap: var(--gap); min-height: 0; overflow: hidden auto; padding: 14px 8px 30px;
     container: gate-aside / size; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
+    /* O pé esmaece: quando a coluna rola, o corte avisa que há mais; sem rolagem, só o respiro de baixo some. */
+    -webkit-mask: linear-gradient(180deg, #000 calc(100% - 30px), transparent); mask: linear-gradient(180deg, #000 calc(100% - 30px), transparent);
   }
+  /* Com Jornada salva, as três peças passam da altura da janela. O progresso nunca sai (docs/visual.md, "Cada peça no
+     seu espaço") e vem primeiro; as conquistas recentes, as primeiras a sair, ficam no pé, esmaecidas, para a rolagem. */
+  .gate-aside > .desk-prog { order: -1; }
 
   /* Cena: a ilustração preenche a célula (foco do SCENE_ART), com a borda de tinta. Logo e citação ficam dentro dela,
      em cantos opostos; a cena é um container, e a citação sai quando ela fica baixa ou estreita. */
@@ -180,6 +187,8 @@
   --line: rgba(36, 25, 15, .28); --line-strong: rgba(36, 25, 15, .5);
   --text: #1a1008; --muted: #4a3620; --title-shadow: none;
   --gold: #7d5d1f; --gold-2: #684c15; --good: #30692c; --bad: #9e2a21; --leaf: #4f7a35;
+  /* Os mesmos tons escuros do .parchment: sem eles o selo "Difícil" ficava rosa claro sobre o papel (cerca de 1,3:1). */
+  --foe: #8f1a14; --jin: #c0501f; --ck-2: #2f60b0;
   position: relative; display: flex; flex-direction: column; overflow: visible; max-height: 86vh; padding: 24px 22px 26px; border: 0; color: var(--text);
   background:
     var(--tex-paper, none) center / cover,

@@ -8,21 +8,21 @@
 .jc-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
 /* Requadro de mangá: o local em nanquim, com a margem grossa de tinta e quem está em cena no canto de baixo. */
-.jc-panel {
+.jc-panel.jscene {
   position: relative; z-index: 2; margin: 0; height: clamp(132px, 24vh, 220px);
   /* O retrato desce do quadro por cima do pergaminho (o `.jscene` corta o que sai; aqui não). */
   overflow: visible;
   border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
 }
-.jc-panel::before {
+.jc-panel.jscene::before {
   content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .9;
   background: var(--scene-art, none) bottom / 100% auto no-repeat;
 }
 /* Sem ninguém em cena, o quadro é só a vista do local: mais baixo, para o texto subir. */
-.jc-panel.empty { height: clamp(84px, 14vh, 150px); }
-[data-theme='light'] .jc-panel { border-color: var(--paper-ink); box-shadow: 4px 4px 0 var(--paper-ink); }
+.jc-panel.jscene.empty { height: clamp(84px, 14vh, 150px); }
+[data-theme='light'] .jc-panel.jscene { border-color: var(--paper-ink); box-shadow: 4px 4px 0 var(--paper-ink); }
 /* No tema claro o nanquim fica mais leve, mas ainda tem de se ler como lugar. */
-[data-theme='light'] .jc-panel::before { opacity: .5; }
+[data-theme='light'] .jc-panel.jscene::before { opacity: .5; }
 /* Papel sobre fundo de papel: a sombra do pergaminho da cena é mais marcada no tema claro, para ele não sumir na página. */
 [data-theme='light'] .jc-paper::after { background: rgba(60, 36, 14, .5); transform: translate(3px, 5px); }
 
@@ -42,7 +42,7 @@
 
 /* Pergaminho: sobe um pouco sobre o quadro, com espaço para o retrato que desce do canto. */
 .jc-paper { margin-top: -6px; padding: 30px 18px 18px; }
-.jc-panel.empty + .jc-side .jc-paper { padding-top: 18px; }
+.jc-panel.jscene.empty + .jc-side .jc-paper { padding-top: 18px; }
 .jc-title { margin: 0 44px 8px 0; text-align: left; font: 700 var(--fs-4xl)/1.12 var(--font-hand); letter-spacing: 0; color: var(--paper-ink); text-shadow: none; text-wrap: balance; }
 .jc-title::after { display: none; }
 .jc-paper p { margin: 0 0 8px; max-width: 62ch; font: 400 var(--fs-lg)/1.5 var(--font-body); color: var(--paper-ink); text-wrap: pretty; }
@@ -76,16 +76,16 @@
 /* PC e tablet deitado: o quadro vira a página da esquerda e o pergaminho a da direita. */
 @media (min-width: 900px) and (min-height: 560px) {
   .jc-frame { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: 0 26px; align-items: start; }
-  .jc-panel { height: clamp(280px, 52vh, 460px); }
+  .jc-panel.jscene { height: clamp(280px, 52vh, 460px); }
   /* Sem ninguém em cena, o quadro em pé seria um vazio alto: fica uma vista baixa do local. */
-  .jc-panel.empty { height: clamp(150px, 26vh, 220px); }
+  .jc-panel.jscene.empty { height: clamp(150px, 26vh, 220px); }
   /* Quadro em pé: o desenho do local cobre a altura toda, ancorado embaixo. */
-  .jc-panel::before { background-size: cover; background-position: center bottom; }
+  .jc-panel.jscene::before { background-size: cover; background-position: center bottom; }
   .jc-cast { left: 18px; bottom: 18px; flex-direction: column; align-items: flex-start; gap: 8px; }
   .jc-cast .portrait { width: clamp(120px, 15vh, 168px); height: clamp(120px, 15vh, 168px); }
   .jc-name { margin: 0; font-size: var(--fs-xl); }
   .jc-cast.no-face { bottom: 18px; }
-  .jc-paper, .jc-panel.empty + .jc-side .jc-paper { margin-top: 0; padding: 22px 24px 22px; }
+  .jc-paper, .jc-panel.jscene.empty + .jc-side .jc-paper { margin-top: 0; padding: 22px 24px 22px; }
   .jc-title { font-size: var(--fs-6xl); }
   .jc-paper p { font-size: var(--fs-xl); }
 }

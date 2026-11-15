@@ -131,6 +131,10 @@
 .jb-log .ico { width: 13px; height: 13px; vertical-align: -.15em; }
 .jb-menu { display: flex; flex-direction: column; gap: 6px; }
 .jb-menu:empty { visibility: hidden; }
+/* Fora do turno do jogador a bandeja continua montada, apagada e sem resposta: a tela não pula e o toque seguinte não
+   cai numa técnica que surgiu embaixo do dedo. */
+.jb-menu.waiting > :not(.jb-prompt) { opacity: .45; filter: saturate(.4); }
+.jb-menu.waiting .jb-prompt { color: var(--muted); }
 .jb-prompt { margin: 0; text-align: center; font: 600 var(--fs-md)/1.2 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2); }
 .jb-hint { margin: 0; text-align: center; font-size: var(--fs-xs); line-height: 1.3; color: var(--muted); }
 .jb-hint .ico { width: 13px; height: 13px; vertical-align: -.15em; color: var(--good); }

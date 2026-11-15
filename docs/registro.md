@@ -66,6 +66,21 @@ Pedido do usuário: o layout ficou apertado, sobreposto e com tamanhos errados e
 
 **Arte e composição** (11/11/2026, mesma versão): depois do teste, o usuário apontou que as imagens dos cards não se ajustavam e que as peças brigavam entre si. Decidido com ele: a arte preenche a célula com foco (moldura única, proporção lida no build, foco no `SCENE_ART`), fica dentro do card, e cada peça ocupa o seu espaço, sem sobreposição. Limites de corte, focos e ordem de saída decididos sozinho ([decisoes.md](decisoes.md) item 25). Só visual; 576 testes (6 novos, do leitor de dimensões).
 
+## Crítica no UI Lab: celular e desktop (v0.76.2, 14/11/2026)
+
+Crítica de design dos 113 cenários do UI Lab, com captura de tela de cada um (390×844 e, numa amostra, 360, 1024, 1440 e tema claro). O usuário pediu as correções de prioridade P0 e P1, celular primeiro. Só visual: nenhuma regra nem número de balanceamento mudou; testes (703) iguais.
+
+- **Modo História no celular (P0)**: o botão "Começar a História" ficava embaixo do card do Sasuke e não recebia o toque. A causa era o nome `.jc-panel`, usado pelo quadro de cena e pelo card de perspectiva; a altura fixa do quadro (24vh) vazava para o card. As regras do quadro passaram a valer só com `.jscene`. Resolveu também a arte cobrindo "Escolha a classe" no preparo do Caminho Ninja.
+- **CTA preso ao pé**: nos eventos e relíquias da Roleta o botão ficava abaixo da dobra (o invólucro `#cta` tinha a altura do próprio botão). Agora gruda no pé da tela, com degradê até o fundo, e no mapa o "Abandonar run" saiu da faixa presa (fica no fim da página). Decidido sozinho: Voltar ao mapa e Lutar lado a lado; a roda girada não alarga mais a página (`overflow-x: clip`).
+- **Cabeçalho em 360px**: o Menu fica só com o ícone até 380px (antes a barra empurrava a página para 382px).
+- **Bandeja da luta da Jornada**: fica montada, apagada e inerte ("Vez dos outros…") fora do turno do jogador, com a mesma altura; antes sumia e voltava em outra posição.
+- **Portão do celular com Jornada salva**: o card Progresso da Jornada entra acima dos modos, como já dizia o [visual.md](visual.md).
+- **Desktop**: luta da Roleta no notebook (900–1279px) com as ações e a ficha do vilão na direita, retratos compactos e rolagem quando falta altura (antes a faixa de Iniciativa cobria os lutadores e a ficha caía no rodapé); fim da run com o card do jogador à esquerda, inteiro; coluna do Portão com o progresso primeiro e o pé esmaecido quando rola (a ordem de saída segue o visual.md); loja numa coluna de 880px.
+- **Estampa Hyuuga**: os dois triângulos sobrepostos liam, em grade, como uma estrela de seis pontas (símbolo religioso). Decidido sozinho: os Oito Trigramas, um círculo com oito traços.
+- **Selo "Difícil" no Registro**: o papel do Registro ganhou os mesmos tons escuros do `.parchment` (`--foe`, `--jin`, `--ck-2`); o selo ia de cerca de 1,3:1 para legível.
+
+Ficaram para depois (P2 e P3 da crítica): picos emocionais (chefe, revelação, vitória; o usuário pediu animação própria da Jornada, sem roleta), textos e fontes de pincel em tamanho pequeno, rótulos invertidos na roda, alvos de toque menores que 44px, entre outros.
+
 ## Auditoria de design e etapa 1: cena narrativa (v0.72.0, 14/11/2026)
 
 Pedido do usuário: auditoria criteriosa da experiência visual com o Impeccable, sem alterar nada, e um plano de evolução. Depois de aprovar o relatório, escolheu começar pela etapa 1 (narrativa), com falas por toque e os retratos em SVG de hoje.

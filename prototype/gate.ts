@@ -54,6 +54,9 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
       id, art: sceneMedia(`modo-${id}`) ?? emblem(id), artVars: sceneVars(`modo-${id}`), seal: id === 'jornada' ? '道' : '運',
       name: M[id].name, desc: M[id].desc, cta: id === 'jornada' ? D.ctaJornadaNew : D.ctaRoleta,
     });
+  // Run da Jornada salva: no PC o progresso fica na coluna da direita; no celular, onde a coluna some, o mesmo card
+  // entra acima dos modos (o CSS mostra um ou outro).
+  const resume = progressSlot();
   const root = show(
     h(`<div class="screen jmodes gate">
       <div class="gate-main">
@@ -68,6 +71,7 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
             <span class="seal duo-seal duo-day" aria-hidden="true">${DU.day.seal}</span><span class="seal duo-seal duo-night" aria-hidden="true">${DU.night.seal}</span></blockquote>
         </div>
         <p class="gate-sub">${M.title}</p>
+        ${resume ? `<div class="gate-resume">${resume}</div>` : ''}
         <nav class="gate-modes">${gateCard('jornada')}${gateCard('roleta')}</nav>
         <button class="scroll-banner" data-profile="achievements"><span class="seal gold" aria-hidden="true">功</span>
           <span><b>${G.achievements}</b><small>${G.achievementsDesc}</small></span>${icon('chevron')}</button>
