@@ -660,9 +660,29 @@
   /* A lista rola na célula dela; a arte fica parada ao lado. */
   .jtrail-screen > .jtrail-arc { display: grid; grid-template-columns: minmax(220px, 46%) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: var(--gap-lg); overflow: hidden; padding-top: 12px; }
   .jtrail-arc .jtrail { grid-column: 1; grid-row: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
-  .jtrail-art { grid-column: 2; grid-row: 1; margin: 0; height: auto; -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat; mask: var(--ink-edge) center / 100% 100% no-repeat; }
+  /*
+   * A célula pode ser bem mais alta que a arte (2560×1440: 634×1220 para uma arte de 0,70). A arte fica na proporção
+   * dela, centrada, e a borda de tinta vai na arte, não na célula: antes a máscara crescia com a célula, cortava a faixa
+   * do nome e a arte perdia os lados.
+   */
+  .jtrail-art {
+    grid-column: 2; grid-row: 1; margin: 0; height: auto; overflow: visible; container-type: size;
+    display: grid; grid-template-areas: 'art'; place-content: center;
+  }
+  /* A maior arte que cabe na célula na proporção dela; numa célula estreita, a arte larga é cortada até ficar em pé
+     (altura de 1,35 vez a largura), para não virar uma faixa pequena no meio da célula. */
+  .jtrail-art > .scene-media {
+    grid-area: art; position: relative; display: block; overflow: hidden;
+    width: min(100cqw, 100cqh * max(var(--ratio, .7), .62));
+    height: min(100cqh, max(100cqw / var(--ratio, .7), 100cqw * 1.35));
+    -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat; mask: var(--ink-edge) center / 100% 100% no-repeat;
+  }
   .jtrail-art > .scene-media > :is(img, video) { -webkit-mask: none; mask: none; }
-  .jtrail-art figcaption { left: auto; right: clamp(14px, 2vw, 30px); bottom: clamp(14px, 3vh, 34px); font-size: clamp(20px, 1.8vw, 32px); rotate: -2deg; filter: drop-shadow(2px 4px 3px rgba(0, 0, 0, .35)); }
+  /* A faixa do nome fica no pé da arte (mesma célula), fora da máscara: inteira em qualquer altura. */
+  .jtrail-art figcaption {
+    grid-area: art; position: relative; z-index: 1; left: auto; bottom: auto; align-self: end; justify-self: end; margin: 0 clamp(10px, 1.4vw, 24px) clamp(12px, 2.6vh, 30px) 0;
+    white-space: nowrap; font-size: clamp(20px, 1.8vw, 32px); rotate: -2deg; filter: drop-shadow(2px 4px 3px rgba(0, 0, 0, .35));
+  }
   .jtrail-art .seal { --s: clamp(30px, 2.4vw, 42px); }
 }
 
@@ -683,7 +703,7 @@
 /* Telas simples da Jornada (sorteio, nome, descanso, baú, evento, fim) no desktop: coluna central de leitura, não a
    largura toda da casca. As telas compostas (entrada, perspectiva, preparo, trilha, mapa, luta) têm a sua grade. */
 @media (min-width: 900px) and (min-height: 560px) {
-  body.mode-jornada main > .screen:not(.gate, .jcampaigns, .jpath, .jtrail-screen, .jbattle, .jrboss) {
+  body.mode-jornada main > .screen:not(.gate, .jcampaigns, .jpath, .jtrail-screen, .jbattle, .jrboss, .jcene) {
     width: 100%; max-width: clamp(560px, 46vw, 860px); margin-left: auto; margin-right: auto;
   }
 }

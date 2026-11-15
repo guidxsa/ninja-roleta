@@ -97,6 +97,12 @@ Ficam para depois: tela de erro e toasts (sem cenário no lab), `prefers-reduced
 
 Ficaram de fora: rolagem interna da loja acoplada a 1440 (a seção já é dobrável), o nome do ninja repetido nas abas do Registro no celular, o rótulo vencedor da roda na vertical (o carimbo sobre a roda já mostra o resultado na horizontal) e os parceiros genéricos do Caminho Ninja (são o molde da classe).
 
+**Telas grandes (v0.76.12, 15/11/2026).** O usuário testou num monitor 4K e achou dois problemas: a faixa com o nome do arco saía cortada na arte da trilha, e aviso, evento e minijogo pareciam o celular esticado. Ele escolheu a página dupla para as cenas e o conserto nos dois modos.
+- Arte do arco: a borda de tinta estava na célula, que a 2560×1440 tinha 634×1220 para uma arte de 0,70. A máscara crescia com a célula e cortava a faixa do nome, e a arte perdia os lados. Agora a borda vai na arte, que fica na proporção dela (numa célula estreita, a arte larga é cortada até 1,35 de altura por largura). A faixa fica no pé da arte, fora da máscara.
+- Cena da Jornada no PC: antes, uma coluna de 46vw (662px a 1440, quadro de 266px). Agora é a página dupla na altura da janela, até 1560px: o quadro alto à esquerda, com o retrato de até 260px, e o pergaminho à direita. Nos picos, o carimbo fica na dobra. No minijogo, o tabuleiro ocupa ~3/4 da tela: memória 6×2 e selos 8×1, cartas medidas pela altura, jokenpô com mãos de até 220px. Quando o conteúdo é longo (relatório do fim), a página rola.
+- Roleta no PC: no aviso e no "Subiu de nível", o popup cobria o carimbo. Agora o carimbo fica no palco e o card ao lado. O jokenpô do evento ganhou mãos maiores.
+- Conferido a 1024×768, 1280×720, 1440×900, 1920×1080 e 2560×1440 (tema claro numa amostra), sem rolagem lateral. O celular (375×812) não mudou.
+
 ## Auditoria de design e etapa 1: cena narrativa (v0.72.0, 14/11/2026)
 
 Pedido do usuário: auditoria criteriosa da experiência visual com o Impeccable, sem alterar nada, e um plano de evolução. Depois de aprovar o relatório, escolheu começar pela etapa 1 (narrativa), com falas por toque e os retratos em SVG de hoje.
