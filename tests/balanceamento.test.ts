@@ -5,7 +5,11 @@ import { relicFits, relicNeeds } from '../src/core/jornada/relics';
 import { gateHpUpkeep, payGateUpkeep } from '../src/core/gates';
 import { fitRelics, gainRelic, heroMods, heroNeeds, newGenericRun, newRun } from '../src/core/jornada/run';
 import type { FighterSeed } from '../src/core/jornada/types';
-import { createRoletaPlayer } from '../src/core/roleta/player';
+import { createRoletaPlayer, playerTechniques } from '../src/core/roleta/player';
+import { battleTechniques, gateForceChance, heavyBodyMult, kitActives, playerAttackOdds, playRoletaRound, sharinganStage, startRoletaBattle, techBlock, useActive, type RBattle } from '../src/core/roleta/battle';
+import { scaleVillain } from '../src/core/difficulty';
+import { roletaVillainsById } from '../src/data/roleta/villains';
+import type { Origin } from '../src/core/types';
 import { relicEffects, relicPool, gainRoletaRelic } from '../src/core/roleta/run';
 import { jornadaData as data } from '../src/data/jornada';
 import { roletaData } from '../src/data/roleta/index';
@@ -130,5 +134,107 @@ describe('Fase 2 · Portões com custo misto (C4)', () => {
   it('o jogo usa a regra nova nos dois modos', () => {
     expect(data.base.gateCosts).toMatchObject({ chakraShare: 0.5, hpPctPerLevel: 0.01 });
     expect(roletaData.base.balance.gateCosts).toBe(data.base.gateCosts);
+  });
+});
+
+describe('Fase 3 · Roleta com os kits completos do clássico (R1)', () => {
+  const org = (lineageId: string | null, elements: Origin['elements'] = [], extra: Partial<Origin> = {}): Origin => ({ lineageId, elements, jinchuuriki: false, ...extra });
+  const rbattle = (o: Origin, level = 1, over: Partial<RBattle['player']> = {}): RBattle => {
+    const p = { ...createRoletaPlayer(o, roletaData), level, ...over };
+    return startRoletaBattle(p, scaleVillain(roletaVillainsById.mizuki!, 'normal', roletaData.base), { playerStartsFirst: true }, roletaData, fixed(0.5));
+  };
+
+  it('as exclusivas do despertar aparecem nos níveis 4 e 7', () => {
+    const lee = (level: number) => playerTechniques({ ...createRoletaPlayer(org('taijutsuProdigy'), roletaData), level }, roletaData).map((t) => t.id);
+    expect(lee(1)).toEqual(['rBasic', 'rLeafHurricane']);
+    expect(lee(4)).toEqual(['rBasic', 'rLeafHurricane', 'rPrimaryLotus']);
+    expect(lee(7)).toEqual(['rBasic', 'rLeafHurricane', 'rPrimaryLotus', 'rHiddenLotus']);
+    expect(kitActives({ ...createRoletaPlayer(org('akimichi'), roletaData), level: 6 }, roletaData)).toEqual(['expansion']);
+    expect(kitActives({ ...createRoletaPlayer(org('akimichi'), roletaData), level: 7 }, roletaData)).toEqual(['expansion', 'pills']);
+  });
+
+  it('usos por luta crescem com o despertar (Esforço 1/2/3, Portões 1/2, Selamento 1/2)', () => {
+    expect([1, 4, 7].map((lv) => rbattle(org(null, ['fire']), lv).fx.uses.effort)).toEqual([1, 2, 3]);
+    expect([1, 7].map((lv) => rbattle(org('taijutsuProdigy'), lv).fx.uses.gates)).toEqual([1, 2]);
+    expect([1, 7].map((lv) => rbattle(org('uzumaki', ['wind']), lv).fx.uses.seal)).toEqual([1, 2]);
+    // Sharingan e Byakugan: só o chakra limita.
+    expect(rbattle(org('uchiha', ['fire'])).fx.uses.sharingan).toBeUndefined();
+  });
+
+  it('Lótus Primária só com um Portão aberto; Forçar abre o portão de cima', () => {
+    let s = rbattle(org('taijutsuProdigy'), 4);
+    const lotus = roletaData.techniques.rPrimaryLotus!;
+    expect(techBlock(s, lotus, roletaData)).toBe('gate');
+    expect(gateForceChance(s, roletaData)).toBeCloseTo(Math.max(0.2, 0.5 + 0.03 * (s.player.offense.taijutsu - 21)) + 0.1, 10);
+    s = useActive(s, roletaData, fixed(0), 'gates', { force: true });
+    expect(s.fx.gate?.stage).toBe(1);
+    expect(techBlock(s, lotus, roletaData)).toBeNull();
+    // Falhou: abre o liberado e fere mais 10% do HP máximo.
+    const fail = useActive(rbattle(org('taijutsuProdigy'), 4), roletaData, fixed(0.99), 'gates', { force: true });
+    expect(fail.fx.gate?.stage).toBe(0);
+    expect(fail.player.hp).toBe(fail.player.maxHp - Math.floor(fail.player.maxHp * 0.1));
+  });
+
+  it('Sharingan: estágio pelo nível, manutenção a partir da rodada seguinte, e a Cópia pega a técnica do vilão', () => {
+    expect(sharinganStage({ ...createRoletaPlayer(org('uchiha', ['fire']), roletaData), level: 7 }, roletaData).copyChance).toBe(0.8);
+    let s = useActive(rbattle(org('uchiha', ['fire'])), roletaData, fixed(0.5), 'sharingan');
+    s = playRoletaRound(s, 'guard', roletaData, fixed(0.99));
+    expect(s.log.some((e) => e.type === 'upkeep')).toBe(false);
+    s = playRoletaRound(s, 'guard', roletaData, fixed(0.99));
+    expect(s.log.some((e) => e.type === 'upkeep' && e.kind === 'sharingan' && e.cost === 2)).toBe(true);
+    // Cópia: precisa do Sharingan e de uma técnica de dano já usada pelo vilão.
+    const v = s.villain.techniques.find((t) => t.baseDamage > 0 && t.type !== 'genjutsu')!;
+    const ready = { ...s, activeUsed: false, villain: { ...s.villain, lastTech: v.id }, player: { ...s.player, chakra: 20 } };
+    const copied = useActive(ready, roletaData, fixed(0), 'copy');
+    expect(copied.fx.copied?.copyOf).toBe(v.id);
+    expect(battleTechniques(copied, roletaData).some((t) => t.copyOf === v.id)).toBe(true);
+    // A técnica copiada sai como ação.
+    expect(() => playRoletaRound(copied, `tech:${copied.fx.copied!.id}`, roletaData, fixed(0.5))).not.toThrow();
+  });
+
+  it('Byakugan: taijutsu não erra e libera o Selo dos Pontos Vitais, que drena chakra', () => {
+    let s = rbattle(org('hyuuga', ['wind']));
+    const seal = roletaData.techniques.rVitalSeal!;
+    expect(techBlock(s, seal, roletaData)).toBe('buff');
+    s = useActive(s, roletaData, fixed(0.5), 'byakugan');
+    expect(playerAttackOdds(s, seal, roletaData).auto).toBe(true);
+    s = { ...s, villain: { ...s.villain, chakra: 9 } };
+    const after = playRoletaRound(s, 'tech:rVitalSeal', roletaData, fixed(0.99));
+    expect(after.log.some((e) => e.type === 'chakra' && e.side === 'villain' && e.value < 9)).toBe(true);
+  });
+
+  it('Corpo pesado pela razão de peso; a Expansão libera os degraus de cima', () => {
+    const s = rbattle(org('akimichi', ['earth']));
+    const ratio = s.player.maxHp / s.villain.maxHp;
+    const step = ratio >= 2 ? 1.3 : ratio >= 1.5 ? 1.2 : ratio >= 1.25 ? 1.1 : ratio >= 1 ? 1.05 : 1;
+    expect(heavyBodyMult(s, roletaData)).toBe(step);
+    expect(heavyBodyMult(useActive(s, roletaData, fixed(0.5), 'expansion'), roletaData)).toBeGreaterThan(step);
+  });
+
+  it('Pílulas do clã (nível 7): a vermelha deixa exausto quando acaba', () => {
+    let s = useActive(rbattle(org('akimichi', ['earth']), 7), roletaData, fixed(0.99), 'pills');
+    expect(s.fx.buffs.find((b) => b.kind === 'pill')?.pill).toBe('red');
+    expect(s.player.hp).toBe(s.player.maxHp - Math.floor(s.player.maxHp * 0.3));
+    for (let i = 0; i < 3; i++) s = playRoletaRound(s, 'guard', roletaData, fixed(0.99));
+    expect(s.fx.buffs.map((b) => b.kind)).toEqual(['exhausted']);
+  });
+
+  it('Correntes de Chakra atordoam e drenam; a Rotação ergue a barreira que devolve metade', () => {
+    const b = rbattle(org('uzumaki', ['wind']), 4);
+    const chained = playRoletaRound({ ...b, villain: { ...b.villain, chakra: 9 } }, 'tech:rChakraChains', roletaData, fixed(0.5));
+    expect(chained.log.some((e) => e.type === 'effect' && e.side === 'villain' && e.kind === 'stun')).toBe(true);
+    const vck = chained.log.filter((e): e is Extract<typeof e, { type: 'chakra' }> => e.type === 'chakra' && e.side === 'villain').map((e) => e.value);
+    expect(vck.at(-2)! - vck.at(-1)!).toBe(4);
+    const hy = playRoletaRound(rbattle(org('hyuuga', ['wind']), 4), 'tech:rRotation', roletaData, fixed(0.99));
+    expect(hy.fx.barrier?.reflectPct).toBe(0.5);
+  });
+
+  it('Senju: curas rendem +25%', () => {
+    expect(rbattle(org('senju', ['fire'])).fx.healMult).toBe(1.25);
+    expect(rbattle(org(null, ['fire'])).fx.healMult).toBe(1);
+  });
+
+  it('Yamanaka, Aburame e Nara seguem fora do sorteio do Roleta', () => {
+    for (const id of ['nara', 'yamanaka', 'aburame']) expect(roletaData.base.lineages.some((l) => l.id === id)).toBe(false);
   });
 });

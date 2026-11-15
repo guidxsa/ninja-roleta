@@ -1,6 +1,6 @@
 # Origens
 
-> **Combate clássico (reserva)**: desde a v0.45.0, o Roleta usa o combate enxuto de [roleta/combate.md](../roleta/combate.md). Esta página segue valendo como descrição do combate clássico, guardado para a Jornada ([reserva/README.md](../reserva/README.md)); acerto, crítico, dano, resistência e dificuldade continuam valendo para todos.
+> **Combate clássico (reserva)**: desde a v0.45.0, o Roleta usa o combate enxuto de [roleta/combate.md](../roleta/combate.md); desde a v0.80.0, os kits, as exclusivas e o despertar desta página voltam ao Roleta, adaptados (tabela em [roleta/combate.md](../roleta/combate.md#kits)). Esta página segue valendo como descrição do combate clássico, guardado para a Jornada ([reserva/README.md](../reserva/README.md)); acerto, crítico, dano, resistência e dificuldade continuam valendo para todos.
 
 A origem do personagem é sorteada no início da run: linhagem, elementos e jinchuuriki. Ela define os status iniciais, as técnicas de partida e as habilidades exclusivas.
 

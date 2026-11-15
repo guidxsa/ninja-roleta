@@ -40,7 +40,7 @@ Fixas pela origem e **sobem sozinhas com o nível**: dano base = base + por nív
 - Quem pode usar ninjutsu (todos, menos o Prodígio): **um clone** (v0.59.0; tipos desde a v0.77.0). O Bunshin no Jutsu, ou no lugar dele o Kage Bunshin no Jutsu (Uzumaki e jinchuuriki) ou o clone da natureza (Mizu Bunshin no Jutsu, Doton Kage Bunshin, Raiton Kage Bunshin, Mokuton Bunshin, Suna Bunshin). No máximo 1 clone. Tipos e regras em [fundamentos.md](../base/fundamentos.md#clones).
 - **A técnica da natureza** e a **barreira** do elemento (Muralha de Terra, Parede d'Água, Muralha de Chamas, Escudo de Vento; o raio não tem), só nas origens de ninjutsu elemental (Comum, Uzumaki, Senju, Uchiha); as outras têm natureza, mas sem técnica. Barreiras em [fundamentos.md](../base/fundamentos.md#barreiras-no-roleta-e-na-jornada).
 - **Kekkei genkai** (Mokuton do Senju): uma técnica própria; ela é a natureza.
-- As técnicas da linhagem.
+- As técnicas da linhagem. As exclusivas do despertar entram no nível 4 ou 7; algumas pedem o dōjutsu ligado ou um Portão aberto (v0.80.0).
 
 | Técnica | Quem | Tipo | Dano (por nível) | Golpes | Chakra | Precisão | Extra |
 |---|---|---|---|---|---|---|---|
@@ -63,12 +63,21 @@ Fixas pela origem e **sobem sozinhas com o nível**: dano base = base + por nív
 | Projéteis d'Água | água | ninjutsu | 6 (+1) | 2 | 6 | 90% | — |
 | Sombra Cortante | Nara | ninjutsu | 10 (+2) | 1 | 6 | 85% | — |
 | Mão Expandida | Akimichi | taijutsu | 11 (+2) | 1 | 4 | 85% | 10% de Atordoar |
+| Rolo Colossal | Akimichi, nível 4 | taijutsu | 14 (+3) | 1 | 8 | 80% | 20% de Atordoar |
 | Pétalas Ilusórias | Yamanaka | genjutsu | 10 (+2) | 1 | 6 | 85% | 30% de Medo |
 | Enxame | Aburame | ninjutsu | 5 (+1) | 2 | 8 | 85% | 50% de Veneno |
 | Presas Giratórias | Inuzuka | taijutsu | 6 (+1) | 2 | 6 | 85% | — |
 | Folha Furacão | prodígio | taijutsu | 6 (+1) | 2 | 4 | 90% | — |
+| Lótus Primária | prodígio, nível 4 | taijutsu | 16 (+3) | 1 | 8 | 85% | só com um Portão aberto; 25% de Atordoar |
+| Lótus Oculta | prodígio, nível 7 | taijutsu | 6 (+1) | 5 | 12 | 85% | só com o 3º Portão ou acima |
+| Olhar Hipnótico | Uchiha | genjutsu | — | 1 | 6 | 80% | sem dano: atordoa se acertar |
 | Ilusão da Dor | Uchiha | genjutsu | 13 (+2) | 1 | 6 | 85% | 20% de Medo |
-| Selo dos Pontos Vitais | Hyuuga | taijutsu | 9 (+2) | 1 | 4 | 85% | 25% de Bloqueio de chakra |
+| Tsukuyomi | Uchiha, nível 7 | genjutsu | 20 (+3) | 1 | 12 | 85% | só com o Sharingan; 50% de Atordoar |
+| Selo dos Pontos Vitais | Hyuuga | taijutsu | 9 (+2) | 1 | 4 | 100% | só com o Byakugan; 25% de Bloqueio de chakra; tira 3 de chakra |
+| Rotação | Hyuuga, nível 4 | ninjutsu | — | — | 6 | — | barreira neutra de 26% do HP que devolve metade do que segura |
+| 64 Palmas | Hyuuga, nível 7 | taijutsu | 5 (+1) | 4 | 10 | 100% | só com o Byakugan; cada golpe tira 2 de chakra |
+| Etiqueta Explosiva | Uzumaki | ninjutsu | 12 (+2) | 1 | 6 | 85% | ignora 50% da resistência |
+| Correntes de Chakra | Uzumaki, nível 4 | ninjutsu | — | 1 | 8 | 75% | sem dano: atordoa e tira 4 de chakra se acertar |
 | Agulhas de Gelo | gelo (guardada) | ninjutsu | 5 (+1) | 3 | 6 | 90% | 15% de Atordoar |
 | Shuriken de Areia | areia (guardada) | ninjutsu | 12 (+2) | 1 | 6 | 95% | começa a luta com escudo de 10% do HP |
 | Bolha de Lava | lava (guardada) | ninjutsu | 14 (+2) | 1 | 6 | 85% | 30% de Queimar |
@@ -79,24 +88,26 @@ Fixas pela origem e **sobem sozinhas com o nível**: dano base = base + por nív
 
 ## Kits
 
-Uma passiva e uma ativa simples por linhagem. A ativa é grátis (uma por turno) e dura 3 rodadas contando a da ativação, quando tem duração.
+Desde a v0.80.0, as 8 origens do sorteio têm os **kits completos do clássico** ([base/origens.md](../base/origens.md)), adaptados ao combate enxuto: passiva, várias ativas, as exclusivas e o **despertar dos níveis 4 e 7**. As ativas são grátis, **uma por turno**; as que duram contam a rodada da ativação. Os números ficam no `balance` da base (`passives`, `awakening`, `dojutsu`, `gates`, `expansion`, `effort`, `beast`, `drunkenFist`, `pills`, `seal`, `copy`, `vitalForce`, `jinchuuriki`); o que só o Roleta adapta fica em `roletaBalance.kits`.
 
-Yamanaka, Nara e Aburame saíram do sorteio na v0.52.0: funcionam melhor como suporte e ficam guardados para a Jornada (`retiredLineages`). Os kits continuam na tabela e nos dados.
+O que dependia de reação, disputa ou golpe carregado (que o Roleta não tem) foi adaptado: a Cópia só no turno; a isca da Fera vira +10% de esquiva; Imitação e prisões viram Atordoar; o Selamento tira a técnica sorteada da roleta do vilão.
 
-| Linhagem | Passiva | Ativa (usos por luta) |
-|---|---|---|
-| Comum | Determinação: +25% de XP; +1 no maior ataque por nível | Esforço (1): +3 nos três ataques |
-| Nara (guardado) | Gênio: vê a próxima ação do vilão | Imitação de Sombra (2): 80% de chance de atordoar |
-| Akimichi | Corpo pesado: +15% de dano de taijutsu | Expansão (1): taijutsu ×1,3 e +3 de resistência física |
-| Yamanaka (guardado) | Leitura mental: o vilão tem −10% de acerto | Transferência de Mente (1): 75% de chance; o vilão perde a vez e se fere com a técnica mais forte dele (não pega quem é imune a genjutsu) |
-| Aburame (guardado) | Colônia: o Enxame pode envenenar | Praga (1): envenena; o veneno dói em dobro e o Enxame sempre envenena |
-| Inuzuka | Dupla: 25% de chance de o cão bater junto (40% do dano) | Fera de quatro patas (1): +3 de speed e Dupla com 60% |
-| Prodígio | Juventude: +5% de crítico; sem ninjutsu e genjutsu | Portões: taijutsu ×1,3 enquanto abertos; abrir custa 4 de chakra e manter custa, por rodada, 1, 2, 3, 4, 6... de chakra e 1% do HP máximo (custo misto, v0.79.0); sem como pagar, fecham sozinhos; podem reabrir ([fundamentos.md](../base/fundamentos.md#portões)) |
-| Uchiha | Olhos treinados: imune a Medo | Sharingan (1): +15% de acerto, +10% de esquiva e +3 nos ataques |
-| Hyuuga | Punho preciso: o taijutsu ignora 30% da resistência | Byakugan (1): o taijutsu não erra (o crítico rola) |
-| Uzumaki | Vitalidade: recupera 2% do HP por rodada | Selamento (1): o vilão perde a próxima ação |
-| Senju | +1 Vontade do Fogo; Força vital: uma vez por luta, abaixo de 30% do HP, recupera 4% por rodada por 3 rodadas | — |
-| Jinchuuriki | Manto: uma vez por luta, abaixo de 50% do HP, ataques ×1,5 por 3 rodadas; imune a Medo | — |
+Yamanaka, Nara e Aburame saíram do sorteio na v0.52.0 (`retiredLineages`) e seguem com os kits enxutos de antes, guardados nos dados.
+
+| Linhagem | Passiva | Ativas (usos por luta) | Despertar |
+|---|---|---|---|
+| Comum | Determinação: +25% de XP; +1 no maior ataque por nível | Esforço (1, +1 nos níveis 4 e 7): +3 nos três ataques por 3 rodadas, sem chakra | 4: Nunca desistir (na 1ª vez abaixo de 25% do HP, recupera 15%). 7: Esforço +5 por 4 rodadas |
+| Akimichi | Corpo pesado: taijutsu pela razão HP máximo ÷ HP máximo do vilão (×1,05 / 1,1 / 1,2 / 1,3) | Expansão (6 ck, repete quando acaba): peso ×1,5 e libera ×1,4 e ×1,5; speed −3. Pílulas do clã (nível 7; 1): roleta verde/amarela/vermelha, taijutsu ×1,3/×1,6/×2 por 10/20/30% do HP; a vermelha deixa exausto 2 rodadas | 4: peso +10%; Rolo Colossal. 7: Pílulas; a Expansão sem perda de speed |
+| Inuzuka | Dupla: 25% de o cão bater junto (40% do dano) | Fera de quatro patas (5 ck; 1, +1 no nível 7): +3 de speed, +10% de esquiva e Dupla com 60%, 3 rodadas | 4: o cão bate com 60%. 7: a Fera custa 3 e dura 4 |
+| Prodígio | Juventude: +5% de crítico; sem ninjutsu e genjutsu | Portões (1; 2 no nível 7): abre o maior liberado pelo taijutsu (17/21/25/29 → ×1,3/1,5/1,7/1,9), custa 5/7/9/11 ck; manter custa, por rodada, chakra crescente e 1% do HP máximo por nível do portão (custo misto, [fundamentos.md](../base/fundamentos.md#portões)); **Forçar** tenta o de cima (50% + 3% por ponto de taijutsu, entre 20% e 80%; falhou, abre o liberado e perde 10% do HP). Punho Bêbado (nível 4; 1): por 3 rodadas, o dano de taijutsu gira ×0,5/×1/×1,5 com −10% de acerto | 4: Forçar +10%; Lótus Primária; Punho Bêbado. 7: 2 usos; Lótus Oculta |
+| Uchiha | Olhos treinados: imune a Medo | Sharingan (4 ck, manutenção 2, 5 rodadas): +3/+5/+7 nos ataques e +1/+2/+3 de speed, genjutsu com +10/15/20% de acerto e +3/6/9 de poder, Leitura de movimento (20/25/30% de o golpe recebido cair pela metade). Cópia (3 ck, com o Sharingan): 50/65/80% de copiar a última técnica de taijutsu ou ninjutsu de dano do vilão até o fim da luta | 4: 2 tomoe. 7: 3 tomoe e Tsukuyomi |
+| Hyuuga | Punho preciso: o taijutsu ignora 30% da resistência | Byakugan (3 ck, manutenção 2, 5 rodadas): o taijutsu não erra e dá ×1,1, enxerga através da névoa, o genjutsu do vilão tem −20% de acerto e libera o Selo dos Pontos Vitais e as 64 Palmas | 4: Byakugan 7 rodadas; Rotação. 7: 64 Palmas |
+| Uzumaki | Vitalidade: 1 de chakra e 2% do HP por rodada | Selamento (6 ck; 1, +1 no nível 7): a técnica sorteada do vilão sai da roleta dele por 2 rodadas | 4: Correntes de Chakra. 7: Selamento por 3 rodadas; Vitalidade com 2 de chakra |
+| Senju | +1 Vontade do Fogo; curas +25%; Força vital: abaixo de 30% do HP, 4% por rodada por 3 rodadas | — | 4: Força vital 5% e 2 de chakra por rodada. 7: dispara 2 vezes por luta |
+| Jinchuuriki | Manto: uma vez por luta, abaixo de 50% do HP, ataques e speed ×1,5, resistências ×1,25 e 5% de HP por rodada, até 5 rodadas; custa 10% do chakra máximo por rodada; imune a Medo | — | — |
+| Nara (guardado) | Gênio: vê a próxima ação do vilão | Imitação de Sombra (2): 80% de atordoar | — |
+| Yamanaka (guardado) | Leitura mental: o vilão tem −10% de acerto | Transferência de Mente (1): 75%; o vilão perde a vez e se fere | — |
+| Aburame (guardado) | Colônia: o Enxame pode envenenar | Praga (1): envenena; veneno em dobro | — |
 
 Invocações (até a v0.46.0, quando viram relíquias): sapo (6% do HP máximo do vilão como dano verdadeiro por ataque que acerta, +2% por nível), cobra (envenena no acerto), lesma (recupera 3% do HP por rodada, +1% por nível).
 

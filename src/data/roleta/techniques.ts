@@ -35,9 +35,25 @@ export interface RTechniqueDef {
   clone?: CloneKind;
   /** Barreira (src/core/barriers.ts): ergue um escudo do elemento da técnica com esta fração do HP máximo (v0.77.0). */
   barrierPct?: number;
+  /** Barreira que devolve ao atacante esta fração do dano que segurou (Rotação). */
+  reflectPct?: number;
+  /** Nível em que a técnica entra no kit (despertar, v0.80.0). */
+  minLevel?: number;
+  /** Só com o dōjutsu ligado (Tsukuyomi, Selo dos Pontos Vitais, 64 Palmas). */
+  requiresBuff?: 'sharingan' | 'byakugan';
+  /** Só com um Portão aberto deste número ou acima (Lótus). */
+  requiresGate?: number;
+  /** Sem dano: uma roleta de acerto e, se pegar, o efeito (Olhar Hipnótico, Correntes de Chakra). */
+  damageless?: boolean;
+  /** Chakra que o vilão perde a cada golpe que acerta (ou quando o efeito pega, na técnica sem dano). */
+  chakraDrain?: number;
+  /** Técnica copiada pelo Sharingan: o id da técnica do vilão (o nome vem dela). */
+  copyOf?: string;
 }
 
 export const BASIC = 'rBasic';
+/** Id da técnica copiada pelo Sharingan na luta (src/core/roleta/battle.ts, `copyTechnique`). */
+export const COPY = 'rCopy';
 /** Bunshin no Jutsu: no kit inicial de toda origem que pode usar ninjutsu. */
 export const BUNSHIN = 'rBunshin';
 
@@ -68,10 +84,20 @@ export const roletaTechniques: RTechniqueDef[] = [
   { id: 'rPetals', type: 'genjutsu', lineage: 'yamanaka', base: 10, perLevel: 2, chakra: 6, effect: { kind: 'fear', chance: 0.3 } },
   { id: 'rSwarm', type: 'ninjutsu', lineage: 'aburame', base: 5, perLevel: 1, hits: 2, chakra: 8, effect: { kind: 'poison', chance: 0.5 } },
   { id: 'rFangs', type: 'taijutsu', lineage: 'inuzuka', base: 6, perLevel: 1, hits: 2, chakra: 6 },
+  // Kits completos do clássico (v0.80.0): as exclusivas voltam, com o nível do despertar e o requisito de dōjutsu ou Portão.
+  // Números do clássico na escala do Roleta (dano base parecido com o da técnica do elemento, custo em dobro).
+  { id: 'rHumanBoulder', type: 'taijutsu', lineage: 'akimichi', base: 14, perLevel: 3, chakra: 8, accuracy: 0.8, minLevel: 4, effect: { kind: 'stun', chance: 0.2 } },
   { id: 'rLeafHurricane', type: 'taijutsu', lineage: 'taijutsuProdigy', base: 6, perLevel: 1, hits: 2, chakra: 4, accuracy: 0.9 },
+  { id: 'rPrimaryLotus', type: 'taijutsu', lineage: 'taijutsuProdigy', base: 16, perLevel: 3, chakra: 8, minLevel: 4, requiresGate: 1, effect: { kind: 'stun', chance: 0.25 } },
+  { id: 'rHiddenLotus', type: 'taijutsu', lineage: 'taijutsuProdigy', base: 6, perLevel: 1, hits: 5, chakra: 12, minLevel: 7, requiresGate: 3 },
+  { id: 'rHypnoticGaze', type: 'genjutsu', lineage: 'uchiha', base: 0, perLevel: 0, chakra: 6, accuracy: 0.8, damageless: true, effect: { kind: 'stun', chance: 1 } },
   { id: 'rPainIllusion', type: 'genjutsu', lineage: 'uchiha', base: 13, perLevel: 2, chakra: 6, effect: { kind: 'fear', chance: 0.2 } },
-  { id: 'rVitalSeal', type: 'taijutsu', lineage: 'hyuuga', base: 9, perLevel: 2, chakra: 4, effect: { kind: 'chakraBlock', chance: 0.25 } },
-  // Uzumaki: a Etiqueta Explosiva saiu do kit (v0.59.0); a natureza elemental ocupa o lugar dela.
+  { id: 'rTsukuyomi', type: 'genjutsu', lineage: 'uchiha', base: 20, perLevel: 3, chakra: 12, minLevel: 7, requiresBuff: 'sharingan', effect: { kind: 'stun', chance: 0.5 } },
+  { id: 'rVitalSeal', type: 'taijutsu', lineage: 'hyuuga', base: 9, perLevel: 2, chakra: 4, accuracy: 1, requiresBuff: 'byakugan', chakraDrain: 3, effect: { kind: 'chakraBlock', chance: 0.25 } },
+  { id: 'rRotation', type: 'ninjutsu', lineage: 'hyuuga', base: 0, perLevel: 0, chakra: 6, minLevel: 4, barrierPct: 0.26, reflectPct: 0.5 },
+  { id: 'rSixtyFour', type: 'taijutsu', lineage: 'hyuuga', base: 5, perLevel: 1, hits: 4, chakra: 10, accuracy: 1, minLevel: 7, requiresBuff: 'byakugan', chakraDrain: 2 },
+  { id: 'rExplosiveSeal', type: 'ninjutsu', lineage: 'uzumaki', base: 12, perLevel: 2, chakra: 6, penetration: 0.5 },
+  { id: 'rChakraChains', type: 'ninjutsu', lineage: 'uzumaki', base: 0, perLevel: 0, chakra: 8, accuracy: 0.75, minLevel: 4, damageless: true, chakraDrain: 4, effect: { kind: 'stun', chance: 1 } },
   // Kekkei genkai: no lugar das técnicas dos dois elementos-pai.
   { id: 'rIce', type: 'ninjutsu', kekkeiGenkai: 'ice', base: 5, perLevel: 1, hits: 3, chakra: 6, accuracy: 0.9, effect: { kind: 'stun', chance: 0.15 } },
   { id: 'rSand', type: 'ninjutsu', kekkeiGenkai: 'sand', base: 12, perLevel: 2, chakra: 6, accuracy: 0.95 },

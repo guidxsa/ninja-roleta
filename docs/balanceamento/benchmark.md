@@ -40,18 +40,20 @@ Nas colunas por estágio da Jornada, os totais (pontos, ryō, compras, kits, Von
 
 ## Cenários de referência
 
-| Cenário | Como medir | Linha de base (v0.77.0, seed 2) |
-|---|---|---|
-| Roleta no Difícil | `sim:origens` | Comum 16%, Prodígio 62%, Uchiha 10%, Hyuuga 12%, Senju 67% |
-| História com o Naruto | `sim:jornada` (canon) | Médio 97%, Difícil 68%, Hardcore 12%; nível médio 8,6 no Médio |
-| Comum no Caminho Ninja | `sim:jornada` (generic:common) | Médio 80%, Difícil 53% |
-| Prodígio no Caminho Ninja | `sim:jornada` (generic:prodigy) | Médio 89%, Difícil 49% |
-| Uchiha no Caminho Ninja | `sim:jornada` (generic:uchiha) | Médio 74%, Difícil 34% |
-| Hyuuga no Caminho Ninja | `sim:jornada` (generic:hyuuga) | Médio 81%, Difícil 43% |
-| Caminho Ninja no Hardcore | `sim:jornada` | 11% a 13% nas quatro classes; a maioria cai no estágio 1 |
-| Infinito | `sim:jornada -- 300 2 5` | a medir na Etapa 4 |
+| Cenário | Como medir | Linha de base (v0.77.0, seed 2) | Atual (v0.80.0) |
+|---|---|---|---|
+| Roleta no Difícil | `sim:origens` | Comum 16%, Prodígio 62%, Uchiha 10%, Hyuuga 12%, Senju 67% | Comum 29%, Prodígio 64%, Uchiha 15%, Hyuuga 28%, Senju 71% (Akimichi 23%) |
+| História com o Naruto | `sim:jornada` (canon) | Médio 97%, Difícil 68%, Hardcore 12%; nível médio 8,6 no Médio | Médio 99%, Difícil 70%, Hardcore 15% |
+| Comum no Caminho Ninja | `sim:jornada` (generic:common) | Médio 80%, Difícil 53% | Médio 81%, Difícil 52% |
+| Prodígio no Caminho Ninja | `sim:jornada` (generic:prodigy) | Médio 89%, Difícil 49% | Médio 92%, Difícil 63% |
+| Uchiha no Caminho Ninja | `sim:jornada` (generic:uchiha) | Médio 74%, Difícil 34% | Médio 74%, Difícil 35% |
+| Hyuuga no Caminho Ninja | `sim:jornada` (generic:hyuuga) | Médio 81%, Difícil 43% | Médio 83%, Difícil 43% |
+| Caminho Ninja no Hardcore | `sim:jornada` | 11% a 13% nas quatro classes; a maioria cai no estágio 1 | 11% a 16% |
+| Infinito | `sim:jornada -- 300 2 5` | a medir na Etapa 4 | — |
 
 ## Linha de base detalhada (v0.77.0)
+
+Os números por versão depois desta (v0.78.0 a v0.80.0) estão no [registro](../registro.md).
 
 ### Roleta, Médio (`--auditoria`)
 

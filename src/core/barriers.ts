@@ -14,6 +14,8 @@ export interface BarrierSpec {
   multiHitResist?: number;
   /** Muralha de Chamas: chance de queimar quem bate nela com taijutsu. */
   burnOnTouch?: number;
+  /** Rotação (Hyuuga): devolve ao atacante esta fração do dano que o escudo segurou. */
+  reflectPct?: number;
 }
 
 export interface BarrierState {
@@ -26,6 +28,7 @@ export interface BarrierState {
   techId: string;
   multiHitResist?: number;
   burnOnTouch?: number;
+  reflectPct?: number;
 }
 
 export interface BarrierContext {
@@ -45,6 +48,7 @@ export function raiseBarrier(techId: string, spec: BarrierSpec | { points: numbe
     techId,
     ...(extra.multiHitResist ? { multiHitResist: extra.multiHitResist } : {}),
     ...(extra.burnOnTouch ? { burnOnTouch: extra.burnOnTouch } : {}),
+    ...(extra.reflectPct ? { reflectPct: extra.reflectPct } : {}),
   };
 }
 

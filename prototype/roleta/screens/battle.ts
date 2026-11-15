@@ -3,10 +3,10 @@ import { scaleVillain } from '../../../src/core/difficulty';
 import { gateHpUpkeep, gateUpkeep } from '../../../src/core/gates';
 import { hitSlices } from '../../../src/core/hit';
 import { xpGain } from '../../../src/core/player';
-import { type RBattleOptions, type RBattle, kitOf, playerAttackOdds, playerHitDamage, playerBarrierMult, techCost, canUseTechnique, canUseActive, canUseItem, cloneRevealsIntent, startRoletaBattle, useActive, useRoletaItem, playRoletaRound, type RAction, type REvent } from '../../../src/core/roleta/battle';
+import { type RBattleOptions, type RBattle, kitOf, kitActives, activeCost, gateForceChance, gateUnlocked, battleTechniques, playerAttackOdds, playerHitDamage, playerBarrierMult, techCost, canUseTechnique, canUseActive, canUseItem, cloneRevealsIntent, startRoletaBattle, useActive, useRoletaItem, playRoletaRound, type RAction, type REvent } from '../../../src/core/roleta/battle';
+import type { RActive } from '../../../src/data/roleta/kits';
 import type { CloneKind } from '../../../src/core/clones';
 import type { BarrierState } from '../../../src/core/barriers';
-import { playerTechniques } from '../../../src/core/roleta/player';
 import { type VillainDef, type ConsumableId } from '../../../src/core/types';
 import { CONSUMABLES } from '../../../src/data/events';
 import { roletaData as rdata } from '../../../src/data/roleta/index';
@@ -148,6 +148,9 @@ export const RACTIVE_ICONS: Record<string, string> = {
   sharingan: 'sharingan',
   byakugan: 'byakugan',
   seal: 'scroll',
+  pills: 'pill',
+  drunkenFist: 'confusion',
+  copy: 'mirrors',
 };
 
 /** Técnica do Roleta que cria este tipo de clone (para o nome na tela). */
@@ -182,6 +185,7 @@ export function badgesHtml(s: RBattle, side: 'player' | 'villain'): string {
     if (v.lastStand) add('heartbreak', S.ui.lastStand, 'bad', St.lastStand);
     if (v.monster) add('claw', S.ui.monster, 'bad', St.monster);
     if (v.skipNext === 'seal') add('scroll', R.actives.seal!.name, 'good', R.actives.seal!);
+    if (v.sealed) add('scroll', R.ui.sealedOn(techName(v.sealed.id), v.sealed.turns), 'good', R.actives.seal!);
     if (v.barrier) add('barrier', R.ui.barrierOn(v.barrier.points, v.barrier.turns), 'bad', { name: techName(v.barrier.techId), desc: barrierDesc(v.barrier) });
     // Gênio (Nara) e clone de madeira (Mokuton): vê a próxima ação do vilão.
     if ((kitOf(s.player, rdata).passive === 'genius' || cloneRevealsIntent(s, rdata)) && v.intent) {
@@ -192,15 +196,18 @@ export function badgesHtml(s: RBattle, side: 'player' | 'villain'): string {
   }
   const fx = s.fx;
   out.push(...effectChips(fx.effects, 'bad'));
-  if (fx.buff?.kind === 'gates') {
-    // Portões: sem contagem de rodadas; o selo mostra a próxima manutenção.
+  if (fx.gate) {
+    // Portões: sem contagem de rodadas; o selo mostra o portão e a próxima manutenção.
     const a = R.actives.gates!;
-    const next = gateUpkeep(fx.gateRounds + 1, rdata.base.balance.gateCosts);
-    const hp = gateHpUpkeep(1, s.player.maxHp, rdata.base.balance.gateCosts);
-    add('gates', R.ui.gatesOn(a.name, next, hp), 'good', { name: a.name, desc: `${a.desc} ${R.ui.gatesNext(next, hp)}` });
-  } else if (fx.buff) {
-    const a = R.actives[fx.buff.kind]!;
-    add(RACTIVE_ICONS[fx.buff.kind] ?? 'ninjutsu', R.ui.buffOn(a.name, fx.buff.turns), 'good', a);
+    const next = gateUpkeep(fx.gate.rounds + 1, rdata.base.balance.gateCosts);
+    const hp = gateHpUpkeep(fx.gate.stage + 1, s.player.maxHp, rdata.base.balance.gateCosts);
+    add('gates', R.ui.gatesStage(fx.gate.stage + 1, next, hp), 'good', { name: a.name, desc: `${a.desc} ${R.ui.gatesNext(next, hp)}` });
+  }
+  // Fortalecimentos do kit: vários ao mesmo tempo (Expansão e pílula, Sharingan...).
+  for (const b of fx.buffs) {
+    if (b.kind === 'pill') add('pill', R.ui.buffOn(R.pills[b.pill ?? '']!, b.turns), 'good', R.actives.pills!);
+    else if (b.kind === 'exhausted') add('heartbreak', R.ui.buffOn(R.ui.exhausted.name, b.turns), 'bad', R.ui.exhausted);
+    else add(RACTIVE_ICONS[b.kind] ?? 'ninjutsu', R.ui.buffOn(R.actives[b.kind]!.name, b.turns), 'good', R.actives[b.kind]!);
   }
   if (fx.cloakTurns > 0) add('cloak', R.ui.buffOn(R.passives.jinchuuriki!.name, fx.cloakTurns), 'good', R.passives.jinchuuriki!);
   if (fx.vitalTurns > 0) add('heart', R.ui.buffOn(R.passives.vitalForce!.name, fx.vitalTurns), 'good', R.passives.vitalForce!);
@@ -249,13 +256,13 @@ export function techButton(s: RBattle, t: RTechniqueDef, enabled: boolean): stri
     title: esc(techName(t.id)),
     // Clone e barreira: sem dano nem roleta de acerto; mostram o que fazem e o custo. Contra a barreira do vilão, o
     // golpe mostra o encontro de elementos no escudo.
-    extra: `${t.clone ? R.ui.cloneLine : t.barrierPct ? R.ui.barrierLine(barrierPoints(s, t)) : `${R.ui.techLine(dmg, t.hits ?? 1, Math.round(odds.hit * 100))}${vsBarrier(s, t)}`} · ${costTag(s, techCost(s, t, rdata))}`,
+    extra: `${t.clone ? R.ui.cloneLine : t.barrierPct ? R.ui.barrierLine(barrierPoints(s, t)) : t.damageless && t.effect ? R.ui.effectLine(R.effects[t.effect.kind]!.name, Math.round(odds.hit * 100)) : `${R.ui.techLine(dmg, t.hits ?? 1, Math.round(odds.hit * 100))}${vsBarrier(s, t)}`} · ${costTag(s, techCost(s, t, rdata))}`,
     tip: t.clone
       ? tip(techName(t.id), cloneDesc(t.clone))
       : t.barrierPct
         ? tip(techName(t.id), `${R.ui.barrierTip(barrierPoints(s, t), rdata.base.balance.barrier.turns)} ${t.element ? (R.ui.barrierSpecial[t.element] ?? '') : ''}`)
         : rTechTip(s.player, t),
-    enabled: enabled && canUseTechnique(s, t, rdata) && !(t.clone && s.fx.clone),
+    enabled: enabled && canUseTechnique(s, t, rdata),
   });
 }
 
@@ -273,7 +280,7 @@ export const actionGroup = (title: string, body: string, compact = false) =>
 /** Ações em seções: técnicas (com a ativa da linhagem), Defender e Concentrar, e os itens da bolsa. */
 export function actionGrid(s: RBattle, enabled: boolean): string {
   const p = s.player;
-  const techs = playerTechniques(p, rdata).map((t) => techButton(s, t, enabled));
+  const techs = battleTechniques(s, rdata).map((t) => techButton(s, t, enabled));
   const restN = Math.min(p.maxChakra - p.chakra, Math.max(1, Math.floor(p.maxChakra * rdata.r.rest.chakraPct)));
   const guard = actionCell({ choice: 'guard', cls: 'act-stance', ico: icon('stance'), title: R.ui.guard, extra: '', tip: tip(R.ui.guard, R.ui.guardTip), enabled });
   const rest = actionCell({ choice: 'rest', cls: 'act-rest', ico: icon('rest'), title: R.ui.rest, extra: `+${restN} ck`, tip: tip(R.ui.rest, R.ui.restTip(restN)), enabled });
@@ -285,27 +292,50 @@ export function actionGrid(s: RBattle, enabled: boolean): string {
   const grid = (cells: string[]) => `<div class="act-grid">${cells.join('')}</div>`;
   const G = R.ui.actionGroups;
   return [
-    actionGroup(G.techniques, `${activeButton(s, enabled)}${grid(techs)}`),
+    actionGroup(G.techniques, `${activeButtons(s, enabled)}${grid(techs)}`),
     actionGroup(G.actions, grid([guard, rest]), true),
     items.length ? actionGroup(G.items, grid(items), true) : '',
   ].join('');
 }
 
-/** Ativa da linhagem (grátis): botão próprio acima das técnicas, com os usos que sobram. */
-export function activeButton(s: RBattle, enabled: boolean): string {
-  const kind = kitOf(s.player, rdata).active;
-  if (!kind || s.fx.activeUses <= 0) return '';
-  const a = R.actives[kind]!;
-  const ok = enabled && canUseActive(s, rdata);
-  if (kind === 'gates') {
-    // Portões: abrir (custo da abertura) ou fechar; a dica traz a próxima manutenção.
-    const open = s.fx.buff?.kind === 'gates';
-    const label = open ? R.ui.gatesCloseLabel(a.name) : R.ui.gatesOpen(a.name, rdata.r.kits.gates.activation);
-    const next = gateUpkeep(open ? s.fx.gateRounds + 1 : 1, rdata.base.balance.gateCosts);
-    const hp = gateHpUpkeep(1, s.player.maxHp, rdata.base.balance.gateCosts);
-    return `<div class="free-row"><button class="btn focus-btn" data-active ${ok ? '' : 'aria-disabled="true"'}${tip(a.name, `${a.desc} ${R.ui.gatesNext(next, hp)}`)}>${icon('gates')}<span>${label}</span></button></div>`;
+/** Ativas da linhagem (grátis, uma por turno): botões acima das técnicas, com os usos que sobram e o custo. */
+export function activeButtons(s: RBattle, enabled: boolean): string {
+  const kinds = kitActives(s.player, rdata);
+  if (!kinds.length) return '';
+  const btn = (kind: RActive, label: string, desc: string, opts: { force?: boolean } = {}) => {
+    const ok = enabled && canUseActive(s, rdata, kind, opts);
+    const name = R.actives[kind]!.name;
+    return `<button class="btn focus-btn" data-active="${kind}"${opts.force ? ' data-force' : ''} ${ok ? '' : 'aria-disabled="true"'}${tip(name, desc)}>${icon(RACTIVE_ICONS[kind] ?? 'ninjutsu')}<span>${label}</span></button>`;
+  };
+  const out: string[] = [];
+  for (const kind of kinds) {
+    const a = R.actives[kind]!;
+    const uses = s.fx.uses[kind];
+    if (kind === 'gates') {
+      // Portões: fechar quando abertos; fechados, abrir o liberado e, se houver um acima, tentar Forçar.
+      const costs = rdata.base.balance.gateCosts;
+      if (s.fx.gate) {
+        const next = gateUpkeep(s.fx.gate.rounds + 1, costs);
+        out.push(btn(kind, R.ui.gatesCloseLabel(a.name), `${a.desc} ${R.ui.gatesNext(next, gateHpUpkeep(s.fx.gate.stage + 1, s.player.maxHp, costs))}`));
+        continue;
+      }
+      if ((uses ?? 1) <= 0) continue;
+      const st = gateUnlocked(s, rdata);
+      if (st < 0) continue;
+      out.push(btn(kind, `${a.name} ×${uses ?? 1} · ${R.ui.gatesOpenStage(st + 1, activeCost(s, kind, rdata))}`, `${a.desc} ${R.ui.gatesNext(gateUpkeep(1, costs), gateHpUpkeep(st + 1, s.player.maxHp, costs))}`));
+      const chance = gateForceChance(s, rdata);
+      if (chance !== null) {
+        const pct = Math.round(chance * 100);
+        const fail = Math.round(rdata.base.balance.gates.force.failHpPct * 100);
+        out.push(btn(kind, R.ui.gatesForce(st + 2, pct), `${R.ui.gatesForceTip(st + 2, pct, fail)} ${R.ui.activeTip}`, { force: true }));
+      }
+      continue;
+    }
+    // Ativa sem uso: some (as que só o chakra limita ficam sempre).
+    if (uses !== undefined && uses <= 0) continue;
+    out.push(btn(kind, R.ui.activeCost(a.name, activeCost(s, kind, rdata), uses ?? null), `${a.desc} ${R.ui.activeTip}`));
   }
-  return `<div class="free-row"><button class="btn focus-btn" data-active ${ok ? '' : 'aria-disabled="true"'}${tip(a.name, `${a.desc} ${R.ui.activeTip}`)}>${icon(RACTIVE_ICONS[kind] ?? 'ninjutsu')}<span>${R.ui.activeLabel(a.name, s.fx.activeUses)}</span></button></div>`;
+  return out.length ? `<div class="free-row">${out.join('')}</div>` : '';
 }
 
 /** Número/ícone que sobe sobre o HUD. `fx`: corte diagonal (crítico) ou imagem residual (esquiva). */
@@ -427,7 +457,7 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
     renderActions(state, false);
     let next: RBattle;
     const choice = btn.dataset.choice ?? '';
-    if (btn.hasAttribute('data-active')) next = useActive(state, rdata, ses.rng);
+    if (btn.hasAttribute('data-active')) next = useActive(state, rdata, ses.rng, btn.dataset.active as RActive, { force: btn.hasAttribute('data-force') });
     else if (choice.startsWith('item:')) next = useRoletaItem(state, choice.slice(5) as ConsumableId, rdata, ses.rng);
     else next = playRoletaRound(state, btn.dataset.choice as RAction, rdata, ses.rng);
     await animate(next.log.slice(state.log.length), next, state);
@@ -521,8 +551,10 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
           const crit = ev.crit === true;
           if (ev.source === 'attack' && lastAttack) {
             log(RL.attackHit(who(lastAttack.side), lastAttack.tech, ev.amount, crit), lastAttack.side === 'player' ? 'mine' : 'theirs');
+            if (ev.mult !== undefined) log(RL.drunk(String(ev.mult).replace('.', ',')), 'muted', 'confusion');
             lastAttack = null;
-          } else if (ev.source === 'burn' || ev.source === 'poison') log(RL.tick[ev.source]!(who(target), ev.amount), target === 'villain' ? 'good' : 'bad', EFFECT_ICONS[ev.source]);
+          } else if (ev.source === 'reflect') log(RL.reflect(ev.amount), 'good', 'barrier');
+          else if (ev.source === 'gates' || ev.source === 'pill') log(RL.selfCost(ev.amount), 'bad', ev.source === 'gates' ? 'gates' : 'pill'); else if (ev.source === 'burn' || ev.source === 'poison') log(RL.tick[ev.source]!(who(target), ev.amount), target === 'villain' ? 'good' : 'bad', EFFECT_ICONS[ev.source]);
           else if (ev.source === 'toad') log(RL.toad(ev.amount), 'good', 'toad');
           else if (ev.source === 'dog') log(RL.dog(ev.amount), 'good', 'beast');
           else if (ev.source === 'tag') log(RL.tag(ev.amount), 'good', 'tag');
@@ -568,6 +600,12 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
           }
           else log(ev.reason === 'chakra' ? RL.gatesExhausted : RL.gatesClose, 'muted', 'gates');
           break;
+        case 'upkeep':
+          log(RL.upkeep[ev.kind]!(ev.cost), 'muted', ev.kind === 'cloak' ? 'cloak' : ev.kind);
+          break;
+        case 'buffEnd':
+          log(RL.buffEnd(ev.kind === 'cloak' ? R.passives.jinchuuriki!.name : (R.actives[ev.kind]?.name ?? ev.kind)), 'muted', ev.kind === 'cloak' ? 'cloak' : RACTIVE_ICONS[ev.kind]);
+          break;
         case 'clone':
           // Clone: aparece, recebe o golpe (e some, ou o de terra aguenta) ou bate junto.
           if (ev.action === 'block') floatNumber(pcard, icon('clones'), 'miss', 'evade');
@@ -607,10 +645,14 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
           log(RL.item[ev.id]!, 'good', ITEM_ICONS[ev.id]);
           break;
         case 'active': {
-          const kind = kitOf(next.player, rdata).active;
           const name = R.actives[ev.kind]?.name ?? ev.kind;
-          if (kind) floatNumber(pcard, icon(RACTIVE_ICONS[ev.kind] ?? 'ninjutsu'), 'ck');
-          log(RL.active(name, ev.success), ev.success ? 'good' : 'muted', RACTIVE_ICONS[ev.kind]);
+          const ico = RACTIVE_ICONS[ev.kind];
+          floatNumber(pcard, icon(ico ?? 'ninjutsu'), 'ck');
+          if (ev.gate !== undefined) log(ev.forced === false ? RL.gatesForceFail(ev.gate) : RL.gatesOpen(ev.gate), ev.forced === false ? 'muted' : 'good', ico);
+          else if (ev.pill) log(RL.pill(R.pills[ev.pill] ?? ev.pill), 'good', ico);
+          else if (ev.sealed) log(RL.sealed(techName(ev.sealed)), 'good', ico);
+          else if (ev.copied) log(RL.copied(techName(ev.copied)), 'good', ico);
+          else log(RL.active(name, ev.success), ev.success ? 'good' : 'muted', ico);
           break;
         }
         case 'passive':

@@ -107,11 +107,18 @@ export function rTechTip(p: PlayerState, t: RTechniqueDef): string {
     t.critBonus && R.ui.critTip(pct(t.critBonus)),
     t.penetration && R.ui.penTip(pct(t.penetration)),
     t.lifesteal && R.ui.lifestealTip(pct(t.lifesteal)),
+    t.damageless && R.ui.effectOnlyTip,
     t.effect && R.ui.effectChance(R.effects[t.effect.kind]!.name, pct(t.effect.chance)),
+    t.chakraDrain && R.ui.drainTip(t.chakraDrain),
+    t.reflectPct && R.ui.reflectTip(pct(t.reflectPct)),
+    t.requiresBuff && R.ui.requiresBuffTip(R.actives[t.requiresBuff]!.name),
+    t.requiresGate && R.ui.requiresGateTip(t.requiresGate),
+    t.minLevel && R.ui.levelTip(t.minLevel),
     p.ninjaToolLevel > 0 && S.bag.ninjaTool.desc(p.ninjaToolLevel * B.ninjaTool.baseDamagePerLevel),
     T.cost(t.chakra),
   ]);
-  return tip(S.roleta.techniques[t.id] ?? t.id, body);
+  const name = t.copyOf ? R.ui.copied(R.techniques[t.copyOf] ?? t.copyOf) : (R.techniques[t.id] ?? t.id);
+  return tip(name, body);
 }
 
 /** Ficha da técnica do vilão (elemento: o da técnica ou o do vilão). */

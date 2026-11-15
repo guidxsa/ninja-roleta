@@ -2,6 +2,31 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Balanceamento aprovado pelo usuário (v0.78.0 a v0.80.0, 15/11/2026)
+
+Escolhas do usuário sobre o [diagnóstico](balanceamento/diagnostico.md), implementadas em fases. Simulação: `npm run sim:origens -- --runs 300 --seed 2 --auditoria` e `npm run sim:jornada -- 300 2 --auditoria`, vitória do bot.
+
+- **v0.78.0 (fase 1)**: dano geral soma (G1); filtro de compatibilidade das relíquias (J4); relíquias fracas refeitas nos dois modos (J4, R3); metade do efeito de equipe nas mais fortes (J3); Pesos de treino do Roleta viram +1 de taijutsu a cada 2 vitórias (R5). Decidido sozinho: os números das relíquias refeitas (tabela em [jornada/reliquias.md](jornada/reliquias.md)).
+- **v0.79.0 (fase 2)**: Portões com custo misto nos dois modos (C4): manter custa metade do chakra e 1% do HP máximo por nível do portão.
+- **v0.80.0 (fase 3)**: Roleta com os kits completos do clássico nas 8 origens do sorteio (R1), adaptados ([roleta/combate.md](roleta/combate.md#kits)). Decidido sozinho: os números das técnicas que voltam na escala do Roleta (Rolo Colossal 14+3, Lótus Primária 16+3, Lótus Oculta 6+1 ×5, Tsukuyomi 20+3, 64 Palmas 5+1 ×4, Etiqueta 12+2), Olhar Hipnótico e Correntes como atordoamento sem dano, isca da Fera como +10% de esquiva, Cópia só no turno, Selamento tirando a técnica da roleta do vilão, e o bot das ativas novas.
+
+Roleta, vitória por origem (Fácil / Médio / Difícil / Hardcore):
+
+| Origem | Linha de base | v0.78.0 | v0.79.0 | v0.80.0 |
+|---|---|---|---|---|
+| Comum | 83 / 48 / 16 / 12 | 79 / 55 / 20 / 11 | 79 / 54 / 19 / 12 | 89 / 57 / 29 / 16 |
+| Akimichi | 94 / 72 / 44 / 30 | 92 / 74 / 41 / 35 | 92 / 73 / 42 / 33 | 92 / **59** / **23** / **13** |
+| Inuzuka | 94 / 70 / 35 / 28 | 96 / 73 / 44 / 31 | 96 / 74 / 49 / 36 | 95 / 75 / 44 / 39 |
+| Prodígio | 98 / 87 / 62 / 52 | 99 / 87 / 60 / 48 | 98 / 91 / 66 / 52 | 98 / 91 / 64 / 47 |
+| Uchiha | 80 / 34 / 10 / 10 | 83 / 41 / 12 / 5 | 82 / 42 / 11 / 6 | 85 / 38 / 15 / 6 |
+| Hyuuga | 79 / 43 / 12 / 6 | 80 / 47 / 13 / 14 | 81 / 46 / 13 / 10 | 89 / 58 / 28 / 15 |
+| Uzumaki | 91 / 65 / 37 / 29 | 94 / 65 / 38 / 24 | 95 / 67 / 33 / 29 | 90 / 66 / 41 / 31 |
+| Senju | 97 / 85 / 67 / 53 | 98 / 88 / 68 / 53 | 99 / 87 / 67 / 52 | 98 / 92 / 71 / 59 |
+
+Jornada, vitória (Fácil / Médio / Difícil / Hardcore), linha de base → v0.79.0 (a v0.80.0 não mexe na Jornada): História 100/97/68/12 → 100/99/70/15; Comum 99/80/53/13 → 99/81/52/14; prodígio 100/89/49/12 → 100/92/63/16 (Portões com custo misto); Uchiha 99/74/34/11 → 99/74/35/11; Hyuuga 99/81/43/12 → 99/83/43/14.
+
+Leitura: o Akimichi caiu muito com o Corpo pesado pela razão de peso (perde força contra vilões de HP alto, como os chefes) e a Expansão sem a resistência a mais; o Hyuuga e o Comum subiram (Byakugan longo, Esforço com mais usos, Nunca desistir); o Uchiha segue abaixo do alvo. Nada foi compensado: vai para [decisoes.md](decisoes.md).
+
 ## Frentes combinadas (itens 5 a 9)
 
 Combinado em 31/10/2026 (brainstorm com o usuário). Os números são rascunho: a simulação decide e o usuário faz o ajuste fino. Cada frente vira uma versão própria.

@@ -6,7 +6,7 @@ import { lineageOf } from '../../src/core/origin';
 import { type PlayerState, xpToNextLevel, equipTrainingWeights } from '../../src/core/player';
 import { type ProgressEffect, type NextFightMods, type Step, type Roll, spendCoin, rollItem, applyItem } from '../../src/core/progression';
 import { createRng } from '../../src/core/rng';
-import { type RBattle, techBase, kitOf } from '../../src/core/roleta/battle';
+import { type RBattle, techBase, kitOf, kitActives } from '../../src/core/roleta/battle';
 import { playerTechniques } from '../../src/core/roleta/player';
 import { type RRun, currentCategory } from '../../src/core/roleta/run';
 import { summarizeRoletaFight } from '../../src/core/roleta/stats';
@@ -85,6 +85,8 @@ export const foePortrait = (id: string, size: 'sm' | 'md' | 'lg' = 'md') => {
 export const techName = (id: string): string => {
   // Cópia (Uchiha): `copy:<vilão>.<técnica>`.
   if (id.startsWith('copy:')) return `${techName(id.slice(id.indexOf('.') + 1))} (cópia)`;
+  // Cópia do Sharingan no Roleta: `rCopy:<técnica do vilão>`.
+  if (id.startsWith('rCopy:')) return S.roleta.ui.copied(techName(id.slice(6)));
   return S.roleta.techniques[id] ?? S.techniques[id] ?? id;
 };
 /** Chip de elemento com ícone; `withTip` = false dentro de botões (o botão já tem a própria dica). */
@@ -442,11 +444,12 @@ export function passiveItems(p: PlayerState, tag: 'li' | 'p'): string[] {
   );
 }
 
-/** Passiva e ativa do kit enxuto (mais a do jinchuuriki). */
+/** Passiva, ativas já liberadas pelo nível (mais a do jinchuuriki) e o despertar alcançado. */
 export function passiveEntries(p: PlayerState): PassiveEntry[] {
   const out: PassiveEntry[] = passiveTraitEntries(p);
-  const active = kitOf(p, rdata).active;
-  if (active) out.push({ ico: icon(RACTIVE_ICONS[active] ?? 'ninjutsu'), ...S.roleta.actives[active]! });
+  for (const active of kitActives(p, rdata)) out.push({ ico: icon(RACTIVE_ICONS[active] ?? 'ninjutsu'), ...S.roleta.actives[active]! });
+  const aw = S.awakening[p.origin.lineageId ?? 'common'];
+  for (const level of [4, 7]) if (aw?.[level] && p.level >= level) out.push({ ico: clanSymbol(p.origin.lineageId), name: S.ui.awakeningTitle(level), desc: aw[level]! });
   return out;
 }
 

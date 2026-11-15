@@ -1,5 +1,6 @@
 // Jogador do Roleta enxuto (docs/roleta/combate.md#técnicas): a mesma ficha da base (`PlayerState`), com o kit fixo
-// de técnicas que sobem sozinhas com o nível. Sem upgrades à escolha, sem linhas elementais, sem despertar.
+// de técnicas que sobem sozinhas com o nível. Sem upgrades à escolha e sem linhas elementais; as exclusivas do
+// despertar (níveis 4 e 7) já estão no kit e aparecem quando o nível chega (v0.80.0).
 import type { Difficulty } from '../difficulty';
 import { hasElementalNinjutsu } from '../nature';
 import { lineageOf } from '../origin';
@@ -58,6 +59,6 @@ export function createRoletaPlayer(origin: Origin, data: RoletaData, difficulty:
   };
 }
 
-/** Técnicas do jogador, na ordem do kit. */
+/** Técnicas do jogador já liberadas pelo nível (despertar), na ordem do kit. */
 export const playerTechniques = (p: PlayerState, data: RoletaData): RTechniqueDef[] =>
-  p.techniques.map((id) => data.techniques[id]).filter((t): t is RTechniqueDef => Boolean(t));
+  p.techniques.map((id) => data.techniques[id]).filter((t): t is RTechniqueDef => Boolean(t) && p.level >= (t!.minLevel ?? 1));

@@ -21,10 +21,14 @@ import {
   type Step,
 } from '../core/progression';
 import {
+  activeCost,
+  battleTechniques,
+  buffOn,
   canUseActive,
   canUseItem,
   canUseTechnique,
-  kitOf,
+  gateForceChance,
+  kitActives,
   playerAttackOdds,
   playerHitDamage,
   playRoletaRound,
@@ -50,7 +54,8 @@ import {
   villainFor,
 } from '../core/roleta/run';
 import type { RCategory } from '../data/roleta/villains';
-import { playerTechniques } from '../core/roleta/player';
+import type { RActive } from '../data/roleta/kits';
+import type { RTechniqueDef } from '../data/roleta/techniques';
 import type { Rng } from '../core/rng';
 import type { VillainDef } from '../core/types';
 import { auditRoletaFight, type FightAudit } from './audit';
@@ -59,12 +64,24 @@ import { auditRoletaFight, type FightAudit } from './audit';
 export const MAX_ROUNDS = 200;
 
 /** Dano esperado de uma técnica agora (acerto × dano × golpes, com o crítico). */
-function expected(s: RBattle, id: string, data: RoletaData): number {
-  const t = data.techniques[id]!;
+function damageValue(s: RBattle, t: RTechniqueDef, data: RoletaData): number {
+  if (t.damageless || t.barrierPct || t.clone) return 0;
   const odds = playerAttackOdds(s, t, data);
   const per = playerHitDamage(s, t, data);
   const critMult = data.base.balance.crit.multiplier;
   return (odds.hit - odds.crit + odds.crit * critMult) * per * (t.hits ?? 1);
+}
+
+/**
+ * Valor da técnica para o bot: o dano esperado; a que só atordoa (Olhar Hipnótico, Correntes) vale 1,5 golpe do
+ * melhor dano, se o vilão pode ser atordoado e ainda tem HP para isso valer.
+ */
+function expected(s: RBattle, t: RTechniqueDef, data: RoletaData): number {
+  if (!t.damageless) return damageValue(s, t, data);
+  const v = s.villain;
+  if (t.effect?.kind !== 'stun' || v.effects.some((e) => e.kind === 'stun' || e.kind === 'stunGuard') || v.hp < v.maxHp * 0.3) return 0;
+  const best = Math.max(0, ...battleTechniques(s, data).map((x) => damageValue(s, x, data)));
+  return playerAttackOdds(s, t, data).hit * best * 1.5;
 }
 
 /** Item do bot antes da ação (não gasta a ação, um por turno): só nos apertos ou para pagar o golpe mais forte. */
@@ -75,8 +92,8 @@ export function chooseRoletaItem(s: RBattle, data: RoletaData): ConsumableId | n
   if (ok('medKit') && p.hp < p.maxHp * 0.3 && s.fx.effects.some((e) => e.kind !== 'stunGuard')) return 'medKit';
   if (ok('smokeBomb') && p.hp < p.maxHp * 0.25) return 'smokeBomb';
   if (ok('soldierPill')) {
-    const techs = playerTechniques(p, data).filter((t) => !t.clone);
-    const best = (list: typeof techs) => list.map((t) => ({ t, e: expected(s, t.id, data) })).sort((a, b) => b.e - a.e)[0];
+    const techs = battleTechniques(s, data).filter((t) => !t.clone);
+    const best = (list: typeof techs) => list.map((t) => ({ t, e: expected(s, t, data) })).sort((a, b) => b.e - a.e)[0];
     const bestNow = best(techs.filter((t) => canUseTechnique(s, t, data)));
     const bestAll = best(techs);
     if (bestAll && bestAll.t.id !== bestNow?.t.id && bestAll.e > (bestNow?.e ?? 0) * 1.5 && p.hp > p.maxHp * 0.5) return 'soldierPill';
@@ -87,28 +104,74 @@ export function chooseRoletaItem(s: RBattle, data: RoletaData): ConsumableId | n
 /** Ação do bot: o golpe de mais dano esperado que dá para pagar, ou Concentrar se valer a pena. */
 export function chooseRoletaAction(s: RBattle, data: RoletaData): RAction {
   const p = s.player;
-  const all = playerTechniques(p, data);
+  const all = battleTechniques(s, data);
   const bunshin = all.find((t) => t.clone);
   if (bunshin && !s.fx.clone && p.hp < p.maxHp * 0.7 && canUseTechnique(s, bunshin, data)) return `tech:${bunshin.id}`;
   const techs = all.filter((t) => !t.clone);
   const affordable = techs.filter((t) => canUseTechnique(s, t, data));
-  const best = (list: typeof techs) => list.map((t) => ({ t, e: expected(s, t.id, data) })).sort((a, b) => b.e - a.e)[0];
+  // Técnica que pede dōjutsu ou Portão fora de hora não conta como "a melhor para juntar chakra".
+  const reachable = techs.filter((t) => !t.requiresBuff && !t.requiresGate);
+  const best = (list: typeof techs) => list.map((t) => ({ t, e: expected(s, t, data) })).sort((a, b) => b.e - a.e)[0];
   const bestNow = best(affordable);
-  const bestAll = best(techs);
+  const bestAll = best([...reachable, ...affordable]);
   if (bestAll && bestNow && bestAll.t.id !== bestNow.t.id && bestAll.e > bestNow.e * 1.5 && p.hp > p.maxHp * 0.5) return 'rest';
   return bestNow ? `tech:${bestNow.t.id}` : 'rest';
 }
 
-/** Ativa grátis: o bot usa logo (os Portões só com HP alto). */
-function wantsActive(s: RBattle, data: RoletaData): boolean {
-  if (!canUseActive(s, data)) return false;
-  const kind = kitOf(s.player, data).active;
-  if (kind === 'gates') {
-    if (s.fx.buff?.kind === 'gates') return false;
-    const g = data.base.balance.gateCosts;
-    return s.player.chakra >= data.r.kits.gates.activation + gateUpkeep(1, g) + gateUpkeep(2, g);
+/** Ordem em que o bot olha as ativas (uma por turno). */
+const ACTIVE_ORDER: RActive[] = ['gates', 'sharingan', 'byakugan', 'expansion', 'beast', 'effort', 'seal', 'copy', 'pills', 'drunkenFist', 'shadow', 'mindTransfer', 'plague'];
+
+/**
+ * Ativa grátis do bot (uma por turno): usa logo o que liga fortalecimento, se sobra chakra para golpear; os Portões só
+ * com HP alto (e fecha abaixo de 25%), Forçar com 60% ou mais; o Selamento contra a técnica mais forte do vilão; a
+ * Cópia quando não tem nada copiado; as pílulas com o vilão acima de 40% do HP.
+ */
+function chooseActive(s: RBattle, data: RoletaData): { kind: RActive; force?: boolean } | null {
+  const p = s.player;
+  const mine = kitActives(p, data);
+  const cheapest = Math.min(...battleTechniques(s, data).filter((t) => t.chakra > 0 && !t.clone && !t.barrierPct).map((t) => t.chakra), 99);
+  for (const kind of ACTIVE_ORDER) {
+    if (!mine.includes(kind)) continue;
+    if (kind === 'gates' && s.fx.gate) {
+      if (p.hp < p.maxHp * 0.25 && canUseActive(s, data, kind)) return { kind };
+      continue;
+    }
+    if (!canUseActive(s, data, kind)) continue;
+    const spare = p.chakra - activeCost(s, kind, data);
+    switch (kind) {
+      case 'gates': {
+        const g = data.base.balance.gateCosts;
+        if (p.hp < p.maxHp * 0.5 || spare < gateUpkeep(1, g) + gateUpkeep(2, g)) continue;
+        const chance = gateForceChance(s, data);
+        if (chance !== null && chance >= 0.6 && p.hp > p.maxHp * 0.6 && canUseActive(s, data, kind, { force: true })) return { kind, force: true };
+        return { kind };
+      }
+      case 'sharingan':
+      case 'byakugan':
+      case 'expansion':
+      case 'beast':
+        if (spare < Math.min(cheapest, 4)) continue;
+        return { kind };
+      case 'seal': {
+        const intent = s.villain.intent;
+        const top = [...s.villain.techniques].sort((a, b) => b.baseDamage - a.baseDamage)[0];
+        if (intent?.kind !== 'tech' || intent.id !== top?.id) continue;
+        return { kind };
+      }
+      case 'copy':
+        if (s.fx.copied) continue;
+        return { kind };
+      case 'pills':
+        if (s.villain.hp < s.villain.maxHp * 0.4) continue;
+        return { kind };
+      case 'drunkenFist':
+        if (buffOn(s, 'exhausted')) continue;
+        return { kind };
+      default:
+        return { kind };
+    }
   }
-  return true;
+  return null;
 }
 
 export function runRoletaBattle(
@@ -123,7 +186,8 @@ export function runRoletaBattle(
   let s = startRoletaBattle(player, villain, options, data, rng);
   onStart?.(s);
   while (s.status === 'ongoing' && s.round < MAX_ROUNDS) {
-    if (wantsActive(s, data)) s = useActive(s, data, rng);
+    const active = chooseActive(s, data);
+    if (active) s = useActive(s, data, rng, active.kind, { force: active.force });
     if (s.status !== 'ongoing') break;
     const item = chooseRoletaItem(s, data);
     if (item) s = useRoletaItem(s, item, data, rng);

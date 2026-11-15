@@ -1,5 +1,3 @@
-import type { RActive } from './kits';
-
 // Números do Roleta enxuto (docs/roleta/combate.md). Valores provisórios: ajustar com `npm run sim`.
 // Acerto, crítico, dano, dificuldade, níveis, eventos e recompensas vêm do `balance` da base.
 
@@ -17,33 +15,21 @@ export const roletaBalance = {
   chakraRegen: { pct: 0.03, min: 1 },
   villainChakra: { restPct: 0.25, regenPct: 0.05 },
   // Efeitos: os mesmos da Jornada, em `balance.effects` (v0.77.0).
-  // Passivas das linhagens (kits enxutos).
+  // Kits completos do clássico (v0.80.0): passivas, ativas e despertar usam os números da base (`balance.passives`,
+  // `awakening`, `dojutsu`, `gates`, `expansion`, `effort`, `beast`, `drunkenFist`, `pills`, `seal`, `copy`,
+  // `vitalForce`, `jinchuuriki`). Aqui fica só o que o Roleta adapta, e os kits enxutos das linhagens guardadas.
   passives: {
-    heavyBodyMult: 1.15,
+    // Yamanaka (guardado): −acerto do vilão.
     mindReadingAccuracy: 0.1,
-    duoChance: 0.25,
-    dogDamagePct: 0.4,
-    preciseFistPen: 0.3,
-    vitalityPct: 0.02,
-    vitalForce: { belowPct: 0.3, regenPct: 0.04, turns: 3 },
   },
-  // Ativas: usos por luta e efeito (turnos contando o da ativação).
   kits: {
-    uses: { effort: 1, shadow: 2, expansion: 1, mindTransfer: 1, plague: 1, beast: 1, gates: 1, sharingan: 1, byakugan: 1, seal: 1 } as Record<RActive, number>,
-    effort: { turns: 3, offense: 3 },
-    shadow: { chance: 0.8 },
-    expansion: { turns: 3, taijutsuMult: 1.3, physical: 3 },
-    mindTransfer: { chance: 0.75 },
-    plague: { turns: 3 },
-    beast: { turns: 3, speed: 3, dogChance: 0.6 },
-    // Portões (src/core/gates.ts): abrir custa `activation` de chakra; manter custa a manutenção comum a cada rodada,
-    // sem limite de rodadas (fecham sozinhos sem chakra); podem reabrir. Sem custo de HP (v0.59.0).
-    gates: { activation: 4, taijutsuMult: 1.3 },
-    sharingan: { turns: 3, accuracy: 0.15, dodge: 0.1, offense: 3 },
-    byakugan: { turns: 3 },
+    // Fera de quatro patas: a isca da Substituição (que não existe no Roleta) vira esquiva a mais.
+    beast: { dodge: 0.1 },
+    // Linhagens guardadas (fora do sorteio): os kits enxutos de antes.
+    shadow: { chance: 0.8, uses: 2 },
+    mindTransfer: { chance: 0.75, uses: 1 },
+    plague: { turns: 3, uses: 1 },
   },
-  // Manto do jinchuuriki: abaixo de belowPct do HP, 1 vez por luta, ataques × offenseMult por `turns` rodadas.
-  cloak: { belowPct: 0.5, offenseMult: 1.5, turns: 3 },
   // Kekkei genkai Areia: começa a luta com escudo desta fração do HP máximo.
   sandShieldPct: 0.1,
   // Invocações (passivas): sapo (dano verdadeiro em % do HP máximo do vilão por ataque que acerta), lesma (cura por rodada).
