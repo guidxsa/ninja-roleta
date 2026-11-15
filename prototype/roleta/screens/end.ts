@@ -41,7 +41,7 @@ export async function endScreen(won: boolean, stoppedAt: string | null, record =
       <h2>${title}</h2>
       ${stoppedAt ? `<p class="center">${S.ui.defeatBy(stoppedAt)}</p>` : ''}
       <p class="center">${RR.reached(c.run.cycle + 1, c.run.wins)}${record ? ` <span class="chip jrecord">${icon('medal')} ${RR.record}</span>` : ''}</p>
-      <p class="center muted">${S.ui.revivesUsed(c.player.revivesUsed)}</p>
+      ${c.player.revivesUsed > 0 ? `<p class="center muted">${S.ui.revivesUsed(c.player.revivesUsed)}</p>` : ''}
       ${won && !canGo ? `<p class="center muted small">${icon('lock')} ${RR.infiniteHardcoreOnly}</p>` : ''}
       </div>
       <div class="rend-r">

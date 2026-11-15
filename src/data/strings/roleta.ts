@@ -92,6 +92,8 @@ export const roletaPtBR = {
     chestTitle: 'Baú do chefe',
     chestPick: 'Toque numa relíquia para escolher.',
     chestTake: (name: string) => `Pegar: ${name}`,
+    /** Botão antes da escolha: só a ação; a instrução fica no texto acima (botão não leva instrução). */
+    chestTakeIdle: 'Pegar',
     relicGot: (name: string) => `Relíquia: ${name}`,
     relicNone: 'Não sobrou relíquia para sortear: vira XP.',
     // Fatias da recompensa, com o valor da raridade (v0.52.0).
@@ -108,7 +110,7 @@ export const roletaPtBR = {
     cycleStart: (pct: number) => `De volta aos genin, com vilões sorteados de novo. Eles estão ${pct}% mais fortes que no 1º ciclo.`,
     cycleWon: (n: number) => `Ciclo ${n} vencido!`,
     cycleWonText: 'O chefe caiu: HP e chakra cheios. O próximo ciclo começa com os vilões mais fortes.',
-    infiniteOver: 'Vitória · fim do modo infinito',
+    infiniteOver: 'Fim do modo infinito',
     infiniteHardcoreOnly: 'O modo infinito (ciclos seguintes) é só no Hardcore.',
     relicRewardTitle: 'Relíquia da vitória',
     reached: (cycle: number, fights: number) => `Ciclo ${cycle} · ${fights} ${fights === 1 ? 'luta vencida' : 'lutas vencidas'}`,

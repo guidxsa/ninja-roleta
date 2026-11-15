@@ -161,7 +161,7 @@ export async function chestScreen(options: string[]): Promise<string> {
         <span class="jrslot huge tier-${relicTier(id)}">${relicIcon(id)}</span><b>${relicName(id)}</b></button>`)
       .join('')}</div>
     <div data-detail><p class="muted center">${RR.chestPick}</p></div>
-    <div class="sticky-cta"><button class="btn primary big" data-choice="take" disabled>${RR.chestPick}</button></div></div>`));
+    <div class="sticky-cta"><button class="btn primary big" data-choice="take" disabled>${RR.chestTakeIdle}</button></div></div>`));
   const take = root.querySelector<HTMLButtonElement>('[data-choice="take"]')!;
   root.querySelector('.jrboss-row')!.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-opt]');

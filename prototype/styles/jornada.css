@@ -124,6 +124,9 @@
 
 .jrpanel h2 small { font-family: var(--font-body); font-size: var(--fs-sm); }
 .jrgroup h3 { margin: 12px 0 6px; font-size: var(--fs-md); color: var(--tier); text-align: left; letter-spacing: .14em; }
+/* No papel, as cores de raridade (pensadas para o fundo escuro) ficavam claras demais ("Inicial" a cerca de 1,9:1):
+   o texto leva a mesma cor puxada para a tinta. Borda e moldura seguem na cor pura. */
+:is(.parchment, .modal-body.registry) :is(.jrcard-tier, .jrgroup h3) { color: color-mix(in srgb, var(--tier) 45%, var(--paper-ink)); }
 .jrgroup.tier-common h3 { color: var(--muted); }
 .jrgrid { display: grid; grid-template-columns: repeat(auto-fill, 54px); gap: 8px; }
 .jrgrid .jrslot.on { transform: translateY(-3px); box-shadow: 0 0 0 2px var(--tier); }

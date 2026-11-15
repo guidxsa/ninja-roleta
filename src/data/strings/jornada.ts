@@ -1135,6 +1135,7 @@ export const jornadaPtBR = {
     relicsHint: 'Toque numa relíquia para ver o que ela faz.',
     relicsCount: (n: number) => `${n} ${n === 1 ? 'relíquia' : 'relíquias'}`,
     relicTake: (name: string) => `Pegar: ${name}`,
+    relicTakeIdle: 'Pegar',
     relicPick: 'Toque numa relíquia para escolher.',
     relicNew: 'Nova',
     bagTitle: 'Bolsa',

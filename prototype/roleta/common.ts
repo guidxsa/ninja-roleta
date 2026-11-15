@@ -349,7 +349,9 @@ export function modChips(mods: NextFightMods): string {
 export function statBox(key: keyof typeof S.stats, value: string | number): string {
   const T = S.tips.stats;
   const desc = T[key];
-  return `<div${tip(S.stats[key], desc)}><small>${S.stats[key]}</small><b>${value}</b></div>`;
+  // Na caixa estreita, o rótulo curto ("Res. mental" virava "RES. MEN…" a 390px); o nome inteiro fica na dica.
+  const label = (S.statsShort as Partial<Record<string, string>>)[key] ?? S.stats[key];
+  return `<div${tip(S.stats[key], desc)}><small>${label}</small><b>${value}</b></div>`;
 }
 
 /** Selo redondo da linhagem (ou da folha), com o nome do clã na dica. */

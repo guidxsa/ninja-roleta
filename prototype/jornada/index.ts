@@ -1227,7 +1227,7 @@ export async function bossChoiceScreen(run: JRun): Promise<JRun> {
         <span class="jrslot huge tier-${relicTier(id)}">${relicIcon(id)}</span><b>${relicName(id)}</b>${isEvolution(id) ? `<small class="jrboss-evo">${J.relics.evolution}</small>` : ''}</button>`)
       .join('')}</div>
     <div data-detail><p class="muted center">${U.relicPick}</p></div>
-    <div class="sticky-cta"><button class="btn primary big" data-choice="take" disabled>${U.relicPick}</button></div></div>`));
+    <div class="sticky-cta"><button class="btn primary big" data-choice="take" disabled>${U.relicTakeIdle}</button></div></div>`));
   const take = root.querySelector<HTMLButtonElement>('[data-choice="take"]')!;
   root.querySelector('.jrboss-row')!.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-opt]');
