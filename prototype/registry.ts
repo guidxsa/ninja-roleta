@@ -76,7 +76,8 @@ export function achievementsTab(): string {
   const cats: AchievementCategory[] = ['milestone', 'luck', 'style', 'secret'];
   // Clássicas (mecânica que saiu do Roleta) só aparecem para quem já tem, e não contam no total.
   const shown = achievements.filter((a) => !a.legacy || unlocked.has(a.id));
-  const counted = achievements.filter((a) => !a.legacy);
+  // O total soma as da Jornada (seção no fim da página), como a ficha do Início: antes aqui dava 0 de 45 e lá 0/64.
+  const counted = [...achievements.filter((a) => !a.legacy), ...jornadaAchievements];
   const got = counted.filter((a) => unlocked.has(a.id)).length;
   return `<p class="muted small center">${A.count(got, counted.length)}</p>${cats
     .map((cat) => {
@@ -172,7 +173,7 @@ export function historyTab(container: HTMLElement) {
                     : '';
             const diff = r.difficulty ? ` ${diffChip(r.difficulty)}` : '';
             return `<li><div class="row between"><b>${origin}</b><span>${diff} <span class="chip st-${r.status}">${S.ui.runStatus[r.status]}</span></span></div>
-              <small class="muted">${date}${reached} · ${S.ui.revivesUsed(r.revivesUsed)}</small></li>`;
+              <small class="muted">${date}${reached}${r.revivesUsed > 0 ? ` · ${S.ui.revivesUsed(r.revivesUsed)}` : ''}</small></li>`;
           })
           .join('')
       : `<li class="muted">${S.ui.historyEmpty}</li>`;

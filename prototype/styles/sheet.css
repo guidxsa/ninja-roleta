@@ -63,7 +63,8 @@
 .sheet-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .sheet-name {
   text-align: left; margin: 0 40px 0 0; color: var(--paper-ink); text-shadow: none;
-  font-size: clamp(16px, 5.2vw, 23px); overflow-wrap: normal; word-break: keep-all;
+  /* Título de pergaminho em letra de mão: o pincel (--font-display) fica só para letreiro grande. */
+  font: 700 clamp(20px, 6vw, 26px)/1.1 var(--font-hand); letter-spacing: 0; overflow-wrap: normal; word-break: keep-all;
 }
 .sheet-name::after { display: none; }
 :is(.scroll-paper, .rsheet-panel) .chip { background: rgba(36, 25, 15, .06); color: var(--paper-ink); border-color: rgba(36, 25, 15, .38); }

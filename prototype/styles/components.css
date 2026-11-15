@@ -42,7 +42,12 @@
 .btn.spin { display: flex; align-items: center; justify-content: center; margin: 4px auto 10px; min-width: 170px; }
 .actions-row { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }
 .actions-row .btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
-.sticky-cta { position: sticky; bottom: 12px; z-index: 3; padding-top: 4px; }
+/* Ação principal presa ao pé da tela no celular. O degradê até o fundo esconde o que rola por baixo (antes o conteúdo
+   aparecia entre os botões e em volta deles). No PC as telas a deixam estática e sem fundo. */
+.sticky-cta {
+  position: sticky; bottom: 0; z-index: 3; padding: 16px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, transparent, var(--bg) 16px);
+}
 .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
 .btn.ghost:hover:not(:disabled) { color: var(--text); background: transparent; border-color: transparent; text-decoration: underline; text-decoration-color: var(--primary); text-underline-offset: 4px; }
 

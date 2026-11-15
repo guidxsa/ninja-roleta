@@ -88,8 +88,15 @@ let heroName: string | null = null;
 /** Nomes da equipe desta luta (suportes com nome sorteado), por ficha. */
 let teamNames: Record<string, string> = {};
 
-export const fighterName = (f: { defId: string; protagonist?: boolean; side?: string }) =>
-  f.protagonist && heroName ? heroName : ((f.side !== 'enemy' && teamNames[f.defId]) || (J.names[f.defId] ?? f.defId));
+/** Número dos inimigos repetidos desta luta, por uid ("Capanga 1", "Capanga 2"): três iguais não davam para distinguir no alvo. */
+let enemyNumbers: Record<string, number> = {};
+
+export const fighterName = (f: { defId: string; protagonist?: boolean; side?: string; uid?: string }) => {
+  if (f.protagonist && heroName) return heroName;
+  const base = (f.side !== 'enemy' && teamNames[f.defId]) || (J.names[f.defId] ?? f.defId);
+  const n = f.side === 'enemy' && f.uid ? enemyNumbers[f.uid] : undefined;
+  return n ? `${base} ${n}` : base;
+};
 export const techName = (id: string) => J.techniques[id] ?? id;
 
 /** Visual do protagonista desta luta (personalização da run). */
@@ -384,13 +391,25 @@ export async function jornadaBattle(
   heroSkin = run0.skin;
   heroName = run0.mode === 'generic' ? heroLabel(run0.hero, host.playerName()) : null;
   teamNames = Object.fromEntries(setup.allies.map((a) => [a.defId, memberLabel(run0, a.defId, host.playerName())]));
+  // Inimigos com a mesma ficha ganham número na ordem em que entram (o uid é 'e' + a posição).
+  enemyNumbers = {};
+  const seen: Record<string, number> = {};
+  const repeated = new Set(setup.enemies.map((e) => e.defId).filter((id, i, all) => all.indexOf(id) !== i));
+  setup.enemies.forEach((e, i) => {
+    if (repeated.has(e.defId)) enemyNumbers[`e${i}`] = seen[e.defId] = (seen[e.defId] ?? 0) + 1;
+  });
   // Na abertura ninguém agiu ainda: os turnos antes do protagonista só andam depois da intro, para as barras não adiantarem o dano.
   let state = opts.from ?? openBattle(setup, data);
   liveBattle = () => state;
   liveBattleRun = () => run;
+  // Elite e chefe têm palco próprio: selo no cabeçalho, varrida de entrada e (chefe) retrato maior. Antes eram iguais a
+  // uma luta comum, só com outro nome.
+  const kind = currentStop(run0, data)?.kind;
+  const big = kind === 'boss' || kind === 'elite' ? kind : null;
+  const kindChip = big ? `<b class="jb-kind">${J.stopKinds[big]}</b>` : '';
   const root = show(
-    h(`<div class="screen jbattle scene-${scene}">
-      <div class="jb-head"><span>${icon('swords')} ${esc(label)}</span><span data-round></span></div>
+    h(`<div class="screen jbattle scene-${scene}${big ? ` jb-k-${big}` : ''}">
+      <div class="jb-head"><span>${icon(big === 'boss' ? 'intent' : big === 'elite' ? 'warning' : 'swords')} ${kindChip}${esc(label)}</span><span data-round></span></div>
       ${run0.relics.length ? `<div class="jb-relics">${relicStrip(run0)}</div>` : ''}
       ${goal ? `<p class="jb-goal">${esc(goal)}</p>` : ''}
       <div class="jb-side jb-enemies" data-side="enemy"></div>
@@ -401,7 +420,7 @@ export async function jornadaBattle(
         <button class="jb-log" type="button" data-log data-title="${B.logTitle}"${tip(B.logTitle, B.logTip)}><span></span></button></div>
       <div class="jb-right"><aside class="jb-intel jb-team" data-intel="ally" data-title="${B.teamTitle}"${foldAttrs('team')}></aside>
         <div class="jb-menu"></div></div>
-      <div class="jb-intro"><div>${esc(label)}</div></div>
+      <div class="jb-intro">${big === 'boss' ? '<span class="seal stamp jb-intro-seal" aria-hidden="true">将</span>' : ''}<div>${esc(label)}</div></div>
       <div class="jb-fx" aria-hidden="true"></div>
     </div>`),
   );
@@ -770,7 +789,16 @@ export async function jornadaBattle(
           if (mult !== 1) card(f.uid)?.querySelector('.jf-art')?.insertAdjacentHTML('beforeend', `<span class="jf-adv">${advantageBadge(mult)}</span>`);
         }
       }
-      menu.innerHTML = `<p class="jb-prompt">${prompt}</p><button class="btn small" data-cancel>${B.cancel}</button>`;
+      // A bandeja continua no lugar (apagada) e o pedido de alvo entra no topo dela: a altura não muda (antes caía de
+      // 238px para 84px e as técnicas pulavam ao voltar).
+      const bar = `<div class="jb-target-bar"><p class="jb-prompt">${prompt}</p><button class="btn small" data-cancel>${B.cancel}</button></div>`;
+      if (trayHtml) {
+        menu.innerHTML = trayHtml;
+        menu.classList.add('targeting');
+        const head = menu.querySelector('.jb-prompt');
+        if (head) head.outerHTML = bar;
+        else menu.insertAdjacentHTML('afterbegin', bar);
+      } else menu.innerHTML = bar;
       const onClick = (ev: Event) => {
         const t = ev.target as HTMLElement;
         if (t.closest('[data-cancel]')) return done(null);
@@ -779,6 +807,7 @@ export async function jornadaBattle(
       };
       const done = (v: string | null) => {
         root.removeEventListener('click', onClick);
+        menu.classList.remove('targeting');
         root.querySelectorAll('.jf.targetable').forEach((el) => el.classList.remove('targetable'));
         root.querySelectorAll('.jf-adv').forEach((el) => el.remove());
         resolve(v);
@@ -808,7 +837,10 @@ export async function jornadaBattle(
       const raisePct = Math.round(data.j.combat.raiseHpPct * 100);
       const raiseBlock = fallen.length
         ? `<h4 class="act-title">${B.groups.raise}</h4><div class="jb-extra jb-raise">
-          <button class="btn small primary jx" data-act="raise" ${tip(B.raise, B.raiseDesc(raisePct))}>${icon('heart')} ${B.raise} · ${raisePct}%</button>
+          ${fallen
+            // Um botão por caído, com o nome: com dois no chão, "Levantar" sozinho não dizia em quem.
+            .map((f) => `<button class="btn small primary jx" data-act="raise" data-uid="${f.uid}" ${tip(B.raise, B.raiseDesc(raisePct))}>${icon('heart')} ${B.raiseWho(esc(fighterName(f)))} · ${raisePct}%</button>`)
+            .join('')}
           ${raiseTechs.map((t) => techButton(state, me, t)).join('')}
           ${pill ? `<button class="btn small jx" data-act="pill" ${tip(J.items.reviveKit!.name, B.pillDesc(Math.round(data.j.combat.reviveHpPct * 100)))}>${icon('pill')} ${J.items.reviveKit!.name}</button>` : ''}
         </div>`
@@ -848,11 +880,13 @@ export async function jornadaBattle(
       ];
       // Aliado caído abre na aba dele; senão, a aba em que o jogador estava (ou Técnicas).
       const open = fallen.length ? 'raise' : panes.some((p) => p.id === menuTab) ? menuTab : 'moves';
+      releaseMenu();
       menu.innerHTML = `<p class="jb-prompt">${B.yourTurn}</p>
         <div class="jb-tabs" role="tablist">${panes
           .map((p) => `<button type="button" class="jb-tab${p.id === open ? ' on' : ''}" role="tab" aria-selected="${p.id === open}" data-tab="${p.id}">${p.label}${p.count ? `<small>${p.count}</small>` : ''}</button>`)
           .join('')}</div>
         ${panes.map((p) => `<div class="jb-pane${p.id === open ? ' on' : ''}" role="tabpanel" data-pane="${p.id}">${p.html}</div>`).join('')}`;
+      trayHtml = menu.innerHTML;
       const pick = await new Promise<HTMLElement>((resolve) => {
         const onClick = (ev: Event) => {
           const tab = (ev.target as HTMLElement).closest<HTMLElement>('[data-tab]');
@@ -875,7 +909,7 @@ export async function jornadaBattle(
       if (pick.dataset.act === 'guard') return { kind: 'guard' };
       if (pick.dataset.act === 'rest') return { kind: 'rest' };
       if (pick.dataset.act === 'raise') {
-        const uid = await pickTarget(fallen, B.pickDowned);
+        const uid = pick.dataset.uid ?? (await pickTarget(fallen, B.pickDowned));
         if (!uid) continue;
         return { kind: 'raise', target: uid };
       }
@@ -967,6 +1001,22 @@ export async function jornadaBattle(
     });
   }
 
+  /** A última bandeja de turno montada (abas e técnicas), para ficar no lugar enquanto os outros agem. */
+  let trayHtml = '';
+  /** Fim do turno do jogador: a bandeja fica no lugar, apagada e inerte, até a próxima vez dele. */
+  function holdMenu(): void {
+    // Saindo da escolha de alvo (ou da bolsa, dos portões), volta a bandeja inteira: a altura não muda entre os turnos.
+    if (trayHtml) menu.innerHTML = trayHtml;
+    menu.inert = true;
+    menu.classList.add('waiting');
+    const prompt = menu.querySelector('.jb-prompt');
+    if (prompt) prompt.textContent = B.othersTurn;
+  }
+  function releaseMenu(): void {
+    menu.inert = false;
+    menu.classList.remove('waiting');
+  }
+
   // Entrada: varrida de pergaminho, depois os turnos que vieram antes do protagonista.
   render(state);
   await sleep(host.instant() ? 150 : 900);
@@ -986,7 +1036,7 @@ export async function jornadaBattle(
       return { battle: state, run, abandoned: true };
     }
     if (!action) break;
-    menu.innerHTML = '';
+    holdMenu();
     const before = state;
     state = playerAct(state, action, data, rng);
     await animate(before, state);

@@ -55,6 +55,8 @@ const ICONS: Record<string, string> = {
   byakugan:
     '<circle cx="12" cy="12" r="10" fill="#ece8f6" stroke="#7d73a8" stroke-width=".9"/><circle cx="12" cy="12" r="5.5" fill="#d3cdea"/><g stroke="#9d93c7" stroke-width=".9"><path d="M2.5 9.5 6 10.5M2.5 14.5 6 13.5M21.5 9.5 18 10.5M21.5 14.5 18 13.5"/></g>',
   item: '<path d="M6 8h12l1.5 12.5a1 1 0 0 1-1 1.5h-13a1 1 0 0 1-1-1.5z" fill="currentColor"/><path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8 12h8" stroke="#0005" stroke-width="1.6"/>',
+  // Baú laqueado do tesouro (a bolsa do item, no mapa, lia como cadeado).
+  chest: '<path d="M4.5 5h15L21 10H3z" fill="currentColor" opacity=".75"/><path d="M3 10h18v9.5a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5z" fill="currentColor"/><path d="M3 13.5h18" stroke="#0005" stroke-width="1.6"/><rect x="10.5" y="11.5" width="3" height="4.5" fill="#0007"/>',
   substitution: '<rect x="4" y="9" width="16" height="9" rx="4.5" fill="currentColor"/><ellipse cx="18" cy="13.5" rx="2.5" ry="4.5" fill="#0004"/><path d="M8 5l2 2M12 3.5v3M16 5l-2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
   clash: '<path d="M3 21 11 13M21 21l-8-8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M12 2l1.6 4.6L18 5l-2 4.2 4.5 1.3L16 12l-4-.4L8 12l-4.5-1.5L8 9.2 6 5l4.4 1.6z" fill="currentColor"/>',
   pass: '<path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>',
@@ -104,7 +106,8 @@ const ICONS: Record<string, string> = {
   scroll: '<rect x="5" y="4" width="14" height="16" rx="1" fill="#efe1c0"/><rect x="3" y="2.5" width="18" height="3" rx="1.5" fill="currentColor"/><rect x="3" y="18.5" width="18" height="3" rx="1.5" fill="currentColor"/><path d="M8.5 9h7M8.5 12h7M8.5 15h4" stroke="#6b3f1d" stroke-width="1.4"/>',
   toad: '<ellipse cx="12" cy="15" rx="9" ry="6" fill="currentColor"/><circle cx="7.5" cy="8.5" r="3" fill="currentColor"/><circle cx="16.5" cy="8.5" r="3" fill="currentColor"/><circle cx="7.5" cy="8.5" r="1.3" fill="#0008"/><circle cx="16.5" cy="8.5" r="1.3" fill="#0008"/><path d="M7 16.5c3 1.6 7 1.6 10 0" stroke="#0007" stroke-width="1.4" fill="none"/>',
   slug: '<path d="M2 19c3 0 4-1 7-1h8c3 0 5-2 5-5s-2-5-5-5c-2.6 0-4.6 1.8-5 4.5L9 18" fill="currentColor"/><path d="M14 8 13 3M18 8l1-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
-  dice: '<rect x="3" y="3" width="18" height="18" rx="4" fill="currentColor"/><g fill="#0008"><circle cx="8" cy="8" r="1.6"/><circle cx="16" cy="8" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="8" cy="16" r="1.6"/><circle cx="16" cy="16" r="1.6"/></g>',
+  // Pips vazados (evenodd): com a cor fixa #0008 o dado virava um quadrado preto no tema claro.
+  dice: '<path fill="currentColor" fill-rule="evenodd" d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zM8 6.4a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zm8 0a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zm-4 4a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zm-4 4a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zm8 0a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2z"/>',
   swords: '<path d="M4 3l9 9M20 3l-9 9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M7 16l-3 3M17 16l3 3M9 14l-4 4 2 2 4-4M15 14l4 4-2 2-4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>',
   sun: '<circle cx="12" cy="12" r="4.5" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
   moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="currentColor"/><circle cx="17" cy="5" r="1.2" fill="currentColor"/><circle cx="20.5" cy="9" r=".8" fill="currentColor"/>',
@@ -676,6 +679,38 @@ const NINJA_OUTFIT: Record<string, { outfit: string; hair: string; collar?: stri
   akamaru: { outfit: '#efe9dd', hair: '#efe9dd', band: 'none' },
   // Personalização do Uchiha (easter egg do Sasuke).
   sasuke: { outfit: '#1c2f5c', hair: '#141a2b', collar: '#22386b' },
+  // Irmãos Demônio: o molde da Névoa com respirador e protetor de chifres (Gōzu um, Meizu dois).
+  gozu: { outfit: '#3f4c5a', hair: '#1d2a33', band: 'mist' },
+  meizu: { outfit: '#3f4c5a', hair: '#1d2a33', band: 'mist' },
+};
+
+/**
+ * Traços que distinguem quem só tinha a cor do traje (o mesmo rosto em todos lia como o mesmo personagem): a máscara e
+ * a bandana torta do Kakashi, o cabelo curto e a bandana de pano dos capangas, o respirador e os chifres dos Irmãos
+ * Demônio. Cada um troca o cabelo, a boca ou a bandana do molde; o resto do retrato é o mesmo desenho.
+ */
+const NINJA_STYLE: Record<string, { hair?: (c: string) => string; over?: string; mouth?: 'none'; band?: (cloth: string) => string }> = {
+  kakashi: {
+    hair: (c) => `<path d="M31 42c-1-10 3-19 11-23l-3-7 8 4 5-9 3 9 9-6-2 9 10-1-5 8c6 3 8 9 7 15-6-8-14-11-22-11s-16 4-21 12z" fill="${c}"/>`,
+    over: '<path d="M33 51q17 5 34 0v5q-3 13-17 15q-14-2-17-15z" fill="#2b3442"/><path d="M50 52v8" stroke="#1d242f" stroke-width="1"/>',
+    mouth: 'none',
+    band: (cloth) => `<g transform="rotate(-16 50 44)">${headband('leaf', cloth, false, 38)}</g>`,
+  },
+  thug: {
+    hair: (c) => `<path d="M32 43c0-12 8-19 18-19s18 7 18 19c-5-5-11-7-18-7s-13 2-18 7z" fill="${c}"/>`,
+    over: '<g fill="#5a3a22" opacity=".55"><circle cx="42" cy="62" r=".7"/><circle cx="46" cy="64" r=".7"/><circle cx="50" cy="64.5" r=".7"/><circle cx="54" cy="64" r=".7"/><circle cx="58" cy="62" r=".7"/></g>',
+    band: () => '<path d="M30 36q20-9 40 0l-1 6q-19-7-38 0z" fill="#8a2f22"/><path d="M69 38l7 4-6 3" fill="#8a2f22"/>',
+  },
+  gozu: {
+    over: '<rect x="37" y="53" width="26" height="10" rx="3" fill="#2a2f36"/><circle cx="50" cy="58" r="3.6" fill="#5b6470" stroke="#1d2126"/><path d="M41 58h4M55 58h4" stroke="#7d8696" stroke-width="1.2"/>',
+    mouth: 'none',
+    band: (cloth) => `${headband('mist', cloth)}<path d="M57 31l7-13 1 14z" fill="#c9d1dc" stroke="#7d8696" stroke-width=".8"/>`,
+  },
+  meizu: {
+    over: '<rect x="37" y="53" width="26" height="10" rx="3" fill="#2a2f36"/><circle cx="50" cy="58" r="3.6" fill="#5b6470" stroke="#1d2126"/><path d="M41 58h4M55 58h4" stroke="#7d8696" stroke-width="1.2"/>',
+    mouth: 'none',
+    band: (cloth) => `${headband('mist', cloth)}<path d="M43 31l-7-12 1 13zM57 31l7-12-1 13z" fill="#c9d1dc" stroke="#7d8696" stroke-width=".8"/>`,
+  },
 };
 
 /** Retrato do jogador: imagem própria (img/ninja/<linhagem>.webp ou img/ninja/ninja.webp) ou o desenho. */
@@ -689,13 +724,17 @@ export function ninjaPortrait(lineageId: string | null, jinchuuriki: boolean, si
   const marks =
     (jinchuuriki ? '<path d="M35 53l7 1M35 56.5l7 0M35 60l7-1M65 53l-7 1M65 56.5l-7 0M65 60l-7-1" stroke="#6b3a2a" stroke-width="1"/>' : '') +
     (key === 'inuzuka' ? '<path d="M37 50l3 6M63 50l-3 6" stroke="#c0392b" stroke-width="2.4" stroke-linecap="round"/>' : '');
+  const style = NINJA_STYLE[key];
   const art =
     scene(`ninja-${key}`, accent, '#0d1222') +
     body(look.outfit, SKIN, collar) +
-    head({ eyeColor: key === 'hyuuga' ? '#cfc8e8' : key === 'uchiha' ? '#15161c' : '#2a4a7a', mouth: 'smirk' }) +
+    head({ eyeColor: key === 'hyuuga' ? '#cfc8e8' : key === 'uchiha' ? '#15161c' : '#2a4a7a', mouth: style?.mouth ?? 'smirk' }) +
     marks +
-    `<path d="M30 46l-5-12 8 1-1-11 8 5 3-11 6 8 5-9 3 10 8-5-1 11 8-1-5 12c-4-8-11-12-19-12s-14 4-18 14z" fill="${look.hair}"/>` +
-    (look.band === 'none' ? '' : headband(look.band ?? 'leaf', '#24324f'));
+    (style?.over ?? '') +
+    (style?.hair
+      ? style.hair(look.hair)
+      : `<path d="M30 46l-5-12 8 1-1-11 8 5 3-11 6 8 5-9 3 10 8-5-1 11 8-1-5 12c-4-8-11-12-19-12s-14 4-18 14z" fill="${look.hair}"/>`) +
+    (style?.band ? style.band('#24324f') : look.band === 'none' ? '' : headband(look.band ?? 'leaf', '#24324f'));
   return `<span class="portrait portrait-${size} ninja-portrait">${svg(art, '0 0 100 100', 'art')}</span>`;
 }
 

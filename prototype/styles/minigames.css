@@ -18,13 +18,45 @@
 .mg-seq { min-height: 74px; display: flex; justify-content: center; align-items: center; gap: 6px; }
 .mg-show { display: grid; place-items: center; width: 70px; height: 70px; background: var(--grain-dark), var(--paper); color: var(--paper-ink); border: 1px solid var(--gold); animation: stamp .3s var(--ease); }
 .mg-typed { font: 400 var(--fs-4xl)/1 var(--font-kanji); letter-spacing: .1em; }
+.mg-slot { width: 30px; height: 36px; border-bottom: 2px dashed var(--line-strong); }
+.mg-typed + .mg-slot { border-bottom-color: var(--gold-2); }
 .mg-duel { display: flex; justify-content: center; gap: 18px; min-height: 56px; align-items: center; }
 .mg-duel b { display: grid; place-items: center; }
 .mg-duel .ico { width: 48px; height: 48px; color: var(--text); }
 .mg-duel span { font: 400 var(--fs-2xl)/1 var(--font-display); color: var(--accent-text); }
-.big-hand { min-width: 76px; min-height: 76px; display: grid !important; place-items: center; }
+.big-hand { min-width: 76px; min-height: 76px; display: grid !important; place-items: center; gap: 2px; padding: 6px 8px; }
+.big-hand small { font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .big-hand .ico { width: 38px; height: 38px; color: var(--text); }
 .center-row { justify-content: center; }
 .mg-result { font: 400 var(--fs-4xl)/1.2 var(--font-display); }
 .mg-result.good { color: var(--gold-2); }
 .mg-result.bad { color: var(--bad); }
+
+/*
+ * PC: o tabuleiro ocupa a página da direita da cena (jornada-scene.css), em vez da coluna de 520px do celular. A
+ * memória vira 6×2 e os selos 8×1, com as cartas medidas pela altura da janela (duas fileiras sempre cabem); o
+ * jokenpô ganha mãos e duelo grandes.
+ */
+@media (min-width: 900px) and (min-height: 560px) {
+  .mg { max-width: none; }
+  .mg h3 { font-size: var(--fs-2xl); }
+  .mg-status { font-size: var(--fs-lg); }
+  .mg-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: clamp(8px, 1vw, 16px); max-width: calc(6 * 16vh + 5 * 16px); margin: 14px auto 0; }
+  .mg-grid.seals { grid-template-columns: repeat(8, minmax(0, 1fr)); max-width: calc(8 * 15vh + 7 * 16px); }
+  .mg-card { box-shadow: inset 0 0 0 4px var(--surface), inset 0 0 0 5px color-mix(in srgb, var(--gold) 45%, transparent), 3px 3px 0 var(--ink); }
+  .mg-card:hover:not(.up):not(:disabled) { transform: translateY(-3px); }
+  .mg-card .seal-glyph { font-size: clamp(var(--fs-5xl), 4.2vh, 56px); }
+  .mg-seq { min-height: clamp(96px, 14vh, 150px); gap: 12px; }
+  .mg-show { width: clamp(96px, 13vh, 140px); height: clamp(96px, 13vh, 140px); }
+  .mg-show .seal-glyph { font-size: clamp(56px, 8vh, 88px); }
+  .mg-typed { font-size: clamp(var(--fs-5xl), 5vh, 60px); }
+  .mg-slot { width: 44px; height: 54px; }
+  .mg-duel { min-height: clamp(110px, 16vh, 170px); gap: 32px; }
+  .mg-duel .ico { width: clamp(80px, 11vh, 120px); height: clamp(80px, 11vh, 120px); }
+  .mg-duel span { font-size: var(--fs-5xl); }
+  .big-hand { min-width: clamp(120px, 18vh, 220px); min-height: clamp(120px, 18vh, 220px); gap: 10px; }
+  .big-hand .ico { width: clamp(60px, 9.5vh, 112px); height: clamp(60px, 9.5vh, 112px); }
+  .big-hand small { font-size: var(--fs-sm); }
+  .mg .center-row { gap: clamp(12px, 1.4vw, 24px); }
+  .mg-result { font-size: var(--fs-6xl); }
+}

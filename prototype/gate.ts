@@ -54,6 +54,9 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
       id, art: sceneMedia(`modo-${id}`) ?? emblem(id), artVars: sceneVars(`modo-${id}`), seal: id === 'jornada' ? '道' : '運',
       name: M[id].name, desc: M[id].desc, cta: id === 'jornada' ? D.ctaJornadaNew : D.ctaRoleta,
     });
+  // Run da Jornada salva: no PC o progresso fica na coluna da direita; no celular, onde a coluna some, o mesmo card
+  // entra acima dos modos (o CSS mostra um ou outro).
+  const resume = progressSlot();
   const root = show(
     h(`<div class="screen jmodes gate">
       <div class="gate-main">
@@ -68,6 +71,7 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
             <span class="seal duo-seal duo-day" aria-hidden="true">${DU.day.seal}</span><span class="seal duo-seal duo-night" aria-hidden="true">${DU.night.seal}</span></blockquote>
         </div>
         <p class="gate-sub">${M.title}</p>
+        ${resume ? `<div class="gate-resume">${resume}</div>` : ''}
         <nav class="gate-modes">${gateCard('jornada')}${gateCard('roleta')}</nav>
         <button class="scroll-banner" data-profile="achievements"><span class="seal gold" aria-hidden="true">功</span>
           <span><b>${G.achievements}</b><small>${G.achievementsDesc}</small></span>${icon('chevron')}</button>
@@ -77,6 +81,9 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
   );
   // A barra lateral escolhe o modo pelo mesmo botão do card enquanto o Início está na tela.
   gateApi = { root };
+  // A coluna direita (PC) só esmaece o pé quando de fato rola.
+  const aside = root.querySelector<HTMLElement>('.gate-aside');
+  if (aside) requestAnimationFrame(() => aside.classList.toggle('scrolls', aside.scrollHeight > aside.clientHeight + 1));
   root.querySelector('[data-desk-name]')?.addEventListener('change', (e) => setPlayerName((e.target as HTMLInputElement).value));
   root.querySelector('.desk-id [data-avatar]')?.addEventListener('click', openAvatarPicker);
   markNav('home');
@@ -190,13 +197,15 @@ export function profileCard(): string {
   const wins = runs.filter((r) => r.status === 'victory').length;
   const bestCycle = bestRoletaCycle(ses.profile, runs);
   const best = ses.profile.jornada?.generic ?? null;
-  const counted = achievements.filter((a) => !a.legacy).length + jornadaAchievements.length;
+  const countedIds = [...achievements.filter((a) => !a.legacy), ...jornadaAchievements].map((a) => a.id);
+  const counted = countedIds.length;
   const rows: [string, string][] = [
     [D.stats.roletaRuns, String(runs.length)],
     [D.stats.roletaWins, String(wins)],
     [D.stats.bestCycle, bestCycle !== null ? String(bestCycle) : D.none],
     [D.stats.jornada, best ? S.jornada.start.best(best.cycle, best.stage, best.won) : D.none],
-    [D.stats.achievements, `${Object.keys(ses.profile.achievements).length}/${counted}`],
+    // Só as do catálogo atual: ids antigos no perfil davam 78/64.
+    [D.stats.achievements, `${countedIds.filter((id) => id in ses.profile.achievements).length}/${counted}`],
     [D.stats.villains, String(Object.keys(ses.profile.villains).length)],
     [D.stats.relics, String(Object.keys(ses.profile.relics).length)],
   ];

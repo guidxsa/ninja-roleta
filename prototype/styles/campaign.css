@@ -3,7 +3,7 @@
 /* Painel do ninja (HUD fora da luta). */
 .panel-head { display: flex; align-items: center; gap: 12px; }
 .panel-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.panel-id .name { font: 400 var(--fs-xl)/1.15 var(--font-display); letter-spacing: .02em; overflow-wrap: break-word; }
+.panel-id .name { font: 700 var(--fs-2xl)/1.15 var(--font-hand); overflow-wrap: break-word; }
 /* Com o nome do jogador, a origem vira a linha de baixo. */
 .panel-id .name-sub { font: 700 var(--fs-sm)/1.1 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .sheet-btn { flex: none; }
@@ -45,8 +45,10 @@
 .trail li.current { background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 16%, transparent), transparent 85%); }
 .trail li.current::before { content: ''; position: absolute; left: -14px; top: 0; bottom: 0; width: 3px; background: var(--primary); }
 .trail li.current .rrow.fight > i { background: var(--primary); border-color: var(--primary-2); color: var(--primary-ink); }
-.trail li.current .rrow.fight b { font: 400 var(--fs-xl)/1.2 var(--font-display); }
-.trail li.todo { opacity: .72; }
+.trail li.current .rrow.fight b { font: 700 var(--fs-2xl)/1.15 var(--font-hand); }
+.trail li.todo { color: var(--muted); }
+/* Etapas futuras: apaga só os ícones e o retrato; o texto em opacidade ficava abaixo de 4,5:1. */
+.trail li.todo :is(.rrow-ico, .trail-ico, .trail-faces, .rrow.fight > i) { opacity: .6; }
 /* Etapa vencida: o resumo abre o que ela deu. */
 .rstep details > summary { list-style: none; cursor: pointer; position: relative; padding-right: 22px; }
 .rstep details > summary::-webkit-details-marker { display: none; }
@@ -67,8 +69,7 @@
 .foe-head { display: flex; gap: 12px; align-items: flex-start; }
 .foe-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 .foe-id .name, .villain-panel .name {
-  font: 400 var(--fs-2xl)/1.1 var(--font-display); letter-spacing: .02em; color: var(--text);
-  text-shadow: var(--title-shadow); overflow-wrap: break-word;
+  font: 700 var(--fs-3xl)/1.15 var(--font-hand); color: var(--text); overflow-wrap: break-word;
 }
 .villain-card .name { font-size: var(--fs-3xl); }
 .stat-pills { display: flex; flex-wrap: wrap; gap: 4px; }

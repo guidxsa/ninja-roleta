@@ -33,15 +33,19 @@ export async function endScreen(won: boolean, stoppedAt: string | null, record =
     ? `<button class="btn primary big" data-choice="continue"${tip(RR.nextCycle(c.run.cycle + 2), RR.nextCycleTip(pct))}>${icon('cycle')} ${RR.nextCycle(c.run.cycle + 2)}</button>`
     : '';
   if (!canGo) ses.campLive = false;
-  const face = good ? clanSymbol(c.player.origin.lineageId) : foePortrait(c.run.villainId ?? rdata.categories.genin[0]!, 'lg');
+  // Vitória 勝; queda no infinito e run abandonada 報 (o relatório do que se alcançou), com o símbolo do clã; derrota em
+  // luta 敗, com o vilão que venceu. Antes o infinito levava 勝 ao lado de "Derrotado por" e o abandono, o rosto do vilão.
+  const report = infinite || abandoned;
+  const face = good || abandoned ? clanSymbol(c.player.origin.lineageId) : foePortrait(c.run.villainId ?? rdata.categories.genin[0]!, 'lg');
+  const stamp = won ? '勝' : report ? '報' : '敗';
   const root = show(
     h(`<div class="screen end rend ${good ? 'win' : 'lose'}">
       <div class="rend-l">
-      <div class="end-seal">${face}<span class="seal stamp end-stamp${good ? ' gold' : ''}" aria-hidden="true">${good ? '勝' : '敗'}</span></div>
+      <div class="end-seal">${face}<span class="seal stamp end-stamp${good ? ' gold' : ''}" aria-hidden="true">${stamp}</span></div>
       <h2>${title}</h2>
       ${stoppedAt ? `<p class="center">${S.ui.defeatBy(stoppedAt)}</p>` : ''}
       <p class="center">${RR.reached(c.run.cycle + 1, c.run.wins)}${record ? ` <span class="chip jrecord">${icon('medal')} ${RR.record}</span>` : ''}</p>
-      <p class="center muted">${S.ui.revivesUsed(c.player.revivesUsed)}</p>
+      ${c.player.revivesUsed > 0 ? `<p class="center muted">${S.ui.revivesUsed(c.player.revivesUsed)}</p>` : ''}
       ${won && !canGo ? `<p class="center muted small">${icon('lock')} ${RR.infiniteHardcoreOnly}</p>` : ''}
       </div>
       <div class="rend-r">

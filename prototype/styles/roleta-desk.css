@@ -21,6 +21,17 @@
 .actions .rabandon { width: 100%; margin-top: 10px; }
 /* Celular: depois das roletas da origem, a ficha toma o lugar delas (como antes). */
 .rorigin #slot.done { display: none; }
+/* Celular: a ação das telas de roleta (#cta) é filha direta da tela, para o .sticky-cta ter onde grudar. Dentro do
+   invólucro, da altura do próprio botão, ela não grudava e ficava abaixo da dobra. */
+@media (max-width: 899px), (max-height: 559px) {
+  .rside > #cta { display: contents; }
+  /* As duas ações (Voltar ao mapa e Lutar) lado a lado: empilhadas, a faixa presa cobria o resultado. */
+  .rwheel .sticky-cta:has(> .btn:not(.rsheet-open) + .btn) { display: flex; gap: 10px; align-items: stretch; }
+  .rwheel .sticky-cta .btn.big { flex: 1; }
+  /* A caixa da roda girada passa da largura da tela (até 407px em 390) e a página inteira encolhia. `clip` corta sem
+     virar contêiner de rolagem, então o .sticky-cta continua grudando. */
+  .rwheel { overflow-x: clip; }
+}
 
 @media (min-width: 900px) and (min-height: 560px) {
   body:has(.rwheel, .rmap, .screen.battle, .rend) { height: max(100dvh, var(--floor-h)); }
@@ -75,6 +86,19 @@
   .rwheel:not(.rorigin):has(.rside .sticky-cta) > .rstage-box::after {
     content: ''; position: absolute; inset: 0; z-index: 2; background: rgba(20, 12, 6, .42); pointer-events: none;
   }
+  /* Aviso, nível e melhoria (carimbo grande, sem roda): o palco com o carimbo à esquerda e o card à direita, sem
+     escurecer. Como popup sobre o palco, o card escondia o carimbo ("Nível 2" ficava atrás dele). */
+  .rwheel:not(.rorigin):has(#slot .stage-stamp) > .rstage-box { grid-column: 1; }
+  .rwheel:not(.rorigin):has(#slot .stage-stamp) > .rstage-box::after { display: none; }
+  .rwheel:not(.rorigin):has(#slot .stage-stamp):has(.rside .sticky-cta) > .rside { grid-column: 2; justify-self: stretch; width: auto; }
+  .rstage-box .stage-stamp { gap: clamp(12px, 2vh, 22px); }
+  .rstage-box .stage-stamp .seal { --s: clamp(120px, 16vh, 180px); }
+  .rstage-box .stage-stamp b { font-size: clamp(var(--fs-5xl), 4vw, 80px); }
+  /* Jokenpô do evento: mãos grandes no palco, no tamanho do PC (a caixa do celular ficava pequena no meio). */
+  .rstage-box .hands { gap: clamp(10px, 1.2vw, 20px); margin: 14px 0 6px; }
+  .rstage-box .btn.hand { min-height: clamp(130px, 17vh, 180px); gap: 10px; }
+  .rstage-box .btn.hand .ico { width: clamp(60px, 8vh, 84px); height: clamp(60px, 8vh, 84px); }
+  .rstage-box .wheel-box:has(.hands) h3 { font-size: var(--fs-2xl); }
   .rwheel .rsheet-open { display: inline-flex; align-items: center; gap: 6px; padding: 0 16px; }
   .rside .sticky-cta { display: flex; gap: 10px; justify-content: flex-end; align-items: stretch; }
   .rside .sticky-cta .big { flex: 1; }
@@ -82,13 +106,12 @@
      entram as opções centradas (a Ficha à esquerda; a Dificuldade, o Re-rolar e o Começar à direita). */
   .rorigin:not(.rolled) > .rstage-box { grid-column: 1 / -1; }
   .rorigin:not(.rolled) > .rside { display: none; }
-  .rorigin.rolled > .rstage-box { display: none; }
-  .rorigin.rolled { grid-template-rows: auto auto auto; align-content: start; }
-  .rorigin.rolled > .rside {
-    grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(18px, 2vw, 36px); align-items: start;
-    width: min(100%, 1100px); justify-self: center; overflow: visible;
-  }
-  .rorigin.rolled #origin-chips { width: min(100%, 1100px); justify-self: center; }
+  /* Com os resultados, a última roda fica parada no palco à esquerda (a roleta é a identidade do modo) e a Ficha, a
+     Dificuldade e o Começar vêm à direita. Antes o palco sumia e metade da tela ficava vazia. */
+  .rorigin.rolled > .rstage-box { grid-column: 1; grid-row: 3; }
+  .rorigin.rolled #slot.done { display: block; }
+  .rorigin.rolled > .rside { grid-column: 2; grid-row: 3; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+  .rorigin.rolled #origin-chips { justify-self: center; }
   /* Cenário desenhado (sem arte na vaga): recortado e apagado, para a roda ser o foco. */
   .rstage.jscene::before { background-size: contain; background-position: center bottom; background-repeat: no-repeat; opacity: .55; }
   .rmap-art.jscene::before { background-size: contain; background-position: center bottom; background-repeat: no-repeat; opacity: .6; }
@@ -99,9 +122,11 @@
   .rmap {
     display: grid; gap: 12px clamp(16px, 1.6vw, 30px); align-items: start;
     grid-template-columns: clamp(320px, 24vw, 460px) minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    grid-template-areas: 'me title' 'me trail' 'me cta';
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: 'me title' 'me trail' 'me cta' 'me quit';
   }
+  .rmap > .rmap-quit { grid-area: quit; justify-self: end; width: min(100%, 520px); }
+  .rmap > .rmap-quit .rabandon { margin: 0 0 0 auto; }
   .rmap > h2 { grid-area: title; margin-bottom: 0; }
   /* Esquerda: a Ficha aberta, em painéis minimizáveis (no PC o resumo do celular some). */
   .rmap-me { grid-area: me; display: flex; flex-direction: column; gap: 10px; align-self: stretch; min-height: 0; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
@@ -111,7 +136,7 @@
   .rsheet-panel > h3 { margin: 0 0 8px; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); text-align: left; }
   .rsheet-body { display: flex; flex-direction: column; gap: 6px; }
   .rsheet-body .sheet-head { display: flex; gap: 10px; align-items: center; }
-  .rsheet-body .sheet-name { margin: 0; font: 400 var(--fs-2xl)/1.1 var(--font-display); }
+  .rsheet-body .sheet-name { margin: 0; font: 700 var(--fs-3xl)/1.15 var(--font-hand); }
   .rsheet-body .sheet-fields { margin: 4px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; font-size: var(--fs-sm); }
   .rsheet-body .sheet-fields > div { display: contents; }
   .rsheet-body .sheet-fields dt { color: var(--muted); font: 700 var(--fs-xs)/1.6 var(--font-hud); letter-spacing: .08em; text-transform: uppercase; }
@@ -196,20 +221,38 @@
   .rend.win .rend-l { border-top-color: var(--gold); }
   .rend-l > h2 { margin: 6px 0 0; }
   .rend-l > p { margin: 0; }
-  .rend-r { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
-  .rend > .sticky-cta { grid-column: 1 / -1; position: static; background: none; padding: 0; display: flex; gap: 10px; justify-content: center; }
+  /* O card do jogador vai para baixo do resultado, à esquerda (antes ficava sob a trilha, cortado ou fora da janela);
+     a trilha ocupa a direita inteira e rola sozinha. */
+  .rend { grid-template-rows: minmax(0, 1fr) auto auto; }
+  .rend-r { display: contents; }
+  .rend-l { grid-column: 1; grid-row: 1; }
+  .rend-r > .player-panel { grid-column: 1; grid-row: 2; }
+  .rend-r > .trail {
+    grid-column: 2; grid-row: 1 / span 2; align-self: stretch; min-height: 0; overflow-y: auto; padding-right: 4px;
+    scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent;
+  }
+  .rend > .sticky-cta { grid-column: 1 / -1; grid-row: 3; position: static; background: none; padding: 0; display: flex; gap: 10px; justify-content: center; }
   .rend > .sticky-cta .btn { flex: 0 1 280px; }
   .screen.jrboss:not(.jboss) { max-width: 1100px; width: 100%; margin: 0 auto; }
 }
 /* Notebook (até 1279px): a luta em duas colunas; o campo à esquerda, as ações à direita e a ficha do vilão com o registro
    embaixo do campo. */
 @media (min-width: 900px) and (min-height: 560px) and (max-width: 1279px) {
+  /* Cinco faixas empilhadas no campo passavam da altura da janela (1024×768): a faixa de Iniciativa encolhia a zero e
+     cobria o vilão e você, e a ficha do vilão caía sobre o rodapé. As ações ocupam o alto da direita e a ficha do vilão
+     com o registro vai para baixo delas, ao lado de você. */
   .screen.battle.rb-desk {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, .85fr); grid-template-rows: auto auto minmax(0, 1fr) auto auto;
-    grid-template-areas: 'head head' 'foe right' 'arena right' 'me right' 'left right';
+    grid-template-columns: minmax(0, 1fr) minmax(300px, .85fr); grid-template-rows: auto auto auto minmax(0, 1fr);
+    grid-template-areas: 'head head' 'foe right' 'arena right' 'me left';
   }
-  .rb-intel { flex-direction: row; align-self: auto; }
-  .rb-intel > section { flex: 1; min-width: 0; max-height: 160px; }
+  .rb-desk > #actions { align-self: start; }
+  .rb-intel { align-self: stretch; }
+  .rb-intel > section { min-height: 0; }
+  /* Retratos compactos e, se ainda faltar altura, a página rola: nada fica por cima de nada nem do rodapé. */
+  .rb-desk #vcard .hud-face .portrait, .rb-desk #pcard .hud-face .portrait { width: clamp(60px, 10vh, 90px); height: clamp(60px, 10vh, 90px); }
+  body:has(.screen.battle.rb-desk) { height: auto; }
+  body:has(.screen.battle.rb-desk) main { display: block; }
+  .screen.battle.rb-desk { min-height: calc(100dvh - 120px); }
 }
 @media (min-width: 900px) and (min-height: 560px) and (max-height: 760px) {
   .rstage-box .wheel-wrap { width: min(30vh, 100%, 300px); margin: 16px auto 6px; }

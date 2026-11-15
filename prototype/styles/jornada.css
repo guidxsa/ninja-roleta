@@ -4,13 +4,19 @@
 .jmode-panel { --tab: var(--gold); }
 .jmode-card { display: flex; gap: 12px; align-items: center; }
 .jdiff-both { margin: 6px 0 2px; color: var(--gold-2); font-weight: 700; }
-.jmode-card h3 { margin: 0 0 4px; text-align: left; font: 400 var(--fs-2xl)/1.1 var(--font-display); letter-spacing: .02em; text-transform: none; text-shadow: var(--title-shadow); }
+.jmode-card h3 { margin: 0 0 4px; text-align: left; font: 700 var(--fs-3xl)/1.15 var(--font-hand); text-transform: none; }
 .jstart-face { display: flex; justify-content: center; }
 
 /* HUD da run */
 .jhud { --tab: var(--gold); }
 .jhud-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .jhud-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+/* Celular: os quatro atalhos numa linha só (a Loja sozinha na segunda linha empurrava a trilha para baixo). */
+@media (max-width: 899px), (max-height: 559px) {
+  .jhud-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .jhud-actions > .btn { padding: 4px 2px; gap: 3px; font-size: var(--fs-sm); letter-spacing: 0; min-width: 0; }
+  .jhud-actions > .btn .ico { flex: none; }
+}
 .jhud-team { display: grid; gap: 6px; }
 .jhud-member { display: flex; align-items: center; gap: 8px; }
 .jhud-member > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -31,7 +37,7 @@
 .jstop.done .jstop-ico { background: var(--gold); color: var(--ink); border-color: var(--gold); }
 .jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 16%, transparent), transparent 85%); }
 .jstop.here .jstop-ico { border-color: var(--primary-2); background: var(--primary); color: var(--primary-ink); }
-.jstop.here .jstop-txt b { font: 400 var(--fs-xl)/1.2 var(--font-display); letter-spacing: .02em; }
+.jstop.here .jstop-txt b { font: 700 var(--fs-2xl)/1.15 var(--font-hand); }
 .jstop.k-boss .jstop-ico { border-color: var(--accent-2); }
 .jstop.k-elite .jstop-ico { border-color: var(--gold-2); }
 .jstop.k-story .jstop-ico { border-color: var(--ck); }
@@ -50,7 +56,9 @@
 .jbest { margin: 4px 0 0; color: var(--gold-2); }
 .chip.jrecord { color: var(--gold-2); }
 .chip.jt-complete { margin-top: 4px; color: var(--leaf); }
-.jtrail-screen .sticky-cta { background: linear-gradient(180deg, transparent, var(--bg) 24%); padding: 18px 0 8px; }
+/* A faixa dos parceiros fica no papel sólido: com o degradê até 24%, os retratos flutuavam sobre os nós da trilha. */
+.jtrail-screen .sticky-cta { background: linear-gradient(180deg, transparent, var(--bg) 16px); padding: 18px 0 calc(8px + env(safe-area-inset-bottom, 0px)); }
+.jtrail-screen .sticky-cta .btn.big { text-wrap: balance; }
 .jteam { display: flex; align-items: center; gap: 4px; justify-content: center; margin: 0 0 6px; }
 .jabandon { display: block; margin: 6px auto 0; }
 .joptions { display: flex; flex-direction: column; gap: 8px; }
@@ -110,7 +118,7 @@
 .jrcard-ico { position: relative; width: 60px; height: 60px; flex: none; display: grid; place-items: center; background: var(--surface-3); border: 1px solid var(--tier); }
 .jrcard-ico .ico { width: 42px; height: 42px; }
 .jrcard-txt { flex: 1; min-width: 0; }
-.jrcard-txt b { display: block; font: 400 var(--fs-xl)/1.15 var(--font-display); letter-spacing: .02em; }
+.jrcard-txt b { display: block; font: 700 var(--fs-2xl)/1.15 var(--font-hand); }
 .jrcard-txt small { display: block; color: var(--muted); }
 .jrcard-txt .jrcard-tier { color: var(--tier); font: 700 var(--fs-xs)/1.3 var(--font-hud); text-transform: uppercase; letter-spacing: .12em; }
 .jrcard.tier-common .jrcard-tier { color: var(--muted); }
@@ -124,6 +132,9 @@
 
 .jrpanel h2 small { font-family: var(--font-body); font-size: var(--fs-sm); }
 .jrgroup h3 { margin: 12px 0 6px; font-size: var(--fs-md); color: var(--tier); text-align: left; letter-spacing: .14em; }
+/* No papel, as cores de raridade (pensadas para o fundo escuro) ficavam claras demais ("Inicial" a cerca de 1,9:1):
+   o texto leva a mesma cor puxada para a tinta. Borda e moldura seguem na cor pura. */
+:is(.parchment, .modal-body.registry) :is(.jrcard-tier, .jrgroup h3) { color: color-mix(in srgb, var(--tier) 45%, var(--paper-ink)); }
 .jrgroup.tier-common h3 { color: var(--muted); }
 .jrgrid { display: grid; grid-template-columns: repeat(auto-fill, 54px); gap: 8px; }
 .jrgrid .jrslot.on { transform: translateY(-3px); box-shadow: 0 0 0 2px var(--tier); }
@@ -176,7 +187,8 @@
 .jrshelf-item .jrslot { pointer-events: none; }
 .jrshelf-item.on { box-shadow: inset 0 0 0 1px var(--tier); background: var(--surface-3); }
 .jrshelf-item.sold { opacity: .45; }
-.jrprice { font: 700 var(--fs-md)/1 var(--font-hud); letter-spacing: .04em; padding: 3px 8px; background: var(--ink); color: var(--gold-2); border-left: 2px solid var(--gold); white-space: nowrap; }
+/* Etiqueta escura: o ouro claro fixo (no papel, --gold-2 vira tinta marrom e dava 2,5:1 sobre o fundo escuro). */
+.jrprice { font: 700 var(--fs-md)/1 var(--font-hud); letter-spacing: .04em; padding: 3px 8px; background: var(--ink); color: #f3d38b; border-left: 2px solid var(--gold); white-space: nowrap; }
 
 /* Painel das relíquias e visual do Sasuke */
 .jmodal { max-height: 86vh; overflow-y: auto; }
@@ -195,6 +207,21 @@
 .jclass.off { opacity: .5; cursor: default; }
 .jclass .lock, .lock-note .ico { width: 14px; height: 14px; color: var(--muted); vertical-align: -.15em; }
 .jreveal .portrait-lg { width: 120px; height: 120px; }
+/* Revelação do Caminho Ninja: o carimbo do elemento cai sobre o retrato depois que ele aparece; a equipe vem embaixo. */
+.jreveal-stage { position: relative; width: max-content; margin: 6px auto 2px; }
+.jreveal-seal {
+  --s: 62px; position: absolute; right: -30px; bottom: -14px; z-index: 2;
+  box-shadow: 0 0 0 3px var(--bg), 3px 4px 0 3px rgba(0, 0, 0, .35); animation: stamp var(--dur-3) var(--ease) .35s both;
+}
+.jreveal-name { margin: 8px 0 0; font: 700 var(--fs-4xl)/1.1 var(--font-hand); letter-spacing: 0; text-transform: none; }
+.jreveal-line { margin-top: 2px; }
+.jreveal-team { list-style: none; margin: 10px 0 4px; padding: 0; display: flex; justify-content: center; align-items: flex-end; gap: 14px; }
+.jreveal-team li { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; text-align: center; animation: pop var(--dur-3) var(--ease) both; }
+.jreveal-team li { animation-delay: .5s; }
+.jreveal-team li + li { animation-delay: .62s; }
+.jreveal-team .portrait-md { width: 64px; height: 64px; }
+.jreveal-team b { font: 700 var(--fs-md)/1.1 var(--font-hud); letter-spacing: .04em; }
+@media (prefers-reduced-motion: reduce) { .jreveal-seal, .jreveal-team li { animation: none; } }
 /* Elemento do Comum: sortear, os 5 elementos ou o prodígio. */
 .jel-pick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .jel-pick[hidden] { display: none; }
@@ -220,7 +247,7 @@
 .jmap-boss .portrait { flex: none; border-color: var(--accent-2); box-shadow: 2px 2px 0 var(--accent-deep); }
 .jmap-boss span:not(.portrait) { display: flex; flex-direction: column; gap: 1px; }
 .jmap-boss small { font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.jmap-boss b { font: 400 var(--fs-2xl)/1.1 var(--font-display); color: var(--accent-text); letter-spacing: .02em; }
+.jmap-boss b { font: 700 var(--fs-3xl)/1.15 var(--font-hand); color: var(--accent-text); }
 /* Altura pela quantidade de linhas (--rows, vindo do mapa); nós e herói ficam em % dela. */
 .jmap { width: 100%; height: calc(var(--rows, 12) * 74px + 104px); }
 .jmap-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -237,9 +264,9 @@
 .jnode-map > * { transform: rotate(-45deg); }
 .jnode-map .ico { width: 20px; height: 20px; }
 .jnode-map .portrait-sm { width: 46px; height: 46px; border: 0; }
-/* Forma por tipo: elite estrelada, descanso redondo, mercador quadrado, tesouro dourado, desconhecido tracejado, chefe grande. */
-.jnode-map.k-elite { border-color: var(--gold-2); color: var(--gold-2); }
-.jnode-map.k-elite::before { content: ''; position: absolute; inset: -1px; z-index: -1; transform: rotate(45deg); background: var(--surface); border: 1px solid var(--gold-2); }
+/* Forma por tipo: elite com borda dupla, descanso redondo, mercador quadrado, tesouro dourado, desconhecido tracejado, chefe grande. */
+/* Elite: losango de borda dupla. O quadrado girado por trás (estrela de oito pontas) lia como defeito de desenho. */
+.jnode-map.k-elite { border-color: var(--gold-2); color: var(--gold-2); box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--gold-2), 2px 2px 0 var(--ink); }
 .jnode-map.k-rest { border-color: var(--leaf); color: var(--leaf); border-radius: 50%; }
 .jnode-map.k-shop { transform: translate(-50%, -50%); border-color: var(--gold); color: var(--gold-2); }
 .jnode-map.k-shop > * { transform: none; }
@@ -250,8 +277,9 @@
   box-shadow: 0 0 0 3px var(--ink), 0 0 0 5px var(--accent), 0 0 22px color-mix(in srgb, var(--accent) 70%, transparent);
 }
 .jnode-map.done { background: var(--gold); color: var(--ink); border-color: var(--gold); opacity: .9; }
-.jnode-map.done::before { background: var(--gold); border-color: var(--gold); }
-.jnode-map.ahead { opacity: .92; }
+/* Adiante (ainda não escolhíveis): mais apagados, para os nós da escolha saltarem já no começo do mapa (antes os três
+   de partida só tinham um halo a mais). O chefe segue inteiro: é o destino. */
+.jnode-map.ahead:not(.k-boss) { opacity: .62; filter: saturate(.55); }
 .jnode-map.dead { opacity: .3; filter: grayscale(1); box-shadow: none; }
 .jnode-map.choice { z-index: 2; cursor: pointer; border-color: var(--accent-2); background: var(--surface-2); opacity: 1; animation: nodeCall 1.4s var(--ease) infinite; }
 .jnode-map.choice::before { border-color: var(--accent-2); }
@@ -284,9 +312,10 @@
 .jstage-name h2 { margin: 3px 0 0; font: 400 clamp(22px, 3.2vh, 34px)/1.1 var(--font-display); letter-spacing: .02em; color: var(--text); text-shadow: var(--title-shadow); }
 .jstage-name .jb-prompt { margin: 4px 0 0; text-align: left; }
 .jstage-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-/* Abandonar jornada: em cor de perigo, como o Desistir da luta (acaba a run inteira; pede confirmação). */
+/* Abandonar jornada: discreto no topo (acaba a run inteira e pede confirmação). Com borda vermelha ele era a segunda
+   coisa que se via na tela, logo abaixo do título; a cor de perigo aparece ao passar o mouse ou focar. */
 .jstage-meta .jgiveup {
-  gap: 6px; color: var(--accent-text); border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, transparent);
+  gap: 6px; margin-left: auto; color: var(--muted); border-color: transparent; background: transparent;
 }
 .jstage-meta .jgiveup:hover { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 .jstage-meta .jgiveup .ico { width: 15px; height: 15px; }
@@ -385,7 +414,7 @@
 .jnext h4 { margin: 10px 0 4px; font: 700 var(--fs-xs)/1 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .jnext-stop { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface-2); border-top: 3px solid var(--accent); }
 .jnext-stop > .ico { width: 22px; height: 22px; flex: none; color: var(--accent-text); }
-.jnext-stop b { display: block; font: 400 var(--fs-xl)/1.15 var(--font-display); }
+.jnext-stop b { display: block; font: 700 var(--fs-2xl)/1.15 var(--font-hand); }
 .jnext-stop small, .jnext-list small { display: block; color: var(--muted); font-size: var(--fs-xs); }
 .jnext-foes, .jnext-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .jnext-foes li { display: flex; align-items: center; gap: 10px; }
@@ -435,8 +464,10 @@
   background: var(--grain-dark), var(--stamp); color: #f8efdc; border: 1px solid var(--stamp);
   box-shadow: inset 0 0 0 2px var(--stamp), inset 0 0 0 3px #f8efdc99, 2px 2px 0 rgba(36, 25, 15, .45);
 }
-.jmap .jnode-map.k-elite { --stamp: var(--accent-deep); color: #f3d38b; border-color: #94712c; }
-.jmap .jnode-map.k-elite::before { background: var(--stamp); border-color: #94712c; }
+.jmap .jnode-map.k-elite {
+  --stamp: var(--accent-deep); color: #f3d38b; border-color: #94712c;
+  box-shadow: inset 0 0 0 2px var(--stamp), inset 0 0 0 3px #f3d38b99, 0 0 0 2px var(--paper), 0 0 0 4px #94712c, 2px 2px 0 rgba(36, 25, 15, .45);
+}
 .jmap .jnode-map.k-rest { --stamp: #3f6b3a; color: #f8efdc; border-color: var(--stamp); }
 .jmap .jnode-map.k-treasure { --stamp: #94712c; color: #fff4d6; border-color: var(--stamp); }
 .jmap .jnode-map.k-shop { --stamp: var(--wood); color: #f3d38b; border-color: var(--stamp); }
@@ -444,7 +475,6 @@
 .jmap .jnode-map.k-unknown .jq { color: var(--accent-text); }
 .jmap .jnode-map.k-boss { --stamp: var(--accent); box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--accent); }
 .jmap .jnode-map.done { --stamp: var(--paper-2); color: var(--paper-ink); border-color: var(--paper-muted); box-shadow: none; opacity: .75; }
-.jmap .jnode-map.done::before { background: var(--paper-2); border-color: var(--paper-muted); }
 .jmap .jnode-map.dead { opacity: .32; box-shadow: none; }
 .jmap .jnode-map.choice { border-color: var(--paper-ink); opacity: 1; background: var(--grain-dark), var(--stamp); animation: mapCall 1.4s var(--ease) infinite; }
 .jmap .jnode-map.choice::before { border-color: var(--paper-ink); }
@@ -545,6 +575,8 @@
 }
 @media (min-width: 900px) and (min-height: 560px) {
   body:has(.jgate) { height: max(100dvh, var(--floor-h)); }
+  /* A sombra dos cards de modo (::after deslocado) passava da borda: rolagem lateral de 8px a 1024. */
+  html:has(.jgate), body:has(.jgate) { overflow-x: clip; }
   body:has(.jgate) main { display: flex; flex-direction: column; min-height: 0; max-width: var(--shell-max); }
   .jgate .gate-aside { display: flex; }
   .jgate .gate-hero { aspect-ratio: auto; }
@@ -628,9 +660,29 @@
   /* A lista rola na célula dela; a arte fica parada ao lado. */
   .jtrail-screen > .jtrail-arc { display: grid; grid-template-columns: minmax(220px, 46%) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: var(--gap-lg); overflow: hidden; padding-top: 12px; }
   .jtrail-arc .jtrail { grid-column: 1; grid-row: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
-  .jtrail-art { grid-column: 2; grid-row: 1; margin: 0; height: auto; -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat; mask: var(--ink-edge) center / 100% 100% no-repeat; }
+  /*
+   * A célula pode ser bem mais alta que a arte (2560×1440: 634×1220 para uma arte de 0,70). A arte fica na proporção
+   * dela, centrada, e a borda de tinta vai na arte, não na célula: antes a máscara crescia com a célula, cortava a faixa
+   * do nome e a arte perdia os lados.
+   */
+  .jtrail-art {
+    grid-column: 2; grid-row: 1; margin: 0; height: auto; overflow: visible; container-type: size;
+    display: grid; grid-template-areas: 'art'; place-content: center;
+  }
+  /* A maior arte que cabe na célula na proporção dela; numa célula estreita, a arte larga é cortada até ficar em pé
+     (altura de 1,35 vez a largura), para não virar uma faixa pequena no meio da célula. */
+  .jtrail-art > .scene-media {
+    grid-area: art; position: relative; display: block; overflow: hidden;
+    width: min(100cqw, 100cqh * max(var(--ratio, .7), .62));
+    height: min(100cqh, max(100cqw / var(--ratio, .7), 100cqw * 1.35));
+    -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat; mask: var(--ink-edge) center / 100% 100% no-repeat;
+  }
   .jtrail-art > .scene-media > :is(img, video) { -webkit-mask: none; mask: none; }
-  .jtrail-art figcaption { left: auto; right: clamp(14px, 2vw, 30px); bottom: clamp(14px, 3vh, 34px); font-size: clamp(20px, 1.8vw, 32px); rotate: -2deg; filter: drop-shadow(2px 4px 3px rgba(0, 0, 0, .35)); }
+  /* A faixa do nome fica no pé da arte (mesma célula), fora da máscara: inteira em qualquer altura. */
+  .jtrail-art figcaption {
+    grid-area: art; position: relative; z-index: 1; left: auto; bottom: auto; align-self: end; justify-self: end; margin: 0 clamp(10px, 1.4vw, 24px) clamp(12px, 2.6vh, 30px) 0;
+    white-space: nowrap; font-size: clamp(20px, 1.8vw, 32px); rotate: -2deg; filter: drop-shadow(2px 4px 3px rgba(0, 0, 0, .35));
+  }
   .jtrail-art .seal { --s: clamp(30px, 2.4vw, 42px); }
 }
 
@@ -651,7 +703,7 @@
 /* Telas simples da Jornada (sorteio, nome, descanso, baú, evento, fim) no desktop: coluna central de leitura, não a
    largura toda da casca. As telas compostas (entrada, perspectiva, preparo, trilha, mapa, luta) têm a sua grade. */
 @media (min-width: 900px) and (min-height: 560px) {
-  body.mode-jornada main > .screen:not(.gate, .jcampaigns, .jpath, .jtrail-screen, .jbattle, .jrboss) {
+  body.mode-jornada main > .screen:not(.gate, .jcampaigns, .jpath, .jtrail-screen, .jbattle, .jrboss, .jcene, .jstaged) {
     width: 100%; max-width: clamp(560px, 46vw, 860px); margin-left: auto; margin-right: auto;
   }
 }

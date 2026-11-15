@@ -24,7 +24,8 @@ export async function mapScreen(eventDone: boolean): Promise<'event' | 'fight' |
   const cat = currentCategory(run, rdata);
   ses.logStep = run.step;
   const pct = Math.round((cycleMult(run, rdata) - 1) * 100);
-  const cycleChip = run.cycle > 0 ? ` <span class="chip jcycle"${tip(RR.cycle(run.cycle + 1), RR.cycleTip(pct))}>${icon('cycle')} ${RR.cycle(run.cycle + 1)}</span>` : '';
+  // O título já diz o ciclo: o chip mostra o quanto os vilões ficaram mais fortes (detalhe na dica).
+  const cycleChip = run.cycle > 0 ? ` <span class="chip jcycle"${tip(RR.cycle(run.cycle + 1), RR.cycleTip(pct))}>${icon('cycle')} +${pct}%</span>` : '';
   const root = show(
     h(`<div class="screen rmap">
       <h2>${RR.title} ${run.cycle + 1}${cycleChip}</h2>
@@ -44,7 +45,8 @@ export async function mapScreen(eventDone: boolean): Promise<'event' | 'fight' |
         eventDone
           ? `<button class="btn primary big" data-choice="fight">${icon('swords')} ${RR.go(villainName(id))}</button>`
           : `<button class="btn primary big" data-choice="event">${icon('dice')} ${RR.toEvent}</button>`
-      }<button class="btn small jgiveup rabandon" data-choice="abandon">${icon('warning')} ${RR.abandon}</button></div>
+      }</div>
+      <div class="rmap-quit"><button class="btn small jgiveup rabandon" data-choice="abandon">${icon('warning')} ${RR.abandon}</button></div>
     </div>`),
   );
   for (;;) {

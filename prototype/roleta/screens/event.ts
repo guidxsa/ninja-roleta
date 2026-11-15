@@ -117,6 +117,8 @@ export async function eventScreen(name: string): Promise<'back' | 'fight'> {
   c.stats = addEffect(addPreEvent(c.stats, roll.value), step.effect);
   if ('result' in step) c.stats = addJokenpo(c.stats, (step as { result: 'win' | 'draw' | 'loss' }).result);
   checkAchievements('inProgress', null);
+  // A instrução ("Gire a roleta de itens.") já foi cumprida: o resultado toma o lugar dela.
+  detail.querySelector('.result-card > p')?.remove();
   showEffect(detail, step.effect);
   refreshHud(true);
   const cta = root.querySelector<HTMLElement>('#cta')!;
@@ -128,7 +130,8 @@ export async function eventScreen(name: string): Promise<'back' | 'fight'> {
 
 export async function jokenpoFlow(slot: HTMLElement): Promise<Step> {
   const c = ses.camp!;
-  const box = h(`<div class="wheel-box"><h3>${S.roulettes.jokenpo}</h3><p class="muted center">${S.ui.chooseHand}</p>
+  // O nome do evento já está no painel ao lado: o palco diz só o que fazer.
+  const box = h(`<div class="wheel-box"><h3>${S.ui.chooseHand}</h3>
     <div class="hands">${HANDS.map((hand) => `<button class="btn hand" data-choice="${hand}">${icon(hand)}<small>${S.hands[hand]}</small></button>`).join('')}</div>
     <div class="duel"></div></div>`);
   slot.replaceChildren(box);

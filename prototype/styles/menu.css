@@ -57,13 +57,15 @@ body.at-gate #home-btn, body:not(.at-gate) .brand, body:not(.has-sheet) #sheet-b
 @media (max-width: 439px) {
   .brand-name { display: none; }
 }
-@media (max-width: 360px) {
+/* Celular estreito: com toque, os 6 botões de 44px mais o "Menu" passam de 360px. O Menu fica só com o ícone (o nome
+   continua no aria-label e na dica) e a barra cabe sem empurrar a página para o lado. */
+@media (max-width: 380px) {
   .top { padding-left: 10px; padding-right: 10px; }
-  .top-actions .btn.small { min-width: 33px; }
-}
-@media (max-width: 340px) {
-  #home-btn { padding-right: 8px; }
+  #home-btn { padding: 4px 10px; }
   #home-btn span { display: none; }
+}
+@media (max-width: 360px) {
+  .top-actions .btn.small { min-width: 33px; }
 }
 
 /* ---------------------------------------------------------------------------

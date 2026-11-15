@@ -486,6 +486,11 @@ export const ptBR = {
     mental: 'Res. mental',
     crit: 'Crítico',
   },
+  /** Rótulos curtos para as caixas de status estreitas (o nome inteiro fica na dica). */
+  statsShort: {
+    physical: 'R. física',
+    mental: 'R. mental',
+  },
   roulettes: {
     relicTier: 'Raridade da relíquia',
     relic: 'Relíquia',
@@ -500,7 +505,7 @@ export const ptBR = {
     jinchuuriki: 'Jinchuuriki?',
     event: 'Evento pré-luta',
     item: 'Roleta de itens',
-    akatsuki: 'Encontro com a Akatsuki',
+    akatsuki: 'Roleta do encontro',
     guru: 'Encontro com o guru',
     summonAnimal: 'Animal de invocação',
     reward: 'Recompensa',
@@ -757,10 +762,10 @@ export const ptBR = {
     reactClashHint: (odds: 'good' | 'even' | 'bad') => (odds === 'good' ? 'a seu favor' : odds === 'bad' ? 'contra você' : 'equilibrada'),
 
     // Upgrades de técnica à escolha.
-    upgradeTitle: 'Upgrade de técnica',
+    upgradeTitle: 'Melhorar técnica',
     upgradeChoose: (n: number) => `Escolha a técnica que sobe de nível (${n} pendente(s)).`,
     upgradeTo: (from: string, to: string, level: string) => (from === to ? `${from} → nível ${level}` : `${from} → ${to} (nível ${level})`),
-    upgradeNone: 'Nenhuma técnica pode subir agora (o nível do personagem limita).',
+    upgradeNone: 'Suas técnicas já estão no teto do seu nível.',
     upgradesPending: (n: number) => `${n} upgrade(s) de técnica à escolha`,
     coinReroll: (n: number) => `Moeda viciada (${n}): girar de novo`,
     keepResult: 'Ficar com este',
@@ -798,9 +803,11 @@ export const ptBR = {
       reroll: 'Re-roll',
     } as Record<string, string>,
     reachedStage: (name: string) => `parou em ${name}`,
-    revivesUsed: (n: number) => `${n} Vontade(s) do Fogo usada(s)`,
+    /** Vazio sem nenhuma usada: a linha some (antes aparecia "0 Vontade(s)..." em toda run). */
+    revivesUsed: (n: number) => (n <= 0 ? '' : n === 1 ? '1 Vontade do Fogo usada' : `${n} Vontades do Fogo usadas`),
     disclaimer: 'Projeto de fã, sem fins lucrativos e sem afiliação oficial. Nomes de trabalho.',
-    towards: (name: string) => `Rumo a ${name}`,
+    // "Rumo a Ninja da Grama" pedia artigo; com o nome primeiro serve para qualquer vilão.
+    towards: (name: string) => `${name} à frente`,
     difficulty: 'Dificuldade',
     hardcoreLocked: 'Vença uma run no Difícil para liberar o Hardcore.',
     xp: (cur: number, need: number) => `${cur}/${need} XP`,
@@ -851,7 +858,7 @@ export const ptBR = {
     techniqueUpgrade: (from: string, to: string, level: string) =>
       from === to ? `${from} subiu para o nível ${level}.` : `${from} evoluiu: ${to} (nível ${level})!`,
     upgradeGranted: (n: number) => `+${n} upgrade(s) de técnica à escolha.`,
-    upgradeForfeit: (xp: number) => `Nenhuma técnica podia subir: o upgrade virou ${xp} de XP.`,
+    upgradeForfeit: (xp: number) => `A melhoria virou ${xp} de XP.`,
     resistance: (phys: number, mental: number) =>
       [phys > 0 ? `Resistência física +${phys}` : '', mental > 0 ? `Resistência mental +${mental}` : ''].filter(Boolean).join(', ') + '.',
     speed: (n: number) => `Speed +${n}. O amuleto vai para a bolsa.`,

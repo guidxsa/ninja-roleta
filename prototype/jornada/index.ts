@@ -97,7 +97,7 @@ const STOP_ICONS: Record<string, string> = {
   boss: 'intent',
   event: 'focus',
   rest: 'rest',
-  treasure: 'item',
+  treasure: 'chest',
 };
 
 /** Nome da parada: o da trilha da História, ou (Caminho Ninja) os inimigos da luta / o tipo da parada. */
@@ -188,6 +188,8 @@ function gainsStrip(): string {
 const heroFace = (host: JornadaHost, run: JRun) => ({
   face: run.hero,
   faceSpec: portraitSpec(run.hero, run),
+  // O herói do Caminho Ninja é o ninja da classe: esse retrato é dele, não o de outro (docs/visual.md#quem-aparece-na-cena).
+  ownFace: run.mode === 'generic',
   // Nome cru: a cena escapa o texto ao desenhar.
   faceName: run.mode === 'generic' ? heroLabel(run.hero, host.playerName()) : (J.names[run.hero] ?? run.hero),
 });
@@ -523,6 +525,9 @@ function elementChoiceButton(c: (typeof ELEMENT_CHOICES)[number]): string {
  * Revelação do começo do Caminho Ninja (sem roleta): o elemento (sorteado ou escolhido), o prodígio ou o Hyuuga sem
  * elemento, a relíquia bônus de quem sorteou e os parceiros.
  */
+/** Kanji do carimbo da revelação por elemento (todos no recorte da fonte, prototype/fonts/LEIAME.md). */
+const REVEAL_KANJI: Partial<Record<string, string>> = { fire: '火', water: '水', wind: '風', lightning: '雷', earth: '土' };
+
 export async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
   const el = elementOf(run, run.hero, data);
   const [a, b] = run.supports.map((id) => memberName(host, run, id));
@@ -530,14 +535,20 @@ export async function revealScreen(host: JornadaHost, run: JRun): Promise<void> 
   const line = el ? `${icon(el)} ${G.revealElement(S.elements[el])}` : noElement ? G.revealHyuuga : G.revealProdigy;
   // A relíquia bônus é a que veio além da inicial.
   const bonus = run.elementPick === 'random' ? run.relics.find((id) => data.relics.find((r) => r.id === id)?.tier !== 'starter') : undefined;
+  // O momento da Jornada não é uma roleta (identidade do outro modo): o elemento cai como um carimbo de tinta sobre o
+  // retrato, e a equipe aparece inteira, com o elemento de cada um. Prodígio: 体 (corpo); Hyuuga: 天 (o céu do Kaiten).
+  const seal = el ? REVEAL_KANJI[el] ?? '忍' : noElement ? '天' : '体';
+  // O nome do parceiro já traz o elemento ("Kenta (Água)"); o protagonista está no alto, então a fileira mostra os dois.
+  const member = (id: string) => `<li>${fighterPortrait(id, portraitSpec(id, run), 'md')}<b>${memberName(host, run, id)}</b></li>`;
   const root = show(
-    h(`<div class="screen jreveal"><h2>${run.elementPick === 'random' ? G.revealTitle : G.revealChosen}</h2>
-      <div class="jstart-face pop">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'lg')}</div>
-      <h3 class="center">${heroName(host, run)}</h3>
-      <p class="center">${line}</p>
+    h(`<div class="screen jreveal jreveal-path"><h2>${run.elementPick === 'random' ? G.revealTitle : G.revealChosen}</h2>
+      <div class="jreveal-stage"><div class="jstart-face pop">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'lg')}</div>
+        <span class="seal stamp jreveal-seal el-${el ?? 'none'}" aria-hidden="true">${seal}</span></div>
+      <h3 class="center jreveal-name">${heroName(host, run)}</h3>
+      <p class="center jreveal-line">${line}</p>
       ${run.classId === 'uchiha' && run.secondElement ? `<p class="center">${icon(run.secondElement)} ${G.revealSecond(S.elements[run.secondElement])}</p>` : ''}
       ${bonus ? `<h3 class="center">${G.randomBonus}</h3>${relicCard(bonus, '', 'reveal')}` : ''}
-      <p class="center muted">${G.revealTeam(a ?? '', b ?? '')}</p>
+      <ul class="jreveal-team" aria-label="${esc(G.revealTeam(a ?? '', b ?? ''))}">${run.supports.map(member).join('')}</ul>
       <button class="btn primary big" data-choice="ok">${U.continue}</button></div>`),
   );
   host.mood(el || noElement ? 'neutral' : 'good');
@@ -705,7 +716,7 @@ function shopPanel(el: HTMLElement, host: JornadaHost, get: () => JRun, set: (r:
         .map((c) => `<div class="jrelic"><span class="jrelic-ico">${icon('kit')}</span><span class="jrelic-txt"><b>${J.items[c.id]!.name}</b><small>${J.items[c.id]!.desc}</small></span>${btn({ kind: 'item', ...c }, `i:${c.id}`)}</div>`)
         .join('')}
       ${talentTreeComplete(run, data) ? '' : `<div class="jrelic"><span class="jrelic-ico">${icon('scroll')}</span><span class="jrelic-txt"><b>${U.training}</b></span>${btn({ kind: 'training', price: offer.training }, 't')}</div>`}
-      <div class="jrelic"><span class="jrelic-ico">${icon('medical')}</span><span class="jrelic-txt"><b>${U.treatment}</b></span>${btn({ kind: 'treatment', price: offer.treatment }, 'heal')}</div>
+      <div class="jrelic"><span class="jrelic-ico">${icon('medical')}</span><span class="jrelic-txt"><b>${U.treatment}</b><small>${U.treatmentDesc}</small></span>${btn({ kind: 'treatment', price: offer.treatment }, 'heal')}</div>
       ${cleanseRow}`;
   };
   el.addEventListener('click', (e) => {
@@ -1112,6 +1123,12 @@ export async function eventStop(host: JornadaHost, run0: JRun): Promise<JRun> {
 }
 
 /**
+ * Fundo das paradas e recompensas no PC (descanso, tesouro, relíquia de história, escolha do chefe): o local da parada
+ * atrás do conteúdo, como na cena (styles/jornada-scene.css, `.jstaged`). No celular não aparece.
+ */
+const stageBg = (run: JRun) => `<figure class="jstage-bg jscene scene-${stopScene(run, data)}" aria-hidden="true"></figure>`;
+
+/**
  * Relíquia de história (a bandana na Formatura, o colar da Tsunade): quem entrega aparece com a fala, e a relíquia nova
  * toma o lugar da antiga à vista do jogador.
  */
@@ -1119,7 +1136,7 @@ export async function storyRelicScene(host: JornadaHost, run: JRun, id: string, 
   const { who, line } = U.storyRelicLines[id]!;
   const giver = J.names[who] ?? who;
   const root = show(
-    h(`<div class="screen jreveal jstory-relic"><h2>${esc(U.storyRelicTitle(relicName(id)))}</h2>
+    h(`<div class="screen jreveal jstory-relic jstaged">${stageBg(run)}<h2>${esc(U.storyRelicTitle(relicName(id)))}</h2>
       ${scenePortrait(who) ? `<div class="jstart-face pop">${scenePortrait(who)}</div>` : ''}
       <blockquote class="parchment gate-quote"><p>${esc(line)}</p><cite>${esc(giver)}</cite></blockquote>
       <div class="jswap">${replaced ? `<span class="jswap-old" aria-label="${esc(U.storyRelicFrom(relicName(replaced)))}">${relicSlot(replaced, 'span')}</span>` : ''}${relicCard(id, '', 'reveal')}</div>
@@ -1135,10 +1152,11 @@ export async function storyRelicScene(host: JornadaHost, run: JRun, id: string, 
 export function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
   let run = keep(openShop(run0, data));
   persist(host, run);
+  // Sair é secundário: o vermelho é das compras; com ele em destaque, o maior chamado da loja era ir embora.
   const root = h(`<div class="jtree-screen jshop-screen ${themeOf(run.hero).cls}" role="dialog" aria-label="${U.shopTitle}"${themeStyle(run)}><div class="jt-body">
     <div class="jt-head"><h2>${icon('tag')} ${U.shopTitle}</h2><span class="chip" data-ryo></span><span class="chip" data-inflation></span></div>
     <section class="parchment jshop-paper"><div data-shop></div></section>
-    <div class="sticky-cta"><button class="btn primary big" data-close>${U.leave}</button></div></div></div>`);
+    <div class="sticky-cta"><button class="btn big" data-close>${U.leave}</button></div></div></div>`);
   openDialog(root);
   const chips = () => {
     root.querySelector('[data-ryo]')!.innerHTML = `${icon('coin')} ${U.ryo(run.ryo)}`;
@@ -1159,8 +1177,8 @@ export function shopScreen(host: JornadaHost, run0: JRun): Promise<JRun> {
 
 export async function restStop(host: JornadaHost, run0: JRun): Promise<JRun> {
   let run = run0;
-  const root = show(h(`<div class="screen"><h2>${stopName(currentStop(run, data)!)}</h2><div data-hud>${hud(host, run)}</div>
-    <button class="btn big" data-choice="heal">${icon('rest')} ${U.restHeal(restHeal(run, data).hp, restHeal(run, data).chakra)}</button>
+  const root = show(h(`<div class="screen jrest jstaged">${stageBg(run)}<h2>${stopName(currentStop(run, data)!)}</h2><div data-hud>${hud(host, run)}</div>
+    <button class="btn big" data-choice="heal"${tip(J.stopKinds.rest!, U.restHealTip(restHeal(run, data).hp, restHeal(run, data).chakra))}>${icon('rest')} ${U.restHeal(restHeal(run, data).hp, restHeal(run, data).chakra)}</button>
     <span data-train>${restTrainButton(run)}</span></div>`));
   // Talentos e loja continuam à mão: o HUD muda a run (e a árvore pode fechar, trocando o Treinar).
   wireHud(root, host, () => run, (r) => (run = r), () => {
@@ -1181,7 +1199,7 @@ function restTrainButton(run: JRun): string {
 }
 
 export async function treasureStop(host: JornadaHost, run: JRun): Promise<JRun> {
-  const root = show(h(`<div class="screen jrtreasure"><h2>${stopName(currentStop(run, data)!)}</h2>
+  const root = show(h(`<div class="screen jrtreasure jstaged">${stageBg(run)}<h2>${stopName(currentStop(run, data)!)}</h2>
     <button type="button" class="jrchest" data-choice="open" aria-label="${U.openTreasure}">${chestClosed()}</button>
     <div data-slot></div><button class="btn primary big" data-choice="open">${U.openTreasure}</button></div>`));
   await choose(root);
@@ -1221,13 +1239,13 @@ export async function relicReveal(title: string, id: string, place: string): Pro
 export async function bossChoiceScreen(run: JRun): Promise<JRun> {
   const options = run.bossChoice!;
   let pick: string | undefined;
-  const root = show(h(`<div class="screen jrboss"><h2>${U.bossChoice}</h2>
+  const root = show(h(`<div class="screen jrboss jstaged">${stageBg(run)}<h2>${U.bossChoice}</h2>
     <div class="jrboss-row">${options
       .map((id) => `<button type="button" class="jrboss-opt tier-${relicTier(id)}" data-opt="${id}" aria-label="${relicName(id)}">
         <span class="jrslot huge tier-${relicTier(id)}">${relicIcon(id)}</span><b>${relicName(id)}</b>${isEvolution(id) ? `<small class="jrboss-evo">${J.relics.evolution}</small>` : ''}</button>`)
       .join('')}</div>
     <div data-detail><p class="muted center">${U.relicPick}</p></div>
-    <div class="sticky-cta"><button class="btn primary big" data-choice="take" disabled>${U.relicPick}</button></div></div>`));
+    <div class="sticky-cta"><button class="btn primary big" data-choice="take" disabled>${U.relicTakeIdle}</button></div></div>`));
   const take = root.querySelector<HTMLButtonElement>('[data-choice="take"]')!;
   root.querySelector('.jrboss-row')!.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-opt]');
@@ -1252,6 +1270,7 @@ interface NoticeScene {
   face?: string | null;
   faceSpec?: string;
   faceName?: string;
+  ownFace?: boolean;
   /** Quantas linhas do começo leem como fala (a lição do teste do sino). */
   lead?: number;
 }
@@ -1260,6 +1279,8 @@ interface NoticeScene {
  * Aviso de um momento da run (vitória, lição, estágio concluído, ciclo): a mesma cena dos eventos, com as linhas
  * entrando uma a uma. Uma linha por `\n`.
  */
+const PEAK_SEALS = new Set<string>(['victory', 'stage', 'cycle']);
+
 export async function notice(title: string, text: string, scene: NoticeScene): Promise<void> {
   const seal = U.sceneSeals[scene.seal]!;
   const root = show(
@@ -1269,8 +1290,11 @@ export async function notice(title: string, text: string, scene: NoticeScene): P
         face: scene.face ?? null,
         ...(scene.faceSpec ? { faceSpec: scene.faceSpec } : {}),
         ...(scene.faceName ? { faceName: scene.faceName } : {}),
+        ...(scene.ownFace ? { ownFace: true } : {}),
         title,
         seal: { ...seal, gold: scene.seal === 'victory' || scene.seal === 'stage' },
+        // Vitória, estágio e ciclo são picos: carimbo grande no alto do pergaminho e o título em letreiro.
+        ...(PEAK_SEALS.has(String(scene.seal)) ? { cls: 'jc-peak' } : {}),
         body: sceneLines(text.split('\n'), scene.lead ?? 0),
         footer: `<button class="btn primary big" data-choice="ok">${U.continue}</button>`,
       }),
@@ -1306,11 +1330,11 @@ export async function endScreen(host: JornadaHost, run: JRun, next: JRun | null,
   const root = show(
     h(
       sceneScreen({
-        cls: `jreport ${good ? 'win' : 'lose'}`,
+        cls: `jreport jc-peak ${good ? 'win' : 'lose'}`,
         place: run.mode === 'generic' ? stageScene(run, data) : stopScene(run, data),
         ...heroFace(host, run),
         title,
-        seal: { ...(good ? U.sceneSeals.victory! : U.sceneSeals.defeat!), gold: good },
+        seal: { ...(won ? U.sceneSeals.victory! : infinite ? U.sceneSeals.infinite! : U.sceneSeals.defeat!), gold: good },
         body: `<p>${esc(text)}${record && (infinite || won) && run.mode === 'generic' ? ` <span class="chip jrecord">${icon('medal')} ${U.record}</span>` : ''}</p>${missionReport(host, run, won)}`,
         footer: buttons,
       }),
@@ -1335,7 +1359,8 @@ function missionReport(host: JornadaHost, run: JRun, won: boolean): string {
     const flat = stages.flatMap((st) => st.stops);
     const at = won ? flat.length : stages.slice(0, run.stageIndex).reduce((n, st) => n + st.stops.length, 0) + run.stopIndex;
     path = `<h3 class="jreport-head">${R.path}</h3><ol class="jreport-path" aria-label="${R.path}">${flat
-      .map((_, i) => `<li class="${i < at ? '' : i === at ? 'fell' : 'todo'}">${i < at ? icon('check') : i === at ? icon('warning') : ''}</li>`)
+      // Cada selo com o ícone do tipo da parada (luta, elite, evento, chefe...): 40 ✓ iguais não contavam o caminho.
+      .map((st, i) => `<li class="k-${st.kind} ${i < at ? '' : i === at ? 'fell' : 'todo'}" title="${esc(stopName(st))}">${i === at ? icon('warning') : icon(STOP_ICONS[st.kind] ?? 'check')}</li>`)
       .join('')}</ol>`;
   }
   const team = membersSeen(run, data);

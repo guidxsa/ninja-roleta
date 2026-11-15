@@ -18,6 +18,8 @@ export interface SceneView {
   faceSpec?: string;
   /** Nome de quem está em cena (padrão: o nome da ficha). */
   faceName?: string;
+  /** O retrato da ficha é a representação de quem está em cena, mesmo genérico (o herói do Caminho Ninja). */
+  ownFace?: boolean;
   title: string;
   /** Selo no canto do pergaminho (kanji do recorte) e o que ele quer dizer, para leitor de tela. */
   seal?: { kanji: string; label: string; gold?: boolean };
@@ -44,7 +46,7 @@ export function scenePortrait(id: string, spec?: string): string {
 /** A tela da cena: quadro do local com quem está em cena, pergaminho e o rodapé de ações. */
 export function sceneScreen(v: SceneView): string {
   const name = v.face ? (v.faceName ?? J.names[v.face] ?? '') : '';
-  const portrait = v.face ? scenePortrait(v.face, v.faceSpec) : '';
+  const portrait = v.face ? (v.ownFace ? fighterPortrait(v.face, v.faceSpec ?? 'ninja:common', 'lg') : scenePortrait(v.face, v.faceSpec)) : '';
   const cast = portrait || name ? `<span class="jc-cast${portrait ? '' : ' no-face'}">${portrait}${name ? `<b class="jc-name">${esc(name)}</b>` : ''}</span>` : '';
   const seal = v.seal ? `<span class="seal jc-seal${v.seal.gold ? ' gold' : ''}" role="img" aria-label="${esc(v.seal.label)}">${v.seal.kanji}</span>` : '';
   return `<div class="screen jcene${v.cls ? ` ${v.cls}` : ''}">${v.above ?? ''}

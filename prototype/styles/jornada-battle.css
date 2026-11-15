@@ -131,6 +131,14 @@
 .jb-log .ico { width: 13px; height: 13px; vertical-align: -.15em; }
 .jb-menu { display: flex; flex-direction: column; gap: 6px; }
 .jb-menu:empty { visibility: hidden; }
+/* Fora do turno do jogador a bandeja continua montada, apagada e sem resposta: a tela não pula e o toque seguinte não
+   cai numa técnica que surgiu embaixo do dedo. */
+.jb-menu.waiting > :not(.jb-prompt) { opacity: .45; filter: saturate(.4); }
+.jb-menu.waiting .jb-prompt { color: var(--muted); }
+/* Escolha de alvo: o pedido no topo e a bandeja apagada embaixo, sem resposta ao toque. */
+.jb-menu.targeting > :not(.jb-target-bar) { opacity: .4; filter: saturate(.4); pointer-events: none; }
+.jb-target-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.jb-target-bar .jb-prompt { text-align: left; color: var(--accent-text); }
 .jb-prompt { margin: 0; text-align: center; font: 600 var(--fs-md)/1.2 var(--font-hud); letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2); }
 .jb-hint { margin: 0; text-align: center; font-size: var(--fs-xs); line-height: 1.3; color: var(--muted); }
 .jb-hint .ico { width: 13px; height: 13px; vertical-align: -.15em; color: var(--good); }
@@ -167,10 +175,11 @@
 .jb-extra { display: flex; flex-wrap: wrap; gap: 6px; }
 .jb-extra .jmove { flex: 1 1 100%; }
 .jb-extra .jx { flex: 1 1 0; justify-content: center; }
-/* Desistir da jornada: botão próprio no pé do menu, em cor de perigo (acaba a run inteira; pede confirmação). */
+/* Desistir da jornada: no pé do menu, separado das ações do turno por um fio e sem o peso de botão (acaba a run inteira
+   e pede confirmação). A cor de perigo aparece ao passar o mouse ou focar. */
 .jb-menu .jgiveup {
-  margin-top: 10px; width: 100%; justify-content: center; gap: 6px;
-  color: var(--accent-text); border-color: color-mix(in srgb, var(--accent) 65%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, transparent);
+  margin-top: 14px; width: 100%; justify-content: center; gap: 6px;
+  color: var(--muted); border-color: transparent; border-top: 1px solid var(--line); background: transparent;
 }
 .jb-menu .jgiveup:hover { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 .jb-menu .jgiveup .ico { width: 16px; height: 16px; }
@@ -181,6 +190,22 @@
   font: 400 var(--fs-5xl)/1.2 var(--font-display); text-align: center; padding: 20px;
 }
 @keyframes scrollAway { 0%, 55% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); } }
+
+/* Elite e chefe: palco próprio. Selo no cabeçalho; o chefe entra com o carimbo 将 numa varrida de laca e luta com o
+   retrato maior, numa moldura de perigo. */
+.jb-kind {
+  display: inline-block; margin-right: 6px; padding: 2px 7px; vertical-align: 1px;
+  font: 700 var(--fs-xs)/1.2 var(--font-hud); letter-spacing: .12em; color: var(--gold-2); border: 1px solid var(--gold-2);
+}
+.jb-k-boss .jb-kind { color: var(--accent-ink); background: var(--accent); border-color: var(--accent-2); }
+.jb-k-boss .jb-head { color: var(--text); }
+.jbattle.jb-k-boss { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent-deep), inset 0 -40px 60px -30px color-mix(in srgb, var(--accent) 35%, transparent); }
+.jbattle.jb-k-elite { border-color: var(--gold-2); box-shadow: inset 0 0 0 1px var(--gold-deep), inset 0 -40px 60px -30px color-mix(in srgb, var(--gold) 28%, transparent); }
+.jb-k-boss .jf.enemy .jf-art { transform: scale(1.22); transform-origin: 50% 100%; margin: 10px 0 6px; }
+.jb-k-boss .jf.enemy .jf-art .portrait { border-width: 2px; box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px var(--accent), 4px 6px 0 var(--accent-deep); }
+.jb-k-elite .jf.enemy .jf-art .portrait { border-width: 2px; border-color: var(--gold-2); box-shadow: 0 0 0 2px var(--ink), 0 0 0 3px var(--gold-2), 3px 4px 0 var(--gold-deep); }
+.jb-k-boss .jb-intro { background: var(--grain-dark), var(--accent-deep); color: var(--accent-ink); gap: 10px; align-content: center; }
+.jb-intro-seal { --s: 72px; rotate: -8deg; box-shadow: 0 0 0 3px var(--accent-ink); }
 
 /* Notebook (≥ 900): campo à esquerda e ações em coluna à direita. */
 @media (min-width: 900px) and (min-height: 560px) {
@@ -334,4 +359,15 @@
   .jbattle .jmove-txt b { font-size: var(--fs-md); }
   .jbattle .jb-menu .jgiveup { margin-top: 4px; min-height: 40px; }
   .jbattle .jb-extra .jx { min-height: 40px; padding: 6px 8px; }
+}
+
+/* Celular baixo (≤ 760px de altura): a bandeja presa no pé cobria o HP dos aliados (a 360×740 as barras ficavam em
+   y≈534 com a bandeja começando em 502). Retratos menores, chefe sem a ampliação toda e a faixa de relíquias fora (elas
+   seguem no HUD e na Ficha): inimigo, HP da equipe e ações cabem numa tela. */
+@media (max-width: 899px) and (max-height: 760px) {
+  .jbattle { gap: 4px; }
+  .jbattle .jb-relics { display: none; }
+  .jbattle .jf-art .portrait-md { width: 54px; height: 54px; }
+  .jb-k-boss .jf.enemy .jf-art { transform: scale(1.12); margin: 4px 0 2px; }
+  .jbattle .jb-banner { min-height: 26px; }
 }

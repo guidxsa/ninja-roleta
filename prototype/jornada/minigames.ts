@@ -80,6 +80,10 @@ async function seals(slot: HTMLElement, data: JornadaData, rng: Rng, instant: bo
     await sleep(150);
   }
   status.textContent = M.sealsRepeat;
+  // Casas vazias mostram quantos selos faltam e em qual posição está (antes sobrava um vão sem pista).
+  const slots = (typed: Seal[]) =>
+    typed.map((s) => `<span class="mg-typed">${S.jornada.sealGlyphs[s]}</span>`).join('') + '<span class="mg-slot" aria-hidden="true"></span>'.repeat(Math.max(0, sequence.length - typed.length));
+  seq.innerHTML = slots([]);
   const grid = box.querySelector<HTMLElement>('.mg-grid')!;
   grid.innerHTML = options.map((s) => `<button class="mg-card up" data-s="${s}" type="button">${glyph(s)}</button>`).join('');
   return new Promise((resolve) => {
@@ -88,7 +92,7 @@ async function seals(slot: HTMLElement, data: JornadaData, rng: Rng, instant: bo
       const b = (ev.target as HTMLElement).closest<HTMLElement>('[data-s]');
       if (!b) return;
       typed.push(b.dataset.s as Seal);
-      seq.innerHTML = typed.map((s) => `<span class="mg-typed">${S.jornada.sealGlyphs[s]}</span>`).join('');
+      seq.innerHTML = slots(typed);
       const r = checkSequence(sequence, typed);
       if (r === 'ok') return;
       grid.querySelectorAll('button').forEach((x) => x.setAttribute('disabled', ''));
@@ -100,7 +104,7 @@ async function seals(slot: HTMLElement, data: JornadaData, rng: Rng, instant: bo
 function rps(slot: HTMLElement, rng: Rng): Promise<boolean> {
   const hands: Hand[] = ['rock', 'paper', 'scissors'];
   const box = h(`<div class="mg"><h3>${M.jokenpoTitle}</h3><p class="muted small">${M.jokenpoHelp}</p>
-    <div class="mg-duel"></div><div class="row center-row">${hands.map((x) => `<button class="btn big-hand" data-h="${x}" aria-label="${S.hands[x]}" title="${S.hands[x]}">${icon(x)}</button>`).join('')}</div></div>`);
+    <div class="mg-duel"></div><div class="row center-row">${hands.map((x) => `<button class="btn big-hand" data-h="${x}">${icon(x)}<small>${S.hands[x]}</small></button>`).join('')}</div></div>`);
   slot.replaceChildren(box);
   const duel = box.querySelector<HTMLElement>('.mg-duel')!;
   return new Promise((resolve) => {

@@ -39,8 +39,8 @@ export const enemies: EnemyDef[] = [
   e('bandit', 42, 0, 9, [7, 0, 0], [3, 3], null, ['jeAmbush', 'jeClub'], 'brute', 'ninja:thug'),
   e('missingNin', 70, 18, 11, [9, 9, 4], [6, 5], null, ['jeKunai', 'jeMissingStrike'], 'striker', 'ninja:mist'),
   e('mistRogue', 55, 14, 10, [6, 8, 2], [5, 4], 'water', ['jeKunai', 'jeWaterBullet'], 'striker', 'ninja:mist'),
-  e('gozu', 62, 8, 11, [8, 3, 0], [5, 4], 'water', ['jeChainClaw', 'jeChainSweep'], 'brute', 'ninja:mist'),
-  e('meizu', 62, 8, 11, [8, 3, 0], [5, 4], 'water', ['jeChainClaw', 'jeChainSweep'], 'brute', 'ninja:mist'),
+  e('gozu', 62, 8, 11, [8, 3, 0], [5, 4], 'water', ['jeChainClaw', 'jeChainSweep'], 'brute', 'ninja:gozu'),
+  e('meizu', 62, 8, 11, [8, 3, 0], [5, 4], 'water', ['jeChainClaw', 'jeChainSweep'], 'brute', 'ninja:meizu'),
   e('zabuza', 160, 30, 12, [12, 11, 3], [9, 6], 'water', ['jeCleaver', 'jeWaterPrison', 'jeWaterDragon'], 'brute', 'villain:zabuza'),
   // Haku: natureza Gelo (Kekkei Genkai, v0.59.0).
   { ...e('haku', 150, 34, 16, [9, 11, 6], [7, 8], 'water', ['jeSenbon', 'jeIceMirrors', 'jePressurePoint'], 'tactician', 'villain:haku', {

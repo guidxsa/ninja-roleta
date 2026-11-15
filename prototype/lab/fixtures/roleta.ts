@@ -54,6 +54,8 @@ export function roletaCamp(f: RoletaFixture = {}): Campaign {
     run = { ...run, used: [...run.used, drawn.villainId!] };
   }
   run = { ...drawVillain({ ...run, step }, rdata, createRng(9001 + step)), ...f.run };
+  // Ciclo vencido: o chefe já entrou nos vencidos, como no jogo (`winRoletaFight`); senão a trilha o mostrava anônimo.
+  if (run.status === 'victory' && run.villainId) run = { ...run, used: [...run.used, run.villainId], villainId: null };
   const camp: Campaign = {
     runId: 'lab',
     origin: player.origin,

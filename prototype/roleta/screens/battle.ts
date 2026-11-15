@@ -87,7 +87,8 @@ export function villainStats(phys: number, mental: number, speed: number): strin
   const pill = (key: 'physical' | 'mental' | 'speed', ico: string, v: number) => {
     const T = S.tips.stats;
     const desc = T[key];
-    return `<span class="stat-pill"${tip(S.stats[key], desc)}>${icon(ico)}<small>${S.stats[key]}</small><b>${v}</b></span>`;
+    // Rótulo curto igual ao da ficha do jogador ("R. física"); o nome inteiro fica na dica.
+    return `<span class="stat-pill"${tip(S.stats[key], desc)}>${icon(ico)}<small>${(S.statsShort as Partial<Record<string, string>>)[key] ?? S.stats[key]}</small><b>${v}</b></span>`;
   };
   return `<div class="stat-pills">${pill('physical', 'barrier', phys)}${pill('mental', 'genjutsu', mental)}${pill('speed', 'dodge', speed)}</div>`;
 }
@@ -296,11 +297,13 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
   let state = setup.from ?? startRoletaBattle(c.player, villain, setup.options, rdata, ses.rng);
   ses.battlePlayer = () => state.player;
 
+  // Chefe do ciclo: palco próprio (moldura de perigo, retrato maior e o 将 no lugar do 戦; o título já diz "Chefe").
+  const boss = roletaCategory() === 'boss';
   const root = show(
-    h(`<div class="screen battle">
-      <div class="battle-head"><span>${icon('swords')} ${setup.label}</span><span id="round">${S.ui.round(0)}</span></div>
+    h(`<div class="screen battle${boss ? ' rb-boss' : ''}">
+      <div class="battle-head"><span>${icon(boss ? 'intent' : 'swords')} ${setup.label}</span><span id="round">${S.ui.round(0)}</span></div>
       <div id="vslot">${villainPanel(state)}</div>
-      <div class="arena">${roletaArt(`roleta-${roletaCategory()}`, CATEGORY_SCENE[roletaCategory()] ?? 'konoha', 'rarena-art')}<span class="arena-mark kanji" aria-hidden="true">戦</span><div id="dice" class="dice"></div></div>
+      <div class="arena">${roletaArt(`roleta-${roletaCategory()}`, CATEGORY_SCENE[roletaCategory()] ?? 'konoha', 'rarena-art')}<span class="arena-mark kanji" aria-hidden="true">${boss ? '将' : '戦'}</span><div id="dice" class="dice"></div></div>
       <ol id="log" class="log" title="${S.ui.logToggle}"></ol>
       <section class="hud ally-hud player-mini" id="pcard">
         <div class="hud-main">
