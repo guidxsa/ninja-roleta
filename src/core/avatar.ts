@@ -7,7 +7,7 @@ export const DEFAULT_AVATAR = 'ninja:common';
 
 /** Personagens que conquistas da Jornada liberam como avatar. */
 const JORNADA_AVATARS: Record<string, string> = {
-  j_bell: 'ninja:uzumaki',
+  j_bell: 'ninja:naruto',
   j_unlockUchiha: 'ninja:uchiha',
   j_unlockHyuuga: 'ninja:hyuuga',
   j_sasukeEgg: 'ninja:sasuke',

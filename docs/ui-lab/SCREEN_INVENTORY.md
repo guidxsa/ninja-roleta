@@ -190,6 +190,7 @@ abandono (Roleta: `window.confirm`; Jornada: `confirmDialog`) e o compartilhar (
 | `meta.confirm` | Diálogo de confirmação | `confirmDialog()` em `dom.ts` | Abandonar e sobrescrever save (Jornada) | Texto | `danger` ou não | Não / não |
 | `meta.tooltip` | Dica (tip) | `tip()` / `installTooltips()` em `tooltip.ts` | Passar o mouse, focar ou tocar | — | Toque vs ponteiro | Sim / não |
 | `meta.toggles` | Botões do cabeçalho | `installHeaderToggles()` | Sempre | `proto_settings_v1` | Instantâneo, Animado, Tema, Efeitos, Música (ligado/desligado) | Sim / não |
+| `meta.portraits` | Galeria de retratos (só no lab) | `portraitGallery()` em `lab/portraitGallery.ts` | Catálogo do lab | `PORTRAIT_KEYS` | Imagem base (`lab/refs/`) ao lado de cada desenho em 120, 78, 48 e 24px; filtro `refs=com` / `refs=sem` | Não (só lab) / não |
 | `meta.lab` | Laboratório antigo | `labScreen()` / `labFlow()` | `?teste` | `proto_lab_v1` | Linhagem, elementos, dificuldade, nível, jinchuuriki, status, bolsa, vilão, etapa; lista de técnicas sempre vazia (`learnable` fixo em `[]`) | Sim (`?teste`) / não |
 
 ## 3. Componentes compartilhados
@@ -208,7 +209,7 @@ abandono (Roleta: `window.confirm`; Jornada: `confirmDialog`) e o compartilhar (
 | `jrboss` (3 relíquias lado a lado) | `chestScreen` e `bossChoiceScreen` | Baú da Roleta e escolha do chefe (HTML quase igual, duplicado) |
 | `modeCard` | `modeCard.ts` | Portão e entrada da Jornada |
 | `jtree-screen` + `themeOf` / `themeStyle` | `jornada/theme.ts` | Talentos, moveset, loja |
-| `fighterPortrait` / `ninjaPortrait` / `foePortrait` / `icon` / `cloud` / `sceneMedia` | `art.ts` | Todas |
+| `fighterPortrait` / `ninjaPortrait` / `foePortrait` / `icon` / `cloud` / `sceneMedia` | `art.ts` (desenhos dos retratos em `portraits/`) | Todas |
 | `foldAttrs` / `foldButton` | `jornada/fold.ts` | HUD, próxima parada, dica, loja, painéis da luta |
 | `techCard` / `techBits` | `jornada/cards.ts` | Moveset e luta da Jornada |
 | `tip` | `tooltip.ts` | Todas |

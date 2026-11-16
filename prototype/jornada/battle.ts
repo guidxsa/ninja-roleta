@@ -36,6 +36,7 @@ import type { Boost, ConsumableId, Fighter, FighterMods, JAction, JBattle, JEven
 import type { Rng } from '../../src/core/rng';
 import { jornadaData } from '../../src/data/jornada';
 import { BEATS } from '../../src/data/elements';
+import { ragePortrait } from '../../src/data/portraits';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { fighterPortrait, hasOwnPortrait, icon } from '../art';
 import { barLayers, barPct, barTone, captureTrails, patchBar, restoreTrails } from '../bars';
@@ -110,9 +111,12 @@ const clonePct = (kind: CloneKind) => Math.round(jornadaData.base.clones.kinds[k
 function portraitOf(f: Fighter, data: JornadaData): string {
   // Forma ligada pelo roteiro (manto, Shukaku) com retrato próprio.
   const formArt = f.form ? (data.characters[f.defId] ?? data.enemies[f.defId])?.forms?.find((x) => x.id === f.form)?.portrait : undefined;
-  const spec = formArt ?? (f.protagonist && heroSkin ? `ninja:${heroSkin}` : (data.characters[f.defId]?.portrait ?? data.enemies[f.defId]?.portrait ?? 'ninja:common'));
+  const skin = f.protagonist && heroSkin ? `ninja:${heroSkin}` : undefined;
+  // Retrato de fúria (só visual): com metade do HP ou menos, a outra face do personagem.
+  const rage = formArt || skin ? undefined : ragePortrait(f.defId, f.hp, f.maxHp);
+  const spec = formArt ?? rage ?? skin ?? data.characters[f.defId]?.portrait ?? data.enemies[f.defId]?.portrait ?? 'ninja:common';
   // Na forma, o retrato é o dela: a imagem própria do personagem não passa por cima (a da forma seria `<id>-<forma>`).
-  return fighterPortrait(formArt ? `${f.defId}-${f.form}` : f.defId, spec, 'md');
+  return fighterPortrait(formArt ? `${f.defId}-${f.form}` : rage ? `${f.defId}-rage` : f.defId, spec, 'md');
 }
 
 function miniBar(kind: 'hp' | 'ck', cur: number, max: number): string {

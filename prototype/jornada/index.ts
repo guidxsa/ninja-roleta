@@ -349,7 +349,7 @@ export async function entryScreen(host: JornadaHost, saved: JRun | null): Promis
 /** Os arcos da História em leque, como arte do card Modo História. */
 function arcFan(): string {
   const arts = data.stages.map((s) => arcMedia(s.id)).filter(Boolean);
-  if (!arts.length) return fighterPortrait('naruto', 'ninja:uzumaki', 'lg');
+  if (!arts.length) return fighterPortrait('naruto', 'ninja:naruto', 'lg');
   return `<span class="jarc-fan">${arts.map((a, i) => `<span class="jarc-fan-i art-frame" style="--i:${i}">${a}</span>`).join('')}</span>`;
 }
 

@@ -50,15 +50,15 @@ export const enemies: EnemyDef[] = [
   }), kekkeiGenkai: 'ice' },
 
   // Estágio 2 · Exame chunin
-  e('dosu', 80, 20, 10, [8, 10, 4], [6, 6], null, ['jeKunai', 'jeSoundWave'], 'striker', 'villain:examSound'),
-  e('zaku', 75, 20, 11, [6, 11, 3], [5, 5], 'wind', ['jeKunai', 'jeAirBlast'], 'striker', 'villain:examSound'),
-  e('kin', 70, 20, 12, [6, 5, 11], [5, 7], null, ['jeKunai', 'jeBellGenjutsu'], 'tactician', 'villain:examSound'),
+  e('dosu', 80, 20, 10, [8, 10, 4], [6, 6], null, ['jeKunai', 'jeSoundWave'], 'striker', 'villain:dosu'),
+  e('zaku', 75, 20, 11, [6, 11, 3], [5, 5], 'wind', ['jeKunai', 'jeAirBlast'], 'striker', 'villain:zaku'),
+  e('kin', 70, 20, 12, [6, 5, 11], [5, 7], null, ['jeKunai', 'jeBellGenjutsu'], 'tactician', 'villain:kin'),
   e('grassNinja', 65, 16, 11, [9, 8, 4], [6, 5], 'earth', ['jeKunai', 'jeWaterBullet'], 'striker', 'ninja:grass'),
   e('rainNinja', 60, 18, 11, [8, 7, 8], [6, 6], 'water', ['jeUmbrellaNeedles', 'jeRainClone'], 'striker', 'ninja:rain'),
-  e('kabutoSpy', 130, 30, 13, [10, 12, 6], [8, 8], null, ['jeKunai', 'jeChakraScalpel', 'jeMedicalHeal', 'jeReanimate'], 'healer', 'villain:kabuto'),
-  e('kiba', 100, 18, 13, [11, 4, 2], [7, 5], null, ['jeFangOverFang', 'jeStinkBomb', 'jeKunai'], 'brute', 'ninja:inuzuka'),
+  e('kabutoSpy', 130, 30, 13, [10, 12, 6], [8, 8], null, ['jeKunai', 'jeChakraScalpel', 'jeMedicalHeal', 'jeReanimate'], 'healer', 'villain:kabutoSpy'),
+  e('kiba', 100, 18, 13, [11, 4, 2], [7, 5], null, ['jeFangOverFang', 'jeStinkBomb', 'jeKunai'], 'brute', 'ninja:kiba'),
   e('akamaru', 45, 0, 15, [9, 0, 0], [4, 3], null, ['jeDogBite'], 'brute', 'ninja:akamaru'),
-  e('neji', 150, 30, 14, [14, 6, 4], [9, 9], null, ['jeGentleFist', 'jeRotation', 'jeSixtyFourPalms'], 'tactician', 'ninja:hyuuga'),
+  e('neji', 150, 30, 14, [14, 6, 4], [9, 9], null, ['jeGentleFist', 'jeRotation', 'jeSixtyFourPalms'], 'tactician', 'ninja:neji'),
   // Gaara: natureza Areia (Kekkei Genkai, v0.59.0).
   { ...e('gaara', 230, 45, 10, [8, 15, 4], [12, 8], 'earth', ['jeSandCoffin', 'jeSandShield', 'jeSandTsunami', 'jeShukakuClaw', 'jSunaBunshin'], 'brute', 'villain:gaara', {
     kind: 'startShieldPct',
@@ -66,7 +66,7 @@ export const enemies: EnemyDef[] = [
   }), kekkeiGenkai: 'sand' },
   e('soundNinja', 75, 16, 12, [10, 8, 6], [6, 6], null, ['jeSoundBlade', 'jeSoundWave'], 'striker', 'villain:examSound'),
   // Gaara exausto: volta no lugar do Shukaku depois da cabeçada do Naruto (última fase).
-  { ...e('gaaraWeak', 90, 20, 8, [6, 10, 3], [8, 6], 'earth', ['jeSandShield', 'jeSandCoffin'], 'brute', 'villain:gaara'), kekkeiGenkai: 'sand' },
+  { ...e('gaaraWeak', 90, 20, 8, [6, 10, 3], [8, 6], 'earth', ['jeSandShield', 'jeSandCoffin'], 'brute', 'villain:gaaraInsane'), kekkeiGenkai: 'sand' },
   // Shukaku: o Gaara transformado (roteiro: entra no lugar dele a 40% do HP).
   { ...e('shukaku', 300, 60, 8, [12, 16, 4], [13, 9], 'earth', ['jeShukakuClaw', 'jeSandTsunami', 'jeSandCoffin'], 'brute', 'villain:shukaku'), kekkeiGenkai: 'sand' },
 
@@ -77,8 +77,8 @@ export const enemies: EnemyDef[] = [
     damageMult: 1.2,
   }),
   e('kabuto', 170, 36, 14, [12, 13, 6], [9, 9], null, ['jeKunai', 'jeChakraScalpel', 'jeMedicalHeal', 'jeReanimate'], 'healer', 'villain:kabuto'),
-  e('sasukeHospital', 170, 34, 15, [13, 13, 7], [8, 8], 'fire', ['jeSasukeChidori', 'jeSasukeFireball', 'jeSasukeLion'], 'striker', 'ninja:uchiha'),
-  e('snake', 90, 0, 9, [11, 0, 0], [7, 4], null, ['jeSnakeBite'], 'brute', 'villain:orochimaru'),
+  e('sasukeHospital', 170, 34, 15, [13, 13, 7], [8, 8], 'fire', ['jeSasukeChidori', 'jeSasukeFireball', 'jeSasukeLion'], 'striker', 'villain:sasukeHospital'),
+  e('snake', 90, 0, 9, [11, 0, 0], [7, 4], null, ['jeSnakeBite'], 'brute', 'villain:snake'),
   e('jirobo', 180, 30, 9, [14, 8, 2], [11, 6], 'earth', ['jeHeavyPunch', 'jeEarthDome', 'jEarthWall', 'jDotonBunshin'], 'brute', 'villain:jirobo'),
   e('kidomaru', 160, 30, 13, [12, 10, 4], [8, 7], null, ['jeGoldenArrow', 'jeSpiderWeb', 'jeKunai'], 'tactician', 'villain:kidomaru'),
   e('tayuya', 150, 34, 12, [8, 8, 14], [7, 9], null, ['jeDemonFlute', 'jeKunai'], 'tactician', 'villain:tayuya'),
@@ -90,12 +90,12 @@ export const enemies: EnemyDef[] = [
   }),
   // Vale do Fim: o selo nível 2 entra pelo roteiro (forma), por cima da fúria.
   {
-    ...e('sasukeFinal', 330, 50, 16, [15, 16, 8], [10, 10], 'fire', ['jeSasukeChidori', 'jeDragonFlame', 'jeSasukeLion', 'jeSasukeFireball'], 'striker', 'ninja:uchiha', {
+    ...e('sasukeFinal', 330, 50, 16, [15, 16, 8], [10, 10], 'fire', ['jeSasukeChidori', 'jeDragonFlame', 'jeSasukeLion', 'jeSasukeFireball'], 'striker', 'villain:sasukeFinal', {
       kind: 'enrage',
       atPct: 0.5,
       damageMult: 1.3,
     }),
-    forms: [{ id: 'curseMark2', statMult: 1.2, healPct: 0.2 }],
+    forms: [{ id: 'curseMark2', statMult: 1.2, healPct: 0.2, portrait: 'villain:sasukeCurse2' }],
   },
 ];
 

@@ -2,6 +2,7 @@
 // Um componente só para evento, vitória, lição, estágio concluído e relíquia: o local da parada como requadro de
 // mangá, quem está em cena no canto do quadro e o texto num pergaminho. O card grafite fica para ferramenta (HUD).
 // Nada aqui muda regra: é só apresentação.
+import { scenePortraits } from '../../src/data/portraits';
 import { jornadaData as data } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { fighterPortrait, hasOwnPortrait } from '../art';
@@ -39,7 +40,7 @@ export interface SceneView {
  * (docs/visual.md#quem-aparece-na-cena). Uma imagem em img/jornada/<id> resolve o caso sem mudar código.
  */
 export function scenePortrait(id: string, spec?: string): string {
-  const own = spec ?? (data.characters[id] ?? data.enemies[id])?.portrait;
+  const own = spec ?? (data.characters[id] ?? data.enemies[id])?.portrait ?? scenePortraits[id];
   return hasOwnPortrait(id, own) ? fighterPortrait(id, own ?? 'ninja:common', 'lg') : '';
 }
 

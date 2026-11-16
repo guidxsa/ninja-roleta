@@ -22,21 +22,21 @@ export const roletaExtraVillains: VillainDef[] = [
   { id: 'rainNinja', element: 'water', hp: 80, chakra: 16, speed: 11, offense: { taijutsu: 8, ninjutsu: 7, genjutsu: 9 }, resistance: { physical: 8, mental: 9 }, critBonus: 0.02, xp: 70, portrait: 'ninja:rain',
     techniques: [{ id: 'rvUmbrella', type: 'taijutsu', baseDamage: 5, chakraCost: 0, weight: 2, hits: 2, accuracy: 0.8 }, { id: 'rvRainClone', type: 'genjutsu', baseDamage: 9, chakraCost: 4, weight: 2 }] },
   // Chunin
-  { id: 'demonBrothers', element: 'water', hp: 100, chakra: 10, speed: 12, offense: { taijutsu: 10, ninjutsu: 4, genjutsu: 0 }, resistance: { physical: 11, mental: 9 }, critBonus: 0.02, xp: 100, portrait: 'ninja:mist',
+  { id: 'demonBrothers', element: 'water', hp: 100, chakra: 10, speed: 12, offense: { taijutsu: 10, ninjutsu: 4, genjutsu: 0 }, resistance: { physical: 11, mental: 9 }, critBonus: 0.02, xp: 100, portrait: 'villain:demonBrothers',
     techniques: [{ id: 'rvChainClaw', type: 'taijutsu', baseDamage: 9, chakraCost: 0, weight: 3 }],
     // Dois irmãos: cada ataque vale por 2 golpes, numa roleta só, cada um com 60% do dano.
     passive: { kind: 'mirrors', actions: 2, damageMult: 0.6 } },
-  { id: 'dosu', element: 'wind', hp: 95, chakra: 18, speed: 10, offense: { taijutsu: 9, ninjutsu: 11, genjutsu: 5 }, resistance: { physical: 10, mental: 10 }, critBonus: 0.03, xp: 100, portrait: 'villain:examSound',
+  { id: 'dosu', element: 'wind', hp: 95, chakra: 18, speed: 10, offense: { taijutsu: 9, ninjutsu: 11, genjutsu: 5 }, resistance: { physical: 10, mental: 10 }, critBonus: 0.03, xp: 100, portrait: 'villain:dosu',
     techniques: [{ id: 'rvKunai', type: 'taijutsu', baseDamage: 8, chakraCost: 0, weight: 2 }, { id: 'rvSoundWave', type: 'ninjutsu', baseDamage: 11, chakraCost: 5, weight: 2 }] },
-  { id: 'zaku', element: 'wind', hp: 90, chakra: 18, speed: 11, offense: { taijutsu: 7, ninjutsu: 12, genjutsu: 4 }, resistance: { physical: 9, mental: 9 }, critBonus: 0.03, xp: 100, portrait: 'villain:examSound',
+  { id: 'zaku', element: 'wind', hp: 90, chakra: 18, speed: 11, offense: { taijutsu: 7, ninjutsu: 12, genjutsu: 4 }, resistance: { physical: 9, mental: 9 }, critBonus: 0.03, xp: 100, portrait: 'villain:zaku',
     techniques: [{ id: 'rvKunai', type: 'taijutsu', baseDamage: 8, chakraCost: 0, weight: 2 }, { id: 'rvAirBlast', type: 'ninjutsu', baseDamage: 12, chakraCost: 5, weight: 2 }] },
-  { id: 'kin', element: 'wind', hp: 85, chakra: 18, speed: 12, offense: { taijutsu: 7, ninjutsu: 6, genjutsu: 12 }, resistance: { physical: 9, mental: 12 }, critBonus: 0.03, xp: 100, portrait: 'villain:examSound',
+  { id: 'kin', element: 'wind', hp: 85, chakra: 18, speed: 12, offense: { taijutsu: 7, ninjutsu: 6, genjutsu: 12 }, resistance: { physical: 9, mental: 12 }, critBonus: 0.03, xp: 100, portrait: 'villain:kin',
     techniques: [{ id: 'rvKunai', type: 'taijutsu', baseDamage: 8, chakraCost: 0, weight: 2 }, { id: 'rvBellGenjutsu', type: 'genjutsu', baseDamage: 9, chakraCost: 4, weight: 2 }] },
   // Jounin
   { id: 'kimimaro', element: 'earth', hp: 190, chakra: 30, speed: 14, offense: { taijutsu: 14, ninjutsu: 6, genjutsu: 4 }, resistance: { physical: 16, mental: 12 }, critBonus: 0.05, xp: 220, portrait: 'ninja:kimimaro',
     techniques: [{ id: 'rvBoneDance', type: 'taijutsu', baseDamage: 7, chakraCost: 3, weight: 2, hits: 3, accuracy: 0.85 }, { id: 'rvBoneDrill', type: 'taijutsu', baseDamage: 15, chakraCost: 4, weight: 2 }],
     passive: curseMark },
-  { id: 'neji', element: 'earth', hp: 160, chakra: 28, speed: 14, offense: { taijutsu: 14, ninjutsu: 6, genjutsu: 4 }, resistance: { physical: 14, mental: 13 }, critBonus: 0.04, xp: 200, portrait: 'ninja:hyuuga',
+  { id: 'neji', element: 'earth', hp: 160, chakra: 28, speed: 14, offense: { taijutsu: 14, ninjutsu: 6, genjutsu: 4 }, resistance: { physical: 14, mental: 13 }, critBonus: 0.04, xp: 200, portrait: 'ninja:neji',
     techniques: [{ id: 'rvGentleFist', type: 'taijutsu', baseDamage: 11, chakraCost: 0, weight: 3, accuracy: 0.95 }, { id: 'rvSixtyFour', type: 'taijutsu', baseDamage: 4, chakraCost: 8, weight: 1, hits: 4, accuracy: 0.95 }] },
 ];
 
