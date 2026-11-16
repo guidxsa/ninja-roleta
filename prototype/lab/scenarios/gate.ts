@@ -26,6 +26,16 @@ export const gate: Scenario[] = [
     setup: (s) => seedRunHistory(s, 12),
     mount: () => modeScreen(),
   },
+  {
+    // Cada quadro é uma página própria: ligar o modo aqui não vaza para os outros cenários. Desmarque o Instantâneo.
+    id: 'gate.home:animado',
+    title: 'Portão no modo Animado (cena viva; sem Instantâneo)',
+    group: 'Entrada',
+    mount: () => {
+      document.documentElement.toggleAttribute('data-animated', true);
+      return modeScreen();
+    },
+  },
   { id: 'gate.name', title: 'Pedir o nome do ninja', group: 'Entrada', mount: () => askPlayerName() },
   {
     id: 'gate.avatar',

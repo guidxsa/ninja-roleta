@@ -214,6 +214,65 @@ body.at-gate .gate-nav {
 .gate-quote { display: grid; position: relative; }
 .gate-quote .duo-q { grid-area: 1 / 1; }
 .gate-quote .duo-seal { --s: 30px; position: absolute; right: -10px; top: -12px; rotate: 6deg; }
+
+/*
+ * Cena viva do Portão (docs/visual.md, "Movimento"): só no modo Animado (data-animated, botão da barra) e fora do
+ * Instantâneo. A arte respira devagar em volta do foco, a névoa atravessa, caem folhas de dia e piscam vaga-lumes à
+ * noite. No modo Leve (padrão) e com menos movimento no aparelho, nada disto é montado: o painel fica parado.
+ * Só transform e opacity; as cores são do cenário (arte), não da interface.
+ */
+.gate-fx { display: none; position: absolute; inset: 0; overflow: hidden; pointer-events: none; container-type: size; }
+.gate-fx-set { position: absolute; inset: 0; }
+.gate-fx i { position: absolute; display: block; will-change: transform, opacity; }
+.gate-mist { top: 6%; left: 0; width: 55cqw; height: 34cqh; background: radial-gradient(closest-side, rgba(255, 255, 255, .26), transparent); animation: gateDrift var(--dur-drift) linear infinite; }
+.gate-mist + .gate-mist { top: 48%; width: 70cqw; height: 28cqh; opacity: .7; animation-duration: calc(var(--dur-drift) * 1.4); animation-delay: calc(var(--dur-drift) * -.8); }
+.gate-leaf {
+  --k: 1; top: 0; left: calc(var(--x) * 1cqw); width: max(var(--s) * 1px, var(--s) * .13cqw); aspect-ratio: 1 / .55;
+  background: linear-gradient(120deg, #7fae3c, #3f7a2a); border-radius: 0 100% 0 100%; opacity: 0;
+  animation: gateLeaf calc(var(--dur-fall) * var(--k)) linear infinite; animation-delay: calc(var(--dur-fall) * var(--d));
+}
+.gate-leaf:nth-child(1) { --x: 4; --s: 12; --d: -.1; }
+.gate-leaf:nth-child(2) { --x: 18; --s: 9; --d: -.55; --k: 1.3; }
+.gate-leaf:nth-child(3) { --x: 33; --s: 14; --d: -.8; --k: .9; }
+.gate-leaf:nth-child(4) { --x: 47; --s: 10; --d: -.3; --k: 1.15; }
+.gate-leaf:nth-child(5) { --x: 61; --s: 12; --d: -.95; --k: 1.4; }
+.gate-leaf:nth-child(6) { --x: 74; --s: 8; --d: -.45; }
+.gate-leaf:nth-child(7) { --x: -8; --s: 11; --d: -.7; --k: 1.2; }
+.gate-fly {
+  --k: 1; left: calc(var(--x) * 1cqw); top: calc(var(--y) * 1cqh); width: 4px; height: 4px; border-radius: 50%; opacity: 0;
+  background: #f4e7a1; box-shadow: 0 0 6px 2px rgba(244, 222, 120, .7);
+  animation: gateFly calc(var(--dur-glow) * var(--k)) ease-in-out infinite; animation-delay: calc(var(--dur-glow) * var(--d));
+}
+.gate-fly:nth-child(1) { --x: 8; --y: 70; --d: -.1; }
+.gate-fly:nth-child(2) { --x: 19; --y: 52; --d: -.6; --k: 1.3; }
+.gate-fly:nth-child(3) { --x: 31; --y: 78; --d: -.35; --k: .8; }
+.gate-fly:nth-child(4) { --x: 44; --y: 60; --d: -.85; --k: 1.2; }
+.gate-fly:nth-child(5) { --x: 56; --y: 82; --d: -.2; }
+.gate-fly:nth-child(6) { --x: 67; --y: 48; --d: -.7; --k: 1.4; }
+.gate-fly:nth-child(7) { --x: 78; --y: 72; --d: -.5; --k: .9; }
+.gate-fly:nth-child(8) { --x: 89; --y: 58; --d: -.95; --k: 1.1; }
+.gate-fly:nth-child(9) { --x: 50; --y: 40; --d: -.4; --k: 1.5; }
+@keyframes gateBreath { from { transform: scale(1); } to { transform: scale(1.07); } }
+@keyframes gateDrift { from { transform: translate3d(-60cqw, 0, 0); } to { transform: translate3d(110cqw, 0, 0); } }
+@keyframes gateLeaf {
+  0% { transform: translate3d(0, -8cqh, 0) rotate(0deg); opacity: 0; }
+  12%, 85% { opacity: .9; }
+  50% { transform: translate3d(18cqw, 50cqh, 0) rotate(300deg); }
+  100% { transform: translate3d(26cqw, 108cqh, 0) rotate(620deg); opacity: 0; }
+}
+@keyframes gateFly {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  25% { opacity: 1; }
+  50% { transform: translate3d(3cqw, -7cqh, 0); opacity: .25; }
+  75% { opacity: 1; }
+  100% { transform: translate3d(-2cqw, -14cqh, 0); opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-animated]:not([data-instant]) .gate-fx { display: block; }
+  :root[data-animated]:not([data-instant]) .gate-hero .duo-layer img {
+    transform-origin: var(--fx, 50%) var(--fy, 35%); animation: gateBreath var(--dur-breath) ease-in-out infinite alternate;
+  }
+}
 .duo-tags { display: grid; margin: 8px 0 0; }
 .duo-tag { grid-area: 1 / 1; font: 700 var(--fs-base)/1.1 var(--font-hand); color: var(--text); text-shadow: 0 1px 2px color-mix(in srgb, var(--bg) 80%, transparent); text-align: center; }
 

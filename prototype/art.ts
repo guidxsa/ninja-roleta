@@ -372,9 +372,6 @@ function customVideo(folder: string, name: string): string | null {
   return null;
 }
 
-/** Há algum vídeo nas vagas? (o botão Animado só aparece quando há.) */
-export const hasSceneVideos = (): boolean => IMAGES.some((p) => /\.(webm|mp4)$/i.test(p));
-
 /** Modo das cenas: Leve (imagem parada, padrão) ou Animado (vídeo em loop, quando a vaga tem). */
 let animatedScenes = false;
 
