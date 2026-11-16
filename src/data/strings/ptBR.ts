@@ -610,7 +610,7 @@ export const ptBR = {
     history: 'Histórico',
     back: 'Voltar',
     instant: (on: boolean) => (on ? 'Instantâneo: ligado' : 'Instantâneo: desligado'),
-    animated: (on: boolean) => (on ? 'Cenas animadas: ligado' : 'Cenas animadas: desligado (Leve: imagens paradas)'),
+    animated: (on: boolean) => (on ? 'Cenas animadas: ligado (os painéis ganham vida)' : 'Cenas animadas: desligado (Leve: imagens paradas)'),
     themeDay: 'Modo dia',
     themeNight: 'Modo noite',
     // Nomes curtos ao lado dos ícones da barra, só no PC (no celular a barra mostra só os ícones).

@@ -21,6 +21,16 @@ export const jornadaScenarios: Scenario[] = [
     mount: jornada((ctx) => entryScreen(ctx.jornadaHost, null)),
   },
   {
+    // Modo Animado (cena viva): cada quadro é uma página própria, então ligar aqui não vaza. Desmarque o Instantâneo.
+    id: 'jornada.entry:animado',
+    title: 'Entrada da Jornada no modo Animado (cena viva)',
+    group: 'Jornada',
+    mount: jornada((ctx) => {
+      document.documentElement.toggleAttribute('data-animated', true);
+      return entryScreen(ctx.jornadaHost, null);
+    }),
+  },
+  {
     id: 'jornada.entry:saved',
     title: 'Entrada com Caminho Ninja salvo e conquistas recentes',
     group: 'Jornada',
