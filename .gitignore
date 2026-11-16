@@ -4,3 +4,6 @@ coverage/
 *.log
 .claude/settings.local.json
 dist-lab/
+# Imagens base da auditoria dos retratos (arte de terceiros): só o LEIAME entra
+prototype/lab/refs/*
+!prototype/lab/refs/LEIAME.md

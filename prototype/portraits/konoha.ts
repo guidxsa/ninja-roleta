@@ -87,7 +87,7 @@ export function kakashi(sharingan = false): string {
     vest() +
     face({ shape: 'square', eyes: 'bored', eyesR: sharingan ? 'sharingan' : 'none', brows: 'flat', browColor: '#9399a3', mouth: 'none', nose: false,
       under: sharingan ? ln('M59 39.6V56', '#b0665a', 1.3) : '' }) +
-    po('M33 52Q50 47 67 52V54L62 61 54 67.6H46L38 61 33 54Z', mask) +
+    po('M33 52Q50 47 67 52V54C67 62 59 67.6 50 68.4C41 67.6 33 62 33 54Z', mask) +
     ln('M50 50.4V57', '#1a2136', 1) +
     po('M31 36L26 26 33 28 30 15 38 22 40 8 47 18 54 5 57 17 67 7 66 19 77 13 72 25 80 26 69 37C64 33 58 31 50 31S36 33 31 36Z', hair) +
     shine('M40 22L42 14M56 20L58 12M66 24L70 18', '#fff', 1.4) +
@@ -173,7 +173,7 @@ export function tsunade(): string {
     both(ln('M37 74.4L45 101', '#2f6a40', 1.6)) +
     ln('M44.6 76L50 84 55.4 76', '#3a3f48', 0.8) +
     po('M50 83L51.8 86.8 50 90.4 48.2 86.8Z', '#6ad0d8', 0.7) +
-    face({ iris: '#a8743a', lashes: true, browColor: '#a8862a', mouth: 'smirk', lips: '#c8405a', flat: true, under: po('M50 29.6L52.2 33.6 50 37.6 47.8 33.6Z', '#7a5ac0', 0.6) }) +
+    face({ iris: '#a8743a', lashes: true, browColor: '#a8862a', mouth: 'smirk', lips: '#c8405a', under: po('M50 29.6L52.2 33.6 50 37.6 47.8 33.6Z', '#7a5ac0', 0.6) }) +
     po('M50 24C45 30 39 33 35 36L34 50 33 66 29 82 26.6 62C26 46 28 34 33 26 37 19 43 15 50 15S63 19 67 26C72 34 74 46 73.4 62L71 82 67 66 66 50 65 36C61 33 55 30 50 24Z', hair) +
     both(shine('M36 26Q42 19 49 18', '#fff', 1.4)) +
     both(ln('M30 46L29.4 70', dim, 1.1))

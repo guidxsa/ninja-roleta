@@ -42,7 +42,7 @@ function zabuza(unmasked = false): string {
       ? po('M41.6 58Q50 61 58.4 58Q57.4 65.4 50 66Q42.6 65.4 41.6 58Z', '#3a1418', 1) +
         p('M42.6 58.6L44.6 62.4 46.6 59.6 48.6 63 50.6 60 52.6 63 54.6 59.6 56.6 62.4 57.6 58.6Q50 61 42.6 58.6Z', '#fff') +
         po('M38 60.6L63 59.6 72 61.6 63 63.6 38 62.8Z', STEEL, 0.9) + `<circle cx="35.6" cy="61.7" r="2.4" fill="none" stroke="${INK}" stroke-width="1.3"/>`
-      : po('M33 51Q50 55 67 51V51L62 61 54 67.6H46L38 61 33 51Z', wrap) + ln('M34.6 56Q50 60 65.4 56M38.6 61.6Q50 65 61.4 61.6M44 67V74M50 68V76', '#b8b1a2', 0.9)) +
+      : po('M33 51Q50 55 67 51V54C67 62 59 67.6 50 68.4C41 67.6 33 62 33 54Z', wrap) + ln('M34 56Q50 60 66 56M35.6 61Q50 65 64.4 61M44 67V74M50 68V76', '#b8b1a2', 0.9)) +
     po('M31 38L28 28 34 30 33 20 40 25 43 15 49 23 55 14 58 24 66 18 66 29 72 27 69 38C64 33 58 31 50 31S36 33 31 38Z', '#2a2d36') +
     `<g transform="rotate(-12 50 34)">${headband('mist', { cloth: '#3d4a5a', tails: true })}</g>`
   );
@@ -54,7 +54,7 @@ function haku(mode: 'mask' | 'unmasked' | 'civil' = 'mask'): string {
   const civil = mode === 'civil';
   const head =
     mode === 'mask'
-      ? po('M33 42C33 30 40 23 50 23S67 30 67 42C67 51 63 58 57 63L52.4 67.4Q50 69 47.6 67.4L43 63C37 58 33 51 33 42Z', '#f6f5f1') +
+      ? po('M33 43C33 30 40 23 50 23S67 30 67 43C67 56 60 67 50 68C40 67 33 56 33 43Z', '#f6f5f1') +
         both(ln('M36 47Q41 43.6 46 47', '#222', 2.4)) +
         both(ln('M38 53.6Q35.4 58 38.4 62', '#c0392b', 1.7)) +
         `<g transform="translate(45.6 28.6) scale(.36)" fill="none" stroke="#7d8696" stroke-width="2.6" stroke-linecap="round">${VILLAGES.mist}</g>`
@@ -96,7 +96,7 @@ function gaara(insane = false): string {
   const sand = p('M16 20h2v2h-2zM24 70h2v2h-2zM12 48h1.6v1.6H12zM88 14h2v2h-2zM8 84h2v2H8z', '#f3d9a6', 'opacity=".7"');
   // Metade Shukaku (à esquerda de quem vê): a areia cobre o rosto, o olho vira o do tanuki e o braço cresce em garra.
   const half = insane
-    ? po('M50 23C40 23 33 30 33 42C33 51 37 58 43 63L47.6 67.4Q49 68.4 50 68.4L48 60 51 52 48 44 51 34Z', SAND) +
+    ? po('M50 23C40 23 33 30 33 43C33 56 40 67 50 68L48 60 51 52 48 44 51 34Z', SAND) +
       ln('M35 36Q41 39 39 45M36 54Q41 57 40 62M46 26V33', SAND_MARK, 1.8) + shukakuEye(41, 47.4, 3.6)
     : '';
   const claw = insane
@@ -301,8 +301,8 @@ function orochimaru(): string {
     soundCollar() +
     rope() +
     `<g transform="rotate(-6 50 66)">` +
-    face({ shape: 'slim', skin: PALE, eyes: 'snake', brows: 'angry', browColor: '#3a2a4a', mouth: 'none', flat: true }) +
-    p('M33.6 42C33.6 30 40 23 50 23L48 40 50 54 47 62 48 68L42 61C37 56 33.6 50 33.6 42Z', '#3a2a5a', 'opacity=".13"') +
+    face({ shape: 'slim', skin: PALE, eyes: 'snake', brows: 'angry', browColor: '#3a2a4a', mouth: 'none' }) +
+    p('M50 23C40 23 33 30 33 42C33 53 39 62 45 66L48 67.6 47 62 50 54 48 40Z', '#3a2a5a', 'opacity=".13"') +
     po('M40 57.6Q50 62.6 60 56.6Q58.6 65.6 50 66.4Q42 65.6 40 57.6Z', '#3a1420', 1) +
     p('M41 58.4Q50 62.6 59.4 57.6L58.8 59.6Q50 64 41.6 60.4Z', '#fff') +
     po('M47.6 62C46.6 70 50 76 46 86 49 84 53.6 78 54 70 54.2 66 53.6 63.6 53 62Z', '#d0506a', 1) +
