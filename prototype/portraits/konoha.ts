@@ -1,5 +1,5 @@
 // Retratos de Konoha: o time 7, os colegas e os mestres. Cada um com cabelo, rosto e traje próprios.
-import { type Art, INK, NAVY, SKIN, STEEL, TAN, bg, both, face, headband, highCollar, kimono, ln, mesh, neck, p, plate, po, shade, shoulders, torso, vest } from './kit';
+import { type Art, INK, NAVY, SKIN, STEEL, TAN, bg, both, face, headband, highCollar, kimono, ln, mesh, neck, p, plate, po, shade, shine, shoulders, torso, vest } from './kit';
 
 const NARUTO_HAIR = 'M31 37L22 30 30 30 23 19 33 23 31 11 40 19 42 7 50 17 55 6 59 18 67 9 68 20 77 14 74 25 83 23 77 33 69 37C65 33 58 31 50 31S35 33 31 37Z';
 
@@ -30,16 +30,32 @@ export function naruto(mode: 'base' | 'kyuubi' | 'oneTail' = 'base'): string {
   );
 }
 
+/** Marca da maldição, primeiro estágio: fileiras de pequenas chamas pretas subindo pelo lado esquerdo do rosto, com a brasa por baixo. */
+function curseFlames(): string {
+  let d = '';
+  for (let row = 0; row < 3; row++) {
+    for (let k = 0; k < 6; k++) {
+      const x = 52.6 + row * 4.2 + k * 0.5;
+      const y = 65.4 - k * 5 - row * 1.6;
+      // Só dentro do rosto: o queixo afina abaixo de y 56.
+      if (x > 65.4 - Math.max(0, y - 54) * 0.75 || y < 39) continue;
+      d += `M${x.toFixed(1)} ${y.toFixed(1)}q2.4-.6 2.8 2.6q-1.4-1.8-3.4-1.2q1.2-.4.6-1.4z`;
+    }
+  }
+  return `<path d="${d}" fill="none" stroke="#f08a3a" stroke-width="1.6" stroke-linejoin="round" opacity=".55"/><path d="${d}" fill="#17100f"/>`;
+}
+
 type SasukeLook = 'base' | 'sharingan' | 'curse' | 'hospital' | 'final' | 'curse2';
-/** Sasuke: franja em duas mechas, espetos atrás e a gola alta azul. As variantes trocam os olhos, a marca e a bandana. */
+/** Sasuke: a franja repartida em duas mechas longas, os espetos subindo atrás e a gola alta azul. As variantes trocam os olhos, a marca e a bandana. */
 export function sasuke(look: SasukeLook = 'base'): string {
   const c2 = look === 'curse2';
-  const hair = c2 ? '#6d7396' : '#1c2136';
+  const hair = c2 ? '#6d7396' : '#1b2038';
+  const lite = c2 ? '#aab0d0' : '#5a68a8';
   const skin = c2 ? '#9a8f86' : SKIN;
   const red = look !== 'base' && look !== 'hospital';
-  const marks = look === 'curse' || look === 'final'
-    ? p('M57 40q3 .6 3.4 3.6q-2-1.6-4-.8zM62 45q3 .6 3.4 3.6q-2-1.6-4-.8zM58 52q3 .6 3.4 3.6q-2-1.6-4-.8zM63 57q2.4.6 2.6 3q-1.6-1.2-3.2-.6zM55 60q3 .6 3.4 3.6q-2-1.6-4-.8zM53 35q3 .6 3.4 3.6q-2-1.6-4-.8z', '#1b1210')
-    : c2 ? po('M44 49L50 46 56 49 54 55 50 52 46 55Z', '#3b3340', 0.6) : '';
+  const curse = look === 'curse' || look === 'final';
+  // Marca da maldição, primeiro estágio: as chamas pretas sobem em fileira pelo lado esquerdo do rosto, com a borda em brasa.
+  const flames = curse ? curseFlames() : c2 ? po('M44 50L50 46.6 56 50 54 55.6 50 52.6 46 55.6Z', '#3b3340', 0.6) : '';
   const band =
     look === 'hospital'
       ? po('M32.6 31Q50 25 67.4 31V38Q50 32 32.6 38Z', '#f1ece0') + ln('M34 34.6Q50 28.6 66 34.6', '#c9c1b0', 0.8)
@@ -47,14 +63,120 @@ export function sasuke(look: SasukeLook = 'base'): string {
   return (
     bg(`sasuke-${look}`, c2 ? '#6a4a8a' : red ? '#a8323a' : '#4a63b8', c2 ? '#120a1c' : '#0d1226',
       c2 ? both(po('M30 70L4 40 14 44 8 26 20 36 20 20 34 60Z', '#5a4a52')) : '') +
-    both(po('M33 30L19 21 27 31 15 33 26 38 17 45 31 43Z', hair)) +
-    (c2 ? po('M30 40C26 56 26 70 30 84H70C74 70 74 56 70 40Z', hair) : '') +
+    both(po('M35 41L23 42 29 35 16 31 28 28 19 17 32 22 33 12 41 22Z', hair)) +
+    both(shine('M23 32L30 33M24 21L31 25', lite, 1.2)) +
+    (c2 ? po('M30 40C26 56 26 70 30 86H70C74 70 74 56 70 40Z', hair) : '') +
     torso('#2b3f7e', skin) +
     highCollar('#33498f') +
-    face({ shape: 'slim', skin, eyes: red ? 'sharingan' : 'sharp', iris: '#1b1b22', brows: 'angry', browColor: hair, mouth: look === 'base' ? 'neutral' : 'frown', lips: c2 ? '#3b2a30' : undefined, under: marks }) +
+    face({ shape: 'slim', skin, eyes: red ? 'sharingan' : 'sharp', iris: '#1b1b22', sclera: c2 ? '#17100f' : '#fff', brows: 'angry', browColor: hair, mouth: look === 'base' ? 'neutral' : 'frown', lips: c2 ? '#3b2a30' : undefined, under: flames }) +
+    po('M31 39C29 26 37 15 50 15S71 26 69 39C66 33 60 28 53 27L50 31 47 27C40 28 34 33 31 39Z', hair) +
     band +
-    po('M50 26C43 27 37 30 35 36L34 57 30.4 49C29 38 31 30 36 25 40 21 45 19 50 19S60 21 64 25C69 30 71 38 69.6 49L66 57 65 36C63 30 57 27 50 26Z', hair) +
-    po('M40 25L36.4 42 41.6 35ZM60 25L63.6 42 58.4 35Z', hair, 1)
+    both(po('M47 24C40 25 34 30 31.6 40C30.4 47 31 56 33.6 66C34.4 58 35.4 52 36.4 46C36.8 38 38 32 40 29Z', hair)) +
+    both(shine('M35 34Q38 28 45 26', lite, 1.3))
+  );
+}
+
+/** Kakashi: cabelo prata inclinado, máscara até o nariz e a bandana torta cobrindo o olho esquerdo. `sharingan`: a bandana levantada, o Sharingan e a cicatriz à mostra. */
+export function kakashi(sharingan = false): string {
+  const hair = '#dce1e8';
+  const mask = '#2b3550';
+  return (
+    bg(sharingan ? 'kakashiSharingan' : 'kakashi', sharingan ? '#a85a66' : '#8ea2b8', '#131a24',
+      sharingan ? ln('M6 60L20 52 14 66 28 58M94 30L80 38 86 24 72 32', '#bfe6ff', 1.4, 'opacity=".6"') : '') +
+    torso(NAVY, mask) +
+    vest() +
+    face({ shape: 'square', eyes: 'bored', eyesR: sharingan ? 'sharingan' : 'none', brows: 'flat', browColor: '#9399a3', mouth: 'none', nose: false,
+      under: sharingan ? ln('M59 39.6V56', '#b0665a', 1.3) : '' }) +
+    po('M33 52Q50 47 67 52V54L62 61 54 67.6H46L38 61 33 54Z', mask) +
+    ln('M50 50.4V57', '#1a2136', 1) +
+    po('M31 36L26 26 33 28 30 15 38 22 40 8 47 18 54 5 57 17 67 7 66 19 77 13 72 25 80 26 69 37C64 33 58 31 50 31S36 33 31 36Z', hair) +
+    shine('M40 22L42 14M56 20L58 12M66 24L70 18', '#fff', 1.4) +
+    (sharingan
+      ? headband('leaf', { tails: true })
+      : po('M32 30Q46 28 69 45V57Q52 44 32 39.6Z', NAVY) + `<g transform="rotate(30 50 38)">${plate(40, 33.4, 21, 9.6, 'leaf')}</g>`)
+  );
+}
+
+/** Neji: cabelo longo e escuro, bandana de pano preto e a camisa bege. `on`: o Byakugan ativo, com as veias saltadas nas têmporas. */
+export function neji(on = false): string {
+  const hair = '#3b2e2c';
+  return (
+    bg(on ? 'nejiByakugan' : 'neji', on ? '#d8d2f0' : '#beb6dc', '#1c1830',
+      on ? `<g fill="none" stroke="#fff" stroke-width=".8" opacity=".5"><circle cx="50" cy="46" r="26"/><circle cx="50" cy="46" r="42"/><path d="M50 0V100M0 46H100M14 10L86 82M86 10L14 82"/></g>` : '') +
+    po('M30 36C24 56 24 80 27 101H73C76 80 76 56 70 36Z', hair) +
+    torso('#e3dac8') +
+    po('M36 73L50 86 64 73 67 80 50 96 33 80Z', '#d2c7b0') +
+    face({ shape: 'slim', eyes: on ? 'byakuganOn' : 'byakugan', brows: 'angry', browColor: hair, mouth: 'frown' }) +
+    po('M31 40C30 25 38 16 50 16S70 25 69 40C66 33 60 28 50 27 40 28 34 33 31 40Z', hair) +
+    shine('M38 22Q44 18 50 18', '#8a7470') +
+    headband('leaf', { cloth: '#1f2026' }) +
+    both(po('M34.6 36L30 62 33.6 68 36.6 41Z', hair, 1))
+  );
+}
+
+/** Akamaru: o filhote branco de cabeça grande, orelhas marrons caídas e olhos sempre apertados. */
+export function akamaru(): string {
+  const fur = '#f6f1e8';
+  const ear = '#9a6a44';
+  return (
+    bg('akamaru', '#c25a60', '#2a0c10') +
+    po('M33 101C31 87 38 77 50 77S69 87 67 101Z', fur) +
+    both(po('M40 91Q35.6 91 35.6 96.4Q35.6 101 41 101Q45.6 101 45.6 95.6Q45.6 91 40 91Z', fur, 1)) +
+    both(po('M32 36C22 33 14 42 14 55C14 63 17 69 23 72C28 67 30.6 59 31.4 50C32 45 33 40 35 37Z', ear)) +
+    both(shine('M19 50Q20 60 23 66', '#c89a70', 1.6)) +
+    po('M26 53C26 38 36 29 50 29S74 38 74 53C74 67 64 78 50 78S26 67 26 53Z', fur) +
+    po('M43.6 31L45 22 48.6 28 51 19 54 28 57.4 23 57 31Z', fur, 1.1) +
+    p('M30 58C34 70 42 76 50 77C40 78 30 70 28 58Z', '#ddd5c6') +
+    both(ln('M34.6 50.4Q39.6 47.4 44.6 50.4', INK, 2.1)) +
+    both(`<ellipse cx="36" cy="58" rx="3.6" ry="2" fill="#f2b8b0" opacity=".7"/>`) +
+    `<ellipse cx="50" cy="58.6" rx="3.4" ry="2.4" fill="${INK}"/><circle cx="49" cy="57.8" r=".7" fill="#fff"/>` +
+    ln('M50 61V63.6M44.6 63.6Q47.4 66.6 50 63.6Q52.6 66.6 55.4 63.6', INK, 1.3) +
+    po('M48 65.4H52V68.4Q50 70.6 48 68.4Z', '#e77a8c', 0.8)
+  );
+}
+
+/** Jiraiya: a juba branca espetada caindo pelos ombros, as linhas vermelhas descendo dos olhos, o protetor de chifres com o kanji do óleo e o haori vermelho. */
+export function jiraiya(): string {
+  const hair = '#f1f3f5';
+  const dim = '#c3cad3';
+  return (
+    bg('jiraiya', '#c6584e', '#2a0c0a') +
+    po('M31 30L18 23 22 34 9 33 18 44 5 50 16 57 5 67 16 71 7 83 18 85 13 101H87L82 85 93 83 84 71 95 67 84 57 95 50 82 44 91 33 78 34 82 23 69 30 64 13 56 22 50 9 44 22 36 13Z', hair) +
+    both(ln('M20 40L27 46M14 54L24 58M15 72L24 72M17 88L25 84', dim, 1.3)) +
+    torso('#6f8f5a') +
+    kimono('#b23a34') +
+    mesh() +
+    face({ shape: 'square', eyes: 'sharp', iris: '#2b2b33', browColor: '#8d939d', mouth: 'grin', under: both(ln('M40 51.6L39 58 40.4 65', '#c0392b', 2)) + `<circle cx="55" cy="55" r="1.1" fill="${shade(SKIN, -0.32)}"/>` }) +
+    po('M32 33L27 20 35 24 37 11 44 20 50 8 56 20 63 11 65 24 73 20 68 33Q50 25 32 33Z', hair) +
+    both(ln('M37 24L39 16M45 21L47 14', dim, 1.1)) +
+    both(po('M37 31L31 18 42 28Z', STEEL, 1)) +
+    po('M33 29.6Q50 23.6 67 29.6V39Q50 33 33 39Z', STEEL) +
+    ln('M35 31Q50 25.4 65 31', '#f4f7fa', 0.8) +
+    `<text x="50" y="35.4" text-anchor="middle" font-size="6.6" font-weight="700" fill="#454d5c" font-family="serif">油</text>` +
+    both(po('M34.6 37L27 44 25.6 62 29 86 34 73 36.4 56 37 42Z', hair)) +
+    both(ln('M30 50L31 70', dim, 1.1))
+  );
+}
+
+/** Tsunade: a franja partida com duas mechas longas, os rabos baixos, o losango na testa, o haori verde aberto e o colar do cristal. */
+export function tsunade(): string {
+  const hair = '#f4d878';
+  const dim = '#d1ae48';
+  return (
+    bg('tsunade', '#93cb9e', '#12301c') +
+    both(po('M34 52C26 60 21 76 23 100L34 96C32 82 34 68 39 58Z', hair)) +
+    both(ln('M28 70Q27 84 28 96', dim, 1.2)) +
+    torso('#c9ccd4') +
+    p('M42 73L50 93 58 73Z', SKIN) +
+    ln('M42 73L50 93 58 73', INK, 1.2) +
+    both(po('M8 101C9 86 20 77 37 74.4L45 101Z', '#4f9a62')) +
+    both(ln('M37 74.4L45 101', '#2f6a40', 1.6)) +
+    ln('M44.6 76L50 84 55.4 76', '#3a3f48', 0.8) +
+    po('M50 83L51.8 86.8 50 90.4 48.2 86.8Z', '#6ad0d8', 0.7) +
+    face({ iris: '#a8743a', lashes: true, browColor: '#a8862a', mouth: 'smirk', lips: '#c8405a', flat: true, under: po('M50 29.6L52.2 33.6 50 37.6 47.8 33.6Z', '#7a5ac0', 0.6) }) +
+    po('M50 24C45 30 39 33 35 36L34 50 33 66 29 82 26.6 62C26 46 28 34 33 26 37 19 43 15 50 15S63 19 67 26C72 34 74 46 73.4 62L71 82 67 66 66 50 65 36C61 33 55 30 50 24Z', hair) +
+    both(shine('M36 26Q42 19 49 18', '#fff', 1.4)) +
+    both(ln('M30 46L29.4 70', dim, 1.1))
   );
 }
 
@@ -74,23 +196,6 @@ export function sakura(): string {
   );
 }
 
-/** Kakashi: cabelo prata inclinado, máscara até o nariz, a bandana torta sobre o olho esquerdo e o colete. */
-export function kakashi(): string {
-  const hair = '#dce1e8';
-  const mask = '#2b3550';
-  return (
-    bg('kakashi', '#8ea2b8', '#131a24') +
-    torso(NAVY, mask) +
-    vest() +
-    face({ shape: 'square', eyes: 'bored', brows: 'flat', browColor: '#9399a3', mouth: 'none', nose: false }) +
-    po('M33 52Q50 47 67 52V54C67 62 59 67.6 50 68.4C41 67.6 33 62 33 54Z', mask) +
-    ln('M50 50.4V57', '#1a2136', 1) +
-    po('M31 36L26 26 33 28 30 15 38 22 40 8 47 18 54 5 57 17 67 7 66 19 77 13 72 25 80 26 69 37C64 33 58 31 50 31S36 33 31 36Z', hair) +
-    po('M51 39L68.6 43 67.6 53 53 49Z', NAVY, 1) +
-    `<g transform="rotate(20 50 36)">${headband('leaf', { y: 31 })}</g>`
-  );
-}
-
 /** Iruka: rabo de cavalo espetado, a cicatriz atravessando o nariz e o colete de chūnin. */
 export function iruka(): string {
   const hair = '#5a3b28';
@@ -102,21 +207,6 @@ export function iruka(): string {
     face({ skin: TAN, iris: '#3a2a20', browColor: hair, mouth: 'smile', nose: false, under: ln('M39.6 53Q50 56.4 60.4 53', '#8a4630', 1.7) }) +
     po('M31 41C30 26 38 17 50 17S70 26 69 41L66.6 46 65 36C60 32 56 31 50 31S40 32 35 36L33.4 46Z', hair) +
     headband('leaf')
-  );
-}
-
-/** Neji: cabelo longo e escuro, Byakugan, bandana de pano preto e a camisa bege. */
-export function neji(): string {
-  const hair = '#3b2e2c';
-  return (
-    bg('neji', '#beb6dc', '#1c1830') +
-    po('M30 36C24 56 24 80 27 101H73C76 80 76 56 70 36Z', hair) +
-    torso('#e3dac8') +
-    po('M36 73L50 86 64 73 67 80 50 96 33 80Z', '#d2c7b0') +
-    face({ shape: 'slim', eyes: 'byakugan', brows: 'angry', browColor: hair, mouth: 'frown' }) +
-    po('M31 40C30 25 38 16 50 16S70 25 69 40C66 33 60 28 50 27 40 28 34 33 31 40Z', hair) +
-    headband('leaf', { cloth: '#1f2026' }) +
-    both(po('M34.6 36L30 62 33.6 68 36.6 41Z', hair, 1))
   );
 }
 
@@ -178,55 +268,6 @@ export function kiba(): string {
   );
 }
 
-/** Akamaru: o cãozinho branco de orelhas caídas marrons. */
-export function akamaru(): string {
-  const fur = '#f4efe6';
-  return (
-    bg('akamaru', '#c25a60', '#2a0c10') +
-    po('M22 101C22 83 34 73 50 73S78 83 78 101Z', fur) +
-    both(po('M34 35C24 32 16 41 18 57 26 55 32 49 36 42Z', '#8a5a36')) +
-    po('M28 50C28 36 38 28 50 28S72 36 72 50C72 64 62 75 50 75S28 64 28 50Z', fur) +
-    po('M46 29L47.6 21 50.4 27 53 20 54.6 29Z', fur, 1) +
-    po('M40 59C40 53.6 45 51.6 50 51.6S60 53.6 60 59C60 65 55 68.4 50 68.4S40 65 40 59Z', '#fffaf2', 1) +
-    both(ln('M35.6 47.4Q40 43.4 44.4 47.4', INK, 1.9)) +
-    `<ellipse cx="50" cy="55.4" rx="3.2" ry="2.3" fill="${INK}"/>` +
-    ln('M50 57.6V61M45 61Q50 65.4 55 61') +
-    po('M47.6 62.6H52.4V66Q50 68.8 47.6 66Z', '#e77a8c', 0.8)
-  );
-}
-
-/** Jiraiya: juba branca, as linhas vermelhas descendo dos olhos, o protetor de chifres e o haori vermelho. */
-export function jiraiya(): string {
-  const hair = '#eef1f4';
-  return (
-    bg('jiraiya', '#c6584e', '#2a0c0a') +
-    po('M30 30L14 25 22 36 7 40 20 48 7 58 20 62 11 77 26 74 23 92H77L74 74 89 77 80 62 93 58 80 48 93 40 78 36 86 25 70 30 63 11 50 20 37 11Z', hair) +
-    torso('#6f8f5a') +
-    kimono('#b23a34') +
-    mesh() +
-    face({ shape: 'square', eyes: 'sharp', browColor: '#a9aeb6', mouth: 'grin', under: both(ln('M40.4 50.6L39.4 64', '#c0392b', 1.9)) + `<circle cx="54.6" cy="54.4" r="1.1" fill="${shade(SKIN, -0.3)}"/>` }) +
-    po('M32 33L28 20 36 24 38 12 45 20 50 9 55 20 62 12 64 24 72 20 68 33Q50 25 32 33Z', hair) +
-    both(po('M34 36L27 45 30 72 35 61 36.6 42Z', hair)) +
-    both(po('M37 31L31.6 19 42 28Z', STEEL, 1)) +
-    po('M33 30Q50 24 67 30V38.6Q50 32.6 33 38.6Z', STEEL) +
-    ln('M46.4 28V34M44.4 31H48.4M52 28.4H56V34H52ZM52 31.2H56', '#596172', 0.9)
-  );
-}
-
-/** Tsunade: loira de franja partida e dois rabos, o losango na testa e o haori verde. */
-export function tsunade(): string {
-  const hair = '#f2d57e';
-  return (
-    bg('tsunade', '#93cb9e', '#12301c') +
-    both(po('M33 50C26 62 24 82 28 99L37 93C35 80 36 66 38 56Z', hair)) +
-    torso('#c9ccd4') +
-    kimono('#4f9a62') +
-    p('M43.6 73L50 87 56.4 73Z', SKIN) +
-    face({ iris: '#b0763a', browColor: '#b8963a', mouth: 'smirk', lips: '#c8506a', under: po('M50 29.6L52.2 33.4 50 37.2 47.8 33.4Z', '#7a5ac0', 0.6) }) +
-    po('M50 22C42 24 37 30 35 40L34 70 28 77C27 60 27 44 30 34 33 22 41 15 50 15S67 22 70 34C73 44 73 60 72 77L66 70 65 40C63 30 58 24 50 22Z', hair)
-  );
-}
-
 export const KONOHA: Record<string, Art> = {
   naruto: () => naruto(),
   narutoKyuubi: () => naruto('kyuubi'),
@@ -238,9 +279,11 @@ export const KONOHA: Record<string, Art> = {
   sasukeFinal: () => sasuke('final'),
   sasukeCurse2: () => sasuke('curse2'),
   sakura,
-  kakashi,
+  kakashi: () => kakashi(),
+  kakashiSharingan: () => kakashi(true),
   iruka,
-  neji,
+  neji: () => neji(),
+  nejiByakugan: () => neji(true),
   lee,
   shikamaru,
   choji,

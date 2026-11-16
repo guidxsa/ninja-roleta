@@ -5,6 +5,7 @@ import { avatarChoices } from '../src/core/avatar';
 import { characters } from '../src/data/jornada/characters';
 import { enemies } from '../src/data/jornada/enemies';
 import { lineages } from '../src/data/lineages';
+import { ragePortrait, ragePortraits, scenePortraits } from '../src/data/portraits';
 import { roletaVillains } from '../src/data/roleta/villains';
 import { villains } from '../src/data/villains';
 import { hasPortraitArt, PORTRAIT_KEYS, portraitArt } from '../prototype/portraits/index';
@@ -18,6 +19,8 @@ describe('retratos', () => {
     for (const f of c.forms ?? []) if (f.portrait) specs.set(`${c.id}/${f.id}`, f.portrait);
   }
   for (const v of roletaVillains) if (v.portrait) specs.set(`roleta/${v.id}`, v.portrait);
+  for (const [id, spec] of Object.entries(ragePortraits)) specs.set(`furia/${id}`, spec);
+  for (const [id, spec] of Object.entries(scenePortraits)) specs.set(`cena/${id}`, spec);
   for (const l of lineages) if (l.jornada?.hero.portrait) specs.set(`classe/${l.id}`, l.jornada.hero.portrait);
 
   it('toda chave de retrato dos dados tem desenho (sem cair na reserva)', () => {
@@ -48,6 +51,15 @@ describe('retratos', () => {
 
   it('as marcas do jinchūriki mudam o retrato da linhagem', () => {
     for (const l of lineages) expect(portraitArt(l.id, true), l.id).not.toBe(portraitArt(l.id, false));
+  });
+
+  it('o retrato de fúria vale com metade do HP ou menos, e só para quem tem um', () => {
+    const known = new Set([...characters, ...enemies, ...villains].map((x) => x.id));
+    for (const id of Object.keys(ragePortraits)) expect(known, id).toContain(id);
+    expect(ragePortrait('haku', 51, 100)).toBeUndefined();
+    expect(ragePortrait('haku', 50, 100)).toBe('villain:hakuUnmasked');
+    expect(ragePortrait('haku', 0, 100)).toBeUndefined();
+    expect(ragePortrait('mizuki', 10, 100)).toBeUndefined();
   });
 
   it('coordenadas válidas: nenhum NaN ou undefined no SVG', () => {

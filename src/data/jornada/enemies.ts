@@ -66,7 +66,7 @@ export const enemies: EnemyDef[] = [
   }), kekkeiGenkai: 'sand' },
   e('soundNinja', 75, 16, 12, [10, 8, 6], [6, 6], null, ['jeSoundBlade', 'jeSoundWave'], 'striker', 'villain:examSound'),
   // Gaara exausto: volta no lugar do Shukaku depois da cabeçada do Naruto (última fase).
-  { ...e('gaaraWeak', 90, 20, 8, [6, 10, 3], [8, 6], 'earth', ['jeSandShield', 'jeSandCoffin'], 'brute', 'villain:gaaraWeak'), kekkeiGenkai: 'sand' },
+  { ...e('gaaraWeak', 90, 20, 8, [6, 10, 3], [8, 6], 'earth', ['jeSandShield', 'jeSandCoffin'], 'brute', 'villain:gaaraInsane'), kekkeiGenkai: 'sand' },
   // Shukaku: o Gaara transformado (roteiro: entra no lugar dele a 40% do HP).
   { ...e('shukaku', 300, 60, 8, [12, 16, 4], [13, 9], 'earth', ['jeShukakuClaw', 'jeSandTsunami', 'jeSandCoffin'], 'brute', 'villain:shukaku'), kekkeiGenkai: 'sand' },
 

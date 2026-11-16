@@ -1,4 +1,5 @@
 // Roleta: textos, componentes (painel do jogador, Ficha, trilha), roletas e o registro da etapa. Usado pelas telas.
+import { ragePortraits } from '../../src/data/portraits';
 import { newAchievements } from '../../src/core/achievements';
 import { type Difficulty } from '../../src/core/difficulty';
 import { critChance } from '../../src/core/hit';
@@ -78,9 +79,10 @@ export const SIDE_COLORS = { player: '#3f5f9e', villain: '#a8332b', miss: '#5558
 
 export const villainName = (id: string) => S.villains[id] ?? id;
 /** Retrato do vilão: o desenho próprio ou, nos vindos da Jornada, o retrato emprestado de lá. */
-export const foePortrait = (id: string, size: 'sm' | 'md' | 'lg' = 'md') => {
-  const spec = villainsById[id]?.portrait;
-  return spec ? fighterPortrait(id, spec, size) : villainPortrait(id, size);
+export const foePortrait = (id: string, size: 'sm' | 'md' | 'lg' = 'md', rage = false) => {
+  // Retrato de fúria (só visual, src/data/portraits.ts): a outra face do vilão quando o HP cai à metade.
+  const spec = (rage ? ragePortraits[id] : undefined) ?? villainsById[id]?.portrait;
+  return spec ? fighterPortrait(rage && ragePortraits[id] ? `${id}-rage` : id, spec, size) : villainPortrait(id, size);
 };
 export const techName = (id: string): string => {
   // Cópia (Uchiha): `copy:<vilão>.<técnica>`.

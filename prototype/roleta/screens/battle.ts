@@ -9,6 +9,7 @@ import type { CloneKind } from '../../../src/core/clones';
 import type { BarrierState } from '../../../src/core/barriers';
 import { type VillainDef, type ConsumableId } from '../../../src/core/types';
 import { CONSUMABLES } from '../../../src/data/events';
+import { RAGE_AT } from '../../../src/data/portraits';
 import { roletaData as rdata } from '../../../src/data/roleta/index';
 import { type RTechniqueDef } from '../../../src/data/roleta/techniques';
 import { roletaVillainsById as villainsById } from '../../../src/data/roleta/villains';
@@ -120,7 +121,7 @@ export function villainPanel(s: RBattle): string {
         ${bar('ck', s.villain.chakra, v.chakra)}
         <div id="vstats">${villainLiveStats(s)}</div>
       </div>
-      <div class="hud-face">${foePortrait(v.id, 'md')}</div>
+      <div class="hud-face" id="vface">${foePortrait(v.id, 'md')}</div>
     </div>
     <div class="hud-extra"><div class="passive-row" id="vpassives">${villainPassiveChips(v)}</div><div class="kit" id="vkit">${villainKit(v, s.villain.techniques)}</div></div>
     <div class="badges" id="vbadges"></div>
@@ -415,10 +416,17 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
     while (logEl.children.length > 30) logEl.lastElementChild!.remove();
   };
   let kitShown = state.villain.techniques;
+  let rageShown = false;
   const renderBadges = (s: RBattle) => {
     root.querySelector('#vbadges')!.innerHTML = badgesHtml(s, 'villain');
     root.querySelector('#pbadges')!.innerHTML = badgesHtml(s, 'player');
     root.querySelector('#vstats')!.innerHTML = villainLiveStats(s);
+    // Retrato de fúria: troca uma vez, quando o HP do vilão cai à metade.
+    const rage = s.villain.hp > 0 && s.villain.hp <= s.villain.maxHp * RAGE_AT;
+    if (rage !== rageShown) {
+      rageShown = rage;
+      root.querySelector('#vface')!.innerHTML = foePortrait(s.villain.def.id, 'md', rage);
+    }
     // O vilão pode trocar de técnicas no meio da luta (Shukaku): refaz o kit.
     if (s.villain.techniques !== kitShown) {
       kitShown = s.villain.techniques;

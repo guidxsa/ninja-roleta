@@ -74,9 +74,9 @@ Exceção (v0.76.9): o herói do **Caminho Ninja** é o ninja da classe; o retra
 
 | Situação | Personagens | Na cena |
 |---|---|---|
-| **Desenho próprio** (v0.88.0) | Todos os nomeados com retrato: Naruto (e as formas da Kyuubi e de uma cauda), Sasuke (Sharingan, marca da maldição, hospital, Vale do Fim e nível 2), Sakura, Kakashi, Iruka, Neji, Lee, Shikamaru, Chōji, Kiba, Akamaru, Jiraiya, Tsunade; Mizuki, Zabuza, Haku (com a máscara), Gōzu, Meizu, Gaara (e o exausto), Shukaku, Gamabunta (e a raposa), Dosu, Zaku, Kin, Jirobo, Kidomaru, Tayuya, Sakon, Kimimaro, Kabuto (e o genin do Exame), Orochimaru e a cobra | Retrato |
+| **Desenho próprio** (v0.88.0) | Todos os nomeados com retrato: Naruto (e as formas da Kyuubi e de uma cauda), Sasuke (Sharingan, marca da maldição, hospital, Vale do Fim e nível 2), Sakura, Kakashi (e o Sharingan à mostra), Iruka, Neji (e o Byakugan ativo), Lee, Shikamaru, Chōji, Kiba, Akamaru, Jiraiya, Tsunade; Mizuki, Zabuza (com e sem as faixas), Haku (com a máscara, sem ela e de quimono na floresta), Gōzu, Meizu, Gaara (e o insano), Shukaku, Gamabunta (e a raposa), Dosu, Zaku, Kin, Jirobo, Kidomaru, Tayuya e Sakon (cada um também na marca da maldição nível 2), Kimimaro, Kabuto (e o genin do Exame), Orochimaru e a cobra | Retrato |
 | **Desenho da origem** | Os genins criados para o jogo (Daichi, Hana, Mika, Ren e Kaede Uchiha, Mio e Sei Hyuuga) e o herói do Caminho Ninja | Retrato |
-| **Sem recurso: só o nome** | Hinata, Tazuna, Ebisu, Ibiki, Itachi e Kisame, o Haku sem máscara (na floresta) | Tira de papel com o nome, quadro só com o local |
+| **Sem recurso: só o nome** | Hinata, Tazuna, Ebisu, Ibiki, Itachi e Kisame | Tira de papel com o nome, quadro só com o local |
 
 Capangas e ninjas das vilas (Névoa, Grama, Chuva, Areia, Som) têm um desenho por tipo: valem na luta, mas não são rosto de cena.
 
@@ -226,6 +226,8 @@ Decidido com o usuário: **a arte oficial é liberada nos retratos de personagen
 - **Um desenho por personagem** (v0.88.0, `prototype/portraits/`): o SVG segue a aparência do personagem na obra (cabelo, olhos, marcas no rosto, traje, acessório e objeto de cena), em traço próprio com contorno de tinta. As peças comuns (rosto, olhos, boca, bandana, ombros) ficam em `kit.ts`; cabelo e traje são de cada um (`konoha.ts`, `villains.ts`, `generic.ts`). Antes, os ninjas dividiam um molde que só trocava a cor.
   - **Genéricos lembram a origem, sem copiar o nomeado**: o Uchiha genérico tem o cabelo preto e a gola alta, mas não a franja do Sasuke; o Nara tem o abacaxi com cavanhaque e cicatrizes; o prodígio tem a tigela repartida e o colete. Ninjas das vilas levam o traje típico (respirador da Chuva, chapéu de palha da Grama, turbante da Areia).
   - Tem que se ler de 24px (ordem de iniciativa) a 170px (cena): o que distingue é silhueta, cabelo e cor, não detalhe fino.
+  - **Traço de anime** (v0.88.1, pedido do usuário): olhos grandes com a pálpebra em pincel, íris em dois tons e dois brilhos; queixo fino; sombra chapada sob a franja e no lado do rosto; mechas de brilho no cabelo; disco (sol ou lua) e nuvens de pincel no fundo.
+  - **Retrato de fúria** (v0.88.1, só visual, `src/data/portraits.ts`): com metade do HP ou menos, o lutador mostra outra face. Kakashi revela o Sharingan, Neji ativa o Byakugan, Zabuza e Haku perdem a máscara, Gaara enlouquece e o Quarteto do Som entra na marca da maldição nível 2. Vale nos dois modos e não muda nenhuma regra. Forma ligada pelo roteiro e visual escolhido pelo jogador têm prioridade. O Haku de quimono é só da cena da floresta (`scenePortraits`).
   - Conferência: o cenário `meta.portraits` do UI Lab mostra todos lado a lado; `tests/portraits.test.ts` garante que toda chave dos dados tem desenho e que nenhum se repete.
 - **Nada de rostos desenhados nos cenários**: o Monumento dos Hokages foi tentado na v0.54.0 e saiu na v0.55.0, a pedido do usuário, porque ficou ruim.
 
