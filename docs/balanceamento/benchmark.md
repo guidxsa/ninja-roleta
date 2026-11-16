@@ -11,6 +11,7 @@ Cenários padronizados para acompanhar o desempenho dos três modos a cada mudan
 | Valor marginal das relíquias do Roleta (Comum, Médio) | `npm run sim:origens -- --runs 400 --seed 2 --reliquias` | 4 min |
 | Vitória por run e dificuldade (Jornada) | `npm run sim:jornada -- 300 2` | 3 min |
 | Auditoria da Jornada, por estágio | `npm run sim:jornada -- 300 2 --auditoria` | 3 min |
+| Só um modo e algumas dificuldades | `npm run sim:jornada -- 300 2 --modo=canon --dif=normal,hard` (combina com `--auditoria`) | 20 s |
 | Valor marginal das relíquias da Jornada (História e Comum, Difícil) e iniciais | `npm run sim:jornada -- 400 2 --reliquias` | 25 min |
 | Só as iniciais das classes | `npm run sim:jornada -- 400 2 --iniciais` | 3 min |
 | Builds da árvore do Naruto | `npm run sim:jornada -- 300 2 --ramos --talentos` | 5 min |

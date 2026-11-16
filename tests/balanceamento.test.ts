@@ -1,12 +1,12 @@
 // Balanceamento aprovado pelo usuário (docs/balanceamento/diagnostico.md): regras novas de cada fase.
 import { describe, expect, it } from 'vitest';
-import { accuracyAgainst, emptyMods, gateOpenCost, hitDamage, hitsOf, hpCost, mergeMods, playerAct, startBattle } from '../src/core/jornada/battle';
+import { accuracyAgainst, emptyMods, enemySeed, gateOpenCost, hitDamage, hitsOf, hpCost, mergeMods, playerAct, startBattle } from '../src/core/jornada/battle';
 import { branchesOf, talentState } from '../src/core/jornada/talents';
 import { ptBR } from '../src/data/strings/ptBR';
 import { evolutionFor, relicFits, relicNeeds } from '../src/core/jornada/relics';
 import { pathRun, playUntil } from '../prototype/lab/fixtures/jornada';
 import { gateHpUpkeep, payGateUpkeep } from '../src/core/gates';
-import { buyTalent, talentContext, fitRelics, gainRelic, heroMods, heroNeeds, newGenericRun, newRun, resolveEvent, runEnemyMult } from '../src/core/jornada/run';
+import { buyTalent, talentContext, fitRelics, gainRelic, heroMods, heroNeeds, newGenericRun, newRun, resolveEvent, runEnemyMult, runEnemyShape } from '../src/core/jornada/run';
 import type { FighterSeed } from '../src/core/jornada/types';
 import { createRoletaPlayer, playerTechniques } from '../src/core/roleta/player';
 import { battleTechniques, gateForceChance, heavyBodyMult, kitActives, playerAttackOdds, playRoletaRound, sharinganStage, startRoletaBattle, techBlock, useActive, type RBattle } from '../src/core/roleta/battle';
@@ -144,7 +144,33 @@ describe('Fase 5 · Jornada e História (H1, H2, H3, J5)', () => {
   it('a força da História muda por estágio (H1); o Caminho Ninja não', () => {
     const run = newRun(1, 'normal', data);
     expect([0, 1, 2, 3].map((i) => runEnemyMult({ ...run, stageIndex: i }, data))).toEqual(data.j.storyStageStrength.map((m) => data.j.storyStrength * m));
-    expect(runEnemyMult({ ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 2 }, data)).toBe(1);
+    expect(runEnemyMult({ ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 2 }, data)).toBe(data.j.genericStageStrength[2]);
+  });
+
+  it('J1 e J2: força por estágio própria da dificuldade e perfil HP/ataque por estágio', () => {
+    const run = { ...newRun(1, 'hard', data), stageIndex: 1 };
+    const by = { ...data, j: { ...data.j, storyStageStrengthBy: { hard: [1, 0.5, 1, 1] } } };
+    expect(runEnemyMult(run, by)).toBeCloseTo(data.j.storyStrength * 0.5);
+    expect(runEnemyMult({ ...run, difficulty: 'normal' }, by)).toBeCloseTo(data.j.storyStrength * data.j.storyStageStrength[1]!);
+    const shaped = { ...data, j: { ...data.j, storyStageShape: [{ hp: 1, offense: 1 }, { hp: 0.5, offense: 2 }] } };
+    expect(runEnemyShape(run, shaped)).toEqual({ hp: 0.5, offense: 2 });
+    expect(runEnemyShape({ ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 1 }, shaped)).toEqual({ hp: 1, offense: 1 });
+    const flat = enemySeed('zabuza', 'normal', data, 1);
+    const split = enemySeed('zabuza', 'normal', data, 1, { hp: 0.5, offense: 2 });
+    const def = data.enemies.zabuza!;
+    const k = data.j.enemyStrength.normal;
+    expect(split.maxHp).toBe(Math.floor(def.hp * k * 0.5));
+    expect(split.offense.taijutsu).toBe(Math.floor(def.offense.taijutsu * k * 2));
+    expect(split.resistance.physical).toBe(Math.max(1, Math.floor(def.resistance.physical * k * 0.5)));
+    expect(enemySeed('zabuza', 'normal', data, 1, { hp: 1, offense: 1 })).toEqual(flat);
+  });
+
+  it('J3: o Caminho Ninja tem força por estágio própria (a História não usa)', () => {
+    const gen = { ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 2 };
+    const with3 = { ...data, j: { ...data.j, genericStageStrength: [1, 1, 1.5] } };
+    expect(runEnemyMult(gen, with3)).toBeCloseTo(1.5);
+    const canon = { ...newRun(1, 'normal', data), stageIndex: 2 };
+    expect(runEnemyMult(canon, with3)).toBeCloseTo(runEnemyMult(canon, data));
   });
 
   it('XP 100 + 30 por nível (J5); Harem atordoa 60% e a Shuriken das sombras +25% por nível (H2)', () => {

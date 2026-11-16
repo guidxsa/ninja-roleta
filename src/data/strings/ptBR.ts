@@ -226,7 +226,7 @@ export const ptBR = {
     vitality: { name: 'Vitalidade Uzumaki', desc: 'A força vital do clã regenera um pouco de HP e de chakra a cada rodada (mais chakra no nível 7).' },
     vitalForce: {
       name: 'Força vital',
-      desc: 'Herdeiro do fundador: começa a run com +1 Vontade do Fogo. Na 1ª vez na luta abaixo de 30% do HP, regenera 4% do HP por rodada durante 3 rodadas (2 vezes por luta no nível 7). Toda cura recebida rende 25% a mais.',
+      desc: 'Na 1ª vez na luta abaixo de 30% do HP, regenera 4% do HP por rodada durante 3 rodadas (2 vezes por luta no nível 7). Toda cura recebida rende 25% a mais.',
     },
     jinchuuriki: {
       name: 'Manto de chakra',

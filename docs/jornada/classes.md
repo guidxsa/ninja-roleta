@@ -17,7 +17,7 @@ As classes são as protagonistas do Caminho Ninja ([caminho-ninja.md](caminho-ni
 
 ## Base única e status derivados
 
-Desde a v0.64.0, cada classe sai de uma origem do Roleta ([origens.md](../base/origens.md#base-única)). A origem tem um bloco `jornada` com o que é próprio do Caminho Ninja (técnicas iniciais, IA, retrato, suportes, nomes e desbloqueio), e a natureza vem da regra da origem: elemento fixo (Uchiha), natureza silenciosa (Hyuuga) ou o protagonista sem elemento (o Comum que não sorteia elemento vira o do Prodígio).
+Desde a v0.64.0, cada classe sai de uma origem do Roleta ([origens.md](../base/origens.md#base-única)). A origem tem um bloco `jornada` com o que é próprio do Caminho Ninja (técnicas iniciais, IA, retrato, suportes, nomes e desbloqueio), e a natureza vem da regra da origem: elemento fixo (Uchiha), natureza silenciosa (Hyuuga) ou o protagonista sem elemento (o Comum que não sorteia elemento vira o do Prodígio, que não tem natureza nenhuma desde a v0.87.1).
 
 Os status do protagonista são **calculados** dos status da origem (`originScale` em `src/data/jornada/balance.ts`, proposta):
 
