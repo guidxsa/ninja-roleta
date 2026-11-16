@@ -29,6 +29,8 @@ Escolhas do usuário sobre o [diagnóstico](balanceamento/diagnostico.md), imple
 
 - **v0.87.0 (fase 6, parte 5)**: C2 e C4, Hyuuga reformulado no molde do Comum: seis ramos (Byakugan, Punho Suave, Rotação, Oito Trigramas, Casa principal, Casa secundária), com as duas casas se excluindo pela raiz a pedido do usuário (o Hyuuga nasce numa só), sete combinações e três assinaturas ([talentos.md](jornada/talentos.md#hyuuga-caminho-ninja)). Mecânica nova de proteger aliados (Guardião, Guarda-costas). Decidido sozinho: os números. Builds (`--ramos --classe=hyuugaNinja`, Médio / Difícil), 1ª medição → final: Byakugan 81/45 → 81/40; Punho Suave 78/40 → 76/41; Rotação 73/34 → 75/43; **Oito Trigramas 96/83** → 91/64 (as 64 Palmas saíram da bifurcação para a junção, e as 128 para o nó extra); Casa principal 77/46 → 82/49; Casa secundária 71/33 → 78/40; diferença entre ramos 24/50 → 16/24; bot padrão 88/54 → **78/43** (cai no chefe final).
 
+- **v0.87.1** (pedido do usuário): o Prodígio do Caminho Ninja não tem natureza, nem a silenciosa. O sorteio à parte continua (a seed dá as mesmas naturezas aos suportes) e saves de antes perdem o elemento do Prodígio. Decidido sozinho: a natureza silenciosa do Hyuuga e dos suportes sai do nome ("Kenta (Água)") e da revelação e fica só na Ficha, com o chip tracejado do Roleta. Simulação (`npm run sim:jornada -- 300 2`, Prodígio, Fácil/Médio/Difícil/Hardcore): 100/85/50/15 → 100/85/50/15; o elemento do lutador só pesa contra barreiras desde a v0.77.0 e o Prodígio só bate de taijutsu.
+
 Roleta, vitória por origem (Fácil / Médio / Difícil / Hardcore), até a v0.80.0:
 
 | Origem | Linha de base | v0.78.0 | v0.79.0 | v0.80.0 |

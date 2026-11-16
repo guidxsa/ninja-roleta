@@ -6,7 +6,7 @@ Ficha no nível 1. Os suportes sobem de nível junto com o Naruto; o crescimento
 
 ## Fichas
 
-Desde a v0.59.0, quem tem ninjutsu começa com o **Bunshin no Jutsu** (fora do moveset quando já há 6 técnicas; [fundamentos.md](../base/fundamentos.md#clones)); o Lee e o Prodígio ganharam chakra para manter os Portões; o Gaara tem a natureza Areia e o Haku, Gelo ([fundamentos.md](../base/fundamentos.md#kekkei-genkai)). Na coluna Elemento, "—" é natureza silenciosa (sorteada, sem técnica).
+Desde a v0.59.0, quem tem ninjutsu começa com o **Bunshin no Jutsu** (fora do moveset quando já há 6 técnicas; [fundamentos.md](../base/fundamentos.md#clones)); o Lee e o Prodígio ganharam chakra para manter os Portões; o Gaara tem a natureza Areia e o Haku, Gelo ([fundamentos.md](../base/fundamentos.md#kekkei-genkai)). Na coluna Elemento, "—" é natureza silenciosa (sorteada, sem técnica), menos no Prodígio, que não tem natureza (v0.87.1). Na interface, a natureza silenciosa aparece só na Ficha (chip tracejado), não no nome nem na revelação.
 
 | Personagem | HP | Chakra | Speed | Tai/Nin/Gen | Res. física/mental | Elemento | IA | Técnicas |
 |---|---|---|---|---|---|---|---|---|

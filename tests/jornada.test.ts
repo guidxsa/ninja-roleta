@@ -35,6 +35,7 @@ import {
   bagFull,
   afterWinRecovery,
   battleSetup,
+  elementOf,
   buy,
   buyTalent,
   canBuy,
@@ -1411,8 +1412,8 @@ describe('Caminho Ninja', () => {
       const run = newGenericRun(s, 'normal', 'common', data);
       kinds.add(run.hero);
       const el = run.elements[run.hero];
-      // O Prodígio tem natureza (silenciosa), mas nenhuma técnica de elemento (v0.59.0).
-      expect(el).not.toBeNull();
+      // O Prodígio não tem natureza (v0.87.1) nem técnica de elemento.
+      expect(el === null).toBe(run.hero === 'prodigy');
       const elemental = new Set(Object.values(data.elementLines).flat());
       if (run.hero === 'prodigy') expect(heroMovable(run, data).filter((id) => elemental.has(id))).toEqual([]);
       else expect(run.moveset).toContain(data.elementLines[el!][0]);
@@ -1544,7 +1545,8 @@ describe('Caminho Ninja', () => {
     expect(fire.relics).toEqual(['academyManual']);
     const prodigy = newGenericRun(4, 'normal', 'common', data, new Set(), null, null);
     expect([prodigy.hero, prodigy.relics]).toEqual(['prodigy', ['greenJumpsuit']]);
-    expect(prodigy.elements.prodigy).not.toBeNull();
+    // O Prodígio não tem natureza, nem a silenciosa (v0.87.1).
+    expect(prodigy.elements.prodigy).toBeNull();
     for (let s = 0; s < 30; s++) {
       const random = newGenericRun(s, 'normal', 'common', data);
       expect(random.elementPick).toBe('random');
@@ -1598,11 +1600,37 @@ describe('Caminho Ninja', () => {
         const run = newGenericRun(seed, 'normal', cls, data, all, null, choice);
         const lost = Object.fromEntries(Object.entries(run.elements).map(([id, el]) => [id, data.characters[id]?.noElement ? null : el]));
         // A função refaz exatamente o que a criação sorteou para as fichas sem ninjutsu elemental.
-        expect(silentNatures(run, data)).toEqual(Object.fromEntries(Object.entries(run.elements).filter(([id]) => data.characters[id]?.noElement)));
+        expect(silentNatures(run, data)).toEqual(Object.fromEntries(Object.entries(run.elements).filter(([id, el]) => data.characters[id]?.noElement && el)));
         mem.set(JORNADA_SAVE_KEY, JSON.stringify({ ...run, elements: lost }));
         expect(loadJornada(storage)!.elements).toEqual(run.elements);
       }
     }
+  });
+
+  it('o Prodígio não tem natureza (v0.87.1): sorteado ou escolhido, e os suportes da seed não mudam', () => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    let drawn = 0;
+    for (let seed = 0; seed < 80; seed++) {
+      const chosen = newGenericRun(seed, 'normal', 'common', data, new Set(), null, null);
+      expect(chosen.hero).toBe('prodigy');
+      expect(chosen.elements.prodigy).toBeNull();
+      expect(elementOf(chosen, 'prodigy', data)).toBeNull();
+      const random = newGenericRun(seed, 'normal', 'common', data);
+      // Os suportes e as naturezas deles são os mesmos de qualquer escolha com a mesma seed.
+      const fire = newGenericRun(seed, 'normal', 'common', data, new Set(), null, 'fire');
+      expect(chosen.supports).toEqual(fire.supports);
+      for (const id of chosen.supports) expect(chosen.elements[id]).toBe(fire.elements[id]);
+      if (random.hero === 'prodigy') {
+        drawn++;
+        expect(random.elements.prodigy).toBeNull();
+      }
+    }
+    expect(drawn).toBeGreaterThan(0);
+    // Save de antes da v0.87.1 com natureza no Prodígio volta sem ela.
+    const run = newGenericRun(5, 'normal', 'common', data, new Set(), null, null);
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify({ ...run, elements: { ...run.elements, prodigy: 'water' } }));
+    expect(loadJornada(storage)!.elements).toEqual(run.elements);
   });
 
   it('o easter egg do Sasuke saiu (v0.86.0): sem ramo Sasuke, sem ramo Raio e sem a conquista', () => {

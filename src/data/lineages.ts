@@ -124,6 +124,8 @@ export const lineages: LineageDef[] = [
         techniques: ['jStrike', 'jLeafWhirlwind', 'jShuriken', 'jGates'],
         ai: 'striker',
         portrait: 'ninja:taijutsuProdigy',
+        // v0.87.1 (pedido do usuário): o Prodígio não tem natureza, nem a silenciosa.
+        noNature: true,
         // v0.65.0 (pedido do usuário: o Prodígio perto de 70% no Médio, de 92%).
         adjust: { hp: -10, offense: { taijutsu: -3 } },
       },

@@ -229,8 +229,10 @@ export function newGenericRun(
   const canChoose = !cls.fixedElement && !cls.noElement;
   const choiceEl = cls.noElement ? null : canChoose && choice !== 'random' ? choice : drawn;
   const hero = choiceEl === null && cls.noElementHero ? cls.noElementHero : cls.hero;
-  // Todo ninja tem natureza: quem não tem ninjutsu elemental a recebe em silêncio (só na ficha e na vantagem).
-  const element = choiceEl ?? drawElement(natureRng, data, false);
+  // Quem não tem ninjutsu elemental recebe a natureza em silêncio (só na ficha e na vantagem). O Prodígio não tem
+  // natureza (v0.87.1), mas o sorteio acontece igual: a seed dá as mesmas naturezas aos suportes.
+  const silent = choiceEl ?? drawElement(natureRng, data, false);
+  const element = data.characters[hero]?.noNature ? null : silent;
   let run = baseRun(seed, difficulty, hero, data);
   run.mode = 'generic';
   run.classId = classId;
@@ -299,7 +301,11 @@ export function silentNatures(run: Pick<JRun, 'mode' | 'seed' | 'hero' | 'suppor
     const el = drawElement(natureRng, data, false);
     if (el) out[id] = el;
   };
-  if (data.characters[run.hero]?.noElement) draw(run.hero);
+  if (data.characters[run.hero]?.noElement) {
+    draw(run.hero);
+    // Prodígio (v0.87.1): sorteia para manter a ordem, mas não tem natureza.
+    if (data.characters[run.hero]?.noNature) delete out[run.hero];
+  }
   for (const id of run.supports) {
     const def = data.characters[id];
     if (def && !def.element && def.noElement) draw(id);

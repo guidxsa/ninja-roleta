@@ -53,7 +53,7 @@ O que espera o usuário. Um item por decisão; o histórico e os números comple
     - **Simulação** (1000 runs, seed 2): sem reforçar os vilões, o Médio caiu para 59% na média das origens, porque perder a roleta de status e itens pesou mais que a cura total. A força dos vilões ficou Genin/Chunin/Jounin ×1 e **Chefe ×0,9**, e o Médio volta a 65% na média. Por origem, no Médio: Comum 53%, Akimichi 75%, Inuzuka 83%, Prodígio 87%, Uchiha 50%, Hyuuga 63%, Uzumaki 69%, Senju 87%.
     - **Pendência**: os pesos da roleta de relíquia são proposta.
 24. **Revisão estrutural: conferir** (v0.59.0, pedido do usuário; números propostos, regras em [base/fundamentos.md](base/fundamentos.md#natureza)):
-    - natureza única (Comum, Uzumaki, Senju e Uchiha usam ninjutsu elemental; as outras origens têm natureza silenciosa); Mokuton do Senju em 3%; Gelo e Areia viraram naturezas do Haku e do Gaara;
+    - natureza única (Comum, Uzumaki, Senju e Uchiha usam ninjutsu elemental; as outras origens têm natureza silenciosa, menos o Prodígio do Caminho Ninja, sem natureza desde a v0.87.1); Mokuton do Senju em 3%; Gelo e Areia viraram naturezas do Haku e do Gaara;
     - Bunshin no Jutsu no kit inicial (Roleta 5 de chakra; Jornada 3);
     - Portões pagos em chakra (abertura 4 no Roleta e 3 por portão na Jornada; manutenção 2, 3, 5, 7, 11, 16...), sem limite de rodadas e sem HP; Lee 20 e Prodígio 22 de chakra na Jornada;
     - chakra do Roleta: técnicas pelo dobro, regeneração do jogador 3% (o vilão ficou em 5%), Concentrar 30%.

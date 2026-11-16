@@ -259,7 +259,7 @@ Futuro: estado **Molhado** (acertos de água) que deixa o alvo vulnerável a rai
 
 ## Natureza
 
-Regra comum aos três modos (v0.59.0, `src/core/nature.ts`). Todo ninja tem **uma natureza**: um dos 5 elementos ou uma Kekkei Genkai. A Kekkei Genkai **é** uma natureza (não se soma a um elemento). Só Comum (com proficiência), Uzumaki, Senju e Uchiha usam ninjutsu elemental; nas outras origens a natureza é sorteada em silêncio e só aparece na ficha ([origens.md](origens.md#natureza-e-ninjutsu-elemental)).
+Regra comum aos três modos (v0.59.0, `src/core/nature.ts`). Todo ninja tem **uma natureza**: um dos 5 elementos ou uma Kekkei Genkai. A Kekkei Genkai **é** uma natureza (não se soma a um elemento). Só Comum (com proficiência), Uzumaki, Senju e Uchiha usam ninjutsu elemental; nas outras origens a natureza é sorteada em silêncio e só aparece na ficha ([origens.md](origens.md#natureza-e-ninjutsu-elemental)). **Exceção:** o Prodígio do Caminho Ninja não tem natureza nenhuma, nem a silenciosa, e fica fora da vantagem elemental (v0.87.1, pedido do usuário).
 
 ## Kekkei genkai
 

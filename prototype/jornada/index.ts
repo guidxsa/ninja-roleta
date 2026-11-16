@@ -108,9 +108,9 @@ const portraitSpec = (id: string, run?: JRun) =>
   run?.skin && id === run.hero ? `ninja:${run.skin}` : (data.characters[id]?.portrait ?? 'ninja:common');
 /** Nome de quem protagoniza, com o nome do jogador no Caminho Ninja. Já escapado: vai direto para o HTML. */
 export const heroName = (host: JornadaHost, run: JRun) => esc(run.mode === 'generic' ? heroLabel(run.hero, host.playerName()) : (J.names[run.hero] ?? run.hero));
-/** Nome com o elemento (Caminho Ninja): "Daichi (Fogo)". Já escapado. */
+/** Nome com o elemento (Caminho Ninja): "Daichi (Fogo)". A natureza silenciosa fica só na Ficha. Já escapado. */
 function memberName(host: JornadaHost, run: JRun, id: string): string {
-  const el = run.mode === 'generic' ? elementOf(run, id, data) : null;
+  const el = run.mode === 'generic' && !data.characters[id]?.noElement ? elementOf(run, id, data) : null;
   const name = esc(memberLabel(run, id, host.playerName()));
   return el ? J.genericStart.elementOf(name, S.elements[el]) : name;
 }
@@ -520,9 +520,10 @@ function elementChoiceButton(c: (typeof ELEMENT_CHOICES)[number]): string {
 const REVEAL_KANJI: Partial<Record<string, string>> = { fire: '火', water: '水', wind: '風', lightning: '雷', earth: '土' };
 
 export async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
-  const el = elementOf(run, run.hero, data);
-  const [a, b] = run.supports.map((id) => memberName(host, run, id));
   const noElement = data.generic.classes.find((c) => c.id === run.classId)?.noElement;
+  // A natureza silenciosa do Hyuuga não é revelada (só aparece na Ficha); o Prodígio não tem natureza.
+  const el = noElement || data.characters[run.hero]?.noElement ? null : elementOf(run, run.hero, data);
+  const [a, b] = run.supports.map((id) => memberName(host, run, id));
   const line = el ? `${icon(el)} ${G.revealElement(S.elements[el])}` : noElement ? G.revealHyuuga : G.revealProdigy;
   // A relíquia bônus é a que veio além da inicial.
   const bonus = run.elementPick === 'random' ? run.relics.find((id) => data.relics.find((r) => r.id === id)?.tier !== 'starter') : undefined;

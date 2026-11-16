@@ -293,11 +293,13 @@ function inFourArcs(run: JRun): JRun {
 }
 
 /**
- * Fichas sem ninjutsu elemental (Hyuuga, Prodígio) têm natureza silenciosa (v0.59.0): conta na vantagem, mas não dá
+ * Fichas sem ninjutsu elemental (Hyuuga; o Prodígio não tem natureza desde a v0.87.1) têm natureza silenciosa (v0.59.0): conta na vantagem, mas não dá
  * técnica. Saves de antes não a tinham, e até a v0.59.1 o carregamento a zerava: quem está sem recebe a da seed, a mesma
  * de uma run nova. O moveset perde a técnica elemental que essas fichas não usam (saves de antes da v0.43.0).
  */
-function withSilentNatures(run: JRun): JRun {
+function withSilentNatures(saved: JRun): JRun {
+  // O Prodígio não tem natureza (v0.87.1): saves de antes a perdem.
+  const run = jornadaData.characters[saved.hero]?.noNature && saved.elements[saved.hero] ? { ...saved, elements: { ...saved.elements, [saved.hero]: null } } : saved;
   const restored = silentNatures(run, jornadaData);
   const missing = Object.keys(restored).filter((id) => !run.elements[id]);
   const next = missing.length ? { ...run, elements: { ...run.elements, ...Object.fromEntries(missing.map((id) => [id, restored[id]!])) } } : run;

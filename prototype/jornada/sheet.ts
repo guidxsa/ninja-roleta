@@ -119,7 +119,7 @@ function memberView(host: JornadaHost, run: JRun, id: string): string {
   const fields = [
     `<div><dt>${F.fields.class}</dt><dd>${esc(className(run, id))}</dd></div>`,
     `<div><dt>${F.fields.level}</dt><dd><span class="lvl">${run.level}</span></dd></div>`,
-    `<div><dt>${F.fields.element}</dt><dd class="chips-left">${els.length ? els.map((e) => elementChip(e)).join('') : `<span class="chip">${F.noElement}</span>`}</dd></div>`,
+    `<div><dt>${F.fields.element}</dt><dd class="chips-left">${els.length ? els.map((e) => elementChip(e, true, Boolean(def.noElement))).join('') : `<span class="chip">${F.noElement}</span>`}</dd></div>`,
     hero
       ? `<div><dt>${F.fields.difficulty}</dt><dd><span class="chip diff-${run.difficulty}">${S.difficulty[run.difficulty].name}</span></dd></div>
          <div><dt>${F.fields.recovery}</dt><dd>${F.recovery(recovery.hp, recovery.chakra)}</dd></div>`
