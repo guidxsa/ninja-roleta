@@ -107,7 +107,7 @@ Visão geral. Detalhes de cada técnica em [tecnicas.md](tecnicas.md).
 | Uchiha | Olhos treinados | Sharingan, Cópia | Taijutsu básico, Fagulha do Dragão, Olhar Hipnótico, Ilusão da Dor | Ilusões de dano, Tsukuyomi (nível 7) | — |
 | Hyuuga | Punho preciso | Byakugan | Taijutsu básico, Selo dos Pontos Vitais (só com o Byakugan) | Selo dos Pontos Vitais, Rotação (nível 4), 64 Palmas (nível 7) | — |
 | Uzumaki | Vitalidade | Selamento | Taijutsu básico, Etiqueta Explosiva | Etiqueta Explosiva, Correntes de Chakra (nível 4) | — |
-| Senju | Herdeiro do fundador, Força vital | — | Taijutsu básico, básico do elemento principal | — (o kit dele é o elemento) | — |
+| Senju | Força vital | — | Taijutsu básico, básico do elemento principal | — (o kit dele é o elemento) | — |
 
 "Básico do elemento principal" = o nível I da linha de ataque do primeiro elemento sorteado ([tecnicas.md](tecnicas.md#linhas-de-ataque)); só no potencial pleno.
 
@@ -242,7 +242,7 @@ Identidade: resistência e selos.
 
 Identidade: o clã do fundador. Muita vida e muito chakra, como o Uzumaki, mas por outro caminho: o Uzumaki regenera um pouco o tempo todo e controla com selos; o Senju aguenta mais, volta da beira da morte e domina qualquer elemento (potencial pleno). Origem forte de propósito e, por isso, lendária e rara.
 
-- **Herdeiro do fundador** (passiva): começa a run com **+1 Vontade do Fogo** (campo `extraRevives`).
+- **Herdeiro do fundador** saiu na v0.88.2 (R1 do diagnóstico 2): o Senju não começa mais com Vontade do Fogo extra (campo `extraRevives`, hoje 0).
 - **Força vital** (passiva): na 1ª vez na luta em que o HP cai abaixo de **30%**, regenera **4% do HP máximo** no início de cada rodada durante **3 rodadas**. Toda **cura recebida** (Palma Curativa, Lesma, Nunca desistir, manto, itens de cura) rende **+25%**.
 - **Mokuton**: só o Senju pode tê-lo, pela roleta própria depois da natureza (3%; [fundamentos.md](fundamentos.md#kekkei-genkai)). A Madeira passa a ser a natureza dele.
 

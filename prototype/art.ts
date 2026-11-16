@@ -294,9 +294,6 @@ function customVideo(folder: string, name: string): string | null {
   return null;
 }
 
-/** Há algum vídeo nas vagas? (o botão Animado só aparece quando há.) */
-export const hasSceneVideos = (): boolean => IMAGES.some((p) => /\.(webm|mp4)$/i.test(p));
-
 /** Modo das cenas: Leve (imagem parada, padrão) ou Animado (vídeo em loop, quando a vaga tem). */
 let animatedScenes = false;
 
@@ -328,6 +325,20 @@ export function sceneVars(name: string): string {
   const size = img ? IMAGE_META[img] : undefined;
   const [fx, fy] = sceneFocus(name);
   return `${size ? `--ratio:${(size[0] / size[1]).toFixed(3)};` : ''}--fx:${fx}%;--fy:${fy}%`;
+}
+
+/**
+ * Camada da cena viva (styles/art.css, `.scene-fx`): névoa, folhas e vaga-lumes sobre a arte de um painel grande. O CSS
+ * só a monta no modo Animado. `theme`: folhas no tema dia e vaga-lumes no tema noite; `day`/`night`: fixa pela arte.
+ * Vai ao lado do invólucro da arte, nunca dentro (o `applySceneMode` reescreve o invólucro).
+ */
+export function sceneFx(mode: 'theme' | 'day' | 'night' = 'theme'): string {
+  const bits = (cls: string, n: number) => Array.from({ length: n }, () => `<i class="${cls}"></i>`).join('');
+  const set = (time: 'day' | 'night') =>
+    mode === 'theme' || mode === time
+      ? `<span class="scene-fx-set${mode === 'theme' ? ` duo-${time}` : ''}">${time === 'day' ? bits('scene-leaf', 7) : bits('scene-fly', 9)}</span>`
+      : '';
+  return `<span class="scene-fx" aria-hidden="true">${bits('scene-mist', 2)}${set('day')}${set('night')}</span>`;
 }
 
 /** Arte do arco (estágio) da História, ou a vaga com o id do estágio (Caminho Ninja: g1, g2, g3). */

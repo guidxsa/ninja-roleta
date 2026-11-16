@@ -287,6 +287,8 @@ export interface CharacterDef {
    * técnica de elemento (v0.59.0).
    */
   noElement?: boolean;
+  /** Sem natureza nenhuma, nem silenciosa (Prodígio do Caminho Ninja, v0.87.1): fica fora da vantagem elemental. */
+  noNature?: boolean;
   /** Técnicas conhecidas no início (as aprendidas depois vêm de talentos e eventos). */
   techniques: string[];
   /** Técnicas que conhece, mas só depois das outras: ficam fora do moveset inicial (Kunai do Comum). */

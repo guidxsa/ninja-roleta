@@ -110,7 +110,7 @@ Aba **Relíquias (宝)** do Registro ninja ([perfil.md](../base/perfil.md)): tod
 | Manual da Academia | Comum | +10% de XP; +5% de acerto. |
 | Macacão verde | prodígio | +1 de dano no taijutsu; +1 de speed. |
 | Leque do clã | Uchiha | O Sharingan (nas duas formas) custa 1 de chakra a menos; técnicas de fogo (Faísca de fogo, Bola de Fogo, Flor de Fênix, Grande Labareda) +10% de dano. |
-| Pergaminho do Punho Suave | Hyuuga | Punho Suave, 64 e 128 Palmas +10% de dano; o Byakugan (nas duas formas) custa 1 de chakra a menos. |
+| Pergaminho do Punho Suave | Hyuuga | Punho Suave, 64 e 128 Palmas +15% de dano; +5% de crítico (v0.88.2; antes +10% e o Byakugan 1 de chakra mais barato). |
 
 ### Comum (20)
 
@@ -210,7 +210,7 @@ Só aparecem na escolha depois do chefe, para quem ainda tem a inicial, e tomam 
 | Colete de chunin | Manual da Academia | +15 de HP máximo; +15% de XP; +8% de acerto. |
 | Macacão da Juventude | Macacão verde | +3 de dano no taijutsu; +2 de speed; +5% de crítico. |
 | Brasão Uchiha | Leque do clã | O Sharingan (nas duas formas) custa 2 de chakra a menos; técnicas de fogo +20% de dano; +5% de crítico. |
-| Pergaminho dos Oito Trigramas | Pergaminho do Punho Suave | Punho Suave, 64 e 128 Palmas +20% de dano; o Byakugan (nas duas formas) custa 2 de chakra a menos; esquiva 4% dos golpes. |
+| Pergaminho dos Oito Trigramas | Pergaminho do Punho Suave | Punho Suave, 64 e 128 Palmas +25% de dano; +10% de crítico; esquiva 4% dos golpes (v0.88.2). |
 
 ### Loja (8)
 

@@ -18,7 +18,10 @@
         t === 'light' || t === 'dark' ? t : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
       // Modo instantâneo também encurta as transições da interface (CSS em styles/instant.css).
       try {
-        if (JSON.parse(localStorage.getItem('proto_settings_v1') || '{}').instant) document.documentElement.dataset.instant = '';
+        var s = JSON.parse(localStorage.getItem('proto_settings_v1') || '{}');
+        if (s.instant) document.documentElement.dataset.instant = '';
+        // Modo Animado: a cena viva do Portão (styles/menu.css) já nasce ligada, sem piscar.
+        if (s.animated) document.documentElement.dataset.animated = '';
       } catch (e) {}
     </script>
     <!-- As fontes vêm embutidas no CSS (styles/fonts.css): o jogo não depende de internet. -->
@@ -34,7 +37,7 @@
         <div class="top-actions">
           <div class="tool-group">
             <button class="btn small" id="instant-btn"></button>
-            <button class="btn small" id="anim-btn" hidden></button>
+            <button class="btn small" id="anim-btn"></button>
             <button class="btn small" id="theme-btn"></button>
             <button class="btn small" id="sfx-btn"></button>
             <button class="btn small" id="music-btn"></button>

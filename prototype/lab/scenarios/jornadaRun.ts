@@ -117,6 +117,15 @@ export const jornadaRun: Scenario[] = [
 
   // Trilha e mapa
   { id: 'jornada.trail', title: 'Trilha da História: próxima parada é evento', group: 'Jornada', mount: stop(() => story('team7')) },
+  {
+    id: 'jornada.trail:animado',
+    title: 'Trilha da História no modo Animado (cena viva na arte do arco)',
+    group: 'Jornada',
+    mount: (ctx) => {
+      document.documentElement.toggleAttribute('data-animated', true);
+      return stop(() => story('team7'))(ctx);
+    },
+  },
   { id: 'jornada.trail:fight', title: 'Trilha: próxima parada é luta de elite (inimigos e equipe)', group: 'Jornada', mount: stop(() => story('demonBrothers')) },
   { id: 'jornada.trail:boss', title: 'Trilha: chefe do estágio', group: 'Jornada', mount: stop(() => story('haku')) },
   {

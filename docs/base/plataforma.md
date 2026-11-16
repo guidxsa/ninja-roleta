@@ -18,7 +18,7 @@ Desde a v0.60.0 o jogo é um PWA: pode ser instalado no celular e no computador 
 - **Dicas** (`tip()`): pela regra do projeto, efeitos, regras e o motivo de um bloqueio ficam na dica. Por isso ela abre por todos os caminhos: passar o mouse, segurar o dedo, **tocar num botão bloqueado** e **receber o foco pelo teclado** (Tab). Chips, selos e linhas com dica recebem foco sozinhos (fora de botões, que já recebem). A dica aberta é lida pelo leitor de tela (`aria-describedby`); Escape fecha.
 - **Troca de tela**: o foco vai para o começo da tela nova (antes ficava num botão que saiu da tela).
 - **Janelas** (Ficha, Registro, relíquias, loja, árvore, moveset): diálogo modal; o foco entra, o Tab fica dentro, Escape fecha (o mesmo caminho do botão Fechar, então o moveset sem salvar descarta as mudanças, como o botão) e o foco volta a quem abriu.
-- **Roletas**: o resultado é lido pelo leitor de tela. Com **menos movimento** pedido pelo aparelho (`prefers-reduced-motion`), a roleta para direto no resultado, sem esperar o giro, e as cenas ficam paradas.
+- **Roletas**: o resultado é lido pelo leitor de tela. Com **menos movimento** pedido pelo aparelho (`prefers-reduced-motion`), a roleta para direto no resultado, sem esperar o giro, e as cenas ficam paradas (inclusive a cena viva dos painéis no modo Animado).
 - Botões só com ícone têm nome: nós do mapa do Caminho Ninja (o tipo da parada; no chefe, o nome dele), jokenpô e cartas do jogo da memória.
 
 ## Quando algo falha

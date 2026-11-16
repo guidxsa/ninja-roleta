@@ -137,13 +137,13 @@ Refeita na v0.84.0, no molde do Naruto: o ninja que faz de tudo. **Seis ramos em
 | Elemento | Nível II | 1 | 3 (+1 cada) | Aprende o nível II do elemento. Cada nível: +20% de dano |
 | Elemento | Afinidade **ou** | 2 | | +15% de dano de ninjutsu; a barreira do elemento (o raio não tem) |
 | Elemento | Fluxo de chakra | 2 | | Técnicas custam 1 a menos; +10% de chance de efeito |
-| Elemento | Nível III | 2 | | Aprende o nível III do elemento |
+| Elemento | Nível III | 2 | | Aprende o nível III do elemento; +25% de dano de ninjutsu (v0.88.3) |
 | Elemento | Natureza dominada | 2 | | Os efeitos que você aplica duram 1 turno a mais |
 | Elemento | **Mestre do elemento** (final) | 3 | | Ninjutsu ignora 30% da resistência; técnicas custam 1 a menos |
 | Ferramentas | Kunai afiada | 1 | | +2 de dano no taijutsu |
 | Ferramentas | Selo explosivo **ou** | 2 | 2 (+1) | Aprende o Selo explosivo (todos os inimigos). Nível 2: +25% de dano |
 | Ferramentas | Armadilha de fios | 2 | | Aprende a Armadilha de fios; os efeitos duram 1 turno a mais |
-| Ferramentas | Bolsa ninja | 2 | | Kits rendem +25%; começa as lutas com +5 de chakra |
+| Ferramentas | Bolsa ninja | 2 | | Kits rendem +25%; começa as lutas com +5 de chakra; +20% de dano de taijutsu, +5% de acerto e +10% de dano (v0.88.3) |
 | Ferramentas | Arsenal | 2 | | Selo e Armadilha custam 2 a menos; +10% de chance de efeito |
 | Ferramentas | **Mestre das armadilhas** (final) | 3 | | Inimigo atordoado leva +40% de dano da equipe |
 | Estilo da Folha | Treino básico | 1 | | +1 de dano no taijutsu; +5% de acerto |
@@ -155,7 +155,7 @@ Refeita na v0.84.0, no molde do Naruto: o ninja que faz de tudo. **Seis ramos em
 | Clones | Bunshin aprimorado | 1 | | O clone custa 1 de chakra a menos |
 | Clones | Kawarimi **ou** | 2 | | Esquiva 12% |
 | Clones | Clone de ataque | 2 | | O clone bate junto com 25% do dano de um golpe |
-| Clones | Multiclones | 2 | | O clone sai com 1 a mais; começa as lutas com 1 clone |
+| Clones | Multiclones | 2 | | O clone sai com 1 a mais; começa as lutas com 2 clones; +10% de dano (v0.88.3) |
 | Clones | Clone explosivo | 2 | | Quem acerta um clone leva 4 de dano |
 | Clones | **Ilusão perfeita** (final) | 3 | | Com clone de pé, −25% de acerto dos inimigos; limite de clones +1 |
 | Equipe | Trabalho em equipe | 1 | | +8% de HP máximo dos suportes |
@@ -225,19 +225,19 @@ Refeita na v0.85.0, no molde do Comum. O prodígio é um personagem genérico: o
 | Treino | Pesos fora | 1 | | Esquiva 5% |
 | Treino | Mil voltas **ou** | 2 | | Escudo de 10% no começo das lutas |
 | Treino | Flexões | 2 | | +3 de dano no taijutsu |
-| Treino | Mestre do taijutsu | 2 | | +20% de dano de taijutsu |
+| Treino | Mestre do taijutsu | 2 | | +30% de dano de taijutsu e +10% de dano; esquiva 10% (v0.88.3) |
 | Treino | Resistência | 2 | | Uma vez por luta fica com 1 de HP |
 | Treino | **Tirar os pesos** (final) | 3 | | 1º golpe da luta crítico; +10% de dano; esquiva +5% |
 | Rivalidade | Entrada dinâmica | 1 | 2 (+1) | Aprende a Entrada dinâmica. Nível 2: +25% de dano |
 | Rivalidade | Contra-ataque **ou** | 2 | | 30% de revidar com 8 de dano ao apanhar de golpe de alvo único |
 | Rivalidade | Desafio | 2 | | +20% de dano contra inimigo acima da metade do HP |
-| Rivalidade | Espírito de rival | 2 | | +5% de acerto e de crítico; +10% de dano |
+| Rivalidade | Espírito de rival | 2 | | +5% de acerto, +10% de crítico e +25% de dano (v0.88.3) |
 | Rivalidade | Não vou perder | 2 | | +25% de dano abaixo da metade do HP; Defender cura 6% |
 | Rivalidade | **Duelo** (final) | 3 | | Contra quem tem mais HP máximo: +30% de dano, +10% de acerto |
 | Mestre e pupilo | Grito de incentivo | 1 | | A equipe +5% de acerto |
 | Mestre e pupilo | Treino em dupla **ou** | 2 | | A equipe +2 de dano no taijutsu |
 | Mestre e pupilo | Olho do mestre | 2 | | +10% de HP máximo dos suportes |
-| Mestre e pupilo | Aula prática | 2 | | A equipe +5% de crítico e +10% de dano |
+| Mestre e pupilo | Aula prática | 2 | | A equipe +5% de acerto e de crítico e +25% de dano (v0.88.3) |
 | Mestre e pupilo | Espírito de equipe | 2 | | A equipe recupera 2 de HP por rodada |
 | Mestre e pupilo | **Lição do mestre** (final) | 3 | | Quando alguém cai, os de pé +20% de dano por 3 turnos |
 
@@ -275,7 +275,7 @@ Refeita na v0.86.0, no molde do Comum: um ninja genérico do clã. **Seis ramos 
 | Sharingan | 3 tomoe | 1 | | Evolui o Sharingan: +20% de acerto, +25% de esquiva e +10% de dano por 4 turnos |
 | Sharingan | Olhar copiador **ou** | 2 | | +5% de crítico e de acerto |
 | Sharingan | Previsão | 2 | | Esquiva 8% |
-| Sharingan | Leitura de movimento | 2 | | +5% de acerto; esquiva 5% |
+| Sharingan | Leitura de movimento | 2 | | +5% de acerto, +10% de crítico e +10% de dano; esquiva 5% (v0.88.3) |
 | Sharingan | Fluxo do Sharingan | 2 | | +10% de dano; 2 de HP por rodada |
 | Sharingan | **Leitura total** (final) | 3 | | Com o Sharingan ligado, 30% de anular um golpe de alvo único |
 | Fogo do clã | Flor de Fênix | 1 | 3 (+1 cada) | Aprende a Flor de Fênix. Cada nível: +20% de dano |
@@ -287,7 +287,7 @@ Refeita na v0.86.0, no molde do Comum: um ninja genérico do clã. **Seis ramos 
 | Ilusões | Ilusão dos corvos | 1 | 3 (+1 cada) | Aprende a Ilusão dos corvos. Cada nível: +20% de dano |
 | Ilusões | Olhar do medo **ou** | 2 | | Cada golpe que acerta: 20% de Medo |
 | Ilusões | Prisão | 2 | | Cada golpe de genjutsu que acerta: 20% de atordoar |
-| Ilusões | Mestre das ilusões | 2 | | +25% de dano de genjutsu |
+| Ilusões | Mestre das ilusões | 2 | | +50% de dano de genjutsu e +10% de dano; Medo em 15% dos golpes (v0.88.3) |
 | Ilusões | Tsukuyomi | 2 | | Aprende o Tsukuyomi |
 | Ilusões | **Mundo da ilusão** (final) | 3 | | Genjutsu em alvo controlado não erra; +35% de dano contra eles |
 | Armas do clã | Mãos rápidas | 1 | | Shuriken giratória e Armadilha de fios custam 1 a menos; +5% de acerto |
@@ -299,13 +299,13 @@ Refeita na v0.86.0, no molde do Comum: um ninja genérico do clã. **Seis ramos 
 | Orgulho do clã | Orgulho do clã | 1 | | +8% de dano |
 | Orgulho do clã | Frieza **ou** | 2 | | +8% de crítico |
 | Orgulho do clã | Raiva | 2 | | +30% de dano abaixo da metade do HP |
-| Orgulho do clã | Olhar frio | 2 | | +5% de acerto e de crítico |
+| Orgulho do clã | Olhar frio | 2 | | +5% de acerto, +10% de crítico e +20% de dano (v0.88.3) |
 | Orgulho do clã | Orgulho ferido | 2 | | Defender cura 8%; 1 de HP por rodada |
 | Orgulho do clã | **Vingança** (final) | 3 | | Abaixo de 30% do HP ou com aliado caído: +50% de dano |
 | Polícia do clã | Patrulha | 1 | | A equipe +5% de acerto |
 | Polícia do clã | Vigia **ou** | 2 | | +10% de HP máximo dos suportes |
 | Polícia do clã | Interrogatório | 2 | | Os efeitos que você aplica duram 1 turno a mais |
-| Polícia do clã | Disciplina do clã | 2 | | A equipe +5% de crítico e +10% de dano |
+| Polícia do clã | Disciplina do clã | 2 | | A equipe +5% de acerto e de crítico e +25% de dano (v0.88.3) |
 | Polícia do clã | Custódia | 2 | | A equipe +10% de chance de efeito |
 | Polícia do clã | **Ordem do clã** (final) | 3 | | Inimigo controlado leva +30% de dano da equipe |
 
@@ -343,19 +343,19 @@ Reformulado na v0.87.0, no molde do Comum: um ninja genérico do clã. **Seis ra
 | Byakugan | Visão ampla | 1 | | +5% de acerto; o Byakugan custa 1 a menos |
 | Byakugan | Byakugan desperto **ou** | 2 | | Evolui o Byakugan: não erra, +30% de penetração e +15% de dano por 4 turnos |
 | Byakugan | Pontos vitais | 2 | | +10% de crítico |
-| Byakugan | Olhos que tudo veem | 2 | | Esquiva 8% |
+| Byakugan | Olhos que tudo veem | 2 | | Esquiva 8%; +10% de crítico e +10% de dano (v0.88.3) |
 | Byakugan | Leitura do chakra | 2 | | +5% de acerto e de dano; derrubar um inimigo devolve 3 de chakra |
 | Byakugan | **Visão de 360°** (final) | 3 | | Ignora a esquiva dos inimigos; esquiva +10% |
 | Punho Suave | Punho Suave | 1 | | +15% de dano de taijutsu |
 | Punho Suave | Fechar pontos **ou** | 2 | | Cada taijutsu que acerta tira 2 de chakra do alvo |
 | Punho Suave | Golpe interno | 2 | | O taijutsu ignora 25% da resistência |
-| Punho Suave | Tenketsu | 2 | | Palma Suave +30% de dano |
+| Punho Suave | Tenketsu | 2 | | Palma Suave +30% de dano; +20% de dano de taijutsu (v0.88.3) |
 | Punho Suave | Fluxo interrompido | 2 | | +30% de dano em alvo com o chakra bloqueado |
 | Punho Suave | **Tenketsu selado** (final) | 3 | | Taijutsu que acerta: 30% de bloquear o chakra |
 | Rotação | Rotação | 1 | | Aprende a Rotação (escudo) |
 | Rotação | Postura do clã **ou** | 2 | | Escudo de 12% no começo das lutas |
 | Rotação | Giro rápido | 2 | | A Rotação custa 2 a menos |
-| Rotação | Paredão de vácuo | 2 | | Aprende o Paredão de vácuo |
+| Rotação | Paredão de vácuo | 2 | | Aprende o Paredão de vácuo; +15% de dano; esquiva 8% (v0.88.3) |
 | Rotação | Equilíbrio | 2 | | Defender cura 8%; 2 de HP por rodada |
 | Rotação | **Defesa absoluta** (final) | 3 | | O escudo devolve 75% do que segura |
 | Oito Trigramas | Postura dos trigramas | 1 | | +5% de acerto; +1 de dano no taijutsu |
@@ -373,7 +373,7 @@ Reformulado na v0.87.0, no molde do Comum: um ninja genérico do clã. **Seis ra
 | Casa secundária | Dever da casa secundária | 1 | | Esquiva 8%; Defender cura 5%. **Fecha a Casa principal** |
 | Casa secundária | Guarda-costas **ou** | 2 | | Defendendo, toma os golpes de alvo único no lugar do aliado mais ferido |
 | Casa secundária | Vigília | 2 | | A equipe esquiva 5% |
-| Casa secundária | Lealdade | 2 | | Esquiva 5%; 2 de HP por rodada |
+| Casa secundária | Lealdade | 2 | | Esquiva 8%; 5 de HP por rodada; começa as lutas com escudo de 12%; +10% de dano (v0.88.3) |
 | Casa secundária | Corpo de escudo | 2 | | Escudo de 12% no começo das lutas |
 | Casa secundária | **Guardião** (final) | 3 | | 35% dos golpes contra aliados caem em você; 2 de HP por rodada |
 

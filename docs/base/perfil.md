@@ -20,7 +20,7 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra late
   - o ninja comum, sempre;
   - cada origem jogada no Roleta (pelo histórico) ou com a vitória registrada (`win_<linhagem>`, que fica mesmo depois de a run sair do histórico);
   - personagens da Jornada pelas conquistas: Naruto (Sino na mão), Uchiha (Chama do clã), Hyuuga (Olhos abertos) e o visual do Sasuke (Mil pássaros).
-- Fica no perfil (`avatar`) como a chave do retrato (`ninja:<chave>`; o Naruto é `ninja:naruto` desde a v0.88.0). Por enquanto é o desenho SVG; quando houver imagem própria com a mesma chave, ela entra no lugar. Se o escolhido deixar de estar liberado, vale o padrão.
+- Fica no perfil (`avatar`) como a chave do retrato (`ninja:<chave>`; o Naruto é `ninja:naruto` desde a v0.90.0). Por enquanto é o desenho SVG; quando houver imagem própria com a mesma chave, ela entra no lugar. Se o escolhido deixar de estar liberado, vale o padrão.
 
 ## Recorde do modo infinito
 

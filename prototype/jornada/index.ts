@@ -65,7 +65,7 @@ import { jornadaData as data } from '../../src/data/jornada';
 import { newJornadaAchievements } from '../../src/data/jornada/achievements';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { loadJornada, saveJornada } from '../../src/state/jornadaSave';
-import { arcMedia, fighterPortrait, icon, sceneMedia, sceneVars } from '../art';
+import { arcMedia, fighterPortrait, icon, sceneFx, sceneMedia, sceneVars } from '../art';
 import { choose, confirmDialog, esc, h, openDialog, show, sleep } from '../dom';
 import { tip } from '../tooltip';
 import { achievementIcon } from '../achievementIcons';
@@ -108,9 +108,9 @@ const portraitSpec = (id: string, run?: JRun) =>
   run?.skin && id === run.hero ? `ninja:${run.skin}` : (data.characters[id]?.portrait ?? 'ninja:common');
 /** Nome de quem protagoniza, com o nome do jogador no Caminho Ninja. Já escapado: vai direto para o HTML. */
 export const heroName = (host: JornadaHost, run: JRun) => esc(run.mode === 'generic' ? heroLabel(run.hero, host.playerName()) : (J.names[run.hero] ?? run.hero));
-/** Nome com o elemento (Caminho Ninja): "Daichi (Fogo)". Já escapado. */
+/** Nome com o elemento (Caminho Ninja): "Daichi (Fogo)". A natureza silenciosa fica só na Ficha. Já escapado. */
 function memberName(host: JornadaHost, run: JRun, id: string): string {
-  const el = run.mode === 'generic' ? elementOf(run, id, data) : null;
+  const el = run.mode === 'generic' && !data.characters[id]?.noElement ? elementOf(run, id, data) : null;
   const name = esc(memberLabel(run, id, host.playerName()));
   return el ? J.genericStart.elementOf(name, S.elements[el]) : name;
 }
@@ -308,7 +308,7 @@ export async function entryScreen(host: JornadaHost, saved: JRun | null): Promis
           <header class="gate-head">
             <h1 class="logo jlogo"><span class="l1">${J.start.logoTop}</span><span class="l2">${J.start.title}</span></h1>
           </header>
-          <div class="gate-hero" aria-hidden="true">${hero ?? ''}</div>
+          <div class="gate-hero" aria-hidden="true">${hero ?? ''}${hero ? sceneFx() : ''}</div>
           <blockquote class="parchment gate-quote"><p>${quote.text}</p><cite>${quote.by}</cite></blockquote>
         </div>
         <nav class="gate-modes">
@@ -370,7 +370,7 @@ export async function campaignScreen(host: JornadaHost, saved: JRun | null): Pro
         const art = sceneMedia(p.art);
         const txt = C[p.id];
         return `<section class="jc-panel jc-${p.time}${open ? '' : ' is-locked'}" data-campaign="${p.id}"${open ? '' : ' aria-disabled="true"'}>
-          <span class="jc-art art-frame" aria-hidden="true">${art ?? ''}</span>
+          <span class="jc-art art-frame" aria-hidden="true">${art ?? ''}${art && open ? sceneFx(p.time) : ''}</span>
           <div class="jc-body parchment">
             <span class="seal jc-seal" aria-hidden="true">${p.seal}</span>
             <h3>${txt.name}</h3><p class="small">${txt.desc}</p>
@@ -402,7 +402,7 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
     h(`<div class="screen jpath">
       <header class="jsub-head"><button class="btn small" data-choice="back">${J.start.back}</button><h2>${G.title}</h2><p class="muted">${G.desc}</p></header>
       <section class="jc-panel jpath-poster" aria-hidden="true">
-        <span class="jc-art art-frame">${sceneMedia('modo-caminho') ?? sceneMedia('jornada') ?? ''}</span>
+        <span class="jc-art art-frame">${sceneMedia('modo-caminho') ?? sceneMedia('jornada') ?? ''}${sceneFx()}</span>
         <div class="jc-body parchment"><span class="seal jc-seal">道</span><h3>${J.start.pathStages}</h3>
           <ol class="jpath-stages">${data.generic.stages.map((g, i) => `<li><span class="seal ghost">${ARC_NUMERALS[i] ?? i + 1}</span>${J.stages[g.id] ?? g.id}</li>`).join('')}</ol></div>
       </section>
@@ -520,9 +520,10 @@ function elementChoiceButton(c: (typeof ELEMENT_CHOICES)[number]): string {
 const REVEAL_KANJI: Partial<Record<string, string>> = { fire: '火', water: '水', wind: '風', lightning: '雷', earth: '土' };
 
 export async function revealScreen(host: JornadaHost, run: JRun): Promise<void> {
-  const el = elementOf(run, run.hero, data);
-  const [a, b] = run.supports.map((id) => memberName(host, run, id));
   const noElement = data.generic.classes.find((c) => c.id === run.classId)?.noElement;
+  // A natureza silenciosa do Hyuuga não é revelada (só aparece na Ficha); o Prodígio não tem natureza.
+  const el = noElement || data.characters[run.hero]?.noElement ? null : elementOf(run, run.hero, data);
+  const [a, b] = run.supports.map((id) => memberName(host, run, id));
   const line = el ? `${icon(el)} ${G.revealElement(S.elements[el])}` : noElement ? G.revealHyuuga : G.revealProdigy;
   // A relíquia bônus é a que veio além da inicial.
   const bonus = run.elementPick === 'random' ? run.relics.find((id) => data.relics.find((r) => r.id === id)?.tier !== 'starter') : undefined;
@@ -584,7 +585,7 @@ function trail(run: JRun): string {
   // História: o painel mostra a arte do arco (SCENE_ART), com o número e o nome; sem arte, o cenário desenhado do local.
   const art = sceneMedia(`arco-${stage.id}`);
   const arc = art
-    ? `<figure class="jtrail-art art-frame" data-arc="${stage.id}" aria-hidden="true">${art}<figcaption><span class="seal">${ARC_NUMERALS[run.stageIndex] ?? run.stageIndex + 1}</span>${J.stages[stage.id] ?? ''}</figcaption></figure>`
+    ? `<figure class="jtrail-art art-frame" data-arc="${stage.id}" aria-hidden="true">${art}${sceneFx()}<figcaption><span class="seal">${ARC_NUMERALS[run.stageIndex] ?? run.stageIndex + 1}</span>${J.stages[stage.id] ?? ''}</figcaption></figure>`
     : '';
   return `<div class="jtrail-scene ${art ? 'jtrail-arc' : 'jscene'} scene-${stopScene(run, data)}">${arc}<ol class="jtrail">${stage.stops
     .map((s, i) => {

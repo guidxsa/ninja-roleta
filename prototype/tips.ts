@@ -45,8 +45,10 @@ export function elementTip(el: Element | null): string {
 }
 
 /** Chip de elemento com ícone e a dica do ciclo. `withTip` = false dentro de botões. */
-export function elementChip(el: Element | null, withTip = true): string {
+export function elementChip(el: Element | null, withTip = true, silent = false): string {
   if (!el) return '';
+  // Natureza silenciosa (sem ninjutsu elemental): chip tracejado, com a dica dela.
+  if (silent) return `<span class="chip el silent el-${el}" style="--c:${ELEMENT_COLORS[el]}"${withTip ? tip(S.elements[el], T.silentNature) : ''}>${icon(ELEMENT_ICON[el])}${S.elements[el]}</span>`;
   return `<span class="chip el el-${el}" style="--c:${ELEMENT_COLORS[el]}"${withTip ? elementTip(el) : ''}>${icon(ELEMENT_ICON[el])}${S.elements[el]}</span>`;
 }
 

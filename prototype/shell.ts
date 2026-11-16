@@ -1,6 +1,6 @@
 // Casca comum às telas: tema, botões do cabeçalho, fontes, erro, volta ao Portão, service worker e faixa de frases.
 import { ptBR as S } from '../src/data/strings/ptBR';
-import { icon, applySceneMode, hasSceneVideos, installSceneRatios, uiTextureVars } from './art';
+import { icon, applySceneMode, installSceneRatios, uiTextureVars } from './art';
 import { installAudio, setSfx, setMusic, mood } from './audio';
 import { installSideNav } from './gate';
 import { installFolds } from './jornada/fold';
@@ -37,12 +37,20 @@ export function setInstantCss(on: boolean) {
   document.documentElement.toggleAttribute('data-instant', on);
 }
 
+/**
+ * Modo Animado: vídeo nas vagas que têm (art.ts) e a cena viva do Portão (styles/menu.css, `.gate-fx`), que o CSS só
+ * mostra com `data-animated` e sem `data-instant`.
+ */
+export function setAnimated(on: boolean) {
+  applySceneMode(on);
+  document.documentElement.toggleAttribute('data-animated', on);
+}
+
 /** Botões do cabeçalho: instantâneo, dia/noite, efeitos sonoros e música. */
 export function installHeaderToggles() {
   setInstantCss(ses.settings.instant);
-  // Modo das cenas antes de qualquer tela; o botão só aparece quando alguma vaga tem vídeo.
-  applySceneMode(ses.settings.animated);
-  document.getElementById('anim-btn')!.hidden = !hasSceneVideos();
+  // Modo das cenas antes de qualquer tela.
+  setAnimated(ses.settings.animated);
   applyTheme();
   deviceTheme?.addEventListener?.('change', applyTheme);
   document.getElementById('theme-btn')!.addEventListener('click', () => {
@@ -53,7 +61,7 @@ export function installHeaderToggles() {
 
   const toggles = [
     { id: 'instant-btn', key: 'instant', on: 'lightning', off: 'lightning', label: S.ui.instant, apply: setInstantCss },
-    { id: 'anim-btn', key: 'animated', on: 'sparkle', off: 'sparkle', label: S.ui.animated, apply: applySceneMode },
+    { id: 'anim-btn', key: 'animated', on: 'sparkle', off: 'sparkle', label: S.ui.animated, apply: setAnimated },
     { id: 'sfx-btn', key: 'sfx', on: 'soundOn', off: 'soundOff', label: S.ui.sfx, apply: setSfx },
     { id: 'music-btn', key: 'music', on: 'music', off: 'musicOff', label: S.ui.music, apply: setMusic },
   ] as const;

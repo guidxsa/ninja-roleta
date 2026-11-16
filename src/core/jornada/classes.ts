@@ -13,6 +13,8 @@ export interface OriginHero {
   spareTechniques?: string[];
   ai: AiProfile;
   portrait: string;
+  /** Sem natureza nenhuma, nem a silenciosa (Prodígio, v0.87.1). */
+  noNature?: true;
   /** Ajuste fino por cima da fórmula (soma; só com aprovação do usuário). */
   adjust?: { hp?: number; chakra?: number; speed?: number; offense?: Partial<AttackStats>; resistance?: Partial<Resistances> };
 }
@@ -98,6 +100,7 @@ export function jornadaHero(lineage: LineageDef, scale: OriginScale): CharacterD
     ...stats,
     element: lineage.elements.fixed ?? null,
     ...(silent ? { noElement: true } : {}),
+    ...(h.noNature ? { noNature: true } : {}),
     techniques: [...h.techniques],
     ...(h.spareTechniques ? { spareTechniques: [...h.spareTechniques] } : {}),
     ai: h.ai,

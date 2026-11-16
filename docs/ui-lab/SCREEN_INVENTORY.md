@@ -43,7 +43,7 @@ Mecanismos de navegação:
 | Botão Portão (`#home-btn`) | `askHome()` | `goHome()` corta a tela atual (símbolo `HOME`) e volta ao Portão; pede `window.confirm` com run em andamento |
 | Barra lateral (`#side-nav`, só PC) | `installSideNav()` | Início, Jornada, Roleta e as 4 páginas do Registro (em popup) |
 | Barra inferior (`#gate-nav`, só celular) | `main()` | Início e atalhos do Registro (`data-profile`) |
-| Cabeçalho | `installHeaderToggles()` | Instantâneo, Animado (só se houver vídeo), Tema, Efeitos, Música, Ficha, Registro |
+| Cabeçalho | `installHeaderToggles()` | Instantâneo, Animado, Tema, Efeitos, Música, Ficha, Registro |
 | Erro no fluxo | `errorScreen()` | Captura exceção, mostra o aviso e volta ao Portão |
 
 Não há `history.pushState` nem hash: **F5 sempre volta ao Portão** (a Jornada retoma pelo save `jornada_run_v1`).
@@ -59,7 +59,7 @@ Não há `history.pushState` nem hash: **F5 sempre volta ao Portão** (a Jornada
 
 | Id | Elemento | Estados |
 |---|---|---|
-| `shell.header` | `header.top`: marca, `#home-btn`, grupos de botões, `#dots` | Rótulos dos botões só ≥ 1280px; botão Ficha some sem run (`syncSheetBtn`); `#anim-btn` escondido sem vídeo |
+| `shell.header` | `header.top`: marca, `#home-btn`, grupos de botões, `#dots` | Rótulos dos botões só ≥ 1280px; botão Ficha some sem run (`syncSheetBtn`) |
 | `shell.dots` | `progressDots()` em `#dots` | Progresso do ciclo da Roleta; vazio no Portão e na Jornada |
 | `shell.sidenav` | `#side-nav` | Só PC; item ativo por `aria-current` |
 | `shell.gatenav` | `#gate-nav` | Só celular |
@@ -74,7 +74,7 @@ Legenda da última coluna: **Direto?** / **Visto**.
 
 | Id | Tela | Onde | Acesso | Dados | Estados alternativos | Responsivo | Direto? / Visto |
 |---|---|---|---|---|---|---|---|
-| `gate.home` | Portão da Vila (escolha de modo) | `modeScreen()` em `main.ts` | Abrir o jogo | Perfil (`localStorage`), save da Jornada, conquistas recentes, `SCENE_ART` | Tema dia (Naruto) e noite (Sasuke) com cenas, frases e selos próprios; card "Progresso da Jornada" só com run salva; conquistas recentes só se houver; frase sorteada | Celular: coluna única com barra inferior. PC: `gate-main` + `gate-aside` (ficha, progresso, recentes) e barra lateral | Sim / não |
+| `gate.home` | Portão da Vila (escolha de modo) | `modeScreen()` em `main.ts` | Abrir o jogo | Perfil (`localStorage`), save da Jornada, conquistas recentes, `SCENE_ART` | Tema dia (Naruto) e noite (Sasuke) com cenas, frases e selos próprios; card "Progresso da Jornada" só com run salva; conquistas recentes só se houver; frase sorteada; no modo Animado, cena viva (névoa, folhas de dia, vaga-lumes à noite) | Celular: coluna única com barra inferior. PC: `gate-main` + `gate-aside` (ficha, progresso, recentes) e barra lateral | Sim / não |
 | `gate.name` | Pedir o nome do ninja | `askPlayerName()` em `playerName.ts` | 1ª entrada no Roleta ou no Caminho Ninja | `profile.playerName` indefinido | Confirmar ou pular | Pergaminho centralizado | Não (some depois da 1ª vez) / não |
 | `gate.avatar` | Escolha do avatar (modal) | `openAvatarPicker()` | Avatar na ficha do Portão (PC) ou no Registro | Avatares liberados (`avatarChoices`: origens jogadas e conquistas) | Poucos ou muitos avatares liberados; atual marcado | Grade | Sim (com Registro) / não |
 | `gate.error` | Tela de erro | `errorScreen()` | Exceção dentro de uma tela | Erro capturado | Detalhe técnico em `<details>` | Simples | Não (precisa forçar erro) / não |
@@ -267,7 +267,7 @@ Estados que mudam muito a interface e valem um caso próprio no lab:
 1. **Tema**: Pergaminho (claro) e Sumi (escuro). No Portão troca também cena, frase e selo (Naruto/Sasuke).
 2. **Modo instantâneo** (`data-instant`): sem botão Girar, sem animação de jokenpô, falas seguem sozinhas.
 3. **Menos movimento** (`prefers-reduced-motion`): roletas param direto no resultado; 11 blocos de CSS.
-4. **Modo Animado**: vídeo nas vagas de cena (o botão só aparece se houver vídeo).
+4. **Modo Animado**: vídeo nas vagas de cena e a cena viva dos painéis grandes (cenários `gate.home:animado`, `jornada.entry:animado` e `jornada.trail:animado`).
 5. **Faixa de tela**: celular estreito (≤ 380), celular, tablet (600–899), PC `DESK`, `WIDE`, e PC com altura baixa.
 6. **Toque vs ponteiro** (`pointer: coarse`): dicas e tamanhos.
 7. **Mood** (`mood('good'|'bad'|'neutral')`): muda o clima da tela depois de resultados.

@@ -678,6 +678,13 @@
     -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat; mask: var(--ink-edge) center / 100% 100% no-repeat;
   }
   .jtrail-art > .scene-media > :is(img, video) { -webkit-mask: none; mask: none; }
+  /* Cena viva: a camada ocupa a mesma área da arte, com a mesma borda de tinta. */
+  .jtrail-art > .scene-fx {
+    grid-area: art; position: relative; inset: auto;
+    width: min(100cqw, 100cqh * max(var(--ratio, .7), .62));
+    height: min(100cqh, max(100cqw / var(--ratio, .7), 100cqw * 1.35));
+    -webkit-mask: var(--ink-edge) center / 100% 100% no-repeat; mask: var(--ink-edge) center / 100% 100% no-repeat;
+  }
   /* A faixa do nome fica no pé da arte (mesma célula), fora da máscara: inteira em qualquer altura. */
   .jtrail-art figcaption {
     grid-area: art; position: relative; z-index: 1; left: auto; bottom: auto; align-self: end; justify-self: end; margin: 0 clamp(10px, 1.4vw, 24px) clamp(12px, 2.6vh, 30px) 0;
