@@ -27,7 +27,7 @@ export const characters: CharacterDef[] = [
     techniques: ['jStrike', 'jShuriken', 'jSexyJutsu'],
     ai: 'striker',
     growth: g(9, 3, 0.5, 1, 1, 0.3, 0.6, 0.5),
-    portrait: 'ninja:uzumaki',
+    portrait: 'ninja:naruto',
     // Chakra da Kyuubi (docs/jornada/roteiro.md): o roteiro liga nos momentos do mangá.
     forms: [
       // Kage Bunshin em massa (Mizuki): centenas de clones por 3 turnos. A técnica fica depois da luta (marco).
@@ -51,7 +51,7 @@ export const characters: CharacterDef[] = [
     techniques: ['jStrike', 'jShuriken', 'jBunshin'],
     ai: 'guardian',
     growth: g(6, 2, 0.4, 0.6, 0.6, 0.3, 0.4, 0.4),
-    portrait: 'ninja:common',
+    portrait: 'ninja:iruka',
   },
   // Kakashi aliado: entra pelo roteiro na luta do Zabuza (convidado, não fica na equipe). Copia o Dragão de Água.
   {
@@ -78,12 +78,12 @@ export const characters: CharacterDef[] = [
     techniques: ['jStrike', 'jShuriken', 'jFireball', 'jLionBarrage', 'jBunshin'],
     ai: 'striker',
     growth: g(7, 3, 0.6, 1, 1.1, 0.4, 0.5, 0.5),
-    portrait: 'ninja:uchiha',
+    portrait: 'ninja:sasuke',
     // Selo amaldiçoado (depois do Orochimaru na Floresta da Morte): o roteiro liga quando ele fica ferido.
     // Sharingan (desperta contra o Haku) e selo amaldiçoado (depois do Orochimaru).
     forms: [
-      { id: 'sharingan', statMult: 1.15 },
-      { id: 'curseMark', statMult: 1.3, healPct: 0.15, turns: 4, exitLine: 'curseMarkEnd' },
+      { id: 'sharingan', statMult: 1.15, portrait: 'villain:sasukeSharingan' },
+      { id: 'curseMark', statMult: 1.3, healPct: 0.15, turns: 4, exitLine: 'curseMarkEnd', portrait: 'villain:sasukeCurse' },
     ],
   },
   // Gamabunta: entra pelo roteiro na luta contra o Shukaku (convidado).
@@ -154,7 +154,7 @@ export const characters: CharacterDef[] = [
     techniques: ['jLeafWhirlwind', 'jLeafHurricane', 'jPrimaryLotus'],
     ai: 'striker',
     growth: g(8, 1, 0.6, 1.3, 0, 0, 0.6, 0.4),
-    portrait: 'ninja:taijutsuProdigy',
+    portrait: 'ninja:lee',
   },
   {
     id: 'gaaraAlly',
@@ -183,7 +183,7 @@ export const characters: CharacterDef[] = [
     techniques: ['jKunai', 'jShuriken', 'jShadowBind', 'jBunshin'],
     ai: 'tactician',
     growth: g(6, 3, 0.4, 0.6, 0.8, 0.6, 0.4, 0.7),
-    portrait: 'ninja:nara',
+    portrait: 'ninja:shikamaru',
   },
   {
     id: 'choji',
@@ -196,7 +196,7 @@ export const characters: CharacterDef[] = [
     techniques: ['jStrike', 'jMeatTank', 'jPartialExpansion', 'jBunshin'],
     ai: 'guardian',
     growth: g(10, 2, 0.2, 1, 0.3, 0.1, 0.7, 0.3),
-    portrait: 'ninja:akimichi',
+    portrait: 'ninja:choji',
   },
   {
     id: 'kibaAlly',
@@ -209,7 +209,7 @@ export const characters: CharacterDef[] = [
     techniques: ['jKunai', 'jAkamaruBite', 'jFangOverFang', 'jBunshin'],
     ai: 'striker',
     growth: g(7, 2, 0.6, 1.1, 0.2, 0.1, 0.5, 0.3),
-    portrait: 'ninja:inuzuka',
+    portrait: 'ninja:kiba',
   },
   {
     id: 'nejiAlly',
@@ -222,7 +222,7 @@ export const characters: CharacterDef[] = [
     techniques: ['jGentlePalm', 'jSixtyFourPalms', 'jRotation', 'jBunshin'],
     ai: 'striker',
     growth: g(7, 2, 0.6, 1.2, 0.3, 0.2, 0.6, 0.5),
-    portrait: 'ninja:hyuuga',
+    portrait: 'ninja:neji',
   },
 ];
 
@@ -245,7 +245,7 @@ export const genericCharacters: CharacterDef[] = [
     techniques: ['jKunai', 'jShuriken', 'jBunshin'],
     ai: 'striker',
     growth: g(6, 2, 0.4, 0.8, 0.8, 0.2, 0.5, 0.4),
-    portrait: 'ninja:common',
+    portrait: 'ninja:leafGeninA',
   },
   {
     id: 'leafGeninB',
@@ -258,7 +258,7 @@ export const genericCharacters: CharacterDef[] = [
     techniques: ['jKunai', 'jWireTrap', 'jRelease', 'jBunshin'],
     ai: 'tactician',
     growth: g(6, 2, 0.4, 0.7, 0.8, 0.4, 0.4, 0.5),
-    portrait: 'ninja:grass',
+    portrait: 'ninja:leafGeninB',
   },
   // Médica de campo (v0.48.0): sem ela, o Caminho Ninja não teria quem reanimar.
   {
@@ -272,7 +272,7 @@ export const genericCharacters: CharacterDef[] = [
     techniques: ['jKunai', 'jRelease', 'jReanimate', 'jBunshin'],
     ai: 'healer',
     growth: g(5, 3, 0.4, 0.5, 0.7, 0.3, 0.4, 0.5),
-    portrait: 'ninja:common',
+    portrait: 'ninja:leafMedic',
   },
   // Uchiha e Hyuuga (v0.37.0): protagonistas e versões suporte (entram no sorteio de parceiros quando liberados).
   {
@@ -314,7 +314,7 @@ export const genericCharacters: CharacterDef[] = [
     techniques: ['jShuriken', 'jWireTrap', 'jBunshin'],
     ai: 'tactician',
     growth: g(6, 2, 0.4, 0.6, 0.9, 0.7, 0.4, 0.6),
-    portrait: 'ninja:uchiha',
+    portrait: 'ninja:uchihaB',
   },
   {
     id: 'hyuugaGeninB',
@@ -328,7 +328,7 @@ export const genericCharacters: CharacterDef[] = [
     techniques: ['jGentlePalm', 'jShuriken', 'jVacuumPalm', 'jBunshin'],
     ai: 'striker',
     growth: g(7, 2, 0.6, 1, 0.4, 0.2, 0.5, 0.4),
-    portrait: 'ninja:hyuuga',
+    portrait: 'ninja:hyuugaB',
   },
 ];
 

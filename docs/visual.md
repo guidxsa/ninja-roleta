@@ -68,18 +68,17 @@ Um componente só (`prototype/jornada/scene.ts`, `styles/jornada-scene.css`) par
 
 Regra (revisão da etapa 1, v0.72.1): **a cena nunca usa o rosto de outro personagem no lugar de alguém, nem o ninja genérico.** Quem não tem representação própria aparece só com o nome, na tira de papel, até existir um recurso visual. Pôr uma imagem em `public/img/jornada/<id>` resolve o caso sem mudar código (`hasOwnPortrait` em `prototype/art.ts`). O corte de quadro da luta segue a mesma regra para quem fala sem estar em campo.
 
-Exceção (v0.76.9): o herói do **Caminho Ninja** é o ninja da classe; o retrato dele é esse molde, então a cena mostra o retrato (antes o fim da run ficava com o nome solto, sem rosto). Personagens nomeados ganharam traços próprios sobre o molde (`NINJA_STYLE` em `prototype/art.ts`): máscara e bandana torta do Kakashi, cabelo curto e bandana de pano dos capangas, respirador e chifres dos Irmãos Demônio.
+Exceção (v0.76.9): o herói do **Caminho Ninja** é o ninja da classe; o retrato dele é o desenho da origem, então a cena mostra o retrato (antes o fim da run ficava com o nome solto, sem rosto).
 
 **Picos da Jornada** (v0.76.9): vitória, estágio concluído, ciclo novo e fim da run usam o selo como **carimbo grande** (96 a 128px), batido no alto do pergaminho, e o título em letreiro (`.jc-peak`). Os outros momentos mantêm o selo pequeno no canto.
 
 | Situação | Personagens | Na cena |
 |---|---|---|
-| **Desenho próprio** | Mizuki, Zabuza, Haku (com a máscara), Gaara, Shukaku, Gamabunta (e a raposa), Kabuto, Orochimaru, Jirobo, Kidomaru, Tayuya, Sakon; Naruto no chakra da Kyuubi e no manto de uma cauda | Retrato |
-| **Traje próprio sobre o molde** (alternativa aceita) | Naruto, Sakura, Kakashi, Jiraiya, Tsunade, Kimimaro | Retrato. O Kakashi está sem a máscara, a semelhança mais fraca do grupo |
-| **Molde do clã** (alternativa aceita: é como ele aparece na luta) | Sasuke (Uchiha), Neji (Hyuuga), Shikamaru (Nara), Chōji (Akimichi), Kiba (Inuzuka), Lee (prodígio) | Retrato |
-| **Sem recurso: só o nome** | Iruka (hoje é o ninja genérico), Hinata, Tazuna, Ebisu, Ibiki, Itachi e Kisame, o Haku sem máscara (na floresta) | Tira de papel com o nome, quadro só com o local |
+| **Desenho próprio** (v0.88.0) | Todos os nomeados com retrato: Naruto (e as formas da Kyuubi e de uma cauda), Sasuke (Sharingan, marca da maldição, hospital, Vale do Fim e nível 2), Sakura, Kakashi, Iruka, Neji, Lee, Shikamaru, Chōji, Kiba, Akamaru, Jiraiya, Tsunade; Mizuki, Zabuza, Haku (com a máscara), Gōzu, Meizu, Gaara (e o exausto), Shukaku, Gamabunta (e a raposa), Dosu, Zaku, Kin, Jirobo, Kidomaru, Tayuya, Sakon, Kimimaro, Kabuto (e o genin do Exame), Orochimaru e a cobra | Retrato |
+| **Desenho da origem** | Os genins criados para o jogo (Daichi, Hana, Mika, Ren e Kaede Uchiha, Mio e Sei Hyuuga) e o herói do Caminho Ninja | Retrato |
+| **Sem recurso: só o nome** | Hinata, Tazuna, Ebisu, Ibiki, Itachi e Kisame, o Haku sem máscara (na floresta) | Tira de papel com o nome, quadro só com o local |
 
-Dosu, Zaku e Kin dividem um desenho só, e os capangas e ninjas comuns usam moldes genéricos: valem na luta, mas nenhum deles é rosto de cena.
+Capangas e ninjas das vilas (Névoa, Grama, Chuva, Areia, Som) têm um desenho por tipo: valem na luta, mas não são rosto de cena.
 
 ## Acabamento
 
@@ -224,6 +223,10 @@ Decidido com o usuário: **a arte oficial é liberada nos retratos de personagen
 - Sem o arquivo, vale o desenho em SVG, então nenhuma tela depende de imagem.
 - Os direitos dessas imagens são dos detentores e não entram na licença MIT do código. A arte é retirada se houver pedido.
 - Cenários desenhados, ícones e demais ornamentos seguem em desenho próprio. **Símbolos da obra** (liberados pelo usuário): a folha de Konoha, a Névoa, a Areia e o Som (nas bandanas e no `ICONS`), o leque Uchiha, o redemoinho Uzumaki e as presas Inuzuka seguem o desenho da obra, em SVG no `art.ts`. Hyuuga, Nara, Akimichi, Yamanaka, Aburame e Senju ainda são desenhos próprios, à espera de referência do usuário.
+- **Um desenho por personagem** (v0.88.0, `prototype/portraits/`): o SVG segue a aparência do personagem na obra (cabelo, olhos, marcas no rosto, traje, acessório e objeto de cena), em traço próprio com contorno de tinta. As peças comuns (rosto, olhos, boca, bandana, ombros) ficam em `kit.ts`; cabelo e traje são de cada um (`konoha.ts`, `villains.ts`, `generic.ts`). Antes, os ninjas dividiam um molde que só trocava a cor.
+  - **Genéricos lembram a origem, sem copiar o nomeado**: o Uchiha genérico tem o cabelo preto e a gola alta, mas não a franja do Sasuke; o Nara tem o abacaxi com cavanhaque e cicatrizes; o prodígio tem a tigela repartida e o colete. Ninjas das vilas levam o traje típico (respirador da Chuva, chapéu de palha da Grama, turbante da Areia).
+  - Tem que se ler de 24px (ordem de iniciativa) a 170px (cena): o que distingue é silhueta, cabelo e cor, não detalhe fino.
+  - Conferência: o cenário `meta.portraits` do UI Lab mostra todos lado a lado; `tests/portraits.test.ts` garante que toda chave dos dados tem desenho e que nenhum se repete.
 - **Nada de rostos desenhados nos cenários**: o Monumento dos Hokages foi tentado na v0.54.0 e saiu na v0.55.0, a pedido do usuário, porque ficou ruim.
 
 ## Celular e desktop

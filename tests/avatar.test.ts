@@ -14,7 +14,7 @@ describe('avatar do perfil (v0.63.0)', () => {
 
   it('conquistas da Jornada liberam personagens', () => {
     const out = avatarChoices({ playedLineages: [], achievements: ['j_bell', 'j_sasukeEgg', 'j_unlockHyuuga'] });
-    expect(out).toEqual(['ninja:common', 'ninja:uzumaki', 'ninja:hyuuga', 'ninja:sasuke']);
+    expect(out).toEqual(['ninja:common', 'ninja:naruto', 'ninja:hyuuga', 'ninja:sasuke']);
   });
 
   it('o escolhido vale só se ainda estiver liberado', () => {

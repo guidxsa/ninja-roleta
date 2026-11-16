@@ -2,6 +2,7 @@
 import { modeScreen } from '../../gate';
 import { openRegistry, type HistoryFilter, type RegistryPage } from '../../registry';
 import { profiles, seedRunHistory } from '../fixtures/profiles';
+import { portraitGallery } from '../portraitGallery';
 import type { Scenario } from '../types';
 
 /** O Registro abre por cima do Portão, como no jogo. */
@@ -19,6 +20,7 @@ const pages: [RegistryPage, string][] = [
 ];
 
 export const meta: Scenario[] = [
+  { id: 'meta.portraits', title: 'Galeria de retratos (todos os desenhos)', group: 'Sistemas', mount: () => portraitGallery() },
   ...pages.map(([page, name]): Scenario => ({ id: `meta.registry.${page}`, title: `Registro: ${name} (vazio)`, group: 'Sistemas', mount: registry(page) })),
   ...pages.map(
     ([page, name]): Scenario => ({

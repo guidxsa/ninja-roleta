@@ -54,7 +54,8 @@ src/data/            balance e dados; roleta/ e jornada/ com os de cada modo; st
 src/sim/             bots da simulação
 src/state/           save da Jornada
 prototype/           interface jogável: main.ts (inicialização), roleta/ (session.ts com o estado, telas em screens/), jornada/,
-                     shell.ts, gate.ts, registry.ts, art.ts com retratos e ícones, styles/
+                     shell.ts, gate.ts, registry.ts, art.ts com ícones e símbolos, portraits/ com os retratos (um desenho por
+                     personagem), styles/
 scripts/             simulações e build
 tests/               testes do core
 ```

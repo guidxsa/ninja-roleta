@@ -1,0 +1,56 @@
+// Retratos (docs/visual.md, "Personagens"): toda chave de retrato dos dados tem desenho próprio e nenhum personagem
+// repete o desenho de outro.
+import { describe, expect, it } from 'vitest';
+import { avatarChoices } from '../src/core/avatar';
+import { characters } from '../src/data/jornada/characters';
+import { enemies } from '../src/data/jornada/enemies';
+import { lineages } from '../src/data/lineages';
+import { roletaVillains } from '../src/data/roleta/villains';
+import { villains } from '../src/data/villains';
+import { hasPortraitArt, PORTRAIT_KEYS, portraitArt } from '../prototype/portraits/index';
+
+const key = (spec: string) => spec.split(':')[1] ?? '';
+
+describe('retratos', () => {
+  const specs = new Map<string, string>();
+  for (const c of [...characters, ...enemies]) {
+    specs.set(c.id, c.portrait);
+    for (const f of c.forms ?? []) if (f.portrait) specs.set(`${c.id}/${f.id}`, f.portrait);
+  }
+  for (const v of roletaVillains) if (v.portrait) specs.set(`roleta/${v.id}`, v.portrait);
+  for (const l of lineages) if (l.jornada?.hero.portrait) specs.set(`classe/${l.id}`, l.jornada.hero.portrait);
+
+  it('toda chave de retrato dos dados tem desenho (sem cair na reserva)', () => {
+    for (const [who, spec] of specs) {
+      expect(spec, who).toMatch(/^(ninja|villain):\w+$/);
+      expect(hasPortraitArt(key(spec)), `${who} → ${spec}`).toBe(true);
+    }
+  });
+
+  it('vilões do Roleta sem chave usam o desenho do próprio id', () => {
+    const withSpec = new Set(roletaVillains.filter((v) => v.portrait).map((v) => v.id));
+    for (const v of villains) if (!withSpec.has(v.id)) expect(hasPortraitArt(v.id), v.id).toBe(true);
+  });
+
+  it('linhagens e avatares têm desenho', () => {
+    for (const l of lineages) expect(hasPortraitArt(l.id), l.id).toBe(true);
+    const all = avatarChoices({ playedLineages: lineages.map((l) => l.id), achievements: ['j_bell', 'j_unlockUchiha', 'j_unlockHyuuga', 'j_sasukeEgg'] });
+    for (const a of all) expect(hasPortraitArt(key(a)), a).toBe(true);
+  });
+
+  it('nenhum desenho se repete e os ids de gradiente não colidem', () => {
+    const arts = PORTRAIT_KEYS.map((k) => portraitArt(k)!);
+    expect(new Set(arts).size).toBe(arts.length);
+    const ids = arts.map((a) => a.match(/id="(bg-[\w-]+)"/)?.[1]);
+    expect(ids.every(Boolean)).toBe(true);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('as marcas do jinchūriki mudam o retrato da linhagem', () => {
+    for (const l of lineages) expect(portraitArt(l.id, true), l.id).not.toBe(portraitArt(l.id, false));
+  });
+
+  it('coordenadas válidas: nenhum NaN ou undefined no SVG', () => {
+    for (const k of PORTRAIT_KEYS) expect(portraitArt(k), k).not.toMatch(/NaN|undefined/);
+  });
+});

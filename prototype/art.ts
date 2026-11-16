@@ -2,6 +2,8 @@
 // Retratos podem vir de imagens em public/img/ (inclusive arte oficial, ver public/img/LEIAME.md).
 // Imagens próprias em `public/img/` substituem os retratos: o build lista os arquivos em __IMAGES__.
 import { prefersStill } from './layout';
+import { portraitArt } from './portraits/index';
+import { VILLAGES, VILLAGE_LEAF } from './villages';
 
 declare const __IMAGES__: string[];
 declare const __IMAGE_META__: Record<string, readonly [number, number]>;
@@ -191,13 +193,6 @@ const spiral = (cx: number, cy: number, turns: number, step = 1) => {
   return { d, x };
 };
 
-/**
- * Símbolo de Konoha (24×24), usado na vila e no clã comum: a espiral larga que sai para a ponta da folha, no alto à
- * direita, e o triângulo do talo embaixo, à esquerda.
- */
-const VILLAGE_LEAF =
-  '<path d="M12.2 13A1.2 1.2 0 0 0 9.8 13A2.4 2.4 0 0 0 14.6 13A3.6 3.6 0 0 0 7.4 13A4.8 4.8 0 0 0 17 13C17 9.2 18.4 5.8 20.6 3L15.6 6.2"/><path d="M7.9 15.9 3 20.8l6.6-2.6z" fill="currentColor" stroke="none"/>';
-
 const CLANS: Record<string, string> = {
   // Folha (comum): o símbolo de Konoha, o mesmo da vila, na cor da folha.
   common: `<g fill="none" stroke="#e8701a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${VILLAGE_LEAF}</g>`,
@@ -239,7 +234,7 @@ export function clanSymbol(lineageId: string | null | undefined, cls = ''): stri
   return svg(body, '0 0 24 24', `ico clan${cls ? ` ${cls}` : ''}`);
 }
 
-/** Cor de destaque da linhagem (fundo do retrato, borda do selo). */
+/** Cor de destaque da linhagem (borda do selo; o fundo do retrato da origem usa a mesma). */
 export const CLAN_COLORS: Record<string, string> = {
   common: '#f28c28',
   uchiha: '#d1232a',
@@ -254,79 +249,6 @@ export const CLAN_COLORS: Record<string, string> = {
   senju: '#2fa36b',
 };
 
-// ---------------------------------------------------------------------------
-// Retratos (100×100). Busto com fundo de cena; traços marcantes de cada vilão.
-
-const SKIN = '#f1c9a0';
-const PALE = '#ece5d8';
-
-interface Face {
-  skin?: string;
-  /** Olhos: 'normal', 'narrow' (estreitos), 'ringed' (olheiras escuras), 'snake' (fenda amarela). */
-  eyes?: 'normal' | 'narrow' | 'ringed' | 'snake' | 'closed';
-  eyeColor?: string;
-  mouth?: 'neutral' | 'smirk' | 'grin' | 'none';
-}
-
-/** Fundo da cena: gradiente radial com um brilho. */
-function scene(id: string, from: string, to: string, extra = ''): string {
-  return `<defs><radialGradient id="bg-${id}" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></radialGradient></defs>
-    <rect width="100" height="100" fill="url(#bg-${id})"/>${extra}`;
-}
-
-/** Ombros e pescoço. */
-function body(outfit: string, skin = SKIN, collar = ''): string {
-  return `<path d="M42 66h16v12H42z" fill="${skin}"/><path d="M8 100c2-17 16-27 42-27s40 10 42 27z" fill="${outfit}"/>${collar}`;
-}
-
-function head(f: Face = {}): string {
-  const skin = f.skin ?? SKIN;
-  const ec = f.eyeColor ?? '#1b1b22';
-  let eyes = '';
-  switch (f.eyes ?? 'normal') {
-    case 'normal':
-      eyes = `<path d="M36 46q5-4 10 0q-5 3-10 0zM54 46q5-4 10 0q-5 3-10 0z" fill="#fff"/><circle cx="41" cy="46" r="2.3" fill="${ec}"/><circle cx="59" cy="46" r="2.3" fill="${ec}"/>`;
-      break;
-    case 'narrow':
-      eyes = `<path d="M35 46l11-1.5-1 2.6zM65 46l-11-1.5 1 2.6z" fill="${ec}"/>`;
-      break;
-    case 'ringed':
-      eyes = `<ellipse cx="41" cy="46" rx="7" ry="5.5" fill="#1a1012"/><ellipse cx="59" cy="46" rx="7" ry="5.5" fill="#1a1012"/><path d="M37 46q4-3 8 0q-4 2.5-8 0zM55 46q4-3 8 0q-4 2.5-8 0z" fill="#e8f2ee"/><circle cx="41" cy="46" r="1.7" fill="${ec}"/><circle cx="59" cy="46" r="1.7" fill="${ec}"/>`;
-      break;
-    case 'snake':
-      eyes = `<path d="M34 44q6-6 13 0q-6 5-13 0zM53 44q7-6 13 0q-7 5-13 0z" fill="#7a4a9e"/><path d="M36 45q5-3.5 9 0q-4.5 3-9 0zM55 45q4.5-3.5 9 0q-4.5 3-9 0z" fill="#e8c23a"/><path d="M40.5 42.8v4.4M59.5 42.8v4.4" stroke="#111" stroke-width="1.4"/>`;
-      break;
-    case 'closed':
-      eyes = '<path d="M36 46q5 3 10 0M54 46q5 3 10 0" stroke="#1b1b22" stroke-width="1.6" fill="none"/>';
-      break;
-  }
-  const mouth = {
-    neutral: '<path d="M45 60h10" stroke="#6b3a2a" stroke-width="1.6" stroke-linecap="round"/>',
-    smirk: '<path d="M44 60q6 1.5 12-2" stroke="#6b3a2a" stroke-width="1.6" fill="none" stroke-linecap="round"/>',
-    grin: '<path d="M43 58q7 6 14 0z" fill="#fff" stroke="#6b3a2a" stroke-width="1.2"/>',
-    none: '',
-  }[f.mouth ?? 'neutral'];
-  return `<ellipse cx="50" cy="48" rx="17" ry="20" fill="${skin}"/>${eyes}${mouth}`;
-}
-
-/** Bandana com a placa de metal e o símbolo da vila. */
-function headband(symbol: 'leaf' | 'mist' | 'sand' | 'sound', cloth = '#24324f', slash = false, y = 31): string {
-  // A placa leva o mesmo símbolo da vila (VILLAGES), reduzido a 10×10 no meio do metal.
-  const sym = `<g transform="translate(45 ${y - 0.6}) scale(.42)" color="#6c7383" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${VILLAGES[symbol]}</g>`;
-  return `<path d="M32 ${y}q18-5 36 0v8q-18-5-36 0z" fill="${cloth}"/><rect x="40" y="${y - 0.5}" width="20" height="10" rx="2" fill="#c9d1dc" stroke="#7d8696" stroke-width=".8"/>${sym}${slash ? `<path d="M41 ${y + 9}l18-9" stroke="#5a6170" stroke-width="1.4"/>` : ''}`;
-}
-
-/**
- * Símbolos das vilas (24×24, traço em `currentColor`), no formato da obra (liberado pelo usuário, v0.57.9):
- * Folha (espiral com a ponta da folha e o triângulo do talo), Névoa (quatro traços ondulados inclinados),
- * Areia (a ampulheta) e Som (a nota musical).
- */
-const VILLAGES = {
-  leaf: VILLAGE_LEAF,
-  mist: '<path d="M4.6 19.5c1.4-2.4-.6-4.6.8-7s1.5-4.3 1.7-6.6M9 19.5c1.4-2.4-.6-4.6.8-7s1.5-4.3 1.7-6.6M13.4 19.5c1.4-2.4-.6-4.6.8-7s1.5-4.3 1.7-6.6M17.8 19.5c1.4-2.4-.6-4.6.8-7s1.5-4.3 1.7-6.6"/>',
-  sand: '<path d="M5 4.5h14M5 19.5h14M7.2 4.5c0 4.2 4.3 5 4.3 7.5s-4.3 3.3-4.3 7.5M16.8 4.5c0 4.2-4.3 5-4.3 7.5s4.3 3.3 4.3 7.5"/>',
-  sound: '<path d="M14 4v12.5"/><path d="M14 4c1.6 2.4 5.2 2.6 5.2 6"/><ellipse cx="10.4" cy="17" rx="3.6" ry="2.8" fill="currentColor"/>',
-} as const;
 export const VILLAGE_IDS = Object.keys(VILLAGES) as (keyof typeof VILLAGES)[];
 export const villageCrest = (id: keyof typeof VILLAGES): string => svg(VILLAGES[id], '0 0 24 24', 'ico crest');
 
@@ -458,301 +380,46 @@ export function emblem(mode: 'jornada' | 'roleta'): string {
   return svg(mode === 'jornada' ? VILLAGES.leaf : swirl, '0 0 24 24', 'emblem');
 }
 
-/** Corda roxa dos guardas do Som (laço na frente). */
-const rope = '<path d="M20 92q30 -8 60 0" stroke="#6a3f8f" stroke-width="5" fill="none"/><path d="M50 88l-7 8 7-3 7 3z" fill="#6a3f8f"/>';
+// ---------------------------------------------------------------------------
+// Retratos. Os desenhos ficam em prototype/portraits/ (um por personagem); aqui só o invólucro e a troca por imagem.
 
-const PORTRAITS: Record<string, () => string> = {
-  mizuki: () =>
-    scene('mizuki', '#4f6b3a', '#141d10',
-      // Shuriken gigante atrás.
-      '<g transform="translate(72 30) rotate(20)" fill="#8e98a8" stroke="#3e4552" stroke-width="1"><path d="M0-22 5-5 22 0 5 5 0 22-5 5-22 0-5-5z"/><circle r="4" fill="#2a2f3a"/></g>') +
-    // Cabelo claro comprido.
-    '<path d="M30 46c-4 14-2 28 4 38h32c6-10 8-24 4-38z" fill="#a9c0d3"/>' +
-    body('#5f7a3a', SKIN, '<path d="M30 76c6 8 34 8 40 0l-4 24H34z" fill="#4d6630"/><path d="M38 74h24l-3 8H41z" fill="#2c3a4f"/>') +
-    head({ eyes: 'narrow', mouth: 'smirk' }) +
-    '<path d="M32 40c2-14 10-21 18-21s16 7 18 21c-6-6-12-8-18-8s-12 2-18 8z" fill="#bcd1e1"/>' +
-    headband('leaf'),
-  zabuza: () =>
-    scene('zabuza', '#56697a', '#10161c',
-      // Espadão (Kubikiribōchō) na diagonal.
-      '<g transform="rotate(-28 50 50)"><rect x="56" y="-6" width="26" height="78" rx="2" fill="#b9c2cc" stroke="#4a5360" stroke-width="1.4"/><circle cx="74" cy="6" r="5" fill="#56697a"/><path d="M56 6h6" stroke="#4a5360" stroke-width="1"/><rect x="62" y="70" width="6" height="22" fill="#4a3a2a"/></g>') +
-    body('#5a6672', '#e3cdb3', '<path d="M22 84l56-10M22 92l56-10" stroke="#3a3f46" stroke-width="3"/>') +
-    head({ skin: '#e3cdb3', eyes: 'narrow', mouth: 'none' }) +
-    // Bandagens no rosto.
-    '<path d="M33 50q17 4 34 0v18q-17 10-34 0z" fill="#e6e1d6"/><path d="M34 55q16 3 32 0M34 60q16 3 32 0M35 65q15 3 30 0" stroke="#b8b1a2" stroke-width="1" fill="none"/>' +
-    '<path d="M33 38c1-12 8-18 17-18s16 6 17 18l-4-5-3 4-4-6-4 5-4-6-3 6-4-4z" fill="#22252b"/>' +
-    `<g transform="rotate(-10 50 34)">${headband('mist', '#3d4a5a', false)}</g>`,
-  haku: () =>
-    scene('haku', '#7cc8e0', '#0e2a36',
-      // Espelhos de gelo.
-      '<g fill="#d8f3fb" fill-opacity=".5" stroke="#eafaff" stroke-width=".8"><rect x="4" y="8" width="18" height="28" rx="1"/><rect x="78" y="10" width="18" height="28" rx="1"/><rect x="2" y="52" width="16" height="26" rx="1"/><rect x="82" y="54" width="16" height="26" rx="1"/></g>') +
-    // Cabelo longo escuro.
-    '<path d="M28 40c-3 18-2 34 4 48h36c6-14 7-30 4-48z" fill="#1d2129"/>' +
-    body('#2f5a4a', SKIN, '<path d="M40 74l10 12 10-12" stroke="#c9d6cf" stroke-width="3" fill="none"/>') +
-    head({ mouth: 'none' }) +
-    // Máscara de caçador.
-    '<ellipse cx="50" cy="48" rx="17.5" ry="20.5" fill="#f4f4f2"/><path d="M36 46q5-3 10 0M54 46q5-3 10 0" stroke="#222" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M38 52q-2 6 0 10M62 52q2 6 0 10" stroke="#c0392b" stroke-width="1.6" fill="none"/><path d="M45 34q2.5-1.5 5 0t5 0M45 37q2.5-1.5 5 0t5 0" stroke="#8a929e" stroke-width="1" fill="none"/>' +
-    '<path d="M32 42c0-16 8-23 18-23s18 7 18 23c-4-8-10-12-18-12s-14 4-18 12z" fill="#1d2129"/>',
-  // Gamabunta: sapo gigante, cachimbo e cicatriz no olho (desenho próprio).
-  gamabunta: () =>
-    scene('gamabunta', '#b0563a', '#2a120c',
-      '<g fill="#7a3324" opacity=".55"><path d="M0 84q22-12 50-8t50 8v16H0z"/></g>') +
-    '<ellipse cx="50" cy="70" rx="40" ry="28" fill="#c2552f" stroke="#5a2014" stroke-width="1.6"/>' +
-    '<ellipse cx="50" cy="78" rx="26" ry="14" fill="#e8b48a"/>' +
-    '<circle cx="30" cy="40" r="11" fill="#c2552f" stroke="#5a2014" stroke-width="1.4"/><circle cx="70" cy="40" r="11" fill="#c2552f" stroke="#5a2014" stroke-width="1.4"/>' +
-    '<circle cx="30" cy="40" r="6" fill="#f3d36b"/><rect x="29" y="35" width="2" height="10" fill="#1b1b22"/>' +
-    '<circle cx="70" cy="40" r="6" fill="#f3d36b"/><rect x="69" y="35" width="2" height="10" fill="#1b1b22"/>' +
-    '<path d="M64 30l12 20" stroke="#5a2014" stroke-width="2.2" stroke-linecap="round"/>' +
-    '<path d="M28 62q22 10 44 0" stroke="#5a2014" stroke-width="2" fill="none"/>' +
-    '<path d="M66 64l16-6" stroke="#6e4423" stroke-width="3" stroke-linecap="round"/><rect x="80" y="52" width="7" height="8" rx="2" fill="#6e4423"/>' +
-    '<path d="M82 48q3-6 0-12" stroke="#cfcfcf" stroke-width="1.4" fill="none" opacity=".7"/>',
-  // Gamabunta transformado em raposa de nove caudas (henge a pedido do Naruto, contra o Shukaku): desenho próprio.
-  foxHenge: () =>
-    scene('foxHenge', '#e0763a', '#2a0f08',
-      // As nove caudas abertas em leque atrás.
-      '<g fill="#c9531f" stroke="#5a2010" stroke-width="1"><path d="M50 78C20 70 4 46 6 18c8 16 20 30 44 44z"/><path d="M50 78C30 62 22 36 28 8c4 18 12 34 22 54z"/><path d="M50 78C44 56 44 30 50 4c6 26 6 52 0 74z"/><path d="M50 78C70 62 78 36 72 8c-4 18-12 34-22 54z"/><path d="M50 78C80 70 96 46 94 18c-8 16-20 30-44 44z"/></g>') +
-    '<path d="M22 100c2-26 12-40 28-40s26 14 28 40z" fill="#d9642a" stroke="#5a2010" stroke-width="1.4"/>' +
-    // Orelhas, cabeça e focinho.
-    '<path d="M28 44l-4-24 16 12zM72 44l4-24-16 12z" fill="#d9642a" stroke="#5a2010" stroke-width="1.4"/><path d="M29 38l-1-11 8 6zM71 38l1-11-8 6z" fill="#2a0f08"/>' +
-    '<path d="M26 46q24-22 48 0q0 20-24 34q-24-14-24-34z" fill="#d9642a" stroke="#5a2010" stroke-width="1.4"/>' +
-    '<path d="M38 62q12 10 24 0l-12 18z" fill="#f4dcc0"/>' +
-    '<path d="M32 48l12 5-10 4zM68 48l-12 5 10 4z" fill="#f3d36b"/><path d="M38 49v6M62 49v6" stroke="#1b1b22" stroke-width="1.6"/>' +
-    '<path d="M47 68h6l-3 4z" fill="#1b1b22"/><path d="M42 74q8 4 16 0" stroke="#5a2010" stroke-width="1.4" fill="none"/><path d="M44 74l1.5 4 1.5-3.4M56 74l-1.5 4-1.5-3.4" fill="#fff"/>' +
-    // A cicatriz e o cachimbo denunciam quem está por baixo da transformação.
-    '<path d="M64 40l8 18" stroke="#5a2010" stroke-width="2" stroke-linecap="round"/><path d="M60 74l14-4" stroke="#6e4423" stroke-width="2.6" stroke-linecap="round"/><rect x="73" y="64" width="6" height="7" rx="2" fill="#6e4423"/>',
-  // Naruto com o chakra da Kyuubi: olhos em fenda, marcas mais fundas e o chakra vermelho em volta.
-  narutoKyuubi: () =>
-    scene('narutoKyuubi', '#d1232a', '#1c0507',
-      '<g fill="none" stroke="#ff7a4a" stroke-width="2" opacity=".65" stroke-linecap="round"><path d="M10 96q-4-30 10-52M90 96q4-30-10-52M22 30q10-18 28-22M78 30q-10-18-28-22"/></g>') +
-    body('#f07a1a', SKIN, '<path d="M34 64q16 6 32 0l2 14q-18 6-36 0z" fill="#2c3a5c"/>') +
-    head({ eyes: 'narrow', eyeColor: '#c0392b', mouth: 'grin' }) +
-    '<path d="M33 52l10 2M33 56.5l10 0M33 61l10-2M67 52l-10 2M67 56.5l-10 0M67 61l-10-2" stroke="#3a1410" stroke-width="2" stroke-linecap="round"/>' +
-    '<path d="M30 46l-7-14 9 2-2-12 9 6 3-12 7 9 5-10 4 11 9-6-2 12 9-2-6 14c-4-8-11-12-19-12s-15 4-19 14z" fill="#e8b33a"/>' +
-    headband('leaf', '#24324f'),
-  // Manto de uma cauda: a capa de chakra com orelhas de raposa e a cauda (Vale do Fim).
-  narutoOneTail: () =>
-    scene('narutoOneTail', '#f0541e', '#1c0507',
-      '<path d="M78 100c14-18 16-44 4-66 0 20-8 36-22 48z" fill="#ff7a4a" opacity=".75"/>') +
-    // A capa de chakra envolve o corpo e forma as orelhas.
-    '<path d="M4 100c0-26 14-40 22-52l-4-30 16 14q12-6 24 0l16-14-4 30c8 12 22 26 22 52z" fill="#ff5a2a" opacity=".45"/>' +
-    body('#f07a1a', SKIN, '<path d="M34 64q16 6 32 0l2 14q-18 6-36 0z" fill="#2c3a5c"/>') +
-    head({ eyes: 'narrow', eyeColor: '#c0392b', mouth: 'grin' }) +
-    '<path d="M33 52l10 2M33 56.5l10 0M33 61l10-2M67 52l-10 2M67 56.5l-10 0M67 61l-10-2" stroke="#3a1410" stroke-width="2.2" stroke-linecap="round"/>' +
-    '<path d="M30 46l-7-14 9 2-2-12 9 6 3-12 7 9 5-10 4 11 9-6-2 12 9-2-6 14c-4-8-11-12-19-12s-15 4-19 14z" fill="#e8b33a"/>' +
-    headband('leaf', '#24324f') +
-    '<g fill="none" stroke="#ffb08a" stroke-width="1.6" opacity=".8" stroke-linecap="round"><path d="M14 92q-2-20 10-36M86 92q2-20-10-36"/></g>',
-  // Shukaku: tanuki de areia com as marcas azuis (desenho próprio).
-  shukaku: () =>
-    scene('shukaku', '#c9a06a', '#3b2410',
-      '<g fill="#f3d9a6" opacity=".5"><circle cx="14" cy="22" r="1.4"/><circle cx="86" cy="30" r="1.2"/><circle cx="20" cy="76" r="1"/></g>') +
-    '<path d="M18 100c0-30 14-52 32-52s32 22 32 52z" fill="#d8b07a" stroke="#7a5a33" stroke-width="1.4"/>' +
-    '<path d="M24 30l8-16 8 14z M60 28l8-14 8 16z" fill="#d8b07a" stroke="#7a5a33" stroke-width="1.4"/>' +
-    '<ellipse cx="50" cy="44" rx="24" ry="20" fill="#d8b07a" stroke="#7a5a33" stroke-width="1.4"/>' +
-    '<g fill="none" stroke="#3a5fa0" stroke-width="2"><path d="M30 36q6 4 4 10M70 36q-6 4-4 10"/><path d="M36 70q6 6 0 12M64 70q-6 6 0 12M50 62v14"/></g>' +
-    '<circle cx="40" cy="42" r="5" fill="#f3e9a6"/><path d="M38 40l4 4M42 40l-4 4" stroke="#1b1b22" stroke-width="1.4"/>' +
-    '<circle cx="60" cy="42" r="5" fill="#f3e9a6"/><path d="M58 40l4 4M62 40l-4 4" stroke="#1b1b22" stroke-width="1.4"/>' +
-    '<path d="M40 54q10 6 20 0" stroke="#5a3a1c" stroke-width="2" fill="none"/>',
-  gaara: () =>
-    scene('gaara', '#d8a75e', '#3b2410',
-      // Cabaça de areia atrás.
-      '<g><ellipse cx="74" cy="66" rx="20" ry="22" fill="#c9a06a" stroke="#7a5a33" stroke-width="1.4"/><ellipse cx="74" cy="34" rx="12" ry="11" fill="#c9a06a" stroke="#7a5a33" stroke-width="1.4"/><rect x="69" y="18" width="10" height="7" rx="2" fill="#a5794a"/></g><g fill="#f3d9a6" opacity=".55"><circle cx="16" cy="20" r="1.2"/><circle cx="24" cy="70" r="1"/><circle cx="12" cy="48" r=".9"/></g>') +
-    body('#7a2a24', '#f3d9c1', '<path d="M18 80l64 18" stroke="#3a2a1c" stroke-width="5"/>') +
-    head({ skin: '#f3d9c1', eyes: 'ringed', eyeColor: '#4bb3a0', mouth: 'neutral' }) +
-    // Kanji do amor na testa e cabelo ruivo espetado.
-    '<text x="35" y="38" font-size="8" fill="#c0392b" font-weight="700" font-family="serif">愛</text>' +
-    '<path d="M31 42c-2-6-1-12 2-16l-4-4 7 1 1-7 5 5 4-8 4 7 5-6 2 7 7-3-3 7 6 2-5 4c2 4 3 7 2 11-2-6-8-10-17-10s-14 4-16 10z" fill="#b3261e"/>',
-  jirobo: () =>
-    scene('jirobo', '#8a6a3c', '#24170a',
-      '<g fill="#5e4524" opacity=".7"><path d="M0 80l14-18 10 10 8-14 14 22z"/><path d="M60 82l12-16 10 8 8-12 10 20z"/></g>') +
-    // Corpo largo.
-    '<path d="M0 100c0-20 18-34 50-34s50 14 50 34z" fill="#d6c49a"/><path d="M40 64h20v10H40z" fill="#e8b98a"/>' +
-    rope +
-    '<ellipse cx="50" cy="50" rx="21" ry="20" fill="#e8b98a"/><path d="M38 47l8-1M54 46l8 1" stroke="#1b1b22" stroke-width="2.4" stroke-linecap="round"/><path d="M44 60q6 3 12 0" stroke="#6b3a2a" stroke-width="1.8" fill="none"/>' +
-    // Topete laranja em tufos.
-    '<path d="M36 34l4-10 4 7 4-10 4 10 4-8 4 11c-6-3-18-3-24 0z" fill="#e07a24"/>',
-  kidomaru: () =>
-    scene('kidomaru', '#3e4630', '#121509',
-      // Teia de aranha.
-      '<g stroke="#e9eadf" stroke-opacity=".35" stroke-width=".8" fill="none"><path d="M0 0l40 40M100 0 60 40M0 100l40-60M100 100 60 40M50 0v40"/><path d="M18 18q32-10 64 0M8 34q42-10 84 0M6 54q44-8 88 0"/></g>') +
-    // Seis braços.
-    '<g fill="#a0704a" stroke="#5b3d24" stroke-width="1"><path d="M22 82 4 60l5-3 18 20z"/><path d="M78 82l18-22-5-3-18 20z"/><path d="M20 92 2 84l2-5 18 8z"/><path d="M80 92l18-8-2-5-18 8z"/></g>' +
-    '<path d="M50 20c-12 0-18 8-18 18 0 0 6-6 18-6s18 6 18 6c0-10-6-18-18-18zM64 28c8 2 14 10 12 22l-6-12z" fill="#3a2a1e"/>' +
-    body('#d6c49a', '#a0704a') + rope +
-    head({ skin: '#a0704a', eyes: 'narrow', mouth: 'grin' }) +
-    '<path d="M32 40c1-12 8-19 18-19s17 7 18 19c-5-5-11-7-18-7s-13 2-18 7z" fill="#3a2a1e"/><circle cx="44" cy="30" r="1.3" fill="#c0392b"/><circle cx="56" cy="30" r="1.3" fill="#c0392b"/>',
-  tayuya: () =>
-    scene('tayuya', '#6e2a4d', '#1a0a14',
-      '<g fill="#f2c4dc" opacity=".35"><path d="M10 22q4-4 8 0M78 18q4-4 8 0M14 62q4-4 8 0"/></g>') +
-    // Cabelo rosa longo.
-    '<path d="M28 42c-6 18-6 36 0 52h44c6-16 6-34 0-52z" fill="#d6527a"/>' +
-    body('#d6c49a', SKIN) + rope +
-    head({ eyes: 'narrow', mouth: 'smirk' }) +
-    '<path d="M33 42c1-12 8-18 17-18s16 6 17 18c-4-5-9-8-17-8s-13 3-17 8z" fill="#e2648c"/>' +
-    // Chapéu preto e flauta.
-    '<path d="M24 32q26-8 52 0l-3 4q-23-6-46 0z" fill="#1a1416"/><path d="M34 31q2-12 16-12t16 12z" fill="#1a1416"/>' +
-    '<rect x="30" y="59" width="44" height="3.6" rx="1.8" fill="#d9dde3" stroke="#7d8696" stroke-width=".6"/><g fill="#7d8696"><circle cx="58" cy="60.8" r=".9"/><circle cx="63" cy="60.8" r=".9"/><circle cx="68" cy="60.8" r=".9"/></g>',
-  sakon: () =>
-    scene('sakon', '#4c6670', '#0f1a1e') +
-    body('#d6c49a', '#e6dccd') + rope +
-    // Segunda cabeça (Ukon) saindo do ombro.
-    '<g transform="translate(24 -8) scale(.62)"><ellipse cx="50" cy="48" rx="17" ry="20" fill="#e6dccd"/><path d="M35 46l11-1.5-1 2.6zM65 46l-11-1.5 1 2.6z" fill="#1b1b22"/><path d="M44 60q6 1.5 12-2" stroke="#4a2a4a" stroke-width="2.4" fill="none"/><path d="M32 46c0-16 8-25 18-25s18 9 18 25c-3-9-8-14-14-15-4 6-10 10-22 15z" fill="#b6c2cc"/></g>' +
-    head({ skin: '#e6dccd', eyes: 'narrow', mouth: 'smirk' }) +
-    '<path d="M44 60q6 1.5 12-2" stroke="#4a2a4a" stroke-width="2" fill="none"/>' +
-    '<path d="M32 50c-1-18 7-28 18-28s19 10 18 26c-3-9-8-14-14-15-4 7-11 12-22 17z" fill="#b6c2cc"/>',
-  kabuto: () =>
-    scene('kabuto', '#5a3d82', '#150b22') +
-    // Rabo de cavalo grisalho.
-    '<path d="M60 34c12 4 16 16 12 30l-6-14z" fill="#b8bcc6"/>' +
-    body('#5b3d86', SKIN, '<path d="M34 74q16-8 32 0l-2 8q-14-5-28 0z" fill="#e8e4ee"/>') +
-    head({ eyes: 'closed', mouth: 'smirk' }) +
-    // Óculos redondos.
-    '<g fill="#dfe8f5" fill-opacity=".35" stroke="#2a2a35" stroke-width="1.6"><circle cx="41" cy="46" r="6"/><circle cx="59" cy="46" r="6"/></g><path d="M47 46h6" stroke="#2a2a35" stroke-width="1.4"/><path d="M38 43l3-2M56 43l3-2" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>' +
-    '<path d="M32 42c1-14 8-21 18-21s17 7 18 21c-2-4-6-8-12-9l-6 4-6-4c-6 1-10 5-12 9z" fill="#c9ccd4"/>' +
-    headband('sound', '#24324f', false, 29),
-  orochimaru: () =>
-    scene('orochimaru', '#3a4a32', '#0b100a',
-      // Cobra enrolada atrás.
-      '<path d="M84 100c0-20-14-24-14-40 0-14 18-14 18-30 0-10-8-16-16-16" fill="none" stroke="#6a3f8f" stroke-width="10" stroke-linecap="round"/><path d="M84 100c0-20-14-24-14-40 0-14 18-14 18-30 0-10-8-16-16-16" fill="none" stroke="#8d5fb5" stroke-width="3" stroke-dasharray="2 5"/><circle cx="70" cy="14" r="7" fill="#6a3f8f"/><circle cx="68" cy="12.5" r="1.4" fill="#e8c23a"/>') +
-    // Cabelo preto longo dos dois lados.
-    '<path d="M28 38c-4 20-4 40 0 62h14V40zM72 38c4 20 4 40 0 62H58V40z" fill="#121214"/>' +
-    body('#e7dfc8', PALE, '<path d="M40 74l10 14 10-14" stroke="#b8ad90" stroke-width="2" fill="none"/>') +
-    rope +
-    head({ skin: PALE, eyes: 'snake', mouth: 'smirk' }) +
-    '<path d="M32 46c0-17 8-26 18-26s18 9 18 26c-3-9-9-15-18-15s-15 6-18 15z" fill="#121214"/>',
-  examSand: () =>
-    scene('examSand', '#c79a55', '#3b2410') +
-    body('#8c6a44', SKIN, '<path d="M30 76q20 8 40 0l-2 24H32z" fill="#6f5233"/>') +
-    // Capuz.
-    '<path d="M28 52c-2-22 8-34 22-34s24 12 22 34l-5-10c-4-6-10-8-17-8s-13 2-17 8z" fill="#b89366"/>' +
-    head({ eyes: 'narrow', mouth: 'neutral' }) +
-    '<path d="M28 52c-2-22 8-34 22-34s24 12 22 34c-3-10-7-15-10-16H38c-3 1-7 6-10 16z" fill="#b89366"/>' +
-    headband('sand', '#5a3d24', false, 30),
-  examSound: () =>
-    scene('examSound', '#58506e', '#14111e') +
-    body('#3a3550', SKIN, '<path d="M28 82q22-10 44 0" stroke="#7a6f9a" stroke-width="3" fill="none"/>') +
-    head({ eyes: 'normal', mouth: 'none' }) +
-    // Bandagens cobrindo meio rosto.
-    '<path d="M33 36q18-4 34 0l1 34q-14 6-17 0V36z" fill="#e6e1d6"/><path d="M52 42h15M52 50h15M52 58h15M52 66h12" stroke="#b8b1a2" stroke-width="1"/>' +
-    '<path d="M33 38c0-12 8-18 17-18s17 6 17 18c-5-4-11-6-17-6s-12 2-17 6z" fill="#3a3a44"/>' +
-    headband('sound', '#24324f', false, 28),
-  examLeaf: () =>
-    scene('examLeaf', '#5f7f45', '#121c0d',
-      '<g fill="#8fb35a" opacity=".35"><path d="M10 20q8-6 12 2-8 4-12-2zM80 70q8-6 12 2-8 4-12-2z"/></g>') +
-    body('#4a5a78', SKIN, '<path d="M30 76c6 8 34 8 40 0l-4 24H34z" fill="#5f7a3a"/>') +
-    head({ eyes: 'normal', mouth: 'smirk' }) +
-    '<path d="M31 42l-2-10 6 2 2-9 6 5 4-8 4 7 6-5 1 8 7-1-3 8c-5-5-11-7-18-7s-12 3-17 8z" fill="#5a3a22"/>' +
-    headband('leaf'),
-};
+/** O SVG do retrato da chave; sem desenho, o da reserva. */
+const portraitSvg = (key: string, fallback: string, jinchuuriki = false): string =>
+  svg(portraitArt(key, jinchuuriki) ?? portraitArt(fallback)!, '0 0 100 100', 'art');
 
 /** Retrato do vilão: imagem própria (img/viloes/<id>.webp) ou o desenho. */
 export function villainPortrait(id: string, size: 'sm' | 'md' | 'lg' = 'md'): string {
   const img = customImage('viloes', id);
-  const inner = img
-    ? `<img src="${img}" alt="">`
-    : svg((PORTRAITS[id] ?? PORTRAITS.examLeaf!)(), '0 0 100 100', 'art');
+  const inner = img ? `<img src="${img}" alt="">` : portraitSvg(id, 'examLeaf');
   return `<span class="portrait portrait-${size} villain-portrait">${inner}</span>`;
 }
 
-/** Cores do traje padrão do ninja por linhagem. */
-const NINJA_OUTFIT: Record<string, { outfit: string; hair: string; collar?: string; band?: 'leaf' | 'mist' | 'sand' | 'sound' | 'none' }> = {
-  common: { outfit: '#2c3a5c', hair: '#3a2a1e' },
-  uchiha: { outfit: '#1f2a44', hair: '#15161c', collar: '#1a2236' },
-  hyuuga: { outfit: '#d8d2e6', hair: '#2a2430' },
-  nara: { outfit: '#5f7a3a', hair: '#2a2420' },
-  akimichi: { outfit: '#b8322a', hair: '#7a4a24' },
-  yamanaka: { outfit: '#6a4a8a', hair: '#f0d27a' },
-  aburame: { outfit: '#5a6a5a', hair: '#2a2a22', collar: '#4a584a' },
-  inuzuka: { outfit: '#5a5a62', hair: '#4a3420' },
-  uzumaki: { outfit: '#f07a1a', hair: '#e8b33a' },
-  senju: { outfit: '#2d6e4e', hair: '#3b2a1e' },
-  taijutsuProdigy: { outfit: '#3f8a3c', hair: '#121214' },
-  // Personagens da Jornada sem desenho próprio (variações do ninja padrão).
-  sakura: { outfit: '#c0392b', hair: '#f29ab8' },
-  kakashi: { outfit: '#4f6b3a', hair: '#d9dde3', collar: '#3d5530' },
-  jiraiya: { outfit: '#8a2f2a', hair: '#eceff1' },
-  tsunade: { outfit: '#3f7a4f', hair: '#f0cf6a' },
-  kimimaro: { outfit: '#d9d4c7', hair: '#f4f4f4', band: 'sound' },
-  thug: { outfit: '#6b5a44', hair: '#2a1d14', band: 'none' },
-  mist: { outfit: '#4a6a80', hair: '#1d2a33', band: 'mist' },
-  grass: { outfit: '#5c7a2c', hair: '#3a2a1e', band: 'none' },
-  rain: { outfit: '#55607a', hair: '#2a2f3a', band: 'none' },
-  akamaru: { outfit: '#efe9dd', hair: '#efe9dd', band: 'none' },
-  // Personalização do Uchiha (easter egg do Sasuke).
-  sasuke: { outfit: '#1c2f5c', hair: '#141a2b', collar: '#22386b' },
-  // Irmãos Demônio: o molde da Névoa com respirador e protetor de chifres (Gōzu um, Meizu dois).
-  gozu: { outfit: '#3f4c5a', hair: '#1d2a33', band: 'mist' },
-  meizu: { outfit: '#3f4c5a', hair: '#1d2a33', band: 'mist' },
-};
-
 /**
- * Traços que distinguem quem só tinha a cor do traje (o mesmo rosto em todos lia como o mesmo personagem): a máscara e
- * a bandana torta do Kakashi, o cabelo curto e a bandana de pano dos capangas, o respirador e os chifres dos Irmãos
- * Demônio. Cada um troca o cabelo, a boca ou a bandana do molde; o resto do retrato é o mesmo desenho.
+ * Retrato de ninja: imagem própria (img/ninja/<chave>.webp ou img/ninja/ninja.webp) ou o desenho. A chave é uma
+ * linhagem do jogador (o visual da origem, com as marcas do jinchūriki se for o caso) ou um personagem.
  */
-const NINJA_STYLE: Record<string, { hair?: (c: string) => string; over?: string; mouth?: 'none'; band?: (cloth: string) => string }> = {
-  kakashi: {
-    hair: (c) => `<path d="M31 42c-1-10 3-19 11-23l-3-7 8 4 5-9 3 9 9-6-2 9 10-1-5 8c6 3 8 9 7 15-6-8-14-11-22-11s-16 4-21 12z" fill="${c}"/>`,
-    over: '<path d="M33 51q17 5 34 0v5q-3 13-17 15q-14-2-17-15z" fill="#2b3442"/><path d="M50 52v8" stroke="#1d242f" stroke-width="1"/>',
-    mouth: 'none',
-    band: (cloth) => `<g transform="rotate(-16 50 44)">${headband('leaf', cloth, false, 38)}</g>`,
-  },
-  thug: {
-    hair: (c) => `<path d="M32 43c0-12 8-19 18-19s18 7 18 19c-5-5-11-7-18-7s-13 2-18 7z" fill="${c}"/>`,
-    over: '<g fill="#5a3a22" opacity=".55"><circle cx="42" cy="62" r=".7"/><circle cx="46" cy="64" r=".7"/><circle cx="50" cy="64.5" r=".7"/><circle cx="54" cy="64" r=".7"/><circle cx="58" cy="62" r=".7"/></g>',
-    band: () => '<path d="M30 36q20-9 40 0l-1 6q-19-7-38 0z" fill="#8a2f22"/><path d="M69 38l7 4-6 3" fill="#8a2f22"/>',
-  },
-  gozu: {
-    over: '<rect x="37" y="53" width="26" height="10" rx="3" fill="#2a2f36"/><circle cx="50" cy="58" r="3.6" fill="#5b6470" stroke="#1d2126"/><path d="M41 58h4M55 58h4" stroke="#7d8696" stroke-width="1.2"/>',
-    mouth: 'none',
-    band: (cloth) => `${headband('mist', cloth)}<path d="M57 31l7-13 1 14z" fill="#c9d1dc" stroke="#7d8696" stroke-width=".8"/>`,
-  },
-  meizu: {
-    over: '<rect x="37" y="53" width="26" height="10" rx="3" fill="#2a2f36"/><circle cx="50" cy="58" r="3.6" fill="#5b6470" stroke="#1d2126"/><path d="M41 58h4M55 58h4" stroke="#7d8696" stroke-width="1.2"/>',
-    mouth: 'none',
-    band: (cloth) => `${headband('mist', cloth)}<path d="M43 31l-7-12 1 13zM57 31l7-12-1 13z" fill="#c9d1dc" stroke="#7d8696" stroke-width=".8"/>`,
-  },
-};
-
-/** Retrato do jogador: imagem própria (img/ninja/<linhagem>.webp ou img/ninja/ninja.webp) ou o desenho. */
 export function ninjaPortrait(lineageId: string | null, jinchuuriki: boolean, size: 'sm' | 'md' | 'lg' = 'sm'): string {
   const key = lineageId ?? 'common';
   const img = customImage('ninja', key) ?? customImage('ninja', 'ninja');
-  if (img) return `<span class="portrait portrait-${size} ninja-portrait"><img src="${img}" alt=""></span>`;
-  const look = NINJA_OUTFIT[key] ?? NINJA_OUTFIT.common!;
-  const accent = CLAN_COLORS[key] ?? CLAN_COLORS.common!;
-  const collar = look.collar ? `<path d="M34 64q16 6 32 0l2 14q-18 6-36 0z" fill="${look.collar}"/>` : '';
-  const marks =
-    (jinchuuriki ? '<path d="M35 53l7 1M35 56.5l7 0M35 60l7-1M65 53l-7 1M65 56.5l-7 0M65 60l-7-1" stroke="#6b3a2a" stroke-width="1"/>' : '') +
-    (key === 'inuzuka' ? '<path d="M37 50l3 6M63 50l-3 6" stroke="#c0392b" stroke-width="2.4" stroke-linecap="round"/>' : '');
-  const style = NINJA_STYLE[key];
-  const art =
-    scene(`ninja-${key}`, accent, '#0d1222') +
-    body(look.outfit, SKIN, collar) +
-    head({ eyeColor: key === 'hyuuga' ? '#cfc8e8' : key === 'uchiha' ? '#15161c' : '#2a4a7a', mouth: style?.mouth ?? 'smirk' }) +
-    marks +
-    (style?.over ?? '') +
-    (style?.hair
-      ? style.hair(look.hair)
-      : `<path d="M30 46l-5-12 8 1-1-11 8 5 3-11 6 8 5-9 3 10 8-5-1 11 8-1-5 12c-4-8-11-12-19-12s-14 4-18 14z" fill="${look.hair}"/>`) +
-    (style?.band ? style.band('#24324f') : look.band === 'none' ? '' : headband(look.band ?? 'leaf', '#24324f'));
-  return `<span class="portrait portrait-${size} ninja-portrait">${svg(art, '0 0 100 100', 'art')}</span>`;
+  const inner = img ? `<img src="${img}" alt="">` : portraitSvg(key, 'common', jinchuuriki);
+  return `<span class="portrait portrait-${size} ninja-portrait">${inner}</span>`;
 }
 
 /**
- * O personagem tem representação própria? Uma imagem em img/jornada/<id>, um desenho próprio (`villain:`) ou um traje
- * dele sobre o molde (`ninja:<chave>`). O molde comum (`ninja:common`) é o ninja genérico: não representa ninguém.
+ * O personagem tem representação própria? Uma imagem em img/jornada/<id> ou um desenho dele (`villain:<id>` ou
+ * `ninja:<chave>`). O ninja comum (`ninja:common`) é o genérico: não representa ninguém.
  */
 export function hasOwnPortrait(defId: string, spec: string | undefined): boolean {
   return Boolean(customImage('jornada', defId)) || (spec !== undefined && spec !== 'ninja:common');
 }
 
 /**
- * Retrato de um lutador da Jornada: imagem própria (img/jornada/<id>.webp) ou a arte já existente
- * indicada nos dados (`villain:<id>` ou `ninja:<chave>`).
+ * Retrato de um lutador da Jornada: imagem própria (img/jornada/<id>.webp) ou o desenho indicado nos dados
+ * (`villain:<id>` ou `ninja:<chave>`).
  */
 export function fighterPortrait(defId: string, spec: string, size: 'sm' | 'md' | 'lg' = 'md'): string {
   const img = customImage('jornada', defId);
   if (img) return `<span class="portrait portrait-${size}"><img src="${img}" alt=""></span>`;
   const [kind, key = ''] = spec.split(':');
-  return kind === 'villain' ? villainPortrait(key, size) : ninjaPortrait(key, defId === 'naruto', size);
+  return kind === 'villain' ? villainPortrait(key, size) : ninjaPortrait(key, false, size);
 }
