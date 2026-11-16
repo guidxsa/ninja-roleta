@@ -240,14 +240,23 @@ export interface BattleSetup {
   runFlags?: string[];
 }
 
+/** Perfil da força do inimigo: `hp` multiplica HP, resistências e cura; `offense`, os ataques. */
+export interface EnemyShape {
+  hp: number;
+  offense: number;
+}
+
 const scale = (n: number, mult: number) => (n > 0 ? Math.max(1, Math.floor(n * mult)) : 0);
 
 /** Ficha do inimigo com a dificuldade aplicada: HP, ataques e resistências, e a cura das técnicas dele. */
-export function enemySeed(defId: string, difficulty: Difficulty, data: JornadaData, cycleMult = 1): FighterSeed {
+export function enemySeed(defId: string, difficulty: Difficulty, data: JornadaData, cycleMult = 1, shape: EnemyShape = { hp: 1, offense: 1 }): FighterSeed {
   const def = data.enemies[defId];
   if (!def) throw new Error(`inimigo desconhecido: ${defId}`);
   // Modo infinito: o ciclo multiplica por cima da dificuldade (docs/jornada/run.md#modo-infinito).
-  const mult = data.j.enemyStrength[difficulty] * cycleMult;
+  const base = data.j.enemyStrength[difficulty] * cycleMult;
+  // Perfil (J2): parte da força em HP e resistências, parte em ataque.
+  const mult = base * shape.hp;
+  const atk = base * shape.offense;
   const hp = scale(def.hp, mult);
   return {
     defId,
@@ -257,7 +266,7 @@ export function enemySeed(defId: string, difficulty: Difficulty, data: JornadaDa
     maxChakra: def.chakra,
     chakra: def.chakra,
     speed: def.speed,
-    offense: { taijutsu: scale(def.offense.taijutsu, mult), ninjutsu: scale(def.offense.ninjutsu, mult), genjutsu: scale(def.offense.genjutsu, mult) },
+    offense: { taijutsu: scale(def.offense.taijutsu, atk), ninjutsu: scale(def.offense.ninjutsu, atk), genjutsu: scale(def.offense.genjutsu, atk) },
     resistance: { physical: scale(def.resistance.physical, mult), mental: scale(def.resistance.mental, mult) },
     element: def.element,
     ...(def.kekkeiGenkai ? { kekkeiGenkai: def.kekkeiGenkai } : {}),

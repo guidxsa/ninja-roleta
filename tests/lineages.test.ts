@@ -295,9 +295,9 @@ describe('Correções da v0.22.1', () => {
 describe('Senju: Herdeiro do fundador e Força vital', () => {
   const senju = (): PlayerState => createPlayer({ lineageId: 'senju', elements: ['earth', 'water'], jinchuuriki: false }, gameData);
 
-  it('começa com +1 Vontade do Fogo, status pela lore e o básico do elemento principal', () => {
+  it('sem Vontade do Fogo extra desde a v0.88.2, status pela lore e o básico do elemento principal', () => {
     const p = senju();
-    expect(p.revives).toBe(2);
+    expect(p.revives).toBe(1);
     expect([p.maxHp, p.maxChakra, p.offense.taijutsu, p.offense.ninjutsu]).toEqual([125, 40, 11, 11]);
     expect(p.techniques).toContain('rockFist');
   });

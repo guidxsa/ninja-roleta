@@ -35,6 +35,7 @@ import {
   bagFull,
   afterWinRecovery,
   battleSetup,
+  elementOf,
   buy,
   buyTalent,
   canBuy,
@@ -629,7 +630,8 @@ describe('run da Jornada', () => {
     const mult = data.j.storyStrength * data.j.storyStageStrength[0]!;
     expect(runEnemyMult(canon, data)).toBeCloseTo(mult);
     expect(runEnemyMult({ ...canon, stageIndex: 3 }, data)).toBeCloseTo(data.j.storyStrength * data.j.storyStageStrength[3]!);
-    expect(runEnemyMult(generic, data)).toBe(1);
+    // O Caminho Ninja tem a própria força por estágio (J3, v0.88.1).
+    expect(runEnemyMult(generic, data)).toBe(data.j.genericStageStrength[0]);
     const foe = battleSetup(canon, data).enemies[0]!;
     expect(foe.maxHp).toBe(enemySeed(foe.defId!, 'normal', data, mult).maxHp);
     expect(data.j.enemyStrength.hardcore).toBeGreaterThan(data.j.enemyStrength.hard);
@@ -1411,8 +1413,8 @@ describe('Caminho Ninja', () => {
       const run = newGenericRun(s, 'normal', 'common', data);
       kinds.add(run.hero);
       const el = run.elements[run.hero];
-      // O Prodígio tem natureza (silenciosa), mas nenhuma técnica de elemento (v0.59.0).
-      expect(el).not.toBeNull();
+      // O Prodígio não tem natureza (v0.87.1) nem técnica de elemento.
+      expect(el === null).toBe(run.hero === 'prodigy');
       const elemental = new Set(Object.values(data.elementLines).flat());
       if (run.hero === 'prodigy') expect(heroMovable(run, data).filter((id) => elemental.has(id))).toEqual([]);
       else expect(run.moveset).toContain(data.elementLines[el!][0]);
@@ -1544,7 +1546,8 @@ describe('Caminho Ninja', () => {
     expect(fire.relics).toEqual(['academyManual']);
     const prodigy = newGenericRun(4, 'normal', 'common', data, new Set(), null, null);
     expect([prodigy.hero, prodigy.relics]).toEqual(['prodigy', ['greenJumpsuit']]);
-    expect(prodigy.elements.prodigy).not.toBeNull();
+    // O Prodígio não tem natureza, nem a silenciosa (v0.87.1).
+    expect(prodigy.elements.prodigy).toBeNull();
     for (let s = 0; s < 30; s++) {
       const random = newGenericRun(s, 'normal', 'common', data);
       expect(random.elementPick).toBe('random');
@@ -1598,11 +1601,37 @@ describe('Caminho Ninja', () => {
         const run = newGenericRun(seed, 'normal', cls, data, all, null, choice);
         const lost = Object.fromEntries(Object.entries(run.elements).map(([id, el]) => [id, data.characters[id]?.noElement ? null : el]));
         // A função refaz exatamente o que a criação sorteou para as fichas sem ninjutsu elemental.
-        expect(silentNatures(run, data)).toEqual(Object.fromEntries(Object.entries(run.elements).filter(([id]) => data.characters[id]?.noElement)));
+        expect(silentNatures(run, data)).toEqual(Object.fromEntries(Object.entries(run.elements).filter(([id, el]) => data.characters[id]?.noElement && el)));
         mem.set(JORNADA_SAVE_KEY, JSON.stringify({ ...run, elements: lost }));
         expect(loadJornada(storage)!.elements).toEqual(run.elements);
       }
     }
+  });
+
+  it('o Prodígio não tem natureza (v0.87.1): sorteado ou escolhido, e os suportes da seed não mudam', () => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v) };
+    let drawn = 0;
+    for (let seed = 0; seed < 80; seed++) {
+      const chosen = newGenericRun(seed, 'normal', 'common', data, new Set(), null, null);
+      expect(chosen.hero).toBe('prodigy');
+      expect(chosen.elements.prodigy).toBeNull();
+      expect(elementOf(chosen, 'prodigy', data)).toBeNull();
+      const random = newGenericRun(seed, 'normal', 'common', data);
+      // Os suportes e as naturezas deles são os mesmos de qualquer escolha com a mesma seed.
+      const fire = newGenericRun(seed, 'normal', 'common', data, new Set(), null, 'fire');
+      expect(chosen.supports).toEqual(fire.supports);
+      for (const id of chosen.supports) expect(chosen.elements[id]).toBe(fire.elements[id]);
+      if (random.hero === 'prodigy') {
+        drawn++;
+        expect(random.elements.prodigy).toBeNull();
+      }
+    }
+    expect(drawn).toBeGreaterThan(0);
+    // Save de antes da v0.87.1 com natureza no Prodígio volta sem ela.
+    const run = newGenericRun(5, 'normal', 'common', data, new Set(), null, null);
+    mem.set(JORNADA_SAVE_KEY, JSON.stringify({ ...run, elements: { ...run.elements, prodigy: 'water' } }));
+    expect(loadJornada(storage)!.elements).toEqual(run.elements);
   });
 
   it('o easter egg do Sasuke saiu (v0.86.0): sem ramo Sasuke, sem ramo Raio e sem a conquista', () => {
@@ -1789,7 +1818,8 @@ describe('dōjutsu que evolui', () => {
     expect(run.relics).toContain('uchihaFan');
     expect(heroMods(run, data).techChakraDiscount.jSharingan3).toBe(1);
     const hyuuga = { ...newGenericRun(1, 'normal', 'hyuuga', data), talents: ['tByakuganRange'] };
-    expect(heroMods(hyuuga, data).techChakraDiscount.jByakugan2).toBe(2);
+    // A inicial do Hyuuga não dá mais desconto (v0.88.2): só o talento.
+    expect(heroMods(hyuuga, data).techChakraDiscount.jByakugan2).toBe(1);
   });
 
   it('a técnica informa o chakra pago, já com desconto', () => {
@@ -1920,7 +1950,8 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     const run = chooseNode(newGenericRun(5, 'hardcore', 'common', data), nodeChoices(newGenericRun(5, 'hardcore', 'common', data))[0]!.id);
     const id = (currentStop(run, data) as { enemies: string[] }).enemies[0]!;
     expect(cycleEnemyMult(run, data)).toBe(1);
-    expect(battleSetup(run, data).enemies[0]).toEqual(enemySeed(id, 'hardcore', data));
+    const st = data.j.genericStageStrength[0]!;
+    expect(battleSetup(run, data).enemies[0]).toEqual(enemySeed(id, 'hardcore', data, st));
     // No ciclo seguinte o sorteio da parada também muda: o inimigo vem da parada do ciclo 1.
     const next = { ...run, cycle: 1 };
     const id1 = (currentStop(next, data) as { enemies: string[] }).enemies[0]!;
@@ -1928,8 +1959,8 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     expect(cycleEnemyMult({ ...run, cycle: 2 }, data)).toBeCloseTo(2.25);
     expect(cycleEnemyMult({ ...run, cycle: 4 }, data)).toBeCloseTo(5.0625);
     const foe = battleSetup(next, data).enemies[0]!;
-    expect(foe).toEqual(enemySeed(id1, 'hardcore', data, 1.5));
-    expect(foe.maxHp).toBe(Math.max(1, Math.floor(data.enemies[id1]!.hp * data.j.enemyStrength.hardcore * 1.5)));
+    expect(foe).toEqual(enemySeed(id1, 'hardcore', data, 1.5 * st));
+    expect(foe.maxHp).toBe(Math.max(1, Math.floor(data.enemies[id1]!.hp * data.j.enemyStrength.hardcore * 1.5 * st)));
     // O multiplicador vale uma vez só no dano: entra no ataque, não em `damageMult`.
     expect(foe.mods.damageMult).toBe(1);
   });

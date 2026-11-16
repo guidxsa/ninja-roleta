@@ -75,7 +75,7 @@ export const roletaPtBR = {
     trainedEyes: { name: 'Olhos treinados', desc: 'Imune a Medo.' },
     preciseFist: { name: 'Punho preciso', desc: 'O taijutsu ignora 30% da resistência.' },
     vitality: { name: 'Vitalidade', desc: 'Recupera 1 de chakra e 2% do HP no começo de cada rodada (2 de chakra no nível 7).' },
-    vitalForce: { name: 'Força vital', desc: '+1 Vontade do Fogo; curas rendem +25%. Abaixo de 30% do HP, recupera 4% do HP por 3 rodadas (5% e 2 de chakra no nível 4; 2 vezes por luta no nível 7).' },
+    vitalForce: { name: 'Força vital', desc: 'Curas rendem +25%. Abaixo de 30% do HP, recupera 4% do HP por 3 rodadas (5% e 2 de chakra no nível 4; 2 vezes por luta no nível 7).' },
     jinchuuriki: { name: 'Manto de chakra', desc: 'Uma vez por luta, abaixo de 50% do HP: ataques e speed ×1,5, resistências ×1,25 e 5% de HP por rodada, por até 5 rodadas. Custa 10% do chakra máximo por rodada. Imune ao Medo.' },
   } as Record<string, { name: string; desc: string }>,
 

@@ -395,7 +395,10 @@ if (BRANCHES) {
   process.exit(0);
 }
 
-for (const mode of ['canon', 'generic:common', 'generic:prodigy', 'generic:uchiha', 'generic:hyuuga']) for (const d of DIFFS) {
+// `--modo=canon` (ou generic:common...) mede só esse modo; `--dif=normal,hard` só essas dificuldades.
+const ONLY_MODE = process.argv.find((a) => a.startsWith('--modo='))?.slice(7);
+const ONLY_DIFF = process.argv.find((a) => a.startsWith('--dif='))?.slice(6).split(',');
+for (const mode of ['canon', 'generic:common', 'generic:prodigy', 'generic:uchiha', 'generic:hyuuga'].filter((m) => !ONLY_MODE || m === ONLY_MODE)) for (const d of DIFFS.filter((x) => !ONLY_DIFF || ONLY_DIFF.includes(x))) {
   cell = `${mode}|${d}|`;
   const stops = new Map<string, number>();
   let wins = 0;
