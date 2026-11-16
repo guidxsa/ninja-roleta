@@ -203,7 +203,8 @@ export const lineages: LineageDef[] = [
     elements: { countWeights: [0, 1] },
     elementalPotential: 'full',
     passive: 'vitalForce',
-    extraRevives: 1,
+    // v0.88.2 (R1, aprovado pelo usuário): sem a Vontade do Fogo extra (Médio 91 → 75%).
+    extraRevives: 0,
   },
 ];
 

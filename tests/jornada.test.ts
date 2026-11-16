@@ -1818,7 +1818,8 @@ describe('dōjutsu que evolui', () => {
     expect(run.relics).toContain('uchihaFan');
     expect(heroMods(run, data).techChakraDiscount.jSharingan3).toBe(1);
     const hyuuga = { ...newGenericRun(1, 'normal', 'hyuuga', data), talents: ['tByakuganRange'] };
-    expect(heroMods(hyuuga, data).techChakraDiscount.jByakugan2).toBe(2);
+    // A inicial do Hyuuga não dá mais desconto (v0.88.2): só o talento.
+    expect(heroMods(hyuuga, data).techChakraDiscount.jByakugan2).toBe(1);
   });
 
   it('a técnica informa o chakra pago, já com desconto', () => {

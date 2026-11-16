@@ -31,7 +31,9 @@ export const relics: RelicDef[] = [
   { id: 'academyManual', tier: 'starter', starterFor: ['commonNinja'], xpMult: 1.1, mods: { accuracyBonus: 0.05 } },
   { id: 'greenJumpsuit', tier: 'starter', starterFor: ['prodigy'], stats: { speed: 1 }, mods: { taijutsuFlat: 1 } },
   { id: 'uchihaFan', tier: 'starter', starterFor: ['uchihaNinja'], mods: { techChakraDiscount: { jSharingan: 1, jSharingan3: 1 }, techDamageMult: each(FIRE, 1.1) } },
-  { id: 'gentleFistScroll', tier: 'starter', starterFor: ['hyuugaNinja'], mods: { techChakraDiscount: { jByakugan: 1, jByakugan2: 1 }, techDamageMult: each(GENTLE_FIST, 1.1) } },
+  // v0.88.2 (J5/J6 do diagnóstico 2, aprovado pelo usuário): o desconto de chakra não valia nada (o Hyuuga entra com 97–99%
+  // do chakra); virou crítico.
+  { id: 'gentleFistScroll', tier: 'starter', starterFor: ['hyuugaNinja'], mods: { techDamageMult: each(GENTLE_FIST, 1.15), critBonus: 0.05 } },
 
   // Evoluções: aparecem só na escolha depois do chefe e substituem a inicial.
   // Colar do Primeiro Hokage (v0.70.0): a Tsunade entrega na cena dos Sannin, no lugar da bandana (não sai mais de chefe).
@@ -48,7 +50,7 @@ export const relics: RelicDef[] = [
     id: 'eightTrigramsScroll',
     tier: 'boss',
     evolves: 'gentleFistScroll',
-    mods: { techChakraDiscount: { jByakugan: 2, jByakugan2: 2 }, techDamageMult: each(GENTLE_FIST, 1.2), evasion: 0.04 },
+    mods: { techDamageMult: each(GENTLE_FIST, 1.25), critBonus: 0.1, evasion: 0.04 },
   },
 
   // Comuns

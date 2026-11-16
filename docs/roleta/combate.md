@@ -67,10 +67,10 @@ Fixas pela origem e **sobem sozinhas com o nível**: dano base = base + por nív
 | Pétalas Ilusórias | Yamanaka | genjutsu | 10 (+2) | 1 | 6 | 85% | 30% de Medo |
 | Enxame | Aburame | ninjutsu | 5 (+1) | 2 | 8 | 85% | 50% de Veneno |
 | Presas Giratórias | Inuzuka | taijutsu | 6 (+1) | 2 | 6 | 85% | — |
-| Folha Furacão | prodígio | taijutsu | 6 (+1) | 2 | 4 | 90% | — |
+| Folha Furacão | prodígio | taijutsu | 9 (+1) | 1 | 4 | 90% | — (v0.88.2: 1 golpe de 9, antes 2 de 6) |
 | Lótus Primária | prodígio, nível 4 | taijutsu | 16 (+3) | 1 | 8 | 85% | só com um Portão aberto; 25% de Atordoar |
 | Lótus Oculta | prodígio, nível 7 | taijutsu | 6 (+1) | 5 | 12 | 85% | só com o 3º Portão ou acima |
-| Olhar Hipnótico | Uchiha | genjutsu | — | 1 | 6 | 80% | sem dano: atordoa se acertar |
+| Olhar Hipnótico | Uchiha | genjutsu | — | 1 | 3 | 80% | sem dano: atordoa se acertar |
 | Ilusão da Dor | Uchiha | genjutsu | 13 (+2) | 1 | 6 | 85% | 20% de Medo |
 | Tsukuyomi | Uchiha, nível 7 | genjutsu | 20 (+3) | 1 | 12 | 85% | só com o Sharingan; 50% de Atordoar |
 | Selo dos Pontos Vitais | Hyuuga | taijutsu | 9 (+2) | 1 | 4 | 100% | só com o Byakugan; 25% de Bloqueio de chakra; tira 3 de chakra |
@@ -103,7 +103,7 @@ Yamanaka, Nara e Aburame saíram do sorteio na v0.52.0 (`retiredLineages`) e seg
 | Uchiha | Olhos treinados: imune a Medo | Sharingan (4 ck, manutenção 2, 5 rodadas): +3/+5/+7 nos ataques e +1/+2/+3 de speed, genjutsu com +10/15/20% de acerto e +3/6/9 de poder, Leitura de movimento (20/25/30% de o golpe recebido cair pela metade). Cópia (3 ck, com o Sharingan): 50/65/80% de copiar a última técnica de taijutsu ou ninjutsu de dano do vilão até o fim da luta | 4: 2 tomoe. 7: 3 tomoe e Tsukuyomi |
 | Hyuuga | Punho preciso: o taijutsu ignora 30% da resistência | Byakugan (3 ck, manutenção 2, 5 rodadas): o taijutsu não erra e dá ×1,1, enxerga através da névoa, o genjutsu do vilão tem −20% de acerto e libera o Selo dos Pontos Vitais e as 64 Palmas | 4: Byakugan 7 rodadas; Rotação. 7: 64 Palmas |
 | Uzumaki | Vitalidade: 1 de chakra e 2% do HP por rodada | Selamento (6 ck; 1, +1 no nível 7): a técnica sorteada do vilão sai da roleta dele por 2 rodadas | 4: Correntes de Chakra. 7: Selamento por 3 rodadas; Vitalidade com 2 de chakra |
-| Senju | +1 Vontade do Fogo; curas +25%; Força vital: abaixo de 30% do HP, 4% por rodada por 3 rodadas | — | 4: Força vital 5% e 2 de chakra por rodada. 7: dispara 2 vezes por luta |
+| Senju | Curas +25%; Força vital: abaixo de 30% do HP, 4% por rodada por 3 rodadas | — | 4: Força vital 5% e 2 de chakra por rodada. 7: dispara 2 vezes por luta |
 | Jinchuuriki | Manto: uma vez por luta, abaixo de 50% do HP, ataques e speed ×1,5, resistências ×1,25 e 5% de HP por rodada, até 5 rodadas; custa 10% do chakra máximo por rodada; imune a Medo | — | — |
 | Nara (guardado) | Gênio: vê a próxima ação do vilão | Imitação de Sombra (2): 80% de atordoar | — |
 | Yamanaka (guardado) | Leitura mental: o vilão tem −10% de acerto | Transferência de Mente (1): 75%; o vilão perde a vez e se fere | — |

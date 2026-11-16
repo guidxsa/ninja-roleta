@@ -87,10 +87,13 @@ export const roletaTechniques: RTechniqueDef[] = [
   // Kits completos do clássico (v0.80.0): as exclusivas voltam, com o nível do despertar e o requisito de dōjutsu ou Portão.
   // Números do clássico na escala do Roleta (dano base parecido com o da técnica do elemento, custo em dobro).
   { id: 'rHumanBoulder', type: 'taijutsu', lineage: 'akimichi', base: 14, perLevel: 3, chakra: 8, accuracy: 0.8, minLevel: 4, effect: { kind: 'stun', chance: 0.2 } },
-  { id: 'rLeafHurricane', type: 'taijutsu', lineage: 'taijutsuProdigy', base: 6, perLevel: 1, hits: 2, chakra: 4, accuracy: 0.9 },
+  // v0.88.2 (R1 do diagnóstico 2, aprovado pelo usuário): 1 golpe de 9 no lugar de 2 de 6; o golpe múltiplo barato fazia o
+  // Prodígio bater o dobro das outras origens (Médio 93 → 76%).
+  { id: 'rLeafHurricane', type: 'taijutsu', lineage: 'taijutsuProdigy', base: 9, perLevel: 1, chakra: 4, accuracy: 0.9 },
   { id: 'rPrimaryLotus', type: 'taijutsu', lineage: 'taijutsuProdigy', base: 16, perLevel: 3, chakra: 8, minLevel: 4, requiresGate: 1, effect: { kind: 'stun', chance: 0.25 } },
   { id: 'rHiddenLotus', type: 'taijutsu', lineage: 'taijutsuProdigy', base: 6, perLevel: 1, hits: 5, chakra: 12, minLevel: 7, requiresGate: 3 },
-  { id: 'rHypnoticGaze', type: 'genjutsu', lineage: 'uchiha', base: 0, perLevel: 0, chakra: 6, accuracy: 0.8, damageless: true, effect: { kind: 'stun', chance: 1 } },
+  // v0.88.2 (R1, aprovado pelo usuário): 6 → 3 de chakra; o Uchiha gastava o chakra no Sharingan e no Olhar e golpeava menos.
+  { id: 'rHypnoticGaze', type: 'genjutsu', lineage: 'uchiha', base: 0, perLevel: 0, chakra: 3, accuracy: 0.8, damageless: true, effect: { kind: 'stun', chance: 1 } },
   { id: 'rPainIllusion', type: 'genjutsu', lineage: 'uchiha', base: 13, perLevel: 2, chakra: 6, effect: { kind: 'fear', chance: 0.2 } },
   { id: 'rTsukuyomi', type: 'genjutsu', lineage: 'uchiha', base: 20, perLevel: 3, chakra: 12, minLevel: 7, requiresBuff: 'sharingan', effect: { kind: 'stun', chance: 0.5 } },
   { id: 'rVitalSeal', type: 'taijutsu', lineage: 'hyuuga', base: 9, perLevel: 2, chakra: 4, accuracy: 1, requiresBuff: 'byakugan', chakraDrain: 3, effect: { kind: 'chakraBlock', chance: 0.25 } },
