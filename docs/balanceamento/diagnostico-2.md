@@ -160,7 +160,7 @@ Valor marginal: vitória com a relíquia desde o começo, menos a linha de base.
 | 2 | **Feito na v0.88.2** (Olhar Hipnótico 3 de chakra, Folha Furacão 1 golpe de 9, Senju sem Vontade extra; Médio Uchiha 56, Prodígio 76, Senju 74). Roleta: subir o Uchiha (ver o custo do Sharingan e do Olhar Hipnótico, ou devolver acerto ao Sharingan) e conter Prodígio e Senju | R1 |
 | 2 | Árvores: dar aos ramos de controle e suporte algo que pese cedo (técnica ou bônus na raiz), em vez de baixar os ramos de técnica | J4 |
 | 2 | **Feito na v0.88.2** (inicial com crítico no lugar do desconto de chakra; evolução +12 no Difícil). Hyuuga: evolução da inicial mais forte e um uso para o chakra que sobra | J5, J6 |
-| 3 | Bot da simulação: aprender a controlar (atordoar e usar ilusões) e a proteger (Defender com o Guarda-costas), para medir esses ramos de verdade | J4 |
+| 3 | **Testado e desfeito** (o bot ficou pior nesses ramos: Defender não compensa; [registro](../registro.md)). Bot da simulação: aprender a controlar (atordoar e usar ilusões) e a proteger (Defender com o Guarda-costas), para medir esses ramos de verdade | J4 |
 | 3 | Revisar a medida de relíquias do Roleta (separar o efeito da roleta de recompensa) | R2 |
 | 3 | H3: mais cenas presenciadas no estágio 3, ou o bônus em outro tipo de parada | J5 |
 | — | Decisões já abertas que este levantamento confirma: itens 29, 34, 35 e 36 de `docs/decisoes.md` | |
