@@ -5,7 +5,7 @@ import type { Difficulty } from '../difficulty';
 import { createRng, type Rng } from '../rng';
 import type { Element, KekkeiGenkaiId } from '../types';
 import { cloneKindFor } from '../clones';
-import { allyResults, emptyMods, enemySeed, mergeMods, type BattleSetup, type FighterSeed } from './battle';
+import { allyResults, emptyMods, enemySeed, mergeMods, type BattleSetup, type EnemyShape, type FighterSeed } from './battle';
 import type { JornadaData, StoryGrant } from './data';
 import { eventOptions, SHOP_CURSE, type EventDef, type EventEffect } from './events';
 import { generateMap, mapNode, nextNodes, type StageMap } from './map';
@@ -337,7 +337,14 @@ export const cycleEnemyMult = (run: JRun, data: JornadaData) => data.j.infinite.
 
 /** Força dos inimigos da run por cima da dificuldade: o ciclo do infinito e, na História, `storyStrength` (v0.65.0). */
 export const runEnemyMult = (run: JRun, data: JornadaData) =>
-  cycleEnemyMult(run, data) * (run.mode === 'canon' ? data.j.storyStrength * (data.j.storyStageStrength[run.stageIndex] ?? 1) : 1);
+  cycleEnemyMult(run, data) * (run.mode === 'canon' ? data.j.storyStrength * (storyStageTable(run, data)[run.stageIndex] ?? 1) : 1);
+
+/** Força por estágio da História na dificuldade da run (J1: a dificuldade pode ter a própria). */
+const storyStageTable = (run: JRun, data: JornadaData) => data.j.storyStageStrengthBy[run.difficulty] ?? data.j.storyStageStrength;
+
+/** Perfil do estágio da História (J2): quanto da força vai para HP e quanto para ataque. Fora da História, 1 / 1. */
+export const runEnemyShape = (run: JRun, data: JornadaData): EnemyShape =>
+  (run.mode === 'canon' ? data.j.storyStageShape[run.stageIndex] : undefined) ?? { hp: 1, offense: 1 };
 
 // ---------------------------------------------------------------------------
 // Estágio e parada
@@ -625,7 +632,7 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
   });
   const opening = relicDefs(run, data).reduce((a, r) => a + (r.openingDamage ?? 0), 0);
   const foes = stop.enemies.map((id) => {
-    const seed = enemySeed(id, run.difficulty, data, runEnemyMult(run, data));
+    const seed = enemySeed(id, run.difficulty, data, runEnemyMult(run, data), runEnemyShape(run, data));
     return opening ? { ...seed, hp: Math.max(1, seed.hp - opening) } : seed;
   });
   // Roteiro: os lutadores que ele pode pôr na luta (inimigos com a força da run; aliados com a ficha da run).
@@ -633,7 +640,7 @@ export function battleSetup(run: JRun, data: JornadaData): BattleSetup {
   const reserveIds = (stop.script ?? []).flatMap((r) => r.do.flatMap((a) => (a.do === 'enter' ? [a.who] : a.do === 'replace' ? [a.with] : [])));
   const reserve = reserveIds.map((id) =>
     data.enemies[id]
-      ? { side: 'enemy' as const, seed: enemySeed(id, run.difficulty, data, runEnemyMult(run, data)) }
+      ? { side: 'enemy' as const, seed: enemySeed(id, run.difficulty, data, runEnemyMult(run, data), runEnemyShape(run, data)) }
       : { side: 'ally' as const, seed: memberSeed(run, id, data) },
   );
   return {
