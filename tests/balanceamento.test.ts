@@ -165,6 +165,14 @@ describe('Fase 5 · Jornada e História (H1, H2, H3, J5)', () => {
     expect(enemySeed('zabuza', 'normal', data, 1, { hp: 1, offense: 1 })).toEqual(flat);
   });
 
+  it('J3: o Caminho Ninja tem força por estágio própria (a História não usa)', () => {
+    const gen = { ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 2 };
+    const with3 = { ...data, j: { ...data.j, genericStageStrength: [1, 1, 1.5] } };
+    expect(runEnemyMult(gen, with3)).toBeCloseTo(1.5);
+    const canon = { ...newRun(1, 'normal', data), stageIndex: 2 };
+    expect(runEnemyMult(canon, with3)).toBeCloseTo(runEnemyMult(canon, data));
+  });
+
   it('XP 100 + 30 por nível (J5); Harem atordoa 60% e a Shuriken das sombras +25% por nível (H2)', () => {
     expect(data.j.xp).toMatchObject({ base: 100, perLevel: 30 });
     expect(data.techniques.jHarem!.onHit).toEqual({ effect: 'stun', chance: 0.6 });

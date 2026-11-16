@@ -154,6 +154,8 @@ export const jornadaBalance = {
     { hp: 0.65, offense: 2.3 },
     { hp: 1, offense: 1 },
   ] as readonly { hp: number; offense: number }[],
+  // J3 (diagnóstico 2, C1): força por estágio do Caminho Ninja, por cima da dificuldade (e do ciclo do infinito).
+  genericStageStrength: [1, 1, 1] as readonly number[],
   // H3 (v0.82.0): cada cena presenciada do estágio 3 da História (índice 2) dá este ryō a mais.
   storyWitnessRyo: { stageIndex: 2, ryo: 20 },
 

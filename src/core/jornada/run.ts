@@ -337,7 +337,7 @@ export const cycleEnemyMult = (run: JRun, data: JornadaData) => data.j.infinite.
 
 /** Força dos inimigos da run por cima da dificuldade: o ciclo do infinito e, na História, `storyStrength` (v0.65.0). */
 export const runEnemyMult = (run: JRun, data: JornadaData) =>
-  cycleEnemyMult(run, data) * (run.mode === 'canon' ? data.j.storyStrength * (storyStageTable(run, data)[run.stageIndex] ?? 1) : 1);
+  cycleEnemyMult(run, data) * (run.mode === 'canon' ? data.j.storyStrength * (storyStageTable(run, data)[run.stageIndex] ?? 1) : (data.j.genericStageStrength[run.stageIndex] ?? 1));
 
 /** Força por estágio da História na dificuldade da run (J1: a dificuldade pode ter a própria). */
 const storyStageTable = (run: JRun, data: JornadaData) => data.j.storyStageStrengthBy[run.difficulty] ?? data.j.storyStageStrength;
