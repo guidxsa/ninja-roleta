@@ -31,6 +31,8 @@ Escolhas do usuário sobre o [diagnóstico](balanceamento/diagnostico.md), imple
 
 - **v0.87.1** (pedido do usuário): o Prodígio do Caminho Ninja não tem natureza, nem a silenciosa. O sorteio à parte continua (a seed dá as mesmas naturezas aos suportes) e saves de antes perdem o elemento do Prodígio. Decidido sozinho: a natureza silenciosa do Hyuuga e dos suportes sai do nome ("Kenta (Água)") e da revelação e fica só na Ficha, com o chip tracejado do Roleta. Simulação (`npm run sim:jornada -- 300 2`, Prodígio, Fácil/Médio/Difícil/Hardcore): 100/85/50/15 → 100/85/50/15; o elemento do lutador só pesa contra barreiras desde a v0.77.0 e o Prodígio só bate de taijutsu.
 
+- **v0.88.0** (diagnóstico 2, J1 e J2, escolhidos pelo usuário): o Difícil da História ganha força própria nos estágios 1 e 2 (1,15 / 1,2 → 1,05 / 1,1; `storyStageStrengthBy`) e o estágio 3 troca HP por ataque (perfil HP ×0,65, ataque ×2,3 sobre o ×1,7; `storyStageShape`). Varredura do Difícil só com o J1 (300 runs, seed 2): 1,15/1,2 20%, 1,1/1,15 29%, 1,1/1,1 44%, 1,05/1,1 54%, 1,0/1,05 70%. Perfil do estágio 3 (Médio, rodadas por luta e dano recebido por rodada): hoje 21,3 e 6,3; HP ×0,65 e ataque ×1,3, 7,2 e 8,7; ataque ×2,3, 8,2 e 14,1; ataque ×3, 7,9 e 18,7 (só baixar o HP encurta a luta sem dar risco). História (Fácil/Médio/Difícil/Hardcore, `npm run sim:jornada -- 300 2 --modo=canon`): 100/74/20/2 → **100/72/50/1**; o estágio 3 do Médio foi de 21,3 para 8,2 rodadas e de 6,3 para 14,1 de dano recebido. O Caminho Ninja não muda.
+
 Roleta, vitória por origem (Fácil / Médio / Difícil / Hardcore), até a v0.80.0:
 
 | Origem | Linha de base | v0.78.0 | v0.79.0 | v0.80.0 |

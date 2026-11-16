@@ -154,8 +154,8 @@ Valor marginal: vitória com a relíquia desde o começo, menos a linha de base.
 
 | Prioridade | Recomendação | Evidência |
 |---|---|---|
-| 1 | História: separar a força dos estágios 1 e 2 por dificuldade (ou suavizar o degrau Médio → Difícil), para o Difícil voltar a 40–50% sem mexer no Médio | J1 |
-| 1 | Estágio 3 da História: trocar parte da força em HP por força em ataque (lutas mais curtas e mais perigosas) | J2 |
+| 1 | **Feito na v0.88.0** (Difícil 1,05 / 1,1; Difícil 20 → 50%). História: separar a força dos estágios 1 e 2 por dificuldade (ou suavizar o degrau Médio → Difícil), para o Difícil voltar a 40–50% sem mexer no Médio | J1 |
+| 1 | **Feito na v0.88.0** (HP ×0,65, ataque ×2,3; 21 → 8 rodadas). Estágio 3 da História: trocar parte da força em HP por força em ataque (lutas mais curtas e mais perigosas) | J2 |
 | 1 | Caminho Ninja: força por estágio (C1), menos no começo e mais no estágio 3 | J3 |
 | 2 | Roleta: subir o Uchiha (ver o custo do Sharingan e do Olhar Hipnótico, ou devolver acerto ao Sharingan) e conter Prodígio e Senju | R1 |
 | 2 | Árvores: dar aos ramos de controle e suporte algo que pese cedo (técnica ou bônus na raiz), em vez de baixar os ramos de técnica | J4 |

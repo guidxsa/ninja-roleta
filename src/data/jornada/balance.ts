@@ -142,14 +142,16 @@ export const jornadaBalance = {
   // As derrotas ficam quase todas nos estágios 1 e 2; o fim quase não pesa (×2 nele muda ~4 pontos). Proposta para o
   // usuário (tabela em docs/registro.md).
   storyStageStrength: [1.15, 1.2, 1.7, 1.9] as readonly number[],
-  // J1 (diagnóstico 2): força por estágio própria de uma dificuldade, no lugar da de cima (sem a chave, vale a de cima).
-  storyStageStrengthBy: {} as Partial<Record<Difficulty, readonly number[]>>,
-  // J2 (diagnóstico 2): perfil por estágio da História, por cima da força: `hp` multiplica HP, resistências e cura;
-  // `offense`, os ataques. 1 / 1 é a força igual em tudo.
+  // J1 (diagnóstico 2, v0.88.0, escolhido pelo usuário): força por estágio própria de uma dificuldade, no lugar da de
+  // cima (sem a chave, vale a de cima). O Difícil com 1,05 / 1,1 nos estágios 1 e 2: 20% → ~54% de vitória do bot.
+  storyStageStrengthBy: { hard: [1.05, 1.1, 1.7, 1.9] } as Partial<Record<Difficulty, readonly number[]>>,
+  // J2 (diagnóstico 2, v0.88.0, aprovado pelo usuário): perfil por estágio da História, por cima da força: `hp`
+  // multiplica HP, resistências e cura; `offense`, os ataques. 1 / 1 é a força igual em tudo. O estágio 3 (Sannin) era
+  // maratona sem risco (21 rodadas, 6 de dano recebido por rodada no Médio); com menos HP e mais ataque, ~8 e ~14.
   storyStageShape: [
     { hp: 1, offense: 1 },
     { hp: 1, offense: 1 },
-    { hp: 1, offense: 1 },
+    { hp: 0.65, offense: 2.3 },
     { hp: 1, offense: 1 },
   ] as readonly { hp: number; offense: number }[],
   // H3 (v0.82.0): cada cena presenciada do estágio 3 da História (índice 2) dá este ryō a mais.
