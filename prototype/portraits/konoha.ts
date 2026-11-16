@@ -1,62 +1,31 @@
 // Retratos de Konoha: o time 7, os colegas e os mestres. Cada um com cabelo, rosto e traje próprios.
-import { VILLAGES } from '../villages';
-import { type Art, INK, NAVY, SKIN, STEEL, TAN, bg, both, face, headband, highCollar, kimono, ln, mesh, neck, p, plate, po, shade, shine, shoulders, torso, tube, vest } from './kit';
+import { type Art, INK, NAVY, SKIN, STEEL, TAN, bg, both, face, headband, highCollar, kimono, ln, mesh, neck, p, plate, po, shade, shine, shoulders, torso, vest } from './kit';
 
-/**
- * Naruto, pela imagem base (prototype/lab/refs/naruto): a cabeleira loira de espetos largos que passam dos ombros, a
- * bandana azul de placa comprida, os olhos grandes e quadrados de íris azul-clara, os três bigodes finos e a gola
- * branca felpuda sobre o azul e o laranja. As formas da Kyuubi mudam os olhos, as presas, os bigodes e o chakra em volta.
- */
+const NARUTO_HAIR = 'M31 37L22 30 30 30 23 19 33 23 31 11 40 19 42 7 50 17 55 6 59 18 67 9 68 20 77 14 74 25 83 23 77 33 69 37C65 33 58 31 50 31S35 33 31 37Z';
+
+/** Naruto: cabelo loiro espetado, bigodes e a jaqueta laranja e azul de gola branca. As formas da Kyuubi mudam olhos, presas e o chakra em volta. */
 export function naruto(mode: 'base' | 'kyuubi' | 'oneTail' = 'base'): string {
   const wild = mode !== 'base';
-  const hair = '#f8dd4c';
-  const skin = '#fbd9b5';
-  const blue = '#2c4fa3';
-  const orange = '#f08a1c';
-  const fluff = 'M29 83C31 75 41 73 50 73S69 75 71 83C69 91 59 93 50 93S31 91 29 83Z';
+  const hair = '#f6c63c';
   const scene =
     mode === 'base'
-      ? bg('naruto', '#8fd0f0', '#1f4a7a')
+      ? bg('naruto', '#f6a53c', '#3a1c0a')
       : mode === 'kyuubi'
-        ? bg('narutoKyuubi', '#e0332c', '#1c0507', ln('M10 98Q5 66 20 44M90 98Q95 66 80 44', '#ff8a52', 2.4, 'opacity=".7"'))
+        ? bg('narutoKyuubi', '#e0332c', '#1c0507', ln('M10 98Q5 66 20 44M90 98Q95 66 80 44M20 30Q31 12 50 7M80 30Q69 12 50 7', '#ff8a52', 2.4, 'opacity=".7"'))
         : bg('narutoOneTail', '#f0541e', '#1c0507', p('M80 101C95 82 97 54 84 30 84 52 76 70 62 84Z', '#ff8a52', 'opacity=".8"'));
   // Manto de uma cauda: a capa de chakra envolve o corpo e forma as orelhas de raposa.
   const cloak = mode === 'oneTail' ? p('M3 101C3 74 17 60 25 48L20 14 38 30Q50 24 62 30L80 14 75 48C83 60 97 74 97 101Z', '#ff6a32', 'opacity=".55"') : '';
-  // Olho esquerdo de quem vê: quadrado de cantos vivos, pálpebra grossa em cima, íris clara com a pupila miúda.
-  const eye = wild
-    ? p('M34.6 45.6L46.8 44.6 46.2 51.6 35.6 51.6Z', '#ffe9c9') + `<ellipse cx="41" cy="48.2" rx="3" ry="3.4" fill="#d1232a"/>` + ln('M41 45.2V51.2', '#111', 1.3) +
-      ln('M33.6 46.4L47.4 43.6', INK, 2.2) + ln('M35.6 51.8H46', INK, 0.8)
-    : p('M34.2 44.6Q40.6 42.2 47 45.4L46 51.4Q40.6 53 35.6 51.8Z', '#fff') +
-      `<circle cx="41" cy="48" r="3.4" fill="#a9def6" stroke="#3a78a8" stroke-width=".6"/><circle cx="41" cy="48" r=".9" fill="#111"/><circle cx="39.8" cy="46.8" r=".7" fill="#fff"/>` +
-      ln('M33.6 44.8Q40.6 41.8 47.4 45.4', INK, 1.7) + ln('M34.2 45L35.6 51.8Q40.6 53 46 51.4L47 45.4', INK, 0.45);
   return (
     scene +
     cloak +
-    shoulders(blue) +
-    `<ellipse cx="50" cy="83" rx="17" ry="7" fill="#ddd5c6"/>` +
-    tube(fluff, 11, '#f7f3ea') +
-    `<path d="${fluff}" fill="none" stroke="#c9c1b2" stroke-width="9" stroke-dasharray=".5 3.6"/>` +
-    po('M43.6 90H56.4V101H43.6Z', orange) +
-    ln('M50 90V101', '#8d939d', 1.4) + ln('M50 90V101', INK, 0.5, 'stroke-dasharray="1 1"') +
-    // A cabeça ocupa o quadro, como na imagem base: os espetos passam das bordas.
-    `<g transform="translate(50 47) scale(1.16) translate(-50 -47)">` +
-    both(`<path d="M31.4 45C27.8 43.6 26 47 26.8 51.4C27.4 55 30 56.6 32.4 55.4Z" fill="${skin}" stroke="${INK}" stroke-width="1"/>` + ln('M28.6 48Q30.2 50 29.6 53', shade(skin, -0.25), 0.7)) +
-    po('M30.5 44C30.5 33 38 24 50 24S69.5 33 69.5 44C69.5 54 64 62 57 66.4Q50 70 43 66.4C36 62 30.5 54 30.5 44Z', skin) +
-    both(ln(wild ? 'M34.6 40.4L46.4 44' : 'M35.4 41.4L45.8 43.2', INK, wild ? 1.8 : 1.1)) +
-    both(eye) +
-    ln('M49 57.2L50.8 58.4', INK, 0.9) + ln('M48.4 59.6H52', shade(skin, -0.25), 0.7) +
-    both(ln('M32.4 53.4L39.8 55.6M31.8 57.6L39.4 58.6M33.2 62.2L40 61.2', wild ? '#3a1410' : INK, wild ? 1.9 : 0.8)) +
-    (wild
-      ? `<path d="M42.6 60.6Q50 63.4 57.4 60.6Q56.4 67.2 50 67.2T42.6 60.6Z" fill="#5a1f1c" stroke="${INK}" stroke-width="1" stroke-linejoin="round"/><path d="M44.6 61.6L46 65 47.6 62.2ZM55.4 61.6L54 65 52.4 62.2Z" fill="#fff"/>`
-      : ln('M42.4 62Q50 65.6 57.6 61.2', INK, 1.2) + ln('M48 67H52', shade(skin, -0.25), 0.8)) +
-    po('M30 37L10 43 21 31 2 25 22 20 13 4 33 13 42 0 51 11 62 0 67 13 86 5 79 21 98 25 80 31 91 43 70 37C64 33 58 31 50 31S36 33 30 37Z', hair) +
-    both(po('M31.6 40L30.2 50.6 34 45 33.6 41Z', hair, 0.8)) +
-    po('M30 31Q50 24 70 31V41.4Q50 34.4 30 41.4Z', blue) +
-    `<path d="M34 28Q50 23.6 66 28V39.4Q50 35 34 39.4Z" fill="${STEEL}" stroke="${INK}" stroke-width="1" stroke-linejoin="round"/>` +
-    ln('M37 29.6Q50 25.8 63 29.6', '#f4f7fa', 0.9) +
-    both(`<circle cx="35.8" cy="30.6" r=".55" fill="#596172"/><circle cx="35.8" cy="33.4" r=".55" fill="#596172"/><circle cx="35.8" cy="36.2" r=".55" fill="#596172"/>`) +
-    `<g transform="translate(45 26.2) scale(.42)" fill="none" stroke="#596172" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${VILLAGES.leaf}</g>` +
-    `</g>` +
+    torso('#f08a1c') +
+    both(po('M9 99C10 87 21 78 38 74.4L41 80Q26 84 21 99Z', '#2f4d9c')) +
+    po('M32 74Q50 86 68 74L70 81Q50 94 30 81Z', '#f4f1ea') +
+    ln('M50 90V101', shade('#f08a1c', -0.3)) +
+    face({ shape: 'round', eyes: wild ? 'slit' : 'normal', iris: wild ? '#d1232a' : '#2f7fd6', brows: wild ? 'angry' : 'thin', browColor: '#a9791f', mouth: wild ? 'fangs' : 'grin', whiskers: wild ? 'deep' : true }) +
+    po(NARUTO_HAIR, hair) +
+    both(po('M32.6 38L30.4 48 35.4 42Z', hair, 1)) +
+    headband('leaf', { tails: true }) +
     (mode === 'oneTail' ? ln('M13 94Q10 72 23 56M87 94Q90 72 77 56', '#ffc09a', 1.8, 'opacity=".85"') : '')
   );
 }
