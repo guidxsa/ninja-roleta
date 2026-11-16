@@ -32,9 +32,13 @@ Como o personagem cresce durante a run: XP, níveis, estágios de status e marco
 | Pergaminho de experiência (roleta de itens) | +100 |
 | Passiva Determinação (comum) | +25% sobre todo XP ganho (e +1 no maior status de ataque a cada nível, ver [origens.md](origens.md#comum)) |
 
-## Curva planejada
+## Curva no Roleta (ciclo)
 
-A tabela abaixo usa só o XP dos vilões e do exame. As fatias de XP das roletas adiantam essa curva, então um jogador com sorte chega ao fim no nível 10 ou mais.
+Um ciclo tem 6 lutas: 2 genin (60 a 100 de XP), 2 chunin (100 a 150), 1 jounin (150 a 250) e o chefe (Orochimaru, 300). Somam-se o Treino (+60), o Pergaminho de experiência (+100) e o XP da relíquia esgotada. Na simulação (auditoria da v0.77.0, [benchmark](../balanceamento/benchmark.md)), o bot termina o 1º ciclo perto do **nível 6** no Médio (de 5 a 6, conforme a origem), do 4 ao 6 no Difícil e no Hardcore: os marcos dos níveis 4 e 7 caem perto do jounin e do chefe.
+
+### Curva da campanha clássica (reserva)
+
+A tabela abaixo é da campanha antiga, de ordem fixa ([reserva](../reserva/README.md)). Usa só o XP dos vilões e do exame; as fatias de XP das roletas adiantam essa curva, então um jogador com sorte chegava ao fim no nível 10 ou mais.
 
 | Confronto | XP | Total | Nível depois | Intenção |
 |---|---|---|---|---|

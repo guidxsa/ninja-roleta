@@ -11,6 +11,7 @@ import {
   startRoletaBattle,
   techBase,
   useActive,
+  useRoletaItem,
   type RBattle,
 } from '../src/core/roleta/battle';
 import { createRoletaPlayer, roletaKit } from '../src/core/roleta/player';
@@ -79,7 +80,7 @@ describe('chakra nos eventos da luta', () => {
 
   it('regeneração e Pílula de soldado também aparecem', () => {
     const b = battle(origin(null, ['fire']), 'mizuki', { chakra: 0, bag: { ...createRoletaPlayer(origin(null, ['fire']), data).bag, soldierPill: 1 } });
-    const s = playRoletaRound(b, 'item:soldierPill', data, fixed(0.5));
+    const s = playRoletaRound(useRoletaItem(b, 'soldierPill', data, fixed(0.5)), 'guard', data, fixed(0.5));
     const values = s.log.slice(b.log.length).flatMap((e) => (e.type === 'chakra' && e.side === 'player' ? [e.value] : []));
     expect(values).toHaveLength(2);
     expect(values[0]).toBeGreaterThan(0);
@@ -144,24 +145,33 @@ describe('Juventude do Prodígio (v0.60.0)', () => {
 
 describe('kit do Roleta enxuto', () => {
   it('Taijutsu básico, Bunshin (quem usa ninjutsu), a técnica da natureza (só os elementais) e as da linhagem', () => {
-    expect(roletaKit(origin(null, ['fire']), data)).toEqual(['rBasic', 'rBunshin', 'rFire']);
-    expect(roletaKit(origin('uchiha', ['fire']), data)).toEqual(['rBasic', 'rBunshin', 'rFire', 'rPainIllusion']);
+    // A barreira do elemento vem junto da técnica da natureza (v0.77.0); o raio não tem barreira.
+    expect(roletaKit(origin(null, ['fire']), data)).toEqual(['rBasic', 'rBunshin', 'rFire', 'rFireWall']);
+    // Kits completos do clássico (v0.80.0): as exclusivas do despertar já estão no kit e aparecem com o nível.
+    expect(roletaKit(origin('uchiha', ['fire']), data)).toEqual(['rBasic', 'rBunshin', 'rFire', 'rFireWall', 'rHypnoticGaze', 'rPainIllusion', 'rTsukuyomi']);
+    // O clone da natureza no lugar do Bunshin (v0.77.0).
+    expect(roletaKit(origin(null, ['earth']), data)).toEqual(['rBasic', 'rDotonBunshin', 'rEarth', 'rEarthWall']);
+    expect(roletaKit(origin(null, ['lightning']), data)).toEqual(['rBasic', 'rRaitonBunshin', 'rLightning']);
+    expect(roletaKit(origin(null, ['wind'], { jinchuuriki: true }), data)).toEqual(['rBasic', 'rKageBunshin', 'rWind', 'rWindShield']);
     // Natureza silenciosa: o Inuzuka tem natureza, mas sem a técnica dela.
     expect(roletaKit(origin('inuzuka', ['fire']), data)).toEqual(['rBasic', 'rBunshin', 'rFangs']);
     // Uzumaki: a natureza no lugar da Etiqueta Explosiva.
-    expect(roletaKit(origin('uzumaki', ['water']), data)).toEqual(['rBasic', 'rBunshin', 'rWater']);
+    // Uzumaki: Kage Bunshin no lugar do clone da natureza.
+    expect(roletaKit(origin('uzumaki', ['water']), data)).toEqual(['rBasic', 'rKageBunshin', 'rWater', 'rWaterWall', 'rExplosiveSeal', 'rChakraChains']);
     // Prodígio: sem elemento e sem ninjutsu.
-    expect(roletaKit(origin('taijutsuProdigy', ['wind']), data)).toEqual(['rBasic', 'rLeafHurricane']);
+    expect(roletaKit(origin('taijutsuProdigy', ['wind']), data)).toEqual(['rBasic', 'rLeafHurricane', 'rPrimaryLotus', 'rHiddenLotus']);
+    expect(roletaKit(origin('hyuuga', ['wind']), data)).toEqual(['rBasic', 'rBunshin', 'rVitalSeal', 'rRotation', 'rSixtyFour']);
+    expect(roletaKit(origin('akimichi', ['earth']), data)).toEqual(['rBasic', 'rBunshin', 'rExpandedHand', 'rHumanBoulder']);
     // Kekkei genkai toma o lugar dos dois elementos-pai.
     // Mokuton: a Kekkei Genkai é a natureza do Senju.
-    expect(roletaKit(origin('senju', [], { kekkeiGenkai: 'wood' }), data)).toEqual(['rBasic', 'rBunshin', 'rWood']);
+    expect(roletaKit(origin('senju', [], { kekkeiGenkai: 'wood' }), data)).toEqual(['rBasic', 'rMokutonBunshin', 'rWood']);
   });
 
   it('toda técnica do Roleta e todo kit têm nome', () => {
     for (const t of roletaTechniques) expect(roletaPtBR.techniques[t.id]).toBeTruthy();
     for (const kit of Object.values(data.kits)) {
       expect(roletaPtBR.passives[kit.passive]).toBeTruthy();
-      if (kit.active) expect(roletaPtBR.actives[kit.active]).toBeTruthy();
+      for (const a of kit.actives) expect(roletaPtBR.actives[a.kind]).toBeTruthy();
     }
   });
 
@@ -172,7 +182,7 @@ describe('kit do Roleta enxuto', () => {
     p = { ...p, xp: 9999 };
     while (canLevelUp(p, data.base) && p.level < 7) p = levelUp(p, data.base).player;
     expect(p.pendingUpgrades).toBe(0);
-    expect(p.techniques).toEqual(['rBasic', 'rBunshin', 'rFire']);
+    expect(p.techniques).toEqual(['rBasic', 'rBunshin', 'rFire', 'rFireWall']);
     expect(techBase(p, fire, data)).toBe(before + fire.perLevel * 6);
   });
 
@@ -213,7 +223,7 @@ describe('combate do Roleta enxuto', () => {
     s = { ...s, villain: { ...s.villain, effects: [{ kind: 'stun', turns: 1 }, { kind: 'burn', turns: 2 }] } };
     const next = playRoletaRound(s, 'guard', data, fixed(0.5));
     expect(next.log.some((e) => e.type === 'skip' && e.side === 'villain' && e.reason === 'stun')).toBe(true);
-    const burn = Math.floor(s.villain.maxHp * data.r.effects.burn.pct);
+    const burn = Math.floor(s.villain.maxHp * data.base.balance.effects.burn.pct);
     expect(next.log.some((e) => e.type === 'damage' && e.side === 'villain' && e.source === 'burn' && e.amount === burn)).toBe(true);
     expect(next.villain.effects.find((e) => e.kind === 'burn')?.turns).toBe(1);
   });
@@ -230,24 +240,26 @@ describe('combate do Roleta enxuto', () => {
     expect(canUseActive(s, data)).toBe(true);
     const off = s.player.offense.ninjutsu;
     s = useActive(s, data, fixed(0.5));
-    expect(s.fx.buff).toEqual({ kind: 'effort', turns: 3 });
+    expect(s.fx.buffs).toEqual([{ kind: 'effort', turns: 3 }]);
     expect(canUseActive(s, data)).toBe(false);
     expect(() => useActive(s, data, fixed(0.5))).toThrow();
     // O Esforço soma +3 nos ataques enquanto dura.
     const t = data.techniques.rFire!;
-    expect(playerHitDamage(s, t, data)).toBeGreaterThan(playerHitDamage({ ...s, fx: { ...s.fx, buff: null } }, t, data));
+    expect(playerHitDamage(s, t, data)).toBeGreaterThan(playerHitDamage({ ...s, fx: { ...s.fx, buffs: [] } }, t, data));
     expect(s.player.offense.ninjutsu).toBe(off);
     // Dura 3 rodadas contando a da ativação.
     for (let i = 0; i < 3; i++) s = playRoletaRound(s, 'guard', data, fixed(0.99));
-    expect(s.fx.buff).toBeNull();
+    expect(s.fx.buffs).toEqual([]);
   });
 
-  it('Portões custam chakra (não HP); Selamento tira a próxima ação do vilão', () => {
+  it('Portões abrem com chakra (não HP); Selamento tira a técnica sorteada da roleta do vilão', () => {
     const lee = useActive(battle(origin('taijutsuProdigy')), data, fixed(0.5));
-    expect([lee.player.hp, lee.player.chakra]).toEqual([lee.player.maxHp, lee.player.maxChakra - data.r.kits.gates.activation]);
-    const uzu = useActive(battle(origin('uzumaki', ['wind'])), data, fixed(0.5));
-    const next = playRoletaRound(uzu, 'guard', data, fixed(0.5));
-    expect(next.log.some((e) => e.type === 'skip' && e.side === 'villain' && e.reason === 'seal')).toBe(true);
+    expect([lee.player.hp, lee.player.chakra]).toEqual([lee.player.maxHp, lee.player.maxChakra - data.base.balance.gates.stages[0]!.chakraCost]);
+    const b = battle(origin('uzumaki', ['wind']));
+    const intent = { kind: 'tech' as const, id: b.villain.techniques[0]!.id };
+    const uzu = useActive({ ...b, villain: { ...b.villain, intent } }, data, fixed(0.5), 'seal');
+    expect(uzu.villain.sealed).toEqual({ id: intent.id, turns: 2 });
+    expect(uzu.villain.intent).not.toEqual(intent);
   });
 
   it('Enganador (Mizuki) escapa uma vez com 1 de HP', () => {
@@ -414,7 +426,7 @@ describe('run do Roleta enxuto e relíquias (v0.46.0)', () => {
     p = gainRoletaRelic(gainRoletaRelic(gainRoletaRelic(p, 'samuraiArmor', data), 'explosiveTags', data), 'phoenixFeather', data);
     const s = startRoletaBattle(p, villain('zabuza'), { playerStartsFirst: true }, data, fixed(0.5));
     expect(s.fx.shield).toBe(Math.floor(p.maxHp * 0.2));
-    expect(s.villain.hp).toBe(s.villain.maxHp - 10);
+    expect(s.villain.hp).toBe(s.villain.maxHp - 20);
     const low = { ...s, fx: { ...s.fx, shield: 0 }, player: { ...s.player, hp: 1, revives: 0 }, playerFirst: false };
     const next = playRoletaRound(low, 'guard', data, fixed(0.5));
     expect(next.status).toBe('ongoing');
@@ -430,9 +442,25 @@ describe('run do Roleta enxuto e relíquias (v0.46.0)', () => {
     expect(toad.summon).toEqual({ animal: 'toad', level: 1 });
     // Com um contrato, os outros não saem mais.
     expect(relicPool(toad, data).some((r) => r.id === 'snakeContract')).toBe(false);
+    // Pesos de treino (v0.78.0): passiva, sem equipar nem perder speed.
     const weights = gainRoletaRelic(p0(), 'trainingWeights', data);
-    expect(weights.trainingWeights).toBe('stored');
+    expect(weights.trainingWeights).toBe('none');
+    expect(weights.speed).toBe(p0().speed);
     expect(contractFor('slug', data)).toBe('slugContract');
+  });
+
+  it('Pesos de treino: +1 de taijutsu a cada 2 vitórias', () => {
+    let run = newRoletaRun(gainRoletaRelic(p0(), 'trainingWeights', data), 'normal');
+    const tai = run.player.offense.taijutsu;
+    const win = () => {
+      if (!run.villainId) run = drawVillain(run, data, createRng(1));
+      const b = startRoletaBattle(run.player, villainFor(run, villainsById, data), { playerStartsFirst: true }, data, createRng(1));
+      run = finishRoletaFight(run, { ...b, status: 'won' }, data, createRng(1)).run;
+    };
+    win();
+    expect(run.player.offense.taijutsu).toBe(tai);
+    win();
+    expect(run.player.offense.taijutsu).toBe(tai + 1);
   });
 
   it('a roleta de itens não tem mais os permanentes', () => {
@@ -455,26 +483,27 @@ describe('mais vilões no sorteio (v0.47.0)', () => {
     for (const v of roletaExtraVillains) for (const t of v.techniques) expect(roletaPtBR.techniques[t.id]).toBeTruthy();
   });
 
-  it('os vilões novos lutam no motor enxuto (Irmãos Demônio: 2 golpes numa roleta só)', () => {
+  it('os vilões novos lutam no motor enxuto (Irmãos Demônio: 2 golpes, cada um com a sua roleta)', () => {
     let s = startRoletaBattle(createRoletaPlayer(origin(null, ['fire']), data), villain('demonBrothers'), { villainStartsFirst: true }, data, fixed(0.5));
     s = playRoletaRound(s, 'guard', data, fixed(0.5));
     const attacks = s.log.filter((e) => e.type === 'attack' && e.side === 'villain');
-    expect(attacks.length).toBe(1);
-    expect(attacks[0]).toMatchObject({ hits: 2 });
+    expect(attacks.length).toBe(2);
+    expect(attacks.map((a) => (a as { strike?: number }).strike)).toEqual([1, 2]);
+    expect(attacks[0]).toMatchObject({ hits: 1, of: 2 });
   });
 
-  it('Espelhos: uma roleta para os 2 golpes, com o dano dos dois e a fumaça anulando o ataque inteiro', () => {
+  it('Espelhos: uma roleta por golpe, com o dano dos dois e a fumaça anulando o ataque inteiro', () => {
     const start = () => startRoletaBattle(createRoletaPlayer(origin(null, ['fire']), data), villain('haku'), { villainStartsFirst: true }, data, fixed(0.5));
     const plain = { ...villain('haku'), passive: undefined };
     const hit = playRoletaRound(start(), 'guard', data, fixed(0.5));
     const base = playRoletaRound(startRoletaBattle(createRoletaPlayer(origin(null, ['fire']), data), plain, { villainStartsFirst: true }, data, fixed(0.5)), 'guard', data, fixed(0.5));
     const dmg = (s: typeof hit) => s.log.filter((e) => e.type === 'damage' && e.side === 'player' && e.source === 'attack');
-    expect(hit.log.filter((e) => e.type === 'attack' && e.side === 'villain').length).toBe(1);
-    expect(dmg(hit).length).toBe(1);
-    const total = (dmg(hit)[0] as { amount: number }).amount;
+    expect(hit.log.filter((e) => e.type === 'attack' && e.side === 'villain').length).toBe(2);
+    expect(dmg(hit).length).toBe(2);
+    const total = dmg(hit).reduce((a, e) => a + (e as { amount: number }).amount, 0);
     const full = (dmg(base)[0] as { amount: number }).amount;
     // Cada golpe vale 60%, arredondado para baixo no golpe; os 2 somam perto de 120% do ataque comum.
-    expect(total % 2).toBe(0);
+    expect((dmg(hit)[0] as { amount: number }).amount).toBe((dmg(hit)[1] as { amount: number }).amount);
     expect(total).toBeGreaterThan(full);
     expect(total).toBeLessThanOrEqual(Math.ceil(full * 1.2));
 
@@ -539,18 +568,18 @@ describe('Bunshin no Jutsu (src/core/clones.ts, v0.59.0)', () => {
     expect(events.some((e) => e.type === 'clone' && e.action === 'create')).toBe(true);
     expect(events.some((e) => e.type === 'clone' && e.action === 'block')).toBe(true);
     expect(events.some((e) => e.type === 'attack' && e.side === 'player')).toBe(false);
-    expect([s.fx.clone, s.player.hp]).toEqual([false, b.player.hp]);
+    expect([s.fx.clone, s.player.hp]).toEqual([null, b.player.hp]);
   });
 
   it('com a roleta do clone falhando, o golpe acerta o ninja e o clone fica', () => {
     const b = battle(origin(null, ['fire']));
     const created = playRoletaRound(b, 'tech:rBunshin', data, fixed(0.99));
-    expect(created.fx.clone).toBe(true);
+    expect(created.fx.clone).toEqual({ kind: 'bunshin', wear: 0 });
     // 0,6: o vilão acerta, mas fica acima da chance do clone (50%).
     const s = playRoletaRound(created, 'tech:rBasic', data, fixed(0.6));
     const events = s.log.slice(created.log.length);
     if (events.some((e) => e.type === 'attack' && e.side === 'villain' && e.outcome !== 'miss')) {
-      expect(s.fx.clone).toBe(true);
+      expect(s.fx.clone).toEqual({ kind: 'bunshin', wear: 0 });
       expect(s.player.hp).toBeLessThan(created.player.hp);
     }
   });
@@ -574,32 +603,39 @@ describe('Bunshin no Jutsu (src/core/clones.ts, v0.59.0)', () => {
 });
 
 describe('Portões (src/core/gates.ts, v0.59.0)', () => {
-  it('manutenção comum: 2, 3, 5, 7, 11, 16 (com peso de nível, arredonda para cima)', () => {
+  it('manutenção comum em chakra: metade de 2, 3, 5, 7, 11, 16 (custo misto, v0.79.0)', () => {
     const g = data.base.balance.gateCosts;
-    expect([1, 2, 3, 4, 5, 6].map((n) => gateUpkeep(n, g))).toEqual([2, 3, 5, 7, 11, 16]);
-    expect(gateUpkeep(1, g, 1.25)).toBe(3);
+    expect([1, 2, 3, 4, 5, 6].map((n) => gateUpkeep(n, g))).toEqual([1, 2, 3, 4, 6, 8]);
+    expect(gateUpkeep(1, g, 1.25)).toBe(2);
   });
 
-  it('Roleta: abrir custa chakra e não HP; manutenção a cada rodada; fecha sozinho sem chakra e pode reabrir', () => {
+  it('Roleta: abrir custa chakra; manter custa chakra e HP a cada rodada; fecha sozinho sem como pagar', () => {
     const b = battle(origin('taijutsuProdigy', ['earth']));
     const hp0 = b.player.hp;
     const ck0 = b.player.chakra;
     expect(canUseActive(b, data)).toBe(true);
     let s = useActive(b, data, fixed(0.5));
-    expect([s.player.hp, s.player.chakra, s.fx.buff?.kind]).toEqual([hp0, ck0 - data.r.kits.gates.activation, 'gates']);
+    expect([s.player.hp, s.player.chakra, s.fx.gate?.stage]).toEqual([hp0, ck0 - data.base.balance.gates.stages[0]!.chakraCost, 0]);
     // Fechar é grátis e também é a ativa do turno.
     expect(canUseActive(s, data)).toBe(false);
     const ups: number[] = [];
-    for (let i = 0; i < 12 && s.status === 'ongoing' && s.fx.buff; i++) {
-      s = playRoletaRound(s, 'rest', data, fixed(0.99));
-      for (const e of s.log) if (e.type === 'gates' && e.action === 'upkeep') ups.push(e.cost);
+    const hpCosts: number[] = [];
+    // Defende (não recupera chakra): a manutenção crescente acaba com o chakra.
+    for (let i = 0; i < 20 && s.status === 'ongoing' && s.fx.gate; i++) {
+      const before = s.log.length;
+      s = playRoletaRound(s, 'guard', data, fixed(0.99));
+      for (const e of s.log.slice(before)) if (e.type === 'gates' && e.action === 'upkeep') {
+        ups.push(e.cost);
+        hpCosts.push(e.hpCost ?? 0);
+      }
     }
-    expect([...new Set(ups)].slice(0, 3)).toEqual([2, 3, 5]);
+    expect(ups.slice(0, 3)).toEqual([1, 2, 3]);
+    expect(hpCosts[0]).toBe(Math.max(1, Math.floor(b.player.maxHp * data.base.balance.gateCosts.hpPctPerLevel)));
     expect(s.log.some((e) => e.type === 'gates' && e.action === 'close' && e.reason === 'chakra')).toBe(true);
-    // Fechado e com chakra: abre de novo.
+    // 1 uso por luta (2 no nível 7, v0.80.0): fechado, não abre de novo.
     if (s.status === 'ongoing') {
       const full = { ...s, activeUsed: false, player: { ...s.player, chakra: s.player.maxChakra } };
-      expect(canUseActive(full, data)).toBe(true);
+      expect(canUseActive(full, data)).toBe(false);
     }
   });
 });

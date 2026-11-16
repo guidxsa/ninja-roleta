@@ -41,8 +41,8 @@ Ativa do prodígio (v0.42.0; custo em chakra desde a v0.59.0, regra comum em [fu
 
 - **Uma troca por turno** (é a ativa do turno): com tudo fechado, abrir qualquer portão liberado; aberto, subir ou descer para qualquer outro, ou fechar. Não gasta a vez.
 - **Abrir ou subir** custa **3 de chakra por portão a mais** (abrir o 5º direto custa 15); descer é grátis. Só aparecem os portões que dá para pagar.
-- **Manutenção** no fim de cada turno aberto (inclusive atordoado): 2, 3, 5, 7, 11, 16... de chakra, × o peso do portão atual (arredondado para cima). Trocar de portão não zera a contagem.
-- **Sem limite de turnos e sem custo de HP**: sem chakra para a manutenção, fecham sozinhos.
+- **Manutenção** no fim de cada turno aberto (inclusive atordoado), em chakra e HP (custo misto, v0.79.0; [fundamentos.md](../base/fundamentos.md#portões)): chakra 1, 2, 3, 4, 6, 8... × o peso do portão atual (arredondado para cima), e 1% do HP máximo por nível do portão. Trocar de portão não zera a contagem.
+- **Sem limite de turnos**: sem chakra, ou sem HP para pagar e ficar com 1, fecham sozinhos.
 - Fechou (pelo jogador ou por falta de chakra): **espera 3 turnos** para abrir de novo. Caiu: os portões fecham, sem espera.
 - Liberação: o prodígio começa com a Abertura; o talento Portão da Vida libera até o 3º e a Lótus Oculta, até o 5º ([talentos.md](talentos.md#prodígio-caminho-ninja)).
 - Chakra: o Prodígio tem 22 e o Lee 20 (eram 12 e 10), porque a Jornada não regenera chakra na luta.
@@ -52,27 +52,23 @@ Ativa do prodígio (v0.42.0; custo em chakra desde a v0.59.0, regra comum em [fu
 ## Acerto e dano
 
 - Chance de acerto = precisão da técnica (padrão 85%) + bônus de acerto de quem ataca − esquiva do alvo, entre 5% e 100%. Crítico: 5% + bônus, até 50%, ×2 no dano.
-- Técnicas de vários golpes rolam cada golpe.
+- Técnicas de vários golpes rolam cada golpe (o Roleta também, desde a v0.77.0).
 - Resistência usada: física contra taijutsu e ninjutsu, mental contra genjutsu; 50% dela (100% defendendo), menos a penetração da técnica (até 60%).
-- **Elementos**: a técnica contra o elemento do alvo. Vantagem ×1,25, desvantagem ×0,8 (ciclo fogo > vento > raio > terra > água > fogo).
+- **Elementos** (v0.77.0): não mudam o dano no HP. Só pesam contra uma **barreira** elemental: vantagem ×1,5 e desvantagem ×0,75 no escudo, raio contra terra ×2 ([fundamentos.md](../base/fundamentos.md#barreiras-no-roleta-e-na-jornada)). Antes valia ×1,25 e ×0,8 contra o elemento do alvo.
 - Multiplicadores de quem ataca: talentos, relíquias, HP baixo e fúria (passiva de alguns inimigos abaixo de uma fração do HP).
 
 ## Efeitos
 
-| Efeito | O que faz | Duração padrão |
-|---|---|---|
-| Atordoar | Perde a vez | 2 (mínimo; a técnica pode dar mais) |
-| Queimar | −5% do HP máximo no começo do turno | 2 |
-| Veneno | −6% do HP máximo no começo do turno | 2 |
-| Bloqueio de chakra | Só taijutsu | 2 (64 Palmas: 3) |
-| Firme (trava) | Não pode ser atordoado | 1 turno próprio, ao sair de um atordoamento |
+Os mesmos do Roleta (v0.77.0): Atordoar, Bloqueio de chakra (64 Palmas: 3 turnos), Queimar, Veneno (5% por 3; era 6% por 2) e **Medo** (novo na Jornada: −25% de dano e −15% de acerto por 2 turnos). Tabela, trava firme e imunidades em [fundamentos.md](../base/fundamentos.md#efeitos-roleta-e-jornada).
 
-- **Controle dura no mínimo 2 turnos** (v0.69.0, `combat.minControlTurns`): atordoar e bloqueio de chakra, de aliados e de inimigos. Para compensar, as chances de atordoar das técnicas com dano caíram cerca de 20% (as de controle puro, como o Sexy no Jutsu e a Possessão das Sombras, não mudaram).
-- **Trava** (`combat.stunImmunityTurns`): quem sai de um atordoamento fica **firme** até o fim do próximo turno em que age, e nenhum atordoamento pega nesse intervalo. Ninguém fica preso em cadeia: depois de perder 2 turnos, o lutador age pelo menos uma vez. O bloqueio de chakra não tem trava (quem está bloqueado ainda age com taijutsu).
+- **Controle dura no mínimo 2 turnos** (v0.69.0, `balance.effects.minControlTurns`): atordoar e bloqueio de chakra, de aliados e de inimigos. Para compensar, as chances de atordoar das técnicas com dano caíram cerca de 20% (as de controle puro, como o Sexy no Jutsu e a Possessão das Sombras, não mudaram).
+- **Trava** (`balance.effects.stunImmunityTurns`): quem sai de um atordoamento fica **firme** até o fim do próximo turno em que age, e nenhum atordoamento pega nesse intervalo. Ninguém fica preso em cadeia: depois de perder 2 turnos, o lutador age pelo menos uma vez. O bloqueio de chakra não tem trava (quem está bloqueado ainda age com taijutsu).
+- **Medo**: o Sino ilusório da Kin, a Flauta demoníaca da Tayuya e a Ilusão dos corvos davam atordoar e passaram a dar Medo (35%, 30% e 30%). Imunes (Uchiha e jinchuuriki, como no Roleta): Naruto, Sasuke, Kakashi, os Uchiha do Caminho Ninja, Gaara e o Shukaku (`combat.fearImmune`).
 
 - **Escudo** absorve dano antes do HP e não some sozinho.
-- **Clones** (Kage Bunshin e Bunshin no Jutsu; regra comum em [fundamentos.md](../base/fundamentos.md#clones)): cada golpe de alvo único tem 50% de chance de acertar um clone no lugar do dono (o clone some). Técnicas em área ignoram os clones, mesmo sobrando um inimigo só. No máximo 5 clones.
-- **Kai**, **Palma mística** e o **Grito de guerra** tiram atordoar e bloqueio de chakra (não dão a trava).
+- **Barreira** (v0.77.0): escudo com elemento, por 3 turnos de quem recebe; o golpe passa por ela antes do escudo comum, e só nela o elemento pesa. Muralha de Terra, Parede d'Água, Muralha de Chamas e Escudo de Vento (o Comum aprende a do elemento no talento Poder elemental; o Jirobo tem a Muralha de Terra); o Escudo de areia e o Gamatatsu viraram barreiras. Regra em [fundamentos.md](../base/fundamentos.md#barreiras-no-roleta-e-na-jornada).
+- **Clones** (tipos desde a v0.77.0; regra comum em [fundamentos.md](../base/fundamentos.md#clones)): cada golpe de alvo único pode acertar um clone no lugar do dono (uma rolagem por golpe: Bunshin 50%; Doton e Mokuton 65% e aguentam 2 golpes). Técnicas em área ignoram os clones, mesmo sobrando um inimigo só. No máximo 5 clones, todos do mesmo tipo. Na luta, quem tem ninjutsu elemental troca o Bunshin no Jutsu pelo clone da natureza (Mizu Bunshin no Jutsu, Doton Kage Bunshin, Raiton Kage Bunshin, Mokuton Bunshin, Suna Bunshin); Mizu e Mokuton batem junto (25% de um golpe por clone, até 70% somados), Raiton e Suna reagem ao se desfazer. Um contra-ataque por golpe: o do talento e a descarga do raio não somam (vale o maior).
+- **Kai**, **Palma mística** e o **Grito de guerra** tiram atordoar, bloqueio de chakra e Medo (não dão a trava).
 
 ## Cair e levantar
 
@@ -106,7 +102,7 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 ## Vitória e derrota
 
 - Vence quem derruba todos os inimigos, ou cumpre a vitória especial da luta ([historia.md](historia.md#vitórias-especiais)).
-- Derrota (todos os aliados no chão) acaba a run. No **Fácil**, a Vontade do Fogo (1 por run e por ciclo do modo infinito, ou por relíquia) recomeça a luta com a equipe em pelo menos 50% do HP e do chakra.
+- Derrota (todos os aliados no chão) acaba a run. Até o **Difícil**, a Vontade do Fogo (Fácil 2, Médio 1, Difícil 1 por run; reposta a cada ciclo do modo infinito; ou por relíquia; v0.77.0) recomeça a luta com a equipe em pelo menos 50% do HP e do chakra. O Hardcore não tem.
 
 ## Interface
 
@@ -120,7 +116,7 @@ Itens não gastam o turno, mas é um por turno. Limite de 5 na bolsa.
 - **Protagonista caído**: uma faixa avisa que os suportes seguem lutando, e outra anuncia quem o levantou (ou a pílula).
 - Log curto (tocar abre o histórico). Sem roleta na tela: só o resultado.
 - **Menu no celular** (v0.73.0): uma bandeja fixa no pé da tela, com uma aba por grupo (Técnicas, Ativas com a contagem, Ações; Aliado caído quando há alguém no chão, já aberta). Nenhuma ação pede rolagem. A aba em que o jogador estava continua aberta no turno seguinte. Desistir fica no fim da aba de Ações, e abre uma confirmação do próprio jogo (não a do navegador), com o foco em "Continuar jogando". No PC as abas somem e os grupos aparecem todos, com título.
-- **Vantagem de elemento à vista** (v0.73.0): o botão da técnica mostra o multiplicador contra quem está de pé (seta para cima e verde quando há vantagem, para baixo e vermelho quando só há desvantagem), e, ao escolher o alvo, cada alvo ganha uma etiqueta com o multiplicador contra ele. Vale no celular e no PC; antes, a informação só aparecia na ficha do inimigo do widescreen.
+- **Vantagem de elemento à vista** (v0.73.0; desde a v0.77.0, só contra barreira): o botão da técnica mostra o multiplicador no escudo de quem está de pé com uma barreira (seta para cima e verde quando há vantagem, para baixo e vermelho quando só há desvantagem), e, ao escolher o alvo, cada alvo com barreira ganha uma etiqueta com o multiplicador. Sem barreira, sem seta: o elemento não muda o dano no HP. A ficha do inimigo no widescreen mostra contra o que a barreira dele é fraca e forte.
 - **Ordem da rodada no celular** (v0.73.0): uma fileira de rostos pequenos abaixo das relíquias, o da vez maior.
 - **Falas do roteiro**: corte de quadro que espera o toque ([visual.md](../visual.md#cena-narrativa)).
 - **Widescreen** (v0.57.4, v0.57.5): à esquerda, a ordem da rodada, a ficha dos inimigos (com contra o que cada um é fraco e forte e as técnicas com o dano) e o registro recolhível; à direita, a ficha da equipe e as ações. Cada linha tem a mesma dica do lutador. Não são alvo: a escolha de alvo é no campo. Layout em [visual.md](../visual.md#celular-e-desktop). O **Desistir da jornada**, no pé das ações do protagonista, acaba a run em derrota ([run.md](run.md#salvamento)).

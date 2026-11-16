@@ -11,19 +11,15 @@ export const jornadaBalance = {
     // Fração da resistência usada normalmente e em postura defensiva.
     resistanceFraction: 0.5,
     guardFraction: 1,
-    // Elemento da técnica contra o elemento do alvo.
-    elementAdvantage: 1.25,
-    elementDisadvantage: 0.8,
-    // Chance de um clone receber o golpe no lugar de quem tem clones (o clone some).
+    // Elemento: só contra barreira, a regra comum (src/core/barriers.ts, `balance.elements`; v0.77.0).
+    // Clones: no máximo este número por lutador (os tipos e as chances ficam em `balance.clones`).
     maxClones: 5,
-    // Queimar e veneno tiram esta fração do HP máximo no começo do turno de quem sofre.
-    burnPct: 0.05,
-    poisonPct: 0.06,
-    defaultEffectTurns: 2,
-    // Controle (atordoar e bloqueio de chakra) dura no mínimo isto, de qualquer lutador (v0.69.0).
-    minControlTurns: 2,
-    // Trava: ao sair de um atordoamento, não pode ser atordoado de novo por este número de turnos próprios.
-    stunImmunityTurns: 1,
+    // Efeitos (queimar, veneno, atordoar, bloqueio de chakra, medo e a trava): os mesmos do Roleta, em `balance.effects`.
+    // Imunes a Medo (v0.77.0), como no Roleta: Uchiha (Sharingan) e jinchuuriki. Por id de personagem ou inimigo.
+    fearImmune: [
+      'naruto', 'sasuke', 'sasukeHospital', 'sasukeFinal', 'kakashi', 'kakashiAlly', 'uchihaNinja', 'uchihaGenin', 'uchihaGeninB',
+      'gaara', 'gaaraAlly', 'gaaraWeak', 'shukaku',
+    ] as string[],
     // Levantar um aliado caído (ação de qualquer integrante da equipe, gasta o turno): volta com esta fração do HP. Proposta.
     raiseHpPct: 0.15,
     // Pílula de reanimação: volta com esta fração do HP máximo. As técnicas de reanimar têm a própria (`reviveHpPct`).
@@ -73,8 +69,8 @@ export const jornadaBalance = {
     startRyo: 60,
     bagLimit: 5,
     startConsumables: { hpKit: 1, chakraKit: 1 } as Record<string, number>,
-    // Vontades do Fogo por dificuldade (só o Fácil tem).
-    willOfFire: { easy: 1, normal: 0, hard: 0, hardcore: 0 } as Record<string, number>,
+    // Vontades do Fogo por dificuldade, até o Difícil (v0.77.0): recomeçam uma luta perdida. O Hardcore não tem.
+    willOfFire: { easy: 2, normal: 1, hard: 1, hardcore: 0 } as Record<string, number>,
   },
 
   // Recompensa por tipo de luta (docs/jornada/progressao.md).
@@ -86,7 +82,7 @@ export const jornadaBalance = {
   },
 
   // XP para o próximo nível: base + porNível × (nível − 1). Cada nível dá 1 ponto de talento.
-  xp: { base: 100, perLevel: 40, talentPerLevel: 1 },
+  xp: { base: 100, perLevel: 30, talentPerLevel: 1 },
 
   // Relíquias por classificação (docs/jornada/reliquias.md).
   relics: {
@@ -104,6 +100,8 @@ export const jornadaBalance = {
     bossChoices: 3,
     // Chance de uma das opções do chefe ser a evolução da relíquia inicial.
     starterEvolveChance: 0.5,
+    // No 1º chefe a evolução vem garantida (v0.83.0, C3 aprovado pelo usuário).
+    starterEvolveFirstBoss: 1,
   },
 
   // Mapa ramificado do Caminho Ninja (docs/jornada/run.md#mapa-ramificado). 12 linhas: começo, 10 do meio, chefe.
@@ -139,6 +137,13 @@ export const jornadaBalance = {
   // mais fácil que o Caminho Ninja na mesma dificuldade.
   // v0.68.0 (escolhido pelo usuário): a cronologia nova tirou 5 lutas de desgaste; 1,1 → 1,2.
   storyStrength: 1.2,
+  // Força por estágio da História, por cima da `storyStrength` (v0.82.0, H1 aprovado pelo usuário). Calibrada junto do
+  // XP 100 + 30 (J5) e do bot novo da loja (J6): o ponto de partida 0,9 / 0,95 / 1,25 / 1,3 deixava o Médio em 100%.
+  // As derrotas ficam quase todas nos estágios 1 e 2; o fim quase não pesa (×2 nele muda ~4 pontos). Proposta para o
+  // usuário (tabela em docs/registro.md).
+  storyStageStrength: [1.15, 1.2, 1.7, 1.9] as readonly number[],
+  // H3 (v0.82.0): cada cena presenciada do estágio 3 da História (índice 2) dá este ryō a mais.
+  storyWitnessRyo: { stageIndex: 2, ryo: 20 },
 
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
   minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },

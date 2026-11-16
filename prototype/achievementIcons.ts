@@ -77,7 +77,6 @@ export const ACHIEVEMENT_ICONS: Record<string, string> = {
   j_cycle2: 'cycle',
   j_cycle3: 'cycle',
   j_cycle5: 'cycle',
-  j_sasukeEgg: 'lightning',
 };
 
 /** Diz se a conquista tem um desenho próprio (mapa ou símbolo do clã). */

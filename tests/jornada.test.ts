@@ -13,6 +13,7 @@ import {
   gateChoices,
   gateTotals,
   hitDamage,
+  elementMult,
   maxGate,
   mergeMods,
   openBattle,
@@ -241,12 +242,13 @@ describe('combate de equipe da Jornada', () => {
     expect(next.log.some((e) => e.type === 'damage' && e.target === 'e0' && e.amount === 15)).toBe(true);
   });
 
-  it('elemento da técnica contra o elemento do alvo muda o dano', () => {
+  it('o elemento não muda o dano no HP (v0.77.0): só pesa contra barreira', () => {
     const b = startBattle(setup({ allies: [hero({ techniques: ['jFireball'] })], enemies: [dummy({ element: 'wind' })] }), data, fixed(0.5));
     const base = hitDamage(b.fighters[0]!, { ...b.fighters[1]!, element: null }, data.techniques.jFireball!, data);
-    const strong = hitDamage(b.fighters[0]!, b.fighters[1]!, data.techniques.jFireball!, data);
-    expect(strong).toBe(Math.floor((16 + 10 - 3) * data.j.combat.elementAdvantage));
-    expect(strong).toBeGreaterThan(base);
+    const vsWind = hitDamage(b.fighters[0]!, b.fighters[1]!, data.techniques.jFireball!, data);
+    expect(vsWind).toBe(base);
+    expect(vsWind).toBe(16 + 10 - 3);
+    expect(elementMult(data.techniques.jFireball!, b.fighters[1]!, data)).toBe(1);
   });
 
   it('postura defensiva usa a resistência inteira', () => {
@@ -412,7 +414,7 @@ describe('combate de equipe da Jornada', () => {
     it('todo atordoamento e bloqueio de chakra dos dados dura 2 turnos ou mais', () => {
       const control = Object.values(data.techniques).filter((t) => t.onHit && isControl(t.onHit.effect));
       expect(control.length).toBeGreaterThan(20);
-      for (const t of control) expect(effectTurns(t, data), t.id).toBeGreaterThanOrEqual(data.j.combat.minControlTurns);
+      for (const t of control) expect(effectTurns(t, data), t.id).toBeGreaterThanOrEqual(data.base.effects.minControlTurns);
     });
 
     it('o atordoado perde 2 turnos, ganha a trava e o atordoamento seguinte não pega', () => {
@@ -425,7 +427,7 @@ describe('combate de equipe da Jornada', () => {
       b = playerAct(b, { kind: 'tech', techId: 'jStrike', target: 'e0' }, data, fixed(0));
       expect(b.log.filter((e) => e.type === 'skip' && e.uid === 'e0')).toHaveLength(2);
       // Saiu do atordoamento com a trava: o próximo não pega e ele age.
-      expect(foe().effects).toEqual([{ kind: 'stunGuard', turns: data.j.combat.stunImmunityTurns }]);
+      expect(foe().effects).toEqual([{ kind: 'stunGuard', turns: data.base.effects.stunImmunityTurns }]);
       b = playerAct(b, { kind: 'tech', techId: 'jStrike', target: 'e0' }, data, fixed(0));
       const s = structuredClone(b);
       s.fighters[0]!.cooldowns = {};
@@ -623,10 +625,13 @@ describe('run da Jornada', () => {
   it('a História tem força própria por cima da dificuldade (v0.65.0)', () => {
     const canon = newRun(1, 'normal', data);
     const generic = { ...canon, mode: 'generic' as const };
-    expect(runEnemyMult(canon, data)).toBeCloseTo(data.j.storyStrength);
+    // Por estágio desde a v0.82.0 (H1): o 1º estágio ×0,9.
+    const mult = data.j.storyStrength * data.j.storyStageStrength[0]!;
+    expect(runEnemyMult(canon, data)).toBeCloseTo(mult);
+    expect(runEnemyMult({ ...canon, stageIndex: 3 }, data)).toBeCloseTo(data.j.storyStrength * data.j.storyStageStrength[3]!);
     expect(runEnemyMult(generic, data)).toBe(1);
     const foe = battleSetup(canon, data).enemies[0]!;
-    expect(foe.maxHp).toBe(enemySeed(foe.defId!, 'normal', data, data.j.storyStrength).maxHp);
+    expect(foe.maxHp).toBe(enemySeed(foe.defId!, 'normal', data, mult).maxHp);
     expect(data.j.enemyStrength.hardcore).toBeGreaterThan(data.j.enemyStrength.hard);
   });
 
@@ -637,15 +642,22 @@ describe('run da Jornada', () => {
     expect(outcome.xp).toBeGreaterThanOrEqual(Math.floor(data.j.rewards.story.xp * 1.15));
   });
 
-  it('perder acaba a run; no Fácil a Vontade do Fogo recomeça a luta', () => {
-    const normal = newRun(1, 'normal', data);
-    expect(finishFight(normal, lost(startBattle(battleSetup(normal, data), data, createRng(1))), data).run.status).toBe('defeat');
-    const easy = newRun(1, 'easy', data);
-    const res = finishFight(easy, lost(startBattle(battleSetup(easy, data), data, createRng(1))), data);
-    expect(res.outcome.retry).toBe(true);
-    expect(res.run.status).toBe('inProgress');
-    expect(res.run.willOfFire).toBe(0);
-    expect(res.run.stopIndex).toBe(easy.stopIndex);
+  it('perder acaba a run; até o Difícil a Vontade do Fogo recomeça a luta (v0.77.0: Fácil 2, Médio 1, Difícil 1)', () => {
+    const hardcore = newRun(1, 'hardcore', data);
+    expect(hardcore.willOfFire).toBe(0);
+    expect(finishFight(hardcore, lost(startBattle(battleSetup(hardcore, data), data, createRng(1))), data).run.status).toBe('defeat');
+    for (const [diff, n] of [['easy', 2], ['normal', 1], ['hard', 1]] as const) {
+      const run = newRun(1, diff, data);
+      expect(run.willOfFire, diff).toBe(n);
+      const res = finishFight(run, lost(startBattle(battleSetup(run, data), data, createRng(1))), data);
+      expect(res.outcome.retry, diff).toBe(true);
+      expect(res.run.status, diff).toBe('inProgress');
+      expect(res.run.willOfFire, diff).toBe(n - 1);
+      expect(res.run.stopIndex, diff).toBe(run.stopIndex);
+    }
+    // A última gasta: a próxima derrota acaba a run.
+    const spent = { ...newRun(1, 'normal', data), willOfFire: 0 };
+    expect(finishFight(spent, lost(startBattle(battleSetup(spent, data), data, createRng(1))), data).run.status).toBe('defeat');
   });
 
   it('subir de nível dá ponto de talento', () => {
@@ -1008,7 +1020,8 @@ describe('run da Jornada', () => {
   it('nós depois de bifurcação dizem quem libera; toda exclusão é mútua; nós e textos existem', () => {
     for (const t of data.talents) {
       const same = data.talents.filter((n) => n.owner === t.owner && n.branch === t.branch && n.tier === t.tier - 1);
-      if (same.length > 1) expect(t.requires, t.id).toBeTruthy();
+      // Combinações e assinaturas são liberadas por `requiresAll`.
+      if (same.length > 1 && !t.requiresAll) expect(t.requires, t.id).toBeTruthy();
       for (const r of t.requires ?? []) expect(data.talents.some((n) => n.id === r), r).toBe(true);
       for (const x of t.excludes ?? []) expect(data.talents.find((n) => n.id === x)?.excludes, x).toContain(t.id);
       expect(jornadaPtBR.talents.list[t.id]?.name, t.id).toBeTruthy();
@@ -1173,7 +1186,8 @@ describe('run da Jornada', () => {
       expect(refreshPrice(bell, data)).toBe(0);
       const r1 = refreshShelf(bell, data);
       expect(r1.ryo).toBe(bell.ryo);
-      expect(refreshPrice(r1, data)).toBe(data.j.shop.refresh.base);
+      // O Sino também dá 10% de desconto (v0.78.0), que vale no preço da atualização.
+    expect(refreshPrice(r1, data)).toBe(Math.floor(data.j.shop.refresh.base * 0.9));
       const token = openShop(gainRelic(rich(), 'merchantToken', data), data);
       expect(refreshPrice(token, data)).toBe(Math.floor(data.j.shop.refresh.base * 0.85));
     });
@@ -1591,15 +1605,11 @@ describe('Caminho Ninja', () => {
     }
   });
 
-  it('easter egg: o Chidori (aprendido no treino; o Uchiha é só Fogo) libera o ramo do Sasuke', () => {
-    const base = { ...newGenericRun(1, 'normal', 'uchiha', data), talentPoints: 20 };
-    const node = (id: string) => data.talents.find((t) => t.id === id)!;
-    const lightning = base;
-    expect(talentState(node('tChidoriU'), data.talents, talentContext(lightning, new Set()))).toBe('available');
-    expect(talentState(node('tLionU'), data.talents, talentContext(lightning, new Set()))).toBe('accountLocked');
-    const learned = buyTalent(lightning, 'tChidoriU', new Set(), data);
-    expect(newJornadaAchievements(learned, new Set())).toContain('j_sasukeEgg');
-    expect(talentState(node('tLionU'), data.talents, talentContext(learned, new Set(['j_sasukeEgg'])))).toBe('available');
+  it('o easter egg do Sasuke saiu (v0.86.0): sem ramo Sasuke, sem ramo Raio e sem a conquista', () => {
+    const uchiha = data.talents.filter((t) => t.owner === 'uchihaNinja');
+    expect(uchiha.some((t) => t.branch === 'sasuke' || t.branch === 'lightning' || t.account)).toBe(false);
+    const run = { ...newGenericRun(1, 'normal', 'uchiha', data), learned: ['jChidori'] };
+    expect(newJornadaAchievements(run, new Set())).not.toContain('j_sasukeEgg');
   });
 
   it('o visual escolhido fica na run', () => {
@@ -1678,30 +1688,30 @@ describe('ativas grátis e Portões (v0.42.0)', () => {
     expect(plain).toBe(15);
     let n = b.log.length;
     b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
-    expect(b.log.slice(n).filter((e) => e.type === 'gateUpkeep')).toEqual([{ type: 'gateUpkeep', uid: 'a0', amount: 2 }]);
+    expect(b.log.slice(n).filter((e) => e.type === 'gateUpkeep')).toEqual([{ type: 'gateUpkeep', uid: 'a0', amount: 1 }]);
     expect(me(b).gate).toEqual({ level: 1, rounds: 1 });
     expect(gateChoices(b, me(b), data)).toEqual([2, 3, 4, 5, 0]);
     const ck1 = me(b).chakra;
     b = setGate(b, 5, data, fixed(0.5));
     expect([me(b).gate, me(b).chakra]).toEqual([{ level: 5, rounds: 1 }, ck1 - 12]);
     n = b.log.length;
-    // 2ª manutenção (3) no 5º portão (× 2): 6.
+    // 2ª manutenção no 5º portão: metade de 3 × 2 em chakra (custo misto, v0.79.0): 3.
     b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
-    expect(b.log.slice(n).filter((e) => e.type === 'gateUpkeep')).toEqual([{ type: 'gateUpkeep', uid: 'a0', amount: 6 }]);
+    expect(b.log.slice(n).filter((e) => e.type === 'gateUpkeep')).toEqual([{ type: 'gateUpkeep', uid: 'a0', amount: 3 }]);
     const ck2 = me(b).chakra;
     b = setGate(b, 2, data, fixed(0.5));
     expect([me(b).gate, me(b).chakra]).toEqual([{ level: 2, rounds: 2 }, ck2]);
   });
 
-  it('manutenção crescente e sem limite de turnos; sem chakra, fecha e entra em espera (sem custo de HP)', () => {
+  it('manutenção crescente e sem limite de turnos, em chakra e HP (v0.79.0); sem como pagar, fecha e entra em espera', () => {
     let b = fight(prodigy({ maxChakra: 100, chakra: 100 }));
     b = setGate(b, 1, data, fixed(0.5));
     for (let i = 0; i < 6; i++) b = playerAct(b, { kind: 'guard' }, data, fixed(0.99));
-    expect(b.log.filter((e) => e.type === 'gateUpkeep').map((e) => (e.type === 'gateUpkeep' ? e.amount : 0))).toEqual([2, 3, 5, 7, 11, 16]);
+    expect(b.log.filter((e) => e.type === 'gateUpkeep').map((e) => (e.type === 'gateUpkeep' ? e.amount : 0))).toEqual([1, 2, 3, 4, 6, 8]);
     expect(me(b).gate).toEqual({ level: 1, rounds: 6 });
-    expect(b.log.some((e) => e.type === 'hpCost' && e.source === 'gates')).toBe(false);
+    expect(b.log.some((e) => e.type === 'hpCost' && e.source === 'gates')).toBe(true);
 
-    let low = fight(prodigy({ chakra: 6 }));
+    let low = fight(prodigy({ chakra: 5 }));
     low = setGate(low, 1, data, fixed(0.5));
     low = playerAct(low, { kind: 'guard' }, data, fixed(0.99));
     expect(me(low).gate).toEqual({ level: 1, rounds: 1 });
@@ -1722,7 +1732,7 @@ describe('ativas grátis e Portões (v0.42.0)', () => {
 
     // Caiu com o portão aberto: fecha sem espera (levantado, pode abrir de novo).
     const ally = hero({ defId: 'sakura', protagonist: false, speed: 1, techniques: ['jKunai'] });
-    let d = startBattle(setup({ allies: [prodigy({ hp: 1 }), ally], enemies: [dummy({ offense: { taijutsu: 50, ninjutsu: 0, genjutsu: 0 } })] }), data, fixed(0.5));
+    let d = startBattle(setup({ allies: [prodigy({ hp: 2 }), ally], enemies: [dummy({ offense: { taijutsu: 50, ninjutsu: 0, genjutsu: 0 } })] }), data, fixed(0.5));
     d = setGate(d, 1, data, fixed(0.5));
     const n = d.log.length;
     d = playerAct(d, { kind: 'guard' }, data, fixed(0.1));
@@ -1734,11 +1744,11 @@ describe('ativas grátis e Portões (v0.42.0)', () => {
 
   it('a IA abre o portão mais alto que dá para abrir e manter por 2 turnos', () => {
     const b = fight(prodigy({ mods: { ...emptyMods(), gateLevels: 4 } }));
-    // 30 de chakra: o 5º custa 15 + 4 + 6 = 25.
+    // 30 de chakra: o 5º custa 15 + 2 + 3 = 20.
     expect(chooseAiActive(b, me(b), data, fixed(0.5))).toEqual({ kind: 'gate', level: 5 });
     const low = fight(prodigy({ chakra: 12, mods: { ...emptyMods(), gateLevels: 4 } }));
-    // 12: o 1º (3 + 2 + 3 = 8) cabe; o 2º (6 + 3 + 4 = 13) não.
-    expect(chooseAiActive(low, me(low), data, fixed(0.5))).toEqual({ kind: 'gate', level: 1 });
+    // 12: o 2º (6 + 2 + 2 = 10) cabe; o 3º (9 + 2 + 3 = 14) não.
+    expect(chooseAiActive(low, me(low), data, fixed(0.5))).toEqual({ kind: 'gate', level: 2 });
   });
 
   it('save com o Quinto portão antigo carrega sem a técnica', () => {
@@ -2029,11 +2039,10 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     const leveled = data.talents.find((n) => n.owner === common.hero && talentMaxRank(n) > 1)!;
     const full = withTree(common);
     expect(talentTreeComplete({ ...full, talentRanks: { ...full.talentRanks, [leveled.id]: 1 } }, data)).toBe(false);
-    // Uchiha sem raio e sem o easter egg: as 3 árvores bastam; com o ramo do Sasuke liberado, não.
+    // Uchiha: a árvore inteira (o ramo do Sasuke, preso à conta, saiu na v0.86.0).
     const uchiha = { ...newGenericRun(6, 'normal', 'uchiha', data, new Set(['j_unlockUchiha'])), secondElement: 'water' as const };
     const uTree = withTree(uchiha, (n) => !n.account && !n.requiresElement);
     expect(talentTreeComplete(uTree, data)).toBe(true);
-    expect(talentTreeComplete(uTree, data, new Set(['j_sasukeEgg']))).toBe(false);
     // Naruto no começo com tudo o que já abre: os ramos da história ainda vêm.
     const naruto = withTree(newRun(6, 'normal', data), (n) => n.fromStage === undefined && !n.account && !n.grantedBy);
     expect(treeComplete('naruto', data.talents, talentContext(naruto, new Set()))).toBe(false);
@@ -2073,7 +2082,8 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
 
   it('as conquistas que a árvore usa vão para o retrato da run (a Ōdama saiu na v0.67.0)', () => {
     const run = { ...newGenericRun(2, 'hardcore', 'uchiha', data, new Set(['j_unlockUchiha'])), status: 'victory' as const };
-    expect(continueCycle(run, data, new Set(['j_sasukeEgg', 'j_unlockUchiha'])).unlocks).toEqual(['j_sasukeEgg']);
+    // Nenhuma árvore usa nó preso à conta desde a v0.86.0 (o ramo do Sasuke saiu): nada a guardar.
+    expect(continueCycle(run, data, new Set(['j_sasukeEgg', 'j_unlockUchiha'])).unlocks).toEqual([]);
     expect(newRun(1, 'normal', data, new Set(['j_canonWin', 'j_bell'])).unlocks).toEqual([]);
   });
 

@@ -1,5 +1,3 @@
-import type { RActive } from './kits';
-
 // Números do Roleta enxuto (docs/roleta/combate.md). Valores provisórios: ajustar com `npm run sim`.
 // Acerto, crítico, dano, dificuldade, níveis, eventos e recompensas vêm do `balance` da base.
 
@@ -16,41 +14,22 @@ export const roletaBalance = {
   rest: { chakraPct: 0.3 },
   chakraRegen: { pct: 0.03, min: 1 },
   villainChakra: { restPct: 0.25, regenPct: 0.05 },
-  // Os 4 efeitos, com duração fixa (turnos de quem sofre). Queimar e Veneno: fração do HP máximo por turno.
-  // Medo: dano × damageMult e acerto + accuracy.
-  effects: {
-    burn: { turns: 2, pct: 0.05 },
-    poison: { turns: 3, pct: 0.04 },
-    stun: { turns: 1 },
-    fear: { turns: 2, damageMult: 0.75, accuracy: -0.15 },
-  },
-  // Passivas das linhagens (kits enxutos).
+  // Efeitos: os mesmos da Jornada, em `balance.effects` (v0.77.0).
+  // Kits completos do clássico (v0.80.0): passivas, ativas e despertar usam os números da base (`balance.passives`,
+  // `awakening`, `dojutsu`, `gates`, `expansion`, `effort`, `beast`, `drunkenFist`, `pills`, `seal`, `copy`,
+  // `vitalForce`, `jinchuuriki`). Aqui fica só o que o Roleta adapta, e os kits enxutos das linhagens guardadas.
   passives: {
-    heavyBodyMult: 1.15,
+    // Yamanaka (guardado): −acerto do vilão.
     mindReadingAccuracy: 0.1,
-    duoChance: 0.25,
-    dogDamagePct: 0.4,
-    preciseFistPen: 0.3,
-    vitalityPct: 0.02,
-    vitalForce: { belowPct: 0.3, regenPct: 0.04, turns: 3 },
   },
-  // Ativas: usos por luta e efeito (turnos contando o da ativação).
   kits: {
-    uses: { effort: 1, shadow: 2, expansion: 1, mindTransfer: 1, plague: 1, beast: 1, gates: 1, sharingan: 1, byakugan: 1, seal: 1 } as Record<RActive, number>,
-    effort: { turns: 3, offense: 3 },
-    shadow: { chance: 0.8 },
-    expansion: { turns: 3, taijutsuMult: 1.3, physical: 3 },
-    mindTransfer: { chance: 0.75 },
-    plague: { turns: 3 },
-    beast: { turns: 3, speed: 3, dogChance: 0.6 },
-    // Portões (src/core/gates.ts): abrir custa `activation` de chakra; manter custa a manutenção comum a cada rodada,
-    // sem limite de rodadas (fecham sozinhos sem chakra); podem reabrir. Sem custo de HP (v0.59.0).
-    gates: { activation: 4, taijutsuMult: 1.3 },
-    sharingan: { turns: 3, accuracy: 0.15, dodge: 0.1, offense: 3 },
-    byakugan: { turns: 3 },
+    // Fera de quatro patas: a isca da Substituição (que não existe no Roleta) vira esquiva a mais.
+    beast: { dodge: 0.1 },
+    // Linhagens guardadas (fora do sorteio): os kits enxutos de antes.
+    shadow: { chance: 0.8, uses: 2 },
+    mindTransfer: { chance: 0.75, uses: 1 },
+    plague: { turns: 3, uses: 1 },
   },
-  // Manto do jinchuuriki: abaixo de belowPct do HP, 1 vez por luta, ataques × offenseMult por `turns` rodadas.
-  cloak: { belowPct: 0.5, offenseMult: 1.5, turns: 3 },
   // Kekkei genkai Areia: começa a luta com escudo desta fração do HP máximo.
   sandShieldPct: 0.1,
   // Invocações (passivas): sapo (dano verdadeiro em % do HP máximo do vilão por ataque que acerta), lesma (cura por rodada).
@@ -72,6 +51,11 @@ export const roletaBalance = {
   // simulação (`npm run sim:origens`): sem a roleta de recompensa o jogador cresce menos, e o Médio só volta a ~65% com o
   // chefe a ×0,9. Proposta para o usuário.
   villainPower: { genin: 1, chunin: 1, jounin: 1, boss: 0.9 } as Record<string, number>,
+  // Forma da categoria por cima da força (v0.81.0, R2 aprovado pelo usuário): o chefe com 15% menos HP e 10% mais
+  // ataque, para a luta ficar mais curta e mais perigosa (antes durava ~13 rodadas no Médio).
+  villainShape: { boss: { hp: 0.85, offense: 1.1 } } as Record<string, { hp: number; offense: number }>,
+  // Bolsa no começo da run (v0.81.0, R4 aprovado pelo usuário).
+  startBag: { medKit: 1, soldierPill: 1 },
   // Roleta de relíquia depois da luta (fora o chefe): pesos da raridade por categoria; cada ciclo do infinito passa
   // `cycleShift` pontos de Comum para Rara (proposta, v0.59.0).
   relicReward: {

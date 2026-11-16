@@ -45,7 +45,9 @@ const withRun = (ctx: LabContext, run: JRun): JRun => {
 };
 
 /** História jogada até a parada `until` (id da parada ou teste). */
-const story = (until: Until, difficulty: 'normal' | 'easy' = 'normal') => playUntil(storyRun(7, difficulty), until);
+// No Fácil, a seed 2: com a força por estágio da História (v0.82.0), a run de seed 7 do bot da fixture cai no 2º estágio.
+const EASY_SEED = 2;
+const story = (until: Until, difficulty: 'normal' | 'easy' = 'normal') => playUntil(storyRun(difficulty === 'easy' ? EASY_SEED : 7, difficulty), until);
 /** Caminho Ninja jogado até a condição. */
 const path = (until: Until) => playUntil(pathRun(7), until);
 
@@ -81,7 +83,8 @@ const end = (make: () => JRun) => (ctx: LabContext) => {
   return endScreen(ctx.jornadaHost, run, next, run.mode === 'generic');
 };
 
-const WRITTEN = () => story('writtenTest');
+// No Médio a run da seed 7 cai antes do exame (v0.77.0): o 2º estágio vem do Fácil.
+const WRITTEN = () => story('writtenTest', 'easy');
 
 /** Árvore de talentos da run, pela tela real. */
 const tree = (make: () => JRun) => (ctx: LabContext) => {
@@ -129,7 +132,7 @@ export const jornadaRun: Scenario[] = [
       return stop(() => story('bells'))(ctx);
     },
   },
-  { id: 'jornada.trail:exam', title: 'Trilha no 2º estágio (Exame Chunin)', group: 'Jornada', mount: stop(() => story('orochimaruForest')) },
+  { id: 'jornada.trail:exam', title: 'Trilha no 2º estágio (Exame Chunin)', group: 'Jornada', mount: stop(() => story('orochimaruForest', 'easy')) },
   { id: 'jornada.trail:sannin', title: 'Trilha no 3º estágio (Sannin, Fácil)', group: 'Jornada', mount: stop(() => story('tsunade', 'easy')) },
   { id: 'jornada.trail:late', title: 'Trilha no último estágio (Fácil)', group: 'Jornada', mount: stop(() => story('valley', 'easy')) },
   { id: 'jornada.map', title: 'Mapa do Caminho Ninja (começo)', group: 'Jornada', mount: stop(() => pathRun(7)) },
@@ -237,7 +240,7 @@ export const jornadaRun: Scenario[] = [
   },
 
   // Fim da run
-  { id: 'jornada.end:story-victory', title: 'Fim: História vencida (Fácil)', group: 'Fim da run', mount: end(() => playToEnd(storyRun(7, 'easy'))) },
+  { id: 'jornada.end:story-victory', title: 'Fim: História vencida (Fácil)', group: 'Fim da run', mount: end(() => playToEnd(storyRun(EASY_SEED, 'easy'))) },
   { id: 'jornada.end:story-defeat', title: 'Fim: derrota na História', group: 'Fim da run', mount: end(() => playToEnd(storyRun(7))) },
   { id: 'jornada.end:path-victory', title: 'Fim: Caminho Ninja vencido no Médio', group: 'Fim da run', mount: end(() => playToEnd(pathRun(7))) },
   { id: 'jornada.end:path-victory-hardcore', title: 'Fim: Caminho Ninja vencido no Hardcore (Seguir ciclo)', group: 'Fim da run', mount: end(hardcoreWin) },

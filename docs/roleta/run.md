@@ -19,7 +19,8 @@ Um ciclo tem 6 lutas: **2 genin → 2 chunin → 1 jounin → 1 chefe**. Cada lu
 - O evento é um passo à parte: no mapa, o botão é "Seguir: evento pré-luta"; no resultado do evento dá para **Lutar** ou **Voltar ao mapa** (aí o botão do mapa vira "Lutar", e o evento não se repete).
 - **Abandonar run** (no mapa e na luta, com confirmação): a run termina, conta como abandonada no histórico e vai para a tela de fim.
 - **A vitória recupera HP e chakra por inteiro** (v0.61.0; na v0.59.0 a cura vinha no começo da luta). O que acontece entre as lutas chega na seguinte: a Akatsuki que tira metade do HP e do chakra faz o jogador entrar ferido. A run começa cheia.
-- **Força dos vilões por categoria** (`villainPower`, × HP e ataques, calibrado pela simulação): Genin, Chunin e Jounin ×1, Chefe ×0,9.
+- **Força dos vilões por categoria** (`villainPower`, × HP e ataques, calibrado pela simulação): Genin, Chunin e Jounin ×1, Chefe ×0,9. Por cima, a **forma do chefe** (`villainShape`, v0.81.0): HP ×0,85 e ataques ×1,1, para a luta ficar mais curta e mais perigosa (no total, HP ×0,765 e ataques ×0,99).
+- **Bolsa inicial** (`startBag`, v0.81.0): a run começa com 1 Kit médico e 1 Pílula de soldado.
 - **Chefe**: vencer abre o **baú**: escolher 1 entre 3 relíquias de chefe.
 - O Orochimaru do Roleta volta da derrota no máximo **1 vez** (`villains.insaneRevivesCap`), em qualquer dificuldade, porque o ciclo é curto.
 
@@ -98,7 +99,8 @@ O catálogo é o mesmo da Jornada, e cada relíquia diz em que modo sai ([reliqu
 
 - Os efeitos no Roleta têm números próprios (menos lutas, um lutador só); as de equipe, ryō, clones, talento e mercador ficam só na Jornada.
 - Exclusivas do Roleta: Ferramenta ninja, Amuleto de velocidade, Amuleto de resistência e os Contratos das cobras e das lesmas.
-- O **Contrato dos sapos** e os **Pesos de treino** saem nos dois modos, com efeitos diferentes. No Roleta são a invocação do sapo e a mecânica de equipar e tirar.
+- O **Contrato dos sapos** e os **Pesos de treino** saem nos dois modos, com efeitos diferentes. No Roleta são a invocação do sapo e +1 de taijutsu a cada 2 vitórias (v0.78.0; antes, a mecânica de equipar e tirar).
+- Só saem relíquias que a origem pode usar (filtro de compatibilidade, v0.78.0): bônus de um tipo de ataque pede uma técnica de dano desse tipo ([reliquias.md](../jornada/reliquias.md)).
 - Contratos: um animal por vez. Com um contrato, os outros não saem.
 - A barra de relíquias aparece no painel do jogador e na ficha; a dica mostra o efeito no Roleta.
 

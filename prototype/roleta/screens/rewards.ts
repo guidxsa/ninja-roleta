@@ -75,9 +75,8 @@ export async function levelUpScreen(): Promise<void> {
   const step = levelUp(c.player, data);
   applyStep(step);
   showEffect(root.querySelector<HTMLElement>('#results')!, step.effect);
-  // Despertar da linhagem nos níveis 4 e 7.
-  // Sem despertar no Roleta enxuto: as técnicas sobem sozinhas com o nível.
-  const awakening = undefined as string | undefined;
+  // Despertar da linhagem nos níveis 4 e 7 (kits completos do clássico, v0.80.0).
+  const awakening = c.player.level === 4 || c.player.level === 7 ? S.awakening[c.player.origin.lineageId ?? 'common']?.[c.player.level] : undefined;
   if (awakening) {
     root
       .querySelector<HTMLElement>('#results')!

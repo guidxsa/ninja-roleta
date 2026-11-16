@@ -44,8 +44,10 @@ export interface RoletaRelicEffect {
   grant?: { revives?: number };
   /** Contrato de invocação: o animal passa a acompanhar (o evento Invocação sobe o nível). */
   summon?: 'toad' | 'snake' | 'slug';
-  /** Pesos de treino: a mecânica de equipar e tirar (−2 de speed, +1 de taijutsu por vitória; tirar dá +3). */
-  weights?: boolean;
+  /** Pesos de treino (v0.78.0): +1 de taijutsu a cada este número de vitórias, sem equipar nem perder speed. */
+  taijutsuEveryWins?: number;
+  /** Chakra recuperado no começo de cada rodada (Núcleo de chakra, v0.78.0). */
+  chakraRegen?: number;
 }
 
 export interface RelicDef {
@@ -61,6 +63,8 @@ export interface RelicDef {
   evolves?: string;
   /** Evolução pela história: substitui esta inicial num evento (efeito `storyRelic`), nunca na escolha do chefe. */
   storyEvolves?: string;
+  /** O que o kit precisa ter para a relíquia sair (sem o campo, vem do efeito: `relicNeeds`). */
+  needs?: RelicNeed[];
   /** Bônus no protagonista. */
   mods?: Partial<FighterMods>;
   /** Bônus em toda a equipe (protagonista incluído). */
@@ -86,10 +90,35 @@ export interface RelicDef {
   /** Descanso cura este valor a mais. */
   restBonus?: { hp: number; chakra: number };
   /** Recurso ao pegar: consumíveis, Vontades do Fogo, ryō ou pontos de talento. */
-  grant?: { items?: Partial<Record<ConsumableId, number>>; willOfFire?: number; ryo?: number; talentPoints?: number };
+  grant?: { items?: Partial<Record<ConsumableId, number>>; willOfFire?: number; ryo?: number; talentPoints?: number; xp?: number };
+  /** Descanso: todos ficam com pelo menos esta fração do HP (Cobertor de campanha). */
+  restFloorPct?: number;
 }
 
 export type Weights = Partial<Record<RelicTier, number>>;
+
+/** O que o kit precisa ter para a relíquia servir (filtro de compatibilidade, v0.78.0). */
+export type RelicNeed = 'taijutsu' | 'ninjutsu' | 'genjutsu' | 'clones';
+
+/** Bônus de clone que só valem com uma técnica de clone (começar com clones vale para qualquer um). */
+const CLONE_KEYS = ['extraClones', 'cloneCounter', 'damagePerClone', 'maxClonesBonus'] as const;
+
+/**
+ * O que a relíquia pede do kit, tirado do próprio efeito: bônus de um tipo de ataque pede esse tipo numa técnica de
+ * dano; bônus de clone pede uma técnica de clone. Efeitos de equipe não filtram (os suportes variam). `needs` na
+ * relíquia, quando houver, manda.
+ */
+export function relicNeeds(r: RelicDef, mode: RelicMode): RelicNeed[] {
+  if (r.needs) return r.needs;
+  const typeMult = mode === 'roleta' ? r.roleta?.typeDamageMult : r.mods?.typeDamageMult;
+  const types = Object.keys(typeMult ?? {}).filter((k): k is RelicNeed => k === 'taijutsu' || k === 'ninjutsu' || k === 'genjutsu');
+  const mods = (r.mods ?? {}) as Partial<Record<string, unknown>>;
+  const clones = mode === 'jornada' && !mods.startClones && CLONE_KEYS.some((k) => mods[k]) ? (['clones'] as RelicNeed[]) : [];
+  return [...types, ...clones];
+}
+
+/** A relíquia serve para um kit que tem `has`? */
+export const relicFits = (r: RelicDef, mode: RelicMode, has: ReadonlySet<RelicNeed>) => relicNeeds(r, mode).every((n) => has.has(n));
 
 /** Sorteia uma relíquia que a run ainda não tem, pela classificação (sem roleta na tela). Evoluções ficam de fora. */
 export function rollRelic(relics: readonly RelicDef[], owned: readonly string[], weights: Weights, rng: Rng, exclude: readonly string[] = []): string | null {

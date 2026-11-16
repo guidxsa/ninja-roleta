@@ -16,7 +16,7 @@ A simulação dele roda em `npm run sim:classico`.
 |---|---|
 | Reações (Resistir, Substituição, disputa) e painel de reação | [base/fundamentos.md](../base/fundamentos.md#reações) |
 | Disputa de ninjutsu e quebra de guarda | [base/fundamentos.md](../base/fundamentos.md#disputa-de-ninjutsu) |
-| Barreiras e escudos como ação, estados elementais (Armadura de Raio), interações de elemento | [base/fundamentos.md](../base/fundamentos.md#escudos), [base/tecnicas.md](../base/tecnicas.md) |
+| Barreiras e escudos como ação, estados elementais (Armadura de Raio), interações de elemento. Desde a v0.77.0 as barreiras elementais (com o elemento só pesando no escudo) também valem no Roleta e na Jornada ([fundamentos.md](../base/fundamentos.md#barreiras-no-roleta-e-na-jornada)); os estados elementais e a disputa seguem só aqui | [base/fundamentos.md](../base/fundamentos.md#escudos), [base/tecnicas.md](../base/tecnicas.md) |
 | Efeitos mentais com roleta de fuga, tenacidade e vulnerabilidade | [base/efeitos.md](../base/efeitos.md) |
 | Linhas elementais I–IV, teto por nível e potencial da origem, upgrades à escolha | [base/tecnicas.md](../base/tecnicas.md#níveis-de-técnica), [base/progressao.md](../base/progressao.md#marcos-de-nível) |
 | Kits completos das origens (Colônia e Devorar, Corpo pesado por peso, Sharingan em 3 estágios com Cópia, Portões com Forçar, Pílulas do clã...) e o despertar dos níveis 4 e 7 | [base/origens.md](../base/origens.md) |

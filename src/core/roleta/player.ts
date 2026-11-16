@@ -1,12 +1,24 @@
 // Jogador do Roleta enxuto (docs/roleta/combate.md#técnicas): a mesma ficha da base (`PlayerState`), com o kit fixo
-// de técnicas que sobem sozinhas com o nível. Sem upgrades à escolha, sem linhas elementais, sem despertar.
+// de técnicas que sobem sozinhas com o nível. Sem upgrades à escolha e sem linhas elementais; as exclusivas do
+// despertar (níveis 4 e 7) já estão no kit e aparecem quando o nível chega (v0.80.0).
 import type { Difficulty } from '../difficulty';
 import { hasElementalNinjutsu } from '../nature';
 import { lineageOf } from '../origin';
 import { createPlayer, type PlayerState } from '../player';
-import type { Origin } from '../types';
+import type { KekkeiGenkaiId, LineageDef, Origin } from '../types';
+import { cloneKindFor, type CloneKind } from '../clones';
 import type { RoletaData } from './data';
-import { BASIC, BUNSHIN, type RTechniqueDef } from '../../data/roleta/techniques';
+import { BASIC, type RTechniqueDef } from '../../data/roleta/techniques';
+
+/**
+ * Tipo de clone da origem (docs/base/fundamentos.md#clones): Kage Bunshin no Uzumaki e no jinchuuriki; o clone da
+ * natureza em quem tem ninjutsu elemental (Mizu, Doton, Raiton, Mokuton, Suna); Bunshin nos outros.
+ */
+export function cloneKindOf(origin: Origin, lineage: LineageDef, kekkeiGenkai: KekkeiGenkaiId | null, data: RoletaData): CloneKind {
+  if (origin.lineageId === 'uzumaki' || origin.jinchuuriki) return 'kage';
+  if (!hasElementalNinjutsu(lineage)) return 'bunshin';
+  return cloneKindFor(kekkeiGenkai ?? origin.elements[0] ?? null, data.base.balance.clones);
+}
 
 /**
  * Técnicas da origem: Taijutsu básico, 1 técnica por elemento (a kekkei genkai toma o lugar das dos dois elementos-pai)
@@ -22,8 +34,8 @@ export function roletaKit(origin: Origin, data: RoletaData): string[] {
   const pick = (f: (t: RTechniqueDef) => boolean) => all.filter((t) => f(t) && !forbidden.has(t.type)).map((t) => t.id);
   return [
     BASIC,
-    // Bunshin no Jutsu: todo mundo que pode usar ninjutsu (o Prodígio, proibido, fica sem).
-    ...pick((t) => t.id === BUNSHIN),
+    // Clone: todo mundo que pode usar ninjutsu (o Prodígio, proibido, fica sem). Um só, no lugar do Bunshin.
+    ...pick((t) => t.clone === cloneKindOf(origin, lineage, kg?.id ?? null, data)).slice(0, 1),
     ...elements.flatMap((el) => pick((t) => t.element === el)),
     ...(kg && hasElementalNinjutsu(lineage) ? pick((t) => t.kekkeiGenkai === kg.id) : []),
     ...(origin.lineageId ? pick((t) => t.lineage === origin.lineageId) : []),
@@ -36,6 +48,8 @@ export function createRoletaPlayer(origin: Origin, data: RoletaData, difficulty:
   return {
     ...p,
     techniques: roletaKit(origin, data),
+    // Começa a run com 1 Kit médico e 1 Pílula de soldado (v0.81.0).
+    bag: { ...p.bag, medKit: p.bag.medKit + data.r.startBag.medKit, soldierPill: p.bag.soldierPill + data.r.startBag.soldierPill },
     techniqueLevels: {},
     pendingUpgrades: 0,
     dojutsu: null,
@@ -47,6 +61,6 @@ export function createRoletaPlayer(origin: Origin, data: RoletaData, difficulty:
   };
 }
 
-/** Técnicas do jogador, na ordem do kit. */
+/** Técnicas do jogador já liberadas pelo nível (despertar), na ordem do kit. */
 export const playerTechniques = (p: PlayerState, data: RoletaData): RTechniqueDef[] =>
-  p.techniques.map((id) => data.techniques[id]).filter((t): t is RTechniqueDef => Boolean(t));
+  p.techniques.map((id) => data.techniques[id]).filter((t): t is RTechniqueDef => Boolean(t) && p.level >= (t!.minLevel ?? 1));

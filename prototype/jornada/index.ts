@@ -419,27 +419,18 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
           })
           .join('')}</div>
         <div class="jel-pick" data-elements role="group" aria-label="${G.elementTitle}">${ELEMENT_CHOICES.map((c) => elementChoiceButton(c)).join('')}</div>
-        ${host.unlocked().has('j_sasukeEgg') ? `<button class="btn small jskin" data-skin aria-pressed="false" hidden>${G.skinSasuke}</button>` : ''}
         <button class="btn primary big" data-choice="generic">${icon('dice')} ${G.start}</button>
       </section>
     </div>`),
   );
   let classId = 'common';
-  let skin: string | null = null;
-  root.querySelector('[data-skin]')?.addEventListener('click', (e) => {
-    const b = e.currentTarget as HTMLElement;
-    skin = skin ? null : 'sasuke';
-    b.setAttribute('aria-pressed', String(Boolean(skin)));
-  });
   root.querySelector('.jclasses')!.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-class]');
     if (!b || b.getAttribute('aria-disabled') === 'true') return;
     classId = b.dataset.class!;
     root.querySelectorAll('[data-class]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    // Só o Comum escolhe o elemento; só o Uchiha tem o visual do Sasuke.
+    // Só o Comum escolhe o elemento.
     root.querySelector<HTMLElement>('[data-elements]')!.hidden = classId !== 'common';
-    const skinBtn = root.querySelector<HTMLElement>('[data-skin]');
-    if (skinBtn) skinBtn.hidden = classId !== 'uchiha';
   });
   // Elemento do Comum: um elemento, o prodígio (sem elemento) ou sortear (com a relíquia bônus).
   let element: ElementChoice = 'random';
@@ -455,7 +446,7 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
     if (c === 'back') return null;
     if (!(await replaceSaved(host, saved))) continue;
     await host.ensurePlayerName();
-    const run = newGenericRun(host.nextSeed(), currentDifficulty(host), classId, data, host.unlocked(), classId === 'uchiha' ? skin : null, classId === 'common' ? element : 'random');
+    const run = newGenericRun(host.nextSeed(), currentDifficulty(host), classId, data, host.unlocked(), null, classId === 'common' ? element : 'random');
     await revealScreen(host, run);
     return run;
   }
@@ -625,7 +616,7 @@ function hintText(run: JRun, salt: number): string {
   const H = U.hints;
   const rec = afterWinRecovery(run, data);
   const all = [
-    H.elements(fmt(c.elementAdvantage), fmt(c.elementDisadvantage)),
+    H.elements(fmt(data.base.elements.advantage), fmt(data.base.elements.disadvantage)),
     H.clones(pct(data.base.clones.blockChance)),
     H.guard,
     H.rest(c.restChakra),

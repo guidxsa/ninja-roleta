@@ -2,21 +2,21 @@
 
 > História implementada na v0.35.0 ([README.md](README.md)). Números provisórios: ajustar com `npm run sim:jornada`.
 
-Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A dificuldade multiplica HP, ataques, resistências e a cura das técnicas dos inimigos por uma força própria da Jornada (`enemyStrength`): 100/125/140/150% (Fácil/Médio/Difícil/Hardcore, v0.65.0; antes 98/120/136/136%). Na **História**, a força ainda é multiplicada por 1,2 (`storyStrength`; 1,1 na v0.65.0, 1,2 desde a v0.68.0): a trilha fixa e os aliados fortes deixavam a História bem mais fácil que o Caminho Ninja. O fator entra uma vez só: antes da v0.51.0 entrava também no dano final. No [modo infinito](run.md#modo-infinito) do Caminho Ninja (só no Hardcore), o ciclo multiplica por cima: × 1,5 ^ ciclo. Comportamento (IA): [personagens.md](personagens.md#comportamento).
+Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A dificuldade multiplica HP, ataques, resistências e a cura das técnicas dos inimigos por uma força própria da Jornada (`enemyStrength`): 100/125/140/150% (Fácil/Médio/Difícil/Hardcore, v0.65.0; antes 98/120/136/136%). Na **História**, a força ainda é multiplicada por 1,2 (`storyStrength`; 1,1 na v0.65.0, 1,2 desde a v0.68.0): a trilha fixa e os aliados fortes deixavam a História bem mais fácil que o Caminho Ninja. Desde a v0.82.0, por cima, uma **força por estágio** (`storyStageStrength`): ×1,15 / ×1,2 / ×1,7 / ×1,9 (Ondas, Exame, Sannin, Vale do Fim; proposta). O fator entra uma vez só: antes da v0.51.0 entrava também no dano final. No [modo infinito](run.md#modo-infinito) do Caminho Ninja (só no Hardcore), o ciclo multiplica por cima: × 1,5 ^ ciclo. Comportamento (IA): [personagens.md](personagens.md#comportamento).
 
 ## Fichas
 
 | Inimigo | HP | Chakra | Speed | Tai/Nin/Gen | Res. física/mental | Elemento | IA | Técnicas | Passiva |
 |---|---|---|---|---|---|---|---|---|---|
 | Mizuki | 65 | 10 | 9 | 7/5/3 | 6/6 | vento | brute | Kunai, Shuriken gigante | — |
-| Kakashi | 170 | 40 | 15 | 11/11/9 | 9/9 | raio | tactician | Chute, Mil Anos de Morte, Decapitação | — |
+| Kakashi | 170 | 40 | 15 | 11/11/9 | 9/9 | raio | tactician | Chute, Mil Anos de Morte, Decapitação, Raiton Kage Bunshin | imune a Medo |
 | Capanga | 38 | 0 | 7 | 6/0/0 | 3/2 | — | brute | Porrete, Katana | — |
 | Bandido | 42 | 0 | 9 | 7/0/0 | 3/3 | — | brute | Emboscada, Porrete | — |
 | Ninja renegado | 70 | 18 | 11 | 9/9/4 | 6/5 | — | striker | Kunai, Golpe traiçoeiro | — |
 | Renegado da Névoa | 55 | 14 | 10 | 6/8/2 | 5/4 | água | striker | Kunai, Projétil de água | — |
 | Gōzu | 62 | 8 | 11 | 8/3/0 | 5/4 | água | brute | Garra envenenada, Corrente | — |
 | Meizu | 62 | 8 | 11 | 8/3/0 | 5/4 | água | brute | Garra envenenada, Corrente | — |
-| Zabuza | 160 | 30 | 12 | 12/11/3 | 9/6 | água | brute | Kubikiribōchō, Prisão de água, Dragão de água | — |
+| Zabuza | 160 | 30 | 12 | 12/11/3 | 9/6 | água | brute | Kubikiribōchō, Prisão de água, Dragão de água, Mizu Bunshin no Jutsu | — |
 | Haku | 150 | 34 | 16 | 9/11/6 | 7/8 | água | tactician | Senbon, Espelhos de gelo, Ponto vital | fúria abaixo de 40% (dano ×1.25) |
 | Dosu | 80 | 20 | 10 | 8/10/4 | 6/6 | — | striker | Kunai, Onda sonora | — |
 | Zaku | 75 | 20 | 11 | 6/11/3 | 5/5 | vento | striker | Kunai, Rajada de ar | — |
@@ -27,7 +27,7 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Kiba | 100 | 18 | 13 | 11/4/2 | 7/5 | — | brute | Presa sobre presa, Bomba de fedor, Kunai | — |
 | Akamaru | 45 | 0 | 15 | 9/0/0 | 4/3 | — | brute | Mordida | — |
 | Neji | 150 | 30 | 14 | 14/6/4 | 9/9 | — | tactician | Punho Suave, Rotação, 64 Palmas | — |
-| Gaara | 230 | 45 | 10 | 8/15/4 | 12/8 | terra | brute | Caixão de areia, Escudo de areia, Tsunami de areia, Garra do Shukaku | escudo inicial 15% |
+| Gaara | 230 | 45 | 10 | 8/15/4 | 12/8 | terra | brute | Caixão de areia, Escudo de areia, Tsunami de areia, Garra do Shukaku, Suna Bunshin | escudo inicial 15%; imune a Medo |
 | Gaara (exausto) | 90 | 20 | 8 | 6/10/3 | 8/6 | areia (Kekkei Genkai) | brute | Escudo de areia, Caixão de areia | volta no lugar do Shukaku depois da cabeçada do Naruto ([roteiro.md](roteiro.md)) |
 | Mercenário do Gatō | 45 | 0 | 8 | 7/0/0 | 4/3 | — | brute | Porrete, Katana | chegam à ponte depois do sacrifício do Haku |
 | Shukaku | 300 | 60 | 8 | 12/16/4 | 13/9 | areia (Kekkei Genkai) | brute | Garra do Shukaku, Tsunami de areia, Caixão de areia | entra no lugar do Gaara a 40% do HP ([roteiro.md](roteiro.md)) |
@@ -36,7 +36,7 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Kabuto | 170 | 36 | 14 | 12/13/6 | 9/9 | — | healer | Kunai, Bisturi de chakra, Cura médica, Reanimação proibida | — |
 | Sasuke | 170 | 34 | 15 | 13/13/7 | 8/8 | fogo | striker | Chidori, Bola de Fogo, Combo do Leão | — |
 | Cobra | 90 | 0 | 9 | 11/0/0 | 7/4 | — | brute | Picada | — |
-| Jirobo | 180 | 30 | 9 | 14/8/2 | 11/6 | terra | brute | Soco pesado, Domo de terra | — |
+| Jirobo | 180 | 30 | 9 | 14/8/2 | 11/6 | terra | brute | Soco pesado, Domo de terra, Muralha de Terra, Doton Kage Bunshin | — |
 | Kidomaru | 160 | 30 | 13 | 12/10/4 | 8/7 | — | tactician | Flecha dourada, Teia, Kunai | — |
 | Tayuya | 150 | 34 | 12 | 8/8/14 | 7/9 | — | tactician | Flauta demoníaca, Kunai | — |
 | Sakon | 150 | 26 | 13 | 13/8/4 | 9/6 | — | brute | Golpe gêmeo, Lâmina sonora | — |
@@ -69,7 +69,7 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Ponto vital | Taijutsu | — | um inimigo | 6 | 2 | 85% | atordoar 25% (2 t) |
 | Onda sonora | Ninjutsu | — | um inimigo | 11 | 3 | 85% | atordoar 15% (2 t) |
 | Rajada de ar | Ninjutsu | vento | todos os inimigos | 8 | 5 | 85% | — |
-| Sino ilusório | Genjutsu | — | um inimigo | 7 | 3 | 85% | atordoar 25% (2 t) |
+| Sino ilusório | Genjutsu | — | um inimigo | 7 | 3 | 85% | medo 35% (2 t) |
 | Chuva de agulhas | Taijutsu | — | todos os inimigos | 4 | 3 | 75% | 2 golpes |
 | Clone de névoa | Genjutsu | — | um inimigo | 9 | 2 | 85% | — |
 | Bisturi de chakra | Ninjutsu | — | um inimigo | 13 | 4 | 85% | bloqueio de chakra 40% |
@@ -82,7 +82,7 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Rotação | Taijutsu | — | em si | — | 4 | 85% | escudo 20% do HP de quem usa; espera 3 |
 | 64 Palmas | Taijutsu | — | um inimigo | 4 | 8 | 95% | 4 golpes; penetração 30%; bloqueio de chakra 50% (3 t); espera 3 |
 | Caixão de areia | Ninjutsu | terra | um inimigo | 18 | 6 | 85% | atordoar 30% (2 t) |
-| Escudo de areia | Ninjutsu | terra | em si | — | 4 | 85% | escudo 15% do HP de quem usa; espera 3 |
+| Escudo de areia | Ninjutsu | terra | em si | — | 4 | 85% | barreira de areia de 15% do HP de quem usa (3 turnos); espera 3 |
 | Tsunami de areia | Ninjutsu | terra | todos os inimigos | 14 | 9 | 85% | — |
 | Garra do Shukaku | Taijutsu | — | um inimigo | 22 | 3 | 80% | — |
 | Mãos de cobra | Ninjutsu | — | um inimigo | 11 | 4 | 85% | 2 golpes; veneno 30% |
@@ -94,7 +94,7 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Soco pesado | Taijutsu | — | um inimigo | 18 | 0 | 80% | — |
 | Flecha dourada | Taijutsu | — | um inimigo | 24 | 6 | 80% | penetração 20% |
 | Teia | Ninjutsu | — | um inimigo | 4 | 3 | 85% | atordoar 35% (2 t); espera 2 |
-| Flauta demoníaca | Genjutsu | — | todos os inimigos | 9 | 6 | 85% | atordoar 15% (2 t) |
+| Flauta demoníaca | Genjutsu | — | todos os inimigos | 9 | 6 | 85% | medo 30% (2 t) |
 | Golpe gêmeo | Taijutsu | — | um inimigo | 9 | 0 | 85% | 2 golpes |
 | Broca de osso | Taijutsu | — | um inimigo | 22 | 4 | 85% | penetração 30% |
 | Balas de osso | Taijutsu | — | todos os inimigos | 8 | 6 | 85% | 2 golpes |

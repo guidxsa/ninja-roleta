@@ -2,12 +2,14 @@
 // só as fórmulas puras (acerto, dano, elementos) são compartilhadas.
 import type { AttackStats, AttackType, Element, KekkeiGenkaiId, Resistances } from '../types';
 import type { FormDef, ScriptRule } from './script';
+import type { BarrierState } from '../barriers';
+import type { CloneKind } from '../clones';
 
 export type TeamSide = 'ally' | 'enemy';
 
 /** Efeitos com duração em turnos de quem sofre (docs/jornada/combate.md#efeitos). */
 /** `stunGuard`: a trava de quem acabou de sair de um atordoamento (não pode ser atordoado de novo enquanto durar). */
-export type JEffect = 'stun' | 'burn' | 'poison' | 'chakraBlock' | 'stunGuard';
+export type JEffect = 'stun' | 'burn' | 'poison' | 'chakraBlock' | 'fear' | 'stunGuard';
 
 /** Bônus temporário em quem usa: dano, acerto, esquiva e penetração por `turns` turnos dele. */
 export interface Boost {
@@ -50,10 +52,17 @@ export interface JTechnique {
   reviveHpPct?: number;
   /** Escudo no alvo, em fração do HP máximo de quem usa. */
   shieldPct?: number;
+  /**
+   * O escudo é uma barreira elemental (src/core/barriers.ts, v0.77.0): tem o elemento (ou a Kekkei Genkai) da técnica,
+   * dura `balance.barrier.turns` turnos de quem a recebe e só ele sente a vantagem de elemento.
+   */
+  barrier?: boolean;
   /** Tira atordoamento e bloqueio de chakra do alvo. */
   cleanse?: boolean;
   /** Clones criados em quem usa. */
   clones?: number;
+  /** Tipo dos clones criados (src/core/clones.ts). Sem o campo: Kage Bunshin. */
+  cloneKind?: CloneKind;
   /** Rodadas de espera depois de usar. */
   cooldown?: number;
   /** Ativa de classe: fica fora do moveset e não gasta o turno, uma por turno (docs/jornada/combate.md#turno). */
@@ -156,6 +165,111 @@ export interface FighterMods {
   techOverflow: Record<string, number>;
   /** Sapos + Kyuubi: peso a mais das variantes sorteadas com o HP abaixo da metade. */
   lowHpRollWeights: Record<string, number>;
+  // Relíquias refeitas (v0.78.0, docs/balanceamento/diagnostico.md P3).
+  /** Turnos a mais nos efeitos que as técnicas aplicam (Frasco de toxina). */
+  effectTurnsBonus: number;
+  /** Dano × este valor contra alvo atordoado, com Medo ou com o chakra bloqueado (Linha de sombra). */
+  controlledDamageMult: number;
+  /** Chance de dar Medo em cada golpe que acerta (Incenso dos sonhos). */
+  fearOnHit: number;
+  /** Defender cura esta fração do HP máximo (Colete acolchoado). */
+  guardHealPct: number;
+  // Árvore do Comum (v0.84.0, docs/jornada/talentos.md#comum-caminho-ninja).
+  /** Penetração a mais por tipo de ataque (Punho firme, Mestre do elemento). */
+  typePen: Partial<Record<AttackType, number>>;
+  /** Com clone de pé, quem ataca tem este acerto a menos (Ilusão perfeita). */
+  cloneEnemyAccuracy: number;
+  /** Golpes a mais nas técnicas de taijutsu de dano (Combo da Folha). */
+  taijutsuExtraHits: number;
+  /** Golpes a mais no taijutsu por clone de pé, até 2 (Mil golpes). */
+  taijutsuHitsPerClone: number;
+  /** Cada golpe de taijutsu seguido que acerta na mesma técnica: +este dano, até +30% (Combo da Folha). */
+  comboStepPct: number;
+  /** Chakra devolvido por golpe de taijutsu que acerta (Ritmo de luta). */
+  taijutsuHitChakra: number;
+  /** O clone de qualquer tipo bate junto com pelo menos esta fração do dano de um golpe (Clone de ataque). */
+  cloneStrikePct: number;
+  /** Ninjutsu em alvo atordoado: esta fração do dano vai para os outros inimigos (Explosão em cadeia). */
+  stunnedSplashPct: number;
+  /** Ao sobreviver com 1 de HP: recupera esta fração e fica firme (Vontade do Fogo). */
+  surviveHealPct: number;
+  /** Ao sobreviver com 1 de HP: a equipe recupera esta fração (Nunca sozinho). */
+  surviveTeamHealPct: number;
+  // Árvore do prodígio (v0.85.0, docs/jornada/talentos.md#prodígio-caminho-ninja).
+  /** Abrir cada portão custa menos chakra (Abertura rápida). */
+  gateOpenDiscount: number;
+  /** Abaixo de 25% do HP, o portão aberto sobe um nível sozinho (Portões sem freio). */
+  gateAutoUp: boolean;
+  /** Somado ao multiplicador do crítico (Chama da juventude). */
+  critMultBonus: number;
+  /** Chakra devolvido por crítico (Chama da juventude). */
+  critChakra: number;
+  /** Golpes a mais em técnicas específicas (Bêbado de verdade, Furacão embriagado). */
+  techExtraHits: Record<string, number>;
+  /** O primeiro golpe da luta é crítico, se acertar (Tirar os pesos). */
+  openingCrit: boolean;
+  /** Chance de revidar ao apanhar de golpe de alvo único, e o dano do revide (Contra-ataque). */
+  counterChance: number;
+  counterDamage: number;
+  /** Contra quem tem mais HP máximo que você: dano × e acerto + (Duelo). */
+  duelDamageMult: number;
+  duelAccuracy: number;
+  /** Dano × contra quem está acima da metade do HP (Desafio). */
+  healthyTargetMult: number;
+  /** Quando alguém da equipe cai (1 vez por luta): os de pé ganham este dano por 3 turnos (Lição do mestre). */
+  fallenRally: number;
+  /** Com o portão deste nível ou acima aberto, as técnicas não cobram HP (Lótus Oculta perfeita). */
+  hpCostFreeAtGate: number;
+  // Árvore do Uchiha (v0.86.0, docs/jornada/talentos.md#uchiha-caminho-ninja).
+  /** Com o Sharingan ligado: chance de anular um golpe de alvo único (Leitura total) e o revide (Leitura de lâminas). */
+  readNullChance: number;
+  readCounterDamage: number;
+  /** A queimadura que você aplica dói × isto (Fogo que não apaga). */
+  burnMult: number;
+  /** Cada golpe de genjutsu que acerta pode atordoar (Prisão). */
+  genjutsuStunChance: number;
+  /** Genjutsu contra alvo com Medo, atordoado ou com chakra bloqueado não erra (Mundo da ilusão). */
+  illusionSureHit: boolean;
+  /** A técnica acerta também os outros inimigos com esta fração do dano (Chuva de shuriken). */
+  techSplash: Record<string, number>;
+  /** Abaixo de 30% do HP ou com alguém da equipe caído: dano × e acerto + (Vingança, Olhos da vingança). */
+  vengeanceMult: number;
+  vengeanceAccuracy: number;
+  /** Dano × contra quem está queimando (Inferno ilusório). */
+  burningDamageMult: number;
+  // Árvore do Hyuuga (v0.87.0, docs/jornada/talentos.md#hyuuga-caminho-ninja).
+  /** A esquiva do alvo não conta (Visão de 360°). */
+  ignoreEvasion: boolean;
+  /** Chakra que o alvo perde a cada golpe de taijutsu que acerta (Fechar pontos, Campo dos trigramas). */
+  taiHitDrain: number;
+  /** Dano × contra quem está com o chakra bloqueado (Fluxo interrompido, Ordem do patriarca). */
+  chakraBlockedDamageMult: number;
+  /** Cada golpe de taijutsu que acerta pode bloquear o chakra (Tenketsu selado). */
+  taiChakraBlockChance: number;
+  /** O seu escudo devolve esta fração do que segura (Defesa absoluta) e tira chakra de quem bate (Giro suave). */
+  shieldReflectPct: number;
+  shieldDrain: number;
+  /** Dano × contra quem está sem chakra (Campo dos trigramas). */
+  noChakraDamageMult: number;
+  /** O acerto do seu fortalecimento vale para a equipe (Herdeiro do clã). */
+  shareBoost: boolean;
+  /** Turnos a mais nos fortalecimentos (Byakugan do herdeiro). */
+  boostTurnsBonus: number;
+  /** Chance de tomar o golpe de alvo único no lugar de um aliado (Guardião). */
+  protectChance: number;
+  /** Defendendo, toma os golpes de alvo único no lugar do aliado mais ferido (Guarda-costas). */
+  guardProtect: boolean;
+  /** Dano do revide ao proteger um aliado (Olhos do guardião). */
+  protectCounter: number;
+  /** O escudo que ergue em si vale também para a equipe, com esta fração (Esfera absoluta). */
+  shieldShare: number;
+  /** A técnica que acerta dá escudo desta fração do HP (Trigrama defensivo); ao aliado mais ferido, com `allyShieldOnHit`. */
+  techShieldOnHit: Record<string, number>;
+  allyShieldOnHit: boolean;
+  /** Todo golpe em alvo com chakra bloqueado é crítico (Mira nos pontos). */
+  blockedAlwaysCrit: boolean;
+  /** Chance de atordoar com a técnica quando o alvo está sem chakra (Oito Trigramas, 128 Palmas). */
+  techStunNoChakra: Record<string, number>;
 }
 
 export interface CharacterDef {
@@ -226,9 +340,15 @@ export interface Fighter {
   ai: AiProfile;
   passive?: EnemyPassive;
   mods: FighterMods;
-  effects: { kind: JEffect; turns: number }[];
+  /** `mult`: queimadura mais forte (Fogo que não apaga). */
+  effects: { kind: JEffect; turns: number; mult?: number }[];
   shield: number;
+  /** Barreira elemental de pé (src/core/barriers.ts), ou null. */
+  barrier: BarrierState | null;
   clones: number;
+  /** Tipo dos clones (todos do mesmo: o último criado manda) e golpes que o da frente já segurou. */
+  cloneKind: CloneKind;
+  cloneWear: number;
   down: boolean;
   /** Postura defensiva até o próximo turno dele: usa a resistência inteira. */
   guarding: boolean;
@@ -242,6 +362,12 @@ export interface Fighter {
   gate: { level: number; rounds: number } | null;
   /** Forma à mostra (a última que entrou), quando houver. */
   form?: string;
+  /** Já rolou o golpe de abertura (Tirar os pesos). */
+  openerUsed?: boolean;
+  /** A Lição do mestre já disparou nesta luta. */
+  rallied?: boolean;
+  /** Alguém da equipe caiu nesta luta (Vingança). */
+  vengeful?: boolean;
   /** Saiu da luta pelo roteiro (troca de fase): não volta nem conta para a vitória. */
   gone?: boolean;
   /** Caiu pelo roteiro (o Iruka protegendo o Naruto, o Sasuke contra o Haku): é cena, ninguém levanta nesta luta. */
@@ -255,7 +381,7 @@ export interface Fighter {
 }
 
 /** Lutador pronto para entrar (sem uid, lado e estado de luta). */
-export type FighterSeed = Omit<Fighter, 'uid' | 'side' | 'effects' | 'shield' | 'clones' | 'down' | 'guarding' | 'cooldowns' | 'survivedOnce' | 'enraged' | 'boost' | 'gate'>;
+export type FighterSeed = Omit<Fighter, 'uid' | 'side' | 'effects' | 'shield' | 'barrier' | 'clones' | 'cloneKind' | 'cloneWear' | 'down' | 'guarding' | 'cooldowns' | 'survivedOnce' | 'enraged' | 'boost' | 'gate'>;
 
 /** Como a luta se vence (docs/jornada/historia.md#vitórias-especiais). */
 export type WinCondition =
@@ -277,7 +403,12 @@ export type JEvent =
   | { type: 'tech'; uid: string; techId: string; targets: string[]; cost: number }
   | { type: 'miss'; uid: string; target: string }
   | { type: 'damage'; uid: string; target: string; amount: number; crit: boolean; elementMult: number; absorbed: number }
-  | { type: 'cloneBlock'; target: string; left: number }
+  /** Um clone segurou o golpe (`left`: os que sobram; `broken`: o clone da frente se desfez). */
+  | { type: 'cloneBlock'; target: string; left: number; kind?: CloneKind; broken?: boolean }
+  /** Clones bateram junto com o dono (Mizu, Mokuton). */
+  | { type: 'cloneStrike'; uid: string; target: string; amount: number }
+  /** Barreira elemental: erguida, golpeada (encontro de elementos no escudo), quebrada, apagou o fogo ou acabou. */
+  | { type: 'barrier'; uid: string; action: 'raise' | 'hit' | 'break' | 'douse' | 'end'; techId: string; points?: number; absorbed?: number; left?: number; mult?: number }
   | { type: 'heal'; uid: string; target: string; amount: number }
   | { type: 'shield'; uid: string; target: string; amount: number }
   | { type: 'clones'; uid: string; total: number }
@@ -299,6 +430,8 @@ export type JEvent =
   | { type: 'chakraGain'; uid: string; amount: number }
   | { type: 'enrage'; uid: string }
   | { type: 'boost'; uid: string; techId: string; turns: number }
+  /** Guardião ou Guarda-costas: `uid` tomou o golpe no lugar de `target`. */
+  | { type: 'protect'; uid: string; target: string }
   /** Custo em HP de uma técnica (`source` = id) ou desgaste dos Portões (`source` = 'gates'). */
   | { type: 'hpCost'; uid: string; amount: number; source: string }
   /** Abriu ou trocou de portão (`level` 1–5; `cost` de chakra) ou fechou (0; `exhausted` quando faltou chakra). */

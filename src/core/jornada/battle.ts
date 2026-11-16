@@ -2,8 +2,9 @@ import type { Difficulty } from '../difficulty';
 // Combate de equipe da Jornada (docs/jornada/combate.md). Funções puras: estado entra, estado sai.
 // Até 3 × 3. O jogador decide só o turno do protagonista; os outros lutadores usam a IA (ai.ts).
 import { damage } from '../damage';
-import { natureMultiplier } from '../nature';
-import { cloneTakesHit } from '../clones';
+import { wearClone } from '../clones';
+import { absorbIntoBarrier, barrierMult, raiseBarrier, type BarrierAttack, type BarrierContext } from '../barriers';
+import { dotDamage, effectDuration, isControl as isControlKind } from '../effects';
 import { gateUpkeep, payGateUpkeep } from '../gates';
 import { critChance, hitChance } from '../hit';
 import { clamp, type Rng } from '../rng';
@@ -63,6 +64,59 @@ export function emptyMods(): FighterMods {
     surviveForm: '',
     techOverflow: {},
     lowHpRollWeights: {},
+    effectTurnsBonus: 0,
+    controlledDamageMult: 1,
+    fearOnHit: 0,
+    guardHealPct: 0,
+    typePen: {},
+    cloneEnemyAccuracy: 0,
+    taijutsuExtraHits: 0,
+    taijutsuHitsPerClone: 0,
+    comboStepPct: 0,
+    taijutsuHitChakra: 0,
+    cloneStrikePct: 0,
+    stunnedSplashPct: 0,
+    surviveHealPct: 0,
+    surviveTeamHealPct: 0,
+    gateOpenDiscount: 0,
+    gateAutoUp: false,
+    critMultBonus: 0,
+    critChakra: 0,
+    techExtraHits: {},
+    openingCrit: false,
+    counterChance: 0,
+    counterDamage: 0,
+    duelDamageMult: 1,
+    duelAccuracy: 0,
+    healthyTargetMult: 1,
+    fallenRally: 0,
+    hpCostFreeAtGate: 0,
+    readNullChance: 0,
+    readCounterDamage: 0,
+    burnMult: 1,
+    genjutsuStunChance: 0,
+    illusionSureHit: false,
+    techSplash: {},
+    vengeanceMult: 1,
+    vengeanceAccuracy: 0,
+    burningDamageMult: 1,
+    ignoreEvasion: false,
+    taiHitDrain: 0,
+    chakraBlockedDamageMult: 1,
+    taiChakraBlockChance: 0,
+    shieldReflectPct: 0,
+    shieldDrain: 0,
+    noChakraDamageMult: 1,
+    shareBoost: false,
+    boostTurnsBonus: 0,
+    protectChance: 0,
+    guardProtect: false,
+    protectCounter: 0,
+    shieldShare: 0,
+    techShieldOnHit: {},
+    allyShieldOnHit: false,
+    blockedAlwaysCrit: false,
+    techStunNoChakra: {},
   };
 }
 
@@ -79,7 +133,8 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     return out;
   };
   return {
-    damageMult: a.damageMult * (b.damageMult ?? 1),
+    // Dano geral soma (v0.78.0, G1 do diagnóstico): +25% e +15% dão +40%. Os outros grupos seguem multiplicando.
+    damageMult: a.damageMult + ((b.damageMult ?? 1) - 1),
     typeDamageMult: mulMap(a.typeDamageMult, b.typeDamageMult),
     taijutsuFlat: a.taijutsuFlat + (b.taijutsuFlat ?? 0),
     critBonus: a.critBonus + (b.critBonus ?? 0),
@@ -114,6 +169,59 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     surviveForm: b.surviveForm || a.surviveForm,
     techOverflow: addMap(a.techOverflow, b.techOverflow),
     lowHpRollWeights: addMap(a.lowHpRollWeights, b.lowHpRollWeights),
+    effectTurnsBonus: a.effectTurnsBonus + (b.effectTurnsBonus ?? 0),
+    controlledDamageMult: a.controlledDamageMult * (b.controlledDamageMult ?? 1),
+    fearOnHit: a.fearOnHit + (b.fearOnHit ?? 0),
+    guardHealPct: a.guardHealPct + (b.guardHealPct ?? 0),
+    typePen: addMap(a.typePen, b.typePen),
+    cloneEnemyAccuracy: a.cloneEnemyAccuracy + (b.cloneEnemyAccuracy ?? 0),
+    taijutsuExtraHits: a.taijutsuExtraHits + (b.taijutsuExtraHits ?? 0),
+    taijutsuHitsPerClone: a.taijutsuHitsPerClone + (b.taijutsuHitsPerClone ?? 0),
+    comboStepPct: a.comboStepPct + (b.comboStepPct ?? 0),
+    taijutsuHitChakra: a.taijutsuHitChakra + (b.taijutsuHitChakra ?? 0),
+    cloneStrikePct: Math.max(a.cloneStrikePct, b.cloneStrikePct ?? 0),
+    stunnedSplashPct: a.stunnedSplashPct + (b.stunnedSplashPct ?? 0),
+    surviveHealPct: a.surviveHealPct + (b.surviveHealPct ?? 0),
+    surviveTeamHealPct: a.surviveTeamHealPct + (b.surviveTeamHealPct ?? 0),
+    gateOpenDiscount: a.gateOpenDiscount + (b.gateOpenDiscount ?? 0),
+    gateAutoUp: a.gateAutoUp || Boolean(b.gateAutoUp),
+    critMultBonus: a.critMultBonus + (b.critMultBonus ?? 0),
+    critChakra: a.critChakra + (b.critChakra ?? 0),
+    techExtraHits: addMap(a.techExtraHits, b.techExtraHits),
+    openingCrit: a.openingCrit || Boolean(b.openingCrit),
+    counterChance: a.counterChance + (b.counterChance ?? 0),
+    counterDamage: a.counterDamage + (b.counterDamage ?? 0),
+    duelDamageMult: a.duelDamageMult * (b.duelDamageMult ?? 1),
+    duelAccuracy: a.duelAccuracy + (b.duelAccuracy ?? 0),
+    healthyTargetMult: a.healthyTargetMult * (b.healthyTargetMult ?? 1),
+    fallenRally: a.fallenRally + (b.fallenRally ?? 0),
+    hpCostFreeAtGate: b.hpCostFreeAtGate ? (a.hpCostFreeAtGate ? Math.min(a.hpCostFreeAtGate, b.hpCostFreeAtGate) : b.hpCostFreeAtGate) : a.hpCostFreeAtGate,
+    readNullChance: a.readNullChance + (b.readNullChance ?? 0),
+    readCounterDamage: a.readCounterDamage + (b.readCounterDamage ?? 0),
+    burnMult: a.burnMult * (b.burnMult ?? 1),
+    genjutsuStunChance: a.genjutsuStunChance + (b.genjutsuStunChance ?? 0),
+    illusionSureHit: a.illusionSureHit || Boolean(b.illusionSureHit),
+    techSplash: addMap(a.techSplash, b.techSplash),
+    vengeanceMult: a.vengeanceMult * (b.vengeanceMult ?? 1),
+    vengeanceAccuracy: a.vengeanceAccuracy + (b.vengeanceAccuracy ?? 0),
+    burningDamageMult: a.burningDamageMult * (b.burningDamageMult ?? 1),
+    ignoreEvasion: a.ignoreEvasion || Boolean(b.ignoreEvasion),
+    taiHitDrain: a.taiHitDrain + (b.taiHitDrain ?? 0),
+    chakraBlockedDamageMult: a.chakraBlockedDamageMult * (b.chakraBlockedDamageMult ?? 1),
+    taiChakraBlockChance: a.taiChakraBlockChance + (b.taiChakraBlockChance ?? 0),
+    shieldReflectPct: a.shieldReflectPct + (b.shieldReflectPct ?? 0),
+    shieldDrain: a.shieldDrain + (b.shieldDrain ?? 0),
+    noChakraDamageMult: a.noChakraDamageMult * (b.noChakraDamageMult ?? 1),
+    shareBoost: a.shareBoost || Boolean(b.shareBoost),
+    boostTurnsBonus: a.boostTurnsBonus + (b.boostTurnsBonus ?? 0),
+    protectChance: a.protectChance + (b.protectChance ?? 0),
+    guardProtect: a.guardProtect || Boolean(b.guardProtect),
+    protectCounter: a.protectCounter + (b.protectCounter ?? 0),
+    shieldShare: a.shieldShare + (b.shieldShare ?? 0),
+    techShieldOnHit: addMap(a.techShieldOnHit, b.techShieldOnHit),
+    allyShieldOnHit: a.allyShieldOnHit || Boolean(b.allyShieldOnHit),
+    blockedAlwaysCrit: a.blockedAlwaysCrit || Boolean(b.blockedAlwaysCrit),
+    techStunNoChakra: addMap(a.techStunNoChakra, b.techStunNoChakra),
   };
 }
 
@@ -169,7 +277,11 @@ function enter(seed: FighterSeed, side: TeamSide, index: number): Fighter {
     chakra: Math.min(seed.maxChakra, seed.chakra + seed.mods.startChakra),
     effects: [],
     shield: Math.floor(seed.maxHp * shieldPct),
+    barrier: null,
     clones: seed.mods.startClones,
+    // Clones do começo da luta (talentos e relíquias): do tipo da técnica de clone que o lutador conhece.
+    cloneKind: 'kage',
+    cloneWear: 0,
     down: seed.hp <= 0,
     guarding: false,
     cooldowns: {},
@@ -195,6 +307,9 @@ export const opponentSide = (side: TeamSide): TeamSide => (side === 'ally' ? 'en
 export const protagonist = (s: JBattle) => s.fighters.find((f) => f.protagonist) ?? null;
 export const hasEffect = (f: Fighter, e: JEffect) => f.effects.some((x) => x.kind === e && x.turns > 0);
 
+/** Imune a Medo (Uchiha e jinchuuriki, como no Roleta). */
+export const fearImmune = (f: Fighter, data: JornadaData) => data.j.combat.fearImmune.includes(f.defId);
+
 /** Quem este lutador pode levantar com a ação universal: os caídos da equipe do jogador (inimigos não têm a ação). */
 export const canRaise = (s: JBattle, f: Fighter): Fighter[] => (f.side === 'ally' && !f.down ? downed(s, 'ally') : []);
 
@@ -212,6 +327,8 @@ export function techniqueCost(f: Fighter, tech: JTechnique): number {
 }
 
 export function hpCost(f: Fighter, tech: JTechnique): number {
+  // Lótus Oculta perfeita (prodígio, v0.85.0): com o portão alto aberto, as técnicas não cobram HP.
+  if (f.mods.hpCostFreeAtGate && f.gate && f.gate.level >= f.mods.hpCostFreeAtGate) return 0;
   return tech.hpCostPct ? Math.max(1, Math.floor(f.maxHp * tech.hpCostPct)) : 0;
 }
 
@@ -232,14 +349,19 @@ export function validTargets(s: JBattle, user: Fighter, tech: JTechnique): Fight
   return alive(s, opponentSide(user.side));
 }
 
-function elementCfg(data: JornadaData) {
-  const j = data.j.combat;
-  return { advantage: j.elementAdvantage, disadvantage: j.elementDisadvantage, neutral: 1, pierce: j.elementAdvantage };
-}
+const barrierCtx = (data: JornadaData): BarrierContext => ({ kekkeiGenkai: data.kekkeiGenkai, beats: data.beats, elements: data.base.elements });
 
-/** Encontro de naturezas (src/core/nature.ts): a Kekkei Genkai conta como uma natureza, com o pai mais favorável. */
-export function elementMult(tech: JTechnique, target: Fighter, data: JornadaData): number {
-  return natureMultiplier(tech.kekkeiGenkai ?? tech.element, target.kekkeiGenkai ?? target.element, data.kekkeiGenkai, data.beats, elementCfg(data));
+/** O golpe da técnica contra uma barreira: taijutsu é neutro; a Kekkei Genkai conta como a natureza dela. */
+const barrierAttack = (user: Fighter, tech: JTechnique): BarrierAttack => ({ type: tech.type, nature: tech.kekkeiGenkai ?? tech.element, hits: hitsOf(user, tech) });
+
+/**
+ * Encontro de elementos (v0.77.0): só contra a barreira do alvo (src/core/barriers.ts). Sem barreira, 1: o elemento
+ * não muda o dano no HP. A interface usa este número para a seta de vantagem.
+ */
+export function elementMult(tech: JTechnique, target: Fighter, data: JornadaData, user?: Fighter): number {
+  if (!target.barrier) return 1;
+  const atk = user ? barrierAttack(user, tech) : { type: tech.type, nature: tech.kekkeiGenkai ?? tech.element, hits: tech.hits ?? 1 };
+  return barrierMult(target.barrier, atk, barrierCtx(data));
 }
 
 /** Multiplicador de ficha (talentos e relíquias) de uma técnica: o que vale fora da luta. */
@@ -256,8 +378,17 @@ function attackerMult(f: Fighter, tech: JTechnique, data: JornadaData): number {
   if (f.boost?.damageMult) mult *= f.boost.damageMult;
   if (f.gate) mult *= gateTotals(f.gate.level, data).damageMult;
   if (m.damagePerClone) mult *= 1 + m.damagePerClone * f.clones;
+  if (vengeful(f)) mult *= m.vengeanceMult;
+  if (hasEffect(f, 'fear')) mult *= data.base.effects.fear.damageMult;
   return mult;
 }
+
+/** Vingança (Uchiha): abaixo de 30% do HP, ou com alguém da equipe caído nesta luta. */
+const vengeful = (f: Fighter) => f.mods.vengeanceMult > 1 && (f.hp < f.maxHp * VENGEANCE_BELOW || Boolean(f.vengeful));
+const VENGEANCE_BELOW = 0.3;
+/** Sharingan ligado (o fortalecimento de uma das técnicas do Sharingan). */
+const sharinganOn = (f: Fighter) => Boolean(f.boost?.techId.startsWith('jSharingan'));
+const controlled = (t: Fighter) => hasEffect(t, 'stun') || hasEffect(t, 'fear') || hasEffect(t, 'chakraBlock');
 
 /** Base por golpe com o dano plano de taijutsu. */
 const powerBase = (tech: JTechnique, m: FighterMods) => tech.baseDamage + (tech.type === 'taijutsu' ? m.taijutsuFlat : 0);
@@ -304,7 +435,8 @@ export function maxGate(f: Fighter, data: JornadaData): number {
 }
 
 /** Chakra para ir do portão aberto (0 = fechado) ao `level`: cada portão a mais custa a abertura; descer é grátis. */
-export const gateOpenCost = (f: Fighter, level: number, data: JornadaData) => Math.max(0, level - (f.gate?.level ?? 0)) * data.j.gates.activationPerLevel;
+export const gateOpenCost = (f: Fighter, level: number, data: JornadaData) =>
+  Math.max(0, level - (f.gate?.level ?? 0)) * Math.max(1, data.j.gates.activationPerLevel - f.mods.gateOpenDiscount);
 
 /** Manutenção da rodada `n` mantida no portão `level` (src/core/gates.ts, com o peso do nível). */
 export const gateUpkeepAt = (level: number, n: number, data: JornadaData) =>
@@ -355,21 +487,54 @@ export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data
     offense: user.offense[tech.type] + (user.boost?.offense ?? 0),
     resistance: target.resistance[resistanceKind(tech.type)],
     fraction: target.guarding ? j.guardFraction : j.resistanceFraction,
-    penetration: Math.min(data.base.penetration.max, (tech.penetration ?? 0) + (user.boost?.penetration ?? 0)),
-    elementMult: elementMult(tech, target, data),
-    critMult: crit ? data.base.crit.multiplier : 1,
-    extraMult: attackerMult(user, tech, data) * (hasEffect(target, 'stun') ? user.mods.stunnedDamageMult : 1),
+    penetration: Math.min(data.base.penetration.max, (tech.penetration ?? 0) + (user.boost?.penetration ?? 0) + (user.mods.typePen[tech.type] ?? 0)),
+    // Sem multiplicador de elemento no HP (v0.77.0): ele só vale contra a barreira, na hora do golpe.
+    elementMult: 1,
+    // Chama da juventude (prodígio): o crítico bate mais.
+    critMult: crit ? data.base.crit.multiplier + user.mods.critMultBonus : 1,
+    extraMult:
+      attackerMult(user, tech, data) *
+      (hasEffect(target, 'stun') ? user.mods.stunnedDamageMult : 1) *
+      (hasEffect(target, 'stun') || hasEffect(target, 'fear') || hasEffect(target, 'chakraBlock') ? user.mods.controlledDamageMult : 1) *
+      // Duelo (prodígio): contra quem tem mais HP máximo que você. Desafio: contra quem está acima da metade do HP.
+      (target.maxHp > user.maxHp ? user.mods.duelDamageMult : 1) *
+      (target.hp > target.maxHp * 0.5 ? user.mods.healthyTargetMult : 1) *
+      // Inferno ilusório (Uchiha): contra quem está queimando.
+      (hasEffect(target, 'burn') ? user.mods.burningDamageMult : 1) *
+      // Fluxo interrompido e Campo dos trigramas (Hyuuga): contra chakra bloqueado e contra quem ficou sem chakra.
+      (hasEffect(target, 'chakraBlock') ? user.mods.chakraBlockedDamageMult : 1) *
+      (target.maxChakra > 0 && target.chakra <= 0 ? user.mods.noChakraDamageMult : 1),
   });
 }
 
 export function hitsOf(user: Fighter, tech: JTechnique): number {
   const extra = tech.hitsPerClone ? Math.min(tech.maxCloneHits ?? Infinity, user.clones * tech.hitsPerClone) : 0;
-  return (tech.hits ?? 1) + extra;
+  // Combo da Folha e Mil golpes (Comum, v0.84.0): técnicas de taijutsu de dano ganham golpes (até +2 pelos clones).
+  const m = user.mods;
+  const taiExtra = tech.type === 'taijutsu' && tech.baseDamage > 0 ? m.taijutsuExtraHits + Math.min(TAI_CLONE_HITS_MAX, user.clones * m.taijutsuHitsPerClone) : 0;
+  return (tech.hits ?? 1) + extra + taiExtra + (m.techExtraHits[tech.id] ?? 0);
 }
 
+/** HP abaixo do qual os Portões sem freio sobem sozinhos. */
+const GATE_AUTO_BELOW = 0.25;
+/** Turnos do fortalecimento da Lição do mestre. */
+const RALLY_TURNS = 3;
+/** Teto dos golpes de taijutsu a mais pelos clones (Mil golpes). */
+const TAI_CLONE_HITS_MAX = 2;
+/** Teto do bônus da sequência de taijutsu (Combo da Folha). */
+const COMBO_MAX = 0.3;
+
 export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique, data: JornadaData): number {
-  const acc = user.mods.accuracyBonus + (user.boost?.accuracy ?? 0) + (user.gate ? gateTotals(user.gate.level, data).accuracy : 0);
-  const eva = target.mods.evasion + (target.boost?.evasion ?? 0);
+  const fear = hasEffect(user, 'fear') ? data.base.effects.fear.accuracy : 0;
+  // Mokuton: o clone compartilha o que vê.
+  const cloneAcc = user.clones > 0 ? (data.base.clones.kinds[user.cloneKind].accuracyBonus ?? 0) : 0;
+  // Mundo da ilusão (Uchiha): genjutsu contra alvo controlado não erra.
+  if (tech.type === 'genjutsu' && user.mods.illusionSureHit && controlled(target)) return 1;
+  const duel = (target.maxHp > user.maxHp ? user.mods.duelAccuracy : 0) + (vengeful(user) ? user.mods.vengeanceAccuracy : 0);
+  const acc = user.mods.accuracyBonus + (user.boost?.accuracy ?? 0) + (user.gate ? gateTotals(user.gate.level, data).accuracy : 0) + fear + cloneAcc + duel;
+  // Ilusão perfeita (Comum): com clone de pé, quem ataca erra mais.
+  // Visão de 360° (Hyuuga): a esquiva do alvo não conta.
+  const eva = user.mods.ignoreEvasion ? 0 : target.mods.evasion + (target.boost?.evasion ?? 0) + (target.clones > 0 ? target.mods.cloneEnemyAccuracy : 0);
   return hitChance(tech.accuracy, acc - eva, data.base.hit);
 }
 
@@ -378,7 +543,11 @@ export function accuracyAgainst(user: Fighter, target: Fighter, tech: JTechnique
 
 /** Monta a luta sem andar: ninguém agiu ainda. É o estado que a tela mostra na abertura. */
 export function openBattle(setup: BattleSetup, data: JornadaData): JBattle {
-  const fighters = [...setup.allies.map((f, i) => enter(f, 'ally', i)), ...setup.enemies.map((f, i) => enter(f, 'enemy', i))];
+  const fighters = [...setup.allies.map((f, i) => enter(f, 'ally', i)), ...setup.enemies.map((f, i) => enter(f, 'enemy', i))].map((f) => ({
+    ...f,
+    // Clones do começo da luta: do tipo da técnica de clone que o lutador conhece (sem nenhuma, Kage Bunshin).
+    cloneKind: f.techniques.map((id) => data.techniques[id]).find((t) => t?.clones)?.cloneKind ?? f.cloneKind,
+  }));
   const s: JBattle = {
     round: 0,
     fighters,
@@ -481,13 +650,17 @@ function startTurn(s: JBattle, f: Fighter, data: JornadaData): boolean {
   s.log.push({ type: 'turn', uid: f.uid });
   for (const e of ['burn', 'poison'] as const) {
     if (!hasEffect(f, e)) continue;
-    const pct = e === 'burn' ? data.j.combat.burnPct : data.j.combat.poisonPct;
-    const amount = Math.max(1, Math.floor(f.maxHp * pct));
+    const amount = dotDamage(e, f.maxHp, data.base.effects, f.effects.find((x) => x.kind === e)?.mult ?? 1);
     s.log.push({ type: 'tick', target: f.uid, effect: e, amount });
     applyHpLoss(s, f, amount, data);
     if (f.down) return false;
   }
   if (s.status !== 'ongoing') return false;
+  // Portões sem freio (prodígio): abaixo de 25% do HP, o portão aberto sobe um nível sozinho, sem custo.
+  if (f.gate && f.mods.gateAutoUp && f.hp < f.maxHp * GATE_AUTO_BELOW && f.gate.level < maxGate(f, data)) {
+    f.gate = { ...f.gate, level: f.gate.level + 1 };
+    s.log.push({ type: 'gate', uid: f.uid, level: f.gate.level });
+  }
   if (hasEffect(f, 'stun')) {
     s.log.push({ type: 'skip', uid: f.uid, reason: 'stun' });
     return false;
@@ -500,7 +673,7 @@ function endTurn(s: JBattle, f: Fighter, data: JornadaData): void {
   const wasStunned = hasEffect(f, 'stun');
   f.effects = f.effects.map((e) => ({ ...e, turns: e.turns - 1 })).filter((e) => e.turns > 0);
   // Saiu do atordoamento: ganha a trava, que vale até o fim do próximo turno em que ele age.
-  if (wasStunned && !hasEffect(f, 'stun') && !f.down) f.effects.push({ kind: 'stunGuard', turns: data.j.combat.stunImmunityTurns });
+  if (wasStunned && !hasEffect(f, 'stun') && !f.down) f.effects.push({ kind: 'stunGuard', turns: data.base.effects.stunImmunityTurns });
   // Forma temporária (roteiro ou ativa): conta os turnos de quem a usa.
   for (const x of [...(f.forms ?? [])]) {
     if (!x.turns || --x.turns > 0) continue;
@@ -509,13 +682,21 @@ function endTurn(s: JBattle, f: Fighter, data: JornadaData): void {
     if (x.def.exitLine && !f.down) s.log.push({ type: 'say', uid: f.uid, who: f.defId, line: x.def.exitLine });
   }
   if (f.boost && --f.boost.turns <= 0) f.boost = null;
+  // Barreira: conta os turnos de quem a recebeu.
+  if (f.barrier && --f.barrier.turns <= 0) {
+    s.log.push({ type: 'barrier', uid: f.uid, action: 'end', techId: f.barrier.techId });
+    f.barrier = null;
+  }
   if (f.gate && !f.down) {
     const n = f.gate.rounds + 1;
-    const paid = payGateUpkeep(f.chakra, n, data.base.gateCosts, 1 + data.j.gates.upkeepLevelStep * (f.gate.level - 1));
+    // Custo misto (v0.79.0): chakra crescente e HP pelo nível do portão; sem como pagar, fecham.
+    const paid = payGateUpkeep({ chakra: f.chakra, hp: f.hp, maxHp: f.maxHp }, n, f.gate.level, data.base.gateCosts, 1 + data.j.gates.upkeepLevelStep * (f.gate.level - 1));
     if (paid) {
       f.chakra = paid.chakra;
+      f.hp = paid.hp;
       f.gate.rounds = n;
       s.log.push({ type: 'gateUpkeep', uid: f.uid, amount: paid.cost });
+      s.log.push({ type: 'hpCost', uid: f.uid, amount: paid.hpCost, source: 'gates' });
     } else closeGates(s, f, data, true);
   }
   for (const id of Object.keys(f.cooldowns)) {
@@ -647,6 +828,7 @@ function execute(s: JBattle, f: Fighter, action: JAction, data: JornadaData, rng
     f.guarding = true;
     s.log.push({ type: 'guard', uid: f.uid });
     if (f.mods.guardHeal) heal(s, f, f, f.mods.guardHeal);
+    if (f.mods.guardHealPct) heal(s, f, f, Math.floor(f.maxHp * f.mods.guardHealPct));
     return;
   }
   if (action.kind === 'rest') {
@@ -721,10 +903,23 @@ function resolveEffects(s: JBattle, f: Fighter, tech: JTechnique, targets: Fight
   const j = data.j.combat;
   if (tech.boost) {
     // Ativa não gasta o turno: o da ativação já conta como um dos turnos do fortalecimento.
-    f.boost = { ...tech.boost, techId: tech.id };
-    s.log.push({ type: 'boost', uid: f.uid, techId: tech.id, turns: tech.boost.turns });
+    const turns = tech.boost.turns + f.mods.boostTurnsBonus;
+    f.boost = { ...tech.boost, turns, techId: tech.id };
+    s.log.push({ type: 'boost', uid: f.uid, techId: tech.id, turns });
+    // Herdeiro do clã (Hyuuga): a equipe ganha o acerto do fortalecimento (quem já tem um fica com o dele).
+    if (f.mods.shareBoost && tech.boost.accuracy) {
+      for (const x of alive(s, f.side)) {
+        if (x.uid === f.uid || x.boost) continue;
+        x.boost = { accuracy: tech.boost.accuracy, turns, techId: tech.id };
+        s.log.push({ type: 'boost', uid: x.uid, techId: tech.id, turns });
+      }
+    }
   }
   if (tech.clones) {
+    // Tipo novo: os clones que já existiam viram do tipo novo (todos de um tipo só) e o desgaste zera.
+    const kind = tech.cloneKind ?? 'kage';
+    if (kind !== f.cloneKind) f.cloneWear = 0;
+    f.cloneKind = kind;
     f.clones = Math.min(j.maxClones + f.mods.maxClonesBonus, f.clones + tech.clones + f.mods.extraClones);
     s.log.push({ type: 'clones', uid: f.uid, total: f.clones });
   }
@@ -737,13 +932,30 @@ function resolveEffects(s: JBattle, f: Fighter, tech: JTechnique, targets: Fight
     else if (tech.onHit && t.side !== f.side) applyStatus(s, f, t, tech, data, rng);
     if (t.down) continue;
     if (tech.healHp) heal(s, f, t, Math.floor(tech.healHp * f.mods.healMult));
-    if (tech.shieldPct) {
+    if (tech.shieldPct && tech.barrier) {
+      // Barreira elemental: substitui a que estava de pé; vale pelos `barrier.turns` turnos seguintes de quem recebe
+      // (+1 quando quem ergue é o próprio alvo: o fim deste turno já desconta).
+      const nature = tech.kekkeiGenkai ?? tech.element;
+      const specials = tech.element ? (data.base.barrierSpecials[tech.element] ?? {}) : {};
+      const turns = data.base.barrier.turns + (t === f ? 1 : 0);
+      t.barrier = raiseBarrier(tech.id, { pct: tech.shieldPct, ...specials }, f.maxHp, nature, turns);
+      s.log.push({ type: 'barrier', uid: t.uid, action: 'raise', techId: tech.id, points: t.barrier.points });
+    } else if (tech.shieldPct) {
       const amount = Math.floor(f.maxHp * tech.shieldPct);
       t.shield += amount;
       s.log.push({ type: 'shield', uid: f.uid, target: t.uid, amount });
+      // Esfera absoluta (Hyuuga): o escudo que ergue em si vale também para a equipe, com uma fração.
+      if (t === f && f.mods.shieldShare > 0) {
+        for (const x of alive(s, f.side)) {
+          if (x.uid === f.uid) continue;
+          const part = Math.floor(amount * f.mods.shieldShare);
+          x.shield += part;
+          if (part > 0) s.log.push({ type: 'shield', uid: f.uid, target: x.uid, amount: part });
+        }
+      }
     }
-    if (tech.cleanse && t.effects.some((e) => e.kind === 'stun' || e.kind === 'chakraBlock')) {
-      t.effects = t.effects.filter((e) => e.kind !== 'stun' && e.kind !== 'chakraBlock');
+    if (tech.cleanse && t.effects.some((e) => CLEANSED.includes(e.kind))) {
+      t.effects = t.effects.filter((e) => !CLEANSED.includes(e.kind));
       s.log.push({ type: 'cleanse', uid: f.uid, target: t.uid });
     }
     if (s.status !== 'ongoing') return;
@@ -761,36 +973,72 @@ function applyStatus(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data:
   tryEffect(s, f, t, tech, data, rng);
 }
 
-function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: JornadaData, rng: Rng): void {
+function strike(s: JBattle, f: Fighter, target: Fighter, tech: JTechnique, data: JornadaData, rng: Rng): void {
   const hits = hitsOf(f, tech);
   // Clones só seguram golpe de alvo único; técnica em área passa por eles.
   const single = tech.target !== 'allEnemies';
+  // Guardião e Guarda-costas (Hyuuga): o golpe de alvo único pode cair em quem protege a equipe.
+  const guard = single ? protector(s, target, rng) : null;
+  const t = guard ?? target;
+  if (guard) {
+    s.log.push({ type: 'protect', uid: guard.uid, target: target.uid });
+    if (guard.mods.protectCounter > 0 && !f.down) {
+      s.log.push({ type: 'damage', uid: guard.uid, target: f.uid, amount: guard.mods.protectCounter, crit: false, elementMult: 1, absorbed: 0 });
+      applyHpLoss(s, f, guard.mods.protectCounter, data);
+      if (f.down || s.status !== 'ongoing') return;
+    }
+  }
+  let landed = 0;
   for (let i = 0; i < hits && !t.down && !f.down && s.status === 'ongoing'; i++) {
     const chance = accuracyAgainst(f, t, tech, data);
     // Um sorteio só: abaixo do crítico é crítico, abaixo do acerto é acerto (crítico contido no acerto).
     const r = rng();
     const gateCrit = f.gate ? gateTotals(f.gate.level, data).critBonus : 0;
     // Mestre da trapaça: quem acerta um alvo atordoado acerta em cheio.
-    const sureCrit = f.mods.stunnedAlwaysCrit && hasEffect(t, 'stun');
+    // Tirar os pesos (prodígio): o primeiro golpe da luta que acerta é crítico.
+    const opener = f.mods.openingCrit && !f.openerUsed;
+    if (opener) f.openerUsed = true;
+    const sureCrit = (f.mods.stunnedAlwaysCrit && hasEffect(t, 'stun')) || (f.mods.blockedAlwaysCrit && hasEffect(t, 'chakraBlock')) || opener;
     const outcome = r < (sureCrit ? chance : critChance((tech.critBonus ?? 0) + f.mods.critBonus + gateCrit, data.base.crit, chance)) ? 'crit' : r < chance ? 'hit' : 'miss';
     if (outcome === 'miss') {
       s.log.push({ type: 'miss', uid: f.uid, target: t.uid });
       continue;
     }
-    // Exército de sombras: com clone ativo, o golpe de alvo único cai sempre nele (sem sorteio).
-    if (t.mods.cloneShield && single && t.clones > 0 ? true : cloneTakesHit(t.clones, single, data.base.clones, rng)) {
-      t.clones--;
-      s.log.push({ type: 'cloneBlock', target: t.uid, left: t.clones });
-      if (t.mods.cloneCounter) {
-        s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: t.mods.cloneCounter, crit: false, elementMult: 1, absorbed: 0 });
-        applyHpLoss(s, f, t.mods.cloneCounter, data);
+    // Leitura total (Uchiha): com o Sharingan ligado, chance de anular o golpe (e, com a Leitura de lâminas, revidar).
+    if (single && sharinganOn(t) && t.mods.readNullChance > 0 && rng() < t.mods.readNullChance) {
+      s.log.push({ type: 'miss', uid: f.uid, target: t.uid });
+      if (t.mods.readCounterDamage > 0 && !f.down) {
+        s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: t.mods.readCounterDamage, crit: false, elementMult: 1, absorbed: 0 });
+        applyHpLoss(s, f, t.mods.readCounterDamage, data);
       }
       continue;
     }
-    const amount = hitDamage(f, t, tech, data, outcome === 'crit');
+    if (cloneBlocks(s, f, t, single, data, rng)) continue;
+    landed++;
+    if (outcome === 'crit' && f.mods.critChakra > 0) {
+      const gain = Math.min(f.maxChakra - f.chakra, f.mods.critChakra);
+      f.chakra += gain;
+      if (gain > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount: gain });
+    }
+    // Combo da Folha: cada golpe de taijutsu seguido que acerta bate mais forte (+10% por golpe, até +30%).
+    const combo = tech.type === 'taijutsu' && f.mods.comboStepPct > 0 ? 1 + Math.min(COMBO_MAX, f.mods.comboStepPct * (landed - 1)) : 1;
+    const stunnedBefore = hasEffect(t, 'stun');
+    const raw = Math.floor(hitDamage(f, t, tech, data, outcome === 'crit') * combo);
+    // Barreira elemental primeiro (o elemento só pesa nela), depois o escudo comum.
+    const bMult = elementMult(tech, t, data, f);
+    const amount = hitBarrier(s, t, raw, barrierAttack(f, tech), data, rng);
     const absorbed = Math.min(t.shield, amount);
     t.shield -= absorbed;
-    s.log.push({ type: 'damage', uid: f.uid, target: t.uid, amount: amount - absorbed, crit: outcome === 'crit', elementMult: elementMult(tech, t, data), absorbed });
+    s.log.push({ type: 'damage', uid: f.uid, target: t.uid, amount: amount - absorbed, crit: outcome === 'crit', elementMult: bMult, absorbed: absorbed + raw - amount });
+    // Defesa absoluta e Giro suave (Hyuuga): o escudo devolve parte do que segura e tira chakra de quem bate.
+    if (absorbed > 0 && !f.down) {
+      const back = Math.floor(absorbed * t.mods.shieldReflectPct);
+      if (back > 0) {
+        s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: back, crit: false, elementMult: 1, absorbed: 0 });
+        applyHpLoss(s, f, back, data);
+      }
+      drainChakra(s, f, t.mods.shieldDrain);
+    }
     const hpBefore = t.hp;
     applyHpLoss(s, t, amount - absorbed, data, tech.id);
     // Rasengan que atravessa: o dano que sobrou do golpe fatal passa para o próximo inimigo de pé (uma vez, sem corrente).
@@ -802,38 +1050,197 @@ function strike(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: Jorn
       s.log.push({ type: 'damage', uid: f.uid, target: nextFoe.uid, amount: spill - soaked, crit: false, elementMult: 1, absorbed: soaked });
       applyHpLoss(s, nextFoe, spill - soaked, data, tech.id);
     }
+    // Explosão em cadeia (Comum): ninjutsu em alvo atordoado espalha parte do dano nos outros inimigos.
+    // Chuva de shuriken (Uchiha): a técnica de arma acerta também os outros inimigos com uma fração do dano.
+    const splashPct = (stunnedBefore && tech.type === 'ninjutsu' ? f.mods.stunnedSplashPct : 0) + (f.mods.techSplash[tech.id] ?? 0);
+    if (splashPct > 0 && s.status === 'ongoing') {
+      const splash = Math.floor((amount - absorbed) * splashPct);
+      for (const o of splash > 0 ? alive(s, t.side).filter((x) => x.uid !== t.uid) : []) {
+        s.log.push({ type: 'damage', uid: f.uid, target: o.uid, amount: splash, crit: false, elementMult: 1, absorbed: 0 });
+        applyHpLoss(s, o, splash, data, tech.id);
+        if (s.status !== 'ongoing') break;
+      }
+    }
     if (t.down && f.mods.onKillChakra) {
       const amount = Math.min(f.maxChakra - f.chakra, f.mods.onKillChakra);
       f.chakra += amount;
       if (amount > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount });
     }
     if (!t.down) tryEffect(s, f, t, tech, data, rng);
+    // Fechar pontos, Tenketsu selado e 128 Palmas (Hyuuga): o taijutsu que acerta drena, bloqueia e, no alvo sem chakra,
+    // atordoa.
+    if (!t.down && tech.type === 'taijutsu' && s.status === 'ongoing') {
+      drainChakra(s, t, f.mods.taiHitDrain);
+      if (f.mods.taiChakraBlockChance > 0 && rng() < f.mods.taiChakraBlockChance) addStatus(s, t, 'chakraBlock', data);
+      const stunDry = f.mods.techStunNoChakra[tech.id] ?? 0;
+      if (stunDry > 0 && t.chakra <= 0 && rng() < stunDry) addStatus(s, t, 'stun', data);
+    }
+    // Prisão (Uchiha): as ilusões podem atordoar.
+    if (!t.down && tech.type === 'genjutsu' && f.mods.genjutsuStunChance > 0 && s.status === 'ongoing' && rng() < f.mods.genjutsuStunChance) addStatus(s, t, 'stun', data);
+    // Contra-ataque (prodígio): quem apanha de golpe de alvo único pode revidar na hora (perda de HP direta).
+    if (single && !t.down && !f.down && t.mods.counterChance > 0 && s.status === 'ongoing' && rng() < t.mods.counterChance) {
+      s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: t.mods.counterDamage, crit: false, elementMult: 1, absorbed: 0 });
+      applyHpLoss(s, f, t.mods.counterDamage, data);
+    }
+    // Incenso dos sonhos: cada golpe que acerta pode dar Medo.
+    if (!t.down && f.mods.fearOnHit > 0 && s.status === 'ongoing' && rng() < f.mods.fearOnHit) addStatus(s, t, 'fear', data);
+  }
+  // Trigrama defensivo e protetor (Hyuuga): a técnica que acertou dá escudo (a si, ou ao aliado mais ferido).
+  const shieldPct = landed ? (f.mods.techShieldOnHit[tech.id] ?? 0) : 0;
+  if (shieldPct > 0 && !f.down) {
+    const who = f.mods.allyShieldOnHit ? mostHurt(s, f) : f;
+    const part = Math.floor(f.maxHp * shieldPct);
+    who.shield += part;
+    s.log.push({ type: 'shield', uid: f.uid, target: who.uid, amount: part });
+  }
+  // Ritmo de luta (Comum): cada golpe de taijutsu que acertou devolve chakra.
+  if (landed && tech.type === 'taijutsu' && f.mods.taijutsuHitChakra > 0 && !f.down) {
+    const gain = Math.min(f.maxChakra - f.chakra, landed * f.mods.taijutsuHitChakra);
+    f.chakra += gain;
+    if (gain > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount: gain });
+  }
+  // Clones que batem junto (Mizu, Mokuton): cada um, uma fração do dano de um golpe, sem rolagem; a soma não passa do
+  // teto (`clones.strikeCap`, 70% de um golpe). Kage e Tajuu batem pelas técnicas com golpe por clone (`hitsPerClone`).
+  // Clone de ataque e Sombra da Folha (Comum): o clone de qualquer tipo bate com pelo menos `cloneStrikePct`.
+  const kind = data.base.clones.kinds[f.cloneKind];
+  const pct = Math.min(Math.max(kind.jornadaStrikePct ?? kind.strikePct, f.mods.cloneStrikePct) * f.clones, data.base.clones.strikeCap);
+  if (landed && single && f.clones > 0 && pct > 0 && !t.down && !f.down && s.status === 'ongoing') {
+    const amount = Math.max(1, Math.floor(hitDamage(f, t, tech, data) * pct));
+    const passes = hitBarrier(s, t, amount, barrierAttack(f, tech), data, rng);
+    const absorbed = Math.min(t.shield, passes);
+    t.shield -= absorbed;
+    s.log.push({ type: 'cloneStrike', uid: f.uid, target: t.uid, amount: passes - absorbed });
+    applyHpLoss(s, t, passes - absorbed, data, tech.id);
   }
 }
 
-/** Controle é o que tira ação: atordoar (perde a vez) e bloqueio de chakra (só taijutsu). */
-export const isControl = (e: JEffect) => e === 'stun' || e === 'chakraBlock';
+/** Tira chakra (perda direta, sem log de dano). */
+function drainChakra(s: JBattle, t: Fighter, amount: number): void {
+  const n = Math.min(t.chakra, amount);
+  if (n <= 0) return;
+  t.chakra -= n;
+  s.log.push({ type: 'chakraGain', uid: t.uid, amount: -n });
+}
 
-/** Turnos do efeito da técnica; controle dura no mínimo `combat.minControlTurns`. */
+/** Aliado de pé com a menor fração de HP (o próprio, se estiver sozinho). */
+function mostHurt(s: JBattle, f: Fighter): Fighter {
+  return [...alive(s, f.side)].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0] ?? f;
+}
+
+/**
+ * Quem toma o golpe no lugar do alvo (Hyuuga, Casa secundária): Defendendo, o Guarda-costas protege o aliado mais
+ * ferido; o Guardião protege qualquer aliado com uma chance. Null: o golpe segue para o alvo.
+ */
+function protector(s: JBattle, t: Fighter, rng: Rng): Fighter | null {
+  const guards = alive(s, t.side).filter((x) => x.uid !== t.uid && (x.mods.protectChance > 0 || x.mods.guardProtect));
+  for (const g of guards) {
+    if (g.mods.guardProtect && g.guarding && mostHurt(s, g).uid === t.uid) return g;
+    if (g.mods.protectChance > 0 && rng() < g.mods.protectChance) return g;
+  }
+  return null;
+}
+
+/**
+ * O golpe de alvo único cai num clone? (técnica em área passa por eles.) O clone se gasta pelo tipo (o Doton aguenta
+ * 2); ao se desfazer, o do raio dá uma descarga em quem bateu e o de areia pode bloquear o chakra dele.
+ */
+function cloneBlocks(s: JBattle, f: Fighter, t: Fighter, single: boolean, data: JornadaData, rng: Rng): boolean {
+  if (!single || t.clones <= 0) return false;
+  const rules = data.base.clones;
+  const kind = rules.kinds[t.cloneKind];
+  // Exército de sombras: com clone ativo, o golpe de alvo único cai sempre nele (sem sorteio).
+  if (!t.mods.cloneShield && rng() >= kind.blockChance) return false;
+  const worn = wearClone(t.cloneWear, t.cloneKind, rules);
+  t.cloneWear = worn.wear;
+  if (worn.broken) t.clones--;
+  s.log.push({ type: 'cloneBlock', target: t.uid, left: t.clones, kind: t.cloneKind, ...(worn.broken ? { broken: true } : {}) });
+  // Um contra-ataque por golpe: o do talento ou relíquia (`cloneCounter`) e a descarga do clone de raio não somam;
+  // vale o maior. É perda de HP direta (não é golpe), então não aciona clones nem barreiras de novo.
+  const brk = worn.broken ? kind.onBreak : undefined;
+  const discharge = brk?.damagePct ? Math.max(1, Math.floor(f.maxHp * brk.damagePct)) : 0;
+  const counter = Math.max(t.mods.cloneCounter, discharge);
+  if (counter > 0 && !f.down && s.status === 'ongoing') {
+    s.log.push({ type: 'damage', uid: t.uid, target: f.uid, amount: counter, crit: false, elementMult: 1, absorbed: 0 });
+    applyHpLoss(s, f, counter, data);
+  }
+  if (brk?.effect && !f.down && s.status === 'ongoing' && rng() < (brk.chance ?? 1)) addStatus(s, f, brk.effect, data);
+  return true;
+}
+
+/** Aplica um efeito fora de técnica (descarga do clone de raio, areia que prende), com a trava e as imunidades. */
+function addStatus(s: JBattle, t: Fighter, effect: 'stun' | 'chakraBlock' | 'fear', data: JornadaData): void {
+  if (effect === 'fear' && fearImmune(t, data)) {
+    s.log.push({ type: 'resist', target: t.uid, effect });
+    return;
+  }
+  if (effect === 'stun' && hasEffect(t, 'stunGuard')) {
+    s.log.push({ type: 'resist', target: t.uid, effect });
+    return;
+  }
+  const turns = effectDuration(effect, data.base.effects);
+  const prev = t.effects.find((e) => e.kind === effect);
+  if (prev) prev.turns = Math.max(prev.turns, turns);
+  else t.effects.push({ kind: effect, turns });
+  s.log.push({ type: 'effect', target: t.uid, effect, turns });
+}
+
+/** A barreira do alvo recebe o golpe; devolve o que passa (para o escudo comum e o HP). */
+function hitBarrier(s: JBattle, t: Fighter, amount: number, atk: BarrierAttack, data: JornadaData, rng: Rng): number {
+  const b = t.barrier;
+  if (!b || amount <= 0) return amount;
+  const r = absorbIntoBarrier(b, amount, atk, barrierCtx(data));
+  if (r.absorbed <= 0) return r.passes;
+  s.log.push({ type: 'barrier', uid: t.uid, action: 'hit', techId: b.techId, absorbed: r.absorbed, left: b.points, mult: r.mult });
+  // Parede d'Água que absorve fogo apaga a queimadura de quem está atrás dela.
+  if (r.douse && hasEffect(t, 'burn')) {
+    t.effects = t.effects.filter((e) => e.kind !== 'burn');
+    s.log.push({ type: 'barrier', uid: t.uid, action: 'douse', techId: b.techId });
+  }
+  if (r.broken) {
+    t.barrier = null;
+    s.log.push({ type: 'barrier', uid: t.uid, action: 'break', techId: b.techId });
+  }
+  // Muralha de Chamas: o atacante de taijutsu pode queimar (quem bate é o lutador da vez).
+  const attacker = s.order[s.turnIndex] ? fighter(s, s.order[s.turnIndex]!) : null;
+  if (r.touched && attacker && attacker.side !== t.side && rng() < (b.burnOnTouch ?? 0)) {
+    const turns = effectDuration('burn', data.base.effects);
+    const prev = attacker.effects.find((e) => e.kind === 'burn');
+    if (prev) prev.turns = Math.max(prev.turns, turns);
+    else attacker.effects.push({ kind: 'burn', turns });
+    s.log.push({ type: 'effect', target: attacker.uid, effect: 'burn', turns });
+  }
+  return r.passes;
+}
+
+/** Controle é o que tira ação: atordoar (perde a vez) e bloqueio de chakra (só taijutsu). */
+export const isControl = (e: JEffect) => isControlKind(e);
+
+/** O que Kai, Palma mística e Grito de guerra tiram. */
+const CLEANSED: JEffect[] = ['stun', 'chakraBlock', 'fear'];
+
+/** Turnos do efeito da técnica (a regra comum, src/core/effects.ts); controle dura no mínimo `minControlTurns`. */
 export function effectTurns(tech: JTechnique, data: JornadaData): number {
   const on = tech.onHit;
-  if (!on) return 0;
-  const turns = on.turns ?? data.j.combat.defaultEffectTurns;
-  return isControl(on.effect) ? Math.max(turns, data.j.combat.minControlTurns) : turns;
+  if (!on || on.effect === 'stunGuard') return 0;
+  return effectDuration(on.effect, data.base.effects, on.turns);
 }
 
 function tryEffect(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data: JornadaData, rng: Rng): void {
   const on = tech.onHit;
   if (!on || t.down || rng() >= on.chance + f.mods.effectChanceBonus) return;
-  // A trava de quem acabou de sair de um atordoamento segura o próximo.
-  if (on.effect === 'stun' && hasEffect(t, 'stunGuard')) {
+  // A trava de quem acabou de sair de um atordoamento segura o próximo; Uchiha e jinchuuriki não sentem Medo.
+  if ((on.effect === 'stun' && hasEffect(t, 'stunGuard')) || (on.effect === 'fear' && fearImmune(t, data))) {
     s.log.push({ type: 'resist', target: t.uid, effect: on.effect });
     return;
   }
-  const turns = effectTurns(tech, data);
+  const turns = effectTurns(tech, data) + f.mods.effectTurnsBonus;
   const prev = t.effects.find((e) => e.kind === on.effect);
-  if (prev) prev.turns = Math.max(prev.turns, turns);
-  else t.effects.push({ kind: on.effect, turns });
+  // Fogo que não apaga (Uchiha): a queimadura de quem tem `burnMult` dói mais.
+  const mult = on.effect === 'burn' && f.mods.burnMult > 1 ? f.mods.burnMult : undefined;
+  if (prev) {
+    prev.turns = Math.max(prev.turns, turns);
+    if (mult) prev.mult = Math.max(prev.mult ?? 1, mult);
+  } else t.effects.push({ kind: on.effect, turns, ...(mult ? { mult } : {}) });
   s.log.push({ type: 'effect', target: t.uid, effect: on.effect, turns });
 }
 
@@ -858,6 +1265,12 @@ function lose(s: JBattle, t: Fighter, amount: number, data: JornadaData, techId?
     t.survivedOnce = true;
     t.hp = 1;
     s.log.push({ type: 'survive', target: t.uid });
+    // Vontade do Fogo (Comum): fica de pé com parte do HP e firme; Nunca sozinho: a equipe se recupera junto.
+    if (t.mods.surviveHealPct > 0) {
+      heal(s, t, t, Math.floor(t.maxHp * t.mods.surviveHealPct));
+      if (!hasEffect(t, 'stunGuard')) t.effects.push({ kind: 'stunGuard', turns: data.base.effects.stunImmunityTurns });
+    }
+    if (t.mods.surviveTeamHealPct > 0) for (const a of alive(s, t.side)) if (a.uid !== t.uid) heal(s, t, a, Math.floor(a.maxHp * t.mods.surviveTeamHealPct));
     // Fúria da Kyuubi: em vez de cair, o chakra da raposa toma conta (a forma da ficha, com a cura e os turnos dela).
     const form = t.mods.surviveForm ? formOf(t.defId, t.mods.surviveForm, data) : undefined;
     if (form && !hasForm(t, form.id)) {
@@ -869,11 +1282,23 @@ function lose(s: JBattle, t: Fighter, amount: number, data: JornadaData, techId?
   t.down = true;
   t.effects = [];
   t.clones = 0;
+  t.cloneWear = 0;
   t.shield = 0;
+  t.barrier = null;
   t.guarding = false;
   t.boost = null;
   t.gate = null;
   s.log.push({ type: 'down', target: t.uid });
+  for (const x of alive(s, t.side)) if (x.mods.vengeanceMult > 1) x.vengeful = true;
+  // Lição do mestre (prodígio): uma vez por luta, quando alguém da equipe cai, os de pé ganham dano por 3 turnos.
+  const mentor = alive(s, t.side).find((x) => x.mods.fallenRally > 0 && !x.rallied);
+  if (mentor) {
+    mentor.rallied = true;
+    for (const x of alive(s, t.side)) {
+      x.boost = { damageMult: 1 + mentor.mods.fallenRally, turns: RALLY_TURNS, techId: 'masterLesson' };
+      s.log.push({ type: 'boost', uid: x.uid, techId: 'masterLesson', turns: RALLY_TURNS });
+    }
+  }
   // Pílula na bolsa levanta o protagonista sozinha, antes de conferir a derrota (vale lutando solo).
   if (t.protagonist && s.pills > 0) {
     s.pills--;

@@ -11,7 +11,7 @@ São quatro arcos, um por estágio (v0.58.0): **País das Ondas, Exame chunin, S
 Desde a v0.68.0, a História segue a **jornada do Naruto**: entra o que ele vive, presencia ou descobre. As lutas de outros personagens que ele não protagoniza (os duelos do Quarteto do Som, os Sannin em Tanzaku) viram cenas presenciadas. **Cada parada, na ordem, com categoria, acontecimento, mecânica e recompensa, está em [cronologia.md](cronologia.md)**, a fonte única. Os roteiros das lutas (falas, formas, fases) seguem [roteiro.md](roteiro.md).
 
 - Cada estágio é uma sequência fixa de paradas; a última luta de cada um é o chefe. Depois do chefe pode vir uma cena (o adeus ao Haku, os três Sannin, a volta a Konoha).
-- Categorias das paradas: combate, chefe, **presenciado** (cena sem escolha, com efeito fixo), **narrativo** (2 reações do Naruto), **treino** (minijogo; às vezes dá um marco), descanso e tesouro. A tela do evento mostra a categoria.
+- Categorias das paradas: combate, chefe, **presenciado** (cena sem escolha, com efeito fixo; no 3º estágio, cada cena presenciada dá **+20 ryō**, `storyWitnessRyo`, v0.82.0), **narrativo** (2 reações do Naruto), **treino** (minijogo; às vezes dá um marco), descanso e tesouro. A tela do evento mostra a categoria.
 - A árvore de talentos decide *como* o Naruto cresce, nunca *se* os momentos fundamentais acontecem ([roteiro.md](roteiro.md)).
 
 ## Vitórias especiais

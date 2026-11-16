@@ -73,7 +73,4 @@ O Sharingan e o Byakugan **evoluem** com os talentos [3 tomoe e Byakugan despert
 
 ## Easter eggs
 
-- **Sasuke**: o Uchiha tem o ramo **Raio** na árvore, com o Chidori (até a v0.58.0, só quem sorteava raio como segundo elemento; o segundo elemento saiu na v0.59.0). Aprender o Chidori libera de vez a conquista secreta *Mil pássaros*, que abre:
-  - o **ramo Sasuke** da árvore do Uchiha (Combo do Leão, Lâmina de raio, Vingador, Selo amaldiçoado), em toda run de Uchiha;
-  - o **visual do Sasuke** (retrato com a roupa azul), escolhido na tela de início para runs de Uchiha.
-- Antes de liberado, o ramo Sasuke aparece como "???".
+O easter egg do Sasuke (ramo Raio com o Chidori, conquista *Mil pássaros*, ramo Sasuke e visual do Sasuke) saiu na v0.86.0: o Sasuke vai ganhar a própria História. Quem já tinha a conquista mantém o avatar do Sasuke no perfil.

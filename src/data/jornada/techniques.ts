@@ -10,7 +10,7 @@ export const allyTechniques: JTechnique[] = [
   { id: 'jShuriken', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 5, hits: 2, chakraCost: 0, accuracy: 0.8 },
 
   // Naruto
-  { id: 'jKageBunshin', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 5, clones: 2, active: true },
+  { id: 'jKageBunshin', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 5, clones: 2, cloneKind: 'kage', active: true },
   // Kuchiyose no Jutsu (marco do contrato com os sapos): o Naruto clássico não escolhe o sapo. Sorteia a variante pelo
   // peso; a árvore dos Sapos mexe nos pesos (`rollWeights`).
   {
@@ -42,18 +42,18 @@ export const allyTechniques: JTechnique[] = [
   { id: 'jKyuubiClaw', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, hits: 2, chakraCost: 0, accuracy: 0.9 },
   { id: 'jSexyJutsu', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 0, chakraCost: 3, accuracy: 0.75, onHit: { effect: 'stun', chance: 0.6 }, cooldown: 3 },
   { id: 'jRendan', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 1, hitsPerClone: 1, maxCloneHits: 2, chakraCost: 3, accuracy: 0.85 },
-  { id: 'jTajuuBunshin', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 9, hits: 2, chakraCost: 12, clones: 3 },
+  { id: 'jTajuuBunshin', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 9, hits: 2, chakraCost: 12, clones: 3, cloneKind: 'tajuu' },
   { id: 'jKyuubiCloak', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.08, shieldPct: 0.2, active: true, cooldown: 4 },
   { id: 'jChakraBurst', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 14, chakraCost: 8, accuracy: 0.9 },
   { id: 'jRasengan', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 28, chakraCost: 10, accuracy: 0.9, critBonus: 0.05 },
   { id: 'jOdama', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 44, chakraCost: 16, accuracy: 0.85, penetration: 0.2, onHit: { effect: 'stun', chance: 0.25 } },
   { id: 'jRasenClone', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 18, hits: 1, hitsPerClone: 1, maxCloneHits: 2, chakraCost: 8, accuracy: 0.9 },
-  { id: 'jHarem', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 0, chakraCost: 6, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.5 }, cooldown: 4 },
+  { id: 'jHarem', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 0, chakraCost: 6, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.6 }, cooldown: 4 },
   { id: 'jSmokeBomb', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, boost: { evasion: 0.3, turns: 2 }, active: true, cooldown: 4 },
   { id: 'jShadowShuriken', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 3, chakraCost: 3, accuracy: 0.85 },
   { id: 'jWarCry', type: 'ninjutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 5, healHp: 20, cleanse: true, cooldown: 2 },
   { id: 'jGamakichi', type: 'ninjutsu', element: 'fire', target: 'allEnemies', baseDamage: 12, chakraCost: 6, onHit: { effect: 'burn', chance: 0.3 } },
-  { id: 'jGamatatsu', type: 'ninjutsu', element: 'water', target: 'self', baseDamage: 0, chakraCost: 5, shieldPct: 0.25, active: true, cooldown: 3 },
+  { id: 'jGamatatsu', type: 'ninjutsu', element: 'water', target: 'self', baseDamage: 0, chakraCost: 5, shieldPct: 0.25, barrier: true, active: true, cooldown: 3 },
   { id: 'jGamabunta', type: 'ninjutsu', element: null, target: 'allEnemies', baseDamage: 26, chakraCost: 16, accuracy: 0.9, onHit: { effect: 'stun', chance: 0.2 }, cooldown: 4 },
   { id: 'jOneTail', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.1, boost: { damageMult: 1.35, turns: 3 }, active: true, cooldown: 5 },
 
@@ -87,7 +87,7 @@ export const allyTechniques: JTechnique[] = [
   { id: 'jPrimaryLotus', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 32, chakraCost: 0, hpCostPct: 0.1, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.25 }, cooldown: 3 },
 
   // Gaara (aliado)
-  { id: 'jSandShieldAlly', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'ally', baseDamage: 0, chakraCost: 5, shieldPct: 0.25, cooldown: 2 },
+  { id: 'jSandShieldAlly', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'ally', baseDamage: 0, chakraCost: 5, shieldPct: 0.25, barrier: true, cooldown: 2 },
   { id: 'jSandCoffinAlly', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'enemy', baseDamage: 20, chakraCost: 7, onHit: { effect: 'stun', chance: 0.25 } },
   { id: 'jSandShuriken', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'allEnemies', baseDamage: 8, chakraCost: 5 },
 
@@ -119,20 +119,33 @@ export const elementalTechniques: JTechnique[] = [
 
 /** Comum e prodígio do Caminho Ninja (docs/jornada/classes.md). */
 export const classTechniques: JTechnique[] = [
-  // Diferente do Kage Bunshin: gasta o turno e cria só 1 clone.
-  { id: 'jBunshin', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, clones: 1 },
+  // Diferente do Kage Bunshin: gasta o turno e cria só 1 clone. É ilusão: só distrai.
+  { id: 'jBunshin', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, clones: 1, cloneKind: 'bunshin' },
+  // Clones elementais (v0.77.0): quem tem a natureza troca o Bunshin pelo clone dela (`cloneTechFor`, src/core/jornada/run.ts).
+  { id: 'jMizuBunshin', type: 'ninjutsu', element: 'water', target: 'self', baseDamage: 0, chakraCost: 4, clones: 1, cloneKind: 'mizu' },
+  { id: 'jDotonBunshin', type: 'ninjutsu', element: 'earth', target: 'self', baseDamage: 0, chakraCost: 4, clones: 1, cloneKind: 'doton' },
+  { id: 'jRaitonBunshin', type: 'ninjutsu', element: 'lightning', target: 'self', baseDamage: 0, chakraCost: 5, clones: 1, cloneKind: 'raiton' },
+  { id: 'jMokutonBunshin', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'wood', target: 'self', baseDamage: 0, chakraCost: 6, clones: 1, cloneKind: 'mokuton' },
+  { id: 'jSunaBunshin', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'self', baseDamage: 0, chakraCost: 4, clones: 1, cloneKind: 'suna' },
+  // Barreiras elementais (v0.77.0): escudo do elemento por 3 turnos; só ele sente a vantagem de elemento. O raio não tem.
+  { id: 'jEarthWall', type: 'ninjutsu', element: 'earth', target: 'self', baseDamage: 0, chakraCost: 5, shieldPct: 0.28, barrier: true, cooldown: 3 },
+  { id: 'jWaterWall', type: 'ninjutsu', element: 'water', target: 'self', baseDamage: 0, chakraCost: 5, shieldPct: 0.24, barrier: true, cooldown: 3 },
+  { id: 'jFireWall', type: 'ninjutsu', element: 'fire', target: 'self', baseDamage: 0, chakraCost: 4, shieldPct: 0.2, barrier: true, cooldown: 3 },
+  { id: 'jWindShield', type: 'ninjutsu', element: 'wind', target: 'self', baseDamage: 0, chakraCost: 4, shieldPct: 0.2, barrier: true, cooldown: 3 },
   { id: 'jEffort', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, cooldown: 4, boost: { offense: 3, turns: 3 }, active: true },
   { id: 'jExplosiveTag', type: 'taijutsu', element: null, target: 'allEnemies', baseDamage: 11, chakraCost: 4, accuracy: 0.85, cooldown: 2 },
   // Portões: a ativa abre a escolha do portão; bônus, desgaste e tempo em jornadaBalance.gates.
   { id: 'jGates', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, active: true, gates: true },
   { id: 'jDynamicEntry', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 15, chakraCost: 0, accuracy: 0.9, critBonus: 0.1, cooldown: 2 },
   { id: 'jHiddenLotus', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, hits: 4, chakraCost: 0, hpCostPct: 0.15, accuracy: 0.85, cooldown: 4 },
+  // Shuriken giratória (Uchiha, ramo Armas do clã, v0.86.0): a arma do clã, 3 golpes baratos.
+  { id: 'jUWindmill', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 4, hits: 3, chakraCost: 3, accuracy: 0.9 },
   { id: 'jDrunkenFist', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 7, hits: 3, chakraCost: 0, accuracy: 0.75, critBonus: 0.15 },
 
   // Uchiha (v0.37.0)
   { id: 'jSharingan', type: 'genjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, boost: { accuracy: 0.15, evasion: 0.15, turns: 3 }, active: true, cooldown: 4 },
   { id: 'jSharingan3', type: 'genjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 4, boost: { accuracy: 0.2, evasion: 0.25, damageMult: 1.1, turns: 4 }, active: true, cooldown: 4, evolves: 'jSharingan' },
-  { id: 'jCrowIllusion', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 12, chakraCost: 4, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.2 } },
+  { id: 'jCrowIllusion', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 12, chakraCost: 4, accuracy: 0.85, onHit: { effect: 'fear', chance: 0.3 } },
   { id: 'jTsukuyomi', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 30, chakraCost: 12, accuracy: 0.85, onHit: { effect: 'stun', chance: 0.4 }, cooldown: 4 },
   { id: 'jCursedSeal', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.1, boost: { damageMult: 1.4, turns: 3 }, active: true, cooldown: 5 },
 
@@ -176,7 +189,7 @@ export const enemyTechniques: JTechnique[] = [
   // Exame: Trio do Som
   { id: 'jeSoundWave', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 11, chakraCost: 3, onHit: { effect: 'stun', chance: 0.15 } },
   { id: 'jeAirBlast', type: 'ninjutsu', element: 'wind', target: 'allEnemies', baseDamage: 8, chakraCost: 5 },
-  { id: 'jeBellGenjutsu', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 7, chakraCost: 3, onHit: { effect: 'stun', chance: 0.25 } },
+  { id: 'jeBellGenjutsu', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 7, chakraCost: 3, onHit: { effect: 'fear', chance: 0.35 } },
   // Ninjas da Grama e da Chuva
   { id: 'jeUmbrellaNeedles', type: 'taijutsu', element: null, target: 'allEnemies', baseDamage: 4, hits: 2, chakraCost: 3, accuracy: 0.75 },
   { id: 'jeRainClone', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 9, chakraCost: 2 },
@@ -194,7 +207,7 @@ export const enemyTechniques: JTechnique[] = [
   { id: 'jeSixtyFourPalms', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 4, hits: 4, chakraCost: 8, accuracy: 0.95, penetration: 0.3, onHit: { effect: 'chakraBlock', chance: 0.5, turns: 3 }, cooldown: 3 },
   // Gaara (exame)
   { id: 'jeSandCoffin', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'enemy', baseDamage: 18, chakraCost: 6, onHit: { effect: 'stun', chance: 0.3 } },
-  { id: 'jeSandShield', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'self', baseDamage: 0, chakraCost: 4, shieldPct: 0.15, cooldown: 3 },
+  { id: 'jeSandShield', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'self', baseDamage: 0, chakraCost: 4, shieldPct: 0.15, barrier: true, cooldown: 3 },
   { id: 'jeSandTsunami', type: 'ninjutsu', element: 'earth', kekkeiGenkai: 'sand', target: 'allEnemies', baseDamage: 14, chakraCost: 9 },
   { id: 'jeShukakuClaw', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 22, chakraCost: 3, accuracy: 0.8 },
   // Orochimaru
@@ -208,7 +221,7 @@ export const enemyTechniques: JTechnique[] = [
   { id: 'jeHeavyPunch', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 18, chakraCost: 0, accuracy: 0.8 },
   { id: 'jeGoldenArrow', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 24, chakraCost: 6, accuracy: 0.8, penetration: 0.2 },
   { id: 'jeSpiderWeb', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 4, chakraCost: 3, onHit: { effect: 'stun', chance: 0.35 }, cooldown: 2 },
-  { id: 'jeDemonFlute', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 9, chakraCost: 6, onHit: { effect: 'stun', chance: 0.15 } },
+  { id: 'jeDemonFlute', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 9, chakraCost: 6, onHit: { effect: 'fear', chance: 0.3 } },
   { id: 'jeTwinStrike', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 9, hits: 2, chakraCost: 0, accuracy: 0.85 },
   // Kimimaro
   { id: 'jeBoneDrill', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 22, chakraCost: 4, penetration: 0.3 },

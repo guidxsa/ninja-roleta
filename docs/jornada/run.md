@@ -49,7 +49,7 @@ Recompensas interativas no lugar da roleta visual. Ganhar dá o prêmio do event
 ## Dificuldade
 
 - As 4 do Roleta ([campanha.md](../roleta/campanha.md#dificuldade)), com a mesma força nos inimigos.
-- A Vontade do Fogo só existe no Fácil (1 por run, reposta a cada ciclo do modo infinito) e por relíquia: recomeça uma luta perdida.
+- A Vontade do Fogo vai até o Difícil (v0.77.0; antes, só no Fácil): Fácil 2, Médio 1, Difícil 1 por run, repostas a cada ciclo do modo infinito, mais as de relíquia. Recomeça uma luta perdida. O Hardcore não tem.
 - O Hardcore da Jornada libera ao vencer a História no Difícil.
 
 ## Salvamento
@@ -88,7 +88,7 @@ Do Caminho Ninja ([caminho-ninja.md](caminho-ninja.md)), implementado na v0.36.0
 Só no **Caminho Ninja** e só no **Hardcore** (implementado na v0.44.0; só no Hardcore desde a v0.51.0; a História termina no Vale do Fim). Run antiga já em ciclo 2 ou mais em outra dificuldade termina o ciclo em que está. A vitória conta como hoje (conquistas de vitória, desbloqueios); depois dela, a tela oferece **Seguir para o ciclo N+1** ou Voltar ao início (a run fica salva para seguir depois).
 
 - **Mantém**: nível, XP, talentos e níveis, técnicas e moveset, relíquias, ryō, bolsa, suportes e os elementos sorteados. As contas da run (lutas, vitórias, aliados caídos) somam.
-- **Recomeça**: estágio 1, com **chefes e mapa sorteados de novo** (da seed e do ciclo), as marcas dos eventos limpas (os eventos voltam a ser novos) e a equipe cheia. A Vontade do Fogo volta ao mínimo da dificuldade (Fácil: 1), sem tirar as que sobraram.
+- **Recomeça**: estágio 1, com **chefes e mapa sorteados de novo** (da seed e do ciclo), as marcas dos eventos limpas (os eventos voltam a ser novos) e a equipe cheia. A Vontade do Fogo volta ao mínimo da dificuldade (o modo infinito é do Hardcore, que não tem; as de relíquia ficam), sem tirar as que sobraram.
 - **Inimigos mais fortes**: HP, ataques e resistências × dificuldade × **1,5 ^ ciclo**, com o ciclo contando do 0 (`infinite.enemyCycleMult`; rascunho). Ciclo 2: ×1,5; ciclo 3: ×2,25; ciclo 4: ×3,4; ciclo 5: ×5,1.
 - Pontos de talento que sobram com a árvore toda comprada viram ryō ([talentos.md](talentos.md#árvore-completa)).
 - Com muitos ciclos as relíquias podem acabar: o tesouro fica vazio, a elite não deixa nada e o chefe não oferece escolha (o jogo segue).

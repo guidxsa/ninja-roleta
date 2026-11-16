@@ -4,7 +4,9 @@ import type { JornadaData } from '../src/core/jornada/data';
 import { battleSetup, currentEvent, finishFight, grantedTechniques, heroKnown, newRun, resolveEvent } from '../src/core/jornada/run';
 import type { ScriptRule } from '../src/core/jornada/script';
 import type { JBattle } from '../src/core/jornada/types';
-import { jornadaData as data } from '../src/data/jornada';
+import { jornadaData } from '../src/data/jornada';
+// Os roteiros da História, não o balanceamento: a força por estágio (v0.82.0) fica neutra para as seeds valerem.
+const data: JornadaData = { ...jornadaData, j: { ...jornadaData.j, storyStageStrength: [1, 1, 1, 1] } };
 import { eventOptions } from '../src/core/jornada/events';
 import { ptBR } from '../src/data/strings/ptBR';
 import { chooseAiAction } from '../src/core/jornada/ai';
@@ -444,7 +446,9 @@ describe('História canônica: Sannin e Resgate (v0.67.0)', () => {
   it('Vale do Fim: selo nível 2 e manto de uma cauda; a 20% o Sasuke parte e a run vence', () => {
     // No jogo, o Naruto chega ao Vale já com o Rasengan (marco dos Sannin).
     const run = { ...newRun(3, 'easy', data), ...stopAt('retrieval', 'valley'), level: 10, learned: ['jRasengan'] };
-    const end = playOut(startBattle(battleSetup(run, data), data, createRng(1)), data, createRng(1));
+    // O roteiro, não o balanceamento: a força por estágio da História (v0.82.0) fica neutra para a seed valer.
+    const flat = { ...data, j: { ...data.j, storyStageStrength: [1, 1, 1, 1] } };
+    const end = playOut(startBattle(battleSetup(run, flat), flat, createRng(3)), flat, createRng(3));
     expect(end.status).toBe('won');
     {
       expect(end.fighters.find((f) => f.defId === 'sasukeFinal')!.form).toBe('curseMark2');
@@ -518,9 +522,11 @@ describe('revisão da História, parte 2 (v0.70.0)', () => {
   it('Gaara: o Gamabunta vira raposa, segura o Shukaku, e a cabeçada do jogador acorda o Gaara', () => {
     const run = { ...newRun(3, 'easy', data), ...stopAt('exam', 'gaara'), level: 8, relics: ['irukaHeadband'] };
     const rng = createRng(26);
-    let b = startBattle(battleSetup(run, data), data, createRng(26));
+    // O roteiro, não o balanceamento: a força por estágio da História (v0.82.0) fica neutra para a seed valer.
+    const flat = { ...data, j: { ...data.j, storyStageStrength: [1, 1, 1, 1] } };
+    let b = startBattle(battleSetup(run, flat), flat, createRng(26));
     const naruto = () => b.fighters.find((f) => f.protagonist)!;
-    for (let i = 0; i < 300 && b.status === 'ongoing' && !naruto().techniques.includes('jHeadbutt'); i++) b = playerAct(b, chooseAiAction(b, naruto(), data, rng), data, rng);
+    for (let i = 0; i < 300 && b.status === 'ongoing' && !naruto().techniques.includes('jHeadbutt'); i++) b = playerAct(b, chooseAiAction(b, naruto(), flat, rng), flat, rng);
     expect(b.status).toBe('ongoing');
     const toad = b.fighters.find((f) => f.defId === 'gamabuntaAlly')!;
     expect(toad.form).toBe('foxHenge');
@@ -529,7 +535,7 @@ describe('revisão da História, parte 2 (v0.70.0)', () => {
     const shukaku = b.fighters.find((f) => f.defId === 'shukaku' && !f.gone)!;
     expect(shukaku.effects.some((e) => e.kind === 'stun')).toBe(true);
     // A cabeçada é do jogador: usar a técnica troca o Shukaku pelo Gaara acordado e manda o Gamabunta embora.
-    b = playerAct(b, { kind: 'tech', techId: 'jHeadbutt', target: shukaku.uid }, data, fixed(0));
+    b = playerAct(b, { kind: 'tech', techId: 'jHeadbutt', target: shukaku.uid }, flat, fixed(0));
     expect(says(b)).toContain('gaaraWake');
     expect(says(b)).not.toContain('gaaraHeadbutt');
     expect(b.fighters.find((f) => f.defId === 'shukaku')!.gone).toBe(true);

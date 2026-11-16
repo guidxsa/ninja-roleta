@@ -32,7 +32,7 @@ const e = (
 export const enemies: EnemyDef[] = [
   // Estágio 1 · Academia e País das Ondas
   e('mizuki', 65, 10, 9, [7, 5, 3], [6, 6], 'wind', ['jeKunai', 'jeGiantShuriken'], 'brute', 'villain:mizuki'),
-  e('kakashi', 170, 40, 15, [11, 11, 9], [9, 9], 'lightning', ['jeKakashiKick', 'jeThousandYears', 'jeHeadHunter'], 'tactician', 'ninja:kakashi'),
+  e('kakashi', 170, 40, 15, [11, 11, 9], [9, 9], 'lightning', ['jeKakashiKick', 'jeThousandYears', 'jeHeadHunter', 'jRaitonBunshin'], 'tactician', 'ninja:kakashi'),
   e('gatoThug', 38, 0, 7, [6, 0, 0], [3, 2], null, ['jeClub', 'jeKatana'], 'brute', 'ninja:thug'),
   // Mercenários do Gatō: chegam à ponte depois do sacrifício do Haku (roteiro).
   e('gatoMerc', 45, 0, 8, [7, 0, 0], [4, 3], null, ['jeClub', 'jeKatana'], 'brute', 'ninja:thug'),
@@ -41,7 +41,7 @@ export const enemies: EnemyDef[] = [
   e('mistRogue', 55, 14, 10, [6, 8, 2], [5, 4], 'water', ['jeKunai', 'jeWaterBullet'], 'striker', 'ninja:mist'),
   e('gozu', 62, 8, 11, [8, 3, 0], [5, 4], 'water', ['jeChainClaw', 'jeChainSweep'], 'brute', 'ninja:gozu'),
   e('meizu', 62, 8, 11, [8, 3, 0], [5, 4], 'water', ['jeChainClaw', 'jeChainSweep'], 'brute', 'ninja:meizu'),
-  e('zabuza', 160, 30, 12, [12, 11, 3], [9, 6], 'water', ['jeCleaver', 'jeWaterPrison', 'jeWaterDragon'], 'brute', 'villain:zabuza'),
+  e('zabuza', 160, 30, 12, [12, 11, 3], [9, 6], 'water', ['jeCleaver', 'jeWaterPrison', 'jeWaterDragon', 'jMizuBunshin'], 'brute', 'villain:zabuza'),
   // Haku: natureza Gelo (Kekkei Genkai, v0.59.0).
   { ...e('haku', 150, 34, 16, [9, 11, 6], [7, 8], 'water', ['jeSenbon', 'jeIceMirrors', 'jePressurePoint'], 'tactician', 'villain:haku', {
     kind: 'enrage',
@@ -60,7 +60,7 @@ export const enemies: EnemyDef[] = [
   e('akamaru', 45, 0, 15, [9, 0, 0], [4, 3], null, ['jeDogBite'], 'brute', 'ninja:akamaru'),
   e('neji', 150, 30, 14, [14, 6, 4], [9, 9], null, ['jeGentleFist', 'jeRotation', 'jeSixtyFourPalms'], 'tactician', 'ninja:hyuuga'),
   // Gaara: natureza Areia (Kekkei Genkai, v0.59.0).
-  { ...e('gaara', 230, 45, 10, [8, 15, 4], [12, 8], 'earth', ['jeSandCoffin', 'jeSandShield', 'jeSandTsunami', 'jeShukakuClaw'], 'brute', 'villain:gaara', {
+  { ...e('gaara', 230, 45, 10, [8, 15, 4], [12, 8], 'earth', ['jeSandCoffin', 'jeSandShield', 'jeSandTsunami', 'jeShukakuClaw', 'jSunaBunshin'], 'brute', 'villain:gaara', {
     kind: 'startShieldPct',
     pct: 0.15,
   }), kekkeiGenkai: 'sand' },
@@ -79,7 +79,7 @@ export const enemies: EnemyDef[] = [
   e('kabuto', 170, 36, 14, [12, 13, 6], [9, 9], null, ['jeKunai', 'jeChakraScalpel', 'jeMedicalHeal', 'jeReanimate'], 'healer', 'villain:kabuto'),
   e('sasukeHospital', 170, 34, 15, [13, 13, 7], [8, 8], 'fire', ['jeSasukeChidori', 'jeSasukeFireball', 'jeSasukeLion'], 'striker', 'ninja:uchiha'),
   e('snake', 90, 0, 9, [11, 0, 0], [7, 4], null, ['jeSnakeBite'], 'brute', 'villain:orochimaru'),
-  e('jirobo', 180, 30, 9, [14, 8, 2], [11, 6], 'earth', ['jeHeavyPunch', 'jeEarthDome'], 'brute', 'villain:jirobo'),
+  e('jirobo', 180, 30, 9, [14, 8, 2], [11, 6], 'earth', ['jeHeavyPunch', 'jeEarthDome', 'jEarthWall', 'jDotonBunshin'], 'brute', 'villain:jirobo'),
   e('kidomaru', 160, 30, 13, [12, 10, 4], [8, 7], null, ['jeGoldenArrow', 'jeSpiderWeb', 'jeKunai'], 'tactician', 'villain:kidomaru'),
   e('tayuya', 150, 34, 12, [8, 8, 14], [7, 9], null, ['jeDemonFlute', 'jeKunai'], 'tactician', 'villain:tayuya'),
   e('sakon', 150, 26, 13, [13, 8, 4], [9, 6], null, ['jeTwinStrike', 'jeSoundBlade'], 'brute', 'villain:sakon'),

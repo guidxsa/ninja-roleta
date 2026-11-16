@@ -37,9 +37,27 @@ function nodeIcon(run: JRun, n: TalentNode): string {
   const tech = learn ? data.techniques[learn] : null;
   if (tech) return icon(tech.clones || tech.hitsPerClone ? 'clones' : tech.shieldPct ? 'barrier' : tech.healHp ? 'medical' : tech.boost ? 'sparkle' : (tech.element ?? tech.type));
   const m = { ...n.mods, ...n.teamMods };
-  if (m.gateLevels) return icon('gates');
+  if (m.gateLevels || m.gateOpenDiscount || m.gateAutoUp || m.hpCostFreeAtGate) return icon('gates');
+  if (m.fallenRally || m.shareBoost || m.boostTurnsBonus) return icon('sparkle');
+  if (m.protectChance || m.guardProtect || m.protectCounter) return icon('stance');
+  if (m.shieldReflectPct || m.shieldShare || m.shieldDrain || (m.techShieldOnHit && Object.keys(m.techShieldOnHit).length)) return icon('barrier');
+  if (m.ignoreEvasion) return icon('byakugan');
+  if (m.taiHitDrain || m.taiChakraBlockChance || m.chakraBlockedDamageMult || m.blockedAlwaysCrit || m.noChakraDamageMult) return icon('block');
+  if (m.techStunNoChakra && Object.keys(m.techStunNoChakra).length) return icon('stun');
+  if (m.readNullChance || m.readCounterDamage || m.vengeanceAccuracy) return icon('sharingan');
+  if (m.burnMult || m.burningDamageMult) return icon('fire');
+  if (m.genjutsuStunChance || m.illusionSureHit || m.fearOnHit) return icon('genjutsu');
+  if (m.techSplash && Object.keys(m.techSplash).length) return icon('kunai');
+  if (m.vengeanceMult) return icon('heartbreak');
+  if (m.counterChance) return icon('stance');
+  if (m.critMultBonus || m.critChakra || m.openingCrit) return icon('crit');
+  if (m.techExtraHits && Object.keys(m.techExtraHits).length) return icon('taijutsu');
   if (m.surviveOnce) return icon('willOfFire');
-  if (m.startClones || m.extraClones || m.maxClonesBonus || m.cloneCounter || m.damagePerClone) return icon('clones');
+  if (m.startClones || m.extraClones || m.maxClonesBonus || m.cloneCounter || m.damagePerClone || m.cloneStrikePct || m.cloneEnemyAccuracy || m.taijutsuHitsPerClone) return icon('clones');
+  if (m.taijutsuExtraHits || m.comboStepPct || m.taijutsuHitChakra || m.typePen?.taijutsu) return icon('taijutsu');
+  if (m.stunnedDamageMult || m.stunnedSplashPct) return icon('stun');
+  if (m.typePen?.ninjutsu || m.effectTurnsBonus) return icon('ninjutsu');
+  if (m.surviveTeamHealPct || m.healMult || m.kitBonusPct) return icon('medical');
   if (m.regenHp) return icon('heart');
   if (m.startShieldPct || m.reviveHpBonus) return icon('barrier');
   if (m.evasion) return icon('dodge');
@@ -85,13 +103,16 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
     // As combinações aparecem no pé dos dois ramos que ligam, lado a lado quando o ramo tem duas.
     const combos = visible().filter((n) => isCombo(n) && comboBranches(n, data.talents).includes(b));
     const list = [...own, ...combos];
-    const rows = Math.max(...own.map((n) => n.tier)) + (combos.length ? 1 : 0);
+    // Combinações em linhas de duas (o Comum tem até quatro por ramo, com as assinaturas, v0.84.0).
+    const lastOwn = Math.max(...own.map((n) => n.tier));
+    const rows = lastOwn + Math.ceil(combos.length / 2);
     // A linha das combinações tem o nome do ramo parceiro embaixo: um pouco mais de altura.
     const height = rows * ROW + (combos.length ? 24 : 4);
     const place = (n: TalentNode): [number, number] => {
       const i = combos.indexOf(n);
       if (i < 0) return [colX(n), rowY(n)];
-      return [combos.length > 1 ? 50 + (i === 0 ? -28 : 28) : 50, rowY(n, rows)];
+      const alone = i === combos.length - 1 && i % 2 === 0;
+      return [alone ? 50 : 50 + (i % 2 === 0 ? -28 : 28), rowY(n, lastOwn + 1 + Math.floor(i / 2))];
     };
     const byId = new Map(own.map((n) => [n.id, n]));
     const edges = list

@@ -1,5 +1,7 @@
 // Tela de batalha da Jornada (docs/jornada/combate.md#interface): inimigos em cima, equipe embaixo,
 // alvo por toque e animação a partir do log de eventos do core. Sem roleta na tela: só o resultado.
+import type { CloneKind } from '../../src/core/clones';
+import { gateHpUpkeep } from '../../src/core/gates';
 import {
   awaitingPlayer,
   canRaise,
@@ -49,7 +51,7 @@ const J = S.jornada;
 const B = J.battle;
 
 /** Ícone de cada efeito de status (dicas, selos do lutador, números flutuantes). */
-export const EFFECT_ICONS: Record<string, string> = { stun: 'stun', burn: 'fire', poison: 'poison', chakraBlock: 'block', stunGuard: 'immune' };
+export const EFFECT_ICONS: Record<string, string> = { stun: 'stun', burn: 'fire', poison: 'poison', chakraBlock: 'block', fear: 'fear', stunGuard: 'immune' };
 const fxIcon = (kind: string) => icon(EFFECT_ICONS[kind] ?? 'neutral');
 
 /** Nome do protagonista: o do jogador no Caminho Ninja ("Nome Uchiha"); na História, o Naruto. Sem escapar. */
@@ -102,7 +104,8 @@ export const techName = (id: string) => J.techniques[id] ?? id;
 /** Visual do protagonista desta luta (personalização da run). */
 let heroSkin: string | null = null;
 
-const CLONE_PCT = Math.round(jornadaData.base.clones.blockChance * 100);
+/** Chance de o clone segurar o golpe, pelo tipo (src/core/clones.ts). */
+const clonePct = (kind: CloneKind) => Math.round(jornadaData.base.clones.kinds[kind].blockChance * 100);
 
 function portraitOf(f: Fighter, data: JornadaData): string {
   // Forma ligada pelo roteiro (manto, Shukaku) com retrato próprio.
@@ -150,7 +153,7 @@ function boostParts(b: Boost): string {
 /** Bônus e próxima manutenção de um portão, para as dicas. */
 function gateLines(f: Fighter, level: number): string[] {
   const t = gateTotals(level, jornadaData);
-  return [G.bonus(fmtMult(t.damageMult), pctN(t.accuracy), pctN(t.critBonus), level > 1), G.upkeep(nextGateUpkeep(f, level, jornadaData))];
+  return [G.bonus(fmtMult(t.damageMult), pctN(t.accuracy), pctN(t.critBonus), level > 1), G.upkeep(nextGateUpkeep(f, level, jornadaData), gateHpUpkeep(level, f.maxHp, jornadaData.base.gateCosts))];
 }
 
 /** Dica do botão Portões: o que está aberto, o desgaste e as regras. */
@@ -206,8 +209,8 @@ export function techTip(tech: JTechnique, f?: Fighter, mods?: FighterMods, s?: J
     effect,
     tech.healHp ? `cura ${tech.healHp} de HP` : '',
     tech.shieldPct ? `${icon('barrier')} escudo ${pct(tech.shieldPct)} do HP de quem usa` : '',
-    tech.cleanse ? `tira ${J.effects.stun} e ${J.effects.chakraBlock}` : '',
-    tech.clones ? `${icon('clones')} ${B.clonesMade(clonesMade(tech, f))}. ${B.cloneRule(CLONE_PCT, jornadaData.j.combat.maxClones)}` : '',
+    tech.cleanse ? `tira ${J.effects.stun}, ${J.effects.chakraBlock} e ${J.effects.fear}` : '',
+    tech.clones ? `${icon('clones')} ${B.clonesMade(clonesMade(tech, f))}. ${B.cloneRule(clonePct(tech.cloneKind ?? 'kage'), jornadaData.j.combat.maxClones)}` : '',
     cost ? B.chakra(cost) : '',
     tech.hpCostPct && f ? B.hpCost(hpCost(f, tech)) : tech.hpCostPct ? `${pct(tech.hpCostPct)} do HP` : '',
     tech.boost ? B.boostLine(tech.boost.turns, boostParts(tech.boost)) : '',
@@ -228,8 +231,9 @@ function fighterTip(f: Fighter): string {
     f.protagonist ? '' : J.ai[f.ai] ?? '',
     passive,
     f.shield ? `${icon('barrier')} ${f.shield}` : '',
-    f.clones ? `${icon('clones')} ${B.clonesActive(f.clones, CLONE_PCT)}` : '',
-    f.gate ? `${icon('gates')} ${B.gateTip(gateName(f.gate.level), nextGateUpkeep(f, f.gate.level, jornadaData))}` : '',
+    f.barrier ? `${icon(barrierIcon(f))} ${techName(f.barrier.techId)}: ${B.barrierChip(f.barrier.points, f.barrier.turns)}` : '',
+    f.clones ? `${icon('clones')} ${B.clonesActive(f.clones, clonePct(f.cloneKind))}` : '',
+    f.gate ? `${icon('gates')} ${B.gateTip(gateName(f.gate.level), nextGateUpkeep(f, f.gate.level, jornadaData), gateHpUpkeep(f.gate.level, f.maxHp, jornadaData.base.gateCosts))}` : '',
     ...(f.gate ? gateLines(f, f.gate.level) : []),
     f.boost ? `${icon('sparkle')} ${B.boostTip(techName(f.boost.techId), f.boost.turns)}: ${boostParts(f.boost)}` : '',
     effects.length ? `${U.tipEffects}: ${effects.join(', ')}` : '',
@@ -238,13 +242,17 @@ function fighterTip(f: Fighter): string {
   return tip(fighterName(f), body);
 }
 
+/** Ícone da barreira: o do elemento dela (a Kekkei Genkai usa o escudo comum). */
+const barrierIcon = (f: Fighter) => (f.barrier?.nature && f.barrier.nature in BEATS ? f.barrier.nature : 'barrier');
+
 function statusChips(f: Fighter): string {
   // A trava contra atordoamento é a favor de quem a tem.
   const chips = f.effects.map((e) => `<span class="jchip ${e.kind === 'stunGuard' ? 'good' : 'bad'}" role="img" aria-label="${J.effects[e.kind]}: ${e.turns}">${fxIcon(e.kind)}${e.turns}</span>`);
   if (f.shield > 0) chips.push(`<span class="jchip good">${icon('barrier')}${f.shield}</span>`);
-  if (f.clones > 0) chips.push(`<span class="jchip good" title="${B.clonesActive(f.clones, CLONE_PCT)}">${icon('clones')}${f.clones}</span>`);
+  if (f.barrier) chips.push(`<span class="jchip good" title="${B.barrierChip(f.barrier.points, f.barrier.turns)}">${icon(barrierIcon(f))}${f.barrier.points}</span>`);
+  if (f.clones > 0) chips.push(`<span class="jchip good" title="${B.clonesActive(f.clones, clonePct(f.cloneKind))}">${icon('clones')}${f.clones}</span>`);
   if (f.guarding) chips.push(`<span class="jchip good">${icon('stance')}</span>`);
-  if (f.gate) chips.push(`<span class="jchip gate" title="${B.gateTip(gateName(f.gate.level), nextGateUpkeep(f, f.gate.level, jornadaData))}">${icon('gates')}${G.numeral[f.gate.level - 1]}</span>`);
+  if (f.gate) chips.push(`<span class="jchip gate" title="${B.gateTip(gateName(f.gate.level), nextGateUpkeep(f, f.gate.level, jornadaData), gateHpUpkeep(f.gate.level, f.maxHp, jornadaData.base.gateCosts))}">${icon('gates')}${G.numeral[f.gate.level - 1]}</span>`);
   if (f.boost) chips.push(`<span class="jchip good" title="${B.boostTip(techName(f.boost.techId), f.boost.turns)}">${icon('sparkle')}${f.boost.turns}</span>`);
   return chips.join('');
 }
@@ -287,10 +295,12 @@ function intelRow(f: Fighter, data: JornadaData): string {
   let matchup = '';
   let techs = '';
   if (enemy) {
-    if (f.element) {
-      const weak = WEAK_TO[f.element]!;
-      const mult = String(data.j.combat.elementAdvantage).replace('.', ',');
-      matchup = `<small class="jb-row-traits jb-row-match"><span class="weak">${icon(weak)} ${B.weakTo(S.elements[weak], mult)}</span><span>${icon(BEATS[f.element])} ${B.strongVs(S.elements[BEATS[f.element]])}</span></small>`;
+    // O elemento só pesa contra a barreira (v0.77.0): com uma de pé, mostra contra o que ela é fraca e forte.
+    const bEl = f.barrier?.nature && f.barrier.nature in BEATS ? (f.barrier.nature as keyof typeof BEATS) : null;
+    if (bEl) {
+      const weak = WEAK_TO[bEl]!;
+      const mult = String(data.base.elements.advantage).replace('.', ',');
+      matchup = `<small class="jb-row-traits jb-row-match"><span class="weak">${icon(weak)} ${B.weakTo(S.elements[weak], mult)}</span><span>${icon(BEATS[bEl])} ${B.strongVs(S.elements[BEATS[bEl]])}</span></small>`;
     }
     techs = `<ul class="jb-row-techs">${f.techniques
       .map((id) => data.techniques[id])
@@ -574,7 +584,10 @@ export async function jornadaBattle(
           break;
         case 'cloneBlock': {
           float(e.target, B.clone, 'shield');
-          pushLog(B.logClone(name(e.target)));
+          // O clone de terra aguenta 2 golpes: no primeiro, segura e fica.
+          const holds = e.broken === false || (e.kind !== undefined && !e.broken);
+          pushLog(holds ? B.logCloneHold(name(e.target)) : B.logClone(name(e.target)));
+          if (holds) break;
           // A última cópia atrás do retrato vira fumaça.
           const ghost = [...(card(e.target)?.querySelectorAll<HTMLElement>('.jf-clone:not(.poof)') ?? [])].pop();
           if (ghost) {
@@ -592,6 +605,22 @@ export async function jornadaBattle(
         case 'shield':
           float(e.target, `${icon('barrier')}+${e.amount}`, 'shield');
           pushLog(B.logShield(name(e.target), e.amount));
+          break;
+        case 'barrier':
+          // Barreira elemental (v0.77.0): erguida, golpeada (com o encontro de elementos no escudo), quebrada ou no fim.
+          if (e.action === 'raise') {
+            float(e.uid, `${icon('barrier')}+${e.points}`, 'shield');
+            pushLog(B.logBarrierRaise(name(e.uid), techName(e.techId), e.points ?? 0));
+          } else if (e.action === 'hit') pushLog(B.logBarrierHit(name(e.uid), e.absorbed ?? 0, e.left ?? 0, e.mult && e.mult !== 1 ? String(e.mult).replace('.', ',') : ''));
+          else if (e.action === 'break') pushLog(B.logBarrierBreak(name(e.uid)));
+          else if (e.action === 'end') pushLog(B.logBarrierEnd(name(e.uid)));
+          else pushLog(B.logBarrierDouse(name(e.uid)));
+          break;
+        case 'cloneStrike':
+          pose(e.target, 'hit');
+          float(e.target, `−${e.amount}`, 'dmg');
+          setHp(e.target, shown.get(e.target)!.hp - e.amount);
+          pushLog(B.logCloneStrike(name(e.uid), e.amount));
           break;
         case 'clones': {
           float(e.uid, `${icon('clones')}${e.total}`, 'shield');
@@ -662,7 +691,8 @@ export async function jornadaBattle(
           pushLog(B.logRest(name(e.uid), e.chakra));
           break;
         case 'chakraGain':
-          float(e.uid, `+${e.amount}`, 'ck');
+          // Negativo: chakra drenado (Punho Suave do Hyuuga).
+          float(e.uid, e.amount < 0 ? `−${-e.amount}` : `+${e.amount}`, 'ck');
           setChakra(e.uid, shown.get(e.uid)!.chakra + e.amount);
           wait = 0;
           break;
@@ -696,6 +726,10 @@ export async function jornadaBattle(
           break;
         case 'gateUpkeep':
           pushLog(B.logGateUpkeep(name(e.uid), e.amount));
+          break;
+        case 'protect':
+          float(e.uid, icon('stance'), 'fx');
+          pushLog(B.logProtect(name(e.uid), name(e.target)));
           break;
         case 'boost':
           float(e.uid, icon('sparkle'), 'fx');
