@@ -144,7 +144,7 @@ describe('Fase 5 · Jornada e História (H1, H2, H3, J5)', () => {
   it('a força da História muda por estágio (H1); o Caminho Ninja não', () => {
     const run = newRun(1, 'normal', data);
     expect([0, 1, 2, 3].map((i) => runEnemyMult({ ...run, stageIndex: i }, data))).toEqual(data.j.storyStageStrength.map((m) => data.j.storyStrength * m));
-    expect(runEnemyMult({ ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 2 }, data)).toBe(1);
+    expect(runEnemyMult({ ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 2 }, data)).toBe(data.j.genericStageStrength[2]);
   });
 
   it('J1 e J2: força por estágio própria da dificuldade e perfil HP/ataque por estágio', () => {

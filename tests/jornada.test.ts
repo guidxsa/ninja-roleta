@@ -630,7 +630,8 @@ describe('run da Jornada', () => {
     const mult = data.j.storyStrength * data.j.storyStageStrength[0]!;
     expect(runEnemyMult(canon, data)).toBeCloseTo(mult);
     expect(runEnemyMult({ ...canon, stageIndex: 3 }, data)).toBeCloseTo(data.j.storyStrength * data.j.storyStageStrength[3]!);
-    expect(runEnemyMult(generic, data)).toBe(1);
+    // O Caminho Ninja tem a própria força por estágio (J3, v0.88.1).
+    expect(runEnemyMult(generic, data)).toBe(data.j.genericStageStrength[0]);
     const foe = battleSetup(canon, data).enemies[0]!;
     expect(foe.maxHp).toBe(enemySeed(foe.defId!, 'normal', data, mult).maxHp);
     expect(data.j.enemyStrength.hardcore).toBeGreaterThan(data.j.enemyStrength.hard);
@@ -1948,7 +1949,8 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     const run = chooseNode(newGenericRun(5, 'hardcore', 'common', data), nodeChoices(newGenericRun(5, 'hardcore', 'common', data))[0]!.id);
     const id = (currentStop(run, data) as { enemies: string[] }).enemies[0]!;
     expect(cycleEnemyMult(run, data)).toBe(1);
-    expect(battleSetup(run, data).enemies[0]).toEqual(enemySeed(id, 'hardcore', data));
+    const st = data.j.genericStageStrength[0]!;
+    expect(battleSetup(run, data).enemies[0]).toEqual(enemySeed(id, 'hardcore', data, st));
     // No ciclo seguinte o sorteio da parada também muda: o inimigo vem da parada do ciclo 1.
     const next = { ...run, cycle: 1 };
     const id1 = (currentStop(next, data) as { enemies: string[] }).enemies[0]!;
@@ -1956,8 +1958,8 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     expect(cycleEnemyMult({ ...run, cycle: 2 }, data)).toBeCloseTo(2.25);
     expect(cycleEnemyMult({ ...run, cycle: 4 }, data)).toBeCloseTo(5.0625);
     const foe = battleSetup(next, data).enemies[0]!;
-    expect(foe).toEqual(enemySeed(id1, 'hardcore', data, 1.5));
-    expect(foe.maxHp).toBe(Math.max(1, Math.floor(data.enemies[id1]!.hp * data.j.enemyStrength.hardcore * 1.5)));
+    expect(foe).toEqual(enemySeed(id1, 'hardcore', data, 1.5 * st));
+    expect(foe.maxHp).toBe(Math.max(1, Math.floor(data.enemies[id1]!.hp * data.j.enemyStrength.hardcore * 1.5 * st)));
     // O multiplicador vale uma vez só no dano: entra no ataque, não em `damageMult`.
     expect(foe.mods.damageMult).toBe(1);
   });
