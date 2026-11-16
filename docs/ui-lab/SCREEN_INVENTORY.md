@@ -266,7 +266,7 @@ Estados que mudam muito a interface e valem um caso próprio no lab:
 1. **Tema**: Pergaminho (claro) e Sumi (escuro). No Portão troca também cena, frase e selo (Naruto/Sasuke).
 2. **Modo instantâneo** (`data-instant`): sem botão Girar, sem animação de jokenpô, falas seguem sozinhas.
 3. **Menos movimento** (`prefers-reduced-motion`): roletas param direto no resultado; 11 blocos de CSS.
-4. **Modo Animado**: vídeo nas vagas de cena e a cena viva do Portão (cenário `gate.home:animado`).
+4. **Modo Animado**: vídeo nas vagas de cena e a cena viva dos painéis grandes (cenários `gate.home:animado`, `jornada.entry:animado` e `jornada.trail:animado`).
 5. **Faixa de tela**: celular estreito (≤ 380), celular, tablet (600–899), PC `DESK`, `WIDE`, e PC com altura baixa.
 6. **Toque vs ponteiro** (`pointer: coarse`): dicas e tamanhos.
 7. **Mood** (`mood('good'|'bad'|'neutral')`): muda o clima da tela depois de resultados.

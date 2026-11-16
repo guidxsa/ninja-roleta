@@ -405,6 +405,20 @@ export function sceneVars(name: string): string {
   return `${size ? `--ratio:${(size[0] / size[1]).toFixed(3)};` : ''}--fx:${fx}%;--fy:${fy}%`;
 }
 
+/**
+ * Camada da cena viva (styles/art.css, `.scene-fx`): névoa, folhas e vaga-lumes sobre a arte de um painel grande. O CSS
+ * só a monta no modo Animado. `theme`: folhas no tema dia e vaga-lumes no tema noite; `day`/`night`: fixa pela arte.
+ * Vai ao lado do invólucro da arte, nunca dentro (o `applySceneMode` reescreve o invólucro).
+ */
+export function sceneFx(mode: 'theme' | 'day' | 'night' = 'theme'): string {
+  const bits = (cls: string, n: number) => Array.from({ length: n }, () => `<i class="${cls}"></i>`).join('');
+  const set = (time: 'day' | 'night') =>
+    mode === 'theme' || mode === time
+      ? `<span class="scene-fx-set${mode === 'theme' ? ` duo-${time}` : ''}">${time === 'day' ? bits('scene-leaf', 7) : bits('scene-fly', 9)}</span>`
+      : '';
+  return `<span class="scene-fx" aria-hidden="true">${bits('scene-mist', 2)}${set('day')}${set('night')}</span>`;
+}
+
 /** Arte do arco (estágio) da História, ou a vaga com o id do estágio (Caminho Ninja: g1, g2, g3). */
 export const arcMedia = (stageId: string): string | null => sceneMedia(`arco-${stageId}`) ?? sceneMedia(stageId);
 

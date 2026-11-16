@@ -7,7 +7,7 @@ import { ptBR as S } from '../src/data/strings/ptBR';
 import { saveProfile, bestRoletaCycle, PLAYER_NAME_MAX, cleanPlayerName } from '../src/state/profile';
 import { loadRuns } from '../src/state/runHistory';
 import { achievementIcon } from './achievementIcons';
-import { sceneMedia, emblem, sceneVars, cloud, icon, ninjaPortrait } from './art';
+import { sceneMedia, sceneFx, emblem, sceneVars, cloud, icon, ninjaPortrait } from './art';
 import { h, show, choose, goHome, esc, openDialog } from './dom';
 import { jornadaProgressCard } from './jornada';
 import { jornadaHost } from './jornadaHost';
@@ -45,9 +45,6 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
   const day = sceneMedia('portao-dia') ?? sceneMedia('portao');
   const night = sceneMedia('portao-noite') ?? day;
   const hero = day || night ? `<span class="duo-layer duo-day">${day ?? ''}</span><span class="duo-layer duo-night">${night ?? ''}</span>` : null;
-  // Cena viva (modo Animado, styles/menu.css): névoa, folhas de dia e vaga-lumes à noite. Sem o modo, o CSS nem monta.
-  const bits = (cls: string, n: number) => Array.from({ length: n }, () => `<i class="${cls}"></i>`).join('');
-  const fx = `<span class="gate-fx">${bits('gate-mist', 2)}<span class="gate-fx-set duo-day">${bits('gate-leaf', 7)}</span><span class="gate-fx-set duo-night">${bits('gate-fly', 9)}</span></span>`;
   const duoQuote = (t: 'day' | 'night') => {
     const q = pickQuote(DU[t].quotes);
     return `<div class="duo-q duo-${t}"><p>${q.text}</p><cite>${q.by}</cite></div>`;
@@ -69,7 +66,7 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
             <h1 class="logo">${S.ui.title.split(' ').map((w, i) => `<span class="l${i + 1}">${w}</span>`).join('')}</h1>
             <p class="duo-tags"><span class="duo-tag duo-day">${DU.day.tag}</span><span class="duo-tag duo-night">${DU.night.tag}</span></p>
           </header>
-          <div class="gate-hero duo" aria-hidden="true">${hero ?? ''}${fx}</div>
+          <div class="gate-hero duo" aria-hidden="true">${hero ?? ''}${sceneFx()}</div>
           <blockquote class="parchment gate-quote">${duoQuote('day')}${duoQuote('night')}
             <span class="seal duo-seal duo-day" aria-hidden="true">${DU.day.seal}</span><span class="seal duo-seal duo-night" aria-hidden="true">${DU.night.seal}</span></blockquote>
         </div>

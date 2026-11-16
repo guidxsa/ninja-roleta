@@ -65,7 +65,7 @@ import { jornadaData as data } from '../../src/data/jornada';
 import { newJornadaAchievements } from '../../src/data/jornada/achievements';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { loadJornada, saveJornada } from '../../src/state/jornadaSave';
-import { arcMedia, fighterPortrait, icon, sceneMedia, sceneVars } from '../art';
+import { arcMedia, fighterPortrait, icon, sceneFx, sceneMedia, sceneVars } from '../art';
 import { choose, confirmDialog, esc, h, openDialog, show, sleep } from '../dom';
 import { tip } from '../tooltip';
 import { achievementIcon } from '../achievementIcons';
@@ -308,7 +308,7 @@ export async function entryScreen(host: JornadaHost, saved: JRun | null): Promis
           <header class="gate-head">
             <h1 class="logo jlogo"><span class="l1">${J.start.logoTop}</span><span class="l2">${J.start.title}</span></h1>
           </header>
-          <div class="gate-hero" aria-hidden="true">${hero ?? ''}</div>
+          <div class="gate-hero" aria-hidden="true">${hero ?? ''}${hero ? sceneFx() : ''}</div>
           <blockquote class="parchment gate-quote"><p>${quote.text}</p><cite>${quote.by}</cite></blockquote>
         </div>
         <nav class="gate-modes">
@@ -370,7 +370,7 @@ export async function campaignScreen(host: JornadaHost, saved: JRun | null): Pro
         const art = sceneMedia(p.art);
         const txt = C[p.id];
         return `<section class="jc-panel jc-${p.time}${open ? '' : ' is-locked'}" data-campaign="${p.id}"${open ? '' : ' aria-disabled="true"'}>
-          <span class="jc-art art-frame" aria-hidden="true">${art ?? ''}</span>
+          <span class="jc-art art-frame" aria-hidden="true">${art ?? ''}${art && open ? sceneFx(p.time) : ''}</span>
           <div class="jc-body parchment">
             <span class="seal jc-seal" aria-hidden="true">${p.seal}</span>
             <h3>${txt.name}</h3><p class="small">${txt.desc}</p>
@@ -402,7 +402,7 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
     h(`<div class="screen jpath">
       <header class="jsub-head"><button class="btn small" data-choice="back">${J.start.back}</button><h2>${G.title}</h2><p class="muted">${G.desc}</p></header>
       <section class="jc-panel jpath-poster" aria-hidden="true">
-        <span class="jc-art art-frame">${sceneMedia('modo-caminho') ?? sceneMedia('jornada') ?? ''}</span>
+        <span class="jc-art art-frame">${sceneMedia('modo-caminho') ?? sceneMedia('jornada') ?? ''}${sceneFx()}</span>
         <div class="jc-body parchment"><span class="seal jc-seal">道</span><h3>${J.start.pathStages}</h3>
           <ol class="jpath-stages">${data.generic.stages.map((g, i) => `<li><span class="seal ghost">${ARC_NUMERALS[i] ?? i + 1}</span>${J.stages[g.id] ?? g.id}</li>`).join('')}</ol></div>
       </section>
@@ -584,7 +584,7 @@ function trail(run: JRun): string {
   // História: o painel mostra a arte do arco (SCENE_ART), com o número e o nome; sem arte, o cenário desenhado do local.
   const art = sceneMedia(`arco-${stage.id}`);
   const arc = art
-    ? `<figure class="jtrail-art art-frame" data-arc="${stage.id}" aria-hidden="true">${art}<figcaption><span class="seal">${ARC_NUMERALS[run.stageIndex] ?? run.stageIndex + 1}</span>${J.stages[stage.id] ?? ''}</figcaption></figure>`
+    ? `<figure class="jtrail-art art-frame" data-arc="${stage.id}" aria-hidden="true">${art}${sceneFx()}<figcaption><span class="seal">${ARC_NUMERALS[run.stageIndex] ?? run.stageIndex + 1}</span>${J.stages[stage.id] ?? ''}</figcaption></figure>`
     : '';
   return `<div class="jtrail-scene ${art ? 'jtrail-arc' : 'jscene'} scene-${stopScene(run, data)}">${arc}<ol class="jtrail">${stage.stops
     .map((s, i) => {
