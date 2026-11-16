@@ -34,7 +34,7 @@ Situação: **pendente** (sem imagem), **enviado** (imagem na pasta, desenho por
 | `leafGeninA` | Daichi | pendente |
 | `leafGeninB` | Hana | pendente |
 | `leafMedic` | Mika | pendente |
-| `naruto` | Naruto | pendente |
+| `naruto` | Naruto | enviado (redesenhado na v0.88.3; aguardando aprovação) |
 | `narutoKyuubi` | Naruto com o chakra da Kyuubi | pendente |
 | `narutoOneTail` | Naruto no manto de uma cauda | pendente |
 | `sasuke` | Sasuke | pendente |
