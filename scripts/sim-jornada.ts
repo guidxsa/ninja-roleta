@@ -11,6 +11,7 @@ import { chooseAiAction, chooseAiActive } from '../src/core/jornada/ai';
 import { awaitingPlayer, current, downed, openBattle, playerAct, startBattle, useFree, useItem } from '../src/core/jornada/battle';
 import { auditJornadaFight, relicCategory, Tally, type FightAudit } from '../src/sim/audit';
 import { eventOptions } from '../src/core/jornada/events';
+import { botWinChance } from '../src/core/jornada/minigames';
 import {
   battleSetup,
   buy,
@@ -365,7 +366,7 @@ function playCycle(run0: JRun, rng: Rng, mode: Mode): { run: JRun; stop: string 
     const stop = currentStop(run, data)!;
     if (stop.kind === 'event') {
       const opt = eventOptions(currentEvent(run, data)!, run.flags, run.ryo)[0]!;
-      run = resolveEvent(run, opt.id, rng() < 0.6, data).run;
+      run = resolveEvent(run, opt.id, rng() < botWinChance(opt.minigame, run.difficulty, data.j.minigames), data).run;
       auditStep(before, run, 'other');
     } else if (stop.kind === 'rest') {
       const hero = memberSheet(run, run.hero, data);

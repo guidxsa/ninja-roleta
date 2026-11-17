@@ -65,6 +65,14 @@ Valor marginal de todas as relíquias (`--reliquias`, 300 runs, seed 2, Difícil
 
 Consequência para o rebalanceamento: com o bot novo, só o Uchiha fica perto da meta no Médio e no Difícil (81/50 contra 65/40); Comum, prodígio e Hyuuga passam muito da meta em todas as dificuldades, e a História passa no Médio e no Difícil e fica abaixo no Hardcore (2 contra 15).
 
+## Minijogos de tempo na Jornada (v0.91.0, 17/11/2026)
+
+Pedido do usuário: mais variedade de minijogos (quase todos eram de selos). Design em [jornada/proposta-minijogos.md](jornada/proposta-minijogos.md); regra em [jornada/run.md](jornada/run.md#minijogos).
+
+- **Decidido pelo usuário**: a dificuldade pesa nos minijogos novos. As outras quatro decisões ele deixou para a sessão ("tome a decisão mais apropriada"): os quatro ganchos de status entram; o sino entra no Time 7 e o clone na parada do Itachi e do Kisame; o mercador de mau agouro segue na Sequência; o Sem pressa liga sozinho com menos movimento.
+- **Decidido sozinho** (revisar se quiser): os prêmios novos de `team7` (`rival`: +60 XP, +20 se errar; antes +40 certos) e `itachiKisame` (`chase`: +60 XP e +6 de HP máximo da equipe, +30 XP se errar; antes +50 XP e +6 de HP certos); as larguras, velocidades e janelas por dificuldade; a chance do bot (60% nos de selos, 65/60/55/50% nos de tempo); a água sem pressa com a opção Manter e a direção da onda anunciada, calibrada numa simulação própria (jogando bem: 88/78/69/50% do Fácil ao Hardcore; com só subir e descer, o Médio dava 19%). Kunai sem pressa, com uma regra simples de jogada: 76/62/44/44%. Sino sem pressa: 50% até o Difícil, 26% no Hardcore.
+- Simulação (`npm run sim:jornada -- 300 2`), vitória antes → depois: História Médio 72 → 70%, Difícil 50 → 48%; Fácil e Hardcore iguais. Caminho Ninja: todas as células iguais, com variação de até 1 ponto (Prodígio Fácil 96 → 95%, Hyuuga Fácil 96 → 97%). O bot escolhe sempre a primeira opção, então o sino do Time 7 (segunda opção) não entra na simulação; a queda da História vem da parada do Itachi (prêmio médio um pouco menor) e dos treinos do Rasengan no Difícil (bot a 55%). Nada foi compensado.
+
 ## Retratos: um desenho por personagem (v0.90.0, 16/11/2026)
 
 Pedido do usuário: melhorar os SVG pela aparência canônica e diferenciar cada personagem. Combinado com ele: aparência do anime (sem imagens no repositório), **todos** os personagens (inclusive os 18 que já tinham desenho) e genéricos parecidos com personagens da mesma origem.

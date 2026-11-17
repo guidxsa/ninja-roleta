@@ -24,6 +24,8 @@ import {
 } from '../../jornada';
 import { jornadaBattle } from '../../jornada/battle';
 import { playMinigame } from '../../jornada/minigames';
+import { NO_BONUS } from '../../../src/core/jornada/minigames';
+import type { Minigame, MinigameSkin } from '../../../src/core/jornada/events';
 import { movesetScreen } from '../../jornada/moveset';
 import { relicsModal } from '../../jornada/relics';
 import { sceneScreen } from '../../jornada/scene';
@@ -70,10 +72,16 @@ const fightFrom = (make: () => JRun, patch: Parameters<typeof battleAt>[1]) => (
 };
 
 /** Minijogo dentro da cena, como o evento abre. */
-const minigame = (kind: 'memory' | 'seals' | 'jokenpo', title: string) => (ctx: LabContext) => {
+const minigame = (kind: Minigame, title: string, extra: { skin?: MinigameSkin; calm?: boolean } = {}) => (ctx: LabContext) => {
   document.body.classList.add('mode-jornada');
   const root = show(h(sceneScreen({ place: 'forest', title, seal: U.sceneSeals.training!, body: '', footer: '<div data-slot></div>' })));
-  return playMinigame(kind, root.querySelector<HTMLElement>('[data-slot]')!, data, ctx.rng, ctx.prefs.instant);
+  return playMinigame(kind, root.querySelector<HTMLElement>('[data-slot]')!, data, ctx.rng, {
+    instant: ctx.prefs.instant,
+    difficulty: 'normal',
+    bonus: NO_BONUS,
+    ...(extra.skin ? { skin: extra.skin } : {}),
+    calm: extra.calm ?? false,
+  });
 };
 
 /** Fim da run: a tela de relatório com o próximo ciclo quando a run permite. */
@@ -177,6 +185,12 @@ export const jornadaRun: Scenario[] = [
   { id: 'jornada.minigame.memory', title: 'Minijogo da memória', group: 'Narrativa', mount: minigame('memory', 'Memória') },
   { id: 'jornada.minigame.seals', title: 'Minijogo dos selos', group: 'Narrativa', mount: minigame('seals', 'Selos') },
   { id: 'jornada.minigame.rps', title: 'Jokenpô da Jornada', group: 'Narrativa', mount: minigame('jokenpo', 'Jokenpô') },
+  { id: 'jornada.minigame.kunai', title: 'Minijogo: kunai no alvo', group: 'Narrativa', mount: minigame('kunai', 'Treino de arremesso') },
+  { id: 'jornada.minigame.kunai:power', title: 'Minijogo: força no ápice (bola de borracha)', group: 'Narrativa', mount: minigame('kunai', 'Bola de borracha', { skin: 'power' }) },
+  { id: 'jornada.minigame.water', title: 'Minijogo: andar sobre a água (árvore)', group: 'Narrativa', mount: minigame('water', 'Subir na árvore', { skin: 'tree' }) },
+  { id: 'jornada.minigame.clone', title: 'Minijogo: o clone verdadeiro', group: 'Narrativa', mount: minigame('clone', 'As cópias do Itachi') },
+  { id: 'jornada.minigame.bell', title: 'Minijogo: pegar o sino', group: 'Narrativa', mount: minigame('bell', 'O teste do mestre') },
+  { id: 'jornada.minigame.water:calm', title: 'Minijogo sem pressa (água)', group: 'Narrativa', mount: minigame('water', 'Lago do santuário', { calm: true }) },
   {
     id: 'jornada.story-relic',
     title: 'Relíquia de história com troca (bandana)',

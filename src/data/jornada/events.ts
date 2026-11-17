@@ -32,7 +32,8 @@ export const events: EventDef[] = [
     options: [
       {
         id: 'climb',
-        minigame: 'seals',
+        minigame: 'water',
+        skin: 'tree',
         effects: [{ kind: 'maxStat', who: 'team', stat: 'chakra', n: 6 }, { kind: 'xp', n: 40 }],
         onLose: [{ kind: 'maxStat', who: 'team', stat: 'chakra', n: 2 }],
       },
@@ -83,7 +84,13 @@ export const events: EventDef[] = [
     category: 'narrative',
     face: 'itachiKisame',
     options: [
-      { id: 'chase', effects: [{ kind: 'xp', n: 50 }, { kind: 'maxStat', who: 'team', stat: 'hp', n: 6 }] },
+      // As cópias do Itachi no corredor da pousada (v0.91.0): achar o verdadeiro.
+      {
+        id: 'chase',
+        minigame: 'clone',
+        effects: [{ kind: 'xp', n: 60 }, { kind: 'maxStat', who: 'team', stat: 'hp', n: 6 }],
+        onLose: [{ kind: 'xp', n: 30 }],
+      },
       { id: 'stay', effects: [{ kind: 'healTeam', hp: 40, chakra: 12 }, { kind: 'ryo', n: 20 }] },
     ],
   },
@@ -126,7 +133,8 @@ export const events: EventDef[] = [
     face: 'kakashiAlly',
     options: [
       { id: 'hokage', effects: [{ kind: 'talent', n: 1 }] },
-      { id: 'rival', effects: [{ kind: 'xp', n: 40 }] },
+      // Pegar o sino antes da hora, para se exibir (v0.91.0): o ensaio da luta do teste do sino.
+      { id: 'rival', minigame: 'bell', effects: [{ kind: 'xp', n: 60 }], onLose: [{ kind: 'xp', n: 20 }] },
     ],
   },
   {
@@ -190,7 +198,7 @@ export const events: EventDef[] = [
     category: 'training',
     face: 'jiraiya',
     options: [
-      { id: 'water', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] },
+      { id: 'water', minigame: 'water', skin: 'balloon', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] },
       { id: 'grind', effects: [{ kind: 'xp', n: 40 }, { kind: 'hurtTeam', pct: 0.1 }] },
     ],
   },
@@ -199,7 +207,7 @@ export const events: EventDef[] = [
     category: 'training',
     face: 'jiraiya',
     options: [
-      { id: 'rubber', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] },
+      { id: 'rubber', minigame: 'kunai', skin: 'power', effects: [{ kind: 'talent', n: 1 }], onLose: [{ kind: 'xp', n: 30 }] },
       { id: 'grind', effects: [{ kind: 'xp', n: 40 }, { kind: 'hurtTeam', pct: 0.1 }] },
     ],
   },
@@ -301,7 +309,7 @@ export const genericEvents: EventDef[] = [
   {
     id: 'gTraining',
     options: [
-      { id: 'seals', minigame: 'seals', effects: [{ kind: 'talent', n: 1 }, { kind: 'xp', n: 30 }], onLose: [{ kind: 'xp', n: 30 }] },
+      { id: 'seals', minigame: 'kunai', effects: [{ kind: 'talent', n: 1 }, { kind: 'xp', n: 30 }], onLose: [{ kind: 'xp', n: 30 }] },
       { id: 'spar', effects: [{ kind: 'xp', n: 60 }, { kind: 'hurtTeam', pct: 0.15 }] },
     ],
   },
@@ -316,14 +324,14 @@ export const genericEvents: EventDef[] = [
     id: 'gGuru',
     options: [
       { id: 'pay', cost: 40, effects: [{ kind: 'talent', n: 2 }] },
-      { id: 'test', minigame: 'memory', effects: [{ kind: 'talent', n: 1 }], onLose: [] },
+      { id: 'test', minigame: 'bell', effects: [{ kind: 'talent', n: 1 }], onLose: [] },
       { id: 'leave', effects: [] },
     ],
   },
   {
     id: 'gAkatsuki',
     options: [
-      { id: 'hide', minigame: 'memory', effects: [{ kind: 'ryo', n: 40 }, { kind: 'flag', id: 'hidFromAkatsuki' }], onLose: [{ kind: 'hurtTeam', pct: 0.3 }] },
+      { id: 'hide', minigame: 'clone', effects: [{ kind: 'ryo', n: 40 }, { kind: 'flag', id: 'hidFromAkatsuki' }], onLose: [{ kind: 'hurtTeam', pct: 0.3 }] },
       { id: 'run', effects: [{ kind: 'hurtTeam', pct: 0.15 }] },
     ],
   },

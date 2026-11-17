@@ -30,6 +30,8 @@ export interface Settings {
   animated: boolean;
   /** Tema escolhido no botão; sem escolha, segue o aparelho. */
   theme?: Theme;
+  /** Minijogos de tempo da Jornada sem pressa (v0.91.0). */
+  calmGames?: boolean;
 }
 
 /** Run do Roleta (só em memória). */
@@ -87,7 +89,7 @@ export function loadSettings(storage: KeyValueStorage): Settings {
     const saved = JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}') as Partial<Settings>;
     const difficulty = saved.difficulty && DIFFICULTIES.includes(saved.difficulty) ? saved.difficulty : DEFAULT_DIFFICULTY;
     const theme = saved.theme === 'light' || saved.theme === 'dark' ? saved.theme : undefined;
-    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), animated: Boolean(saved.animated), theme };
+    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), animated: Boolean(saved.animated), theme, calmGames: Boolean(saved.calmGames) };
   } catch {
     return { instant: false, difficulty: DEFAULT_DIFFICULTY, sfx: true, music: false, animated: false };
   }

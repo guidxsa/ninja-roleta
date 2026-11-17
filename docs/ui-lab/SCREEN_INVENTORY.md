@@ -130,6 +130,10 @@ Tudo em `prototype/jornada/`, run salva a cada parada (`jornada_run_v1`). Duas v
 | `jornada.minigame.memory` | Minijogo da memória | `memory()` em `minigames.ts` | Opção com minijogo | RNG da parada | Vitória/derrota | Dentro da cena | Não / não |
 | `jornada.minigame.seals` | Minijogo dos selos | `seals()` | idem | RNG | Vitória/derrota | idem | Não / não |
 | `jornada.minigame.rps` | Jokenpô da Jornada | `rps()` | idem | RNG | Vitória/derrota | idem | Não / não |
+| `jornada.minigame.kunai` | Kunai no alvo (e a pele `:power`, bola de borracha) | `kunaiGame()` em `minigamesTimed.ts` | idem | RNG | Vitória/derrota | idem | Não / não |
+| `jornada.minigame.water` | Andar sobre a água (e `:calm`, a variante sem pressa) | `waterGame()` | idem | RNG | Vitória/derrota | idem | Não / não |
+| `jornada.minigame.clone` | O clone verdadeiro | `cloneGame()` | idem | RNG | Vitória/derrota | idem | Não / não |
+| `jornada.minigame.bell` | Pegar o sino | `bellGame()` | idem | RNG | Vitória/derrota | idem | Não / não |
 | `jornada.story-relic` | Relíquia de história | `storyRelicScene()` | Evento que entrega relíquia com fala (bandana, colar) | `storyRelicLines` | Com ou sem relíquia substituída (troca à vista) | Coluna | Não / não |
 | `jornada.battle.cutin` | Fala em corte de quadro | `cutIn()` em `jornada/battle.ts` | Evento `say` do roteiro da luta | Roteiro da parada | Narrador, aliado, inimigo; segue sozinho no instantâneo | Faixa diagonal sobre a luta | Não / não |
 

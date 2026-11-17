@@ -29,10 +29,10 @@ Saem do **desconhecido** (50% das vezes). Um evento não repete na mesma run enq
 |---|---|
 | A velhinha | Ajudar (+1 kit de HP e marca *ajudou a velhinha*) · Seguir (+15 ryō) |
 | Barraca de ramen | Pagar (15 ryō, +60 de HP, +18 de chakra) · De graça se ajudou a velhinha (igual) · Treinar (+20 XP) |
-| Treino na clareira | Selos: +1 ponto de talento e +30 XP (perdeu: +30 XP) · Treino pesado (+60 XP, equipe perde 15% do HP) |
+| Treino na clareira | Kunai no alvo: +1 ponto de talento e +30 XP (perdeu: +30 XP) · Treino pesado (+60 XP, equipe perde 15% do HP) |
 | Jokenpô | Jogar: relíquia rara (perdeu: +10 ryō) · Vender o pergaminho (+20 ryō) |
-| O guru | Pagar 40 ryō: +2 pontos de talento · Memória: +1 ponto de talento · Ir embora |
-| Mantos de nuvem vermelha | Memória: +40 ryō (perdeu: equipe perde 30% do HP) · Fugir (equipe perde 15% do HP) |
+| O guru | Pagar 40 ryō: +2 pontos de talento · Pegar o sino: +1 ponto de talento · Ir embora |
+| Mantos de nuvem vermelha | O clone verdadeiro: +40 ryō (perdeu: equipe perde 30% do HP) · Fugir (equipe perde 15% do HP) |
 | Achado | +1 Pílula de reanimação · +50 XP |
 | Contrato de invocação | Selos: relíquia de evento (perdeu: equipe perde 10% do HP) · +6 de HP máximo da equipe |
 | Mercador de mau agouro (má sorte) | Aceitar a barganha (+35 ryō e a [maldição do mercador](run.md#loja)) · Selos: +20 XP (perdeu: a maldição) |
