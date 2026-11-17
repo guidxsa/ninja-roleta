@@ -1,6 +1,6 @@
 // Roleta: evento pré-luta (e os subfluxos de jokenpô e invocação).
-import { rollWeighted, type Step, applySimpleEvent, applyTrainingFocus, rollTraining, applyTraining, rollAkatsuki, applyAkatsuki, rollGuru, applyGuru, rollPremiumChoices, applyPremium, applyClanLesson, HANDS, type Hand, playJokenpo, applySummonEncounter, rollSummonAnimal } from '../../../src/core/progression';
-import { contractFor, gainRoletaRelic } from '../../../src/core/roleta/run';
+import { rollWeighted, type Step, applyTrainingFocus, rollTraining, applyTraining, rollAkatsuki, applyAkatsuki, rollGuru, applyGuru, rollPremiumChoices, applyPremium, applyClanLesson, HANDS, type Hand, playJokenpo, applySummonEncounter, rollSummonAnimal } from '../../../src/core/progression';
+import { applyOldLadyRoleta, applyRamenRoleta, contractFor, gainRoletaRelic } from '../../../src/core/roleta/run';
 import { addEffect, addPreEvent, addJokenpo } from '../../../src/core/runStats';
 import { type Element } from '../../../src/core/types';
 import { roletaData as rdata } from '../../../src/data/roleta/index';
@@ -43,8 +43,10 @@ export async function eventScreen(name: string): Promise<'back' | 'fight'> {
   let step: Step;
   switch (roll.value) {
     case 'oldLady':
+      step = applyOldLadyRoleta(c.player, ses.rng, rdata);
+      break;
     case 'ramen':
-      step = applySimpleEvent(c.player, roll.value);
+      step = applyRamenRoleta(c.player, ses.rng, rdata);
       break;
     case 'training': {
       // XP garantido e o destaque de status (o foco elemental saiu no Roleta enxuto).

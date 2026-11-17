@@ -135,8 +135,11 @@ describe('barreiras elementais (elemento só pesa no escudo)', () => {
     expect(absorbIntoBarrier(water, 6, { type: 'ninjutsu', nature: 'fire', hits: 1 }, ctx).douse).toBe(true);
   });
 
-  it('Roleta: o kit de quem tem ninjutsu elemental traz a barreira; erguer gasta o turno e uma de pé por vez', () => {
-    const s = battle(origin(null, ['earth']));
+  // Barreiras e clones saíram do kit do Roleta na v0.92.0 (ficam na Jornada); o motor continua com a regra, testada com a
+  // técnica posta à mão na ficha.
+  it('Roleta (motor): erguer a barreira gasta o turno e uma de pé por vez', () => {
+    const base = battle(origin(null, ['earth']));
+    const s = { ...base, player: { ...base.player, techniques: [...base.player.techniques, 'rEarthWall'] } };
     const raised = playRoletaRound(s, 'tech:rEarthWall', data, fixed(HIT));
     expect(raised.fx.barrier).toMatchObject({ nature: 'earth', techId: 'rEarthWall' });
     expect(raised.log.some((e) => e.type === 'barrier' && e.action === 'raise')).toBe(true);
@@ -169,8 +172,9 @@ describe('tipos de clone', () => {
     expect(wearClone(0, 'bunshin', r)).toEqual({ wear: 0, broken: true });
   });
 
-  it('Roleta: o clone de raio, ao se desfazer, dá a descarga em quem bateu', () => {
-    const s = battle(origin(null, ['lightning']));
+  it('Roleta (motor): o clone de raio, ao se desfazer, dá a descarga em quem bateu', () => {
+    const base = battle(origin(null, ['lightning']));
+    const s = { ...base, player: { ...base.player, techniques: [...base.player.techniques, 'rRaitonBunshin'] } };
     const made = playRoletaRound(s, 'tech:rRaitonBunshin', data, fixed(0.99));
     expect(made.fx.clone).toEqual({ kind: 'raiton', wear: 0 });
     // Vilão acerta (0,3), o clone segura (0,3 < 50%) e a descarga fere; o atordoar (25%) não pega com 0,3.
@@ -194,8 +198,9 @@ describe('tipos de clone', () => {
     expect(strikes[0]).toMatchObject({ amount: Math.floor(per * 0.35) });
   });
 
-  it('Roleta: um clone por vez, sem recriar enquanto ele está de pé', () => {
-    const s = battle(origin(null, ['earth']));
+  it('Roleta (motor): um clone por vez, sem recriar enquanto ele está de pé', () => {
+    const base = battle(origin(null, ['earth']));
+    const s = { ...base, player: { ...base.player, techniques: [...base.player.techniques, 'rDotonBunshin'] } };
     const made = playRoletaRound(s, 'tech:rDotonBunshin', data, fixed(0.99));
     expect(made.fx.clone).toEqual({ kind: 'doton', wear: 0 });
     expect(canUseTechnique(made, data.techniques.rDotonBunshin!, data)).toBe(false);

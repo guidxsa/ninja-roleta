@@ -1,6 +1,6 @@
-# Proposta: Roleta rápido e explosivo (para aprovar)
+# Proposta: Roleta rápido e explosivo (aprovada e feita na v0.92.0)
 
-Item 40 de [decisoes.md](../decisoes.md). Nada daqui está no código ainda. Os números são o ponto de partida: os finais saem da simulação, com a meta 90/65/40/15 por origem (±5) e 3 a 6 rodadas por luta (6 a 8 no chefe).
+Item 40 de [decisoes.md](../decisoes.md). Aprovada pelo usuário em 17/11/2026 e implementada na v0.92.0; os números finais, calibrados pela simulação, estão em [combate.md](combate.md#kits). Este arquivo fica como registro da ficha. Os números são o ponto de partida: os finais saem da simulação, com a meta 90/65/40/15 por origem (±5) e 3 a 6 rodadas por luta (6 a 8 no chefe).
 
 ## Princípios
 

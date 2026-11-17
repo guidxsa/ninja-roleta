@@ -21,24 +21,26 @@ export function cloneKindOf(origin: Origin, lineage: LineageDef, kekkeiGenkai: K
 }
 
 /**
- * Técnicas da origem: Taijutsu básico, 1 técnica por elemento (a kekkei genkai toma o lugar das dos dois elementos-pai)
- * e as da linhagem. Origem sem potencial elemental (prodígio) ou proibida de ninjutsu fica sem as do elemento.
+ * Técnicas da origem (v0.92.0, kits curtos): Taijutsu básico, a técnica de ataque de cada elemento (a kekkei genkai toma o
+ * lugar das dos dois elementos-pai) quando o kit usa elemento, e as técnicas-chave da linhagem. Sem clones nem barreiras
+ * no Roleta (ficam na Jornada). Origem proibida de ninjutsu fica sem as do elemento.
  */
 export function roletaKit(origin: Origin, data: RoletaData): string[] {
   const lineage = lineageOf(origin.lineageId, data.base);
+  const kit = data.kits[origin.lineageId ?? 'common'] ?? data.kits.common!;
   const all = Object.values(data.techniques);
   const forbidden = new Set(lineage.forbiddenAttackTypes ?? []);
   const kg = origin.kekkeiGenkai ? data.base.kekkeiGenkai.find((k) => k.id === origin.kekkeiGenkai) : undefined;
-  // Só as origens de ninjutsu elemental (Comum, Uzumaki, Senju, Uchiha) ganham a técnica da natureza (src/core/nature.ts).
-  const elements = hasElementalNinjutsu(lineage) ? origin.elements.filter((el) => !kg?.parents.includes(el)) : [];
-  const pick = (f: (t: RTechniqueDef) => boolean) => all.filter((t) => f(t) && !forbidden.has(t.type)).map((t) => t.id);
+  // Só as origens de ninjutsu elemental (Comum, Uzumaki, Senju) ganham a técnica da natureza (src/core/nature.ts).
+  const elemental = kit.elementTechniques && hasElementalNinjutsu(lineage);
+  const elements = elemental ? origin.elements.filter((el) => !kg?.parents.includes(el)) : [];
+  const attack = (t: RTechniqueDef) => !t.clone && !t.barrierPct && !t.lineage && !forbidden.has(t.type);
+  const pick = (f: (t: RTechniqueDef) => boolean) => all.filter((t) => f(t) && attack(t)).map((t) => t.id);
   return [
     BASIC,
-    // Clone: todo mundo que pode usar ninjutsu (o Prodígio, proibido, fica sem). Um só, no lugar do Bunshin.
-    ...pick((t) => t.clone === cloneKindOf(origin, lineage, kg?.id ?? null, data)).slice(0, 1),
-    ...elements.flatMap((el) => pick((t) => t.element === el)),
-    ...(kg && hasElementalNinjutsu(lineage) ? pick((t) => t.kekkeiGenkai === kg.id) : []),
-    ...(origin.lineageId ? pick((t) => t.lineage === origin.lineageId) : []),
+    ...elements.flatMap((el) => pick((t) => t.element === el && !t.kekkeiGenkai)),
+    ...(kg && elemental ? pick((t) => t.kekkeiGenkai === kg.id) : []),
+    ...kit.techniques.filter((id) => data.techniques[id] && !forbidden.has(data.techniques[id]!.type)),
   ];
 }
 

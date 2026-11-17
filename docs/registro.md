@@ -2,6 +2,26 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Roleta rápido e explosivo (v0.92.0, 17/11/2026)
+
+Item 40 de `decisoes.md`, com a ficha aprovada pelo usuário (`docs/roleta/proposta-kits.md`). Kits de uma passiva e 2 ou 3 técnicas-chave, sem ativas, clones nem barreiras; Prodígio sem natureza; Velhinha e Ramen como força de combate; roleta de relíquia com 2 raridades vizinhas. Regras em [roleta/combate.md](roleta/combate.md#kits) e [roleta/run.md](roleta/run.md).
+
+- **Decidido sozinho, dentro da ficha aprovada** (números calibrados pela simulação): força dos vilões por dificuldade só no Roleta (`difficultyPower` 1,3 / 1,2 / 1,12 / 1,22); Esforço +5 por 4 rodadas (+7 por 5 no nível 7); Expansão abaixo de 60% do HP; Pílula do clã ×1,5; Fera só na 1ª rodada (2 no nível 7) e Dupla 18% / 30% com a Fera / 25% depois dela no nível 7; Portões abaixo de 60 / 45 / 30 / 15% do HP; o Sharingan aceso dá metade do bônus de ataque e copia com 15 / 20 / 30%; o Byakugan aceso não dá o ×1,1; as 64 Palmas ficaram no nível 7; os números das técnicas novas e o ajuste de Mão Expandida, Presas, Folha Furacão, Lótus, Grande Bola de Fogo e Ilusão da Dor; o Ramen sorteia 2 status entre taijutsu, ninjutsu, genjutsu, resistências e speed. Os textos dos eventos Velhinha e Ramen são da base e mudaram também para o clássico (que só roda na simulação; a regra dele continua a da iniciativa).
+- **Simulação** (`npm run sim:origens -- --runs 300 --seed 2`, vence o 1º ciclo, Fácil / Médio / Difícil / Hardcore; rodadas por luta no Médio), v0.90.1 → v0.92.0:
+
+  | Origem | Antes | Depois | Rodadas |
+  |---|---|---|---|
+  | Comum | 94 / 65 / 34 / 24 | 90 / 64 / 40 / 18 | 6,7 → 5,4 |
+  | Akimichi | 95 / 71 / 34 / 28 | 90 / 63 / 39 / 16 | 7,1 → 7,4 |
+  | Inuzuka | 98 / 83 / 47 / 46 | 94 / 70 / 46 / 22 | 4,8 → 5,2 |
+  | Prodígio | 96 / 76 / 51 / 29 | 93 / 70 / 43 / 18 | 5,3 → 6,2 |
+  | Uchiha | 88 / 56 / 29 / 26 | 88 / 66 / 40 / 19 | 9,9 → 6,2 |
+  | Hyuuga | 93 / 68 / 34 / 21 | 93 / 62 / 43 / 13 | 5,8 → 5,8 |
+  | Uzumaki | 95 / 71 / 46 / 38 | 91 / 67 / 38 / 21 | 7,8 → 8,0 |
+  | Senju | 96 / 74 / 51 / 44 | 93 / 59 / 38 / 13 | 7,4 → 6,7 |
+
+  Quase tudo dentro de ±5 da meta; fora por 6 a 7 pontos (no ruído de 300 runs): Inuzuka e Uzumaki no Hardcore (22 e 21) e Senju no Médio (59). O infinito do Hardcore ficou entre 2 e 13% no ciclo 2.
+
 ## Revisão geral dos três modos (17/11/2026)
 
 Análise de jogabilidade e balanceamento do Roleta, da História e do Caminho Ninja na v0.88.3, com as respostas do usuário. Simulação: `npm run sim:origens -- --runs 300 --seed 2` e `npm run sim:jornada -- 300 2 3`.

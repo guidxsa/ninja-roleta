@@ -134,11 +134,13 @@ export function rollOrigin(rng: Rng, data: GameData): OriginRoll {
   let lineage = lineageOf(stepValue(lineageStep), data);
   let rolled = rollElements(lineage, rng, data);
   steps.push(...rolled.steps);
-  // O Comum sem proficiência elemental é o Prodígio do taijutsu (docs/base/origens.md#sorteio); a natureza dele é
-  // sorteada em silêncio, como a das origens sem ninjutsu elemental.
+  // O Comum sem proficiência elemental é o Prodígio do taijutsu (docs/base/origens.md#sorteio). Desde a v0.92.0 ele não
+  // tem natureza nenhuma, nem silenciosa (como no Caminho Ninja desde a v0.87.1). O sorteio continua girando por dentro,
+  // para as seeds de antes darem as mesmas roletas seguintes.
   if (lineage.id === COMMON_LINEAGE && rolled.elements.length === 0 && data.lineages.some((l) => l.id === PRODIGY_LINEAGE)) {
     lineage = lineageOf(PRODIGY_LINEAGE, data);
-    rolled = rollElements(lineage, rng, data);
+    rollElements(lineage, rng, data);
+    rolled = { elements: [], steps: [] };
   }
   // Kekkei Genkai: só a rolagem especial da linhagem (Mokuton do Senju); saindo, ela é a natureza.
   const kg = rollLineageKekkeiGenkai(lineage, rng, data);

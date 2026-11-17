@@ -22,7 +22,8 @@ describe('rolagem de origem', () => {
     const rng = createRng(77);
     for (let i = 0; i < 2000; i++) {
       const { origin } = rollOrigin(rng, gameData);
-      expect(origin.elements.length + (origin.kekkeiGenkai ? 1 : 0)).toBe(1);
+      // O Prodígio do taijutsu não tem natureza nenhuma (v0.92.0); todo o resto tem exatamente uma.
+      expect(origin.elements.length + (origin.kekkeiGenkai ? 1 : 0)).toBe(origin.lineageId === 'taijutsuProdigy' ? 0 : 1);
     }
   });
 
@@ -76,10 +77,11 @@ describe('rolagem de origem', () => {
     }
   });
 
-  it('o Comum sem proficiência vira o Prodígio do taijutsu (9% no total, como antes), com natureza silenciosa', () => {
-    // 0.2 → comum; 0.0 → sem proficiência → Prodígio; 0.0 → natureza silenciosa (fogo); 0.99 → não jinchuuriki
+  it('o Comum sem proficiência vira o Prodígio do taijutsu (9% no total, como antes), sem natureza (v0.92.0)', () => {
+    // 0.2 → comum; 0.0 → sem proficiência → Prodígio; 0.0 → o sorteio da natureza gira por dentro (seeds iguais) e é
+    // descartado; 0.99 → não jinchuuriki
     const { origin, steps } = rollOrigin(seq(0.2, 0.0, 0.0, 0.99), gameData);
-    expect(origin).toEqual({ lineageId: 'taijutsuProdigy', elements: ['fire'], jinchuuriki: false, kekkeiGenkai: null });
+    expect(origin).toEqual({ lineageId: 'taijutsuProdigy', elements: [], jinchuuriki: false, kekkeiGenkai: null });
     expect(steps.map((s) => s.kind)).toEqual(['lineage', 'elementCount', 'jinchuuriki']);
     const common = gameData.lineages.find((l) => l.id === 'common')!;
     const w = common.elements.countWeights;
