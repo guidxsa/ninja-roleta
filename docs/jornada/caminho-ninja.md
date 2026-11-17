@@ -21,6 +21,22 @@ A run que aproveita o **mapa ramificado** ([run.md](run.md#mapa-ramificado)): o 
 
 Fichas: [inimigos.md](inimigos.md).
 
+### Inimigos novos (v0.94.0)
+
+Aprovados em 17/11/2026 ([proposta-fichas.md](proposta-fichas.md#parte-1--inimigos-novos-no-caminho-ninja)): cada estágio ganhou 1 chefe, 2 elites e 2 lutas.
+
+| Estágio | Lutas novas | Elites novas | Chefe novo |
+|---|---|---|---|
+| 1 | 2 samurais errantes · caçador da Névoa e bandido | Zōri e Waraji · 2 caçadores da Névoa | **Gatō, Zōri e Waraji** |
+| 2 | 2 genins da Areia · genin da Areia e ninja da Grama | Yoroi e Misumi · 3 genins da Areia | **Kankurō, a Karasu e Temari** |
+| 3 | 2 guardas do esconderijo · guarda e cobra | Tayuya e 3 Doki · 2 guardas e Kidōmaru | **Sakon (nível 2)** |
+
+- **Guarda-costas** (`protects` na ficha): o Zōri e o Waraji tomam todos os golpes de alvo único no Gatō; a Karasu toma 30% dos golpes no Kankurō. Técnica em área passa.
+- **O Gatō foge** quando o Zōri e o Waraji caem: a luta acaba em vitória (roteiro da luta, `encounters` em `src/data/jornada/generic.ts`).
+- **Dois corpos**: a 50% do HP, o Ukon se separa do Sakon e entra na luta.
+- **Itachi e Kisame**: elite rara do estágio 3, 10% de chance de tomar o lugar da elite sorteada (nunca no 1º ciclo do Fácil). Vence quem derruba os dois ou resiste 6 rodadas (vitória `survive`). Derrubar os dois deixa uma relíquia rara no lugar da relíquia de elite.
+- Os retratos usam desenhos parecidos (bandido, Haku, genins do Exame, Kabuto disfarçado, Uchiha, Zabuza) até haver os próprios.
+
 ## Eventos
 
 Saem do **desconhecido** (50% das vezes). Um evento não repete na mesma run enquanto houver outro novo. Alguns lembram o Roleta.

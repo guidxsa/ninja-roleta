@@ -25,7 +25,7 @@ A Jornada tem um combate de equipe próprio, que usa as fórmulas da base ([fund
 | [caminho-ninja.md](caminho-ninja.md) | Caminho Ninja: estrutura, pools por estágio, chefes, eventos |
 | [classes.md](classes.md) | Classes, sorteio do elemento, desbloqueios, ativas, suportes genéricos |
 | [proposta-minijogos.md](proposta-minijogos.md) | 4 minijogos de tempo (kunai, água, clone, sino) e a troca nos eventos; feitos na v0.91.0 |
-| [proposta-fichas.md](proposta-fichas.md) | **Proposta para aprovar**: inimigos novos do Caminho Ninja (3 chefes, 6 elites, Itachi e Kisame) e o Hyuuga no cânone |
+| [proposta-fichas.md](proposta-fichas.md) | Inimigos novos do Caminho Ninja (3 chefes, 6 elites, Itachi e Kisame) e o Hyuuga no cânone; feitos na v0.94.0 |
 
 ## Pilares
 

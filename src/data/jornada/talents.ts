@@ -267,7 +267,7 @@ export const talents: TalentNode[] = [
   { id: 'tH360', owner: 'hyuugaNinja', branch: 'byakugan', tier: 5, cost: 3, capstone: true, mods: { ignoreEvasion: true, evasion: 0.1 } },
   // Punho Suave (chakra do alvo). Final: o taijutsu bloqueia o chakra.
   { id: 'tGentleFist', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 1, cost: 1, mods: { typeDamageMult: { taijutsu: 1.15 } } },
-  { id: 'tHClosePoints', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 2, col: -1, cost: 2, excludes: ['tHInnerStrike'], mods: { taiHitDrain: 2 } },
+  { id: 'tHClosePoints', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 2, col: -1, cost: 2, excludes: ['tHInnerStrike'], mods: { taiHitDrain: 2, drainRefund: 1 } },
   { id: 'tHInnerStrike', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 2, col: 1, cost: 2, excludes: ['tHClosePoints'], mods: { typePen: { taijutsu: 0.25 } } },
   { id: 'tChakraPoints', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 3, cost: 2, requires: ['tHClosePoints', 'tHInnerStrike'], mods: { techDamageMult: { jGentlePalm: 1.3 }, typeDamageMult: { taijutsu: 1.2 } } },
   { id: 'tHBrokenFlow', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 4, cost: 2, mods: { chakraBlockedDamageMult: 1.3 } },
@@ -275,7 +275,7 @@ export const talents: TalentNode[] = [
   // Rotação (defesa). Final: o escudo devolve metade do que segura.
   { id: 'tRotation', owner: 'hyuugaNinja', branch: 'rotation', tier: 1, cost: 1, learn: 'jRotation' },
   { id: 'tGuardStance', owner: 'hyuugaNinja', branch: 'rotation', tier: 2, col: -1, cost: 2, excludes: ['tHQuickSpin'], mods: { startShieldPct: 0.12 } },
-  { id: 'tHQuickSpin', owner: 'hyuugaNinja', branch: 'rotation', tier: 2, col: 1, cost: 2, excludes: ['tGuardStance'], mods: { techChakraDiscount: { jRotation: 2 } } },
+  { id: 'tHQuickSpin', owner: 'hyuugaNinja', branch: 'rotation', tier: 2, col: 1, cost: 2, excludes: ['tGuardStance'], mods: { techChakraDiscount: { jRotation: 3 } } },
   { id: 'tVacuumWall', owner: 'hyuugaNinja', branch: 'rotation', tier: 3, cost: 2, requires: ['tGuardStance', 'tHQuickSpin'], learn: 'jVacuumWall', mods: { evasion: 0.08, damageMult: 1.15 } },
   { id: 'tHBalance', owner: 'hyuugaNinja', branch: 'rotation', tier: 4, cost: 2, mods: { guardHealPct: 0.08, regenHp: 2 } },
   { id: 'tHAbsoluteDefense', owner: 'hyuugaNinja', branch: 'rotation', tier: 5, cost: 3, capstone: true, mods: { shieldReflectPct: 0.75 } },

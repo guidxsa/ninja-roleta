@@ -460,7 +460,11 @@ describe('História canônica: Sannin e Resgate (v0.67.0)', () => {
 
 describe('revisão da História, parte 2 (v0.70.0)', () => {
   const J = ptBR.jornada;
-  const scripts = data.stages.flatMap((st) => st.stops).flatMap((stop) => ('script' in stop ? (stop.script ?? []) : []));
+  const scripts = [
+    ...data.stages.flatMap((st) => st.stops).flatMap((stop) => ('script' in stop ? (stop.script ?? []) : [])),
+    // Lutas com regra própria do Caminho Ninja (v0.94.0).
+    ...data.generic.stages.flatMap((st) => Object.values(st.encounters ?? {})).flatMap((e) => e.script ?? []),
+  ];
 
   it('Kage Bunshin: o Naruto começa sem ele e aprende no pergaminho proibido, qualquer que seja a escolha', () => {
     const run = newRun(1, 'normal', data);

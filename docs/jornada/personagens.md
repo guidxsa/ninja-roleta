@@ -173,11 +173,11 @@ Nível I no kit de quem tem o elemento; II e III pela árvore do Comum ([talento
 | Ilusão dos corvos | Genjutsu | — | um inimigo | 12 | 4 | 85% | medo 30% (2 t) |
 | Tsukuyomi | Genjutsu | — | um inimigo | 30 | 12 | 85% | atordoar 40% (2 t); espera 4 |
 | Selo amaldiçoado | Ninjutsu | — | em si | — | 0 | 85% | custa 10% do HP; espera 5; fortalece 3 turnos (dano ×1.4); ativa de classe |
-| Byakugan | Taijutsu | — | em si | — | 3 | 85% | espera 4; fortalece 3 turnos (+100% acerto); ativa de classe |
-| Byakugan (desperto) | Taijutsu | — | em si | — | 4 | 85% | espera 4; fortalece 4 turnos (dano ×1.15) (+100% acerto); ativa de classe |
-| Palma Suave | Taijutsu | — | um inimigo | 10 | 0 | 95% | penetração 20%; bloqueio de chakra 30% |
-| 64 Palmas | Taijutsu | — | um inimigo | 5 | 8 | 95% | 4 golpes; penetração 30%; bloqueio de chakra 50% (3 t); espera 3 |
-| 128 Palmas | Taijutsu | — | um inimigo | 4 | 12 | 95% | 8 golpes; penetração 30%; bloqueio de chakra 60% (3 t); espera 4 |
-| Rotação | Taijutsu | — | em si | — | 4 | 85% | escudo 25% do HP de quem usa; espera 3 |
-| Palma do Vácuo | Taijutsu | — | um inimigo | 16 | 4 | 90% | penetração 20% |
-| Paredão de vácuo | Taijutsu | — | todos os inimigos | 12 | 8 | 90% | espera 2 |
+| Byakugan | Taijutsu | — | em si | — | 2 | 85% | **postura** (v0.94.0): liga e desliga, 2 de chakra por turno enquanto aceso; +100% acerto e +20% de penetração; ativa de classe |
+| Byakugan (desperto) | Taijutsu | — | em si | — | 3 | 85% | postura, 3 de chakra por turno; +100% acerto, +30% de penetração, dano ×1.15; ativa de classe |
+| Palma Suave | Taijutsu | — | um inimigo | 12 | 2 | 95% | penetração 20%; bloqueio de chakra 30%; tira 3 de chakra do alvo (com o Byakugan: 5 e bloqueio 45%) |
+| 64 Palmas | Taijutsu | — | um inimigo | 6 | 12 | 95% | só com o Byakugan aceso; 4 golpes; penetração 30%; bloqueio de chakra 50% (3 t); cada golpe tira 2 de chakra; espera 3 |
+| 128 Palmas | Taijutsu | — | um inimigo | 5 | 18 | 95% | só com o Byakugan aceso; 8 golpes; penetração 30%; bloqueio de chakra 60% (3 t); cada golpe tira 2 de chakra; espera 4 |
+| Rotação | Taijutsu | — | em si | — | 8 | 85% | escudo 30% do HP de quem usa, que devolve 30% do que segura; espera 3 |
+| Palma do Vácuo | Taijutsu | — | um inimigo | 18 | 6 | 90% | penetração 20% |
+| Paredão de vácuo | Taijutsu | — | todos os inimigos | 14 | 10 | 90% | espera 2 |

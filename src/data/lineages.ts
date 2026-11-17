@@ -176,7 +176,9 @@ export const lineages: LineageDef[] = [
         techniques: ['jStrike', 'jGentlePalm', 'jShuriken', 'jByakugan', 'jBunshin'],
         ai: 'striker',
         portrait: 'ninja:hyuuga',
-        // O ajuste da v0.64.0 (+1 taijutsu, +5 HP) saiu na v0.65.0: com os inimigos mais fortes, a fórmula pura basta.
+        // O ajuste da v0.64.0 (+1 taijutsu, +5 HP) saiu na v0.65.0. Na v0.94.0 (Hyuuga no cânone) o chakra sobe 28 → 40,
+        // para caber a postura do Byakugan e as Palmas, que passaram a custar chakra de verdade.
+        adjust: { chakra: 12 },
       },
       class: { id: 'hyuuga', unlock: 'j_unlockHyuuga', supports: ['hyuugaGenin', 'hyuugaGeninB'], supportNames: ['mio', 'sei', 'haru', 'yuki', 'kenji', 'emi', 'tomo', 'aya', 'shun', 'mai'] },
     },

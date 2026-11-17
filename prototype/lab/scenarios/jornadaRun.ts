@@ -213,6 +213,8 @@ export const jornadaRun: Scenario[] = [
   { id: 'jornada.battle:boss', title: 'Chefe com falas (Haku)', group: 'Combate', mount: fight(() => story('haku')) },
   { id: 'jornada.battle:lesson', title: 'Teste do sino (derrota vira lição)', group: 'Combate', mount: fight(() => story('bells')) },
   { id: 'jornada.battle:path', title: 'Luta do Caminho Ninja', group: 'Combate', mount: fight(() => path((r) => !choosingNode(r) && !r.bossChoice && currentStop(r, data)?.kind === 'fight')) },
+  // v0.94.0: o Hyuuga no cânone (Byakugan como postura, Palmas que pedem o Byakugan) numa luta do 2º estágio.
+  { id: 'jornada.battle:hyuuga', title: 'Luta do Hyuuga (Byakugan em postura)', group: 'Combate', mount: fight(() => playUntil(pathRun(1, 'normal', 'hyuuga'), (r) => r.stageIndex === 1 && !choosingNode(r) && !r.bossChoice && currentStop(r, data)?.kind === 'fight')) },
   { id: 'jornada.battle:downed', title: 'Luta com aliados caídos (aba Reerguer)', group: 'Combate', mount: fightFrom(() => story('demonBrothers'), downAllies) },
   { id: 'jornada.battle:low-hp', title: 'Luta com os dois lados feridos', group: 'Combate', mount: fightFrom(() => story('zabuza'), hpAt(0.3, 0.25)) },
   { id: 'jornada.battle:late', title: 'Chefe do último estágio (Fácil)', group: 'Combate', mount: fight(() => story('valley', 'easy')) },

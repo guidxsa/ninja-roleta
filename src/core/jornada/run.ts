@@ -419,9 +419,23 @@ function stopFromNode(run: JRun, data: JornadaData): StopDef {
     kind = entries.find(([, v]) => (x -= v) < 0)?.[0] ?? 'event';
   }
   const id = node.id;
-  if (kind === 'fight') return { kind: 'fight', id, enemies: pickFrom(node.row < data.j.map.easyRows ? stage.easyFights : stage.fights, rng) };
-  if (kind === 'elite') return { kind: 'elite', id, enemies: pickFrom(stage.elites, rng) };
-  if (kind === 'boss') return { kind: 'boss', id, enemies: stage.bosses[run.bossPlan[run.stageIndex] ?? 0]! };
+  // Regra própria da luta (v0.94.0): condição de vitória e roteiro pela composição dos inimigos.
+  const extras = (enemies: string[]) => stage.encounters?.[enemies.join('+')] ?? {};
+  if (kind === 'fight') {
+    const enemies = pickFrom(node.row < data.j.map.easyRows ? stage.easyFights : stage.fights, rng);
+    return { kind: 'fight', id, enemies, ...extras(enemies) };
+  }
+  if (kind === 'elite') {
+    let enemies = pickFrom(stage.elites, rng);
+    // Elite rara (Itachi e Kisame): nunca no 1º ciclo do Fácil.
+    const rare = stage.rareElite;
+    if (rare && !(run.difficulty === 'easy' && run.cycle === 0) && rng() < rare.chance) enemies = rare.enemies;
+    return { kind: 'elite', id, enemies, ...extras(enemies) };
+  }
+  if (kind === 'boss') {
+    const enemies = stage.bosses[run.bossPlan[run.stageIndex] ?? 0]!;
+    return { kind: 'boss', id, enemies, ...extras(enemies) };
+  }
   if (kind === 'event') {
     const fresh = stage.events.filter((e) => !run.flags.includes(`ev:${e}`));
     return { kind: 'event', id, event: pickFrom(fresh.length ? fresh : stage.events, rng) };
@@ -849,7 +863,9 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
     if (!run.bossChoice.length) run.bossChoice = null;
   }
   // Elite vencida deixa uma relíquia (o sorteio vem antes de avançar: a seed é a da parada).
-  const relic = stop.kind === 'elite' ? dropRelic(fitRelics(run, data), run.relics, data.j.relics.eliteWeights, stopRng(run, 13)) : null;
+  // Itachi e Kisame (v0.94.0): derrubar os dois, em vez de só resistir, deixa uma relíquia rara.
+  const rout = stop.routRelic && battle.fighters.filter((x) => x.side === 'enemy' && !x.gone).every((x) => x.down);
+  const relic = stop.kind === 'elite' ? dropRelic(fitRelics(run, data), run.relics, rout ? data.j.relics.routWeights : data.j.relics.eliteWeights, stopRng(run, 13)) : null;
   if (relic) run = gainRelic(run, relic, data);
   if (!run.bossChoice) advanceStop(run, data);
   const talentRyo = rewardRyo + levelRyo;

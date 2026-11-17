@@ -1,6 +1,6 @@
-# Proposta: inimigos novos no Caminho Ninja e Hyuuga no cânone (para aprovar)
+# Proposta: inimigos novos no Caminho Ninja e Hyuuga no cânone (aprovada e feita na v0.94.0)
 
-Itens 43 e 44 de [decisoes.md](../decisoes.md). Nada daqui está no código. Os números são o ponto de partida, na escala das fichas de hoje ([inimigos.md](inimigos.md)); os finais saem da simulação, no rebalanceamento para a meta 90/65/40/15 que vem depois destas fichas.
+Itens 43 e 44 de [decisoes.md](../decisoes.md). Aprovada pelo usuário em 17/11/2026 e implementada na v0.94.0; o que mudou na implementação está no [registro](../registro.md#inimigos-novos-do-caminho-ninja-e-hyuuga-no-cânone-v0940-17112026) e as regras finais em [caminho-ninja.md](caminho-ninja.md#inimigos-novos-v0940). Este arquivo fica como registro da ficha. Os números são o ponto de partida, na escala das fichas de hoje ([inimigos.md](inimigos.md)); os finais saem da simulação, no rebalanceamento para a meta 90/65/40/15 que vem depois destas fichas.
 
 ## Parte 1 · Inimigos novos no Caminho Ninja
 

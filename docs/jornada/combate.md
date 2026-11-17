@@ -18,7 +18,7 @@ Um motor próprio, de equipe, separado do combate do Roleta. Compartilha com a b
 
 1. Queimar e veneno tiram 5% e 6% do HP máximo.
 2. Atordoado perde a vez.
-3. O lutador age. Antes da ação, pode usar **uma ativa de classe** (Kage Bunshin, Sharingan, Byakugan, Portões, Manto da Kyuubi...): ela **não gasta o turno**, é uma por turno, e o turno continua. Fortalecimentos contam o turno da ativação (o Sharingan de 3 turnos vale para a ação deste turno e das 2 seguintes). O protagonista escolhe:
+3. O lutador age. Antes da ação, pode usar **uma ativa de classe** (Kage Bunshin, Sharingan, Byakugan, Portões, Manto da Kyuubi...): ela **não gasta o turno**, é uma por turno, e o turno continua. Fortalecimentos contam o turno da ativação (o Sharingan de 3 turnos vale para a ação deste turno e das 2 seguintes). **Postura** (Byakugan, v0.94.0): não tem prazo; custa chakra no fim de cada turno de quem usa a partir do turno seguinte ao que ligou, e apaga sem chakra para pagar; usar de novo desliga, sem custo. Técnicas podem pedir um fortalecimento ligado (as Palmas pedem o Byakugan). O protagonista escolhe:
    - **técnica** do moveset, tocando no alvo (inimigo ou aliado; técnicas em todos os inimigos e em si não pedem alvo);
    - **Defender**: usa a resistência inteira (100% no lugar de 50%) até o próximo turno dele;
    - **Concentrar**: recupera 8 de chakra;

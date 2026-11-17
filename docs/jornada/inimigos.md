@@ -42,6 +42,23 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Sakon | 150 | 26 | 13 | 13/8/4 | 9/6 | — | brute | Golpe gêmeo, Lâmina sonora | — |
 | Kimimaro | 290 | 40 | 14 | 17/6/4 | 12/8 | — | brute | Broca de osso, Balas de osso, Dança do salgueiro | fúria abaixo de 50% (dano ×1.25) |
 | Sasuke (selo) | 330 | 50 | 16 | 15/16/8 | 10/10 | fogo | striker | Chidori, Chamas do dragão, Combo do Leão, Bola de Fogo | fúria abaixo de 50% (dano ×1.3) |
+| Samurai errante | 48 | 0 | 9 | 7/0/0 | 4/3 | — | brute | Corte rápido, Katana | — (Caminho Ninja, v0.94.0) |
+| Caçador da Névoa | 58 | 18 | 12 | 7/8/3 | 5/5 | água | striker | Senbon, Projétil de água | — |
+| Zōri | 70 | 0 | 10 | 9/0/0 | 6/4 | — | brute | Katana, Corte rápido | guarda-costas do Gatō: os golpes de alvo único nele caem no Zōri |
+| Waraji | 80 | 0 | 8 | 10/0/0 | 7/4 | — | brute | Machado pesado, Porrete | guarda-costas do Gatō, como o Zōri |
+| Gatō | 50 | 0 | 7 | 4/0/0 | 3/3 | — | tactician | Bengala, Pagamento extra | foge quando Zōri e Waraji caem (a luta acaba em vitória) |
+| Genin da Areia | 70 | 18 | 11 | 8/9/5 | 6/6 | vento | striker | Kunai, Lâmina de vento | — |
+| Yoroi | 110 | 30 | 11 | 10/8/4 | 7/7 | — | tactician | Mão que suga chakra, Kunai | — |
+| Misumi | 100 | 20 | 12 | 10/6/4 | 8/6 | — | tactician | Corpo flexível, Kunai | — |
+| Kankurō | 140 | 36 | 11 | 7/12/6 | 8/8 | — | tactician | Kunai, Fios de chakra | luta com a Karasu |
+| Karasu | 60 | 20 | 11 | 10/0/0 | 6/6 | — | brute | Karasu: lâminas envenenadas, Karasu: abraço | marionete: 30% dos golpes de alvo único no Kankurō caem nela |
+| Temari | 130 | 40 | 13 | 7/14/4 | 7/8 | vento | striker | Grande leque: rajada, Lâmina de vento, Kunai | — |
+| Guarda do esconderijo | 80 | 16 | 11 | 10/8/5 | 7/6 | — | striker | Kunai, Lâmina sonora | — |
+| Doki | 80 | 0 | 9 | 11/0/0 | 7/7 | — | brute | Golpe dos demônios | lutam junto da Tayuya |
+| Sakon (nível 2) | 260 | 40 | 14 | 15/10/6 | 10/8 | — | brute | Golpe gêmeo, Fusão parasita, Rashōmon | a 50% do HP o Ukon se separa e entra na luta; fúria abaixo de 40% (dano ×1.25) |
+| Ukon | 156 | 24 | 14 | 15/10/6 | 10/8 | — | brute | Golpe gêmeo, Fusão parasita | entra pela separação do Sakon |
+| Itachi Uchiha | 240 | 60 | 18 | 13/16/18 | 10/14 | fogo | tactician | Tsukuyomi, Amaterasu, Kunai, Clone de corvos | elite rara (ver [caminho-ninja.md](caminho-ninja.md#inimigos-novos-v0940)) |
+| Kisame Hoshigaki | 300 | 70 | 13 | 16/14/4 | 12/8 | água | brute | Samehada, Tubarão de água, Prisão de água | elite rara, com o Itachi |
 
 ## Técnicas
 
@@ -103,3 +120,22 @@ Fichas só da Jornada (as do Roleta ficam em [viloes.md](../base/viloes.md)). A 
 | Bola de Fogo | Ninjutsu | fogo | um inimigo | 16 | 5 | 85% | queimar 30% |
 | Combo do Leão | Taijutsu | — | um inimigo | 15 | 2 | 90% | — |
 | Chamas do dragão | Ninjutsu | fogo | todos os inimigos | 14 | 9 | 85% | queimar 30%; espera 2 |
+| Corte rápido | Taijutsu | — | um inimigo | 6 | 0 | 90% | 2 golpes |
+| Machado pesado | Taijutsu | — | um inimigo | 16 | 0 | 75% | atordoar 15% (2 t) |
+| Bengala | Taijutsu | — | um inimigo | 4 | 0 | 85% | — |
+| Pagamento extra | Taijutsu | — | um aliado | — | 0 | 85% | cura 20 de HP e tira atordoar e bloqueio; espera 3 |
+| Lâmina de vento | Ninjutsu | vento | um inimigo | 11 | 3 | 85% | — |
+| Mão que suga chakra | Taijutsu | — | um inimigo | 10 | 2 | 85% | tira 6 de chakra do alvo, que vão para quem usa |
+| Corpo flexível | Taijutsu | — | um inimigo | 8 | 3 | 80% | atordoar 100% (2 t); espera 4 |
+| Fios de chakra | Ninjutsu | — | um inimigo | 10 | 3 | 85% | — |
+| Karasu: lâminas envenenadas | Taijutsu | — | um inimigo | 9 | 3 | 85% | 2 golpes; veneno 40% |
+| Karasu: abraço | Taijutsu | — | um inimigo | 6 | 5 | 80% | atordoar 100% (2 t); espera 4 |
+| Grande leque: rajada | Ninjutsu | vento | todos os inimigos | 12 | 8 | 85% | espera 2 |
+| Golpe dos demônios | Taijutsu | — | um inimigo | 10 | 0 | 85% | — |
+| Fusão parasita | Taijutsu | — | um inimigo | 14 | 4 | 85% | veneno 30% |
+| Rashōmon | Ninjutsu | — | em si | — | 8 | 85% | escudo 25% do HP de quem usa; espera 4 |
+| Tsukuyomi | Genjutsu | — | um inimigo | 20 | 12 | 85% | atordoar 60% (2 t); espera 4 |
+| Amaterasu | Ninjutsu | fogo | um inimigo | 16 | 15 | 85% | queimar 100% (3 t); espera 4 |
+| Clone de corvos | Genjutsu | — | em si | — | 6 | 85% | 1 clone ilusório; espera 3 |
+| Samehada | Taijutsu | — | um inimigo | 18 | 0 | 85% | tira 5 de chakra do alvo, que vão para quem usa |
+| Tubarão de água | Ninjutsu | água | todos os inimigos | 15 | 10 | 85% | espera 2 |

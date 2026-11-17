@@ -10,6 +10,11 @@ export const jornadaBalance = {
     // golpe que acerta, e o chakra por golpe (Ritmo de luta) volta uma vez por uso. Técnicas de vários golpes deixam de
     // multiplicar esses bônus. `false` volta à regra antiga (por golpe).
     flatPerTechnique: true,
+    // Herdeiro do clã com o Byakugan em postura (v0.94.0): a equipe ganha o acerto por estes turnos, sem manutenção.
+    sharedStanceTurns: 4,
+    // IA e bot com a postura: ligam com o chakra acima desta fração e desligam abaixo desta.
+    stanceOnAbovePct: 0.4,
+    stanceOffBelowPct: 0.15,
     // Ordem da rodada: speed × (1 ± variação). Pequena: a sorte pesa menos (docs/jornada/combate.md#ordem).
     orderVariance: 0.15,
     // Fração da resistência usada normalmente e em postura defensiva.
@@ -92,6 +97,8 @@ export const jornadaBalance = {
   relics: {
     // Elite vencida deixa uma relíquia com estas chances.
     eliteWeights: { common: 50, uncommon: 33, rare: 17 },
+    // Elite rara derrubada por inteiro (Itachi e Kisame, v0.94.0): a relíquia vem rara.
+    routWeights: { common: 0, uncommon: 0, rare: 1 },
     treasureWeights: { common: 40, uncommon: 35, rare: 25 },
     // A loja tem 1 vaga fixa de relíquia de loja; as outras saem destes pesos, um por estágio passado (o último vale
     // para os seguintes e para o modo infinito): a prateleira melhora com a run (v0.62.0, proposta).

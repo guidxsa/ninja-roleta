@@ -36,7 +36,7 @@ A tabela abaixo é gerada dos dados (`npm run docs:tabelas`); não edite à mão
 | Comum | `commonNinja` | 115 | 36 | 11 | 9 | 9 | 3 | 7 | 6 |
 | Prodígio do taijutsu | `prodigy` | 100 | 22 | 14 | 10 | 0 | 0 | 8 | 5 |
 | Uchiha | `uchihaNinja` | 105 | 32 | 12 | 10 | 12 | 8 | 7 | 8 |
-| Hyuuga | `hyuugaNinja` | 100 | 28 | 13 | 11 | 4 | 4 | 7 | 7 |
+| Hyuuga | `hyuugaNinja` | 100 | 40 | 13 | 11 | 4 | 4 | 7 | 7 |
 <!-- /gerado -->
 
 ## Desbloqueios
@@ -57,7 +57,7 @@ Na tela de início, a classe trancada aparece com cadeado e a condição. Com a 
 | Comum | Esforço | Fortalece: +3 nos três ataques por 3 turnos (3 de chakra, espera 4). O **Bunshin no Jutsu** é técnica do moveset, não ativa: gasta o turno e cria 1 clone (o Kage Bunshin do Naruto é ativa e cria 2) |
 | Prodígio | Portões | Abre, troca ou fecha um dos 5 portões: dano maior, pago em chakra (abertura e manutenção crescente; [combate.md](combate.md#portões)) |
 | Uchiha | Sharingan | Fortalece: +15% de acerto e +15% de esquiva por 3 turnos (3 de chakra, espera 4) |
-| Hyuuga | Byakugan | Fortalece: não erra e +20% de penetração por 3 turnos (3 de chakra, espera 4) |
+| Hyuuga | Byakugan | **Postura** (v0.94.0): liga por 2 de chakra e custa 2 por turno enquanto aceso (desligar é grátis; sem chakra, apaga): não erra e +20% de penetração. As 64 e 128 Palmas só saem com ele aceso |
 
 Ativas de classe não gastam o turno: saem junto com a ação, uma por turno ([combate.md](combate.md#turno)). Fortalecimento: um bônus temporário em quem usa (dano, acerto, esquiva, penetração) que dura os turnos indicados, contando o da ativação; usar de novo renova.
 

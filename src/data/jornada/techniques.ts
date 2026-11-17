@@ -150,14 +150,16 @@ export const classTechniques: JTechnique[] = [
   { id: 'jCursedSeal', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 0, hpCostPct: 0.1, boost: { damageMult: 1.4, turns: 3 }, active: true, cooldown: 5 },
 
   // Hyuuga (v0.37.0)
-  { id: 'jByakugan', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, boost: { accuracy: 1, penetration: 0.2, turns: 3 }, active: true, cooldown: 4 },
-  { id: 'jByakugan2', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 4, boost: { accuracy: 1, penetration: 0.3, damageMult: 1.15, turns: 4 }, active: true, cooldown: 4, evolves: 'jByakugan' },
-  { id: 'jGentlePalm', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 10, chakraCost: 0, accuracy: 0.95, penetration: 0.2, onHit: { effect: 'chakraBlock', chance: 0.3 } },
-  { id: 'jSixtyFourPalms', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 5, hits: 4, chakraCost: 8, accuracy: 0.95, penetration: 0.3, onHit: { effect: 'chakraBlock', chance: 0.5, turns: 3 }, cooldown: 3 },
-  { id: 'jHundredTwentyEight', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 4, hits: 8, chakraCost: 12, accuracy: 0.95, penetration: 0.3, onHit: { effect: 'chakraBlock', chance: 0.6, turns: 3 }, cooldown: 4 },
-  { id: 'jRotation', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 4, shieldPct: 0.25, cooldown: 3 },
-  { id: 'jVacuumPalm', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 16, chakraCost: 4, accuracy: 0.9, penetration: 0.2 },
-  { id: 'jVacuumWall', type: 'taijutsu', element: null, target: 'allEnemies', baseDamage: 12, chakraCost: 8, accuracy: 0.9, cooldown: 2 },
+  // Hyuuga no cânone (v0.94.0): o Byakugan é postura (liga e desliga, manutenção por turno); o Punho Suave fecha pontos
+  // e tira chakra; as Palmas pedem o Byakugan ligado; a Rotação devolve parte do que segura.
+  { id: 'jByakugan', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 2, boost: { accuracy: 1, penetration: 0.2, turns: 99, upkeep: 2 }, active: true, stance: true },
+  { id: 'jByakugan2', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 3, boost: { accuracy: 1, penetration: 0.3, damageMult: 1.15, turns: 99, upkeep: 3 }, active: true, stance: true, evolves: 'jByakugan' },
+  { id: 'jGentlePalm', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 12, chakraCost: 2, accuracy: 0.95, penetration: 0.2, onHit: { effect: 'chakraBlock', chance: 0.3 }, chakraDrain: 3, boosted: { techs: ['jByakugan', 'jByakugan2'], chakraDrain: 5, onHitChance: 0.45 } },
+  { id: 'jSixtyFourPalms', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 6, hits: 4, chakraCost: 12, requiresBoost: ['jByakugan', 'jByakugan2'], chakraDrain: 2, accuracy: 0.95, penetration: 0.3, onHit: { effect: 'chakraBlock', chance: 0.5, turns: 3 }, cooldown: 3 },
+  { id: 'jHundredTwentyEight', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 5, hits: 8, chakraCost: 18, requiresBoost: ['jByakugan', 'jByakugan2'], chakraDrain: 2, accuracy: 0.95, penetration: 0.3, onHit: { effect: 'chakraBlock', chance: 0.6, turns: 3 }, cooldown: 4 },
+  { id: 'jRotation', type: 'taijutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 8, shieldPct: 0.3, reflectPct: 0.3, cooldown: 3 },
+  { id: 'jVacuumPalm', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 18, chakraCost: 6, accuracy: 0.9, penetration: 0.2 },
+  { id: 'jVacuumWall', type: 'taijutsu', element: null, target: 'allEnemies', baseDamage: 14, chakraCost: 10, accuracy: 0.9, cooldown: 2 },
 ];
 
 /** Dos inimigos (fichas em data/jornada/enemies.ts). */
@@ -222,6 +224,26 @@ export const enemyTechniques: JTechnique[] = [
   { id: 'jeGoldenArrow', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 24, chakraCost: 6, accuracy: 0.8, penetration: 0.2 },
   { id: 'jeSpiderWeb', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 4, chakraCost: 3, onHit: { effect: 'stun', chance: 0.35 }, cooldown: 2 },
   { id: 'jeDemonFlute', type: 'genjutsu', element: null, target: 'allEnemies', baseDamage: 9, chakraCost: 6, onHit: { effect: 'fear', chance: 0.3 } },
+  // Caminho Ninja: técnicas dos inimigos novos (v0.94.0).
+  { id: 'jeQuickCut', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 6, hits: 2, chakraCost: 0, accuracy: 0.9 },
+  { id: 'jeHeavyAxe', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 16, chakraCost: 0, accuracy: 0.75, onHit: { effect: 'stun', chance: 0.15 } },
+  { id: 'jeCane', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 4, chakraCost: 0 },
+  { id: 'jeBribe', type: 'taijutsu', element: null, target: 'ally', baseDamage: 0, chakraCost: 0, healHp: 20, cleanse: true, cooldown: 3 },
+  { id: 'jeWindBlade', type: 'ninjutsu', element: 'wind', target: 'enemy', baseDamage: 11, chakraCost: 3 },
+  { id: 'jeChakraSuck', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 10, chakraCost: 2, chakraDrain: 6, drainRefund: true },
+  { id: 'jeFlexibleBody', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 8, chakraCost: 3, accuracy: 0.8, onHit: { effect: 'stun', chance: 1 }, cooldown: 4 },
+  { id: 'jeChakraThreads', type: 'ninjutsu', element: null, target: 'enemy', baseDamage: 10, chakraCost: 3 },
+  { id: 'jeKarasuBlades', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 9, hits: 2, chakraCost: 3, onHit: { effect: 'poison', chance: 0.4 } },
+  { id: 'jeKarasuHug', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 6, chakraCost: 5, accuracy: 0.8, onHit: { effect: 'stun', chance: 1 }, cooldown: 4 },
+  { id: 'jeGreatFan', type: 'ninjutsu', element: 'wind', target: 'allEnemies', baseDamage: 12, chakraCost: 8, cooldown: 2 },
+  { id: 'jeDemonStrike', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 10, chakraCost: 0 },
+  { id: 'jeParasite', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 14, chakraCost: 4, onHit: { effect: 'poison', chance: 0.3 } },
+  { id: 'jeRashomon', type: 'ninjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 8, shieldPct: 0.25, cooldown: 4 },
+  { id: 'jeTsukuyomi', type: 'genjutsu', element: null, target: 'enemy', baseDamage: 20, chakraCost: 12, onHit: { effect: 'stun', chance: 0.6 }, cooldown: 4 },
+  { id: 'jeAmaterasu', type: 'ninjutsu', element: 'fire', target: 'enemy', baseDamage: 16, chakraCost: 15, onHit: { effect: 'burn', chance: 1, turns: 3 }, cooldown: 4 },
+  { id: 'jeCrowClone', type: 'genjutsu', element: null, target: 'self', baseDamage: 0, chakraCost: 6, clones: 1, cloneKind: 'bunshin', cooldown: 3 },
+  { id: 'jeSamehada', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 18, chakraCost: 0, chakraDrain: 5, drainRefund: true },
+  { id: 'jeWaterShark', type: 'ninjutsu', element: 'water', target: 'allEnemies', baseDamage: 15, chakraCost: 10, cooldown: 2 },
   { id: 'jeTwinStrike', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 9, hits: 2, chakraCost: 0, accuracy: 0.85 },
   // Kimimaro
   { id: 'jeBoneDrill', type: 'taijutsu', element: null, target: 'enemy', baseDamage: 22, chakraCost: 4, penetration: 0.3 },

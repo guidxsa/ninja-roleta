@@ -2,6 +2,14 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Inimigos novos do Caminho Ninja e Hyuuga no cânone (v0.94.0, 17/11/2026)
+
+Itens 43 e 44 de `decisoes.md`, com as fichas aprovadas pelo usuário ([jornada/proposta-fichas.md](jornada/proposta-fichas.md)). Regras em [jornada/caminho-ninja.md](jornada/caminho-ninja.md#inimigos-novos-v0940), [jornada/personagens.md](jornada/personagens.md) e [jornada/combate.md](jornada/combate.md#turno).
+
+- **Motor**: postura (`Boost.upkeep`, `stance`): o Byakugan liga e desliga, paga a manutenção a partir do turno seguinte e apaga sem chakra; técnica que pede fortalecimento (`requiresBoost`); dreno de chakra por golpe (`chakraDrain`, com `boosted` e a devolução `drainRefund`); escudo que devolve dano pela técnica (`reflectPct`); guarda-costas de inimigo (`protects`); lutas com regra própria no Caminho Ninja (`encounters`: vitória e roteiro pela composição) e elite rara (`rareElite`).
+- **Decidido sozinho na implementação** (para revisar): o chefe do Gatō ficou só com Zōri e Waraji (sem os 2 mercenários), e Zōri 70 HP / Waraji 80 HP, samurai 48 HP e caçador da Névoa 58 HP (mais fracos que a ficha), porque a run de teste do UI Lab caía no estágio 1; a "Ordem: atacar" do Gatō virou **Pagamento extra** (cura 20 e limpa um aliado), porque o motor não tem fortalecimento de equipe; a Karasu é um lutador à parte (60 HP) com as técnicas da marionete, no lugar de uma regra nova; os Doki só lutam junto da Tayuya (não somem quando ela cai); derrubar Itachi e Kisame troca a relíquia de elite por uma rara (em vez de uma a mais); a IA liga a postura com o chakra acima de 40% e desliga abaixo de 15%; o Herdeiro do clã passa o acerto da postura à equipe por 4 turnos. Retratos: os personagens novos usam desenhos parecidos até haver os próprios.
+- **Simulação** (`npm run sim:jornada -- 300 2 3`; Fácil / Médio / Difícil / Hardcore), antes → depois: Comum 100/88/59/29 → 100/86/62/32; Prodígio 100/99/85/48 → 100/97/86/54; Uchiha 100/80/50/15 → 99/76/40/16; **Hyuuga 100/97/87/51 → 100/96/80/40**; História igual (100/81/66/1). Nada compensado: o rebalanceamento para a meta 90/65/40/15 é o próximo passo.
+
 ## Roleta rápido e explosivo (v0.92.0, 17/11/2026)
 
 Item 40 de `decisoes.md`, com a ficha aprovada pelo usuário (`docs/roleta/proposta-kits.md`). Kits de uma passiva e 2 ou 3 técnicas-chave, sem ativas, clones nem barreiras; Prodígio sem natureza; Velhinha e Ramen como força de combate; roleta de relíquia com 2 raridades vizinhas. Regras em [roleta/combate.md](roleta/combate.md#kits) e [roleta/run.md](roleta/run.md).

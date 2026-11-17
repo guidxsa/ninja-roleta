@@ -22,9 +22,23 @@ export const generic: GenericDef = {
         ['gatoThug', 'gatoThug', 'bandit'],
         ['mistRogue', 'bandit'],
         ['missingNin', 'gatoThug'],
+        // v0.94.0: inimigos novos (docs/jornada/proposta-fichas.md).
+        ['samurai', 'samurai'],
+        ['mistHunter', 'bandit'],
       ],
-      elites: [['gozu', 'meizu'], ['missingNin', 'missingNin', 'mistRogue']],
-      bosses: [['zabuza'], ['haku']],
+      elites: [['gozu', 'meizu'], ['missingNin', 'missingNin', 'mistRogue'], ['zori', 'waraji'], ['mistHunter', 'mistHunter']],
+      bosses: [['zabuza'], ['haku'], ['gato', 'zori', 'waraji']],
+      encounters: {
+        // O Gatō se esconde atrás dos guarda-costas (`protects`) e foge quando os dois caem: a luta acaba em vitória.
+        'gato+zori+waraji': {
+          script: [
+            { when: { on: 'down', who: 'zori' }, if: { flag: 'gatoWarajiDown' }, do: [{ do: 'say', who: 'gato', line: 'gatoFlee' }, { do: 'leave', who: 'gato' }, { do: 'end', status: 'won' }] },
+            { when: { on: 'down', who: 'zori' }, ifNot: { flag: 'gatoWarajiDown' }, do: [{ do: 'flag', id: 'gatoZoriDown' }] },
+            { when: { on: 'down', who: 'waraji' }, if: { flag: 'gatoZoriDown' }, do: [{ do: 'say', who: 'gato', line: 'gatoFlee' }, { do: 'leave', who: 'gato' }, { do: 'end', status: 'won' }] },
+            { when: { on: 'down', who: 'waraji' }, ifNot: { flag: 'gatoZoriDown' }, do: [{ do: 'flag', id: 'gatoWarajiDown' }] },
+          ],
+        },
+      },
       events: EVENTS,
     },
     {
@@ -36,9 +50,12 @@ export const generic: GenericDef = {
         ['rainNinja', 'rainNinja'],
         ['soundNinja', 'grassNinja'],
         ['missingNin', 'rainNinja', 'bandit'],
+        ['sandGenin', 'sandGenin'],
+        ['sandGenin', 'grassNinja'],
       ],
-      elites: [['rainNinja', 'rainNinja', 'rainNinja'], ['dosu', 'zaku', 'kin'], ['kabutoSpy', 'soundNinja']],
-      bosses: [['gaara'], ['neji']],
+      elites: [['rainNinja', 'rainNinja', 'rainNinja'], ['dosu', 'zaku', 'kin'], ['kabutoSpy', 'soundNinja'], ['yoroi', 'misumi'], ['sandGenin', 'sandGenin', 'sandGenin']],
+      // Kankurō luta com a Karasu: a marionete toma parte dos golpes nele (`protects`).
+      bosses: [['gaara'], ['neji'], ['kankuro', 'karasu', 'temari']],
       events: EVENTS,
     },
     {
@@ -49,9 +66,22 @@ export const generic: GenericDef = {
         ['soundNinja', 'soundNinja', 'snake'],
         ['snake', 'snake'],
         ['soundNinja', 'missingNin', 'soundNinja'],
+        ['hideoutGuard', 'hideoutGuard'],
+        ['hideoutGuard', 'snake'],
       ],
-      elites: [['jirobo'], ['kidomaru', 'tayuya'], ['sakon', 'snake']],
-      bosses: [['orochimaru'], ['kimimaro']],
+      elites: [['jirobo'], ['kidomaru', 'tayuya'], ['sakon', 'snake'], ['tayuya', 'doki', 'doki', 'doki'], ['hideoutGuard', 'hideoutGuard', 'kidomaru']],
+      bosses: [['orochimaru'], ['kimimaro'], ['sakon2']],
+      encounters: {
+        // Dois corpos: a 50% do HP o Ukon se separa do Sakon e entra na luta.
+        sakon2: { script: [{ when: { on: 'hpBelow', who: 'sakon2', pct: 0.5 }, do: [{ do: 'say', who: 'sakon2', line: 'sakonSplit' }, { do: 'enter', who: 'ukon' }] }] },
+        // Itachi e Kisame: vence quem derruba os dois ou resiste 6 rodadas (eles se retiram). Sem alvo: só as rodadas.
+        'itachi+kisame': {
+          win: { kind: 'survive', rounds: 6, target: '-', pct: 0 },
+          script: [{ when: { on: 'start' }, do: [{ do: 'say', who: 'itachi', line: 'itachiOpen' }] }],
+          routRelic: true,
+        },
+      },
+      rareElite: { chance: 0.1, enemies: ['itachi', 'kisame'] },
       events: EVENTS,
     },
   ],

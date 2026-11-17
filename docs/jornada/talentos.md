@@ -364,24 +364,24 @@ Reformulado na v0.87.0, no molde do Comum: um ninja genérico do clã. **Seis ra
 
 | Ramo | Nó | Custo | Níveis | Efeito |
 |---|---|---|---|---|
-| Byakugan | Visão ampla | 1 | | +5% de acerto; o Byakugan custa 1 a menos |
-| Byakugan | Byakugan desperto **ou** | 2 | | Evolui o Byakugan: não erra, +30% de penetração e +15% de dano por 4 turnos |
+| Byakugan | Visão ampla | 1 | | +5% de acerto; o Byakugan custa 1 a menos para ligar e por turno |
+| Byakugan | Byakugan desperto **ou** | 2 | | Evolui o Byakugan (postura, 3 por turno): não erra, +30% de penetração e +15% de dano |
 | Byakugan | Pontos vitais | 2 | | +10% de crítico |
 | Byakugan | Olhos que tudo veem | 2 | | Esquiva 8%; +10% de crítico e +10% de dano (v0.88.3) |
 | Byakugan | Leitura do chakra | 2 | | +5% de acerto e de dano; derrubar um inimigo devolve 3 de chakra |
 | Byakugan | **Visão de 360°** (final) | 3 | | Ignora a esquiva dos inimigos; esquiva +10% |
 | Punho Suave | Punho Suave | 1 | | +15% de dano de taijutsu |
-| Punho Suave | Fechar pontos **ou** | 2 | | Cada taijutsu que acerta tira 2 de chakra do alvo |
+| Punho Suave | Fechar pontos **ou** | 2 | | Cada taijutsu que acerta tira +2 de chakra do alvo, e 1 do chakra tirado volta para você (v0.94.0) |
 | Punho Suave | Golpe interno | 2 | | O taijutsu ignora 25% da resistência |
 | Punho Suave | Tenketsu | 2 | | Palma Suave +30% de dano; +20% de dano de taijutsu (v0.88.3) |
 | Punho Suave | Fluxo interrompido | 2 | | +30% de dano em alvo com o chakra bloqueado |
 | Punho Suave | **Tenketsu selado** (final) | 3 | | Taijutsu que acerta: 30% de bloquear o chakra |
 | Rotação | Rotação | 1 | | Aprende a Rotação (escudo) |
 | Rotação | Postura do clã **ou** | 2 | | Escudo de 12% no começo das lutas |
-| Rotação | Giro rápido | 2 | | A Rotação custa 2 a menos |
+| Rotação | Giro rápido | 2 | | A Rotação custa 3 a menos (v0.94.0) |
 | Rotação | Paredão de vácuo | 2 | | Aprende o Paredão de vácuo; +15% de dano; esquiva 8% (v0.88.3) |
 | Rotação | Equilíbrio | 2 | | Defender cura 8%; 2 de HP por rodada |
-| Rotação | **Defesa absoluta** (final) | 3 | | O escudo devolve 75% do que segura |
+| Rotação | **Defesa absoluta** (final) | 3 | | O escudo devolve 75% do que segura (a Rotação já devolve 30% desde a v0.94.0) |
 | Oito Trigramas | Postura dos trigramas | 1 | | +5% de acerto; +1 de dano no taijutsu |
 | Oito Trigramas | Palma do Vácuo **ou** | 2 | 3 (+1 cada) | Aprende a Palma do Vácuo. Cada nível: +20% de dano |
 | Oito Trigramas | Ritmo das palmas | 2 | | 64 e 128 Palmas +1 golpe |

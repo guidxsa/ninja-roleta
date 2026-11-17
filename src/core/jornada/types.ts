@@ -20,6 +20,13 @@ export interface Boost {
   evasion?: number;
   penetration?: number;
   turns: number;
+  /**
+   * Postura (Byakugan, v0.94.0): chakra pago no fim de cada turno de quem usa enquanto ela dura; os turnos não descontam.
+   * Sem chakra para pagar, a postura apaga.
+   */
+  upkeep?: number;
+  /** Postura recém-ligada: a manutenção começa no fim do turno seguinte. */
+  fresh?: boolean;
 }
 
 /** Quem a técnica atinge. `allEnemies`: todos os adversários de pé. */
@@ -46,6 +53,18 @@ export interface JTechnique {
   critBonus?: number;
   penetration?: number;
   onHit?: { effect: JEffect; chance: number; turns?: number };
+  /** Chakra tirado do alvo a cada golpe que acerta (o Punho Suave fecha pontos, v0.94.0). */
+  chakraDrain?: number;
+  /** O chakra tirado volta para quem bate (a mão do Yoroi, a Samehada do Kisame). */
+  drainRefund?: boolean;
+  /** Com um destes fortalecimentos ligado, a técnica tira mais chakra e o efeito pega mais (Palma Suave com o Byakugan). */
+  boosted?: { techs: string[]; chakraDrain?: number; onHitChance?: number };
+  /** Só sai com um destes fortalecimentos ligado (as Palmas pedem o Byakugan). */
+  requiresBoost?: string[];
+  /** Postura: usar com ela ligada a desliga, sem custo (o Byakugan, v0.94.0). */
+  stance?: boolean;
+  /** O escudo desta técnica devolve esta fração do que segurar a quem bateu (Rotação; o talento pode subir). */
+  reflectPct?: number;
   /** Cura do alvo, em valor fixo de HP. */
   healHp?: number;
   /** Levanta um aliado caído com esta fração do HP máximo dele (alvo `downedAlly`). */
@@ -242,6 +261,8 @@ export interface FighterMods {
   ignoreEvasion: boolean;
   /** Chakra que o alvo perde a cada golpe de taijutsu que acerta (Fechar pontos, Campo dos trigramas). */
   taiHitDrain: number;
+  /** Do chakra que tira do alvo num golpe, até isto volta para quem bate (Fechar pontos, v0.94.0). */
+  drainRefund: number;
   /** Dano × contra quem está com o chakra bloqueado (Fluxo interrompido, Ordem do patriarca). */
   chakraBlockedDamageMult: number;
   /** Cada golpe de taijutsu que acerta pode bloquear o chakra (Tenketsu selado). */
@@ -317,6 +338,8 @@ export interface EnemyDef {
   techniques: string[];
   ai: AiProfile;
   passive?: EnemyPassive;
+  /** Guarda-costas (v0.94.0): os golpes de alvo único nestes aliados (defIds) caem nele com esta chance. */
+  protects?: { ids: string[]; chance: number };
   portrait: string;
   /** Transformações que o roteiro pode ligar (Gaara → Shukaku). */
   forms?: FormDef[];
@@ -432,6 +455,8 @@ export type JEvent =
   | { type: 'chakraGain'; uid: string; amount: number }
   | { type: 'enrage'; uid: string }
   | { type: 'boost'; uid: string; techId: string; turns: number }
+  /** A postura apagou (desligada ou sem chakra para a manutenção, v0.94.0). */
+  | { type: 'boostEnd'; uid: string; techId: string }
   /** Guardião ou Guarda-costas: `uid` tomou o golpe no lugar de `target`. */
   | { type: 'protect'; uid: string; target: string }
   /** Custo em HP de uma técnica (`source` = id) ou desgaste dos Portões (`source` = 'gates'). */
