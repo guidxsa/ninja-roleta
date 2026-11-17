@@ -8,6 +8,7 @@ O que espera o usuário. Um item por decisão; o histórico e os números comple
 
 ## Balanceamento
 
+49. **Jornada na meta: conferir** (v0.95.0, [registro](registro.md#jornada-na-meta-906540-15-v0950-17112026)). Tudo dentro de ±5, menos o Hyuuga no Fácil e no Médio (99 e 74). Para revisar: as alavancas decididas sozinho (força por dificuldade de cada tipo de run, Hardcore da História por estágio, status das classes) e o infinito, que quase não aperta.
 38. **Os três modos contra a meta nova** (v0.88.3, 300 runs, seed 2; Fácil / Médio / Difícil / Hardcore):
 
     | Modo | Hoje | Fora da meta |
@@ -40,6 +41,7 @@ O que espera o usuário. Um item por decisão; o histórico e os números comple
 As decisões visuais foram aceitas em 17/11/2026; o que falta é o teste no aparelho e o julgamento do resultado.
 
 37. **Retratos: auditoria por imagem base** (v0.90.0, aguardando as imagens do usuário; [lista](../prototype/lab/refs/LEIAME.md)): uma imagem por chave em `prototype/lab/refs/`, ajuste de um retrato por vez, conferindo na galeria `meta.portraits` do UI Lab. Os sprites novos aparecem como retrato de fúria (metade do HP ou menos, só visual); dizer se prefere outro gatilho (uma fala do roteiro, a fúria do chefe, uma técnica).
+49. **Emoções nos ícones de personagem** (para depois). Diversificar as expressões dos retratos.
 30. **Etapas visuais 1 a 4** (v0.72.0 a v0.76.0): falta o teste das etapas 1 e 2. Sobrou da etapa 0: cerca de 40 durações de animação fixas (o modo instantâneo não as alcança), o branco sobre as barras de HP e XP (2,4 a 3,4:1, com sombra de apoio) e cores soltas nos CSS de tela. Do combate: as confirmações nativas do modo Roleta e a dica própria nos ícones de estado.
 48. **Retratos e símbolos que faltam**: Hinata, Tazuna, Ebisu, Ibiki, Itachi e Kisame aparecem só com o nome (Iruka, Kakashi e o Haku sem máscara ganharam desenho na v0.90.0). Símbolos de Hyuuga, Nara, Akimichi, Yamanaka, Aburame e Senju sem referência confiável. Cada um entra quando houver desenho ou imagem do usuário (`public/img/LEIAME.md`, `public/img/jornada/`).
 16. **Casca do PC e Roleta no PC** (aguardando o teste local). Backlog: decidir se as imagens provisórias sobem para o jogo publicado ou ficam só locais; Registro só em popup; papel mais envelhecido e vagas de textura em `img/ui/`; cenas animadas (vídeo nas vagas de `cenas/`), com os modos Leve (padrão) e Animado.

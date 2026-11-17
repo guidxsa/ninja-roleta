@@ -34,9 +34,9 @@ A tabela abaixo é gerada dos dados (`npm run docs:tabelas`); não edite à mão
 | Origem | Protagonista | HP | Chakra | Speed | Taijutsu | Ninjutsu | Genjutsu | Res. física | Res. mental |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Comum | `commonNinja` | 115 | 36 | 11 | 9 | 9 | 3 | 7 | 6 |
-| Prodígio do taijutsu | `prodigy` | 100 | 22 | 14 | 10 | 0 | 0 | 8 | 5 |
-| Uchiha | `uchihaNinja` | 105 | 32 | 12 | 10 | 12 | 8 | 7 | 8 |
-| Hyuuga | `hyuugaNinja` | 100 | 40 | 13 | 11 | 4 | 4 | 7 | 7 |
+| Prodígio do taijutsu | `prodigy` | 75 | 22 | 14 | 8 | 0 | 0 | 8 | 5 |
+| Uchiha | `uchihaNinja` | 120 | 32 | 12 | 10 | 15 | 10 | 7 | 8 |
+| Hyuuga | `hyuugaNinja` | 92 | 40 | 13 | 9 | 4 | 4 | 7 | 7 |
 <!-- /gerado -->
 
 ## Desbloqueios

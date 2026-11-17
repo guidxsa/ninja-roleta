@@ -83,8 +83,8 @@ describe('fixtures', () => {
     for (const id of normal) expect(currentStop(playUntil(storyRun(7), id), jornadaData)?.id, id).toBe(id);
     for (const id of ['writtenTest', 'orochimaruForest', 'tsunade', 'valley']) expect(currentStop(playUntil(storyRun(1, 'easy'), id), jornadaData)?.id, id).toBe(id);
     // Árvores das classes: a run de cada classe chega ao 2º estágio.
-    // Seed 1 desde a v0.94.0: com os inimigos novos, a run do Uchiha na seed 7 cai antes (num trio de bandidos).
-    for (const cls of ['uchiha', 'hyuuga']) expect(playUntil(pathRun(1, 'normal', cls), (r) => choosingNode(r) && r.stageIndex === 1).talentPoints).toBeGreaterThan(0);
+    // Seed 2 desde a v0.95.0 (seed 1 na v0.94.0, 7 antes): as classes reajustadas mudam onde a run simples cai.
+    for (const cls of ['uchiha', 'hyuuga']) expect(playUntil(pathRun(2, 'normal', cls), (r) => choosingNode(r) && r.stageIndex === 1).talentPoints).toBeGreaterThan(0);
     expect(playUntil(pathRun(7), (r) => Boolean(r.bossChoice)).bossChoice).toHaveLength(3);
     expect(playToEnd(storyRun(1, 'easy')).status).toBe('victory');
     expect(playToEnd(storyRun(7)).status).toBe('defeat');

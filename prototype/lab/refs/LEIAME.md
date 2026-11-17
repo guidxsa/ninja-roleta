@@ -34,7 +34,7 @@ Situação: **pendente** (sem imagem), **enviado** (imagem na pasta, desenho por
 | `leafGeninA` | Daichi | pendente |
 | `leafGeninB` | Hana | pendente |
 | `leafMedic` | Mika | pendente |
-| `naruto` | Naruto | enviado (primeira tentativa descartada pelo usuário) |
+| `naruto` | Naruto | aprovado (arte base principal com sorriso e olhos abertos em `naruto.png`; variante de olhos fechados guardada em `narutoSorrisoFechado.png`) |
 | `narutoKyuubi` | Naruto com o chakra da Kyuubi | pendente |
 | `narutoOneTail` | Naruto no manto de uma cauda | pendente |
 | `sasuke` | Sasuke | pendente |

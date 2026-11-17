@@ -143,15 +143,18 @@ describe('Fase 2 · Portões com custo misto (C4)', () => {
 describe('Fase 5 · Jornada e História (H1, H2, H3, J5)', () => {
   it('a força da História muda por estágio (H1); o Caminho Ninja não', () => {
     const run = newRun(1, 'normal', data);
-    expect([0, 1, 2, 3].map((i) => runEnemyMult({ ...run, stageIndex: i }, data))).toEqual(data.j.storyStageStrength.map((m) => data.j.storyStrength * m));
-    expect(runEnemyMult({ ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 2 }, data)).toBe(data.j.genericStageStrength[2]);
+    // Por cima, a força por dificuldade de cada tipo de run (v0.95.0, `difficultyMult`).
+    const ds = data.j.difficultyMult.story.normal;
+    const dg = data.j.difficultyMult.generic.normal;
+    [0, 1, 2, 3].forEach((i) => expect(runEnemyMult({ ...run, stageIndex: i }, data)).toBeCloseTo(data.j.storyStrength * data.j.storyStageStrength[i]! * ds));
+    expect(runEnemyMult({ ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 2 }, data)).toBeCloseTo(data.j.genericStageStrength[2]! * dg);
   });
 
   it('J1 e J2: força por estágio própria da dificuldade e perfil HP/ataque por estágio', () => {
     const run = { ...newRun(1, 'hard', data), stageIndex: 1 };
     const by = { ...data, j: { ...data.j, storyStageStrengthBy: { hard: [1, 0.5, 1, 1] } } };
-    expect(runEnemyMult(run, by)).toBeCloseTo(data.j.storyStrength * 0.5);
-    expect(runEnemyMult({ ...run, difficulty: 'normal' }, by)).toBeCloseTo(data.j.storyStrength * data.j.storyStageStrength[1]!);
+    expect(runEnemyMult(run, by)).toBeCloseTo(data.j.storyStrength * 0.5 * data.j.difficultyMult.story.hard);
+    expect(runEnemyMult({ ...run, difficulty: 'normal' }, by)).toBeCloseTo(data.j.storyStrength * data.j.storyStageStrength[1]! * data.j.difficultyMult.story.normal);
     const shaped = { ...data, j: { ...data.j, storyStageShape: [{ hp: 1, offense: 1 }, { hp: 0.5, offense: 2 }] } };
     expect(runEnemyShape(run, shaped)).toEqual({ hp: 0.5, offense: 2 });
     expect(runEnemyShape({ ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 1 }, shaped)).toEqual({ hp: 1, offense: 1 });
@@ -168,7 +171,7 @@ describe('Fase 5 · Jornada e História (H1, H2, H3, J5)', () => {
   it('J3: o Caminho Ninja tem força por estágio própria (a História não usa)', () => {
     const gen = { ...newGenericRun(7, 'normal', 'common', data, new Set(), null, 'fire'), stageIndex: 2 };
     const with3 = { ...data, j: { ...data.j, genericStageStrength: [1, 1, 1.5] } };
-    expect(runEnemyMult(gen, with3)).toBeCloseTo(1.5);
+    expect(runEnemyMult(gen, with3)).toBeCloseTo(1.5 * data.j.difficultyMult.generic.normal);
     const canon = { ...newRun(1, 'normal', data), stageIndex: 2 };
     expect(runEnemyMult(canon, with3)).toBeCloseTo(runEnemyMult(canon, data));
   });

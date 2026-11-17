@@ -128,7 +128,7 @@ export const lineages: LineageDef[] = [
         // v0.87.1 (pedido do usuário): o Prodígio não tem natureza, nem a silenciosa.
         noNature: true,
         // v0.65.0 (pedido do usuário: o Prodígio perto de 70% no Médio, de 92%).
-        adjust: { hp: -10, offense: { taijutsu: -3 } },
+        adjust: { hp: -35, offense: { taijutsu: -5 } },
       },
     },
   },
@@ -153,7 +153,7 @@ export const lineages: LineageDef[] = [
         portrait: 'ninja:uchiha',
         // As técnicas da Jornada são de ninjutsu e taijutsu: o perfil por igual da origem derrubava o Uchiha (v0.64.0,
         // aprovado pelo usuário). Volta ao perfil de antes da base única.
-        adjust: { hp: 5, chakra: 4, offense: { taijutsu: 3, ninjutsu: 3, genjutsu: -1 }, resistance: { mental: 1 } },
+        adjust: { hp: 20, chakra: 4, offense: { taijutsu: 3, ninjutsu: 6, genjutsu: 1 }, resistance: { mental: 1 } },
       },
       class: { id: 'uchiha', unlock: 'j_unlockUchiha', supports: ['uchihaGenin', 'uchihaGeninB'], supportNames: ['ren', 'akane', 'hikaru', 'tetsu', 'kaede', 'ryo', 'suzu', 'jin', 'kiyomi', 'nao'] },
     },
@@ -178,7 +178,7 @@ export const lineages: LineageDef[] = [
         portrait: 'ninja:hyuuga',
         // O ajuste da v0.64.0 (+1 taijutsu, +5 HP) saiu na v0.65.0. Na v0.94.0 (Hyuuga no cânone) o chakra sobe 28 → 40,
         // para caber a postura do Byakugan e as Palmas, que passaram a custar chakra de verdade.
-        adjust: { chakra: 12 },
+        adjust: { hp: -8, chakra: 12, offense: { taijutsu: -2 } },
       },
       class: { id: 'hyuuga', unlock: 'j_unlockHyuuga', supports: ['hyuugaGenin', 'hyuugaGeninB'], supportNames: ['mio', 'sei', 'haru', 'yuki', 'kenji', 'emi', 'tomo', 'aya', 'shun', 'mai'] },
     },

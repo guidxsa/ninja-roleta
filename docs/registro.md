@@ -2,6 +2,12 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Jornada na meta 90/65/40/15 (v0.95.0, 17/11/2026)
+
+Item 37/38 de `decisoes.md`, pedido do usuário. Alavancas (decididas sozinho, para revisar): `difficultyMult` em `src/data/jornada/balance.ts` (História 1,26 / 1,05 / 1,04 / 1; Caminho Ninja 1,24 / 1,11 / 1,08 / 1,04), força por estágio própria do Hardcore da História (1,04 / 1,08 / 1,7 / 1,9) e ajustes de status das classes (`adjust` em `src/data/lineages.ts`): Prodígio −35 HP e −5 taijutsu (era −10 e −3), Hyuuga −8 HP e −2 taijutsu (chakra +12 mantido), Uchiha +20 HP e ninjutsu +6, genjutsu +1 (era +5 HP, +3, −1). As fixtures do UI Lab e os testes de roteiro usam a força por dificuldade neutra.
+
+Simulação (`npm run sim:jornada -- 300 2 3`; Fácil / Médio / Difícil / Hardcore), v0.94.0 → v0.95.0: História 100/81/66/1 → 91/62/43/14; Comum 100/86/62/32 → 90/64/39/19; Prodígio 100/97/86/54 → 93/67/35/17; Uchiha 99/76/40/16 → 91/69/38/14; Hyuuga 100/96/80/40 → **99/74/37/12** (Fácil e Médio 9 pontos acima: cortar mais derrubava o Hardcore para 4%). O infinito quase não aperta: quem vence o ciclo 1 vence o 3 quase sempre.
+
 ## Inimigos novos do Caminho Ninja e Hyuuga no cânone (v0.94.0, 17/11/2026)
 
 Itens 43 e 44 de `decisoes.md`, com as fichas aprovadas pelo usuário ([jornada/proposta-fichas.md](jornada/proposta-fichas.md)). Regras em [jornada/caminho-ninja.md](jornada/caminho-ninja.md#inimigos-novos-v0940), [jornada/personagens.md](jornada/personagens.md) e [jornada/combate.md](jornada/combate.md#turno).

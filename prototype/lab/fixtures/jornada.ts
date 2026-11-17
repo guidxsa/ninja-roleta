@@ -30,9 +30,15 @@ import {
   type JRun,
 } from '../../../src/core/jornada/run';
 import { createRng, type Rng } from '../../../src/core/rng';
-import { jornadaData as data } from '../../../src/data/jornada/index';
+import { jornadaData } from '../../../src/data/jornada/index';
+import type { JornadaData } from '../../../src/core/jornada/data';
 import { saveJornada } from '../../../src/state/jornadaSave';
 import type { KeyValueStorage } from '../../../src/state/runHistory';
+
+// As fixtures só levam a run até as telas do laboratório (não medem balanceamento): a força por dificuldade de cada tipo
+// de run (v0.95.0) fica neutra, para o jogador simples delas chegar às paradas dos cenários.
+const neutral = { easy: 1, normal: 1, hard: 1, hardcore: 1 };
+const data: JornadaData = { ...jornadaData, j: { ...jornadaData.j, difficultyMult: { story: neutral, generic: neutral } } };
 
 /** Run nova da História (campanha do Naruto). */
 export const storyRun = (seed = 7, difficulty: Difficulty = 'normal'): JRun => newRun(seed, difficulty, data);

@@ -6,7 +6,9 @@ import type { ScriptRule } from '../src/core/jornada/script';
 import type { JBattle } from '../src/core/jornada/types';
 import { jornadaData } from '../src/data/jornada';
 // Os roteiros da História, não o balanceamento: a força por estágio (v0.82.0) fica neutra para as seeds valerem.
-const data: JornadaData = { ...jornadaData, j: { ...jornadaData.j, storyStageStrength: [1, 1, 1, 1] } };
+const neutral = { easy: 1, normal: 1, hard: 1, hardcore: 1 };
+// O roteiro testa as cenas, não o balanceamento: força por estágio e por dificuldade neutras (v0.95.0).
+const data: JornadaData = { ...jornadaData, j: { ...jornadaData.j, storyStageStrength: [1, 1, 1, 1], difficultyMult: { story: neutral, generic: neutral } } };
 import { eventOptions } from '../src/core/jornada/events';
 import { ptBR } from '../src/data/strings/ptBR';
 import { chooseAiAction } from '../src/core/jornada/ai';
