@@ -21,6 +21,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 | [reliquias.md](reliquias.md) | Relíquias: classificações, de onde vêm, evolução, coleção, catálogo |
 | [caminho-ninja.md](caminho-ninja.md) | Caminho Ninja: estrutura, pools por estágio, chefes, eventos |
 | [classes.md](classes.md) | Classes, sorteio do elemento, desbloqueios, ativas, suportes genéricos |
+| [proposta-minijogos.md](proposta-minijogos.md) | **Proposta** (não implementada): 4 minijogos novos (kunai, água, clone, sino) e a troca nos eventos |
 
 ## Pilares
 
