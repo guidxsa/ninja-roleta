@@ -17,6 +17,10 @@ Cenários padronizados para acompanhar o desempenho dos três modos a cada mudan
 | Builds da árvore do Naruto | `npm run sim:jornada -- 300 2 --ramos --talentos` | 5 min |
 | Builds de uma classe do Caminho Ninja | `npm run sim:jornada -- 300 2 --ramos --classe=commonNinja` (ou `prodigy`, `uchihaNinja`, `hyuugaNinja`) | 4 min |
 | Modo infinito do Caminho Ninja (até N ciclos) | `npm run sim:jornada -- 300 2 5` | varia |
+| Valor de algumas relíquias da Jornada | `npm run sim:jornada -- 300 2 --reliquias --so=chakraStone,paddedVest` | 2 min por relíquia |
+| Bot antigo da Jornada, ou o novo sem uma parte | qualquer medida da Jornada com `--bot-antigo`, `--sem-plano`, `--sem-acoes` ou `--sem-kits` | igual |
+
+**Bot da Jornada** (fase 2b, 17/11/2026, `src/sim/jornadaBot.ts`): o protagonista segue um plano de talentos (ramo preferido da árvore até o final, a junção do vizinho e as combinações), escolhe a ação por valor esperado (Defender só com limiar) e compra kits com o ryō que sobra. Ele vence bem mais que o antigo: os números de antes de 17/11/2026 vêm do bot antigo, então só dá para comparar com eles usando `--bot-antigo`. Linha de base com o bot novo (300 runs, seed 2; Fácil/Médio/Difícil/Hardcore): História 100/83/72/2, Comum 100/95/75/44, prodígio 100/98/88/56, Uchiha 100/81/50/16, Hyuuga 100/98/90/60. Detalhes, a ablação e as builds em [registro.md](../registro.md#bot-da-jornada-mais-inteligente-fase-2b-sem-versão-17112026).
 
 Ruído: com 300 a 400 runs, diferenças abaixo de uns 7 pontos entre duas medidas podem ser só ruído. Para comparar antes e depois, use sempre a mesma seed.
 
