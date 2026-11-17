@@ -1,6 +1,6 @@
 # Proposta: minijogos novos da Jornada
 
-> **Proposta de design, não implementada (17/11/2026).** As perguntas de design foram fechadas no mesmo dia ([Decisões](#decisões)); falta implementar. Nada aqui vale como regra até entrar em [run.md](run.md#minijogos); os números são rascunho e iriam para `balance` (`src/data/jornada/balance.ts`, `minigames`).
+> **Implementada na v0.91.0 (17/11/2026).** A regra em vigor está em [run.md](run.md#minijogos); este arquivo fica como o registro do design. Diferenças da implementação: a água sem pressa ganhou a opção **Manter** e anuncia a direção da próxima onda (sem ela, do centro qualquer passo saía da faixa); a kunai sem pressa limita quantas posições se pode passar (4/3/2/2 do Fácil ao Hardcore); o sino sem pressa tem uma distração falsa por rodada (duas no Hardcore). O relógio usa ticks de 50 ms.
 
 ## Por quê
 

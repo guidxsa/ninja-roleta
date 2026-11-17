@@ -9,6 +9,9 @@ export interface JornadaHost {
   storage: KeyValueStorage;
   /** Modo instantâneo ligado (animações curtas). */
   instant: () => boolean;
+  /** Minijogos de tempo na variante sem pressa (escolha guardada; o menos movimento do aparelho também liga). */
+  calmGames: () => boolean;
+  setCalmGames: (on: boolean) => void;
   /** Seed fixa do `?seed=` (uma vez); sem ela, sorteia. */
   nextSeed: () => number;
   /** Conquistas liberadas no perfil. */

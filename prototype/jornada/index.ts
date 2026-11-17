@@ -74,6 +74,7 @@ import { movesetScreen } from './moveset';
 import { openJornadaSheet } from './sheet';
 import type { JornadaHost } from './host';
 import { playMinigame } from './minigames';
+import { minigameBonus } from '../../src/core/jornada/minigames';
 import { themeOf, themeStyle } from './theme';
 import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
 import { inkWipe, stampChoice } from './motion';
@@ -81,7 +82,7 @@ import { sceneLines, scenePortrait, sceneScreen } from './scene';
 import { relicIcon } from './relicIcons';
 import { talentTreeScreen } from './talentTree';
 import { foldAttrs, foldButton, installFolds } from './fold';
-import { WIDE } from '../layout';
+import { prefersStill, WIDE } from '../layout';
 import { modeCard } from '../modeCard';
 
 const J = S.jornada;
@@ -1096,7 +1097,16 @@ export async function eventStop(host: JornadaHost, run0: JRun): Promise<JRun> {
     await stampChoice(options, pick, host.instant());
     options.remove();
     let won = true;
-    if (opt.minigame) won = await playMinigame(opt.minigame, root.querySelector('[data-slot]')!, data, stopRng(run, 11), host.instant());
+    if (opt.minigame) {
+      won = await playMinigame(opt.minigame, root.querySelector('[data-slot]')!, data, stopRng(run, 11), {
+        instant: host.instant(),
+        difficulty: run.difficulty,
+        bonus: minigameBonus(run, data),
+        ...(opt.skin ? { skin: opt.skin } : {}),
+        calm: prefersStill() || host.calmGames(),
+        setCalm: host.setCalmGames,
+      });
+    }
     const out = resolveEvent(run, pick, won, data);
     // A relíquia ganha tem cena própria: não repete na faixa.
     pendingGains = gainLines(out.gains.filter((g) => g.kind !== 'storyRelic'), run, out.run);

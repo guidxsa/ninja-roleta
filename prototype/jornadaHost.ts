@@ -13,6 +13,11 @@ export const jornadaHost: JornadaHost = {
     return ses.storage;
   },
   instant: () => ses.settings.instant,
+  calmGames: () => Boolean(ses.settings.calmGames),
+  setCalmGames: (on) => {
+    ses.settings.calmGames = on;
+    saveSettings();
+  },
   nextSeed: () => nextRunSeed() ?? Math.floor(Math.random() * 2 ** 31),
   unlocked: () => new Set(Object.keys(ses.profile.achievements)),
   unlock: (ids) => {

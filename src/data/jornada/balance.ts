@@ -161,7 +161,81 @@ export const jornadaBalance = {
   storyWitnessRyo: { stageIndex: 2, ryo: 20 },
 
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
-  minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },
+  // Memória, Sequência e Jokenpô são iguais em todas as dificuldades; os 4 de tempo (v0.91.0, proposta em
+  // docs/jornada/proposta-minijogos.md) apertam com a dificuldade. O tempo anda em ticks de `tickMs`.
+  minigames: {
+    memoryPairs: 6,
+    memoryMaxMisses: 5,
+    sealLength: 5,
+    sealPool: 8,
+    tickMs: 50,
+    // Kunai no alvo: 3 arremessos; centro 2 pontos, anel 1; vence com 4. `center` e `ring` em fração da faixa (o anel é
+    // a largura de cada lado do centro). O marcador vai e volta em `periodTicks` e acelera `speedUp` a cada kunai.
+    kunai: {
+      throws: 3,
+      winPoints: 4,
+      center: { easy: 0.16, normal: 0.12, hard: 0.1, hardcore: 0.08 },
+      ring: 0.12,
+      periodTicks: 36,
+      speedUp: 0.15,
+      // Gancho de status: cada relíquia desta lista alarga o centro (até o teto).
+      relics: ['goggles', 'kunaiPouch', 'twinKunai', 'masterKunai'] as readonly string[],
+      relicCenter: 0.02,
+      relicCenterMax: 0.06,
+      // Sem pressa: 12 posições em ordem sorteada; pode passar esta quantidade de vezes por kunai.
+      calmPositions: 12,
+      calmSkips: { easy: 4, normal: 3, hard: 2, hardcore: 2 },
+    },
+    // Andar sobre a água: ficar `ticks` com o ponteiro na faixa; perde com mais de `tolerance` ticks fora.
+    water: {
+      ticks: 160,
+      band: { easy: 0.3, normal: 0.25, hard: 0.22, hardcore: 0.18 },
+      tolerance: { easy: 40, normal: 30, hard: 24, hardcore: 20 },
+      fall: 0.007,
+      tap: 0.075,
+      waveEvery: [12, 24] as readonly [number, number],
+      wave: 0.12,
+      // Gancho de status: +`chakraBand` de faixa a cada `chakraPer` de chakra máximo acima da ficha inicial (até o teto).
+      chakraPer: 20,
+      chakraBand: 0.01,
+      chakraBandMax: 0.06,
+      // Sem pressa: 10 passos; subir, manter ou descer `calmStep`. A direção da próxima onda é anunciada; a força (entre
+      // `calmWaveMin` e `calmWaveMax`) só aparece depois da escolha. Jogando bem: ~88/78/69/50% do Fácil ao Hardcore.
+      calmSteps: 10,
+      calmMaxOut: 2,
+      calmStep: 0.1,
+      calmWaveMin: 0.08,
+      calmWaveMax: 0.24,
+    },
+    // O clone verdadeiro: figuras, trocas e ticks por troca.
+    clone: {
+      figures: { easy: 3, normal: 4, hard: 4, hardcore: 5 },
+      swaps: { easy: 4, normal: 5, hard: 7, hardcore: 8 },
+      swapTicks: { easy: 14, normal: 12, hard: 10, hardcore: 9 },
+      // Gancho de status: protagonista com dōjutsu vê o fluxo a troca toda; um aliado com dōjutsu dá um brilho no meio.
+      eyes: ['sasuke', 'uchihaNinja', 'uchihaGenin', 'uchihaGeninB', 'hyuugaNinja', 'hyuugaGenin', 'hyuugaGeninB', 'nejiAlly'] as readonly string[],
+    },
+    // Pegar o sino: melhor de 3. O sinal sai entre `signalTicks`; a janela depois dele em ms (nunca abaixo de `windowMinMs`).
+    bell: {
+      rounds: 3,
+      toWin: 2,
+      signalTicks: [30, 80] as readonly [number, number],
+      windowMs: { easy: 900, normal: 700, hard: 550, hardcore: 450 },
+      windowMinMs: 400,
+      // Gancho de status: +`speedMs` por ponto de speed do protagonista acima de `speedBase` (até `speedMsMax`).
+      speedBase: 10,
+      speedMs: 20,
+      speedMsMax: 150,
+      // Sem pressa: 5 páginas por rodada; uma é a distração de verdade e `calmDecoys` só parecem.
+      calmPages: 5,
+      calmDecoys: { easy: 1, normal: 1, hard: 1, hardcore: 2 },
+    },
+    // Chance do bot da simulação ganhar (scripts/sim-jornada.ts): os de selos e o jokenpô ficam nos 60% de sempre.
+    botWin: {
+      flat: 0.6,
+      timed: { easy: 0.65, normal: 0.6, hard: 0.55, hardcore: 0.5 },
+    },
+  },
 
   // Base única (docs/jornada/classes.md#status-derivados, v0.64.0): o protagonista de cada classe sai dos status da
   // origem do Roleta. Ataques × offense, resistências × resistance, HP e chakra × hp/chakra (para baixo), speed +

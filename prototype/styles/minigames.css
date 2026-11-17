@@ -60,3 +60,97 @@
   .mg .center-row { gap: clamp(12px, 1.4vw, 24px); }
   .mg-result { font-size: var(--fs-6xl); }
 }
+
+/*
+ * Minijogos de tempo (v0.91.0): kunai, água, clone e sino. O tabuleiro é um botão grande (um toque em qualquer ponto);
+ * a cor do estado sempre vem junto de forma ou texto. Com menos movimento, nada desliza (a variante sem pressa liga).
+ */
+.mg-timed h3 { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.mg-info { background: none; border: 0; color: var(--muted); padding: 4px; cursor: help; display: inline-grid; }
+.mg-info .ico { width: 18px; height: 18px; }
+.mg-board { margin: 8px auto 0; }
+.mg-actions { margin-top: 10px; gap: 8px; flex-wrap: wrap; min-height: 48px; }
+.mg-calm[aria-pressed="true"] { border-color: var(--gold); color: var(--gold-2); }
+.mg-calm .ico { width: 18px; height: 18px; }
+
+/* Kunai: a faixa sobre o alvo de madeira; o centro em vermelho, o anel em dourado. */
+.mgk {
+  position: relative; display: block; width: 100%; height: 96px; border: 1px solid var(--line-strong); padding: 0; cursor: pointer;
+  background: var(--grain-dark), var(--wood); touch-action: manipulation;
+}
+.mgk:disabled { cursor: default; }
+.mgk-ring, .mgk-center { position: absolute; top: 18px; bottom: 18px; left: 50%; transform: translateX(-50%); }
+.mgk-ring { width: calc(var(--c) + 2 * var(--r)); background: color-mix(in srgb, var(--gold) 45%, transparent); }
+.mgk-center { width: var(--c); background: var(--accent); box-shadow: 0 0 0 1px var(--paper) inset; }
+.mgk-marker, .mgk-stuck { position: absolute; top: 4px; transform: translateX(-50%) rotate(135deg); color: var(--paper); left: 0; }
+.mgk-marker .ico, .mgk-stuck .ico { width: 30px; height: 30px; }
+.mgk-stuck { top: auto; bottom: 4px; opacity: .8; transform: translateX(-50%) rotate(-45deg); color: var(--gold-2); }
+.mgk.power { background: linear-gradient(90deg, var(--surface-2), var(--ck) 50%, var(--surface-2)); }
+.mgk.power .mgk-marker, .mgk.power .mgk-stuck { transform: translateX(-50%); }
+.mgk-score { margin: 6px 0 0; font-family: var(--font-hud); letter-spacing: .04em; }
+
+/* Água: o medidor vertical, com a faixa "no ponto" e o nível. */
+.mgw {
+  position: relative; display: block; width: min(140px, 40vw); height: 220px; margin: 0 auto; padding: 0; cursor: pointer;
+  border: 1px solid var(--line-strong); background: linear-gradient(0deg, color-mix(in srgb, var(--ck) 55%, var(--surface)) 0%, var(--surface-2) 100%);
+  touch-action: manipulation;
+}
+.mgw.tree { background: linear-gradient(0deg, var(--wood), var(--surface-2)); }
+.mgw-band { position: absolute; left: 0; right: 0; bottom: var(--lo); top: calc(100% - var(--hi)); border-block: 2px dashed var(--gold-2); background: color-mix(in srgb, var(--gold) 18%, transparent); }
+.mgw-level { position: absolute; left: 50%; bottom: 50%; transform: translate(-50%, 50%); color: var(--text); display: grid; }
+.mgw-level .ico { width: 34px; height: 34px; }
+.mgw[data-state="low"] .mgw-level, .mgw[data-state="high"] .mgw-level { color: var(--bad); }
+.mgw[data-state="low"] { box-shadow: inset 0 -6px 0 var(--bad); }
+.mgw[data-state="high"] { box-shadow: inset 0 6px 0 var(--bad); }
+.mgw-meta { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 6px; font-family: var(--font-hud); }
+.mgw-lost { width: 90px; height: 6px; background: var(--surface-3); display: inline-block; }
+.mgw-lost i { display: block; height: 100%; width: 0; background: var(--bad); }
+
+/* Clone: a fila de figuras; a troca anima a posição. */
+.mgc { position: relative; height: 112px; width: 100%; max-width: calc(var(--n) * 96px); margin: 0 auto; }
+.mgc-fig {
+  position: absolute; top: 0; left: calc(var(--x) * 100% / var(--n)); width: calc(100% / var(--n) - 6px); height: 104px;
+  display: grid; place-items: center; gap: 2px; padding: 6px 0; cursor: pointer; color: var(--text);
+  background: var(--grain), var(--surface-2); border: 1px solid var(--line-strong);
+  transition: left var(--swap) var(--ease);
+}
+.mgc-fig .ico { width: 54px; height: 54px; }
+.mgc-fig small { font: 700 var(--fs-xs)/1 var(--font-hud); color: var(--muted); }
+.mgc-fig:disabled { cursor: default; color: var(--text); opacity: 1; }
+.mgc-fig.glow { box-shadow: 0 0 0 2px var(--ck-2), 0 0 18px var(--ck); color: var(--ck-2); }
+.mgc-fig.flow { box-shadow: 0 0 0 1px color-mix(in srgb, var(--ck-2) 55%, transparent); color: color-mix(in srgb, var(--ck-2) 45%, var(--text)); }
+.mgc-fig.real { border-color: var(--gold); color: var(--gold-2); }
+.mgc-fig.poof { opacity: .35; text-decoration: line-through; }
+.mg-timed.calm .mgc-fig { transition: none; }
+
+/* Sino: o livro e o guizo; o sinal troca o desenho e o texto, sem deslocar nada. */
+.mgb {
+  display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; gap: 4px 18px; width: 100%; min-height: 140px;
+  padding: 12px; cursor: pointer; color: var(--text); border: 1px solid var(--line-strong); background: var(--grain), var(--surface-2); touch-action: manipulation;
+}
+.mgb:disabled { cursor: default; color: var(--text); opacity: 1; }
+.mgb .ico { width: 56px; height: 56px; }
+.mgb-bell { color: var(--gold-2); }
+.mgb-say { grid-column: 1 / -1; font: 400 var(--fs-2xl)/1.2 var(--font-display); }
+.mgb[data-state="now"] { background: var(--grain), var(--accent-deep); color: var(--accent-ink); }
+.mgb[data-state="now"] .mgb-say { color: var(--gold-2); }
+.mgb[data-state="now"] .mgb-book { transform: rotate(-18deg); }
+.mgb[data-state="hit"] .mgb-say { color: var(--gold-2); }
+.mgb[data-state="early"] .mgb-say, .mgb[data-state="late"] .mgb-say { color: var(--bad); }
+.mgb-score { margin: 6px 0 0; font-family: var(--font-hud); letter-spacing: .04em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mgc-fig { transition: none; }
+}
+
+@media (min-width: 900px) and (min-height: 560px) {
+  .mgk { height: clamp(120px, 16vh, 170px); max-width: 760px; margin: 0 auto; }
+  .mgk-marker .ico, .mgk-stuck .ico { width: 40px; height: 40px; }
+  .mgw { width: 180px; height: clamp(260px, 38vh, 380px); }
+  .mgc { height: clamp(140px, 20vh, 190px); max-width: calc(var(--n) * 150px); }
+  .mgc-fig { height: calc(100% - 8px); }
+  .mgc-fig .ico { width: clamp(64px, 9vh, 96px); height: clamp(64px, 9vh, 96px); }
+  .mgb { min-height: clamp(180px, 26vh, 260px); max-width: 640px; margin: 0 auto; }
+  .mgb .ico { width: clamp(72px, 10vh, 110px); height: clamp(72px, 10vh, 110px); }
+  .mgb-say { font-size: var(--fs-4xl); }
+}
