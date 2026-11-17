@@ -74,6 +74,14 @@ export const talents: TalentNode[] = [
   // final que muda uma regra. Seis combinações ligam ramos vizinhos (pedem as duas junções) e três assinaturas premiam
   // combos fortes (pedem o talento final de um ramo e a junção do outro). A árvore toda custa ~80; uma run rende ~18.
   // Elemento (poder): as técnicas do elemento sorteado. Final: o ninjutsu atravessa a resistência.
+  // Núcleos do rascunho (v0.93.0, docs/jornada/talentos.md#rascunho): escolhidos de graça no começo da run (3 oferecidos:
+  // um de dano, um de apoio e um livre). Cada um dá a técnica do estilo (o Elemento, o Nível II; a Determinação, o +25% de XP) e uma versão fraca da regra final.
+  { id: 'tCoreElement', owner: 'commonNinja', branch: 'element', tier: 0, cost: 0, core: 'dano', coreGrants: ['tElement2'], mods: { typePen: { ninjutsu: 0.1 } } },
+  { id: 'tCoreTools', owner: 'commonNinja', branch: 'tools', tier: 0, cost: 0, core: 'apoio', learn: 'jWireTrap', teamMods: { stunnedDamageMult: 1.15 } },
+  { id: 'tCoreLeaf', owner: 'commonNinja', branch: 'leafStyle', tier: 0, cost: 0, core: 'dano', learn: 'jLeafHurricane', mods: { comboStepPct: 0.03 } },
+  { id: 'tCoreClones', owner: 'commonNinja', branch: 'clones', tier: 0, cost: 0, core: 'apoio', mods: { startClones: 1, cloneEnemyAccuracy: 0.1 } },
+  { id: 'tCoreTeam', owner: 'commonNinja', branch: 'team', tier: 0, cost: 0, core: 'apoio', allyHpPct: 0.05, teamMods: { startShieldPct: 0.04 } },
+  { id: 'tCoreWill', owner: 'commonNinja', branch: 'will', tier: 0, cost: 0, core: 'dano', coreGrants: ['tDetermination'], mods: { regenHp: 1, lowHpDamageMult: 1.1 } },
   { id: 'tElement2', owner: 'commonNinja', branch: 'element', tier: 1, cost: 1, learnByElement: { fire: 'jFireball', wind: 'jGale', lightning: 'jLightningCurrent', earth: 'jEarthSpear', water: 'jWaterShark' }, maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jFireball: 1.2, jGale: 1.2, jLightningCurrent: 1.2, jEarthSpear: 1.2, jWaterShark: 1.2 } } },
   // Afinidade também ensina a barreira do elemento (v0.77.0; o raio não tem).
   { id: 'tElementPower', owner: 'commonNinja', branch: 'element', tier: 2, col: -1, cost: 2, excludes: ['tCChakraFlow'], mods: { typeDamageMult: { ninjutsu: 1.15 } }, learnByElement: { fire: 'jFireWall', wind: 'jWindShield', earth: 'jEarthWall', water: 'jWaterWall' } },

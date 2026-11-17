@@ -15,6 +15,30 @@ A árvore **reinicia a cada run** e custa pontos de talento ([progressao.md](pro
 - O Modo Sennin ficou de fora: é pós-timeskip, e a run termina no Vale do Fim. No lugar entrou o ramo da Kyuubi.
 - Nós que só existem com um elemento (`requiresElement`) ficam escondidos para quem não tem o elemento (o ramo Raio do Uchiha saiu na v0.86.0).
 
+## Rascunho
+
+Implementado na v0.93.0, primeiro no **Comum** (as outras classes e o Naruto seguem a árvore em ordem por enquanto). Proposta e próximos passos em [proposta-arvore.md](proposta-arvore.md); números em `talentDraft` (`src/data/jornada/balance.ts`), código em `src/core/jornada/draft.ts`.
+
+- **Núcleo**: no começo da run, antes da primeira parada, o protagonista escolhe um entre **3 núcleos** sorteados pela seed (um de dano, um de apoio e um livre). O núcleo é de graça e vale a run toda: dá a técnica do estilo e uma versão fraca da regra final (a raiz do ramo vinha junto até a v0.93.1; agora sai no rascunho como os outros nós, e só o Elemento e a Determinação trazem um nó junto, por `coreGrants`: o Nível II e o +25% de XP). Os outros núcleos ficam fechados.
+- **Oferta**: a árvore não se compra mais em ordem. A tela mostra **3 talentos** sorteados que dá para aprender ou subir (**4** com 3 pontos ou mais guardados), e só eles se compram. O primeiro cartão é do ramo do núcleo enquanto houver. Os outros saem por peso: 1, +3 se for do ramo do núcleo, +1 por tag em comum com as relíquias da run, +2 se for combinação ou talento final. A oferta sai da seed e do número de compras: reabrir a tela mostra a mesma, e ela muda a cada compra.
+- **Trocar**: uma troca grátis por estágio (de cada ciclo) sorteia outra oferta.
+- **Sem ordem no ramo**: no rascunho, os nós não pedem o anterior. Continuam valendo a **bifurcação** (escolher um lado fecha o outro) e as **combinações** e **assinaturas** (pedem os nós indicados).
+- **Talento final**: pede **4 talentos do ramo** (sem contar o núcleo, o final e as combinações), de qualquer linha.
+- **Tags**: saem dos bônus do talento e da relíquia (`modTags`): taijutsu, ninjutsu, genjutsu, clones, controle, equipe, defesa e crítico. Nenhuma relíquia precisa de tag escrita à mão.
+- **Na tela**: o núcleo aparece no cabeçalho da árvore; a oferta fica acima dos ramos, com o botão **Trocar (n)**. A árvore vira o registro da build: o que dá para comprar e não está na oferta mostra "Aparece no rascunho", e o final mostra quanto falta (por exemplo, 2/4).
+- Save antigo (sem o campo `draft`) segue na árvore em ordem. O prodígio (o Comum que escolhe ficar sem elemento) não usa rascunho.
+
+### Núcleos do Comum
+
+| Núcleo | Tipo | Ganha de graça |
+|---|---|---|
+| Elemento | dano | O Nível II do elemento; o ninjutsu ignora 10% da resistência |
+| Ferramentas | apoio | A Armadilha de fios; inimigo atordoado leva +15% de dano da equipe |
+| Estilo da Folha | dano | O Furacão da Folha; cada golpe seguido de taijutsu +3% |
+| Clones | apoio | Começa as lutas com 1 clone; com clone de pé, −10% de acerto dos inimigos |
+| Equipe | apoio | +5% de HP máximo dos suportes; escudo de 4% na equipe |
+| Determinação | dano | Determinação (+25% de XP); 1 de HP por rodada; +10% de dano abaixo da metade do HP |
+
 ## Árvore completa
 
 Implementada na v0.44.0. Quando não sobra nada para aprender nem subir na árvore do protagonista, **cada ponto de talento ganho vira 30 ryō na hora** (metade do Treino do mercador; `talentTree.completeRyoPerPoint`). O ryō convertido não passa pelo multiplicador de ryō das relíquias.
@@ -121,7 +145,7 @@ No código: `requiresAll` no nó (`src/core/jornada/talents.ts`); as regras dos 
 
 ## Comum (Caminho Ninja)
 
-Refeita na v0.84.0, no molde do Naruto: o ninja que faz de tudo. **Seis ramos em anel**, cada um com raiz, **bifurcação**, junção, um nó a mais e um **talento final** que muda uma regra; **seis combinações** ligam ramos vizinhos e **três assinaturas** premiam combos fortes. Um ramo custa 10 pontos; a árvore toda, uns 80, e uma run rende ~18: dá para fechar um ramo e meio, ou montar um combo. O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.md#sorteio-do-elemento)).
+Refeita na v0.84.0, no molde do Naruto: o ninja que faz de tudo. Desde a v0.93.0 se compra pelo [rascunho](#rascunho), com um núcleo por ramo. **Seis ramos em anel**, cada um com raiz, **bifurcação**, junção, um nó a mais e um **talento final** que muda uma regra; **seis combinações** ligam ramos vizinhos e **três assinaturas** premiam combos fortes. Um ramo custa 10 pontos; a árvore toda, uns 80, e uma run rende ~18: dá para fechar um ramo e meio, ou montar um combo. O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.md#sorteio-do-elemento)).
 
 | Ramo | Estilo | Bifurcação | Talento final (a regra que muda) |
 |---|---|---|---|

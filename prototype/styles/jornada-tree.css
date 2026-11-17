@@ -194,3 +194,37 @@
   .jt-node { width: 74px; margin-left: -37px; }
   .jt-name { font-size: var(--fs-xs); overflow-wrap: anywhere; }
 }
+
+/* Rascunho de talentos (v0.93.0): núcleo no cabeçalho, oferta de 3 ou 4 cartões acima dos ramos e a escolha do núcleo. */
+.jt-core { color: var(--tree-2); border-color: var(--tree); }
+.jt-core .ico { width: 16px; height: 16px; }
+.jt-draft { position: relative; margin: 10px 0 4px; }
+.jt-draft > header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.jt-draft h3 { margin: 0; font: 700 var(--fs-xl)/1.1 var(--font-hand); color: var(--tree-2); }
+.jt-draft-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin-top: 6px; }
+.jt-card-opt, .jrcore-opt {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 120px; padding: 8px 6px 10px;
+  background: var(--surface); border: 2px solid var(--line-strong); border-radius: var(--radius); color: var(--text); font: inherit; cursor: pointer;
+  transition: transform var(--dur-2) var(--ease), border-color var(--dur-2);
+}
+.jt-card-opt b, .jrcore-opt b { font: 700 var(--fs-sm)/1.15 var(--font-hud); letter-spacing: .02em; text-align: center; overflow-wrap: anywhere; }
+.jt-card-opt small { font: 700 var(--fs-xs)/1.2 var(--font-hud); color: var(--muted); text-align: center; }
+.jt-card-opt.core { border-color: color-mix(in srgb, var(--tree) 60%, var(--line-strong)); }
+.jt-card-opt.capstone .jt-seal { box-shadow: 3px 3px 0 var(--ink), 0 0 0 3px var(--gold); }
+.jt-card-opt.combo .jt-seal { border-radius: 50%; }
+.jt-card-opt.dim > * { opacity: .6; }
+.jt-card-opt.sel, .jrcore-opt.on { border-color: var(--tree); transform: translateY(-3px); box-shadow: inset 0 -3px 0 var(--tree); }
+.jt-card-opt:focus-visible, .jrcore-opt:focus-visible { outline: 3px solid var(--gold-2); outline-offset: 2px; }
+.jrcore { color: var(--text); }
+.jrcore h2 { text-align: center; }
+.jrcore-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+.jrcore-opt { min-height: 150px; justify-content: center; }
+.jrcore-kind { font: 700 var(--fs-xs)/1.1 var(--font-hud); letter-spacing: .1em; text-transform: uppercase; color: var(--tree-2); }
+.jrcore .jt-card > b { color: var(--tree-2); }
+@media (prefers-reduced-motion: reduce) {
+  .jt-card-opt, .jrcore-opt { transition: none; }
+}
+@media (min-width: 900px) {
+  .jt-draft-row { max-width: 720px; }
+  .jt-card-opt { min-height: 104px; }
+}

@@ -488,11 +488,14 @@ function changeGate(s: JBattle, f: Fighter, level: number, data: JornadaData): v
 
 const resistanceKind = (type: AttackType) => (type === 'genjutsu' ? 'mental' : 'physical');
 
-/** Dano de um golpe sem crítico (prévia e IA). */
-export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data: JornadaData, crit = false): number {
+/**
+ * Dano de um golpe sem crítico (prévia e IA). `flat`: soma o dano fixo do taijutsu (com `flatPerTechnique`, só no
+ * primeiro golpe que acerta).
+ */
+export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data: JornadaData, crit = false, flat = true): number {
   const j = data.j.combat;
   return damage({
-    baseDamage: tech.baseDamage + (tech.type === 'taijutsu' ? user.mods.taijutsuFlat : 0),
+    baseDamage: tech.baseDamage + (tech.type === 'taijutsu' && flat ? user.mods.taijutsuFlat : 0),
     offense: user.offense[tech.type] + (user.boost?.offense ?? 0),
     resistance: target.resistance[resistanceKind(tech.type)],
     fraction: target.guarding ? j.guardFraction : j.resistanceFraction,
@@ -1032,7 +1035,8 @@ function strike(s: JBattle, f: Fighter, target: Fighter, tech: JTechnique, data:
     // Combo da Folha: cada golpe de taijutsu seguido que acerta bate mais forte (+10% por golpe, até +30%).
     const combo = tech.type === 'taijutsu' && f.mods.comboStepPct > 0 ? 1 + Math.min(COMBO_MAX, f.mods.comboStepPct * (landed - 1)) : 1;
     const stunnedBefore = hasEffect(t, 'stun');
-    const raw = Math.floor(hitDamage(f, t, tech, data, outcome === 'crit') * combo);
+    // Bônus por técnica (v0.93.0): o dano fixo do taijutsu entra só no primeiro golpe que acerta.
+    const raw = Math.floor(hitDamage(f, t, tech, data, outcome === 'crit', !data.j.combat.flatPerTechnique || landed === 1) * combo);
     // Barreira elemental primeiro (o elemento só pesa nela), depois o escudo comum.
     const bMult = elementMult(tech, t, data, f);
     const amount = hitBarrier(s, t, raw, barrierAttack(f, tech), data, rng);
@@ -1102,9 +1106,9 @@ function strike(s: JBattle, f: Fighter, target: Fighter, tech: JTechnique, data:
     who.shield += part;
     s.log.push({ type: 'shield', uid: f.uid, target: who.uid, amount: part });
   }
-  // Ritmo de luta (Comum): cada golpe de taijutsu que acertou devolve chakra.
+  // Ritmo de luta (Comum): o taijutsu que acertou devolve chakra (uma vez por uso com `flatPerTechnique`).
   if (landed && tech.type === 'taijutsu' && f.mods.taijutsuHitChakra > 0 && !f.down) {
-    const gain = Math.min(f.maxChakra - f.chakra, landed * f.mods.taijutsuHitChakra);
+    const gain = Math.min(f.maxChakra - f.chakra, (data.j.combat.flatPerTechnique ? 1 : landed) * f.mods.taijutsuHitChakra);
     f.chakra += gain;
     if (gain > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount: gain });
   }

@@ -30,7 +30,7 @@ import { movesetScreen } from '../../jornada/moveset';
 import { relicsModal } from '../../jornada/relics';
 import { sceneScreen } from '../../jornada/scene';
 import { openJornadaSheet } from '../../jornada/sheet';
-import { talentTreeScreen } from '../../jornada/talentTree';
+import { coreChoiceScreen, talentTreeScreen } from '../../jornada/talentTree';
 import { battleSetup } from '../../../src/core/jornada/run';
 import { profiles } from '../fixtures/profiles';
 import { battleAt, downAllies, hpAt, pathRun, playToEnd, playUntil, storyRun, type Until } from '../fixtures/jornada';
@@ -48,7 +48,7 @@ const withRun = (ctx: LabContext, run: JRun): JRun => {
 
 /** História jogada até a parada `until` (id da parada ou teste). */
 // No Fácil, a seed 2: com a força por estágio da História (v0.82.0), a run de seed 7 do bot da fixture cai no 2º estágio.
-const EASY_SEED = 2;
+const EASY_SEED = 1;
 const story = (until: Until, difficulty: 'normal' | 'easy' = 'normal') => playUntil(storyRun(difficulty === 'easy' ? EASY_SEED : 7, difficulty), until);
 /** Caminho Ninja jogado até a condição. */
 const path = (until: Until) => playUntil(pathRun(7), until);
@@ -228,6 +228,10 @@ export const jornadaRun: Scenario[] = [
     mount: (ctx) => { const run = withRun(ctx, story('valley', 'easy')); return talentTreeScreen(ctx.jornadaHost, run, heroName(ctx.jornadaHost, run)); },
   },
   { id: 'jornada.talents:path', title: 'Árvore do Comum (cor do elemento)', group: 'Progressão', mount: tree(() => pathRun(7)) },
+  // Rascunho de talentos (v0.93.0): escolha do núcleo no começo e a oferta com pontos (3 cartões; 4 com 3 pontos guardados).
+  { id: 'jornada.talents:core', title: 'Escolha do núcleo (Comum)', group: 'Progressão', mount: (ctx) => coreChoiceScreen(withRun(ctx, pathRun(7, 'normal', 'common', false))) },
+  { id: 'jornada.talents:draft', title: 'Rascunho de talentos (Comum, 2 pontos)', group: 'Progressão', mount: tree(() => ({ ...pathRun(7), talentPoints: 2 })) },
+  { id: 'jornada.talents:draft-held', title: 'Rascunho com pontos guardados (4 cartões)', group: 'Progressão', mount: tree(() => ({ ...path((r) => r.stageIndex === 1 && choosingNode(r)), talentPoints: 4 })) },
   // Classes do Caminho Ninja: cada uma tem árvore e tema próprios. Jogadas até o 2º estágio, para ter pontos e nós comprados.
   { id: 'jornada.talents:uchiha', title: 'Árvore do Uchiha (2º estágio)', group: 'Progressão', profile: profiles.full, mount: tree(() => classMid(pathRun(7, 'normal', 'uchiha'))) },
   { id: 'jornada.talents:hyuuga', title: 'Árvore do Hyuuga (2º estágio)', group: 'Progressão', profile: profiles.full, mount: tree(() => classMid(pathRun(7, 'normal', 'hyuuga'))) },

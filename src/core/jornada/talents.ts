@@ -52,6 +52,15 @@ export interface TalentNode {
   grantedBy?: { technique?: string; flag?: string };
   /** Talento final do ramo: caro e que muda o estilo de jogo. */
   capstone?: boolean;
+  /**
+   * Núcleo do ramo (rascunho de talentos, docs/jornada/talentos.md#rascunho): escolhido de graça no começo da run,
+   * dá a técnica e uma versão fraca da regra final. `dano` ou `apoio` (controle e suporte) monta a oferta de 3.
+   */
+  core?: 'dano' | 'apoio';
+  /** Núcleo: nós aprendidos de graça junto com ele (ex.: a técnica do estilo que mora em outro nó). */
+  coreGrants?: string[];
+  /** Tags a mais além das tiradas dos bônus (pesam o rascunho junto com as das relíquias). */
+  tags?: string[];
 }
 
 export interface TalentContext {
@@ -64,6 +73,11 @@ export interface TalentContext {
   unlocked: ReadonlySet<string>;
   /** Elementos do protagonista (principal e segundo). */
   elements?: readonly (Element | null)[];
+  /**
+   * Rascunho de talentos: sem a ordem do ramo (só bifurcação e combinação valem), núcleo só pela escolha do começo e
+   * talento final com `capstoneNeeds` talentos do ramo.
+   */
+  draft?: { capstoneNeeds: number };
 }
 
 export type TalentState = 'owned' | 'upgradable' | 'maxed' | 'available' | 'noPoints' | 'locked' | 'excluded' | 'stageLocked' | 'storyLocked' | 'accountLocked' | 'hidden';
@@ -76,11 +90,13 @@ export const talentRank = (node: TalentNode, ctx: Pick<TalentContext, 'owned' | 
 export function talentRequirements(node: TalentNode, nodes: readonly TalentNode[]): string[] {
   if (node.requiresAll) return node.requiresAll;
   if (node.requires) return node.requires;
-  return nodes.filter((n) => n.owner === node.owner && n.branch === node.branch && n.tier === node.tier - 1).map((n) => n.id);
+  return nodes.filter((n) => n.owner === node.owner && n.branch === node.branch && n.tier === node.tier - 1 && !n.core).map((n) => n.id);
 }
 
 export function talentState(node: TalentNode, nodes: readonly TalentNode[], ctx: TalentContext): TalentState {
   if (node.requiresElement && !ctx.elements?.includes(node.requiresElement)) return 'hidden';
+  // Núcleo só existe no rascunho (a árvore clássica, de saves antigos, não o mostra).
+  if (node.core && !ctx.draft) return 'hidden';
   if (ctx.owned.includes(node.id)) {
     const rank = talentRank(node, ctx);
     if (talentMaxRank(node) === 1) return 'owned';
@@ -92,6 +108,13 @@ export function talentState(node: TalentNode, nodes: readonly TalentNode[], ctx:
   if (node.account && !ctx.unlocked.has(node.account)) return 'accountLocked';
   if (node.fromStage !== undefined && ctx.stageIndex < node.fromStage) return 'stageLocked';
   if (node.excludes?.some((id) => ctx.owned.includes(id))) return 'excluded';
+  if (ctx.draft) {
+    // Núcleo: só pela escolha do começo da run (o que não foi escolhido fica fechado).
+    if (node.core) return 'excluded';
+    if (node.requiresAll && !node.requiresAll.every((id) => ctx.owned.includes(id))) return 'locked';
+    if (node.capstone && branchProgress(node.branch, node.owner, nodes, ctx.owned) < ctx.draft.capstoneNeeds) return 'locked';
+    return ctx.points >= node.cost ? 'available' : 'noPoints';
+  }
   if (node.requiresAll) {
     if (!node.requiresAll.every((id) => ctx.owned.includes(id))) return 'locked';
   } else {
@@ -100,6 +123,14 @@ export function talentState(node: TalentNode, nodes: readonly TalentNode[], ctx:
   }
   return ctx.points >= node.cost ? 'available' : 'noPoints';
 }
+
+/** Talentos do ramo já aprendidos, sem o núcleo, o final e as combinações (o que libera o final no rascunho). */
+export function branchProgress(branch: string, owner: string, nodes: readonly TalentNode[], owned: readonly string[]): number {
+  return nodes.filter((n) => n.owner === owner && n.branch === branch && !n.core && !n.capstone && !n.requiresAll && owned.includes(n.id)).length;
+}
+
+/** O mesmo contexto com pontos de sobra: o que daria para comprar sem olhar o custo. */
+export const talentContextOpen = (ctx: TalentContext): TalentContext => ({ ...ctx, points: Infinity });
 
 /** Dá para aprender (ou subir o nível) agora. */
 export function canBuyTalent(node: TalentNode, nodes: readonly TalentNode[], ctx: TalentContext): boolean {

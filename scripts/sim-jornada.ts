@@ -53,6 +53,17 @@ import type { ConsumableId } from '../src/core/jornada/types';
 import { jornadaData as data } from '../src/data/jornada';
 import { DEFAULT_RELIC_VALUE, relicValues } from '../src/sim/relicValues';
 import { heroAction, heroFree, heroItem, nextTalent, planBuild } from '../src/sim/jornadaBot';
+import { spendDraft } from '../src/sim/draftBot';
+
+// Comparar com as regras de antes da v0.93.0: `--sem-rascunho` volta à árvore clássica em todas as classes e
+// `--por-golpe` soma o dano fixo e o chakra do taijutsu em cada golpe.
+if (process.argv.includes('--sem-rascunho')) (data.j.talentDraft as { owners: string[] }).owners = [];
+// `--rascunho=capstoneNeeds:4,rerollsPerStage:0`: testar números do rascunho sem mexer no balance.
+for (const kv of process.argv.find((a) => a.startsWith('--rascunho='))?.slice(11).split(',') ?? []) {
+  const [k, v] = kv.split(':');
+  (data.j.talentDraft as Record<string, unknown>)[k!] = v === 'true' ? true : v === 'false' ? false : Number(v);
+}
+if (process.argv.includes('--por-golpe')) (data.j.combat as { flatPerTechnique: boolean }).flatPerTechnique = false;
 
 const ARGS = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const BRANCHES = process.argv.includes('--ramos');
@@ -206,6 +217,11 @@ const bought = new Map<string, number>();
 
 function spendTalents(run: JRun): JRun {
   if (OLD_TALENTS) return spendTalentsOld(run);
+  // Rascunho (v0.93.0): núcleo e oferta por pontuação; a build focada força o núcleo do ramo.
+  if (run.draft) {
+    const next = spendDraft(run, data, unlocked, focus[0]);
+    return focus.length ? tuneMoveset(next, []) : next;
+  }
   // Plano de build (src/sim/jornadaBot.ts): um ramo até o final, a junção do vizinho e as combinações; guarda ponto
   // quando o próximo passo do plano só espera ponto.
   for (;;) {

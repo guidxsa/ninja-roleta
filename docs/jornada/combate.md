@@ -53,6 +53,7 @@ Ativa do prodígio (v0.42.0; custo em chakra desde a v0.59.0, regra comum em [fu
 
 - Chance de acerto = precisão da técnica (padrão 85%) + bônus de acerto de quem ataca − esquiva do alvo, entre 5% e 100%. Crítico: 5% + bônus, até 50%, ×2 no dano.
 - Técnicas de vários golpes rolam cada golpe (o Roleta também, desde a v0.77.0).
+- **Bônus por técnica, não por golpe** (v0.93.0, `combat.flatPerTechnique`): o dano fixo do taijutsu (Kunai afiada, Treino básico, Bolsa de kunai...) entra só no **primeiro golpe que acerta**, e o chakra devolvido pelo taijutsu (Ritmo de luta) volta **uma vez por uso**. Acerto, crítico e o combo continuam por golpe. Assim, uma técnica de vários golpes não multiplica esses bônus ([proposta-arvore.md](proposta-arvore.md)). Só a Jornada.
 - Resistência usada: física contra taijutsu e ninjutsu, mental contra genjutsu; 50% dela (100% defendendo), menos a penetração da técnica (até 60%).
 - **Elementos** (v0.77.0): não mudam o dano no HP. Só pesam contra uma **barreira** elemental: vantagem ×1,5 e desvantagem ×0,75 no escudo, raio contra terra ×2 ([fundamentos.md](../base/fundamentos.md#barreiras-no-roleta-e-na-jornada)). Antes valia ×1,25 e ×0,8 contra o elemento do alvo.
 - Multiplicadores de quem ataca: talentos, relíquias, HP baixo e fúria (passiva de alguns inimigos abaixo de uma fração do HP).
