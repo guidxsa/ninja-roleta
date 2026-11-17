@@ -396,7 +396,7 @@ function currentDifficulty(host: JornadaHost): Difficulty {
   return d === 'hardcore' && !host.unlocked().has('j_canonHard') ? 'normal' : d;
 }
 
-/** Caminho Ninja: classe, elemento (só o Comum) e o visual do Sasuke (easter egg), depois a revelação. */
+/** Caminho Ninja: classe e elemento (só o Comum), depois a revelação. */
 export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Promise<JRun | null> {
   const root = show(
     h(`<div class="screen jpath">

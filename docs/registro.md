@@ -2,6 +2,16 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Revisão geral dos três modos (17/11/2026)
+
+Análise de jogabilidade e balanceamento do Roleta, da História e do Caminho Ninja na v0.88.3, com as respostas do usuário. Simulação: `npm run sim:origens -- --runs 300 --seed 2` e `npm run sim:jornada -- 300 2 3`.
+
+- **Meta nova** do bot, por origem ou classe e com ±5: 90/65/40/15 (Fácil/Médio/Difícil/Hardcore). Acabam a exceção de 50–60% dos kits complexos e o Hardcore de ~1% aceito antes.
+- **Aceito em bloco** tudo o que estava "decidido sozinho, para revisar" em `decisoes.md` até a v0.88.3 (números de relíquias, Portões, kits, fichas de vilões e inimigos, árvores das quatro classes e do Naruto, roteiro da História, Levantar e Primeiros socorros, combate unificado, visual e desktop). Também ficam como estão: XP + 30 por nível, preço por estágio da loja 0,25 e os pesos atuais dos eventos.
+- **Itens que saíram por estarem vencidos**: os números do Roleta e da Jornada da v0.52 à v0.88 (itens 1, 2, 21, 23, 24, 26, 27, 33, 34, 35 e 36, trocados pelo item 38), a pressão do infinito do Roleta (item 3: na v0.88.3, cerca de metade de quem vence o 1º ciclo do Hardcore cai no 2º), as sugestões não escolhidas (12), o idioma (9: commits em PT-BR, sem acentos) e os itens visuais 6, 13, 15 e 19, resumidos nos itens 30, 47 e 48.
+- **Pedidos novos** (itens 39 a 48 de `decisoes.md`): Roleta rápido e explosivo, com 1 passiva e técnicas-chave; bot da Jornada; mais inimigos no Caminho Ninja; Hyuuga no cânone; suporte do prodígio; estudo de árvore nova; minijogos novos.
+- Linha de base, v0.88.3 (Médio): Roleta Comum 65, Akimichi 71, Inuzuka 83, Prodígio 76, Uchiha 56, Hyuuga 68, Uzumaki 71, Senju 74 (rodadas por luta de 4,8 a 9,9); História 100/72/50/1; Caminho Ninja Comum 97/70/44/16, prodígio 96/64/34/14, Uchiha 97/70/39/15, Hyuuga 96/68/31/12.
+
 ## Retratos: um desenho por personagem (v0.90.0, 16/11/2026)
 
 Pedido do usuário: melhorar os SVG pela aparência canônica e diferenciar cada personagem. Combinado com ele: aparência do anime (sem imagens no repositório), **todos** os personagens (inclusive os 18 que já tinham desenho) e genéricos parecidos com personagens da mesma origem.

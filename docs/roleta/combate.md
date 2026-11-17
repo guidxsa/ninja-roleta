@@ -1,6 +1,8 @@
-# Combate do Roleta (enxuto)
+# Combate do Roleta
 
-> Implementado na v0.45.0 (Roleta enxuto I). Dados em `src/data/roleta/` (`balance.ts`, `techniques.ts`, `kits.ts`); regras em `src/core/roleta/battle.ts`. O combate clássico (reações, disputa, barreiras, estados elementais, efeitos mentais com fuga, linhas elementais, kits completos) ficou guardado como reserva para a Jornada: [reserva/README.md](../reserva/README.md).
+> Turno de um toque desde a v0.45.0 (Roleta enxuto I); efeitos e barreiras unificados com a Jornada na v0.77.0; kits completos das origens desde a v0.80.0. Dados em `src/data/roleta/` (`balance.ts`, `techniques.ts`, `kits.ts`); regras em `src/core/roleta/battle.ts`. O que ficou só no combate clássico (reações, disputa de ninjutsu, estados elementais, efeitos mentais com fuga, linhas elementais) está na reserva: [reserva/README.md](../reserva/README.md).
+>
+> **Em mudança** ([decisoes.md](../decisoes.md), item 39): o Roleta vai voltar a ter kits curtos (uma passiva e 2 ou 3 técnicas-chave, sem ativas) e um combate mais explosivo.
 
 O Roleta é o modo rápido: lutas curtas, decisões simples e muita roleta. Acerto, crítico, dano, resistência e dificuldade seguem a base ([fundamentos.md](../base/fundamentos.md)); aqui fica o que é do Roleta.
 
@@ -128,4 +130,4 @@ Mesmas fichas ([viloes.md](../base/viloes.md)), com a dificuldade aplicada. Esco
 
 ## Simulação
 
-`npm run sim` e `npm run sim:origens` medem o Roleta enxuto (bot simples: o golpe de mais dano esperado, a ativa logo, itens nos apertos). O clássico continua em `npm run sim:classico`.
+`npm run sim` e `npm run sim:origens` medem o Roleta (bot: o golpe de mais dano esperado, as ativas pelo critério de cada kit, Kit médico e Pílula de soldado nos apertos). O clássico continua em `npm run sim:classico`.

@@ -6,7 +6,7 @@ Segundo levantamento, refeito depois do balanceamento aprovado (v0.78.0 a v0.87.
 
 - Os números saem do bot da simulação, que joga pior que um humano. Desde a v0.82.0 o bot da Jornada usa a loja melhor (tratamento abaixo de 50% do HP, relíquia pelo valor medido, uma atualização da prateleira) e o do Roleta usa Kit médico e Pílula de soldado com critério (v0.81.0). Parte da subida dos números vem disso, não de o jogo ter ficado mais fácil.
 - 300 runs por medida (as relíquias da Jornada, 200). Diferenças abaixo de uns **7 pontos** podem ser só ruído.
-- Alvo combinado (`docs/decisoes.md`): bot no Médio com 60–70% (kits complexos 50–60%).
+- Alvo usado neste levantamento: bot no Médio com 60–70% (kits complexos 50–60%). Desde 17/11/2026 a meta é 90/65/40/15 por origem ou classe, com ±5 (`docs/decisoes.md`).
 
 ## 1. Onde estamos
 

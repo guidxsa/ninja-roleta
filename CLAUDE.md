@@ -2,11 +2,23 @@
 
 ## Visão geral
 
-Jogo de browser de sessões curtas (1 a 3 minutos por luta, feito para o celular), inspirado no universo ninja de Naruto. Projeto de fã, open source, sem fins lucrativos. A roleta visual é a identidade do jogo (inspiração: https://pokemon-roulette.zeroxm.com.br/).
+Jogo de browser feito para o celular, inspirado no universo ninja de Naruto. Projeto de fã, open source, sem fins lucrativos. A roleta visual é a identidade do jogo (inspiração: https://pokemon-roulette.zeroxm.com.br/).
 
-**O RNG é o coração do jogo**: origem, iniciativa, acerto, dano, eventos e recompensas passam por roleta, mas os status do jogador sempre influenciam as chances.
+**O RNG é o coração do jogo**: origem, iniciativa, acerto, dano, eventos e recompensas passam por sorteio, e os status do jogador sempre influenciam as chances. No Roleta, a roleta aparece na tela; na Jornada, a sorte pesa menos e só o resultado aparece.
 
-Dois modos: **Roleta** (rápido e simples; run em ciclos infinitos) e **Jornada** (roguelike de equipe com talentos e relíquias; runs História e Caminho Ninja).
+### Modos
+
+Três modos, cada um com uma finalidade:
+
+| Modo | Finalidade | Como se joga |
+|---|---|---|
+| **Roleta** | Rápido e simples: uma sessão curta no celular (lutas de poucas rodadas, combate explosivo) | Origem sorteada; kit de 1 passiva que evolui com o nível e 2–3 técnicas-chave, sem ativas para gerenciar; ciclo de 6 lutas com evento e relíquia sorteados; infinito no Hardcore |
+| **História** (Jornada) | Longa e narrativa: viver a história do Naruto | Linear, segue o mangá; equipe, roteiro de luta, cenas e treinos; a rejogabilidade vem da variedade de talentos |
+| **Caminho Ninja** (Jornada) | Roguelike de builds | Classe e elemento escolhidos, mapa ramificado, relíquias, loja e árvore; a rejogabilidade vem dos inimigos, dos caminhos e das builds; infinito no Hardcore |
+
+História e Caminho Ninja dividem o combate de equipe, a loja, as relíquias e as árvores (a run da Jornada é salva a cada parada). Em desenvolvimento: campanha do Sasuke e outras classes na Jornada.
+
+**Meta de vitória do bot** (por origem ou classe, ±5): Fácil 90%, Médio 65%, Difícil 40%, Hardcore 15% ([docs/decisoes.md](docs/decisoes.md)).
 
 ## Onde está cada coisa
 
@@ -21,14 +33,14 @@ Dois modos: **Roleta** (rápido e simples; run em ciclos infinitos) e **Jornada*
 | [docs/ui-lab/](docs/ui-lab/ARCHITECTURE.md) | UI Lab: inventário das telas e arquitetura do laboratório (cenários em `prototype/lab/`) |
 | `.claude/skills/` | `nova-mecanica` (fluxo de regra nova) e `lancar-versao` (preparar e, com aprovação, publicar) |
 
-Pastas dos docs: `base/` (regras dos dois modos), `roleta/`, `jornada/` e `reserva/` (combate clássico guardado para a Jornada).
+Pastas dos docs: `base/` (regras comuns ao Roleta e à Jornada), `roleta/`, `jornada/` e `reserva/` (combate clássico guardado para a Jornada).
 
 ### Regras para os docs
 
 - **Os docs são o design; os dados são a implementação.** Os números vivem em `balance` e `src/data/`; os docs devem bater com eles.
 - Mudou regra ou número no código: atualizar o doc no mesmo commit.
 - Código e doc divergem e não está em `docs/decisoes.md`: perguntar antes de escolher um lado.
-- Cada regra é descrita em **um** arquivo; os outros apontam com link. Regra dos dois modos fica em `docs/base/`; a Jornada só descreve o que muda.
+- Cada regra é descrita em **um** arquivo; os outros apontam com link. Regra comum ao Roleta e à Jornada fica em `docs/base/`; a Jornada só descreve o que muda.
 - Decisão tomada sem o usuário: registrar em `docs/registro.md` (frase curta + simulação de antes e depois) e, se ele precisa revisar, um item em `docs/decisoes.md`.
 - `tests/docs.test.ts` confere que toda técnica do jogador está em `docs/base/tecnicas.md` e toda de vilão em `docs/base/viloes.md`.
 - **Não apagar o clássico**: reações, disputa, barreiras, estados elementais, linhas elementais e kits ricos ficam no código (com testes, `npm run sim:classico`) e em `docs/reserva/`.
@@ -37,7 +49,7 @@ Pastas dos docs: `base/` (regras dos dois modos), `roleta/`, `jornada/` e `reser
 
 - **Celular e desktop são pares**: no celular, um toque, layout vertical e botões grandes; no desktop, composição própria (colunas, painéis fixos), não o celular ampliado. Mesma lógica nos dois; faixas e situação por tela em [docs/visual.md](docs/visual.md).
 - **Offline**: PWA com service worker (`prototype/sw.ts`; [docs/base/plataforma.md](docs/base/plataforma.md)). **Sem backend.**
-- **Run só em memória** (F5 reseta), exceto a Jornada, salva a cada parada (`jornada_run_v1`). Perfil e histórico em `localStorage`.
+- **Run do Roleta só em memória** (F5 reseta); a Jornada é salva a cada parada (`jornada_run_v1`). Perfil e histórico em `localStorage`.
 - **Lógica separada da interface**: regras são funções puras, sem DOM.
 - **RNG injetável**: toda função que sorteia recebe `rng()`; testes com seed.
 - **Tudo é dado**: origens, técnicas, vilões, eventos, itens e recompensas em arquivos de dados; textos em PT-BR nos arquivos de strings.

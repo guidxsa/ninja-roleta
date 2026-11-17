@@ -1,6 +1,6 @@
 # Classes da Jornada
 
-> Comum e prodígio na v0.36.0; Uchiha, Hyuuga, versões suporte e o easter egg do Sasuke na v0.37.0; escolha do elemento, Hyuuga sem elemento e suportes com classe e nome sorteados na v0.43.0; base única com as origens na v0.64.0 ([README.md](README.md)). Dados no bloco `jornada` das origens (`src/data/lineages.ts`) e nas fichas de suporte (`characters.ts`).
+> Comum e prodígio na v0.36.0; Uchiha, Hyuuga, versões suporte e o easter egg do Sasuke (que saiu na v0.86.0) na v0.37.0; escolha do elemento, Hyuuga sem elemento e suportes com classe e nome sorteados na v0.43.0; base única com as origens na v0.64.0 ([README.md](README.md)). Dados no bloco `jornada` das origens (`src/data/lineages.ts`) e nas fichas de suporte (`characters.ts`).
 
 As classes são as protagonistas do Caminho Ninja ([caminho-ninja.md](caminho-ninja.md)). Vêm das origens do Roleta ([origens.md](../base/origens.md)), com um corte: cada classe é uma árvore de talentos inteira ([talentos.md](talentos.md)).
 

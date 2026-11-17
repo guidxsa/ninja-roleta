@@ -2,7 +2,7 @@
 
 O design do jogo. Os números de balanceamento vivem em `src/data/` (`balance` e afins); os docs devem bater com eles.
 
-- **[base/](base/)**: regras usadas pelos dois modos (hoje implementadas no Roleta; a Jornada herda).
+- **[base/](base/)**: regras comuns ao Roleta e à Jornada (História e Caminho Ninja); a Jornada herda e descreve só o que muda.
 - **[roleta/](roleta/)**: o que é só do modo Roleta (combate enxuto desde a v0.45.0).
 - **[reserva/](reserva/README.md)**: o combate clássico, guardado para a Jornada.
 - **[jornada/](jornada/README.md)**: o modo Jornada (História e Caminho Ninja).

@@ -1,11 +1,13 @@
 # Jornada
 
-> **História na v0.35.0; Caminho Ninja na v0.36.0; Uchiha, Hyuuga e o easter egg do Sasuke na v0.37.0; modo infinito do Caminho Ninja na v0.44.0.** As pendências estão no fim.
+> **História na v0.35.0; Caminho Ninja na v0.36.0; Uchiha e Hyuuga na v0.37.0; modo infinito do Caminho Ninja na v0.44.0; árvores de seis ramos das quatro classes da v0.84.0 à v0.87.0.** As pendências estão no fim.
 
-O jogo tem dois modos, escolhidos na tela inicial:
+O jogo tem três modos (finalidade de cada um no `CLAUDE.md`): o **Roleta** ([run.md](../roleta/run.md)), rápido, simples e na sorte, e os dois da **Jornada**, um roguelike mais lento e com mais controle, com equipe, talentos e relíquias:
 
-- **Roleta**: o modo original ([campanha.md](../roleta/campanha.md)), que vai ficar enxuto: run mais curta e um combate refeito, extremamente simples e bem mais na sorte.
-- **Jornada**: um roguelike mais lento e com mais controle, com equipe, talentos, relíquias e a história do Naruto. Tem um combate de equipe próprio, que usa as fórmulas da base ([fundamentos.md](../base/fundamentos.md)).
+- **História**: longa e narrativa, a história do Naruto.
+- **Caminho Ninja**: roguelike de builds, com mapa ramificado.
+
+A Jornada tem um combate de equipe próprio, que usa as fórmulas da base ([fundamentos.md](../base/fundamentos.md)).
 
 | Arquivo | Conteúdo |
 |---|---|
@@ -42,7 +44,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 A História é organizada em **campanhas** (`CampaignDef` em `src/core/jornada/data.ts`, dados em `src/data/jornada/campaigns.ts`). Cada campanha é a perspectiva de um personagem, com seus arcos em ordem, e se liga ao dia ou à noite da identidade visual. Combate, loja, relíquias, talentos e eventos são os mesmos para todas; muda o que se conta e como.
 
 - **Naruto** (dia): a única jogável, em 4 arcos ([historia.md](historia.md)).
-- **Sasuke** (noite): em design ([historia-sasuke.md](historia-sasuke.md)).
+- **Sasuke** (noite): em desenvolvimento ([historia-sasuke.md](historia-sasuke.md)).
 - Fluxo de entrada: a entrada da Jornada tem os cards **Modo História** (abre a escolha da perspectiva: Naruto ou Sasuke, em breve) e **Caminho Ninja** (abre a preparação: classe e elemento); o Progresso continua a run salva direto ([visual.md](../visual.md#entrada-da-jornada)).
 - A run guarda a campanha (`campaign`; sem ela, Naruto) e lê os arcos por `storyStages`. Shippuden entra como campanhas novas, sem sistema novo.
 
@@ -50,7 +52,7 @@ A História é organizada em **campanhas** (`CampaignDef` em `src/core/jornada/d
 
 - O perfil é um só para os dois modos ([perfil.md](../base/perfil.md)); a aba Conquistas tem a categoria Jornada.
 - Conquistas da Jornada: Sino na mão, Ponte do Naruto, Coração de chunin, Vale do Fim, Hokage um dia (libera o Hardcore da Jornada), Lenda de Konoha, Ninguém fica para trás, Gama-chan gordo, Colecionador, Caminho próprio (vencer uma run do Caminho Ninja), Chama do clã (libera o Uchiha), Olhos abertos (libera o Hyuuga), Herdeiro do clã, Destino quebrado, Mais uma volta, Treino sem fim e Vontade inabalável (vencer os ciclos 2, 3 e 5 do modo infinito) e duas secretas.
-- Como a Jornada tem progressão permanente, é o modo que mais justifica contas para sincronizar o perfil ([decisoes.md](../decisoes.md), item 8).
+- Como a Jornada tem progressão permanente, é o modo que mais justifica contas para sincronizar o perfil ([decisoes.md](../decisoes.md), item 8, Perfil).
 
 ## Simulação
 
@@ -62,10 +64,10 @@ A História é organizada em **campanhas** (`CampaignDef` em `src/core/jornada/d
 2. ~~História do Naruto completa, com a tela de batalha nova~~ (v0.35.0).
 3. Sprites dos personagens e vilões (a tela já tem as poses prontas).
 4. ~~Caminho Ninja: mapa ramificado, desconhecido, Comum e prodígio, suportes genéricos~~ (v0.36.0).
-5. ~~Uchiha e Hyuuga com árvores, desbloqueios, versões suporte e o easter egg do Sasuke~~ (v0.37.0).
+5. ~~Uchiha e Hyuuga com árvores, desbloqueios e versões suporte~~ (v0.37.0; o easter egg do Sasuke saiu na v0.86.0).
 
 ## Pendências
 
-- Alvo de vitória do bot na Jornada (v0.35.1: Médio 78%, Difícil 6%).
-- Versão suporte do prodígio e mais easter eggs por combinação.
-- Nomes das paradas com sabor ninja.
+Em [decisoes.md](../decisoes.md): meta de vitória do bot (90/65/40/15) e bot novo, mais inimigos no Caminho Ninja, Hyuuga no cânone, versão suporte do prodígio, estudo de árvore nova, minijogos novos, mais easter eggs por combinação e nomes das paradas com sabor ninja.
+
+Em desenvolvimento: a campanha do Sasuke e as outras classes (Akimichi, Uzumaki, Inuzuka, Nara, Senju, Aburame e Yamanaka).
