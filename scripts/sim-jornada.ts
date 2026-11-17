@@ -1,10 +1,12 @@
 // Simulação da História da Jornada: um bot joga N runs por dificuldade e mostra onde elas param.
 // Uso: `npm run sim:jornada -- [runs] [seed] [ciclos]`. Com `ciclos` > 0, os vencedores do Caminho Ninja seguem no modo
-// infinito até cair (no máximo esse número de ciclos) e sai a curva de sobrevivência por ciclo. O bot joga pior que um humano (não monta moveset, compra
-// sem planejar). Os números vão para o usuário decidir; nada é ajustado sozinho.
+// infinito até cair (no máximo esse número de ciclos) e sai a curva de sobrevivência por ciclo. O bot do protagonista
+// (fase 2b, src/sim/jornadaBot.ts) segue um plano de talentos, escolhe a ação por valor esperado e compra kits; ainda
+// joga pior que um humano. Os números vão para o usuário decidir; nada é ajustado sozinho.
 // `--ramos` (v0.71.0): só a História, uma build focada por ramo da árvore do Naruto (e por par de ramos vizinhos, as
-// combinações), no Médio e no Difícil. A build gasta primeiro no ramo, guarda pontos para ele e monta o moveset com as
-// técnicas dele; sai a vitória de cada uma, a diferença entre a melhor e a pior e os talentos mais comprados.
+// combinações), no Médio e no Difícil. A build segue o plano com esse ramo como principal (e o par como vizinho) e
+// monta o moveset com as técnicas dele; sai a vitória de cada uma, a diferença entre a melhor e a pior e os talentos
+// mais comprados.
 import { chooseAiAction, chooseAiActive } from '../src/core/jornada/ai';
 import { awaitingPlayer, current, downed, openBattle, playerAct, startBattle, useFree, useItem } from '../src/core/jornada/battle';
 import { auditJornadaFight, relicCategory, Tally, type FightAudit } from '../src/sim/audit';
@@ -46,11 +48,22 @@ import {
 import { branchesOf, canBuyTalent, talentState } from '../src/core/jornada/talents';
 import { createRng, type Rng } from '../src/core/rng';
 import type { Difficulty } from '../src/core/difficulty';
+import type { ConsumableId } from '../src/core/jornada/types';
 import { jornadaData as data } from '../src/data/jornada';
 import { DEFAULT_RELIC_VALUE, relicValues } from '../src/sim/relicValues';
+import { heroAction, heroFree, heroItem, nextTalent, planBuild } from '../src/sim/jornadaBot';
 
 const ARGS = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const BRANCHES = process.argv.includes('--ramos');
+/**
+ * `--bot-antigo`: o bot de antes da fase 2b (talento mais barato, ação pela IA dos suportes, sem comprar kits), para
+ * comparar. Para separar o efeito de cada parte do bot novo: `--sem-plano` (talentos), `--sem-acoes` (luta e itens) e
+ * `--sem-kits` (loja).
+ */
+const OLD_BOT = process.argv.includes('--bot-antigo');
+const OLD_TALENTS = OLD_BOT || process.argv.includes('--sem-plano');
+const OLD_ACTIONS = OLD_BOT || process.argv.includes('--sem-acoes');
+const OLD_SHOP = OLD_BOT || process.argv.includes('--sem-kits');
 const RUNS = Number(ARGS[0] ?? 300);
 const SEED = Number(ARGS[1] ?? 1);
 const CYCLES = Number(ARGS[2] ?? 0);
@@ -74,20 +87,33 @@ function fight(run: JRun, rng: Rng): JRun {
     while (b.status === 'ongoing') {
       if (!awaitingPlayer(b)) throw new Error('luta parada');
       const me = current(b)!;
-      const fallen = downed(b, 'ally');
-      if (!b.itemUsed && fallen.length && run.bag.reviveKit > 0) {
-        b = useItem(b, 'reviveKit', fallen[0]!.uid, data);
-        run = spendItem(run, 'reviveKit');
-        if (AUDIT) tally.add(`${stageKey(run)}kits`, 1);
-      } else if (!b.itemUsed && me.hp < me.maxHp * 0.35 && run.bag.hpKit > 0) {
-        b = useItem(b, 'hpKit', me.uid, data);
-        run = spendItem(run, 'hpKit');
+      if (OLD_ACTIONS) {
+        const fallen = downed(b, 'ally');
+        if (!b.itemUsed && fallen.length && run.bag.reviveKit > 0) {
+          b = useItem(b, 'reviveKit', fallen[0]!.uid, data);
+          run = spendItem(run, 'reviveKit');
+          if (AUDIT) tally.add(`${stageKey(run)}kits`, 1);
+        } else if (!b.itemUsed && me.hp < me.maxHp * 0.35 && run.bag.hpKit > 0) {
+          b = useItem(b, 'hpKit', me.uid, data);
+          run = spendItem(run, 'hpKit');
+          if (AUDIT) tally.add(`${stageKey(run)}kits`, 1);
+        }
+        // Ativa grátis (ou troca de portão) antes da ação, como a IA dos outros lutadores.
+        const free = chooseAiActive(b, me, data, rng);
+        if (free) b = useFree(b, free, data, rng);
+        b = playerAct(b, chooseAiAction(b, current(b)!, data, rng), data, rng);
+        continue;
+      }
+      // Bot da fase 2b (src/sim/jornadaBot.ts): item, ativa grátis e a ação de maior valor.
+      const item = heroItem(b, me, run.bag, data);
+      if (item) {
+        b = useItem(b, item.item, item.target, data);
+        run = spendItem(run, item.item);
         if (AUDIT) tally.add(`${stageKey(run)}kits`, 1);
       }
-      // Ativa grátis (ou troca de portão) antes da ação, como a IA dos outros lutadores.
-      const free = chooseAiActive(b, me, data, rng);
+      const free = heroFree(b, current(b)!, data, rng);
       if (free) b = useFree(b, free, data, rng);
-      b = playerAct(b, chooseAiAction(b, current(b)!, data, rng), data, rng);
+      b = playerAct(b, heroAction(b, current(b)!, data, rng), data, rng);
     }
     if (start) {
       lastFight = auditJornadaFight(start, b);
@@ -148,7 +174,28 @@ function shopTurn(run0: JRun): JRun {
     run = refreshShelf(run, data);
     relic = best();
   }
-  return relic ? buy(run, { kind: 'relic', ...relic }, data) : run;
+  if (relic) run = buy(run, { kind: 'relic', ...relic }, data);
+  return OLD_SHOP ? run : buyKits(run);
+}
+
+/**
+ * Kits com o ryō que sobra (fase 2b): reanimação, HP e chakra até uma meta por item, que cresce com os espaços a mais da
+ * bolsa (Selo de cliente, Bolsa resistente). Guarda o preço da relíquia mais barata para a próxima loja.
+ */
+function buyKits(run0: JRun): JRun {
+  let run = run0;
+  const reserve = Math.min(...Object.values(data.j.relics.price));
+  const extra = run.relics.reduce((a, id) => a + (data.relics.find((r) => r.id === id)?.bagBonus ?? 0), 0);
+  const want: Record<ConsumableId, number> = { reviveKit: 1 + Math.floor(extra / 3), hpKit: 2 + Math.ceil(extra / 2), chakraKit: 1 + Math.floor(extra / 3) };
+  for (const id of ['reviveKit', 'hpKit', 'chakraKit'] as ConsumableId[]) {
+    for (;;) {
+      const offer = shopOffer(run, data).consumables.find((c) => c.id === id)!;
+      const p = { kind: 'item' as const, ...offer };
+      if (run.bag[id] >= want[id] || !canBuy(run, p, data) || run.ryo - offer.price < reserve) break;
+      run = buy(run, p, data);
+    }
+  }
+  return run;
 }
 
 /** Ramos em que a build foca (um, ou dois para medir uma combinação); vazio = o bot de sempre (o mais barato). */
@@ -157,6 +204,20 @@ let focus: string[] = [];
 const bought = new Map<string, number>();
 
 function spendTalents(run: JRun): JRun {
+  if (OLD_TALENTS) return spendTalentsOld(run);
+  // Plano de build (src/sim/jornadaBot.ts): um ramo até o final, a junção do vizinho e as combinações; guarda ponto
+  // quando o próximo passo do plano só espera ponto.
+  for (;;) {
+    const ctx = talentContext(run, unlocked);
+    const plan = planBuild(run.hero, data.talents, ctx, data, focus);
+    const next = nextTalent(run.hero, data.talents, ctx, plan);
+    if (!next || next === 'wait') return tuneMoveset(run, plan ? [plan.primary, ...(plan.secondary ? [plan.secondary] : [])] : []);
+    run = buyTalent(run, next, unlocked, data);
+  }
+}
+
+/** O bot de antes (`--bot-antigo`): o talento mais barato, ou o mais barato do ramo focado (`--ramos`). */
+function spendTalentsOld(run: JRun): JRun {
   for (;;) {
     const ctx = talentContext(run, unlocked);
     const mine = data.talents.filter((n) => n.owner === run.hero);
@@ -165,17 +226,17 @@ function spendTalents(run: JRun): JRun {
     let node = focus.length ? cheapest(mine.filter(inFocus)) : cheapest(mine);
     if (!node && focus.length) {
       // Falta só ponto para o próximo nó do ramo: guarda. Sem nada a esperar (ramo fechado ou ainda preso à história), gasta fora.
-      if (mine.some((n) => inFocus(n) && talentState(n, data.talents, ctx) === 'noPoints')) return tuneMoveset(run);
+      if (mine.some((n) => inFocus(n) && talentState(n, data.talents, ctx) === 'noPoints')) return tuneMoveset(run, focus);
       node = cheapest(mine);
     }
-    if (!node) return focus.length ? tuneMoveset(run) : run;
+    if (!node) return focus.length ? tuneMoveset(run, focus) : run;
     run = buyTalent(run, node.id, unlocked, data);
   }
 }
 
-/** Moveset da build focada: as técnicas do ramo primeiro, depois as de mais dano (o bot padrão não monta moveset). */
-function tuneMoveset(run: JRun): JRun {
-  const branchTechs = new Set(data.talents.filter((n) => n.owner === run.hero && (focus.includes(n.branch) || n.requiresAll?.length) && n.learn && run.talents.includes(n.id)).map((n) => n.learn!));
+/** Moveset da build: as técnicas dos ramos do plano primeiro, depois as de mais dano. */
+function tuneMoveset(run: JRun, branches: string[]): JRun {
+  const branchTechs = new Set(data.talents.filter((n) => n.owner === run.hero && (branches.includes(n.branch) || n.requiresAll?.length) && n.learn && run.talents.includes(n.id)).map((n) => n.learn!));
   const score = (id: string) => {
     const t = data.techniques[id]!;
     const dmg = t.roll ? 14 : t.baseDamage * (t.hits ?? 1) * (t.target === 'allEnemies' ? 1.6 : 1);
@@ -224,14 +285,15 @@ if (process.argv.includes('--reliquias')) {
   const base = modes.map((m) => winRate(m, d, RUNS));
   console.log(`Valor marginal das relíquias · Difícil · ${RUNS} runs · linha de base: História ${base[0]!.toFixed(1)}% · Comum ${base[1]!.toFixed(1)}%`);
   console.log('relíquia | classificação | categoria | História Δ | Comum Δ | média Δ');
-  const pool = data.relics.filter((r) => !['starter', 'special'].includes(r.tier) && !r.evolves && !r.storyEvolves);
+  // `--so=id1,id2`: só essas relíquias (e sem a parte das iniciais).
+  const only = process.argv.find((a) => a.startsWith('--so='))?.slice(5).split(',');
+  const pool = data.relics.filter((r) => !['starter', 'special'].includes(r.tier) && !r.evolves && !r.storyEvolves && (!only || only.includes(r.id)));
   for (const r of pool) {
     patch = (run) => gainRelic(run, r.id, data);
     const deltas = modes.map((m, i) => winRate(m, d, RUNS) - base[i]!);
     console.log(`${r.id} | ${r.tier} | ${relicCategory(r)} | ${deltas.map((x) => x.toFixed(1)).join(' | ')} | ${((deltas[0]! + deltas[1]!) / 2).toFixed(1)}`);
   }
-  console.log(`\nRelíquias iniciais · Médio e Difícil · ${RUNS} runs (vitória: sem a inicial · com a inicial · com a evolução desde o começo)`);
-  starterAudit();
+  if (!only) starterAudit();
   process.exit(0);
 }
 
@@ -365,7 +427,7 @@ if (BRANCHES) {
   const pairs = [...new Map(data.talents.filter((n) => n.owner === owner && n.requiresAll?.length).map((n) => [...new Set(n.requiresAll!.map((id) => data.talents.find((t) => t.id === id)!.branch))]).map((p) => [[...p].sort().join('+'), p] as const)).values()];
   const solo = process.argv.includes('--so-ramos');
   const only = process.argv.find((a) => a.startsWith('--ramo='))?.slice(7);
-  const builds: { name: string; focus: string[] }[] = [{ name: 'padrão (mais barato)', focus: [] }, ...branches.map((b) => ({ name: b, focus: [b] })), ...(solo ? [] : pairs.map((p) => ({ name: p.join('+'), focus: p })))].filter((b) => !only || b.name === only);
+  const builds: { name: string; focus: string[] }[] = [{ name: OLD_TALENTS ? 'padrão (mais barato)' : 'padrão (plano)', focus: [] }, ...branches.map((b) => ({ name: b, focus: [b] })), ...(solo ? [] : pairs.map((p) => ({ name: p.join('+'), focus: p })))].filter((b) => !only || b.name === only);
   const diffs: Difficulty[] = ['normal', 'hard'];
   const table: { name: string; pct: number[] }[] = [];
   for (const build of builds) {

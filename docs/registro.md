@@ -32,6 +32,39 @@ Análise de jogabilidade e balanceamento do Roleta, da História e do Caminho Ni
 - **Pedidos novos** (itens 39 a 48 de `decisoes.md`): Roleta rápido e explosivo, com 1 passiva e técnicas-chave; bot da Jornada; mais inimigos no Caminho Ninja; Hyuuga no cânone; suporte do prodígio; estudo de árvore nova; minijogos novos.
 - Linha de base, v0.88.3 (Médio): Roleta Comum 65, Akimichi 71, Inuzuka 83, Prodígio 76, Uchiha 56, Hyuuga 68, Uzumaki 71, Senju 74 (rodadas por luta de 4,8 a 9,9); História 100/72/50/1; Caminho Ninja Comum 97/70/44/16, prodígio 96/64/34/14, Uchiha 97/70/39/15, Hyuuga 96/68/31/12.
 
+## Bot da Jornada mais inteligente (fase 2b, sem versão, 17/11/2026)
+
+Pedido do usuário: ensinar o bot antes do rebalanceamento para a meta nova (90/65/40/15 por classe, ±5). Só o bot mudou (`src/sim/jornadaBot.ts`, `scripts/sim-jornada.ts`); regras, números e dados ficaram iguais. O bot antigo continua em `--bot-antigo`.
+
+- **Talentos**: plano de build no lugar do mais barato. Ramo principal até o talento final (na bifurcação, o lado com técnica de dano ou bônus de dano), a junção do vizinho que tem combinação com ele, as combinações dos dois, os níveis a mais e o resto do vizinho. Guarda ponto quando o próximo passo do plano só espera ponto; passo preso à história pula. Ramos preferidos por árvore em `BRANCH_PREFS`, medidos com `--ramos --so-ramos --classe=...` (200 runs, seed 2, este bot): Naruto Kyuubi; Comum Estilo da Folha; prodígio Punho Bêbado; Uchiha Ilusões; Hyuuga Oito Trigramas. O moveset passa a ser montado em toda run (técnicas do plano primeiro).
+- **Luta, por valor esperado**: dano que tira HP, derrubar vale a ameaça do alvo por 2 turnos, controle vale o dano por turno do inimigo pelos turnos que ele perde (o mais perigoso primeiro) mais o dano a mais do protagonista nele (Linha de sombra, talentos de controle), e conta os efeitos de talentos e relíquias por golpe (atordoar do genjutsu, bloqueio do taijutsu, Medo). O peso do chakra é ~0 com o chakra cheio e sobe quando falta (Contas de meditação barateiam). Concentrar só quando a melhor técnica vale mais que duas da melhor de agora. **Defender só com limiar**: Guarda-costas com um aliado abaixo de 30% do HP (vale mais se um golpe o derrubaria) e cura ao Defender (Colete acolchoado, talentos) com o próprio HP abaixo de 45%, e só se vale mais que o melhor golpe; nada do "Defender sempre" do J4. Kit de chakra quando falta chakra para a melhor técnica; kit de HP num aliado quase caindo, com kit sobrando; clones refeitos acima do limite com bônus de clone (Pergaminho dos mil).
+- **Loja**: compra kits (reanimação, HP, chakra) com o ryō que sobra, guardando o preço da relíquia mais barata; a meta de kits cresce com os espaços a mais da bolsa (Selo de cliente).
+- **Decidido sozinho**: `--ramos` no Comum. Parte das runs do Comum sorteia "sem elemento" e vira prodígio; o foco num ramo do Comum caía no mais barato nessas runs. Agora elas seguem o plano preferido do prodígio (os números do `--ramos --classe=commonNinja` de antes e de depois não são comparáveis um a um).
+
+Vitória (`npm run sim:jornada -- 300 2 3`; Fácil/Médio/Difícil/Hardcore), antes → depois:
+
+| Run | Bot antigo | Bot novo |
+|---|---|---|
+| História | 100 / 72 / 50 / 1 | 100 / 83 / 72 / 2 |
+| Comum | 97 / 70 / 44 / 16 | 100 / 95 / 75 / 44 |
+| Prodígio | 96 / 64 / 34 / 14 | 100 / 98 / 88 / 56 |
+| Uchiha | 97 / 70 / 39 / 15 | 100 / 81 / 50 / 16 |
+| Hyuuga | 96 / 68 / 31 / 12 | 100 / 98 / 90 / 60 |
+
+Infinito (vencidos do ciclo 3 no Hardcore): Comum 12 → 43%, prodígio 10 → 56%, Uchiha 10 → 14%, Hyuuga 9 → 56%.
+
+Efeito de cada parte (300 runs, seed 2, Médio/Difícil; bot novo sem a parte): sem o plano, Comum 82/59, prodígio 66/41, Uchiha 77/54, Hyuuga 80/58, História 82/69; sem as ações, Comum 89/75, prodígio 97/85, Uchiha 77/37, Hyuuga 97/71, História 81/61; sem os kits, as classes ficam quase iguais (Comum 94/77, prodígio 98/88, Uchiha 80/46, Hyuuga 98/88) e a História cai no Difícil (81/62). O plano de talentos é o maior ganho; as ações pesam no Difícil; os kits só na História.
+
+Builds do Naruto (`--ramos`, 300 runs, seed 2; Médio/Difícil), antes → depois: padrão 72/50 → 83/72 (padrão agora é o plano, com a Kyuubi), Clones 80/60 → 79/60, Pegadinhas 75/55 → 81/70, Laços 72/52 → 79/63, Sapos 67/43 → 78/62, Kyuubi 76/53 → 83/72, Rasengan 69/46 → 83/72; combinações: Clones+Pegadinhas 72/59 → 79/60, Pegadinhas+Laços 72/59 → 81/70, Laços+Sapos 70/46 → 68/36, Sapos+Kyuubi 65/41 → 78/62, Kyuubi+Rasengan 76/54 → 83/72. Diferença entre o melhor e o pior ramo no Difícil: 18 → 12 pontos. Kyuubi e Rasengan dão o mesmo número porque as duas raízes vêm da história: até lá, o plano compra o mais barato.
+
+Builds por classe com o bot novo (`--ramos --so-ramos`, 200 runs; Médio/Difícil): Comum Elemento 83/64, Ferramentas 78/66, Estilo da Folha 88/66, Clones 85/59, Equipe 83/67, Determinação 82/65; prodígio Portões 91/75, Juventude 84/55, Punho Bêbado 97/83, Treino 98/79, Rivalidade 93/67, Mestre e pupilo 93/68; Uchiha Sharingan 85/57, Fogo do clã 83/62, Ilusões 88/58, Armas do clã 87/56, Orgulho do clã 85/59, Polícia do clã 84/59; Hyuuga Byakugan 80/52, Punho Suave 91/74, Rotação 88/56, Oito Trigramas 98/84, Casa principal 83/64, Casa secundária 92/71 (era a pior com o bot antigo, 74/45 depois da v0.88.3: a proteção com limiar funciona).
+
+Relíquias que não faziam nada para o bot (`--reliquias --so=...`, 300 runs, Difícil; média de História e Comum, antes → depois): Pílulas de soldado 1,3 → 0,2; Contas de meditação 1,7 → 2,8; Pedra de chakra 9,3 → 6,0; Pergaminho dos mil 3,5 → 3,7; Selo de cliente 1,5 → 1,0; Colete acolchoado 3,0 → −0,3; Linha de sombra 1,7 → −0,8. O bot agora usa as sete quando a regra deixa, mas o valor segue dentro do ruído (±7): são fracas nos números, não só no bot (a mesma conclusão do J4 para o Defender). A tabela da loja (`src/sim/relicValues.ts`, medida com o bot antigo) não mudou.
+
+Valor marginal de todas as relíquias (`--reliquias`, 300 runs, seed 2, Difícil; média de História e Comum). A linha de base subiu (História 50,3 → 71,7%, Comum 43,7 → 75,0%) e quase todo valor encolheu: perto do teto, sobra menos para ganhar. As de cima, antes → depois: Bolsa sem fundo 23,8 → 21,0, Lâmina de chakra 20,7 → 16,3, Encomenda do ferreiro 12,8 → 16,0, Manto de Kage 20,3 → 15,3, Carta de recomendação 17,5 → 15,3, Lótus eterna 14,0 → 15,0, Armadura samurai 18,0 → 14,2, Chapéu do Hokage 17,0 → 13,3. As que mais caíram: Pacto de sangue 17,2 → 9,2, Selo de contenção 17,7 → 8,8, Kunai do mestre 11,7 → 4,5, Frasco de toxina 11,7 → 5,2, Pergaminho de invocação 8,2 → 0,7, Caco de espelho 5,5 → 0,3. Iniciais (Médio/Difícil; sem a inicial · com ela · com a evolução), depois: Comum 93/73 · 95/75 · 99/87; prodígio 98/85 · 98/88 · 97/98; Uchiha 78/43 · 81/50 · 91/59; Hyuuga 97/80 · 98/90 · 99/90 (antes: Comum 71/40 · 70/44 · 78/54; prodígio 59/29 · 64/34 · 73/46; Uchiha 60/36 · 70/39 · 77/52; Hyuuga 65/29 · 68/31 · 70/42). A tabela completa fica na saída do comando; a tabela da loja pode ser refeita com ela depois, mas isso muda as compras do bot e as medidas de novo.
+
+Consequência para o rebalanceamento: com o bot novo, só o Uchiha fica perto da meta no Médio e no Difícil (81/50 contra 65/40); Comum, prodígio e Hyuuga passam muito da meta em todas as dificuldades, e a História passa no Médio e no Difícil e fica abaixo no Hardcore (2 contra 15).
+
 ## Retratos: um desenho por personagem (v0.90.0, 16/11/2026)
 
 Pedido do usuário: melhorar os SVG pela aparência canônica e diferenciar cada personagem. Combinado com ele: aparência do anime (sem imagens no repositório), **todos** os personagens (inclusive os 18 que já tinham desenho) e genéricos parecidos com personagens da mesma origem.
