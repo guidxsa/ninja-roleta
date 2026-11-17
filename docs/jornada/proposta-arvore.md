@@ -148,7 +148,7 @@ O que mudou em relação ao texto acima, na fase 1:
 - **Custos ficaram como estavam** (1, 2 e 3): os talentos de 2 pontos não viraram dois cartões. Com 3 pontos guardados a oferta tem 4 cartões.
 - **Tags tiradas dos bônus**, não escritas à mão: nenhuma relíquia ganhou campo novo. Nós que reagem a uma relíquia específica (`reactsTo`) ficaram para depois.
 - **Segundo núcleo** e **cartões de semente** do Naruto ficaram para as próximas fases.
-- **O núcleo dá também a raiz do ramo** (o nó da linha 1), além do nó de núcleo.
+- **O núcleo dá só a técnica do estilo e a regra fraca** (v0.91.1; na v0.91.0 dava também a raiz do ramo). O Elemento traz o Nível II por `coreGrants`.
 
 ## Próximas fases
 

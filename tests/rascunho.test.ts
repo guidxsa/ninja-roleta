@@ -49,12 +49,37 @@ describe('rascunho de talentos', () => {
     while (!runCoreOffer(common(seed), data).includes('leafStyle')) seed++;
     const run = chooseCore(common(seed), 'leafStyle', data);
     expect(run.draft!.core).toBe('leafStyle');
-    expect(run.talents).toEqual(expect.arrayContaining(['tCoreLeaf', 'tCBasicTraining']));
+    // Só o núcleo (v0.91.1: a raiz do ramo deixou de vir de graça); a técnica do estilo vem com ele.
+    expect(run.talents).toEqual(['tCoreLeaf']);
     expect(run.learned).toContain('jLeafHurricane');
     expect(run.talentPoints).toBe(0);
     // Os outros núcleos ficam fechados; não dá para escolher de novo.
     expect(talentState(node('tCoreTools'), data.talents, talentContext(run, new Set()))).toBe('excluded');
     expect(() => chooseCore(run, 'tools', data)).toThrow();
+  });
+
+  it('o núcleo Elemento traz o Nível II (coreGrants)', () => {
+    let seed = 1;
+    while (!runCoreOffer(common(seed), data).includes('element')) seed++;
+    const run = chooseCore(common(seed), 'element', data);
+    expect(run.talents).toEqual(['tCoreElement', 'tElement2']);
+    // A Determinação traz o +25% de XP.
+    let s2 = 1;
+    while (!runCoreOffer(common(s2), data).includes('will')) s2++;
+    expect(chooseCore(common(s2), 'will', data).talents).toEqual(['tCoreWill', 'tDetermination']);
+    expect(run.learned).toContain('jWaterShark');
+  });
+
+  it('todo ramo com núcleo alcança o talento final (respeitando a bifurcação)', () => {
+    const owners = data.j.talentDraft.owners;
+    for (const owner of owners) {
+      for (const core of data.talents.filter((n) => n.owner === owner && n.core)) {
+        const own = data.talents.filter((n) => n.owner === owner && n.branch === core.branch && !n.core && !n.capstone && !n.requiresAll);
+        // De cada par da bifurcação, só um lado conta.
+        const reachable = own.filter((n) => !n.excludes || n.excludes.every((x) => own.findIndex((o) => o.id === x) > own.indexOf(n)));
+        expect(reachable.length, core.branch).toBeGreaterThanOrEqual(data.j.talentDraft.capstoneNeeds);
+      }
+    }
   });
 
   it('não escolhe um núcleo fora da oferta', () => {

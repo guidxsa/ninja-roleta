@@ -132,7 +132,7 @@ export const jornadaBalance = {
   // Rascunho de talentos (docs/jornada/talentos.md#rascunho, v0.91.0): classes que trocam a árvore em ordem pelo
   // núcleo escolhido no começo + 3 talentos sorteados por compra. Começa pelo Comum; as outras seguem a árvore clássica.
   // Pesos do sorteio: 1 + coreWeight (ramo do núcleo) + relicTagWeight por tag em comum com as relíquias + goalWeight
-  // (combinação ou talento final). 4 cartões com `heldPoints` pontos guardados. O final pede `capstoneNeeds` talentos do ramo.
+  // (combinação ou talento final). 4 cartões com `heldPoints` pontos guardados. O final pede `capstoneNeeds` talentos do ramo (v0.91.1: o núcleo deixou de dar a raiz de graça, para o alvo de vitória).
   talentDraft: {
     owners: ['commonNinja'] as string[],
     coreChoices: 3,

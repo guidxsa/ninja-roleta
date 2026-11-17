@@ -57,6 +57,8 @@ export interface TalentNode {
    * dá a técnica e uma versão fraca da regra final. `dano` ou `apoio` (controle e suporte) monta a oferta de 3.
    */
   core?: 'dano' | 'apoio';
+  /** Núcleo: nós aprendidos de graça junto com ele (ex.: a técnica do estilo que mora em outro nó). */
+  coreGrants?: string[];
   /** Tags a mais além das tiradas dos bônus (pesam o rascunho junto com as das relíquias). */
   tags?: string[];
 }

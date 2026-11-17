@@ -37,7 +37,8 @@ export const lineages: LineageDef[] = [
         ai: 'striker',
         portrait: 'ninja:common',
         // v0.65.0 (aprovado pelo usuário): o Comum ficava bem abaixo das outras classes com os inimigos mais fortes.
-        adjust: { hp: 15, chakra: 4, offense: { taijutsu: 1, ninjutsu: 1 } },
+        // v0.91.1 (pedido do usuário: Comum no alvo depois do rascunho): sem o +1 de taijutsu e de ninjutsu.
+        adjust: { hp: 15, chakra: 4 },
       },
       class: { id: 'common', noElementOrigin: 'taijutsuProdigy', supports: ['leafGeninA', 'leafGeninB', 'leafMedic'], supportNames: ['daichi', 'hana', 'kenta', 'yui', 'sora', 'aiko', 'haruto', 'rin', 'takumi', 'mei', 'riku', 'nanami'] },
     },

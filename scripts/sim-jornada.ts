@@ -53,6 +53,11 @@ import { spendDraft } from '../src/sim/draftBot';
 // Comparar com as regras de antes da v0.91.0: `--sem-rascunho` volta à árvore clássica em todas as classes e
 // `--por-golpe` soma o dano fixo e o chakra do taijutsu em cada golpe.
 if (process.argv.includes('--sem-rascunho')) (data.j.talentDraft as { owners: string[] }).owners = [];
+// `--rascunho=capstoneNeeds:4,rerollsPerStage:0`: testar números do rascunho sem mexer no balance.
+for (const kv of process.argv.find((a) => a.startsWith('--rascunho='))?.slice(11).split(',') ?? []) {
+  const [k, v] = kv.split(':');
+  (data.j.talentDraft as Record<string, unknown>)[k!] = v === 'true' ? true : v === 'false' ? false : Number(v);
+}
 if (process.argv.includes('--por-golpe')) (data.j.combat as { flatPerTechnique: boolean }).flatPerTechnique = false;
 
 const ARGS = process.argv.slice(2).filter((a) => !a.startsWith('--'));

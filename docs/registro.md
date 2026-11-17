@@ -2,6 +2,27 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Comum de volta ao alvo depois do rascunho (v0.91.1, 17/11/2026)
+
+Pedido do usuário: ajustar o Comum, que tinha ficado acima do alvo de 90/65/40/15 com o rascunho (99/81/50/23). Simulação: `npm run sim:jornada -- 300 2 --modo=generic:common`; as outras classes não mudam.
+
+| Variante | Fácil / Médio / Difícil / Hardcore |
+|---|---|
+| v0.91.0 | 99/81/50/23 |
+| Núcleo sem a raiz de graça (o Elemento traz o Nível II) | 99/80/48/22 |
+| + sem troca por estágio | 99/77/47/19 |
+| + pesos do sorteio menores (núcleo +1, final +1) | 99/78/48/20 |
+| + sem troca e pesos menores | 99/74/49/20 |
+| Ajuste da classe sem nada (era +15 HP, +4 chakra, +1 tai e nin) | 98/70/36/11 |
+| Ajuste da classe pela metade (+8 HP, +2 chakra) | 98/70/37/12 |
+| **Ajuste da classe sem o +1 de ataque**, e a Determinação com o +25% de XP de volta | **99/75/39/14** |
+
+- **Aplicado:** o núcleo não dá mais a raiz do ramo (dá a técnica do estilo e a regra fraca; o Elemento traz o Nível II e a Determinação o +25% de XP, por `coreGrants`), e o ajuste da classe Comum (`jornada.hero.adjust`, aprovado na v0.65.0) perdeu o +1 de taijutsu e de ninjutsu.
+- **Os números do rascunho quase não mexem na vitória:** a maior parte do ganho da v0.91.0 veio do bot escolher melhor (no rascunho e na árvore antiga com build focada, 76 a 86 no Médio), não da força do rascunho. Por isso a alavanca foi o status da classe.
+- **Testado e descartado:** o final pedir 5 talentos do ramo. Com a bifurcação, cada ramo tem só 4 alcançáveis, e o final ficava impossível (o teste `todo ramo com núcleo alcança o talento final` guarda isso).
+- **Fica fora do alvo:** o Médio (75 contra 65) e o Fácil (99 contra 90). Nenhuma alavanca acerta as quatro dificuldades juntas: a curva do Comum é mais íngreme que a do alvo (como no item 2 de [decisoes.md](decisoes.md)).
+- **Núcleos** (`--ramos --so-ramos --classe=commonNinja`, Médio / Difícil): bot padrão 73/39, Elemento 76/48, Ferramentas 72/43, Estilo da Folha 76/47, Clones 78/52, Equipe 74/47, Determinação 75/46. Diferença no Difícil: 7,7 (v0.91.0) → **8,7**, ainda dentro da meta de até 10.
+
 ## Rascunho de talentos no Comum e bônus por técnica (v0.91.0, 17/11/2026)
 
 Pedido do usuário: builds mais divertidas e variadas na Jornada (a rejogabilidade da História vem dos talentos). Proposta em [proposta-arvore.md](jornada/proposta-arvore.md); o usuário aprovou a direção e mandou seguir as decisões recomendadas. Fase 1: rascunho com núcleo no Comum ([talentos.md](jornada/talentos.md#rascunho)) e bônus fixo por técnica em toda a Jornada ([combate.md](jornada/combate.md#acerto-e-dano)).

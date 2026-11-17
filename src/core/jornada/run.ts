@@ -1310,7 +1310,7 @@ function grantNode(run: JRun, node: TalentNode, data: JornadaData): void {
 }
 
 /**
- * Escolhe o núcleo: aprende de graça o nó de núcleo e a raiz do ramo. `anyCore`: aceita um núcleo fora da oferta (só a
+ * Escolhe o núcleo: aprende de graça o nó de núcleo e os nós de `coreGrants` (o Elemento ganha o Nível II). `anyCore`: aceita um núcleo fora da oferta (só a
  * simulação, para medir cada núcleo).
  */
 export function chooseCore(prev: JRun, branch: string, data: JornadaData, anyCore = false): JRun {
@@ -1319,7 +1319,8 @@ export function chooseCore(prev: JRun, branch: string, data: JornadaData, anyCor
   const run = clone(prev);
   run.draft!.core = branch;
   const mine = data.talents.filter((n) => n.owner === run.hero && n.branch === branch && !n.requiresAll);
-  for (const n of mine.filter((x) => x.core || x.tier === 1)) grantNode(run, n, data);
+  const core = mine.find((x) => x.core)!;
+  for (const n of [core, ...(core.coreGrants ?? []).map((id) => data.talents.find((t) => t.id === id)!)]) grantNode(run, n, data);
   return run;
 }
 

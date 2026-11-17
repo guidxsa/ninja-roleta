@@ -19,7 +19,7 @@ A árvore **reinicia a cada run** e custa pontos de talento ([progressao.md](pro
 
 Implementado na v0.91.0, primeiro no **Comum** (as outras classes e o Naruto seguem a árvore em ordem por enquanto). Proposta e próximos passos em [proposta-arvore.md](proposta-arvore.md); números em `talentDraft` (`src/data/jornada/balance.ts`), código em `src/core/jornada/draft.ts`.
 
-- **Núcleo**: no começo da run, antes da primeira parada, o protagonista escolhe um entre **3 núcleos** sorteados pela seed (um de dano, um de apoio e um livre). O núcleo é de graça e vale a run toda: aprende o nó de núcleo e a raiz do ramo, com a técnica do estilo e uma versão fraca da regra final. Os outros núcleos ficam fechados.
+- **Núcleo**: no começo da run, antes da primeira parada, o protagonista escolhe um entre **3 núcleos** sorteados pela seed (um de dano, um de apoio e um livre). O núcleo é de graça e vale a run toda: dá a técnica do estilo e uma versão fraca da regra final (a raiz do ramo vinha junto até a v0.91.1; agora sai no rascunho como os outros nós, e só o Elemento e a Determinação trazem um nó junto, por `coreGrants`: o Nível II e o +25% de XP). Os outros núcleos ficam fechados.
 - **Oferta**: a árvore não se compra mais em ordem. A tela mostra **3 talentos** sorteados que dá para aprender ou subir (**4** com 3 pontos ou mais guardados), e só eles se compram. O primeiro cartão é do ramo do núcleo enquanto houver. Os outros saem por peso: 1, +3 se for do ramo do núcleo, +1 por tag em comum com as relíquias da run, +2 se for combinação ou talento final. A oferta sai da seed e do número de compras: reabrir a tela mostra a mesma, e ela muda a cada compra.
 - **Trocar**: uma troca grátis por estágio (de cada ciclo) sorteia outra oferta.
 - **Sem ordem no ramo**: no rascunho, os nós não pedem o anterior. Continuam valendo a **bifurcação** (escolher um lado fecha o outro) e as **combinações** e **assinaturas** (pedem os nós indicados).
@@ -32,11 +32,11 @@ Implementado na v0.91.0, primeiro no **Comum** (as outras classes e o Naruto seg
 
 | Núcleo | Tipo | Ganha de graça |
 |---|---|---|
-| Elemento | dano | Nível II do elemento; o ninjutsu ignora 10% da resistência |
-| Ferramentas | apoio | Kunai afiada e a Armadilha de fios; inimigo atordoado leva +15% de dano da equipe |
-| Estilo da Folha | dano | Treino básico e o Furacão da Folha; cada golpe seguido de taijutsu +3% |
-| Clones | apoio | Bunshin aprimorado; começa as lutas com 1 clone; com clone de pé, −10% de acerto dos inimigos |
-| Equipe | apoio | Trabalho em equipe; +5% de HP máximo dos suportes (13% com a raiz); escudo de 4% na equipe |
+| Elemento | dano | O Nível II do elemento; o ninjutsu ignora 10% da resistência |
+| Ferramentas | apoio | A Armadilha de fios; inimigo atordoado leva +15% de dano da equipe |
+| Estilo da Folha | dano | O Furacão da Folha; cada golpe seguido de taijutsu +3% |
+| Clones | apoio | Começa as lutas com 1 clone; com clone de pé, −10% de acerto dos inimigos |
+| Equipe | apoio | +5% de HP máximo dos suportes; escudo de 4% na equipe |
 | Determinação | dano | Determinação (+25% de XP); 1 de HP por rodada; +10% de dano abaixo da metade do HP |
 
 ## Árvore completa
