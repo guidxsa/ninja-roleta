@@ -1462,7 +1462,8 @@ describe('Caminho Ninja', () => {
   });
 
   it('o ramo Elemento ensina a técnica do elemento sorteado', () => {
-    const run = { ...newGenericRun(1, 'normal', 'common', data), hero: 'commonNinja', elements: { commonNinja: 'water' as const }, talentPoints: 5 };
+    // Árvore clássica (sem rascunho): o nó se compra direto.
+    const run = { ...newGenericRun(1, 'normal', 'common', data), hero: 'commonNinja', elements: { commonNinja: 'water' as const }, talentPoints: 5, draft: undefined };
     const next = buyTalent(run, 'tElement2', new Set(), data);
     expect(next.learned).toContain('jWaterShark');
   });

@@ -6,6 +6,10 @@ import type { GateLevel } from '../../core/jornada/types';
 
 export const jornadaBalance = {
   combat: {
+    // Bônus por técnica, não por golpe (v0.91.0, docs/jornada/combate.md): o dano fixo do taijutsu entra só no primeiro
+    // golpe que acerta, e o chakra por golpe (Ritmo de luta) volta uma vez por uso. Técnicas de vários golpes deixam de
+    // multiplicar esses bônus. `false` volta à regra antiga (por golpe).
+    flatPerTechnique: true,
     // Ordem da rodada: speed × (1 ± variação). Pequena: a sorte pesa menos (docs/jornada/combate.md#ordem).
     orderVariance: 0.15,
     // Fração da resistência usada normalmente e em postura defensiva.
@@ -124,6 +128,23 @@ export const jornadaBalance = {
   // Árvore completa (docs/jornada/talentos.md#árvore-completa): com nada mais a aprender ou subir, cada ponto de
   // talento ganho vira ryō na hora (metade do Treino do mercador). O ryō convertido não passa pelo multiplicador.
   talentTree: { completeRyoPerPoint: 30 },
+
+  // Rascunho de talentos (docs/jornada/talentos.md#rascunho, v0.91.0): classes que trocam a árvore em ordem pelo
+  // núcleo escolhido no começo + 3 talentos sorteados por compra. Começa pelo Comum; as outras seguem a árvore clássica.
+  // Pesos do sorteio: 1 + coreWeight (ramo do núcleo) + relicTagWeight por tag em comum com as relíquias + goalWeight
+  // (combinação ou talento final). 4 cartões com `heldPoints` pontos guardados. O final pede `capstoneNeeds` talentos do ramo.
+  talentDraft: {
+    owners: ['commonNinja'] as string[],
+    coreChoices: 3,
+    cards: 3,
+    cardsHeld: 4,
+    heldPoints: 3,
+    rerollsPerStage: 1,
+    capstoneNeeds: 4,
+    coreWeight: 3,
+    relicTagWeight: 1,
+    goalWeight: 2,
+  },
 
   // Modo infinito do Caminho Ninja, só no Hardcore (docs/jornada/run.md#modo-infinito): os inimigos ficam × dificuldade
   // × enemyCycleMult ^ ciclo, com o ciclo contando do 0. Rascunho: a simulação decide e o usuário ajusta.

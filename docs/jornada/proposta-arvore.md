@@ -1,6 +1,6 @@
 # Proposta: árvore de talentos e controle de builds
 
-> **Proposta, não implementada** (17/11/2026). Só design: nada mudou no código nem nos dados. Vai ao usuário para aprovação antes de qualquer implementação. Regras atuais em [talentos.md](talentos.md); números medidos em [diagnóstico 2](../balanceamento/diagnostico-2.md) (J4) e nos itens 28 e 29 de [decisoes.md](../decisoes.md).
+> **Direção aprovada pelo usuário** (17/11/2026: "siga nessa direção e tome as decisões recomendadas"). **Fase 1 implementada na v0.91.0**: rascunho com núcleo no **Comum** e bônus fixo por técnica em toda a Jornada ([talentos.md](talentos.md#rascunho), [combate.md](combate.md#acerto-e-dano)). As decisões da seção 6 seguiram a recomendação; o que falta está em [Próximas fases](#próximas-fases). Regras atuais em [talentos.md](talentos.md); números medidos em [diagnóstico 2](../balanceamento/diagnostico-2.md) (J4) e nos itens 28 e 29 de [decisoes.md](../decisoes.md).
 
 **Pedido:** controle de builds mais divertido e, se valer a pena, outra forma de organizar a árvore da Jornada (História e Caminho Ninja). Decisão do usuário: **a rejogabilidade da História vem da variedade de talentos**. Meta de vitória do bot: 90/65/40/15 (Fácil/Médio/Difícil/Hardcore) por classe.
 
@@ -135,10 +135,24 @@ Ordem sugerida: **primeiro o Comum** (Caminho Ninja, o mais estável), medir, de
 
 **Docs:** `talentos.md` reescrito, `progressao.md` (ponto abre rascunho), `reliquias.md` (tags) e `docs/registro.md` com a simulação de antes e depois.
 
-## 6. Para decidir
+## 6. Decisões (tomadas pela recomendação)
 
-1. Aceitar a direção (núcleo + rascunho + tags) ou ficar com uma das três sozinha.
-2. O núcleo no início é **sorteado entre 3** ou **livre entre os 6**. Sorteado dá mais variedade; livre dá mais controle.
-3. Bônus por técnica em vez de por golpe vale também para o Roleta, ou só na Jornada.
-4. A árvore atual fica como opção ("modo clássico") ou sai quando a nova entrar.
-5. Começar pelo Comum, como sugerido, ou direto pelo Naruto da História.
+1. **Direção**: núcleo + rascunho + tags.
+2. **Núcleo sorteado entre 3** (um de dano, um de apoio e um livre), pela seed da run.
+3. **Bônus por técnica só na Jornada** (o Roleta tem combate próprio). Vale para o dano fixo do taijutsu e o chakra do Ritmo de luta; acerto, crítico e combo continuam por golpe. Desligável em `combat.flatPerTechnique`.
+4. **A árvore em ordem fica no código** para as classes sem rascunho e para saves antigos (sem o campo `draft`). A lista `talentDraft.owners` diz quem usa o rascunho.
+5. **Começar pelo Comum.**
+
+O que mudou em relação ao texto acima, na fase 1:
+
+- **Custos ficaram como estavam** (1, 2 e 3): os talentos de 2 pontos não viraram dois cartões. Com 3 pontos guardados a oferta tem 4 cartões.
+- **Tags tiradas dos bônus**, não escritas à mão: nenhuma relíquia ganhou campo novo. Nós que reagem a uma relíquia específica (`reactsTo`) ficaram para depois.
+- **Segundo núcleo** e **cartões de semente** do Naruto ficaram para as próximas fases.
+- **O núcleo dá também a raiz do ramo** (o nó da linha 1), além do nó de núcleo.
+
+## Próximas fases
+
+1. Prodígio, Uchiha e Hyuuga: um núcleo por ramo (técnica do estilo + regra fraca), entrar em `talentDraft.owners`, medir cada núcleo com `--ramos --classe=...`.
+2. Naruto na História: núcleos que chegam pela história e os **cartões de semente** (seção 4).
+3. Segundo núcleo (4 pontos, a partir do estágio 2) e nós que reagem a relíquias.
+4. Bot: o bot da simulação escolhe no rascunho por pontuação (`src/sim/draftBot.ts`); falta combinar com o trabalho do bot da Jornada em andamento em outra sessão.

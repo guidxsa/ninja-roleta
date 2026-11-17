@@ -17,7 +17,7 @@ O jogo tem dois modos, escolhidos na tela inicial:
 | [personagens.md](personagens.md) | Fichas, técnicas e comportamento automático dos aliados |
 | [inimigos.md](inimigos.md) | Fichas e técnicas dos inimigos |
 | [talentos.md](talentos.md) | Árvores de talentos (Naruto, Comum, prodígio, Uchiha, Hyuuga) |
-| [proposta-arvore.md](proposta-arvore.md) | **Proposta, não aprovada**: núcleo + rascunho de talentos + tags para builds mais variadas |
+| [proposta-arvore.md](proposta-arvore.md) | Árvore em rascunho (núcleo + 3 talentos por vez + tags): diagnóstico, decisões e próximas fases (fase 1 no Comum, v0.91.0) |
 | [progressao.md](progressao.md) | XP, nível, recompensas, entre lutas |
 | [reliquias.md](reliquias.md) | Relíquias: classificações, de onde vêm, evolução, coleção, catálogo |
 | [caminho-ninja.md](caminho-ninja.md) | Caminho Ninja: estrutura, pools por estágio, chefes, eventos |

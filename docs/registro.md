@@ -2,6 +2,39 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Rascunho de talentos no Comum e bônus por técnica (v0.91.0, 17/11/2026)
+
+Pedido do usuário: builds mais divertidas e variadas na Jornada (a rejogabilidade da História vem dos talentos). Proposta em [proposta-arvore.md](jornada/proposta-arvore.md); o usuário aprovou a direção e mandou seguir as decisões recomendadas. Fase 1: rascunho com núcleo no Comum ([talentos.md](jornada/talentos.md#rascunho)) e bônus fixo por técnica em toda a Jornada ([combate.md](jornada/combate.md#acerto-e-dano)).
+
+Simulação: `npm run sim:jornada -- 300 2`, com `--sem-rascunho --por-golpe` para as regras de antes e `--sem-rascunho` para isolar a regra por técnica. Fácil / Médio / Difícil / Hardcore:
+
+| Linha | v0.90.0 | Só por técnica | v0.91.0 |
+|---|---|---|---|
+| História | 100/72/50/1 | 100/68/42/2 | 100/68/42/2 |
+| Comum | 97/70/44/16 | 98/66/41/17 | **99/81/50/23** |
+| Prodígio | 96/64/34/14 | 94/58/34/11 | 94/58/34/11 |
+| Uchiha | 97/70/39/15 | 97/69/38/16 | 97/69/38/16 |
+| Hyuuga | 96/68/31/12 | 96/64/33/12 | 96/64/33/12 |
+
+Builds do Comum (`--ramos --so-ramos --classe=commonNinja`, Médio / Difícil; no rascunho, a build força o núcleo do ramo; ~22% das runs viram prodígio no sorteio do elemento e jogam sem ele):
+
+| Build | v0.90.0 | Só por técnica | v0.91.0 (núcleo) |
+|---|---|---|---|
+| Bot padrão | 70 / 44 (mais barato) | 66 / 41 | **81 / 50** (núcleo sorteado + pontuação) |
+| Elemento | 80 / 55 | 79 / 56 | 83 / 59 |
+| Ferramentas | 76 / 53 | 71 / 50 | 78 / 54 |
+| Estilo da Folha | 86 / 64 | 82 / 54 | 82 / 61 |
+| Clones | 83 / 54 | 80 / 50 | 85 / 62 |
+| Equipe | 80 / 48 | 77 / 47 | 80 / 55 |
+| Determinação | 82 / 53 | 80 / 51 | 84 / 54 |
+| Diferença no Difícil | **16,6** | 9,0 | **7,7** |
+
+- **O que funcionou:** a diferença entre o melhor e o pior estilo do Comum no Difícil caiu de 16,6 para 7,7 pontos (meta da proposta: até 10). O Estilo da Folha deixou de dominar: a regra por técnica sozinha tirou 10 pontos dele no Difícil. O bot padrão deixou de cair pela armadilha do mais barato: escolher no rascunho dá +11 no Médio.
+- **Efeito colateral da regra por técnica** nas classes sem rascunho: a História perdeu 4 pontos no Médio e 8 no Difícil (o Rendan e a Shuriken das sombras têm vários golpes, e a Guarda de clones dá +2 fixo). O prodígio perdeu 6 no Médio. Uchiha e Hyuuga quase não mudaram.
+- **Fora do alvo de 90/65/40/15, nada compensado:** o Comum ficou acima em todas as dificuldades (99/81/50/23). História e prodígio ficaram mais perto do alvo no Médio.
+- **Decidido sozinho, para revisar:** os números dos seis núcleos (a regra fraca de cada um e a raiz dada de graça); os pesos do sorteio (núcleo +3, tag da relíquia +1, final ou combinação +2); 4 cartões a partir de 3 pontos guardados; 1 troca por estágio; o final pedindo 4 talentos do ramo; o bônus por técnica valer para o dano fixo do taijutsu e o chakra do Ritmo de luta (não para chance de efeito por golpe); a pontuação do bot (`src/sim/draftBot.ts`).
+- UI Lab: a run da História no Fácil passou da seed 2 para a 1 (a 2 caiu antes do Vale do Fim com a regra nova). Cenários novos: `jornada.talents:core`, `jornada.talents:draft` e `jornada.talents:draft-held`.
+
 ## Retratos: um desenho por personagem (v0.90.0, 16/11/2026)
 
 Pedido do usuário: melhorar os SVG pela aparência canônica e diferenciar cada personagem. Combinado com ele: aparência do anime (sem imagens no repositório), **todos** os personagens (inclusive os 18 que já tinham desenho) e genéricos parecidos com personagens da mesma origem.

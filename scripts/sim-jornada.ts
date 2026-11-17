@@ -48,6 +48,12 @@ import { createRng, type Rng } from '../src/core/rng';
 import type { Difficulty } from '../src/core/difficulty';
 import { jornadaData as data } from '../src/data/jornada';
 import { DEFAULT_RELIC_VALUE, relicValues } from '../src/sim/relicValues';
+import { spendDraft } from '../src/sim/draftBot';
+
+// Comparar com as regras de antes da v0.91.0: `--sem-rascunho` volta à árvore clássica em todas as classes e
+// `--por-golpe` soma o dano fixo e o chakra do taijutsu em cada golpe.
+if (process.argv.includes('--sem-rascunho')) (data.j.talentDraft as { owners: string[] }).owners = [];
+if (process.argv.includes('--por-golpe')) (data.j.combat as { flatPerTechnique: boolean }).flatPerTechnique = false;
 
 const ARGS = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const BRANCHES = process.argv.includes('--ramos');
@@ -157,6 +163,11 @@ let focus: string[] = [];
 const bought = new Map<string, number>();
 
 function spendTalents(run: JRun): JRun {
+  // Rascunho (v0.91.0): núcleo e oferta por pontuação; a build focada força o núcleo do ramo.
+  if (run.draft) {
+    const next = spendDraft(run, data, unlocked, focus[0]);
+    return focus.length ? tuneMoveset(next) : next;
+  }
   for (;;) {
     const ctx = talentContext(run, unlocked);
     const mine = data.talents.filter((n) => n.owner === run.hero);

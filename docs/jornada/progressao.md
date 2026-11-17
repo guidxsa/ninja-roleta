@@ -33,7 +33,7 @@
 
 ## Árvore de talentos
 
-Por classe, reinicia a cada run; alguns ramos abrem pela história e outros por objetivos da conta. Tem bifurcações e alguns talentos sobem de nível: [talentos.md](talentos.md).
+Por classe, reinicia a cada run; alguns ramos abrem pela história e outros por objetivos da conta. Tem bifurcações e alguns talentos sobem de nível: [talentos.md](talentos.md). No Comum, desde a v0.91.0, os pontos se gastam no [rascunho](talentos.md#rascunho): núcleo escolhido no começo e 3 talentos oferecidos por vez.
 
 ## Quanto se ganha numa run
 

@@ -56,6 +56,7 @@ import {
   buyCleanse,
   isCursed,
   heroKnown,
+  needsCore,
 } from '../../src/core/jornada/run';
 import { reachableFrom, type MapNode } from '../../src/core/jornada/map';
 import type { Element } from '../../src/core/types';
@@ -79,7 +80,7 @@ import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCar
 import { inkWipe, stampChoice } from './motion';
 import { sceneLines, scenePortrait, sceneScreen } from './scene';
 import { relicIcon } from './relicIcons';
-import { talentTreeScreen } from './talentTree';
+import { coreChoiceScreen, talentTreeScreen } from './talentTree';
 import { foldAttrs, foldButton, installFolds } from './fold';
 import { WIDE } from '../layout';
 import { modeCard } from '../modeCard';
@@ -832,6 +833,8 @@ function runStop(host: JornadaHost, run: JRun, stop: StopDef): Promise<JRun> {
 }
 
 export async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
+  // Rascunho de talentos: o núcleo se escolhe antes da primeira parada.
+  if (needsCore(run)) return coreChoiceScreen(run);
   if (run.bossChoice) {
     host.discoverRelics(run.bossChoice);
     return bossChoiceScreen(run);

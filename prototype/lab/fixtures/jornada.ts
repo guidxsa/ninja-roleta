@@ -9,6 +9,7 @@ import { eventOptions } from '../../../src/core/jornada/events';
 import {
   battleSetup,
   chooseBossRelic,
+  chooseCore,
   chooseNode,
   choosingNode,
   currentEvent,
@@ -18,10 +19,12 @@ import {
   leaveStop,
   newGenericRun,
   newRun,
+  needsCore,
   nodeChoices,
   openTreasure,
   resolveEvent,
   rest,
+  runCoreOffer,
   spendItem,
   stopRng,
   type JRun,
@@ -35,7 +38,11 @@ import type { KeyValueStorage } from '../../../src/state/runHistory';
 export const storyRun = (seed = 7, difficulty: Difficulty = 'normal'): JRun => newRun(seed, difficulty, data);
 
 /** Run nova do Caminho Ninja. */
-export const pathRun = (seed = 7, difficulty: Difficulty = 'normal', classId = 'common'): JRun => newGenericRun(seed, difficulty, classId, data);
+/** Run do Caminho Ninja; com rascunho (Comum), já com o primeiro núcleo oferecido (`core: false` deixa a escolha pendente). */
+export const pathRun = (seed = 7, difficulty: Difficulty = 'normal', classId = 'common', core = true): JRun => {
+  const run = newGenericRun(seed, difficulty, classId, data);
+  return core && needsCore(run) ? chooseCore(run, runCoreOffer(run, data)[0]!, data) : run;
+};
 
 /** Grava a run como o save da Jornada (no armazenamento em memória do cenário). */
 export function saveRun(storage: KeyValueStorage, run: JRun): void {
@@ -70,6 +77,7 @@ function autoFight(run0: JRun, rng: Rng): JRun {
 
 /** Resolve a parada atual (ou a escolha de nó/relíquia) como o bot. */
 function step(run: JRun, rng: Rng): JRun {
+  if (needsCore(run)) return chooseCore(run, runCoreOffer(run, data)[0]!, data);
   if (run.bossChoice) return chooseBossRelic(run, run.bossChoice[0]!, data);
   if (choosingNode(run)) {
     const nodes = nodeChoices(run);
