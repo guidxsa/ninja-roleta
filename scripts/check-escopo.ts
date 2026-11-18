@@ -4,14 +4,17 @@
 // etiqueta `contrato-aprovado`, que só o usuário põe.
 // Uso: npm run check:escopo
 import { pathToFileURL } from 'node:url';
-import { currentBranch, gitChanges, inCi, matchesAny, packageJsonChange, readVersion, report, type Finding } from './harness';
+import { currentBranch, gitChanges, inCi, lockfileOnlyVersion, matchesAny, packageJsonChange, readVersion, report, type Finding } from './harness';
 
 /** Sem contrato, ou sem a etiqueta de aprovação no PR: aviso até esta data, erro a partir dela (o hábito pegar). */
 export const EXIGIR_CONTRATO_A_PARTIR = '2026-12-02';
 export const ETIQUETA_APROVADO = 'contrato-aprovado';
 
-/** Sempre dentro do escopo: changelog e registro de decisões, que toda tarefa pode tocar. A versão no package.json, à parte. */
-export const SEMPRE = ['package-lock.json', 'CHANGELOG.md', 'docs/registro.md', 'docs/decisoes.md'];
+/**
+ * Sempre dentro do escopo: changelog e registro de decisões, que toda tarefa pode tocar. O package.json e o
+ * package-lock.json, à parte: passam sozinhos só se mudar apenas a versão do projeto (o resto muda o que se instala).
+ */
+export const SEMPRE = ['CHANGELOG.md', 'docs/registro.md', 'docs/decisoes.md'];
 
 export interface Contrato {
   objetivo?: string;
@@ -61,19 +64,20 @@ export interface EscopoInput {
   env?: NodeJS.ProcessEnv;
   /** O package.json mudou só na versão? (o resto do arquivo precisa estar no escopo) */
   packageOnlyVersion?: boolean;
+  /** O package-lock.json mudou só na versão do projeto? */
+  lockOnlyVersion?: boolean;
   /** Etiquetas do PR (na CI do PR), ou null fora de PR. */
   labels?: string[] | null;
-  /** Na CI, falta de contexto vira erro (a partir da data, para o tema). */
-  ci?: boolean;
 }
 
-export function checkEscopo({ branch, files, contrato, hoje, env = {}, packageOnlyVersion = false, labels = null, ci = false }: EscopoInput): Finding[] {
+export function checkEscopo({ branch, files, contrato, hoje, env = {}, packageOnlyVersion = false, lockOnlyVersion = false, labels = null }: EscopoInput): Finding[] {
   const exigido = hoje >= EXIGIR_CONTRATO_A_PARTIR;
   const { tema, origem } = temaDaTarefa(branch, files, env);
   if (!tema)
     return [
       {
-        level: ci && exigido ? 'erro' : 'aviso',
+        // A partir da data, sem tema é erro em qualquer lugar (na CI e na máquina): use CHECK_TEMA se a branch não diz.
+        level: exigido ? 'erro' : 'aviso',
         rule: 'escopo',
         message: `Não achei o tema da tarefa na branch "${branch || '?'}" (${origem}): use feature/<tema>, CHECK_TEMA ou altere um único docs/tarefas/<tema>.md. Escopo não conferido.`,
       },
@@ -105,7 +109,8 @@ export function checkEscopo({ branch, files, contrato, hoje, env = {}, packageOn
 
   const fora = c.fora ?? [];
   const dentro = [...c.escopo, ...SEMPRE, path];
-  const livre = (f: string) => matchesAny(f, dentro) || (f === 'package.json' && packageOnlyVersion);
+  const livre = (f: string) =>
+    matchesAny(f, dentro) || (f === 'package.json' && packageOnlyVersion) || (f === 'package-lock.json' && lockOnlyVersion);
   const proibidos = files.filter((f) => matchesAny(f, fora) && f !== path);
   const soltos = files.filter((f) => !proibidos.includes(f) && !livre(f));
   if (proibidos.length)
@@ -114,7 +119,7 @@ export function checkEscopo({ branch, files, contrato, hoje, env = {}, packageOn
     out.push({
       level: 'erro',
       rule: 'fora-do-escopo',
-      message: `Arquivos fora do "escopo" de ${path}${soltos.includes('package.json') ? ' (o package.json só passa sozinho se mudar apenas a versão)' : ''}. Pare e peça ao usuário para ampliar o contrato, ou desfaça:`,
+      message: `Arquivos fora do "escopo" de ${path}${soltos.some((f) => f.startsWith('package')) ? ' (package.json e package-lock.json só passam sozinhos se mudar apenas a versão)' : ''}. Pare e peça ao usuário para ampliar o contrato, ou desfaça:`,
       files: soltos,
     });
   return out;
@@ -133,9 +138,11 @@ function main(): void {
   const packageOnlyVersion =
     changes.files.includes('package.json') && !!changes.base && packageJsonChange(readVersion('package.json', { base: changes.base }), readVersion('package.json', 'tree')).onlyVersion;
   // Só no PR (CHECK_PR=true, posto pela CI) as etiquetas contam; fora dele não há onde o usuário aprovar.
+  const lockOnlyVersion =
+    changes.files.includes('package-lock.json') && !!changes.base && lockfileOnlyVersion(readVersion('package-lock.json', { base: changes.base }), readVersion('package-lock.json', 'tree'));
   const labels = process.env.CHECK_PR === 'true' ? (process.env.CHECK_ETIQUETAS ?? '').split(',').map((l) => l.trim()).filter(Boolean) : null;
   const hoje = new Date().toISOString().slice(0, 10);
-  findings.push(...checkEscopo({ branch, files: changes.files, contrato, hoje, env: process.env, packageOnlyVersion, labels, ci }));
+  findings.push(...checkEscopo({ branch, files: changes.files, contrato, hoje, env: process.env, packageOnlyVersion, lockOnlyVersion, labels }));
   process.exitCode = report(`check:escopo (${branch || '?'}${tema ? `, tema ${tema}` : ''})`, findings);
 }
 

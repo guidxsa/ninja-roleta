@@ -34,4 +34,10 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   branches=$((branches + 1))
 done
 [ "$branches" -eq 0 ] && exit 0
+# O check roda na árvore de trabalho: ela precisa ser igual ao commit que sobe (sem mudança nem arquivo novo fora do
+# commit, que poderiam esconder um erro do que está sendo enviado).
+if [ -n "$(git status --porcelain)" ]; then
+  echo "pre-push: há mudanças fora do commit (git status). Commite ou guarde (git stash -u) antes do push, para a verificação rodar no que sobe." >&2
+  exit 1
+fi
 exec npm run --silent check

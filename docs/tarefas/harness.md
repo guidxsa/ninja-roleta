@@ -23,7 +23,7 @@ Regra, número ou tela do jogo (`src/core`, `src/data`, `prototype`). Unificar `
 - Publicar passa a ser só pelo merge do PR (a skill `lancar-versao` deixou de dar push no `master`).
 
 ## Revisão do Codex (18/11/2026)
-O Codex revisou a branch na nuvem e apontou dez achados; os dez foram corrigidos (detalhes em [docs/processo/plano-harness.md](../processo/plano-harness.md#andamento)). O `package.json` entrou no escopo porque esta tarefa muda os scripts dele.
+O Codex revisou a branch na nuvem duas vezes: dez achados na primeira, seis parciais e três novos na segunda, todos tratados (detalhes em [docs/processo/plano-harness.md](../processo/plano-harness.md#andamento)). O `package.json` entrou no escopo porque esta tarefa muda os scripts dele.
 
 ## Achados
 - `PRODUCT.md` e `docs/jornada/README.md` ainda mandam ler o "`CLAUDE.md`" para regras que agora estão no `AGENTS.md` (fora do escopo; `docs/visual.md` e a skill `nova-mecanica` foram corrigidos aqui). Os graders das evals da `nova-mecanica` também citam o `CLAUDE.md`.

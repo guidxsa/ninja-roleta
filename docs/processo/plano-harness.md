@@ -210,6 +210,22 @@ O Codex revisou a branch na nuvem com o prompt de `docs/processo/codex.md`. Resp
 | 9 | O padrão da branch de processo aceitava `feature/harnessidental` | `^feature/harness(-[a-z0-9-]+)?$` |
 | 10 | O `CLAUDE.md` prometia mais do que o hook `Stop` faz | Descrição fiel (bloqueia uma vez por resposta); o hook observa também os arquivos do processo |
 
+### Segunda revisão do Codex (18/11/2026)
+
+Dos dez achados, o Codex confirmou 4 como corrigidos e 6 como parciais, e trouxe 3 novos. Corrigido no commit seguinte:
+
+| Achado | Correção |
+|---|---|
+| 1 parcial: a etiqueta vale para o PR inteiro, mesmo com o contrato ampliado depois dela | **Não dá para resolver por código** (a CI não sabe quando a etiqueta foi posta). Virou regra do `AGENTS.md`: contrato mudou depois da etiqueta, o agente avisa e o usuário tira e põe de novo depois de conferir |
+| 2 parcial: o check do `pre-push` rodava na árvore com mudanças fora do commit | O `pre-push` exige árvore limpa |
+| 3 parcial: sem tema, fora da CI, era só aviso mesmo depois do prazo | A partir de 02/12/2026, sem tema é erro em qualquer lugar (`CHECK_TEMA=<tema>` resolve) |
+| 6 parcial: a Roleta passava com uma origem só | Os grupos esperados vêm dos dados (8 origens) e da lista de modos da Jornada; faltando ou sobrando é erro |
+| 8 parcial: `/window/` em regex dava falso positivo e `const rng = Math` passava | O leitor reconhece regex literal; `Math` usado como valor (sem `.`) é violação. Continua heurístico: uma análise com resolução de referências exigiria a API do compilador, que o TypeScript 7 não expõe |
+| 10 parcial: edição só no `ci.yml` não disparava o `Stop`, e a mensagem citava o `pre-commit` para tipos | O hook observa também `.github/`; mensagem corrigida |
+| Novo 1: etiqueta posta durante o `meta` podia deixá-lo "pulado", que o GitHub aceita | O `meta` roda em todo evento, inclusive de etiqueta |
+| Novo 2: o `package-lock.json` passava inteiro sem estar no escopo | Só passa sozinho se mudar apenas a versão do projeto |
+| Novo 3: caminho com acento chegava entre aspas do git | Listas do git com `-z` (separadas por NUL) |
+
 Junto: retratos descritos pelo processo real (imagens-modelo do usuário e revisão humana; `referencias` obrigatório, `prompt` opcional, campo `ajustes`) e o guia do Codex na nuvem.
 
 **Pendências do usuário**:

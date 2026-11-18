@@ -71,10 +71,16 @@ describe('escopo', () => {
     expect(rules(run([], "---\nescopo: ['a']\n---\n"))).toEqual(['erro:contrato']);
   });
 
-  it('sem tema: aviso local; na CI, erro a partir da data (revisão do Codex)', () => {
+  it('sem tema: aviso antes da data, erro a partir dela, na CI e na máquina (revisão do Codex)', () => {
     expect(rules(run(['qualquer.ts'], null, { branch: 'work' }))).toEqual(['aviso:escopo']);
-    expect(rules(run(['qualquer.ts'], null, { branch: 'work', ci: true }))).toEqual(['aviso:escopo']);
-    expect(rules(run(['qualquer.ts'], null, { branch: 'work', ci: true, hoje: DEPOIS }))).toEqual(['erro:escopo']);
+    expect(rules(run(['qualquer.ts'], null, { branch: 'work', hoje: DEPOIS }))).toEqual(['erro:escopo']);
+    expect(run(['docs/a.md'], contrato(['docs/**']), { branch: 'work', hoje: DEPOIS, env: { CHECK_TEMA: 'veneno' } })).toEqual([]);
+  });
+
+  it('package-lock.json só passa fora do escopo se mudar apenas a versão do projeto (2ª revisão do Codex)', () => {
+    const docs = contrato(['docs/**']);
+    expect(run(['docs/a.md', 'package-lock.json'], docs, { lockOnlyVersion: true })).toEqual([]);
+    expect(run(['docs/a.md', 'package-lock.json'], docs)[0]!.files).toEqual(['package-lock.json']);
   });
 
   it('branch com nome próprio usa o contrato alterado no diff', () => {

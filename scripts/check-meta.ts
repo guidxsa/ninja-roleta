@@ -7,14 +7,20 @@ import { execFile } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { report, type Finding } from './harness';
+import { roletaData } from '../src/data/roleta/index';
 
 export const META: Record<string, number> = { easy: 0.9, normal: 0.65, hard: 0.4, hardcore: 0.15 };
 /** Folga de cada célula (origem ou classe × dificuldade, amostra pequena) e da média de cada modo por dificuldade. */
 export const FOLGA_CELULA = 0.2;
 export const FOLGA_MEDIA = 0.1;
+/** Grupos que cada simulação tem de devolver: as origens dos dados do Roleta e os modos da Jornada (os de sim-jornada.ts). */
+export const GRUPOS = {
+  Roleta: roletaData.base.lineages.map((l) => l.id),
+  Jornada: ['canon', 'generic:common', 'generic:prodigy', 'generic:uchiha', 'generic:hyuuga'],
+};
 export const SIMS = [
-  { modo: 'Roleta', args: ['scripts/sim-origens.ts', '--runs', '60', '--seed', '2', '--ciclos', '1', '--json'] },
-  { modo: 'Jornada', args: ['scripts/sim-jornada.ts', '40', '2', '--json'] },
+  { modo: 'Roleta' as const, args: ['scripts/sim-origens.ts', '--runs', '60', '--seed', '2', '--ciclos', '1', '--json'] },
+  { modo: 'Jornada' as const, args: ['scripts/sim-jornada.ts', '40', '2', '--json'] },
 ];
 
 export interface MetaRow {
@@ -35,7 +41,7 @@ const pct = (x: number) => `${Math.round(x * 100)}%`;
  * A simulação cobriu tudo? Ao menos um grupo, uma célula por grupo e dificuldade da meta, sem repetição, e taxas
  * finitas entre 0 e 1. Sem isso, a comparação com a meta ficaria verde sem ter medido nada.
  */
-export function validateRows(modo: string, rows: unknown): Finding[] {
+export function validateRows(modo: string, rows: unknown, esperados?: readonly string[]): Finding[] {
   const err = (message: string, files?: string[]): Finding[] => [{ level: 'erro', rule: 'meta-cobertura', message: `${modo}: ${message}`, files }];
   if (!Array.isArray(rows) || rows.length === 0) return err('a simulação não devolveu nenhuma célula.');
   const bad = rows.filter(
@@ -48,14 +54,18 @@ export function validateRows(modo: string, rows: unknown): Finding[] {
   const keys = cells.map((r) => `${r.grupo} · ${r.dif}`);
   const dup = keys.filter((k, i) => keys.indexOf(k) !== i);
   if (dup.length) return err('células repetidas:', [...new Set(dup)]);
-  const groups = [...new Set(cells.map((r) => r.grupo))];
+  const groups = esperados ?? [...new Set(cells.map((r) => r.grupo))];
+  if (esperados) {
+    const extra = [...new Set(cells.map((r) => r.grupo))].filter((g) => !esperados.includes(g));
+    if (extra.length) return err('grupos que a simulação não deveria ter:', extra);
+  }
   const missing = groups.flatMap((g) => Object.keys(META).filter((d) => !keys.includes(`${g} · ${d}`)).map((d) => `${g} · ${d}`));
   if (missing.length) return err('células faltando (cada grupo precisa das quatro dificuldades):', missing);
   return [];
 }
 
-export function checkMeta(modo: string, rows: MetaRow[]): Finding[] {
-  const invalid = validateRows(modo, rows);
+export function checkMeta(modo: string, rows: MetaRow[], esperados?: readonly string[]): Finding[] {
+  const invalid = validateRows(modo, rows, esperados);
   if (invalid.length) return invalid;
   const out: Finding[] = [];
   const fora = rows.filter((r) => META[r.dif] !== undefined && Math.abs(r.vitoria - META[r.dif]!) > FOLGA_CELULA);
@@ -84,7 +94,7 @@ async function main(): Promise<void> {
       return { modo, rows: parseMetaJson(stdout) };
     }),
   );
-  const findings = results.flatMap(({ modo, rows }) => checkMeta(modo, rows));
+  const findings = results.flatMap(({ modo, rows }) => checkMeta(modo, rows, GRUPOS[modo]));
   for (const { modo, rows } of results) {
     const byDif = Object.keys(META).map((d) => {
       const c = rows.filter((r) => r.dif === d);

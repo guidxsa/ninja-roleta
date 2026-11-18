@@ -8,5 +8,5 @@ As regras do projeto ficam no `AGENTS.md`, a fonte única para o Claude Code e o
 
 - As skills de `.claude/skills/` carregam sozinhas; a tabela "Skills e fluxos" do `AGENTS.md` diz quando cada uma vale.
 - `.claude/settings.json` (versionado) nega push no `master`, push forçado, `--no-verify` e troca do `core.hooksPath`.
-- Hook `Stop` (`.claude/hooks/stop-check.sh`): com código ou arquivo do processo alterado e não commitado, roda typecheck e `check:regras` e, se falhar, impede o fim da vez **uma vez por resposta** (na segunda tentativa deixa encerrar e avisa, para não entrar em laço; o pre-commit, o pre-push e a CI continuam barrando). Erro que não dá para corrigir: explicar ao usuário, nunca contornar.
+- Hook `Stop` (`.claude/hooks/stop-check.sh`): com código ou arquivo do processo alterado e não commitado, roda typecheck e `check:regras` e, se falhar, impede o fim da vez **uma vez por resposta** (na segunda tentativa deixa encerrar e avisa, para não entrar em laço; o pre-commit continua barrando as regras do processo, e o pre-push e a CI, os tipos e os testes). Erro que não dá para corrigir: explicar ao usuário, nunca contornar.
 - Configurações pessoais ficam em `.claude/settings.local.json` (fora do git) e não afrouxam as regras acima.

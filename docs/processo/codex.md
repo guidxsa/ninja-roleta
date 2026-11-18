@@ -51,7 +51,7 @@ O Codex não tem um hook equivalente ao `Stop` do Claude Code (que impede encerr
 | Momento | O que roda | Onde |
 |---|---|---|
 | `git commit` | `check:regras` sobre o que vai no commit | `.githooks/pre-commit` |
-| `git push` deste clone | `npm run check` na branch que sobe; recusa push no `master`, push forçado e push de branch que não é a atual | `.githooks/pre-push` |
+| `git push` deste clone | `npm run check` na branch que sobe, com a árvore limpa; recusa push no `master`, push forçado, push de branch que não é a atual e push com mudanças fora do commit | `.githooks/pre-push` |
 | PR e push em `feature/**` | `npm run check` (no PR, `check:regras` estrito e etiqueta `contrato-aprovado`) e `check:meta` | `.github/workflows/ci.yml` |
 | Merge no `master` | só por PR com a CI verde | proteção de branch no GitHub, **configurada pelo usuário** (enquanto não estiver ligada, nada impede um push direto feito fora dos hooks) |
 

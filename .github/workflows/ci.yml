@@ -38,8 +38,8 @@ jobs:
   # Guarda da meta de vitória (scripts/check-meta.ts): simulação curta com seed fixa. Quebrou: proponha ao usuário com
   # a tabela de antes e depois, nunca ajuste número para passar (AGENTS.md).
   meta:
-    # Mudança só de etiqueta não muda o código: não roda a simulação de novo.
-    if: github.event.action != 'labeled' && github.event.action != 'unlabeled'
+    # Roda em todo evento, inclusive de etiqueta: um check pulado conta como aprovado no GitHub, e uma execução de
+    # etiqueta que cancela a anterior (concurrency) não pode deixar a meta sem medir.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

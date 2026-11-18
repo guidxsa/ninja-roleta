@@ -26,7 +26,8 @@ const GLOBALS = /(?<![\w$.])(document|window|localStorage|sessionStorage|globalT
 /**
  * Apaga comentários e o conteúdo de strings e templates (vira espaço, mantendo as quebras de linha), para a busca
  * enxergar só código. Devolve também onde começa cada string, para conferir `Math['random']`.
- * Leitor léxico simples (o TypeScript 7 do projeto não expõe a API do compilador): não trata regex literal.
+ * Leitor léxico simples (o TypeScript 7 do projeto não expõe a API do compilador). Regex literal é reconhecida pelo
+ * que vem antes da barra (operador, abertura ou palavra como return): o conteúdo também é apagado.
  */
 export function codeOnly(src: string): { code: string; strings: Map<number, string> } {
   const out = src.split('');
@@ -35,6 +36,16 @@ export function codeOnly(src: string): { code: string; strings: Map<number, stri
     for (let k = from; k < to; k++) if (out[k] !== '\n') out[k] = ' ';
   };
   const templateDepth: number[] = [];
+  /** A barra em `i` abre uma regex? Sim se o último código antes dela não é um valor (nome, número, fecha-parêntese). */
+  const startsRegex = (i: number): boolean => {
+    let k = i - 1;
+    while (k >= 0 && /\s/.test(out[k]!)) k--;
+    if (k < 0) return true;
+    const prev = out[k]!;
+    if (/[(,=:[!&|?{};+\-*%<>~^]/.test(prev)) return true;
+    const word = /([A-Za-z_$][\w$]*)$/.exec(out.slice(Math.max(0, k - 12), k + 1).join(''))?.[1];
+    return !!word && ['return', 'typeof', 'case', 'in', 'of', 'delete', 'void', 'throw', 'new', 'do', 'else', 'yield', 'await'].includes(word);
+  };
   let i = 0;
   while (i < src.length) {
     const c = src[i]!;
@@ -49,6 +60,17 @@ export function codeOnly(src: string): { code: string; strings: Map<number, stri
       const end = e < 0 ? src.length : e + 2;
       blank(i, end);
       i = end;
+    } else if (c === '/' && startsRegex(i)) {
+      let j = i + 1;
+      let inClass = false;
+      while (j < src.length && src[j] !== '\n' && (inClass || src[j] !== '/')) {
+        if (src[j] === '\\') j++;
+        else if (src[j] === '[') inClass = true;
+        else if (src[j] === ']') inClass = false;
+        j++;
+      }
+      blank(i + 1, j);
+      i = j + 1;
     } else if (c === "'" || c === '"' || c === '`' || (c === '}' && templateDepth.length && templateDepth[templateDepth.length - 1] === 0)) {
       const isTemplate = c === '`' || c === '}';
       if (c === '}') templateDepth.pop();
@@ -83,9 +105,9 @@ export function codeOnly(src: string): { code: string; strings: Map<number, stri
 }
 
 /**
- * Violações de pureza num arquivo do core (strings e comentários não contam): Math.random em qualquer forma
- * (`.random`, `?.random`, `['random']`, `const { random } = Math`) e leitura de document, window, localStorage,
- * sessionStorage ou globalThis (inclusive com `?.`).
+ * Violações de pureza num arquivo do core (strings, regex e comentários não contam): Math.random em qualquer forma
+ * (`.random`, `?.random`, `['random']`, `const { random } = Math`), `Math` passado como valor (`const m = Math`, que
+ * esconderia o random) e leitura de document, window, localStorage, sessionStorage ou globalThis (inclusive com `?.`).
  */
 export function coreViolations(file: string, src: string): string[] {
   const { code, strings } = codeOnly(src);
@@ -97,7 +119,13 @@ export function coreViolations(file: string, src: string): string[] {
     const q = m.index! + m[0].length;
     if (strings.get(q) === 'random') at(m.index!, 'Math["random"] (use o rng() injetado)');
   }
-  for (const m of code.matchAll(/\{[^{}]*\brandom\b[^{}]*\}\s*=\s*Math\b/g)) at(m.index!, 'random tirado de Math (use o rng() injetado)');
+  const destructured = new Set<number>();
+  for (const m of code.matchAll(/\{[^{}]*\brandom\b[^{}]*\}\s*=\s*Math\b/g)) {
+    at(m.index!, 'random tirado de Math (use o rng() injetado)');
+    destructured.add(m.index! + m[0].length - 4);
+  }
+  for (const m of code.matchAll(/(?<![\w$.])Math\b(?!\s*(?:\?\.|\.|\[))/g))
+    if (!destructured.has(m.index!)) at(m.index!, 'Math usado como valor (esconde o random; use o rng() injetado)');
   for (const m of code.matchAll(GLOBALS)) at(m.index!, `${m[1]} (o core não acessa DOM nem armazenamento)`);
   return found;
 }

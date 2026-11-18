@@ -20,7 +20,8 @@ const tryGit = (...args: string[]): string | null => {
   }
 };
 
-const lines = (s: string | null): string[] => (s ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+/** Saída do git com -z: caminhos separados por NUL, sem aspas nem escapes (acentos e espaços chegam como são). */
+const paths = (s: string | null): string[] => (s ?? '').split('\0').filter(Boolean);
 
 /** Na CI (GitHub Actions) toda falta de contexto vira erro: a verificação não pode ficar verde sem ter conferido. */
 export const inCi = (env: NodeJS.ProcessEnv = process.env): boolean => env.CI === 'true' || env.GITHUB_ACTIONS === 'true';
@@ -45,18 +46,18 @@ export interface Changes {
  */
 export function gitChanges(env: NodeJS.ProcessEnv = process.env, staged = false): Changes {
   if (staged) {
-    const out = tryGit('diff', '--cached', '--name-only', '--diff-filter=ACMRD');
-    return out === null ? { base: null, files: [], problem: 'git diff --cached falhou' } : { base: null, files: lines(out).sort() };
+    const out = tryGit('diff', '--cached', '--name-only', '-z', '--diff-filter=ACMRD');
+    return out === null ? { base: null, files: [], problem: 'git diff --cached falhou' } : { base: null, files: paths(out).sort() };
   }
   const candidates = [env.CHECK_BASE, 'origin/master', 'master'].filter((b): b is string => !!b);
   const ref = candidates.find((b) => tryGit('rev-parse', '--verify', '--quiet', `${b}^{commit}`) !== null);
   if (!ref) return { base: null, files: [], problem: 'sem origin/master nem master para comparar (faça git fetch origin master)' };
   const base = tryGit('merge-base', 'HEAD', ref)?.trim();
   if (!base) return { base: null, files: [], problem: `sem ponto comum entre HEAD e ${ref}` };
-  const changed = tryGit('diff', '--name-only', base);
-  const untracked = tryGit('ls-files', '--others', '--exclude-standard');
+  const changed = tryGit('diff', '--name-only', '-z', base);
+  const untracked = tryGit('ls-files', '-z', '--others', '--exclude-standard');
   if (changed === null || untracked === null) return { base, files: [], problem: 'git diff falhou' };
-  return { base, files: [...new Set([...lines(changed), ...lines(untracked)])].sort() };
+  return { base, files: [...new Set([...paths(changed), ...paths(untracked)])].sort() };
 }
 
 /** Conteúdo de um arquivo: na base (`git show <base>:arq`), no índice (`git show :arq`) ou na árvore de trabalho. */
@@ -66,7 +67,7 @@ export function readVersion(path: string, where: { base: string } | 'index' | 't
 }
 
 /** Arquivos versionados sob uma pasta, como estão no índice (para conferir o que vai no commit). */
-export const indexFiles = (dir: string): string[] => lines(tryGit('ls-files', '--cached', '--', dir));
+export const indexFiles = (dir: string): string[] => paths(tryGit('ls-files', '-z', '--cached', '--', dir));
 
 /** O que mudou no package.json entre duas versões: só a versão do jogo, ou os scripts (que definem as verificações). */
 export function packageJsonChange(before: string | null, after: string | null): { onlyVersion: boolean; scriptsChanged: boolean } {
@@ -79,6 +80,24 @@ export function packageJsonChange(before: string | null, after: string | null): 
     return { onlyVersion: strip(a) === strip(b), scriptsChanged };
   } catch {
     return { onlyVersion: false, scriptsChanged: true };
+  }
+}
+
+/**
+ * O package-lock.json mudou só na versão do projeto (a raiz e `packages[""]`, que o lançamento de versão atualiza)?
+ * Qualquer outra mudança muda o que o `npm ci` instala e precisa estar no escopo do contrato.
+ */
+export function lockfileOnlyVersion(before: string | null, after: string | null): boolean {
+  if (before === null || after === null) return false;
+  try {
+    const strip = (txt: string) => {
+      const o = JSON.parse(txt) as { version?: unknown; packages?: Record<string, { version?: unknown }> };
+      const root = o.packages?.[''];
+      return JSON.stringify({ ...o, version: null, packages: o.packages ? { ...o.packages, '': root ? { ...root, version: null } : root } : o.packages });
+    };
+    return strip(before) === strip(after);
+  } catch {
+    return false;
   }
 }
 

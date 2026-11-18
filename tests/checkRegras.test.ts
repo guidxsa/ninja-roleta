@@ -1,7 +1,7 @@
 // Verificações do processo (AGENTS.md, "Como trabalhar"; scripts/check-regras.ts).
 import { describe, expect, it } from 'vitest';
 import { BALANCE_FILE, checkRegras, codeOnly, coreViolations, HARNESS_BRANCH } from '../scripts/check-regras';
-import { globToRegExp, matchesAny, packageJsonChange } from '../scripts/harness';
+import { globToRegExp, lockfileOnlyVersion, matchesAny, packageJsonChange } from '../scripts/harness';
 
 const run = (files: string[], over: Partial<Parameters<typeof checkRegras>[0]> = {}) =>
   checkRegras({ files, branch: 'feature/tema', strict: false, core: [], ...over });
@@ -46,6 +46,15 @@ describe('pureza do core', () => {
     expect(v('const t = `texto com document.x e ${1}`;')).toBe(0);
     expect(v('const o = { document: 1 }; o.document; o.window;')).toBe(0);
     expect(v('export const f = (rng: () => number) => Math.floor(rng() * 3);')).toBe(0);
+  });
+
+  it('regex literal não conta e Math como valor conta (2ª revisão do Codex)', () => {
+    expect(v('const re = /window/;')).toBe(0);
+    expect(v('if (/document\\.x/.test(s)) return /localStorage[/]x/g;')).toBe(0);
+    expect(v('const half = a / b; const w = c / window.x;')).toBe(1);
+    expect(v('const rng = Math; rng.random();')).toBe(1);
+    expect(v('use(Math);')).toBe(1);
+    expect(v('const { floor } = Math;')).toBe(1);
   });
 
   it('o leitor léxico mantém as linhas', () => {
@@ -106,5 +115,16 @@ describe('package.json', () => {
     expect(packageJsonChange(pkg('1.0.0', { a: 'x' }), pkg('1.0.1', { a: 'x' }))).toEqual({ onlyVersion: true, scriptsChanged: false });
     expect(packageJsonChange(pkg('1.0.0', { a: 'x' }), pkg('1.0.0', { a: 'y' }))).toEqual({ onlyVersion: false, scriptsChanged: true });
     expect(packageJsonChange(pkg('1.0.0', {}), pkg('1.0.0', {}, { dependencies: { z: '1' } }))).toEqual({ onlyVersion: false, scriptsChanged: false });
+  });
+});
+
+describe('package-lock.json', () => {
+  const lock = (version: string, deps: Record<string, string>) =>
+    JSON.stringify({ name: 'x', version, lockfileVersion: 3, packages: { '': { name: 'x', version }, ...Object.fromEntries(Object.entries(deps).map(([k, v]) => [`node_modules/${k}`, { version: v }])) } });
+
+  it('só a versão do projeto passa; dependência transitiva não (2ª revisão do Codex)', () => {
+    expect(lockfileOnlyVersion(lock('1.0.0', { a: '1.0.0' }), lock('1.0.1', { a: '1.0.0' }))).toBe(true);
+    expect(lockfileOnlyVersion(lock('1.0.0', { a: '1.0.0' }), lock('1.0.0', { a: '1.0.1' }))).toBe(false);
+    expect(lockfileOnlyVersion(null, lock('1.0.0', {}))).toBe(false);
   });
 });
