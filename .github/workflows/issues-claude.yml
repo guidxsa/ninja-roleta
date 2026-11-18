@@ -136,7 +136,7 @@ jobs:
         if: steps.token.outputs.ok == 'true'
         env:
           ETAPA: issue
-        run: npx tsx scripts/metricas-execucao.ts perfil || echo "::warning::Perfil não escolhido: modelo padrão."
+        run: npx tsx scripts/metricas-execucao.ts perfil || echo "::warning::Perfil não escolhido, modelo padrão."
       # Push: só "git push origin HEAD" (a branch feature/issue-<n> em checkout; sem --force, sem outra branch).
       # Sem gh pr merge: o merge é do usuário. Commit sem atribuição, conferido no passo seguinte.
       - uses: anthropics/claude-code-action@v1
