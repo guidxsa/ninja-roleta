@@ -107,7 +107,8 @@ O projeto é feito pelo Claude Code e pelo Codex, com as mesmas regras. Plano de
 ### Escopo
 
 - Toda tarefa começa por um **contrato** com objetivo, o que fica de fora, caminhos que podem ser tocados e critério de pronto (modelo em [docs/processo/tarefa-modelo.md](docs/processo/tarefa-modelo.md); o arquivo fica em `docs/tarefas/<tema>.md`, com `<tema>` igual ao da branch `feature/<tema>`). O agente escreve o contrato a partir do pedido; o usuário aprova antes do código.
-- Mexer só no que o contrato permite. Precisou sair do escopo: parar e pedir para atualizar o contrato; não ampliar sozinho. O `npm run check:escopo` (dentro do `npm run check`) compara o diff com o `escopo` e o `fora` do contrato; versão, `CHANGELOG.md`, `docs/registro.md` e `docs/decisoes.md` sempre podem mudar. Sem contrato numa `feature/*` é aviso, e vira erro a partir de 02/12/2026.
+- Mexer só no que o contrato permite. Precisou sair do escopo: parar e pedir para atualizar o contrato; não ampliar sozinho. O `npm run check:escopo` (dentro do `npm run check`) compara o diff com o `escopo` e o `fora` do contrato; `CHANGELOG.md`, `docs/registro.md`, `docs/decisoes.md` e a linha `version` do `package.json` sempre podem mudar (o resto do `package.json` precisa estar no escopo). O tema vem da branch `feature/<tema>` ou, numa branch com outro nome (Codex na nuvem), do único `docs/tarefas/<tema>.md` alterado. Sem contrato é aviso, e vira erro a partir de 02/12/2026.
+- **Aprovação do contrato**: no PR, o usuário põe a etiqueta `contrato-aprovado`; a CI confere (aviso até 02/12/2026, erro depois). **Agente nunca põe, tira nem pede para pular essa etiqueta.**
 - Achou bug, melhoria ou doc desatualizado fora do escopo: anotar em **Achados** no resumo final e no PR, sem corrigir.
 - Nada de refatoração, renomeação ou formatação "de passagem".
 
@@ -115,7 +116,7 @@ O projeto é feito pelo Claude Code e pelo Codex, com as mesmas regras. Plano de
 
 Uma tarefa só está pronta quando:
 
-1. `npm run check` passa (typecheck, testes, `check:regras`, `check:escopo` e build), com a saída mostrada no resumo. Os git hooks rodam o mesmo: `pre-commit` (typecheck e `check:regras`) e `pre-push` (`npm run check`, e recusa push no `master` e push forçado). Hook nunca é pulado (`--no-verify` é proibido); se ele falha, corrige-se a causa.
+1. `npm run check` passa (typecheck, testes, `check:regras`, `check:escopo` e build), com a saída mostrada no resumo. Os git hooks: `pre-commit` (`check:regras` sobre o que vai no commit) e `pre-push` (`npm run check` na branch que sobe; recusa push no `master`, push forçado e push de uma branch que não é a atual). Eles só valem para push feito do próprio clone: a garantia final é a CI e a proteção do `master` no GitHub. Hook nunca é pulado (`--no-verify` é proibido); se ele falha, corrige-se a causa.
 2. Regra ou número mudou: o doc correspondente mudou no mesmo commit.
 3. O jogador nota a mudança: linha no `CHANGELOG.md`.
 4. Houve decisão sem o usuário: registrada em `docs/registro.md` e, se ele precisa revisar, em `docs/decisoes.md`.
@@ -144,4 +145,4 @@ Skill nova entra nesta tabela no mesmo commit.
 - Uma branch tem **um agente por vez**: Claude e Codex nunca trabalham juntos na mesma branch.
 - **Quem implementa não revisa**: o PR do Codex é revisado pelo Claude (`/code-review`) e vice-versa. O merge é do usuário.
 - Cada sessão começa lendo este arquivo e o contrato da tarefa. Configuração de cada agente: `CLAUDE.md` (Claude Code) e [docs/processo/codex.md](docs/processo/codex.md) (Codex).
-- Este arquivo, o `CLAUDE.md`, os hooks e as configurações dos agentes só mudam numa tarefa de processo (`feature/harness-*`) pedida pelo usuário: o agente não afrouxa as próprias regras.
+- Este arquivo, o `CLAUDE.md`, os hooks, os scripts de verificação, os `scripts` do `package.json` e as configurações dos agentes só mudam numa tarefa de processo pedida pelo usuário, na branch `feature/harness` ou `feature/harness-<tema>` (o `check:regras` confere o nome): o agente não afrouxa as próprias regras.

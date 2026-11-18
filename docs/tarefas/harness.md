@@ -1,6 +1,6 @@
 ---
 objetivo: Harness comum para Claude Code e Codex - regras num AGENTS.md só e verificações automáticas iguais para os dois.
-escopo: ["AGENTS.md", "CLAUDE.md", ".github/**", ".githooks/**", ".claude/**", "docs/processo/**", "docs/tarefas/**", "scripts/harness.ts", "scripts/check-*.ts", "tests/check*.test.ts", "tests/meta.test.ts", "src/sim/**", "scripts/sim-*.ts", "public/img/retratos.json", "public/img/LEIAME.md", "tests/retratosImagem.test.ts", "docs/visual.md", "scripts/revisar-visual.ts"]
+escopo: ["AGENTS.md", "CLAUDE.md", "package.json", ".github/**", ".githooks/**", ".claude/**", "docs/processo/**", "docs/tarefas/**", "scripts/harness.ts", "scripts/check-*.ts", "tests/check*.test.ts", "tests/meta.test.ts", "src/sim/**", "scripts/sim-*.ts", "public/img/retratos.json", "public/img/LEIAME.md", "tests/retratosImagem.test.ts", "docs/visual.md", "scripts/revisar-visual.ts"]
 fora: ["src/core/**", "src/data/**", "prototype/**"]
 pronto: ["npm run check verde", "verificação de cada fase do plano mostrada no resumo"]
 agente: claude
@@ -21,6 +21,9 @@ Regra, número ou tela do jogo (`src/core`, `src/data`, `prototype`). Unificar `
 ## Decisões para o usuário
 - Todas as fases numa branch só (`feature/harness`), um commit por fase, em vez de uma branch por fase.
 - Publicar passa a ser só pelo merge do PR (a skill `lancar-versao` deixou de dar push no `master`).
+
+## Revisão do Codex (18/11/2026)
+O Codex revisou a branch na nuvem e apontou dez achados; os dez foram corrigidos (detalhes em [docs/processo/plano-harness.md](../processo/plano-harness.md#andamento)). O `package.json` entrou no escopo porque esta tarefa muda os scripts dele.
 
 ## Achados
 - `PRODUCT.md` e `docs/jornada/README.md` ainda mandam ler o "`CLAUDE.md`" para regras que agora estão no `AGENTS.md` (fora do escopo; `docs/visual.md` e a skill `nova-mecanica` foram corrigidos aqui). Os graders das evals da `nova-mecanica` também citam o `CLAUDE.md`.

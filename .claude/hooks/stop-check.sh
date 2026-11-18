@@ -1,9 +1,10 @@
 #!/bin/sh
-# Hook Stop do Claude Code (.claude/settings.json): o Claude não encerra a vez com tipos ou regras do processo
-# quebrados. Só roda se há mudança não commitada no código; o teste completo fica no pre-push e na CI.
+# Hook Stop do Claude Code (.claude/settings.json): bloqueia o fim da vez, uma vez por resposta, se os tipos ou as regras
+# do processo estão quebrados. Só roda se há mudança não commitada no código ou no processo; o teste completo fica no
+# pre-push e na CI, que continuam barrando se o Claude encerrar na segunda tentativa.
 input=$(cat)
 cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
-[ -z "$(git status --porcelain -- src prototype tests scripts 2>/dev/null)" ] && exit 0
+[ -z "$(git status --porcelain -- src prototype tests scripts AGENTS.md CLAUDE.md .githooks .claude package.json 2>/dev/null)" ] && exit 0
 if out=$( { npm run --silent typecheck && npm run --silent check:regras; } 2>&1 ); then
   exit 0
 fi

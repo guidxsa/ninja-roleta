@@ -193,5 +193,28 @@ Feito pelo Claude Code em 18/11/2026, na branch `feature/harness` (um commit por
 | 6 | feita | Os 94 retratos entraram no manifesto com `ferramenta`, `prompt` e `referencias` vazios (pendentes); só retrato novo é cobrado |
 | 7 | feita | `revisar-visual` usa `scripts/revisar-visual.ts` (fotos em `dist-lab/revisao/`) |
 
-**Pendências do usuário**: proteger o `master` no GitHub, preencher o prompt base da ficha de estilo e os prompts no `retratos.json`, configurar o Codex (`docs/processo/codex.md`) e testar os dois agentes com a mesma pergunta.
+### Revisão do Codex (18/11/2026)
+
+O Codex revisou a branch na nuvem com o prompt de `docs/processo/codex.md`. Respondeu igual ao Claude às perguntas sobre as regras (os dois leem o mesmo `AGENTS.md`), rodou `npm run check` e `check:meta` em verde e apontou dez achados, todos corrigidos:
+
+| # | Achado | Correção |
+|---|---|---|
+| 1 | O escopo aceitava o `package.json` inteiro e contrato ampliado no próprio diff | Só a linha `version` passa sem estar no escopo; `scripts` do `package.json` viram arquivo do processo; no PR, o contrato vale só com a etiqueta `contrato-aprovado`, que só o usuário põe |
+| 2 | O `pre-push` testava a árvore atual mesmo subindo outra branch | Recusa push de branch que não é a atual e quando não dá para conferir a ancestralidade; a proteção do `master` aparece nos docs como pendência do usuário |
+| 3 | Sem contexto do git, a verificação ficava verde | Na CI, sem base ou com erro no git, dá erro; o tema vem também do único contrato alterado no diff (branches com nome do Codex) |
+| 4 | A skill `nova-mecanica` mandava compensar o balanceamento sozinho | Passa pela skill `auditar-balanceamento` e espera o aval; a regra do registro pega o `balance.ts` de todos os modos |
+| 5 | O `pre-commit` olhava a árvore inteira | `check:regras --preparado`: só o que vai no commit; o typecheck foi para o pre-push e a CI |
+| 6 | O `check:meta` aceitava simulação vazia | Exige cobertura: cada grupo nas quatro dificuldades, sem repetição, taxas entre 0 e 1 |
+| 7 | A captura visual não achava o navegador e aceitava id errado | `--chromium=` / `PW_CHROMIUM`; id desconhecido para antes; "Cenário desconhecido" na tela vira erro |
+| 8 | A pureza do core dava falso positivo em string e deixava passar formas indiretas | Leitor léxico que apaga strings e comentários (o TypeScript 7 do projeto não expõe a API do compilador) e padrões para desestruturação, `?.` e `Math['random']` |
+| 9 | O padrão da branch de processo aceitava `feature/harnessidental` | `^feature/harness(-[a-z0-9-]+)?$` |
+| 10 | O `CLAUDE.md` prometia mais do que o hook `Stop` faz | Descrição fiel (bloqueia uma vez por resposta); o hook observa também os arquivos do processo |
+
+Junto: retratos descritos pelo processo real (imagens-modelo do usuário e revisão humana; `referencias` obrigatório, `prompt` opcional, campo `ajustes`) e o guia do Codex na nuvem.
+
+**Pendências do usuário**:
+- proteger o `master` no GitHub (exigir PR e os checks `check` e `meta`, sem push forçado);
+- criar a etiqueta `contrato-aprovado` e pô-la nos PRs cujo contrato aprovou;
+- pedir ao Codex uma segunda revisão;
+- preencher, quando quiser, as `referencias` dos retratos atuais.
 

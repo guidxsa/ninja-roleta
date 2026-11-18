@@ -236,7 +236,7 @@ Decidido com o usuário: **a arte oficial é liberada nos retratos de personagen
 
 ### Ficha de estilo dos retratos
 
-Os retratos ilustrados da v0.95.1 foram gerados por IA a partir de referências escolhidas pelo usuário. Esta ficha existe para que um retrato novo, ou refeito, saia no mesmo estilo dos outros, seja qual for a ferramenta ou o agente. O passo a passo está na skill [`novo-retrato`](../.claude/skills/novo-retrato/SKILL.md); o registro de cada arquivo, em [`public/img/retratos.json`](../public/img/retratos.json).
+Os retratos ilustrados da v0.95.1 foram gerados por IA a partir de imagens-modelo escolhidas pelo usuário. Esta ficha existe para que um retrato novo, ou refeito, saia no mesmo estilo dos outros, seja qual for a ferramenta ou o agente. O passo a passo está na skill [`novo-retrato`](../.claude/skills/novo-retrato/SKILL.md); o registro de cada arquivo, em [`public/img/retratos.json`](../public/img/retratos.json).
 
 | Item | Padrão (tirado dos retratos atuais) |
 |---|---|
@@ -249,7 +249,12 @@ Os retratos ilustrados da v0.95.1 foram gerados por IA a partir de referências 
 | Variantes | Mesma pessoa, mesmo enquadramento e mesmo fundo; muda só o que a forma muda (Sharingan, marca da maldição, sem máscara) |
 | Nunca | Texto, logotipo, marca-d'água, assinatura ou moldura |
 
-**Prompt base**: preencher com o prompt e os parâmetros que o usuário usou na v0.95.1 (pendente). Até lá, descreva o item acima no prompt e anexe como referência dois retratos já aprovados do mesmo grupo (aliados ou vilões), além da referência do personagem.
+**Como os retratos são feitos** (processo do usuário na v0.95.1):
+
+1. **Imagens-modelo**: o usuário escolhe imagens com as características que quer no retrato (traço, enquadramento, expressão, detalhe do traje) e as guarda em `prototype/lab/refs/<chave>` (fora do git e do jogo; a galeria do UI Lab mostra cada uma ao lado do retrato).
+2. **Instrução**: um texto curto dizendo o que pegar de cada imagem e o que seguir da tabela acima. Para manter a série, junte dois retratos já aprovados do mesmo grupo (aliados ou vilões).
+3. **Geração** pela ferramenta de IA.
+4. **Revisão humana**: o usuário compara na galeria, nos dois temas e em tamanho pequeno e grande, e pede ajustes até aprovar. Cada pedido vai para `ajustes` no manifesto.
 
 ## Celular e desktop
 

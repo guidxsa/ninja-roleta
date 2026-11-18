@@ -1,5 +1,6 @@
 // Fotografa cenários do UI Lab em celular e desktop, nos dois temas e com menos movimento (skill revisar-visual).
 // Uso: npm run lab && npx tsx scripts/revisar-visual.ts <id do cenário>... [--prefixo=jornada.shop] [--todos] [--saida=dir]
+//      [--chromium=/caminho/do/chromium]   (ou a variável PW_CHROMIUM; sem nenhum, tenta o padrão e /opt/pw-browsers/chromium)
 // Saída: PNGs em dist-lab/revisao/ (fora do git) e, no terminal, os erros do console de cada foto.
 // Precisa do Playwright com o Chromium (no ambiente na nuvem já vem; na sua máquina: npx playwright install chromium).
 import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
@@ -8,6 +9,7 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const LAB = 'dist-lab/lab.html';
+const FALLBACK_CHROMIUM = '/opt/pw-browsers/chromium';
 export const VIEWPORTS = [
   { nome: 'celular', width: 390, height: 844 },
   { nome: 'desktop', width: 1280, height: 800 },
@@ -48,7 +50,7 @@ interface PwBrowser {
   close(): Promise<void>;
 }
 interface Pw {
-  chromium: { launch(): Promise<PwBrowser> };
+  chromium: { launch(o?: { executablePath?: string }): Promise<PwBrowser> };
 }
 
 async function main(): Promise<void> {
@@ -64,7 +66,11 @@ async function main(): Promise<void> {
     return;
   }
   const unknown = ids.filter((id) => !all.includes(id));
-  if (unknown.length) console.log(`Aviso: ids que não achei nos cenários (confira): ${unknown.join(', ')}`);
+  if (unknown.length) {
+    console.log(`Cenário(s) desconhecido(s): ${unknown.join(', ')}. Confira os ids em prototype/lab/scenarios/.`);
+    process.exitCode = 1;
+    return;
+  }
   if (!existsSync(LAB)) {
     console.log(`Sem ${LAB}: rode npm run lab antes.`);
     process.exitCode = 1;
@@ -81,7 +87,19 @@ async function main(): Promise<void> {
   }
 
   mkdirSync(out, { recursive: true });
-  const browser = await chromium.launch();
+  const pinned = args.find((a) => a.startsWith('--chromium='))?.slice(11) ?? process.env.PW_CHROMIUM;
+  let browser: PwBrowser;
+  try {
+    browser = await chromium.launch(pinned ? { executablePath: pinned } : undefined);
+  } catch (e) {
+    if (pinned || !existsSync(FALLBACK_CHROMIUM)) {
+      console.log(`Não consegui abrir o Chromium${pinned ? ` em ${pinned}` : ''}: ${(e as Error).message.split('\n')[0]}`);
+      console.log('Indique o executável com --chromium=<caminho> ou PW_CHROMIUM, ou instale com npx playwright install chromium.');
+      process.exitCode = 1;
+      return;
+    }
+    browser = await chromium.launch({ executablePath: FALLBACK_CHROMIUM });
+  }
   let problems = 0;
   for (const vp of VIEWPORTS)
     for (const v of VARIANTES) {
@@ -99,6 +117,9 @@ async function main(): Promise<void> {
         await page.goto(shotUrl(LAB, id, v.theme, v.still));
         await page.waitForTimeout(400);
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+        // O lab mostra "Cenário desconhecido" sem lançar erro (prototype/lab/frame.ts): isso não pode virar foto "ok".
+        const title = await page.evaluate(() => document.querySelector('#screen h2')?.textContent ?? '');
+        if (title.includes('Cenário desconhecido')) errors.push('o lab não montou o cenário (Cenário desconhecido)');
         const file = join(out, `${id.replace(/[^\w.-]/g, '_')}--${vp.nome}--${v.nome}.png`);
         await page.screenshot({ path: file, fullPage: true });
         const notes = [...(overflow ? ['rolagem horizontal'] : []), ...errors.map((e) => `console: ${e}`)];

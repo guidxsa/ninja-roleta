@@ -31,7 +31,32 @@ export function parseMetaJson(stdout: string): MetaRow[] {
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
+/**
+ * A simulação cobriu tudo? Ao menos um grupo, uma célula por grupo e dificuldade da meta, sem repetição, e taxas
+ * finitas entre 0 e 1. Sem isso, a comparação com a meta ficaria verde sem ter medido nada.
+ */
+export function validateRows(modo: string, rows: unknown): Finding[] {
+  const err = (message: string, files?: string[]): Finding[] => [{ level: 'erro', rule: 'meta-cobertura', message: `${modo}: ${message}`, files }];
+  if (!Array.isArray(rows) || rows.length === 0) return err('a simulação não devolveu nenhuma célula.');
+  const bad = rows.filter(
+    (r) =>
+      typeof r !== 'object' || r === null || typeof (r as MetaRow).grupo !== 'string' || typeof (r as MetaRow).dif !== 'string' ||
+      typeof (r as MetaRow).vitoria !== 'number' || !Number.isFinite((r as MetaRow).vitoria) || (r as MetaRow).vitoria < 0 || (r as MetaRow).vitoria > 1,
+  );
+  if (bad.length) return err('células com formato ou taxa inválida (esperado { grupo, dif, vitoria entre 0 e 1 }):', bad.map((r) => JSON.stringify(r)));
+  const cells = rows as MetaRow[];
+  const keys = cells.map((r) => `${r.grupo} · ${r.dif}`);
+  const dup = keys.filter((k, i) => keys.indexOf(k) !== i);
+  if (dup.length) return err('células repetidas:', [...new Set(dup)]);
+  const groups = [...new Set(cells.map((r) => r.grupo))];
+  const missing = groups.flatMap((g) => Object.keys(META).filter((d) => !keys.includes(`${g} · ${d}`)).map((d) => `${g} · ${d}`));
+  if (missing.length) return err('células faltando (cada grupo precisa das quatro dificuldades):', missing);
+  return [];
+}
+
 export function checkMeta(modo: string, rows: MetaRow[]): Finding[] {
+  const invalid = validateRows(modo, rows);
+  if (invalid.length) return invalid;
   const out: Finding[] = [];
   const fora = rows.filter((r) => META[r.dif] !== undefined && Math.abs(r.vitoria - META[r.dif]!) > FOLGA_CELULA);
   if (fora.length)

@@ -25,3 +25,16 @@ describe('check:meta', () => {
     expect(f.map((x) => x.rule)).toEqual(['meta-media']);
   });
 });
+
+describe('check:meta: cobertura (revisão do Codex)', () => {
+  it('simulação vazia é erro', () => {
+    expect(checkMeta('Roleta', []).map((f) => f.rule)).toEqual(['meta-cobertura']);
+  });
+
+  it('dificuldade faltando, célula repetida e taxa inválida são erro', () => {
+    const semHardcore = rows({ easy: 0.9, normal: 0.65, hard: 0.4 });
+    expect(checkMeta('Roleta', semHardcore)[0]!.files).toEqual(['comum · hardcore']);
+    expect(checkMeta('Roleta', [...rows(naMeta), { grupo: 'comum', dif: 'easy', vitoria: 0.9 }])[0]!.message).toMatch(/repetidas/);
+    for (const vitoria of [NaN, -0.1, 1.5, Infinity]) expect(checkMeta('Roleta', rows({ ...naMeta, easy: vitoria }))[0]!.rule).toBe('meta-cobertura');
+  });
+});

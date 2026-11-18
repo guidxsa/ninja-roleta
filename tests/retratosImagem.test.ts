@@ -19,8 +19,9 @@ interface Retrato {
   origem: 'ia' | 'oficial' | 'desenho';
   ferramenta: string | null;
   data: string;
-  prompt: string | null;
   referencias: string | string[] | null;
+  prompt: string | null;
+  ajustes: string | string[] | null;
   parametros: unknown;
   aprovado: boolean;
 }
@@ -54,12 +55,17 @@ describe('retratos: arquivos e manifesto', () => {
     }
   });
 
-  it('retrato novo diz como foi feito (ferramenta, prompt e referências)', () => {
+  it('retrato novo diz como foi feito (imagens-modelo e ferramenta) e passou pela revisão humana', () => {
     for (const r of manifesto.retratos.filter((x) => x.data > MANIFESTO_DESDE && x.origem === 'ia')) {
+      expect(r.referencias, `${r.arquivo}: referencias (as imagens-modelo)`).toBeTruthy();
       expect(r.ferramenta, `${r.arquivo}: ferramenta`).toBeTruthy();
-      expect(r.prompt, `${r.arquivo}: prompt`).toBeTruthy();
-      expect(r.referencias, `${r.arquivo}: referencias`).toBeTruthy();
+      expect(r.aprovado, `${r.arquivo}: aprovado na revisão humana`).toBe(true);
     }
+  });
+
+  it('toda entrada tem os campos do manifesto', () => {
+    const campos = ['arquivo', 'chave', 'uso', 'origem', 'ferramenta', 'data', 'referencias', 'prompt', 'ajustes', 'parametros', 'aprovado'];
+    for (const r of manifesto.retratos) expect(Object.keys(r).sort(), r.arquivo).toEqual([...campos].sort());
   });
 
   it('256 × 256 e até 30 KB', () => {

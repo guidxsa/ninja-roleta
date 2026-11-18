@@ -1,11 +1,11 @@
 // Confere as convenções do AGENTS.md que dá para conferir por máquina. Roda no pre-commit, no `npm run check` e na CI.
-// Uso: npm run check:regras [-- --estrito]   (na CI do PR, CHECK_ESTRITO=true faz o mesmo)
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+// Uso: npm run check:regras [-- --estrito] [-- --preparado]
+//   --estrito   balance sem registro vira erro (na CI do PR, CHECK_ESTRITO=true faz o mesmo)
+//   --preparado só o que está no índice, para o pre-commit (arquivos e conteúdo do core como vão no commit)
 import { pathToFileURL } from 'node:url';
-import { currentBranch, gitChanges, matchesAny, report, type Finding } from './harness';
+import { currentBranch, gitChanges, inCi, indexFiles, packageJsonChange, readVersion, matchesAny, report, type Finding } from './harness';
 
-/** Arquivos que só mudam numa tarefa de processo (feature/harness*): o agente não afrouxa as próprias regras. */
+/** Arquivos que só mudam numa tarefa de processo pedida pelo usuário: o agente não afrouxa as próprias regras. */
 export const PROTECTED = [
   'AGENTS.md',
   'CLAUDE.md',
@@ -16,24 +16,90 @@ export const PROTECTED = [
   'scripts/check-*.ts',
   '.github/workflows/**',
 ];
-export const HARNESS_BRANCH = /^feature\/harness/;
+/** Branch de processo: `feature/harness` ou `feature/harness-<tema>` (AGENTS.md, "Dois agentes"). */
+export const HARNESS_BRANCH = /^feature\/harness(-[a-z0-9-]+)?$/;
+/** Números de balanceamento de cada modo (`src/data/balance.ts`, `src/data/roleta/balance.ts`...). */
+export const BALANCE_FILE = /^src\/data\/(?:.+\/)?balance[^/]*\.ts$/;
 
-/** O que o core não pode usar (AGENTS.md, Convenções): DOM, armazenamento do navegador e sorteio sem rng injetado. */
-const CORE_FORBIDDEN: [RegExp, string][] = [
-  [/\bMath\.random\b/, 'Math.random (use o rng() injetado)'],
-  [/\bdocument\s*\./, 'document (DOM)'],
-  [/\bwindow\s*\./, 'window (DOM)'],
-  [/\blocalStorage\b/, 'localStorage'],
-  [/\bsessionStorage\b/, 'sessionStorage'],
-];
+const GLOBALS = /(?<![\w$.])(document|window|localStorage|sessionStorage|globalThis)\b(?!\s*:(?!:))/g;
 
-/** Tira comentários para não acusar "sem Math.random" escrito num comentário. */
-export const stripComments = (src: string): string => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\])\/\/.*$/gm, '$1');
+/**
+ * Apaga comentários e o conteúdo de strings e templates (vira espaço, mantendo as quebras de linha), para a busca
+ * enxergar só código. Devolve também onde começa cada string, para conferir `Math['random']`.
+ * Leitor léxico simples (o TypeScript 7 do projeto não expõe a API do compilador): não trata regex literal.
+ */
+export function codeOnly(src: string): { code: string; strings: Map<number, string> } {
+  const out = src.split('');
+  const strings = new Map<number, string>();
+  const blank = (from: number, to: number) => {
+    for (let k = from; k < to; k++) if (out[k] !== '\n') out[k] = ' ';
+  };
+  const templateDepth: number[] = [];
+  let i = 0;
+  while (i < src.length) {
+    const c = src[i]!;
+    const n = src[i + 1];
+    if (c === '/' && n === '/') {
+      const e = src.indexOf('\n', i);
+      const end = e < 0 ? src.length : e;
+      blank(i, end);
+      i = end;
+    } else if (c === '/' && n === '*') {
+      const e = src.indexOf('*/', i + 2);
+      const end = e < 0 ? src.length : e + 2;
+      blank(i, end);
+      i = end;
+    } else if (c === "'" || c === '"' || c === '`' || (c === '}' && templateDepth.length && templateDepth[templateDepth.length - 1] === 0)) {
+      const isTemplate = c === '`' || c === '}';
+      if (c === '}') templateDepth.pop();
+      const quote = isTemplate ? '`' : c;
+      let j = i + 1;
+      let text = '';
+      while (j < src.length && src[j] !== quote) {
+        if (src[j] === '\\') {
+          text += src[j + 1] ?? '';
+          j += 2;
+          continue;
+        }
+        if (isTemplate && src[j] === '$' && src[j + 1] === '{') break;
+        text += src[j];
+        j++;
+      }
+      strings.set(i, text);
+      blank(i + 1, j);
+      if (isTemplate && src[j] === '$') {
+        templateDepth.push(0);
+        i = j + 2;
+      } else i = j + 1;
+    } else {
+      if (templateDepth.length) {
+        if (c === '{') templateDepth[templateDepth.length - 1]!++;
+        else if (c === '}') templateDepth[templateDepth.length - 1]!--;
+      }
+      i++;
+    }
+  }
+  return { code: out.join(''), strings };
+}
 
-/** Violações de pureza num arquivo do core (conteúdo inteiro, não só o diff). */
+/**
+ * Violações de pureza num arquivo do core (strings e comentários não contam): Math.random em qualquer forma
+ * (`.random`, `?.random`, `['random']`, `const { random } = Math`) e leitura de document, window, localStorage,
+ * sessionStorage ou globalThis (inclusive com `?.`).
+ */
 export function coreViolations(file: string, src: string): string[] {
-  const code = stripComments(src);
-  return CORE_FORBIDDEN.filter(([re]) => re.test(code)).map(([, what]) => `${file}: ${what}`);
+  const { code, strings } = codeOnly(src);
+  const found: string[] = [];
+  const lineOf = (pos: number) => code.slice(0, pos).split('\n').length;
+  const at = (pos: number, what: string) => found.push(`${file}:${lineOf(pos)}: ${what}`);
+  for (const m of code.matchAll(/\bMath\s*\??\.\s*random\b/g)) at(m.index!, 'Math.random (use o rng() injetado)');
+  for (const m of code.matchAll(/\bMath\s*(?:\?\.)?\s*\[\s*/g)) {
+    const q = m.index! + m[0].length;
+    if (strings.get(q) === 'random') at(m.index!, 'Math["random"] (use o rng() injetado)');
+  }
+  for (const m of code.matchAll(/\{[^{}]*\brandom\b[^{}]*\}\s*=\s*Math\b/g)) at(m.index!, 'random tirado de Math (use o rng() injetado)');
+  for (const m of code.matchAll(GLOBALS)) at(m.index!, `${m[1]} (o core não acessa DOM nem armazenamento)`);
+  return found;
 }
 
 export interface RegrasInput {
@@ -42,9 +108,11 @@ export interface RegrasInput {
   strict: boolean;
   /** Conteúdo dos arquivos do core (todos, alterados ou não). */
   core: { file: string; src: string }[];
+  /** Os scripts do package.json mudaram em relação ao master? */
+  scriptsChanged?: boolean;
 }
 
-export function checkRegras({ files, branch, strict, core }: RegrasInput): Finding[] {
+export function checkRegras({ files, branch, strict, core, scriptsChanged = false }: RegrasInput): Finding[] {
   const out: Finding[] = [];
   const has = (re: RegExp) => files.some((f) => re.test(f));
   const pick = (re: RegExp) => files.filter((f) => re.test(f));
@@ -62,12 +130,12 @@ export function checkRegras({ files, branch, strict, core }: RegrasInput): Findi
       files: coreChanged,
     });
 
-  const balance = pick(/^src\/data\/balance[^/]*\.ts$/);
+  const balance = pick(BALANCE_FILE);
   if (balance.length && !files.includes('docs/registro.md'))
     out.push({
       level: strict ? 'erro' : 'aviso',
       rule: 'balance-com-registro',
-      message: 'Mudou número de balanceamento sem registrar em docs/registro.md (tabela de antes e depois).',
+      message: 'Mudou número de balanceamento sem registrar em docs/registro.md (tabela de antes e depois, aprovada pelo usuário).',
       files: balance,
     });
 
@@ -79,32 +147,38 @@ export function checkRegras({ files, branch, strict, core }: RegrasInput): Findi
       message: 'Mudou o jogo sem mexer em docs/ nem no CHANGELOG.md. Se mudou regra, número ou algo que o jogador nota, atualize no mesmo commit.',
     });
 
-  const prot = files.filter((f) => matchesAny(f, PROTECTED));
+  const prot = [...files.filter((f) => matchesAny(f, PROTECTED)), ...(scriptsChanged ? ['package.json (scripts)'] : [])];
   if (prot.length && !HARNESS_BRANCH.test(branch))
     out.push({
       level: 'erro',
       rule: 'processo-protegido',
-      message: `Arquivos do processo só mudam numa branch feature/harness* pedida pelo usuário (branch atual: ${branch || '?'}).`,
+      message: `Arquivos do processo só mudam numa branch feature/harness ou feature/harness-<tema> pedida pelo usuário (branch atual: ${branch || '?'}).`,
       files: prot,
     });
 
   return out;
 }
 
-function listTs(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-    const p = join(dir, e.name);
-    return e.isDirectory() ? listTs(p) : e.name.endsWith('.ts') ? [p.replaceAll('\\', '/')] : [];
-  });
-}
-
 function main(): void {
   const strict = process.argv.includes('--estrito') || process.env.CHECK_ESTRITO === 'true';
-  const { base, files } = gitChanges();
-  const core = listTs('src/core').map((file) => ({ file, src: readFileSync(file, 'utf8') }));
-  const findings = checkRegras({ files, branch: currentBranch(), strict, core });
-  if (!base) findings.push({ level: 'aviso', rule: 'base', message: 'Sem origin/master nem master: só a pureza do core foi conferida.' });
-  process.exitCode = report(`check:regras${strict ? ' (estrito)' : ''}, ${files.length} arquivo(s) alterado(s)`, findings);
+  const staged = process.argv.includes('--preparado');
+  const changes = gitChanges(process.env, staged);
+  const where = staged ? 'index' : 'tree';
+  const core = indexFiles('src/core')
+    .filter((f) => f.endsWith('.ts'))
+    .map((file) => ({ file, src: readVersion(file, where) }))
+    .filter((c): c is { file: string; src: string } => c.src !== null);
+  const pkgBefore = changes.base ? readVersion('package.json', { base: changes.base }) : staged ? readVersion('package.json', { base: 'HEAD' }) : null;
+  const scriptsChanged = changes.files.includes('package.json') && packageJsonChange(pkgBefore, readVersion('package.json', where)).scriptsChanged;
+  const findings = checkRegras({ files: changes.files, branch: currentBranch(), strict, core, scriptsChanged });
+  if (changes.problem)
+    findings.push({
+      level: strict || inCi() ? 'erro' : 'aviso',
+      rule: 'contexto-git',
+      message: `Não deu para listar os arquivos alterados (${changes.problem}): só a pureza do core foi conferida.`,
+    });
+  const mode = [strict && 'estrito', staged && 'preparado'].filter(Boolean).join(', ');
+  process.exitCode = report(`check:regras${mode ? ` (${mode})` : ''}, ${changes.files.length} arquivo(s) alterado(s)`, findings);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) main();

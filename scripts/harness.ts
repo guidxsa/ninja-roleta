@@ -1,6 +1,7 @@
 // Base comum das verificações do processo (check-regras.ts e check-escopo.ts; AGENTS.md, "Como trabalhar").
-// As regras são funções puras sobre a lista de arquivos alterados; só gitChanges() e currentBranch() tocam o git.
+// As regras são funções puras sobre a lista de arquivos alterados; só as funções de git abaixo tocam o repositório.
 import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 
 export interface Finding {
   level: 'erro' | 'aviso';
@@ -9,7 +10,7 @@ export interface Finding {
   files?: string[];
 }
 
-const git = (...args: string[]): string => execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+const git = (...args: string[]): string => execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 });
 
 const tryGit = (...args: string[]): string | null => {
   try {
@@ -19,24 +20,66 @@ const tryGit = (...args: string[]): string | null => {
   }
 };
 
+const lines = (s: string | null): string[] => (s ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+
+/** Na CI (GitHub Actions) toda falta de contexto vira erro: a verificação não pode ficar verde sem ter conferido. */
+export const inCi = (env: NodeJS.ProcessEnv = process.env): boolean => env.CI === 'true' || env.GITHUB_ACTIONS === 'true';
+
 /** Branch atual: na CI vem do GitHub (no PR, a branch de origem); fora dela, do git. */
 export function currentBranch(env: NodeJS.ProcessEnv = process.env): string {
-  return env.GITHUB_HEAD_REF || env.GITHUB_REF_NAME || tryGit('rev-parse', '--abbrev-ref', 'HEAD') || '';
+  return env.GITHUB_HEAD_REF || env.GITHUB_REF_NAME || tryGit('rev-parse', '--abbrev-ref', 'HEAD')?.trim() || '';
+}
+
+export interface Changes {
+  /** Ponto de comparação (merge-base com o master), ou null no modo do índice e quando não há base. */
+  base: string | null;
+  files: string[];
+  /** Por que não deu para listar os arquivos (sem base, git falhou). Quem chama decide se é aviso ou erro. */
+  problem?: string;
 }
 
 /**
- * Arquivos alterados em relação ao ponto em que a branch saiu do master (commits, área de preparo, mudanças não
- * preparadas e arquivos novos). Base: CHECK_BASE, senão origin/master, senão master. Sem base, lista vazia.
+ * Arquivos alterados em relação ao ponto em que a branch saiu do master: commits, área de preparo, mudanças não
+ * preparadas e arquivos novos. Base: CHECK_BASE, senão origin/master, senão master.
+ * Com `staged`, só o que está preparado para o próximo commit (pre-commit).
  */
-export function gitChanges(env: NodeJS.ProcessEnv = process.env): { base: string | null; files: string[] } {
+export function gitChanges(env: NodeJS.ProcessEnv = process.env, staged = false): Changes {
+  if (staged) {
+    const out = tryGit('diff', '--cached', '--name-only', '--diff-filter=ACMRD');
+    return out === null ? { base: null, files: [], problem: 'git diff --cached falhou' } : { base: null, files: lines(out).sort() };
+  }
   const candidates = [env.CHECK_BASE, 'origin/master', 'master'].filter((b): b is string => !!b);
   const ref = candidates.find((b) => tryGit('rev-parse', '--verify', '--quiet', `${b}^{commit}`) !== null);
-  if (!ref) return { base: null, files: [] };
-  const base = tryGit('merge-base', 'HEAD', ref) ?? ref;
-  const changed = (tryGit('diff', '--name-only', base) ?? '').split('\n');
-  const untracked = (tryGit('ls-files', '--others', '--exclude-standard') ?? '').split('\n');
-  const files = [...new Set([...changed, ...untracked].map((f) => f.trim()).filter(Boolean))].sort();
-  return { base: ref, files };
+  if (!ref) return { base: null, files: [], problem: 'sem origin/master nem master para comparar (faça git fetch origin master)' };
+  const base = tryGit('merge-base', 'HEAD', ref)?.trim();
+  if (!base) return { base: null, files: [], problem: `sem ponto comum entre HEAD e ${ref}` };
+  const changed = tryGit('diff', '--name-only', base);
+  const untracked = tryGit('ls-files', '--others', '--exclude-standard');
+  if (changed === null || untracked === null) return { base, files: [], problem: 'git diff falhou' };
+  return { base, files: [...new Set([...lines(changed), ...lines(untracked)])].sort() };
+}
+
+/** Conteúdo de um arquivo: na base (`git show <base>:arq`), no índice (`git show :arq`) ou na árvore de trabalho. */
+export function readVersion(path: string, where: { base: string } | 'index' | 'tree'): string | null {
+  if (where === 'tree') return existsSync(path) ? readFileSync(path, 'utf8') : null;
+  return tryGit('show', where === 'index' ? `:${path}` : `${where.base}:${path}`);
+}
+
+/** Arquivos versionados sob uma pasta, como estão no índice (para conferir o que vai no commit). */
+export const indexFiles = (dir: string): string[] => lines(tryGit('ls-files', '--cached', '--', dir));
+
+/** O que mudou no package.json entre duas versões: só a versão do jogo, ou os scripts (que definem as verificações). */
+export function packageJsonChange(before: string | null, after: string | null): { onlyVersion: boolean; scriptsChanged: boolean } {
+  if (before === null || after === null) return { onlyVersion: false, scriptsChanged: before !== after };
+  try {
+    const a = JSON.parse(before) as Record<string, unknown>;
+    const b = JSON.parse(after) as Record<string, unknown>;
+    const scriptsChanged = JSON.stringify(a.scripts ?? null) !== JSON.stringify(b.scripts ?? null);
+    const strip = (o: Record<string, unknown>) => JSON.stringify({ ...o, version: null });
+    return { onlyVersion: strip(a) === strip(b), scriptsChanged };
+  } catch {
+    return { onlyVersion: false, scriptsChanged: true };
+  }
 }
 
 /** Converte um padrão glob (`*`, `**`, `?`) em expressão regular sobre caminhos com `/`. */

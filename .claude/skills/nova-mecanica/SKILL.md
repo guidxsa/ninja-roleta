@@ -50,7 +50,7 @@ Em `tests/*.test.ts` (Vitest), usando `gameData` real e `seq(...)` de `tests/hel
 A simulação (`src/sim/runner.ts`, `scripts/simulate.ts`) é como o projeto mede balanceamento. Se a mecânica afeta poder do jogador ou dos vilões, a simulação precisa usá-la, senão os números ficam falsos.
 
 - Faça o runner usar a mesma função do core que a UI usa.
-- Rode de novo e compare com `sim-antes.txt`. Se a mudança deixou o jogo muito mais fácil ou difícil sem o usuário pedir, compense em `balance.ts` (ex.: menos níveis por campanha → ganhos maiores por nível) e reporte antes/depois.
+- Rode de novo e compare com `sim-antes.txt`. Se a mudança deixou o jogo muito mais fácil ou difícil sem o usuário pedir, **não compense sozinho**: siga a skill [`auditar-balanceamento`](../auditar-balanceamento/SKILL.md) (tabela de antes e depois contra a meta e até três alavancas, ex.: menos níveis por campanha → ganhos maiores por nível) e espere o aval do usuário antes de mexer em qualquer `balance.ts`.
 - Se a simulação não cobre algo (eventos e recompensas não entram na campanha simulada), diga isso ao interpretar os números.
 
 ## 5. Protótipo
