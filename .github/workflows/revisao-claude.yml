@@ -16,9 +16,8 @@ permissions:
   issues: write
   id-token: write
 
-concurrency:
-  group: revisao-claude-${{ github.event.pull_request.number || github.event.issue.number }}
-  cancel-in-progress: true
+# A concorrência fica em cada job, e não no workflow: só um job que passou do filtro entra no grupo,
+# então um comentário comum no PR não cancela a revisão em andamento.
 
 jobs:
   # Automática: PR aberto ou atualizado que o Codex implementou (modelo de PR com "Implementou: codex", ou branch codex/*).
@@ -27,6 +26,10 @@ jobs:
     if: >-
       github.event_name == 'pull_request' && !github.event.pull_request.draft &&
       (contains(github.event.pull_request.body, 'Implementou: codex') || startsWith(github.head_ref, 'codex/'))
+    # Push novo no PR substitui a revisão do commit anterior.
+    concurrency:
+      group: revisao-claude-auto-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - name: Conferir o token
@@ -67,11 +70,18 @@ jobs:
 
   # À mão: comentário com "@claude" num PR, de quem tem acesso ao repositório (ex.: "@claude revise seguindo
   # docs/processo/revisao.md"). Vale para qualquer PR, inclusive para repetir a revisão depois de correções.
+  # O issue_comment roda no contexto do repositório, com os segredos, mesmo num PR de fork: por isso este job
+  # nunca executa código do PR (sem npm ci nem npm run, checkout sem credencial gravada). O Claude lê o diff
+  # e confere o resultado da CI com gh pr checks.
   comentario:
     if: >-
       github.event_name == 'issue_comment' && github.event.issue.pull_request &&
       contains(github.event.comment.body, '@claude') &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    # Pedidos seguidos entram na fila, sem cancelar o que está rodando.
+    concurrency:
+      group: revisao-claude-comentario-${{ github.event.issue.number }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:
       - name: Conferir o token
@@ -90,18 +100,12 @@ jobs:
         with:
           ref: refs/pull/${{ github.event.issue.number }}/head
           fetch-depth: 0
-      - uses: actions/setup-node@v4
-        if: steps.token.outputs.ok == 'true'
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-        if: steps.token.outputs.ok == 'true'
+          persist-credentials: false
       - uses: anthropics/claude-code-action@v1
         if: steps.token.outputs.ok == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           trigger_phrase: '@claude'
           claude_args: >-
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(npm run check),Bash(npm run check:regras*),Bash(npm run check:escopo),Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
-            --append-system-prompt "Ao revisar um PR deste repositório, siga docs/processo/revisao.md. Só revisão: não altere arquivos nem faça commit."
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr checks:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
+            --append-system-prompt "Ao revisar um PR deste repositório, siga docs/processo/revisao.md. Só revisão: não altere arquivos nem faça commit. Não execute código do PR (npm, scripts): a verificação é o resultado da CI, em gh pr checks."
