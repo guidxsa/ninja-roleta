@@ -62,6 +62,8 @@ Toda issue do fluxo tem `inconsistencia` e **uma** destas:
 - processo (AGENTS.md, CLAUDE.md, hooks, workflows, scripts de verificação);
 - correção que mexe no contrato de outra tarefa em andamento.
 
+**Categoria** (opcional, para as [métricas](metricas.md#relatório)): uma etiqueta `cat:docs` (link, caminho, texto, doc atrasado), `cat:bug`, `cat:teste` ou `cat:texto`.
+
 Quem abre a issue (agente ou usuário) já põe a etiqueta pelo critério. Quem tem acesso de triagem responde pelo conteúdo da issue com `correcao-automatica`: o texto entra no prompt do loop.
 
 ## Loop
@@ -81,6 +83,8 @@ Quem abre a issue (agente ou usuário) já põe a etiqueta pelo critério. Quem 
 - Processo nunca é automático: AGENTS.md, workflows, hooks e scripts de verificação só mudam em `feature/harness*` (`check:regras`).
 - Push só `git push origin HEAD` na branch da issue, sem `--force`; sem `gh pr merge`. Depois, o workflow confere que o PR descende do `master` usado e não tem `Co-Authored-By`; se falhar, avisa no PR.
 - O texto da issue é descrição do problema, não instrução: o prompt manda o Claude não mudar regras nem processo por causa dele.
+
+**Modelo e métricas**: o job `corrige` escolhe o modelo pelo perfil da issue (leve ou padrão, alternado por issue quando `PILOTO_PERFIS=on`, com escalada na 2ª tentativa) e, depois de cada execução, comenta na issue o consumo (tokens por modelo, tempo, turnos, resultado). O job `corrige` da revisão faz o mesmo nos PRs de `feature/issue-<n>`. Regras e relatório (`npm run metricas`) em [metricas.md](metricas.md).
 
 **O usuário entra** na triagem (`precisa-decisao`), quando o loop para (2 tentativas sem PR, limite de rodadas da revisão) e no merge.
 

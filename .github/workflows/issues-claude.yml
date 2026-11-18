@@ -30,6 +30,9 @@ env:
   POR_VARREDURA: 2
   # Tentativas sem PR por issue, contadas pelo marcador <!-- loop-issues:tentativa --> nos comentários da issue.
   LIMITE_TENTATIVAS: 2
+  # Piloto de perfis de modelo (docs/processo/metricas.md): "on" na variável de repositório PILOTO_PERFIS liga a
+  # alternância (issue ímpar começa no perfil leve). Desligado, tudo roda no padrão; o registro de métricas vale sempre.
+  PILOTO_PERFIS: ${{ vars.PILOTO_PERFIS }}
 
 jobs:
   escolhe:
@@ -125,10 +128,19 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+        id: npmci
         if: steps.token.outputs.ok == 'true'
+      # Perfil de modelo e número da tentativa (docs/processo/metricas.md): leve ou padrão, com escalada.
+      - name: Escolher o perfil
+        id: perfil
+        if: steps.token.outputs.ok == 'true'
+        env:
+          ETAPA: issue
+        run: npx tsx scripts/metricas-execucao.ts perfil || echo "::warning::Perfil não escolhido: modelo padrão."
       # Push: só "git push origin HEAD" (a branch feature/issue-<n> em checkout; sem --force, sem outra branch).
       # Sem gh pr merge: o merge é do usuário. Commit sem atribuição, conferido no passo seguinte.
       - uses: anthropics/claude-code-action@v1
+        id: claude
         if: steps.token.outputs.ok == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -154,7 +166,9 @@ jobs:
           claude_args: >-
             --allowedTools "Read,Edit,Write,Glob,Grep,Bash(npm run check),Bash(npm run check:*),Bash(npm test),Bash(npm test:*),Bash(npm run typecheck),Bash(npm run proto),Bash(npm run sim:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git push origin HEAD),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh issue list:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(gh pr view:*)"
             --settings '{"includeCoAuthoredBy":false,"attribution":{"commit":"","pr":""}}'
+            ${{ steps.perfil.outputs.modelo && format('--model {0}', steps.perfil.outputs.modelo) || '' }}
       - name: Conferir o resultado
+        id: conferir
         if: steps.token.outputs.ok == 'true' && !cancelled()
         env:
           INICIO: ${{ steps.token.outputs.inicio }}
@@ -164,13 +178,17 @@ jobs:
           decisao=$(gh api "repos/$GH_REPO/issues/$ISSUE/comments" --paginate --jq ".[] | select(.created_at >= \"$INICIO\") | .body | gsub(\"\n\"; \" \")" | grep -c '<!-- loop-issues:precisa-decisao -->' || true)
           if [ "$decisao" -gt 0 ]; then
             gh issue edit "$ISSUE" --remove-label "$ETIQUETA" --add-label "$DECISAO"
+            echo "resultado=precisa-decisao" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           pr=$(gh pr list --state open --head "$BRANCH" --json number --jq '.[0].number // empty')
           if [ -z "$pr" ]; then
+            echo "resultado=sem-pr" >> "$GITHUB_OUTPUT"
             comenta "Loop das issues: esta tentativa terminou sem PR (veja o comentário do Claude acima, se houver, e o log do job). Nova tentativa na próxima varredura, até $LIMITE_TENTATIVAS; depois, decisão do usuário (docs/processo/issues.md, \"Loop\")." "" '<!-- loop-issues:tentativa -->'
             exit 0
           fi
+          echo "resultado=pr-aberto" >> "$GITHUB_OUTPUT"
+          echo "pr=$pr" >> "$GITHUB_OUTPUT"
           # Sem push forçado e sem atribuição nos commits do PR.
           ponta=$(gh pr view "$pr" --json headRefOid --jq .headRefOid)
           status=$(gh api "repos/$GH_REPO/compare/$base...$ponta" --jq .status)
@@ -181,3 +199,30 @@ jobs:
             exit 1
           fi
           echo "::notice::Issue #$ISSUE: PR #$pr aberto."
+      # Registro da execução na issue (docs/processo/metricas.md). Não trava o job: sem registro, só um aviso.
+      - name: Registrar as métricas
+        if: steps.token.outputs.ok == 'true' && !cancelled()
+        env:
+          ETAPA: issue
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+          PR: ${{ steps.conferir.outputs.pr }}
+          TENTATIVA: ${{ steps.perfil.outputs.tentativa }}
+          PERFIL: ${{ steps.perfil.outputs.perfil }}
+          MODELO: ${{ steps.perfil.outputs.modelo }}
+          RESULTADO: ${{ steps.conferir.outputs.resultado || 'nao-rodou' }}
+          NPM_CI: ${{ steps.npmci.outcome }}
+          CLAUDE: ${{ steps.claude.outcome }}
+        run: |
+          if [ "$NPM_CI" != "success" ]; then
+            # Sem node_modules não há tsx: o registro mínimo sai pelo jq, para a falha de ambiente não contar na escalada.
+            jq -nc --argjson issue "$ISSUE" --arg quando "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              '{v:1, issue:$issue, pr:null, etapa:"issue", tentativa:1, perfil:"padrao", modelo:"", resultado:"nao-rodou", falha:"ambiente", quando:$quando, porModelo:{}, duracaoMs:null, turnos:null, custoUsd:null, erro:true}' > "$RUNNER_TEMP/registro.json"
+            printf '%s\n' "**Métricas** (issue): npm ci falhou, execução não rodou (falha de ambiente, docs/processo/metricas.md)." "" "<!-- metricas:$(cat "$RUNNER_TEMP/registro.json") -->" > "$RUNNER_TEMP/metricas.md"
+            gh issue comment "$ISSUE" --body-file "$RUNNER_TEMP/metricas.md" || echo "::warning::Registro de métricas falhou."
+            exit 0
+          fi
+          if [ "$CLAUDE" != "success" ]; then FALHA=execucao
+          elif [ "$RESULTADO" = "sem-pr" ]; then FALHA=mudanca
+          else FALHA=; fi
+          export FALHA
+          npx tsx scripts/metricas-execucao.ts registra || echo "::warning::Registro de métricas falhou (veja acima)."

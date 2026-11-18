@@ -161,6 +161,7 @@ Toda inconsistência achada (em revisão, numa tarefa, numa simulação) vira um
 - **Abrir**: o agente que acha (fora do escopo da tarefa) e o revisor (cada "melhoria futura" e cada achado recusado por sair do escopo). Procurar duplicata antes; o número da issue vai no resumo e no PR.
 - **Triagem**: etiqueta `inconsistencia` e mais uma. `correcao-automatica` só para erro claro, com uma única resposta certa (bug evidente, regra deste arquivo violada, link quebrado, doc que não acompanhou mudança registrada, teste faltando, erro de texto). `precisa-decisao` para o resto (balanceamento, código × doc sem registro, design, regra nova, processo) e na dúvida.
 - **Loop**: o workflow `.github/workflows/issues-claude.yml` corrige sozinho a issue com `correcao-automatica`: branch `feature/issue-<n>`, contrato `docs/tarefas/issue-<n>.md` gerado da issue (com `issue: <n>`), `npm run check`, PR com `Closes #<n>`. A issue com essa etiqueta vale como aprovação do contrato (dispensa `contrato-aprovado`), mas a correção automática nunca toca balanceamento nem processo. Se não for erro claro, a issue volta para `precisa-decisao`. Daí segue a revisão cruzada; **o merge continua do usuário** e fecha a issue.
+- **Modelo e métricas**: o loop escolhe o modelo por perfil (leve ou padrão, com escalada) e registra o consumo de cada execução na issue; regras do piloto, escolha de executor e critério de promoção em [docs/processo/metricas.md](docs/processo/metricas.md).
 
 ## Review guidelines
 
