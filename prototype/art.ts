@@ -400,10 +400,20 @@ export function emblem(mode: 'jornada' | 'roleta'): string {
 const portraitSvg = (key: string, fallback: string, jinchuuriki = false): string =>
   svg(portraitArt(key, jinchuuriki) ?? portraitArt(fallback)!, '0 0 100 100', 'art');
 
+/** A mesma chave pode ser chamada como ninja na Jornada e como vilão no Roleta. */
+export function portraitImage(key: string, folder: 'ninja' | 'viloes' = 'ninja'): string | null {
+  return customImage(folder, key) ?? customImage(folder === 'ninja' ? 'viloes' : 'ninja', key);
+}
+
+/** O template deixa o desenho fora da tela até a imagem falhar, por exemplo ao jogar offline. */
+const portraitImg = (src: string, fallback: string): string =>
+  `<img src="${src}" alt="" onerror="this.replaceWith(this.nextElementSibling.content)"><template>${fallback}</template>`;
+
 /** Retrato do vilão: imagem própria (img/viloes/<id>.webp) ou o desenho. */
 export function villainPortrait(id: string, size: 'sm' | 'md' | 'lg' = 'md'): string {
-  const img = customImage('viloes', id);
-  const inner = img ? `<img src="${img}" alt="">` : portraitSvg(id, 'examLeaf');
+  const img = portraitImage(id, 'viloes');
+  const drawing = portraitSvg(id, 'examLeaf');
+  const inner = img ? portraitImg(img, drawing) : drawing;
   return `<span class="portrait portrait-${size} villain-portrait">${inner}</span>`;
 }
 
@@ -413,8 +423,11 @@ export function villainPortrait(id: string, size: 'sm' | 'md' | 'lg' = 'md'): st
  */
 export function ninjaPortrait(lineageId: string | null, jinchuuriki: boolean, size: 'sm' | 'md' | 'lg' = 'sm'): string {
   const key = lineageId ?? 'common';
-  const img = customImage('ninja', key) ?? customImage('ninja', 'ninja');
-  const inner = img ? `<img src="${img}" alt="">` : portraitSvg(key, 'common', jinchuuriki);
+  const img = jinchuuriki
+    ? customImage('ninja', `${key}-jinchuuriki`)
+    : portraitImage(key) ?? customImage('ninja', 'ninja');
+  const drawing = portraitSvg(key, 'common', jinchuuriki);
+  const inner = img ? portraitImg(img, drawing) : drawing;
   return `<span class="portrait portrait-${size} ninja-portrait">${inner}</span>`;
 }
 
@@ -431,8 +444,11 @@ export function hasOwnPortrait(defId: string, spec: string | undefined): boolean
  * (`villain:<id>` ou `ninja:<chave>`).
  */
 export function fighterPortrait(defId: string, spec: string, size: 'sm' | 'md' | 'lg' = 'md'): string {
-  const img = customImage('jornada', defId);
-  if (img) return `<span class="portrait portrait-${size}"><img src="${img}" alt=""></span>`;
   const [kind, key = ''] = spec.split(':');
+  const img = customImage('jornada', defId);
+  if (img) {
+    const drawing = portraitArt(key) && spec !== 'ninja:common' ? portraitSvg(key, key) : '';
+    return `<span class="portrait portrait-${size}">${portraitImg(img, drawing)}</span>`;
+  }
   return kind === 'villain' ? villainPortrait(key, size) : ninjaPortrait(key, false, size);
 }

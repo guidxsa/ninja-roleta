@@ -76,9 +76,11 @@ Exceção (v0.76.9): o herói do **Caminho Ninja** é o ninja da classe; o retra
 |---|---|---|
 | **Desenho próprio** (v0.90.0) | Todos os nomeados com retrato: Naruto (e as formas da Kyuubi e de uma cauda), Sasuke (Sharingan, marca da maldição, hospital, Vale do Fim e nível 2), Sakura, Kakashi (e o Sharingan à mostra), Iruka, Neji (e o Byakugan ativo), Lee, Shikamaru, Chōji, Kiba, Akamaru, Jiraiya, Tsunade; Mizuki, Zabuza (com e sem as faixas), Haku (com a máscara, sem ela e de quimono na floresta), Gōzu, Meizu, Gaara (e o insano), Shukaku, Gamabunta (e a raposa), Dosu, Zaku, Kin, Jirobo, Kidomaru, Tayuya e Sakon (cada um também na marca da maldição nível 2), Kimimaro, Kabuto (e o genin do Exame), Orochimaru e a cobra | Retrato |
 | **Desenho da origem** | Os genins criados para o jogo (Daichi, Hana, Mika, Ren e Kaede Uchiha, Mio e Sei Hyuuga) e o herói do Caminho Ninja | Retrato |
-| **Sem recurso: só o nome** | Hinata, Tazuna, Ebisu, Ibiki, Itachi e Kisame | Tira de papel com o nome, quadro só com o local |
+| **Sem recurso: só o nome** | Tazuna, Ebisu, Ibiki, Itachi e Kisame | Tira de papel com o nome, quadro só com o local |
 
 Capangas e ninjas das vilas (Névoa, Grama, Chuva, Areia, Som) têm um desenho por tipo: valem na luta, mas não são rosto de cena.
+
+A partir da v0.95.1, as fichas com ilustração carregam os WebPs de 256 × 256 em [`public/img/`](../public/img/LEIAME.md). A chave da ficha aponta para o mesmo arquivo no Roleta, na Jornada e no avatar. A Hinata tem retrato nas cenas em que é identificada pelo próprio id. Quando uma imagem está indisponível, a ficha usa o desenho correspondente em SVG. As marcas do jinchūriki usam a versão própria da origem, quando disponível, ou o desenho com as marcas.
 
 ## Acabamento
 

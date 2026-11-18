@@ -1,8 +1,9 @@
-// Galeria de retratos (só no UI Lab): todos os desenhos de prototype/portraits/ lado a lado, nos tamanhos em que a
+// Galeria de retratos (só no UI Lab): todos os retratos registrados lado a lado, nos tamanhos em que a
 // interface os usa (da ordem de iniciativa, 24px, à cena, 120px). Auditoria: a imagem base de cada um, quando existe em
 // prototype/lab/refs/<chave>.png|jpg|webp (ver o LEIAME de lá), aparece ao lado do desenho.
 // Filtro pela URL: `&refs=com` (só os que têm imagem base) ou `&refs=sem` (só os que faltam).
 import { h, show } from '../dom';
+import { portraitImage } from '../art';
 import { PORTRAIT_KEYS, portraitArt } from '../portraits/index';
 
 declare const __LAB_REFS__: string[];
@@ -16,8 +17,12 @@ export const refFile = (key: string, files: readonly string[] = REFS): string | 
 export function portraitGallery(): Promise<never> {
   const filter = new URLSearchParams(location.search).get('refs');
   const keys = PORTRAIT_KEYS.filter((k) => (filter === 'com' ? refFile(k) : filter === 'sem' ? !refFile(k) : true));
-  const pic = (key: string, px: number) =>
-    `<svg class="art" viewBox="0 0 100 100" width="${px}" height="${px}" aria-hidden="true">${portraitArt(key)}</svg>`;
+  const pic = (key: string, px: number) => {
+    const img = portraitImage(key);
+    return img
+      ? `<img src="${img}" alt="" width="${px}" height="${px}">`
+      : `<svg class="art" viewBox="0 0 100 100" width="${px}" height="${px}" aria-hidden="true">${portraitArt(key)}</svg>`;
+  };
   const ref = (key: string) => {
     const file = refFile(key);
     return file
