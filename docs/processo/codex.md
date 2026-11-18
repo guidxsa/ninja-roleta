@@ -69,3 +69,7 @@ termine com o resumo no formato do .github/pull_request_template.md.
 ## Revisão
 
 Quem implementa não revisa. Um PR feito pelo Codex é revisado pelo Claude (automático, pelo workflow `revisao-claude.yml`) e vice-versa (automático, pela revisão do Codex); o merge é do usuário. Instruções e configuração em [revisao.md](revisao.md).
+
+## Issues
+
+O Codex segue as mesmas regras: inconsistência achada fora do escopo (ou "melhoria futura" numa revisão) vira uma issue descritiva pelo modelo e com a triagem de [issues.md](issues.md). Sem `gh` no ambiente (Codex na nuvem), o achado vai no resumo e no PR com o texto da issue pronto, e quem pega o PR abre a issue. A correção automática das issues é do Claude, pelo workflow `issues-claude.yml`; o PR dela é revisado pelo Codex.

@@ -1,0 +1,51 @@
+# Modelo das issues de inconsistência (docs/processo/issues.md). Os agentes abrem pelo gh com o mesmo formato.
+name: Inconsistência
+description: Erro, regra violada, doc desatualizado ou divergência achada numa revisão, sessão ou simulação.
+labels: [inconsistencia]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: O que está errado
+      description: Uma ou duas frases, sem jargão desnecessário.
+    validations:
+      required: true
+  - type: textarea
+    id: onde
+    attributes:
+      label: Onde
+      description: Arquivo:linha (ou tela e modo do jogo).
+      placeholder: src/core/roleta/battle.ts:120
+    validations:
+      required: true
+  - type: textarea
+    id: cenario
+    attributes:
+      label: Cenário concreto
+      description: Como reproduzir (comando, seed, passos) e o que acontece.
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Esperado
+      description: O que deveria acontecer, citando a regra ou o doc que manda (AGENTS.md, docs/...).
+    validations:
+      required: true
+  - type: input
+    id: origem
+    attributes:
+      label: Origem
+      description: Onde foi achado (revisão do PR #n, sessão do Claude ou do Codex, simulação, jogando).
+    validations:
+      required: true
+  - type: dropdown
+    id: classificacao
+    attributes:
+      label: Classificação
+      description: Critério em docs/processo/issues.md ("Triagem"). Na dúvida, precisa de decisão. A etiqueta é posta por quem tem acesso ao repositório.
+      options:
+        - Precisa de decisão do usuário
+        - Erro claro (correção automática)
+    validations:
+      required: true

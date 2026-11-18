@@ -2,7 +2,7 @@
 
 Copie para `docs/tarefas/<tema>.md`, com `<tema>` igual ao nome da branch `feature/<tema>`. O agente preenche a partir do pedido e o usuário aprova **antes** do código. Mudou o escopo no meio do caminho: atualiza o contrato e pede nova aprovação. Regras em [AGENTS.md](../../AGENTS.md#como-trabalhar-dois-agentes).
 
-Os campos do topo são lidos pela conferência de escopo (Fase 4 do [plano](plano-harness.md)): `escopo` e `fora` são padrões de caminho (glob) a partir da raiz do repositório.
+Os campos do topo são lidos pela conferência de escopo (Fase 4 do [plano](plano-harness.md)): `escopo` e `fora` são padrões de caminho (glob) a partir da raiz do repositório. `issue` só existe na correção automática de uma issue (branch `feature/issue-<n>`, [issues.md](issues.md)): apague a linha nas outras tarefas.
 
 ```markdown
 ---
@@ -12,6 +12,7 @@ fora: ["src/data/balance*", "prototype/**"]
 pronto: ["npm run check verde", "sim:origens sem sair da meta"]
 agente: claude | codex
 revisor: codex | claude
+issue: 12
 ---
 
 # <Título da tarefa>
@@ -32,5 +33,5 @@ O que não será feito nesta tarefa, mesmo que pareça relacionado.
 Perguntas em aberto ou escolhas feitas sem ele (vão também para `docs/registro.md`).
 
 ## Achados
-Preenchido durante o trabalho: bugs, melhorias ou docs desatualizados vistos fora do escopo, sem corrigir.
+Preenchido durante o trabalho: bugs, melhorias ou docs desatualizados vistos fora do escopo, sem corrigir, cada um com o número da issue aberta para ele ([issues.md](issues.md)).
 ```

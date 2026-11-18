@@ -114,7 +114,7 @@ O projeto é feito pelo Claude Code e pelo Codex, com as mesmas regras. Plano de
 - Toda tarefa começa por um **contrato** com objetivo, o que fica de fora, caminhos que podem ser tocados e critério de pronto (modelo em [docs/processo/tarefa-modelo.md](docs/processo/tarefa-modelo.md); o arquivo fica em `docs/tarefas/<tema>.md`, com `<tema>` igual ao da branch `feature/<tema>`). O agente escreve o contrato a partir do pedido; o usuário aprova antes do código.
 - Mexer só no que o contrato permite. Precisou sair do escopo: parar e pedir para atualizar o contrato; não ampliar sozinho. O `npm run check:escopo` (dentro do `npm run check`) compara o diff com o `escopo` e o `fora` do contrato; `CHANGELOG.md`, `docs/registro.md` e `docs/decisoes.md` sempre podem mudar; `package.json` e `package-lock.json`, só na versão do projeto (o resto muda o que se instala e precisa estar no escopo). O tema vem da branch `feature/<tema>` ou, numa branch com outro nome (Codex na nuvem), do único `docs/tarefas/<tema>.md` alterado. Sem tema ou sem contrato é aviso, e vira erro a partir de 02/12/2026, na CI e na máquina (branch sem tema: `CHECK_TEMA=<tema>`).
 - **Aprovação do contrato**: no PR, o usuário põe a etiqueta `contrato-aprovado`; a CI confere (aviso até 02/12/2026, erro depois). **Agente nunca põe, tira nem pede para pular essa etiqueta.** A etiqueta vale para o contrato como estava quando o usuário a pôs (a CI não sabe quando foi posta): se o contrato mudar depois disso, o agente avisa no resumo e no PR que a aprovação precisa ser refeita, e o usuário tira e põe a etiqueta de novo depois de conferir.
-- Achou bug, melhoria ou doc desatualizado fora do escopo: anotar em **Achados** no resumo final e no PR, sem corrigir.
+- Achou bug, melhoria ou doc desatualizado fora do escopo: anotar em **Achados** no resumo final e no PR **e** abrir uma issue descritiva (ver [Issues](#issues)), sem corrigir na tarefa atual.
 - Nada de refatoração, renomeação ou formatação "de passagem".
 
 ### Definição de pronto
@@ -154,12 +154,20 @@ Skill nova entra nesta tabela no mesmo commit.
 - Cada sessão começa lendo este arquivo e o contrato da tarefa. Configuração de cada agente: `CLAUDE.md` (Claude Code) e [docs/processo/codex.md](docs/processo/codex.md) (Codex).
 - Este arquivo, o `CLAUDE.md`, os hooks, os scripts de verificação, os `scripts` do `package.json` e as configurações dos agentes só mudam numa tarefa de processo pedida pelo usuário, na branch `feature/harness` ou `feature/harness-<tema>` (o `check:regras` confere o nome): o agente não afrouxa as próprias regras.
 
+### Issues
+
+Toda inconsistência achada (em revisão, numa tarefa, numa simulação) vira uma **issue descritiva** no GitHub, pelo modelo e com a triagem de [docs/processo/issues.md](docs/processo/issues.md):
+
+- **Abrir**: o agente que acha (fora do escopo da tarefa) e o revisor (cada "melhoria futura" e cada achado recusado por sair do escopo). Procurar duplicata antes; o número da issue vai no resumo e no PR.
+- **Triagem**: etiqueta `inconsistencia` e mais uma. `correcao-automatica` só para erro claro, com uma única resposta certa (bug evidente, regra deste arquivo violada, link quebrado, doc que não acompanhou mudança registrada, teste faltando, erro de texto). `precisa-decisao` para o resto (balanceamento, código × doc sem registro, design, regra nova, processo) e na dúvida.
+- **Loop**: o workflow `.github/workflows/issues-claude.yml` corrige sozinho a issue com `correcao-automatica`: branch `feature/issue-<n>`, contrato `docs/tarefas/issue-<n>.md` gerado da issue (com `issue: <n>`), `npm run check`, PR com `Closes #<n>`. A issue com essa etiqueta vale como aprovação do contrato (dispensa `contrato-aprovado`), mas a correção automática nunca toca balanceamento nem processo. Se não for erro claro, a issue volta para `precisa-decisao`. Daí segue a revisão cruzada; **o merge continua do usuário** e fecha a issue.
+
 ## Review guidelines
 
 Seção lida pela revisão automática do Codex e usada pelo workflow do Claude. As instruções completas estão em [docs/processo/revisao.md](docs/processo/revisao.md):
 
 - Confira o PR contra este arquivo e o contrato da tarefa (`docs/tarefas/<tema>.md`): faz o que o contrato pede e só isso.
 - Prioridade: bug real; regra deste arquivo burlável num uso normal; arquivo fora do escopo; doc que não acompanha a mudança; balanceamento compensado sem o usuário.
-- Separe "bloqueia o merge" de "melhoria futura", com arquivo:linha e um cenário concreto. Não reabra decisões registradas no contrato ou em `docs/decisoes.md`.
+- Separe "bloqueia o merge" de "melhoria futura", com arquivo:linha e um cenário concreto. Cada melhoria futura vira uma issue descritiva ([docs/processo/issues.md](docs/processo/issues.md)). Não reabra decisões registradas no contrato ou em `docs/decisoes.md`.
 - Termine com o veredito: aprovado, aprovado com ressalvas ou precisa de mudanças. É só revisão: não altere arquivos.
 
