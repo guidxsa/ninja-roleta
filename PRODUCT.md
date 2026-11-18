@@ -37,7 +37,7 @@ A roleta visual como identidade e como motor das regras (inspiração: pokemon-r
 
 ## Brand Commitments
 
-Nome provisório. Direção visual, temas Sumi/Pergaminho e regras de interface estão registrados em `docs/visual.md` e no `CLAUDE.md` (seção Interface).
+Nome provisório. Direção visual, temas Sumi/Pergaminho e regras de interface estão registrados em `docs/visual.md` e no `AGENTS.md` (seção Interface).
 
 ## Evidence on Hand
 

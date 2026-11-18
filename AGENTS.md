@@ -143,6 +143,17 @@ Skill nova entra nesta tabela no mesmo commit.
 ### Dois agentes
 
 - Uma branch tem **um agente por vez**: Claude e Codex nunca trabalham juntos na mesma branch.
-- **Quem implementa não revisa**: o PR do Codex é revisado pelo Claude (`/code-review`) e vice-versa. O merge é do usuário.
+- **Quem implementa não revisa**, e a revisão chega sozinha no PR: o do Codex é revisado pelo Claude (workflow `.github/workflows/revisao-claude.yml`) e o do Claude, pelo Codex (revisão automática do Codex). Quem abre o PR preenche "Implementou" no modelo de PR (`claude`, `codex` ou `humano`): é por ele que o workflow sabe quem revisa. À mão: `@claude revise` ou `@codex review` num comentário do PR. Instruções e configuração em [docs/processo/revisao.md](docs/processo/revisao.md).
+- **Merge**: o `master` exige PR e os checks `check` e `meta` verdes, sem aprovação obrigatória no GitHub (a revisão é do outro agente); o usuário mergeia com bypass, como merge commit.
 - Cada sessão começa lendo este arquivo e o contrato da tarefa. Configuração de cada agente: `CLAUDE.md` (Claude Code) e [docs/processo/codex.md](docs/processo/codex.md) (Codex).
 - Este arquivo, o `CLAUDE.md`, os hooks, os scripts de verificação, os `scripts` do `package.json` e as configurações dos agentes só mudam numa tarefa de processo pedida pelo usuário, na branch `feature/harness` ou `feature/harness-<tema>` (o `check:regras` confere o nome): o agente não afrouxa as próprias regras.
+
+## Review guidelines
+
+Seção lida pela revisão automática do Codex e usada pelo workflow do Claude. As instruções completas estão em [docs/processo/revisao.md](docs/processo/revisao.md):
+
+- Confira o PR contra este arquivo e o contrato da tarefa (`docs/tarefas/<tema>.md`): faz o que o contrato pede e só isso.
+- Prioridade: bug real; regra deste arquivo burlável num uso normal; arquivo fora do escopo; doc que não acompanha a mudança; balanceamento compensado sem o usuário.
+- Separe "bloqueia o merge" de "melhoria futura", com arquivo:linha e um cenário concreto. Não reabra decisões registradas no contrato ou em `docs/decisoes.md`.
+- Termine com o veredito: aprovado, aprovado com ressalvas ou precisa de mudanças. É só revisão: não altere arquivos.
+
