@@ -1,6 +1,6 @@
 # Revisão de PR
 
-Instruções de revisão para os dois agentes (AGENTS.md, "Review guidelines"). Quem implementa não revisa: o PR do Codex é revisado pelo Claude e o do Claude, pelo Codex. A revisão informa; quem decide e faz o merge é o usuário. Achado que bloqueia o merge volta sozinho para o autor corrigir, em [loop](#loop).
+Instruções de revisão para os dois agentes (AGENTS.md, "Review guidelines"). Quem implementa não revisa: o PR do Codex é revisado pelo Claude e o do Claude, pelo Codex. A revisão informa; quem decide e faz o merge é o usuário. Achado que bloqueia o merge volta sozinho para o autor corrigir, em [loop](#loop); a melhoria futura vira uma [issue](issues.md).
 
 ## Como chega
 
@@ -32,7 +32,7 @@ A revisão roda em loop no PR, sem ninguém no meio: o revisor aponta achados, o
 - **O job que corrige executa código do PR** (`npm ci`, `npm run check`) com os segredos: só roda no evento `pull_request_review` de PR da própria base cuja branch começa com `feature/`, nunca em `issue_comment` (o job `comentario` não executa código do PR).
 - **Push**: o Claude só tem liberado `git push origin HEAD`, na branch do PR em checkout (sem `--force`, sem outra branch, nunca o `master`). Commit sem `Co-Authored-By`: a atribuição vem desligada nas configurações do Claude no job. Depois, o workflow confere que o commit novo descende do revisado (sem push forçado) e que nenhum commit novo tem `Co-Authored-By`; se falhar, para o loop e avisa no PR.
 - **Revisão velha**: se o PR andou depois da revisão do Codex, o job `corrige` não corrige (a revisão do commit novo vale mais).
-- **Achado que não procede**: o Claude não corrige o que não procede, sai do escopo do contrato ou depende de decisão do usuário (balanceamento, por exemplo); explica no resumo. Sem commit, o workflow não pede nova revisão e avisa que o loop parou.
+- **Achado que não procede**: o Claude não corrige o que não procede, sai do escopo do contrato ou depende de decisão do usuário (balanceamento, por exemplo); explica no resumo e, se o achado é real mas fora do escopo, abre uma [issue](issues.md). Sem commit, o workflow não pede nova revisão e avisa que o loop parou.
 
 **O usuário entra** quando o loop para sem aprovação (limite, achado recusado, trava) e no merge. Para pedir mais uma rodada depois do limite, basta comentar à mão `@codex review` (PR do Claude) ou o pedido de correção ao Codex (PR do Codex).
 
@@ -57,7 +57,7 @@ Não reabra decisões registradas no contrato ou em `docs/decisoes.md`; se disco
 ## Formato da resposta
 
 1. O que foi verificado e o resultado (comandos e saída resumida).
-2. Achados, do mais grave ao menos grave, separados em **bloqueia o merge** (bug real ou regra burlável num uso normal) e **melhoria futura**. Cada achado tem arquivo:linha, o problema, um cenário concreto e a correção sugerida, sem aplicar.
+2. Achados, do mais grave ao menos grave, separados em **bloqueia o merge** (bug real ou regra burlável num uso normal) e **melhoria futura**. Cada achado tem arquivo:linha, o problema, um cenário concreto e a correção sugerida, sem aplicar. Cada melhoria futura (e inconsistência fora do escopo do PR) vira uma issue descritiva pelo modelo e com a triagem de [issues.md](issues.md), com o número citado no resumo.
 3. Na última linha, o veredito: **aprovado**, **aprovado com ressalvas** ou **precisa de mudanças**. Na revisão automática do Claude, o resumo termina com o marcador do veredito (`<!-- revisao-claude:veredito=aprovado -->`, `=ressalvas` ou `=mudancas`), que o workflow lê para o [loop](#loop).
 
 Achado específico vai como comentário na linha; o resumo com o veredito vai num comentário do PR.

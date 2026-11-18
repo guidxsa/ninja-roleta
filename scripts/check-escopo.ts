@@ -1,7 +1,8 @@
 // Confere se o diff da tarefa cabe no contrato (AGENTS.md, "Escopo"; modelo em docs/processo/tarefa-modelo.md).
 // O tema vem de CHECK_TEMA, da branch feature/<tema> ou do único docs/tarefas/<tema>.md alterado no diff (branches com
 // nome próprio, como as do Codex na nuvem). Na CI do PR (CHECK_PR=true), CHECK_ETIQUETAS traz as etiquetas: o contrato só vale com a
-// etiqueta `contrato-aprovado`, que só o usuário põe.
+// etiqueta `contrato-aprovado`, que só o usuário põe, ou, na correção automática de uma issue (branch feature/issue-<n>, contrato
+// com `issue: <n>`), com a etiqueta `correcao-automatica` na issue, lida pela CI em CHECK_ISSUE_ETIQUETAS (docs/processo/issues.md).
 // Uso: npm run check:escopo
 import { pathToFileURL } from 'node:url';
 import { currentBranch, gitChanges, inCi, lockfileOnlyVersion, matchesAny, packageJsonChange, readVersion, report, type Finding } from './harness';
@@ -9,6 +10,12 @@ import { currentBranch, gitChanges, inCi, lockfileOnlyVersion, matchesAny, packa
 /** Sem contrato, ou sem a etiqueta de aprovação no PR: aviso até esta data, erro a partir dela (o hábito pegar). */
 export const EXIGIR_CONTRATO_A_PARTIR = '2026-12-02';
 export const ETIQUETA_APROVADO = 'contrato-aprovado';
+/** Etiqueta da issue que o loop corrige sozinho: vale como aprovação do contrato gerado a partir dela. */
+export const ETIQUETA_AUTOMATICA = 'correcao-automatica';
+/** O que a correção automática nunca toca: balanceamento é sempre do usuário (AGENTS.md, "Convenções"). */
+export const NUNCA_AUTOMATICO = ['src/data/balance*'];
+/** Branch da correção automática de uma issue. */
+export const ISSUE_BRANCH = /^feature\/issue-(\d+)$/;
 
 /**
  * Sempre dentro do escopo: changelog e registro de decisões, que toda tarefa pode tocar. O package.json e o
@@ -68,9 +75,11 @@ export interface EscopoInput {
   lockOnlyVersion?: boolean;
   /** Etiquetas do PR (na CI do PR), ou null fora de PR. */
   labels?: string[] | null;
+  /** Etiquetas da issue <n> numa branch feature/issue-<n> (na CI do PR), ou null. */
+  issueLabels?: string[] | null;
 }
 
-export function checkEscopo({ branch, files, contrato, hoje, env = {}, packageOnlyVersion = false, lockOnlyVersion = false, labels = null }: EscopoInput): Finding[] {
+export function checkEscopo({ branch, files, contrato, hoje, env = {}, packageOnlyVersion = false, lockOnlyVersion = false, labels = null, issueLabels = null }: EscopoInput): Finding[] {
   const exigido = hoje >= EXIGIR_CONTRATO_A_PARTIR;
   const { tema, origem } = temaDaTarefa(branch, files, env);
   if (!tema)
@@ -100,19 +109,32 @@ export function checkEscopo({ branch, files, contrato, hoje, env = {}, packageOn
   if (!c?.escopo?.length) return [{ level: 'erro', rule: 'contrato', message: `${path} sem frontmatter com a lista "escopo".` }];
 
   const out: Finding[] = [];
-  if (labels !== null && !labels.includes(ETIQUETA_APROVADO))
+  const issue = ISSUE_BRANCH.exec(branch)?.[1];
+  const aprovadoPeloUsuario = labels?.includes(ETIQUETA_APROVADO) ?? false;
+  const aprovadoPelaIssue = !!issue && String(c.issue ?? '') === issue && (issueLabels?.includes(ETIQUETA_AUTOMATICA) ?? false);
+  if (labels !== null && !aprovadoPeloUsuario && !aprovadoPelaIssue)
     out.push({
       level: exigido ? 'erro' : 'aviso',
       rule: 'contrato-aprovado',
-      message: `O PR não tem a etiqueta "${ETIQUETA_APROVADO}": o usuário ainda não aprovou o contrato ${path} (agente nunca põe essa etiqueta).`,
+      message: issue
+        ? `O PR não tem a etiqueta "${ETIQUETA_APROVADO}" e a issue #${issue} não aprova sozinha (precisa da etiqueta "${ETIQUETA_AUTOMATICA}" e de "issue: ${issue}" em ${path}).`
+        : `O PR não tem a etiqueta "${ETIQUETA_APROVADO}": o usuário ainda não aprovou o contrato ${path} (agente nunca põe essa etiqueta).`,
+    });
+  const automaticos = issue && !aprovadoPeloUsuario ? files.filter((f) => matchesAny(f, NUNCA_AUTOMATICO)) : [];
+  if (automaticos.length)
+    out.push({
+      level: 'erro',
+      rule: 'correcao-automatica',
+      message: `A correção automática da issue #${issue} não mexe em balanceamento (troque a etiqueta da issue por "precisa-decisao"):`,
+      files: automaticos,
     });
 
   const fora = c.fora ?? [];
   const dentro = [...c.escopo, ...SEMPRE, path];
   const livre = (f: string) =>
     matchesAny(f, dentro) || (f === 'package.json' && packageOnlyVersion) || (f === 'package-lock.json' && lockOnlyVersion);
-  const proibidos = files.filter((f) => matchesAny(f, fora) && f !== path);
-  const soltos = files.filter((f) => !proibidos.includes(f) && !livre(f));
+  const proibidos = files.filter((f) => matchesAny(f, fora) && f !== path && !automaticos.includes(f));
+  const soltos = files.filter((f) => !proibidos.includes(f) && !automaticos.includes(f) && !livre(f));
   if (proibidos.length)
     out.push({ level: 'erro', rule: 'fora-do-escopo', message: `Arquivos que o contrato (${path}) marca como "fora":`, files: proibidos });
   if (soltos.length)
@@ -141,8 +163,11 @@ function main(): void {
   const lockOnlyVersion =
     changes.files.includes('package-lock.json') && !!changes.base && lockfileOnlyVersion(readVersion('package-lock.json', { base: changes.base }), readVersion('package-lock.json', 'tree'));
   const labels = process.env.CHECK_PR === 'true' ? (process.env.CHECK_ETIQUETAS ?? '').split(',').map((l) => l.trim()).filter(Boolean) : null;
+  // Etiquetas da issue <n> (branch feature/issue-<n>), lidas pela CI do PR; vazio quando a issue não existe ou não foi lida.
+  const issueLabels =
+    process.env.CHECK_PR === 'true' && ISSUE_BRANCH.test(branch) ? (process.env.CHECK_ISSUE_ETIQUETAS ?? '').split(',').map((l) => l.trim()).filter(Boolean) : null;
   const hoje = new Date().toISOString().slice(0, 10);
-  findings.push(...checkEscopo({ branch, files: changes.files, contrato, hoje, env: process.env, packageOnlyVersion, lockOnlyVersion, labels }));
+  findings.push(...checkEscopo({ branch, files: changes.files, contrato, hoje, env: process.env, packageOnlyVersion, lockOnlyVersion, labels, issueLabels }));
   process.exitCode = report(`check:escopo (${branch || '?'}${tema ? `, tema ${tema}` : ''})`, findings);
 }
 

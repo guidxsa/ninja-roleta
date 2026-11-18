@@ -20,7 +20,7 @@
 - [ ] Balanceamento: tabela de antes e depois (ou não se aplica)
 
 ## Achados fora do escopo
-<!-- Bugs, melhorias ou docs desatualizados vistos e não corrigidos. -->
+<!-- Bugs, melhorias ou docs desatualizados vistos e não corrigidos, cada um com a issue aberta (#n; docs/processo/issues.md). -->
 
 ## Agentes
 <!-- Depois de "Implementou:", escreva uma palavra só: claude, codex ou humano. É por ela que a revisão automática sabe quem revisa (docs/processo/revisao.md). -->

@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { gitChanges } from '../scripts/harness';
-import { checkEscopo, ETIQUETA_APROVADO, EXIGIR_CONTRATO_A_PARTIR, parseContrato, temaDaTarefa } from '../scripts/check-escopo';
+import { checkEscopo, ETIQUETA_APROVADO, ETIQUETA_AUTOMATICA, EXIGIR_CONTRATO_A_PARTIR, parseContrato, temaDaTarefa } from '../scripts/check-escopo';
 
 const contrato = (escopo: string[], fora: string[] = []) =>
   `---\nobjetivo: Teste.\nescopo: ${JSON.stringify(escopo)}\nfora: ${JSON.stringify(fora)}\n---\n\n# Tarefa\n`;
@@ -64,6 +64,41 @@ describe('escopo', () => {
     expect(run(files, md, { labels: [ETIQUETA_APROVADO] })).toEqual([]);
     expect(rules(run(files, md, { labels: [] }))).toEqual(['aviso:contrato-aprovado']);
     expect(rules(run(files, md, { labels: ['outra'], hoje: DEPOIS }))).toEqual(['erro:contrato-aprovado']);
+  });
+
+  it('correção automática: a issue com a etiqueta do loop vale como aprovação (docs/processo/issues.md)', () => {
+    const md7 = `---
+objetivo: Corrige a issue 7.
+issue: 7
+escopo: ["docs/**"]
+---
+`;
+    const issue = { branch: 'feature/issue-7', hoje: DEPOIS };
+    expect(run(['docs/a.md'], md7, { ...issue, labels: [], issueLabels: [ETIQUETA_AUTOMATICA] })).toEqual([]);
+    // sem a etiqueta na issue, com outra issue no contrato ou fora de uma branch feature/issue-<n>: precisa do usuário
+    expect(rules(run(['docs/a.md'], md7, { ...issue, labels: [], issueLabels: ['precisa-decisao'] }))).toEqual(['erro:contrato-aprovado']);
+    expect(rules(run(['docs/a.md'], md7, { ...issue, labels: [], issueLabels: null }))).toEqual(['erro:contrato-aprovado']);
+    expect(rules(run(['docs/a.md'], md7, { branch: 'feature/issue-8', hoje: DEPOIS, labels: [], issueLabels: [ETIQUETA_AUTOMATICA] }))).toEqual([
+      'erro:contrato-aprovado',
+    ]);
+    expect(rules(run(['docs/a.md'], md7, { branch: 'feature/veneno', hoje: DEPOIS, env: { CHECK_TEMA: 'issue-7' }, labels: [], issueLabels: [ETIQUETA_AUTOMATICA] }))).toEqual([
+      'erro:contrato-aprovado',
+    ]);
+  });
+
+  it('correção automática nunca mexe em balanceamento, nem com o arquivo no escopo', () => {
+    const md7 = `---
+objetivo: x
+issue: 7
+escopo: ["src/**"]
+---
+`;
+    const f = run(['src/data/balance.ts', 'src/core/a.ts'], md7, { branch: 'feature/issue-7', labels: [], issueLabels: [ETIQUETA_AUTOMATICA] });
+    expect(rules(f)).toEqual(['erro:correcao-automatica']);
+    expect(f[0]!.files).toEqual(['src/data/balance.ts']);
+    expect(rules(run(['src/data/balance.ts'], md7, { branch: 'feature/issue-7', labels: null }))).toEqual(['erro:correcao-automatica']);
+    // com a aprovação do usuário no PR, vale o contrato normal
+    expect(run(['src/data/balance.ts'], md7, { branch: 'feature/issue-7', labels: [ETIQUETA_APROVADO] })).toEqual([]);
   });
 
   it('sem contrato: aviso antes da data, erro a partir dela', () => {
