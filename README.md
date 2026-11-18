@@ -54,10 +54,15 @@ A licença não cobre imagens de personagens em `public/img/`: os direitos da ar
 
 ## Versionamento
 
-O jogo está em **0.x** (protótipo) e ainda longe do 1.0. Depois do `v0.9.0` vem o `v0.10.0`, depois `v0.11.0` e assim por diante; o número do meio pode passar de 9 quantas vezes for preciso.
+O trabalho chega à produção em duas camadas ([docs/processo/fluxo.md](docs/processo/fluxo.md)): os PRs aprovados pelos agentes entram sozinhos no `staging`, e o `staging` vai para o `master` (produção) de uma vez, quando o mantenedor aprova. O v1.0.0 está próximo e sai do staging, quando o mantenedor decidir.
 
-- **Minor** (`v0.10.0` → `v0.11.0`): muda como se joga ou traz um sistema novo: mecânica, regra, origem ou vilão refeito, rebalanceamento de fórmulas, tela ou modo novo.
-- **Patch** (`v0.10.0` → `v0.10.1`): ajuste ou complemento do que já existe: correção de bug, números, texto, documentação, polimento de interface, uma opção a mais numa tela ou na ferramenta de teste.
+- **y, release** (`v0.95.2` → `v0.96.0`): o que se acumulou no staging, testado no preview e publicado de uma vez. Junta mecânicas, telas e correções menores numa versão só.
+- **z, hotfix** (`v0.96.0` → `v0.96.1`): correção urgente direto no `master`, que não espera a release.
+- **x, major**: só por decisão do mantenedor (o próximo é o `v1.0.0`). Depois do `v0.9.0` veio o `v0.10.0`: o número do meio passa de 9 quantas vezes for preciso.
+
+No staging não há versão: cada mudança traz um fragmento em `changelog.d/` que vira a linha da release no [CHANGELOG](CHANGELOG.md). O preview do staging fica em https://guidxsa.github.io/ninja-roleta/staging/ (save separado do jogo publicado).
+
+Até a v0.95.2, cada mudança ganhava a própria versão: minor para mecânica, sistema, tela ou rebalanceamento; patch para ajuste, correção, texto ou documentação.
 
 Cada versão do histórico tem uma tag `vX.Y.Z`. Algumas foram criadas depois, sem commit próprio ou com outro número no título do commit (quatro em 05 e 06/11/2026, duas em 14/11/2026, três em 17/11/2026):
 
@@ -73,7 +78,7 @@ Cada versão do histórico tem uma tag `vX.Y.Z`. Algumas foram criadas depois, s
 | `v0.93.0` | `31cbef3` | Commit próprio, com o título "v0.91.0": a versão foi renumerada ao juntar as branches da fase 2 (outra branch já usava a v0.91.0). |
 | `v0.93.1` | `ba8197c` | Commit próprio, com o título "v0.91.1": renumerada como a `v0.93.0`. |
 
-O **v1.0.0** fica para quando o jogo estiver completo para quem joga:
+Critérios antigos do **v1.0.0**, de antes da decisão de 18/11/2026 de lançá-lo em breve a partir do staging; o mantenedor decide o que deles ainda vale ([decisões](docs/decisoes.md), item 50):
 
 - interface final em `src/ui` no lugar do protótipo;
 - nome definitivo;

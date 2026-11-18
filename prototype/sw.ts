@@ -9,6 +9,8 @@
 export {};
 
 declare const __VERSION__: string;
+/** Canal do build: o staging fica em /staging/, dentro do escopo da produção (docs/processo/fluxo.md, "Preview"). */
+declare const __CANAL__: 'producao' | 'staging';
 
 interface WaitEvent extends Event {
   waitUntil(p: Promise<unknown>): void;
@@ -25,8 +27,11 @@ declare const self: {
   addEventListener(type: 'fetch', listener: (e: FetchEvent) => void): void;
 };
 
-const PREFIX = 'ninja-roleta-';
+const PREFIX_STAGING = 'ninja-roleta-staging-';
+const PREFIX = __CANAL__ === 'staging' ? PREFIX_STAGING : 'ninja-roleta-';
 const CACHE = `${PREFIX}${__VERSION__}`;
+/** Caches que este service worker pode apagar: os do próprio canal (a produção não apaga os do staging). */
+const meu = (k: string): boolean => k.startsWith(PREFIX) && (__CANAL__ === 'staging' || !k.startsWith(PREFIX_STAGING));
 /** O que a instalação já deixa guardado: a página e o que o manifesto pede. */
 const SHELL = ['./', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 /** Chave única da página: `index.html`, `./` e `?seed=` são o mesmo jogo. */
@@ -45,7 +50,7 @@ self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith(PREFIX) && k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => meu(k) && k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -81,6 +86,8 @@ async function networkFirst(req: Request): Promise<Response> {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || !req.url.startsWith(self.registration.scope)) return;
+  // A produção não responde pelo preview do staging, que tem service worker próprio em /staging/.
+  if (__CANAL__ !== 'staging' && req.url.startsWith(`${self.registration.scope}staging/`)) return;
   if (req.mode === 'navigate') return e.respondWith(page(req));
   const path = new URL(req.url).pathname;
   if (/\.(webp|png|jpe?g|svg|webm|mp4)$/i.test(path)) return e.respondWith(cacheFirst(req));

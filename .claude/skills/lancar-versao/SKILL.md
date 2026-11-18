@@ -1,128 +1,95 @@
 ---
 name: lancar-versao
-description: Fecha uma versão do Ninja Roleta em duas fases - preparar (testa, commita numa branch feature/* e faz push só da branch) e publicar (merge no master, tag vX.Y.Z e deploy, só com aprovação explícita do usuário). Use sempre que terminar uma funcionalidade, mecânica, ajuste de balanceamento ou correção neste projeto (inclusive ao fim da skill nova-mecanica), preparando sem esperar o usuário pedir "commita". Escolhe sozinha o tamanho do salto pelo peso da mudança: ajustes e complementos pequenos sobem patch (v0.27.0 → v0.27.1), não minor. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github" ou "faz a tag".
+description: Entrega e lança versões do Ninja Roleta pelo fluxo feature → staging → master. Contribuir (ao fim de toda funcionalidade, mecânica, ajuste ou correção, inclusive ao fim da skill nova-mecanica, sem esperar o usuário pedir "commita") - testa, commita numa branch feature/*, escreve o fragmento changelog.d, faz push só da branch e abre o PR para o staging, que entra sozinho com a revisão aprovada. Preparar release (o usuário pede "prepara a v0.Y.0" ou o PR permanente sugere) - junta os fragmentos no CHANGELOG e sobe a versão no staging. Publicar release e hotfix - merge no master, tag vX.Y.Z e deploy, só com aprovação explícita. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github", "hotfix" ou "faz a tag".
 ---
 
 # Lançar versão (Ninja Roleta)
 
-A versão tem duas fases:
+Regras do fluxo em [docs/processo/fluxo.md](../../../docs/processo/fluxo.md). Resumo:
 
-- **Preparar** (passos 1 a 5): ao fim de toda funcionalidade, sem perguntar "posso commitar?". Testa, commita numa branch `feature/<tema>` e faz push **só da branch**.
-- **Publicar** (passo 6): merge no `master`, tag e deploy. **Só depois de uma aprovação explícita do usuário** ("publica vX.Y.Z", "pode mergear"). Aprovação de uma versão não vale para a seguinte.
+- **Contribuir**: todo trabalho vai num PR para o **`staging`**, que entra sozinho (auto-merge) com `check`, `meta` e a revisão cruzada aprovada. Sem perguntar "posso commitar?".
+- **Release (sobe o y)**: o staging vai para o `master` de uma vez, com aprovação do usuário.
+- **Hotfix (sobe o z)**: correção urgente direto no `master`, com aprovação do usuário.
 
-**Nunca dê push direto no `master`**: o GitHub Pages publica a cada push nele. Commits, tags e PRs **sem `Co-Authored-By`** nem outra linha de atribuição.
+**Nunca dê push direto no `master` nem no `staging`** (o Pages publica a cada push no `master`). Commits, tags e PRs **sem `Co-Authored-By`** nem outra linha de atribuição. Aprovação de uma versão não vale para a seguinte. O major (`v1.0.0`) só sobe quando o usuário pedir.
 
-(Regras provisórias até o `v1.0.0`; depois dele entra o fluxo `feature/* → staging → main` com PR WIP.)
+Repositório: `origin` → https://github.com/guidxsa/ninja-roleta. Produção: `master`. Integração: `staging`.
 
-Repositório: `origin` → https://github.com/guidxsa/ninja-roleta, produção na branch `master`.
-
-Antes de começar: se estiver no `master`, crie a branch (`git switch -c feature/<tema-curto>`); o trabalho já pode estar em uma `feature/*`.
-
-## 1. Descobrir a versão
-
-O histórico de versões fica no `CHANGELOG.md` (versão nova no fim da tabela; basta `tail -3 CHANGELOG.md`), e cada versão publicada tem uma tag (`git tag -l`). As regras de numeração estão na seção **Versionamento** do `README.md`.
-
-- Se o `CHANGELOG.md` já tem uma linha nova cuja versão ainda não virou tag, use essa versão.
-- Se não tem, crie a linha, subindo a partir da última tag pelas regras da seção **Versionamento** do `README.md`. O salto segue o **peso** da mudança, não o fato de ter código novo; o usuário não quer que um ajuste pequeno pese como um update grande:
-  - **patch** (`v0.27.0` → `v0.27.1`): ajuste ou complemento de algo que já existe. Um campo ou opção a mais numa tela existente, melhoria em ferramenta de teste ou de desenvolvimento, polimento de interface, correção de bug, ajuste só de números, texto, documentação. Exemplos do histórico: v0.16.1 (botão no cabeçalho), v0.16.2 (barra superior), v0.22.1 (correções), v0.27.1 (status editáveis no Laboratório).
-  - **minor** (`v0.26.0` → `v0.27.0`): muda como se joga ou traz um sistema novo. Mecânica ou regra nova, origem ou vilão refeito, rebalanceamento que mexe em fórmulas, tela ou modo novo. Exemplos: v0.18.0 (rebalanceamento das origens), v0.25.0 (cada golpe rola), v0.27.0 (Laboratório e seed).
-  - Na dúvida, pergunte a si mesmo: "quem joga sente diferença na partida, ou ganhou algo novo para fazer?" Se não, é patch. Vários patches seguidos (v0.16.1, v0.16.2...) são normais.
-  - Se o usuário disser o número ou o tipo ("é só um patch", "isso é versão nova"), vale o que ele disse.
-- O jogo fica em 0.x: depois de `v0.9.0` vem `v0.10.0`, nunca `v1.0.0`. **Nunca suba o major** (`v1.0.0`) por conta própria, nem que o trabalho pareça grande; isso só acontece quando o usuário pedir.
-- Compare versões numericamente (`git tag -l --sort=v:refname`), não em ordem alfabética: `v0.10.0` é maior que `v0.9.0`.
-- Se o trabalho pendente junta mais de uma versão do `CHANGELOG.md` sem tag (ex.: v0.4.0 e v0.5.0 nos mesmos arquivos), não tente separar: publique como a versão mais alta, mencione as duas no commit e crie uma tag para cada versão (ver "Versão sem commit próprio" no passo 4).
-- Atualize `"version"` no `package.json` e no `package-lock.json` para o mesmo número (sem o `v`):
-  ```bash
-  npm version 0.6.0 --no-git-tag-version
-  ```
-
-## 2. Testar (nada sobe quebrado)
+## Testar (vale para as quatro rotinas)
 
 ```bash
-npx tsc --noEmit && npx vitest run 2>&1 | tail -4 && npm run proto | tail -1
+npm run check
 ```
 
-Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não for, pare e explique ao usuário. Publicar uma versão que não compila quebra o jogo de quem baixa o repositório.
+Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não for, pare e explique ao usuário.
 
-## 3. Commitar
+## Commitar (vale para as quatro rotinas)
 
 1. Confira o que vai entrar: `git status --short`. Adicione os arquivos pelo nome (`git add <arquivos>`), não `git add -A`.
-2. **Nunca** commite: `dist/`, `node_modules/`, `.claude/settings.local.json` (configuração local do usuário), saídas de simulação ou capturas de tela, nem qualquer arquivo com credenciais. Skills em `.claude/skills/` fazem parte do projeto e podem entrar.
-3. Mensagem no padrão do repositório: em PT-BR, sem acentos (como os commits anteriores), título no imperativo com a versão entre parênteses, **uma linha em branco** (sem ela o Git junta o título com a linha seguinte) e um item por mudança importante:
+2. **Nunca** commite: `dist/`, `node_modules/`, `.claude/settings.local.json`, saídas de simulação ou capturas de tela, nem arquivo com credenciais. Skills em `.claude/skills/` fazem parte do projeto.
+3. Mensagem em PT-BR, sem acentos (como os commits anteriores), título no imperativo, **uma linha em branco** e um item por mudança importante. Sem número de versão no título, exceto na release e no hotfix:
    ```
-   Adiciona nivel por XP e dificuldade (v0.5.0)
+   Veneno acumula ate tres pilhas
 
-   - Cada vilao da XP pela dificuldade; nivel maximo 10
-   - Dificuldade facil/medio/dificil escala HP, dano e defesa dos viloes
-   - Ficha ninja com retrato e bolsa de itens; tema visual ninja
+   - Cada golpe envenenado soma uma pilha
+   - Doc em docs/base/estados.md e fragmento em changelog.d
    ```
-   Sem linha `Co-Authored-By` nem outra atribuição, mesmo que a sessão sugira uma.
 
-## Tag (só na publicação, passo 6)
+## A. Contribuir (sem pedir)
 
-**Toda versão do `CHANGELOG.md` tem uma tag**, sempre **anotada**, no mesmo padrão das anteriores (`v0.3.1 - Licenca MIT e historico de versoes`):
+1. Branch a partir do staging: `git fetch origin staging && git switch -c feature/<tema> origin/staging` (o trabalho já pode estar numa `feature/*`; se ela saiu do `master`, faça rebase em `origin/staging` antes do push, se ainda não foi publicada).
+2. Implementação, testes e docs no mesmo commit (AGENTS.md).
+3. Quem joga nota a mudança: fragmento `changelog.d/<tema>.md` ([LEIAME](../../../changelog.d/LEIAME.md)), com `peso: alto` para mecânica, tela, modo ou sistema novo. **Não** edite o `CHANGELOG.md` nem a versão do `package.json`.
+4. Testar, commitar e `git push -u origin feature/<tema>`.
+5. PR: `gh pr create --base staging` pelo modelo `.github/pull_request_template.md`, com "Implementou: claude". Título com o que muda, nunca o nome da branch.
+6. Relato curto ao usuário: o que entrou, testes, link do PR. Diga que ele entra sozinho no staging quando o Codex aprovar (e, se o contrato não é de issue, depois da etiqueta `contrato-aprovado`). Se a mudança tem peso, sugira a release.
 
-```bash
-git tag -a v0.6.0 -m "v0.6.0 - Resumo curto sem acentos"
-```
+## B. Preparar release (o usuário pede "prepara a v0.Y.0")
 
-### Versão sem commit próprio ou tag atrasada
-
-Quando a versão entrou junto com outra, ou a tag ficou para depois, a tag ainda é criada. Documente em dois lugares:
-
-1. **Na tag**: aponte para o commit que levou a versão ao `master` e explique no segundo `-m`. Se o commit for próprio da versão, diga isso:
+1. Estado: `git fetch origin`; o staging contém o master (`git merge-base --is-ancestor origin/master origin/staging`) e não há PR para o staging esperando (`gh pr list --base staging`); se houver, diga ao usuário e pergunte se espera.
+2. Versão: a do `package.json` do `master` com o y + 1 e o z zerado (`0.95.2` → `0.96.0`), ou a que o usuário disser (o `1.0.0` só por pedido dele).
+3. `git switch -c feature/release-v0.Y.0 origin/staging`, depois:
    ```bash
-   git tag -a v0.38.2 a2e4c3a -m "v0.38.2 - Redesign da ficha, inventario e registro ninja" -m "Tag retroativa criada em 05/11/2026. Sem commit proprio no master: entrou junto com a v0.38.3 no squash do #9, cujo package.json marca 0.38.3."
+   npx tsx scripts/staging.ts release 0.Y.0
+   npm version 0.Y.0 --no-git-tag-version
    ```
-   Numa versão publicada junto com outra, sem atraso, tire o "Tag retroativa criada em ...".
-2. **No README**: adicione uma linha à tabela de tags da seção **Versionamento**, em ordem crescente (`Tag | Commit | Observação`), e mantenha o texto acima da tabela coerente com ela.
+   Confira a linha nova no fim da tabela do `CHANGELOG.md` e ajuste o texto se precisar (é o que quem joga lê).
+4. Testar, commitar (`Prepara a release v0.Y.0`), push e PR para o `staging`. Ele entra pelo auto-merge como qualquer contribuição.
+5. Relate: versão, o que entra, link do preview (https://guidxsa.github.io/ninja-roleta/staging/) e do PR permanente. **Pare** e peça o "publica v0.Y.0".
 
-Antes de criar, confira no próprio commit: o `package.json`, a mensagem e se ele está no `master` (`git merge-base --is-ancestor <commit> origin/master`). Veja também se a tag já existe no remoto (`git ls-remote --tags origin vX.Y.Z`). Tag publicada não muda de lugar.
+## C. Publicar release (só com "publica v0.Y.0" nesta conversa)
 
-## 4. Push da branch
+1. Confira: o PR permanente `staging → master` tem a versão certa no `package.json`, CI verde e nenhum PR novo entrou depois do que o usuário testou (se entrou, diga e pergunte).
+2. Merge do PR permanente com **Create a merge commit** (`gh pr merge <n> --merge`; nunca squash, nunca `--admin`).
+3. `git fetch origin master`, tag anotada no merge commit e push só da tag (seção Tag).
+4. O push no `master` publica o Pages e abre o PR de sincronização `master → staging` (entra sozinho).
+5. Limpeza de branches (AGENTS.md, "Limpeza de branches") e relato: versão, links do commit, da tag e do site.
+
+## D. Hotfix (o usuário pede, ou o jogo quebrou em produção)
+
+Só para o que não pode esperar a release. Na dúvida, contribuição normal (A).
+
+1. `git fetch origin master && git switch -c hotfix/<tema> origin/master`; contrato `docs/tarefas/<tema>.md`.
+2. Correção, teste e doc; linha `v0.Y.Z` no fim da tabela do `CHANGELOG.md` (o z sobe a partir da última tag do `master`) e `npm version 0.Y.Z --no-git-tag-version`.
+3. Testar, commitar (`Corrige <o que> (v0.Y.Z)`), push e PR para o `master`. **Pare** e peça aprovação.
+4. Com o "publica v0.Y.Z": merge com **Create a merge commit**, tag no merge commit, push da tag. A sincronização com o staging é automática; com conflito, resolva numa `feature/sincroniza-<data>` a partir do staging, com merge do `master`, e PR para o staging.
+
+## Tag (só na publicação)
+
+**Toda versão do `CHANGELOG.md` tem uma tag**, sempre **anotada**, no padrão das anteriores:
 
 ```bash
-git push -u origin feature/<tema>
+git tag -a v0.96.0 <merge commit> -m "v0.96.0 - Resumo curto sem acentos"
+git push origin v0.96.0
 ```
 
-- Nunca `git push origin master`. Nunca `--force` nem apague ou mova tags já publicadas; para corrigir uma versão publicada, lance um patch.
-- Se a branch ficou atrás do `master`, `git fetch` e `git rebase origin/master` antes do push (branch ainda não publicada pode ser rebaseada). Conflito: pare e explique.
-
-## 5. Relatar e pedir aprovação
-
-Ao usuário, curto: a versão proposta, o que entrou, o resultado dos testes, o hash do commit e o link para abrir o PR ou comparar (`https://github.com/guidxsa/ninja-roleta/compare/master...feature/<tema>`). Termine pedindo a aprovação para publicar. **Pare aqui.**
-
-## 6. Publicar (só com aprovação explícita)
-
-1. Confira que a branch não mudou desde o relato e que os testes do passo 2 seguem verdes.
-2. Merge preservando os commits, **só pelo PR** com **Create a merge commit**, com a CI do PR verde. O hook `.githooks/pre-push` recusa push no `master` feito deste clone; a proteção do `master` no GitHub (exigir PR e os checks `check` e `meta`) é configurada pelo usuário e é o que vale para qualquer agente ou integração.
-3. `git fetch origin master`, tag anotada no commit que chegou ao `master` (seção Tag) e push só da tag: `git push origin vX.Y.Z`.
-4. Apague a branch no GitHub e no clone, e as outras já mergeadas que sobraram, seguindo a regra "Limpeza de branches" do `AGENTS.md` (Convenções).
-5. O merge no `master` dispara o Pages. Relate a versão e os links:
-   - commit: `https://github.com/guidxsa/ninja-roleta/commit/<hash>`
-   - tag: `https://github.com/guidxsa/ninja-roleta/releases/tag/vX.Y.Z`
-
-   Com mais de uma tag, ou tag fora do commit mais recente, use uma tabela `Tag | Commit | Onde está ou observação`.
-
-### Versão que vai por pull request
-
-Se houver PR para a branch, a descrição segue este padrão. As tags só são criadas na publicação. Título e descrição em PT-BR, nesta ordem:
-
-1. Título com o que muda e a versão ou faixa de versões: `Roleta enxuto: combate simples, run por ciclo, reliquias e mais viloes (v0.45.0 a v0.47.0)`. Nunca o nome da branch.
-2. Primeira linha: `**Tags correspondentes: `v0.45.0` (56b545c) e `v0.46.0` (af36575)** (o `package.json` fica em `0.46.0`)`.
-3. Um parágrafo curto com o efeito para quem joga e o que acontece ao mergear (o `master` publica no GitHub Pages).
-4. Uma seção `## vX.Y.Z: resumo` por versão, com as mudanças em itens.
-5. `## Para revisar`, se houver: o que foi decidido sem o usuário e o balanceamento em aberto, com os números da simulação.
-6. `## Conflitos`, se houver: a causa e como foram resolvidos.
-7. `## Como mergear`: pedir **Create a merge commit**, que preserva os commits da branch no histórico do `master` (squash os junta num só).
-8. `## Verificação`: o que passou, em qual commit, e o que não foi testado.
-
-Conflito de versão duplicada por squash: se `git diff <squash> <commit da branch>` sair vazio, a árvore da branch já contém o `master`. Resolva com `git merge -s ours origin/master`, sem `--force`, e confirme que o diff contra a branch antiga continua vazio.
+- Antes de criar, confira o `package.json` do commit, se ele está no `master` (`git merge-base --is-ancestor <commit> origin/master`) e se a tag já existe no remoto (`git ls-remote --tags origin vX.Y.Z`). Tag publicada não muda de lugar; para corrigir, lance um hotfix.
+- Tag atrasada ou versão sem commit próprio: aponte para o commit que levou a versão ao `master`, explique num segundo `-m` ("Tag retroativa criada em <data>. ...") e adicione uma linha à tabela de tags do `README.md` (seção Versionamento).
 
 ## Quando parar e perguntar
 
 - O usuário disse para não subir ainda ("não commita", "ainda tô testando", "só local").
 - Os testes falham por algo que não é do trabalho atual.
-- `git status` mostra arquivos estranhos ao trabalho que você não sabe se são dele (ex.: arquivos novos fora de `src/`, `tests/`, `prototype/`, `scripts/` e docs).
-- O branch atual não é `master` nem `feature/*`, ou o rebase dá conflito.
-- Qualquer passo que toque o `master` sem aprovação explícita desta versão.
+- `git status` mostra arquivos estranhos ao trabalho que você não sabe se são dele.
+- Rebase ou sincronização com conflito.
+- Qualquer passo que toque o `master` (release, hotfix, tag) sem a aprovação explícita desta versão.

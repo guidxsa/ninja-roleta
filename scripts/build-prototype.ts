@@ -6,7 +6,8 @@
 // A música (public/audio/naruto_theme.mp3) vai embutida em base64, para o arquivo seguir único e offline.
 // PWA (prototype/pwa/LEIAME.md): dist/sw.js (de prototype/sw.ts), dist/manifest.webmanifest e os ícones.
 // O empacotamento comum com o UI Lab fica em scripts/page-build.ts. O lab não entra aqui (npm run lab, dist-lab/).
-// Uso: `npm run proto`
+// Uso: `npm run proto` (produção) ou `npm run proto -- --canal=staging` (preview do staging em /staging/, com versão
+// marcada, chaves de armazenamento e cache próprios; docs/processo/fluxo.md, "Preview").
 import { build } from 'esbuild';
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -16,7 +17,9 @@ const MUSIC_FILE = 'public/audio/naruto_theme.mp3';
 const PWA_ICONS = ['icon-192.png', 'icon-512.png'];
 
 const { list: imageList, meta: imageMeta } = images();
-const version = readVersion();
+const canal = process.argv.includes('--canal=staging') ? 'staging' : 'producao';
+const commit = (process.env.GITHUB_SHA ?? '').slice(0, 7) || 'local';
+const version = canal === 'staging' ? `${readVersion()}-staging.${commit}` : readVersion();
 const music = existsSync(MUSIC_FILE) ? readFileSync(MUSIC_FILE).toString('base64') : '';
 
 const js = await bundleJs('prototype/main.ts', {
@@ -24,6 +27,7 @@ const js = await bundleJs('prototype/main.ts', {
   __IMAGE_META__: JSON.stringify(imageMeta),
   __MUSIC__: JSON.stringify(music),
   __VERSION__: JSON.stringify(version),
+  __CANAL__: JSON.stringify(canal),
 });
 const css = await bundleCss('prototype/styles/index.css');
 
@@ -34,15 +38,16 @@ const worker = await build({
   target: 'es2020',
   write: false,
   minify: true,
-  define: { __VERSION__: JSON.stringify(version) },
+  define: { __VERSION__: JSON.stringify(version), __CANAL__: JSON.stringify(canal) },
 });
 
-const html = page('prototype/index.html', js, css);
+const pagina = page('prototype/index.html', js, css);
+const html = canal === 'staging' ? pagina.replace('<title>Ninja Roleta</title>', '<title>Ninja Roleta (staging)</title>') : pagina;
 
 // Manifesto do jogo instalável: abre em tela cheia, nas cores do tema escuro (o padrão).
 const manifest = {
-  name: 'Ninja Roleta',
-  short_name: 'Ninja Roleta',
+  name: canal === 'staging' ? 'Ninja Roleta (staging)' : 'Ninja Roleta',
+  short_name: canal === 'staging' ? 'NR staging' : 'Ninja Roleta',
   description: 'Jogo de fã, de roleta e estratégia, no universo ninja. Sem afiliação oficial.',
   lang: 'pt-BR',
   start_url: './',

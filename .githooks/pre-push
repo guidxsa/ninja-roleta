@@ -1,5 +1,5 @@
 #!/bin/sh
-# Antes de cada push: bloqueia o master e o push forçado, e roda a verificação completa (npm run check) na branch que
+# Antes de cada push: bloqueia o master, o staging e o push forçado, e roda a verificação completa (npm run check) na branch que
 # está subindo. O master é produção (o Pages publica a cada push): publicar é mergear o PR no GitHub, com aprovação do
 # usuário. Este hook só vale para push feito deste clone; a garantia de verdade é a proteção do master no GitHub.
 zero=0000000000000000000000000000000000000000
@@ -7,8 +7,8 @@ head=$(git rev-parse HEAD)
 branches=0
 while read -r local_ref local_sha remote_ref remote_sha; do
   case "$remote_ref" in
-    refs/heads/master|refs/heads/main)
-      echo "pre-push: push direto em ${remote_ref#refs/heads/} bloqueado. Use uma branch feature/<tema> e um PR." >&2
+    refs/heads/master|refs/heads/main|refs/heads/staging)
+      echo "pre-push: push direto em ${remote_ref#refs/heads/} bloqueado. Use uma branch feature/<tema> (ou hotfix/<tema>) e um PR (docs/processo/fluxo.md)." >&2
       exit 1 ;;
     refs/heads/*) ;;
     *) continue ;; # tags: a skill lancar-versao cuida (tag publicada não muda de lugar)

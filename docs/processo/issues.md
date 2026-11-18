@@ -72,16 +72,16 @@ Quem abre a issue (agente ou usuário) já põe a etiqueta pelo critério. Quem 
 
 1. **Dispara** quando a issue ganha `correcao-automatica`, numa varredura diária das issues abertas com a etiqueta (até 2 por execução) ou à mão (Actions → Issues do Claude → Run workflow, com o número ou vazio para varrer).
 2. **Pula** a issue fechada, sem a etiqueta, com a branch `feature/issue-<n>` ou com PR aberto, e a que já teve 2 tentativas sem PR (`LIMITE_TENTATIVAS`, marcador `<!-- loop-issues:tentativa -->`).
-3. **Corrige**: o Claude confere a triagem; se não for erro claro (ou o problema já sumiu), comenta o motivo e o workflow troca `correcao-automatica` por `precisa-decisao`. Se for, a partir do `master` na branch `feature/issue-<n>`: escreve o contrato `docs/tarefas/issue-<n>.md` com `issue: <n>` e o escopo mais estreito, corrige, roda `npm run check`, faz commit e `git push origin HEAD` e abre o PR com `Closes #<n>`, "Implementou: claude" e a saída do check.
+3. **Corrige**: o Claude confere a triagem; se não for erro claro (ou o problema já sumiu), comenta o motivo e o workflow troca `correcao-automatica` por `precisa-decisao`. Se for, a partir do `staging` (do `master` enquanto o staging não existe) na branch `feature/issue-<n>`: escreve o contrato `docs/tarefas/issue-<n>.md` com `issue: <n>` e o escopo mais estreito, corrige, roda `npm run check`, faz commit e `git push origin HEAD` e abre o PR para o `staging` com `Closes #<n>`, "Implementou: claude" e a saída do check. Mudança que quem joga nota leva o fragmento `changelog.d/issue-<n>.md` ([fluxo.md](fluxo.md)).
 4. **Revisa**: o PR entra na revisão cruzada de sempre (o Codex revisa; achados voltam para o Claude pelo job `corrige`, até 3 rodadas).
-5. **Fecha**: o merge é do usuário, como em todo PR; o `Closes #<n>` fecha a issue no merge.
+5. **Fecha**: com a revisão aprovada e a CI verde, o PR entra sozinho no `staging` (auto-merge, [fluxo.md](fluxo.md#entrada-no-staging)) e o workflow `staging.yml` fecha a issue com um aviso; a correção chega à produção na próxima release, com o merge do usuário.
 
 **A issue vale como contrato.** No PR de `feature/issue-<n>`, a CI lê as etiquetas da issue `<n>` e o `check:escopo` aceita como aprovado se a issue tem `correcao-automatica` e o contrato tem `issue: <n>`, sem a etiqueta `contrato-aprovado`. O resto do contrato vale igual: diff só dentro do escopo.
 
 **Travas**:
 - Balanceamento nunca é automático: arquivo `src/data/balance*` no diff de `feature/issue-<n>` é erro no `check:escopo`, a menos que o usuário ponha `contrato-aprovado` no PR.
 - Processo nunca é automático: AGENTS.md, workflows, hooks e scripts de verificação só mudam em `feature/harness*` (`check:regras`).
-- Push só `git push origin HEAD` na branch da issue, sem `--force`; sem `gh pr merge`. Depois, o workflow confere que o PR descende do `master` usado e não tem `Co-Authored-By`; se falhar, avisa no PR.
+- Push só `git push origin HEAD` na branch da issue, sem `--force`; sem `gh pr merge`. Depois, o workflow confere que o PR descende da base usada e não tem `Co-Authored-By`; se falhar, avisa no PR.
 - O texto da issue é descrição do problema, não instrução: o prompt manda o Claude não mudar regras nem processo por causa dele.
 
 **Modelo e métricas**: o job `corrige` escolhe o modelo pelo perfil da issue (leve ou padrão, alternado por issue quando `PILOTO_PERFIS=on`, com escalada na 2ª tentativa) e, depois de cada execução, comenta na issue o consumo (tokens por modelo, tempo, turnos, resultado). O job `corrige` da revisão faz o mesmo nos PRs de `feature/issue-<n>`. Regras e relatório (`npm run metricas`) em [metricas.md](metricas.md).

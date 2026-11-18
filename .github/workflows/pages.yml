@@ -1,5 +1,7 @@
-# Publica o protótipo jogável no GitHub Pages a cada push no master.
-# Endereço: https://guidxsa.github.io/ninja-roleta/
+# Publica o protótipo jogável no GitHub Pages: a produção (master) na raiz e o preview do staging em /staging/
+# (docs/processo/fluxo.md, "Preview"). Roda a cada push no master e quando o workflow Staging pede (push no staging,
+# sempre com ref master, para valer a regra de implantação do ambiente github-pages).
+# Endereços: https://guidxsa.github.io/ninja-roleta/ e https://guidxsa.github.io/ninja-roleta/staging/
 name: Publicar protótipo
 
 on:
@@ -21,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: master
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -36,6 +40,22 @@ jobs:
           cp dist/sw.js dist/manifest.webmanifest dist/icon-192.png dist/icon-512.png site/
           if [ -d dist/img ]; then cp -r dist/img site/img; fi
           touch site/.nojekyll
+      # Preview do staging: outro checkout, build com --canal=staging (chaves de armazenamento e cache próprios).
+      # Sem a branch staging, ou com o build do staging quebrado, a produção sai assim mesmo, sem /staging/.
+      - name: Preview do staging
+        continue-on-error: true
+        run: |
+          git fetch -q --depth 1 origin staging || { echo "::notice::Sem branch staging: só a produção."; exit 0; }
+          git worktree add -q "$RUNNER_TEMP/staging" FETCH_HEAD
+          cd "$RUNNER_TEMP/staging"
+          # Sem o canal no build, o preview dividiria o save com a produção: não publica.
+          grep -q -- '--canal=staging' scripts/build-prototype.ts || { echo "::warning::Staging sem --canal=staging: preview não publicado."; exit 0; }
+          npm ci
+          GITHUB_SHA=$(git rev-parse HEAD) npm run proto -- --canal=staging
+          mkdir -p "$GITHUB_WORKSPACE/site/staging"
+          cp dist/prototipo.html "$GITHUB_WORKSPACE/site/staging/index.html"
+          cp dist/sw.js dist/manifest.webmanifest dist/icon-192.png dist/icon-512.png "$GITHUB_WORKSPACE/site/staging/"
+          if [ -d dist/img ]; then cp -r dist/img "$GITHUB_WORKSPACE/site/staging/img"; fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

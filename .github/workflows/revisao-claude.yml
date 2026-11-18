@@ -20,6 +20,7 @@ permissions:
   pull-requests: write
   issues: write
   id-token: write
+  statuses: write # portão revisao-cruzada do staging (docs/processo/fluxo.md)
 
 env:
   # Rodadas de correção por PR (os dois sentidos juntos), contadas pelo marcador <!-- loop-revisao:rodada --> nos
@@ -98,11 +99,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
           INICIO: ${{ steps.token.outputs.inicio }}
         run: |
           comentarios() { gh api "repos/$GH_REPO/issues/$PR/comments" --paginate --jq '.[] | .created_at + " " + (.body | gsub("\n"; " "))'; }
           veredito=$(comentarios | awk -v t="$INICIO" '$1 >= t' | grep -o 'revisao-claude:veredito=[a-z]*' | tail -n 1 | cut -d= -f2 || true)
           echo "Veredito desta revisão: ${veredito:-nenhum}"
+          # Aprovado ou com ressalvas: status revisao-cruzada verde no commit revisado, se ainda for a ponta do PR
+          # (portão do auto-merge no staging, docs/processo/fluxo.md).
+          if [ "$veredito" = "aprovado" ] || [ "$veredito" = "ressalvas" ]; then
+            if [ "$(gh pr view "$PR" --json headRefOid --jq .headRefOid)" = "$SHA" ]; then
+              gh api "repos/$GH_REPO/statuses/$SHA" -f state=success -f context=revisao-cruzada -f description="Revisão do Claude: $veredito" > /dev/null
+            fi
+            exit 0
+          fi
           if [ "$veredito" != "mudancas" ]; then exit 0; fi
           rodadas=$(comentarios | grep -c '<!-- loop-revisao:rodada -->' || true)
           if [ "$rodadas" -ge "$LIMITE_RODADAS" ]; then

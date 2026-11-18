@@ -1,6 +1,6 @@
 # Modelo de contrato de tarefa
 
-Copie para `docs/tarefas/<tema>.md`, com `<tema>` igual ao nome da branch `feature/<tema>`. O agente preenche a partir do pedido e o usuário aprova **antes** do código. Mudou o escopo no meio do caminho: atualiza o contrato e pede nova aprovação. Regras em [AGENTS.md](../../AGENTS.md#como-trabalhar-dois-agentes).
+Copie para `docs/tarefas/<tema>.md`, com `<tema>` igual ao nome da branch `feature/<tema>` (ou `hotfix/<tema>`, [fluxo.md](fluxo.md)). O agente preenche a partir do pedido e o usuário aprova **antes** do código. Mudou o escopo no meio do caminho: atualiza o contrato e pede nova aprovação. Regras em [AGENTS.md](../../AGENTS.md#como-trabalhar-dois-agentes).
 
 Os campos do topo são lidos pela conferência de escopo (Fase 4 do [plano](plano-harness.md)): `escopo` e `fora` são padrões de caminho (glob) a partir da raiz do repositório. `issue` só existe na correção automática de uma issue (branch `feature/issue-<n>`, [issues.md](issues.md)): apague a linha nas outras tarefas.
 

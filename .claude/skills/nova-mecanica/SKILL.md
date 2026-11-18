@@ -69,7 +69,7 @@ O protótipo só tem fluxo e animação; toda regra vem do core. Telas da Roleta
 - `docs/decisoes.md`: tire o item resolvido; acrescente um se surgiu dúvida ou se você decidiu algo que o usuário precisa revisar.
 - `docs/registro.md`: uma entrada curta com o que foi decidido sozinho e a simulação de antes e depois.
 - `AGENTS.md`: só se mudou um jeito de trabalhar (regra, convenção, estrutura); não registre versões nele.
-- `CHANGELOG.md`: nova linha no fim da tabela. A regra de qual número usar está na skill `lancar-versao`.
+- `changelog.d/<tema>.md`: o fragmento para quem joga (`peso: alto` para mecânica nova; formato em `changelog.d/LEIAME.md`). A linha do `CHANGELOG.md` e a versão saem na release (skill `lancar-versao`).
 
 ## 7. Verificar e relatar
 
@@ -77,7 +77,7 @@ O protótipo só tem fluxo e animação; toda regra vem do core. Telas da Roleta
 npx tsc --noEmit && npx vitest run 2>&1 | tail -4 && npm run proto | tail -1
 ```
 
-Com tudo verde, prepare a versão seguindo a skill `lancar-versao` (testa, commita na branch `feature/*` e faz push só da branch). O usuário quer isso ao fim de toda funcionalidade, sem precisar pedir. Merge no `master`, tag e deploy ficam para depois da aprovação explícita dele. No relatório final (em PT-BR, para o usuário, não um changelog):
+Com tudo verde, entregue seguindo a skill `lancar-versao` ("Contribuir": testa, commita na branch `feature/*`, faz push só da branch, escreve o fragmento `changelog.d/<tema>.md` e abre o PR para o `staging`). O usuário quer isso ao fim de toda funcionalidade, sem precisar pedir. O PR entra sozinho no staging com a revisão aprovada; release, tag e deploy ficam para a aprovação explícita dele. No relatório final (em PT-BR, para o usuário, não um changelog):
 - o que a mecânica faz agora, com os números escolhidos;
 - simulação antes/depois e o que isso significa para o jogador;
 - decisões que você tomou sozinho e riscos (ex.: "Difícil não vence nenhuma campanha na simulação").

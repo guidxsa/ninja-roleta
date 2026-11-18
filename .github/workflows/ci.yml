@@ -4,7 +4,7 @@ name: Verificar
 
 on:
   push:
-    branches: ['feature/**']
+    branches: ['feature/**', 'hotfix/**', staging]
   pull_request:
     # labeled/unlabeled: a etiqueta contrato-aprovado (check:escopo) roda a verificação de novo
     types: [opened, synchronize, reopened, labeled, unlabeled]
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # o check:regras compara a branch com o origin/master
+          fetch-depth: 0 # o check:regras compara a branch com a base (origin/staging ou origin/master)
       - uses: actions/setup-node@v4
         with:
           node-version: 24
