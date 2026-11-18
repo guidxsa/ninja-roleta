@@ -107,7 +107,7 @@ O projeto é feito pelo Claude Code e pelo Codex, com as mesmas regras. Plano de
 ### Escopo
 
 - Toda tarefa começa por um **contrato** com objetivo, o que fica de fora, caminhos que podem ser tocados e critério de pronto (modelo em [docs/processo/tarefa-modelo.md](docs/processo/tarefa-modelo.md); o arquivo fica em `docs/tarefas/<tema>.md`, com `<tema>` igual ao da branch `feature/<tema>`). O agente escreve o contrato a partir do pedido; o usuário aprova antes do código.
-- Mexer só no que o contrato permite. Precisou sair do escopo: parar e pedir para atualizar o contrato; não ampliar sozinho.
+- Mexer só no que o contrato permite. Precisou sair do escopo: parar e pedir para atualizar o contrato; não ampliar sozinho. O `npm run check:escopo` (dentro do `npm run check`) compara o diff com o `escopo` e o `fora` do contrato; versão, `CHANGELOG.md`, `docs/registro.md` e `docs/decisoes.md` sempre podem mudar. Sem contrato numa `feature/*` é aviso, e vira erro a partir de 02/12/2026.
 - Achou bug, melhoria ou doc desatualizado fora do escopo: anotar em **Achados** no resumo final e no PR, sem corrigir.
 - Nada de refatoração, renomeação ou formatação "de passagem".
 
@@ -115,7 +115,7 @@ O projeto é feito pelo Claude Code e pelo Codex, com as mesmas regras. Plano de
 
 Uma tarefa só está pronta quando:
 
-1. `npm run check` passa (typecheck, testes, `check:regras` e build), com a saída mostrada no resumo. Os git hooks rodam o mesmo: `pre-commit` (typecheck e `check:regras`) e `pre-push` (`npm run check`, e recusa push no `master` e push forçado). Hook nunca é pulado (`--no-verify` é proibido); se ele falha, corrige-se a causa.
+1. `npm run check` passa (typecheck, testes, `check:regras`, `check:escopo` e build), com a saída mostrada no resumo. Os git hooks rodam o mesmo: `pre-commit` (typecheck e `check:regras`) e `pre-push` (`npm run check`, e recusa push no `master` e push forçado). Hook nunca é pulado (`--no-verify` é proibido); se ele falha, corrige-se a causa.
 2. Regra ou número mudou: o doc correspondente mudou no mesmo commit.
 3. O jogador nota a mudança: linha no `CHANGELOG.md`.
 4. Houve decisão sem o usuário: registrada em `docs/registro.md` e, se ele precisa revisar, em `docs/decisoes.md`.

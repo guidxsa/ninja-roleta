@@ -11,7 +11,7 @@
 
 ## Como verifiquei
 <!-- Comandos rodados e o resultado (typecheck, testes, build, simulação com seed). -->
-- [ ] `npm run check` (typecheck, testes, `check:regras` e build)
+- [ ] `npm run check` (typecheck, testes, `check:regras`, `check:escopo` e build)
 
 ## Docs e registro
 - [ ] Doc da regra atualizado no mesmo commit (ou não se aplica)
