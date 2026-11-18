@@ -6,10 +6,12 @@ Formatos: `.webp` (preferido), `.png`, `.jpg` ou `.svg`. Retratos: quadrados, de
 
 | Pasta | Nome do arquivo | Onde aparece |
 |---|---|---|
-| `jornada/` | id da personagem ou do inimigo na Jornada (abaixo) | toda a Jornada |
-| `viloes/` | id do vilão: `mizuki`, `haku`, `zabuza`, `examSand`, `examSound`, `examLeaf`, `gaara`, `jirobo`, `kidomaru`, `tayuya`, `sakon`, `kabuto`, `orochimaru` | ficha do vilão, mapa e luta do Roleta; inimigos da Jornada sem arquivo próprio |
+| `jornada/` | id próprio da Jornada, como `hinata`, ou `<id>-<forma>` para um retrato específico de transformação | cenas e retratos específicos da Jornada |
+| `viloes/` | chave do vilão, transformação ou invocação, como `zabuza`, `hakuCivil`, `sakonCurse` e `snake` | fichas, mapas e lutas do Roleta e da Jornada |
 | `cenas/` | ilustrações: `dia` e `noite` (Portão: o Naruto de dia, o Sasuke à noite), `jornada`, `modo-jornada`, `modo-roleta`, os arcos `waves`, `chunnin`, `sannin`, `sasuke` (equipe do resgate, arco Vale do Fim) `caminho-ninja` (card e pôster do Caminho Ninja), `g1`, `g2`, `g3` e, no Roleta do PC (opcionais), `roleta` (palco do sorteio) e `roleta-genin`, `roleta-chunin`, `roleta-jounin`, `roleta-chefe` (mapa, roletas e luta, pela categoria) | destaque do Portão, banner da Jornada, cards de modo, faixa de arcos e card de progresso. Quem liga cada vaga ao arquivo é o mapa `SCENE_ART` em `prototype/art.ts` ([docs/visual.md](../../docs/visual.md#vagas-de-ilustração)) |
-| `ninja/` | id da linhagem: `common`, `akimichi`, `inuzuka`, `uchiha`, `hyuuga`, `taijutsuProdigy`, `uzumaki`, `senju`; ou `ninja` para todas | retrato do jogador |
+| `ninja/` | chave do personagem, linhagem, classe ou suporte, como `naruto`, `senju`, `taijutsuProdigy` e `leafMedic`. Use `<chave>-jinchuuriki` para a versão com marcas | jogador, equipe e personagens da História |
+
+Os retratos do pacote são ilustrações próprias em WebP. Use a mesma chave da ficha e guarde uma única cópia nas pastas `ninja/` ou `viloes/`. O jogo procura a chave nas duas pastas. Uma imagem com o id específico em `jornada/` tem prioridade naquele lutador ou cena. As artes variantes, como `sakuraShort` e `orochimaruDisguise`, estão disponíveis para as fichas que citarem essas chaves.
 
 **Cenas animadas** (`cenas/`, opcionais): ponha um vídeo com o mesmo nome da imagem (`dia.webm`, de preferência, ou `.mp4`): sem som, 6 a 10 s em loop, até 1280×720 e cerca de 3 MB. Deixe também a imagem estática com o mesmo nome: ela é o modo **Leve** (o padrão) e a capa do vídeo. O botão **Animado** da barra superior liga os vídeos (e a cena viva dos painéis grandes); com movimento reduzido no aparelho, fica sempre a imagem. GIF e WebP animado também funcionam, mas animam sempre (nos dois modos) e pesam bem mais.
 
@@ -17,11 +19,4 @@ Formatos: `.webp` (preferido), `.png`, `.jpg` ou `.svg`. Retratos: quadrados, de
 
 **Imagens provisórias**: as vagas de `cenas/` sem arte própria vêm com um `.svg` genérico. Os estágios do Caminho Ninja (`g1`, `g2`, `g3`) têm uma arte simples, sem texto: estrada ao entardecer, vila em guerra e o vale do Som à noite. Para trocar, ponha a sua imagem com o mesmo nome (`.webp`, `.png` ou `.jpg`), apague o `.svg` e rode `npm run proto`.
 
-**Primeiros arquivos do piloto**, em `jornada/`: `naruto`, `sasuke`, `sakura` e `kakashi`.
-
-**Demais ids da Jornada:**
-
-- Equipe: `jiraiya`, `tsunade`, `lee`, `gaaraAlly`, `shikamaru`, `choji`, `kibaAlly`, `nejiAlly`
-- Inimigos: `mizuki`, `zabuza`, `haku`, `gozu`, `meizu`, `dosu`, `zaku`, `kin`, `kabutoSpy`, `kiba`, `akamaru`, `neji`, `gaara`, `orochimaru`, `kabuto`, `sasukeHospital`, `jirobo`, `kidomaru`, `tayuya`, `sakon`, `kimimaro`, `sasukeFinal`
-
-Exemplo: `public/img/jornada/naruto.webp`. Sem o arquivo, o desenho em SVG continua valendo.
+Por exemplo, `public/img/ninja/naruto.webp` vale sempre que a ficha pedir `ninja:naruto`. Se o retrato estiver indisponível, o jogo usa o desenho correspondente em SVG. Em cenas com arte própria e sem desenho de reserva, o nome já identifica quem está em cena.

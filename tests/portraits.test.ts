@@ -1,6 +1,7 @@
 // Retratos (docs/visual.md, "Personagens"): toda chave de retrato dos dados tem desenho próprio e nenhum personagem
 // repete o desenho de outro.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { images } from '../scripts/page-build';
 import { avatarChoices } from '../src/core/avatar';
 import { characters } from '../src/data/jornada/characters';
 import { enemies } from '../src/data/jornada/enemies';
@@ -51,6 +52,29 @@ describe('retratos', () => {
 
   it('as marcas do jinchūriki mudam o retrato da linhagem', () => {
     for (const l of lineages) expect(portraitArt(l.id, true), l.id).not.toBe(portraitArt(l.id, false));
+  });
+
+  it('carrega as ilustrações no Roleta e na Jornada com o desenho de reserva', async () => {
+    const { list, meta } = images();
+    vi.stubGlobal('__IMAGES__', list);
+    try {
+      const { fighterPortrait, hasOwnPortrait, ninjaPortrait, portraitImage, villainPortrait } = await import('../prototype/art');
+      for (const id of PORTRAIT_KEYS) {
+        const src = portraitImage(id);
+        expect(src, id).toMatch(/\.webp$/);
+        expect(meta[src!], id).toEqual([256, 256]);
+      }
+      expect(ninjaPortrait('senju', false)).toContain('src="img/ninja/senju.webp"');
+      expect(ninjaPortrait('senju', true)).toContain(portraitArt('senju', true));
+      expect(villainPortrait('neji')).toContain('src="img/ninja/neji.webp"');
+      expect(fighterPortrait('kimimaro', 'ninja:kimimaro')).toContain('src="img/viloes/kimimaro.webp"');
+      expect(fighterPortrait('haku-rage', 'villain:hakuUnmasked')).toContain('<template><svg');
+      expect(hasOwnPortrait('hinata', undefined)).toBe(true);
+      expect(fighterPortrait('hinata', 'ninja:common')).toContain('src="img/jornada/hinata.webp"');
+    } finally {
+      vi.unstubAllGlobals();
+      vi.resetModules();
+    }
   });
 
   it('o retrato de fúria vale com metade do HP ou menos, e só para quem tem um', () => {
