@@ -140,5 +140,5 @@ Skill nova entra nesta tabela no mesmo commit.
 
 - Uma branch tem **um agente por vez**: Claude e Codex nunca trabalham juntos na mesma branch.
 - **Quem implementa não revisa**: o PR do Codex é revisado pelo Claude (`/code-review`) e vice-versa. O merge é do usuário.
-- Cada sessão começa lendo este arquivo e o contrato da tarefa.
+- Cada sessão começa lendo este arquivo e o contrato da tarefa. Configuração de cada agente: `CLAUDE.md` (Claude Code) e [docs/processo/codex.md](docs/processo/codex.md) (Codex).
 - Este arquivo, o `CLAUDE.md`, os hooks e as configurações dos agentes só mudam numa tarefa de processo (`feature/harness-*`) pedida pelo usuário: o agente não afrouxa as próprias regras.
