@@ -1,0 +1,20 @@
+#!/bin/sh
+# Antes de cada push: bloqueia o master e o push forçado, e roda a verificação completa (npm run check).
+# O master é produção (o Pages publica a cada push): publicar é mergear o PR no GitHub, com aprovação do usuário.
+zero=0000000000000000000000000000000000000000
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/master|refs/heads/main)
+      echo "pre-push: push direto em ${remote_ref#refs/heads/} bloqueado. Use uma branch feature/<tema> e um PR." >&2
+      exit 1 ;;
+  esac
+  # Apagar uma branch de trabalho depois do merge é permitido (o master já saiu acima).
+  [ "$local_sha" = "$zero" ] && continue
+  if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha" 2>/dev/null; then
+    if ! git merge-base --is-ancestor "$remote_sha" "$local_sha"; then
+      echo "pre-push: push forçado em $remote_ref bloqueado (a branch remota tem commits que você não tem). Faça merge, não --force." >&2
+      exit 1
+    fi
+  fi
+done
+npm run --silent check

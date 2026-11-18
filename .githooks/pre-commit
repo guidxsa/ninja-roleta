@@ -1,0 +1,6 @@
+#!/bin/sh
+# Antes de cada commit (AGENTS.md, "Definição de pronto"): tipos e convenções do processo.
+# Ativado pelo `npm install` (script prepare: git config core.hooksPath .githooks).
+set -e
+npm run --silent typecheck
+npm run --silent check:regras

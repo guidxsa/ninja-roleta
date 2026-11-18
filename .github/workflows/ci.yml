@@ -19,11 +19,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # o check:regras compara a branch com o origin/master
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit
-      - run: npx vitest run
-      - run: npm run proto
+      # Mesma verificação do pre-push (AGENTS.md, "Definição de pronto"). No PR, o check:regras é estrito.
+      - run: npm run check
+        env:
+          CHECK_ESTRITO: ${{ github.event_name == 'pull_request' }}

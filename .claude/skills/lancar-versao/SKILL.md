@@ -95,10 +95,10 @@ Ao usuário, curto: a versão proposta, o que entrou, o resultado dos testes, o 
 ## 6. Publicar (só com aprovação explícita)
 
 1. Confira que a branch não mudou desde o relato e que os testes do passo 2 seguem verdes.
-2. Merge preservando os commits: pelo PR com **Create a merge commit**, ou localmente com `git switch master && git pull --ff-only && git merge --no-ff feature/<tema>`.
-3. Tag anotada no commit que chegou ao `master` (seção Tag) e push: `git push origin master && git push origin vX.Y.Z`.
+2. Merge preservando os commits, **só pelo PR** com **Create a merge commit** (o `master` é protegido e o hook `.githooks/pre-push` recusa push nele; a CI do PR precisa estar verde).
+3. `git fetch origin master`, tag anotada no commit que chegou ao `master` (seção Tag) e push só da tag: `git push origin vX.Y.Z`.
 4. Apague a branch: `git branch -d feature/<tema>` (o `-d` só funciona se tudo foi mergeado) e `git push origin --delete feature/<tema>`.
-5. O push no `master` dispara o Pages. Relate a versão e os links:
+5. O merge no `master` dispara o Pages. Relate a versão e os links:
    - commit: `https://github.com/guidxsa/ninja-roleta/commit/<hash>`
    - tag: `https://github.com/guidxsa/ninja-roleta/releases/tag/vX.Y.Z`
 

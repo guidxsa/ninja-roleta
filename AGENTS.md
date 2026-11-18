@@ -59,7 +59,7 @@ Pastas dos docs: `base/` (regras comuns ao Roleta e à Jornada), `roleta/`, `jor
 
 ## Stack e estrutura
 
-TypeScript sem framework de UI; Vitest; esbuild gera o protótipo (`scripts/build-prototype.ts`: um HTML só, mais `sw.js`, manifesto e ícones). Não há Vite. A CI roda typecheck, testes e build em toda `feature/**` e PR (`.github/workflows/ci.yml`); o `pages.yml` publica o `master`.
+TypeScript sem framework de UI; Vitest; esbuild gera o protótipo (`scripts/build-prototype.ts`: um HTML só, mais `sw.js`, manifesto e ícones). Não há Vite. A CI roda `npm run check` em toda `feature/**` e PR (`.github/workflows/ci.yml`; no PR, o `check:regras` é estrito); o `pages.yml` publica o `master`.
 
 ```
 docs/                design (ver acima)
@@ -74,7 +74,7 @@ scripts/             simulações e build
 tests/               testes do core
 ```
 
-Comandos: `npm test`, `npm run typecheck`, `npm run proto`, `npm run lab` (UI Lab, só local: `dist-lab/`, [docs/ui-lab/](docs/ui-lab/ARCHITECTURE.md); `npm run lab:seed -- --all` refaz as seeds dos cenários de sorteio), `npm run sim:origens -- --runs 300 --seed 2` (Roleta), `npm run sim:jornada -- [runs] [seed] [ciclos]`, `npm run sim:classico`. Auditoria de balanceamento: as mesmas simulações com `--auditoria`, `--reliquias` ou `--iniciais` ([docs/balanceamento/benchmark.md](docs/balanceamento/benchmark.md)).
+Comandos: `npm run check` (verificação completa, a mesma do pre-push e da CI), `npm test`, `npm run typecheck`, `npm run proto`, `npm run lab` (UI Lab, só local: `dist-lab/`, [docs/ui-lab/](docs/ui-lab/ARCHITECTURE.md); `npm run lab:seed -- --all` refaz as seeds dos cenários de sorteio), `npm run sim:origens -- --runs 300 --seed 2` (Roleta), `npm run sim:jornada -- [runs] [seed] [ciclos]`, `npm run sim:classico`. Auditoria de balanceamento: as mesmas simulações com `--auditoria`, `--reliquias` ou `--iniciais` ([docs/balanceamento/benchmark.md](docs/balanceamento/benchmark.md)).
 
 ## Interface (design system "Shinobi")
 
@@ -115,7 +115,7 @@ O projeto é feito pelo Claude Code e pelo Codex, com as mesmas regras. Plano de
 
 Uma tarefa só está pronta quando:
 
-1. `npm run typecheck`, `npm test` e `npm run proto` passam (vira `npm run check` quando a Fase 2 do plano existir), com a saída mostrada no resumo.
+1. `npm run check` passa (typecheck, testes, `check:regras` e build), com a saída mostrada no resumo. Os git hooks rodam o mesmo: `pre-commit` (typecheck e `check:regras`) e `pre-push` (`npm run check`, e recusa push no `master` e push forçado). Hook nunca é pulado (`--no-verify` é proibido); se ele falha, corrige-se a causa.
 2. Regra ou número mudou: o doc correspondente mudou no mesmo commit.
 3. O jogador nota a mudança: linha no `CHANGELOG.md`.
 4. Houve decisão sem o usuário: registrada em `docs/registro.md` e, se ele precisa revisar, em `docs/decisoes.md`.
