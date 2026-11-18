@@ -25,17 +25,17 @@ O harness (PR #18) definiu que quem implementa não revisa. A revisão foi feita
    - dispara quando um PR é aberto ou atualizado **e** foi implementado pelo Codex: o corpo do PR tem "Implementou: codex" ou a branch começa com `codex/`. PR do Claude não aciona o Claude (quem implementa não revisa);
    - também dispara num comentário `@claude revise` no PR, para pedir uma revisão à mão;
    - roda o `anthropics/claude-code-action@v1` com o prompt "siga docs/processo/revisao.md" e permissão só de leitura no código e de escrita em comentários do PR;
-   - lê a chave do segredo `ANTHROPIC_API_KEY`. Sem o segredo, o job avisa e não falha, para não bloquear PR nenhum.
+   - autentica com o token da assinatura do usuário, no segredo `CLAUDE_CODE_OAUTH_TOKEN` (sem custo extra além do limite do plano). Sem o segredo, o job avisa e não falha, para não bloquear PR nenhum.
    - Não é um check obrigatório: a revisão informa, quem decide é o usuário.
-4. **Quando o Claude abre um PR** (`AGENTS.md`, skill `lancar-versao`): comentar `@codex review` no PR, caso a revisão automática do Codex não esteja ligada.
+4. **PRs do Claude** são revisados pela revisão automática do Codex, que o usuário liga nas configurações do Codex. O `AGENTS.md` e o `docs/processo/codex.md` explicam como ligar; se ela não estiver ligada, o comentário `@codex review` no PR pede a revisão à mão.
 5. **Proteção do `master` como está configurada**: PR e checks `check` e `meta` obrigatórios, sem aprovação no GitHub, merge pelo dono com bypass. Fica registrado no `AGENTS.md` e no `docs/processo/codex.md`.
 6. **Pendências do PR #18**: o `PRODUCT.md` e o `docs/jornada/README.md` passam a apontar para o `AGENTS.md` em vez do `CLAUDE.md`.
 
 ## Fora do escopo
 Mudar regra, número ou tela do jogo. Mudar as verificações (`scripts/`, hooks) ou as configurações do Claude Code (`.claude/`). Tornar a revisão automática um check obrigatório.
 
-## Decisões para o usuário
-- **Chave do Claude no GitHub**: o caminho sem a sua máquina é uma chave de API (console.anthropic.com → API Keys) salva como segredo `ANTHROPIC_API_KEY` no repositório. Cada revisão é cobrada por uso da API. A alternativa, um token da assinatura, precisa do Claude Code na sua máquina (`claude setup-token` ou `/install-github-app`).
-- **Codex**: ligar a revisão de código do repositório nas configurações do Codex (revisão automática dos PRs). Se preferir não ligar, o Claude comenta `@codex review` nos PRs que abrir.
+## Decisões do usuário (18/11/2026)
+- **Chave do Claude no GitHub**: token da assinatura (`claude setup-token`, gerado uma vez na máquina do usuário) no segredo `CLAUDE_CODE_OAUTH_TOKEN`. Chave de API descartada por ser cobrada à parte. Até o token existir, o workflow pula a revisão sem falhar.
+- **Codex**: o usuário liga a revisão automática de PRs nas configurações do Codex.
 
 ## Achados
