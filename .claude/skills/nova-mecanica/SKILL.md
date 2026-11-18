@@ -5,7 +5,7 @@ description: Fluxo ponta a ponta para adicionar ou mudar uma mecânica do jogo N
 
 # Nova mecânica (Ninja Roleta)
 
-O jogo tem uma arquitetura em camadas com regras fortes (ver `CLAUDE.md`). Uma mecânica só está pronta quando atravessa todas as camadas de forma coerente: se ela existe no core mas a simulação não a conhece, o balanceamento mente; se existe na UI mas não nos testes, vai quebrar na próxima mudança. Este fluxo existe para que nenhuma camada fique para trás.
+O jogo tem uma arquitetura em camadas com regras fortes (ver `AGENTS.md`). Uma mecânica só está pronta quando atravessa todas as camadas de forma coerente: se ela existe no core mas a simulação não a conhece, o balanceamento mente; se existe na UI mas não nos testes, vai quebrar na próxima mudança. Este fluxo existe para que nenhuma camada fique para trás.
 
 ## 0. Entender e medir antes de mexer
 
@@ -50,7 +50,7 @@ Em `tests/*.test.ts` (Vitest), usando `gameData` real e `seq(...)` de `tests/hel
 A simulação (`src/sim/runner.ts`, `scripts/simulate.ts`) é como o projeto mede balanceamento. Se a mecânica afeta poder do jogador ou dos vilões, a simulação precisa usá-la, senão os números ficam falsos.
 
 - Faça o runner usar a mesma função do core que a UI usa.
-- Rode de novo e compare com `sim-antes.txt`. Se a mudança deixou o jogo muito mais fácil ou difícil sem o usuário pedir, compense em `balance.ts` (ex.: menos níveis por campanha → ganhos maiores por nível) e reporte antes/depois.
+- Rode de novo e compare com `sim-antes.txt`. Se a mudança deixou o jogo muito mais fácil ou difícil sem o usuário pedir, **não compense sozinho**: siga a skill [`auditar-balanceamento`](../auditar-balanceamento/SKILL.md) (tabela de antes e depois contra a meta e até três alavancas, ex.: menos níveis por campanha → ganhos maiores por nível) e espere o aval do usuário antes de mexer em qualquer `balance.ts`.
 - Se a simulação não cobre algo (eventos e recompensas não entram na campanha simulada), diga isso ao interpretar os números.
 
 ## 5. Protótipo
@@ -68,7 +68,7 @@ O protótipo só tem fluxo e animação; toda regra vem do core. Telas da Roleta
 - `docs/`: atualize o doc da mecânica com as regras e números novos (os testes de `tests/docs.test.ts` conferem as técnicas).
 - `docs/decisoes.md`: tire o item resolvido; acrescente um se surgiu dúvida ou se você decidiu algo que o usuário precisa revisar.
 - `docs/registro.md`: uma entrada curta com o que foi decidido sozinho e a simulação de antes e depois.
-- `CLAUDE.md`: só se mudou um jeito de trabalhar (regra, convenção, estrutura); não registre versões nele.
+- `AGENTS.md`: só se mudou um jeito de trabalhar (regra, convenção, estrutura); não registre versões nele.
 - `CHANGELOG.md`: nova linha no fim da tabela. A regra de qual número usar está na skill `lancar-versao`.
 
 ## 7. Verificar e relatar

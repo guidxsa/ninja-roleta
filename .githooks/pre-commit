@@ -1,0 +1,6 @@
+#!/bin/sh
+# Antes de cada commit (AGENTS.md, "Definição de pronto"): as convenções do processo sobre o que vai no commit
+# (arquivos preparados e o conteúdo deles no índice, não a árvore de trabalho). O typecheck fica no pre-push e na CI,
+# para uma edição em andamento não barrar um commit que não a inclui.
+# Ativado pelo `npm install` (script prepare: git config core.hooksPath .githooks).
+exec npm run --silent check:regras -- --preparado

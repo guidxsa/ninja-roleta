@@ -477,6 +477,8 @@ if (BRANCHES) {
 // `--modo=canon` (ou generic:common...) mede só esse modo; `--dif=normal,hard` só essas dificuldades.
 const ONLY_MODE = process.argv.find((a) => a.startsWith('--modo='))?.slice(7);
 const ONLY_DIFF = process.argv.find((a) => a.startsWith('--dif='))?.slice(6).split(',');
+// `--json`: no fim, uma linha META_JSON com a vitória por modo e dificuldade (scripts/check-meta.ts).
+const metaRows: { grupo: string; dif: Difficulty; vitoria: number }[] = [];
 for (const mode of ['canon', 'generic:common', 'generic:prodigy', 'generic:uchiha', 'generic:hyuuga'].filter((m) => !ONLY_MODE || m === ONLY_MODE)) for (const d of DIFFS.filter((x) => !ONLY_DIFF || ONLY_DIFF.includes(x))) {
   cell = `${mode}|${d}|`;
   const stops = new Map<string, number>();
@@ -496,6 +498,7 @@ for (const mode of ['canon', 'generic:common', 'generic:prodigy', 'generic:uchih
       infiniteLevels += inf.level;
     }
   }
+  metaRows.push({ grupo: mode, dif: d, vitoria: wins / RUNS });
   const top = [...stops.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, n]) => `${k} ${Math.round((n / RUNS) * 100)}%`);
   console.log(`${mode.padEnd(15)} ${d.padEnd(8)} vitória ${Math.round((wins / RUNS) * 100)}% · nível médio ${(levels / RUNS).toFixed(1)} · ${top.join(' · ')}`);
   if (AUDIT) printAudit(cell, RUNS, mode === 'canon' ? data.stages.length : data.generic.stages.length);
@@ -505,3 +508,4 @@ for (const mode of ['canon', 'generic:common', 'generic:prodigy', 'generic:uchih
     console.log(`${''.padEnd(15)} ${''.padEnd(8)} infinito: ${pts} · ciclos vencidos (média) ${avg.toFixed(2)} · nível final ${(infiniteLevels / RUNS).toFixed(1)}`);
   }
 }
+if (process.argv.includes('--json')) console.log(`META_JSON ${JSON.stringify(metaRows)}`);

@@ -37,6 +37,7 @@ const zeroShare = (commonDef.elements.countWeights[0] ?? 0) / commonDef.elements
 const share = (id: string, weight: number) =>
   id === COMMON_LINEAGE ? weight * (1 - zeroShare) : id === 'taijutsuProdigy' ? commonDef.weight * zeroShare : weight;
 const origins = gameData.lineages.map((l) => ({
+  id: l.id,
   label: `${ptBR.lineages[l.id] ?? l.id} (${Math.round((share(l.id, l.weight) / totalWeight) * 100)}%)`,
   make: (): Origin => ({
     lineageId: l.id === COMMON_LINEAGE ? null : l.id,
@@ -113,6 +114,8 @@ console.log(
   `\nRun do Roleta por origem: ${runs} runs por célula, ${progression ? 'com eventos e recompensas' : 'sem eventos nem recompensas'} (vence o 1º ciclo · rodadas por luta · onde mais parou · vence os ciclos 2..${cycles})\n`,
 );
 console.log(''.padEnd(28) + difficulties.map((d) => ptBR.difficulty[d].name.padEnd(38)).join(''));
+// `--json`: no fim, uma linha META_JSON com a vitória do 1º ciclo por origem e dificuldade (scripts/check-meta.ts).
+const metaRows: { grupo: string; dif: Difficulty; vitoria: number }[] = [];
 for (const o of origins) {
   let line = o.label.padEnd(28);
   for (const d of difficulties) {
@@ -130,8 +133,10 @@ for (const o of origins) {
     const top = [...stops.entries()].sort((a, b) => b[1] - a[1])[0];
     const where = top ? `${ptBR.villains[top[0]] ?? top[0]} ${pct(top[1] / runs).trim()}` : '';
     const curve = won.slice(1).map((n) => pct(n / runs).trim()).join('/');
+    metaRows.push({ grupo: o.id, dif: d, vitoria: won[0]! / runs });
     line += `${pct(won[0]! / runs)} ${(rounds / Math.max(1, fights)).toFixed(1)}r ${where} ${curve}`.padEnd(38);
   }
   console.log(line);
 }
 console.log('');
+if (process.argv.includes('--json')) console.log(`META_JSON ${JSON.stringify(metaRows)}`);

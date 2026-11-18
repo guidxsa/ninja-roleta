@@ -1,6 +1,6 @@
 # Direção visual
 
-O jogo deve parecer parte do universo de Naruto, e não um site com tema de Naruto. O critério de qualidade: **quem conhece a obra, ao abrir o jogo, sente que está navegando pelo mundo shinobi?** As regras técnicas de estilo (tokens, ícones, chanfro) estão no `CLAUDE.md`, seção Interface. O visual nunca muda regra, fórmula ou balanceamento.
+O jogo deve parecer parte do universo de Naruto, e não um site com tema de Naruto. O critério de qualidade: **quem conhece a obra, ao abrir o jogo, sente que está navegando pelo mundo shinobi?** As regras técnicas de estilo (tokens, ícones, chanfro) estão no `AGENTS.md`, seção Interface. O visual nunca muda regra, fórmula ou balanceamento.
 
 ## Princípios
 
@@ -233,6 +233,28 @@ Decidido com o usuário: **a arte oficial é liberada nos retratos de personagen
   - **Retrato de fúria** (v0.90.0, só visual, `src/data/portraits.ts`): com metade do HP ou menos, o lutador mostra outra face. Kakashi revela o Sharingan, Neji ativa o Byakugan, Zabuza e Haku perdem a máscara, Gaara enlouquece e o Quarteto do Som entra na marca da maldição nível 2. Vale nos dois modos e não muda nenhuma regra. Forma ligada pelo roteiro e visual escolhido pelo jogador têm prioridade. O Haku de quimono é só da cena da floresta (`scenePortraits`).
   - Conferência: o cenário `meta.portraits` do UI Lab mostra todos lado a lado; `tests/portraits.test.ts` garante que toda chave dos dados tem desenho e que nenhum se repete.
 - **Nada de rostos desenhados nos cenários**: o Monumento dos Hokages foi tentado na v0.54.0 e saiu na v0.55.0, a pedido do usuário, porque ficou ruim.
+
+### Ficha de estilo dos retratos
+
+Os retratos ilustrados da v0.95.1 foram gerados por IA a partir de imagens-modelo escolhidas pelo usuário. Esta ficha existe para que um retrato novo, ou refeito, saia no mesmo estilo dos outros, seja qual for a ferramenta ou o agente. O passo a passo está na skill [`novo-retrato`](../.claude/skills/novo-retrato/SKILL.md); o registro de cada arquivo, em [`public/img/retratos.json`](../public/img/retratos.json).
+
+| Item | Padrão (tirado dos retratos atuais) |
+|---|---|
+| Formato | WebP quadrado, 256 × 256, até 30 KB |
+| Enquadramento | Busto de frente, do peito para cima; a cabeça ocupa o terço de cima e o centro, sem cortar o cabelo nem a bandana |
+| Traço | Anime em cel shading: contorno limpo, sombra em duas ou três tonalidades, sem brilho exagerado nem textura de pintura |
+| Rosto | Fiel à obra no formato, olhos e marcas; expressão própria do personagem. Fora: olhos enormes, queixo fino demais e sombra chapada (o traço rejeitado na v0.90.0) |
+| Fundo | Liso, uma cor só e discreta, com textura leve de papel, sem cenário, disco ou moldura. Tons frios (azul-petróleo, ardósia) nos aliados e nos vilões; a cor não pode brigar com o vermelho de perigo da interface |
+| Leitura | Tem que se reconhecer de 24px a 170px: silhueta, cabelo, cor do traje e acessório |
+| Variantes | Mesma pessoa, mesmo enquadramento e mesmo fundo; muda só o que a forma muda (Sharingan, marca da maldição, sem máscara) |
+| Nunca | Texto, logotipo, marca-d'água, assinatura ou moldura |
+
+**Como os retratos são feitos** (processo do usuário na v0.95.1):
+
+1. **Imagens-modelo**: o usuário escolhe imagens com as características que quer no retrato (traço, enquadramento, expressão, detalhe do traje) e as guarda em `prototype/lab/refs/<chave>` (fora do git e do jogo; a galeria do UI Lab mostra cada uma ao lado do retrato).
+2. **Instrução**: um texto curto dizendo o que pegar de cada imagem e o que seguir da tabela acima. Para manter a série, junte dois retratos já aprovados do mesmo grupo (aliados ou vilões).
+3. **Geração** pela ferramenta de IA.
+4. **Revisão humana**: o usuário compara na galeria, nos dois temas e em tamanho pequeno e grande, e pede ajustes até aprovar. Cada pedido vai para `ajustes` no manifesto.
 
 ## Celular e desktop
 

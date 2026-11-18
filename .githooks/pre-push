@@ -1,0 +1,43 @@
+#!/bin/sh
+# Antes de cada push: bloqueia o master e o push forçado, e roda a verificação completa (npm run check) na branch que
+# está subindo. O master é produção (o Pages publica a cada push): publicar é mergear o PR no GitHub, com aprovação do
+# usuário. Este hook só vale para push feito deste clone; a garantia de verdade é a proteção do master no GitHub.
+zero=0000000000000000000000000000000000000000
+head=$(git rev-parse HEAD)
+branches=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/master|refs/heads/main)
+      echo "pre-push: push direto em ${remote_ref#refs/heads/} bloqueado. Use uma branch feature/<tema> e um PR." >&2
+      exit 1 ;;
+    refs/heads/*) ;;
+    *) continue ;; # tags: a skill lancar-versao cuida (tag publicada não muda de lugar)
+  esac
+  # Apagar uma branch de trabalho depois do merge é permitido (o master já saiu acima).
+  [ "$local_sha" = "$zero" ] && continue
+  # A verificação roda na árvore atual: ela precisa ser a que está subindo.
+  if [ "$local_sha" != "$head" ]; then
+    echo "pre-push: $local_ref não é a branch atual. Faça checkout dela antes do push, para a verificação rodar no que sobe." >&2
+    exit 1
+  fi
+  if [ "$remote_sha" != "$zero" ]; then
+    git cat-file -e "$remote_sha^{commit}" 2>/dev/null || git fetch -q origin "$remote_ref" 2>/dev/null
+    if ! git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
+      echo "pre-push: não consegui conferir se $remote_ref tem commits que você não tem (nem depois do git fetch). Bloqueado." >&2
+      exit 1
+    fi
+    if ! git merge-base --is-ancestor "$remote_sha" "$local_sha"; then
+      echo "pre-push: push forçado em $remote_ref bloqueado (a branch remota tem commits que você não tem). Faça merge, não --force." >&2
+      exit 1
+    fi
+  fi
+  branches=$((branches + 1))
+done
+[ "$branches" -eq 0 ] && exit 0
+# O check roda na árvore de trabalho: ela precisa ser igual ao commit que sobe (sem mudança nem arquivo novo fora do
+# commit, que poderiam esconder um erro do que está sendo enviado).
+if [ -n "$(git status --porcelain)" ]; then
+  echo "pre-push: há mudanças fora do commit (git status). Commite ou guarde (git stash -u) antes do push, para a verificação rodar no que sobe." >&2
+  exit 1
+fi
+exec npm run --silent check
