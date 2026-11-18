@@ -467,7 +467,7 @@ export function summonEffect(p: PlayerState): string {
 
 /** Retrato do ninja (desenho da linhagem ou imagem própria em img/ninja/) com o selo do clã. */
 export function avatar(p: PlayerState, size: 'sm' | 'lg' = 'sm'): string {
-  return `<span class="avatar avatar-${size}">${ninjaPortrait(p.origin.lineageId, p.jinchuuriki, size === 'lg' ? 'lg' : 'sm')}${clanSeal(p)}</span>`;
+  return `<span class="avatar avatar-${size}">${ninjaPortrait(p.origin.lineageId, size === 'lg' ? 'lg' : 'sm')}${clanSeal(p)}</span>`;
 }
 
 export function xpBar(p: PlayerState): string {
