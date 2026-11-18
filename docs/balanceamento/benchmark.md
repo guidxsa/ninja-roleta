@@ -17,6 +17,10 @@ Cenários padronizados para acompanhar o desempenho dos três modos a cada mudan
 | Builds da árvore do Naruto | `npm run sim:jornada -- 300 2 --ramos --talentos` | 5 min |
 | Builds de uma classe do Caminho Ninja | `npm run sim:jornada -- 300 2 --ramos --classe=commonNinja` (ou `prodigy`, `uchihaNinja`, `hyuugaNinja`) | 4 min |
 | Modo infinito do Caminho Ninja (até N ciclos) | `npm run sim:jornada -- 300 2 5` | varia |
+| Valor de algumas relíquias da Jornada | `npm run sim:jornada -- 300 2 --reliquias --so=chakraStone,paddedVest` | 2 min por relíquia |
+| Bot antigo da Jornada, ou o novo sem uma parte | qualquer medida da Jornada com `--bot-antigo`, `--sem-plano`, `--sem-acoes` ou `--sem-kits` | igual |
+
+**Bot da Jornada** (fase 2b, 17/11/2026, `src/sim/jornadaBot.ts`): o protagonista segue um plano de talentos (ramo preferido da árvore até o final, a junção do vizinho e as combinações), escolhe a ação por valor esperado (Defender só com limiar) e compra kits com o ryō que sobra. Ele vence bem mais que o antigo: os números de antes de 17/11/2026 vêm do bot antigo, então só dá para comparar com eles usando `--bot-antigo`. Linha de base com o bot novo (300 runs, seed 2; Fácil/Médio/Difícil/Hardcore): História 100/83/72/2, Comum 100/95/75/44, prodígio 100/98/88/56, Uchiha 100/81/50/16, Hyuuga 100/98/90/60. Detalhes, a ablação e as builds em [registro.md](../registro.md#bot-da-jornada-mais-inteligente-fase-2b-sem-versão-17112026).
 
 Ruído: com 300 a 400 runs, diferenças abaixo de uns 7 pontos entre duas medidas podem ser só ruído. Para comparar antes e depois, use sempre a mesma seed.
 
@@ -42,16 +46,18 @@ Nas colunas por estágio da Jornada, os totais (pontos, ryō, compras, kits, Von
 
 ## Cenários de referência
 
-| Cenário | Como medir | Linha de base (v0.77.0, seed 2) | Atual (v0.82.0) |
+Meta (17/11/2026, por origem ou classe, ±5): Fácil 90%, Médio 65%, Difícil 40%, Hardcore 15% ([decisoes.md](../decisoes.md)).
+
+| Cenário | Como medir | Linha de base (v0.77.0, seed 2) | Atual (v0.88.3) |
 |---|---|---|---|
-| Roleta no Difícil | `sim:origens` | Comum 16%, Prodígio 62%, Uchiha 10%, Hyuuga 12%, Senju 67% | Comum 39%, Prodígio 75%, Uchiha 21%, Hyuuga 35%, Senju 78% (Akimichi 37%) |
-| História com o Naruto | `sim:jornada` (canon) | Médio 97%, Difícil 68%, Hardcore 12%; nível médio 8,6 no Médio | Médio 74%, Difícil 20%, Hardcore 2%; nível médio 8,7 |
-| Comum no Caminho Ninja | `sim:jornada` (generic:common) | Médio 80%, Difícil 53% | Médio 90%, Difícil 66% |
-| Prodígio no Caminho Ninja | `sim:jornada` (generic:prodigy) | Médio 89%, Difícil 49% | Médio 94%, Difícil 68% |
-| Uchiha no Caminho Ninja | `sim:jornada` (generic:uchiha) | Médio 74%, Difícil 34% | Médio 81%, Difícil 45% |
-| Hyuuga no Caminho Ninja | `sim:jornada` (generic:hyuuga) | Médio 81%, Difícil 43% | Médio 88%, Difícil 53% |
-| Caminho Ninja no Hardcore | `sim:jornada` | 11% a 13% nas quatro classes; a maioria cai no estágio 1 | 11% a 29% |
-| Infinito | `sim:jornada -- 300 2 5` | a medir na Etapa 4 | — |
+| Roleta no Difícil | `sim:origens` | Comum 16%, Prodígio 62%, Uchiha 10%, Hyuuga 12%, Senju 67% | Comum 34%, Prodígio 51%, Uchiha 29%, Hyuuga 34%, Senju 51% (Akimichi 34%, Inuzuka 47%, Uzumaki 46%) |
+| História com o Naruto | `sim:jornada` (canon) | Médio 97%, Difícil 68%, Hardcore 12%; nível médio 8,6 no Médio | Médio 72%, Difícil 50%, Hardcore 1%; nível médio 8,4 |
+| Comum no Caminho Ninja | `sim:jornada` (generic:common) | Médio 80%, Difícil 53% | Médio 70%, Difícil 44% |
+| Prodígio no Caminho Ninja | `sim:jornada` (generic:prodigy) | Médio 89%, Difícil 49% | Médio 64%, Difícil 34% |
+| Uchiha no Caminho Ninja | `sim:jornada` (generic:uchiha) | Médio 74%, Difícil 34% | Médio 70%, Difícil 39% |
+| Hyuuga no Caminho Ninja | `sim:jornada` (generic:hyuuga) | Médio 81%, Difícil 43% | Médio 68%, Difícil 31% |
+| Caminho Ninja no Hardcore | `sim:jornada` | 11% a 13% nas quatro classes; a maioria cai no estágio 1 | 12% a 16% |
+| Infinito | `sim:jornada -- 300 2 5` | a medir na Etapa 4 | Caminho Ninja, Hardcore, ciclos 1/2/3: 12–16 / 10–12 / 9–12%. Roleta, Hardcore, ciclos 2/3: 6–26 / 3–19% |
 
 ## Linha de base detalhada (v0.77.0)
 

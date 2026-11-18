@@ -390,8 +390,8 @@ export const ptBR = {
   } as Record<string, { name: string; desc: string; hardcore: string }>,
   events: {
     summon: { name: 'Encontro com invocações', desc: 'Um animal quer firmar um contrato.' },
-    oldLady: { name: 'Ajudou uma velhinha', desc: 'Chegou atrasado: o vilão ataca primeiro na próxima luta.' },
-    ramen: { name: 'Ramen muito bom', desc: 'Cheio de energia: você ataca primeiro na próxima luta.' },
+    oldLady: { name: 'Velhinha agradecida', desc: 'Você ajudou uma velhinha, e ela retribuiu com um presente.' },
+    ramen: { name: 'Ramen do Ichiraku', desc: 'Uma tigela caprichada antes da luta deixa você mais forte.' },
     akatsuki: { name: 'Encontro com a Akatsuki', desc: 'Gire a roleta do encontro.' },
     training: { name: 'Treino', desc: 'XP garantido e um status em destaque.' },
     jokenpo: { name: 'Jokenpô', desc: 'Um companheiro de vila te desafia.' },
@@ -850,6 +850,9 @@ export const ptBR = {
     villainFirst: 'O vilão ataca primeiro na próxima luta.',
     playerFirst: 'Você ataca primeiro na próxima luta.',
     stages: (n: number) => `+${n} estágio(s) em todos os status.`,
+    relicGift: (name: string) => `A velhinha deu um presente: ${name}.`,
+    relicGiftXp: (xp: number) => `Nada novo para ganhar: o presente virou ${xp} de XP.`,
+    statGain: (parts: string) => `Você se sente mais forte: ${parts}.`,
     revive: '+1 Vontade do Fogo.',
     ninjaTool: (level: number) =>
       level === 1

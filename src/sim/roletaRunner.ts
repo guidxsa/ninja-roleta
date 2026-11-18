@@ -7,7 +7,6 @@ import { canLevelUp, equipTrainingWeights, gainXp, recoverAfterWin, trainingWeig
 import {
   applyAkatsuki,
   applyItem,
-  applySimpleEvent,
   applySummonEncounter,
   applyTraining,
   HANDS,
@@ -50,6 +49,8 @@ import {
   newRoletaRun,
   canContinueRoleta,
   rewardXp,
+  applyOldLadyRoleta,
+  applyRamenRoleta,
   rollRelicReward,
   villainFor,
 } from '../core/roleta/run';
@@ -236,8 +237,9 @@ export function autoRoletaEvent(player: PlayerState, rng: Rng, data: RoletaData)
   const ev = rollWeighted(data.base.preFightEvents, rng).value;
   switch (ev) {
     case 'oldLady':
+      return applyOldLadyRoleta(player, rng, data);
     case 'ramen':
-      return applySimpleEvent(player, ev);
+      return applyRamenRoleta(player, rng, data);
     case 'training':
       return applyTraining(player, rollTraining(player, rng, data.base).value, data.base);
     case 'jokenpo':
@@ -250,7 +252,7 @@ export function autoRoletaEvent(player: PlayerState, rng: Rng, data: RoletaData)
       return applyAkatsuki(player, rollAkatsuki(player, rng, data.base).value, data.base);
     default:
       // Guru e Lição do clã não existem no Roleta enxuto.
-      return applySimpleEvent(player, 'ramen');
+      return applyRamenRoleta(player, rng, data);
   }
 }
 

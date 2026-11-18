@@ -3,8 +3,8 @@ import { scaleVillain } from '../../../src/core/difficulty';
 import { gateHpUpkeep, gateUpkeep } from '../../../src/core/gates';
 import { hitSlices } from '../../../src/core/hit';
 import { xpGain } from '../../../src/core/player';
-import { type RBattleOptions, type RBattle, kitOf, kitActives, activeCost, gateForceChance, gateUnlocked, battleTechniques, playerAttackOdds, playerHitDamage, playerBarrierMult, techCost, canUseTechnique, canUseActive, canUseItem, cloneRevealsIntent, startRoletaBattle, useActive, useRoletaItem, playRoletaRound, type RAction, type REvent } from '../../../src/core/roleta/battle';
-import type { RActive } from '../../../src/data/roleta/kits';
+import { type RBattleOptions, type RBattle, kitOf, kitActives, hasAuto, activeCost, gateForceChance, gateUnlocked, battleTechniques, playerAttackOdds, playerHitDamage, playerBarrierMult, techCost, canUseTechnique, canUseActive, canUseItem, cloneRevealsIntent, startRoletaBattle, useActive, useRoletaItem, playRoletaRound, type RAction, type REvent } from '../../../src/core/roleta/battle';
+import type { RActive, RAuto } from '../../../src/data/roleta/kits';
 import type { CloneKind } from '../../../src/core/clones';
 import type { BarrierState } from '../../../src/core/barriers';
 import { type VillainDef, type ConsumableId } from '../../../src/core/types';
@@ -152,6 +152,8 @@ export const RACTIVE_ICONS: Record<string, string> = {
   pills: 'pill',
   drunkenFist: 'confusion',
   copy: 'mirrors',
+  clanPill: 'pill',
+  rotation: 'barrier',
 };
 
 /** Técnica do Roleta que cria este tipo de clone (para o nome na tela). */
@@ -197,7 +199,11 @@ export function badgesHtml(s: RBattle, side: 'player' | 'villain'): string {
   }
   const fx = s.fx;
   out.push(...effectChips(fx.effects, 'bad'));
-  if (fx.gate) {
+  const passive = R.passives[kitOf(s.player, rdata).passive];
+  if (fx.gate && hasAuto(s.player, 'gates', rdata)) {
+    // Portões da passiva (v0.92.0): o portão aberto; o custo de HP fica na dica da passiva.
+    add('gates', R.ui.gateAuto(fx.gate.stage + 1), 'good', passive ?? R.actives.gates!);
+  } else if (fx.gate) {
     // Portões: sem contagem de rodadas; o selo mostra o portão e a próxima manutenção.
     const a = R.actives.gates!;
     const next = gateUpkeep(fx.gate.rounds + 1, rdata.base.balance.gateCosts);
@@ -208,7 +214,14 @@ export function badgesHtml(s: RBattle, side: 'player' | 'villain'): string {
   for (const b of fx.buffs) {
     if (b.kind === 'pill') add('pill', R.ui.buffOn(R.pills[b.pill ?? '']!, b.turns), 'good', R.actives.pills!);
     else if (b.kind === 'exhausted') add('heartbreak', R.ui.buffOn(R.ui.exhausted.name, b.turns), 'bad', R.ui.exhausted);
-    else add(RACTIVE_ICONS[b.kind] ?? 'ninjutsu', R.ui.buffOn(R.actives[b.kind]!.name, b.turns), 'good', R.actives[b.kind]!);
+    // Sharingan e Byakugan da passiva ficam acesos a luta inteira: o selo da passiva já diz isso.
+    else if (b.permanent && (b.kind === 'sharingan' || b.kind === 'byakugan')) continue;
+    else {
+      // Da passiva (v0.92.0): o nome do que ela fez; a luta inteira não mostra contagem.
+      const name = R.auto[b.kind] ?? R.actives[b.kind]?.name ?? b.kind;
+      const tipInfo = hasAuto(s.player, b.kind as RAuto, rdata) && passive ? passive : (R.actives[b.kind] ?? { name, desc: '' });
+      add(RACTIVE_ICONS[b.kind] ?? 'ninjutsu', b.permanent ? R.ui.buffAlways(name) : R.ui.buffOn(name, b.turns), 'good', tipInfo);
+    }
   }
   if (fx.cloakTurns > 0) add('cloak', R.ui.buffOn(R.passives.jinchuuriki!.name, fx.cloakTurns), 'good', R.passives.jinchuuriki!);
   if (fx.vitalTurns > 0) add('heart', R.ui.buffOn(R.passives.vitalForce!.name, fx.vitalTurns), 'good', R.passives.vitalForce!);
@@ -661,6 +674,17 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
           else if (ev.sealed) log(RL.sealed(techName(ev.sealed)), 'good', ico);
           else if (ev.copied) log(RL.copied(techName(ev.copied)), 'good', ico);
           else log(RL.active(name, ev.success), ev.success ? 'good' : 'muted', ico);
+          break;
+        }
+        case 'auto': {
+          // A passiva fez sozinha o que a ativa fazia (v0.92.0).
+          const ico = RACTIVE_ICONS[ev.kind];
+          floatNumber(pcard, icon(ico ?? 'ninjutsu'), 'ck');
+          if (ev.gate !== undefined) log(RL.gatesOpen(ev.gate), 'good', ico);
+          else if (ev.sealed) log(RL.sealed(techName(ev.sealed)), 'good', ico);
+          else if (ev.copied) log(RL.copied(techName(ev.copied)), 'good', ico);
+          else if (ev.reflected !== undefined) log(RL.rotation(ev.reflected), 'good', ico);
+          else log(RL.autoOn(R.auto[ev.kind] ?? ev.kind), 'good', ico);
           break;
         }
         case 'passive':

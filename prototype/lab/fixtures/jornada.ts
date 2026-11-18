@@ -9,6 +9,7 @@ import { eventOptions } from '../../../src/core/jornada/events';
 import {
   battleSetup,
   chooseBossRelic,
+  chooseCore,
   chooseNode,
   choosingNode,
   currentEvent,
@@ -18,24 +19,36 @@ import {
   leaveStop,
   newGenericRun,
   newRun,
+  needsCore,
   nodeChoices,
   openTreasure,
   resolveEvent,
   rest,
+  runCoreOffer,
   spendItem,
   stopRng,
   type JRun,
 } from '../../../src/core/jornada/run';
 import { createRng, type Rng } from '../../../src/core/rng';
-import { jornadaData as data } from '../../../src/data/jornada/index';
+import { jornadaData } from '../../../src/data/jornada/index';
+import type { JornadaData } from '../../../src/core/jornada/data';
 import { saveJornada } from '../../../src/state/jornadaSave';
 import type { KeyValueStorage } from '../../../src/state/runHistory';
+
+// As fixtures só levam a run até as telas do laboratório (não medem balanceamento): a força por dificuldade de cada tipo
+// de run (v0.95.0) fica neutra, para o jogador simples delas chegar às paradas dos cenários.
+const neutral = { easy: 1, normal: 1, hard: 1, hardcore: 1 };
+const data: JornadaData = { ...jornadaData, j: { ...jornadaData.j, difficultyMult: { story: neutral, generic: neutral } } };
 
 /** Run nova da História (campanha do Naruto). */
 export const storyRun = (seed = 7, difficulty: Difficulty = 'normal'): JRun => newRun(seed, difficulty, data);
 
 /** Run nova do Caminho Ninja. */
-export const pathRun = (seed = 7, difficulty: Difficulty = 'normal', classId = 'common'): JRun => newGenericRun(seed, difficulty, classId, data);
+/** Run do Caminho Ninja; com rascunho (Comum), já com o primeiro núcleo oferecido (`core: false` deixa a escolha pendente). */
+export const pathRun = (seed = 7, difficulty: Difficulty = 'normal', classId = 'common', core = true): JRun => {
+  const run = newGenericRun(seed, difficulty, classId, data);
+  return core && needsCore(run) ? chooseCore(run, runCoreOffer(run, data)[0]!, data) : run;
+};
 
 /** Grava a run como o save da Jornada (no armazenamento em memória do cenário). */
 export function saveRun(storage: KeyValueStorage, run: JRun): void {
@@ -70,6 +83,7 @@ function autoFight(run0: JRun, rng: Rng): JRun {
 
 /** Resolve a parada atual (ou a escolha de nó/relíquia) como o bot. */
 function step(run: JRun, rng: Rng): JRun {
+  if (needsCore(run)) return chooseCore(run, runCoreOffer(run, data)[0]!, data);
   if (run.bossChoice) return chooseBossRelic(run, run.bossChoice[0]!, data);
   if (choosingNode(run)) {
     const nodes = nodeChoices(run);

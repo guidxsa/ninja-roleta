@@ -10,7 +10,8 @@ import type { JornadaData, StoryGrant } from './data';
 import { eventOptions, SHOP_CURSE, type EventDef, type EventEffect } from './events';
 import { generateMap, mapNode, nextNodes, type StageMap } from './map';
 import { bossChoices, dropRelic, relicFits, rollRelic, rollRelics, type RelicDef, type RelicNeed } from './relics';
-import { canBuyTalent, talentRankCost, treeComplete, type TalentContext } from './talents';
+import { canBuyTalent, talentRankCost, treeComplete, type TalentContext, type TalentNode } from './talents';
+import { coreOffer, draftOffer, rerollKey, rerollsLeft, type DraftInput, type DraftState } from './draft';
 import { isFight, teamFor, type FightKind, type StopDef } from './trail';
 import type { ConsumableId, FighterMods, JBattle } from './types';
 
@@ -114,6 +115,11 @@ export interface JRun {
   merged?: 1;
   /** Árvore do Naruto refeita na v0.71.0 já aplicada (sem o campo: os pontos gastos voltam ao carregar). */
   tree071?: 1;
+  /**
+   * Rascunho de talentos (docs/jornada/talentos.md#rascunho): núcleo escolhido no começo e talentos oferecidos 3 a 3.
+   * Sem o campo, a árvore clássica (em ordem pelo ramo).
+   */
+  draft?: DraftState;
   /** Etapa do evento em andamento na parada atual (paradas com mais de um evento, v0.70.0); sem o campo, a primeira. */
   beat?: number;
 }
@@ -245,6 +251,7 @@ export function newGenericRun(
   run.skin = skin;
   run.unlocks = talentUnlocks(unlocked, data);
   run.elements = { [hero]: element };
+  if (data.j.talentDraft.owners.includes(hero)) run.draft = { core: null, nonce: 0, rerollKey: '', rerollsUsed: 0, capstoneNeeds: data.j.talentDraft.capstoneNeeds };
   drawSupports(run, rng, data, unlocked, natureRng);
   run.bossPlan = data.generic.stages.map((s) => Math.floor(rng() * s.bosses.length));
   run.map = generateMap(rng, data);
@@ -337,7 +344,10 @@ export const cycleEnemyMult = (run: JRun, data: JornadaData) => data.j.infinite.
 
 /** Força dos inimigos da run por cima da dificuldade: o ciclo do infinito e, na História, `storyStrength` (v0.65.0). */
 export const runEnemyMult = (run: JRun, data: JornadaData) =>
-  cycleEnemyMult(run, data) * (run.mode === 'canon' ? data.j.storyStrength * (storyStageTable(run, data)[run.stageIndex] ?? 1) : (data.j.genericStageStrength[run.stageIndex] ?? 1));
+  cycleEnemyMult(run, data) *
+  (run.mode === 'canon'
+    ? data.j.storyStrength * (storyStageTable(run, data)[run.stageIndex] ?? 1) * data.j.difficultyMult.story[run.difficulty]
+    : (data.j.genericStageStrength[run.stageIndex] ?? 1) * data.j.difficultyMult.generic[run.difficulty]);
 
 /** Força por estágio da História na dificuldade da run (J1: a dificuldade pode ter a própria). */
 const storyStageTable = (run: JRun, data: JornadaData) => data.j.storyStageStrengthBy[run.difficulty] ?? data.j.storyStageStrength;
@@ -412,9 +422,23 @@ function stopFromNode(run: JRun, data: JornadaData): StopDef {
     kind = entries.find(([, v]) => (x -= v) < 0)?.[0] ?? 'event';
   }
   const id = node.id;
-  if (kind === 'fight') return { kind: 'fight', id, enemies: pickFrom(node.row < data.j.map.easyRows ? stage.easyFights : stage.fights, rng) };
-  if (kind === 'elite') return { kind: 'elite', id, enemies: pickFrom(stage.elites, rng) };
-  if (kind === 'boss') return { kind: 'boss', id, enemies: stage.bosses[run.bossPlan[run.stageIndex] ?? 0]! };
+  // Regra própria da luta (v0.94.0): condição de vitória e roteiro pela composição dos inimigos.
+  const extras = (enemies: string[]) => stage.encounters?.[enemies.join('+')] ?? {};
+  if (kind === 'fight') {
+    const enemies = pickFrom(node.row < data.j.map.easyRows ? stage.easyFights : stage.fights, rng);
+    return { kind: 'fight', id, enemies, ...extras(enemies) };
+  }
+  if (kind === 'elite') {
+    let enemies = pickFrom(stage.elites, rng);
+    // Elite rara (Itachi e Kisame): nunca no 1º ciclo do Fácil.
+    const rare = stage.rareElite;
+    if (rare && !(run.difficulty === 'easy' && run.cycle === 0) && rng() < rare.chance) enemies = rare.enemies;
+    return { kind: 'elite', id, enemies, ...extras(enemies) };
+  }
+  if (kind === 'boss') {
+    const enemies = stage.bosses[run.bossPlan[run.stageIndex] ?? 0]!;
+    return { kind: 'boss', id, enemies, ...extras(enemies) };
+  }
   if (kind === 'event') {
     const fresh = stage.events.filter((e) => !run.flags.includes(`ev:${e}`));
     return { kind: 'event', id, event: pickFrom(fresh.length ? fresh : stage.events, rng) };
@@ -842,7 +866,9 @@ export function finishFight(prev: JRun, battle: JBattle, data: JornadaData): { r
     if (!run.bossChoice.length) run.bossChoice = null;
   }
   // Elite vencida deixa uma relíquia (o sorteio vem antes de avançar: a seed é a da parada).
-  const relic = stop.kind === 'elite' ? dropRelic(fitRelics(run, data), run.relics, data.j.relics.eliteWeights, stopRng(run, 13)) : null;
+  // Itachi e Kisame (v0.94.0): derrubar os dois, em vez de só resistir, deixa uma relíquia rara.
+  const rout = stop.routRelic && battle.fighters.filter((x) => x.side === 'enemy' && !x.gone).every((x) => x.down);
+  const relic = stop.kind === 'elite' ? dropRelic(fitRelics(run, data), run.relics, rout ? data.j.relics.routWeights : data.j.relics.eliteWeights, stopRng(run, 13)) : null;
   if (relic) run = gainRelic(run, relic, data);
   if (!run.bossChoice) advanceStop(run, data);
   const talentRyo = rewardRyo + levelRyo;
@@ -1247,7 +1273,74 @@ export function resolveEvent(prev: JRun, optionId: string, wonMinigame: boolean,
 // Talentos e moveset
 
 export function talentContext(run: JRun, unlocked: ReadonlySet<string>): TalentContext {
-  return { owned: run.talents, ranks: run.talentRanks, points: run.talentPoints, stageIndex: run.stageIndex, unlocked, elements: [run.elements[run.hero] ?? null, run.secondElement] };
+  return {
+    owned: run.talents,
+    ranks: run.talentRanks,
+    points: run.talentPoints,
+    stageIndex: run.stageIndex,
+    unlocked,
+    elements: [run.elements[run.hero] ?? null, run.secondElement],
+    draft: run.draft ? { capstoneNeeds: run.draft.capstoneNeeds } : undefined,
+  };
+}
+
+// Rascunho de talentos (docs/jornada/talentos.md#rascunho)
+
+/** A run ainda precisa escolher o núcleo (começo do Caminho Ninja de uma classe com rascunho). */
+export const needsCore = (run: JRun) => Boolean(run.draft && !run.draft.core);
+
+/** Núcleos oferecidos no começo da run (ramos). */
+export const runCoreOffer = (run: JRun, data: JornadaData) => coreOffer(run.hero, run.seed, data);
+
+function draftInput(run: JRun, unlocked: ReadonlySet<string>, data: JornadaData): DraftInput {
+  const bought = run.talents.length + Object.values(run.talentRanks ?? {}).reduce((a, r) => a + r - 1, 0);
+  return { hero: run.hero, seed: run.seed, draft: run.draft!, owned: run.talents, bought, points: run.talentPoints, relics: relicDefs(run, data), ctx: talentContext(run, unlocked) };
+}
+
+/** Talentos oferecidos agora (vazio sem rascunho, sem núcleo ou com a árvore completa). */
+export function talentOffer(run: JRun, data: JornadaData, unlocked: ReadonlySet<string> = new Set(run.unlocks ?? [])): string[] {
+  if (!run.draft?.core) return [];
+  return draftOffer(draftInput(run, unlocked, data), data);
+}
+
+export const draftRerollsLeft = (run: JRun, data: JornadaData) => (run.draft ? rerollsLeft(run.draft, rerollKey(run.cycle ?? 0, run.stageIndex), data) : 0);
+
+/** Troca a oferta (uma grátis por estágio). */
+export function rerollTalents(prev: JRun, data: JornadaData): JRun {
+  if (!prev.draft?.core || draftRerollsLeft(prev, data) <= 0) throw new Error('sem troca');
+  const run = clone(prev);
+  const key = rerollKey(run.cycle ?? 0, run.stageIndex);
+  const d = run.draft!;
+  d.rerollsUsed = d.rerollKey === key ? d.rerollsUsed + 1 : 1;
+  d.rerollKey = key;
+  d.nonce += 1;
+  return run;
+}
+
+/** Aprende um nó sem custo (núcleo e raiz do ramo escolhido). */
+function grantNode(run: JRun, node: TalentNode, data: JornadaData): void {
+  if (run.talents.includes(node.id)) return;
+  run.talents.push(node.id);
+  const learn = talentLearns(run, node.id, data);
+  if (learn && !run.learned.includes(learn)) {
+    run.learned.push(learn);
+    addToMoveset(run, learn, data);
+  }
+}
+
+/**
+ * Escolhe o núcleo: aprende de graça o nó de núcleo e os nós de `coreGrants` (o Elemento ganha o Nível II). `anyCore`: aceita um núcleo fora da oferta (só a
+ * simulação, para medir cada núcleo).
+ */
+export function chooseCore(prev: JRun, branch: string, data: JornadaData, anyCore = false): JRun {
+  const exists = data.talents.some((n) => n.owner === prev.hero && n.branch === branch && n.core);
+  if (!needsCore(prev) || !exists || (!anyCore && !runCoreOffer(prev, data).includes(branch))) throw new Error('núcleo indisponível');
+  const run = clone(prev);
+  run.draft!.core = branch;
+  const mine = data.talents.filter((n) => n.owner === run.hero && n.branch === branch && !n.requiresAll);
+  const core = mine.find((x) => x.core)!;
+  for (const n of [core, ...(core.coreGrants ?? []).map((id) => data.talents.find((t) => t.id === id)!)]) grantNode(run, n, data);
+  return run;
 }
 
 /** Técnica que o nó ensina nesta run (fixa ou pelo elemento do protagonista). */
@@ -1264,6 +1357,8 @@ export function talentLearns(run: JRun, nodeId: string, data: JornadaData): stri
 export function buyTalent(prev: JRun, nodeId: string, unlocked: ReadonlySet<string>, data: JornadaData): JRun {
   const node = data.talents.find((t) => t.id === nodeId);
   if (!node || node.owner !== prev.hero || !canBuyTalent(node, data.talents, talentContext(prev, unlocked))) throw new Error('talento indisponível');
+  // No rascunho, só o que está na oferta.
+  if (prev.draft && !talentOffer(prev, data, unlocked).includes(node.id)) throw new Error('talento fora da oferta');
   const run = clone(prev);
   run.unlocks = talentUnlocks(unlocked, data);
   // Já aprendido: sobe um nível (a técnica não muda; os bônus vêm de `rankMods`).

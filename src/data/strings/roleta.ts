@@ -44,6 +44,12 @@ export const roletaPtBR = {
     rSteam: 'Névoa Ácida',
     rExplosion: 'Bomba de Argila',
     rWood: 'Raízes de Madeira',
+    // Técnicas-chave dos kits curtos (v0.92.0).
+    rKunai: 'Kunai',
+    rDogClaw: 'Garra do Cão',
+    rGentleFist: 'Punho Gentil',
+    rFounderFist: 'Punho do Fundador',
+    rGreatFireball: 'Grande Bola de Fogo',
     // Técnicas dos vilões novos (v0.47.0).
     rvClub: 'Porrete',
     rvAmbush: 'Emboscada',
@@ -63,19 +69,22 @@ export const roletaPtBR = {
     rvSixtyFour: '64 Palmas',
   } as Record<string, string>,
 
-  /** Passivas dos kits (completos do clássico desde a v0.80.0; docs/base/origens.md). */
+  /**
+   * Passivas dos kits (v0.92.0: uma por origem, que faz sozinha o que as ativas faziam). O texto diz o que acontece, sem
+   * a conta (pedido do usuário); os números ficam em `roletaBalance.auto` e no `balance` da base.
+   */
   passives: {
-    determination: { name: 'Determinação', desc: '+25% de XP; a cada nível, +1 no maior status de ataque. Nível 4: Nunca desistir (na 1ª vez abaixo de 25% do HP, recupera 15%).' },
+    determination: { name: 'Determinação', desc: 'Aprende mais rápido e fica mais forte a cada nível. Começa cada luta no Esforço, com os ataques mais fortes por algumas rodadas. Nível 4: na primeira vez que fica por um fio, se recupera um pouco. Nível 7: o Esforço dura mais e volta uma vez quando a luta aperta.' },
     genius: { name: 'Gênio', desc: 'Vê a próxima ação do vilão.' },
-    heavyBody: { name: 'Corpo pesado', desc: 'Taijutsu pela razão entre o seu HP máximo (o peso) e o do vilão: ×1,05 (igual), ×1,1 (1,25×), ×1,2 (1,5×), ×1,3 (2×). Peso +10% no nível 4.' },
+    heavyBody: { name: 'Corpo pesado', desc: 'Quanto mais pesado que o vilão, mais forte o taijutsu. Ferido, entra na Expansão sozinho e fica ainda mais pesado até o fim da luta. Nível 4: mais peso. Nível 7: a Expansão não deixa lento e, quase caindo, come a Pílula do clã.' },
     mindReading: { name: 'Leitura mental', desc: 'Os ataques do vilão têm −10% de acerto.' },
     hive: { name: 'Colônia', desc: 'O Enxame pode envenenar; na Praga, o veneno dói em dobro.' },
-    duo: { name: 'Dupla', desc: 'Depois de um golpe que acerta, 25% de chance de o cão bater junto (40% do dano; 60% no nível 4).' },
-    youth: { name: 'Juventude', desc: '+5% de crítico. Sem ninjutsu e sem genjutsu.' },
-    trainedEyes: { name: 'Olhos treinados', desc: 'Imune a Medo.' },
-    preciseFist: { name: 'Punho preciso', desc: 'O taijutsu ignora 30% da resistência.' },
-    vitality: { name: 'Vitalidade', desc: 'Recupera 1 de chakra e 2% do HP no começo de cada rodada (2 de chakra no nível 7).' },
-    vitalForce: { name: 'Força vital', desc: 'Curas rendem +25%. Abaixo de 30% do HP, recupera 4% do HP por 3 rodadas (5% e 2 de chakra no nível 4; 2 vezes por luta no nível 7).' },
+    duo: { name: 'Dupla', desc: 'O cão às vezes bate junto depois do seu golpe. A luta começa na Fera de quatro patas: mais rápido, mais difícil de acertar e o cão ataca mais. Nível 4: o cão bate mais forte. Nível 7: a Fera dura mais e o cão segue mais presente depois dela.' },
+    youth: { name: 'Juventude e Portões', desc: 'Mais chance de crítico. Sem ninjutsu, sem genjutsu e sem natureza. Os Portões abrem sozinhos conforme você se fere: cada portão deixa o taijutsu mais forte e custa um pouco de HP por rodada, sem nunca derrubar. Nível 4: abre o 3º portão. Nível 7: o 4º.' },
+    trainedEyes: { name: 'Sharingan', desc: 'O Sharingan fica aceso a luta inteira, sem gastar chakra: ataques e speed maiores, genjutsu mais certeiro e chance de o golpe recebido cair pela metade. Imune a Medo. Às vezes copia a técnica de dano que o acertou. Melhora nos níveis 4 e 7.' },
+    preciseFist: { name: 'Byakugan', desc: 'O Byakugan fica aceso a luta inteira, sem gastar chakra: o taijutsu não erra e ignora parte da resistência, a névoa não atrapalha e o genjutsu do vilão erra mais. Nível 4: a Rotação devolve o primeiro golpe pesado. Nível 7: duas vezes por luta.' },
+    vitality: { name: 'Vitalidade', desc: 'Recupera um pouco de HP e de chakra a cada rodada. Na primeira rodada, sela a técnica mais forte do vilão por algumas rodadas. Nível 7: recupera mais chakra e o selo dura mais.' },
+    vitalForce: { name: 'Força vital', desc: 'Curas rendem mais. Ferido, regenera HP por algumas rodadas. Nível 4: regenera mais e recupera chakra. Nível 7: duas vezes por luta.' },
     jinchuuriki: { name: 'Manto de chakra', desc: 'Uma vez por luta, abaixo de 50% do HP: ataques e speed ×1,5, resistências ×1,25 e 5% de HP por rodada, por até 5 rodadas. Custa 10% do chakra máximo por rodada. Imune ao Medo.' },
   } as Record<string, { name: string; desc: string }>,
 
@@ -95,6 +104,20 @@ export const roletaPtBR = {
     byakugan: { name: 'Byakugan', desc: 'Por 5 rodadas (7 no nível 4; manutenção 2 de chakra): o taijutsu não erra e dá ×1,1, enxerga através da névoa e o genjutsu do vilão tem −20% de acerto.' },
     seal: { name: 'Selamento', desc: 'Sela a próxima técnica do vilão: ela sai da roleta dele por 2 rodadas (3 no nível 7). 1 uso por luta (+1 no nível 7).' },
   } as Record<string, { name: string; desc: string }>,
+
+  /** O que a passiva fez sozinha (registro da luta e selos de estado, v0.92.0). */
+  auto: {
+    effort: 'Esforço',
+    expansion: 'Expansão',
+    clanPill: 'Pílula do clã',
+    beast: 'Fera de quatro patas',
+    gates: 'Portões',
+    sharingan: 'Sharingan',
+    copy: 'Cópia',
+    byakugan: 'Byakugan',
+    rotation: 'Rotação',
+    seal: 'Selamento',
+  } as Record<string, string>,
 
   /** Pílulas do clã (Akimichi). */
   pills: { green: 'Pílula verde', yellow: 'Pílula amarela', red: 'Pílula vermelha' } as Record<string, string>,
@@ -198,6 +221,9 @@ export const roletaPtBR = {
     intent: (what: string) => `Próxima ação: ${what}`,
     intentRest: 'concentrar',
     buffOn: (name: string, turns: number) => `${name} (${turns})`,
+    /** Fortalecimento da passiva que dura a luta inteira: sem contagem. */
+    buffAlways: (name: string) => name,
+    gateAuto: (gate: number) => `${gate}º portão`,
     effectOn: (name: string, turns: number) => `${name} (${turns})`,
     dodgeTip: (pct: number) => `Esquiva ${pct}% (pela diferença de speed).`,
     cloneLine: 'cria um clone',
@@ -302,7 +328,10 @@ export const roletaPtBR = {
     toad: (n: number) => `O sapo ataca junto: ${n} de dano verdadeiro.`,
     dog: (n: number) => `O cão ataca junto: ${n} de dano.`,
     tag: (n: number) => `Selo explosivo: ${n} de dano!`,
-    gatesUpkeep: (n: number, hp: number) => `Os Portões consomem ${n} de chakra${hp ? ` e ${hp} de HP` : ''}.`,
+    gatesUpkeep: (n: number, hp: number) => (n ? `Os Portões consomem ${n} de chakra${hp ? ` e ${hp} de HP` : ''}.` : `Os Portões consomem ${hp} de HP.`),
+    /** Passiva automática (v0.92.0). */
+    autoOn: (name: string) => `${name}!`,
+    rotation: (n: number) => `Rotação! O golpe cai pela metade e ${n} de dano volta para o vilão.`,
     gatesClose: 'Você fecha os Portões.',
     gatesExhausted: 'Sem chakra: os Portões se fecham.',
     guard: 'Você se defende: resistência inteira até o seu próximo turno.',

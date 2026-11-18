@@ -37,11 +37,12 @@ Não se aprende natureza nova durante a run: ela é a do sorteio (v0.59.0).
 | Uzumaki | 1 dos 5 elementos (a natureza ocupa o lugar do antigo Selo Explosivo no kit) | Sim | Sim (pleno) |
 | Senju | 1 dos 5 elementos; depois o **Mokuton** (3%) | Sim | Sim (pleno) |
 | Uchiha | sempre **Fogo** | Não (fixa) | Sim (fogo) |
-| Nara, Akimichi, Yamanaka, Aburame, Inuzuka, Hyuuga, Prodígio do taijutsu | 1 dos 5, **em silêncio** | Não | Não (só informativa) |
+| Nara, Akimichi, Yamanaka, Aburame, Inuzuka, Hyuuga | 1 dos 5, **em silêncio** | Não | Não (só informativa) |
+| Prodígio do taijutsu | **nenhuma** (v0.92.0; o sorteio gira por dentro e é descartado, para as seeds de antes darem as mesmas roletas seguintes) | Não | Não |
 
 Com o Senju em 3% da roleta de linhagem e o Mokuton em 3% dos Senju, a Madeira sai em cerca de **1 a cada 1100 runs**.
 
-Quem tem ninjutsu (todas as origens, menos o Prodígio do taijutsu) começa com o **Bunshin no Jutsu** ([fundamentos.md](fundamentos.md#clones)).
+Na Jornada, quem tem ninjutsu (todas as origens, menos o Prodígio do taijutsu) começa com o **Bunshin no Jutsu** ([fundamentos.md](fundamentos.md#clones)); o Roleta não tem clones desde a v0.92.0 ([roleta/combate.md](../roleta/combate.md#técnicas)).
 
 ### Re-roll
 

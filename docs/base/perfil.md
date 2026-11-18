@@ -19,7 +19,7 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra late
 - Dá para escolher entre os personagens jogáveis **já liberados** (`avatarChoices`, `src/core/avatar.ts`):
   - o ninja comum, sempre;
   - cada origem jogada no Roleta (pelo histórico) ou com a vitória registrada (`win_<linhagem>`, que fica mesmo depois de a run sair do histórico);
-  - personagens da Jornada pelas conquistas: Naruto (Sino na mão), Uchiha (Chama do clã), Hyuuga (Olhos abertos) e o visual do Sasuke (Mil pássaros).
+  - personagens da Jornada pelas conquistas: Naruto (Sino na mão), Uchiha (Chama do clã), Hyuuga (Olhos abertos) e o visual do Sasuke (Mil pássaros), que não se libera mais desde a v0.86.0 (saiu o easter egg): fica nos perfis que já tinham e volta com a campanha do Sasuke.
 - Fica no perfil (`avatar`) como a chave do retrato (`ninja:<chave>`; o Naruto é `ninja:naruto` desde a v0.90.0). Por enquanto é o desenho SVG; quando houver imagem própria com a mesma chave, ela entra no lugar. Se o escolhido deixar de estar liberado, vale o padrão.
 
 ## Recorde do modo infinito

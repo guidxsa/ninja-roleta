@@ -1,10 +1,22 @@
 // Árvore de talentos da Jornada (docs/jornada/talentos.md#na-tela): tela cheia com o tema da classe, selos ligados
 // por traços de pincel e um cartão com o talento escolhido. No celular, um ramo por vez em abas; no PC, todos lado a lado.
 import type { JRun } from '../../src/core/jornada/run';
-import { buyTalent, heroMods, talentContext, talentLearns, talentTreeComplete } from '../../src/core/jornada/run';
+import {
+  buyTalent,
+  chooseCore,
+  draftRerollsLeft,
+  heroMods,
+  rerollTalents,
+  runCoreOffer,
+  talentContext,
+  talentLearns,
+  talentOffer,
+  talentTreeComplete,
+} from '../../src/core/jornada/run';
 import { techPower } from '../../src/core/jornada/battle';
 import {
   branchesOf,
+  branchProgress,
   comboBranches,
   talentMaxRank,
   talentRank,
@@ -17,7 +29,7 @@ import {
 import { jornadaData as data } from '../../src/data/jornada';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { clanSymbol, fighterPortrait, icon } from '../art';
-import { h, openDialog } from '../dom';
+import { choose, h, openDialog, show } from '../dom';
 import { tip } from '../tooltip';
 import { techName } from './battle';
 import type { JornadaHost } from './host';
@@ -25,6 +37,7 @@ import { themeOf, themeStyle } from './theme';
 
 const J = S.jornada;
 const T = J.talents;
+const D = T.draft;
 
 const ROW = 112;
 /** Coluna do nó no ramo, em % da largura. */
@@ -32,7 +45,7 @@ const colX = (n: TalentNode) => 50 + (n.col ?? 0) * 28;
 const rowY = (n: TalentNode, tier = n.tier) => (tier - 1) * ROW + 44;
 
 /** Ícone do selo: o da técnica ensinada, ou pelo tipo do bônus. */
-function nodeIcon(run: JRun, n: TalentNode): string {
+export function nodeIcon(run: JRun, n: TalentNode): string {
   const learn = talentLearns(run, n.id, data);
   const tech = learn ? data.techniques[learn] : null;
   if (tech) return icon(tech.clones || tech.hitsPerClone ? 'clones' : tech.shieldPct ? 'barrier' : tech.healHp ? 'medical' : tech.boost ? 'sparkle' : (tech.element ?? tech.type));
@@ -81,9 +94,14 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
   const theme = themeOf(run.hero);
   const ctx = () => talentContext(run, host.unlocked());
   const state = (n: TalentNode): TalentState => talentState(n, data.talents, ctx());
-  const visible = () => nodes.filter((n) => state(n) !== 'hidden');
+  // Núcleo (rascunho): fica no cabeçalho, fora da árvore.
+  const visible = () => nodes.filter((n) => state(n) !== 'hidden' && !n.core);
   const branches = () => branchesOf(run.hero, data.talents).filter((b) => visible().some((n) => n.branch === b));
-  const startNode = visible().find((n) => ['available', 'upgradable'].includes(state(n))) ?? visible()[0];
+  /** Rascunho (v0.93.0): a árvore vira o registro da build e só se compra o que está na oferta. */
+  const drafting = () => Boolean(run.draft?.core);
+  const offer = () => talentOffer(run, data, host.unlocked());
+  const buyable = (n: TalentNode) => ['available', 'upgradable'].includes(state(n)) && (!drafting() || offer().includes(n.id));
+  const startNode = (drafting() ? nodes.find((n) => n.id === offer()[0]) : undefined) ?? visible().find(buyable) ?? visible()[0];
   let selected = startNode?.id ?? null;
   let tab = startNode?.branch ?? branches()[0]!;
 
@@ -146,7 +164,7 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
         // Talento final aprendido agora: o kanji do ramo acende atrás do selo.
         const kanji = n.capstone && n.id === just ? `<b class="jt-kanji kanji" aria-hidden="true">${T.branchKanji[n.branch] ?? ''}</b>` : '';
         const link = isCombo(n) ? `<small class="jt-link">+ ${T.branches[partner(n, b)] ?? ''}</small>` : '';
-        return `<button type="button" class="jt-node st-${st}${marks}${n.id === selected ? ' sel' : ''}${n.id === just ? ' just' : ''}" data-node="${n.id}" style="left:${x}%;top:${y}px">
+        return `<button type="button" class="jt-node st-${drafting() && !buyable(n) && (st === 'available' || st === 'upgradable') ? (st === 'upgradable' ? 'owned' : 'noPoints') : st}${marks}${n.id === selected ? ' sel' : ''}${n.id === just ? ' just' : ''}" data-node="${n.id}" style="left:${x}%;top:${y}px">
           ${kanji}<span class="jt-seal"><span>${hidden ? icon('lock') : nodeIcon(run, n)}</span></span>
           <span class="jt-name">${hidden ? T.hiddenName : nodeText(run, n).name}</span>${link}${pips}</button>`;
       })
@@ -181,8 +199,10 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
     const rank = talentRank(n, ctx());
     const max = talentMaxRank(n);
     const canUp = st === 'upgradable';
-    const action =
-      st === 'available'
+    const offered = !drafting() || offer().includes(n.id);
+    const action = !offered
+      ? ''
+      : st === 'available'
         ? `<button class="btn primary big" data-buy>${T.learn(T.cost(n.cost))}</button>`
         : canUp
           ? `<button class="btn primary big" data-buy>${T.rankUp(rank + 1, T.cost(talentRankCost(n)))}</button>`
@@ -191,7 +211,13 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
     const pair = comboBranches(n, data.talents);
     const missing = (n.requiresAll ?? []).filter((id) => !ctx().owned.includes(id)).map((id) => nodeText(run, nodes.find((x) => x.id === id)!).name);
     const comboLine = isCombo(n) ? `<small class="jt-combo">${T.comboOf(T.branches[pair[0]!] ?? '', T.branches[pair[1]!] ?? '')}${missing.length ? ` · ${T.comboNeeds(missing.join(', '))}` : ''}</small>` : '';
-    const status = st === 'locked' && isCombo(n) ? '' : st === 'owned' && max > 1 && rank < max ? T.rankUp(rank + 1, T.cost(talentRankCost(n))) : st === 'owned' || st === 'maxed' ? (max > 1 ? T.states.maxed : T.states.owned) : st === 'noPoints' ? `${T.cost(n.cost)} · ${T.states.noPoints}` : st === 'available' || st === 'upgradable' ? (max > 1 ? '' : T.unique) : T.states[st]!;
+    // Rascunho: o final mostra quanto falta no ramo; o que dá para comprar e não está na oferta diz onde aparece.
+    const finalLine = drafting() && n.capstone && st === 'locked' ? D.finalNeeds(branchProgress(n.branch, n.owner, data.talents, run.talents), run.draft!.capstoneNeeds) : '';
+    const draftLine = !offered && ['available', 'noPoints', 'upgradable'].includes(st) ? D.notOffered : '';
+    const status =
+      finalLine ||
+      draftLine ||
+      (st === 'locked' && isCombo(n) ? '' : st === 'owned' && max > 1 && rank < max ? T.rankUp(rank + 1, T.cost(talentRankCost(n))) : st === 'owned' || st === 'maxed' ? (max > 1 ? T.states.maxed : T.states.owned) : st === 'noPoints' ? `${T.cost(n.cost)} · ${T.states.noPoints}` : st === 'available' || st === 'upgradable' ? (max > 1 ? '' : T.unique) : T.states[st]!);
     return `<div class="jt-card"><b>${txt.name}</b>
       ${max > 1 ? `<small class="jt-rank">${T.rank(rank, max)}${txt.rank ? ` · ${txt.rank}` : ''}</small>` : ''}
       ${comboLine}${n.capstone ? `<small class="jt-final">${T.final}</small>` : ''}
@@ -201,11 +227,36 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
       ${status ? `<small class="jt-status st-${st}">${status}</small>` : ''}</div>${action}`;
   }
 
+  /** Rascunho: os cartões da oferta e a troca. */
+  function draftView(): string {
+    if (!drafting()) return '';
+    const cards = offer();
+    const left = draftRerollsLeft(run, data);
+    const list = cards.length
+      ? cards
+          .map((id) => {
+            const n = nodes.find((x) => x.id === id)!;
+            const up = run.talents.includes(id);
+            const cost = up ? talentRankCost(n) : n.cost;
+            const marks = `${n.capstone ? ' capstone' : ''}${isCombo(n) ? ' combo' : ''}${n.branch === run.draft!.core ? ' core' : ''}`;
+            return `<button type="button" class="jt-card-opt${marks}${id === selected ? ' sel' : ''}${cost > run.talentPoints ? ' dim' : ''}" data-card="${id}">
+              <span class="jt-seal"><span>${nodeIcon(run, n)}</span></span><b>${nodeText(run, n).name}</b>
+              <small>${up ? `${T.rank(talentRank(n, ctx()) + 1, talentMaxRank(n))} · ` : ''}${T.branches[n.branch] ?? ''} · ${T.cost(cost)}</small></button>`;
+          })
+          .join('')
+      : `<p class="muted center">${D.empty}</p>`;
+    return `<section class="jt-draft" aria-label="${D.offer}"><header><h3${tip(D.offer, D.offerTip)}>${D.offer}</h3>
+      <button type="button" class="btn small" data-reroll${left && cards.length ? '' : ' disabled'}${tip(D.reroll(left), D.rerollTip)}>${icon('dice')} ${D.reroll(left)}</button></header>
+      <div class="jt-draft-row">${list}</div></section>`;
+  }
+
   const render = () => {
     const hero = fighterPortrait(run.hero, run.skin ? `ninja:${run.skin}` : (data.characters[run.hero]?.portrait ?? 'ninja:common'), 'sm');
     const scroll = root.scrollTop;
     body.innerHTML = `<span class="jt-crest" aria-hidden="true">${clanSymbol(theme.crest)}</span>
       <header class="jt-head">${hero}<div class="jt-title"><h2>${T.title}</h2><small>${heroTitle}</small>${
+        drafting() ? `<span class="chip jt-core">${nodeIcon(run, nodes.find((n) => n.core && n.branch === run.draft!.core)!)} ${D.core(T.branches[run.draft!.core!] ?? '')}</span>` : ''
+      }${
         talentTreeComplete(run, data, host.unlocked())
           ? `<span class="chip jt-complete"${tip(T.complete, T.completeTip(data.j.talentTree.completeRyoPerPoint))}>${icon('check')} ${T.complete}</span>`
           : ''
@@ -216,10 +267,11 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
         .map((b) => {
           const list = visible().filter((n) => n.branch === b);
           const got = list.filter((n) => ctx().owned.includes(n.id)).length;
-          const canBuy = list.some((n) => ['available', 'upgradable'].includes(state(n)));
+          const canBuy = list.some(buyable);
           return `<button type="button" class="jt-tab${b === tab ? ' on' : ''}${canBuy ? ' can' : ''}" data-tab="${b}"><b>${branchName(b)}</b><small>${got}/${list.length}</small></button>`;
         })
         .join('')}</nav>
+      ${draftView()}
       <div class="jt-branches">${branches().map(branchView).join('')}</div>
       <div class="jt-detail" aria-live="polite">${detailView()}</div>`;
     root.scrollTop = scroll;
@@ -238,7 +290,20 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
       if (tabBtn) {
         tab = tabBtn.dataset.tab!;
         const first = visible().filter((n) => n.branch === tab);
-        selected = (first.find((n) => ['available', 'upgradable'].includes(state(n))) ?? first[0])?.id ?? null;
+        selected = (first.find(buyable) ?? first[0])?.id ?? null;
+        return render();
+      }
+      if (t.closest('[data-reroll]')) {
+        if (draftRerollsLeft(run, data) > 0) {
+          run = rerollTalents(run, data);
+          selected = offer()[0] ?? selected;
+        }
+        return render();
+      }
+      const card = t.closest<HTMLElement>('[data-card]');
+      if (card) {
+        selected = card.dataset.card!;
+        tab = nodes.find((n) => n.id === selected)!.branch;
         return render();
       }
       const nodeBtn = t.closest<HTMLElement>('[data-node]');
@@ -252,8 +317,47 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
         run = buyTalent(run, selected, host.unlocked(), data);
         just = selected;
         host.mood('good');
+        // Rascunho: a oferta muda; o primeiro cartão novo fica escolhido.
+        if (drafting()) selected = offer()[0] ?? selected;
         render();
       }
     });
   });
+}
+
+/**
+ * Escolha do núcleo no começo da run (rascunho de talentos): 3 cartões grandes no tema da classe; tocar destaca e mostra
+ * o que o núcleo dá, o botão confirma.
+ */
+export async function coreChoiceScreen(run: JRun): Promise<JRun> {
+  const theme = themeOf(run.hero);
+  const options = runCoreOffer(run, data);
+  const coreNode = (b: string) => data.talents.find((n) => n.owner === run.hero && n.branch === b && n.core)!;
+  let pick: string | undefined;
+  const root = show(
+    h(`<div class="screen jrcore ${theme.cls}"${themeStyle(run)}><h2>${D.coreTitle}</h2><p class="muted center">${D.coreHint}</p>
+    <div class="jrcore-row">${options
+      .map((b) => {
+        const n = coreNode(b);
+        return `<button type="button" class="jrcore-opt" data-opt="${b}" aria-label="${T.branches[b] ?? b}">
+          <small class="jrcore-kind">${D.coreKind[n.core!] ?? ''}</small><span class="jt-seal"><span>${nodeIcon(run, n)}</span></span><b>${T.branches[b] ?? b}</b></button>`;
+      })
+      .join('')}</div>
+    <div data-detail><p class="muted center">${D.coreIdle}</p></div>
+    <div class="sticky-cta"><button class="btn primary big" data-choice="take" disabled>${D.coreIdle}</button></div></div>`),
+  );
+  const take = root.querySelector<HTMLButtonElement>('[data-choice="take"]')!;
+  root.querySelector('.jrcore-row')!.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-opt]');
+    if (!b) return;
+    pick = b.dataset.opt!;
+    root.querySelectorAll('[data-opt]').forEach((x) => x.classList.toggle('on', x === b));
+    const n = coreNode(pick);
+    const txt = nodeText(run, n);
+    root.querySelector('[data-detail]')!.innerHTML = `<div class="jt-card"><b>${txt.name}</b><small>${txt.desc}</small></div>`;
+    take.disabled = false;
+    take.textContent = D.coreTake(T.branches[pick] ?? pick);
+  });
+  await choose(root.querySelector('.sticky-cta')!);
+  return chooseCore(run, pick!, data);
 }

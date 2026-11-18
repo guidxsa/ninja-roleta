@@ -3,7 +3,9 @@
 import type { RelicTier } from './relics';
 import type { ConsumableId } from './types';
 
-export type Minigame = 'memory' | 'seals' | 'jokenpo';
+export type Minigame = 'memory' | 'seals' | 'jokenpo' | 'kunai' | 'water' | 'clone' | 'bell';
+/** Pele de um minijogo: só texto e desenho, a regra é a mesma (docs/jornada/run.md#minijogos). */
+export type MinigameSkin = 'power' | 'tree' | 'balloon';
 
 export type EventEffect =
   | { kind: 'ryo'; n: number }
@@ -37,6 +39,8 @@ export interface EventOption {
   hiddenBy?: string;
   /** Minijogo antes do efeito: ganhar dá `effects`, perder dá `onLose`. */
   minigame?: Minigame;
+  /** Pele do minijogo (kunai: `power`; água: `tree` ou `balloon`). */
+  skin?: MinigameSkin;
   /** Ryō pago ao escolher (a opção some sem ryō suficiente). */
   cost?: number;
   effects: EventEffect[];

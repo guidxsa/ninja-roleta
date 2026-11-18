@@ -8,6 +8,7 @@ import {
   effectTurns,
   battlePower,
   blockedReason,
+  stanceOn,
   current,
   elementMult,
   fighter,
@@ -344,6 +345,7 @@ function advantageOf(s: JBattle, f: Fighter, tech: JTechnique): number {
 /** Botão de técnica: nome e os números principais (dano e custo). O resto fica na dica. */
 function techButton(s: JBattle, f: Fighter, tech: JTechnique): string {
   const blocked = blockedReason(f, tech);
+  const on = stanceOn(f, tech);
   const disabled = Boolean(blocked) || Boolean(tech.active && s.activeUsed) || validTargets(s, f, tech).length === 0;
   const cost = techniqueCost(f, tech);
   const hp = hpCost(f, tech);
@@ -355,13 +357,15 @@ function techButton(s: JBattle, f: Fighter, tech: JTechnique): string {
     tech.baseDamage > 0 ? `<span${power > tech.baseDamage ? ' class="up"' : ''}>${B.damage(power)}${hits > 1 ? `×${hits}` : ''}</span>` : '',
     adv ? advantageBadge(adv) : '',
     tech.clones ? `${icon('clones')} +${clonesMade(tech, f)}` : '',
-    cost ? `<span${f.chakra < cost ? ' class="short"' : ''}>${B.chakra(cost)}</span>` : '',
+    // Postura ligada (Byakugan): mostra a manutenção no lugar do custo de ligar.
+    on ? B.stanceOn(Math.max(0, (f.boost?.upkeep ?? 0) - f.mods.chakraDiscount - (f.mods.techChakraDiscount[tech.id] ?? 0))) : '',
+    cost && !on ? `<span${f.chakra < cost ? ' class="short"' : ''}>${B.chakra(cost)}</span>` : '',
     hp ? `<span${hp >= f.hp ? ' class="short"' : ''}>${B.hpCost(hp)}</span>` : '',
   ].filter(Boolean);
   const color = tech.element ? ELEMENT_COLORS[tech.element] : `var(--t-${tech.type})`;
   const wait = blocked === 'cooldown' ? f.cooldowns[tech.id]! : 0;
   const cd = wait ? `<span class="cd" style="--p:${Math.min(1, wait / Math.max(wait, tech.cooldown ?? wait))}" aria-hidden="true">${wait}</span>` : '';
-  return `<button class="btn jmove${wait ? ' cooling' : ''}" data-tech="${tech.id}" ${disabled ? 'aria-disabled="true"' : ''} style="--c:${color}"${techTip(tech, f, undefined, s)}>
+  return `<button class="btn jmove${wait ? ' cooling' : ''}${on ? ' on' : ''}" data-tech="${tech.id}" ${disabled ? 'aria-disabled="true"' : ''} style="--c:${color}"${techTip(tech, f, undefined, s)}>
     <span class="jmove-ico">${icon(tech.element ?? tech.type)}${cd}</span>
     <span class="jmove-txt"><b>${techName(tech.id)}</b>${bits.length ? `<small>${bits.join(' · ')}</small>` : ''}</span></button>`;
 }
@@ -737,8 +741,11 @@ export async function jornadaBattle(
           break;
         case 'boost':
           float(e.uid, icon('sparkle'), 'fx');
-          pushLog(B.logBoost(name(e.uid), techName(e.techId), e.turns));
+          pushLog(jornadaData.techniques[e.techId]?.stance ? B.logStance(name(e.uid), techName(e.techId)) : B.logBoost(name(e.uid), techName(e.techId), e.turns));
           wait = host.instant() ? 70 : 250;
+          break;
+        case 'boostEnd':
+          pushLog(B.logBoostEnd(name(e.uid), techName(e.techId)));
           break;
         // Roteiro (docs/jornada/roteiro.md): falas, formas e troca de lutadores.
         case 'say': {

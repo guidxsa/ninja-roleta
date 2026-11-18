@@ -1,6 +1,6 @@
 # Classes da Jornada
 
-> Comum e prodígio na v0.36.0; Uchiha, Hyuuga, versões suporte e o easter egg do Sasuke na v0.37.0; escolha do elemento, Hyuuga sem elemento e suportes com classe e nome sorteados na v0.43.0; base única com as origens na v0.64.0 ([README.md](README.md)). Dados no bloco `jornada` das origens (`src/data/lineages.ts`) e nas fichas de suporte (`characters.ts`).
+> Comum e prodígio na v0.36.0; Uchiha, Hyuuga, versões suporte e o easter egg do Sasuke (que saiu na v0.86.0) na v0.37.0; escolha do elemento, Hyuuga sem elemento e suportes com classe e nome sorteados na v0.43.0; base única com as origens na v0.64.0 ([README.md](README.md)). Dados no bloco `jornada` das origens (`src/data/lineages.ts`) e nas fichas de suporte (`characters.ts`).
 
 As classes são as protagonistas do Caminho Ninja ([caminho-ninja.md](caminho-ninja.md)). Vêm das origens do Roleta ([origens.md](../base/origens.md)), com um corte: cada classe é uma árvore de talentos inteira ([talentos.md](talentos.md)).
 
@@ -33,10 +33,10 @@ A tabela abaixo é gerada dos dados (`npm run docs:tabelas`); não edite à mão
 <!-- gerado:status-protagonistas -->
 | Origem | Protagonista | HP | Chakra | Speed | Taijutsu | Ninjutsu | Genjutsu | Res. física | Res. mental |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Comum | `commonNinja` | 115 | 36 | 11 | 10 | 10 | 3 | 7 | 6 |
-| Prodígio do taijutsu | `prodigy` | 100 | 22 | 14 | 10 | 0 | 0 | 8 | 5 |
-| Uchiha | `uchihaNinja` | 105 | 32 | 12 | 10 | 12 | 8 | 7 | 8 |
-| Hyuuga | `hyuugaNinja` | 100 | 28 | 13 | 11 | 4 | 4 | 7 | 7 |
+| Comum | `commonNinja` | 115 | 36 | 11 | 9 | 9 | 3 | 7 | 6 |
+| Prodígio do taijutsu | `prodigy` | 75 | 22 | 14 | 8 | 0 | 0 | 8 | 5 |
+| Uchiha | `uchihaNinja` | 120 | 32 | 12 | 10 | 15 | 10 | 7 | 8 |
+| Hyuuga | `hyuugaNinja` | 92 | 40 | 13 | 9 | 4 | 4 | 7 | 7 |
 <!-- /gerado -->
 
 ## Desbloqueios
@@ -57,7 +57,7 @@ Na tela de início, a classe trancada aparece com cadeado e a condição. Com a 
 | Comum | Esforço | Fortalece: +3 nos três ataques por 3 turnos (3 de chakra, espera 4). O **Bunshin no Jutsu** é técnica do moveset, não ativa: gasta o turno e cria 1 clone (o Kage Bunshin do Naruto é ativa e cria 2) |
 | Prodígio | Portões | Abre, troca ou fecha um dos 5 portões: dano maior, pago em chakra (abertura e manutenção crescente; [combate.md](combate.md#portões)) |
 | Uchiha | Sharingan | Fortalece: +15% de acerto e +15% de esquiva por 3 turnos (3 de chakra, espera 4) |
-| Hyuuga | Byakugan | Fortalece: não erra e +20% de penetração por 3 turnos (3 de chakra, espera 4) |
+| Hyuuga | Byakugan | **Postura** (v0.94.0): liga por 2 de chakra e custa 2 por turno enquanto aceso (desligar é grátis; sem chakra, apaga): não erra e +20% de penetração. As 64 e 128 Palmas só saem com ele aceso |
 
 Ativas de classe não gastam o turno: saem junto com a ação, uma por turno ([combate.md](combate.md#turno)). Fortalecimento: um bônus temporário em quem usa (dano, acerto, esquiva, penetração) que dura os turnos indicados, contando o da ativação; usar de novo renova.
 

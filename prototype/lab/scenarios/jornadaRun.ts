@@ -24,11 +24,13 @@ import {
 } from '../../jornada';
 import { jornadaBattle } from '../../jornada/battle';
 import { playMinigame } from '../../jornada/minigames';
+import { NO_BONUS } from '../../../src/core/jornada/minigames';
+import type { Minigame, MinigameSkin } from '../../../src/core/jornada/events';
 import { movesetScreen } from '../../jornada/moveset';
 import { relicsModal } from '../../jornada/relics';
 import { sceneScreen } from '../../jornada/scene';
 import { openJornadaSheet } from '../../jornada/sheet';
-import { talentTreeScreen } from '../../jornada/talentTree';
+import { coreChoiceScreen, talentTreeScreen } from '../../jornada/talentTree';
 import { battleSetup } from '../../../src/core/jornada/run';
 import { profiles } from '../fixtures/profiles';
 import { battleAt, downAllies, hpAt, pathRun, playToEnd, playUntil, storyRun, type Until } from '../fixtures/jornada';
@@ -46,7 +48,7 @@ const withRun = (ctx: LabContext, run: JRun): JRun => {
 
 /** História jogada até a parada `until` (id da parada ou teste). */
 // No Fácil, a seed 2: com a força por estágio da História (v0.82.0), a run de seed 7 do bot da fixture cai no 2º estágio.
-const EASY_SEED = 2;
+const EASY_SEED = 1;
 const story = (until: Until, difficulty: 'normal' | 'easy' = 'normal') => playUntil(storyRun(difficulty === 'easy' ? EASY_SEED : 7, difficulty), until);
 /** Caminho Ninja jogado até a condição. */
 const path = (until: Until) => playUntil(pathRun(7), until);
@@ -70,10 +72,16 @@ const fightFrom = (make: () => JRun, patch: Parameters<typeof battleAt>[1]) => (
 };
 
 /** Minijogo dentro da cena, como o evento abre. */
-const minigame = (kind: 'memory' | 'seals' | 'jokenpo', title: string) => (ctx: LabContext) => {
+const minigame = (kind: Minigame, title: string, extra: { skin?: MinigameSkin; calm?: boolean } = {}) => (ctx: LabContext) => {
   document.body.classList.add('mode-jornada');
   const root = show(h(sceneScreen({ place: 'forest', title, seal: U.sceneSeals.training!, body: '', footer: '<div data-slot></div>' })));
-  return playMinigame(kind, root.querySelector<HTMLElement>('[data-slot]')!, data, ctx.rng, ctx.prefs.instant);
+  return playMinigame(kind, root.querySelector<HTMLElement>('[data-slot]')!, data, ctx.rng, {
+    instant: ctx.prefs.instant,
+    difficulty: 'normal',
+    bonus: NO_BONUS,
+    ...(extra.skin ? { skin: extra.skin } : {}),
+    calm: extra.calm ?? false,
+  });
 };
 
 /** Fim da run: a tela de relatório com o próximo ciclo quando a run permite. */
@@ -177,6 +185,12 @@ export const jornadaRun: Scenario[] = [
   { id: 'jornada.minigame.memory', title: 'Minijogo da memória', group: 'Narrativa', mount: minigame('memory', 'Memória') },
   { id: 'jornada.minigame.seals', title: 'Minijogo dos selos', group: 'Narrativa', mount: minigame('seals', 'Selos') },
   { id: 'jornada.minigame.rps', title: 'Jokenpô da Jornada', group: 'Narrativa', mount: minigame('jokenpo', 'Jokenpô') },
+  { id: 'jornada.minigame.kunai', title: 'Minijogo: kunai no alvo', group: 'Narrativa', mount: minigame('kunai', 'Treino de arremesso') },
+  { id: 'jornada.minigame.kunai:power', title: 'Minijogo: força no ápice (bola de borracha)', group: 'Narrativa', mount: minigame('kunai', 'Bola de borracha', { skin: 'power' }) },
+  { id: 'jornada.minigame.water', title: 'Minijogo: andar sobre a água (árvore)', group: 'Narrativa', mount: minigame('water', 'Subir na árvore', { skin: 'tree' }) },
+  { id: 'jornada.minigame.clone', title: 'Minijogo: o clone verdadeiro', group: 'Narrativa', mount: minigame('clone', 'As cópias do Itachi') },
+  { id: 'jornada.minigame.bell', title: 'Minijogo: pegar o sino', group: 'Narrativa', mount: minigame('bell', 'O teste do mestre') },
+  { id: 'jornada.minigame.water:calm', title: 'Minijogo sem pressa (água)', group: 'Narrativa', mount: minigame('water', 'Lago do santuário', { calm: true }) },
   {
     id: 'jornada.story-relic',
     title: 'Relíquia de história com troca (bandana)',
@@ -199,6 +213,8 @@ export const jornadaRun: Scenario[] = [
   { id: 'jornada.battle:boss', title: 'Chefe com falas (Haku)', group: 'Combate', mount: fight(() => story('haku')) },
   { id: 'jornada.battle:lesson', title: 'Teste do sino (derrota vira lição)', group: 'Combate', mount: fight(() => story('bells')) },
   { id: 'jornada.battle:path', title: 'Luta do Caminho Ninja', group: 'Combate', mount: fight(() => path((r) => !choosingNode(r) && !r.bossChoice && currentStop(r, data)?.kind === 'fight')) },
+  // v0.94.0: o Hyuuga no cânone (Byakugan como postura, Palmas que pedem o Byakugan) numa luta do 2º estágio.
+  { id: 'jornada.battle:hyuuga', title: 'Luta do Hyuuga (Byakugan em postura)', group: 'Combate', mount: fight(() => playUntil(pathRun(1, 'normal', 'hyuuga'), (r) => r.stageIndex === 1 && !choosingNode(r) && !r.bossChoice && currentStop(r, data)?.kind === 'fight')) },
   { id: 'jornada.battle:downed', title: 'Luta com aliados caídos (aba Reerguer)', group: 'Combate', mount: fightFrom(() => story('demonBrothers'), downAllies) },
   { id: 'jornada.battle:low-hp', title: 'Luta com os dois lados feridos', group: 'Combate', mount: fightFrom(() => story('zabuza'), hpAt(0.3, 0.25)) },
   { id: 'jornada.battle:late', title: 'Chefe do último estágio (Fácil)', group: 'Combate', mount: fight(() => story('valley', 'easy')) },
@@ -214,6 +230,10 @@ export const jornadaRun: Scenario[] = [
     mount: (ctx) => { const run = withRun(ctx, story('valley', 'easy')); return talentTreeScreen(ctx.jornadaHost, run, heroName(ctx.jornadaHost, run)); },
   },
   { id: 'jornada.talents:path', title: 'Árvore do Comum (cor do elemento)', group: 'Progressão', mount: tree(() => pathRun(7)) },
+  // Rascunho de talentos (v0.93.0): escolha do núcleo no começo e a oferta com pontos (3 cartões; 4 com 3 pontos guardados).
+  { id: 'jornada.talents:core', title: 'Escolha do núcleo (Comum)', group: 'Progressão', mount: (ctx) => coreChoiceScreen(withRun(ctx, pathRun(7, 'normal', 'common', false))) },
+  { id: 'jornada.talents:draft', title: 'Rascunho de talentos (Comum, 2 pontos)', group: 'Progressão', mount: tree(() => ({ ...pathRun(7), talentPoints: 2 })) },
+  { id: 'jornada.talents:draft-held', title: 'Rascunho com pontos guardados (4 cartões)', group: 'Progressão', mount: tree(() => ({ ...path((r) => r.stageIndex === 1 && choosingNode(r)), talentPoints: 4 })) },
   // Classes do Caminho Ninja: cada uma tem árvore e tema próprios. Jogadas até o 2º estágio, para ter pontos e nós comprados.
   { id: 'jornada.talents:uchiha', title: 'Árvore do Uchiha (2º estágio)', group: 'Progressão', profile: profiles.full, mount: tree(() => classMid(pathRun(7, 'normal', 'uchiha'))) },
   { id: 'jornada.talents:hyuuga', title: 'Árvore do Hyuuga (2º estágio)', group: 'Progressão', profile: profiles.full, mount: tree(() => classMid(pathRun(7, 'normal', 'hyuuga'))) },

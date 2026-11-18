@@ -56,6 +56,7 @@ import {
   buyCleanse,
   isCursed,
   heroKnown,
+  needsCore,
 } from '../../src/core/jornada/run';
 import { reachableFrom, type MapNode } from '../../src/core/jornada/map';
 import type { Element } from '../../src/core/types';
@@ -74,14 +75,15 @@ import { movesetScreen } from './moveset';
 import { openJornadaSheet } from './sheet';
 import type { JornadaHost } from './host';
 import { playMinigame } from './minigames';
+import { minigameBonus } from '../../src/core/jornada/minigames';
 import { themeOf, themeStyle } from './theme';
 import { chestClosed, chestOpen, isEvolution, markRelicsSeen, relicBar, relicCard, relicName, relicSlot, relicsModal, relicTier } from './relics';
 import { inkWipe, stampChoice } from './motion';
 import { sceneLines, scenePortrait, sceneScreen } from './scene';
 import { relicIcon } from './relicIcons';
-import { talentTreeScreen } from './talentTree';
+import { coreChoiceScreen, talentTreeScreen } from './talentTree';
 import { foldAttrs, foldButton, installFolds } from './fold';
-import { WIDE } from '../layout';
+import { prefersStill, WIDE } from '../layout';
 import { modeCard } from '../modeCard';
 
 const J = S.jornada;
@@ -396,7 +398,7 @@ function currentDifficulty(host: JornadaHost): Difficulty {
   return d === 'hardcore' && !host.unlocked().has('j_canonHard') ? 'normal' : d;
 }
 
-/** Caminho Ninja: classe, elemento (só o Comum) e o visual do Sasuke (easter egg), depois a revelação. */
+/** Caminho Ninja: classe e elemento (só o Comum), depois a revelação. */
 export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Promise<JRun | null> {
   const root = show(
     h(`<div class="screen jpath">
@@ -832,6 +834,8 @@ function runStop(host: JornadaHost, run: JRun, stop: StopDef): Promise<JRun> {
 }
 
 export async function playStop(host: JornadaHost, run: JRun): Promise<JRun> {
+  // Rascunho de talentos: o núcleo se escolhe antes da primeira parada.
+  if (needsCore(run)) return coreChoiceScreen(run);
   if (run.bossChoice) {
     host.discoverRelics(run.bossChoice);
     return bossChoiceScreen(run);
@@ -1096,7 +1100,16 @@ export async function eventStop(host: JornadaHost, run0: JRun): Promise<JRun> {
     await stampChoice(options, pick, host.instant());
     options.remove();
     let won = true;
-    if (opt.minigame) won = await playMinigame(opt.minigame, root.querySelector('[data-slot]')!, data, stopRng(run, 11), host.instant());
+    if (opt.minigame) {
+      won = await playMinigame(opt.minigame, root.querySelector('[data-slot]')!, data, stopRng(run, 11), {
+        instant: host.instant(),
+        difficulty: run.difficulty,
+        bonus: minigameBonus(run, data),
+        ...(opt.skin ? { skin: opt.skin } : {}),
+        calm: prefersStill() || host.calmGames(),
+        setCalm: host.setCalmGames,
+      });
+    }
     const out = resolveEvent(run, pick, won, data);
     // A relíquia ganha tem cena própria: não repete na faixa.
     pendingGains = gainLines(out.gains.filter((g) => g.kind !== 'storyRelic'), run, out.run);

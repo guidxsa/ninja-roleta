@@ -36,12 +36,12 @@ Status: **já** (desde a v0.67.0) · **novo** ou **muda** (v0.68.0) · **v0.70**
 | 1 | Pergaminho dos Selos | Treino | O Naruto rouba o pergaminho e aprende a técnica de clones | Decorar os selos (minijogo) ou repetir até cair | Marco: **Kage Bunshin** (o Naruto começa a História sem ele). +20 XP (+10 se errar), ou +12 XP e −10% do HP | v0.70 |
 | 2 | Naruto × Mizuki | Combate | O Mizuki revela a Kyuubi; o Iruka se joga na frente da Fūma Shuriken | Naruto e Iruka (ferido). Mizuki a 60% → o Iruka cai protegendo o Naruto → Mil Clones (forma de 3 turnos, +10% nos status) | Luta de história. Marco: **Mil Clones** (fica no kit depois da luta) | v0.70 |
 | 3 | Formatura | Narrativo | A bandana do Iruka e o Ichiraku | Ramen ou treinar; cena do Iruka entregando a bandana | Nas duas, a Bandana do Iruka no lugar dos óculos de aviador ([reliquias.md](reliquias.md#iniciais-e-evolução)); cura e +15 ryō, ou +1 ponto | v0.70 (cena) |
-| 4 | O Time 7 | Narrativo | O Naruto conhece o Kakashi, o Sasuke e a Sakura; quer ser reconhecido | "Vou ser Hokage!" ou "Sasuke, eu vou te superar!" | +1 ponto, ou +40 XP | Novo |
+| 4 | O Time 7 | Narrativo | O Naruto conhece o Kakashi, o Sasuke e a Sakura; quer ser reconhecido | "Vou ser Hokage!" ou "Sasuke, eu vou te superar!" (minijogo **Pegar o sino**, v0.91.0) | +1 ponto, ou +60 XP (+20 se errar; antes, +40 certos) | v0.91 |
 | 5 | Teste do sino | Combate especial | Ninguém pega o sino; a lição do trabalho em equipe | **Derrota inevitável, em campo**: Kakashi a 75% → derruba a Sakura; a 50% → o Sasuke; a 25% (ou na rodada 5) → o Naruto, e a luta acaba. A tela diz **"Lição"**, não "Derrota"; não gasta Vontade, e a equipe sai com o HP e o chakra com que entrou | Luta de história e a **raiz do ramo Laços** | v0.70 |
 | 6 | Irmãos Demônio | Combate (elite) | Emboscada na estrada | Equipe 7 | Elite | Já (vira a 1ª luta) |
 | 7 | O construtor Tazuna | Narrativo | O Tazuna confessa | Proteger ou cobrar | +20 ryō e desconto, ou +45 ryō | Já |
 | 8 | Zabuza | Combate (elite) | O Kakashi preso e solto; o Dragão copiado | Abertura: a névoa (+20% de esquiva do Zabuza por 2 turnos). Zabuza a 60% → a Sakura protege o Tazuna e o Kakashi entra | Elite | v0.70 |
-| 9 | Subir na árvore | Treino | Chakra nos pés | Minijogo de selos ou descansar | +6 de chakra máximo da equipe e +40 XP, ou cura | Já |
+| 9 | Subir na árvore | Treino | Chakra nos pés | Minijogo **Andar sobre a água** (pele de árvore; antes, selos) ou descansar | +6 de chakra máximo da equipe e +40 XP, ou cura | Já |
 | 10 | O Haku na floresta | Narrativo | "Você tem alguém precioso?" | 2 respostas | Cura a equipe, ou +1 ponto | Novo |
 | 11 | Ataque à casa do Tazuna | Combate | Os capangas do Gatō atacam a Tsunami e o Inari | Luta comum; na abertura, a besta do Inari atordoa um capanga por 2 turnos | Comum | v0.70 |
 | 12 | Esconderijo do Gatō | Tesouro | | | Relíquia | Já |
@@ -79,9 +79,9 @@ Sai a elite "Espião do Som (Kabuto)".
 | # | Parada | Categoria | Acontecimento | Mecânica | Recompensa | Status |
 |---|---|---|---|---|---|---|
 | 32 | Na estrada com o Jiraiya, etapa 1 | Narrativo | A busca pela Tsunade começa | 2 falas | +40 XP, ou +20 ryō | v0.70 (etapa) |
-| 33 | Na estrada com o Jiraiya, etapa 2: Itachi e Kisame | Narrativo | Eles vêm atrás do Naruto | Ir com o Sasuke ou segurar a porta | +50 XP e +6 de HP máximo da equipe, ou cura e +20 ryō | v0.70 (etapa) |
-| 34 | Treino do Rasengan, etapa 1: balão de água | Treino | Rotação | Minijogo, ou treinar até a mão arder | +1 ponto (+30 XP se errar), ou +40 XP e −10% do HP | v0.70 (etapa) |
-| 35 | Treino do Rasengan, etapa 2: bola de borracha | Treino | Força | Minijogo, ou apertar até não sentir os dedos | +1 ponto (+30 XP se errar), ou +40 XP e −10% do HP | v0.70 (etapa) |
+| 33 | Na estrada com o Jiraiya, etapa 2: Itachi e Kisame | Narrativo | Eles vêm atrás do Naruto | Ir com o Sasuke (minijogo **O clone verdadeiro**, v0.91.0) ou segurar a porta | +60 XP e +6 de HP máximo da equipe (+30 XP se errar; antes, +50 XP e +6 de HP certos), ou cura e +20 ryō | v0.70 (etapa) |
+| 34 | Treino do Rasengan, etapa 1: balão de água | Treino | Rotação | Minijogo **Andar sobre a água** (pele de balão d'água, v0.91.0), ou treinar até a mão arder | +1 ponto (+30 XP se errar), ou +40 XP e −10% do HP | v0.70 (etapa) |
+| 35 | Treino do Rasengan, etapa 2: bola de borracha | Treino | Força | Minijogo **Kunai no alvo** (pele de força, v0.91.0), ou apertar até não sentir os dedos | +1 ponto (+30 XP se errar), ou +40 XP e −10% do HP | v0.70 (etapa) |
 | 36 | A Tsunade | Narrativo | Ela não acredita no título de Hokage; a aposta (uma semana para dominar a técnica) | Desafiar ou apostar | +10 de HP máximo, ou +40 ryō | Muda (era o "apostar" do treino) |
 | 37 | Pousada de Tanzaku | Descanso | | | Descanso | Já |
 | 38 | Rasengan III: bola de borracha | Treino | Combinação | Minijogo, ou virar a noite tentando | Marco: **Rasengan** (de qualquer jeito); +1 ponto se acertar (+30 XP se errar), ou +40 XP e −15% do HP | v0.70 |

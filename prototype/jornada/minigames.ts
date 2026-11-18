@@ -1,4 +1,5 @@
-// Minijogos dos eventos da Jornada: memória, sequência de selos e jokenpô. Devolvem se o jogador ganhou.
+// Minijogos dos eventos da Jornada: memória, sequência de selos e jokenpô aqui; os de tempo (kunai, água, clone e sino)
+// em minigamesTimed.ts. Devolvem se o jogador ganhou.
 import type { JornadaData } from '../../src/core/jornada/data';
 import type { Minigame } from '../../src/core/jornada/events';
 import { checkSequence, jokenpo, memoryDeck, sealSequence, type Hand, type Seal } from '../../src/core/jornada/minigames';
@@ -6,12 +7,23 @@ import type { Rng } from '../../src/core/rng';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { icon } from '../art';
 import { h, sleep } from '../dom';
+import { bellGame, cloneGame, kunaiGame, waterGame, type TimedOpts } from './minigamesTimed';
 
 const M = S.jornada.minigames;
 const glyph = (s: Seal) => `<span class="seal-glyph">${S.jornada.sealGlyphs[s]}</span><small>${S.jornada.seals[s]}</small>`;
 
-export async function playMinigame(kind: Minigame, slot: HTMLElement, data: JornadaData, rng: Rng, instant: boolean): Promise<boolean> {
-  const won = kind === 'memory' ? await memory(slot, data, rng, instant) : kind === 'seals' ? await seals(slot, data, rng, instant) : await rps(slot, rng);
+const TIMED = { kunai: kunaiGame, water: waterGame, clone: cloneGame, bell: bellGame } as const;
+
+export async function playMinigame(kind: Minigame, slot: HTMLElement, data: JornadaData, rng: Rng, opts: TimedOpts): Promise<boolean> {
+  const { instant } = opts;
+  const won =
+    kind === 'memory'
+      ? await memory(slot, data, rng, instant)
+      : kind === 'seals'
+        ? await seals(slot, data, rng, instant)
+        : kind === 'jokenpo'
+          ? await rps(slot, rng)
+          : await TIMED[kind](slot, data, rng, opts);
   slot.insertAdjacentHTML('beforeend', `<p class="center mg-result ${won ? 'good' : 'bad'}">${won ? M.won : M.lost}</p>`);
   await sleep(instant ? 200 : 700);
   return won;

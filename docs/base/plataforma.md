@@ -19,6 +19,7 @@ Desde a v0.60.0 o jogo é um PWA: pode ser instalado no celular e no computador 
 - **Troca de tela**: o foco vai para o começo da tela nova (antes ficava num botão que saiu da tela).
 - **Janelas** (Ficha, Registro, relíquias, loja, árvore, moveset): diálogo modal; o foco entra, o Tab fica dentro, Escape fecha (o mesmo caminho do botão Fechar, então o moveset sem salvar descarta as mudanças, como o botão) e o foco volta a quem abriu.
 - **Roletas**: o resultado é lido pelo leitor de tela. Com **menos movimento** pedido pelo aparelho (`prefers-reduced-motion`), a roleta para direto no resultado, sem esperar o giro, e as cenas ficam paradas (inclusive a cena viva dos painéis no modo Animado).
+- **Minijogos de tempo** da Jornada (kunai, água, clone e sino): variante **sem pressa**, sem reflexo, ligada sozinha com menos movimento e pelo botão Sem pressa ([run.md](../jornada/run.md#minijogos)).
 - Botões só com ícone têm nome: nós do mapa do Caminho Ninja (o tipo da parada; no chefe, o nome dele), jokenpô e cartas do jogo da memória.
 
 ## Quando algo falha

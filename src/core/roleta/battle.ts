@@ -17,7 +17,7 @@ import type { AttackType, ConsumableId, ResistanceKind, VillainDef, VillainTechn
 import type { PlayerState } from '../player';
 import type { RoletaData } from './data';
 import { COPY, type REffectKind, type RTechniqueDef } from '../../data/roleta/techniques';
-import type { RActive } from '../../data/roleta/kits';
+import type { RActive, RAuto } from '../../data/roleta/kits';
 import { playerTechniques } from './player';
 import { relicEffects } from './run';
 
@@ -61,7 +61,7 @@ export interface RVillain {
 }
 
 /** Fortalecimentos do kit: vários ao mesmo tempo (Expansão e pílula, Sharingan...). */
-export type RBuffKind = 'effort' | 'expansion' | 'beast' | 'drunkenFist' | 'sharingan' | 'byakugan' | 'plague' | 'pill' | 'exhausted';
+export type RBuffKind = 'effort' | 'expansion' | 'beast' | 'drunkenFist' | 'sharingan' | 'byakugan' | 'plague' | 'pill' | 'exhausted' | 'clanPill';
 
 export interface RBuff {
   kind: RBuffKind;
@@ -71,6 +71,16 @@ export interface RBuff {
   pill?: string;
   /** Dōjutsu recém-ligado: a manutenção começa na rodada seguinte. */
   fresh?: boolean;
+  /** Da passiva, a luta inteira (sem manutenção e sem contar rodadas na tela). */
+  permanent?: boolean;
+}
+
+/** O que a passiva automática já fez nesta luta (v0.92.0). */
+export interface RAutoState {
+  expansion: boolean;
+  clanPill: boolean;
+  effortAgain: boolean;
+  rotations: number;
 }
 
 export interface RPlayerFx {
@@ -101,6 +111,7 @@ export interface RPlayerFx {
   survivedOnce: boolean;
   /** Clone ativo (no máximo 1) e quantos golpes já segurou (src/core/clones.ts). */
   clone: { kind: CloneKind; wear: number } | null;
+  auto: RAutoState;
 }
 
 /** Ação do turno. O item não é ação: usa-se antes, com `useRoletaItem` (um por turno). */
@@ -140,6 +151,8 @@ export type REvent =
    */
   | { type: 'active'; kind: RActive; success: boolean; chance?: number; gate?: number; forced?: boolean; pill?: string; sealed?: string; copied?: string }
   | { type: 'passive'; side: Side; kind: string }
+  /** A passiva fez sozinha o que a ativa fazia (v0.92.0). Portões: `gate`; Selamento: `sealed`; Cópia: `copied`. */
+  | { type: 'auto'; kind: RAuto; gate?: number; sealed?: string; copied?: string; reflected?: number }
   | { type: 'revive'; side: Side; source: 'willOfFire' | 'insane' }
   | { type: 'end'; status: 'won' | 'lost' };
 
@@ -216,6 +229,7 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
       vitalCount: 0,
       survivedOnce: false,
       clone: null,
+      auto: { expansion: false, clanPill: false, effortAgain: false, rotations: 0 },
     },
     round: 0,
     playerFirst: true,
@@ -241,11 +255,14 @@ export function startRoletaBattle(player: PlayerState, def: VillainDef, options:
     s.villain.hp -= n;
     s.log.push({ type: 'damage', side: 'villain', amount: n, source: 'opening' });
   }
+  // Passivas automáticas do começo da luta (antes da iniciativa: o Sharingan e a Fera dão speed).
+  autoAtStart(s, data);
   const forced = Boolean(options.playerStartsFirst || options.villainStartsFirst);
   const chance = initiativeChance(effectiveSpeed(s, 'player', data), def.speed);
   s.playerFirst = options.playerStartsFirst ? true : options.villainStartsFirst ? false : rollInitiative(effectiveSpeed(s, 'player', data), def.speed, rng) === 'a';
   s.log.push({ type: 'initiative', playerFirst: s.playerFirst, chance, forced });
   s.villain.intent = rollIntent(s, rng);
+  autoSeal(s, data, rng);
   return s;
 }
 
@@ -296,10 +313,16 @@ export function effectiveSpeed(s: RBattle, side: Side, data: RoletaData): number
 export function playerOffense(s: RBattle, type: AttackType, data: RoletaData): number {
   const b = data.base.balance;
   let v = s.player.offense[type];
-  if (buff(s, 'effort')) v += s.player.level >= b.awakening.common.effort.level ? b.awakening.common.effort.offenseBonus : b.effort.offenseBonus;
+  if (buff(s, 'effort')) {
+    const lv7 = s.player.level >= b.awakening.common.effort.level;
+    const ae = data.r.auto.effort;
+    v += hasAuto(s.player, 'effort', data) ? (lv7 ? ae.lv7Bonus : ae.bonus) : lv7 ? b.awakening.common.effort.offenseBonus : b.effort.offenseBonus;
+  }
   if (buff(s, 'sharingan')) {
     const st = sharinganStage(s.player, data);
-    v += st.statBonus + (type === 'genjutsu' ? st.genjutsuPower : 0);
+    // Sharingan da passiva (aceso a luta inteira): uma fração do bônus de ataque.
+    const k = hasAuto(s.player, 'sharingan', data) ? data.r.auto.sharingan.statMult : 1;
+    v += Math.floor((st.statBonus + (type === 'genjutsu' ? st.genjutsuPower : 0)) * k);
   }
   if (s.fx.cloakTurns > 0) v *= cloakCfg(data).statMult;
   return v;
@@ -373,8 +396,9 @@ function playerExtraMult(s: RBattle, t: RTechniqueDef, data: RoletaData): number
   let m = 1;
   if (t.type === 'taijutsu') {
     m *= heavyBodyMult(s, data) * gateMult(s, data);
-    if (buff(s, 'byakugan')) m *= b.dojutsu.byakugan.taijutsuMult;
+    if (buff(s, 'byakugan')) m *= hasAuto(s.player, 'byakugan', data) ? data.r.auto.byakugan.taijutsuMult : b.dojutsu.byakugan.taijutsuMult;
     m *= pillOn(s, data)?.taijutsuMult ?? 1;
+    if (buff(s, 'clanPill')) m *= data.r.auto.clanPill.taijutsuMult;
     if (buff(s, 'exhausted')) m *= b.pills.exhausted.taijutsuMult;
   }
   if (has(s.fx.effects, 'fear')) m *= data.base.balance.effects.fear.damageMult;
@@ -687,6 +711,121 @@ export function useActive(prev: RBattle, data: RoletaData, rng: Rng, kind: RActi
 }
 
 // ---------------------------------------------------------------------------
+// Passivas automáticas (v0.92.0, docs/roleta/combate.md#kits): sem botão e sem custo de chakra
+
+const autoCfg = (data: RoletaData) => data.r.auto;
+export const hasAuto = (p: PlayerState, kind: RAuto, data: RoletaData) => kitOf(p, data).auto.includes(kind);
+const PERMANENT_TURNS = 999;
+
+/** Portão que a passiva do Prodígio mantém aberto pelo HP e pelo nível (0 = 1º), ou −1. */
+export function autoGateStage(p: PlayerState, data: RoletaData): number {
+  const g = autoCfg(data).gates;
+  let st = -1;
+  g.thresholds.forEach((pct, i) => {
+    if (p.level >= g.levels[i]! && p.hp < p.maxHp * pct) st = i;
+  });
+  return Math.min(st, data.base.balance.gates.stages.length - 1);
+}
+
+function pushAutoBuff(s: RBattle, kind: RBuffKind, turns: number, permanent = false): void {
+  s.fx.buffs = s.fx.buffs.filter((b) => b.kind !== kind);
+  s.fx.buffs.push({ kind, turns, ...(permanent ? { permanent: true } : {}) });
+}
+
+/** Começo da luta: dōjutsu aceso, Esforço, Fera e o 1º Portão. */
+function autoAtStart(s: RBattle, data: RoletaData): void {
+  const a = autoCfg(data);
+  const aw = data.base.balance.awakening;
+  const lv = s.player.level;
+  if (hasAuto(s.player, 'sharingan', data)) {
+    pushAutoBuff(s, 'sharingan', PERMANENT_TURNS, true);
+    s.log.push({ type: 'auto', kind: 'sharingan' });
+  }
+  if (hasAuto(s.player, 'byakugan', data)) {
+    pushAutoBuff(s, 'byakugan', PERMANENT_TURNS, true);
+    s.log.push({ type: 'auto', kind: 'byakugan' });
+  }
+  if (hasAuto(s.player, 'effort', data)) {
+    pushAutoBuff(s, 'effort', lv >= aw.common.effort.level ? a.effort.lv7Turns : a.effort.turns);
+    s.log.push({ type: 'auto', kind: 'effort' });
+  }
+  if (hasAuto(s.player, 'beast', data)) {
+    pushAutoBuff(s, 'beast', lv >= aw.inuzuka.beast.level ? a.beast.lv7Turns : a.beast.turns);
+    s.log.push({ type: 'auto', kind: 'beast' });
+  }
+  autoGates(s, data);
+}
+
+/** Selamento na 1ª rodada: a técnica de mais dano do vilão sai da roleta dele; ele sorteia outra ação. */
+function autoSeal(s: RBattle, data: RoletaData, rng: Rng): void {
+  if (!hasAuto(s.player, 'seal', data) || s.villain.techniques.length < 2) return;
+  const power = (t: VillainTechnique) => t.baseDamage * (t.hits ?? 1);
+  const strongest = [...s.villain.techniques].filter((t) => t.baseDamage > 0).sort((x, y) => power(y) - power(x))[0];
+  if (!strongest) return;
+  const a = autoCfg(data).seal;
+  s.villain.sealed = { id: strongest.id, turns: s.player.level >= data.base.balance.awakening.uzumaki.seal.level ? a.lv7Turns : a.turns };
+  if (s.villain.intent?.kind === 'tech' && s.villain.intent.id === strongest.id) s.villain.intent = rollIntent(s, rng);
+  s.log.push({ type: 'auto', kind: 'seal', sealed: strongest.id });
+}
+
+/** Portões do Prodígio: sobem sozinhos com o HP perdido e nunca fecham. */
+function autoGates(s: RBattle, data: RoletaData): void {
+  if (!hasAuto(s.player, 'gates', data)) return;
+  const st = autoGateStage(s.player, data);
+  if (st < 0 || (s.fx.gate && s.fx.gate.stage >= st)) return;
+  s.fx.gate = { stage: st, rounds: s.fx.gate?.rounds ?? 0 };
+  s.log.push({ type: 'auto', kind: 'gates', gate: st + 1 });
+}
+
+/** Começo de cada rodada: o que dispara pelo HP (Expansão, Pílula, Esforço de novo, Portões). */
+function autoOnRound(s: RBattle, data: RoletaData): void {
+  const a = autoCfg(data);
+  const p = s.player;
+  const below = (pct: number) => p.hp < p.maxHp * pct;
+  if (hasAuto(p, 'expansion', data) && !s.fx.auto.expansion && below(a.expansion.belowPct)) {
+    s.fx.auto.expansion = true;
+    pushAutoBuff(s, 'expansion', PERMANENT_TURNS, true);
+    s.log.push({ type: 'auto', kind: 'expansion' });
+  }
+  if (hasAuto(p, 'clanPill', data) && p.level >= a.clanPill.level && !s.fx.auto.clanPill && below(a.clanPill.belowPct)) {
+    s.fx.auto.clanPill = true;
+    pushAutoBuff(s, 'clanPill', PERMANENT_TURNS, true);
+    s.log.push({ type: 'auto', kind: 'clanPill' });
+  }
+  const effortLv = data.base.balance.awakening.common.effort.level;
+  if (hasAuto(p, 'effort', data) && p.level >= effortLv && !s.fx.auto.effortAgain && !buff(s, 'effort') && below(a.effort.lv7AgainBelowPct)) {
+    s.fx.auto.effortAgain = true;
+    pushAutoBuff(s, 'effort', a.effort.lv7Turns);
+    s.log.push({ type: 'auto', kind: 'effort' });
+  }
+  autoGates(s, data);
+}
+
+/** Rotação do Hyuuga: o golpe que tiraria muito HP cai pela metade e a metade cortada volta para o vilão. */
+function autoRotation(s: RBattle, per: number, data: RoletaData, rng: Rng): number {
+  const a = autoCfg(data).rotation;
+  if (!hasAuto(s.player, 'rotation', data) || s.player.level < a.level) return per;
+  const uses = s.player.level >= data.base.balance.awakening.hyuuga.byakugan.level ? a.lv7Uses : a.uses;
+  if (s.fx.auto.rotations >= uses || per < s.player.maxHp * a.minDamagePct) return per;
+  s.fx.auto.rotations++;
+  const cut = Math.floor(per * a.cutPct);
+  s.log.push({ type: 'auto', kind: 'rotation', reflected: cut });
+  hurtVillain(s, cut, 'reflect', data, rng);
+  return per - cut;
+}
+
+/** Cópia do Uchiha: a técnica de dano que o acertou pode ficar com ele até o fim da luta. */
+function autoCopy(s: RBattle, tech: VillainTechnique, data: RoletaData, rng: Rng): void {
+  if (!hasAuto(s.player, 'copy', data) || tech.baseDamage <= 0 || tech.type === 'genjutsu' || s.fx.copied?.copyOf === tech.id) return;
+  const stages = data.base.balance.dojutsu.sharingan.stages;
+  const idx = Math.max(0, stages.indexOf(sharinganStage(s.player, data)));
+  const chances = autoCfg(data).copy.chances;
+  if (rng() >= (chances[idx] ?? chances.at(-1)!)) return;
+  s.fx.copied = copyTechnique(tech);
+  s.log.push({ type: 'auto', kind: 'copy', copied: tech.id });
+}
+
+// ---------------------------------------------------------------------------
 // Rodada
 
 export function playRoletaRound(prev: RBattle, action: RAction, data: RoletaData, rng: Rng): RBattle {
@@ -727,9 +866,18 @@ function startOfRound(s: RBattle, data: RoletaData): void {
   s.villain.chakra = Math.min(s.villain.def.chakra, s.villain.chakra + regen(s.villain.def.chakra, r.villainChakra.regenPct));
   if (s.player.chakra !== playerChakra) logChakra(s, 'player');
   if (s.villain.chakra !== villainChakra) logChakra(s, 'villain');
-  // Portões abertos: manutenção crescente em chakra e HP pelo nível do portão (custo misto, v0.79.0); sem como pagar,
-  // fecham sozinhos.
-  if (s.fx.gate) {
+  autoOnRound(s, data);
+  // Portões da passiva (Prodígio, v0.92.0): só HP, por portão aberto, nunca abaixo de 1; não fecham.
+  if (s.fx.gate && hasAuto(s.player, 'gates', data)) {
+    const hp = Math.min(s.player.hp - 1, Math.floor(s.player.maxHp * data.r.auto.gates.hpPctPerGate * (s.fx.gate.stage + 1)));
+    s.fx.gate.rounds++;
+    if (hp > 0) {
+      s.player.hp -= hp;
+      s.log.push({ type: 'gates', action: 'upkeep', cost: 0, hpCost: hp });
+    }
+  } else if (s.fx.gate) {
+    // Portões abertos pelo botão (clássico): manutenção crescente em chakra e HP pelo nível do portão (custo misto,
+    // v0.79.0); sem como pagar, fecham sozinhos.
     s.fx.gate.rounds++;
     const paid = payGateUpkeep({ chakra: s.player.chakra, hp: s.player.hp, maxHp: s.player.maxHp }, s.fx.gate.rounds, s.fx.gate.stage + 1, b.gateCosts);
     if (paid) {
@@ -744,7 +892,7 @@ function startOfRound(s: RBattle, data: RoletaData): void {
   }
   // Dōjutsu: manutenção a partir da rodada seguinte à ativação; sem chakra, desliga.
   for (const bf of [...s.fx.buffs]) {
-    if (bf.kind !== 'sharingan' && bf.kind !== 'byakugan') continue;
+    if ((bf.kind !== 'sharingan' && bf.kind !== 'byakugan') || bf.permanent) continue;
     if (bf.fresh) {
       delete bf.fresh;
       continue;
@@ -911,7 +1059,9 @@ function playerAction(s: RBattle, action: RAction, data: RoletaData, rng: Rng): 
   if (action === 'rest') return concentrate(s, data);
   const id = action.slice(5);
   const copied = id.startsWith(`${COPY}:`);
-  const t = copied ? (s.fx.copied?.id === id ? s.fx.copied : undefined) : data.techniques[id];
+  // Cópia automática (v0.92.0): o vilão pode ter trocado a técnica copiada antes do turno do jogador; vale a de agora.
+  const t = copied ? (s.fx.copied ?? undefined) : data.techniques[id];
+  if (copied && !t) return concentrate(s, data);
   if (!t || (!copied && !s.player.techniques.includes(t.id))) throw new Error(`técnica desconhecida: ${action}`);
   // Sem chakra (a manutenção dos Portões, no começo da rodada, pode ter gasto depois da escolha): concentra no lugar,
   // no mesmo turno. Repetir o turno faria os efeitos doerem e perderem a duração duas vezes.
@@ -1026,7 +1176,8 @@ function playerAttack(s: RBattle, t: RTechniqueDef, data: RoletaData, rng: Rng):
   if (s.status !== 'ongoing') return;
   if (kitOf(s.player, data).passive === 'duo') {
     const b = data.base.balance;
-    const chance = buff(s, 'beast') ? b.beast.duoChance : b.passives.duo.chance;
+    const d = data.r.auto.duo;
+    const chance = buff(s, 'beast') ? d.beastChance : s.player.level >= b.awakening.inuzuka.beast.level ? d.lv7Chance : d.chance;
     const pct = s.player.level >= b.awakening.inuzuka.duo.level ? b.awakening.inuzuka.duo.damagePct : b.passives.duo.damagePct;
     if (rng() < chance) hurtVillain(s, Math.max(1, Math.floor(per * pct)), 'dog', data, rng);
   }
@@ -1169,9 +1320,12 @@ function villainAttack(s: RBattle, tech: VillainTechnique, data: RoletaData, rng
       per = Math.floor(per * data.base.balance.dojutsu.sharingan.readDamageFactor);
       s.log.push({ type: 'passive', side: 'player', kind: 'read' });
     }
+    per = autoRotation(s, per, data, rng);
+    if (s.status !== 'ongoing') return;
     hurtPlayer(s, per, 'attack', data, outcome === 'crit', { tech, rng });
   }
   if (!landed || s.status !== 'ongoing') return;
+  autoCopy(s, tech, data, rng);
   // Cobra do Orochimaru e bisturi do Kabuto (hardcore): veneno no acerto.
   if ((p?.kind === 'insane' && p.snakeBonus > 0) || (p?.kind === 'scalpel' && p.bleedOnHit)) {
     if (!has(s.fx.effects, 'poison')) addEffect(s, 'player', 'poison', data);

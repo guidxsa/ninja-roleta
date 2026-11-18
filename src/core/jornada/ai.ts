@@ -225,7 +225,10 @@ export function chooseAiActive(s: JBattle, f: Fighter, data: JornadaData, _rng: 
   const gate = aiGate(s, f, data);
   if (gate !== null) return { kind: 'gate', level: gate };
   const boost = self((t) => Boolean(t.boost));
-  if (boost && !f.boost) return { kind: 'active', techId: boost.id, target: f.uid };
+  // Postura (Byakugan, v0.94.0): liga com chakra de sobra e desliga quando o chakra aperta, para sobrar para as técnicas.
+  const stance = f.boost ? actives.find((t) => t.stance && t.id === f.boost!.techId) : undefined;
+  if (stance && f.chakra < f.maxChakra * data.j.combat.stanceOffBelowPct) return { kind: 'active', techId: stance.id, target: f.uid };
+  if (boost && !f.boost && (!boost.stance || f.chakra >= f.maxChakra * data.j.combat.stanceOnAbovePct)) return { kind: 'active', techId: boost.id, target: f.uid };
   const clones = self((t) => Boolean(t.clones));
   if (clones && f.clones === 0) return { kind: 'active', techId: clones.id, target: f.uid };
   return null;

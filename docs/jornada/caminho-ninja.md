@@ -21,6 +21,22 @@ A run que aproveita o **mapa ramificado** ([run.md](run.md#mapa-ramificado)): o 
 
 Fichas: [inimigos.md](inimigos.md).
 
+### Inimigos novos (v0.94.0)
+
+Aprovados em 17/11/2026 ([proposta-fichas.md](proposta-fichas.md#parte-1--inimigos-novos-no-caminho-ninja)): cada estágio ganhou 1 chefe, 2 elites e 2 lutas.
+
+| Estágio | Lutas novas | Elites novas | Chefe novo |
+|---|---|---|---|
+| 1 | 2 samurais errantes · caçador da Névoa e bandido | Zōri e Waraji · 2 caçadores da Névoa | **Gatō, Zōri e Waraji** |
+| 2 | 2 genins da Areia · genin da Areia e ninja da Grama | Yoroi e Misumi · 3 genins da Areia | **Kankurō, a Karasu e Temari** |
+| 3 | 2 guardas do esconderijo · guarda e cobra | Tayuya e 3 Doki · 2 guardas e Kidōmaru | **Sakon (nível 2)** |
+
+- **Guarda-costas** (`protects` na ficha): o Zōri e o Waraji tomam todos os golpes de alvo único no Gatō; a Karasu toma 30% dos golpes no Kankurō. Técnica em área passa.
+- **O Gatō foge** quando o Zōri e o Waraji caem: a luta acaba em vitória (roteiro da luta, `encounters` em `src/data/jornada/generic.ts`).
+- **Dois corpos**: a 50% do HP, o Ukon se separa do Sakon e entra na luta.
+- **Itachi e Kisame**: elite rara do estágio 3, 10% de chance de tomar o lugar da elite sorteada (nunca no 1º ciclo do Fácil). Vence quem derruba os dois ou resiste 6 rodadas (vitória `survive`). Derrubar os dois deixa uma relíquia rara no lugar da relíquia de elite.
+- Os retratos usam desenhos parecidos (bandido, Haku, genins do Exame, Kabuto disfarçado, Uchiha, Zabuza) até haver os próprios.
+
 ## Eventos
 
 Saem do **desconhecido** (50% das vezes). Um evento não repete na mesma run enquanto houver outro novo. Alguns lembram o Roleta.
@@ -29,10 +45,10 @@ Saem do **desconhecido** (50% das vezes). Um evento não repete na mesma run enq
 |---|---|
 | A velhinha | Ajudar (+1 kit de HP e marca *ajudou a velhinha*) · Seguir (+15 ryō) |
 | Barraca de ramen | Pagar (15 ryō, +60 de HP, +18 de chakra) · De graça se ajudou a velhinha (igual) · Treinar (+20 XP) |
-| Treino na clareira | Selos: +1 ponto de talento e +30 XP (perdeu: +30 XP) · Treino pesado (+60 XP, equipe perde 15% do HP) |
+| Treino na clareira | Kunai no alvo: +1 ponto de talento e +30 XP (perdeu: +30 XP) · Treino pesado (+60 XP, equipe perde 15% do HP) |
 | Jokenpô | Jogar: relíquia rara (perdeu: +10 ryō) · Vender o pergaminho (+20 ryō) |
-| O guru | Pagar 40 ryō: +2 pontos de talento · Memória: +1 ponto de talento · Ir embora |
-| Mantos de nuvem vermelha | Memória: +40 ryō (perdeu: equipe perde 30% do HP) · Fugir (equipe perde 15% do HP) |
+| O guru | Pagar 40 ryō: +2 pontos de talento · Pegar o sino: +1 ponto de talento · Ir embora |
+| Mantos de nuvem vermelha | O clone verdadeiro: +40 ryō (perdeu: equipe perde 30% do HP) · Fugir (equipe perde 15% do HP) |
 | Achado | +1 Pílula de reanimação · +50 XP |
 | Contrato de invocação | Selos: relíquia de evento (perdeu: equipe perde 10% do HP) · +6 de HP máximo da equipe |
 | Mercador de mau agouro (má sorte) | Aceitar a barganha (+35 ryō e a [maldição do mercador](run.md#loja)) · Selos: +20 XP (perdeu: a maldição) |

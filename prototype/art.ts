@@ -83,6 +83,8 @@ const ICONS: Record<string, string> = {
   intent: '<path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/>',
   dodge: '<path d="M14 4h6M11 9h10M14 14h6M3 19h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="6" cy="9" r="3" fill="currentColor"/>',
   clones: '<circle cx="8" cy="7" r="3.2" fill="currentColor"/><circle cx="16" cy="7" r="3.2" fill="currentColor" opacity=".6"/><path d="M2 21c0-5 2.7-8 6-8s6 3 6 8zM10 21c0-5 2.7-8 6-8s6 3 6 8z" fill="currentColor"/>',
+  // Um shinobi de pé, com a bandana (minijogo do clone verdadeiro, v0.91.0).
+  shinobi: '<circle cx="12" cy="6" r="3.4" fill="currentColor"/><path d="M8.4 5h7.2" stroke="#0008" stroke-width="1.4"/><path d="M15.4 5.2l3 1.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M6 22l1.6-8.5c.4-2 2.2-3.5 4.4-3.5s4 1.5 4.4 3.5L18 22h-3.4l-1-5h-3.2l-1 5z" fill="currentColor"/>',
   armor: '<path d="M12 2 4 5v6c0 5 3.4 9.2 8 11 4.6-1.8 8-6 8-11V5z" fill="currentColor"/><path d="M13 6 8.5 13h3l-1 5 4.5-7h-3z" fill="#0008"/>',
   willOfFire: '<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 1.6-4.6 3-6 .2 2 1 3 2.2 3.6C10.6 8.8 11 5.4 12 2z" fill="currentColor"/><path d="M12 21s-3.5-2.4-3.5-5a1.9 1.9 0 0 1 3.5-1 1.9 1.9 0 0 1 3.5 1c0 2.6-3.5 5-3.5 5z" fill="#fff8"/>',
   owes: '<path d="M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M10 18h4" stroke="currentColor" stroke-width="2.4"/>',

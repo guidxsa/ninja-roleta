@@ -74,6 +74,14 @@ export const talents: TalentNode[] = [
   // final que muda uma regra. Seis combinações ligam ramos vizinhos (pedem as duas junções) e três assinaturas premiam
   // combos fortes (pedem o talento final de um ramo e a junção do outro). A árvore toda custa ~80; uma run rende ~18.
   // Elemento (poder): as técnicas do elemento sorteado. Final: o ninjutsu atravessa a resistência.
+  // Núcleos do rascunho (v0.93.0, docs/jornada/talentos.md#rascunho): escolhidos de graça no começo da run (3 oferecidos:
+  // um de dano, um de apoio e um livre). Cada um dá a técnica do estilo (o Elemento, o Nível II; a Determinação, o +25% de XP) e uma versão fraca da regra final.
+  { id: 'tCoreElement', owner: 'commonNinja', branch: 'element', tier: 0, cost: 0, core: 'dano', coreGrants: ['tElement2'], mods: { typePen: { ninjutsu: 0.1 } } },
+  { id: 'tCoreTools', owner: 'commonNinja', branch: 'tools', tier: 0, cost: 0, core: 'apoio', learn: 'jWireTrap', teamMods: { stunnedDamageMult: 1.15 } },
+  { id: 'tCoreLeaf', owner: 'commonNinja', branch: 'leafStyle', tier: 0, cost: 0, core: 'dano', learn: 'jLeafHurricane', mods: { comboStepPct: 0.03 } },
+  { id: 'tCoreClones', owner: 'commonNinja', branch: 'clones', tier: 0, cost: 0, core: 'apoio', mods: { startClones: 1, cloneEnemyAccuracy: 0.1 } },
+  { id: 'tCoreTeam', owner: 'commonNinja', branch: 'team', tier: 0, cost: 0, core: 'apoio', allyHpPct: 0.05, teamMods: { startShieldPct: 0.04 } },
+  { id: 'tCoreWill', owner: 'commonNinja', branch: 'will', tier: 0, cost: 0, core: 'dano', coreGrants: ['tDetermination'], mods: { regenHp: 1, lowHpDamageMult: 1.1 } },
   { id: 'tElement2', owner: 'commonNinja', branch: 'element', tier: 1, cost: 1, learnByElement: { fire: 'jFireball', wind: 'jGale', lightning: 'jLightningCurrent', earth: 'jEarthSpear', water: 'jWaterShark' }, maxRank: 3, rankCost: 1, rankMods: { techDamageMult: { jFireball: 1.2, jGale: 1.2, jLightningCurrent: 1.2, jEarthSpear: 1.2, jWaterShark: 1.2 } } },
   // Afinidade também ensina a barreira do elemento (v0.77.0; o raio não tem).
   { id: 'tElementPower', owner: 'commonNinja', branch: 'element', tier: 2, col: -1, cost: 2, excludes: ['tCChakraFlow'], mods: { typeDamageMult: { ninjutsu: 1.15 } }, learnByElement: { fire: 'jFireWall', wind: 'jWindShield', earth: 'jEarthWall', water: 'jWaterWall' } },
@@ -259,7 +267,7 @@ export const talents: TalentNode[] = [
   { id: 'tH360', owner: 'hyuugaNinja', branch: 'byakugan', tier: 5, cost: 3, capstone: true, mods: { ignoreEvasion: true, evasion: 0.1 } },
   // Punho Suave (chakra do alvo). Final: o taijutsu bloqueia o chakra.
   { id: 'tGentleFist', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 1, cost: 1, mods: { typeDamageMult: { taijutsu: 1.15 } } },
-  { id: 'tHClosePoints', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 2, col: -1, cost: 2, excludes: ['tHInnerStrike'], mods: { taiHitDrain: 2 } },
+  { id: 'tHClosePoints', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 2, col: -1, cost: 2, excludes: ['tHInnerStrike'], mods: { taiHitDrain: 2, drainRefund: 1 } },
   { id: 'tHInnerStrike', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 2, col: 1, cost: 2, excludes: ['tHClosePoints'], mods: { typePen: { taijutsu: 0.25 } } },
   { id: 'tChakraPoints', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 3, cost: 2, requires: ['tHClosePoints', 'tHInnerStrike'], mods: { techDamageMult: { jGentlePalm: 1.3 }, typeDamageMult: { taijutsu: 1.2 } } },
   { id: 'tHBrokenFlow', owner: 'hyuugaNinja', branch: 'gentleFist', tier: 4, cost: 2, mods: { chakraBlockedDamageMult: 1.3 } },
@@ -267,7 +275,7 @@ export const talents: TalentNode[] = [
   // Rotação (defesa). Final: o escudo devolve metade do que segura.
   { id: 'tRotation', owner: 'hyuugaNinja', branch: 'rotation', tier: 1, cost: 1, learn: 'jRotation' },
   { id: 'tGuardStance', owner: 'hyuugaNinja', branch: 'rotation', tier: 2, col: -1, cost: 2, excludes: ['tHQuickSpin'], mods: { startShieldPct: 0.12 } },
-  { id: 'tHQuickSpin', owner: 'hyuugaNinja', branch: 'rotation', tier: 2, col: 1, cost: 2, excludes: ['tGuardStance'], mods: { techChakraDiscount: { jRotation: 2 } } },
+  { id: 'tHQuickSpin', owner: 'hyuugaNinja', branch: 'rotation', tier: 2, col: 1, cost: 2, excludes: ['tGuardStance'], mods: { techChakraDiscount: { jRotation: 3 } } },
   { id: 'tVacuumWall', owner: 'hyuugaNinja', branch: 'rotation', tier: 3, cost: 2, requires: ['tGuardStance', 'tHQuickSpin'], learn: 'jVacuumWall', mods: { evasion: 0.08, damageMult: 1.15 } },
   { id: 'tHBalance', owner: 'hyuugaNinja', branch: 'rotation', tier: 4, cost: 2, mods: { guardHealPct: 0.08, regenHp: 2 } },
   { id: 'tHAbsoluteDefense', owner: 'hyuugaNinja', branch: 'rotation', tier: 5, cost: 3, capstone: true, mods: { shieldReflectPct: 0.75 } },

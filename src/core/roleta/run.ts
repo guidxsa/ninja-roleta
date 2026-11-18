@@ -5,8 +5,8 @@ import { scaleVillain, type Difficulty } from '../difficulty';
 import type { GameData } from '../gameData';
 import { bossChoices, relicFits, type RelicDef, type RelicNeed, type RoletaRelicEffect } from '../jornada/relics';
 import { spin, type Slice } from '../roulette';
-import { fullRestore, gainXp, trainingWeightsWin, xpGain, xpToNextLevel, type PlayerState } from '../player';
-import type { NextFightMods } from '../progression';
+import { fullRestore, gainXp, taijutsuGain, trainingWeightsWin, xpGain, xpToNextLevel, type PlayerState } from '../player';
+import { TRAINING_STATS, type NextFightMods, type Step, type TrainingStat } from '../progression';
 import type { Rng } from '../rng';
 import type { VillainDef } from '../types';
 import type { RBattle } from './battle';
@@ -100,7 +100,7 @@ export function villainFor(run: RRun, villains: Record<string, VillainDef>, data
   const v = scaleVillain(villains[run.villainId!]!, run.difficulty, scaled);
   // Força da categoria (as lutas começam com HP cheio, v0.59.0): × HP e ataques.
   // Forma da categoria (v0.81.0): o chefe com menos HP e mais ataque.
-  const pow = data.r.villainPower[cat] ?? 1;
+  const pow = (data.r.villainPower[cat] ?? 1) * (data.r.difficultyPower[run.difficulty] ?? 1);
   const shape = data.r.villainShape[cat] ?? { hp: 1, offense: 1 };
   const hpMult = pow * shape.hp;
   const offMult = pow * shape.offense;
@@ -219,11 +219,28 @@ export interface RelicRewardRoll {
   relic: string | null;
 }
 
-/** Pesos da raridade para a categoria e o ciclo (cada ciclo do infinito passa pontos de Comum para Rara). */
+/**
+ * Pesos da raridade para a categoria e o ciclo (v0.92.0): só as 2 raridades vizinhas da categoria; cada ciclo do infinito
+ * passa pontos da mais baixa para a mais alta das duas.
+ */
 export function relicRewardWeights(category: RCategory, cycle: number, data: RoletaData): Record<RelicRewardTier, number> {
-  const w = data.r.relicReward.weights[category] ?? data.r.relicReward.weights.genin!;
-  const shift = Math.min(w.common, data.r.relicReward.cycleShift * cycle);
-  return { common: w.common - shift, uncommon: w.uncommon, rare: w.rare + shift };
+  const w = { ...(data.r.relicReward.weights[category] ?? data.r.relicReward.weights.genin!) };
+  const on = RELIC_REWARD_TIERS.filter((t) => w[t] > 0);
+  if (on.length === 2 && cycle > 0) {
+    const [low, high] = on as [RelicRewardTier, RelicRewardTier];
+    const shift = Math.min(w[low], data.r.relicReward.cycleShift * cycle);
+    w[low] -= shift;
+    w[high] += shift;
+  }
+  return w;
+}
+
+/** Raridade vizinha disponível quando as da roleta se esgotaram (a mais próxima; empate, a mais alta). */
+function nearestTier(weights: Record<RelicRewardTier, number>, available: (t: RelicRewardTier) => boolean): RelicRewardTier | null {
+  const idx = RELIC_REWARD_TIERS.map((t, i) => (weights[t] > 0 ? i : -1)).filter((i) => i >= 0);
+  const center = idx.length ? idx.reduce((a, b) => a + b, 0) / idx.length : 0;
+  const order = RELIC_REWARD_TIERS.map((t, i) => ({ t, d: Math.abs(i - center) - i * 0.001 })).sort((a, b) => a.d - b.d);
+  return order.find((o) => available(o.t))?.t ?? null;
 }
 
 /**
@@ -234,13 +251,61 @@ export function rollRelicReward(player: PlayerState, category: RCategory, cycle:
   const owned = player.relics ?? [];
   const pool = relicPool(player, data).filter((r) => !owned.includes(r.id));
   const weights = relicRewardWeights(category, cycle, data);
-  const tierSlices = RELIC_REWARD_TIERS.filter((t) => weights[t] > 0 && pool.some((r) => r.tier === t)).map((t) => ({ label: t, weight: weights[t], value: t }));
+  const available = (t: RelicRewardTier) => pool.some((r) => r.tier === t);
+  let tierSlices = RELIC_REWARD_TIERS.filter((t) => weights[t] > 0 && available(t)).map((t) => ({ label: t, weight: weights[t], value: t }));
+  // As duas raridades da roleta esgotadas: cai para a vizinha que ainda tem relíquia.
+  if (!tierSlices.length) {
+    const near = nearestTier(weights, available);
+    tierSlices = near ? [{ label: near, weight: 1, value: near }] : [];
+  }
   if (!tierSlices.length) return { tierStep: null, relicStep: null, relic: null };
   const tierIndex = spin(tierSlices, rng).index;
   const tier = tierSlices[tierIndex]!.value;
   const relicSlices = pool.filter((r) => r.tier === tier).map((r) => ({ label: r.id, weight: 1, value: r.id }));
   const relicIndex = spin(relicSlices, rng).index;
   return { tierStep: { slices: tierSlices, index: tierIndex }, relicStep: { slices: relicSlices, index: relicIndex }, relic: relicSlices[relicIndex]!.value };
+}
+
+// ---------------------------------------------------------------------------
+// Eventos pré-luta do Roleta que dão força de combate (v0.92.0, docs/roleta/run.md#eventos)
+
+/** Velhinha agradecida: uma relíquia da raridade do evento (sem nenhuma para dar, o XP da roleta de relíquia). */
+export function applyOldLadyRoleta(player: PlayerState, rng: Rng, data: RoletaData): Step {
+  const owned = player.relics ?? [];
+  const pool = relicPool(player, data).filter((r) => !owned.includes(r.id) && r.tier === data.r.events.oldLadyTier);
+  if (!pool.length) {
+    const xp = rewardXp(player, 2, data);
+    return { player: gainXp(player, xp, data.base), mods: {}, effect: { kind: 'relicGift', id: null, xp: xpGain(player, xp, data.base) } };
+  }
+  const id = pool[Math.floor(rng() * pool.length)]!.id;
+  return { player: gainRoletaRelic(player, id, data), mods: {}, effect: { kind: 'relicGift', id, xp: 0 } };
+}
+
+/** Ramen do Ichiraku: +1 estágio em status sorteados, sem repetir (tipos de ataque proibidos ficam de fora). */
+export function applyRamenRoleta(player: PlayerState, rng: Rng, data: RoletaData): Step {
+  const st = data.base.balance.statStage;
+  const pool: TrainingStat[] = TRAINING_STATS.filter((s) => !(player.forbiddenAttackTypes as readonly string[]).includes(s));
+  const picked: TrainingStat[] = [];
+  while (picked.length < data.r.events.ramenStats && pool.length) picked.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]!);
+  let p: PlayerState = { ...player, offense: { ...player.offense }, resistance: { ...player.resistance } };
+  const gains: { stat: TrainingStat; amount: number }[] = [];
+  for (const stat of picked) {
+    if (stat === 'taijutsu') {
+      const t = taijutsuGain(p, st.taijutsu, data.base);
+      p = { ...p, offense: { ...p.offense, taijutsu: p.offense.taijutsu + t.gain }, taijutsuCarry: t.carry };
+      gains.push({ stat, amount: t.gain });
+    } else if (stat === 'ninjutsu' || stat === 'genjutsu') {
+      p.offense[stat] += st[stat];
+      gains.push({ stat, amount: st[stat] });
+    } else if (stat === 'physical' || stat === 'mental') {
+      p.resistance[stat] += st[stat];
+      gains.push({ stat, amount: st[stat] });
+    } else {
+      p.speed += st.speed;
+      gains.push({ stat, amount: st.speed });
+    }
+  }
+  return { player: p, mods: {}, effect: { kind: 'statGain', stats: gains } };
 }
 
 /** Contrato do animal (evento Invocação): a relíquia que corresponde a ele. */

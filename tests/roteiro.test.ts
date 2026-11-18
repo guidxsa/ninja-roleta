@@ -6,7 +6,9 @@ import type { ScriptRule } from '../src/core/jornada/script';
 import type { JBattle } from '../src/core/jornada/types';
 import { jornadaData } from '../src/data/jornada';
 // Os roteiros da História, não o balanceamento: a força por estágio (v0.82.0) fica neutra para as seeds valerem.
-const data: JornadaData = { ...jornadaData, j: { ...jornadaData.j, storyStageStrength: [1, 1, 1, 1] } };
+const neutral = { easy: 1, normal: 1, hard: 1, hardcore: 1 };
+// O roteiro testa as cenas, não o balanceamento: força por estágio e por dificuldade neutras (v0.95.0).
+const data: JornadaData = { ...jornadaData, j: { ...jornadaData.j, storyStageStrength: [1, 1, 1, 1], difficultyMult: { story: neutral, generic: neutral } } };
 import { eventOptions } from '../src/core/jornada/events';
 import { ptBR } from '../src/data/strings/ptBR';
 import { chooseAiAction } from '../src/core/jornada/ai';
@@ -460,7 +462,11 @@ describe('História canônica: Sannin e Resgate (v0.67.0)', () => {
 
 describe('revisão da História, parte 2 (v0.70.0)', () => {
   const J = ptBR.jornada;
-  const scripts = data.stages.flatMap((st) => st.stops).flatMap((stop) => ('script' in stop ? (stop.script ?? []) : []));
+  const scripts = [
+    ...data.stages.flatMap((st) => st.stops).flatMap((stop) => ('script' in stop ? (stop.script ?? []) : [])),
+    // Lutas com regra própria do Caminho Ninja (v0.94.0).
+    ...data.generic.stages.flatMap((st) => Object.values(st.encounters ?? {})).flatMap((e) => e.script ?? []),
+  ];
 
   it('Kage Bunshin: o Naruto começa sem ele e aprende no pergaminho proibido, qualquer que seja a escolha', () => {
     const run = newRun(1, 'normal', data);

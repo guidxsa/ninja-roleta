@@ -38,13 +38,42 @@ De cima para baixo: o banner, o card **Progresso da Jornada** (quando há run sa
 
 ## Minijogos
 
-Recompensas interativas no lugar da roleta visual. Ganhar dá o prêmio do evento; perder dá um prêmio menor.
+Recompensas interativas no lugar da roleta visual. Ganhar dá o prêmio do evento; perder dá um prêmio menor. A opção com minijogo mostra o ícone de carta. Os números ficam em `minigames` (`src/data/jornada/balance.ts`); a regra, em `src/core/jornada/minigames.ts`.
 
 | Minijogo | Regra |
 |---|---|
 | Memória | 6 pares de selos de mão; pode errar 5 vezes |
 | Sequência de selos | Decore 5 selos mostrados um a um e repita na ordem, entre 8 opções; um erro perde |
 | Jokenpô | Pedra, papel ou tesoura; empate joga de novo |
+| Kunai no alvo (v0.91.0) | Um marcador vai e volta sobre o alvo; toque para soltar. 3 kunai, cada uma 15% mais rápida; centro vale 2, anel 1; vence com 4 pontos. A pele **força** (bola de borracha) troca o alvo por uma barra de chakra |
+| Andar sobre a água (v0.91.0) | O chakra cai sozinho e ondas empurram; cada toque sobe um degrau. Fique 8 segundos; perde com tempo demais fora da faixa. Peles: **árvore** e **balão d'água** |
+| O clone verdadeiro (v0.91.0) | O verdadeiro brilha e as figuras trocam de lugar, duas a duas; toque no verdadeiro |
+| Pegar o sino (v0.91.0) | Toque depois que o mestre vira a página e antes de ele levantar os olhos; tocar antes perde a rodada. Melhor de 3 |
+
+**A dificuldade pesa nos 4 de tempo** (Memória, Sequência e Jokenpô são iguais em todas):
+
+| | Fácil | Médio | Difícil | Hardcore |
+|---|---|---|---|---|
+| Kunai: centro (fração da faixa; anel de 12% de cada lado) | 16% | 12% | 10% | 8% |
+| Água: faixa do medidor · tempo fora tolerado | 30% · 2 s | 25% · 1,5 s | 22% · 1,2 s | 18% · 1 s |
+| Clone: figuras · trocas | 3 · 4 | 4 · 5 | 4 · 7 | 5 · 8 |
+| Sino: janela depois do sinal (nunca abaixo de 400 ms) | 900 ms | 700 ms | 550 ms | 450 ms |
+
+**Status pesam** (o jogador sempre influencia o sorteio):
+
+- Kunai: cada relíquia de kunai (Óculos, Bolsa de kunai, Kunai gêmeas, Kunai de mestre) alarga o centro em 2 pontos, até 6.
+- Água: +1 ponto de faixa a cada 20 de chakra máximo do protagonista acima da ficha inicial, até 6.
+- Clone: protagonista com dōjutsu (Uchiha, Hyuuga, ou a aparência do Sasuke) vê o fluxo de chakra a troca toda; um aliado com dōjutsu (Sasuke, Neji, gennin Uchiha ou Hyuuga) dá um brilho no meio das trocas.
+- Sino: +20 ms de janela por ponto de speed do protagonista acima de 10, até +150 ms.
+
+**Sem pressa** (acessibilidade): cada jogo de tempo tem uma variante sem reflexo, ligada sozinha quando o aparelho pede menos movimento e pelo botão **Sem pressa** antes de começar (a escolha fica guardada no aparelho, `calmGames`). A regra e o roteiro são os mesmos:
+
+- Kunai: o marcador para em cada uma de 12 posições, em ordem sorteada; solte ou passe (até 4/3/2/2 vezes por kunai, do Fácil ao Hardcore). As duas posições do meio são sempre centro.
+- Água: 10 passos; concentre (sobe), mantenha ou solte (desce). A direção da próxima onda é anunciada, a força não; pode sair do ponto 2 vezes.
+- Clone: uma troca por vez, descrita em texto ("Trocam 2 e 4"), com o botão Próxima.
+- Sino: 5 páginas por rodada; em cada uma, espere ou pegue. Uma distração é de verdade e outra só parece (duas no Hardcore).
+
+O leitor de tela recebe só as mudanças de estado ("Afundando", "No ponto", "Agora!") numa linha `aria-live`; o tabuleiro é um botão grande, que aceita toque, Espaço ou Enter. O modo instantâneo não encurta a parte jogável. Na simulação, o bot ganha 60% dos de selos e do jokenpô, e dos de tempo 65/60/55/50% do Fácil ao Hardcore (`minigames.botWin`). A proposta que originou os 4 está em [proposta-minijogos.md](proposta-minijogos.md).
 
 ## Dificuldade
 

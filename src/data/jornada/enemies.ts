@@ -97,6 +97,30 @@ export const enemies: EnemyDef[] = [
     }),
     forms: [{ id: 'curseMark2', statMult: 1.2, healPct: 0.2, portrait: 'villain:sasukeCurse2' }],
   },
+
+  // Caminho Ninja: inimigos novos (v0.94.0, docs/jornada/proposta-fichas.md). Os retratos usam desenhos parecidos até
+  // haver os próprios (decisoes.md, retratos que faltam).
+  e('samurai', 48, 0, 9, [7, 0, 0], [4, 3], null, ['jeQuickCut', 'jeKatana'], 'brute', 'ninja:thug'),
+  e('mistHunter', 58, 18, 12, [7, 8, 3], [5, 5], 'water', ['jeSenbon', 'jeWaterBullet'], 'striker', 'villain:haku'),
+  { ...e('zori', 70, 0, 10, [9, 0, 0], [6, 4], null, ['jeKatana', 'jeQuickCut'], 'brute', 'ninja:thug'), protects: { ids: ['gato'], chance: 1 } },
+  { ...e('waraji', 80, 0, 8, [10, 0, 0], [7, 4], null, ['jeHeavyAxe', 'jeClub'], 'brute', 'ninja:thug'), protects: { ids: ['gato'], chance: 1 } },
+  e('gato', 50, 0, 7, [4, 0, 0], [3, 3], null, ['jeCane', 'jeBribe'], 'tactician', 'ninja:thug'),
+  e('sandGenin', 70, 18, 11, [8, 9, 5], [6, 6], 'wind', ['jeKunai', 'jeWindBlade'], 'striker', 'villain:examSand'),
+  e('yoroi', 110, 30, 11, [10, 8, 4], [7, 7], null, ['jeChakraSuck', 'jeKunai'], 'tactician', 'villain:kabutoSpy'),
+  e('misumi', 100, 20, 12, [10, 6, 4], [8, 6], null, ['jeFlexibleBody', 'jeKunai'], 'tactician', 'villain:kabutoSpy'),
+  e('kankuro', 140, 36, 11, [7, 12, 6], [8, 8], null, ['jeKunai', 'jeChakraThreads'], 'tactician', 'villain:examSand'),
+  { ...e('karasu', 60, 20, 11, [10, 0, 0], [6, 6], null, ['jeKarasuBlades', 'jeKarasuHug'], 'brute', 'villain:examSand'), protects: { ids: ['kankuro'], chance: 0.3 } },
+  e('temari', 130, 40, 13, [7, 14, 4], [7, 8], 'wind', ['jeGreatFan', 'jeWindBlade', 'jeKunai'], 'striker', 'villain:examSand'),
+  e('hideoutGuard', 80, 16, 11, [10, 8, 5], [7, 6], null, ['jeKunai', 'jeSoundBlade'], 'striker', 'villain:examSound'),
+  e('doki', 80, 0, 9, [11, 0, 0], [7, 7], null, ['jeDemonStrike'], 'brute', 'villain:tayuyaCurse'),
+  e('sakon2', 260, 40, 14, [15, 10, 6], [10, 8], null, ['jeTwinStrike', 'jeParasite', 'jeRashomon'], 'brute', 'villain:sakonCurse', {
+    kind: 'enrage',
+    atPct: 0.4,
+    damageMult: 1.25,
+  }),
+  e('ukon', 156, 24, 14, [15, 10, 6], [10, 8], null, ['jeTwinStrike', 'jeParasite'], 'brute', 'villain:sakonCurse'),
+  e('itachi', 240, 60, 18, [13, 16, 18], [10, 14], 'fire', ['jeTsukuyomi', 'jeAmaterasu', 'jeKunai', 'jeCrowClone'], 'tactician', 'ninja:uchiha'),
+  e('kisame', 300, 70, 13, [16, 14, 4], [12, 8], 'water', ['jeSamehada', 'jeWaterShark', 'jeWaterPrison'], 'brute', 'villain:zabuza'),
 ];
 
 export const enemiesById: Record<string, EnemyDef> = Object.fromEntries(enemies.map((x) => [x.id, x]));

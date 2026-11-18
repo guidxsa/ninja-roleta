@@ -115,7 +115,7 @@ Tudo em `prototype/jornada/`, run salva a cada parada (`jornada_run_v1`). Duas v
 |---|---|---|---|---|---|---|---|
 | `jornada.entry` | Entrada da Jornada | `entryScreen()` em `jornada/index.ts` | Card Jornada no Portão | Save, conquistas (`j_canonHard` libera Hardcore), recentes | Com ou sem card de progresso; Hardcore travado/liberado; com ou sem conquistas recentes; frase sorteada | Composição do Portão: `gate-main` + `gate-aside` | Sim (1 clique) / não |
 | `jornada.story.pick` | Modo História: escolher perspectiva | `campaignScreen()` | Card História | `data.campaigns`, save | Naruto aberto; Sasuke travado ("em breve") enquanto não houver `campaigns.sasuke`; faixa de arcos com arco atual e feitos (só com run da História salva); confirmação de sobrescrever save | Dois painéis dia/noite; arcos rolam de lado no celular | Sim (2 cliques) / não |
-| `jornada.path.setup` | Caminho Ninja: preparação | `pathSetupScreen()` | Card Caminho Ninja | Conquistas (classes Uchiha/Hyuuga), recorde | Classes travadas/abertas; seletor de elemento só no Comum; botão de visual do Sasuke só com Uchiha + conquista; linha de recorde só a partir de 1 ciclo vencido | Pôster + painel | Sim (2 cliques) / não |
+| `jornada.path.setup` | Caminho Ninja: preparação | `pathSetupScreen()` | Card Caminho Ninja | Conquistas (classes Uchiha/Hyuuga), recorde | Classes travadas/abertas; seletor de elemento só no Comum; linha de recorde só a partir de 1 ciclo vencido | Pôster + painel | Sim (2 cliques) / não |
 | `jornada.path.reveal` | Revelação do herói | `revealScreen()` | Começar o Caminho Ninja | Run nova (RNG) | Elemento sorteado vs escolhido; prodígio sem elemento; Hyuuga sem elemento; 2º elemento do Uchiha; relíquia bônus de quem sorteou | Coluna centralizada | Não / não |
 | `jornada.trail` | Trilha da História (parada atual) | `playStop()` (ramo canon) | Cada parada da História | Run, `stages`, arte do arco | Próxima parada é luta (inimigos, IA, objetivo especial) ou não; faixa "O que mudou" no topo depois de evento; equipe da luta; dica rotativa; legenda; chip de ciclo; loja fixa só no widescreen | Celular: coluna. PC: `jcol-l` (HUD) + trilha + `jcol-r`. WIDE: loja acoplada (`dockShop`). Seções dobráveis (`fold.ts`, guardado no aparelho) | Não (só com save) / não |
 | `jornada.map` | Mapa do Caminho Ninja | `mapScreen()` / `mapView()` | Escolha de nó no Caminho Ninja | `run.map` (gerado por seed), `path` | Nós feito, escolha, adiante, morto; chefe no topo com retrato; nó "?" desconhecido; card "Sua run"; loja acoplada no WIDE | Mapa vertical; colunas no PC | Não / não |
@@ -130,6 +130,10 @@ Tudo em `prototype/jornada/`, run salva a cada parada (`jornada_run_v1`). Duas v
 | `jornada.minigame.memory` | Minijogo da memória | `memory()` em `minigames.ts` | Opção com minijogo | RNG da parada | Vitória/derrota | Dentro da cena | Não / não |
 | `jornada.minigame.seals` | Minijogo dos selos | `seals()` | idem | RNG | Vitória/derrota | idem | Não / não |
 | `jornada.minigame.rps` | Jokenpô da Jornada | `rps()` | idem | RNG | Vitória/derrota | idem | Não / não |
+| `jornada.minigame.kunai` | Kunai no alvo (e a pele `:power`, bola de borracha) | `kunaiGame()` em `minigamesTimed.ts` | idem | RNG | Vitória/derrota | idem | Não / não |
+| `jornada.minigame.water` | Andar sobre a água (e `:calm`, a variante sem pressa) | `waterGame()` | idem | RNG | Vitória/derrota | idem | Não / não |
+| `jornada.minigame.clone` | O clone verdadeiro | `cloneGame()` | idem | RNG | Vitória/derrota | idem | Não / não |
+| `jornada.minigame.bell` | Pegar o sino | `bellGame()` | idem | RNG | Vitória/derrota | idem | Não / não |
 | `jornada.story-relic` | Relíquia de história | `storyRelicScene()` | Evento que entrega relíquia com fala (bandana, colar) | `storyRelicLines` | Com ou sem relíquia substituída (troca à vista) | Coluna | Não / não |
 | `jornada.battle.cutin` | Fala em corte de quadro | `cutIn()` em `jornada/battle.ts` | Evento `say` do roteiro da luta | Roteiro da parada | Narrador, aliado, inimigo; segue sozinho no instantâneo | Faixa diagonal sobre a luta | Não / não |
 
@@ -228,8 +232,7 @@ abandono (Roleta: `window.confirm`; Jornada: `confirmDialog`) e o compartilhar (
        ▼                    ▼              ▼
   casca + ritmo      Portão, Registro,  entrada/progresso
   (todas as telas)   avatares, Hardcore  da Jornada, retomar
-                     liberado, classes,
-                     visual do Sasuke
+                     liberado, classes
 
   RNG (seed) ──► Roleta: origem → vilão → evento → acerto/dano → relíquia → baú
              └─► Jornada: run nova → mapa (Caminho) → RNG por parada → luta/minijogo/tesouro
@@ -258,7 +261,7 @@ Dependências entre telas (o que precisa ter acontecido antes):
 | `jornada.talents` com ramos ocultos/abertos | Conquistas de conta e estágio da run |
 | `jornada.shop` com Purificar | Run amaldiçoada |
 | `jornada.end` com "Seguir ciclo" | Vencer o Caminho Ninja |
-| Classes Uchiha/Hyuuga, visual do Sasuke, Hardcore da Jornada | Conquistas no perfil |
+| Classes Uchiha/Hyuuga, Hardcore da Jornada | Conquistas no perfil |
 
 ## 5. Estados especiais
 

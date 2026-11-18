@@ -19,7 +19,7 @@ Um ciclo tem 6 lutas: **2 genin → 2 chunin → 1 jounin → 1 chefe**. Cada lu
 - O evento é um passo à parte: no mapa, o botão é "Seguir: evento pré-luta"; no resultado do evento dá para **Lutar** ou **Voltar ao mapa** (aí o botão do mapa vira "Lutar", e o evento não se repete).
 - **Abandonar run** (no mapa e na luta, com confirmação): a run termina, conta como abandonada no histórico e vai para a tela de fim.
 - **A vitória recupera HP e chakra por inteiro** (v0.61.0; na v0.59.0 a cura vinha no começo da luta). O que acontece entre as lutas chega na seguinte: a Akatsuki que tira metade do HP e do chakra faz o jogador entrar ferido. A run começa cheia.
-- **Força dos vilões por categoria** (`villainPower`, × HP e ataques, calibrado pela simulação): Genin, Chunin e Jounin ×1, Chefe ×0,9. Por cima, a **forma do chefe** (`villainShape`, v0.81.0): HP ×0,85 e ataques ×1,1, para a luta ficar mais curta e mais perigosa (no total, HP ×0,765 e ataques ×0,99).
+- **Força dos vilões por categoria** (`villainPower`, × HP e ataques, calibrado pela simulação): Genin, Chunin e Jounin ×1, Chefe ×0,9. Por cima, a **força da dificuldade** do Roleta (`difficultyPower`, v0.92.0: Fácil 1,3, Médio 1,2, Difícil 1,12, Hardcore 1,22; [combate.md](combate.md#chakra-e-itens)). Por cima, a **forma do chefe** (`villainShape`, v0.81.0): HP ×0,85 e ataques ×1,1, para a luta ficar mais curta e mais perigosa (no total, HP ×0,765 e ataques ×0,99).
 - **Bolsa inicial** (`startBag`, v0.81.0): a run começa com 1 Kit médico e 1 Pílula de soldado.
 - **Chefe**: vencer abre o **baú**: escolher 1 entre 3 relíquias de chefe.
 - O Orochimaru do Roleta volta da derrota no máximo **1 vez** (`villains.insaneRevivesCap`), em qualquer dificuldade, porque o ciclo é curto.
@@ -57,8 +57,8 @@ Desde a v0.47.0, o sorteio também traz fichas só do Roleta (`roletaExtraVillai
 | Peso | Evento | Efeito |
 |---|---|---|
 | 10 | Invocação | Sem animal: sorteia um e ganha o **contrato** dele (relíquia). Com animal: ele sobe de nível |
-| 10 | Velhinha | O vilão age primeiro na próxima luta |
-| 10 | Ramen | O jogador age primeiro na próxima luta |
+| 10 | Velhinha agradecida | Uma relíquia Comum garantida (sem nenhuma para dar, XP como a roleta de relíquia). Até a v0.91: o vilão agia primeiro |
+| 10 | Ramen do Ichiraku | +1 estágio em 2 status sorteados, sem repetir (taijutsu, ninjutsu, genjutsu, resistências, speed). Até a v0.91: o jogador agia primeiro |
 | 10 | Akatsuki | Ver [campanha.md](campanha.md#akatsuki) |
 | 25 | Treino | +60 de XP e a roleta de destaque de status |
 | 20 | Jokenpô | Vitória: +2 estágios de status; derrota: o vilão age primeiro |
@@ -66,17 +66,17 @@ Desde a v0.47.0, o sorteio também traz fichas só do Roleta (`roletaExtraVillai
 
 ## Recompensa
 
-Desde a v0.59.0, a roleta de recompensa (status, XP, itens, jackpot) saiu. Depois de cada vitória (fora o chefe) gira a **roleta de relíquia**, sem escolha (`relicReward`, proposta):
+Desde a v0.59.0, a roleta de recompensa (status, XP, itens, jackpot) saiu. Depois de cada vitória (fora o chefe) gira a **roleta de relíquia**, sem escolha (`relicReward`):
 
-1. **Raridade**, com os pesos da categoria do vilão; cada ciclo do modo infinito passa 10 pontos de Comum para Rara (`cycleShift`).
+1. **Raridade**: desde a v0.92.0 (aprovado pelo usuário), **só 2 raridades vizinhas** por categoria. Cada ciclo do modo infinito passa 10 pontos da mais baixa para a mais alta das duas (`cycleShift`), sem abrir uma terceira.
 
    | Categoria | Comum | Incomum | Rara |
    |---|---|---|---|
-   | Genin | 70 | 25 | 5 |
-   | Chunin | 45 | 40 | 15 |
-   | Jounin | 20 | 45 | 35 |
+   | Genin | 75 | 25 | — |
+   | Chunin | — | 65 | 35 |
+   | Jounin | — | 35 | 65 |
 
-2. **Relíquia**: uma das que o jogador ainda não tem, naquela raridade, com peso igual. Raridade esgotada sai da roleta; sem nenhuma relíquia para sortear, vale XP igual ao custo do nível atual (`rewards.xpPct`).
+2. **Relíquia**: uma das que o jogador ainda não tem, naquela raridade, com peso igual. Raridade esgotada sai da roleta; com as duas esgotadas, cai para a raridade vizinha que ainda tem relíquia; sem nenhuma para sortear, vale XP (`rewards.xpPct`).
 
 O **chefe** continua com o **baú** (escolher 1 entre 3 relíquias de chefe). Status e itens agora vêm dos eventos pré-luta e dos níveis.
 

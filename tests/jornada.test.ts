@@ -627,11 +627,13 @@ describe('run da Jornada', () => {
     const canon = newRun(1, 'normal', data);
     const generic = { ...canon, mode: 'generic' as const };
     // Por estágio desde a v0.82.0 (H1): o 1º estágio ×0,9.
-    const mult = data.j.storyStrength * data.j.storyStageStrength[0]!;
+    // Por cima, a força por dificuldade de cada tipo de run (v0.95.0).
+    const ds = data.j.difficultyMult.story.normal;
+    const mult = data.j.storyStrength * data.j.storyStageStrength[0]! * ds;
     expect(runEnemyMult(canon, data)).toBeCloseTo(mult);
-    expect(runEnemyMult({ ...canon, stageIndex: 3 }, data)).toBeCloseTo(data.j.storyStrength * data.j.storyStageStrength[3]!);
+    expect(runEnemyMult({ ...canon, stageIndex: 3 }, data)).toBeCloseTo(data.j.storyStrength * data.j.storyStageStrength[3]! * ds);
     // O Caminho Ninja tem a própria força por estágio (J3, v0.88.1).
-    expect(runEnemyMult(generic, data)).toBe(data.j.genericStageStrength[0]);
+    expect(runEnemyMult(generic, data)).toBeCloseTo(data.j.genericStageStrength[0]! * data.j.difficultyMult.generic.normal);
     const foe = battleSetup(canon, data).enemies[0]!;
     expect(foe.maxHp).toBe(enemySeed(foe.defId!, 'normal', data, mult).maxHp);
     expect(data.j.enemyStrength.hardcore).toBeGreaterThan(data.j.enemyStrength.hard);
@@ -1462,7 +1464,8 @@ describe('Caminho Ninja', () => {
   });
 
   it('o ramo Elemento ensina a técnica do elemento sorteado', () => {
-    const run = { ...newGenericRun(1, 'normal', 'common', data), hero: 'commonNinja', elements: { commonNinja: 'water' as const }, talentPoints: 5 };
+    // Árvore clássica (sem rascunho): o nó se compra direto.
+    const run = { ...newGenericRun(1, 'normal', 'common', data), hero: 'commonNinja', elements: { commonNinja: 'water' as const }, talentPoints: 5, draft: undefined };
     const next = buyTalent(run, 'tElement2', new Set(), data);
     expect(next.learned).toContain('jWaterShark');
   });
@@ -1950,7 +1953,7 @@ describe('modo infinito do Caminho Ninja e árvore completa (v0.44.0)', () => {
     const run = chooseNode(newGenericRun(5, 'hardcore', 'common', data), nodeChoices(newGenericRun(5, 'hardcore', 'common', data))[0]!.id);
     const id = (currentStop(run, data) as { enemies: string[] }).enemies[0]!;
     expect(cycleEnemyMult(run, data)).toBe(1);
-    const st = data.j.genericStageStrength[0]!;
+    const st = data.j.genericStageStrength[0]! * data.j.difficultyMult.generic.hardcore;
     expect(battleSetup(run, data).enemies[0]).toEqual(enemySeed(id, 'hardcore', data, st));
     // No ciclo seguinte o sorteio da parada também muda: o inimigo vem da parada do ciclo 1.
     const next = { ...run, cycle: 1 };

@@ -27,7 +27,7 @@ import { type Mood, mood } from '../audio';
 import { barPct, barTone, barLayers, patchBar } from '../bars';
 import { esc, h, openDialog, choose } from '../dom';
 import { foldAttrs, foldButton } from '../jornada/fold';
-import { relicSlot } from '../jornada/relics';
+import { relicName, relicSlot } from '../jornada/relics';
 import { prefersStill } from '../layout';
 import { elementChip, lines, techIconName, ELEMENT_COLORS, rTechTip } from '../tips';
 import { tip } from '../tooltip';
@@ -183,6 +183,10 @@ export function effectText(e: ProgressEffect): string {
       return E.playerFirst;
     case 'stages':
       return E.stages(e.n);
+    case 'relicGift':
+      return e.id ? E.relicGift(relicName(e.id)) : E.relicGiftXp(e.xp);
+    case 'statGain':
+      return E.statGain(e.stats.map((g) => `${S.trainingStats[g.stat] ?? g.stat} +${g.amount}`).join(', '));
     case 'revive':
       return E.revive;
     case 'ninjaTool':

@@ -102,6 +102,7 @@ export function emptyMods(): FighterMods {
     burningDamageMult: 1,
     ignoreEvasion: false,
     taiHitDrain: 0,
+    drainRefund: 0,
     chakraBlockedDamageMult: 1,
     taiChakraBlockChance: 0,
     shieldReflectPct: 0,
@@ -207,6 +208,7 @@ export function mergeMods(a: FighterMods, b: Partial<FighterMods>): FighterMods 
     burningDamageMult: a.burningDamageMult * (b.burningDamageMult ?? 1),
     ignoreEvasion: a.ignoreEvasion || Boolean(b.ignoreEvasion),
     taiHitDrain: a.taiHitDrain + (b.taiHitDrain ?? 0),
+    drainRefund: a.drainRefund + (b.drainRefund ?? 0),
     chakraBlockedDamageMult: a.chakraBlockedDamageMult * (b.chakraBlockedDamageMult ?? 1),
     taiChakraBlockChance: a.taiChakraBlockChance + (b.taiChakraBlockChance ?? 0),
     shieldReflectPct: a.shieldReflectPct + (b.shieldReflectPct ?? 0),
@@ -342,13 +344,19 @@ export function hpCost(f: Fighter, tech: JTechnique): number {
 }
 
 /** Por que a técnica não pode ser usada agora (null = pode). */
-export function blockedReason(f: Fighter, tech: JTechnique): 'chakra' | 'cooldown' | 'chakraBlock' | 'hp' | null {
+export function blockedReason(f: Fighter, tech: JTechnique): 'chakra' | 'cooldown' | 'chakraBlock' | 'hp' | 'boost' | null {
+  // Postura ligada: desligar é sempre possível e não custa nada.
+  if (stanceOn(f, tech)) return null;
   if ((f.cooldowns[tech.id] ?? 0) > 0) return 'cooldown';
+  if (tech.requiresBoost && !(f.boost && tech.requiresBoost.includes(f.boost.techId))) return 'boost';
   if (hasEffect(f, 'chakraBlock') && tech.type !== 'taijutsu') return 'chakraBlock';
   if (f.chakra < techniqueCost(f, tech)) return 'chakra';
   if (hpCost(f, tech) >= f.hp) return 'hp';
   return null;
 }
+
+/** A postura desta técnica está ligada no lutador (usar de novo desliga). */
+export const stanceOn = (f: Fighter, tech: JTechnique) => Boolean(tech.stance && f.boost?.techId === tech.id);
 
 /** Alvos possíveis da técnica para quem usa. */
 export function validTargets(s: JBattle, user: Fighter, tech: JTechnique): Fighter[] {
@@ -488,11 +496,14 @@ function changeGate(s: JBattle, f: Fighter, level: number, data: JornadaData): v
 
 const resistanceKind = (type: AttackType) => (type === 'genjutsu' ? 'mental' : 'physical');
 
-/** Dano de um golpe sem crítico (prévia e IA). */
-export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data: JornadaData, crit = false): number {
+/**
+ * Dano de um golpe sem crítico (prévia e IA). `flat`: soma o dano fixo do taijutsu (com `flatPerTechnique`, só no
+ * primeiro golpe que acerta).
+ */
+export function hitDamage(user: Fighter, target: Fighter, tech: JTechnique, data: JornadaData, crit = false, flat = true): number {
   const j = data.j.combat;
   return damage({
-    baseDamage: tech.baseDamage + (tech.type === 'taijutsu' ? user.mods.taijutsuFlat : 0),
+    baseDamage: tech.baseDamage + (tech.type === 'taijutsu' && flat ? user.mods.taijutsuFlat : 0),
     offense: user.offense[tech.type] + (user.boost?.offense ?? 0),
     resistance: target.resistance[resistanceKind(tech.type)],
     fraction: target.guarding ? j.guardFraction : j.resistanceFraction,
@@ -690,7 +701,18 @@ function endTurn(s: JBattle, f: Fighter, data: JornadaData): void {
     s.log.push({ type: 'formEnd', uid: f.uid, form: x.def.id });
     if (x.def.exitLine && !f.down) s.log.push({ type: 'say', uid: f.uid, who: f.defId, line: x.def.exitLine });
   }
-  if (f.boost && --f.boost.turns <= 0) f.boost = null;
+  if (f.boost?.fresh) delete f.boost.fresh;
+  else if (f.boost?.upkeep !== undefined && !f.down) {
+    // Postura (Byakugan): paga a manutenção (com o desconto da técnica); sem chakra, apaga.
+    const cost = Math.max(0, f.boost.upkeep - f.mods.chakraDiscount - (f.mods.techChakraDiscount[f.boost.techId] ?? 0));
+    if (f.chakra >= cost) {
+      f.chakra -= cost;
+      if (cost > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount: -cost });
+    } else {
+      s.log.push({ type: 'boostEnd', uid: f.uid, techId: f.boost.techId });
+      f.boost = null;
+    }
+  } else if (f.boost && --f.boost.turns <= 0) f.boost = null;
   // Barreira: conta os turnos de quem a recebeu.
   if (f.barrier && --f.barrier.turns <= 0) {
     s.log.push({ type: 'barrier', uid: f.uid, action: 'end', techId: f.barrier.techId });
@@ -863,6 +885,12 @@ function applyTech(s: JBattle, f: Fighter, techId: string, targetUid: string, da
   if (!tech || !f.techniques.includes(tech.id)) throw new Error(`técnica indisponível: ${techId}`);
   if (tech.gates) throw new Error('Portões: use setGate');
   if (blockedReason(f, tech)) throw new Error(`técnica bloqueada: ${tech.id}`);
+  // Postura ligada: usar de novo desliga, sem custo nem espera.
+  if (stanceOn(f, tech)) {
+    s.log.push({ type: 'boostEnd', uid: f.uid, techId: tech.id });
+    f.boost = null;
+    return;
+  }
   const targets = tech.target === 'allEnemies' ? alive(s, opponentSide(f.side)) : tech.target === 'self' ? [f] : [fighter(s, targetUid)];
   if (tech.target === 'downedAlly') {
     if (targets.some((t) => !downed(s, f.side).includes(t))) throw new Error('alvo inválido');
@@ -913,14 +941,16 @@ function resolveEffects(s: JBattle, f: Fighter, tech: JTechnique, targets: Fight
   if (tech.boost) {
     // Ativa não gasta o turno: o da ativação já conta como um dos turnos do fortalecimento.
     const turns = tech.boost.turns + f.mods.boostTurnsBonus;
-    f.boost = { ...tech.boost, turns, techId: tech.id };
+    f.boost = { ...tech.boost, turns, techId: tech.id, ...(tech.boost.upkeep !== undefined ? { fresh: true } : {}) };
     s.log.push({ type: 'boost', uid: f.uid, techId: tech.id, turns });
     // Herdeiro do clã (Hyuuga): a equipe ganha o acerto do fortalecimento (quem já tem um fica com o dele).
     if (f.mods.shareBoost && tech.boost.accuracy) {
       for (const x of alive(s, f.side)) {
         if (x.uid === f.uid || x.boost) continue;
-        x.boost = { accuracy: tech.boost.accuracy, turns, techId: tech.id };
-        s.log.push({ type: 'boost', uid: x.uid, techId: tech.id, turns });
+        // A postura (sem fim) passa à equipe por alguns turnos, sem manutenção.
+        const shared = tech.boost.upkeep !== undefined ? Math.min(turns, data.j.combat.sharedStanceTurns) : turns;
+        x.boost = { accuracy: tech.boost.accuracy, turns: shared, techId: tech.id };
+        s.log.push({ type: 'boost', uid: x.uid, techId: tech.id, turns: shared });
       }
     }
   }
@@ -953,6 +983,8 @@ function resolveEffects(s: JBattle, f: Fighter, tech: JTechnique, targets: Fight
       const amount = Math.floor(f.maxHp * tech.shieldPct);
       t.shield += amount;
       s.log.push({ type: 'shield', uid: f.uid, target: t.uid, amount });
+      // Rotação (v0.94.0): o escudo já devolve parte do que segura; o talento (Defesa absoluta) sobe.
+      if (tech.reflectPct && tech.reflectPct > t.mods.shieldReflectPct) t.mods = { ...t.mods, shieldReflectPct: tech.reflectPct };
       // Esfera absoluta (Hyuuga): o escudo que ergue em si vale também para a equipe, com uma fração.
       if (t === f && f.mods.shieldShare > 0) {
         for (const x of alive(s, f.side)) {
@@ -982,12 +1014,18 @@ function applyStatus(s: JBattle, f: Fighter, t: Fighter, tech: JTechnique, data:
   tryEffect(s, f, t, tech, data, rng);
 }
 
-function strike(s: JBattle, f: Fighter, target: Fighter, tech: JTechnique, data: JornadaData, rng: Rng): void {
+function strike(s: JBattle, f: Fighter, target: Fighter, baseTech: JTechnique, data: JornadaData, rng: Rng): void {
+  // Com o fortalecimento certo ligado, a técnica tira mais chakra e o efeito pega mais (Palma Suave com o Byakugan).
+  const b = baseTech.boosted;
+  const tech: JTechnique =
+    b && f.boost && b.techs.includes(f.boost.techId)
+      ? { ...baseTech, ...(b.chakraDrain !== undefined ? { chakraDrain: b.chakraDrain } : {}), ...(b.onHitChance !== undefined && baseTech.onHit ? { onHit: { ...baseTech.onHit, chance: b.onHitChance } } : {}) }
+      : baseTech;
   const hits = hitsOf(f, tech);
   // Clones só seguram golpe de alvo único; técnica em área passa por eles.
   const single = tech.target !== 'allEnemies';
   // Guardião e Guarda-costas (Hyuuga): o golpe de alvo único pode cair em quem protege a equipe.
-  const guard = single ? protector(s, target, rng) : null;
+  const guard = single ? protector(s, target, rng, data) : null;
   const t = guard ?? target;
   if (guard) {
     s.log.push({ type: 'protect', uid: guard.uid, target: target.uid });
@@ -1032,7 +1070,8 @@ function strike(s: JBattle, f: Fighter, target: Fighter, tech: JTechnique, data:
     // Combo da Folha: cada golpe de taijutsu seguido que acerta bate mais forte (+10% por golpe, até +30%).
     const combo = tech.type === 'taijutsu' && f.mods.comboStepPct > 0 ? 1 + Math.min(COMBO_MAX, f.mods.comboStepPct * (landed - 1)) : 1;
     const stunnedBefore = hasEffect(t, 'stun');
-    const raw = Math.floor(hitDamage(f, t, tech, data, outcome === 'crit') * combo);
+    // Bônus por técnica (v0.93.0): o dano fixo do taijutsu entra só no primeiro golpe que acerta.
+    const raw = Math.floor(hitDamage(f, t, tech, data, outcome === 'crit', !data.j.combat.flatPerTechnique || landed === 1) * combo);
     // Barreira elemental primeiro (o elemento só pesa nela), depois o escudo comum.
     const bMult = elementMult(tech, t, data, f);
     const amount = hitBarrier(s, t, raw, barrierAttack(f, tech), data, rng);
@@ -1078,8 +1117,16 @@ function strike(s: JBattle, f: Fighter, target: Fighter, tech: JTechnique, data:
     if (!t.down) tryEffect(s, f, t, tech, data, rng);
     // Fechar pontos, Tenketsu selado e 128 Palmas (Hyuuga): o taijutsu que acerta drena, bloqueia e, no alvo sem chakra,
     // atordoa.
+    // Punho Suave (v0.94.0): a técnica fecha pontos e tira chakra; Fechar pontos devolve parte a quem bate.
+    if (!t.down && s.status === 'ongoing') {
+      const drained = drainChakra(s, t, (tech.chakraDrain ?? 0) + (tech.type === 'taijutsu' ? f.mods.taiHitDrain : 0));
+      const back = Math.min(drained, tech.drainRefund ? drained : f.mods.drainRefund, f.maxChakra - f.chakra);
+      if (back > 0 && !f.down) {
+        f.chakra += back;
+        s.log.push({ type: 'chakraGain', uid: f.uid, amount: back });
+      }
+    }
     if (!t.down && tech.type === 'taijutsu' && s.status === 'ongoing') {
-      drainChakra(s, t, f.mods.taiHitDrain);
       if (f.mods.taiChakraBlockChance > 0 && rng() < f.mods.taiChakraBlockChance) addStatus(s, t, 'chakraBlock', data);
       const stunDry = f.mods.techStunNoChakra[tech.id] ?? 0;
       if (stunDry > 0 && t.chakra <= 0 && rng() < stunDry) addStatus(s, t, 'stun', data);
@@ -1102,9 +1149,9 @@ function strike(s: JBattle, f: Fighter, target: Fighter, tech: JTechnique, data:
     who.shield += part;
     s.log.push({ type: 'shield', uid: f.uid, target: who.uid, amount: part });
   }
-  // Ritmo de luta (Comum): cada golpe de taijutsu que acertou devolve chakra.
+  // Ritmo de luta (Comum): o taijutsu que acertou devolve chakra (uma vez por uso com `flatPerTechnique`).
   if (landed && tech.type === 'taijutsu' && f.mods.taijutsuHitChakra > 0 && !f.down) {
-    const gain = Math.min(f.maxChakra - f.chakra, landed * f.mods.taijutsuHitChakra);
+    const gain = Math.min(f.maxChakra - f.chakra, (data.j.combat.flatPerTechnique ? 1 : landed) * f.mods.taijutsuHitChakra);
     f.chakra += gain;
     if (gain > 0) s.log.push({ type: 'chakraGain', uid: f.uid, amount: gain });
   }
@@ -1123,12 +1170,13 @@ function strike(s: JBattle, f: Fighter, target: Fighter, tech: JTechnique, data:
   }
 }
 
-/** Tira chakra (perda direta, sem log de dano). */
-function drainChakra(s: JBattle, t: Fighter, amount: number): void {
+/** Tira chakra (perda direta, sem log de dano). Devolve quanto tirou. */
+function drainChakra(s: JBattle, t: Fighter, amount: number): number {
   const n = Math.min(t.chakra, amount);
-  if (n <= 0) return;
+  if (n <= 0) return 0;
   t.chakra -= n;
   s.log.push({ type: 'chakraGain', uid: t.uid, amount: -n });
+  return n;
 }
 
 /** Aliado de pé com a menor fração de HP (o próprio, se estiver sozinho). */
@@ -1140,7 +1188,12 @@ function mostHurt(s: JBattle, f: Fighter): Fighter {
  * Quem toma o golpe no lugar do alvo (Hyuuga, Casa secundária): Defendendo, o Guarda-costas protege o aliado mais
  * ferido; o Guardião protege qualquer aliado com uma chance. Null: o golpe segue para o alvo.
  */
-function protector(s: JBattle, t: Fighter, rng: Rng): Fighter | null {
+function protector(s: JBattle, t: Fighter, rng: Rng, data: JornadaData): Fighter | null {
+  // Guarda-costas de inimigo (v0.94.0): Zōri e Waraji pelo Gatō, a Karasu pelo Kankurō.
+  for (const g of alive(s, t.side)) {
+    const p = g.side === 'enemy' && g.uid !== t.uid ? data.enemies[g.defId]?.protects : undefined;
+    if (p && p.ids.includes(t.defId) && rng() < p.chance) return g;
+  }
   const guards = alive(s, t.side).filter((x) => x.uid !== t.uid && (x.mods.protectChance > 0 || x.mods.guardProtect));
   for (const g of guards) {
     if (g.mods.guardProtect && g.guarding && mostHurt(s, g).uid === t.uid) return g;

@@ -6,6 +6,15 @@ import type { GateLevel } from '../../core/jornada/types';
 
 export const jornadaBalance = {
   combat: {
+    // Bônus por técnica, não por golpe (v0.93.0, docs/jornada/combate.md): o dano fixo do taijutsu entra só no primeiro
+    // golpe que acerta, e o chakra por golpe (Ritmo de luta) volta uma vez por uso. Técnicas de vários golpes deixam de
+    // multiplicar esses bônus. `false` volta à regra antiga (por golpe).
+    flatPerTechnique: true,
+    // Herdeiro do clã com o Byakugan em postura (v0.94.0): a equipe ganha o acerto por estes turnos, sem manutenção.
+    sharedStanceTurns: 4,
+    // IA e bot com a postura: ligam com o chakra acima desta fração e desligam abaixo desta.
+    stanceOnAbovePct: 0.4,
+    stanceOffBelowPct: 0.15,
     // Ordem da rodada: speed × (1 ± variação). Pequena: a sorte pesa menos (docs/jornada/combate.md#ordem).
     orderVariance: 0.15,
     // Fração da resistência usada normalmente e em postura defensiva.
@@ -88,6 +97,8 @@ export const jornadaBalance = {
   relics: {
     // Elite vencida deixa uma relíquia com estas chances.
     eliteWeights: { common: 50, uncommon: 33, rare: 17 },
+    // Elite rara derrubada por inteiro (Itachi e Kisame, v0.94.0): a relíquia vem rara.
+    routWeights: { common: 0, uncommon: 0, rare: 1 },
     treasureWeights: { common: 40, uncommon: 35, rare: 25 },
     // A loja tem 1 vaga fixa de relíquia de loja; as outras saem destes pesos, um por estágio passado (o último vale
     // para os seguintes e para o modo infinito): a prateleira melhora com a run (v0.62.0, proposta).
@@ -125,6 +136,23 @@ export const jornadaBalance = {
   // talento ganho vira ryō na hora (metade do Treino do mercador). O ryō convertido não passa pelo multiplicador.
   talentTree: { completeRyoPerPoint: 30 },
 
+  // Rascunho de talentos (docs/jornada/talentos.md#rascunho, v0.93.0): classes que trocam a árvore em ordem pelo
+  // núcleo escolhido no começo + 3 talentos sorteados por compra. Começa pelo Comum; as outras seguem a árvore clássica.
+  // Pesos do sorteio: 1 + coreWeight (ramo do núcleo) + relicTagWeight por tag em comum com as relíquias + goalWeight
+  // (combinação ou talento final). 4 cartões com `heldPoints` pontos guardados. O final pede `capstoneNeeds` talentos do ramo (v0.93.1: o núcleo deixou de dar a raiz de graça, para o alvo de vitória).
+  talentDraft: {
+    owners: ['commonNinja'] as string[],
+    coreChoices: 3,
+    cards: 3,
+    cardsHeld: 4,
+    heldPoints: 3,
+    rerollsPerStage: 1,
+    capstoneNeeds: 4,
+    coreWeight: 3,
+    relicTagWeight: 1,
+    goalWeight: 2,
+  },
+
   // Modo infinito do Caminho Ninja, só no Hardcore (docs/jornada/run.md#modo-infinito): os inimigos ficam × dificuldade
   // × enemyCycleMult ^ ciclo, com o ciclo contando do 0. Rascunho: a simulação decide e o usuário ajusta.
   infinite: { enemyCycleMult: 1.5, difficulty: 'hardcore' as Difficulty },
@@ -144,7 +172,7 @@ export const jornadaBalance = {
   storyStageStrength: [1.15, 1.2, 1.7, 1.9] as readonly number[],
   // J1 (diagnóstico 2, v0.88.0, escolhido pelo usuário): força por estágio própria de uma dificuldade, no lugar da de
   // cima (sem a chave, vale a de cima). O Difícil com 1,05 / 1,1 nos estágios 1 e 2: 20% → ~54% de vitória do bot.
-  storyStageStrengthBy: { hard: [1.05, 1.1, 1.7, 1.9] } as Partial<Record<Difficulty, readonly number[]>>,
+  storyStageStrengthBy: { hard: [1.05, 1.1, 1.7, 1.9], hardcore: [1.04, 1.08, 1.7, 1.9] } as Partial<Record<Difficulty, readonly number[]>>,
   // J2 (diagnóstico 2, v0.88.0, aprovado pelo usuário): perfil por estágio da História, por cima da força: `hp`
   // multiplica HP, resistências e cura; `offense`, os ataques. 1 / 1 é a força igual em tudo. O estágio 3 (Sannin) era
   // maratona sem risco (21 rodadas, 6 de dano recebido por rodada no Médio); com menos HP e mais ataque, ~8 e ~14.
@@ -157,11 +185,91 @@ export const jornadaBalance = {
   // J3 (diagnóstico 2, C1; v0.88.1, escolhido pelo usuário): força por estágio do Caminho Ninja, por cima da dificuldade
   // (e do ciclo do infinito). Menos no começo, mais no fim: o Médio caiu de 78–89% para 61–70% nas quatro classes.
   genericStageStrength: [0.95, 1.05, 1.25] as readonly number[],
+  // Rebalanceamento para a meta 90/65/40/15 (v0.95.0, decisoes.md): força por dificuldade própria de cada tipo de run,
+  // por cima de `enemyStrength` (a História e o Caminho Ninja reagem diferente ao mesmo degrau). Calibrada pela simulação.
+  difficultyMult: {
+    story: { easy: 1.26, normal: 1.05, hard: 1.04, hardcore: 1 } as Record<Difficulty, number>,
+    generic: { easy: 1.24, normal: 1.11, hard: 1.08, hardcore: 1.04 } as Record<Difficulty, number>,
+  },
   // H3 (v0.82.0): cada cena presenciada do estágio 3 da História (índice 2) dá este ryō a mais.
   storyWitnessRyo: { stageIndex: 2, ryo: 20 },
 
   // Minijogos dos eventos (docs/jornada/run.md#minijogos).
-  minigames: { memoryPairs: 6, memoryMaxMisses: 5, sealLength: 5, sealPool: 8 },
+  // Memória, Sequência e Jokenpô são iguais em todas as dificuldades; os 4 de tempo (v0.91.0, proposta em
+  // docs/jornada/proposta-minijogos.md) apertam com a dificuldade. O tempo anda em ticks de `tickMs`.
+  minigames: {
+    memoryPairs: 6,
+    memoryMaxMisses: 5,
+    sealLength: 5,
+    sealPool: 8,
+    tickMs: 50,
+    // Kunai no alvo: 3 arremessos; centro 2 pontos, anel 1; vence com 4. `center` e `ring` em fração da faixa (o anel é
+    // a largura de cada lado do centro). O marcador vai e volta em `periodTicks` e acelera `speedUp` a cada kunai.
+    kunai: {
+      throws: 3,
+      winPoints: 4,
+      center: { easy: 0.16, normal: 0.12, hard: 0.1, hardcore: 0.08 },
+      ring: 0.12,
+      periodTicks: 36,
+      speedUp: 0.15,
+      // Gancho de status: cada relíquia desta lista alarga o centro (até o teto).
+      relics: ['goggles', 'kunaiPouch', 'twinKunai', 'masterKunai'] as readonly string[],
+      relicCenter: 0.02,
+      relicCenterMax: 0.06,
+      // Sem pressa: 12 posições em ordem sorteada; pode passar esta quantidade de vezes por kunai.
+      calmPositions: 12,
+      calmSkips: { easy: 4, normal: 3, hard: 2, hardcore: 2 },
+    },
+    // Andar sobre a água: ficar `ticks` com o ponteiro na faixa; perde com mais de `tolerance` ticks fora.
+    water: {
+      ticks: 160,
+      band: { easy: 0.3, normal: 0.25, hard: 0.22, hardcore: 0.18 },
+      tolerance: { easy: 40, normal: 30, hard: 24, hardcore: 20 },
+      fall: 0.007,
+      tap: 0.075,
+      waveEvery: [12, 24] as readonly [number, number],
+      wave: 0.12,
+      // Gancho de status: +`chakraBand` de faixa a cada `chakraPer` de chakra máximo acima da ficha inicial (até o teto).
+      chakraPer: 20,
+      chakraBand: 0.01,
+      chakraBandMax: 0.06,
+      // Sem pressa: 10 passos; subir, manter ou descer `calmStep`. A direção da próxima onda é anunciada; a força (entre
+      // `calmWaveMin` e `calmWaveMax`) só aparece depois da escolha. Jogando bem: ~88/78/69/50% do Fácil ao Hardcore.
+      calmSteps: 10,
+      calmMaxOut: 2,
+      calmStep: 0.1,
+      calmWaveMin: 0.08,
+      calmWaveMax: 0.24,
+    },
+    // O clone verdadeiro: figuras, trocas e ticks por troca.
+    clone: {
+      figures: { easy: 3, normal: 4, hard: 4, hardcore: 5 },
+      swaps: { easy: 4, normal: 5, hard: 7, hardcore: 8 },
+      swapTicks: { easy: 14, normal: 12, hard: 10, hardcore: 9 },
+      // Gancho de status: protagonista com dōjutsu vê o fluxo a troca toda; um aliado com dōjutsu dá um brilho no meio.
+      eyes: ['sasuke', 'uchihaNinja', 'uchihaGenin', 'uchihaGeninB', 'hyuugaNinja', 'hyuugaGenin', 'hyuugaGeninB', 'nejiAlly'] as readonly string[],
+    },
+    // Pegar o sino: melhor de 3. O sinal sai entre `signalTicks`; a janela depois dele em ms (nunca abaixo de `windowMinMs`).
+    bell: {
+      rounds: 3,
+      toWin: 2,
+      signalTicks: [30, 80] as readonly [number, number],
+      windowMs: { easy: 900, normal: 700, hard: 550, hardcore: 450 },
+      windowMinMs: 400,
+      // Gancho de status: +`speedMs` por ponto de speed do protagonista acima de `speedBase` (até `speedMsMax`).
+      speedBase: 10,
+      speedMs: 20,
+      speedMsMax: 150,
+      // Sem pressa: 5 páginas por rodada; uma é a distração de verdade e `calmDecoys` só parecem.
+      calmPages: 5,
+      calmDecoys: { easy: 1, normal: 1, hard: 1, hardcore: 2 },
+    },
+    // Chance do bot da simulação ganhar (scripts/sim-jornada.ts): os de selos e o jokenpô ficam nos 60% de sempre.
+    botWin: {
+      flat: 0.6,
+      timed: { easy: 0.65, normal: 0.6, hard: 0.55, hardcore: 0.5 },
+    },
+  },
 
   // Base única (docs/jornada/classes.md#status-derivados, v0.64.0): o protagonista de cada classe sai dos status da
   // origem do Roleta. Ataques × offense, resistências × resistance, HP e chakra × hp/chakra (para baixo), speed +

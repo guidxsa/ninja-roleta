@@ -2,6 +2,145 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Jornada na meta 90/65/40/15 (v0.95.0, 17/11/2026)
+
+Item 37/38 de `decisoes.md`, pedido do usuário. Alavancas (decididas sozinho, para revisar): `difficultyMult` em `src/data/jornada/balance.ts` (História 1,26 / 1,05 / 1,04 / 1; Caminho Ninja 1,24 / 1,11 / 1,08 / 1,04), força por estágio própria do Hardcore da História (1,04 / 1,08 / 1,7 / 1,9) e ajustes de status das classes (`adjust` em `src/data/lineages.ts`): Prodígio −35 HP e −5 taijutsu (era −10 e −3), Hyuuga −8 HP e −2 taijutsu (chakra +12 mantido), Uchiha +20 HP e ninjutsu +6, genjutsu +1 (era +5 HP, +3, −1). As fixtures do UI Lab e os testes de roteiro usam a força por dificuldade neutra.
+
+Simulação (`npm run sim:jornada -- 300 2 3`; Fácil / Médio / Difícil / Hardcore), v0.94.0 → v0.95.0: História 100/81/66/1 → 91/62/43/14; Comum 100/86/62/32 → 90/64/39/19; Prodígio 100/97/86/54 → 93/67/35/17; Uchiha 99/76/40/16 → 91/69/38/14; Hyuuga 100/96/80/40 → **99/74/37/12** (Fácil e Médio 9 pontos acima: cortar mais derrubava o Hardcore para 4%). O infinito quase não aperta: quem vence o ciclo 1 vence o 3 quase sempre.
+
+## Inimigos novos do Caminho Ninja e Hyuuga no cânone (v0.94.0, 17/11/2026)
+
+Itens 43 e 44 de `decisoes.md`, com as fichas aprovadas pelo usuário ([jornada/proposta-fichas.md](jornada/proposta-fichas.md)). Regras em [jornada/caminho-ninja.md](jornada/caminho-ninja.md#inimigos-novos-v0940), [jornada/personagens.md](jornada/personagens.md) e [jornada/combate.md](jornada/combate.md#turno).
+
+- **Motor**: postura (`Boost.upkeep`, `stance`): o Byakugan liga e desliga, paga a manutenção a partir do turno seguinte e apaga sem chakra; técnica que pede fortalecimento (`requiresBoost`); dreno de chakra por golpe (`chakraDrain`, com `boosted` e a devolução `drainRefund`); escudo que devolve dano pela técnica (`reflectPct`); guarda-costas de inimigo (`protects`); lutas com regra própria no Caminho Ninja (`encounters`: vitória e roteiro pela composição) e elite rara (`rareElite`).
+- **Decidido sozinho na implementação** (para revisar): o chefe do Gatō ficou só com Zōri e Waraji (sem os 2 mercenários), e Zōri 70 HP / Waraji 80 HP, samurai 48 HP e caçador da Névoa 58 HP (mais fracos que a ficha), porque a run de teste do UI Lab caía no estágio 1; a "Ordem: atacar" do Gatō virou **Pagamento extra** (cura 20 e limpa um aliado), porque o motor não tem fortalecimento de equipe; a Karasu é um lutador à parte (60 HP) com as técnicas da marionete, no lugar de uma regra nova; os Doki só lutam junto da Tayuya (não somem quando ela cai); derrubar Itachi e Kisame troca a relíquia de elite por uma rara (em vez de uma a mais); a IA liga a postura com o chakra acima de 40% e desliga abaixo de 15%; o Herdeiro do clã passa o acerto da postura à equipe por 4 turnos. Retratos: os personagens novos usam desenhos parecidos até haver os próprios.
+- **Simulação** (`npm run sim:jornada -- 300 2 3`; Fácil / Médio / Difícil / Hardcore), antes → depois: Comum 100/88/59/29 → 100/86/62/32; Prodígio 100/99/85/48 → 100/97/86/54; Uchiha 100/80/50/15 → 99/76/40/16; **Hyuuga 100/97/87/51 → 100/96/80/40**; História igual (100/81/66/1). Nada compensado: o rebalanceamento para a meta 90/65/40/15 é o próximo passo.
+
+## Roleta rápido e explosivo (v0.92.0, 17/11/2026)
+
+Item 40 de `decisoes.md`, com a ficha aprovada pelo usuário (`docs/roleta/proposta-kits.md`). Kits de uma passiva e 2 ou 3 técnicas-chave, sem ativas, clones nem barreiras; Prodígio sem natureza; Velhinha e Ramen como força de combate; roleta de relíquia com 2 raridades vizinhas. Regras em [roleta/combate.md](roleta/combate.md#kits) e [roleta/run.md](roleta/run.md).
+
+- **Decidido sozinho, dentro da ficha aprovada** (números calibrados pela simulação): força dos vilões por dificuldade só no Roleta (`difficultyPower` 1,3 / 1,2 / 1,12 / 1,22); Esforço +5 por 4 rodadas (+7 por 5 no nível 7); Expansão abaixo de 60% do HP; Pílula do clã ×1,5; Fera só na 1ª rodada (2 no nível 7) e Dupla 18% / 30% com a Fera / 25% depois dela no nível 7; Portões abaixo de 60 / 45 / 30 / 15% do HP; o Sharingan aceso dá metade do bônus de ataque e copia com 15 / 20 / 30%; o Byakugan aceso não dá o ×1,1; as 64 Palmas ficaram no nível 7; os números das técnicas novas e o ajuste de Mão Expandida, Presas, Folha Furacão, Lótus, Grande Bola de Fogo e Ilusão da Dor; o Ramen sorteia 2 status entre taijutsu, ninjutsu, genjutsu, resistências e speed. Os textos dos eventos Velhinha e Ramen são da base e mudaram também para o clássico (que só roda na simulação; a regra dele continua a da iniciativa).
+- **Simulação** (`npm run sim:origens -- --runs 300 --seed 2`, vence o 1º ciclo, Fácil / Médio / Difícil / Hardcore; rodadas por luta no Médio), v0.90.1 → v0.92.0:
+
+  | Origem | Antes | Depois | Rodadas |
+  |---|---|---|---|
+  | Comum | 94 / 65 / 34 / 24 | 90 / 64 / 40 / 18 | 6,7 → 5,4 |
+  | Akimichi | 95 / 71 / 34 / 28 | 90 / 63 / 39 / 16 | 7,1 → 7,4 |
+  | Inuzuka | 98 / 83 / 47 / 46 | 94 / 70 / 46 / 22 | 4,8 → 5,2 |
+  | Prodígio | 96 / 76 / 51 / 29 | 93 / 70 / 43 / 18 | 5,3 → 6,2 |
+  | Uchiha | 88 / 56 / 29 / 26 | 88 / 66 / 40 / 19 | 9,9 → 6,2 |
+  | Hyuuga | 93 / 68 / 34 / 21 | 93 / 62 / 43 / 13 | 5,8 → 5,8 |
+  | Uzumaki | 95 / 71 / 46 / 38 | 91 / 67 / 38 / 21 | 7,8 → 8,0 |
+  | Senju | 96 / 74 / 51 / 44 | 93 / 59 / 38 / 13 | 7,4 → 6,7 |
+
+  Quase tudo dentro de ±5 da meta; fora por 6 a 7 pontos (no ruído de 300 runs): Inuzuka e Uzumaki no Hardcore (22 e 21) e Senju no Médio (59). O infinito do Hardcore ficou entre 2 e 13% no ciclo 2.
+
+## Revisão geral dos três modos (17/11/2026)
+
+Análise de jogabilidade e balanceamento do Roleta, da História e do Caminho Ninja na v0.88.3, com as respostas do usuário. Simulação: `npm run sim:origens -- --runs 300 --seed 2` e `npm run sim:jornada -- 300 2 3`.
+
+- **Meta nova** do bot, por origem ou classe e com ±5: 90/65/40/15 (Fácil/Médio/Difícil/Hardcore). Acabam a exceção de 50–60% dos kits complexos e o Hardcore de ~1% aceito antes.
+- **Aceito em bloco** tudo o que estava "decidido sozinho, para revisar" em `decisoes.md` até a v0.88.3 (números de relíquias, Portões, kits, fichas de vilões e inimigos, árvores das quatro classes e do Naruto, roteiro da História, Levantar e Primeiros socorros, combate unificado, visual e desktop). Também ficam como estão: XP + 30 por nível, preço por estágio da loja 0,25 e os pesos atuais dos eventos.
+- **Itens que saíram por estarem vencidos**: os números do Roleta e da Jornada da v0.52 à v0.88 (itens 1, 2, 21, 23, 24, 26, 27, 33, 34, 35 e 36, trocados pelo item 38), a pressão do infinito do Roleta (item 3: na v0.88.3, cerca de metade de quem vence o 1º ciclo do Hardcore cai no 2º), as sugestões não escolhidas (12), o idioma (9: commits em PT-BR, sem acentos) e os itens visuais 6, 13, 15 e 19, resumidos nos itens 30, 47 e 48.
+- **Pedidos novos** (itens 39 a 48 de `decisoes.md`): Roleta rápido e explosivo, com 1 passiva e técnicas-chave; bot da Jornada; mais inimigos no Caminho Ninja; Hyuuga no cânone; suporte do prodígio; estudo de árvore nova; minijogos novos.
+- Linha de base, v0.88.3 (Médio): Roleta Comum 65, Akimichi 71, Inuzuka 83, Prodígio 76, Uchiha 56, Hyuuga 68, Uzumaki 71, Senju 74 (rodadas por luta de 4,8 a 9,9); História 100/72/50/1; Caminho Ninja Comum 97/70/44/16, prodígio 96/64/34/14, Uchiha 97/70/39/15, Hyuuga 96/68/31/12.
+
+## Bot da Jornada mais inteligente (fase 2b, sem versão, 17/11/2026)
+
+Pedido do usuário: ensinar o bot antes do rebalanceamento para a meta nova (90/65/40/15 por classe, ±5). Só o bot mudou (`src/sim/jornadaBot.ts`, `scripts/sim-jornada.ts`); regras, números e dados ficaram iguais. O bot antigo continua em `--bot-antigo`.
+
+- **Talentos**: plano de build no lugar do mais barato. Ramo principal até o talento final (na bifurcação, o lado com técnica de dano ou bônus de dano), a junção do vizinho que tem combinação com ele, as combinações dos dois, os níveis a mais e o resto do vizinho. Guarda ponto quando o próximo passo do plano só espera ponto; passo preso à história pula. Ramos preferidos por árvore em `BRANCH_PREFS`, medidos com `--ramos --so-ramos --classe=...` (200 runs, seed 2, este bot): Naruto Kyuubi; Comum Estilo da Folha; prodígio Punho Bêbado; Uchiha Ilusões; Hyuuga Oito Trigramas. O moveset passa a ser montado em toda run (técnicas do plano primeiro).
+- **Luta, por valor esperado**: dano que tira HP, derrubar vale a ameaça do alvo por 2 turnos, controle vale o dano por turno do inimigo pelos turnos que ele perde (o mais perigoso primeiro) mais o dano a mais do protagonista nele (Linha de sombra, talentos de controle), e conta os efeitos de talentos e relíquias por golpe (atordoar do genjutsu, bloqueio do taijutsu, Medo). O peso do chakra é ~0 com o chakra cheio e sobe quando falta (Contas de meditação barateiam). Concentrar só quando a melhor técnica vale mais que duas da melhor de agora. **Defender só com limiar**: Guarda-costas com um aliado abaixo de 30% do HP (vale mais se um golpe o derrubaria) e cura ao Defender (Colete acolchoado, talentos) com o próprio HP abaixo de 45%, e só se vale mais que o melhor golpe; nada do "Defender sempre" do J4. Kit de chakra quando falta chakra para a melhor técnica; kit de HP num aliado quase caindo, com kit sobrando; clones refeitos acima do limite com bônus de clone (Pergaminho dos mil).
+- **Loja**: compra kits (reanimação, HP, chakra) com o ryō que sobra, guardando o preço da relíquia mais barata; a meta de kits cresce com os espaços a mais da bolsa (Selo de cliente).
+- **Decidido sozinho**: `--ramos` no Comum. Parte das runs do Comum sorteia "sem elemento" e vira prodígio; o foco num ramo do Comum caía no mais barato nessas runs. Agora elas seguem o plano preferido do prodígio (os números do `--ramos --classe=commonNinja` de antes e de depois não são comparáveis um a um).
+
+Vitória (`npm run sim:jornada -- 300 2 3`; Fácil/Médio/Difícil/Hardcore), antes → depois:
+
+| Run | Bot antigo | Bot novo |
+|---|---|---|
+| História | 100 / 72 / 50 / 1 | 100 / 83 / 72 / 2 |
+| Comum | 97 / 70 / 44 / 16 | 100 / 95 / 75 / 44 |
+| Prodígio | 96 / 64 / 34 / 14 | 100 / 98 / 88 / 56 |
+| Uchiha | 97 / 70 / 39 / 15 | 100 / 81 / 50 / 16 |
+| Hyuuga | 96 / 68 / 31 / 12 | 100 / 98 / 90 / 60 |
+
+Infinito (vencidos do ciclo 3 no Hardcore): Comum 12 → 43%, prodígio 10 → 56%, Uchiha 10 → 14%, Hyuuga 9 → 56%.
+
+Efeito de cada parte (300 runs, seed 2, Médio/Difícil; bot novo sem a parte): sem o plano, Comum 82/59, prodígio 66/41, Uchiha 77/54, Hyuuga 80/58, História 82/69; sem as ações, Comum 89/75, prodígio 97/85, Uchiha 77/37, Hyuuga 97/71, História 81/61; sem os kits, as classes ficam quase iguais (Comum 94/77, prodígio 98/88, Uchiha 80/46, Hyuuga 98/88) e a História cai no Difícil (81/62). O plano de talentos é o maior ganho; as ações pesam no Difícil; os kits só na História.
+
+Builds do Naruto (`--ramos`, 300 runs, seed 2; Médio/Difícil), antes → depois: padrão 72/50 → 83/72 (padrão agora é o plano, com a Kyuubi), Clones 80/60 → 79/60, Pegadinhas 75/55 → 81/70, Laços 72/52 → 79/63, Sapos 67/43 → 78/62, Kyuubi 76/53 → 83/72, Rasengan 69/46 → 83/72; combinações: Clones+Pegadinhas 72/59 → 79/60, Pegadinhas+Laços 72/59 → 81/70, Laços+Sapos 70/46 → 68/36, Sapos+Kyuubi 65/41 → 78/62, Kyuubi+Rasengan 76/54 → 83/72. Diferença entre o melhor e o pior ramo no Difícil: 18 → 12 pontos. Kyuubi e Rasengan dão o mesmo número porque as duas raízes vêm da história: até lá, o plano compra o mais barato.
+
+Builds por classe com o bot novo (`--ramos --so-ramos`, 200 runs; Médio/Difícil): Comum Elemento 83/64, Ferramentas 78/66, Estilo da Folha 88/66, Clones 85/59, Equipe 83/67, Determinação 82/65; prodígio Portões 91/75, Juventude 84/55, Punho Bêbado 97/83, Treino 98/79, Rivalidade 93/67, Mestre e pupilo 93/68; Uchiha Sharingan 85/57, Fogo do clã 83/62, Ilusões 88/58, Armas do clã 87/56, Orgulho do clã 85/59, Polícia do clã 84/59; Hyuuga Byakugan 80/52, Punho Suave 91/74, Rotação 88/56, Oito Trigramas 98/84, Casa principal 83/64, Casa secundária 92/71 (era a pior com o bot antigo, 74/45 depois da v0.88.3: a proteção com limiar funciona).
+
+Relíquias que não faziam nada para o bot (`--reliquias --so=...`, 300 runs, Difícil; média de História e Comum, antes → depois): Pílulas de soldado 1,3 → 0,2; Contas de meditação 1,7 → 2,8; Pedra de chakra 9,3 → 6,0; Pergaminho dos mil 3,5 → 3,7; Selo de cliente 1,5 → 1,0; Colete acolchoado 3,0 → −0,3; Linha de sombra 1,7 → −0,8. O bot agora usa as sete quando a regra deixa, mas o valor segue dentro do ruído (±7): são fracas nos números, não só no bot (a mesma conclusão do J4 para o Defender). A tabela da loja (`src/sim/relicValues.ts`, medida com o bot antigo) não mudou.
+
+Valor marginal de todas as relíquias (`--reliquias`, 300 runs, seed 2, Difícil; média de História e Comum). A linha de base subiu (História 50,3 → 71,7%, Comum 43,7 → 75,0%) e quase todo valor encolheu: perto do teto, sobra menos para ganhar. As de cima, antes → depois: Bolsa sem fundo 23,8 → 21,0, Lâmina de chakra 20,7 → 16,3, Encomenda do ferreiro 12,8 → 16,0, Manto de Kage 20,3 → 15,3, Carta de recomendação 17,5 → 15,3, Lótus eterna 14,0 → 15,0, Armadura samurai 18,0 → 14,2, Chapéu do Hokage 17,0 → 13,3. As que mais caíram: Pacto de sangue 17,2 → 9,2, Selo de contenção 17,7 → 8,8, Kunai do mestre 11,7 → 4,5, Frasco de toxina 11,7 → 5,2, Pergaminho de invocação 8,2 → 0,7, Caco de espelho 5,5 → 0,3. Iniciais (Médio/Difícil; sem a inicial · com ela · com a evolução), depois: Comum 93/73 · 95/75 · 99/87; prodígio 98/85 · 98/88 · 97/98; Uchiha 78/43 · 81/50 · 91/59; Hyuuga 97/80 · 98/90 · 99/90 (antes: Comum 71/40 · 70/44 · 78/54; prodígio 59/29 · 64/34 · 73/46; Uchiha 60/36 · 70/39 · 77/52; Hyuuga 65/29 · 68/31 · 70/42). A tabela completa fica na saída do comando; a tabela da loja pode ser refeita com ela depois, mas isso muda as compras do bot e as medidas de novo.
+
+Consequência para o rebalanceamento: com o bot novo, só o Uchiha fica perto da meta no Médio e no Difícil (81/50 contra 65/40); Comum, prodígio e Hyuuga passam muito da meta em todas as dificuldades, e a História passa no Médio e no Difícil e fica abaixo no Hardcore (2 contra 15).
+
+## Minijogos de tempo na Jornada (v0.91.0, 17/11/2026)
+
+Pedido do usuário: mais variedade de minijogos (quase todos eram de selos). Design em [jornada/proposta-minijogos.md](jornada/proposta-minijogos.md); regra em [jornada/run.md](jornada/run.md#minijogos).
+
+- **Decidido pelo usuário**: a dificuldade pesa nos minijogos novos. As outras quatro decisões ele deixou para a sessão ("tome a decisão mais apropriada"): os quatro ganchos de status entram; o sino entra no Time 7 e o clone na parada do Itachi e do Kisame; o mercador de mau agouro segue na Sequência; o Sem pressa liga sozinho com menos movimento.
+- **Decidido sozinho** (revisar se quiser): os prêmios novos de `team7` (`rival`: +60 XP, +20 se errar; antes +40 certos) e `itachiKisame` (`chase`: +60 XP e +6 de HP máximo da equipe, +30 XP se errar; antes +50 XP e +6 de HP certos); as larguras, velocidades e janelas por dificuldade; a chance do bot (60% nos de selos, 65/60/55/50% nos de tempo); a água sem pressa com a opção Manter e a direção da onda anunciada, calibrada numa simulação própria (jogando bem: 88/78/69/50% do Fácil ao Hardcore; com só subir e descer, o Médio dava 19%). Kunai sem pressa, com uma regra simples de jogada: 76/62/44/44%. Sino sem pressa: 50% até o Difícil, 26% no Hardcore.
+- Simulação (`npm run sim:jornada -- 300 2`), vitória antes → depois: História Médio 72 → 70%, Difícil 50 → 48%; Fácil e Hardcore iguais. Caminho Ninja: todas as células iguais, com variação de até 1 ponto (Prodígio Fácil 96 → 95%, Hyuuga Fácil 96 → 97%). O bot escolhe sempre a primeira opção, então o sino do Time 7 (segunda opção) não entra na simulação; a queda da História vem da parada do Itachi (prêmio médio um pouco menor) e dos treinos do Rasengan no Difícil (bot a 55%). Nada foi compensado.
+
+## Comum de volta ao alvo depois do rascunho (v0.93.1, 17/11/2026)
+
+Pedido do usuário: ajustar o Comum, que tinha ficado acima do alvo de 90/65/40/15 com o rascunho (99/81/50/23). Simulação: `npm run sim:jornada -- 300 2 --modo=generic:common`; as outras classes não mudam.
+
+| Variante | Fácil / Médio / Difícil / Hardcore |
+|---|---|
+| v0.93.0 | 99/81/50/23 |
+| Núcleo sem a raiz de graça (o Elemento traz o Nível II) | 99/80/48/22 |
+| + sem troca por estágio | 99/77/47/19 |
+| + pesos do sorteio menores (núcleo +1, final +1) | 99/78/48/20 |
+| + sem troca e pesos menores | 99/74/49/20 |
+| Ajuste da classe sem nada (era +15 HP, +4 chakra, +1 tai e nin) | 98/70/36/11 |
+| Ajuste da classe pela metade (+8 HP, +2 chakra) | 98/70/37/12 |
+| **Ajuste da classe sem o +1 de ataque**, e a Determinação com o +25% de XP de volta | **99/75/39/14** |
+
+- **Aplicado:** o núcleo não dá mais a raiz do ramo (dá a técnica do estilo e a regra fraca; o Elemento traz o Nível II e a Determinação o +25% de XP, por `coreGrants`), e o ajuste da classe Comum (`jornada.hero.adjust`, aprovado na v0.65.0) perdeu o +1 de taijutsu e de ninjutsu.
+- **Os números do rascunho quase não mexem na vitória:** a maior parte do ganho da v0.93.0 veio do bot escolher melhor (no rascunho e na árvore antiga com build focada, 76 a 86 no Médio), não da força do rascunho. Por isso a alavanca foi o status da classe.
+- **Testado e descartado:** o final pedir 5 talentos do ramo. Com a bifurcação, cada ramo tem só 4 alcançáveis, e o final ficava impossível (o teste `todo ramo com núcleo alcança o talento final` guarda isso).
+- **Fica fora do alvo:** o Médio (75 contra 65) e o Fácil (99 contra 90). Nenhuma alavanca acerta as quatro dificuldades juntas: a curva do Comum é mais íngreme que a do alvo (como no item 2 de [decisoes.md](decisoes.md)).
+- **Núcleos** (`--ramos --so-ramos --classe=commonNinja`, Médio / Difícil): bot padrão 73/39, Elemento 76/48, Ferramentas 72/43, Estilo da Folha 76/47, Clones 78/52, Equipe 74/47, Determinação 75/46. Diferença no Difícil: 7,7 (v0.93.0) → **8,7**, ainda dentro da meta de até 10.
+
+## Rascunho de talentos no Comum e bônus por técnica (v0.93.0, 17/11/2026)
+
+Pedido do usuário: builds mais divertidas e variadas na Jornada (a rejogabilidade da História vem dos talentos). Proposta em [proposta-arvore.md](jornada/proposta-arvore.md); o usuário aprovou a direção e mandou seguir as decisões recomendadas. Fase 1: rascunho com núcleo no Comum ([talentos.md](jornada/talentos.md#rascunho)) e bônus fixo por técnica em toda a Jornada ([combate.md](jornada/combate.md#acerto-e-dano)).
+
+Simulação: `npm run sim:jornada -- 300 2`, com `--sem-rascunho --por-golpe` para as regras de antes e `--sem-rascunho` para isolar a regra por técnica. Fácil / Médio / Difícil / Hardcore:
+
+| Linha | v0.90.0 | Só por técnica | v0.93.0 |
+|---|---|---|---|
+| História | 100/72/50/1 | 100/68/42/2 | 100/68/42/2 |
+| Comum | 97/70/44/16 | 98/66/41/17 | **99/81/50/23** |
+| Prodígio | 96/64/34/14 | 94/58/34/11 | 94/58/34/11 |
+| Uchiha | 97/70/39/15 | 97/69/38/16 | 97/69/38/16 |
+| Hyuuga | 96/68/31/12 | 96/64/33/12 | 96/64/33/12 |
+
+Builds do Comum (`--ramos --so-ramos --classe=commonNinja`, Médio / Difícil; no rascunho, a build força o núcleo do ramo; ~22% das runs viram prodígio no sorteio do elemento e jogam sem ele):
+
+| Build | v0.90.0 | Só por técnica | v0.93.0 (núcleo) |
+|---|---|---|---|
+| Bot padrão | 70 / 44 (mais barato) | 66 / 41 | **81 / 50** (núcleo sorteado + pontuação) |
+| Elemento | 80 / 55 | 79 / 56 | 83 / 59 |
+| Ferramentas | 76 / 53 | 71 / 50 | 78 / 54 |
+| Estilo da Folha | 86 / 64 | 82 / 54 | 82 / 61 |
+| Clones | 83 / 54 | 80 / 50 | 85 / 62 |
+| Equipe | 80 / 48 | 77 / 47 | 80 / 55 |
+| Determinação | 82 / 53 | 80 / 51 | 84 / 54 |
+| Diferença no Difícil | **16,6** | 9,0 | **7,7** |
+
+- **O que funcionou:** a diferença entre o melhor e o pior estilo do Comum no Difícil caiu de 16,6 para 7,7 pontos (meta da proposta: até 10). O Estilo da Folha deixou de dominar: a regra por técnica sozinha tirou 10 pontos dele no Difícil. O bot padrão deixou de cair pela armadilha do mais barato: escolher no rascunho dá +11 no Médio.
+- **Efeito colateral da regra por técnica** nas classes sem rascunho: a História perdeu 4 pontos no Médio e 8 no Difícil (o Rendan e a Shuriken das sombras têm vários golpes, e a Guarda de clones dá +2 fixo). O prodígio perdeu 6 no Médio. Uchiha e Hyuuga quase não mudaram.
+- **Fora do alvo de 90/65/40/15, nada compensado:** o Comum ficou acima em todas as dificuldades (99/81/50/23). História e prodígio ficaram mais perto do alvo no Médio.
+- **Decidido sozinho, para revisar:** os números dos seis núcleos (a regra fraca de cada um e a raiz dada de graça); os pesos do sorteio (núcleo +3, tag da relíquia +1, final ou combinação +2); 4 cartões a partir de 3 pontos guardados; 1 troca por estágio; o final pedindo 4 talentos do ramo; o bônus por técnica valer para o dano fixo do taijutsu e o chakra do Ritmo de luta (não para chance de efeito por golpe); a pontuação do bot (`src/sim/draftBot.ts`).
+- UI Lab: a run da História no Fácil passou da seed 2 para a 1 (a 2 caiu antes do Vale do Fim com a regra nova). Cenários novos: `jornada.talents:core`, `jornada.talents:draft` e `jornada.talents:draft-held`.
+
 ## Retratos: um desenho por personagem (v0.90.0, 16/11/2026)
 
 Pedido do usuário: melhorar os SVG pela aparência canônica e diferenciar cada personagem. Combinado com ele: aparência do anime (sem imagens no repositório), **todos** os personagens (inclusive os 18 que já tinham desenho) e genéricos parecidos com personagens da mesma origem.

@@ -21,6 +21,8 @@ export type StopDef = (
        * Fogo nem encerra a run; a recompensa da luta continua.
        */
       inevitableLoss?: boolean;
+      /** Derrubar todos os inimigos (e não só vencer pela condição) troca a relíquia de elite por uma rara (Itachi e Kisame). */
+      routRelic?: boolean;
     }
   /** `then`: eventos seguintes na mesma parada (etapas), abertos em sequência sem voltar à trilha (v0.70.0). */
   | { kind: 'event'; id: string; event: string; then?: string[] }
@@ -79,6 +81,13 @@ export interface GenericStage {
   /** Um chefe é sorteado no começo da run e aparece no topo do mapa. */
   bosses: string[][];
   events: string[];
+  /**
+   * Lutas com regra própria (v0.94.0): a chave é a lista de inimigos juntada por '+'. A condição de vitória e o roteiro
+   * entram na parada (o Gatō que foge, o Ukon que se separa do Sakon).
+   */
+  encounters?: Record<string, { win?: WinCondition; script?: ScriptRule[]; routRelic?: boolean }>;
+  /** Elite rara: troca a elite sorteada com esta chance (nunca no 1º ciclo do Fácil). */
+  rareElite?: { chance: number; enemies: string[] };
 }
 
 export interface GenericDef {

@@ -53,6 +53,10 @@ export type ProgressEffect =
   | { kind: 'villainFirst' }
   | { kind: 'playerFirst' }
   | { kind: 'stages'; n: number }
+  /** Velhinha agradecida (Roleta, v0.92.0): a relíquia dada, ou o XP quando não há nenhuma para dar. */
+  | { kind: 'relicGift'; id: string | null; xp: number }
+  /** Ramen do Ichiraku (Roleta, v0.92.0): +1 estágio em cada status sorteado. */
+  | { kind: 'statGain'; stats: { stat: TrainingStat; amount: number }[] }
   | { kind: 'revive' }
   | { kind: 'ninjaTool'; level: number }
   /** Upgrade aplicado: `techniqueId` é a ficha depois do upgrade (nas linhas, a técnica nova). */
