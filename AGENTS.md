@@ -134,6 +134,8 @@ As skills são instruções em markdown e valem para os dois agentes. **Antes de
 | Regra nova ou alterada, ajuste de fórmula ou balanceamento, reclamação de comportamento de jogo | [.claude/skills/nova-mecanica/SKILL.md](.claude/skills/nova-mecanica/SKILL.md) |
 | Fechar ou publicar versão (commit, push da branch, merge, tag) | [.claude/skills/lancar-versao/SKILL.md](.claude/skills/lancar-versao/SKILL.md) |
 | Retrato ilustrado novo, refeito ou trocado (`public/img/ninja`, `viloes`, `jornada`) | [.claude/skills/novo-retrato/SKILL.md](.claude/skills/novo-retrato/SKILL.md) |
+| Medir o balanceamento contra a meta, check:meta quebrado, antes de propor número | [.claude/skills/auditar-balanceamento/SKILL.md](.claude/skills/auditar-balanceamento/SKILL.md) |
+| Conferir tela depois de mexer em interface (fotos do UI Lab em celular e desktop, dois temas) | [.claude/skills/revisar-visual/SKILL.md](.claude/skills/revisar-visual/SKILL.md) |
 
 Skill nova entra nesta tabela no mesmo commit.
 

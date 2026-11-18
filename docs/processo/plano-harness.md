@@ -176,3 +176,22 @@ me entregue o resumo do que mudou, do que ficou de fora e do que precisa da minh
 - Sessão nova no Claude e no Codex: os dois citam as mesmas regras e as mesmas skills.
 - Um commit que viola uma convenção é barrado localmente e na CI, independente do agente.
 - Um PR para `master` sem CI verde não pode ser mergeado.
+
+---
+
+## Andamento
+
+Feito pelo Claude Code em 18/11/2026, na branch `feature/harness` (um commit por fase, em vez de uma branch por fase), com o contrato em [docs/tarefas/harness.md](../tarefas/harness.md).
+
+| Fase | Situação | O que ficou de diferente do plano |
+|---|---|---|
+| 1 | feita | — |
+| 2 | feita | A skill `lancar-versao` passou a publicar só pelo merge do PR (o hook recusa push no `master`); apagar branch `feature/*` é permitido |
+| 3 | feita | O hook `Stop` bloqueia uma vez por resposta (com `stop_hook_active`, deixa encerrar para não entrar em laço) |
+| 4 | feita | Sem contrato: aviso até 02/12/2026, erro depois (`EXIGIR_CONTRATO_A_PARTIR` em `scripts/check-escopo.ts`). Versão, `CHANGELOG.md`, `docs/registro.md` e `docs/decisoes.md` sempre podem mudar |
+| 5 | feita | Em vez de extrair o bot para `src/sim/`, as simulações ganharam `--json` e o `scripts/check-meta.ts` roda as duas (job próprio na CI, ~1 min). Faixa: célula ±20, média do modo ±10 |
+| 6 | feita | Os 94 retratos entraram no manifesto com `ferramenta`, `prompt` e `referencias` vazios (pendentes); só retrato novo é cobrado |
+| 7 | feita | `revisar-visual` usa `scripts/revisar-visual.ts` (fotos em `dist-lab/revisao/`) |
+
+**Pendências do usuário**: proteger o `master` no GitHub, preencher o prompt base da ficha de estilo e os prompts no `retratos.json`, configurar o Codex (`docs/processo/codex.md`) e testar os dois agentes com a mesma pergunta.
+

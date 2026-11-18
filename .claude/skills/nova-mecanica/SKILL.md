@@ -5,7 +5,7 @@ description: Fluxo ponta a ponta para adicionar ou mudar uma mecânica do jogo N
 
 # Nova mecânica (Ninja Roleta)
 
-O jogo tem uma arquitetura em camadas com regras fortes (ver `CLAUDE.md`). Uma mecânica só está pronta quando atravessa todas as camadas de forma coerente: se ela existe no core mas a simulação não a conhece, o balanceamento mente; se existe na UI mas não nos testes, vai quebrar na próxima mudança. Este fluxo existe para que nenhuma camada fique para trás.
+O jogo tem uma arquitetura em camadas com regras fortes (ver `AGENTS.md`). Uma mecânica só está pronta quando atravessa todas as camadas de forma coerente: se ela existe no core mas a simulação não a conhece, o balanceamento mente; se existe na UI mas não nos testes, vai quebrar na próxima mudança. Este fluxo existe para que nenhuma camada fique para trás.
 
 ## 0. Entender e medir antes de mexer
 
@@ -68,7 +68,7 @@ O protótipo só tem fluxo e animação; toda regra vem do core. Telas da Roleta
 - `docs/`: atualize o doc da mecânica com as regras e números novos (os testes de `tests/docs.test.ts` conferem as técnicas).
 - `docs/decisoes.md`: tire o item resolvido; acrescente um se surgiu dúvida ou se você decidiu algo que o usuário precisa revisar.
 - `docs/registro.md`: uma entrada curta com o que foi decidido sozinho e a simulação de antes e depois.
-- `CLAUDE.md`: só se mudou um jeito de trabalhar (regra, convenção, estrutura); não registre versões nele.
+- `AGENTS.md`: só se mudou um jeito de trabalhar (regra, convenção, estrutura); não registre versões nele.
 - `CHANGELOG.md`: nova linha no fim da tabela. A regra de qual número usar está na skill `lancar-versao`.
 
 ## 7. Verificar e relatar

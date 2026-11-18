@@ -23,4 +23,5 @@ Regra, número ou tela do jogo (`src/core`, `src/data`, `prototype`). Unificar `
 - Publicar passa a ser só pelo merge do PR (a skill `lancar-versao` deixou de dar push no `master`).
 
 ## Achados
-- `docs/visual.md`, `PRODUCT.md`, `docs/jornada/README.md` e a skill `nova-mecanica` mandam ler o "`CLAUDE.md`" para regras que agora estão no `AGENTS.md`.
+- `PRODUCT.md` e `docs/jornada/README.md` ainda mandam ler o "`CLAUDE.md`" para regras que agora estão no `AGENTS.md` (fora do escopo; `docs/visual.md` e a skill `nova-mecanica` foram corrigidos aqui). Os graders das evals da `nova-mecanica` também citam o `CLAUDE.md`.
+- O `tests/portraits.test.ts` já conferia 256 × 256 nas imagens ligadas a chaves; o teste novo cobre todas.
