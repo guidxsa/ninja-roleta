@@ -97,7 +97,7 @@ Ao usuário, curto: a versão proposta, o que entrou, o resultado dos testes, o 
 1. Confira que a branch não mudou desde o relato e que os testes do passo 2 seguem verdes.
 2. Merge preservando os commits, **só pelo PR** com **Create a merge commit**, com a CI do PR verde. O hook `.githooks/pre-push` recusa push no `master` feito deste clone; a proteção do `master` no GitHub (exigir PR e os checks `check` e `meta`) é configurada pelo usuário e é o que vale para qualquer agente ou integração.
 3. `git fetch origin master`, tag anotada no commit que chegou ao `master` (seção Tag) e push só da tag: `git push origin vX.Y.Z`.
-4. Apague a branch: `git branch -d feature/<tema>` (o `-d` só funciona se tudo foi mergeado) e `git push origin --delete feature/<tema>`.
+4. Apague a branch no GitHub e no clone, e as outras já mergeadas que sobraram, seguindo a regra "Limpeza de branches" do `AGENTS.md` (Convenções).
 5. O merge no `master` dispara o Pages. Relate a versão e os links:
    - commit: `https://github.com/guidxsa/ninja-roleta/commit/<hash>`
    - tag: `https://github.com/guidxsa/ninja-roleta/releases/tag/vX.Y.Z`

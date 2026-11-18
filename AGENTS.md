@@ -97,6 +97,11 @@ A direção está em [docs/visual.md](docs/visual.md): a interface deve parecer 
 - Antes de mudar uma fórmula, escrever ou ajustar o teste.
 - Balanceamento: proposto ao usuário com a tabela de antes e depois, nunca compensado sozinho (alvo em `docs/decisoes.md`).
 - **Nada de push direto no `master`** (produção; o Pages publica a cada push). Cada trabalho vai numa branch `feature/<tema>`: testar, commitar e dar push só da branch, sem esperar pedido (skill `lancar-versao`). Merge no `master`, tag `vX.Y.Z` e deploy só com aprovação explícita do usuário ("publica vX.Y.Z"). Nunca `--force`.
+- **Limpeza de branches** (Claude e Codex), para não acumular branch morta:
+  - **Depois do merge**: quem fez o merge (ou o agente, na sessão seguinte) apaga a branch no GitHub e no clone: `git push origin --delete feature/<tema>` e `git branch -d feature/<tema>`. Se ela tem worktree, `git worktree remove` antes.
+  - **No começo de cada tarefa**: `git fetch --prune origin` e `git branch -d` em cada branch local já mergeada (`git branch --merged origin/master`). Remota já mergeada que sobrou também é apagada. O `-d` recusa branch com commit fora do `master`: isso é sinal de trabalho não mergeado, não motivo para trocar por `-D`.
+  - **Sem merge e parada há mais de 30 dias** (data do último commit): listar para o usuário (nome, último commit, PR, se houver) e apagar só com aprovação dele, porque o trabalho se perde.
+  - **Nunca apagar**: `master`, `main` e `staging`; branch com PR aberto; branch em uso por outro agente ou sessão (com worktree ou commit recente de outro agente); tags.
 - **Commits e PRs sem `Co-Authored-By`** nem outra linha de atribuição.
 - A partir do `v1.0.0` entra o fluxo `feature/* → staging → main` com PR WIP permanente (plano aprovado, ainda não implementado).
 
