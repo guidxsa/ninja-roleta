@@ -1,7 +1,7 @@
 ---
 objetivo: Branches já mergeadas e antigas não se acumulam - todo agente apaga a branch depois do merge e limpa as que sobraram, com regra única no AGENTS.md.
-escopo: ["AGENTS.md", ".claude/skills/lancar-versao/SKILL.md", "docs/tarefas/harness-limpeza-branches.md"]
-fora: ["src/**", "prototype/**", "tests/**", "scripts/**", ".githooks/**", ".github/**", "package.json", "package-lock.json"]
+escopo: ["AGENTS.md", ".claude/skills/lancar-versao/SKILL.md", "docs/tarefas/harness-limpeza-branches.md", "tests/checkEscopo.test.ts"]
+fora: ["src/**", "prototype/**", "scripts/**", ".githooks/**", ".github/**", "package.json", "package-lock.json"]
 pronto: ["npm run check verde", "regra no AGENTS.md (vale para Claude e Codex)", "skill lancar-versao aponta para a regra"]
 agente: claude
 revisor: codex
@@ -22,6 +22,7 @@ A skill `lancar-versao` já apaga a branch no passo 6.4, mas só no fluxo de ver
    - branch sem merge e parada há mais de 30 dias: listar e apagar só com aprovação do usuário;
    - nunca apagar `master`, `main`, `staging`, branch com PR aberto, branch em uso por outro agente, nem tags.
 2. **Skill `lancar-versao`, passo 6.4**: aponta para a regra do `AGENTS.md` em vez de repetir.
+3. **Teste que corrompia o repositório** (escopo ampliado com aprovação do usuário, 18/11/2026): `tests/checkEscopo.test.ts` cria um repositório temporário com `git init` e `git config`. No `pre-push` de um worktree, o git exporta `GIT_DIR` absoluto, e esses comandos caíam no repositório real: `core.bare=true` (git status e commit quebrados em todos os checkouts), `core.hooksPath=/dev/null` (hooks desligados) e usuário "teste". O teste passa a limpar as variáveis `GIT_*` antes de usar o git.
 
 ## Fora do escopo
 Mudar hooks ou scripts (o `pre-push` já permite apagar branch remota de trabalho). Ligar no GitHub o "Automatically delete head branches", que é configuração do repositório e fica com o usuário.

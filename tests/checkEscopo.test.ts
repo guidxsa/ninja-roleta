@@ -95,6 +95,10 @@ describe('escopo', () => {
 });
 
 describe('renomeação conta a origem e o destino (3ª revisão do Codex)', () => {
+  // Dentro de um git hook (o pre-push roda o npm run check), o git exporta GIT_DIR e afins; num worktree o GIT_DIR é
+  // absoluto e venceria o cwd: o `git init` e o `git config` abaixo cairiam no repositório real (core.bare=true,
+  // hooks desligados, usuário "teste"). O repositório temporário precisa de um ambiente sem essas variáveis.
+  for (const k of Object.keys(process.env)) if (k.startsWith('GIT_')) delete process.env[k];
   const dir = mkdtempSync(join(tmpdir(), 'escopo-renome-'));
   const g = (...args: string[]) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' }).trim();
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
