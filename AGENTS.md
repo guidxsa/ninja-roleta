@@ -74,7 +74,7 @@ scripts/             simulações e build
 tests/               testes do core
 ```
 
-Comandos: `npm run check` (verificação completa, a mesma do pre-push e da CI), `npm test`, `npm run typecheck`, `npm run proto`, `npm run lab` (UI Lab, só local: `dist-lab/`, [docs/ui-lab/](docs/ui-lab/ARCHITECTURE.md); `npm run lab:seed -- --all` refaz as seeds dos cenários de sorteio), `npm run sim:origens -- --runs 300 --seed 2` (Roleta), `npm run sim:jornada -- [runs] [seed] [ciclos]`, `npm run sim:classico`. Auditoria de balanceamento: as mesmas simulações com `--auditoria`, `--reliquias` ou `--iniciais` ([docs/balanceamento/benchmark.md](docs/balanceamento/benchmark.md)).
+Comandos: `npm run check` (verificação completa, a mesma do pre-push e da CI), `npm run check:meta` (guarda da meta de vitória, só na CI por ser lenta), `npm test`, `npm run typecheck`, `npm run proto`, `npm run lab` (UI Lab, só local: `dist-lab/`, [docs/ui-lab/](docs/ui-lab/ARCHITECTURE.md); `npm run lab:seed -- --all` refaz as seeds dos cenários de sorteio), `npm run sim:origens -- --runs 300 --seed 2` (Roleta), `npm run sim:jornada -- [runs] [seed] [ciclos]`, `npm run sim:classico`. Auditoria de balanceamento: as mesmas simulações com `--auditoria`, `--reliquias` ou `--iniciais` ([docs/balanceamento/benchmark.md](docs/balanceamento/benchmark.md)).
 
 ## Interface (design system "Shinobi")
 
@@ -119,7 +119,7 @@ Uma tarefa só está pronta quando:
 2. Regra ou número mudou: o doc correspondente mudou no mesmo commit.
 3. O jogador nota a mudança: linha no `CHANGELOG.md`.
 4. Houve decisão sem o usuário: registrada em `docs/registro.md` e, se ele precisa revisar, em `docs/decisoes.md`.
-5. Balanceamento: a tabela de antes e depois está no resumo e nada foi compensado sozinho.
+5. Balanceamento: a tabela de antes e depois está no resumo e nada foi compensado sozinho. A CI roda a guarda da meta (`npm run check:meta`, job próprio, ~1 min): se ela quebrar, **não ajuste número para passar**; pare e proponha ao usuário com a tabela de antes e depois.
 6. Só arquivos dentro do escopo do contrato aparecem no diff.
 7. Commit e push só da branch `feature/<tema>`; merge, tag e deploy só com aprovação explícita.
 

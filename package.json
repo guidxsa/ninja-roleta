@@ -12,6 +12,7 @@
     "check": "npm run typecheck && npm test && npm run check:regras && npm run check:escopo && npm run proto",
     "check:regras": "tsx scripts/check-regras.ts",
     "check:escopo": "tsx scripts/check-escopo.ts",
+    "check:meta": "tsx scripts/check-meta.ts",
     "sim": "tsx scripts/simulate.ts",
     "sim:origens": "tsx scripts/sim-origens.ts",
     "sim:classico": "tsx scripts/sim-classico.ts",
