@@ -226,6 +226,10 @@ Dos dez achados, o Codex confirmou 4 como corrigidos e 6 como parciais, e trouxe
 | Novo 2: o `package-lock.json` passava inteiro sem estar no escopo | Só passa sozinho se mudar apenas a versão do projeto |
 | Novo 3: caminho com acento chegava entre aspas do git | Listas do git com `-z` (separadas por NUL) |
 
+### Terceira revisão do Codex (18/11/2026)
+
+Os nove itens da segunda revisão foram confirmados como corrigidos. Um achado novo bloqueava o merge: com a detecção de renomeação do git, mover um arquivo de um caminho proibido para um permitido listava só o destino. Os diffs passaram a usar `--no-renames` (origem e destino entram na lista), com teste num repositório git de verdade, no índice e contra a base. O guia da nuvem passou a dizer que, sem tema, o erro vale em qualquer lugar a partir de 02/12/2026.
+
 Junto: retratos descritos pelo processo real (imagens-modelo do usuário e revisão humana; `referencias` obrigatório, `prompt` opcional, campo `ajustes`) e o guia do Codex na nuvem.
 
 **Pendências do usuário**:

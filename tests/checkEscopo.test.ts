@@ -1,5 +1,10 @@
 // Conferência de escopo pelo contrato da tarefa (AGENTS.md, "Escopo"; scripts/check-escopo.ts).
-import { describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterAll, describe, expect, it } from 'vitest';
+import { gitChanges } from '../scripts/harness';
 import { checkEscopo, ETIQUETA_APROVADO, EXIGIR_CONTRATO_A_PARTIR, parseContrato, temaDaTarefa } from '../scripts/check-escopo';
 
 const contrato = (escopo: string[], fora: string[] = []) =>
@@ -86,5 +91,36 @@ describe('escopo', () => {
   it('branch com nome próprio usa o contrato alterado no diff', () => {
     const files = ['docs/tarefas/veneno.md', 'src/core/roleta/battle.ts', 'prototype/x.ts'];
     expect(run(files, md, { branch: 'codex/veneno-acumula' })[0]!.files).toEqual(['prototype/x.ts']);
+  });
+});
+
+describe('renomeação conta a origem e o destino (3ª revisão do Codex)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'escopo-renome-'));
+  const g = (...args: string[]) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' }).trim();
+  afterAll(() => rmSync(dir, { recursive: true, force: true }));
+  g('init', '-q');
+  g('config', 'user.email', 'teste@exemplo');
+  g('config', 'user.name', 'teste');
+  g('config', 'core.hooksPath', '/dev/null');
+  mkdirSync(join(dir, 'proibido'));
+  mkdirSync(join(dir, 'permitido'));
+  writeFileSync(join(dir, 'proibido/a.md'), 'conteúdo longo o bastante para o git reconhecer o renome\n'.repeat(5));
+  g('add', '.');
+  g('commit', '-q', '-m', 'base');
+  const base = g('rev-parse', 'HEAD');
+  g('mv', 'proibido/a.md', 'permitido/a.md');
+  const md = contrato(['permitido/**'], ['proibido/**']);
+
+  it('no índice (pre-commit)', () => {
+    const { files } = gitChanges({}, true, dir);
+    expect(files).toEqual(['permitido/a.md', 'proibido/a.md']);
+    expect(run(files, md)[0]!.files).toEqual(['proibido/a.md']);
+  });
+
+  it('contra a base, depois do commit (pre-push e CI)', () => {
+    g('commit', '-q', '-m', 'renome');
+    const { files } = gitChanges({ CHECK_BASE: base }, false, dir);
+    expect(files).toEqual(['permitido/a.md', 'proibido/a.md']);
+    expect(run(files, md)[0]!.files).toEqual(['proibido/a.md']);
   });
 });

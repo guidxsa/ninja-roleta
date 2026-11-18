@@ -10,15 +10,15 @@ export interface Finding {
   files?: string[];
 }
 
-const git = (...args: string[]): string => execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 });
-
-const tryGit = (...args: string[]): string | null => {
+/** Roda o git na pasta `cwd` (padrão: a atual); null se ele falhar. */
+const tryGitAt = (cwd: string | undefined, ...args: string[]): string | null => {
   try {
-    return git(...args);
+    return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 });
   } catch {
     return null;
   }
 };
+const tryGit = (...args: string[]): string | null => tryGitAt(undefined, ...args);
 
 /** Saída do git com -z: caminhos separados por NUL, sem aspas nem escapes (acentos e espaços chegam como são). */
 const paths = (s: string | null): string[] => (s ?? '').split('\0').filter(Boolean);
@@ -42,11 +42,13 @@ export interface Changes {
 /**
  * Arquivos alterados em relação ao ponto em que a branch saiu do master: commits, área de preparo, mudanças não
  * preparadas e arquivos novos. Base: CHECK_BASE, senão origin/master, senão master.
- * Com `staged`, só o que está preparado para o próximo commit (pre-commit).
+ * Com `staged`, só o que está preparado para o próximo commit (pre-commit). Renomeação conta como remoção da origem
+ * mais criação do destino (`--no-renames`): mover um arquivo de um caminho proibido para um permitido não esconde a origem.
  */
-export function gitChanges(env: NodeJS.ProcessEnv = process.env, staged = false): Changes {
+export function gitChanges(env: NodeJS.ProcessEnv = process.env, staged = false, cwd?: string): Changes {
+  const tryGit = (...args: string[]) => tryGitAt(cwd, ...args);
   if (staged) {
-    const out = tryGit('diff', '--cached', '--name-only', '-z', '--diff-filter=ACMRD');
+    const out = tryGit('diff', '--cached', '--name-only', '-z', '--no-renames', '--diff-filter=ACMD');
     return out === null ? { base: null, files: [], problem: 'git diff --cached falhou' } : { base: null, files: paths(out).sort() };
   }
   const candidates = [env.CHECK_BASE, 'origin/master', 'master'].filter((b): b is string => !!b);
@@ -54,7 +56,7 @@ export function gitChanges(env: NodeJS.ProcessEnv = process.env, staged = false)
   if (!ref) return { base: null, files: [], problem: 'sem origin/master nem master para comparar (faça git fetch origin master)' };
   const base = tryGit('merge-base', 'HEAD', ref)?.trim();
   if (!base) return { base: null, files: [], problem: `sem ponto comum entre HEAD e ${ref}` };
-  const changed = tryGit('diff', '--name-only', '-z', base);
+  const changed = tryGit('diff', '--name-only', '-z', '--no-renames', base);
   const untracked = tryGit('ls-files', '-z', '--others', '--exclude-standard');
   if (changed === null || untracked === null) return { base, files: [], problem: 'git diff falhou' };
   return { base, files: [...new Set([...paths(changed), ...paths(untracked)])].sort() };

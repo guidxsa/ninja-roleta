@@ -21,7 +21,7 @@ Funciona sem a máquina. Cada tarefa roda num container com o repositório e ter
 
 1. **Ambiente** (Environments): repositório `guidxsa/ninja-roleta`, setup script `npm ci`. O `npm ci` também liga os git hooks pelo `prepare`. A internet do agente pode ficar desligada: o `npm run check` e o `check:meta` não precisam dela.
 2. **Na nuvem não há** `config.toml` nem modo de aprovação: o container é isolado e você revisa o resultado antes de virar PR. O botão de publicar transforma as mudanças da tarefa num PR. Numa tarefa só de revisão, não clique.
-3. **Branch**: o Codex cria branches com o nome dele. Peça no prompt `feature/<tema>`. Se o nome vier outro, o `check:escopo` acha o tema pelo único `docs/tarefas/<tema>.md` alterado no diff; sem nenhum, só avisa (e vira erro na CI a partir de 02/12/2026).
+3. **Branch**: o Codex cria branches com o nome dele. Peça no prompt `feature/<tema>`. Se o nome vier outro, o `check:escopo` acha o tema pelo único `docs/tarefas/<tema>.md` alterado no diff; sem nenhum, é aviso até 02/12/2026 e erro depois, na nuvem, na CI e na máquina; nesse caso, defina `CHECK_TEMA=<tema>`.
 4. **O push quem faz é a plataforma**, ao abrir o PR, então o `pre-push` não roda. Quem garante é a CI (`check` e `meta`) e a proteção do `master`.
 5. **Revisão de PR**: uma tarefa com o prompt de revisão abaixo (rodando os checks) ou o comentário `@codex review` no PR, se a integração do Codex com o GitHub estiver ligada.
 6. **Sem navegador**: o container pode não ter o Chromium do Playwright. A skill `revisar-visual` fica com o Claude, ou use `--chromium=<caminho>`.
