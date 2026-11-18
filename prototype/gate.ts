@@ -149,7 +149,7 @@ export function avatarOptions(): string[] {
 /** Desenho do avatar a partir da chave de retrato (`ninja:<chave>`). */
 export function avatarArt(spec: string, size: 'sm' | 'md' | 'lg'): string {
   const key = spec.split(':')[1] ?? 'common';
-  return ninjaPortrait(key, false, size);
+  return ninjaPortrait(key, size);
 }
 
 /** Nome do avatar na escolha: a origem, ou um nome próprio (visual do Sasuke). */

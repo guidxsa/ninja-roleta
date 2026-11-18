@@ -80,7 +80,7 @@ Exceção (v0.76.9): o herói do **Caminho Ninja** é o ninja da classe; o retra
 
 Capangas e ninjas das vilas (Névoa, Grama, Chuva, Areia, Som) têm um desenho por tipo: valem na luta, mas não são rosto de cena.
 
-A partir da v0.95.1, as fichas com ilustração carregam os WebPs de 256 × 256 em [`public/img/`](../public/img/LEIAME.md). A chave da ficha aponta para o mesmo arquivo no Roleta, na Jornada e no avatar. A Hinata tem retrato nas cenas em que é identificada pelo próprio id. Quando uma imagem está indisponível, a ficha usa o desenho correspondente em SVG. As marcas do jinchūriki usam a versão própria da origem, quando disponível, ou o desenho com as marcas.
+A partir da v0.95.1, as fichas com ilustração carregam os WebPs de 256 × 256 em [`public/img/`](../public/img/LEIAME.md). A chave da ficha aponta para o mesmo arquivo no Roleta, na Jornada e no avatar. A Hinata tem retrato nas cenas em que é identificada pelo próprio id. Quando uma imagem está indisponível, a ficha usa o desenho correspondente em SVG. Por enquanto o jinchūriki usa o mesmo retrato da origem, sem mudança visual.
 
 ## Acabamento
 

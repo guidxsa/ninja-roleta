@@ -64,8 +64,7 @@ describe('retratos', () => {
         expect(src, id).toMatch(/\.webp$/);
         expect(meta[src!], id).toEqual([256, 256]);
       }
-      expect(ninjaPortrait('senju', false)).toContain('src="img/ninja/senju.webp"');
-      expect(ninjaPortrait('senju', true)).toContain(portraitArt('senju', true));
+      expect(ninjaPortrait('senju')).toContain('src="img/ninja/senju.webp"');
       expect(villainPortrait('neji')).toContain('src="img/ninja/neji.webp"');
       expect(fighterPortrait('kimimaro', 'ninja:kimimaro')).toContain('src="img/viloes/kimimaro.webp"');
       expect(fighterPortrait('haku-rage', 'villain:hakuUnmasked')).toContain('<template><svg');

@@ -397,8 +397,8 @@ export function emblem(mode: 'jornada' | 'roleta'): string {
 // Retratos. Os desenhos ficam em prototype/portraits/ (um por personagem); aqui só o invólucro e a troca por imagem.
 
 /** O SVG do retrato da chave; sem desenho, o da reserva. */
-const portraitSvg = (key: string, fallback: string, jinchuuriki = false): string =>
-  svg(portraitArt(key, jinchuuriki) ?? portraitArt(fallback)!, '0 0 100 100', 'art');
+const portraitSvg = (key: string, fallback: string): string =>
+  svg(portraitArt(key) ?? portraitArt(fallback)!, '0 0 100 100', 'art');
 
 /** A mesma chave pode ser chamada como ninja na Jornada e como vilão no Roleta. */
 export function portraitImage(key: string, folder: 'ninja' | 'viloes' = 'ninja'): string | null {
@@ -419,14 +419,12 @@ export function villainPortrait(id: string, size: 'sm' | 'md' | 'lg' = 'md'): st
 
 /**
  * Retrato de ninja: imagem própria (img/ninja/<chave>.webp ou img/ninja/ninja.webp) ou o desenho. A chave é uma
- * linhagem do jogador (o visual da origem, com as marcas do jinchūriki se for o caso) ou um personagem.
+ * linhagem do jogador (o visual da origem) ou um personagem. Por enquanto o jinchūriki não muda o retrato.
  */
-export function ninjaPortrait(lineageId: string | null, jinchuuriki: boolean, size: 'sm' | 'md' | 'lg' = 'sm'): string {
+export function ninjaPortrait(lineageId: string | null, size: 'sm' | 'md' | 'lg' = 'sm'): string {
   const key = lineageId ?? 'common';
-  const img = jinchuuriki
-    ? customImage('ninja', `${key}-jinchuuriki`)
-    : portraitImage(key) ?? customImage('ninja', 'ninja');
-  const drawing = portraitSvg(key, 'common', jinchuuriki);
+  const img = portraitImage(key) ?? customImage('ninja', 'ninja');
+  const drawing = portraitSvg(key, 'common');
   const inner = img ? portraitImg(img, drawing) : drawing;
   return `<span class="portrait portrait-${size} ninja-portrait">${inner}</span>`;
 }
@@ -450,5 +448,5 @@ export function fighterPortrait(defId: string, spec: string, size: 'sm' | 'md' |
     const drawing = portraitArt(key) && spec !== 'ninja:common' ? portraitSvg(key, key) : '';
     return `<span class="portrait portrait-${size}">${portraitImg(img, drawing)}</span>`;
   }
-  return kind === 'villain' ? villainPortrait(key, size) : ninjaPortrait(key, false, size);
+  return kind === 'villain' ? villainPortrait(key, size) : ninjaPortrait(key, size);
 }
