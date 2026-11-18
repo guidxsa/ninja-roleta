@@ -28,7 +28,7 @@ Funciona sem a máquina. Cada tarefa roda num container com o repositório e ter
 
 ### Revisão automática dos PRs do Claude
 
-Nas configurações do Codex (chatgpt.com/codex → Settings → Code review), ligue a revisão de código para `guidxsa/ninja-roleta`, com revisão automática nos PRs. O Codex lê a seção "Review guidelines" do `AGENTS.md`, que aponta para [revisao.md](revisao.md). Com ela ligada, todo PR que o Claude abrir recebe a revisão do Codex no próprio PR. Se a revisão automática não estiver disponível, comente `@codex review` no PR.
+Nas configurações do Codex (chatgpt.com/codex → Settings → Code review), ligue a revisão de código para `guidxsa/ninja-roleta`, com revisão automática nos PRs. O Codex lê a seção "Review guidelines" do `AGENTS.md`, que aponta para [revisao.md](revisao.md). Com ela ligada, todo PR que o Claude abrir recebe a revisão do Codex no próprio PR. Se a revisão automática não estiver disponível, comente `@codex review` no PR. Com achados, o Claude corrige no próprio PR e pede nova revisão sozinho ([loop](revisao.md#loop)); num PR do Codex, a revisão do Claude que pede mudanças chega como `@codex address that feedback`.
 
 ### Prompt de revisão por tarefa (testado em 18/11/2026)
 
