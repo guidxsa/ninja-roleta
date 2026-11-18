@@ -232,6 +232,10 @@ Os nove itens da segunda revisão foram confirmados como corrigidos. Um achado n
 
 Junto: retratos descritos pelo processo real (imagens-modelo do usuário e revisão humana; `referencias` obrigatório, `prompt` opcional, campo `ajustes`) e o guia do Codex na nuvem.
 
+### Revisão cruzada automática (18/11/2026, `feature/harness-revisao-cruzada`)
+
+A revisão do outro agente passou a chegar sozinha no PR: o Claude revisa os PRs do Codex pelo workflow `.github/workflows/revisao-claude.yml` (token do plano do usuário, `CLAUDE_CODE_OAUTH_TOKEN`, sem custo extra) e o Codex revisa os do Claude pela revisão automática dele. As instruções ficam em `docs/processo/revisao.md`, lidas pelos dois (o `AGENTS.md` aponta para elas na seção "Review guidelines"). A proteção do `master` ficou registrada como configurada: PR e checks obrigatórios, sem aprovação no GitHub, merge pelo dono com bypass.
+
 **Pendências do usuário**:
 - proteger o `master` no GitHub (exigir PR e os checks `check` e `meta`, sem push forçado);
 - criar a etiqueta `contrato-aprovado` e pô-la nos PRs cujo contrato aprovou;

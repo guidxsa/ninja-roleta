@@ -23,5 +23,6 @@
 <!-- Bugs, melhorias ou docs desatualizados vistos e não corrigidos. -->
 
 ## Agentes
-- Implementou: <!-- claude | codex | humano -->
+<!-- Depois de "Implementou:", escreva uma palavra só: claude, codex ou humano. É por ela que a revisão automática sabe quem revisa (docs/processo/revisao.md). -->
+- Implementou: 
 - Revisou: <!-- o outro -->

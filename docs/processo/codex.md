@@ -23,25 +23,23 @@ Funciona sem a máquina. Cada tarefa roda num container com o repositório e ter
 2. **Na nuvem não há** `config.toml` nem modo de aprovação: o container é isolado e você revisa o resultado antes de virar PR. O botão de publicar transforma as mudanças da tarefa num PR. Numa tarefa só de revisão, não clique.
 3. **Branch**: o Codex cria branches com o nome dele. Peça no prompt `feature/<tema>`. Se o nome vier outro, o `check:escopo` acha o tema pelo único `docs/tarefas/<tema>.md` alterado no diff; sem nenhum, é aviso até 02/12/2026 e erro depois, na nuvem, na CI e na máquina; nesse caso, defina `CHECK_TEMA=<tema>`.
 4. **O push quem faz é a plataforma**, ao abrir o PR, então o `pre-push` não roda. Quem garante é a CI (`check` e `meta`) e a proteção do `master`.
-5. **Revisão de PR**: uma tarefa com o prompt de revisão abaixo (rodando os checks) ou o comentário `@codex review` no PR, se a integração do Codex com o GitHub estiver ligada.
+5. **Revisão de PR**: automática nos PRs do Claude (seção abaixo). À mão: o comentário `@codex review` no PR, ou uma tarefa com o prompt de revisão abaixo.
 6. **Sem navegador**: o container pode não ter o Chromium do Playwright. A skill `revisar-visual` fica com o Claude, ou use `--chromium=<caminho>`.
 
-### Prompt de revisão (testado em 18/11/2026)
+### Revisão automática dos PRs do Claude
 
-Escolha a branch do PR ao criar a tarefa:
+Nas configurações do Codex (chatgpt.com/codex → Settings → Code review), ligue a revisão de código para `guidxsa/ninja-roleta`, com revisão automática nos PRs. O Codex lê a seção "Review guidelines" do `AGENTS.md`, que aponta para [revisao.md](revisao.md). Com ela ligada, todo PR que o Claude abrir recebe a revisão do Codex no próprio PR. Se a revisão automática não estiver disponível, comente `@codex review` no PR.
+
+### Prompt de revisão por tarefa (testado em 18/11/2026)
+
+Para uma revisão completa numa tarefa do Codex na nuvem (roda os checks no container). Escolha a branch do PR ao criar a tarefa:
 
 ```
 Você vai revisar um trabalho feito por outro agente neste repositório. É só revisão: NÃO altere, crie nem apague
 arquivos, NÃO faça commit e NÃO abra PR.
 
 Passo 1. git fetch origin master <branch> && git checkout -B <branch> origin/<branch> && npm ci
-Passo 2. Leia o AGENTS.md e o contrato em docs/tarefas/<tema>.md.
-Passo 3. Rode e mostre: npm run check, npm run check:meta (se a tarefa mexe no jogo) e git config core.hooksPath.
-Passo 4. Revise git diff origin/master...HEAD contra o AGENTS.md e o contrato: bugs, regra que dá para burlar sem
-nenhuma verificação perceber, falso positivo, contradição entre AGENTS.md, CLAUDE.md, skills e docs, e arquivo fora
-do escopo.
-Resposta: saída resumida do passo 3; achados do mais grave ao menos grave, cada um com arquivo:linha, problema,
-cenário concreto e correção sugerida (sem aplicar); no fim, "aprovado", "aprovado com ressalvas" ou "precisa de mudanças".
+Passo 2. Siga docs/processo/revisao.md (o que conferir e o formato da resposta).
 ```
 
 ## O que segura a qualidade do Codex
@@ -53,7 +51,7 @@ O Codex não tem um hook equivalente ao `Stop` do Claude Code (que impede encerr
 | `git commit` | `check:regras` sobre o que vai no commit | `.githooks/pre-commit` |
 | `git push` deste clone | `npm run check` na branch que sobe, com a árvore limpa; recusa push no `master`, push forçado, push de branch que não é a atual e push com mudanças fora do commit | `.githooks/pre-push` |
 | PR e push em `feature/**` | `npm run check` (no PR, `check:regras` estrito e etiqueta `contrato-aprovado`) e `check:meta` | `.github/workflows/ci.yml` |
-| Merge no `master` | só por PR com a CI verde | proteção de branch no GitHub, **configurada pelo usuário** (enquanto não estiver ligada, nada impede um push direto feito fora dos hooks) |
+| Merge no `master` | só por PR com os checks `check` e `meta` verdes; sem aprovação obrigatória no GitHub (a revisão é do outro agente); o dono mergeia com bypass | proteção de branch no GitHub, configurada pelo usuário |
 
 ## Skills
 
@@ -70,4 +68,4 @@ termine com o resumo no formato do .github/pull_request_template.md.
 
 ## Revisão
 
-Quem implementa não revisa. Um PR feito pelo Codex é revisado pelo Claude Code (`/code-review`) e vice-versa; o merge é do usuário.
+Quem implementa não revisa. Um PR feito pelo Codex é revisado pelo Claude (automático, pelo workflow `revisao-claude.yml`) e vice-versa (automático, pela revisão do Codex); o merge é do usuário. Instruções e configuração em [revisao.md](revisao.md).

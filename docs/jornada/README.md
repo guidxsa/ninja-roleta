@@ -2,7 +2,7 @@
 
 > **História na v0.35.0; Caminho Ninja na v0.36.0; Uchiha e Hyuuga na v0.37.0; modo infinito do Caminho Ninja na v0.44.0; árvores de seis ramos das quatro classes da v0.84.0 à v0.87.0.** As pendências estão no fim.
 
-O jogo tem três modos (finalidade de cada um no `CLAUDE.md`): o **Roleta** ([run.md](../roleta/run.md)), rápido, simples e na sorte, e os dois da **Jornada**, um roguelike mais lento e com mais controle, com equipe, talentos e relíquias:
+O jogo tem três modos (finalidade de cada um no `AGENTS.md`): o **Roleta** ([run.md](../roleta/run.md)), rápido, simples e na sorte, e os dois da **Jornada**, um roguelike mais lento e com mais controle, com equipe, talentos e relíquias:
 
 - **História**: longa e narrativa, a história do Naruto.
 - **Caminho Ninja**: roguelike de builds, com mapa ramificado.
