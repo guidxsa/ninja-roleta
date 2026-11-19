@@ -81,7 +81,7 @@ async function main(): Promise<void> {
   try {
     chromium = (createRequire(import.meta.url)('playwright') as Pw).chromium;
   } catch {
-    console.log('Playwright não encontrado. Na sua máquina: npm i -D playwright && npx playwright install chromium.');
+    console.log('Playwright não encontrado. Na sua máquina: npm i --no-save playwright && npx playwright install chromium (skill revisar-visual).');
     process.exitCode = 1;
     return;
   }

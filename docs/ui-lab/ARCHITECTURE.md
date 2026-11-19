@@ -25,7 +25,7 @@ aprovado. Ainda não implementada.
 | Passo ([§10](#10-ordem-de-implementação)) | Situação |
 |---|---|
 | 1. Costuras + retirada do `?teste` | Feito |
-| 2. Lab mínimo | Feito: `npm run lab` → `dist-lab/lab.html`, servido pela configuração `ui-lab` do `.claude/launch.json` (porta 4178). 22 cenários diretos (Portão, nome, avatar, entrada e início da Jornada, Registro), perfis `empty`/`mid`/`full`, histórico de runs e saves da Jornada por fixture. Testes em `tests/uilab.test.ts` |
+| 2. Lab mínimo | Feito: `npm run lab` → `dist-lab/lab.html`, servido pela configuração `ui-lab` do `.claude/launch.json` (porta 4178; fora do Claude Code, `python -m http.server 4178 --directory dist-lab` ou qualquer servidor estático). A captura de fotos (skill `revisar-visual`) pede o Playwright, fora das dependências: `npm i --no-save playwright` e `npx playwright install chromium`. 22 cenários diretos (Portão, nome, avatar, entrada e início da Jornada, Registro), perfis `empty`/`mid`/`full`, histórico de runs e saves da Jornada por fixture. Testes em `tests/uilab.test.ts` |
 | 3. Cenários de prioridade alta | Feito: 113 cenários no total (114 desde a v0.90.0, com a galeria de retratos `meta.portraits`, que mostra a imagem base de `prototype/lab/refs/` ao lado de cada desenho) (com as árvores e os movesets das classes e a trilha nos quatro estágios). Roleta (origem, mapa, os 7 eventos com resultado garantido pela seed, luta, nível, upgrade, relíquia, baú, aviso, fins e Ficha) e Jornada (revelação, trilha, mapa, avisos, eventos, minijogos, relíquias de história, lutas, talentos, moveset, tesouro, descanso, escolha do chefe, loja, fins, Ficha e relíquias da run) |
 
 Diferenças do que está descrito abaixo:

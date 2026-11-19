@@ -1,4 +1,4 @@
 schema_version: "1.1"
 name: evento-emboscada
 expected_outcome: |
-  Evento 'ambush' em events.ts com peso 10 e 'nothing' zerado ou removido, aplicado via core com playerStartsFirst, teste do efeito, texto em ptBR, protótipo funcionando, CLAUDE.md com a tabela de eventos atualizada.
+  Evento 'ambush' em events.ts com peso 10 e 'nothing' zerado ou removido, aplicado via core com playerStartsFirst, teste do efeito, texto em ptBR, protótipo funcionando, tabela de eventos atualizada no doc de design em docs/ e fragmento changelog.d/.

@@ -1,6 +1,7 @@
 // Guarda da meta de vitória (scripts/check-meta.ts; meta em docs/decisoes.md).
 import { describe, expect, it } from 'vitest';
-import { checkMeta, GRUPOS, parseMetaJson, type MetaRow } from '../scripts/check-meta';
+import { existsSync } from 'node:fs';
+import { checkMeta, comandoTsx, GRUPOS, parseMetaJson, type MetaRow } from '../scripts/check-meta';
 
 const rows = (v: Record<string, number>, grupo = 'comum'): MetaRow[] => Object.entries(v).map(([dif, vitoria]) => ({ grupo, dif, vitoria }));
 const naMeta = { easy: 0.9, normal: 0.65, hard: 0.4, hardcore: 0.15 };
@@ -9,6 +10,13 @@ describe('check:meta', () => {
   it('lê a linha META_JSON da saída da simulação', () => {
     expect(parseMetaJson(`tabela\nMETA_JSON [{"grupo":"a","dif":"easy","vitoria":0.9}]\n`)).toEqual([{ grupo: 'a', dif: 'easy', vitoria: 0.9 }]);
     expect(() => parseMetaJson('sem linha')).toThrow();
+  });
+
+  it('roda as simulações com o Node atual e o CLI do tsx, sem npx (Windows)', () => {
+    const [cmd, argv] = comandoTsx(['scripts/sim-origens.ts', '--json']);
+    expect(cmd).toBe(process.execPath);
+    expect(existsSync(argv[0]!)).toBe(true);
+    expect(argv.slice(1)).toEqual(['scripts/sim-origens.ts', '--json']);
   });
 
   it('na meta passa', () => {

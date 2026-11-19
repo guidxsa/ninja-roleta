@@ -144,6 +144,8 @@ As skills são instruções em markdown e valem para os dois agentes. **Antes de
 
 Skill nova entra nesta tabela no mesmo commit.
 
+**Skill de terceiros (Impeccable)**: design de interface (`impeccable`, de `pbakaus/impeccable`). O repositório guarda só a configuração: a versão fixada em `skills-lock.json` (4.9.0), o contexto de design (`PRODUCT.md`, `DESIGN.md`, `.impeccable/design.json`) e os hooks do Codex (`.codex/hooks.json`, que acham o launcher pela raiz do git, de qualquer subpasta). A skill em si é instalada por agente e fica fora do git: `npx skills add pbakaus/impeccable`, escolhendo Claude Code (`.claude/skills/impeccable/`) e Codex (`.agents/skills/impeccable/`). É opcional: sem ela, os hooks não fazem nada e as regras de interface continuam as deste arquivo e do `docs/visual.md`.
+
 ### Dois agentes
 
 - Uma branch tem **um agente por vez**: Claude e Codex nunca trabalham juntos na mesma branch.
