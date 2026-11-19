@@ -12,6 +12,8 @@ import type { Origin } from '../../src/core/types';
 import { roletaData as rdata } from '../../src/data/roleta/index';
 import { loadProfile, type Profile } from '../../src/state/profile';
 import type { KeyValueStorage } from '../../src/state/runHistory';
+import { storageDoCanal } from '../../src/state/canal';
+import { CANAL } from '../canal';
 
 export const SETTINGS_KEY = 'proto_settings_v1';
 export const DIFFICULTIES = Object.keys(rdata.base.balance.difficulty.multipliers) as Difficulty[];
@@ -120,12 +122,15 @@ export function initSession(storage: KeyValueStorage, seed: number | null): void
   } satisfies Session);
 }
 
-/** O `localStorage` do navegador; bloqueado (modo privado, permissão), um mapa em memória. */
+/**
+ * O `localStorage` do navegador; bloqueado (modo privado, permissão), um mapa em memória. No preview do staging, com
+ * prefixo nas chaves (src/state/canal.ts), para não mexer no save de quem joga na produção.
+ */
 export function browserStorage(): KeyValueStorage {
   try {
     const ls = window.localStorage;
     ls.getItem('probe');
-    return ls;
+    return storageDoCanal(ls, CANAL);
   } catch {
     const mem = new Map<string, string>();
     return { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => void mem.set(k, v) };

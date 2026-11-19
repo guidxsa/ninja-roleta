@@ -1,4 +1,6 @@
-<!-- Contrato resumido da tarefa (AGENTS.md, "Como trabalhar"). Apague o que não se aplica. -->
+<!-- Contrato resumido da tarefa (AGENTS.md, "Como trabalhar"). Apague o que não se aplica.
+     Base do PR: staging (todo trabalho; entra sozinho com a revisão aprovada). master só para hotfix/<tema>
+     e para o PR permanente do staging (docs/processo/fluxo.md). -->
 
 ## Objetivo
 <!-- Uma frase. Contrato: docs/tarefas/<tema>.md -->
@@ -15,7 +17,7 @@
 
 ## Docs e registro
 - [ ] Doc da regra atualizado no mesmo commit (ou não se aplica)
-- [ ] `CHANGELOG.md` (se o jogador nota a mudança)
+- [ ] Fragmento `changelog.d/<tema>.md` (se o jogador nota a mudança; no hotfix, a linha no `CHANGELOG.md`)
 - [ ] `docs/registro.md` / `docs/decisoes.md` (se houve decisão sem o usuário)
 - [ ] Balanceamento: tabela de antes e depois (ou não se aplica)
 

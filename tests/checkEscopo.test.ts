@@ -163,3 +163,16 @@ describe('renomeação conta a origem e o destino (3ª revisão do Codex)', () =
     expect(run(files, md)[0]!.files).toEqual(['proibido/a.md']);
   });
 });
+
+describe('fluxo com staging (docs/processo/fluxo.md)', () => {
+  it('staging e master não conferem contrato (cada tarefa foi conferida no próprio PR)', () => {
+    expect(run(['src/core/a.ts'], null, { branch: 'staging', hoje: DEPOIS })).toEqual([]);
+    expect(run(['src/core/a.ts'], null, { branch: 'master', hoje: DEPOIS })).toEqual([]);
+  });
+
+  it('hotfix/<tema> usa o contrato do tema e changelog.d sempre pode mudar', () => {
+    expect(temaDaTarefa('hotfix/texto', []).tema).toBe('texto');
+    const md = contrato(['docs/roleta/**']);
+    expect(run(['docs/roleta/a.md', 'changelog.d/texto.md', 'docs/tarefas/texto.md'], md, { branch: 'hotfix/texto', labels: null })).toEqual([]);
+  });
+});

@@ -20,11 +20,14 @@ permissions:
   pull-requests: write
   issues: write
   id-token: write
+  statuses: write # portão revisao-cruzada do staging (docs/processo/fluxo.md)
 
 env:
   # Rodadas de correção por PR (os dois sentidos juntos), contadas pelo marcador <!-- loop-revisao:rodada --> nos
   # comentários. No limite, o loop para e avisa o usuário no PR.
   LIMITE_RODADAS: 3
+  # Piloto de perfis de modelo nos PRs de feature/issue-<n> (docs/processo/metricas.md; issues-claude.yml).
+  PILOTO_PERFIS: ${{ vars.PILOTO_PERFIS }}
 
 # A concorrência fica em cada job, e não no workflow: só um job que passou do filtro entra no grupo,
 # então um comentário comum no PR não cancela a revisão em andamento.
@@ -96,11 +99,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
           INICIO: ${{ steps.token.outputs.inicio }}
         run: |
           comentarios() { gh api "repos/$GH_REPO/issues/$PR/comments" --paginate --jq '.[] | .created_at + " " + (.body | gsub("\n"; " "))'; }
           veredito=$(comentarios | awk -v t="$INICIO" '$1 >= t' | grep -o 'revisao-claude:veredito=[a-z]*' | tail -n 1 | cut -d= -f2 || true)
           echo "Veredito desta revisão: ${veredito:-nenhum}"
+          # Aprovado ou com ressalvas: status revisao-cruzada verde no commit revisado, se ainda for a ponta do PR
+          # (portão do auto-merge no staging, docs/processo/fluxo.md).
+          if [ "$veredito" = "aprovado" ] || [ "$veredito" = "ressalvas" ]; then
+            if [ "$(gh pr view "$PR" --json headRefOid --jq .headRefOid)" = "$SHA" ]; then
+              gh api "repos/$GH_REPO/statuses/$SHA" -f state=success -f context=revisao-cruzada -f description="Revisão do Claude: $veredito" > /dev/null
+            fi
+            exit 0
+          fi
           if [ "$veredito" != "mudancas" ]; then exit 0; fi
           rodadas=$(comentarios | grep -c '<!-- loop-revisao:rodada -->' || true)
           if [ "$rodadas" -ge "$LIMITE_RODADAS" ]; then
@@ -230,9 +242,24 @@ jobs:
           cache: npm
       - run: npm ci
         if: steps.rodada.outputs.ok == 'true'
+      # PR de feature/issue-<n>: perfil de modelo da issue, com escalada a partir da 2ª rodada (docs/processo/metricas.md).
+      # Branch criada antes do piloto (sem o script): segue no modelo padrão, sem registro.
+      - name: Escolher o perfil (PR de issue)
+        id: perfil
+        if: steps.rodada.outputs.ok == 'true' && startsWith(github.event.pull_request.head.ref, 'feature/issue-')
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          ETAPA: revisao-${{ steps.rodada.outputs.numero }}
+        run: |
+          ISSUE="${HEAD_REF#feature/issue-}"
+          case "$ISSUE" in ''|*[!0-9]*) echo "::notice::Branch $HEAD_REF sem número de issue: sem perfil."; exit 0 ;; esac
+          [ -f scripts/metricas-execucao.ts ] || { echo "::notice::Branch sem scripts/metricas-execucao.ts: sem perfil."; exit 0; }
+          echo "issue=$ISSUE" >> "$GITHUB_OUTPUT"
+          ISSUE="$ISSUE" npx tsx scripts/metricas-execucao.ts perfil || echo "::warning::Perfil não escolhido: modelo padrão."
       # Push: só "git push origin HEAD" está liberado (a branch do PR, em checkout; sem --force, sem outra branch).
       # Commit sem atribuição: as configurações abaixo desligam o Co-Authored-By e o passo seguinte confere.
       - uses: anthropics/claude-code-action@v1
+        id: claude
         if: steps.rodada.outputs.ok == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -254,7 +281,9 @@ jobs:
           claude_args: >-
             --allowedTools "Read,Edit,Write,Glob,Grep,Bash(npm run check),Bash(npm run check:*),Bash(npm test),Bash(npm test:*),Bash(npm run typecheck),Bash(npm run proto),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git push origin HEAD),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr checks:*),Bash(gh pr comment:*),Bash(gh issue list:*),Bash(gh issue create:*)"
             --settings '{"includeCoAuthoredBy":false,"attribution":{"commit":"","pr":""}}'
+            ${{ steps.perfil.outputs.modelo && format('--model {0}', steps.perfil.outputs.modelo) || '' }}
       - name: Conferir o push e pedir nova revisão ao Codex
+        id: conferir
         if: steps.rodada.outputs.ok == 'true' && !cancelled()
         env:
           NUMERO: ${{ steps.rodada.outputs.numero }}
@@ -265,9 +294,11 @@ jobs:
           }
           nova=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
           if [ "$nova" = "$SHA_REVISADO" ]; then
+            echo "resultado=sem-commit" >> "$GITHUB_OUTPUT"
             avisa "O Claude não fez commit para a revisão do Codex (achados que não procedem, fora do escopo ou correção que falhou): veja o resumo do Claude acima e o log do job."
             exit 0
           fi
+          echo "resultado=corrigido" >> "$GITHUB_OUTPUT"
           # Sem push forçado: o commit novo descende do revisado.
           status=$(gh api "repos/$GH_REPO/compare/$SHA_REVISADO...$nova" --jq .status)
           if [ "$status" != "ahead" ]; then
@@ -281,3 +312,16 @@ jobs:
           fi
           printf '%s\n' "@codex review" "" "Correções da revisão anterior em $nova. Rodada $NUMERO de $LIMITE_RODADAS do loop de revisão (docs/processo/revisao.md, \"Loop\")." "" '<!-- loop-revisao:rodada -->' > "$RUNNER_TEMP/pedido.md"
           gh pr comment "$PR" --body-file "$RUNNER_TEMP/pedido.md"
+      # Registro da rodada na issue do PR (docs/processo/metricas.md). Não trava o job.
+      - name: Registrar as métricas (PR de issue)
+        if: steps.rodada.outputs.ok == 'true' && !cancelled() && steps.perfil.outputs.issue != ''
+        env:
+          ISSUE: ${{ steps.perfil.outputs.issue }}
+          ETAPA: revisao-${{ steps.rodada.outputs.numero }}
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+          TENTATIVA: '1'
+          PERFIL: ${{ steps.perfil.outputs.perfil }}
+          MODELO: ${{ steps.perfil.outputs.modelo }}
+          RESULTADO: ${{ steps.conferir.outputs.resultado || 'nao-rodou' }}
+          FALHA: ${{ steps.claude.outcome != 'success' && 'execucao' || '' }}
+        run: npx tsx scripts/metricas-execucao.ts registra || echo "::warning::Registro de métricas falhou (veja acima)."

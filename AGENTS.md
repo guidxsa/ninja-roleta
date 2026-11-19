@@ -96,14 +96,13 @@ A direção está em [docs/visual.md](docs/visual.md): a interface deve parecer 
 - Dano e resistência arredondados para baixo no fim do cálculo.
 - Antes de mudar uma fórmula, escrever ou ajustar o teste.
 - Balanceamento: proposto ao usuário com a tabela de antes e depois, nunca compensado sozinho (alvo em `docs/decisoes.md`).
-- **Nada de push direto no `master`** (produção; o Pages publica a cada push). Cada trabalho vai numa branch `feature/<tema>`: testar, commitar e dar push só da branch, sem esperar pedido (skill `lancar-versao`). Merge no `master`, tag `vX.Y.Z` e deploy só com aprovação explícita do usuário ("publica vX.Y.Z"). Nunca `--force`.
+- **Branches e versões** ([docs/processo/fluxo.md](docs/processo/fluxo.md)): cada trabalho vai numa branch `feature/<tema>` com PR para o **`staging`**: testar, commitar, dar push só da branch e abrir o PR, sem esperar pedido (skill `lancar-versao`). O PR entra sozinho no staging (auto-merge) com `check`, `meta` e a revisão cruzada aprovada (status `revisao-cruzada`). O `master` é produção (o Pages publica a cada push) e só recebe o PR permanente do staging (release, sobe o y) e `hotfix/<tema>` (sobe o z), com merge, tag `vX.Y.Z` e deploy só com aprovação explícita do usuário ("publica vX.Y.Z"). No staging não há versão: quem joga nota a mudança, fragmento em `changelog.d/<tema>.md`. **Nada de push direto em `master` ou `staging`**; nunca `--force`.
 - **Limpeza de branches** (Claude e Codex), para não acumular branch morta:
   - **Depois do merge**: quem fez o merge (ou o agente, na sessão seguinte) apaga a branch no GitHub e no clone: `git push origin --delete feature/<tema>` e `git branch -d feature/<tema>`. Se ela tem worktree, `git worktree remove` antes.
-  - **No começo de cada tarefa**: `git fetch --prune origin` e `git branch -d` em cada branch local já mergeada (`git branch --merged origin/master`). Remota já mergeada que sobrou também é apagada. O `-d` recusa branch com commit fora do `master`: isso é sinal de trabalho não mergeado, não motivo para trocar por `-D`.
+  - **No começo de cada tarefa**: `git fetch --prune origin` e `git branch -d` em cada branch local já mergeada (`git branch --merged origin/staging` e `git branch --merged origin/master`). Remota já mergeada que sobrou também é apagada. O `-d` recusa branch com commit fora da base: isso é sinal de trabalho não mergeado, não motivo para trocar por `-D`.
   - **Sem merge e parada há mais de 30 dias** (data do último commit): listar para o usuário (nome, último commit, PR, se houver) e apagar só com aprovação dele, porque o trabalho se perde.
   - **Nunca apagar**: `master`, `main` e `staging`; branch com PR aberto; branch em uso por outro agente ou sessão (com worktree ou commit recente de outro agente); tags.
 - **Commits e PRs sem `Co-Authored-By`** nem outra linha de atribuição.
-- A partir do `v1.0.0` entra o fluxo `feature/* → staging → main` com PR WIP permanente (plano aprovado, ainda não implementado).
 
 ## Como trabalhar (dois agentes)
 
@@ -112,7 +111,7 @@ O projeto é feito pelo Claude Code e pelo Codex, com as mesmas regras. Plano de
 ### Escopo
 
 - Toda tarefa começa por um **contrato** com objetivo, o que fica de fora, caminhos que podem ser tocados e critério de pronto (modelo em [docs/processo/tarefa-modelo.md](docs/processo/tarefa-modelo.md); o arquivo fica em `docs/tarefas/<tema>.md`, com `<tema>` igual ao da branch `feature/<tema>`). O agente escreve o contrato a partir do pedido; o usuário aprova antes do código.
-- Mexer só no que o contrato permite. Precisou sair do escopo: parar e pedir para atualizar o contrato; não ampliar sozinho. O `npm run check:escopo` (dentro do `npm run check`) compara o diff com o `escopo` e o `fora` do contrato; `CHANGELOG.md`, `docs/registro.md` e `docs/decisoes.md` sempre podem mudar; `package.json` e `package-lock.json`, só na versão do projeto (o resto muda o que se instala e precisa estar no escopo). O tema vem da branch `feature/<tema>` ou, numa branch com outro nome (Codex na nuvem), do único `docs/tarefas/<tema>.md` alterado. Sem tema ou sem contrato é aviso, e vira erro a partir de 02/12/2026, na CI e na máquina (branch sem tema: `CHECK_TEMA=<tema>`).
+- Mexer só no que o contrato permite. Precisou sair do escopo: parar e pedir para atualizar o contrato; não ampliar sozinho. O `npm run check:escopo` (dentro do `npm run check`) compara o diff com o `escopo` e o `fora` do contrato; `CHANGELOG.md`, `changelog.d/*.md`, `docs/registro.md` e `docs/decisoes.md` sempre podem mudar; `package.json` e `package-lock.json`, só na versão do projeto (o resto muda o que se instala e precisa estar no escopo). O tema vem da branch `feature/<tema>` (ou `hotfix/<tema>`) ou, numa branch com outro nome (Codex na nuvem), do único `docs/tarefas/<tema>.md` alterado. Sem tema ou sem contrato é aviso, e vira erro a partir de 02/12/2026, na CI e na máquina (branch sem tema: `CHECK_TEMA=<tema>`).
 - **Aprovação do contrato**: no PR, o usuário põe a etiqueta `contrato-aprovado`; a CI confere (aviso até 02/12/2026, erro depois). **Agente nunca põe, tira nem pede para pular essa etiqueta.** A etiqueta vale para o contrato como estava quando o usuário a pôs (a CI não sabe quando foi posta): se o contrato mudar depois disso, o agente avisa no resumo e no PR que a aprovação precisa ser refeita, e o usuário tira e põe a etiqueta de novo depois de conferir.
 - Achou bug, melhoria ou doc desatualizado fora do escopo: anotar em **Achados** no resumo final e no PR **e** abrir uma issue descritiva (ver [Issues](#issues)), sem corrigir na tarefa atual.
 - Nada de refatoração, renomeação ou formatação "de passagem".
@@ -121,13 +120,13 @@ O projeto é feito pelo Claude Code e pelo Codex, com as mesmas regras. Plano de
 
 Uma tarefa só está pronta quando:
 
-1. `npm run check` passa (typecheck, testes, `check:regras`, `check:escopo` e build), com a saída mostrada no resumo. Os git hooks: `pre-commit` (`check:regras` sobre o que vai no commit) e `pre-push` (`npm run check` na branch que sobe, com a árvore limpa; recusa push no `master`, push forçado, push de uma branch que não é a atual e push com mudanças fora do commit). Eles só valem para push feito do próprio clone: a garantia final é a CI e a proteção do `master` no GitHub. Hook nunca é pulado (`--no-verify` é proibido); se ele falha, corrige-se a causa.
+1. `npm run check` passa (typecheck, testes, `check:regras`, `check:escopo` e build), com a saída mostrada no resumo. Os git hooks: `pre-commit` (`check:regras` sobre o que vai no commit) e `pre-push` (`npm run check` na branch que sobe, com a árvore limpa; recusa push no `master` e no `staging`, push forçado, push de uma branch que não é a atual e push com mudanças fora do commit). Eles só valem para push feito do próprio clone: a garantia final é a CI e a proteção do `master` no GitHub. Hook nunca é pulado (`--no-verify` é proibido); se ele falha, corrige-se a causa.
 2. Regra ou número mudou: o doc correspondente mudou no mesmo commit.
-3. O jogador nota a mudança: linha no `CHANGELOG.md`.
+3. O jogador nota a mudança: fragmento `changelog.d/<tema>.md` (a linha do `CHANGELOG.md` sai na release; no hotfix, a linha direto).
 4. Houve decisão sem o usuário: registrada em `docs/registro.md` e, se ele precisa revisar, em `docs/decisoes.md`.
 5. Balanceamento: a tabela de antes e depois está no resumo e nada foi compensado sozinho. A CI roda a guarda da meta (`npm run check:meta`, job próprio, ~1 min): se ela quebrar, **não ajuste número para passar**; pare e proponha ao usuário com a tabela de antes e depois.
 6. Só arquivos dentro do escopo do contrato aparecem no diff.
-7. Commit e push só da branch `feature/<tema>`; merge, tag e deploy só com aprovação explícita.
+7. Commit e push só da branch `feature/<tema>`, PR para o `staging`; release, hotfix, tag e deploy só com aprovação explícita.
 
 O resumo final segue o modelo de PR (`.github/pull_request_template.md`): objetivo, fora do escopo, caminhos tocados, como verificou, docs atualizados, achados e quem implementou e quem revisou.
 
@@ -138,7 +137,7 @@ As skills são instruções em markdown e valem para os dois agentes. **Antes de
 | Tipo de tarefa | Skill |
 |---|---|
 | Regra nova ou alterada, ajuste de fórmula ou balanceamento, reclamação de comportamento de jogo | [.claude/skills/nova-mecanica/SKILL.md](.claude/skills/nova-mecanica/SKILL.md) |
-| Fechar ou publicar versão (commit, push da branch, merge, tag) | [.claude/skills/lancar-versao/SKILL.md](.claude/skills/lancar-versao/SKILL.md) |
+| PR para o staging, preparar e publicar release, hotfix (commit, push da branch, merge, tag) | [.claude/skills/lancar-versao/SKILL.md](.claude/skills/lancar-versao/SKILL.md) |
 | Retrato ilustrado novo, refeito ou trocado (`public/img/ninja`, `viloes`, `jornada`) | [.claude/skills/novo-retrato/SKILL.md](.claude/skills/novo-retrato/SKILL.md) |
 | Medir o balanceamento contra a meta, check:meta quebrado, antes de propor número | [.claude/skills/auditar-balanceamento/SKILL.md](.claude/skills/auditar-balanceamento/SKILL.md) |
 | Conferir tela depois de mexer em interface (fotos do UI Lab em celular e desktop, dois temas) | [.claude/skills/revisar-visual/SKILL.md](.claude/skills/revisar-visual/SKILL.md) |
@@ -150,7 +149,7 @@ Skill nova entra nesta tabela no mesmo commit.
 - Uma branch tem **um agente por vez**: Claude e Codex nunca trabalham juntos na mesma branch.
 - **Quem implementa não revisa**, e a revisão chega sozinha no PR: o do Codex é revisado pelo Claude (workflow `.github/workflows/revisao-claude.yml`) e o do Claude, pelo Codex (revisão automática do Codex). Quem abre o PR preenche "Implementou" no modelo de PR (`claude`, `codex` ou `humano`): é por ele que o workflow sabe quem revisa. À mão: `@claude revise` ou `@codex review` num comentário do PR. Instruções e configuração em [docs/processo/revisao.md](docs/processo/revisao.md).
 - **Loop de revisão**: achado que bloqueia o merge volta sozinho para o autor. No PR do Claude, a revisão do Codex com achados aciona o Claude no GitHub (job `corrige`), que corrige na branch, dá push e pede `@codex review`; no PR do Codex, o veredito "precisa de mudanças" do Claude vira um pedido `@codex address that feedback`, e o push do Codex traz nova revisão. Para quando o revisor não acha nada ou depois de 3 rodadas, com aviso ao usuário no PR. Só PR da própria base (nunca fork), push só na branch do PR (nunca `--force`, nunca o `master`) e commit sem `Co-Authored-By`, conferidos pelo workflow. O merge continua do usuário. Detalhes e travas em [docs/processo/revisao.md](docs/processo/revisao.md#loop).
-- **Merge**: o `master` exige PR e os checks `check` e `meta` verdes, sem aprovação obrigatória no GitHub (a revisão é do outro agente); o usuário mergeia com bypass, como merge commit.
+- **Merge**: no `staging`, o GitHub mergeia sozinho com `check`, `meta` e `revisao-cruzada` verdes (o portão abre quando o outro agente aprova; [fluxo.md](docs/processo/fluxo.md#entrada-no-staging)). No `master`, só o usuário, como merge commit: o PR permanente do staging e os hotfix.
 - Cada sessão começa lendo este arquivo e o contrato da tarefa. Configuração de cada agente: `CLAUDE.md` (Claude Code) e [docs/processo/codex.md](docs/processo/codex.md) (Codex).
 - Este arquivo, o `CLAUDE.md`, os hooks, os scripts de verificação, os `scripts` do `package.json` e as configurações dos agentes só mudam numa tarefa de processo pedida pelo usuário, na branch `feature/harness` ou `feature/harness-<tema>` (o `check:regras` confere o nome): o agente não afrouxa as próprias regras.
 
@@ -161,6 +160,7 @@ Toda inconsistência achada (em revisão, numa tarefa, numa simulação) vira um
 - **Abrir**: o agente que acha (fora do escopo da tarefa) e o revisor (cada "melhoria futura" e cada achado recusado por sair do escopo). Procurar duplicata antes; o número da issue vai no resumo e no PR.
 - **Triagem**: etiqueta `inconsistencia` e mais uma. `correcao-automatica` só para erro claro, com uma única resposta certa (bug evidente, regra deste arquivo violada, link quebrado, doc que não acompanhou mudança registrada, teste faltando, erro de texto). `precisa-decisao` para o resto (balanceamento, código × doc sem registro, design, regra nova, processo) e na dúvida.
 - **Loop**: o workflow `.github/workflows/issues-claude.yml` corrige sozinho a issue com `correcao-automatica`: branch `feature/issue-<n>`, contrato `docs/tarefas/issue-<n>.md` gerado da issue (com `issue: <n>`), `npm run check`, PR com `Closes #<n>`. A issue com essa etiqueta vale como aprovação do contrato (dispensa `contrato-aprovado`), mas a correção automática nunca toca balanceamento nem processo. Se não for erro claro, a issue volta para `precisa-decisao`. Daí segue a revisão cruzada; **o merge continua do usuário** e fecha a issue.
+- **Modelo e métricas**: o loop escolhe o modelo por perfil (leve ou padrão, com escalada) e registra o consumo de cada execução na issue; regras do piloto, escolha de executor e critério de promoção em [docs/processo/metricas.md](docs/processo/metricas.md).
 
 ## Review guidelines
 

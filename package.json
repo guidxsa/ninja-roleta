@@ -21,6 +21,7 @@
     "lab": "tsx scripts/build-lab.ts",
     "lab:seed": "tsx scripts/lab-seed.ts",
     "docs:tabelas": "tsx scripts/doc-tables.ts",
+    "metricas": "tsx scripts/metricas-relatorio.ts",
     "prepare": "git config core.hooksPath .githooks || true"
   },
   "devDependencies": {

@@ -17,6 +17,10 @@ O "Implementou" vem do modelo de PR (`.github/pull_request_template.md`): quem a
 - **Codex**: ligar a revisão de código do repositório nas configurações do Codex.
 - **App do Claude no repositório** (para o loop): o `claude-code-action` usa o token do app do Claude para publicar e dar push. Instale com `/install-github-app` no Claude Code ou em github.com/apps/claude. Push feito com o token do app dispara a CI; com o `GITHUB_TOKEN` do Actions, não dispararia.
 
+## Portão do staging
+
+A aprovação abre o auto-merge no `staging` ([fluxo.md](fluxo.md#entrada-no-staging)): o veredito `aprovado` ou `ressalvas` do Claude, ou o "Didn't find any major issues" do Codex depois do último commit, deixa verde o status `revisao-cruzada` do commit revisado. Commit novo volta a esperar a revisão.
+
 ## Loop
 
 A revisão roda em loop no PR, sem ninguém no meio: o revisor aponta achados, o autor corrige e pede nova revisão, até não haver achado ou acabar o limite de rodadas. O merge continua do usuário.
@@ -30,7 +34,7 @@ A revisão roda em loop no PR, sem ninguém no meio: o revisor aponta achados, o
 - **Limite de rodadas**: 3 por PR (`LIMITE_RODADAS` no workflow), os dois sentidos juntos, contadas pelo marcador `<!-- loop-revisao:rodada -->` nos comentários de pedido. No limite, o workflow para de pedir correção e avisa o usuário no PR uma vez (`<!-- loop-revisao:limite -->`). O aviso não menciona o Codex com arroba, para não abrir mais uma rodada.
 - **Só PR da própria base**: o loop exige `head.repo` igual ao repositório. PR de fork recebe no máximo a revisão, nunca a correção.
 - **O job que corrige executa código do PR** (`npm ci`, `npm run check`) com os segredos: só roda no evento `pull_request_review` de PR da própria base cuja branch começa com `feature/`, nunca em `issue_comment` (o job `comentario` não executa código do PR).
-- **Push**: o Claude só tem liberado `git push origin HEAD`, na branch do PR em checkout (sem `--force`, sem outra branch, nunca o `master`). Commit sem `Co-Authored-By`: a atribuição vem desligada nas configurações do Claude no job. Depois, o workflow confere que o commit novo descende do revisado (sem push forçado) e que nenhum commit novo tem `Co-Authored-By`; se falhar, para o loop e avisa no PR.
+- **Push**: o Claude só tem liberado `git push origin HEAD`, na branch do PR em checkout (sem `--force`, sem outra branch, nunca o `master` nem o `staging`). Commit sem `Co-Authored-By`: a atribuição vem desligada nas configurações do Claude no job. Depois, o workflow confere que o commit novo descende do revisado (sem push forçado) e que nenhum commit novo tem `Co-Authored-By`; se falhar, para o loop e avisa no PR.
 - **Revisão velha**: se o PR andou depois da revisão do Codex, o job `corrige` não corrige (a revisão do commit novo vale mais).
 - **Achado que não procede**: o Claude não corrige o que não procede, sai do escopo do contrato ou depende de decisão do usuário (balanceamento, por exemplo); explica no resumo e, se o achado é real mas fora do escopo, abre uma [issue](issues.md). Sem commit, o workflow não pede nova revisão e avisa que o loop parou.
 

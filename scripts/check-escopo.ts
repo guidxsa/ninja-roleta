@@ -21,7 +21,7 @@ export const ISSUE_BRANCH = /^feature\/issue-(\d+)$/;
  * Sempre dentro do escopo: changelog e registro de decisões, que toda tarefa pode tocar. O package.json e o
  * package-lock.json, à parte: passam sozinhos só se mudar apenas a versão do projeto (o resto muda o que se instala).
  */
-export const SEMPRE = ['CHANGELOG.md', 'docs/registro.md', 'docs/decisoes.md'];
+export const SEMPRE = ['CHANGELOG.md', 'changelog.d/*.md', 'docs/registro.md', 'docs/decisoes.md'];
 
 export interface Contrato {
   objetivo?: string;
@@ -55,7 +55,7 @@ export const caminhoDoContrato = (tema: string): string => `docs/tarefas/${tema.
 /** De onde vem o tema da tarefa, nesta ordem: variável, branch feature/<tema>, único contrato alterado no diff. */
 export function temaDaTarefa(branch: string, files: string[], env: NodeJS.ProcessEnv = {}): { tema: string | null; origem: string } {
   if (env.CHECK_TEMA) return { tema: env.CHECK_TEMA, origem: 'CHECK_TEMA' };
-  const fromBranch = /^feature\/(.+)$/.exec(branch)?.[1];
+  const fromBranch = /^(?:feature|hotfix)\/(.+)$/.exec(branch)?.[1];
   if (fromBranch) return { tema: fromBranch, origem: `branch ${branch}` };
   const contratos = files.filter((f) => /^docs\/tarefas\/[^/]+\.md$/.test(f));
   if (contratos.length === 1) return { tema: contratos[0]!.slice('docs/tarefas/'.length, -3), origem: `contrato alterado (${contratos[0]})` };
@@ -81,6 +81,8 @@ export interface EscopoInput {
 
 export function checkEscopo({ branch, files, contrato, hoje, env = {}, packageOnlyVersion = false, lockOnlyVersion = false, labels = null, issueLabels = null }: EscopoInput): Finding[] {
   const exigido = hoje >= EXIGIR_CONTRATO_A_PARTIR;
+  // staging e master juntam várias tarefas, cada uma conferida no próprio PR (docs/processo/fluxo.md).
+  if (/^(staging|master)$/.test(branch) && !env.CHECK_TEMA) return [];
   const { tema, origem } = temaDaTarefa(branch, files, env);
   if (!tema)
     return [

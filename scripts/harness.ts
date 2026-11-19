@@ -40,20 +40,32 @@ export interface Changes {
 }
 
 /**
- * Arquivos alterados em relação ao ponto em que a branch saiu do master: commits, área de preparo, mudanças não
- * preparadas e arquivos novos. Base: CHECK_BASE, senão origin/master, senão master.
+ * Arquivos alterados em relação ao ponto em que a branch saiu da sua base: commits, área de preparo, mudanças não
+ * preparadas e arquivos novos. Base pela ordem de `baseCandidates` (staging para o trabalho comum, master para hotfix).
  * Com `staged`, só o que está preparado para o próximo commit (pre-commit). Renomeação conta como remoção da origem
  * mais criação do destino (`--no-renames`): mover um arquivo de um caminho proibido para um permitido não esconde a origem.
  */
+/**
+ * Onde comparar o diff (docs/processo/fluxo.md): CHECK_BASE; no PR, a base dele (GITHUB_BASE_REF); senão o staging
+ * para o trabalho comum e o master para hotfix/<tema>, staging e master; por último o master.
+ */
+export function baseCandidates(branch: string, env: NodeJS.ProcessEnv = {}): string[] {
+  const rumoAoMaster = /^hotfix\//.test(branch) || branch === 'staging' || branch === 'master';
+  const padrao = rumoAoMaster ? ['origin/master', 'master'] : ['origin/staging', 'staging', 'origin/master', 'master'];
+  const pr = env.GITHUB_BASE_REF ? [`origin/${env.GITHUB_BASE_REF}`] : [];
+  return [...new Set([env.CHECK_BASE, ...pr, ...padrao].filter((b): b is string => !!b))];
+}
+
 export function gitChanges(env: NodeJS.ProcessEnv = process.env, staged = false, cwd?: string): Changes {
   const tryGit = (...args: string[]) => tryGitAt(cwd, ...args);
   if (staged) {
     const out = tryGit('diff', '--cached', '--name-only', '-z', '--no-renames', '--diff-filter=ACMD');
     return out === null ? { base: null, files: [], problem: 'git diff --cached falhou' } : { base: null, files: paths(out).sort() };
   }
-  const candidates = [env.CHECK_BASE, 'origin/master', 'master'].filter((b): b is string => !!b);
+  const branch = env.GITHUB_HEAD_REF || env.GITHUB_REF_NAME || tryGit('rev-parse', '--abbrev-ref', 'HEAD')?.trim() || '';
+  const candidates = baseCandidates(branch, env);
   const ref = candidates.find((b) => tryGit('rev-parse', '--verify', '--quiet', `${b}^{commit}`) !== null);
-  if (!ref) return { base: null, files: [], problem: 'sem origin/master nem master para comparar (faça git fetch origin master)' };
+  if (!ref) return { base: null, files: [], problem: `sem ${candidates.join(' nem ')} para comparar (faça git fetch origin staging master)` };
   const base = tryGit('merge-base', 'HEAD', ref)?.trim();
   if (!base) return { base: null, files: [], problem: `sem ponto comum entre HEAD e ${ref}` };
   const changed = tryGit('diff', '--name-only', '-z', '--no-renames', base);

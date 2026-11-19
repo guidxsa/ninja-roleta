@@ -2,9 +2,11 @@
 // dica, sua run e, na luta, ordem da rodada e fichas. As ações nunca dobram. Abaixo de 1280px o CSS ignora tudo isto.
 // A escolha fica no navegador (conveniência de quem joga): sem localStorage, os painéis só começam abertos.
 import { ptBR as S } from '../../src/data/strings/ptBR';
+import { prefixoDoCanal } from '../../src/state/canal';
+import { CANAL } from '../canal';
 import { tip } from '../tooltip';
 
-const KEY = 'jornada_folds_v1';
+const KEY = `${prefixoDoCanal(CANAL)}jornada_folds_v1`;
 const U = S.jornada.ui;
 
 function load(): Set<string> {

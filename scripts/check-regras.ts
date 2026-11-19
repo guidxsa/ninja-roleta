@@ -18,6 +18,11 @@ export const PROTECTED = [
 ];
 /** Branch de processo: `feature/harness` ou `feature/harness-<tema>` (AGENTS.md, "Dois agentes"). */
 export const HARNESS_BRANCH = /^feature\/harness(-[a-z0-9-]+)?$/;
+/**
+ * Branches de integração (docs/processo/fluxo.md): só recebem PRs já conferidos na branch de origem. O PR staging → master
+ * e o de sincronização master → staging carregam mudanças de processo aprovadas antes numa feature/harness-<tema>.
+ */
+export const INTEGRACAO_BRANCH = /^(staging|master)$/;
 /** Números de balanceamento de cada modo (`src/data/balance.ts`, `src/data/roleta/balance.ts`...). */
 export const BALANCE_FILE = /^src\/data\/(?:.+\/)?balance[^/]*\.ts$/;
 
@@ -168,7 +173,7 @@ export function checkRegras({ files, branch, strict, core, scriptsChanged = fals
     });
 
   const game = pick(/^(src|prototype)\//);
-  if (game.length && !has(/^docs\//) && !files.includes('CHANGELOG.md'))
+  if (game.length && !has(/^docs\//) && !has(/^changelog\.d\//) && !files.includes('CHANGELOG.md'))
     out.push({
       level: 'aviso',
       rule: 'doc-junto',
@@ -176,7 +181,7 @@ export function checkRegras({ files, branch, strict, core, scriptsChanged = fals
     });
 
   const prot = [...files.filter((f) => matchesAny(f, PROTECTED)), ...(scriptsChanged ? ['package.json (scripts)'] : [])];
-  if (prot.length && !HARNESS_BRANCH.test(branch))
+  if (prot.length && !HARNESS_BRANCH.test(branch) && !INTEGRACAO_BRANCH.test(branch))
     out.push({
       level: 'erro',
       rule: 'processo-protegido',

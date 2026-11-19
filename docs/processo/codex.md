@@ -22,7 +22,7 @@ Funciona sem a máquina. Cada tarefa roda num container com o repositório e ter
 1. **Ambiente** (Environments): repositório `guidxsa/ninja-roleta`, setup script `npm ci`. O `npm ci` também liga os git hooks pelo `prepare`. A internet do agente pode ficar desligada: o `npm run check` e o `check:meta` não precisam dela.
 2. **Na nuvem não há** `config.toml` nem modo de aprovação: o container é isolado e você revisa o resultado antes de virar PR. O botão de publicar transforma as mudanças da tarefa num PR. Numa tarefa só de revisão, não clique.
 3. **Branch**: o Codex cria branches com o nome dele. Peça no prompt `feature/<tema>`. Se o nome vier outro, o `check:escopo` acha o tema pelo único `docs/tarefas/<tema>.md` alterado no diff; sem nenhum, é aviso até 02/12/2026 e erro depois, na nuvem, na CI e na máquina; nesse caso, defina `CHECK_TEMA=<tema>`.
-4. **O push quem faz é a plataforma**, ao abrir o PR, então o `pre-push` não roda. Quem garante é a CI (`check` e `meta`) e a proteção do `master`.
+4. **O push quem faz é a plataforma**, ao abrir o PR, então o `pre-push` não roda. Quem garante é a CI (`check` e `meta`) e a proteção do `master` e do `staging`. Ao abrir o PR, escolha a base `staging` ([fluxo.md](fluxo.md)).
 5. **Revisão de PR**: automática nos PRs do Claude (seção abaixo). À mão: o comentário `@codex review` no PR, ou uma tarefa com o prompt de revisão abaixo.
 6. **Sem navegador**: o container pode não ter o Chromium do Playwright. A skill `revisar-visual` fica com o Claude, ou use `--chromium=<caminho>`.
 
@@ -49,9 +49,10 @@ O Codex não tem um hook equivalente ao `Stop` do Claude Code (que impede encerr
 | Momento | O que roda | Onde |
 |---|---|---|
 | `git commit` | `check:regras` sobre o que vai no commit | `.githooks/pre-commit` |
-| `git push` deste clone | `npm run check` na branch que sobe, com a árvore limpa; recusa push no `master`, push forçado, push de branch que não é a atual e push com mudanças fora do commit | `.githooks/pre-push` |
-| PR e push em `feature/**` | `npm run check` (no PR, `check:regras` estrito e etiqueta `contrato-aprovado`) e `check:meta` | `.github/workflows/ci.yml` |
-| Merge no `master` | só por PR com os checks `check` e `meta` verdes; sem aprovação obrigatória no GitHub (a revisão é do outro agente); o dono mergeia com bypass | proteção de branch no GitHub, configurada pelo usuário |
+| `git push` deste clone | `npm run check` na branch que sobe, com a árvore limpa; recusa push no `master` e no `staging`, push forçado, push de branch que não é a atual e push com mudanças fora do commit | `.githooks/pre-push` |
+| PR e push em `feature/**`, `hotfix/**` e `staging` | `npm run check` (no PR, `check:regras` estrito e etiqueta `contrato-aprovado`) e `check:meta` | `.github/workflows/ci.yml` |
+| Merge no `staging` | sozinho (auto-merge) com `check`, `meta` e `revisao-cruzada` verdes ([fluxo.md](fluxo.md)) | `.github/workflows/staging.yml` e proteção do `staging` |
+| Merge no `master` | só o dono: o PR permanente do staging (release) e os hotfix, com `check` e `meta` verdes | proteção de branch no GitHub, configurada pelo usuário |
 
 ## Skills
 
@@ -62,13 +63,13 @@ O Codex usa as mesmas skills do Claude lendo o arquivo: a tabela "Skills e fluxo
 ```
 Leia AGENTS.md. Tarefa: <pedido>.
 Antes de codar, escreva o contrato em docs/tarefas/<tema>.md (modelo em docs/processo/tarefa-modelo.md)
-e espere minha aprovação. Depois, trabalhe na branch feature/<tema>, rode npm run check e
-termine com o resumo no formato do .github/pull_request_template.md.
+e espere minha aprovação. Depois, trabalhe na branch feature/<tema> a partir do staging, rode npm run check,
+abra o PR com base staging e termine com o resumo no formato do .github/pull_request_template.md.
 ```
 
 ## Revisão
 
-Quem implementa não revisa. Um PR feito pelo Codex é revisado pelo Claude (automático, pelo workflow `revisao-claude.yml`) e vice-versa (automático, pela revisão do Codex); o merge é do usuário. Instruções e configuração em [revisao.md](revisao.md).
+Quem implementa não revisa. Um PR feito pelo Codex é revisado pelo Claude (automático, pelo workflow `revisao-claude.yml`) e vice-versa (automático, pela revisão do Codex); com a aprovação, o PR entra sozinho no `staging` ([fluxo.md](fluxo.md)). Instruções e configuração em [revisao.md](revisao.md).
 
 ## Issues
 

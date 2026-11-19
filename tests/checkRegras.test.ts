@@ -1,7 +1,7 @@
 // Verificações do processo (AGENTS.md, "Como trabalhar"; scripts/check-regras.ts).
 import { describe, expect, it } from 'vitest';
 import { BALANCE_FILE, checkRegras, codeOnly, coreViolations, HARNESS_BRANCH } from '../scripts/check-regras';
-import { globToRegExp, lockfileOnlyVersion, matchesAny, packageJsonChange } from '../scripts/harness';
+import { baseCandidates, globToRegExp, lockfileOnlyVersion, matchesAny, packageJsonChange } from '../scripts/harness';
 
 const run = (files: string[], over: Partial<Parameters<typeof checkRegras>[0]> = {}) =>
   checkRegras({ files, branch: 'feature/tema', strict: false, core: [], ...over });
@@ -126,5 +126,26 @@ describe('package-lock.json', () => {
     expect(lockfileOnlyVersion(lock('1.0.0', { a: '1.0.0' }), lock('1.0.1', { a: '1.0.0' }))).toBe(true);
     expect(lockfileOnlyVersion(lock('1.0.0', { a: '1.0.0' }), lock('1.0.0', { a: '1.0.1' }))).toBe(false);
     expect(lockfileOnlyVersion(null, lock('1.0.0', {}))).toBe(false);
+  });
+});
+
+describe('fluxo com staging (docs/processo/fluxo.md)', () => {
+  it('staging e master aceitam arquivos de processo já aprovados; hotfix não', () => {
+    expect(run(['AGENTS.md', '.github/workflows/ci.yml'], { branch: 'staging' })).toEqual([]);
+    expect(run(['AGENTS.md'], { branch: 'master' })).toEqual([]);
+    expect(rules(run(['AGENTS.md'], { branch: 'hotfix/texto' }))).toEqual(['erro:processo-protegido']);
+    expect(rules(run(['AGENTS.md'], { branch: 'feature/staging' }))).toEqual(['erro:processo-protegido']);
+  });
+
+  it('fragmento em changelog.d conta como doc junto', () => {
+    expect(run(['prototype/roleta/session.ts', 'changelog.d/veneno.md'])).toEqual([]);
+  });
+
+  it('base do diff: staging para o trabalho comum, master para hotfix, e a base do PR antes de tudo', () => {
+    expect(baseCandidates('feature/veneno')).toEqual(['origin/staging', 'staging', 'origin/master', 'master']);
+    expect(baseCandidates('hotfix/texto')).toEqual(['origin/master', 'master']);
+    expect(baseCandidates('staging')).toEqual(['origin/master', 'master']);
+    expect(baseCandidates('feature/veneno', { GITHUB_BASE_REF: 'master' })[0]).toBe('origin/master');
+    expect(baseCandidates('feature/veneno', { CHECK_BASE: 'abc', GITHUB_BASE_REF: 'staging' }).slice(0, 2)).toEqual(['abc', 'origin/staging']);
   });
 });

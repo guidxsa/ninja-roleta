@@ -1,6 +1,6 @@
 # Changelog
 
-O que mudou em cada versão, para quem joga. Toda versão tem uma tag `vX.Y.Z`; as regras de numeração estão na seção **Versionamento** do [README](README.md). Versão nova entra no fim da tabela.
+O que mudou em cada versão, para quem joga. Toda versão tem uma tag `vX.Y.Z`; as regras de numeração estão na seção **Versionamento** do [README](README.md). Versão nova entra no fim da tabela: a release junta os fragmentos de [`changelog.d/`](changelog.d/LEIAME.md) (o que já está no staging e ainda não foi publicado) e o hotfix escreve a linha direto ([fluxo](docs/processo/fluxo.md)).
 
 
 | Versão | O que mudou |

@@ -698,6 +698,12 @@ Hardcore do Prodígio 47 → 46 → 44%; as outras células do Hardcore variam a
 
 **Dados do jogador**: Hardcore liberado guardado no perfil (o histórico guarda só 100 runs); dado corrompido vai para `<chave>_backup` antes de ser sobrescrito; falha ao salvar a Jornada avisa; a Jornada antiga só é trocada quando a nova é salva; uma exceção numa tela mostra um aviso e volta ao Portão (antes a interface congelava). Detalhes em [perfil.md](base/perfil.md) e [jornada/run.md](jornada/run.md#salvamento).
 
+## Staging com auto-merge e versão y/z (processo, 18/11/2026)
+
+Pedido do usuário: uma camada `staging` abaixo do `master` que recebe sozinha o que os agentes aprovaram, para juntar mudanças pequenas em releases maiores (y) e deixar o z para hotfix; o v1.0.0 sai do staging em breve. Decidido com ele: staging já, mantendo o nome `master`; auto-merge com CI verde e revisão cruzada aprovada; preview em `/staging/`; a release é decisão dele, com sugestão do agente. Regras em [processo/fluxo.md](processo/fluxo.md).
+
+Decidido sem o usuário, para revisar: fragmentos em `changelog.d/` no lugar de editar o `CHANGELOG.md` a cada PR (evita conflito entre merges seguidos); sugestão de release com um item de peso alto ou 8 itens; proteção do staging sem exigir branch atualizada; segredo `STAGING_TOKEN` (token do dono), porque merge e PR feitos com o `GITHUB_TOKEN` não disparam a CI nem o preview. Achado: a proteção do `master` não exigia nenhum check, embora os docs dissessem `check` e `meta`.
+
 ## Rodadas antigas
 
 Última rodada concluída: "rebalanceamento das origens"
