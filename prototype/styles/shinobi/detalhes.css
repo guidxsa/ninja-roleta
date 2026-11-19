@@ -1,0 +1,401 @@
+/* Ajustes da leitura em tamanho real */
+:root {
+  --shinobi-booth-wash: linear-gradient(#13203699, #18232be8);
+  --shinobi-booth-view: url('img/cenas/noite.jpg');
+}
+:root[data-theme='light'] {
+  --shinobi-booth-wash: linear-gradient(#d7bd9c36, #eee0bb63);
+  --shinobi-booth-view: url('img/cenas/dia.webp');
+}
+:is(.rorigin, .rrelic) {
+  background-image:
+    url('img/shinobi/pilar.png'), url('img/shinobi/pilar.png'), url('img/shinobi/balcao.png'), var(--shinobi-booth-wash),
+    var(--shinobi-booth-view);
+}
+:is(.rorigin, .rrelic)::before {
+  background: url('img/shinobi/cortina.png') center top/100% 65% no-repeat;
+}
+:is(.rorigin, .rrelic)::after {
+  content: '';
+  position: absolute;
+  top: 1.7%;
+  right: var(--post);
+  height: clamp(52px, 12vh, 135px);
+  width: clamp(27px, 5.8vh, 72px);
+  z-index: -1;
+  background: url('img/shinobi/lanterna-d.png') center/100% 100% no-repeat;
+  clip-path: polygon(
+    40% 0,
+    56% 0,
+    58% 7%,
+    74% 11%,
+    91% 17%,
+    98% 31%,
+    99% 77%,
+    90% 89%,
+    69% 94%,
+    62% 100%,
+    38% 100%,
+    32% 94%,
+    13% 88%,
+    2% 74%,
+    0 29%,
+    10% 18%,
+    32% 10%
+  );
+}
+:is(.rorigin, .rrelic) .wheel-wrap::after {
+  border-radius: 50%;
+  mask: radial-gradient(circle, #000 64%, transparent 70%);
+}
+.rrelic #results .jrcard::before {
+  background: radial-gradient(ellipse at center, #faecce24 55%, #98663880 100%), var(--shinobi-paper);
+}
+.rrelic .jrcard[data-relic='kakashiBell'] .jrcard-ico {
+  mask: radial-gradient(ellipse farthest-side at center, #000 69%, transparent 100%);
+  background-blend-mode: multiply;
+}
+.rwheel.rrelic:has(.rside .sticky-cta) > .rside {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.lineage-wheel .range-name {
+  font:
+    700 10px Georgia,
+    serif;
+  fill: #35281b;
+  pointer-events: none;
+}
+.gate .gate-banner .gate-head::before,
+.gate .gate-banner .gate-quote,
+.gate .desk-pin {
+  display: none;
+}
+.gate .mode-cta {
+  mask: none;
+  clip-path: none;
+}
+.gate::before {
+  inset: 0;
+}
+[data-theme='dark'] .gate .gate-banner .gate-hero img {
+  filter: brightness(1.5) saturate(0.91);
+}
+.gate.jgate .gate-banner .gate-hero {
+  background:
+    linear-gradient(90deg, #15111953, transparent 65%),
+    url('img/cenas/noite.jpg') center 48% / cover;
+}
+[data-theme='light'] .gate.jgate .gate-banner .gate-hero {
+  background:
+    linear-gradient(90deg, #36221b54, transparent 65%),
+    url('img/cenas/dia.webp') center 50% / cover;
+}
+.gate.jgate .gate-banner .gate-hero > * {
+  display: none;
+}
+.ninja-record {
+  color: var(--shinobi-muted);
+  font: 600 13px var(--font-hud);
+}
+.ninja-record summary {
+  cursor: pointer;
+  padding: 5px 0;
+  border-top: 1px solid #987957;
+}
+.gate-aside .desk-id {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+.gate-aside .desk-id [data-avatar] {
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+.gate-aside .desk-id [data-avatar] > .portrait {
+  width: clamp(100px, 16vh, 185px);
+  height: auto;
+  aspect-ratio: 1;
+  border: none;
+  box-shadow: none;
+  mask: linear-gradient(#000 78%, transparent);
+  mix-blend-mode: multiply;
+  filter: sepia(0.55) saturate(0.7);
+}
+.gate-aside .desk-id .field {
+  width: 100%;
+  align-items: center;
+}
+.gate-aside .desk-id .field > span {
+  position: absolute;
+  clip-path: inset(50%);
+}
+.gate-aside .desk-id .field input {
+  color: var(--shinobi-ink);
+  border: 0;
+  background: #f2dfb94d;
+  box-shadow: none;
+  text-align: center;
+  width: min(100%, 220px);
+  font: 700 23px/1.05 var(--shinobi-serif);
+  padding: 2px 6px;
+  height: 30px;
+}
+.gate-aside .jprogress + .desk-seal {
+  display: none;
+}
+@media (min-width: 900px) and (min-height: 560px) {
+  .gate-aside .jprogress {
+    padding: 12px 14px;
+  }
+  .gate-aside .jprogress-row b {
+    font: 700 19px/1.08 var(--shinobi-serif);
+  }
+  .gate-aside .jprogress-row .jthumb {
+    max-height: 65px;
+    rotate: 0;
+  }
+  .jmap-screen .jtrail-map > .jmap {
+    height: max(100%, calc(var(--rows) * 32px + 78px));
+  }
+  .jtree-screen .jt-detail .jt-card small {
+    font-size: clamp(16px, 1.4vw, 22px);
+    line-height: 1.4;
+  }
+  .jtree-screen .jt-detail .jt-card {
+    gap: 14px;
+  }
+  .jtree-screen .jt-detail .btn {
+    min-height: 54px;
+    margin-top: 10px;
+  }
+}
+@media (max-width: 899px), (max-height: 559px) {
+  .gate-resume > .desk-prog,
+  .gate .jprogress {
+    padding: 7px 10px !important;
+    margin: 0;
+    min-height: 0;
+  }
+  .gate .jprogress {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+    gap: 2px 7px;
+    align-items: center;
+    position: relative;
+  }
+  .gate .jprogress > h3 {
+    grid-column: 1/2;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font: 700 18px/1.12 var(--shinobi-serif);
+  }
+  .gate .jprogress .jprogress-row {
+    grid-column: 1/2;
+    display: block;
+    margin: 0;
+    min-height: 0;
+  }
+  .gate .jprogress .jprogress-row small,
+  .gate .jprogress .jthumb {
+    display: none;
+  }
+  .gate .jprogress .jprogress-row b {
+    font: 600 13px/1.1 var(--shinobi-serif);
+  }
+  .gate .jprogress .jprogress-row p {
+    display: inline;
+    margin: 0 0 0 5px;
+    font: 12px var(--shinobi-serif);
+  }
+  .gate .jprogress .jprogress-bar {
+    grid-column: 1/2;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin: 0;
+  }
+  .gate .jprogress-bar > span {
+    font-size: 10px;
+  }
+  .gate .jprogress-bar > b {
+    font-size: 12px;
+  }
+  .gate .jprogress-bar > i {
+    flex: 1;
+    height: 3px;
+  }
+  .gate .jprogress .btn {
+    grid-column: 2;
+    grid-row: 1/4;
+    align-self: stretch;
+    justify-self: end;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 4px 6px;
+    min-height: 42px;
+    max-width: 85px;
+    font: 700 13px/1.12 var(--shinobi-serif);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .gate .jprogress .btn > .ico {
+    display: none;
+  }
+  .gate .jprogress .btn > .chip {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+  .gate .gate-resume .desk-seal {
+    display: none;
+  }
+  .gate .gate-banner {
+    height: clamp(145px, 22vh, 210px);
+  }
+  .jmap-screen .jtrail-map > .jmap {
+    height: max(clamp(290px, 49dvh, 630px), calc(var(--rows) * 29px + 44px));
+  }
+  .jmap-screen .jnode-map:not(.k-boss) {
+    height: 27px;
+    width: 27px;
+  }
+  .rrelic #results .jrcard {
+    padding: 10px;
+    min-height: 0;
+  }
+  .rrelic .jrcard[data-relic='kakashiBell'] .jrcard-ico {
+    height: clamp(93px, 15vh, 149px);
+  }
+}
+.branch-pattern {
+  left: 0;
+  bottom: 10%;
+  width: 23%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.27;
+  mix-blend-mode: multiply;
+  mask-image: radial-gradient(ellipse, #000 0 58%, transparent 73%);
+}
+[data-branch-art='rasengan'] .branch-pattern,
+[data-branch-art='rotation'] .branch-pattern {
+  background: repeating-radial-gradient(ellipse at 47% 48%, transparent 0 8%, #66584b 9% 10%, transparent 11% 19%);
+  rotate: -24deg;
+}
+[data-branch-art='trigrams'] .branch-pattern,
+[data-branch-art='byakugan'] .branch-pattern {
+  background:
+    radial-gradient(circle at center, transparent 0 26%, #554866 27% 29%, transparent 30% 50%, #554866 51% 53%, transparent 54%),
+    repeating-conic-gradient(from -8deg, transparent 0 16deg, #776279 17deg 22deg, transparent 23deg 45deg);
+  mask-image: radial-gradient(circle, transparent 0 12%, #000 13% 64%, transparent 66%);
+}
+[data-branch-art='sharingan'] .branch-pattern,
+[data-branch-art='illusions'] .branch-pattern {
+  background:
+    radial-gradient(ellipse at 52% 18%, #542c32 0 8%, transparent 9%), radial-gradient(ellipse at 79% 70%, #542c32 0 8%, transparent 9%),
+    radial-gradient(ellipse at 22% 68%, #542c32 0 8%, transparent 9%),
+    radial-gradient(circle, transparent 0 44%, #542c32 45% 47%, transparent 48%);
+}
+[data-school='naruto']:is([data-branch-art='kyuubi'], [data-branch-art='toads']) .school-r {
+  background-position: right bottom;
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  mask-image: linear-gradient(330deg, #000 5%, #0009 34%, transparent 55%);
+  filter: sepia(0.57) saturate(0.68);
+}
+[data-theme='dark'] .jt-branch.on {
+  background: linear-gradient(100deg, #725b4833, transparent 45%, #5d4e423d), var(--shinobi-paper);
+}
+
+.route-number {
+  display: none;
+}
+@media (max-width: 899px), (max-height: 559px) {
+  .jmap-screen .route-number {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    right: -6px;
+    top: -8px;
+    min-width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1px solid #ead6a9;
+    background: #6e3625;
+    color: #fff0c8;
+    font: 700 10px/1 var(--font-hud);
+    pointer-events: none;
+  }
+}
+:is(.rorigin, .rrelic)::before {
+  background-size: 141% 75%;
+}
+:is(.rorigin, .rrelic) .festival-lamp {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  left: var(--post);
+  top: 2%;
+  height: clamp(51px, 11vh, 128px);
+  width: clamp(26px, 5.6vh, 70px);
+  background: url('img/shinobi/lanterna-e.png') center/100% 100% no-repeat;
+  clip-path: polygon(
+    40% 0,
+    56% 0,
+    58% 7%,
+    75% 11%,
+    91% 19%,
+    98% 32%,
+    99% 77%,
+    90% 89%,
+    69% 94%,
+    62% 100%,
+    38% 100%,
+    32% 94%,
+    13% 88%,
+    2% 74%,
+    0 29%,
+    10% 18%,
+    32% 10%
+  );
+}
+.gate .mode-txt small {
+  background: linear-gradient(100deg, #f3dfbfb3 45%, transparent);
+  border-radius: 2px;
+}
+@media (max-width: 599px) {
+  .jgate .mode-txt small {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+.jbattle.bridge.bridge-live .jb-field-art {
+  background:
+    linear-gradient(#222a3244, #222a3252),
+    url('img/shinobi/ponte-limpa.png') left top/315% 202% no-repeat;
+}
+.jbattle.bridge.bridge-live .jf {
+  display: flex;
+  flex-direction: column;
+  max-width: 142px;
+  padding: 6px;
+  background: #211c18cf;
+}
+.jbattle.bridge.bridge-live .jf .jf-art > .portrait {
+  width: clamp(48px, 8vh, 94px);
+  height: auto;
+}
+.jbattle.bridge-live .jb-side {
+  align-items: center;
+}

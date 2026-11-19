@@ -127,36 +127,3 @@
 .stage-stamp .seal { --s: 96px; rotate: -6deg; box-shadow: 0 0 0 4px var(--bg), 4px 6px 0 4px rgba(0, 0, 0, .35); animation: stamp var(--dur-3) var(--ease) .15s both; }
 .stage-stamp b { font: 400 var(--fs-5xl)/1.05 var(--font-display); letter-spacing: .02em; color: var(--text); text-shadow: var(--title-shadow); }
 @media (prefers-reduced-motion: reduce) { .stage-stamp .seal { animation: none; } }
-
-/* Madeira e placa de papel na barraca. Os tons da roda acompanham a arte da cena. */
-.rwheel .wheel-box:has(.wheel-wrap) {
-  --frame: var(--wood); --fill: var(--ink); --surface: var(--ink);
-  --primary: var(--seal); --primary-2: var(--accent-2);
-  --primary-deep: var(--accent-deep); --primary-ink: var(--accent-ink);
-}
-.rwheel .wheel-box:has(.wheel-wrap)::after {
-  background:
-    linear-gradient(90deg, var(--wood) 4px, transparent 4px calc(100% - 4px), var(--wood) calc(100% - 4px)),
-    var(--grain-dark), var(--fill);
-}
-.rwheel .wheel-box:has(.wheel-wrap) h3 {
-  width: fit-content; max-width: 100%; margin: 0 auto var(--sp-2); padding: var(--sp-1) var(--sp-4);
-  border: 1px solid var(--gold-deep); color: var(--paper-ink); background: var(--grain-dark), var(--paper);
-  font: 700 var(--fs-3xl)/1.15 var(--font-hand);
-}
-.rwheel .wheel { filter: drop-shadow(0 7px 5px var(--shadow-soft)); }
-.rwheel .wheel .rim { fill: var(--wood); stroke: var(--gold-deep); }
-.rwheel .wheel .hub { fill: var(--seal); stroke: var(--ink); }
-.rwheel .wheel .hub-leaf { stroke: var(--accent-ink); }
-.rwheel .legend {
-  padding: var(--sp-2); color: var(--paper-ink); background: var(--grain-dark), var(--paper);
-}
-.rwheel .legend li b { color: var(--paper-muted); }
-.rwheel .legend li.win { border-left-color: var(--gold-deep); }
-.rwheel .legend .has-ico { background: var(--ink); color: var(--accent-ink); }
-
-@media (max-width: 899px), (max-height: 559px) {
-  .rwheel .wheel-box:has(.wheel-wrap) { padding-top: var(--sp-4); }
-  .rwheel .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
-  .rwheel .legend li { padding-inline: 3px; gap: var(--sp-1); }
-}

@@ -1,0 +1,654 @@
+/* Carta do percurso */
+.compact-status,
+.map-destinations {
+  display: none;
+}
+.jmap-screen .jstage-title {
+  padding: 12px 15px;
+  background: var(--shinobi-paper);
+  border: 1px solid var(--shinobi-edge);
+  color: var(--shinobi-ink);
+}
+.jmap-screen .jstage-name small {
+  color: var(--shinobi-muted);
+}
+.jmap-screen .jstage-name h2 {
+  font: 700 clamp(15px, 1.5vw, 23px) / 1.1 var(--shinobi-serif);
+  color: var(--shinobi-ink);
+  text-shadow: none;
+}
+.jmap-screen .jstage-name .jb-prompt {
+  font: 700 clamp(23px, 2.1vw, 36px) / 1.13 var(--shinobi-brush);
+  text-transform: none;
+  letter-spacing: -0.02em;
+  color: var(--shinobi-ink);
+}
+.jmap-screen .jstage-meta .jgiveup {
+  color: var(--shinobi-muted);
+  font-size: 12px;
+}
+.jmap-screen .jtrail-map {
+  border: 1px solid var(--shinobi-edge);
+  box-shadow: var(--shinobi-shadow);
+}
+.jmap-screen .jtrail-map > .jmap {
+  background:
+    linear-gradient(var(--map-wash, #f5dca718), var(--map-wash, #f5dca718)),
+    url('img/shinobi/mapa-paisagem.png') center/100% 100% no-repeat,
+    var(--shinobi-paper);
+  border: 0;
+  margin: 0;
+}
+[data-theme='dark'] .jmap-screen {
+  --map-wash: #53391220;
+}
+.jmap-screen .jtrail-map .jmap::before,
+.jmap-screen .jtrail-map .jmap::after {
+  display: none;
+}
+.jmap-screen .jmap-lines path {
+  stroke: #5b4630;
+  stroke-width: 2;
+  opacity: 0.6;
+}
+.jmap-screen .jmap-lines .dead {
+  opacity: 0.24;
+  stroke-dasharray: 3 4;
+}
+.jmap-screen .jmap-lines .walked {
+  stroke: #6b271e;
+  stroke-width: 4;
+  opacity: 1;
+}
+.jmap-screen .jmap-lines .open {
+  stroke: #a33922;
+  stroke-width: 3.5;
+  opacity: 1;
+}
+.jmap-screen .jnode-map:not(.k-boss) {
+  border-radius: 50%;
+  border: 1.6px solid #604c33;
+  background: #e2cca7;
+  color: var(--shinobi-ink);
+  box-shadow: 0 1px 2px #573d2a55;
+  transform: translate(-50%, -50%);
+  opacity: 0.93;
+}
+.jmap-screen .jnode-map:not(.k-boss) > * {
+  transform: none;
+}
+.jmap-screen .jnode-map .jq {
+  color: inherit;
+}
+.jmap-screen .jnode-map:not(.k-boss)::before {
+  display: none;
+}
+.jmap-screen .jnode-map.choice {
+  border: 2px solid #602415;
+  background: #ffdf92;
+  outline: 3px solid #b77328;
+  outline-offset: 2px;
+  animation: none;
+}
+.jmap-screen .jnode-map.done {
+  background: #633326;
+  color: #fff0c9;
+}
+.jmap-screen .jnode-map.dead {
+  opacity: 0.48;
+}
+.jmap-screen .jnode-map.k-boss {
+  border-color: #9c3122;
+  box-shadow:
+    0 0 0 2px #e7c592,
+    0 0 0 4px #883828;
+}
+.jmap-screen .jlegend-chips {
+  padding: 6px 4px;
+  background: var(--shinobi-paper);
+  border: 1px solid var(--shinobi-edge);
+  gap: 4px 6px;
+}
+.jmap-screen .jlegend-chip {
+  border: none;
+  background: transparent;
+  color: #493728;
+  text-transform: none;
+  letter-spacing: 0;
+  font: 600 13px/1.12 var(--shinobi-serif);
+}
+.jmap-screen .jlegend-chip.k-boss {
+  color: #802c20;
+}
+.jmap-screen .jlegend-chip.k-rest {
+  color: #374928;
+}
+@media (min-width: 1280px) and (min-height: 560px) {
+  .jtrail-screen.jmap-screen {
+    grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.46fr) minmax(230px, 0.63fr);
+    gap: 8px 12px;
+  }
+  .jmap-screen .jcol-l,
+  .jmap-screen .jcol-r {
+    overflow-y: auto;
+    align-self: stretch;
+    scrollbar-width: thin;
+  }
+}
+@media (max-width: 899px), (max-height: 559px) {
+  .jtrail-screen.jmap-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .jmap-screen .jstage-title {
+    order: 0;
+    flex-wrap: nowrap;
+    padding: 8px 10px;
+    align-items: center;
+  }
+  .jmap-screen .jstage-meta {
+    max-width: 84px;
+    justify-content: flex-end;
+    gap: 2px;
+  }
+  .jmap-screen .jstage-meta .jgiveup {
+    min-height: 32px;
+    padding: 2px;
+    font-size: 10px;
+  }
+  .jmap-screen [data-hud] {
+    order: 1;
+  }
+  .jmap-screen .compact-status {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px;
+    padding: 5px 8px;
+    background: var(--shinobi-paper);
+    color: var(--shinobi-ink);
+    border: 1px solid var(--shinobi-edge);
+    cursor: pointer;
+    text-align: left;
+  }
+  .compact-status > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .compact-status > span > span {
+    display: grid;
+  }
+  .compact-status small {
+    font: 600 11px var(--font-hud);
+    color: var(--shinobi-muted);
+  }
+  .compact-status b {
+    font: 700 14px var(--shinobi-serif);
+  }
+  .compact-status .ico {
+    width: 17px;
+    height: 17px;
+  }
+  .compact-status .expand-build {
+    font: 700 13px var(--shinobi-serif);
+    padding-left: 5px;
+    border-left: 1px solid var(--shinobi-edge);
+  }
+  .expand-build .ico:last-child {
+    width: 11px;
+    rotate: 90deg;
+  }
+  .jmap-screen:not(.build-expanded) #map-build {
+    display: none;
+  }
+  .jmap-screen.build-expanded #map-build {
+    margin-top: 5px;
+  }
+  .jmap-screen .jmap-boss {
+    order: 2;
+    min-height: 34px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    padding: 3px 8px;
+    background: var(--shinobi-ground);
+    color: var(--text);
+  }
+  .jmap-screen .jmap-boss .portrait {
+    width: 27px;
+    height: 27px;
+  }
+  .jmap-screen .jmap-boss span:not(.portrait) {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+  .jmap-screen .jmap-boss small {
+    font-size: 11px;
+  }
+  .jmap-screen .jmap-boss b {
+    font-size: 14px;
+  }
+  .jmap-screen .jtrail-map {
+    order: 3;
+    overflow: auto;
+    max-height: clamp(290px, 49dvh, 630px);
+    scrollbar-width: thin;
+  }
+  .jmap-screen .jtrail-map > .jmap {
+    height: max(clamp(290px, 49dvh, 630px), calc(var(--rows) * 42px + 50px));
+  }
+  .jmap-screen .jmap-field {
+    inset: 32px 15px 27px;
+  }
+  .jmap-screen .jnode-map:not(.k-boss) {
+    width: 31px;
+    height: 31px;
+  }
+  .jmap-screen .jnode-map.k-boss {
+    width: 39px;
+    height: 39px;
+  }
+  .jmap-screen .jnode-map .ico {
+    width: 17px;
+    height: 17px;
+  }
+  .jmap-screen .jlegend-chips {
+    order: 4;
+  }
+  .jmap-screen .map-destinations {
+    order: 5;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 5px;
+  }
+  .map-destinations .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 44px;
+    font: 700 15px/1 var(--shinobi-serif);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .map-destinations .ico {
+    width: 16px;
+    height: 16px;
+  }
+}
+/* Árvore e ramificações */
+.jtree-screen:not(.jshop-screen):has(.jt-branches) {
+  background: var(--shinobi-ground);
+}
+.jtree-screen:has(.jt-branches)::before,
+.jtree-screen:has(.jt-branches) .jt-crest {
+  display: none;
+}
+.jtree-screen:has(.jt-branches) .jt-body {
+  padding: 8px;
+  min-height: 100%;
+  max-width: 1780px;
+  gap: 7px;
+}
+.jtree-screen .jt-head {
+  border: 1px solid var(--shinobi-line);
+  background: var(--shinobi-ground);
+  padding: 8px 12px;
+}
+.jt-title h2 {
+  font: 700 clamp(23px, 2.65vw, 44px) / 1.04 var(--shinobi-serif);
+  text-shadow: none;
+  letter-spacing: -0.03em;
+}
+.jt-head .portrait {
+  height: 42px;
+  width: 42px;
+}
+.jt-title small {
+  color: var(--muted);
+}
+.jt-points.has {
+  background: var(--shinobi-paper);
+  color: var(--shinobi-ink);
+  border: 1px solid var(--shinobi-edge);
+  box-shadow: none;
+}
+.jt-points.has small {
+  color: var(--shinobi-muted);
+}
+.jtree-screen .jt-tabs {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  margin: 0;
+  padding: 3px;
+  background: var(--shinobi-paper);
+  border: 1px solid var(--shinobi-edge);
+  scrollbar-width: thin;
+}
+.jtree-screen .jt-tab {
+  flex: 1 0 auto;
+  min-height: 43px;
+  min-width: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: none;
+  border: 0;
+  border-right: 1px solid #987a58;
+  color: var(--shinobi-ink);
+  text-transform: none;
+}
+.jtree-screen .jt-tab b {
+  font: 700 clamp(15px, 1.35vw, 22px) / 1.03 var(--shinobi-serif);
+}
+.jtree-screen .jt-tab small {
+  font: 600 12px/1 var(--font-hud);
+  color: var(--shinobi-muted);
+}
+.jtree-screen .jt-tab.on {
+  background: var(--shinobi-lacquer);
+  color: #f8e8c9;
+}
+.jtree-screen .jt-tab.on small {
+  color: #f8dfab;
+}
+.jtree-screen .jt-branches {
+  display: block;
+  min-width: 0;
+}
+.jtree-screen .jt-branch:not(.on) {
+  display: none;
+}
+.jtree-screen .jt-branch.on {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  border: 1px solid var(--shinobi-edge);
+  margin: 0;
+  padding: 0 4px 12px;
+  background: var(--shinobi-paper);
+  color: var(--shinobi-ink);
+  min-height: 100%;
+}
+.jtree-screen .jt-branch h3 {
+  display: block;
+  position: relative;
+  margin: 9px 12px 0;
+  font: 700 15px var(--shinobi-serif);
+  text-align: left;
+  color: var(--shinobi-muted);
+  background: none;
+  border: 0;
+}
+.jt-branch h3 small {
+  color: inherit;
+}
+.branch-scenery {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+.branch-scenery > span {
+  position: absolute;
+  pointer-events: none;
+}
+.school-l,
+.school-r {
+  inset: 0 auto 0 0;
+  width: 47%;
+  background-position: center bottom;
+  background-size: cover;
+  opacity: 0.7;
+  mix-blend-mode: multiply;
+  mask-image: linear-gradient(90deg, #000 12%, #000b 63%, transparent 100%);
+}
+.school-r {
+  left: auto;
+  right: 0;
+  mask-image: linear-gradient(270deg, #000 12%, #000a 61%, transparent);
+  background-position: right bottom;
+}
+.branch-scenery:not([data-school='naruto']) .school-r {
+  width: 48%;
+  background-position: 70% 90%;
+  background-repeat: no-repeat;
+  background-size: auto 73%;
+  filter: sepia(0.72) saturate(0.64);
+  opacity: 0.46;
+  mask-image: linear-gradient(335deg, #000 0%, #0009 37%, transparent 65%);
+}
+.branch-scenery[data-school='hyuugaNinja'] .school-l,
+.branch-scenery[data-school='prodigy'] .school-l {
+  background-size: cover;
+  opacity: 0.6;
+}
+.branch-mark {
+  left: 6%;
+  top: 17%;
+  color: #7b3c22;
+  opacity: 0.19;
+}
+.branch-mark .ico {
+  width: clamp(40px, 8vw, 116px);
+  height: auto;
+  stroke-width: 1.15;
+}
+.branch-script {
+  right: 6%;
+  top: 8%;
+  font-size: clamp(54px, 8vw, 126px);
+  line-height: 1;
+  color: #6f3f29;
+  opacity: 0.26;
+}
+.jtree-screen .jt-grid {
+  width: 83%;
+  max-width: 790px;
+  margin: 0 auto;
+  min-height: 250px;
+}
+.jtree-screen .jt-lines path {
+  stroke: #4d3725;
+  opacity: 0.8;
+}
+.jtree-screen .jt-lines path.on {
+  stroke: #8d3225;
+  filter: none;
+}
+.jtree-screen .jt-lines .off {
+  opacity: 0.45;
+}
+.jtree-screen .jt-node .jt-seal {
+  border-radius: 50%;
+  transform: none;
+  outline-offset: 2px;
+  background: #e9d2a8;
+  border: 2px solid #59412b;
+  color: #38281b;
+  box-shadow: none;
+}
+.jtree-screen .jt-node .jt-seal > span,
+.jtree-screen .jt-node .jt-seal > span .ico {
+  transform: none;
+}
+.jtree-screen .jt-node.st-owned .jt-seal,
+.jtree-screen .jt-node.st-upgradable .jt-seal,
+.jtree-screen .jt-node.st-maxed .jt-seal {
+  background: var(--shinobi-lacquer);
+  color: #f7dfb4;
+  border-color: #922f26;
+}
+.jtree-screen .jt-node.sel .jt-seal {
+  outline: 3px solid #ae762d;
+}
+.jtree-screen .jt-node.combo .jt-seal {
+  border: 3px double #694c32;
+}
+.jtree-screen .jt-node.capstone .jt-seal {
+  border: 3px double #ac7b31;
+}
+.jtree-screen .jt-node .jt-name,
+.jtree-screen .jt-node .jt-link {
+  background: #e9d3abeb;
+  color: #372519;
+  text-shadow: none;
+  font: 700 14px/1.03 var(--shinobi-serif);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+.jtree-screen .jt-node .jt-link {
+  font-size: 11px;
+}
+.jtree-screen .jt-detail {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 12px;
+  background: var(--shinobi-paper);
+  color: var(--shinobi-ink);
+  border: 1px solid var(--shinobi-edge);
+  box-shadow: none;
+}
+.jtree-screen .jt-detail .jt-card {
+  flex: none;
+  gap: 8px;
+}
+.jtree-screen .jt-detail .jt-card > b {
+  font: 700 clamp(25px, 2.5vw, 43px) / 1.08 var(--shinobi-brush);
+  color: var(--shinobi-ink);
+}
+.jtree-screen .jt-detail .jt-card small {
+  color: var(--shinobi-muted);
+  font-size: 15px;
+}
+.jtree-screen .jt-detail .btn {
+  min-width: 0;
+  width: 100%;
+  min-height: 48px;
+  font: 700 21px var(--shinobi-serif);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.jtree-screen .jt-draft {
+  margin: 0;
+  padding: 7px 11px;
+  border: 1px solid var(--shinobi-line);
+  background: var(--shinobi-ground);
+}
+.jt-draft .jt-card-opt {
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 6px;
+  padding: 5px;
+}
+.jt-draft .jt-card-opt .jt-seal {
+  grid-row: span 2;
+  width: 23px;
+  height: 23px;
+}
+.jt-draft .jt-card-opt .jt-seal .ico {
+  width: 15px;
+  height: 15px;
+}
+.jt-draft .jt-card-opt b,
+.jt-draft .jt-card-opt small {
+  text-align: left;
+}
+@media (min-width: 900px) and (min-height: 560px) {
+  .jtree-screen:has(.jt-branches) .jt-body {
+    display: grid;
+    grid-template-columns: minmax(0, 2.15fr) minmax(258px, 0.88fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    height: 100%;
+    max-height: 100%;
+    gap: 9px;
+    padding: 10px;
+  }
+  .jtree-screen .jt-body:has(.jt-draft) {
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+  }
+  .jtree-screen .jt-head,
+  .jtree-screen .jt-tabs,
+  .jtree-screen .jt-draft {
+    grid-column: 1/-1;
+  }
+  .jtree-screen .jt-detail {
+    position: relative;
+    overflow: auto;
+    padding: clamp(18px, 3vw, 50px);
+    background:
+      url('img/shinobi/serra-rodape.png') center bottom/100% auto no-repeat,
+      var(--shinobi-paper);
+  }
+  .jtree-screen .jt-branches {
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .jtree-screen .jt-title {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .jt-title small {
+    font-size: 16px;
+  }
+  .jt-tab b {
+    font-size: 22px;
+  }
+}
+@media (max-width: 899px), (max-height: 559px) {
+  .jtree-screen .jt-body:has(.jt-branches) {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+  }
+  .jtree-screen .jt-branches {
+    flex: 1;
+    min-height: 128px;
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+  .jt-grid {
+    max-width: 100%;
+  }
+  .jtree-screen .jt-detail {
+    position: static;
+    max-height: 33vh;
+    overflow: auto;
+    min-height: 84px;
+    padding: 9px 11px;
+    gap: 6px;
+  }
+  .jtree-screen .jt-detail .jt-card {
+    gap: 3px;
+  }
+  .jtree-screen .jt-detail .jt-card small {
+    font-size: 13px;
+  }
+  .jtree-screen .jt-detail .jt-card > b {
+    font-size: 23px;
+  }
+  .jtree-screen .jt-draft-row {
+    overflow: auto;
+    grid-auto-columns: minmax(111px, 1fr);
+    padding-block: 3px;
+  }
+  .jtree-screen .jt-title h2 {
+    font-size: 23px;
+  }
+}

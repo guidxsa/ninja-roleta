@@ -41,11 +41,11 @@ Referências do usuário (07/11/2026): o painel do Project Rasengan, o logo de S
 
 ### Composição Shinobi nas telas jogáveis
 
-- No Portão e na entrada da Jornada, a ilustração abre a tela e o letreiro fica no canto inferior. Os modos têm ação em laca dentro do pergaminho. No celular o progresso fica entre a cena e os modos, com capítulo, percentual e Continuar no mesmo painel.
-- A barraca das roletas usa aro de madeira, uma placa de papel para o título e uma legenda na mesma família de papel. O resultado de relíquia tem pergaminho próprio. No celular ficam juntos a roda parada, o resultado, Ficha e Continuar. No desktop a relíquia aparece ao lado da roda.
-- No mapa do Caminho Ninja, rotas abertas usam traço contínuo escuro e os destinos acessíveis têm aro duplo. A legenda e os símbolos continuam identificando o tipo de parada.
-- Nas cenas da História, as tiras de escolha usam o mesmo papel do texto. No combate widescreen, a ordem, a ficha de inimigos e o registro formam a coluna de leitura ao lado do campo. As técnicas e as ações ficam do outro lado.
-- Na árvore de talentos, a partir de 1024 × 620, as abas escolhem o ramo da carta à esquerda, com nome, efeito e custo do talento à direita. Quando a classe usa rascunho, as ofertas ficam acima das abas. No celular, as abas ficam sobre o ramo e o detalhe continua no rodapé.
+- No Portão e na entrada da Jornada, a ilustração abre a tela, com letreiro sobre a cena e ações em laca nos pergaminhos dos modos. No celular, o progresso da Jornada salva fica entre a cena e os modos. No PC, a ficha permite expandir o Registro do ninja.
+- Na barraca de linhagem, os emblemas aparecem na roda e na legenda, junto do nome e da chance. Tocar no emblema da legenda destaca a fatia. Na vitória, a relíquia sorteada ganha um cartão junto da roda, com acesso à Ficha e à próxima parada.
+- No mapa do Caminho Ninja, os botões abaixo da carta correspondem aos nós acessíveis. Quando dois destinos têm o mesmo tipo, o número de rota liga cada botão ao seu nó. No celular, vida, chakra e ryō ficam à vista com um botão para expandir a ficha.
+- O Time 7 abre com a faixa do capítulo, Kakashi no telhado e as escolhas no pergaminho. Na batalha da ponte, as artes dos combatentes carregam na abertura. O campo acompanha mudanças de forma e de equipe, e as ações seguem o estado do turno.
+- Na árvore de talentos, a paisagem e o símbolo acompanham a classe e o ramo. No desktop largo, as abas escolhem o ramo da carta à esquerda, com nome, efeito e custo do talento à direita. No celular, o detalhe fica no rodapé.
 
 
 ## Três materiais

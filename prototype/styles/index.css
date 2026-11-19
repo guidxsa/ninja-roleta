@@ -29,3 +29,9 @@
 @import './instant.css';
 @import './acabamento.css';
 @import './a11y.css';
+@import './shinobi/base.css';
+@import './shinobi/entradas.css';
+@import './shinobi/sorteios.css';
+@import './shinobi/mapa-arvore.css';
+@import './shinobi/cenas.css';
+@import './shinobi/detalhes.css';

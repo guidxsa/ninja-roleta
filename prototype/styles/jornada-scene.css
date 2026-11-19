@@ -230,8 +230,3 @@
   .jc-peak .jc-title { font-size: clamp(36px, 3.6vw, 92px); overflow-wrap: normal; hyphens: manual; }
 }
 @media (prefers-reduced-motion: reduce) { .jc-peak .jc-seal { animation: none; } }
-
-/* Folha de leitura e tiras de escolha no mesmo tom de papel. */
-.jcene .jc-title { margin-bottom: var(--sp-3); }
-.jcene .joptions .btn { background: var(--grain-dark), var(--paper); border-color: var(--gold-deep); }
-.jcene .joptions .btn:focus-visible { outline-color: var(--primary); }

@@ -298,30 +298,3 @@
   .rwheel.revent .rstage-box .wheel-wrap { width: min(calc(22vh - 20px), 100%, 220px); }
   .rwheel > h2 { font-size: var(--fs-2xl); }
 }
-
-/* Após o sorteio, o resultado cabe com a roda parada e as duas ações. */
-.rrelic #results .jrcard {
-  align-items: center; gap: var(--sp-4); padding: var(--sp-4);
-  color: var(--paper-ink); border: 1px solid var(--gold-deep);
-  background: var(--grain-dark), var(--paper);
-}
-.rrelic #results .jrcard-ico {
-  width: 60px; height: 60px; color: var(--accent-ink);
-  background: var(--wood); border: 1px solid var(--gold-deep);
-}
-.rrelic #results .jrcard-txt b { color: var(--paper-ink); font: 700 var(--fs-3xl)/1.15 var(--font-hand); }
-.rrelic #results .jrcard-txt small { color: var(--paper-muted); }
-.rrelic #results .jrcard-tier { color: var(--gold-deep); }
-
-@media (max-width: 899px), (max-height: 559px) {
-  .rrelic:has(#results .jrcard) :is(#hud, .wheel-box .legend, .wheel-box .btn.spin.spent) { display: none; }
-  .rrelic:has(#results .jrcard) .wheel-box:has(.wheel-wrap) { padding-block: var(--sp-2); }
-  .rrelic:has(#results .jrcard) .wheel-wrap { width: min(64vw, 31vh, 260px); }
-  .rrelic:has(#results .jrcard) .sticky-cta { display: flex; align-items: stretch; gap: var(--sp-2); }
-  .rrelic:has(#results .jrcard) .rsheet-open { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: 44px; }
-}
-@media (min-width: 900px) and (min-height: 560px) {
-  .rrelic:has(#results .jrcard) > .rstage-box { grid-column: 1; }
-  .rrelic:has(#results .jrcard) > .rstage-box::after { display: none; }
-  .rrelic:has(#results .jrcard) > .rside { grid-column: 2; width: 100%; box-shadow: none; }
-}

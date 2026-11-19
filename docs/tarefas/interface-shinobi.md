@@ -1,26 +1,29 @@
 ---
-objetivo: Aplicar às telas jogáveis a composição da simulação Shinobi aprovada.
-escopo: ["prototype/styles/**", "prototype/roleta/screens/rewards.ts", "prototype/jornada/talentTree.ts", "docs/visual.md"]
-fora: ["src/**", "public/img/**", "scripts/**", ".github/**"]
-pronto: ["npm run check aprovado", "oito telas conferidas no UI Lab em celular e desktop nos dois temas", "roleta, mapa, combate e talentos testados pelo fluxo normal"]
+objetivo: Incorporar ao jogo a composição das oito telas da prévia integrada aprovada.
+escopo: ["prototype/styles/**", "prototype/gate.ts", "prototype/wheel.ts", "prototype/lineageEmblems.ts", "prototype/battleArt.ts", "prototype/jornada/index.ts", "prototype/jornada/battle.ts", "prototype/jornada/scene.ts", "prototype/jornada/branchScenery.ts", "prototype/jornada/talentTree.ts", "prototype/roleta/screens/battle.ts", "prototype/roleta/screens/origin.ts", "prototype/roleta/screens/rewards.ts", "scripts/page-build.ts", "public/img/shinobi/**", "docs/visual.md"]
+fora: ["src/**", "prototype/lab/**", ".github/**"]
+pronto: ["npm run check aprovado", "oito telas comparadas às capturas da prévia integrada no UI Lab e no protótipo", "controles conferidos nos fluxos do jogo"]
 agente: codex
 revisor: claude
 ---
 
 # Composição Shinobi nas telas jogáveis
 
-## Pedido
+A referência da Tarefa 0 é a prévia integrada aprovada em 19/11. O Portão, a entrada da Jornada e as seis telas de partida usam os mesmos módulos no jogo e no UI Lab. As artes de cenário, madeira, tecido e papel acompanham os dois builds para uso offline.
 
-O usuário aprovou a disposição e o design, pediu uma simulação com as artes do jogo e solicitou a aplicação das mudanças: “agora faça as suas alteraçoes propostas nesse modelo”.
+| Tela | O que conferir |
+|---|---|
+| Portão da Vila | Ilustração e letreiro sobre a cena. Modos e progresso abaixo, com Registro do ninja recolhível na ficha de desktop. |
+| Entrada da Jornada | Progresso da run salva e acesso a História e Caminho Ninja nos pergaminhos. |
+| Linhagem | Cada fatia tem emblema. A legenda reúne nome, símbolo e probabilidade. Tocar em uma origem destaca a fatia e preserva o sorteio. |
+| Mapa do Caminho Ninja | O mapa e os botões compartilham os destinos disponíveis. Rotas do mesmo tipo recebem números. No celular, a ficha abre a partir do resumo de vida, chakra e ryō. |
+| Combate da História | A luta contra Haku usa a ponte. Retratos, fichas e ações acompanham o estado da equipe, com carregamento prévio das artes da luta. |
+| O Time 7 | Faixa do capítulo, Kakashi no cenário e opções no pergaminho. |
+| Relíquia da vitória | Roda, cartão da relíquia, Ficha e Continuar. O Sino do Kakashi tem arte própria quando sai no sorteio. |
+| Árvore de talentos | A classe e o ramo ativo determinam a paisagem. O detalhe e o custo acompanham o talento selecionado. |
 
-## Telas
+## Conferência
 
-Portão da Vila, entrada da Jornada, sorteio de linhagem, mapa do Caminho Ninja, combate da História, evento O Time 7, relíquia da vitória e árvore de talentos. A implementação usa o sistema Shinobi e os recursos do repositório.
+Comparar o protótipo de `npm run proto` e os cenários de `npm run lab` com as capturas de PC (1440 × 900) e celular (390 × 844) em Sumi e Pergaminho. No Lab, usar um Portão com save, o chefe Haku, o evento O Time 7 e o sorteio de relíquia jounin. No protótipo, continuar a run a partir do Portão e chegar à recompensa pelo combate do Roleta. Nome, conquistas, falas, barras e recompensas refletem o estado de cada partida.
 
-## Plano
-
-Ajustar as folhas de estilo das telas e reunir a relíquia e suas ações num estado próprio. Conferir os cenários jogáveis em celular e desktop nos dois temas, inclusive com menos movimento, e atualizar a direção visual e o fragmento do changelog.
-
-## Limites
-
-A contribuição trata de apresentação. Dados, regras, pesos, persistência e arquivos de arte ficam fora do escopo.
+A entrega é o PR #35 para staging. A prévia, os atalhos e os instrumentos usados na comparação ficam fora do pacote do jogo.

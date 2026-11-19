@@ -1,5 +1,6 @@
 // Árvore de talentos da Jornada (docs/jornada/talentos.md#na-tela): tela cheia com o tema da classe, selos ligados
 // por traços de pincel e um cartão com o talento escolhido. No celular, um ramo por vez em abas; no PC, todos lado a lado.
+import { branchScenery } from './branchScenery';
 import type { JRun } from '../../src/core/jornada/run';
 import {
   buyTalent,
@@ -172,7 +173,7 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
     // A contagem do ramo é a dos nós dele; a combinação conta no ramo dono.
     const counted = list.filter((n) => n.branch === b);
     const got = counted.filter((n) => ctx().owned.includes(n.id)).length;
-    return `<section class="jt-branch${b === tab ? ' on' : ''}" data-branch="${b}">
+    return `<section class="jt-branch${b === tab ? ' on' : ''}" data-branch="${b}">${b === tab ? branchScenery(run, branchName(b) === T.hiddenName ? 'locked' : b) : ''}
       <h3>${branchName(b)} <small>${got}/${counted.length}</small></h3>
       <div class="jt-grid" style="height:${height}px"><svg class="jt-lines" viewBox="0 0 100 ${height}" preserveAspectRatio="none" aria-hidden="true">${edges}</svg>${seals}</div>
     </section>`;

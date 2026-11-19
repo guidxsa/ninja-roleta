@@ -1,0 +1,599 @@
+.gate .mode-card[data-choice='story'] .mode-body::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 8px;
+  width: 41%;
+  height: 80%;
+  max-height: 230px;
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: url('img/ninja/naruto.webp') bottom center/100% 100% no-repeat;
+  clip-path: polygon(
+    0% 100%,
+    3.13% 93.36%,
+    9.77% 87.5%,
+    27.34% 79.69%,
+    32.03% 67.19%,
+    30.86% 62.5%,
+    32.03% 58.59%,
+    27.73% 55.47%,
+    26.17% 50.39%,
+    26.56% 46.48%,
+    21.48% 48.05%,
+    23.83% 40.63%,
+    17.58% 44.14%,
+    19.92% 39.06%,
+    16.41% 40.63%,
+    20.7% 32.81%,
+    14.84% 28.91%,
+    22.27% 23.44%,
+    21.09% 17.97%,
+    25.39% 19.14%,
+    21.09% 12.5%,
+    34.38% 14.84%,
+    31.25% 6.64%,
+    42.58% 10.94%,
+    44.53% 3.52%,
+    48.05% 9.77%,
+    46.48% 1.17%,
+    58.59% 8.98%,
+    60.16% 11.72%,
+    66.41% 3.91%,
+    67.97% 15.63%,
+    75.78% 10.55%,
+    73.05% 20.31%,
+    82.42% 21.48%,
+    76.17% 27.34%,
+    82.42% 35.55%,
+    76.17% 34.38%,
+    78.13% 37.89%,
+    83.59% 37.89%,
+    89.45% 42.58%,
+    79.3% 44.14%,
+    83.59% 51.17%,
+    83.59% 56.64%,
+    74.22% 50.39%,
+    71.09% 57.81%,
+    68.75% 66.02%,
+    70.31% 69.92%,
+    71.09% 80.08%,
+    91.02% 87.11%,
+    96.09% 92.58%,
+    100% 100%
+  );
+  filter: sepia(0.65) saturate(0.74);
+  opacity: 0.9;
+}
+.chapter-banner,
+.jbattle .jb-head {
+  background:
+    url('img/shinobi/cabecalho-dir.png') right center/auto 100% no-repeat,
+    url('img/shinobi/cabecalho-esq.png') left center/auto 100% no-repeat,
+    var(--shinobi-paper);
+  border: 1px solid var(--shinobi-edge);
+  color: var(--shinobi-ink);
+  text-shadow: none;
+}
+.chapter-banner {
+  padding: 9px 17px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.chapter-banner span {
+  font: 700 13px var(--font-hud);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.chapter-banner b {
+  flex: 1;
+  text-align: center;
+  font: 700 clamp(18px, 2vw, 34px) / 1.2 var(--shinobi-serif);
+}
+.team-seven .jc-panel.jscene {
+  border: 1px solid var(--shinobi-edge);
+  background:
+    linear-gradient(var(--shinobi-veil), var(--shinobi-veil)),
+    url('img/shinobi/telhado.png') center/cover;
+  box-shadow: inset 0 0 45px #241c1580;
+}
+.team-seven .jc-panel.jscene::before,
+.team-seven .jc-panel.jscene::after {
+  display: none;
+}
+.team-seven .jc-cast {
+  align-items: center;
+  gap: 0;
+  rotate: 0;
+}
+.team-seven .jc-cast .portrait {
+  border: none;
+  box-shadow: none;
+  background: none;
+  border-radius: 0;
+  clip-path: polygon(
+    0% 100%,
+    1.56% 93.36%,
+    5.47% 87.89%,
+    22.27% 82.03%,
+    24.22% 71.48%,
+    25% 67.58%,
+    33.98% 64.06%,
+    32.42% 58.98%,
+    28.52% 55.86%,
+    23.83% 60.94%,
+    24.61% 51.95%,
+    18.36% 52.73%,
+    21.48% 46.09%,
+    25% 39.84%,
+    26.95% 38.28%,
+    26.95% 34.38%,
+    23.83% 37.5%,
+    25.78% 32.81%,
+    21.09% 30.86%,
+    25.78% 29.69%,
+    22.27% 21.09%,
+    27.34% 25%,
+    25.78% 16.02%,
+    29.69% 20.7%,
+    30.08% 13.67%,
+    34.77% 8.2%,
+    33.2% 15.63%,
+    44.14% 4.3%,
+    48.83% 2.73%,
+    44.14% 10.55%,
+    64.45% 1.17%,
+    60.55% 7.03%,
+    78.13% 1.56%,
+    73.44% 10.94%,
+    82.42% 9.38%,
+    77.34% 19.14%,
+    87.11% 17.19%,
+    77.34% 28.52%,
+    85.94% 33.2%,
+    76.17% 37.5%,
+    78.91% 44.14%,
+    71.88% 41.02%,
+    71.88% 49.22%,
+    70.31% 47.27%,
+    70.7% 53.91%,
+    66.41% 60.16%,
+    64.84% 64.06%,
+    73.83% 66.41%,
+    75.78% 69.53%,
+    74.61% 79.69%,
+    89.84% 86.33%,
+    94.53% 91.02%,
+    100% 98.83%,
+    100% 100%
+  );
+  filter: sepia(0.53) saturate(0.73);
+}
+.team-seven .jc-cast .jc-name {
+  margin: 0;
+  rotate: 0;
+  background: var(--shinobi-sumi);
+  border: 1px solid #ae9269;
+  color: #f4dfb9;
+  padding: 5px 18px;
+  font: 700 clamp(15px, 1.65vw, 25px) / 1 var(--shinobi-serif);
+}
+.team-seven .jc-side {
+  position: relative;
+  isolation: isolate;
+  gap: clamp(12px, 3vh, 32px);
+  padding: clamp(18px, 3.5vw, 60px);
+  background: var(--shinobi-paper);
+  border: 3px double var(--shinobi-edge);
+  box-shadow: var(--shinobi-shadow);
+}
+.team-seven .jc-side > .jc-paper {
+  margin: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--shinobi-ink);
+}
+.team-seven .jc-paper::before,
+.team-seven .jc-paper::after {
+  display: none;
+}
+.team-seven .jc-seal {
+  position: static;
+  display: grid;
+  margin: 0 auto 8px;
+  --s: 32px;
+}
+.team-seven .jc-title {
+  font: 700 clamp(38px, 5vw, 85px) / 1 var(--shinobi-brush);
+  margin: 0 auto 18px;
+  text-align: center;
+}
+.team-seven .jc-title::after {
+  display: block;
+  width: 44%;
+  height: 4px;
+  margin: 3px auto;
+}
+.team-seven .jc-paper p {
+  font: 500 clamp(17px, 1.8vw, 29px) / 1.35 var(--shinobi-serif);
+  color: var(--shinobi-ink);
+  max-width: 44ch;
+}
+.team-seven .jc-foot {
+  padding-top: clamp(12px, 2.6vh, 30px);
+  border-top: 1px solid #998365;
+}
+.team-seven .joptions {
+  display: grid;
+  gap: 10px;
+}
+.team-seven .joptions .btn {
+  padding: 11px;
+  text-align: center;
+  justify-content: center;
+  letter-spacing: 0;
+  text-transform: none;
+  font: 700 clamp(17px, 1.8vw, 28px) / 1.16 var(--shinobi-serif);
+  color: var(--shinobi-ink);
+  min-height: 49px;
+  background: #f0dfbd55;
+  border: 1px solid #715738;
+  box-shadow: none;
+}
+.team-seven .joptions .btn:first-child,
+.team-seven .joptions .btn:hover {
+  border: 2px solid #943c2d;
+}
+@media (min-width: 900px) and (min-height: 560px) {
+  .jcene.team-seven .jc-frame {
+    min-height: clamp(490px, 77vh, 1050px);
+  }
+  .team-seven .jc-side {
+    justify-self: end;
+    width: clamp(420px, 52%, 860px);
+    margin: 36px 8% 36px 0;
+  }
+  .team-seven .jc-cast {
+    left: 3%;
+    bottom: 4%;
+  }
+  .team-seven .jc-cast .portrait {
+    width: clamp(130px, 18vw, 270px);
+    height: auto;
+    aspect-ratio: 1;
+  }
+}
+@media (max-width: 899px), (max-height: 559px) {
+  .team-seven .jc-panel.jscene {
+    height: clamp(150px, 27vh, 280px);
+    background-position: center 53%;
+    margin: 0;
+  }
+  .team-seven .jc-cast {
+    flex-direction: column;
+    left: 12px;
+    bottom: 6px;
+  }
+  .team-seven .jc-cast .portrait {
+    height: clamp(82px, 13vh, 130px);
+    width: auto;
+    aspect-ratio: 1;
+  }
+  .team-seven .jc-side {
+    margin: -1px 3px 0;
+    padding: 17px 16px 19px;
+  }
+  .chapter-banner {
+    padding: 6px 9px;
+  }
+}
+/* Luta */
+.jbattle {
+  isolation: isolate;
+  background: var(--shinobi-ground);
+  border-color: var(--shinobi-line);
+}
+.jbattle .jb-head {
+  padding: 7px 12px;
+  min-height: 40px;
+  font: 700 clamp(17px, 1.7vw, 28px) / 1.12 var(--shinobi-serif);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.jbattle .jb-head [data-round] {
+  flex: none;
+  background: var(--shinobi-lacquer);
+  color: #f6e3bb;
+  padding: 5px 9px;
+  min-width: 74px;
+  font: 700 clamp(13px, 1.2vw, 19px) / 1 var(--shinobi-serif);
+  text-align: center;
+}
+.jbattle .jb-field-art {
+  pointer-events: none;
+  z-index: 0;
+  align-self: stretch;
+  justify-self: stretch;
+  min-height: 0;
+  margin: 0;
+  background:
+    var(--scene-art) center bottom/cover no-repeat,
+    var(--scene);
+  border: 1px solid var(--shinobi-line);
+}
+.jbattle.bridge .jb-field-art {
+  background:
+    linear-gradient(var(--shinobi-veil), var(--shinobi-veil)),
+    url('img/shinobi/ponte-limpa.png') center/100% 100% no-repeat;
+}
+.jbattle::before {
+  display: none;
+}
+.jbattle.bridge .jf {
+  display: grid;
+  grid-template-columns: minmax(24px, 30%) minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  padding: 4px 5px;
+  max-width: 175px;
+  background: #211d19ef;
+  border: 1px solid #c5ae89;
+  box-shadow: 0 1px 3px #201e1ac9;
+  color: #f5e3bd;
+}
+.jbattle.bridge .jf .jf-art {
+  margin: 0;
+  min-width: 0;
+}
+.jbattle.bridge .jf .jf-art > .portrait {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border: 1px solid #ad9474;
+  box-shadow: none;
+}
+.jbattle.bridge .jf .jf-info {
+  width: 100%;
+  min-width: 0;
+}
+.jf .jf-name {
+  font: 700 14px/1.05 var(--shinobi-serif);
+  text-transform: none;
+}
+.jbattle.bridge .jf.targetable {
+  outline: 3px solid #e4a23d;
+  outline-offset: 2px;
+}
+.jbattle .jb-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+}
+.jbattle .jb-tab {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  min-height: 42px;
+  padding: 4px 5px;
+  background: #dfc9a5;
+  border: 1px solid #786047;
+  color: var(--shinobi-ink);
+  font: 700 13px/1.1 var(--shinobi-serif);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.jbattle .jb-tab.on {
+  background: var(--shinobi-lacquer);
+  color: #fff0d2;
+}
+.jbattle .jb-tab small {
+  margin-left: 3px;
+}
+.jbattle .jb-pane {
+  display: none;
+}
+.jbattle .jb-pane.on {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.jbattle .jb-pane .act-title {
+  display: none;
+}
+.jbattle .jb-menu {
+  background: var(--shinobi-paper);
+  border: 1px solid var(--shinobi-edge);
+  color: var(--shinobi-ink);
+}
+.jbattle .jb-menu .jb-prompt,
+.jbattle .jb-menu .jb-hint {
+  color: var(--shinobi-muted);
+}
+.jbattle .jb-menu .jmove {
+  background: #f4e3c064;
+  color: var(--shinobi-ink);
+  border: 1px solid var(--shinobi-edge);
+  padding: 7px;
+  box-shadow: none;
+}
+.jbattle .jb-menu .jmove-txt b {
+  font: 700 clamp(14px, 1.15vw, 19px) / 1.1 var(--shinobi-serif);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.jbattle .jmove-txt small {
+  color: var(--shinobi-muted);
+}
+.jbattle .jmove-txt .up,
+.jbattle .jb-menu .jadv.up {
+  color: #37502a;
+}
+.jbattle .jb-menu .jgiveup {
+  color: #793325;
+}
+.jbattle .jb-menu .jb-extra .jx:not(.primary) {
+  background: #e5cfac;
+  color: var(--shinobi-ink);
+  border: 1px solid var(--shinobi-edge);
+}
+@media (min-width: 1280px) and (min-height: 560px) {
+  .jbattle {
+    grid-template-columns: minmax(190px, 0.62fr) minmax(0, 1.55fr) minmax(260px, 0.76fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 5px 8px;
+    padding: 6px;
+  }
+  .jbattle .jb-field-art {
+    grid-column: 2;
+    grid-row: 2/7;
+  }
+  .jbattle .jb-left,
+  .jbattle .jb-right {
+    padding: 8px 8px 10px;
+    overflow: auto;
+    scrollbar-width: thin;
+    border: 1px solid var(--shinobi-line);
+    gap: 7px;
+  }
+  .jbattle .jb-left {
+    background: var(--shinobi-ground);
+  }
+  .jbattle .jb-right {
+    background: var(--shinobi-paper);
+    color: var(--shinobi-ink);
+    --muted: var(--shinobi-muted);
+  }
+  .jbattle .jb-right .jb-team {
+    --surface: #dfc7a2;
+    --text: #392b20;
+    --gold-2: #795523;
+    --muted: #614d36;
+    color: var(--shinobi-ink);
+    flex: none;
+  }
+  .jbattle .jb-right .jb-menu {
+    position: static;
+    flex: 1 0 auto;
+    justify-content: flex-start;
+    padding: 8px;
+    box-shadow: none;
+  }
+  .jbattle .jb-pane .jb-moves {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .jbattle .jb-menu .jmove {
+    min-height: clamp(42px, 6.3vh, 74px);
+  }
+  .jbattle .jb-foes,
+  .jbattle .jb-order,
+  .jbattle .jb-log {
+    flex: 0 0 auto;
+    max-height: none;
+  }
+  .jbattle .jb-log {
+    margin-top: 0;
+  }
+  .jbattle .jb-log:not(.open) > span {
+    max-height: 125px;
+    overflow: hidden;
+  }
+  .jbattle .jb-side.jb-enemies {
+    align-self: start;
+    margin-top: 8px;
+  }
+  .jbattle .jb-side.jb-allies {
+    align-self: end;
+    justify-content: space-around;
+    margin: 0 5px 12px;
+  }
+}
+@media (min-width: 900px) and (max-width: 1279px) and (min-height: 560px) {
+  .jbattle {
+    grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.75fr);
+  }
+  .jbattle .jb-field-art {
+    grid-column: 1;
+    grid-row: 4/7;
+  }
+  .jbattle .jb-side.jb-enemies {
+    align-self: start;
+  }
+  .jbattle .jb-side.jb-allies {
+    align-self: end;
+  }
+}
+@media (max-width: 899px), (max-height: 559px) {
+  .jbattle {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'head' 'order' 'relics' 'goal' 'enemies' 'banner' 'allies' 'log' 'menu';
+    grid-template-rows: auto auto auto auto minmax(70px, 12vh) minmax(25px, 9vh) minmax(62px, 11vh) auto auto;
+    gap: 3px;
+    padding: 4px;
+    min-height: 0;
+  }
+  .jbattle .jb-field-art {
+    grid-column: 1;
+    grid-row: 5/8;
+  }
+  .jbattle .jb-head {
+    grid-area: head;
+    padding: 4px 6px;
+    font-size: 16px;
+  }
+  .jbattle .jb-order {
+    grid-area: order;
+  }
+  .jbattle .jb-relics {
+    grid-area: relics;
+  }
+  .jbattle .jb-goal {
+    grid-area: goal;
+  }
+  .jbattle .jb-enemies {
+    grid-area: enemies;
+    align-self: start;
+    margin-top: 5px;
+  }
+  .jbattle .jb-allies {
+    grid-area: allies;
+    align-self: end;
+    justify-content: space-around;
+    margin: 0 4px 5px;
+  }
+  .jbattle .jb-banner {
+    grid-area: banner;
+  }
+  .jbattle .jb-log {
+    grid-area: log;
+    min-height: 24px;
+  }
+  .jbattle .jb-menu {
+    grid-area: menu;
+    position: sticky;
+    margin: 0;
+    padding: 7px;
+    min-width: 0;
+    bottom: 0;
+    box-shadow: 0 -2px 4px #25190f55;
+  }
+  .jbattle .jf {
+    max-width: 130px;
+  }
+  .jbattle .jf-art .portrait {
+    width: 45px;
+    height: 45px;
+  }
+  .jbattle .jf-name {
+    font-size: 12px;
+  }
+  .jbattle .jb-menu .jb-moves {
+    grid-template-columns: 1fr 1fr;
+  }
+  .jbattle .jb-menu .jmove {
+    min-height: 46px;
+  }
+}

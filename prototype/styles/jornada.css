@@ -724,13 +724,3 @@
   .jc-duo .jc-body .jarc small { display: none; }
   .jc-duo .jc-body .jarcs { padding-top: 6px; padding-bottom: 2px; }
 }
-
-/* A trilha disponível se lê por traço e contorno, mesmo sem animação. */
-.jmap .jmap-lines path.open {
-  stroke: var(--paper-ink); stroke-width: 3.5; stroke-dasharray: none; animation: none;
-}
-.jmap .jmap-lines path.walked { stroke: var(--gold-deep); }
-.jmap .jnode-map.choice {
-  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--gold-deep);
-  animation: none;
-}

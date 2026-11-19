@@ -30,6 +30,7 @@ export interface SceneView {
   footer: string;
   /** Faixa acima do quadro ("O que mudou"), já em HTML. */
   above?: string;
+  chapter?: string;
   /** Classes a mais na tela (as que o TS e o CSS já usam: `jevent`, `jrtreasure`). */
   cls?: string;
 }
@@ -50,7 +51,8 @@ export function sceneScreen(v: SceneView): string {
   const portrait = v.face ? (v.ownFace ? fighterPortrait(v.face, v.faceSpec ?? 'ninja:common', 'lg') : scenePortrait(v.face, v.faceSpec)) : '';
   const cast = portrait || name ? `<span class="jc-cast${portrait ? '' : ' no-face'}">${portrait}${name ? `<b class="jc-name">${esc(name)}</b>` : ''}</span>` : '';
   const seal = v.seal ? `<span class="seal jc-seal${v.seal.gold ? ' gold' : ''}" role="img" aria-label="${esc(v.seal.label)}">${v.seal.kanji}</span>` : '';
-  return `<div class="screen jcene${v.cls ? ` ${v.cls}` : ''}">${v.above ?? ''}
+  const chapter = v.chapter ? `<div class="chapter-banner"><span>História</span><b>${esc(v.chapter)}</b></div>` : '';
+  return `<div class="screen jcene${v.cls ? ` ${v.cls}` : ''}">${chapter}${v.above ?? ''}
     <div class="jc-frame">
       <figure class="jc-panel jscene scene-${v.place}${portrait ? '' : ' empty'}" aria-hidden="${cast ? 'false' : 'true'}">${cast}</figure>
       <div class="jc-side">
