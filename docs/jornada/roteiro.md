@@ -1,6 +1,6 @@
 # Roteiro de luta e marcos da história
 
-> Infraestrutura na v0.66.0; História canônica e os recursos de `knock`, condição de marca, forma temporária e técnica sorteada na v0.67.0. Código em `src/core/jornada/script.ts`; marcos em `src/data/jornada/campaigns.ts`. Os momentos de cada luta estão em [historia.md](historia.md#momentos-canônicos).
+> Infraestrutura na v0.66.0; História canônica e os recursos de `knock`, condição de marca, forma temporária e técnica sorteada na v0.67.0. Código em `src/core/jornada/script.ts`; marcos em `src/data/jornada/campaigns.ts`. Os momentos de cada luta estão em [historia.md](cronologia.md#cronologia-adaptada).
 
 A História separa dois tipos de progressão:
 
