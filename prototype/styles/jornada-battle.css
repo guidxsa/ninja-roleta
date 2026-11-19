@@ -371,3 +371,11 @@
   .jb-k-boss .jf.enemy .jf-art { transform: scale(1.12); margin: 4px 0 2px; }
   .jbattle .jb-banner { min-height: 26px; }
 }
+
+/* As fichas e o registro enquadram o campo com o mesmo filete. */
+@media (min-width: 1280px) and (min-height: 560px) {
+  .jbattle :is(.jb-order, .jb-intel, .jb-log, .jb-pane) {
+    border-inline-color: color-mix(in srgb, var(--gold-deep) 64%, var(--line));
+  }
+  .jbattle .jb-log { margin-top: 0; }
+}

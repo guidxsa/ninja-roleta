@@ -268,7 +268,7 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
           const list = visible().filter((n) => n.branch === b);
           const got = list.filter((n) => ctx().owned.includes(n.id)).length;
           const canBuy = list.some(buyable);
-          return `<button type="button" class="jt-tab${b === tab ? ' on' : ''}${canBuy ? ' can' : ''}" data-tab="${b}"><b>${branchName(b)}</b><small>${got}/${list.length}</small></button>`;
+          return `<button type="button" class="jt-tab${b === tab ? ' on' : ''}${canBuy ? ' can' : ''}" data-tab="${b}"${b === tab ? ' aria-current="true"' : ''}><b>${branchName(b)}</b><small>${got}/${list.length}</small></button>`;
         })
         .join('')}</nav>
       ${draftView()}
@@ -291,7 +291,10 @@ export function talentTreeScreen(host: JornadaHost, run0: JRun, heroTitle: strin
         tab = tabBtn.dataset.tab!;
         const first = visible().filter((n) => n.branch === tab);
         selected = (first.find(buyable) ?? first[0])?.id ?? null;
-        return render();
+        const restoreFocus = tabBtn === document.activeElement;
+        render();
+        if (restoreFocus) body.querySelector<HTMLButtonElement>('.jt-tab.on')?.focus({ preventScroll: true });
+        return;
       }
       if (t.closest('[data-reroll]')) {
         if (draftRerollsLeft(run, data) > 0) {

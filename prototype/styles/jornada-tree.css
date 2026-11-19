@@ -228,3 +228,60 @@
   .jt-draft-row { max-width: 720px; }
   .jt-card-opt { min-height: 104px; }
 }
+
+/* A carta mostra o ramo escolhido ao lado da ficha do talento no desktop largo. */
+.jtree-screen .jt-detail {
+  color: var(--paper-ink); background: var(--grain-dark), var(--paper);
+  border-top-color: var(--gold-deep);
+}
+.jtree-screen .jt-detail .jt-card > b { color: var(--paper-ink); }
+.jtree-screen .jt-detail .jt-card :is(small, .jt-rank, .jt-choice, .jt-combo, .jt-final) {
+  color: var(--paper-muted);
+}
+.jtree-screen .jt-tab.on {
+  color: var(--primary-ink); background: var(--primary); border-color: var(--primary);
+}
+.jtree-screen .jt-points.has { box-shadow: none; }
+
+@media (min-width: 1024px) and (min-height: 620px) {
+  .jtree-screen .jt-body {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 32%);
+    grid-template-areas: 'head head' 'tabs tabs' 'graph detail'; grid-template-rows: auto auto 1fr;
+    gap: var(--sp-3); padding-bottom: var(--sp-4);
+  }
+  .jtree-screen .jt-body:has(.jt-draft) {
+    grid-template-areas: 'head head' 'draft draft' 'tabs tabs' 'graph detail';
+    grid-template-rows: auto auto auto 1fr;
+  }
+  .jtree-screen .jt-head { grid-area: head; }
+  .jtree-screen .jt-tabs { grid-area: tabs; display: flex; margin: 0; padding: 3px; }
+  .jtree-screen .jt-tab { flex: 1; }
+  .jtree-screen .jt-draft { grid-area: draft; }
+  .jtree-screen .jt-branches {
+    grid-area: graph; display: block; min-width: 0;
+    padding: var(--sp-3) var(--sp-4) var(--sp-5);
+    border: 1px solid var(--gold-deep); background: var(--grain-dark), var(--paper);
+  }
+  .jtree-screen .jt-branch { display: none; }
+  .jtree-screen .jt-branch.on { display: block; }
+  .jtree-screen .jt-branch h3 { color: var(--paper-ink); }
+  .jtree-screen .jt-branch h3 small { color: var(--paper-muted); }
+  .jtree-screen .jt-grid { max-width: 500px; }
+  .jtree-screen .jt-seal { border-radius: 50%; }
+  .jtree-screen .jt-branch .jt-name, .jtree-screen .jt-link {
+    color: var(--paper-ink); text-shadow: 0 1px var(--paper);
+  }
+  .jtree-screen .jt-branch .jt-node:is(.st-locked, .st-stageLocked, .st-accountLocked) .jt-name {
+    color: var(--paper-muted);
+  }
+  .jtree-screen .jt-node.sel .jt-name { text-decoration: underline; text-underline-offset: 3px; }
+  .jtree-screen .jt-detail {
+    grid-area: detail; position: relative; align-self: stretch; margin: 0; padding: var(--sp-5);
+    flex-direction: column; align-items: stretch; justify-content: flex-start;
+    border: 1px solid var(--gold-deep); box-shadow: none;
+  }
+  .jtree-screen .jt-detail .jt-card { flex: none; gap: var(--sp-2); }
+  .jtree-screen .jt-detail .jt-card > b { font-size: var(--fs-5xl); }
+  .jtree-screen .jt-detail .jt-card > small { font-size: var(--fs-base); }
+  .jtree-screen .jt-detail .btn { min-width: 0; width: 100%; }
+}
