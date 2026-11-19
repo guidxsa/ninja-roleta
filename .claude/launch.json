@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "prototipo",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "4173", "--directory", "dist"],
+      "port": 4173
+    },
+    {
+      "name": "prototipo-2",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "4177", "--directory", "dist"],
+      "port": 4177,
+      "autoPort": false
+    },
+    {
+      "name": "ui-lab",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "4178", "--directory", "dist-lab"],
+      "port": 4178,
+      "autoPort": false
+    }
+  ]
+}

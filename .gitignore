@@ -7,3 +7,10 @@ dist-lab/
 # Imagens base da auditoria dos retratos (arte de terceiros): só o LEIAME entra
 prototype/lab/refs/*
 !prototype/lab/refs/LEIAME.md
+# Worktrees dos agentes (cada um é um checkout de outra branch)
+.claude/worktrees/
+# Skill Impeccable: instalada por agente, versão fixada em skills-lock.json (AGENTS.md, "Skills de terceiros")
+.agents/skills/impeccable/
+.claude/skills/impeccable/
+.claude/agents/impeccable-*
+.codex/agents/impeccable-*

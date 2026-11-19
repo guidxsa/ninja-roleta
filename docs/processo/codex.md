@@ -58,6 +58,8 @@ O Codex não tem um hook equivalente ao `Stop` do Claude Code (que impede encerr
 
 O Codex usa as mesmas skills do Claude lendo o arquivo: a tabela "Skills e fluxos" do `AGENTS.md` diz qual `SKILL.md` ler para cada tipo de tarefa. Se a sua versão do Codex carregar skills sozinha, aponte para `.claude/skills/` em vez de copiar (uma cópia só, para não divergir).
 
+A exceção é a skill de terceiros Impeccable, instalada por agente em `.agents/skills/impeccable/` (instalação e versão no [AGENTS.md](../../AGENTS.md#skills-e-fluxos)). Os hooks dela ficam em `.codex/hooks.json` e acham o launcher pela raiz do git, então funcionam com a sessão aberta em qualquer subpasta; sem a skill instalada, não fazem nada.
+
 ## Prompt de início de tarefa
 
 ```

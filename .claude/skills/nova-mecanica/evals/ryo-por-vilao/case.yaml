@@ -1,4 +1,4 @@
 schema_version: "1.1"
 name: ryo-por-vilao
 expected_outcome: |
-  Campo de ryo por vilão nos dados, ryo no PlayerState, função pura de ganho no core com teste, ryo exibido na bolsa ninja da ficha via strings ptBR, protótipo compilado, CLAUDE.md e README atualizados.
+  Campo de ryo por vilão nos dados, ryo no PlayerState, função pura de ganho no core com teste, ryo exibido na bolsa ninja da ficha via strings ptBR, protótipo compilado, doc de design em docs/ atualizado e fragmento changelog.d/.

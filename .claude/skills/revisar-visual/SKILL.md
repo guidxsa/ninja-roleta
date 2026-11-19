@@ -14,6 +14,15 @@ O jogo deve parecer parte do universo shinobi (critério de `docs/visual.md`) e 
 
 ## 2. Fotografar
 
+**Pré-requisito (uma vez por máquina)**: a captura usa o Playwright, que não está nas dependências do projeto (pesaria o `npm ci` de todos). Instale só na sua máquina:
+
+```
+npm i --no-save playwright
+npx playwright install chromium
+```
+
+Sem ele, o script para com `Playwright não encontrado` (um `npm ci` ou `npm install` depois remove o módulo: instale de novo). `--chromium=<caminho>` (ou `PW_CHROMIUM`) só troca o navegador: o módulo `playwright` continua necessário. Para olhar o lab à mão, o `.claude/launch.json` serve `dist-lab/` na porta 4178 (configuração `ui-lab`; é um `python -m http.server`, qualquer servidor estático serve).
+
 ```
 npm run lab
 npx tsx scripts/revisar-visual.ts <id> <id> ...      # ou --prefixo=jornada.shop, ou --todos
