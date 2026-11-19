@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read # no push, a base do PR aberto da branch (check:escopo compara com ela)
   issues: read # etiquetas da issue numa branch feature/issue-<n> (correção automática, docs/processo/issues.md)
 
 concurrency:
@@ -42,9 +43,22 @@ jobs:
           n="${HEAD_REF#feature/issue-}"
           case "$n" in ''|*[!0-9]*) exit 0 ;; esac
           echo "etiquetas=$(gh issue view "$n" --json labels --jq '[.labels[].name] | join(",")' || true)" >> "$GITHUB_OUTPUT"
+      # No push não há GITHUB_BASE_REF: se a branch tem PR aberto, compara com a base dele, como na execução do PR
+      # (PR empilhado sobre outra branch, ou para o staging). Sem PR, vale a base pelo nome da branch (harness.ts).
+      - name: Base do PR da branch
+        id: base
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          b=$(gh pr list --head "$BRANCH" --state open --json baseRefName --jq '.[0].baseRefName // empty' || true)
+          if [ -n "$b" ] && git rev-parse --verify --quiet "origin/$b^{commit}" > /dev/null; then echo "check_base=origin/$b" >> "$GITHUB_OUTPUT"; fi
       # Mesma verificação do pre-push (AGENTS.md, "Definição de pronto"). No PR, o check:regras é estrito.
       - run: npm run check
         env:
+          CHECK_BASE: ${{ steps.base.outputs.check_base }}
           CHECK_ESTRITO: ${{ github.event_name == 'pull_request' }}
           CHECK_PR: ${{ github.event_name == 'pull_request' }}
           CHECK_ETIQUETAS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
