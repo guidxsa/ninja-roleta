@@ -3,7 +3,7 @@ name: Ninja Roleta
 description: Mesa de escriba shinobi em papel, tinta e laca vermelha, com dois temas (Sumi, noite fria; Pergaminho, dia quente).
 colors:
   primary: "#b5161f"
-  primary-bright: "#db3a40"
+  primary-bright: "#c92a31"
   primary-deep: "#5e0b10"
   primary-ink: "#f6ecd6"
   gold: "#b8954f"
@@ -133,7 +133,7 @@ Paleta de tinta e papel: grafite quase preto, papel envelhecido, vermelho laca e
 
 ### Primary
 - **Vermelho Laca** (#b5161f): ação e navegação (botão principal, abas, progresso) e também perigo, chefe e carimbo. Hoje `--primary` e `--accent` apontam para o mesmo vermelho, mas ficam separados para poder divergir. No tema claro vira #a3121b.
-- **Laca Viva** (#db3a40): hover. **Laca Funda** (#5e0b10): pressionado e sombra dura dos letreiros. **Marfim de Carimbo** (#f6ecd6): texto sobre o vermelho.
+- **Laca Viva** (#c92a31): hover. **Laca Funda** (#5e0b10): pressionado e sombra dura dos letreiros. **Marfim de Carimbo** (#f6ecd6): texto sobre o vermelho.
 
 ### Secondary
 - **Dourado Envelhecido** (#b8954f): conquista e destaque raro, filetes e foco. **Ouro Claro** (#dcbd78) para brilho; **Ouro Fundo** (#6e5428). No papel claro escurece para #7d5d1f, para ler.
