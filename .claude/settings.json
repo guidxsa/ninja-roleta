@@ -17,6 +17,18 @@
     ]
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/limpar-branches.sh",
+            "timeout": 90
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

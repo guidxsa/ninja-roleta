@@ -63,7 +63,7 @@ Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não fo
 2. Merge do PR permanente com **Create a merge commit** (`gh pr merge <n> --merge`; nunca squash, nunca `--admin`).
 3. `git fetch origin master`, tag anotada no merge commit e push só da tag (seção Tag).
 4. O push no `master` publica o Pages e abre o PR de sincronização `master → staging` (entra sozinho).
-5. Limpeza de branches (AGENTS.md, "Limpeza de branches") e relato: versão, links do commit, da tag e do site.
+5. Limpeza de branches (`npm run limpar -- --aplicar --worktrees`; AGENTS.md, "Limpeza de branches") e relato: versão, links do commit, da tag e do site.
 
 ## D. Hotfix (o usuário pede, ou o jogo quebrou em produção)
 
