@@ -1,6 +1,6 @@
 ---
 name: revisar-visual
-description: Revisão visual de telas do Ninshu Roots pelo UI Lab - fotografa os cenários afetados em celular (390px) e desktop (1280px), nos temas Sumi e Pergaminho e com menos movimento, e confere contra docs/visual.md e as regras de interface do AGENTS.md. Use depois de mexer em interface (prototype/, estilos, art.ts, retratos), antes de fechar uma versão com mudança visual, ou quando o usuário disser "como ficou", "confere a tela", "ficou feio no celular".
+description: Revisão visual de telas do Ninshu Roots pelo UI Lab - fotografa os cenários afetados em celular (390px) e desktop (1280px), no tema grafite e com menos movimento, e confere contra docs/visual.md e as regras de interface do AGENTS.md. Use depois de mexer em interface (prototype/, estilos, art.ts, retratos), antes de fechar uma versão com mudança visual, ou quando o usuário disser "como ficou", "confere a tela", "ficou feio no celular".
 ---
 
 # Revisar visual (Ninshu Roots)
@@ -28,7 +28,7 @@ npm run lab
 npx tsx scripts/revisar-visual.ts <id> <id> ...      # ou --prefixo=jornada.shop, ou --todos
 ```
 
-Sai uma foto por cenário × {celular, desktop} × {Sumi, Pergaminho, Sumi com menos movimento} em `dist-lab/revisao/` (fora do git). O terminal marca `VER` quando há rolagem horizontal ou erro no console.
+Sai uma foto por cenário × {celular, desktop} × {Sumi, Sumi com menos movimento} em `dist-lab/revisao/` (fora do git). O terminal marca `VER` quando há rolagem horizontal ou erro no console.
 
 Olhe as fotos (o agente lê as imagens). Fotos que o usuário vai ver: gere de novo com `deviceScaleFactor: 2` se precisar de nitidez.
 
@@ -44,7 +44,7 @@ Olhe as fotos (o agente lê as imagens). Fotos que o usuário vai ver: gere de n
 **Direção visual** (`docs/visual.md`):
 - A tela usa os objetos do mundo (pergaminho, placa, carimbo) e poucas referências ligadas ao que acontece nela.
 - Celular: um toque, vertical, botões grandes, sem rolagem horizontal. Desktop: composição própria (colunas, painéis), não o celular esticado; quanto menos rolagem, melhor.
-- Os dois temas legíveis (contraste do texto sobre o papel e sobre o sumi).
+- Texto legível no grafite e no papel (contraste WCAG AA, 4,5:1, sobre o sumi e dentro do pergaminho).
 - Menos movimento: nada essencial depende de animação.
 
 ## 4. Relatar
