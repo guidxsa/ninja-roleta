@@ -20,7 +20,7 @@
     cover,
     cover;
   background-repeat: no-repeat;
-  border: 1px solid #725036;
+  border: 1px solid var(--sh-terra-11);
 }
 :is(.rorigin, .rrelic)::before {
   content: '';
@@ -73,7 +73,7 @@
   aspect-ratio: 1;
   background: url('img/shinobi/aro.png') center/100% 100% no-repeat;
   border-radius: 50%;
-  filter: drop-shadow(0 6px 5px #110e0ad6);
+  filter: drop-shadow(0 6px 5px color-mix(in srgb, var(--sh-sumi-5) 84%, transparent));
 }
 :is(.rorigin, .rrelic) .wheel-wrap::after {
   content: '';
@@ -88,11 +88,11 @@
   filter: none;
 }
 .wheel .rim {
-  fill: #5d402b;
-  stroke: #ad794c;
+  fill: var(--shinobi-muted);
+  stroke: var(--sh-terra-2);
 }
 .lineage-wheel .wheel .slice {
-  stroke: #4d3529;
+  stroke: var(--sh-laca-11);
   stroke-width: 1.1;
 }
 :is(.rorigin, .rrelic) .wheel-pointer {
@@ -101,7 +101,7 @@
   width: 8.5%;
   height: 10%;
   background: var(--shinobi-lacquer);
-  border-top: 3px solid #d8a35a;
+  border-top: 3px solid var(--sh-ouro-2);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 .lineage-wheel .slice-label {
@@ -111,19 +111,19 @@
   pointer-events: none;
 }
 .origin-on-wheel.ink {
-  color: #38281f;
+  color: var(--sh-laca-13);
 }
 .origin-on-wheel.pale {
-  color: #fff0d5;
+  color: var(--sh-papel-1);
 }
 .lineage-wheel .origin-on-wheel {
-  filter: drop-shadow(0 0.6px 0.45px #25170d70);
+  filter: drop-shadow(0 0.6px 0.45px color-mix(in srgb, var(--paper-ink) 44%, transparent));
 }
 .lineage-wheel.is-reading .slice:not(.read) {
   opacity: 0.47;
 }
 .lineage-wheel .slice.read {
-  stroke: #fff2c2;
+  stroke: var(--sh-papel-2);
   stroke-width: 3;
 }
 :is(.rorigin, .rrelic) .legend {
@@ -159,11 +159,11 @@
 }
 .lineage-wheel .legend button:hover,
 .lineage-wheel .legend button[aria-pressed='true'] {
-  border-color: #88432f;
-  background: #fae8be7d;
+  border-color: var(--sh-laca-3);
+  background: color-mix(in srgb, var(--sh-papel-3) 49%, transparent);
 }
 .lineage-wheel .legend button[aria-pressed='true'] .origin-seal {
-  color: #902f21;
+  color: var(--sh-laca-5);
 }
 .origin-seal {
   width: 24px;
@@ -172,7 +172,7 @@
 }
 .lineage-wheel .legend strong {
   font: 700 13px/1 var(--font-hud);
-  color: #61462e;
+  color: var(--shinobi-muted);
   font-variant-numeric: tabular-nums;
 }
 :is(.rorigin, .rrelic) .spin {
@@ -180,9 +180,9 @@
   min-width: 150px;
   max-width: 440px;
   background: var(--shinobi-lacquer);
-  color: #f8e9ca;
-  border: 1px solid #d0845a;
-  box-shadow: 0 3px 0 #50291b;
+  color: var(--shinobi-bone);
+  border: 1px solid var(--sh-laca-1);
+  box-shadow: 0 3px 0 var(--wood);
   font: 700 25px/1 var(--shinobi-serif);
   text-transform: none;
   letter-spacing: 0;
@@ -240,9 +240,9 @@
 .rrelic .jrcard-txt .jrcard-tier {
   order: -1;
   padding: 3px 14px;
-  background: #c79d62;
-  border: 1px solid #7d5b35;
-  color: #392611;
+  background: var(--sh-ouro-3);
+  border: 1px solid var(--sh-terra-11);
+  color: var(--sh-tinta-6);
   font: 700 15px/1 var(--shinobi-serif);
   text-transform: none;
 }

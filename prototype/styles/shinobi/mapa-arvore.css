@@ -33,21 +33,21 @@
 }
 .jmap-screen .jtrail-map > .jmap {
   background:
-    linear-gradient(var(--map-wash, #f5dca718), var(--map-wash, #f5dca718)),
+    linear-gradient(var(--map-wash, color-mix(in srgb, var(--sh-papel-4) 9%, transparent)), var(--map-wash, color-mix(in srgb, var(--sh-papel-4) 9%, transparent))),
     url('img/shinobi/mapa-paisagem.png') center/100% 100% no-repeat,
     var(--shinobi-paper);
   border: 0;
   margin: 0;
 }
 [data-theme='dark'] .jmap-screen {
-  --map-wash: #53391220;
+  --map-wash: color-mix(in srgb, var(--sh-tinta-4) 13%, transparent);
 }
 .jmap-screen .jtrail-map .jmap::before,
 .jmap-screen .jtrail-map .jmap::after {
   display: none;
 }
 .jmap-screen .jmap-lines path {
-  stroke: #5b4630;
+  stroke: var(--paper-muted);
   stroke-width: 2;
   opacity: 0.6;
 }
@@ -56,21 +56,21 @@
   stroke-dasharray: 3 4;
 }
 .jmap-screen .jmap-lines .walked {
-  stroke: #6b271e;
+  stroke: var(--sh-laca-10);
   stroke-width: 4;
   opacity: 1;
 }
 .jmap-screen .jmap-lines .open {
-  stroke: #a33922;
+  stroke: var(--sh-laca-2);
   stroke-width: 3.5;
   opacity: 1;
 }
 .jmap-screen .jnode-map:not(.k-boss) {
   border-radius: 50%;
-  border: 1.6px solid #604c33;
-  background: #e2cca7;
+  border: 1.6px solid var(--shinobi-muted);
+  background: var(--sh-papel-7);
   color: var(--shinobi-ink);
-  box-shadow: 0 1px 2px #573d2a55;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--sh-tinta-2) 33%, transparent);
   transform: translate(-50%, -50%);
   opacity: 0.93;
 }
@@ -84,24 +84,24 @@
   display: none;
 }
 .jmap-screen .jnode-map.choice {
-  border: 2px solid #602415;
-  background: #ffdf92;
-  outline: 3px solid #b77328;
+  border: 2px solid var(--sh-laca-10);
+  background: var(--sh-papel-6);
+  outline: 3px solid var(--sh-terra-6);
   outline-offset: 2px;
   animation: none;
 }
 .jmap-screen .jnode-map.done {
-  background: #633326;
-  color: #fff0c9;
+  background: var(--sh-laca-8);
+  color: var(--sh-papel-1);
 }
 .jmap-screen .jnode-map.dead {
   opacity: 0.48;
 }
 .jmap-screen .jnode-map.k-boss {
-  border-color: #9c3122;
+  border-color: var(--sh-laca-2);
   box-shadow:
-    0 0 0 2px #e7c592,
-    0 0 0 4px #883828;
+    0 0 0 2px var(--sh-papel-8),
+    0 0 0 4px var(--sh-laca-4);
 }
 .jmap-screen .jlegend-chips {
   padding: 6px 4px;
@@ -112,16 +112,16 @@
 .jmap-screen .jlegend-chip {
   border: none;
   background: transparent;
-  color: #493728;
+  color: var(--sh-tinta-3);
   text-transform: none;
   letter-spacing: 0;
   font: 600 13px/1.12 var(--shinobi-serif);
 }
 .jmap-screen .jlegend-chip.k-boss {
-  color: #802c20;
+  color: var(--sh-laca-6);
 }
 .jmap-screen .jlegend-chip.k-rest {
-  color: #374928;
+  color: var(--sh-folha-1);
 }
 @media (min-width: 1280px) and (min-height: 560px) {
   .jtrail-screen.jmap-screen {
@@ -342,7 +342,7 @@
   padding: 5px 10px;
   background: none;
   border: 0;
-  border-right: 1px solid #987a58;
+  border-right: 1px solid var(--sh-terra-3);
   color: var(--shinobi-ink);
   text-transform: none;
 }
@@ -355,10 +355,10 @@
 }
 .jtree-screen .jt-tab.on {
   background: var(--shinobi-lacquer);
-  color: #f8e8c9;
+  color: var(--shinobi-bone);
 }
 .jtree-screen .jt-tab.on small {
-  color: #f8dfab;
+  color: var(--sh-papel-4);
 }
 .jtree-screen .jt-branches {
   display: block;
@@ -435,7 +435,7 @@
 .branch-mark {
   left: 6%;
   top: 17%;
-  color: #7b3c22;
+  color: var(--sh-laca-6);
   opacity: 0.19;
 }
 .branch-mark .ico {
@@ -448,7 +448,7 @@
   top: 8%;
   font-size: clamp(54px, 8vw, 126px);
   line-height: 1;
-  color: #6f3f29;
+  color: var(--sh-laca-7);
   opacity: 0.26;
 }
 .jtree-screen .jt-grid {
@@ -458,11 +458,11 @@
   min-height: 250px;
 }
 .jtree-screen .jt-lines path {
-  stroke: #4d3725;
+  stroke: var(--sh-tinta-2);
   opacity: 0.8;
 }
 .jtree-screen .jt-lines path.on {
-  stroke: #8d3225;
+  stroke: var(--sh-laca-5);
   filter: none;
 }
 .jtree-screen .jt-lines .off {
@@ -472,9 +472,9 @@
   border-radius: 50%;
   transform: none;
   outline-offset: 2px;
-  background: #e9d2a8;
-  border: 2px solid #59412b;
-  color: #38281b;
+  background: var(--sh-papel-7);
+  border: 2px solid var(--paper-muted);
+  color: var(--sh-tinta-5);
   box-shadow: none;
 }
 .jtree-screen .jt-node .jt-seal > span,
@@ -485,22 +485,22 @@
 .jtree-screen .jt-node.st-upgradable .jt-seal,
 .jtree-screen .jt-node.st-maxed .jt-seal {
   background: var(--shinobi-lacquer);
-  color: #f7dfb4;
-  border-color: #922f26;
+  color: var(--sh-papel-3);
+  border-color: var(--sh-laca-5);
 }
 .jtree-screen .jt-node.sel .jt-seal {
-  outline: 3px solid #ae762d;
+  outline: 3px solid var(--sh-terra-6);
 }
 .jtree-screen .jt-node.combo .jt-seal {
-  border: 3px double #694c32;
+  border: 3px double var(--sh-terra-14);
 }
 .jtree-screen .jt-node.capstone .jt-seal {
-  border: 3px double #ac7b31;
+  border: 3px double var(--sh-terra-7);
 }
 .jtree-screen .jt-node .jt-name,
 .jtree-screen .jt-node .jt-link {
-  background: #e9d3abeb;
-  color: #372519;
+  background: color-mix(in srgb, var(--sh-papel-5) 92%, transparent);
+  color: var(--sh-tinta-5);
   text-shadow: none;
   font: 700 14px/1.03 var(--shinobi-serif);
   padding: 1px 4px;
