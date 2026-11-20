@@ -5,7 +5,31 @@ import { join } from 'node:path';
 // Issue #37: nas folhas Shinobi, cor de componente só por token (var(--...)). Cor literal só na definição dos
 // tokens (blocos :root) e em máscara, onde o preto é só o canal alfa.
 const DIR = join(__dirname, '..', 'prototype', 'styles', 'shinobi');
-const COLOR = /#[0-9a-fA-F]{3,8}\b|rgba?\(/g;
+// Cores nomeadas do CSS (transparent e currentColor ficam de fora: não são cor de paleta).
+const NAMED = (
+  'aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue blueviolet brown burlywood ' +
+  'cadetblue chartreuse chocolate coral cornflowerblue cornsilk crimson cyan darkblue darkcyan darkgoldenrod darkgray ' +
+  'darkgreen darkgrey darkkhaki darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen ' +
+  'darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue dimgray dimgrey dodgerblue ' +
+  'firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite gold goldenrod gray green greenyellow grey honeydew ' +
+  'hotpink indianred indigo ivory khaki lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan ' +
+  'lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon lightseagreen lightskyblue lightslategray ' +
+  'lightslategrey lightsteelblue lightyellow lime limegreen linen magenta maroon mediumaquamarine mediumblue ' +
+  'mediumorchid mediumpurple mediumseagreen mediumslateblue mediumspringgreen mediumturquoise mediumvioletred ' +
+  'midnightblue mintcream mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid ' +
+  'palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum powderblue purple ' +
+  'rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown seagreen seashell sienna silver skyblue ' +
+  'slateblue slategray slategrey snow springgreen steelblue tan teal thistle tomato turquoise violet wheat white ' +
+  'whitesmoke yellow yellowgreen'
+).split(' ');
+const COLOR = new RegExp(
+  '#[0-9a-fA-F]{3,8}\\b|(?<![\\w-])(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\\(|' +
+    `(?<![\\w-])(?:${NAMED.join('|')})(?![\\w-])`,
+  'gi',
+);
+/** Tira o que não é cor mas pode ter as mesmas letras: nomes de variável, URLs e textos entre aspas. */
+const stripNonColor = (v: string) =>
+  v.replace(/url\([^)]*\)/gi, 'url()').replace(/(['"]).*?\1/g, '""').replace(/--[\w-]+/g, '--v');
 const MASK = /^(-webkit-)?mask(-image)?$/;
 
 interface Decl {
@@ -63,7 +87,7 @@ function declarations(src: string): Decl[] {
 function literalColors(src: string): string[] {
   return declarations(src)
     .filter((d) => !(d.inRoot && d.prop.startsWith('--')) && !MASK.test(d.prop))
-    .flatMap((d) => [...d.value.matchAll(COLOR)].map((c) => `${d.line}: ${c[0]}`));
+    .flatMap((d) => [...stripNonColor(d.value).matchAll(COLOR)].map((c) => `${d.line}: ${c[0]}`));
 }
 
 describe('cores das telas Shinobi', () => {
@@ -104,5 +128,16 @@ describe('cores das telas Shinobi', () => {
       '/* .e { color: #789; } */',
     ].join('\n');
     expect(literalColors(css)).toEqual(['1: #fff', '2: rgba(', '5: #123', '6: #456']);
+  });
+
+  it('pega cor nomeada e funções de cor, sem confundir com variável, URL, texto ou palavra-chave', () => {
+    const css = [
+      '.a { color: red; }',
+      '.b { background: hsl(0 100% 50%); border-color: oklch(70% .1 40); }',
+      '.c { outline: 1px solid White; }',
+      ".d { color: var(--gold-2); background: url('img/gold.png'); content: 'red'; }",
+      '.e { color: transparent; fill: currentColor; font-family: Georgia, serif; }',
+    ].join('\n');
+    expect(literalColors(css)).toEqual(['1: red', '2: hsl(', '2: oklch(', '3: White']);
   });
 });
