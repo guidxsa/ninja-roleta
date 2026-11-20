@@ -3,7 +3,7 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: #272725;
+  background: var(--sh-sumi-2);
   border: 1px solid var(--shinobi-line);
 }
 .gate .gate-banner .gate-hero {
@@ -36,7 +36,7 @@
   width: 100%;
   height: clamp(110px, 21vh, 230px);
   background: url('img/shinobi/marca-letreiro.png') left center/contain no-repeat;
-  filter: drop-shadow(1px 3px 3px #190f0e99);
+  filter: drop-shadow(1px 3px 3px color-mix(in srgb, var(--sh-sumi-4) 60%, transparent));
   text-align: left;
 }
 .gate.jgate .gate-head .logo {
@@ -87,7 +87,7 @@
   padding: 0 14px;
   background: none;
   box-shadow: none;
-  filter: drop-shadow(0 3px 3px #100d095c);
+  filter: drop-shadow(0 3px 3px color-mix(in srgb, var(--sh-sumi-5) 36%, transparent));
   color: var(--shinobi-ink);
   transform: none;
 }
@@ -163,7 +163,7 @@
   width: 78%;
   height: 3px;
   margin-top: 4px;
-  background: #95372a;
+  background: var(--sh-laca-4);
   clip-path: polygon(0 50%, 32% 1%, 66% 18%, 100% 78%, 47% 77%, 4% 100%);
 }
 .gate .mode-txt small {
@@ -173,9 +173,9 @@
   font: 500 clamp(13px, 1.02vw, 17px) / 1.28 var(--shinobi-serif);
   color: var(--shinobi-ink);
   text-shadow:
-    0 0 4px #f8e4bd,
-    0 0 7px #f8e4bd,
-    0 1px #f8e4bd;
+    0 0 4px var(--sh-papel-3),
+    0 0 7px var(--sh-papel-3),
+    0 1px var(--sh-papel-3);
 }
 .gate .mode-cta {
   display: inline-flex;
@@ -193,7 +193,7 @@
 }
 .gate .mode-card:focus-visible .mode-cta,
 .gate .mode-card:hover .mode-cta {
-  outline: 2px solid #af8153;
+  outline: 2px solid var(--sh-ouro-6);
   outline-offset: 2px;
 }
 .gate .gate-aside > .parchment,
@@ -216,7 +216,7 @@
 .gate .gate-aside h3 {
   font: 700 22px/1.1 var(--shinobi-serif);
   letter-spacing: -0.02em;
-  border-bottom: 1px solid #8e7659;
+  border-bottom: 1px solid var(--sh-terra-5);
   padding-bottom: 7px;
 }
 @media (min-width: 900px) and (min-height: 560px) {

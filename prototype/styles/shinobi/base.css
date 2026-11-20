@@ -51,6 +51,63 @@
     0 calc(100% - 8px),
     0 8px
   );
+  /* Paleta das telas Shinobi (issue #37): cor de componente só por token. */
+  --sh-papel-1: #fff0d7;
+  --sh-papel-2: #fff0c8;
+  --sh-papel-3: #f8e4bd;
+  --sh-papel-4: #f5dca7;
+  --sh-papel-5: #e9d3ab;
+  --sh-papel-6: #ffdf92;
+  --sh-papel-7: #dfc9a5;
+  --sh-papel-8: #e7c592;
+  --sh-ouro-1: #c5ae89;
+  --sh-ouro-2: #d8a35a;
+  --sh-ouro-3: #c79d62;
+  --sh-ouro-4: #e4a23d;
+  --sh-ouro-5: #ae9269;
+  --sh-ouro-6: #af8153;
+  --sh-terra-1: #998365;
+  --sh-terra-2: #ad794c;
+  --sh-terra-3: #987957;
+  --sh-terra-4: #c58222;
+  --sh-terra-5: #8a7456;
+  --sh-terra-6: #b77328;
+  --sh-terra-7: #ac7b31;
+  --sh-terra-8: #986638;
+  --sh-terra-9: #786047;
+  --sh-terra-10: #66584b;
+  --sh-terra-11: #715738;
+  --sh-terra-12: #5d4e42;
+  --sh-terra-13: #795523;
+  --sh-terra-14: #694c32;
+  --sh-tinta-1: #614d36;
+  --sh-tinta-2: #573d2a;
+  --sh-tinta-3: #493728;
+  --sh-tinta-4: #533912;
+  --sh-tinta-5: #392b20;
+  --sh-tinta-6: #392611;
+  --sh-tinta-7: #211d19;
+  --sh-laca-1: #d0845a;
+  --sh-laca-2: #a33922;
+  --sh-laca-3: #8b4d38;
+  --sh-laca-4: #943c2d;
+  --sh-laca-5: #8d3225;
+  --sh-laca-6: #793325;
+  --sh-laca-7: #6f3f29;
+  --sh-laca-8: #633326;
+  --sh-laca-9: #542c32;
+  --sh-laca-10: #64241c;
+  --sh-laca-11: #4d3529;
+  --sh-laca-12: #51160c;
+  --sh-laca-13: #36221b;
+  --sh-folha-1: #37502a;
+  --sh-noite-1: #222a32;
+  --sh-uva-1: #554866;
+  --sh-sumi-1: #776279;
+  --sh-sumi-2: #272725;
+  --sh-sumi-3: #201e1a;
+  --sh-sumi-4: #151119;
+  --sh-sumi-5: #100d09;
 }
 :root[data-theme='light'] {
   --shinobi-ground: linear-gradient(#f8edd5c9, #e8d9bccc), url('img/shinobi/papel-continuo.png') center/220px 406px;
@@ -69,14 +126,14 @@ body {
 .mode-cta {
   background: var(--shinobi-lacquer);
   color: var(--shinobi-bone);
-  border-color: #64241c;
-  text-shadow: 0 1px 1px #51160c;
+  border-color: var(--sh-laca-10);
+  text-shadow: 0 1px 1px var(--sh-laca-12);
 }
 button:focus-visible,
 a:focus-visible,
 select:focus-visible,
 .jt-node:focus-visible .jt-seal {
-  outline: 3px solid #c58222;
+  outline: 3px solid var(--sh-terra-4);
   outline-offset: 2px;
 }
 .top {
@@ -96,7 +153,7 @@ select:focus-visible,
   }
   .side-nav {
     background: var(--shinobi-sumi);
-    border-right: 1px solid #8a7456;
+    border-right: 1px solid var(--sh-terra-5);
     padding: 14px 7px;
     gap: 5px;
   }
@@ -108,7 +165,7 @@ select:focus-visible,
     text-align: left;
     padding: 10px 7px;
     gap: 9px;
-    color: #e9dac0;
+    color: var(--paper);
     font: 600 clamp(12px, 0.94vw, 16px) / 1.15 var(--shinobi-serif);
     text-transform: none;
     letter-spacing: 0;
@@ -120,8 +177,8 @@ select:focus-visible,
   }
   .side-nav button[aria-current] {
     background: var(--shinobi-lacquer);
-    color: #fff0d7;
-    border-color: #8b4d38;
+    color: var(--sh-papel-1);
+    border-color: var(--sh-laca-3);
     box-shadow: none;
   }
   .top,
