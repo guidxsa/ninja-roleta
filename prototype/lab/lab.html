@@ -18,6 +18,8 @@
   <body>
     <!-- Mesma casca do jogo (prototype/index.html): as telas reais dependem destes ids. -->
     <header class="top">
+      <button class="top-grip" type="button" aria-controls="top-tools" aria-expanded="false"></button>
+      <div id="top-tools">
       <div class="top-bar">
         <span class="brand" aria-hidden="true"><span class="seal brand-seal"></span><span class="brand-name">Ninshu Roots</span></span>
         <button class="btn small" id="home-btn" title="Portão da Vila" aria-label="Portão da Vila"></button>
@@ -35,6 +37,7 @@
         </div>
       </div>
       <div class="dots" id="dots"></div>
+      </div>
     </header>
     <nav class="side-nav" id="side-nav"></nav>
     <main id="screen" tabindex="-1"></main>

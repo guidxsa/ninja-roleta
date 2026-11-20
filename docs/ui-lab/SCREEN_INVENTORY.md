@@ -30,8 +30,8 @@ main()  (prototype/main.ts)
  ├─ ?teste → labFlow() → labScreen() → battleScreen() | runCampaign()
  └─ modeScreen()  (Portão da Vila)
      ├─ roleta  → ensurePlayerName() → originScreen() → runCampaign()
-     └─ jornada → runJornada()  (prototype/jornada/index.ts)
-                   └─ jornadaLoop() → startScreen() | run salva → playStop()* → endScreen()
+     ├─ story   → runJornada({entry: 'story'}) → perspectiva ou parada salva
+     └─ path    → runJornada({entry: 'path'}) → preparação ou parada salva
 ```
 
 Mecanismos de navegação:
@@ -41,8 +41,8 @@ Mecanismos de navegação:
 | URL `?teste` | `parseLabParams` em `src/core/lab.ts` | Abre o laboratório antigo no lugar do Portão (só Roleta) |
 | URL `?seed=N` | idem | Fixa o RNG da **primeira** run da página (Roleta e Jornada) |
 | Botão Portão (`#home-btn`) | `askHome()` | `goHome()` corta a tela atual (símbolo `HOME`) e volta ao Portão; pede `window.confirm` com run em andamento |
-| Barra lateral (`#side-nav`, só PC) | `installSideNav()` | Início, Jornada, Roleta e as 4 páginas do Registro (em popup) |
-| Barra inferior (`#gate-nav`, só celular) | `main()` | Início e atalhos do Registro (`data-profile`) |
+| Barra lateral (`#side-nav`, só PC) | `installSideNav()` | Início, Arcade, História, Campanha e Registro (escolha de seção em popup) |
+| Barra inferior (`#gate-nav`, só celular) | `installSideNav()` | Os mesmos cinco destinos da lateral, no Portão |
 | Cabeçalho | `installHeaderToggles()` | Instantâneo, Animado, Efeitos, Música, Ficha, Registro |
 | Erro no fluxo | `errorScreen()` | Captura exceção, mostra o aviso e volta ao Portão |
 
@@ -59,7 +59,7 @@ Não há `history.pushState` nem hash: **F5 sempre volta ao Portão** (a Jornada
 
 | Id | Elemento | Estados |
 |---|---|---|
-| `shell.header` | `header.top`: marca, `#home-btn`, grupos de botões, `#dots` | Rótulos dos botões só ≥ 1280px; botão Ficha some sem run (`syncSheetBtn`) |
+| `shell.header` | `header.top`: marca, `#home-btn`, grupos de botões, `#dots` | Alça de Konoha por toque, mouse e Tab. Rótulos dos botões só ≥ 1280px; botão Ficha some sem run (`syncSheetBtn`) |
 | `shell.dots` | `progressDots()` em `#dots` | Progresso do ciclo da Roleta; vazio no Portão e na Jornada |
 | `shell.sidenav` | `#side-nav` | Só PC; item ativo por `aria-current` |
 | `shell.gatenav` | `#gate-nav` | Só celular |
@@ -74,7 +74,7 @@ Legenda da última coluna: **Direto?** / **Visto**.
 
 | Id | Tela | Onde | Acesso | Dados | Estados alternativos | Responsivo | Direto? / Visto |
 |---|---|---|---|---|---|---|---|
-| `gate.home` | Portão da Vila (escolha de modo) | `modeScreen()` em `main.ts` | Abrir o jogo | Perfil (`localStorage`), save da Jornada, conquistas recentes, `SCENE_ART` | Cena noturna de Sasuke; card "Progresso da Jornada" só com run salva; conquistas recentes só se houver; frase sorteada; no modo Animado, cena viva (névoa e vaga-lumes) | Celular: coluna única com barra inferior. PC: `gate-main` + `gate-aside` (ficha, progresso, recentes) e barra lateral | Sim / não |
+| `gate.home` | Portão da Vila | `modeScreen()` em `gate.ts` | Abrir o jogo | Perfil, `jornada_run_v1`, conquistas recentes, arte `portao` | Vazio (`gate.home`, `:empty-story`), médio (`:mid-new`, `:mid` com Campanha), cheio (`:full`, `:full-story`), cena viva (`:animado`). Continuar só no card do save | Celular em coluna com barra inferior. Desktop com três modos lado a lado, ficha, recentes e lateral | Sim / sim |
 | `gate.name` | Pedir o nome do ninja | `askPlayerName()` em `playerName.ts` | 1ª entrada no Roleta ou no Caminho Ninja | `profile.playerName` indefinido | Confirmar ou pular | Pergaminho centralizado | Não (some depois da 1ª vez) / não |
 | `gate.avatar` | Escolha do avatar (modal) | `openAvatarPicker()` | Avatar na ficha do Portão (PC) ou no Registro | Avatares liberados (`avatarChoices`: origens jogadas e conquistas) | Poucos ou muitos avatares liberados; atual marcado | Grade | Sim (com Registro) / não |
 | `gate.error` | Tela de erro | `errorScreen()` | Exceção dentro de uma tela | Erro capturado | Detalhe técnico em `<details>` | Simples | Não (precisa forçar erro) / não |
@@ -88,7 +88,7 @@ Fluxo: Portão → nome → origem → (mapa → evento → luta → recompensas
 
 | Id | Tela | Onde | Acesso | Dados | Estados alternativos | Responsivo | Direto? / Visto |
 |---|---|---|---|---|---|---|---|
-| `roleta.origin` | Roletas de origem + dificuldade | `originScreen()` | Card Roleta no Portão | RNG, `rollOrigin`, perfil (Hardcore liberado?) | Antes, durante e depois dos giros (`rolled`); 1 a N roletas conforme a linhagem (elementos, kekkei genkai, jinchuuriki); Hardcore travado ou liberado; "Girar de novo" | `rwheel`: palco + coluna `rside` lado a lado no PC | Sim (1 clique) / não |
+| `roleta.origin` | Roletas de origem + dificuldade | `originScreen()` | Card Arcade no Portão | RNG, `rollOrigin`, perfil (Hardcore liberado?) | Antes, durante e depois dos giros (`rolled`); 1 a N roletas conforme a linhagem (elementos, kekkei genkai, jinchuuriki); Hardcore travado ou liberado; "Girar de novo" | `rwheel`: palco + coluna `rside` lado a lado no PC | Sim (1 clique) / não |
 | `roleta.map` | Mapa do ciclo | `mapScreen(eventDone)` | Depois da origem e entre lutas | `camp.run`, vilão sorteado, `camp.log` | Botão "Evento" ou "Lutar" (`eventDone`); chip de ciclo só do ciclo 2; botão Pesos (equipar/tirar) só com o item; trilha com etapas feitas que expandem (`<details>`); categoria genin/chunin/jounin/chefe muda arte e selo | Ficha em painéis (`sheetPanels`) no PC; `sticky-cta` | Lab (campanha a partir de etapa) / não |
 | `roleta.event` | Evento pré-luta | `eventScreen()` | Botão Evento no mapa | RNG (`roletaPreFightEvents`, 7 eventos com peso, total 100) | Um subfluxo por evento (abaixo); Moeda viciada oferece girar de novo (`spinRoll`); resultado com efeito e HUD pulsando | `rwheel` | Não / não |
 | `roleta.event.training` | Treino | `eventScreen` case `training` | Evento sorteado | RNG | Escolha de foco elemental existe no código mas `focus` está sempre vazio (só a roleta roda) | — | Não / não |
@@ -107,13 +107,13 @@ Fluxo: Portão → nome → origem → (mapa → evento → luta → recompensas
 
 ### 2.3 Jornada
 
-Fluxo: Portão → entrada → (História: perspectiva | Caminho Ninja: preparação → revelação) → paradas* → fim.
+Fluxo: Portão → História (perspectiva) ou Campanha (preparação e revelação) → paradas → fim. Continuar retoma diretamente a parada salva.
 Tudo em `prototype/jornada/`, run salva a cada parada (`jornada_run_v1`). Duas variantes de run com telas diferentes:
 **História** (`mode: 'canon'`, trilha linear de paradas) e **Caminho Ninja** (`mode: 'generic'`, mapa de nós).
 
 | Id | Tela | Onde | Acesso | Dados | Estados alternativos | Responsivo | Direto? / Visto |
 |---|---|---|---|---|---|---|---|
-| `jornada.entry` | Entrada da Jornada | `entryScreen()` em `jornada/index.ts` | Card Jornada no Portão | Save, conquistas (`j_canonHard` libera Hardcore), recentes | Com ou sem card de progresso; Hardcore travado/liberado; com ou sem conquistas recentes; frase sorteada | Composição do Portão: `gate-main` + `gate-aside` | Sim (1 clique) / não |
+| `jornada.entry` | Entrada da Jornada | `entryScreen()` em `jornada/index.ts` | Cenário legado do UI Lab | Save, conquistas (`j_canonHard` libera Hardcore), recentes | Com ou sem card de progresso; Hardcore travado/liberado; com ou sem conquistas recentes; frase sorteada | Composição do Portão: `gate-main` + `gate-aside` | Sim (1 clique) / não |
 | `jornada.story.pick` | Modo História: escolher perspectiva | `campaignScreen()` | Card História | `data.campaigns`, save | Naruto aberto; Sasuke travado ("em breve") enquanto não houver `campaigns.sasuke`; faixa de arcos com arco atual e feitos (só com run da História salva); confirmação de sobrescrever save | Dois painéis dia/noite; arcos rolam de lado no celular | Sim (2 cliques) / não |
 | `jornada.path.setup` | Caminho Ninja: preparação | `pathSetupScreen()` | Card Caminho Ninja | Conquistas (classes Uchiha/Hyuuga), recorde | Classes travadas/abertas; seletor de elemento só no Comum; linha de recorde só a partir de 1 ciclo vencido | Pôster + painel | Sim (2 cliques) / não |
 | `jornada.path.reveal` | Revelação do herói | `revealScreen()` | Começar o Caminho Ninja | Run nova (RNG) | Elemento sorteado vs escolhido; prodígio sem elemento; Hyuuga sem elemento; 2º elemento do Uchiha; relíquia bônus de quem sorteou | Coluna centralizada | Não / não |
@@ -187,7 +187,7 @@ abandono (Roleta: `window.confirm`; Jornada: `confirmDialog`) e o compartilhar (
 | `meta.registry.history` | Registro: Histórico | `openRegistry('history')` + `historyTab()` | Barra lateral, barra inferior ou cabeçalho | Runs salvas | Filtros Geral / Origens (`originsTab`) / Dificuldade (`difficultyStats`); mostrar rerolagens; vazio | Sim / não |
 | `meta.registry.bingo` | Registro: Livro Bingo | `bingoTab()` | idem | `profile.villains` | Vilão desconhecido, enfrentado, derrotado (carimbo) | Sim / não |
 | `meta.registry.relics` | Registro: Relíquias | `relicCollection()` em `jornada/relics.ts` | idem | `profile.relics` | Descobertas e não descobertas | Sim / não |
-| `meta.registry.achievements` | Registro: Conquistas | `achievementsTab()` | idem, ou faixa do Portão | `profile.achievements` | Liberada, travada, oculta, com progresso; categorias + seção da Jornada | Sim / não |
+| `meta.registry.achievements` | Registro: Conquistas | `achievementsTab()` | Registro → Conquistas | `profile.achievements` | Liberada, travada, oculta, com progresso; categorias + seção da Jornada | Sim / não |
 | `meta.sheet.roleta` | Ficha ninja da Roleta | `openSheet()` + `sheetHtml()` | Botão Ficha (cabeçalho, painel, luta) | `camp` | Durante a luta usa o jogador da luta (`battlePlayer`) | Não (precisa run) / não |
 | `meta.sheet.jornada` | Ficha da Jornada | `openJornadaSheet()` em `sheet.ts` | Ficha no cabeçalho ou no HUD | Run (ou a da luta) | Abas por membro (só com equipe) | Não / não |
 | `meta.relics-modal` | Relíquias da run | `relicsModal()` | Relíquia no HUD | Run | Foco numa relíquia | Não / não |
@@ -286,7 +286,7 @@ Estados que mudam muito a interface e valem um caso próprio no lab:
 
 ### Difíceis de acessar
 
-- **Quase tudo além do Portão depende de jogar.** Diretas hoje: Portão, entrada da Jornada, as duas telas de início da
+- **Quase tudo além do Portão depende de jogar.** Diretas hoje: Portão e as duas telas de início da
   Jornada, o Registro, o avatar, as dicas e os botões do cabeçalho. Pelo lab antigo: a origem montada, o mapa da Roleta
   a partir de uma etapa e a luta da Roleta contra um vilão.
 - **A Jornada não está no lab antigo.** Nenhuma tela de run da Jornada abre sem jogar ou ter um save.

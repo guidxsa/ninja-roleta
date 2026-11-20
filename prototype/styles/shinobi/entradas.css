@@ -193,21 +193,18 @@
   outline: 2px solid var(--sh-ouro-6);
   outline-offset: 2px;
 }
-.gate .gate-aside > .parchment,
-.gate .gate-resume > .parchment {
+.gate .gate-aside > .parchment {
   color: var(--shinobi-ink);
   box-shadow: var(--shinobi-shadow);
   border: 1px solid var(--shinobi-edge);
 }
-.gate .gate-aside > .parchment::before,
-.gate .gate-resume > .parchment::before {
+.gate .gate-aside > .parchment::before {
   clip-path: none;
   inset: 0;
   transform: none;
   background: var(--shinobi-paper);
 }
-.gate .gate-aside > .parchment::after,
-.gate .gate-resume > .parchment::after {
+.gate .gate-aside > .parchment::after {
   display: none;
 }
 .gate .gate-aside h3 {
@@ -298,9 +295,6 @@
   .gate .gate-main {
     display: contents;
   }
-  .gate .gate-resume {
-    order: 1;
-  }
   .gate .gate-modes {
     order: 2;
   }
@@ -310,7 +304,6 @@
   .gate .jprogress {
     margin: 0;
   }
-  .gate-resume .desk-prog,
   .jgate .jprogress {
     padding: 10px 14px;
   }

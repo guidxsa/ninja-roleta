@@ -551,6 +551,8 @@ export const ptBR = {
     /** Atalhos do Portão da Vila (tela inicial) para o registro ninja. */
     gate: {
       registry: 'Registro ninja',
+      tools: 'Ferramentas do jogo',
+      newRun: 'Nova partida',
       home: 'Início',
       achievements: 'Conquistas',
       achievementsDesc: 'Veja seu progresso e o que falta desbloquear.',
@@ -598,7 +600,7 @@ export const ptBR = {
     toolLabels: { instant: 'Instantâneo', animated: 'Animado', sfx: 'Efeitos', music: 'Música', sheet: 'Ficha', history: 'Registro' },
     // Casca do PC (docs/visual.md, "Celular e desktop"): barra lateral, Início em painéis e páginas do Registro.
     desk: {
-      nav: { home: 'Início', jornada: 'Jornada', roleta: 'Roleta', history: 'Histórico', bingo: 'Livro Bingo', relics: 'Relíquias', achievements: 'Conquistas' },
+      nav: { home: 'Início', roleta: 'Arcade', story: 'História', path: 'Campanha', registry: 'Registro', history: 'Histórico', bingo: 'Livro Bingo', relics: 'Relíquias', achievements: 'Conquistas' },
       navLabel: 'Navegação',
       profileTitle: 'Ficha do ninja',
       namePlaceholder: 'Registre seu nome',

@@ -34,7 +34,6 @@
   /* O Menu da barra superior sai (a barra lateral tem o Início); a barra inferior do Portão é só do celular. */
   #home-btn { display: none !important; }
   /* O progresso da Jornada salva fica na coluna direita; o card do celular (acima dos modos) sai. */
-  .gate-resume { display: none; }
   body.at-gate { padding-bottom: 0; }
   body.at-gate .gate-nav { display: none; }
 
