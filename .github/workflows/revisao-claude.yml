@@ -73,7 +73,10 @@ jobs:
         if: steps.token.outputs.ok == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          track_progress: true
+          # Sem track_progress: com ele, a action manda o resumo para o comentário de progresso dela, que sai sem o
+          # marcador do veredito, e o portão revisao-cruzada nunca fica verde.
+          # O push do Codex (synchronize) tem o bot dele como autor; sem a lista, a action recusa a execução.
+          allowed_bots: chatgpt-codex-connector
           prompt: |
             Você é o revisor deste PR (repositório ${{ github.repository }}, PR #${{ github.event.pull_request.number }}).
             Ele foi implementado pelo Codex; pela regra do projeto, quem implementa não revisa.
@@ -104,6 +107,20 @@ jobs:
         run: |
           comentarios() { gh api "repos/$GH_REPO/issues/$PR/comments" --paginate --jq '.[] | .created_at + " " + (.body | gsub("\n"; " "))'; }
           veredito=$(comentarios | awk -v t="$INICIO" '$1 >= t' | grep -o 'revisao-claude:veredito=[a-z]*' | tail -n 1 | cut -d= -f2 || true)
+          # Reserva: sem o marcador, a linha "Veredito: ..." do resumo (docs/processo/revisao.md), só nos comentários
+          # do Claude publicados por esta execução.
+          if [ -z "$veredito" ]; then
+            texto=$(gh api "repos/$GH_REPO/issues/$PR/comments" --paginate \
+                --jq '.[] | select(.user.login | test("^claude")) | .created_at + " " + (.body | gsub("\n"; " "))' \
+              | awk -v t="$INICIO" '$1 >= t' \
+              | grep -oiE 'veredito:?[* ]*(aprovado com ressalvas|aprovado|precisa de mudan(ç|c)as)' | tail -n 1 | tr '[:upper:]' '[:lower:]' || true)
+            case "$texto" in
+              *ressalvas*) veredito=ressalvas ;;
+              *mudan*) veredito=mudancas ;;
+              *aprovado*) veredito=aprovado ;;
+            esac
+            if [ -n "$veredito" ]; then echo "::warning::Resumo sem o marcador do veredito; lido do texto: $veredito."; fi
+          fi
           echo "Veredito desta revisão: ${veredito:-nenhum}"
           # Aprovado ou com ressalvas: status revisao-cruzada verde no commit revisado, se ainda for a ponta do PR
           # (portão do auto-merge no staging, docs/processo/fluxo.md).
@@ -263,6 +280,8 @@ jobs:
         if: steps.rodada.outputs.ok == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Este job nasce da revisão do bot do Codex; sem a lista, a action recusa ("non-human actor").
+          allowed_bots: chatgpt-codex-connector
           prompt: |
             Você é o autor deste PR (repositório ${{ github.repository }}, PR #${{ github.event.pull_request.number }}, branch em checkout).
             O Codex revisou o commit ${{ github.event.review.commit_id }} e deixou achados, salvos em ${{ runner.temp }}/revisao-codex.md.
