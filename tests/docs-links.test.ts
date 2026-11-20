@@ -21,7 +21,7 @@ function slug(t: string): string {
 function anchors(file: string): Set<string> {
   const out = new Set<string>();
   let fence = false;
-  // \r?\n: no Windows (core.autocrlf) o checkout vem com CRLF e o "." do regex do título não casa o \r.
+  // \r?\n: no checkout do Windows (autocrlf) o \r sobraria no título e viraria um "-" no fim da âncora.
   for (const l of readFileSync(file, 'utf8').split(/\r?\n/)) {
     if (l.startsWith('```')) fence = !fence;
     const m = fence ? null : /^#{1,6}\s+(.*)$/.exec(l);

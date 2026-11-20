@@ -32,4 +32,4 @@ Rever a paleta em si (unificar com os tokens globais, tema único). Fica para a 
 Nenhuma: a decisão "tokens em vez de exceção" é dele.
 
 ## Achados
-- `tests/docs-links.test.ts` falhava no Windows (`core.autocrlf=true`): com CRLF, o regex dos títulos não casava e o pre-push barrava todo push da máquina. O usuário aprovou incluir a correção (`split(/\r?\n/)`) neste contrato em 19/11.
+- `tests/docs-links.test.ts` falhava no Windows (CRLF) porque esta branch saiu do #35, anterior à correção que o staging já tinha (#34). O arquivo ficou idêntico ao do staging: o diff do PR não o toca, mas ele continua no escopo porque a branch o altera em relação ao #35.
