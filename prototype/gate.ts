@@ -213,7 +213,7 @@ export function profileCard(): string {
     <h3>${D.profileTitle}</h3>
     <div class="desk-id">${avatarButton('md')}
       <label class="field"><span>${S.ui.playerName.label}</span><input type="text" data-desk-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${D.namePlaceholder}" value="${esc(ses.profile.playerName ?? '')}"></label></div>
-    <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+    <details class="ninja-record"><summary>Registro do ninja</summary><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>
   </section>`;
 }
 

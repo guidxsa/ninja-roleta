@@ -47,6 +47,7 @@ export async function bundleCss(entry: string): Promise<string> {
     charset: 'utf8',
     minify: true,
     target: ['chrome105', 'safari15.4', 'firefox110'],
+    external: ['img/*'], // Assets públicos copiados ao lado do HTML do jogo e do Lab.
     loader: { '.woff2': 'dataurl' },
     logLevel: 'error',
   });

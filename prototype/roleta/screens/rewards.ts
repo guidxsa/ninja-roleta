@@ -116,7 +116,7 @@ export async function relicRewardScreen(cat: RCategory): Promise<void> {
   const c = ses.camp!;
   const RR = S.roleta.run;
   const root = show(
-    h(`<div class="screen rwheel"><h2>${RR.relicRewardTitle}</h2><p class="center"><span class="chip">${RR.categories[cat]}</span></p>
+    h(`<div class="screen rwheel rrelic"><i class="festival-lamp" aria-hidden="true"></i><h2>${RR.relicRewardTitle}</h2><p class="center"><span class="chip">${RR.categories[cat]}</span></p>
       <div class="rstage-box">${rstage()}<div id="slot"></div></div><div class="rside"><div id="results"></div><div id="hud"></div><div id="cta"></div></div></div>`),
   );
   const slot = root.querySelector<HTMLElement>('#slot')!;

@@ -1,4 +1,5 @@
 // Roleta: luta 1×1, com as roletas de iniciativa e acerto.
+import { preRoleta } from '../../battleArt';
 import { scaleVillain } from '../../../src/core/difficulty';
 import { gateHpUpkeep, gateUpkeep } from '../../../src/core/gates';
 import { hitSlices } from '../../../src/core/hit';
@@ -374,6 +375,10 @@ export async function battleScreen(setup: BattleSetup, abandonable = false): Pro
   const c = ses.camp!;
   const villain = setup.def ?? scaleVillain(villainsById[setup.villainId]!, c.difficulty, data);
   let state = setup.from ?? startRoletaBattle(c.player, villain, setup.options, rdata, ses.rng);
+  const category = roletaCategory();
+  await preRoleta(
+    villainPanel(state) + foePortrait(villain.id, 'md', true) + avatar(c.player) + roletaArt('roleta-' + category, CATEGORY_SCENE[category] ?? 'konoha', 'rarena-art'),
+  );
   ses.battlePlayer = () => state.player;
 
   // Chefe do ciclo: palco próprio (moldura de perigo, retrato maior e o 将 no lugar do 戦; o título já diz "Chefe").
