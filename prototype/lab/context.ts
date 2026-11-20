@@ -46,7 +46,7 @@ export function makeDeterministic(seed: number): void {
 export function labContext(scenario: Scenario, prefs: LabPrefs, seed = scenario.seed ?? 1): LabContext {
   const storage = memoryStorage();
   saveProfile(storage, { ...(scenario.profile?.() ?? emptyProfile()), backfilled: true });
-  const settings: Settings = { instant: prefs.instant, difficulty: DEFAULT_DIFFICULTY, sfx: false, music: false, animated: false, theme: prefs.theme };
+  const settings: Settings = { instant: prefs.instant, difficulty: DEFAULT_DIFFICULTY, sfx: false, music: false, animated: false };
   storage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   scenario.setup?.(storage);
   initSession(storage, seed);

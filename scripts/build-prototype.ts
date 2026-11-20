@@ -42,20 +42,20 @@ const worker = await build({
 });
 
 const pagina = page('prototype/index.html', js, css);
-const html = canal === 'staging' ? pagina.replace('<title>Ninja Roleta</title>', '<title>Ninja Roleta (staging)</title>') : pagina;
+const html = canal === 'staging' ? pagina.replace('<title>Ninshu Roots</title>', '<title>Ninshu Roots (staging)</title>') : pagina;
 
 // Manifesto do jogo instalável: abre em tela cheia, nas cores do tema escuro (o padrão).
 const manifest = {
-  name: canal === 'staging' ? 'Ninja Roleta (staging)' : 'Ninja Roleta',
-  short_name: canal === 'staging' ? 'NR staging' : 'Ninja Roleta',
+  name: canal === 'staging' ? 'Ninshu Roots (staging)' : 'Ninshu Roots',
+  short_name: canal === 'staging' ? 'Ninshu Roots (staging)' : 'Ninshu Roots',
   description: 'Jogo de fã, de roleta e estratégia, no universo ninja. Sem afiliação oficial.',
   lang: 'pt-BR',
   start_url: './',
   scope: './',
   display: 'standalone',
   orientation: 'any',
-  background_color: '#0d0c0b',
-  theme_color: '#0d0c0b',
+  background_color: '#1a1918',
+  theme_color: '#1a1918',
   // O selo fica na zona segura, então cada ícone serve aos dois usos (entradas separadas, como pede a especificação).
   icons: PWA_ICONS.flatMap((src) => {
     const n = src.match(/\d+/)![0];

@@ -1,9 +1,9 @@
 ---
 name: lancar-versao
-description: Entrega e lança versões do Ninja Roleta pelo fluxo feature → staging → master. Contribuir (ao fim de toda funcionalidade, mecânica, ajuste ou correção, inclusive ao fim da skill nova-mecanica, sem esperar o usuário pedir "commita") - testa, commita numa branch feature/*, escreve o fragmento changelog.d, faz push só da branch e abre o PR para o staging, que entra sozinho com a revisão aprovada. Preparar release (o usuário pede "prepara a v0.Y.0" ou o PR permanente sugere) - junta os fragmentos no CHANGELOG e sobe a versão no staging. Publicar release e hotfix - merge no master, tag vX.Y.Z e deploy, só com aprovação explícita. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github", "hotfix" ou "faz a tag".
+description: Entrega e lança versões do Ninshu Roots pelo fluxo feature → staging → master. Contribuir (ao fim de toda funcionalidade, mecânica, ajuste ou correção, inclusive ao fim da skill nova-mecanica, sem esperar o usuário pedir "commita") - testa, commita numa branch feature/*, escreve o fragmento changelog.d, faz push só da branch e abre o PR para o staging, que entra sozinho com a revisão aprovada. Preparar release (o usuário pede "prepara a v0.Y.0" ou o PR permanente sugere) - junta os fragmentos no CHANGELOG e sobe a versão no staging. Publicar release e hotfix - merge no master, tag vX.Y.Z e deploy, só com aprovação explícita. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github", "hotfix" ou "faz a tag".
 ---
 
-# Lançar versão (Ninja Roleta)
+# Lançar versão (Ninshu Roots)
 
 Regras do fluxo em [docs/processo/fluxo.md](../../../docs/processo/fluxo.md). Resumo:
 

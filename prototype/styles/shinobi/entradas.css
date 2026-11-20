@@ -35,14 +35,14 @@
   position: relative;
   width: 100%;
   height: clamp(110px, 21vh, 230px);
-  background: url('img/shinobi/marca-letreiro.png') left center/contain no-repeat;
+  font-size: var(--fs-brand);
   filter: drop-shadow(1px 3px 3px color-mix(in srgb, var(--sh-sumi-4) 60%, transparent));
   text-align: left;
 }
 .gate.jgate .gate-head .logo {
-  background-image: url('img/shinobi/jornada-letreiro.png');
+  background: url('img/shinobi/jornada-letreiro.png') left center/contain no-repeat;
 }
-.gate .gate-head .logo span {
+.gate.jgate .gate-head .logo span {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -51,10 +51,7 @@
 }
 .gate .gate-head .logo::before,
 .gate .gate-head .logo::after,
-.gate .gate-cloud,
-.gate .duo-tags {
-  display: none;
-}
+.gate .gate-cloud { display: none; }
 .gate .gate-quote {
   padding: 10px 16px;
   width: clamp(180px, 25%, 300px);

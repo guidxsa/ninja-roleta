@@ -1,9 +1,9 @@
 ---
 name: auditar-balanceamento
-description: Mede o balanceamento do Ninja Roleta contra a meta de vitória do bot (Fácil 90, Médio 65, Difícil 40, Hardcore 15, ±5) e monta a tabela de antes e depois para o usuário decidir, sem ajustar nada sozinho. Use quando o usuário disser "tá fácil/difícil demais", "confere a meta", "como ficou o balanceamento", quando o check:meta da CI quebrar, ao fim de uma mecânica que mexe em dano, vida, chance ou recompensa (skill nova-mecanica, passo de simulação), ou antes de propor qualquer número novo.
+description: Mede o balanceamento do Ninshu Roots contra a meta de vitória do bot (Fácil 90, Médio 65, Difícil 40, Hardcore 15, ±5) e monta a tabela de antes e depois para o usuário decidir, sem ajustar nada sozinho. Use quando o usuário disser "tá fácil/difícil demais", "confere a meta", "como ficou o balanceamento", quando o check:meta da CI quebrar, ao fim de uma mecânica que mexe em dano, vida, chance ou recompensa (skill nova-mecanica, passo de simulação), ou antes de propor qualquer número novo.
 ---
 
-# Auditar balanceamento (Ninja Roleta)
+# Auditar balanceamento (Ninshu Roots)
 
 A regra do projeto: **balanceamento é proposto ao usuário com a tabela de antes e depois, nunca compensado sozinho** (AGENTS.md). Esta skill mede e propõe; quem decide é o usuário.
 

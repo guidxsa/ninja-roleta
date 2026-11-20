@@ -1,6 +1,6 @@
 ---
-name: Ninja Roleta
-description: Mesa de escriba shinobi em papel, tinta e laca vermelha, com dois temas (Sumi, noite fria; Pergaminho, dia quente).
+name: Ninshu Roots
+description: Mesa de escriba shinobi em papel, tinta e laca vermelha, com tema único escuro grafite.
 colors:
   primary: "#b5161f"
   primary-bright: "#c92a31"
@@ -9,23 +9,20 @@ colors:
   gold: "#b8954f"
   gold-bright: "#dcbd78"
   gold-deep: "#6e5428"
-  sumi-bg: "#0d0c0b"
-  sumi-bg-raised: "#151312"
-  sumi-surface: "#1a1817"
-  sumi-surface-2: "#232120"
-  sumi-surface-3: "#2f2c29"
+  sumi-bg: "#1a1918"
+  sumi-bg-raised: "#24221f"
+  sumi-surface: "#292725"
+  sumi-surface-2: "#302d2a"
+  sumi-surface-3: "#36332f"
   sumi-line: "#36332f"
   steel: "#8a919a"
   sumi-text: "#ece3d0"
-  sumi-muted: "#9a9286"
+  sumi-muted: "#afa79b"
   paper: "#e8dcc0"
   paper-deep: "#d4c39e"
   paper-ink: "#24190f"
   paper-muted: "#574632"
   wood: "#4a2f1c"
-  pergaminho-bg: "#e6dac0"
-  pergaminho-surface: "#f6efde"
-  pergaminho-text: "#1f1812"
   hp: "#5f9a5c"
   hp-low: "#c4412c"
   chakra: "#3d6fc4"
@@ -108,7 +105,7 @@ components:
     size: "40px"
 ---
 
-# Design System: Ninja Roleta
+# Design System: Ninshu Roots
 
 ## Overview
 
@@ -116,7 +113,7 @@ components:
 
 A interface é um conjunto de objetos de papel, tinta, madeira e laca pousados numa mesa: pergaminhos de borda rasgada, selos (hanko) carimbados, pinceladas, placas e cartas de mapa. Nada parece componente de site. Quem conhece a obra deve sentir que está navegando pelo mundo shinobi, mesmo sem nenhum personagem na tela.
 
-O projeto tem dois temas que contrastam de propósito, como a dualidade Naruto e Sasuke: **Pergaminho** (dia, papel quente, tinta sumi) e **Sumi** (noite, carvão frio, vermelho Sharingan e dourado envelhecido). Só os tokens trocam; a composição é a mesma. Sem escolha do jogador, o jogo segue o aparelho.
+O letreiro do Portão usa `--font-display` e a escala fluida `--fs-brand` (36 a 90 px). A folha de Konoha em traço marfim sobre um azulejo vermelho identifica Ninshu Roots. O fundo Sumi é grafite. Os pergaminhos usam tinta escura sobre papel envelhecido.
 
 A voz é artesanal e ritual (cada ação tem gesto: carimbar, desenrolar, pingar tinta), tensa e contida (vermelho raro, dourado só para conquista) e direta e legível (toque grande, números claros, a ambientação nunca atrapalha a função). A exceção festiva é a roleta, que ganha cor e ritmo de barraca de festival contra o resto sóbrio. Celular e desktop são pares, cada um com composição própria.
 
@@ -132,17 +129,16 @@ A voz é artesanal e ritual (cada ação tem gesto: carimbar, desenrolar, pingar
 Paleta de tinta e papel: grafite quase preto, papel envelhecido, vermelho laca e dourado fosco, com poucas cores funcionais dessaturadas para viver nela.
 
 ### Primary
-- **Vermelho Laca** (#b5161f): ação e navegação (botão principal, abas, progresso) e também perigo, chefe e carimbo. Hoje `--primary` e `--accent` apontam para o mesmo vermelho, mas ficam separados para poder divergir. No tema claro vira #a3121b.
+- **Vermelho Laca** (#b5161f): ação e navegação (botão principal, abas, progresso) e também perigo, chefe e carimbo. Hoje `--primary` e `--accent` apontam para o mesmo vermelho, mas ficam separados para poder divergir.
 - **Laca Viva** (#c92a31): hover. **Laca Funda** (#5e0b10): pressionado e sombra dura dos letreiros. **Marfim de Carimbo** (#f6ecd6): texto sobre o vermelho.
 
 ### Secondary
 - **Dourado Envelhecido** (#b8954f): conquista e destaque raro, filetes e foco. **Ouro Claro** (#dcbd78) para brilho; **Ouro Fundo** (#6e5428). No papel claro escurece para #7d5d1f, para ler.
 
 ### Neutral
-- **Sumi** (#0d0c0b): fundo noturno; camadas de superfície em #151312, #1a1817, #232120 e #2f2c29; filete #36332f e aço #8a919a.
-- **Texto Marfim** (#ece3d0) e **Cinza de Cinza** (#9a9286) para texto secundário.
-- **Pergaminho** (#e8dcc0 / #d4c39e) com **Tinta de Papel** (#24190f) e #574632 para texto: dentro de `.parchment` os tons de texto são sempre os escuros do papel, nos dois temas.
-- Tema claro: fundo #e6dac0, superfície #f6efde, texto #1f1812.
+- **Sumi** (#1a1918): fundo noturno; camadas de superfície em #24221f, #292725, #302d2a e #36332f; filete #36332f e aço #8a919a.
+- **Texto Marfim** (#ece3d0) e **Cinza de Cinza** (#afa79b) para texto secundário.
+- **Pergaminho** (#e8dcc0 / #d4c39e) com **Tinta de Papel** (#24190f) e #574632 para texto: dentro de `.parchment` os tons de texto são sempre os escuros do papel.
 - **Madeira** (#4a2f1c) para rolos e placas.
 
 ### Functional
@@ -153,7 +149,7 @@ Paleta de tinta e papel: grafite quase preto, papel envelhecido, vermelho laca e
 
 **The Tokens Only Rule.** Cor, fonte, duração e forma só por `var(--...)`. Cor solta existe apenas em arte: cenário, roda, cards de modo, barraca, carta do mapa e barra do Portão.
 
-**The Two Moods Rule.** Os temas só trocam tokens. Nenhuma tela tem versão própria para dia ou noite.
+**Sumi.** Todas as telas usam o fundo grafite, inclusive quando o aparelho prefere a aparência clara.
 
 ## Typography
 
@@ -166,7 +162,7 @@ Paleta de tinta e papel: grafite quase preto, papel envelhecido, vermelho laca e
 **Character:** pincel grande nos letreiros, caligrafia à mão nos títulos de pergaminho, e uma voz condensada de HUD para números e rótulos. O corpo é neutro e legível.
 
 ### Hierarchy
-- **Display** (Shojumaru 400, escala fluida, 1.05): só letreiro grande, com sombra dura `2px 2px 0` em vermelho fundo (no tema claro, sombra suave).
+- **Display** (Shojumaru 400, escala fluida, 1.05): só letreiro grande, com sombra dura `2px 2px 0` em vermelho fundo.
 - **Hand** (Kalam 700, 22 a 23px, 1.1): título de pergaminho, citação e nome dos modos.
 - **Body** (Zen Kaku 400/700, 15px, 1.5): texto corrido.
 - **HUD** (Barlow Condensed 600/700, 13 a 18px, caixa alta, +0.05 a +0.14em): números, rótulos, botão primário, chips, títulos de seção.
@@ -229,7 +225,7 @@ Responde a um gesto ou explica troca de estado. O carimbo (hanko 道) firma a es
 
 ### Do:
 - **Do** usar objetos do universo (pergaminho, selo, carimbo, placa, carta de mapa) no lugar de componentes genéricos.
-- **Do** usar só tokens `var(--...)`; o tema troca só os tokens.
+- **Do** usar só tokens `var(--...)`.
 - **Do** manter o chanfro em `::before`/`::after` e o foco por dentro quando o elemento é chanfrado.
 - **Do** usar SVG de `ICONS` em `art.ts` (`icon(nome)`) para todo ícone.
 - **Do** manter botões simples (ícone, nome, números) e levar regras e motivos de bloqueio para a dica.

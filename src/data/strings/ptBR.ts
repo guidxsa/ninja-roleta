@@ -532,7 +532,7 @@ export const ptBR = {
   ui: {
     /** Rótulo da versão com `?seed=N` (replay do Compartilhar). */
     seedBadge: (n: number) => `seed ${n}`,
-    title: 'Ninja Roleta',
+    title: 'Ninshu Roots',
     subtitle: 'protótipo',
     /** O aparelho não guardou a Jornada (cheio ou bloqueado). Avisado uma vez por sessão. */
     saveFailed: 'Não deu para salvar a jornada neste aparelho. Ela segue aberta, mas fechar a página agora perde o progresso.',
@@ -555,29 +555,12 @@ export const ptBR = {
       achievements: 'Conquistas',
       achievementsDesc: 'Veja seu progresso e o que falta desbloquear.',
       // Frases no espírito da obra (paráfrases curtas), sorteadas a cada visita ao Portão.
-      // Dualidade do Portão: de dia, o Naruto e quem acredita nele; à noite, o Sasuke e o que o move. Nenhum dos dois é o lado "bom".
-      duality: {
-        day: {
-          tag: 'Dia · Naruto observa Konoha',
-          seal: '陽',
-          quotes: [
-            { text: 'Eu não volto atrás na minha palavra. Esse é o meu jeito ninja!', by: 'Naruto Uzumaki' },
-            { text: 'Um dia eu vou ser Hokage, e todo mundo vai me reconhecer!', by: 'Naruto Uzumaki' },
-            { text: 'Eu vou trazer o Sasuke de volta. É uma promessa para a vida toda.', by: 'Naruto Uzumaki' },
-            { text: 'Ninguém sabe a dor de ficar sozinho como eu sei.', by: 'Naruto Uzumaki' },
-          ],
-        },
-        night: {
-          tag: 'Noite · Sasuke observa Konoha',
-          seal: '影',
-          quotes: [
-            { text: 'O que eu tenho não é um sonho, porque eu vou torná-lo realidade.', by: 'Sasuke Uchiha' },
-            { text: 'Eu não sou como você. Eu perdi tudo de uma vez.', by: 'Sasuke Uchiha' },
-            { text: 'Você se tornou meu melhor amigo. Por isso mesmo.', by: 'Sasuke Uchiha' },
-            { text: 'Odeie-me, amaldiçoe-me. E sobreviva, agarrado à vida.', by: 'Itachi Uchiha' },
-          ],
-        },
-      },
+      nightQuotes: [
+        { text: 'O que eu tenho não é um sonho, porque eu vou torná-lo realidade.', by: 'Sasuke Uchiha' },
+        { text: 'Eu não sou como você. Eu perdi tudo de uma vez.', by: 'Sasuke Uchiha' },
+        { text: 'Você se tornou meu melhor amigo. Por isso mesmo.', by: 'Sasuke Uchiha' },
+        { text: 'Odeie-me, amaldiçoe-me. E sobreviva, agarrado à vida.', by: 'Itachi Uchiha' },
+      ],
       quotes: [
         { text: 'Eu não volto atrás na minha palavra. Esse é o meu jeito ninja!', by: 'Naruto Uzumaki' },
         { text: 'Quem abandona os amigos é pior que lixo.', by: 'Kakashi Hatake' },
@@ -611,10 +594,8 @@ export const ptBR = {
     back: 'Voltar',
     instant: (on: boolean) => (on ? 'Instantâneo: ligado' : 'Instantâneo: desligado'),
     animated: (on: boolean) => (on ? 'Cenas animadas: ligado (os painéis ganham vida)' : 'Cenas animadas: desligado (Leve: imagens paradas)'),
-    themeDay: 'Modo dia',
-    themeNight: 'Modo noite',
     // Nomes curtos ao lado dos ícones da barra, só no PC (no celular a barra mostra só os ícones).
-    toolLabels: { instant: 'Instantâneo', animated: 'Animado', theme: 'Tema', sfx: 'Efeitos', music: 'Música', sheet: 'Ficha', history: 'Registro' },
+    toolLabels: { instant: 'Instantâneo', animated: 'Animado', sfx: 'Efeitos', music: 'Música', sheet: 'Ficha', history: 'Registro' },
     // Casca do PC (docs/visual.md, "Celular e desktop"): barra lateral, Início em painéis e páginas do Registro.
     desk: {
       nav: { home: 'Início', jornada: 'Jornada', roleta: 'Roleta', history: 'Histórico', bingo: 'Livro Bingo', relics: 'Relíquias', achievements: 'Conquistas' },
@@ -805,7 +786,7 @@ export const ptBR = {
     reachedStage: (name: string) => `parou em ${name}`,
     /** Vazio sem nenhuma usada: a linha some (antes aparecia "0 Vontade(s)..." em toda run). */
     revivesUsed: (n: number) => (n <= 0 ? '' : n === 1 ? '1 Vontade do Fogo usada' : `${n} Vontades do Fogo usadas`),
-    disclaimer: 'Projeto de fã, sem fins lucrativos e sem afiliação oficial. Nomes de trabalho.',
+    disclaimer: 'Projeto de fã, sem fins lucrativos e sem afiliação oficial.',
     // "Rumo a Ninja da Grama" pedia artigo; com o nome primeiro serve para qualquer vilão.
     towards: (name: string) => `${name} à frente`,
     difficulty: 'Dificuldade',
@@ -1205,7 +1186,7 @@ export const ptBR = {
     button: 'Compartilhar',
     copied: 'Resultado copiado! Cole no grupo.',
     failed: 'Não deu para copiar. Selecione o texto e copie à mão.',
-    title: (version: string, difficulty: string) => `Ninja Roleta v${version} · ${difficulty}`,
+    title: (version: string, difficulty: string) => `Ninshu Roots v${version} · ${difficulty}`,
     level: (n: number) => `Nível ${n}`,
     win: '✅',
     loss: '💀',

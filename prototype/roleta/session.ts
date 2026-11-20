@@ -20,7 +20,6 @@ export const DIFFICULTIES = Object.keys(rdata.base.balance.difficulty.multiplier
 export const DEFAULT_DIFFICULTY: Difficulty = rdata.base.balance.difficulty.default;
 
 /** Preferências do aparelho (não é estado de campanha). A dificuldade é a última escolhida. */
-export type Theme = 'light' | 'dark';
 export interface Settings {
   instant: boolean;
   difficulty: Difficulty;
@@ -30,8 +29,6 @@ export interface Settings {
   music: boolean;
   /** Cenas animadas (vídeo nas vagas de ilustração); desligado é o modo Leve, o padrão. */
   animated: boolean;
-  /** Tema escolhido no botão; sem escolha, segue o aparelho. */
-  theme?: Theme;
   /** Minijogos de tempo da Jornada sem pressa (v0.91.0). */
   calmGames?: boolean;
 }
@@ -90,8 +87,7 @@ export function loadSettings(storage: KeyValueStorage): Settings {
   try {
     const saved = JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}') as Partial<Settings>;
     const difficulty = saved.difficulty && DIFFICULTIES.includes(saved.difficulty) ? saved.difficulty : DEFAULT_DIFFICULTY;
-    const theme = saved.theme === 'light' || saved.theme === 'dark' ? saved.theme : undefined;
-    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), animated: Boolean(saved.animated), theme, calmGames: Boolean(saved.calmGames) };
+    return { instant: Boolean(saved.instant), difficulty, sfx: saved.sfx !== false, music: Boolean(saved.music), animated: Boolean(saved.animated), calmGames: Boolean(saved.calmGames) };
   } catch {
     return { instant: false, difficulty: DEFAULT_DIFFICULTY, sfx: true, music: false, animated: false };
   }

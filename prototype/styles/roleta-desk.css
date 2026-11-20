@@ -185,8 +185,7 @@
   .rb-desk > .battle-head { grid-area: head; }
   /* Fundo: a arte da categoria (ou o cenário desenhado) cobre a luta toda, como a cena da Jornada. */
   .rb-desk > .arena { position: static; grid-area: arena; align-self: center; justify-self: center; width: min(100%, 620px); min-height: 0; border: 0; background: none; padding: 6px 0; }
-  .rb-desk .rarena-art { inset: 0; z-index: -1; opacity: .5; -webkit-mask: none; mask: none; }
-  :root:not([data-theme='light']) .rb-desk .rarena-art { opacity: .35; }
+  .rb-desk .rarena-art { inset: 0; z-index: -1; opacity: .35; -webkit-mask: none; mask: none; }
   .rb-desk .rarena-art.jscene::before { background-size: cover; background-position: center 30%; }
   .rb-desk .arena-mark { font-size: clamp(80px, 10vw, 180px); }
   .rb-desk .arena .dice { width: 100%; }

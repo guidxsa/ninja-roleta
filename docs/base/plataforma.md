@@ -9,7 +9,7 @@ Desde a v0.60.0 o jogo é um PWA: pode ser instalado no celular e no computador 
 - **Arquivos**: `manifest.webmanifest`, `sw.js` e os ícones (`icon-192.png`, `icon-512.png`, o selo 忍 em desenho próprio) saem do build ao lado da página ([prototype/pwa/LEIAME.md](../../prototype/pwa/LEIAME.md)). O service worker é `prototype/sw.ts`.
 - **Página**: vem da rede primeiro e a cópia fica guardada. Online, a versão nova chega no próximo acesso, sem ninguém ficar preso numa versão antiga; sem rede, abre a cópia. `?seed=` e `index.html` abrem a mesma cópia.
 - **Imagens**: do cache, depois de vistas uma vez. Sem a imagem (offline e nunca vista), o jogo usa o desenho em SVG, como sempre.
-- **Cache**: um por versão (`ninja-roleta-<versão>`); ativar uma versão apaga as antigas. O GitHub Pages divide a origem com outros projetos, então o service worker só responde dentro do próprio escopo e só apaga caches com o prefixo dele.
+- **Cache**: um por versão e canal (`ninshu-roots-` em produção e `ninshu-roots-staging-` no preview). Na ativação, o worker remove versões antigas do próprio canal, inclusive as com prefixo `ninja-roleta-`. O GitHub Pages divide a origem com outros projetos, então o service worker só responde dentro do próprio escopo e só apaga caches com o prefixo dele.
 - Aberto como arquivo (`dist/prototipo.html`, endereço `file:`), não há service worker: o arquivo único já funciona sem rede.
 - O que é salvo no aparelho (perfil, histórico, Jornada) não muda: continua no `localStorage`.
 

@@ -81,7 +81,7 @@
     position: absolute; right: clamp(14px, 3cqw, 40px); top: clamp(12px, 6cqh, 44px); width: min(40cqw, 440px); margin: 0; align-self: auto; transform: none;
     rotate: 1.5deg; z-index: 2; filter: drop-shadow(3px 6px 4px rgba(0, 0, 0, .3));
   }
-  .gate-banner .gate-quote .duo-seal { right: 6px; top: 6px; --s: 26px; }
+  .gate-banner .gate-quote .quote-seal { right: 6px; top: 6px; --s: 26px; }
   .gate-banner .gate-quote p { padding-right: 26px; }
   .gate-sub { display: none; }
 
@@ -236,12 +236,11 @@
   }
 }
 
-/* Dualidade no PC: a legenda acompanha o logo, à esquerda. */
+/* Leitura do letreiro sobre a cena no PC. */
 @media (min-width: 900px) and (min-height: 560px) {
-  /* O logo fica sobre a arte nos dois temas: a primeira linha clara com sombra, e uma sombra de tinta atrás do canto. */
+  /* O logo fica sobre a arte: a primeira linha clara com sombra, e uma sombra de tinta atrás do canto. */
   .gate-banner .logo .l1 { color: #f3e6c8; text-shadow: 0 2px 6px rgba(0, 0, 0, .85), 0 0 2px rgba(0, 0, 0, .9); }
-  .gate-banner .gate-hero.duo::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(42% 46% at 16% 22%, rgba(16, 10, 5, .5), transparent 100%); }
-  .gate-banner .duo-tag { text-align: left; font-size: clamp(15px, 1.1vw, 20px); color: #f3e6c8; text-shadow: 0 1px 3px rgba(0, 0, 0, .8); }
+  .gate:not(.jgate) .gate-hero::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(42% 46% at 16% 22%, color-mix(in srgb, var(--ink) 50%, transparent), transparent 100%); }
 }
 
 /*

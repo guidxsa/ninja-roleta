@@ -24,9 +24,7 @@ function report(status: FrameStatus): void {
 }
 
 export function prefsFrom(params: URLSearchParams): LabPrefs {
-  const theme = params.get('theme');
-  const device = window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  return { theme: theme === 'light' || theme === 'dark' ? theme : device, instant: params.get('instant') === '1' };
+  return { instant: params.get('instant') === '1' };
 }
 
 export async function runFrame(id: string, params: URLSearchParams): Promise<void> {

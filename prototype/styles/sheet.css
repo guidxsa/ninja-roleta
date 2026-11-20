@@ -154,7 +154,7 @@
 .jsheet .mods .chip { font-size: var(--fs-xs); }
 .jsheet .jrbar { flex-wrap: wrap; }
 
-/* Painéis da Ficha no mapa do Roleta (PC): o mesmo papel da janela da ficha, nos dois temas (no escuro, a tinta clara do
+/* Painéis da Ficha no mapa do Roleta (PC): o mesmo papel da janela da ficha, (no escuro, a tinta clara do
    tema sumia sobre as cores de papel das técnicas, relíquias e bolsa). */
 .rsheet-panel {
   --fill: var(--paper); --frame: rgba(36, 25, 15, .45);

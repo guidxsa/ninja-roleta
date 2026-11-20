@@ -1,9 +1,9 @@
 ---
 name: nova-mecanica
-description: Fluxo ponta a ponta para adicionar ou mudar uma mecânica do jogo Ninja Roleta (dados → core puro → testes → simulação → protótipo → docs/CHANGELOG). Use sempre que o usuário pedir uma regra nova ou alterada no jogo — nível/XP, itens, eventos pré-vilão, vilões, técnicas, passivas, linhagens, dificuldade, recompensas, inventário, ficha, roletas — ou reclamar de um comportamento de jogo ("o player tá subindo de nível demais", "quero que o veneno acumule"), mesmo que não diga "mecânica". Também vale para ajustes de balanceamento que mexem em fórmulas, não só em números.
+description: Fluxo ponta a ponta para adicionar ou mudar uma mecânica do jogo Ninshu Roots (dados → core puro → testes → simulação → protótipo → docs/CHANGELOG). Use sempre que o usuário pedir uma regra nova ou alterada no jogo — nível/XP, itens, eventos pré-vilão, vilões, técnicas, passivas, linhagens, dificuldade, recompensas, inventário, ficha, roletas — ou reclamar de um comportamento de jogo ("o player tá subindo de nível demais", "quero que o veneno acumule"), mesmo que não diga "mecânica". Também vale para ajustes de balanceamento que mexem em fórmulas, não só em números.
 ---
 
-# Nova mecânica (Ninja Roleta)
+# Nova mecânica (Ninshu Roots)
 
 O jogo tem uma arquitetura em camadas com regras fortes (ver `AGENTS.md`). Uma mecânica só está pronta quando atravessa todas as camadas de forma coerente: se ela existe no core mas a simulação não a conhece, o balanceamento mente; se existe na UI mas não nos testes, vai quebrar na próxima mudança. Este fluxo existe para que nenhuma camada fique para trás.
 

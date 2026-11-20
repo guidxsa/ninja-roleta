@@ -1,21 +1,20 @@
 /*
  * Design system "Shinobi": tokens de cor, tipografia, forma e movimento.
- * Tema escuro "Sumi" (carvão, grafite, vermelho Sharingan, dourado envelhecido) é o padrão;
- * o claro "Pergaminho" (papel, tinta sumi, mesmos acentos) só troca os tokens.
+ * Tema único Sumi em grafite, laca e dourado.
  * Regra: componentes usam só estes tokens; cor solta no CSS só em arte (madeira, metal).
  */
 :root {
   /* Superfícies */
-  --bg: #0d0c0b;
-  --bg-2: #151312;
-  --surface: #1a1817;
-  --surface-2: #232120;
-  --surface-3: #2f2c29;
+  --bg: #1a1918;
+  --bg-2: #24221f;
+  --surface: #292725;
+  --surface-2: #302d2a;
+  --surface-3: #36332f;
   --line: #36332f;
   --line-strong: #5a5f66;
   --steel: #8a919a;
   --text: #ece3d0;
-  --muted: #9a9286;
+  --muted: #afa79b;
 
   /* Acentos: vermelho é ação e perigo; dourado é conquista e destaque raro; pergaminho é documento. */
   --accent: #b5161f;
@@ -54,6 +53,7 @@
   --fs-4xl: 24px;
   --fs-5xl: 28px;
   --fs-6xl: 32px;
+  --fs-brand: clamp(36px, 6vw, 90px);
   /* Escala de espaço (múltiplos de 4): para o que for escrito daqui em diante. */
   --sp-1: 4px;
   --sp-2: 8px;
@@ -132,7 +132,6 @@
   --dur-2: 200ms;
   --dur-3: 320ms;
   /* Troca de dia e noite no Portão (dualidade Naruto e Sasuke): lenta, como um amanhecer. */
-  --dur-dawn: 1600ms;
   /* Cena viva dos painéis grandes (modo Animado): respiro da arte, névoa, queda das folhas e brilho dos vaga-lumes. */
   --dur-breath: 26s;
   --dur-drift: 70s;
@@ -146,54 +145,6 @@
   color-scheme: dark;
 }
 
-:root[data-theme='light'] {
-  --bg: #e6dac0;
-  --bg-2: #efe5cf;
-  --surface: #f6efde;
-  --surface-2: #ece1c6;
-  --surface-3: #ddcfad;
-  --line: #cbbb95;
-  --line-strong: #8d8170;
-  --steel: #5e5a53;
-  --text: #1f1812;
-  --muted: #5f5140;
-
-  --accent: #a3121b;
-  --accent-2: #b3191f;
-  --accent-deep: #6b0c12;
-  --accent-ink: #f8efdc;
-  --accent-text: #a3121b;
-  --seal: #a3121b;
-  /* Dourado no papel claro: escuro o bastante para ler (antes #94712c/#ad8636 quase sumiam). */
-  --gold: #735518;
-  --gold-2: #684c15;
-  --gold-deep: #5e4720;
-
-  --hp: #4b8a49;
-  --hp-mid: #ad852b;
-  --hp-low: #b8392a;
-  --ck: #2f60b0;
-  --ck-2: #2f60b0;
-  --xp: #876620;
-  --good: #3c7a37;
-  --bad: #b3352b;
-  --jin: #c0501f;
-  --foe: #8f1a14;
-  --leaf: #456d2e;
-  --leaf-deep: #2f5f34;
-  --orange: #c2550f;
-  --navy: #2c3a52;
-  --log-bg: rgba(250, 244, 230, .9);
-  --log-mine: #2b6528;
-  --log-theirs: #962219;
-  --bar-bg: #2a231b;
-  --shadow: rgba(50, 32, 12, .45);
-  --shadow-soft: rgba(50, 32, 12, .2);
-  --scrim: rgba(40, 28, 14, .62);
-  --grain: var(--grain-dark);
-  --title-shadow: 1.5px 1.5px 0 color-mix(in srgb, var(--accent) 28%, transparent);
-  color-scheme: light;
-}
 
 /* Faixas (base.css): só tokens mudam aqui; as telas cuidam da composição. */
 @media (min-width: 600px) { :root { --col-max: 860px; --modal-max: 720px; } }
