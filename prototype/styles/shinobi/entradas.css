@@ -267,10 +267,15 @@
   }
   .gate .gate-modes .mode-card {
     flex: none;
-    min-height: 164px;
-    height: clamp(164px, 22vh, 208px);
+    /* Altura mínima, não fixa: com a descrição longa em 360 px o card cresce e o botão não sai do papel (issue #41). */
+    display: flex;
+    flex-direction: column;
+    min-height: clamp(164px, 22vh, 208px);
+    height: auto;
   }
   .gate .gate-modes .mode-body {
+    flex: 1 1 auto;
+    height: auto;
     padding: 19px 10px 17px;
   }
   .gate .mode-txt {
