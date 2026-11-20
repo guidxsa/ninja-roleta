@@ -33,7 +33,7 @@ Acrescente ou atualize a entrada em `public/img/retratos.json`, em ordem de arqu
 
 ## 4. Revisão humana (ciclo até aprovar)
 
-1. `npm run lab` e o cenário `meta.portraits` (galeria): o retrato novo ao lado da imagem-modelo e dos outros do grupo, nos temas Sumi e Pergaminho, em tamanho pequeno (ordem de iniciativa) e grande (cena). A skill `revisar-visual` tira as fotos (`npx tsx scripts/revisar-visual.ts meta.portraits`).
+1. `npm run lab` e o cenário `meta.portraits` (galeria): o retrato novo ao lado da imagem-modelo e dos outros do grupo, sobre o grafite e sobre o papel, em tamanho pequeno (ordem de iniciativa) e grande (cena). A skill `revisar-visual` tira as fotos (`npx tsx scripts/revisar-visual.ts meta.portraits`).
 2. Mostre ao usuário. Cada ajuste pedido vai para `ajustes` no manifesto; ajuste a instrução, gere de novo e mostre outra vez.
 3. Só com o aval dele: `"aprovado": true`.
 

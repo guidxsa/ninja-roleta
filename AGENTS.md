@@ -81,7 +81,7 @@ Comandos: `npm run check` (verificação completa, a mesma do pre-push e da CI),
 A direção está em [docs/visual.md](docs/visual.md): a interface deve parecer parte do universo.
 
 - Estilos em `prototype/styles/` (camadas: `tokens.css` → `fonts.css` → `base.css` → `components.css` → `ornaments.css` → telas); o build junta e embute as fontes.
-- Cores, fontes, durações e forma só por tokens (`var(--...)`); os temas Sumi (escuro) e Pergaminho (claro) trocam só os tokens. `--primary` é ação e navegação e `--accent` é perigo, chefe e carimbo (hoje o mesmo vermelho). Cor solta só em arte (cenário, roda, cards de modo).
+- Cores, fontes, durações e forma só por tokens (`var(--...)`); o tema é um só, Sumi (grafite), e mora nos tokens; o papel de cena (`.parchment`) leva a tinta escura. Texto confere contraste WCAG AA sobre o grafite e sobre o papel. `--primary` é ação e navegação e `--accent` é perigo, chefe e carimbo (hoje o mesmo vermelho). Cor solta só em arte (cenário, roda, cards de modo).
 - **Nada de emoji como ícone**: SVG do `ICONS` em `prototype/art.ts` (`icon(nome)`), traço 24×24 em `currentColor`. Exceção: o texto de compartilhar.
 - Cantos retos (`--radius: 2px`) e chanfro (`--cut`) nos painéis, sempre em `::before`/`::after`, nunca no elemento (cortaria números flutuantes e o foco).
 - Painel no estilo das referências: `.parchment` (pergaminho rasgado), nuvens (`cloud()`), `.scroll-banner`.
@@ -141,7 +141,7 @@ As skills são instruções em markdown e valem para os dois agentes. **Antes de
 | PR para o staging, preparar e publicar release, hotfix (commit, push da branch, merge, tag) | [.claude/skills/lancar-versao/SKILL.md](.claude/skills/lancar-versao/SKILL.md) |
 | Retrato ilustrado novo, refeito ou trocado (`public/img/ninja`, `viloes`, `jornada`) | [.claude/skills/novo-retrato/SKILL.md](.claude/skills/novo-retrato/SKILL.md) |
 | Medir o balanceamento contra a meta, check:meta quebrado, antes de propor número | [.claude/skills/auditar-balanceamento/SKILL.md](.claude/skills/auditar-balanceamento/SKILL.md) |
-| Conferir tela depois de mexer em interface (fotos do UI Lab em celular e desktop, dois temas) | [.claude/skills/revisar-visual/SKILL.md](.claude/skills/revisar-visual/SKILL.md) |
+| Conferir tela depois de mexer em interface (fotos do UI Lab em celular e desktop, grafite e menos movimento) | [.claude/skills/revisar-visual/SKILL.md](.claude/skills/revisar-visual/SKILL.md) |
 
 Skill nova entra nesta tabela no mesmo commit.
 
