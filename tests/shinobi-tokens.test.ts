@@ -27,9 +27,8 @@ const COLOR = new RegExp(
     `(?<![\\w-])(?:${NAMED.join('|')})(?![\\w-])`,
   'gi',
 );
-/** Tira o que não é cor mas pode ter as mesmas letras: nomes de variável, URLs e textos entre aspas. */
-const stripNonColor = (v: string) =>
-  v.replace(/url\([^)]*\)/gi, 'url()').replace(/(['"]).*?\1/g, '""').replace(/--[\w-]+/g, '--v');
+/** Tira o que não é cor mas pode ter as mesmas letras: nomes de variável e URLs (o texto entre aspas já vem vazio). */
+const stripNonColor = (v: string) => v.replace(/url\([^)]*\)/gi, 'url()').replace(/--[\w-]+/g, '--v');
 const MASK = /^(-webkit-)?mask(-image)?$/;
 
 interface Decl {
@@ -41,44 +40,73 @@ interface Decl {
   inRoot: boolean;
 }
 
-/** Declarações do CSS, lidas caractere a caractere: não depende de quebra de linha nem de uma regra por linha. */
+/**
+ * Declarações do CSS, lidas caractere a caractere (um tokenizador mínimo): não depende de quebra de linha nem de uma
+ * regra por linha. Comentários somem; texto entre aspas vira "" (com escapes), para que parênteses, chaves,
+ * ponto e vírgula ou nomes de cor dentro de um texto não mudem a leitura do resto da folha.
+ */
 function declarations(src: string): Decl[] {
-  const css = src.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '));
   const out: Decl[] = [];
   const stack: string[] = [];
   let buf = '';
-  let start = 0;
+  let declLine = 0;
+  let line = 1;
   let paren = 0;
-  const lineAt = (i: number) => css.slice(0, i).split('\n').length;
-  const flush = (end: number) => {
+  const flush = () => {
     const colon = buf.indexOf(':');
     if (stack.length && colon > 0) {
-      const lead = buf.length - buf.trimStart().length;
       out.push({
         prop: buf.slice(0, colon).trim(),
         value: buf.slice(colon + 1).trim(),
-        line: lineAt(start + lead),
+        line: declLine,
         inRoot: stack.some((s) => /^:root\b/.test(s)),
       });
     }
     buf = '';
-    start = end + 1;
+    declLine = 0;
   };
-  for (let i = 0; i < css.length; i++) {
-    const ch = css[i]!;
+  const add = (s: string) => {
+    if (!declLine && s.trim()) declLine = line;
+    buf += s;
+  };
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i]!;
+    if (ch === '/' && src[i + 1] === '*') {
+      const end = src.indexOf('*/', i + 2);
+      const stop = end < 0 ? src.length : end + 2;
+      line += (src.slice(i, stop).match(/\n/g) ?? []).length;
+      i = stop - 1;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      add('""');
+      let j = i + 1;
+      for (; j < src.length && src[j] !== ch; j++) {
+        if (src[j] === '\\') j++;
+        if (src[j] === '\n') line++;
+      }
+      i = j;
+      continue;
+    }
+    if (ch === '\\') {
+      add(src.slice(i, i + 2));
+      i++;
+      continue;
+    }
+    if (ch === '\n') line++;
     if (ch === '(') paren++;
     if (ch === ')') paren = Math.max(0, paren - 1);
     if (paren === 0 && ch === '{') {
       stack.push(buf.trim());
       buf = '';
-      start = i + 1;
+      declLine = 0;
     } else if (paren === 0 && ch === ';') {
-      flush(i);
+      flush();
     } else if (paren === 0 && ch === '}') {
-      flush(i);
+      flush();
       stack.pop();
     } else {
-      buf += ch;
+      add(ch);
     }
   }
   return out;
@@ -139,5 +167,18 @@ describe('cores das telas Shinobi', () => {
       '.e { color: transparent; fill: currentColor; font-family: Georgia, serif; }',
     ].join('\n');
     expect(literalColors(css)).toEqual(['1: red', '2: hsl(', '2: oklch(', '3: White']);
+  });
+
+  it('texto, escape ou comentário com ( { } ; não desligam a leitura do resto da folha', () => {
+    const css = [
+      ".a::before { content: '('; }",
+      '.b { color: red; }',
+      '.c::after { content: "} ; { \\" /*"; color: #fff; }',
+      '/* comentário com ( e { sem fechar */',
+      '.d\\{ { background: #abc; }',
+      ".e { content: 'a\\'b ('; border-color: blue; }",
+      '.f { background: url(img/fundo(1).png); color: #123; }',
+    ].join('\n');
+    expect(literalColors(css)).toEqual(['2: red', '3: #fff', '5: #abc', '6: blue', '7: #123']);
   });
 });
