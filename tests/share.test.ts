@@ -23,7 +23,7 @@ const text = (over: Partial<ShareSummary>) => buildShareText({ ...base, ...over 
 
 describe('texto de compartilhar (src/core/share.ts)', () => {
   it('título, origem e nível, a trilha só com as etapas jogadas e o fim', () => {
-    expect(text({})).toEqual(['Ninja Roleta v0.60.0 · Médio', 'Comum (Fogo) · Nível 5', 'Mizuki ✅ · Zabuza 💀', 'Caiu para Zabuza · 1 Vontade do Fogo · seed 42']);
+    expect(text({})).toEqual(['Ninshu Roots v0.60.0 · Médio', 'Comum (Fogo) · Nível 5', 'Mizuki ✅ · Zabuza 💀', 'Caiu para Zabuza · 1 Vontade do Fogo · seed 42']);
   });
 
   it('vitória no 1º ciclo', () => {

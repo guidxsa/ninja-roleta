@@ -30,7 +30,7 @@ aprovado. Ainda não implementada.
 
 Diferenças do que está descrito abaixo:
 
-- Parâmetros de URL implementados: `s`, `frame`, `theme`, `instant`, `seed`, `w`. Ficam para depois `still` (menos
+- Parâmetros de URL implementados: `s`, `frame`, `instant`, `seed`, `w`. Ficam para depois `still` (menos
   movimento) e `art=0` (sem arte).
 - `expect(rng)` recebe um RNG novo da seed do cenário e diz se o sorteio dá o resultado do título. `npm run lab:seed --
   <id>` (ou `--all`) acha a seed; `tests/uilab.test.ts` confere todas.
@@ -70,9 +70,9 @@ nem dependência nova.
  dist-lab/lab.html   (só local, nunca no Pages)
  ┌──────────────────────────────────────────────────────────────────────┐
  │ Catálogo (lab/catalog.ts)                                            │
- │  lista de cenários · busca · tema · instantâneo · menos movimento    │
+ │  lista de cenários · busca · instantâneo · menos movimento    │
  │  larguras: 360 · 390 · 768 · 1024 · 1440                             │
- │        │ ?s=<id>&frame=1&theme=…                                     │
+ │        │ ?s=<id>&frame=1                                     │
  │        ▼                                                             │
  │  ┌─ <iframe> lab.html em modo quadro ──────────────────────────────┐ │
  │  │ casca real (header, #screen, navs)  ← mesmo HTML e CSS do jogo  │ │
@@ -103,7 +103,7 @@ export interface Scenario {
   seed?: number;
   /** Perfil de partida (padrão: `profiles.empty`). */
   profile?: Profile;
-  /** Preferências (tema, instantâneo...) quando o cenário depende delas; o catálogo pode sobrepor. */
+  /** Preferências (instantâneo...) quando o cenário depende delas; o catálogo pode sobrepor. */
   prefs?: Partial<LabPrefs>;
   /** Monta a tela real. Resolve quando a tela termina (o catálogo mostra "fim do cenário"). */
   mount(ctx: LabContext): Promise<unknown>;
@@ -146,7 +146,7 @@ Quando um arquivo crescer demais, ele vira pasta (`scenarios/jornada/battle.ts`)
 
 1. `lab/frame.ts` lê `?s=` e acha o cenário (id desconhecido mostra a lista com os parecidos).
 2. Monta o contexto: armazenamento em memória já com o perfil do cenário, `rng = createRng(seed)`, preferências.
-3. Liga a **casca real** (cabeçalho, dicas, dobras, tema, fontes), pelas mesmas funções que o jogo usa (§3).
+3. Liga a **casca real** (cabeçalho, dicas, dobras, fontes), pelas mesmas funções que o jogo usa (§3).
 4. Chama `scenario.mount(ctx)`, que chama a tela real.
 5. Quando a tela resolve, uma faixa do lab (fora de `#screen`) mostra o resultado e os botões **Repetir** e **Próximo**.
 6. O botão Portão do cabeçalho, no lab, recarrega o cenário em vez de ir ao Portão (o `goHome()` corta a tela como hoje).
@@ -157,7 +157,6 @@ Quando um arquivo crescer demais, ele vira pasta (`scenarios/jornada/battle.ts`)
 |---|---|
 | `?s=<id>` | Cenário (sem ele: catálogo) |
 | `&frame=1` | Só a tela, sem catálogo (é o que o iframe abre) |
-| `&theme=light\|dark` | Tema |
 | `&instant=1` | Modo instantâneo |
 | `&still=1` | Simula menos movimento (classe no `<html>`; o `matchMedia` real não dá para forçar) |
 | `&art=0` | Sem arte: força o cenário desenhado em CSS |
@@ -255,7 +254,7 @@ jogo.
 ```
 prototype/
   main.ts                 inicialização do jogo (initSession com o localStorage, liga a casca, abre o Portão)
-  shell.ts                casca compartilhada: tema, cabeçalho, fontes, erro, volta ao Portão (costura 4)
+  shell.ts                casca compartilhada: cabeçalho, fontes, erro, volta ao Portão (costura 4)
   gate.ts                 Portão da Vila, barra lateral, avatar, nome do jogador
   registry.ts             Registro ninja (popup)
   jornadaHost.ts          o JornadaHost do jogo, ligado à sessão

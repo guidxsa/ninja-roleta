@@ -1,5 +1,5 @@
 /*
- * Ninja Roleta: folhas de estilo em camadas (o build junta tudo com o esbuild, na ordem abaixo).
+ * Ninshu Roots: folhas de estilo em camadas (o build junta tudo com o esbuild, na ordem abaixo).
  * tokens → fontes → base → componentes → telas. Telas só usam tokens e componentes.
  */
 @import './tokens.css';

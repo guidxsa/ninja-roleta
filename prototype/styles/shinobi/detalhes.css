@@ -3,10 +3,6 @@
   --shinobi-booth-wash: linear-gradient(#13203699, #18232be8);
   --shinobi-booth-view: url('img/cenas/noite.jpg');
 }
-:root[data-theme='light'] {
-  --shinobi-booth-wash: linear-gradient(#d7bd9c36, #eee0bb63);
-  --shinobi-booth-view: url('img/cenas/dia.webp');
-}
 :is(.rorigin, .rrelic) {
   background-image:
     url('img/shinobi/pilar.png'), url('img/shinobi/pilar.png'), url('img/shinobi/balcao.png'), var(--shinobi-booth-wash),
@@ -79,18 +75,13 @@
 .gate::before {
   inset: 0;
 }
-[data-theme='dark'] .gate .gate-banner .gate-hero img {
+.gate .gate-banner .gate-hero img {
   filter: brightness(1.5) saturate(0.91);
 }
 .gate.jgate .gate-banner .gate-hero {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--sh-sumi-4) 33%, transparent), transparent 65%),
     url('img/cenas/noite.jpg') center 48% / cover;
-}
-[data-theme='light'] .gate.jgate .gate-banner .gate-hero {
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--sh-laca-13) 33%, transparent), transparent 65%),
-    url('img/cenas/dia.webp') center 50% / cover;
 }
 .gate.jgate .gate-banner .gate-hero > * {
   display: none;
@@ -310,7 +301,7 @@
   mask-image: linear-gradient(330deg, #000 5%, #0009 34%, transparent 55%);
   filter: sepia(0.57) saturate(0.68);
 }
-[data-theme='dark'] .jt-branch.on {
+.jt-branch.on {
   background: linear-gradient(100deg, color-mix(in srgb, var(--sh-terra-9) 20%, transparent), transparent 45%, color-mix(in srgb, var(--sh-terra-12) 24%, transparent)), var(--shinobi-paper);
 }
 

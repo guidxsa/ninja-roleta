@@ -1,9 +1,9 @@
 ---
 name: novo-retrato
-description: Fluxo para criar, refazer ou trocar o retrato ilustrado (WebP) de um personagem, vilão, forma ou variante do Ninja Roleta, no mesmo estilo dos outros. Use sempre que o usuário pedir retrato novo, arte de personagem, trocar ou corrigir uma imagem de public/img/ninja, viloes ou jornada, ou disser que um rosto "ficou estranho". Não serve para cenários (public/img/cenas) nem para os desenhos SVG de reserva (prototype/portraits).
+description: Fluxo para criar, refazer ou trocar o retrato ilustrado (WebP) de um personagem, vilão, forma ou variante do Ninshu Roots, no mesmo estilo dos outros. Use sempre que o usuário pedir retrato novo, arte de personagem, trocar ou corrigir uma imagem de public/img/ninja, viloes ou jornada, ou disser que um rosto "ficou estranho". Não serve para cenários (public/img/cenas) nem para os desenhos SVG de reserva (prototype/portraits).
 ---
 
-# Novo retrato (Ninja Roleta)
+# Novo retrato (Ninshu Roots)
 
 O retrato precisa parecer da mesma série que os outros 94 e funcionar de 24px a 170px. Ele sai de imagens-modelo escolhidas pelo usuário e de uma revisão humana com ajustes até a aprovação. Quem gera a imagem pode ser o usuário, o Codex ou outra ferramenta; este fluxo vale para qualquer um e guarda o necessário para refazer o retrato depois.
 

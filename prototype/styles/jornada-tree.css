@@ -32,11 +32,6 @@
      grade liam como uma estrela de seis pontas, símbolo religioso que nada tem a ver com o clã. */
   --tree-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Cg fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round'%3E%3Ccircle cx='46' cy='46' r='12'/%3E%3Cpath d='M39 18h14M39 74h14M18 39v14M74 39v14M60.9 21.3l9.8 9.8M21.3 31.1l9.8-9.8M60.9 70.7l9.8-9.8M21.3 60.9l9.8 9.8'/%3E%3C/g%3E%3C/svg%3E");
 }
-:root[data-theme='light'] .jt-hyuuga { --tree: #6d5bb0; --tree-2: #4a3d86; }
-:root[data-theme='light'] .jt-uchiha { --tree-2: #8a1b1b; }
-:root[data-theme='light'] .jt-naruto { --tree: #d0650f; --tree-2: #8a4a08; }
-:root[data-theme='light'] .jt-common { --tree-2: #3f6a2c; }
-:root[data-theme='light'] .jtree-screen::before { filter: invert(1); opacity: .06; }
 
 .jt-body { position: relative; max-width: 1280px; margin: 0 auto; padding: 12px 16px 0; min-height: 100%; display: flex; flex-direction: column; gap: 10px; }
 /* O brasão (.jt-crest) sai 40px pela direita de propósito; o corte fica no corpo, para a tela (que rola) não ganhar

@@ -722,3 +722,7 @@ Roteiro de contas e progresso (combinado em 30/10/2026; a fase 1, o Laboratório
 
 - **Fase 3, contas opcionais**: só para sincronizar o perfil local; o jogo segue jogável offline e sem conta. Usar um serviço com login pronto (Supabase ou Firebase, a decidir), nunca guardar senha. Pede política de privacidade (LGPD) e revisar o princípio "Sem backend". A Jornada (item 7), com progressão permanente, é o motivo principal para ter contas.
 
+
+## 19/11/2026 — Identidade de Ninshu Roots
+
+O jogo adota o nome Ninshu Roots, a folha de Konoha sobre azulejo vermelho e o tema único escuro grafite. O Portão usa a arte noturna já disponível e conserva a citação sorteada.

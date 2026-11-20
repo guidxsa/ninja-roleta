@@ -8,24 +8,7 @@ import { openProfile, type ProfileTab } from './registry';
 import { installTooltips } from './tooltip';
 import { sleep, h, goHome, show, esc, choose } from './dom';
 import { VERSION, openSheet, toast, track, syncSheetBtn } from './roleta/common';
-import { type Theme, ses, saveSettings } from './roleta/session';
-
-/** Tema aplicado: o escolhido no botão ou o do aparelho. */
-export const deviceTheme = window.matchMedia?.('(prefers-color-scheme: light)');
-export const currentTheme = (): Theme => ses.settings.theme ?? (deviceTheme?.matches ? 'light' : 'dark');
-export const THEME_COLORS: Record<Theme, string> = { dark: '#0d0c0b', light: '#e6dac0' };
-
-export function applyTheme() {
-  const theme = currentTheme();
-  document.documentElement.dataset.theme = theme;
-  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', THEME_COLORS[theme]));
-  const btn = document.getElementById('theme-btn')!;
-  // O botão mostra para onde vai: sol à noite, lua de dia.
-  const next = theme === 'dark' ? S.ui.themeDay : S.ui.themeNight;
-  btn.innerHTML = `${icon(theme === 'dark' ? 'sun' : 'moon')}${toolLabel('theme')}`;
-  btn.title = next;
-  btn.setAttribute('aria-label', next);
-}
+import { ses, saveSettings } from './roleta/session';
 
 /** Nome curto ao lado do ícone da barra: o CSS só mostra no PC (≥ 1280px). */
 export function toolLabel(key: keyof typeof S.ui.toolLabels): string {
@@ -46,18 +29,12 @@ export function setAnimated(on: boolean) {
   document.documentElement.toggleAttribute('data-animated', on);
 }
 
-/** Botões do cabeçalho: instantâneo, dia/noite, efeitos sonoros e música. */
+/** Botões do cabeçalho: instantâneo, animação, efeitos sonoros e música. */
 export function installHeaderToggles() {
   setInstantCss(ses.settings.instant);
   // Modo das cenas antes de qualquer tela.
   setAnimated(ses.settings.animated);
-  applyTheme();
-  deviceTheme?.addEventListener?.('change', applyTheme);
-  document.getElementById('theme-btn')!.addEventListener('click', () => {
-    ses.settings.theme = currentTheme() === 'dark' ? 'light' : 'dark';
-    saveSettings();
-    applyTheme();
-  });
+  document.querySelector('.brand-seal')!.innerHTML = icon('konoha');
 
   const toggles = [
     { id: 'instant-btn', key: 'instant', on: 'lightning', off: 'lightning', label: S.ui.instant, apply: setInstantCss },
@@ -218,7 +195,7 @@ export async function installShell(): Promise<void> {
   const navItem = (kanji: string, label: string, attr = '') =>
     `<button type="button" ${attr}><span class="kanji${kanji.length > 1 ? ' two' : ''}" aria-hidden="true">${kanji}</span>${label}</button>`;
   gateNav.innerHTML =
-    navItem('忍', S.ui.gate.home, 'aria-current="page"') +
+    `<button type="button" aria-current="page"><span class="kanji" aria-hidden="true">${icon('konoha')}</span>${S.ui.gate.home}</button>` +
     (
       [
         ['history', '歴'],

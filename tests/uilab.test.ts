@@ -43,7 +43,7 @@ describe('cenários', () => {
 
   it('o preparo de cada cenário monta a sessão só no armazenamento em memória', () => {
     for (const s of SCENARIOS) {
-      const ctx = labContext(s, { theme: 'dark', instant: true });
+      const ctx = labContext(s, { instant: true });
       expect(ses.storage).toBe(ctx.storage);
       expect(ctx.storage.getItem(PROFILE_STORAGE_KEY)).not.toBeNull();
       expect(JSON.parse(ctx.storage.getItem(SETTINGS_KEY)!)).toMatchObject({ sfx: false, music: false, instant: true });
@@ -53,7 +53,7 @@ describe('cenários', () => {
 
 describe('fixtures', () => {
   it('a run do Roleta sobe de nível pelas regras e fica na sessão', () => {
-    labContext(SCENARIOS[0]!, { theme: 'dark', instant: true });
+    labContext(SCENARIOS[0]!, { instant: true });
     const c = roletaCamp({ level: 6, step: 5, cycle: 1, lineage: 'uchiha', elements: [] });
     expect(c.player.level).toBe(6);
     expect(c.run.step).toBe(5);

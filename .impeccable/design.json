@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-11-14T00:00:00Z",
-  "title": "Design System: Ninja Roleta",
+  "title": "Design System: Ninshu Roots",
   "extensions": {
     "colorMeta": {
       "primary": { "role": "primary", "displayName": "Vermelho Laca", "canonical": "#b5161f", "tonalRamp": ["#2a0508", "#5e0b10", "#80101a", "#a3121b", "#b5161f", "#db3a40", "#e88a8c", "#f6d9d9"] },
       "gold": { "role": "secondary", "displayName": "Dourado Envelhecido", "canonical": "#b8954f", "tonalRamp": ["#2b2210", "#4a3a1a", "#6e5428", "#8f6f34", "#b8954f", "#dcbd78", "#ecd9a8", "#f7efd8"] },
-      "sumi-bg": { "role": "neutral", "displayName": "Sumi", "canonical": "#0d0c0b", "tonalRamp": ["#0d0c0b", "#151312", "#1a1817", "#232120", "#2f2c29", "#36332f", "#5a5f66", "#8a919a"] },
+      "sumi-bg": { "role": "neutral", "displayName": "Sumi", "canonical": "#1a1918", "tonalRamp": ["#1a1918", "#24221f", "#292725", "#302d2a", "#36332f", "#36332f", "#5a5f66", "#8a919a"] },
       "paper": { "role": "neutral", "displayName": "Pergaminho", "canonical": "#e8dcc0", "tonalRamp": ["#24190f", "#574632", "#8d8170", "#bfae88", "#d4c39e", "#e8dcc0", "#efe5cf", "#f6efde"] }
     },
     "typographyMeta": {
@@ -25,8 +25,7 @@
       { "name": "ease", "value": "cubic-bezier(.2, .7, .2, 1)", "purpose": "Easing padrão." },
       { "name": "dur-1", "value": "120ms", "purpose": "Hover e toque." },
       { "name": "dur-2", "value": "200ms", "purpose": "Opacidade e estado." },
-      { "name": "dur-3", "value": "320ms", "purpose": "Entradas (pop)." },
-      { "name": "dur-dawn", "value": "1600ms", "purpose": "Troca dia e noite no Portão." }
+      { "name": "dur-3", "value": "320ms", "purpose": "Entradas (pop)." }
     ],
     "breakpoints": [
       { "name": "tablet", "value": "600px" },
@@ -48,7 +47,7 @@
       "refersTo": "button-secondary",
       "description": "Ação secundária: grafite com filete de aço.",
       "html": "<button class=\"ds-btn\">Histórico</button>",
-      "css": ".ds-btn { border: 1px solid #5a5f66; border-radius: 2px; background: #232120; color: #ece3d0; padding: 11px 14px; min-height: 48px; font: 700 15px/1.25 'Zen Kaku Gothic New', sans-serif; cursor: pointer; transition: background 120ms, border-color 120ms; } .ds-btn:hover { border-color: #b8954f; background: #2f2c29; } .ds-btn:focus-visible { outline: 2px solid #dcbd78; outline-offset: 2px; }"
+      "css": ".ds-btn { border: 1px solid #5a5f66; border-radius: 2px; background: #302d2a; color: #ece3d0; padding: 11px 14px; min-height: 48px; font: 700 15px/1.25 'Zen Kaku Gothic New', sans-serif; cursor: pointer; transition: background 120ms, border-color 120ms; } .ds-btn:hover { border-color: #b8954f; background: #36332f; } .ds-btn:focus-visible { outline: 2px solid #dcbd78; outline-offset: 2px; }"
     },
     {
       "name": "Chip",
@@ -72,12 +71,12 @@
       "refersTo": "panel",
       "description": "Painel laqueado com aba vermelha no topo.",
       "html": "<div class=\"ds-panel\">Ficha do ninja</div>",
-      "css": ".ds-panel { position: relative; isolation: isolate; padding: 12px; color: #ece3d0; font: 15px/1.5 'Zen Kaku Gothic New', sans-serif; } .ds-panel::before { content: ''; position: absolute; inset: 0; z-index: -1; background: #5a5f66; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); } .ds-panel::after { content: ''; position: absolute; inset: 1px; z-index: -1; background: linear-gradient(#b5161f, #b5161f) 15px 0 / 36px 2px no-repeat, #1a1817; clip-path: polygon(9.5px 0, 100% 0, 100% calc(100% - 9.5px), calc(100% - 9.5px) 100%, 0 100%, 0 9.5px); }"
+      "css": ".ds-panel { position: relative; isolation: isolate; padding: 12px; color: #ece3d0; font: 15px/1.5 'Zen Kaku Gothic New', sans-serif; } .ds-panel::before { content: ''; position: absolute; inset: 0; z-index: -1; background: #5a5f66; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); } .ds-panel::after { content: ''; position: absolute; inset: 1px; z-index: -1; background: linear-gradient(#b5161f, #b5161f) 15px 0 / 36px 2px no-repeat, #292725; clip-path: polygon(9.5px 0, 100% 0, 100% calc(100% - 9.5px), calc(100% - 9.5px) 100%, 0 100%, 0 9.5px); }"
     }
   ],
   "narrative": {
     "northStar": "A Mesa do Escriba Ninja",
-    "overview": "A interface é um conjunto de objetos de papel, tinta, madeira e laca pousados numa mesa: pergaminhos de borda rasgada, selos (hanko) carimbados, pinceladas, placas e cartas de mapa. Dois temas contrastam como Naruto e Sasuke: Pergaminho (dia, quente) e Sumi (noite, frio). A voz é artesanal e ritual, tensa e contida, direta e legível, com a roleta como exceção festiva.",
+    "overview": "A interface é um conjunto de objetos de papel, tinta, madeira e laca pousados numa mesa: pergaminhos de borda rasgada, selos (hanko) carimbados, pinceladas, placas e cartas de mapa. Ninshu Roots usa um único tema escuro grafite e a folha de Konoha sobre azulejo vermelho. A voz é artesanal e ritual, tensa e contida, direta e legível, com a roleta como exceção festiva.",
     "keyCharacteristics": [
       "Objetos do universo no lugar de cards, gradientes e sombras difusas.",
       "Cantos retos com chanfro como assinatura dos painéis.",
@@ -88,13 +87,13 @@
     "rules": [
       { "name": "The Lacquer Rarity Rule", "body": "O vermelho é ação ou perigo, nunca decoração.", "section": "colors" },
       { "name": "The Tokens Only Rule", "body": "Cor, fonte, duração e forma só por var(--...). Cor solta apenas em arte.", "section": "colors" },
-      { "name": "The Two Moods Rule", "body": "Os temas só trocam tokens; nenhuma tela tem versão própria para dia ou noite.", "section": "colors" },
+      { "name": "Sumi", "body": "Todas as telas usam o fundo grafite.", "section": "colors" },
       { "name": "The One Brush Rule", "body": "Pincel (display) só em letreiro grande; texto de leitura nunca usa display nem hand.", "section": "typography" },
       { "name": "The Hard Shadow Rule", "body": "Sombra é o próprio recorte deslocado ou um letreiro duro; nada de sombra difusa genérica em painel.", "section": "elevation" }
     ],
     "dos": [
       "Do usar objetos do universo (pergaminho, selo, carimbo, placa, carta de mapa) no lugar de componentes genéricos.",
-      "Do usar só tokens var(--...); o tema troca só os tokens.",
+      "Do usar só tokens var(--...).",
       "Do manter o chanfro em ::before/::after e o foco por dentro quando o elemento é chanfrado.",
       "Do usar SVG de ICONS em art.ts (icon(nome)) para todo ícone.",
       "Do manter botões simples (ícone, nome, números) e levar regras e motivos de bloqueio para a dica.",

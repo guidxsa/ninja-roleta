@@ -1,9 +1,9 @@
 ---
 name: revisar-visual
-description: Revisão visual de telas do Ninja Roleta pelo UI Lab - fotografa os cenários afetados em celular (390px) e desktop (1280px), nos temas Sumi e Pergaminho e com menos movimento, e confere contra docs/visual.md e as regras de interface do AGENTS.md. Use depois de mexer em interface (prototype/, estilos, art.ts, retratos), antes de fechar uma versão com mudança visual, ou quando o usuário disser "como ficou", "confere a tela", "ficou feio no celular".
+description: Revisão visual de telas do Ninshu Roots pelo UI Lab - fotografa os cenários afetados em celular (390px) e desktop (1280px), nos temas Sumi e Pergaminho e com menos movimento, e confere contra docs/visual.md e as regras de interface do AGENTS.md. Use depois de mexer em interface (prototype/, estilos, art.ts, retratos), antes de fechar uma versão com mudança visual, ou quando o usuário disser "como ficou", "confere a tela", "ficou feio no celular".
 ---
 
-# Revisar visual (Ninja Roleta)
+# Revisar visual (Ninshu Roots)
 
 O jogo deve parecer parte do universo shinobi (critério de `docs/visual.md`) e celular e desktop são pares, cada um com sua composição. Esta skill olha as telas de verdade, não o código.
 

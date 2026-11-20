@@ -12,7 +12,7 @@ Fãs de Naruto que também curtem roguelike. Jogam principalmente no celular, em
 
 ## Product Purpose
 
-Ninja Roleta (nome provisório) é um jogo de browser inspirado no universo ninja de Naruto. Origem, iniciativa, acerto, dano, eventos e recompensas passam por uma roleta visual, e os status do jogador sempre pesam nas chances. Sucesso: partidas curtas e satisfatórias, com a sensação de estar dentro do mundo shinobi.
+Ninshu Roots é um jogo de browser inspirado no universo ninja de Naruto. Origem, iniciativa, acerto, dano, eventos e recompensas passam por uma roleta visual, e os status do jogador sempre pesam nas chances. Sucesso: partidas curtas e satisfatórias, com a sensação de estar dentro do mundo shinobi.
 
 Dois modos:
 - **Roleta**: rápido e simples; a run segue em ciclos infinitos.
@@ -37,7 +37,7 @@ A roleta visual como identidade e como motor das regras (inspiração: pokemon-r
 
 ## Brand Commitments
 
-Nome provisório. Direção visual, temas Sumi/Pergaminho e regras de interface estão registrados em `docs/visual.md` e no `AGENTS.md` (seção Interface).
+A folha de Konoha identifica Ninshu Roots. O tema único grafite e as superfícies de papel seguem `docs/visual.md`.
 
 ## Evidence on Hand
 

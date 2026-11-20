@@ -55,7 +55,7 @@ Só para o que não pode esperar a release (jogo quebrado em produção).
 
 O Pages publica a produção na raiz e o staging em `/staging/` (`.github/workflows/pages.yml`, a cada push no `master` e quando o `staging.yml` pede). O preview é gerado com `npm run proto -- --canal=staging`:
 
-- versão marcada (`0.95.2-staging.<commit>`) e título "Ninja Roleta (staging)";
+- versão marcada (`0.95.2-staging.<commit>`) e título "Ninshu Roots (staging)";
 - chaves do `localStorage` com prefixo `staging:` (`src/state/canal.ts`): mesma origem que a produção, então sem o prefixo o preview leria e gravaria o save de quem joga;
 - service worker com cache próprio; o da produção não responde por `/staging/` nem apaga os caches do staging.
 

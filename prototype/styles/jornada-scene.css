@@ -20,15 +20,9 @@
 }
 /* Sem ninguém em cena, o quadro é só a vista do local: mais baixo, para o texto subir. */
 .jc-panel.jscene.empty { height: clamp(84px, 14vh, 150px); }
-[data-theme='light'] .jc-panel.jscene { border-color: var(--paper-ink); box-shadow: 4px 4px 0 var(--paper-ink); }
-/* No tema claro o nanquim fica mais leve, mas ainda tem de se ler como lugar. */
-[data-theme='light'] .jc-panel.jscene::before { opacity: .5; }
-/* Papel sobre fundo de papel: a sombra do pergaminho da cena é mais marcada no tema claro, para ele não sumir na página. */
-[data-theme='light'] .jc-paper::after { background: rgba(60, 36, 14, .5); transform: translate(3px, 5px); }
 
 .jc-cast { position: absolute; left: 14px; bottom: -22px; z-index: 2; display: flex; align-items: flex-end; gap: 10px; }
 .jc-cast .portrait { width: 96px; height: 96px; border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); animation: castIn var(--dur-3) var(--ease-out, var(--ease)) both; }
-[data-theme='light'] .jc-cast .portrait { border-color: var(--paper-ink); box-shadow: 4px 4px 0 var(--paper-ink); }
 /* O nome de quem está em cena, numa tira de papel presa ao quadro. */
 .jc-name {
   margin-bottom: 28px; padding: 3px 10px 4px; rotate: -2deg;
@@ -90,7 +84,6 @@
   /* O local: o palco inteiro, atrás do pergaminho. */
   .jc-panel.jscene, .jc-panel.jscene.empty { position: absolute; inset: 0; z-index: 0; height: auto; }
   .jc-panel.jscene::before { background-size: cover; background-position: center bottom; opacity: .5; }
-  [data-theme='light'] .jc-panel.jscene::before { opacity: .35; }
   /* Vinheta centrada: escurece atrás do pergaminho e deixa o local mais à vista nas bordas. */
   .jc-panel.jscene::after, .jstaged > .jstage-bg::after {
     content: ''; position: absolute; inset: 0; pointer-events: none;
@@ -142,8 +135,6 @@
     border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
   }
   .jstaged > .jstage-bg::before { background-size: cover; background-position: center bottom; opacity: .5; }
-  [data-theme='light'] .jstaged > .jstage-bg { border-color: var(--paper-ink); box-shadow: 4px 4px 0 var(--paper-ink); }
-  [data-theme='light'] .jstaged > .jstage-bg::before { opacity: .35; }
 }
 
 @media (prefers-reduced-motion: reduce) {

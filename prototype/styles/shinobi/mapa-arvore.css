@@ -39,7 +39,7 @@
   border: 0;
   margin: 0;
 }
-[data-theme='dark'] .jmap-screen {
+.jmap-screen {
   --map-wash: color-mix(in srgb, var(--sh-tinta-4) 13%, transparent);
 }
 .jmap-screen .jtrail-map .jmap::before,

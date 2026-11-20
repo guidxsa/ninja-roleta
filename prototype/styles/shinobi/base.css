@@ -7,12 +7,12 @@
   --shinobi-bone: #f7e6c7;
   --shinobi-lacquer: linear-gradient(100deg, #67131544, #a12d1d26), url('img/shinobi/laca.png') center/180px 76px, #982b20;
   --shinobi-paper: url('img/shinobi/papel-continuo.png') center/215px 398px repeat, #e9d3ad;
-  --shinobi-sumi: linear-gradient(110deg, #17151244, #13131199), url('img/shinobi/sumi.png') center/140px 186px repeat, #1c1916;
+  --shinobi-sumi: linear-gradient(110deg, color-mix(in srgb, var(--bg) 87%, transparent), color-mix(in srgb, var(--bg-2) 85%, transparent)), url('img/shinobi/sumi.png') center/140px 186px repeat, var(--bg);
   --shinobi-ground: var(--shinobi-sumi);
   --shinobi-flare: #d6ae68;
   --shinobi-veil: rgba(10, 19, 32, 0.2);
   --shinobi-booth: linear-gradient(#1118279c, #181c22e8), url('img/cenas/noite.jpg') center 53% / cover;
-  --shinobi-stage: #25221e;
+  --shinobi-stage: var(--bg-2);
   --shinobi-scene-light: 0.9;
   --shinobi-line: #6f6250;
   --shinobi-shadow: 0 5px 14px #140e0a55;
@@ -108,15 +108,6 @@
   --sh-sumi-3: #201e1a;
   --sh-sumi-4: #151119;
   --sh-sumi-5: #100d09;
-}
-:root[data-theme='light'] {
-  --shinobi-ground: linear-gradient(#f8edd5c9, #e8d9bccc), url('img/shinobi/papel-continuo.png') center/220px 406px;
-  --shinobi-stage: #efe2c8;
-  --shinobi-veil: rgba(255, 201, 120, 0.055);
-  --shinobi-booth: linear-gradient(#d6be9380, #dfc496bf), url('img/cenas/dia.webp') center/cover;
-  --shinobi-scene-light: 1.1;
-  --shinobi-line: #a08a68;
-  --shinobi-flare: #7d5223;
 }
 body {
   background: var(--shinobi-ground);

@@ -444,7 +444,7 @@
 .jtrail-scene .jstop.here { background: linear-gradient(90deg, color-mix(in srgb, var(--place, var(--primary)) 26%, transparent), transparent 85%); }
 
 /*
- * Mapa do Caminho Ninja: carta em papel envelhecido, igual nos dois temas. Os tokens são do papel,
+ * Mapa do Caminho Ninja: carta em papel envelhecido, igual. Os tokens são do papel,
  * as rotas são a pincel e cada nó é um carimbo pela cor do tipo; relevo e rosa dos ventos ficam atrás.
  */
 .jmap.jscene {

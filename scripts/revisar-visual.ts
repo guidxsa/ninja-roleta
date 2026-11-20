@@ -1,4 +1,4 @@
-// Fotografa cenários do UI Lab em celular e desktop, nos dois temas e com menos movimento (skill revisar-visual).
+// Fotografa cenários do UI Lab em celular e desktop, em grafite e com menos movimento (skill revisar-visual).
 // Uso: npm run lab && npx tsx scripts/revisar-visual.ts <id do cenário>... [--prefixo=jornada.shop] [--todos] [--saida=dir]
 //      [--chromium=/caminho/do/chromium]   (ou a variável PW_CHROMIUM; sem nenhum, tenta o padrão e /opt/pw-browsers/chromium)
 // Saída: PNGs em dist-lab/revisao/ (fora do git) e, no terminal, os erros do console de cada foto.
@@ -11,13 +11,15 @@ import { pathToFileURL } from 'node:url';
 const LAB = 'dist-lab/lab.html';
 const FALLBACK_CHROMIUM = '/opt/pw-browsers/chromium';
 export const VIEWPORTS = [
-  { nome: 'celular', width: 390, height: 844 },
-  { nome: 'desktop', width: 1280, height: 800 },
+  { nome: '360', width: 360, height: 780 },
+  { nome: '390', width: 390, height: 844 },
+  { nome: '768', width: 768, height: 1024 },
+  { nome: '1024', width: 1024, height: 720 },
+  { nome: '1440', width: 1440, height: 900 },
 ];
 export const VARIANTES = [
-  { nome: 'sumi', theme: 'dark', still: false },
-  { nome: 'pergaminho', theme: 'light', still: false },
-  { nome: 'sumi-still', theme: 'dark', still: true },
+  { nome: 'sumi', still: false },
+  { nome: 'sumi-still', still: true },
 ];
 
 /** Ids dos cenários, lidos dos arquivos de prototype/lab/scenarios (sem carregar o lab, que precisa de DOM). */
@@ -28,8 +30,8 @@ export function scenarioIds(dir = 'prototype/lab/scenarios'): string[] {
   return [...new Set(ids)].sort();
 }
 
-export const shotUrl = (lab: string, id: string, theme: string, still: boolean): string =>
-  `${pathToFileURL(resolve(lab)).href}?s=${encodeURIComponent(id)}&frame=1&theme=${theme}&instant=1${still ? '&still=1' : ''}`;
+export const shotUrl = (lab: string, id: string, still: boolean): string =>
+  `${pathToFileURL(resolve(lab)).href}?s=${encodeURIComponent(id)}&frame=1&instant=1${still ? '&still=1' : ''}`;
 
 // Tipos mínimos do Playwright (não é dependência do projeto: vem do ambiente ou de quem roda).
 interface PwPage {
@@ -107,14 +109,14 @@ async function main(): Promise<void> {
         viewport: { width: vp.width, height: vp.height },
         deviceScaleFactor: 1,
         reducedMotion: v.still ? 'reduce' : 'no-preference',
-        colorScheme: v.theme === 'light' ? 'light' : 'dark',
+        colorScheme: 'dark',
       });
       for (const id of ids) {
         const page = await ctx.newPage();
         const errors: string[] = [];
         page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
         page.on('pageerror', (e) => errors.push(e.message));
-        await page.goto(shotUrl(LAB, id, v.theme, v.still));
+        await page.goto(shotUrl(LAB, id, v.still));
         await page.waitForTimeout(400);
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
         // O lab mostra "Cenário desconhecido" sem lançar erro (prototype/lab/frame.ts): isso não pode virar foto "ok".

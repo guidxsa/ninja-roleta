@@ -28,6 +28,7 @@ const svg = (body: string, viewBox = '0 0 24 24', cls = 'ico') =>
 // Ícones (24×24). `currentColor` herda a cor do componente.
 
 const ICONS: Record<string, string> = {
+  konoha: '<path d="M21.8 4.2c-1.5 2-2.8 3.2-5.2 2.2C10 3.5 4.9 7.4 4.9 12.9c0 4.2 3.4 7 7.4 6.6 4.2-.4 6.6-4.2 4.8-7.5-1.4-2.6-5.1-3-6.9-.8-1.4 1.7-.7 4 1.1 4.4 1.4.3 2.7-.6 2.7-1.8M5.2 10.9 1.8 19.5h9.9" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/>',
   // Elementos
   fire: '<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 1.6-4.6 3-6 .2 2 1 3 2.2 3.6C10.6 8.8 11 5.4 12 2z" fill="currentColor"/><path d="M12 13c.8 1.6 3 2.4 3 5a3 3 0 0 1-6 0c0-1.6 1.2-2.4 1.6-3.6.4.8.8 1.2 1.4 1.4-.3-1-.3-1.8 0-2.8z" fill="#fff3" />',
   wind: '<g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h16a3 3 0 1 1-3 3"/><path d="M3 16h7a2.5 2.5 0 1 1-2.5 2.5"/></g>',
@@ -331,16 +332,13 @@ export function sceneVars(name: string): string {
 
 /**
  * Camada da cena viva (styles/art.css, `.scene-fx`): névoa, folhas e vaga-lumes sobre a arte de um painel grande. O CSS
- * só a monta no modo Animado. `theme`: folhas no tema dia e vaga-lumes no tema noite; `day`/`night`: fixa pela arte.
+ * só a monta no modo Animado. A arte define folhas ou vaga-lumes.
  * Vai ao lado do invólucro da arte, nunca dentro (o `applySceneMode` reescreve o invólucro).
  */
-export function sceneFx(mode: 'theme' | 'day' | 'night' = 'theme'): string {
+export function sceneFx(mode: 'day' | 'night' = 'night'): string {
   const bits = (cls: string, n: number) => Array.from({ length: n }, () => `<i class="${cls}"></i>`).join('');
-  const set = (time: 'day' | 'night') =>
-    mode === 'theme' || mode === time
-      ? `<span class="scene-fx-set${mode === 'theme' ? ` duo-${time}` : ''}">${time === 'day' ? bits('scene-leaf', 7) : bits('scene-fly', 9)}</span>`
-      : '';
-  return `<span class="scene-fx" aria-hidden="true">${bits('scene-mist', 2)}${set('day')}${set('night')}</span>`;
+  const particles = mode === 'day' ? bits('scene-leaf', 7) : bits('scene-fly', 9);
+  return `<span class="scene-fx" aria-hidden="true">${bits('scene-mist', 2)}<span class="scene-fx-set">${particles}</span></span>`;
 }
 
 /** Arte do arco (estágio) da História, ou a vaga com o id do estágio (Caminho Ninja: g1, g2, g3). */

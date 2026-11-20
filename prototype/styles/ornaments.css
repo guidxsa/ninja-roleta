@@ -28,10 +28,6 @@
     var(--grain-dark), var(--paper);
 }
 .parchment::after { z-index: -2; background: rgba(0, 0, 0, .45); transform: translate(2px, 4px); }
-/* Tema claro: papel sobre página quase da mesma cor. A sombra de tinta mais marcada (como no .jc-paper) separa a peça
-   do fundo; antes o rasgo se perdia. */
-[data-theme='light'] .parchment::after { background: rgba(60, 36, 14, .5); transform: translate(3px, 5px); }
-[data-theme='light'] .parchment:nth-child(even)::after { transform: scaleX(-1) translate(-3px, 5px); }
 /* Pergaminhos vizinhos não repetem o mesmo rasgo. */
 .parchment:nth-child(even)::before { transform: scaleX(-1); }
 .parchment:nth-child(even)::after { transform: scaleX(-1) translate(-2px, 4px); }
