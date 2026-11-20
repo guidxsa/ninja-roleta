@@ -40,6 +40,8 @@ A revisão roda em loop no PR, sem ninguém no meio: o revisor aponta achados, o
 
 **O usuário entra** quando o loop para sem aprovação (limite, achado recusado, trava) e no merge. Para pedir mais uma rodada depois do limite, basta comentar à mão `@codex review` (PR do Claude) ou o pedido de correção ao Codex (PR do Codex).
 
+A action do Claude recusa execuções disparadas por bots. Os jobs `automatica` (push do Codex) e `corrige` (revisão do Codex) liberam só `chatgpt-codex-connector` (`allowed_bots`).
+
 **Pendente de teste real** (depende do segredo e do app do Claude): se o Codex atende `@codex review` e `@codex address that feedback` escritos por um bot (o pedido sai como `github-actions[bot]`). Se não atender, o loop para nessa rodada e o pedido é feito à mão no PR.
 
 ## O que conferir
@@ -62,6 +64,6 @@ Não reabra decisões registradas no contrato ou em `docs/decisoes.md`; se disco
 
 1. O que foi verificado e o resultado (comandos e saída resumida).
 2. Achados, do mais grave ao menos grave, separados em **bloqueia o merge** (bug real ou regra burlável num uso normal) e **melhoria futura**. Cada achado tem arquivo:linha, o problema, um cenário concreto e a correção sugerida, sem aplicar. Cada melhoria futura (e inconsistência fora do escopo do PR) vira uma issue descritiva pelo modelo e com a triagem de [issues.md](issues.md), com o número citado no resumo.
-3. Na última linha, o veredito: **aprovado**, **aprovado com ressalvas** ou **precisa de mudanças**. Na revisão automática do Claude, o resumo termina com o marcador do veredito (`<!-- revisao-claude:veredito=aprovado -->`, `=ressalvas` ou `=mudancas`), que o workflow lê para o [loop](#loop).
+3. Na última linha, o veredito: **aprovado**, **aprovado com ressalvas** ou **precisa de mudanças**. Na revisão automática do Claude, o resumo termina com o marcador do veredito (`<!-- revisao-claude:veredito=aprovado -->`, `=ressalvas` ou `=mudancas`), que o workflow lê para o [loop](#loop). Sem o marcador, o workflow lê a linha "Veredito: ..." do resumo do Claude e avisa no log. O resumo sai num comentário próprio (`gh pr comment`): o comentário de progresso da action (`track_progress`) perdia o marcador e travava o portão.
 
 Achado específico vai como comentário na linha; o resumo com o veredito vai num comentário do PR.
