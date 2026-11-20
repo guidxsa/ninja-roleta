@@ -21,7 +21,8 @@ function slug(t: string): string {
 function anchors(file: string): Set<string> {
   const out = new Set<string>();
   let fence = false;
-  for (const l of readFileSync(file, 'utf8').split('\n')) {
+  // \r?\n: no Windows (core.autocrlf) o checkout vem com CRLF e o "." do regex do título não casa o \r.
+  for (const l of readFileSync(file, 'utf8').split(/\r?\n/)) {
     if (l.startsWith('```')) fence = !fence;
     const m = fence ? null : /^#{1,6}\s+(.*)$/.exec(l);
     if (m?.[1]) out.add(slug(m[1]));
@@ -34,7 +35,7 @@ describe('links internos dos docs', () => {
     const quebrados: string[] = [];
     for (const f of mdFiles('docs')) {
       let fence = false;
-      readFileSync(f, 'utf8').split('\n').forEach((l, i) => {
+      readFileSync(f, 'utf8').split(/\r?\n/).forEach((l, i) => {
         if (l.startsWith('```')) fence = !fence;
         if (fence) return;
         for (const m of l.replace(/`[^`]*`/g, '').matchAll(/\]\(([^)\s]+)\)/g)) {

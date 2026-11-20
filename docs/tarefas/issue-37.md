@@ -1,6 +1,6 @@
 ---
 objetivo: Trocar as cores literais das regras de componente de prototype/styles/shinobi/*.css por tokens e travar a regra com um teste.
-escopo: ["prototype/styles/shinobi/**", "tests/shinobi-tokens.test.ts", "docs/visual.md", "docs/tarefas/issue-37.md"]
+escopo: ["prototype/styles/shinobi/**", "tests/shinobi-tokens.test.ts", "tests/docs-links.test.ts", "docs/visual.md", "docs/tarefas/issue-37.md"]
 fora: ["src/**", "prototype/**/*.ts", "prototype/styles/tokens.css", "public/img/**", "scripts/**", ".github/**"]
 pronto: ["npm run check verde", "teste shinobi-tokens sem cor literal fora de :root e máscara", "telas Shinobi sem diferença visível no UI Lab"]
 agente: claude
@@ -32,4 +32,4 @@ Rever a paleta em si (unificar com os tokens globais, tema único). Fica para a 
 Nenhuma: a decisão "tokens em vez de exceção" é dele.
 
 ## Achados
-Nenhum.
+- `tests/docs-links.test.ts` falhava no Windows (`core.autocrlf=true`): com CRLF, o regex dos títulos não casava e o pre-push barrava todo push da máquina. O usuário aprovou incluir a correção (`split(/\r?\n/)`) neste contrato em 19/11.
