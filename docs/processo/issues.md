@@ -1,6 +1,6 @@
 # Issues
 
-Toda inconsistência achada vira uma **issue descritiva** no GitHub, para nada se perder num resumo ou num comentário de PR. A que é claramente um erro, sem nada para o usuário avaliar, os agentes corrigem sozinhos em [loop](#loop): pegam a issue, corrigem num PR e a issue fecha quando o usuário mergeia. Regra resumida no [AGENTS.md](../../AGENTS.md#issues).
+Toda inconsistência achada vira uma **issue descritiva** no GitHub, para nada se perder num resumo ou num comentário de PR. A que é claramente um erro, sem nada para o usuário avaliar, os agentes corrigem sozinhos em [loop](#loop): pegam a issue e corrigem num PR, que entra sozinho no `staging` com a revisão aprovada; a issue fecha nesse merge e a correção chega à produção na release, com o merge do usuário no `master`. Regra resumida no [AGENTS.md](../../AGENTS.md#issues).
 
 ## Quando abrir
 
@@ -64,7 +64,7 @@ Toda issue do fluxo tem `inconsistencia` e **uma** destas:
 
 **Categoria** (opcional, para as [métricas](metricas.md#relatório)): uma etiqueta `cat:docs` (link, caminho, texto, doc atrasado), `cat:bug`, `cat:teste` ou `cat:texto`.
 
-Quem abre a issue (agente ou usuário) já põe a etiqueta pelo critério. Quem tem acesso de triagem responde pelo conteúdo da issue com `correcao-automatica`: o texto entra no prompt do loop.
+**O agente sempre abre a issue com `precisa-decisao`**, mesmo quando acha que é erro claro (pode dizer isso no corpo). Só o usuário promove para `correcao-automatica`: ela aprova o contrato do loop sem mais ninguém olhar, e quem a põe responde pelo conteúdo da issue, que entra no prompt. A CI só conta essa etiqueta se foi o dono do repositório quem a pôs (`scripts/check-aprovacao.ts`), o que barra a revisão do Claude e os outros agentes do Actions; os agentes locais usam a conta do usuário e ficam pela regra e pelas negações do `.claude/settings.json`.
 
 ## Loop
 
@@ -76,7 +76,7 @@ Quem abre a issue (agente ou usuário) já põe a etiqueta pelo critério. Quem 
 4. **Revisa**: o PR entra na revisão cruzada de sempre (o Codex revisa; achados voltam para o Claude pelo job `corrige`, até 3 rodadas).
 5. **Fecha**: com a revisão aprovada e a CI verde, o PR entra sozinho no `staging` (auto-merge, [fluxo.md](fluxo.md#entrada-no-staging)) e o workflow `staging.yml` fecha a issue com um aviso; a correção chega à produção na próxima release, com o merge do usuário.
 
-**A issue vale como contrato.** No PR de `feature/issue-<n>`, a CI lê as etiquetas da issue `<n>` e o `check:escopo` aceita como aprovado se a issue tem `correcao-automatica` e o contrato tem `issue: <n>`, sem a etiqueta `contrato-aprovado`. O resto do contrato vale igual: diff só dentro do escopo.
+**A issue vale como contrato.** No PR de `feature/issue-<n>`, a CI lê as etiquetas da issue `<n>` e o `check:escopo` aceita como aprovado se a issue tem `correcao-automatica` posta pelo dono do repositório e o contrato tem `issue: <n>`, sem a etiqueta `contrato-aprovado`. O resto do contrato vale igual: diff só dentro do escopo.
 
 **Travas**:
 - Balanceamento nunca é automático: arquivo `src/data/balance*` no diff de `feature/issue-<n>` é erro no `check:escopo`, a menos que o usuário ponha `contrato-aprovado` no PR.
@@ -86,7 +86,7 @@ Quem abre a issue (agente ou usuário) já põe a etiqueta pelo critério. Quem 
 
 **Modelo e métricas**: o job `corrige` escolhe o modelo pelo perfil da issue (leve ou padrão, alternado por issue quando `PILOTO_PERFIS=on`, com escalada na 2ª tentativa) e, depois de cada execução, comenta na issue o consumo (tokens por modelo, tempo, turnos, resultado). O job `corrige` da revisão faz o mesmo nos PRs de `feature/issue-<n>`. Regras e relatório (`npm run metricas`) em [metricas.md](metricas.md).
 
-**O usuário entra** na triagem (`precisa-decisao`), quando o loop para (2 tentativas sem PR, limite de rodadas da revisão) e no merge.
+**O usuário entra** na triagem (`precisa-decisao`), quando o loop para (2 tentativas sem PR, limite de rodadas da revisão) e no merge do `master` (release).
 
 **Configuração**: a mesma da revisão (segredo `CLAUDE_CODE_OAUTH_TOKEN` e app do Claude no repositório, [revisao.md](revisao.md)) e as etiquetas `inconsistencia`, `correcao-automatica` e `precisa-decisao`. Sem o segredo, o workflow avisa e pula.
 

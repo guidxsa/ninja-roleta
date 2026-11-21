@@ -1,9 +1,9 @@
 ---
 name: lancar-versao
-description: Entrega e lança versões do Ninja Roleta pelo fluxo feature → staging → master. Contribuir (ao fim de toda funcionalidade, mecânica, ajuste ou correção, inclusive ao fim da skill nova-mecanica, sem esperar o usuário pedir "commita") - testa, commita numa branch feature/*, escreve o fragmento changelog.d, faz push só da branch e abre o PR para o staging, que entra sozinho com a revisão aprovada. Preparar release (o usuário pede "prepara a v0.Y.0" ou o PR permanente sugere) - junta os fragmentos no CHANGELOG e sobe a versão no staging. Publicar release e hotfix - merge no master, tag vX.Y.Z e deploy, só com aprovação explícita. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github", "hotfix" ou "faz a tag".
+description: Entrega e lança versões do Ninshu Roots pelo fluxo feature → staging → master. Contribuir (ao fim de toda funcionalidade, mecânica, ajuste ou correção, inclusive ao fim da skill nova-mecanica, sem esperar o usuário pedir "commita") - testa, commita numa branch feature/*, escreve o fragmento changelog.d, faz push só da branch e abre o PR para o staging, que entra sozinho com a revisão aprovada. Preparar release (o usuário pede "prepara a v0.Y.0" ou o PR permanente sugere) - junta os fragmentos no CHANGELOG e sobe a versão no staging. Publicar release e hotfix - merge no master, tag vX.Y.Z e deploy, só com aprovação explícita. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github", "hotfix" ou "faz a tag".
 ---
 
-# Lançar versão (Ninja Roleta)
+# Lançar versão (Ninshu Roots)
 
 Regras do fluxo em [docs/processo/fluxo.md](../../../docs/processo/fluxo.md). Resumo:
 
@@ -54,7 +54,7 @@ Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não fo
    npm version 0.Y.0 --no-git-tag-version
    ```
    Confira a linha nova no fim da tabela do `CHANGELOG.md` e ajuste o texto se precisar (é o que quem joga lê).
-4. Testar, commitar (`Prepara a release v0.Y.0`), push e PR para o `staging`. Ele entra pelo auto-merge como qualquer contribuição.
+4. Testar, commitar (`Prepara a release v0.Y.0`), push e PR para o `staging`. Ele entra pelo auto-merge como qualquer contribuição. **Sem contrato em `docs/tarefas/` e sem `contrato-aprovado`**: o `check:escopo` dá à `feature/release-v<x.y.z>` um contrato implícito (o seu "prepara" é a aprovação) e recusa qualquer arquivo além de `CHANGELOG.md`, `changelog.d/*.md` e da versão do `package.json`/`package-lock.json`. Precisou mexer em outra coisa: `feature/<tema>` à parte, com contrato.
 5. Relate: versão, o que entra, link do preview (https://guidxsa.github.io/ninja-roleta/staging/) e do PR permanente. **Pare** e peça o "publica v0.Y.0".
 
 ## C. Publicar release (só com "publica v0.Y.0" nesta conversa)
@@ -63,7 +63,7 @@ Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não fo
 2. Merge do PR permanente com **Create a merge commit** (`gh pr merge <n> --merge`; nunca squash, nunca `--admin`).
 3. `git fetch origin master`, tag anotada no merge commit e push só da tag (seção Tag).
 4. O push no `master` publica o Pages e abre o PR de sincronização `master → staging` (entra sozinho).
-5. Limpeza de branches (AGENTS.md, "Limpeza de branches") e relato: versão, links do commit, da tag e do site.
+5. Limpeza de branches (`npm run limpar -- --aplicar --worktrees`; AGENTS.md, "Limpeza de branches") e relato: versão, links do commit, da tag e do site.
 
 ## D. Hotfix (o usuário pede, ou o jogo quebrou em produção)
 
@@ -71,7 +71,7 @@ Só para o que não pode esperar a release. Na dúvida, contribuição normal (A
 
 1. `git fetch origin master && git switch -c hotfix/<tema> origin/master`; contrato `docs/tarefas/<tema>.md`.
 2. Correção, teste e doc; linha `v0.Y.Z` no fim da tabela do `CHANGELOG.md` (o z sobe a partir da última tag do `master`) e `npm version 0.Y.Z --no-git-tag-version`.
-3. Testar, commitar (`Corrige <o que> (v0.Y.Z)`), push e PR para o `master`. **Pare** e peça aprovação.
+3. Testar, commitar (`Corrige <o que> (v0.Y.Z)`), push e PR para o `master`. Peça a revisão cruzada no PR (`@codex review`, ou `@claude revise` se o hotfix é do Codex): no `master` não há portão, ela não trava o merge, mas o usuário confere antes. **Pare** e peça aprovação.
 4. Com o "publica v0.Y.Z": merge com **Create a merge commit**, tag no merge commit, push da tag. A sincronização com o staging é automática; com conflito, resolva numa `feature/sincroniza-<data>` a partir do staging, com merge do `master`, e PR para o staging.
 
 ## Tag (só na publicação)

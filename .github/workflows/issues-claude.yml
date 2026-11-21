@@ -1,7 +1,8 @@
 # Loop das issues (AGENTS.md, "Issues"; docs/processo/issues.md): o Claude corrige sozinho a issue com a etiqueta
 # correcao-automatica. Cria a branch feature/issue-<n>, escreve o contrato a partir da issue, corrige, roda o
 # npm run check, dá push e abre o PR com "Closes #<n>". Daí em diante vale o loop da revisão cruzada
-# (revisao-claude.yml, job corrige); o merge é do usuário e fecha a issue.
+# (revisao-claude.yml, job corrige); aprovado, o PR entra sozinho no staging e o staging.yml fecha a issue. O merge no
+# master (release) é do usuário.
 # Se a issue não for um erro claro, o Claude explica na issue e o workflow troca a etiqueta por precisa-decisao.
 # Autentica como a revisão (segredo CLAUDE_CODE_OAUTH_TOKEN); sem ele, avisa e pula.
 name: Issues do Claude
@@ -79,7 +80,7 @@ jobs:
           echo "issues=$json" >> "$GITHUB_OUTPUT"
           echo "Escolhidas: $json"
 
-  # Executa código do master (npm ci, npm run check) com os segredos. O texto da issue entra no prompt: quem põe a
+  # Executa código da base, o staging (npm ci, npm run check), com os segredos. O texto da issue entra no prompt: quem põe a
   # etiqueta correcao-automatica (só quem tem acesso de triagem) responde pelo conteúdo dela.
   corrige:
     needs: escolhe
@@ -144,7 +145,7 @@ jobs:
           ETAPA: issue
         run: npx tsx scripts/metricas-execucao.ts perfil || echo "::warning::Perfil não escolhido, modelo padrão."
       # Push: só "git push origin HEAD" (a branch feature/issue-<n> em checkout; sem --force, sem outra branch).
-      # Sem gh pr merge: o merge é do usuário. Commit sem atribuição, conferido no passo seguinte.
+      # Sem gh pr merge: o PR entra pelo auto-merge do staging, depois da revisão. Commit sem atribuição, conferido no passo seguinte.
       - uses: anthropics/claude-code-action@v1
         id: claude
         if: steps.token.outputs.ok == 'true'

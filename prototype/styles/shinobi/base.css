@@ -1,0 +1,211 @@
+:root {
+  --shinobi-serif: Georgia, 'Times New Roman', serif;
+  --shinobi-brush: Kalam, var(--font-hand), cursive;
+  --shinobi-ink: #2d2118;
+  --shinobi-muted: #5c4532;
+  --shinobi-edge: #866949;
+  --shinobi-bone: #f7e6c7;
+  --shinobi-lacquer: linear-gradient(100deg, #67131544, #a12d1d26), url('img/shinobi/laca.png') center/180px 76px, #982b20;
+  --shinobi-paper: url('img/shinobi/papel-continuo.png') center/215px 398px repeat, #e9d3ad;
+  --shinobi-sumi: linear-gradient(110deg, color-mix(in srgb, var(--bg) 87%, transparent), color-mix(in srgb, var(--bg-2) 85%, transparent)), url('img/shinobi/sumi.png') center/140px 186px repeat, var(--bg);
+  --shinobi-ground: var(--shinobi-sumi);
+  --shinobi-flare: #d6ae68;
+  --shinobi-veil: rgba(10, 19, 32, 0.2);
+  --shinobi-booth: linear-gradient(#1118279c, #181c22e8), url('img/cenas/noite.jpg') center 53% / cover;
+  --shinobi-stage: var(--bg-2);
+  --shinobi-scene-light: 0.9;
+  --shinobi-line: #6f6250;
+  --shinobi-shadow: 0 5px 14px #140e0a55;
+  --shinobi-torn: polygon(
+    0 5%,
+    2% 1%,
+    16% 2%,
+    26% 0,
+    45% 2%,
+    62% 0,
+    78% 1%,
+    91% 0,
+    99% 3%,
+    100% 12%,
+    99% 36%,
+    100% 56%,
+    99% 89%,
+    100% 97%,
+    94% 99%,
+    75% 98%,
+    51% 100%,
+    34% 99%,
+    15% 100%,
+    1% 97%,
+    0 89%,
+    1% 69%,
+    0 42%
+  );
+  --shinobi-cut: polygon(
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    0 calc(100% - 8px),
+    0 8px
+  );
+  /* Paleta das telas Shinobi (issue #37): cor de componente só por token. */
+  --sh-papel-1: #fff0d7;
+  --sh-papel-2: #fff0c8;
+  --sh-papel-3: #f8e4bd;
+  --sh-papel-4: #f5dca7;
+  --sh-papel-5: #e9d3ab;
+  --sh-papel-6: #ffdf92;
+  --sh-papel-7: #dfc9a5;
+  --sh-papel-8: #e7c592;
+  --sh-ouro-1: #c5ae89;
+  --sh-ouro-2: #d8a35a;
+  --sh-ouro-3: #c79d62;
+  --sh-ouro-4: #e4a23d;
+  --sh-ouro-5: #ae9269;
+  --sh-ouro-6: #af8153;
+  --sh-terra-1: #998365;
+  --sh-terra-2: #ad794c;
+  --sh-terra-3: #987957;
+  --sh-terra-4: #c58222;
+  --sh-terra-5: #8a7456;
+  --sh-terra-6: #b77328;
+  --sh-terra-7: #ac7b31;
+  --sh-terra-8: #986638;
+  --sh-terra-9: #786047;
+  --sh-terra-10: #66584b;
+  --sh-terra-11: #715738;
+  --sh-terra-12: #5d4e42;
+  --sh-terra-13: #795523;
+  --sh-terra-14: #694c32;
+  --sh-tinta-1: #614d36;
+  --sh-tinta-2: #573d2a;
+  --sh-tinta-3: #493728;
+  --sh-tinta-4: #533912;
+  --sh-tinta-5: #392b20;
+  --sh-tinta-6: #392611;
+  --sh-tinta-7: #211d19;
+  --sh-laca-1: #d0845a;
+  --sh-laca-2: #a33922;
+  --sh-laca-3: #8b4d38;
+  --sh-laca-4: #943c2d;
+  --sh-laca-5: #8d3225;
+  --sh-laca-6: #793325;
+  --sh-laca-7: #6f3f29;
+  --sh-laca-8: #633326;
+  --sh-laca-9: #542c32;
+  --sh-laca-10: #64241c;
+  --sh-laca-11: #4d3529;
+  --sh-laca-12: #51160c;
+  --sh-laca-13: #36221b;
+  --sh-folha-1: #37502a;
+  --sh-noite-1: #222a32;
+  --sh-uva-1: #554866;
+  --sh-sumi-1: #776279;
+  --sh-sumi-2: #272725;
+  --sh-sumi-3: #201e1a;
+  --sh-sumi-4: #151119;
+  --sh-sumi-5: #100d09;
+}
+body {
+  background: var(--shinobi-ground);
+  background-attachment: fixed;
+}
+.btn.primary,
+.mode-cta {
+  background: var(--shinobi-lacquer);
+  color: var(--shinobi-bone);
+  border-color: var(--sh-laca-10);
+  text-shadow: 0 1px 1px var(--sh-laca-12);
+}
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+.jt-node:focus-visible .jt-seal {
+  outline: 3px solid var(--sh-terra-4);
+  outline-offset: 2px;
+}
+.top {
+  border-bottom: 1px solid var(--shinobi-line);
+}
+.top::after {
+  display: none;
+}
+.top-bar .brand-name {
+  font: 700 18px var(--shinobi-serif);
+  letter-spacing: 0;
+}
+@media (min-width: 900px) and (min-height: 560px) {
+  :root {
+    --side-w: clamp(84px, 9vw, 148px);
+    --shell-max: 1920px;
+  }
+  .side-nav {
+    background: var(--shinobi-sumi);
+    border-right: 1px solid var(--sh-terra-5);
+    padding: 14px 7px;
+    gap: 5px;
+  }
+  .side-nav .side-brand {
+    margin-block: 12px 22px;
+  }
+  .side-nav button {
+    flex-direction: row;
+    text-align: left;
+    padding: 10px 7px;
+    gap: 9px;
+    color: var(--paper);
+    font: 600 clamp(12px, 0.94vw, 16px) / 1.15 var(--shinobi-serif);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .side-nav button .ico {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+  .side-nav button[aria-current] {
+    background: var(--shinobi-lacquer);
+    color: var(--sh-papel-1);
+    border-color: var(--sh-laca-3);
+    box-shadow: none;
+  }
+  .top,
+  body.mode-jornada .top,
+  body:has(.rwheel) main,
+  body.mode-jornada main,
+  body:has(.gate) main {
+    padding-inline: clamp(12px, 1.4vw, 24px);
+  }
+  .top .btn {
+    min-height: 32px;
+  }
+  footer {
+    padding-block: 5px;
+    font-size: 12px;
+  }
+  .quote-strip {
+    font-size: 14px;
+  }
+}
+@media (max-width: 899px), (max-height: 559px) {
+  main:has(> .gate, > .rorigin, > .rrelic, > .jmap-screen, > .jbattle, > .team-seven) {
+    padding-inline: 8px;
+  }
+  .top {
+    padding: 4px 8px;
+  }
+  .top .btn {
+    min-height: 34px;
+    min-width: 32px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}

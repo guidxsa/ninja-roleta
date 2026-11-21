@@ -4,6 +4,7 @@
 // etiqueta `contrato-aprovado`, que só o usuário põe, ou, na correção automática de uma issue (branch feature/issue-<n>, contrato
 // com `issue: <n>`), com a etiqueta `correcao-automatica` na issue, lida pela CI em CHECK_ISSUE_ETIQUETAS (docs/processo/issues.md).
 // Uso: npm run check:escopo
+import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { currentBranch, gitChanges, inCi, lockfileOnlyVersion, matchesAny, packageJsonChange, readVersion, report, type Finding } from './harness';
 
@@ -16,6 +17,12 @@ export const ETIQUETA_AUTOMATICA = 'correcao-automatica';
 export const NUNCA_AUTOMATICO = ['src/data/balance*'];
 /** Branch da correção automática de uma issue. */
 export const ISSUE_BRANCH = /^feature\/issue-(\d+)$/;
+/**
+ * Branch da release (docs/processo/fluxo.md, "Release"): contrato implícito, sem docs/tarefas nem etiqueta, porque o
+ * "prepara a v0.Y.0" do usuário é a aprovação. O diff só pode juntar os fragmentos no CHANGELOG e subir a versão.
+ */
+export const RELEASE_BRANCH = /^feature\/release-v\d+\.\d+\.\d+$/;
+export const ESCOPO_RELEASE = ['CHANGELOG.md', 'changelog.d/*.md'];
 
 /**
  * Sempre dentro do escopo: changelog e registro de decisões, que toda tarefa pode tocar. O package.json e o
@@ -77,12 +84,46 @@ export interface EscopoInput {
   labels?: string[] | null;
   /** Etiquetas da issue <n> numa branch feature/issue-<n> (na CI do PR), ou null. */
   issueLabels?: string[] | null;
+  /**
+   * Blobs dos contratos no momento da aprovação do usuário (registro do aprovacao.yml, lido por check-aprovacao.ts): null
+   * no PR sem registro; undefined quando não se confere (fora do PR).
+   */
+  contratosAprovados?: Record<string, string> | null;
+  /** Blob do contrato no commit conferido (`git rev-parse HEAD:<contrato>`). */
+  contratoBlob?: string | null;
 }
 
-export function checkEscopo({ branch, files, contrato, hoje, env = {}, packageOnlyVersion = false, lockOnlyVersion = false, labels = null, issueLabels = null }: EscopoInput): Finding[] {
+export function checkEscopo({
+  branch,
+  files,
+  contrato,
+  hoje,
+  env = {},
+  packageOnlyVersion = false,
+  lockOnlyVersion = false,
+  labels = null,
+  issueLabels = null,
+  contratosAprovados,
+  contratoBlob = null,
+}: EscopoInput): Finding[] {
   const exigido = hoje >= EXIGIR_CONTRATO_A_PARTIR;
   // staging e master juntam várias tarefas, cada uma conferida no próprio PR (docs/processo/fluxo.md).
   if (/^(staging|master)$/.test(branch) && !env.CHECK_TEMA) return [];
+  if (RELEASE_BRANCH.test(branch) && !env.CHECK_TEMA) {
+    const soltos = files.filter(
+      (f) => !matchesAny(f, ESCOPO_RELEASE) && !(f === 'package.json' && packageOnlyVersion) && !(f === 'package-lock.json' && lockOnlyVersion),
+    );
+    return soltos.length
+      ? [
+          {
+            level: 'erro',
+            rule: 'fora-do-escopo',
+            message: `A branch de release só junta os fragmentos (CHANGELOG.md, changelog.d/*.md) e sobe a versão do package.json; o resto vai numa feature/<tema> com contrato:`,
+            files: soltos,
+          },
+        ]
+      : [];
+  }
   const { tema, origem } = temaDaTarefa(branch, files, env);
   if (!tema)
     return [
@@ -112,9 +153,21 @@ export function checkEscopo({ branch, files, contrato, hoje, env = {}, packageOn
 
   const out: Finding[] = [];
   const issue = ISSUE_BRANCH.exec(branch)?.[1];
-  const aprovadoPeloUsuario = labels?.includes(ETIQUETA_APROVADO) ?? false;
+  const etiqueta = labels?.includes(ETIQUETA_APROVADO) ?? false;
+  // A aprovação vale para o contrato como estava quando o usuário pôs a etiqueta (AGENTS.md, "Escopo").
+  const registrado = contratosAprovados === undefined || (!!contratoBlob && contratosAprovados?.[path] === contratoBlob);
+  const aprovadoPeloUsuario = etiqueta && registrado;
   const aprovadoPelaIssue = !!issue && String(c.issue ?? '') === issue && (issueLabels?.includes(ETIQUETA_AUTOMATICA) ?? false);
-  if (labels !== null && !aprovadoPeloUsuario && !aprovadoPelaIssue)
+  if (labels !== null && etiqueta && !registrado && !aprovadoPelaIssue)
+    out.push({
+      level: exigido ? 'erro' : 'aviso',
+      rule: 'contrato-aprovado',
+      message:
+        contratosAprovados === null
+          ? `A etiqueta "${ETIQUETA_APROVADO}" não tem o registro do contrato aprovado (aprovacao.yml): o usuário tira e põe a etiqueta de novo.`
+          : `${path} mudou depois da etiqueta "${ETIQUETA_APROVADO}": a aprovação venceu. O usuário confere o contrato novo, tira e põe a etiqueta de novo.`,
+    });
+  else if (labels !== null && !aprovadoPeloUsuario && !aprovadoPelaIssue)
     out.push({
       level: exigido ? 'erro' : 'aviso',
       rule: 'contrato-aprovado',
@@ -149,6 +202,15 @@ export function checkEscopo({ branch, files, contrato, hoje, env = {}, packageOn
   return out;
 }
 
+/** Blob do arquivo no commit em checkout, o mesmo `sha` que a API do GitHub dá para o arquivo no PR. */
+function blobNoHead(path: string): string | null {
+  try {
+    return execFileSync('git', ['rev-parse', `HEAD:${path}`], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 function main(): void {
   const branch = currentBranch();
   const ci = inCi();
@@ -168,8 +230,18 @@ function main(): void {
   // Etiquetas da issue <n> (branch feature/issue-<n>), lidas pela CI do PR; vazio quando a issue não existe ou não foi lida.
   const issueLabels =
     process.env.CHECK_PR === 'true' && ISSUE_BRANCH.test(branch) ? (process.env.CHECK_ISSUE_ETIQUETAS ?? '').split(',').map((l) => l.trim()).filter(Boolean) : null;
+  // Registro do contrato na aprovação (CHECK_CONTRATOS, posto pela CI do PR a partir de check-aprovacao.ts): vazio = sem registro.
+  const contratosAprovados =
+    process.env.CHECK_PR === 'true' && process.env.CHECK_CONTRATOS !== undefined
+      ? process.env.CHECK_CONTRATOS
+        ? (JSON.parse(process.env.CHECK_CONTRATOS) as Record<string, string>)
+        : null
+      : undefined;
+  const contratoBlob = path && contratosAprovados !== undefined ? blobNoHead(path) : null;
   const hoje = new Date().toISOString().slice(0, 10);
-  findings.push(...checkEscopo({ branch, files: changes.files, contrato, hoje, env: process.env, packageOnlyVersion, lockOnlyVersion, labels, issueLabels }));
+  findings.push(
+    ...checkEscopo({ branch, files: changes.files, contrato, hoje, env: process.env, packageOnlyVersion, lockOnlyVersion, labels, issueLabels, contratosAprovados, contratoBlob }),
+  );
   process.exitCode = report(`check:escopo (${branch || '?'}${tema ? `, tema ${tema}` : ''})`, findings);
 }
 

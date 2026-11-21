@@ -27,11 +27,16 @@ declare const self: {
   addEventListener(type: 'fetch', listener: (e: FetchEvent) => void): void;
 };
 
-const PREFIX_STAGING = 'ninja-roleta-staging-';
-const PREFIX = __CANAL__ === 'staging' ? PREFIX_STAGING : 'ninja-roleta-';
-const CACHE = `${PREFIX}${__VERSION__}`;
-/** Caches que este service worker pode apagar: os do próprio canal (a produção não apaga os do staging). */
-const meu = (k: string): boolean => k.startsWith(PREFIX) && (__CANAL__ === 'staging' || !k.startsWith(PREFIX_STAGING));
+const staging = __CANAL__ === 'staging';
+const prefix = staging ? 'ninshu-roots-staging-' : 'ninshu-roots-';
+const CACHE = prefix + __VERSION__;
+/** Cada canal limpa as próprias versões nas duas gerações de nomes. */
+function meu(key: string): boolean {
+  return ['ninshu-roots-', 'ninja-roleta-'].some((base) => {
+    const preview = base + 'staging-';
+    return staging ? key.startsWith(preview) : key.startsWith(base) && !key.startsWith(preview);
+  });
+}
 /** O que a instalação já deixa guardado: a página e o que o manifesto pede. */
 const SHELL = ['./', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 /** Chave única da página: `index.html`, `./` e `?seed=` são o mesmo jogo. */

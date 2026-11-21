@@ -1,0 +1,317 @@
+/* Entrada e portão */
+.gate .gate-banner {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--sh-sumi-2);
+  border: 1px solid var(--shinobi-line);
+}
+.gate .gate-banner .gate-hero {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  mask: none;
+  z-index: -1;
+}
+.gate .gate-banner .gate-hero :is(img, video) {
+  object-fit: cover;
+  filter: brightness(var(--shinobi-scene-light)) saturate(0.9);
+}
+.gate .gate-head {
+  position: absolute;
+  left: 6%;
+  top: 10%;
+  padding: 0;
+  display: block;
+  z-index: 1;
+  width: 54%;
+  pointer-events: none;
+}
+.gate .gate-head .logo {
+  margin: 0;
+  position: relative;
+  width: 100%;
+  height: clamp(110px, 21vh, 230px);
+  font-size: var(--fs-brand);
+  filter: drop-shadow(1px 3px 3px color-mix(in srgb, var(--sh-sumi-4) 60%, transparent));
+  text-align: left;
+}
+.gate.jgate .gate-head .logo {
+  background: url('img/shinobi/jornada-letreiro.png') left center/contain no-repeat;
+}
+.gate.jgate .gate-head .logo span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.gate .gate-head .logo::before,
+.gate .gate-head .logo::after,
+.gate .gate-cloud { display: none; }
+.gate .gate-quote {
+  padding: 10px 16px;
+  width: clamp(180px, 25%, 300px);
+  left: auto;
+  right: 3%;
+  top: 9%;
+  margin: 0;
+  rotate: 0;
+  filter: none;
+  opacity: 0.96;
+}
+.gate .gate-quote p {
+  font: 700 clamp(13px, 1.15vw, 17px) / 1.23 var(--shinobi-brush);
+}
+.gate .gate-quote cite {
+  font-size: 12px;
+}
+.gate .gate-modes {
+  display: flex;
+  gap: 9px;
+  padding: 0;
+}
+.gate .gate-modes .mode-card {
+  --mode-paint: url('img/shinobi/pergaminho-jornada.png');
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  overflow: visible;
+  border: 0;
+  padding: 0 14px;
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 3px 3px color-mix(in srgb, var(--sh-sumi-5) 36%, transparent));
+  color: var(--shinobi-ink);
+  transform: none;
+}
+.gate .mode-card[data-choice='roleta'] {
+  --mode-paint: url('img/shinobi/pergaminho-roleta.png');
+}
+.gate .mode-card[data-choice='story'] {
+  --mode-paint: url('img/shinobi/pergaminho-historia.png');
+}
+.gate .mode-card[data-choice='path'] {
+  --mode-paint: url('img/shinobi/pergaminho-caminho.png');
+}
+.gate .gate-modes .mode-card::before {
+  inset: 8px 6px;
+  transform: none;
+  box-shadow: none;
+  clip-path: none;
+  background:
+    var(--mode-paint) center/100% 100% no-repeat,
+    var(--shinobi-paper);
+  border: 1px solid var(--shinobi-edge);
+}
+.gate .gate-modes .mode-card::after {
+  display: none;
+}
+.gate .mode-card :is(.mode-seal, .mode-art, .mode-body > .ico) {
+  display: none;
+}
+.gate .mode-card .scroll-roll {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: auto;
+  width: 100%;
+  height: clamp(12px, 1.9vh, 21px);
+  border: 0;
+  box-shadow: none;
+  background: url('img/shinobi/rolo.png') center/100% 100% no-repeat;
+  transform: none;
+}
+.gate .mode-card .scroll-roll.r {
+  top: auto;
+  bottom: 0;
+  background-image: url('img/shinobi/rolo-base.png');
+}
+.gate .gate-modes .mode-body {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  min-height: 0;
+  padding: clamp(20px, 3vh, 34px) clamp(12px, 1.5vw, 28px);
+  position: relative;
+}
+.gate .mode-txt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+}
+.gate .mode-txt b {
+  font: 700 clamp(25px, 2.5vw, 46px) / 1.04 var(--shinobi-serif);
+  color: var(--shinobi-ink);
+  letter-spacing: -0.035em;
+}
+.gate .mode-txt b::after,
+.jc-title::after {
+  content: '';
+  display: block;
+  width: 78%;
+  height: 3px;
+  margin-top: 4px;
+  background: var(--sh-laca-4);
+  clip-path: polygon(0 50%, 32% 1%, 66% 18%, 100% 78%, 47% 77%, 4% 100%);
+}
+.gate .mode-txt small {
+  width: min(52%, 26ch);
+  margin: 0;
+  padding-right: 4px;
+  font: 500 clamp(13px, 1.02vw, 17px) / 1.28 var(--shinobi-serif);
+  color: var(--shinobi-ink);
+  text-shadow:
+    0 0 4px var(--sh-papel-3),
+    0 0 7px var(--sh-papel-3),
+    0 1px var(--sh-papel-3);
+}
+.gate .mode-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: auto 0 0;
+  padding: 8px 14px;
+  min-height: 38px;
+  min-width: 100px;
+  text-transform: none;
+  letter-spacing: 0;
+  font: 700 17px/1 var(--shinobi-serif);
+  background: var(--shinobi-lacquer);
+}
+.gate .mode-card:focus-visible .mode-cta,
+.gate .mode-card:hover .mode-cta {
+  outline: 2px solid var(--sh-ouro-6);
+  outline-offset: 2px;
+}
+.gate .gate-aside > .parchment,
+.gate .gate-resume > .parchment {
+  color: var(--shinobi-ink);
+  box-shadow: var(--shinobi-shadow);
+  border: 1px solid var(--shinobi-edge);
+}
+.gate .gate-aside > .parchment::before,
+.gate .gate-resume > .parchment::before {
+  clip-path: none;
+  inset: 0;
+  transform: none;
+  background: var(--shinobi-paper);
+}
+.gate .gate-aside > .parchment::after,
+.gate .gate-resume > .parchment::after {
+  display: none;
+}
+.gate .gate-aside h3 {
+  font: 700 22px/1.1 var(--shinobi-serif);
+  letter-spacing: -0.02em;
+  border-bottom: 1px solid var(--sh-terra-5);
+  padding-bottom: 7px;
+}
+@media (min-width: 900px) and (min-height: 560px) {
+  .gate .gate-main {
+    min-width: 0;
+    display: grid;
+    grid-template-rows: minmax(170px, 1.1fr) minmax(210px, 0.93fr);
+    gap: 8px;
+  }
+  .gate .gate-aside > .desk-profile {
+    order: -3;
+  }
+  .gate .gate-aside > .desk-prog {
+    order: -2;
+  }
+  .gate .gate-modes .mode-card {
+    flex: 1 1 0;
+    height: 100%;
+  }
+  .gate .gate-aside {
+    gap: 8px;
+  }
+  .gate .gate-aside > .parchment {
+    padding: 12px;
+  }
+}
+@media (max-width: 899px), (max-height: 559px) {
+  .gate .gate-banner {
+    display: block;
+    flex: none;
+    height: clamp(170px, 27vh, 275px);
+    width: 100%;
+    margin: 0;
+  }
+  .gate .gate-head {
+    left: 7%;
+    top: 12%;
+    width: 49%;
+  }
+  .gate .gate-head .logo {
+    height: clamp(90px, 18vh, 150px);
+  }
+  .gate .gate-quote {
+    display: none;
+  }
+  .gate .gate-sub {
+    display: none;
+  }
+  .gate .gate-modes {
+    flex-direction: column;
+  }
+  .gate .gate-modes .mode-card {
+    flex: none;
+    /* Altura mínima, não fixa: com a descrição longa em 360 px o card cresce e o botão não sai do papel (issue #41). */
+    display: flex;
+    flex-direction: column;
+    min-height: clamp(164px, 22vh, 208px);
+    height: auto;
+  }
+  .gate .gate-modes .mode-body {
+    flex: 1 1 auto;
+    height: auto;
+    padding: 19px 10px 17px;
+  }
+  .gate .mode-txt {
+    gap: 5px;
+  }
+  .gate .mode-txt small {
+    width: 58%;
+    max-width: 31ch;
+    font-size: 13px;
+    line-height: 1.18;
+  }
+  .gate .mode-txt b {
+    font-size: 26px;
+  }
+  .gate .mode-cta {
+    min-height: 32px;
+    font-size: 15px;
+    padding: 5px 10px;
+  }
+  .gate .gate-main {
+    display: contents;
+  }
+  .gate .gate-resume {
+    order: 1;
+  }
+  .gate .gate-modes {
+    order: 2;
+  }
+  .gate .scroll-banner {
+    order: 3;
+  }
+  .gate .jprogress {
+    margin: 0;
+  }
+  .gate-resume .desk-prog,
+  .jgate .jprogress {
+    padding: 10px 14px;
+  }
+}

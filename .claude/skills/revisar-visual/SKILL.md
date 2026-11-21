@@ -1,9 +1,9 @@
 ---
 name: revisar-visual
-description: Revisão visual de telas do Ninja Roleta pelo UI Lab - fotografa os cenários afetados em celular (390px) e desktop (1280px), nos temas Sumi e Pergaminho e com menos movimento, e confere contra docs/visual.md e as regras de interface do AGENTS.md. Use depois de mexer em interface (prototype/, estilos, art.ts, retratos), antes de fechar uma versão com mudança visual, ou quando o usuário disser "como ficou", "confere a tela", "ficou feio no celular".
+description: Revisão visual de telas do Ninshu Roots pelo UI Lab - fotografa os cenários afetados em celular (390px) e desktop (1280px), no tema grafite e com menos movimento, e confere contra docs/visual.md e as regras de interface do AGENTS.md. Use depois de mexer em interface (prototype/, estilos, art.ts, retratos), antes de fechar uma versão com mudança visual, ou quando o usuário disser "como ficou", "confere a tela", "ficou feio no celular".
 ---
 
-# Revisar visual (Ninja Roleta)
+# Revisar visual (Ninshu Roots)
 
 O jogo deve parecer parte do universo shinobi (critério de `docs/visual.md`) e celular e desktop são pares, cada um com sua composição. Esta skill olha as telas de verdade, não o código.
 
@@ -14,12 +14,21 @@ O jogo deve parecer parte do universo shinobi (critério de `docs/visual.md`) e 
 
 ## 2. Fotografar
 
+**Pré-requisito (uma vez por máquina)**: a captura usa o Playwright, que não está nas dependências do projeto (pesaria o `npm ci` de todos). Instale só na sua máquina:
+
+```
+npm i --no-save playwright
+npx playwright install chromium
+```
+
+Sem ele, o script para com `Playwright não encontrado` (um `npm ci` ou `npm install` depois remove o módulo: instale de novo). `--chromium=<caminho>` (ou `PW_CHROMIUM`) só troca o navegador: o módulo `playwright` continua necessário. Para olhar o lab à mão, o `.claude/launch.json` serve `dist-lab/` na porta 4178 (configuração `ui-lab`; é um `python -m http.server`, qualquer servidor estático serve).
+
 ```
 npm run lab
 npx tsx scripts/revisar-visual.ts <id> <id> ...      # ou --prefixo=jornada.shop, ou --todos
 ```
 
-Sai uma foto por cenário × {celular, desktop} × {Sumi, Pergaminho, Sumi com menos movimento} em `dist-lab/revisao/` (fora do git). O terminal marca `VER` quando há rolagem horizontal ou erro no console.
+Sai uma foto por cenário × {celular, desktop} × {Sumi, Sumi com menos movimento} em `dist-lab/revisao/` (fora do git). O terminal marca `VER` quando há rolagem horizontal ou erro no console.
 
 Olhe as fotos (o agente lê as imagens). Fotos que o usuário vai ver: gere de novo com `deviceScaleFactor: 2` se precisar de nitidez.
 
@@ -35,7 +44,7 @@ Olhe as fotos (o agente lê as imagens). Fotos que o usuário vai ver: gere de n
 **Direção visual** (`docs/visual.md`):
 - A tela usa os objetos do mundo (pergaminho, placa, carimbo) e poucas referências ligadas ao que acontece nela.
 - Celular: um toque, vertical, botões grandes, sem rolagem horizontal. Desktop: composição própria (colunas, painéis), não o celular esticado; quanto menos rolagem, melhor.
-- Os dois temas legíveis (contraste do texto sobre o papel e sobre o sumi).
+- Texto legível no grafite e no papel (contraste WCAG AA, 4,5:1, sobre o sumi e dentro do pergaminho).
 - Menos movimento: nada essencial depende de animação.
 
 ## 4. Relatar

@@ -1,0 +1,1 @@
+**Telas do Ninja Roleta renovadas.** O Portão e a Jornada ganham entradas em pergaminho com ações mais claras. A roda de madeira destaca os resultados, o mapa dá mais contraste aos caminhos abertos, e a História ganha escolhas de leitura mais clara. No desktop, a árvore põe o ramo escolhido ao lado do efeito e do custo de cada talento.

@@ -66,6 +66,26 @@ describe('escopo', () => {
     expect(rules(run(files, md, { labels: ['outra'], hoje: DEPOIS }))).toEqual(['erro:contrato-aprovado']);
   });
 
+  it('a aprovação vale para o contrato como estava quando a etiqueta foi posta (#59)', () => {
+    const files = ['src/core/roleta/battle.ts'];
+    const aprovado = { labels: [ETIQUETA_APROVADO], contratoBlob: 'b1' };
+    expect(run(files, md, { ...aprovado, contratosAprovados: { 'docs/tarefas/veneno.md': 'b1' } })).toEqual([]);
+    // contrato mudou depois da etiqueta, ou etiqueta sem registro: aviso antes da data, erro depois
+    expect(rules(run(files, md, { ...aprovado, contratosAprovados: { 'docs/tarefas/veneno.md': 'b0' } }))).toEqual(['aviso:contrato-aprovado']);
+    const vencido = run(files, md, { ...aprovado, contratosAprovados: { 'docs/tarefas/veneno.md': 'b0' }, hoje: DEPOIS });
+    expect(rules(vencido)).toEqual(['erro:contrato-aprovado']);
+    expect(vencido[0]!.message).toMatch(/venceu/);
+    expect(run(files, md, { ...aprovado, contratosAprovados: null, hoje: DEPOIS })[0]!.message).toMatch(/registro/);
+    // fora do PR (contratosAprovados undefined) não confere
+    expect(run(files, md, { labels: [ETIQUETA_APROVADO] })).toEqual([]);
+  });
+
+  it('aprovação vencida não libera balanceamento na correção automática', () => {
+    const md7 = '---\nobjetivo: x\nissue: 7\nescopo: ["src/**"]\n---\n';
+    const f = run(['src/data/balance.ts'], md7, { branch: 'feature/issue-7', labels: [ETIQUETA_APROVADO], contratosAprovados: null, issueLabels: [ETIQUETA_AUTOMATICA] });
+    expect(rules(f)).toEqual(['erro:correcao-automatica']);
+  });
+
   it('correção automática: a issue com a etiqueta do loop vale como aprovação (docs/processo/issues.md)', () => {
     const md7 = `---
 objetivo: Corrige a issue 7.
@@ -168,6 +188,17 @@ describe('fluxo com staging (docs/processo/fluxo.md)', () => {
   it('staging e master não conferem contrato (cada tarefa foi conferida no próprio PR)', () => {
     expect(run(['src/core/a.ts'], null, { branch: 'staging', hoje: DEPOIS })).toEqual([]);
     expect(run(['src/core/a.ts'], null, { branch: 'master', hoje: DEPOIS })).toEqual([]);
+  });
+
+  it('feature/release-v<x.y.z> tem contrato implícito: só changelog e versão, sem etiqueta (#63)', () => {
+    const release = { branch: 'feature/release-v0.96.0', hoje: DEPOIS, labels: [] as string[], packageOnlyVersion: true, lockOnlyVersion: true };
+    expect(run(['CHANGELOG.md', 'changelog.d/telas.md', 'package.json', 'package-lock.json'], null, release)).toEqual([]);
+    const f = run(['CHANGELOG.md', 'src/core/a.ts'], null, release);
+    expect(rules(f)).toEqual(['erro:fora-do-escopo']);
+    expect(f[0]!.files).toEqual(['src/core/a.ts']);
+    expect(rules(run(['package.json'], null, { ...release, packageOnlyVersion: false }))).toEqual(['erro:fora-do-escopo']);
+    // Nome fora do padrão não ganha a exceção.
+    expect(rules(run(['CHANGELOG.md'], null, { ...release, branch: 'feature/release-proxima' }))).toEqual(['erro:contrato']);
   });
 
   it('hotfix/<tema> usa o contrato do tema e changelog.d sempre pode mudar', () => {

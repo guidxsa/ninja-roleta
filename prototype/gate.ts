@@ -38,17 +38,8 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
   const G = S.ui.gate;
   // Portão da Vila (docs/visual.md): destaque com citação, os modos em pergaminho com arte e a faixa de Conquistas.
   // A faixa usa data-profile (não data-choice): só abre a janela, não escolhe modo. O Registro fica na barra inferior.
-  // Dualidade (docs/visual.md): de dia o Naruto observa Konoha, à noite o Sasuke. As duas cenas, frases e selos ficam
-  // montados; o CSS mostra a do tema atual (data-theme) e troca devagar, como um amanhecer.
-  const DU = G.duality;
-  const pickQuote = (list: readonly { text: string; by: string }[]) => list[Math.floor(Math.random() * list.length)]!;
-  const day = sceneMedia('portao-dia') ?? sceneMedia('portao');
-  const night = sceneMedia('portao-noite') ?? day;
-  const hero = day || night ? `<span class="duo-layer duo-day">${day ?? ''}</span><span class="duo-layer duo-night">${night ?? ''}</span>` : null;
-  const duoQuote = (t: 'day' | 'night') => {
-    const q = pickQuote(DU[t].quotes);
-    return `<div class="duo-q duo-${t}"><p>${q.text}</p><cite>${q.by}</cite></div>`;
-  };
+  const hero = sceneMedia('portao-noite') ?? sceneMedia('portao');
+  const quote = G.nightQuotes[Math.floor(Math.random() * G.nightQuotes.length)]!;
   const gateCard = (id: 'jornada' | 'roleta') =>
     modeCard({
       id, art: sceneMedia(`modo-${id}`) ?? emblem(id), artVars: sceneVars(`modo-${id}`), seal: id === 'jornada' ? '道' : '運',
@@ -64,11 +55,10 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
           <header class="gate-head">
             <span class="gate-cloud l" aria-hidden="true">${cloud()}</span><span class="gate-cloud r" aria-hidden="true">${cloud()}</span>
             <h1 class="logo">${S.ui.title.split(' ').map((w, i) => `<span class="l${i + 1}">${w}</span>`).join('')}</h1>
-            <p class="duo-tags"><span class="duo-tag duo-day">${DU.day.tag}</span><span class="duo-tag duo-night">${DU.night.tag}</span></p>
           </header>
-          <div class="gate-hero duo" aria-hidden="true">${hero ?? ''}${sceneFx()}</div>
-          <blockquote class="parchment gate-quote">${duoQuote('day')}${duoQuote('night')}
-            <span class="seal duo-seal duo-day" aria-hidden="true">${DU.day.seal}</span><span class="seal duo-seal duo-night" aria-hidden="true">${DU.night.seal}</span></blockquote>
+          <div class="gate-hero" aria-hidden="true">${hero ?? ''}${sceneFx()}</div>
+          <blockquote class="parchment gate-quote"><div><p>${quote.text}</p><cite>${quote.by}</cite></div>
+            <span class="seal quote-seal" aria-hidden="true">影</span></blockquote>
         </div>
         <p class="gate-sub">${M.title}</p>
         ${resume ? `<div class="gate-resume">${resume}</div>` : ''}
@@ -119,7 +109,7 @@ export function installSideNav(): void {
   const nav = document.getElementById('side-nav')!;
   nav.setAttribute('aria-label', D.navLabel);
   const item = (id: NavId) => `<button type="button" data-nav="${id}">${icon(NAV_ICONS[id])}<span>${D.nav[id]}</span></button>`;
-  nav.innerHTML = `<span class="side-brand seal" aria-hidden="true">忍</span>${(['home', 'jornada', 'roleta'] as const).map(item).join('')}<hr>${REGISTRY_PAGES.map(item).join('')}`;
+  nav.innerHTML = `<span class="side-brand seal brand-seal" aria-hidden="true">${icon('konoha')}</span>${(['home', 'jornada', 'roleta'] as const).map(item).join('')}<hr>${REGISTRY_PAGES.map(item).join('')}`;
   nav.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-nav]');
     if (!b) return;
@@ -213,7 +203,7 @@ export function profileCard(): string {
     <h3>${D.profileTitle}</h3>
     <div class="desk-id">${avatarButton('md')}
       <label class="field"><span>${S.ui.playerName.label}</span><input type="text" data-desk-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${D.namePlaceholder}" value="${esc(ses.profile.playerName ?? '')}"></label></div>
-    <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+    <details class="ninja-record"><summary>Registro do ninja</summary><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>
   </section>`;
 }
 

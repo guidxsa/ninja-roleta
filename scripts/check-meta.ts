@@ -4,6 +4,8 @@
 // Uso: npm run check:meta   (roda na CI, em job próprio; leva cerca de 1 a 2 minutos)
 // Quebrou: não ajuste número para passar. Pare e proponha ao usuário com a tabela de antes e depois (AGENTS.md).
 import { execFile } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { report, type Finding } from './harness';
@@ -22,6 +24,18 @@ export const SIMS = [
   { modo: 'Roleta' as const, args: ['scripts/sim-origens.ts', '--runs', '60', '--seed', '2', '--ciclos', '1', '--json'] },
   { modo: 'Jornada' as const, args: ['scripts/sim-jornada.ts', '40', '2', '--json'] },
 ];
+
+/**
+ * Comando de uma simulação: o Node atual com o CLI do `tsx` instalado no projeto. Sem `npx` nem shell, que no Windows
+ * falham com `spawn npx ENOENT` (o `npx` lá é um `.cmd`), e com o mesmo resultado na CI.
+ */
+export function comandoTsx(args: string[]): [string, string[]] {
+  const req = createRequire(import.meta.url);
+  const pkgPath = req.resolve('tsx/package.json');
+  const bin = (req(pkgPath) as { bin: string | Record<string, string> }).bin;
+  const cli = typeof bin === 'string' ? bin : bin.tsx!;
+  return [process.execPath, [join(dirname(pkgPath), cli), ...args]];
+}
 
 export interface MetaRow {
   grupo: string;
@@ -90,7 +104,8 @@ async function main(): Promise<void> {
   const run = promisify(execFile);
   const results = await Promise.all(
     SIMS.map(async ({ modo, args }) => {
-      const { stdout } = await run('npx', ['tsx', ...args], { maxBuffer: 64 * 1024 * 1024 });
+      const [cmd, argv] = comandoTsx(args);
+      const { stdout } = await run(cmd, argv, { maxBuffer: 64 * 1024 * 1024 });
       return { modo, rows: parseMetaJson(stdout) };
     }),
   );

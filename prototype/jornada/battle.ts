@@ -1,5 +1,6 @@
 // Tela de batalha da Jornada (docs/jornada/combate.md#interface): inimigos em cima, equipe embaixo,
 // alvo por toque e animação a partir do log de eventos do core. Sem roleta na tela: só o resultado.
+import { preBattle } from '../battleArt';
 import type { CloneKind } from '../../src/core/clones';
 import { gateHpUpkeep } from '../../src/core/gates';
 import {
@@ -418,6 +419,8 @@ export async function jornadaBattle(
   });
   // Na abertura ninguém agiu ainda: os turnos antes do protagonista só andam depois da intro, para as barras não adiantarem o dano.
   let state = opts.from ?? openBattle(setup, data);
+  const bridge = state.fighters.some((fighter) => fighter.defId === 'haku' && fighter.side === 'enemy');
+  await preBattle(state, data, bridge, portraitOf);
   liveBattle = () => state;
   liveBattleRun = () => run;
   // Elite e chefe têm palco próprio: selo no cabeçalho, varrida de entrada e (chefe) retrato maior. Antes eram iguais a
@@ -426,7 +429,8 @@ export async function jornadaBattle(
   const big = kind === 'boss' || kind === 'elite' ? kind : null;
   const kindChip = big ? `<b class="jb-kind">${J.stopKinds[big]}</b>` : '';
   const root = show(
-    h(`<div class="screen jbattle scene-${scene}${big ? ` jb-k-${big}` : ''}">
+    h(`<div class="screen jbattle scene-${scene}${bridge ? ' bridge' : ''}${big ? ` jb-k-${big}` : ''}">
+      <div class="jb-field-art" aria-hidden="true"></div>
       <div class="jb-head"><span>${icon(big === 'boss' ? 'intent' : big === 'elite' ? 'warning' : 'swords')} ${kindChip}${esc(label)}</span><span data-round></span></div>
       ${run0.relics.length ? `<div class="jb-relics">${relicStrip(run0)}</div>` : ''}
       ${goal ? `<p class="jb-goal">${esc(goal)}</p>` : ''}
@@ -454,6 +458,10 @@ export async function jornadaBattle(
 
   const fxLayer = root.querySelector<HTMLElement>('.jb-fx')!;
   const render = (s: JBattle) => {
+    const originalTeam = s.fighters.length === 3 && s.fighters.every(
+      (fighter) => ['naruto', 'sasuke', 'haku'].includes(fighter.defId) && !fighter.down && !fighter.form && fighter.hp > fighter.maxHp * 0.5,
+    );
+    root.classList.toggle('bridge-live', bridge && !originalTeam);
     const trails = captureTrails(root, barKey);
     enemiesEl.innerHTML = s.fighters.filter((f) => f.side === 'enemy').map((f) => fighterCard(f, data)).join('');
     alliesEl.innerHTML = s.fighters.filter((f) => f.side === 'ally').map((f) => fighterCard(f, data)).join('');

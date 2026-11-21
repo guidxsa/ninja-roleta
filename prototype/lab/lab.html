@@ -1,16 +1,13 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="robots" content="noindex" />
-    <title>UI Lab · Ninja Roleta</title>
+    <title>UI Lab · Ninshu Roots</title>
     <script>
-      // Tema antes da primeira pintura, pela URL (o lab não lê as preferências do jogo).
       (function () {
         var p = new URLSearchParams(location.search);
-        var t = p.get('theme');
-        document.documentElement.dataset.theme = t === 'light' || t === 'dark' ? t : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
         if (p.get('instant') === '1') document.documentElement.dataset.instant = '';
       })();
     </script>
@@ -22,13 +19,12 @@
     <!-- Mesma casca do jogo (prototype/index.html): as telas reais dependem destes ids. -->
     <header class="top">
       <div class="top-bar">
-        <span class="brand" aria-hidden="true"><span class="seal">忍</span><span class="brand-name">Ninja Roleta</span></span>
+        <span class="brand" aria-hidden="true"><span class="seal brand-seal"></span><span class="brand-name">Ninshu Roots</span></span>
         <button class="btn small" id="home-btn" title="Portão da Vila" aria-label="Portão da Vila"></button>
         <div class="top-actions">
           <div class="tool-group">
             <button class="btn small" id="instant-btn"></button>
             <button class="btn small" id="anim-btn"></button>
-            <button class="btn small" id="theme-btn"></button>
             <button class="btn small" id="sfx-btn"></button>
             <button class="btn small" id="music-btn"></button>
           </div>

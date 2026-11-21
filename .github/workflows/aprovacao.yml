@@ -1,0 +1,41 @@
+# Registro da aprovação do contrato (AGENTS.md, "Escopo"; scripts/check-aprovacao.ts): quando a etiqueta
+# contrato-aprovado entra num PR, grava num comentário o blob de cada docs/tarefas/*.md do PR naquele momento. O
+# check:escopo compara com o contrato atual: se ele mudou depois da etiqueta, a aprovação vence e o usuário põe de novo.
+# A CI só conta o registro se a etiqueta foi posta pelo dono do repositório (a timeline diz quem pôs).
+#
+# pull_request_target: roda a versão deste arquivo da base do PR (o PR não reescreve o registro da própria aprovação) e
+# não faz checkout nem executa nada do PR; só lê a lista de arquivos pela API.
+name: Aprovação do contrato
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  registra:
+    if: github.event.label.name == 'contrato-aprovado'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Registrar o contrato aprovado
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          QUEM: ${{ github.event.sender.login }}
+        run: |
+          # O sha de cada arquivo na lista do PR é o blob dele na ponta (o mesmo do `git rev-parse HEAD:<arquivo>`).
+          contratos=$(gh api "repos/$GH_REPO/pulls/$PR/files" --paginate \
+              --jq '.[] | select(.filename | test("^docs/tarefas/[^/]+\\.md$")) | select(.status != "removed") | {(.filename): .sha}' \
+            | jq -cs 'add // {}')
+          dados=$(jq -cn --arg head "$HEAD" --argjson c "$contratos" '{head: $head, contratos: $c}')
+          lista=$(jq -r 'keys | map("`" + . + "`") | join(", ")' <<< "$contratos")
+          printf '%s\n' \
+            "Contrato aprovado registrado (etiqueta posta por $QUEM no commit ${HEAD:0:7}): ${lista:-nenhum docs/tarefas/*.md no PR}." \
+            "Se o contrato mudar, a aprovação vence: confira, tire e ponha a etiqueta de novo (AGENTS.md, \"Escopo\"). Só a etiqueta posta pelo dono do repositório conta." \
+            "" "<!-- contrato-aprovado:v1 $dados -->" > "$RUNNER_TEMP/registro.md"
+          gh pr comment "$PR" --body-file "$RUNNER_TEMP/registro.md"

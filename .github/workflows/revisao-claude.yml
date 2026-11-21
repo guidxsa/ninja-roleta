@@ -1,7 +1,8 @@
 # Revisão cruzada (AGENTS.md, "Dois agentes"; docs/processo/revisao.md): o Claude revisa os PRs implementados pelo Codex.
 # Os PRs do Claude são revisados pela revisão automática do Codex, ligada nas configurações do Codex.
 # Autentica com o token da assinatura do usuário (segredo CLAUDE_CODE_OAUTH_TOKEN, gerado uma vez com `claude setup-token`).
-# Sem o segredo, a revisão é pulada com um aviso e o PR segue: a revisão informa, não é check obrigatório.
+# Sem o segredo, a revisão é pulada e o PR do Codex fica parado no portão revisao-cruzada do staging (check obrigatório,
+# docs/processo/fluxo.md): o job automatica avisa no PR uma vez, e o usuário decide (revisao-dispensada ou o segredo).
 # Loop (docs/processo/revisao.md, "Loop"): revisão com achados → o autor corrige → nova revisão, até não haver achado
 # ou acabar o limite de rodadas. PR do Codex: o job automatica pede a correção com "@codex address that feedback".
 # PR do Claude: a revisão do Codex com achados aciona o job corrige, que corrige na branch e pede "@codex review".
@@ -49,10 +50,21 @@ jobs:
         id: token
         env:
           TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          DA_BASE: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         run: |
           if [ -z "$TOKEN" ]; then
             echo "::warning::Sem o segredo CLAUDE_CODE_OAUTH_TOKEN: revisão do Claude pulada (como configurar: docs/processo/revisao.md)."
             echo "ok=false" >> "$GITHUB_OUTPUT"
+            # O revisao-cruzada é obrigatório no staging: sem a revisão, o PR para. Avisa uma vez (PR de fork não tem segredo
+            # nem permissão de comentar).
+            if [ "$DA_BASE" = "true" ] &&
+               ! gh api "repos/$GH_REPO/issues/$PR/comments" --paginate --jq '.[].body' | grep -q '<!-- revisao-claude:sem-segredo -->'; then
+              printf '%s\n' "A revisão do Claude não rodou: falta o segredo \`CLAUDE_CODE_OAUTH_TOKEN\` (docs/processo/revisao.md). Sem ela, o \`revisao-cruzada\` fica pendente e o PR não entra no staging. Decisão do usuário: configurar o segredo e pedir \`@claude revise\`, ou pôr a etiqueta \`revisao-dispensada\`." "" '<!-- revisao-claude:sem-segredo -->' > "$RUNNER_TEMP/sem-segredo.md"
+              gh pr comment "$PR" --body-file "$RUNNER_TEMP/sem-segredo.md" || echo "::warning::Não deu para avisar no PR."
+            fi
           else
             echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
@@ -61,7 +73,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.token.outputs.ok == 'true'
         with:
-          fetch-depth: 0 # a revisão compara com o origin/master
+          fetch-depth: 0 # a revisão compara com a base do PR
       - uses: actions/setup-node@v4
         if: steps.token.outputs.ok == 'true'
         with:
@@ -73,7 +85,10 @@ jobs:
         if: steps.token.outputs.ok == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          track_progress: true
+          # Sem track_progress: com ele, a action manda o resumo para o comentário de progresso dela, que sai sem o
+          # marcador do veredito, e o portão revisao-cruzada nunca fica verde.
+          # O push do Codex (synchronize) tem o bot dele como autor; sem a lista, a action recusa a execução.
+          allowed_bots: chatgpt-codex-connector
           prompt: |
             Você é o revisor deste PR (repositório ${{ github.repository }}, PR #${{ github.event.pull_request.number }}).
             Ele foi implementado pelo Codex; pela regra do projeto, quem implementa não revisa.
@@ -87,6 +102,8 @@ jobs:
             consiga agir (arquivo:linha, problema e correção sugerida). Não mencione o Codex com arroba: quem chama é o workflow.
             Cada "melhoria futura" e cada inconsistência fora do escopo do PR vira uma issue descritiva, como manda
             docs/processo/issues.md (procure duplicata com gh issue list antes; cite o número da issue no resumo).
+            Abra a issue sempre com as etiquetas inconsistencia e precisa-decisao: nunca correcao-automatica, que só o
+            usuário põe (e a CI só conta a etiqueta posta por ele).
           claude_args: >-
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(npm run check),Bash(npm run check:regras*),Bash(npm run check:escopo),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(gh issue list:*),Bash(gh issue create:*)"
       # Loop, PR do Codex: veredito "precisa de mudanças" → pede a correção ao Codex. O push do Codex dispara esta
@@ -104,6 +121,20 @@ jobs:
         run: |
           comentarios() { gh api "repos/$GH_REPO/issues/$PR/comments" --paginate --jq '.[] | .created_at + " " + (.body | gsub("\n"; " "))'; }
           veredito=$(comentarios | awk -v t="$INICIO" '$1 >= t' | grep -o 'revisao-claude:veredito=[a-z]*' | tail -n 1 | cut -d= -f2 || true)
+          # Reserva: sem o marcador, a linha "Veredito: ..." do resumo (docs/processo/revisao.md), só nos comentários
+          # do Claude publicados por esta execução.
+          if [ -z "$veredito" ]; then
+            texto=$(gh api "repos/$GH_REPO/issues/$PR/comments" --paginate \
+                --jq '.[] | select(.user.login | test("^claude")) | .created_at + " " + (.body | gsub("\n"; " "))' \
+              | awk -v t="$INICIO" '$1 >= t' \
+              | grep -oiE 'veredito:?[* ]*(aprovado com ressalvas|aprovado|precisa de mudan(ç|c)as)' | tail -n 1 | tr '[:upper:]' '[:lower:]' || true)
+            case "$texto" in
+              *ressalvas*) veredito=ressalvas ;;
+              *mudan*) veredito=mudancas ;;
+              *aprovado*) veredito=aprovado ;;
+            esac
+            if [ -n "$veredito" ]; then echo "::warning::Resumo sem o marcador do veredito; lido do texto: $veredito."; fi
+          fi
           echo "Veredito desta revisão: ${veredito:-nenhum}"
           # Aprovado ou com ressalvas: status revisao-cruzada verde no commit revisado, se ainda for a ponta do PR
           # (portão do auto-merge no staging, docs/processo/fluxo.md).
@@ -166,7 +197,7 @@ jobs:
           trigger_phrase: '@claude'
           claude_args: >-
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr checks:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(gh issue list:*),Bash(gh issue create:*)"
-            --append-system-prompt "Ao revisar um PR deste repositório, siga docs/processo/revisao.md; melhoria futura e inconsistência fora do escopo viram issue (docs/processo/issues.md). Só revisão: não altere arquivos nem faça commit. Não execute código do PR (npm, scripts): a verificação é o resultado da CI, em gh pr checks."
+            --append-system-prompt "Ao revisar um PR deste repositório, siga docs/processo/revisao.md; melhoria futura e inconsistência fora do escopo viram issue (docs/processo/issues.md), sempre com as etiquetas inconsistencia e precisa-decisao, nunca correcao-automatica. Só revisão: não altere arquivos nem faça commit. Não execute código do PR (npm, scripts): a verificação é o resultado da CI, em gh pr checks."
 
   # Loop, PR do Claude: a revisão do Codex com achados aciona o Claude, que corrige na branch do PR; depois o workflow
   # confere o push e pede nova revisão com "@codex review". Sem achados, o Codex só comenta "Didn't find any major
@@ -233,7 +264,7 @@ jobs:
         if: steps.rodada.outputs.ok == 'true'
         with:
           ref: ${{ github.event.pull_request.head.ref }} # a branch, para o commit ir para ela
-          fetch-depth: 0 # o check:regras compara com o origin/master
+          fetch-depth: 0 # o check:regras compara com a base do PR (origin/staging ou origin/master)
           persist-credentials: false # o push usa só a credencial que o claude-code-action configura
       - uses: actions/setup-node@v4
         if: steps.rodada.outputs.ok == 'true'
@@ -263,6 +294,8 @@ jobs:
         if: steps.rodada.outputs.ok == 'true'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Este job nasce da revisão do bot do Codex; sem a lista, a action recusa ("non-human actor").
+          allowed_bots: chatgpt-codex-connector
           prompt: |
             Você é o autor deste PR (repositório ${{ github.repository }}, PR #${{ github.event.pull_request.number }}, branch em checkout).
             O Codex revisou o commit ${{ github.event.review.commit_id }} e deixou achados, salvos em ${{ runner.temp }}/revisao-codex.md.
@@ -271,7 +304,8 @@ jobs:
             1. Para cada achado, decida se procede. O que não procede, não mexa: explique no resumo.
             2. Corrija só o que procede e cabe no escopo do contrato. Achado que pede sair do escopo, mudar balanceamento
                ou decisão do usuário: não corrija; abra uma issue descritiva (docs/processo/issues.md, procurando
-               duplicata com gh issue list antes) e cite o número no resumo.
+               duplicata com gh issue list antes; etiquetas inconsistencia e precisa-decisao, nunca correcao-automatica)
+               e cite o número no resumo.
             3. Rode npm run check até passar. Doc da regra no mesmo commit, como manda o AGENTS.md.
             4. Faça commit em português, sem Co-Authored-By nem outra linha de atribuição, e dê push com exatamente
                "git push origin HEAD" (nunca --force, nunca outra branch).

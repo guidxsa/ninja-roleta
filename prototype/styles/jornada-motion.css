@@ -29,7 +29,7 @@
 }
 
 /* --- Faixa "O que mudou" ------------------------------------------------------------------------------------------- */
-/* Etiqueta de arquivo presa no alto da tela seguinte: fundo de papel, tinta escura nos dois temas. */
+/* Etiqueta de arquivo presa no alto da tela seguinte: fundo de papel, tinta escura. */
 .jgains {
   position: relative; margin: 0 0 12px; padding: 8px 12px 9px;
   background: var(--grain-dark), var(--paper); color: var(--paper-ink);

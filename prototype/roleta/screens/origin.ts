@@ -1,4 +1,5 @@
 // Roleta: roletas de origem e escolha da dificuldade.
+import { crest, clanPaint } from '../../lineageEmblems';
 import { type Difficulty } from '../../../src/core/difficulty';
 import { hasElementalNinjutsu } from '../../../src/core/nature';
 import { lineageOf, type OriginStep, rollOrigin } from '../../../src/core/origin';
@@ -62,9 +63,9 @@ export function originStepSlices(step: OriginStep): WheelSlice[] {
         return { label: n === 0 ? S.sliceLabels.prodigy! : S.sliceLabels.proficient!, weight: s.weight, color: COUNT_COLORS[n] ?? TIER_COLORS.common };
       }
       case 'lineage': {
-        // A cor da fatia indica o nível: comum, clã ou rara.
+        // Cada origem tem cor e emblema próprios; o tom da raridade cobre origens sem paleta.
         const tier = lineageOf(s.value, data).tier;
-        return { label: S.lineages[s.value] ?? s.value, weight: s.weight, color: TIER_COLORS[tier], icon: clanSymbol(s.value) };
+        return { label: S.lineages[s.value] ?? s.value, weight: s.weight, color: clanPaint[s.value] ?? TIER_COLORS[tier], originId: s.value, icon: crest(s.value) || clanSymbol(s.value) };
       }
     }
   });
@@ -75,7 +76,7 @@ export function stepResultText(step: OriginStep): string {
   switch (step.kind) {
     case 'lineage': {
       const tier = lineageOf(v, data).tier;
-      return `${clanSymbol(v)}${S.lineages[v] ?? v}${tier === 'common' ? '' : ` · ${S.lineageTiers[tier]}`}`;
+      return `${crest(v) || clanSymbol(v)}${S.lineages[v] ?? v}${tier === 'common' ? '' : ` · ${S.lineageTiers[tier]}`}`;
     }
     case 'element':
       return `${icon(ELEMENT_ICON[v as Element])}${S.elements[v as Element]}`;
@@ -115,7 +116,7 @@ export async function originScreen(): Promise<void> {
     document.body.classList.remove('has-sheet');
 
     const root = show(
-      h(`<div class="screen rwheel rorigin"><h2>${S.ui.title}</h2><div class="chips-line" id="origin-chips"></div>
+      h(`<div class="screen rwheel rorigin"><i class="festival-lamp" aria-hidden="true"></i><h2>${S.ui.title}</h2><div class="chips-line" id="origin-chips"></div>
         <div class="rstage-box">${rstage('roleta', 'konoha')}<div id="slot"></div></div>
         <div class="rside"><div id="ohud"></div><div id="after"></div></div></div>`),
     );

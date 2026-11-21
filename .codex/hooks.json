@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "r=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; l=\"$r/.agents/skills/impeccable/scripts/impeccable\"; [ -z \"$r\" ] || [ ! -f \"$l\" ] || \"$l\" hook",
+            "commandWindows": "powershell -NoProfile -Command \"$r = git rev-parse --show-toplevel 2>$null; if ($r) { $l = Join-Path $r '.agents/skills/impeccable/scripts/impeccable.cmd'; if (Test-Path $l) { & $l hook; exit $LASTEXITCODE } }; exit 0\"",
+            "timeout": 5,
+            "statusMessage": "Checking UI changes"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "r=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; l=\"$r/.agents/skills/impeccable/scripts/impeccable\"; [ -z \"$r\" ] || [ ! -f \"$l\" ] || \"$l\" hook",
+            "commandWindows": "powershell -NoProfile -Command \"$r = git rev-parse --show-toplevel 2>$null; if ($r) { $l = Join-Path $r '.agents/skills/impeccable/scripts/impeccable.cmd'; if (Test-Path $l) { & $l hook; exit $LASTEXITCODE } }; exit 0\"",
+            "timeout": 30,
+            "statusMessage": "Design deep pass"
+          }
+        ]
+      }
+    ]
+  }
+}

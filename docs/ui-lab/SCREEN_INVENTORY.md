@@ -43,7 +43,7 @@ Mecanismos de navegação:
 | Botão Portão (`#home-btn`) | `askHome()` | `goHome()` corta a tela atual (símbolo `HOME`) e volta ao Portão; pede `window.confirm` com run em andamento |
 | Barra lateral (`#side-nav`, só PC) | `installSideNav()` | Início, Jornada, Roleta e as 4 páginas do Registro (em popup) |
 | Barra inferior (`#gate-nav`, só celular) | `main()` | Início e atalhos do Registro (`data-profile`) |
-| Cabeçalho | `installHeaderToggles()` | Instantâneo, Animado, Tema, Efeitos, Música, Ficha, Registro |
+| Cabeçalho | `installHeaderToggles()` | Instantâneo, Animado, Efeitos, Música, Ficha, Registro |
 | Erro no fluxo | `errorScreen()` | Captura exceção, mostra o aviso e volta ao Portão |
 
 Não há `history.pushState` nem hash: **F5 sempre volta ao Portão** (a Jornada retoma pelo save `jornada_run_v1`).
@@ -74,7 +74,7 @@ Legenda da última coluna: **Direto?** / **Visto**.
 
 | Id | Tela | Onde | Acesso | Dados | Estados alternativos | Responsivo | Direto? / Visto |
 |---|---|---|---|---|---|---|---|
-| `gate.home` | Portão da Vila (escolha de modo) | `modeScreen()` em `main.ts` | Abrir o jogo | Perfil (`localStorage`), save da Jornada, conquistas recentes, `SCENE_ART` | Tema dia (Naruto) e noite (Sasuke) com cenas, frases e selos próprios; card "Progresso da Jornada" só com run salva; conquistas recentes só se houver; frase sorteada; no modo Animado, cena viva (névoa, folhas de dia, vaga-lumes à noite) | Celular: coluna única com barra inferior. PC: `gate-main` + `gate-aside` (ficha, progresso, recentes) e barra lateral | Sim / não |
+| `gate.home` | Portão da Vila (escolha de modo) | `modeScreen()` em `main.ts` | Abrir o jogo | Perfil (`localStorage`), save da Jornada, conquistas recentes, `SCENE_ART` | Cena noturna de Sasuke; card "Progresso da Jornada" só com run salva; conquistas recentes só se houver; frase sorteada; no modo Animado, cena viva (névoa e vaga-lumes) | Celular: coluna única com barra inferior. PC: `gate-main` + `gate-aside` (ficha, progresso, recentes) e barra lateral | Sim / não |
 | `gate.name` | Pedir o nome do ninja | `askPlayerName()` em `playerName.ts` | 1ª entrada no Roleta ou no Caminho Ninja | `profile.playerName` indefinido | Confirmar ou pular | Pergaminho centralizado | Não (some depois da 1ª vez) / não |
 | `gate.avatar` | Escolha do avatar (modal) | `openAvatarPicker()` | Avatar na ficha do Portão (PC) ou no Registro | Avatares liberados (`avatarChoices`: origens jogadas e conquistas) | Poucos ou muitos avatares liberados; atual marcado | Grade | Sim (com Registro) / não |
 | `gate.error` | Tela de erro | `errorScreen()` | Exceção dentro de uma tela | Erro capturado | Detalhe técnico em `<details>` | Simples | Não (precisa forçar erro) / não |
@@ -193,7 +193,7 @@ abandono (Roleta: `window.confirm`; Jornada: `confirmDialog`) e o compartilhar (
 | `meta.relics-modal` | Relíquias da run | `relicsModal()` | Relíquia no HUD | Run | Foco numa relíquia | Não / não |
 | `meta.confirm` | Diálogo de confirmação | `confirmDialog()` em `dom.ts` | Abandonar e sobrescrever save (Jornada) | Texto | `danger` ou não | Não / não |
 | `meta.tooltip` | Dica (tip) | `tip()` / `installTooltips()` em `tooltip.ts` | Passar o mouse, focar ou tocar | — | Toque vs ponteiro | Sim / não |
-| `meta.toggles` | Botões do cabeçalho | `installHeaderToggles()` | Sempre | `proto_settings_v1` | Instantâneo, Animado, Tema, Efeitos, Música (ligado/desligado) | Sim / não |
+| `meta.toggles` | Botões do cabeçalho | `installHeaderToggles()` | Sempre | `proto_settings_v1` | Instantâneo, Animado, Efeitos, Música (ligado/desligado) | Sim / não |
 | `meta.portraits` | Galeria de retratos (só no lab) | `portraitGallery()` em `lab/portraitGallery.ts` | Catálogo do lab | `PORTRAIT_KEYS` | Imagem base (`lab/refs/`) ao lado de cada desenho em 120, 78, 48 e 24px; filtro `refs=com` / `refs=sem` | Não (só lab) / não |
 | `meta.lab` | Laboratório antigo | `labScreen()` / `labFlow()` | `?teste` | `proto_lab_v1` | Linhagem, elementos, dificuldade, nível, jinchuuriki, status, bolsa, vilão, etapa; lista de técnicas sempre vazia (`learnable` fixo em `[]`) | Sim (`?teste`) / não |
 
@@ -226,7 +226,7 @@ abandono (Roleta: `window.confirm`; Jornada: `confirmDialog`) e o compartilhar (
                           localStorage
        ┌──────────────┬──────────────┬───────────────┬──────────────┐
   proto_settings_v1   perfil/runs    jornada_run_v1   proto_lab_v1   fold (aparelho)
-  (tema, instant,     (conquistas,   (save da run)    (lab antigo)   (seções dobradas)
+  (instant,           (conquistas,   (save da run)    (lab antigo)   (seções dobradas)
    dificuldade, som)   vilões, relíq.)
        │                    │              │
        ▼                    ▼              ▼
@@ -267,7 +267,7 @@ Dependências entre telas (o que precisa ter acontecido antes):
 
 Estados que mudam muito a interface e valem um caso próprio no lab:
 
-1. **Tema**: Pergaminho (claro) e Sumi (escuro). No Portão troca também cena, frase e selo (Naruto/Sasuke).
+1. **Aparência**: grafite em todas as larguras, inclusive com a preferência clara do aparelho.
 2. **Modo instantâneo** (`data-instant`): sem botão Girar, sem animação de jokenpô, falas seguem sozinhas.
 3. **Menos movimento** (`prefers-reduced-motion`): roletas param direto no resultado; 11 blocos de CSS.
 4. **Modo Animado**: vídeo nas vagas de cena e a cena viva dos painéis grandes (cenários `gate.home:animado`, `jornada.entry:animado` e `jornada.trail:animado`).
@@ -340,7 +340,7 @@ Prioridade pelo quanto a tela é vista e o quanto é difícil chegar nela.
 | Média | `roleta.levelup`, `roleta.upgrade`, `roleta.notice` | Jogador com XP ou upgrades pendentes |
 | Baixa | `gate.name`, `gate.error`, toasts, `meta.confirm`, `gate.confirm-native` | Abrir sob demanda |
 | Baixa | Portão, Registro, avatar | Perfis prontos (vazio, médio, completo) |
-| Transversal | Todas | Trocar tema, instantâneo, menos movimento, faixa de tela e com/sem arte sem recarregar |
+| Transversal | Todas | Trocar instantâneo, menos movimento, faixa de tela e com/sem arte sem recarregar |
 
 ## 8. Cobertura do inventário
 

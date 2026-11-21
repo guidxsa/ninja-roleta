@@ -6,7 +6,7 @@ import { pathRun, saveRun } from '../fixtures/jornada';
 import type { Scenario } from '../types';
 
 export const gate: Scenario[] = [
-  { id: 'gate.home', title: 'Portão da Vila (primeiro acesso)', group: 'Entrada', mount: () => modeScreen() },
+  { id: 'gate.home', title: 'Portão de Ninshu Roots (primeiro acesso)', group: 'Entrada', mount: () => modeScreen() },
   {
     id: 'gate.home:mid',
     title: 'Portão com perfil médio e Jornada salva',
@@ -29,7 +29,7 @@ export const gate: Scenario[] = [
   {
     // Cada quadro é uma página própria: ligar o modo aqui não vaza para os outros cenários. Desmarque o Instantâneo.
     id: 'gate.home:animado',
-    title: 'Portão no modo Animado (cena viva; sem Instantâneo)',
+    title: 'Portão no modo Animado (cena noturna; sem Instantâneo)',
     group: 'Entrada',
     mount: () => {
       document.documentElement.toggleAttribute('data-animated', true);
