@@ -50,7 +50,7 @@ Os tokens vêm do `execution_file` do `claude-code-action`. **Entrada normalizad
 `npm run metricas` (com o `gh` autenticado) lê os marcadores das issues com `inconsistencia` e o estado dos PRs `feature/issue-<n>`, e imprime duas tabelas em Markdown:
 
 - **por issue**: perfil inicial, se escalou, execuções e rodadas somadas (as tentativas que falharam entram), revisões do Codex com achados, tokens normalizados, custo estimado, se o PR foi mergeado;
-- **por categoria × perfil inicial**: issues, **concluídas** (PR mergeado: o `master` exige os checks verdes), **mediana de tokens normalizados até o PR pronto**, mediana de tempo, quantas escalaram.
+- **por categoria × perfil inicial**: issues, **concluídas** (PR mergeado no `staging`, que exige `check`, `meta` e `revisao-cruzada`; a chegada ao `master` depende da data da release, não do agente), **mediana de tokens normalizados até o PR pronto**, mediana de tempo, quantas escalaram.
 
 A categoria vem da etiqueta `cat:<nome>` posta na triagem ([issues.md](issues.md#triagem)); sem ela, `sem-categoria`.
 

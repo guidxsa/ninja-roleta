@@ -141,7 +141,7 @@ export interface RegrasInput {
   strict: boolean;
   /** Conteúdo dos arquivos do core (todos, alterados ou não). */
   core: { file: string; src: string }[];
-  /** Os scripts do package.json mudaram em relação ao master? */
+  /** Os scripts do package.json mudaram em relação à base da branch (staging ou master)? */
   scriptsChanged?: boolean;
 }
 

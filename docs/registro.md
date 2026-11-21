@@ -2,6 +2,16 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Docs do processo alinhados ao staging (processo, sem versão, 21/11/2026)
+
+Tarefa `harness-docs` (#56, #58, #60, #61, #63), segunda das três da avaliação do processo. O usuário escolheu, nas quatro decisões, a opção recomendada:
+
+- **Merge no staging** (#56): docs e comentários deixam de dizer que o merge é do usuário; no `staging` ele é automático, no `master` é do usuário. Nas métricas, **concluída** = PR mergeado no `staging` (o cálculo já era esse; só o texto mudou).
+- **Contrato da release** (#63): a branch `feature/release-v<x.y.z>` tem contrato implícito no `check:escopo`, sem `docs/tarefas/` nem `contrato-aprovado` (o "prepara a v0.Y.0" do usuário é a aprovação); qualquer arquivo além de `CHANGELOG.md`, `changelog.d/*.md` e da versão no `package.json`/`package-lock.json` é erro. Resolve antes de 02/12/2026, quando o contrato passa a ser exigido.
+- **Hotfix** (#61): a revisão cruzada é pedida, mas não trava; no `master` não há portão `revisao-cruzada` (travaria o PR permanente da release) e o merge do usuário é a garantia.
+- **Skills e arquivos locais** (#58, #60): uma cópia só das skills, em `.claude/skills/`; o `.gitignore` ignora `.agents/skills/` inteiro (o Impeccable continua lá, instalado por agente). Nota ou arquivo local vai em `.git/info/exclude`. O usuário apaga as cinco cópias locais das skills do projeto em `.agents/skills/`.
+- **Decidido sozinho**: nenhum número de jogo mudou; a branch de release com `CHECK_TEMA` volta à regra comum (contrato do tema), para quem quiser forçar um contrato.
+
 ## Portão e aprovações que não se abrem sozinhos (processo, sem versão, 21/11/2026)
 
 Avaliação do processo pedida pelo usuário, que virou as issues #47 a #63; esta é a tarefa `harness-portao` (#47, #49, #57, #59, #62). Decisões do usuário nesta conversa: resolver as issues só com o Claude, porque a cota do Codex acabou (a revisão é `@claude revise` mais a leitura dele, e o portão abre com `revisao-dispensada`), e pôr tudo no staging atual, junto com a reformulação do plano A, em vez de soltar versões 0.95.z.

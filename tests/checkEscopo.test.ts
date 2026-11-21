@@ -190,6 +190,17 @@ describe('fluxo com staging (docs/processo/fluxo.md)', () => {
     expect(run(['src/core/a.ts'], null, { branch: 'master', hoje: DEPOIS })).toEqual([]);
   });
 
+  it('feature/release-v<x.y.z> tem contrato implícito: só changelog e versão, sem etiqueta (#63)', () => {
+    const release = { branch: 'feature/release-v0.96.0', hoje: DEPOIS, labels: [] as string[], packageOnlyVersion: true, lockOnlyVersion: true };
+    expect(run(['CHANGELOG.md', 'changelog.d/telas.md', 'package.json', 'package-lock.json'], null, release)).toEqual([]);
+    const f = run(['CHANGELOG.md', 'src/core/a.ts'], null, release);
+    expect(rules(f)).toEqual(['erro:fora-do-escopo']);
+    expect(f[0]!.files).toEqual(['src/core/a.ts']);
+    expect(rules(run(['package.json'], null, { ...release, packageOnlyVersion: false }))).toEqual(['erro:fora-do-escopo']);
+    // Nome fora do padrão não ganha a exceção.
+    expect(rules(run(['CHANGELOG.md'], null, { ...release, branch: 'feature/release-proxima' }))).toEqual(['erro:contrato']);
+  });
+
   it('hotfix/<tema> usa o contrato do tema e changelog.d sempre pode mudar', () => {
     expect(temaDaTarefa('hotfix/texto', []).tema).toBe('texto');
     const md = contrato(['docs/roleta/**']);

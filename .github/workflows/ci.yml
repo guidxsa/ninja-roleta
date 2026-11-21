@@ -1,4 +1,4 @@
-# Verifica cada branch de trabalho e cada PR antes do merge no master (o master publica no Pages a cada push).
+# Verifica cada branch de trabalho e cada PR antes do merge (no staging, sozinho; no master, do usuário, que publica no Pages a cada push).
 # Mesmos passos do build de produção, sem publicar.
 name: Verificar
 

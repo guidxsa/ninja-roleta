@@ -214,7 +214,7 @@ export const mediana = (xs: number[]): number | null => {
 export interface InfoIssue {
   issue: number;
   categoria: string;
-  /** PR da issue mergeado (o master exige os checks verdes para o merge). */
+  /** PR da issue mergeado no staging (o auto-merge exige check, meta e revisao-cruzada): conta como concluída. */
   mergeado: boolean;
   /** Revisões do Codex com achados no PR. */
   revisoesComAchados: number;

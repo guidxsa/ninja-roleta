@@ -56,7 +56,9 @@ O Codex não tem um hook equivalente ao `Stop` do Claude Code (que impede encerr
 
 ## Skills
 
-O Codex usa as mesmas skills do Claude lendo o arquivo: a tabela "Skills e fluxos" do `AGENTS.md` diz qual `SKILL.md` ler para cada tipo de tarefa. Se a sua versão do Codex carregar skills sozinha, aponte para `.claude/skills/` em vez de copiar (uma cópia só, para não divergir).
+O Codex usa as mesmas skills do Claude lendo o arquivo: a tabela "Skills e fluxos" do `AGENTS.md` diz qual `SKILL.md` ler para cada tipo de tarefa. Se a sua versão do Codex carregar skills sozinha, aponte para `.claude/skills/` em vez de copiar (uma cópia só, para não divergir). O `.gitignore` ignora `.agents/skills/` inteiro: uma cópia ali não aparece no `git status` e fica velha sem ninguém ver, então não copie as skills do projeto para lá; se já copiou, apague as cópias e deixe só o Impeccable.
+
+**Arquivo local** (nota, prompt, rascunho que não vai para o git): ponha em `.git/info/exclude` do seu clone, nunca no `.gitignore` versionado. O pre-push, o `check:escopo` e o hook Stop do Claude contam arquivo não rastreado como mudança, e um arquivo solto na raiz quebra o push ou aparece como fora do escopo.
 
 A exceção é a skill de terceiros Impeccable, instalada por agente em `.agents/skills/impeccable/` (instalação e versão no [AGENTS.md](../../AGENTS.md#skills-e-fluxos)). Os hooks dela ficam em `.codex/hooks.json` e acham o launcher pela raiz do git, então funcionam com a sessão aberta em qualquer subpasta; sem a skill instalada, não fazem nada.
 
