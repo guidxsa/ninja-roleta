@@ -123,19 +123,18 @@ function memberName(host: JornadaHost, run: JRun, id: string): string {
 let live: JRun | null = null;
 const keep = (run: JRun): JRun => (live = run);
 
-/** Card "Progresso da Jornada" para o Início do PC ('' sem run salva). O botão (data-choice="continue") continua direto. */
-export function jornadaProgressCard(storage: JornadaHost['storage']): string {
-  const saved = loadJornada(storage);
-  return saved ? progressCard(saved) : '';
-}
+export type JornadaEntry = 'story' | 'path';
+export const entryForRun = (run: JRun): JornadaEntry => run.mode === 'canon' ? 'story' : 'path';
 
-/** `resume`: atalho do Início, que pula a tela de entrada quando há run salva. */
-export async function runJornada(host: JornadaHost, opts: { resume?: boolean } = {}): Promise<void> {
+export async function runJornada(host: JornadaHost, opts: { entry: JornadaEntry; resume?: boolean }): Promise<void> {
   // Layout próprio (mais largo no PC).
   document.body.classList.add('mode-jornada');
   forgetLiveBattle();
   try {
-    await jornadaLoop(host, opts.resume ?? false);
+    const saved = loadJornada(host.storage);
+    const setup = opts.entry === 'story' ? campaignScreen : pathSetupScreen;
+    const run = opts.resume && saved && entryForRun(saved) === opts.entry ? saved : await setup(host, saved);
+    if (run) await jornadaLoop(host, run);
   } finally {
     document.body.classList.remove('mode-jornada');
     host.setSheet(null);
@@ -199,12 +198,10 @@ const heroFace = (host: JornadaHost, run: JRun) => ({
 /** Ryō de pontos convertidos (árvore completa) já avisado na tela: o resto vira um toast. */
 let announcedTalentRyo = 0;
 
-async function jornadaLoop(host: JornadaHost, resume: boolean): Promise<void> {
+async function jornadaLoop(host: JornadaHost, initial: JRun): Promise<void> {
   installFolds();
-  let run = (resume ? loadJornada(host.storage) : null) ?? (await startScreen(host));
-  if (!run) return;
   // O retrato das conquistas da árvore acompanha o perfil (save antigo, conquista liberada fora da run).
-  run = keep(syncUnlocks(run, host.unlocked(), data));
+  let run = keep(syncUnlocks(initial, host.unlocked(), data));
   announcedTalentRyo = run.stats.talentRyo ?? 0;
   markRelicsSeen(run.relics);
   host.discoverRelics(run.relics);
@@ -260,22 +257,6 @@ const recoveryLine = (d: Difficulty) => {
   const r = data.j.run.afterWinRecovery[d]!;
   return `${icon('heart')} ${J.start.recovery(r.hp, r.chakra)}`;
 };
-
-/**
- * Entrada da Jornada (docs/visual.md, "Entrada da Jornada"): a mesma composição do Início. Destaque com a arte da
- * Jornada, os dois modos em pergaminho (Modo História e Caminho Ninja) e, ao lado, progresso, dificuldade e conquistas.
- * Cada modo abre a sua tela: a escolha da perspectiva (Naruto ou Sasuke) ou a preparação do Caminho Ninja.
- */
-async function startScreen(host: JornadaHost): Promise<JRun | null> {
-  for (;;) {
-    const saved = loadJornada(host.storage);
-    const pick = await entryScreen(host, saved);
-    if (pick === 'back') return null;
-    if (pick === 'continue' && saved) return saved;
-    const run = pick === 'story' ? await campaignScreen(host, saved) : await pathSetupScreen(host, saved);
-    if (run) return run;
-  }
-}
 
 /**
  * Confirma trocar a run salva (o recorde dela conta antes) e libera o começo de uma nova. A salva não é apagada aqui:
@@ -357,8 +338,8 @@ function arcFan(): string {
 
 /** Perspectivas da História: as campanhas dos dados e a do Sasuke, ainda em design (em breve). */
 const PERSPECTIVES = [
-  { id: 'naruto', art: 'portao-dia', seal: '陽', time: 'day' },
-  { id: 'sasuke', art: 'portao-noite', seal: '影', time: 'night' },
+  { id: 'naruto', art: 'perspectiva-naruto', seal: '陽', time: 'day' },
+  { id: 'sasuke', art: 'perspectiva-sasuke', seal: '影', time: 'night' },
 ] as const;
 
 /** Modo História: escolher a perspectiva. Dia e noite lado a lado; a do Sasuke fica travada até existir. */

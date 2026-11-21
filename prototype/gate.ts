@@ -6,10 +6,11 @@ import { jornadaAchievements } from '../src/data/jornada/achievements';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { saveProfile, bestRoletaCycle, PLAYER_NAME_MAX, cleanPlayerName } from '../src/state/profile';
 import { loadRuns } from '../src/state/runHistory';
+import { loadJornada } from '../src/state/jornadaSave';
 import { achievementIcon } from './achievementIcons';
-import { sceneMedia, sceneFx, emblem, sceneVars, cloud, icon, ninjaPortrait } from './art';
+import { AVATAR_CUTS, sceneMedia, sceneFx, emblem, sceneVars, cloud, icon, ninjaPortrait } from './art';
 import { h, show, choose, goHome, esc, openDialog } from './dom';
-import { jornadaProgressCard } from './jornada';
+import { entryForRun, type JornadaEntry } from './jornada';
 import { jornadaHost } from './jornadaHost';
 import { modeCard } from './modeCard';
 import { askPlayerName } from './playerName';
@@ -18,14 +19,17 @@ import { syncSheetBtn } from './roleta/common';
 import { ses, DIFFICULTIES } from './roleta/session';
 import { tip } from './tooltip';
 
-/** Tela inicial: Roleta (rápido, tudo na sorte) ou Jornada (lento, com controle). */
-export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-continue'> {
+type GateMode = 'roleta' | JornadaEntry;
+interface GatePick { mode: GateMode; resume?: boolean }
+
+/** Escolha direta do Portão, compartilhada pelos cards e pela navegação. */
+export async function modeScreen(): Promise<GatePick> {
   // A barra lateral pediu um modo de dentro de uma run: abre direto nele.
   if (pendingMode) {
     const m = pendingMode;
     pendingMode = null;
     markNav(m);
-    return m;
+    return { mode: m };
   }
   const M = S.jornada.modes;
   const D = S.ui.desk;
@@ -36,18 +40,15 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
   document.body.classList.add('at-gate');
   document.getElementById('dots')!.innerHTML = '';
   const G = S.ui.gate;
-  // Portão da Vila (docs/visual.md): destaque com citação, os modos em pergaminho com arte e a faixa de Conquistas.
-  // A faixa usa data-profile (não data-choice): só abre a janela, não escolhe modo. O Registro fica na barra inferior.
-  const hero = sceneMedia('portao-noite') ?? sceneMedia('portao');
-  const quote = G.nightQuotes[Math.floor(Math.random() * G.nightQuotes.length)]!;
-  const gateCard = (id: 'jornada' | 'roleta') =>
-    modeCard({
-      id, art: sceneMedia(`modo-${id}`) ?? emblem(id), artVars: sceneVars(`modo-${id}`), seal: id === 'jornada' ? '道' : '運',
-      name: M[id].name, desc: M[id].desc, cta: id === 'jornada' ? D.ctaJornadaNew : D.ctaRoleta,
-    });
-  // Run da Jornada salva: no PC o progresso fica na coluna da direita; no celular, onde a coluna some, o mesmo card
-  // entra acima dos modos (o CSS mostra um ou outro).
-  const resume = progressSlot();
+  const hero = sceneMedia('portao');
+  const saved = loadJornada(ses.storage);
+  const savedMode = saved && entryForRun(saved);
+  const quote = G.quotes[Math.floor(Math.random() * G.quotes.length)]!;
+  const gateCard = (id: GateMode, artKey: string, seal: string, cta: string) => modeCard({
+    id, art: sceneMedia(artKey) ?? emblem(id === 'roleta' ? 'roleta' : 'jornada'), artVars: sceneVars(artKey),
+    seal, ...M[id], cta: savedMode === id ? G.newRun : cta,
+    resume: savedMode === id ? { choice: 'continue', label: S.ui.continue } : undefined,
+  });
   const root = show(
     h(`<div class="screen jmodes gate">
       <div class="gate-main">
@@ -61,12 +62,13 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
             <span class="seal quote-seal" aria-hidden="true">影</span></blockquote>
         </div>
         <p class="gate-sub">${M.title}</p>
-        ${resume ? `<div class="gate-resume">${resume}</div>` : ''}
-        <nav class="gate-modes">${gateCard('jornada')}${gateCard('roleta')}</nav>
-        <button class="scroll-banner" data-profile="achievements"><span class="seal gold" aria-hidden="true">功</span>
-          <span><b>${G.achievements}</b><small>${G.achievementsDesc}</small></span>${icon('chevron')}</button>
+        <nav class="gate-modes" aria-label="${M.title}">
+          ${gateCard('roleta', 'modo-roleta', '運', D.ctaRoleta)}
+          ${gateCard('story', 'modo-jornada', '史', S.jornada.start.storyCta)}
+          ${gateCard('path', 'modo-caminho', '道', S.jornada.start.pathCta)}
+        </nav>
       </div>
-      <aside class="gate-aside">${profileCard()}${progressSlot()}${recentCard()}</aside>
+      <aside class="gate-aside">${profileCard()}${recentCard()}</aside>
     </div>`),
   );
   // A barra lateral escolhe o modo pelo mesmo botão do card enquanto o Início está na tela.
@@ -77,57 +79,82 @@ export async function modeScreen(): Promise<'roleta' | 'jornada' | 'jornada-cont
   root.querySelector('[data-desk-name]')?.addEventListener('change', (e) => setPlayerName((e.target as HTMLInputElement).value));
   root.querySelector('.desk-id [data-avatar]')?.addEventListener('click', openAvatarPicker);
   markNav('home');
-  const pick = await choose<'roleta' | 'jornada' | 'continue'>(root);
+  const pick = await choose<GateMode | 'continue'>(root);
   gateApi = null;
   document.body.classList.remove('at-gate');
-  markNav(pick === 'roleta' ? 'roleta' : 'jornada');
-  return pick === 'continue' ? 'jornada-continue' : pick;
+  if (pick === 'continue') {
+    // Só existe botão de retomada quando o card foi montado com este save.
+    if (!savedMode) return modeScreen();
+    markNav(savedMode);
+    return { mode: savedMode, resume: true };
+  }
+  markNav(pick);
+  return { mode: pick };
 }
 
 // ---------------------------------------------------------------------------
 // Casca do PC (docs/visual.md, "Celular e desktop"): barra lateral persistente, Início em painéis, Registro em
 // popup e a faixa de frases no pé. No celular nada disto aparece (o CSS esconde a partir de 900px).
 
-export type NavId = 'home' | 'jornada' | 'roleta' | RegistryPage;
-export const NAV_ICONS: Record<NavId, string> = { home: 'home', jornada: 'scroll', roleta: 'dice', history: 'book', bingo: 'card', relics: 'sparkle', achievements: 'medal' };
-export const REGISTRY_PAGES: RegistryPage[] = ['history', 'bingo', 'relics', 'achievements'];
+type NavId = 'home' | GateMode | 'registry';
+const destinations: readonly NavId[] = ['home', 'roleta', 'story', 'path', 'registry'];
+const navIcons: Record<NavId | RegistryPage, string> = {
+  home: 'home', roleta: 'dice', story: 'scroll', path: 'kunai', registry: 'book',
+  history: 'book', bingo: 'card', relics: 'sparkle', achievements: 'medal',
+};
+const registryPages: RegistryPage[] = ['history', 'bingo', 'relics', 'achievements'];
 
-/** Modo pedido pela barra lateral de dentro de uma run: o próximo Portão abre direto nele. */
-export let pendingMode: 'roleta' | 'jornada' | null = null;
-/** Início aberto (só existe enquanto o Portão está na tela). */
-export let gateApi: { root: HTMLElement } | null = null;
+let pendingMode: GateMode | null = null;
+let gateApi: { root: HTMLElement } | null = null;
+let activeNav: NavId = 'home';
 
-export function markNav(id: NavId): void {
-  document.querySelectorAll<HTMLElement>('#side-nav [data-nav]').forEach((b) => {
+function markNav(id: NavId): void {
+  activeNav = id;
+  document.querySelectorAll<HTMLElement>('#side-nav [data-nav], #gate-nav [data-nav]').forEach((b) => {
     if (b.dataset.nav === id) b.setAttribute('aria-current', 'page');
     else b.removeAttribute('aria-current');
   });
 }
 
+/** Escolher uma seção mantém a tela atual por baixo do Registro. */
+function openRegistryMenu(): void {
+  const D = S.ui.desk;
+  const overlay = h(`<div class="modal" aria-label="${S.ui.gate.registry}"><div class="modal-body">
+    <div class="modal-head"><h2>${S.ui.gate.registry}</h2><button class="btn small" data-close aria-label="${S.ui.close}">${icon('close')}</button></div>
+    <div class="registry-links">${registryPages.map((page) => `<button class="btn" data-page="${page}">${icon(navIcons[page])} ${D.nav[page]}</button>`).join('')}</div>
+    </div></div>`);
+  overlay.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const page = target.closest<HTMLElement>('[data-page]')?.dataset.page as RegistryPage | undefined;
+    if (page || target === overlay || target.closest('[data-close]')) overlay.remove();
+    if (page) queueMicrotask(() => openRegistry(page));
+  });
+  openDialog(overlay);
+}
+
 export function installSideNav(): void {
   const D = S.ui.desk;
-  const nav = document.getElementById('side-nav')!;
-  nav.setAttribute('aria-label', D.navLabel);
-  const item = (id: NavId) => `<button type="button" data-nav="${id}">${icon(NAV_ICONS[id])}<span>${D.nav[id]}</span></button>`;
-  nav.innerHTML = `<span class="side-brand seal brand-seal" aria-hidden="true">${icon('konoha')}</span>${(['home', 'jornada', 'roleta'] as const).map(item).join('')}<hr>${REGISTRY_PAGES.map(item).join('')}`;
-  nav.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-nav]');
-    if (!b) return;
-    const id = b.dataset.nav as NavId;
-    // O Registro abre em popup em qualquer tela (a de trás fica intacta).
-    if (id !== 'home' && id !== 'jornada' && id !== 'roleta') return openRegistry(id);
-    // No Início: o modo é escolhido pelo mesmo botão do card.
-    if (gateApi) {
-      if (id !== 'home') gateApi.root.querySelector<HTMLElement>(`[data-choice="${id}"]`)?.click();
-      return;
-    }
-    const inJornada = document.body.classList.contains('mode-jornada');
-    if ((id === 'jornada' && inJornada) || (id === 'roleta' && !inJornada)) return;
-    const text = inJornada && ses.jornadaSheet ? S.ui.homeConfirmJornada : !inJornada && ses.camp && ses.campLive ? S.ui.homeConfirmRoleta : null;
-    if (text && !window.confirm(text)) return;
-    pendingMode = id === 'home' ? null : id;
-    goHome();
-  });
+  const item = (id: NavId) => `<button type="button" data-nav="${id}">${icon(navIcons[id])}<span>${D.nav[id]}</span></button>`;
+  for (const key of ['side-nav', 'gate-nav']) {
+    const nav = document.getElementById(key)!;
+    nav.setAttribute('aria-label', D.navLabel);
+    const brand = key === 'side-nav' ? `<span class="side-brand seal brand-seal" aria-hidden="true">${icon('konoha')}</span>` : '';
+    nav.innerHTML = brand + destinations.map(item).join('');
+    nav.addEventListener('click', (e) => {
+      const id = (e.target as HTMLElement).closest<HTMLElement>('[data-nav]')?.dataset.nav as NavId | undefined;
+      if (!id || id === activeNav) return;
+      if (id === 'registry') return openRegistryMenu();
+      if (gateApi) {
+        gateApi.root.querySelector<HTMLButtonElement>(`[data-choice="${id}"]`)?.click();
+        return;
+      }
+      const inJornada = document.body.classList.contains('mode-jornada');
+      const text = inJornada && ses.jornadaSheet ? S.ui.homeConfirmJornada : !inJornada && ses.camp && ses.campLive ? S.ui.homeConfirmRoleta : null;
+      if (text && !window.confirm(text)) return;
+      pendingMode = id === 'home' ? null : id;
+      goHome();
+    });
+  }
 }
 
 /** Avatares liberados agora (core puro: origens jogadas no Roleta e conquistas da Jornada). */
@@ -137,9 +164,11 @@ export function avatarOptions(): string[] {
 }
 
 /** Desenho do avatar a partir da chave de retrato (`ninja:<chave>`). */
-export function avatarArt(spec: string, size: 'sm' | 'md' | 'lg'): string {
+export function avatarArt(spec: string, size: 'sm' | 'md' | 'lg', onPaper = false): string {
   const key = spec.split(':')[1] ?? 'common';
-  return ninjaPortrait(key, size);
+  const portrait = ninjaPortrait(key, size);
+  const cut = onPaper && AVATAR_CUTS[key];
+  return cut ? `<span class="avatar-art" style="--avatar-cut:${cut}">${portrait}</span>` : portrait;
 }
 
 /** Nome do avatar na escolha: a origem, ou um nome próprio (visual do Sasuke). */
@@ -152,7 +181,7 @@ export function avatarName(spec: string): string {
 export function avatarButton(size: 'sm' | 'md'): string {
   const D = S.ui.desk;
   const spec = currentAvatar(ses.profile.avatar, avatarOptions());
-  return `<button type="button" class="avatar-btn" data-avatar aria-label="${D.avatarEdit}"${tip(D.avatarTitle, D.avatarTip)}>${avatarArt(spec, size)}</button>`;
+  return `<button type="button" class="avatar-btn" data-avatar aria-label="${D.avatarEdit}"${tip(D.avatarTitle, D.avatarTip)}>${avatarArt(spec, size, size === 'md')}</button>`;
 }
 
 /** Janela de escolha do avatar. Escolher grava no perfil e redesenha os botões abertos. */
@@ -171,7 +200,10 @@ export function openAvatarPicker(): void {
     if (pick) {
       ses.profile = { ...ses.profile, avatar: pick.dataset.pick! };
       saveProfile(ses.storage, ses.profile);
-      document.querySelectorAll<HTMLElement>('[data-avatar]').forEach((b) => (b.innerHTML = avatarArt(ses.profile.avatar!, b.closest('.desk-id') ? 'md' : 'sm')));
+      document.querySelectorAll<HTMLElement>('[data-avatar]').forEach((b) => {
+        const onPaper = Boolean(b.closest('.desk-id'));
+        b.innerHTML = avatarArt(ses.profile.avatar!, onPaper ? 'md' : 'sm', onPaper);
+      });
       overlay.remove();
       return;
     }
@@ -205,12 +237,6 @@ export function profileCard(): string {
       <label class="field"><span>${S.ui.playerName.label}</span><input type="text" data-desk-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${D.namePlaceholder}" value="${esc(ses.profile.playerName ?? '')}"></label></div>
     <details class="ninja-record"><summary>Registro do ninja</summary><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>
   </section>`;
-}
-
-/** Progresso da Jornada na coluna direita, com o selo carimbado no canto ('' sem run salva). */
-export function progressSlot(): string {
-  const card = jornadaProgressCard(ses.storage);
-  return card ? `<div class="desk-prog">${card}<span class="seal desk-seal" aria-hidden="true">巻</span></div>` : '';
 }
 
 /** Conquistas recentes (coluna direita do Início), com o atalho para a página. */

@@ -201,6 +201,12 @@ Cantos retos (`--radius: 2px`) e **chanfro** (`--cut` 10px, 6px pequeno, 14px em
 - **Segmentado** (`.seg`): dificuldade pinta o selecionado (folha, dourado, vermelho, tinta).
 - **Regra:** botão tem ícone, nome e números principais; efeitos e bloqueios vão para a dica.
 
+### Portão da Vila
+
+A pintura da vila em azul e grafite ocupa a largura da composição central. Os telhados do primeiro plano se dissolvem no fundo. O letreiro deixa a torre livre no recorte. Arcade, História e Campanha têm um pergaminho cada, com arte própria e uma ação. Quando há uma Jornada salva, o pergaminho do modo reúne **Continuar** e **Nova partida**.
+
+No celular os modos ficam em coluna, acima da navegação de cinco destinos. No desktop ficam lado a lado entre a cena e o rodapé. Na coluna direita, a silhueta do avatar e a Ficha do ninja compartilham o token de papel `--profile-paper`. A barra de ferramentas abre pela alça com a folha de Konoha, pelo foco ou pela borda superior com o mouse.
+
 ### Panels
 - **Painel laqueado** (`.card`, `.panel`, `.chamfer`): grafite com grão, filete de aço desenhado pela camada de baixo, aba vermelha curta no topo marcando o dono. Padding 12px.
 - **Pergaminho** (`.parchment`): papel com grão, manchas e borda queimada; título em Kalam. Botão primário dentro usa dourado claro.

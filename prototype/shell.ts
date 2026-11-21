@@ -61,6 +61,39 @@ export function installHeaderToggles() {
   }
 }
 
+/** A alça continua focável com o painel recolhido. Os controles só entram no Tab quando visíveis. */
+function installHeaderGrip(): void {
+  const top = document.querySelector<HTMLElement>('header.top')!;
+  const grip = top.querySelector<HTMLButtonElement>('.top-grip')!;
+  grip.innerHTML = icon('konoha');
+  grip.setAttribute('aria-label', S.ui.gate.tools);
+  const setOpen = (open: boolean) => {
+    top.classList.toggle('open', open);
+    grip.setAttribute('aria-expanded', String(open));
+  };
+  const fine = matchMedia('(pointer: fine)');
+  top.addEventListener('pointerenter', (e) => { if (fine.matches && e.pointerType === 'mouse') setOpen(true); });
+  top.addEventListener('pointerleave', (e) => {
+    if (e.pointerType === 'mouse' && !top.querySelector(':focus-visible')) setOpen(false);
+  });
+  top.addEventListener('focusin', (e) => {
+    if ((e.target as HTMLElement).matches(':focus-visible')) setOpen(true);
+  });
+  top.addEventListener('focusout', (e) => {
+    if (!top.contains(e.relatedTarget as Node | null)) setOpen(false);
+  });
+  grip.addEventListener('click', () => setOpen(!top.classList.contains('open')));
+  top.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      grip.focus();
+      setOpen(false);
+    }
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if (!top.contains(e.target as Node)) setOpen(false);
+  });
+}
+
 /** Garante as fontes embutidas antes de medir texto (rótulos da roleta). Sem suporte, segue sem esperar. */
 export async function loadFonts(): Promise<void> {
   const faces = ['700 16px "Zen Kaku Gothic New"', '400 16px "Zen Kaku Gothic New"', '700 16px "Barlow Condensed"', '600 16px "Barlow Condensed"', '16px Shojumaru', '16px "Yuji Boku"'];
@@ -155,6 +188,7 @@ export function installQuoteStrip(): void {
 export async function installShell(): Promise<void> {
   installAudio(ses.settings);
   installHeaderToggles();
+  installHeaderGrip();
   document.getElementById('history-btn')!.addEventListener('click', () => openProfile());
   // Atalhos do Portão da Vila para o registro ninja.
   document.addEventListener('click', (e) => {
@@ -190,22 +224,6 @@ export async function installShell(): Promise<void> {
   document.getElementById('home-btn')!.innerHTML = `${icon('home')}<span>${S.ui.homeShort}</span>`;
   document.getElementById('home-btn')!.title = S.ui.home;
   document.getElementById('home-btn')!.setAttribute('aria-label', S.ui.home);
-  const gateNav = document.getElementById('gate-nav')!;
-  gateNav.setAttribute('aria-label', S.ui.gate.registry);
-  const navItem = (kanji: string, label: string, attr = '') =>
-    `<button type="button" ${attr}><span class="kanji${kanji.length > 1 ? ' two' : ''}" aria-hidden="true">${kanji}</span>${label}</button>`;
-  gateNav.innerHTML =
-    `<button type="button" aria-current="page"><span class="kanji" aria-hidden="true">${icon('konoha')}</span>${S.ui.gate.home}</button>` +
-    (
-      [
-        ['history', '歴'],
-        ['bingo', '手配'],
-        ['relics', '宝'],
-        ['origins', '族'],
-      ] as const
-    )
-      .map(([tab, kanji]) => navItem(kanji, S.profile.tabs[tab], `data-profile="${tab}"`))
-      .join('');
   document.getElementById('history-btn')!.innerHTML = `${icon('book')}${toolLabel('history')}`;
 
   installTooltips();

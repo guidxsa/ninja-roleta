@@ -209,3 +209,53 @@ select:focus-visible,
     scroll-behavior: auto !important;
   }
 }
+
+/* Barra de ferramentas sobre a tela. A área sob a alça estreita continua tocável. */
+body header.top {
+  --grip-h: 20px;
+  display: block;
+  padding: 0;
+  height: var(--grip-h);
+  min-height: var(--grip-h);
+  margin-inline: auto;
+  background: var(--bg);
+  border: 0;
+  backdrop-filter: none;
+}
+.top-grip {
+  display: grid;
+  place-items: center;
+  position: relative;
+  z-index: 1;
+  width: 64px;
+  height: var(--grip-h);
+  margin-inline: auto;
+  padding: 0;
+  color: var(--gold-2);
+  border: 0;
+  border-bottom: 1px solid var(--gold);
+  background: var(--surface);
+  cursor: pointer;
+}
+.top-grip .ico { width: 20px; height: 18px; }
+#top-tools {
+  position: absolute;
+  inset: 100% 0 auto;
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--line-strong);
+  background: var(--bg-2);
+  visibility: hidden;
+  transform: translateY(-6px);
+  opacity: 0;
+  transition: opacity var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+}
+.top.open #top-tools { visibility: visible; transform: none; opacity: 1; }
+.registry-links { display: grid; gap: var(--sp-2); }
+@media (pointer: coarse) {
+  .top-grip::after { content: ''; position: absolute; inset: 0 0 auto; min-height: var(--tap); }
+  .top.open .top-grip::after { inset: auto; min-height: 0; }
+  .top.open .top-actions button { min-height: var(--tap); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #top-tools { transition: none; transform: none; }
+}

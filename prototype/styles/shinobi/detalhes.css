@@ -165,7 +165,6 @@
   }
 }
 @media (max-width: 899px), (max-height: 559px) {
-  .gate-resume > .desk-prog,
   .gate .jprogress {
     padding: 7px 10px !important;
     margin: 0;
@@ -243,9 +242,6 @@
   .gate .jprogress .btn > .chip {
     font-size: 10px;
     padding: 2px 4px;
-  }
-  .gate .gate-resume .desk-seal {
-    display: none;
   }
   .gate .gate-banner {
     height: clamp(145px, 22vh, 210px);
@@ -389,4 +385,140 @@
 }
 .jbattle.bridge-live .jb-side {
   align-items: center;
+}
+
+/* Portão da Vila */
+.gate.jmodes .gate-banner {
+  border: 0;
+  background: transparent;
+}
+.jmodes .gate-banner .gate-hero {
+  background: var(--scene-art) center / cover no-repeat, var(--scene);
+  mask: linear-gradient(to bottom, var(--ink) 68%, transparent);
+}
+.jmodes .gate-banner .gate-hero img {
+  object-position: var(--fx) var(--fy);
+  filter: none;
+}
+.jmodes .gate-banner .gate-hero::after { display: none; }
+.gate.jmodes .gate-banner .gate-hero::before { background: none; }
+.gate.jmodes .gate-aside > .desk-profile { --profile-paper: var(--sh-papel-5); }
+.gate.jmodes .desk-profile::before,
+.jmodes .desk-id .avatar-btn,
+.jmodes .desk-id .avatar-btn .portrait { background: var(--profile-paper); }
+.jmodes .desk-id .avatar-art { display: block; }
+.jmodes .desk-id .avatar-btn .portrait {
+  width: clamp(100px, 16vh, 185px);
+  height: auto;
+  aspect-ratio: 1;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  mask: none;
+  filter: none;
+}
+.jmodes .desk-id .avatar-art img { clip-path: var(--avatar-cut); }
+.jmodes .desk-id .portrait svg > rect[fill^='url(#bg-'] { fill: var(--profile-paper); }
+.gate.jmodes .gate-modes {
+  display: grid;
+  align-items: stretch;
+  gap: var(--gap);
+}
+.gate.jmodes .mode-card {
+  width: 100%;
+  rotate: none;
+  padding-inline: var(--sp-3);
+}
+.gate.jmodes .mode-card::before { background: var(--shinobi-paper); }
+.gate.jmodes .mode-card .mode-art {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  mask: none;
+  border: 0;
+  box-shadow: none;
+}
+.gate.jmodes .mode-card .mode-body::after { content: none; }
+.gate.jmodes .mode-card .mode-art { mix-blend-mode: multiply; }
+.gate.jmodes .mode-art img { width: 100%; height: 100%; object-fit: cover; object-position: var(--fx) var(--fy); }
+.gate.jmodes .mode-card .mode-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(62px, 1fr) auto;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-2);
+}
+.gate.jmodes .mode-txt { gap: var(--sp-1); }
+.gate.jmodes .mode-txt b { font-size: clamp(var(--fs-4xl), 2.3vw, var(--fs-6xl)); }
+.gate.jmodes .mode-txt small {
+  display: block;
+  background: none;
+  width: auto;
+  max-width: 30ch;
+  padding: 0;
+  color: var(--shinobi-muted);
+  font: var(--fs-md)/1.24 var(--font-body);
+  text-shadow: none;
+}
+.gate.jmodes .mode-cta {
+  min-width: 0;
+  min-height: 36px;
+  margin-top: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  font-size: var(--fs-md);
+}
+.mode-saved {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+.gate.jmodes .mode-saved .mode-body { padding-bottom: 68px; }
+.mode-saved .mode-resume {
+  position: absolute;
+  bottom: var(--sp-4);
+  left: calc(var(--sp-3) + var(--sp-2));
+  min-height: 44px;
+  padding: var(--sp-1) var(--sp-3);
+  font-size: var(--fs-md);
+}
+.gate.jmodes .mode-saved .mode-cta {
+  background: transparent;
+  color: var(--shinobi-ink);
+  text-shadow: none;
+  box-shadow: none;
+  border: 0;
+  padding-inline: 0;
+  text-decoration: underline;
+}
+@media (min-width: 900px) and (min-height: 560px) {
+  :root { --side-w: clamp(116px, 9vw, 148px); }
+  .side-nav button { padding-inline: var(--sp-1); gap: var(--sp-1); }
+  .gate.jmodes { grid-template-columns: minmax(0, 1fr) clamp(232px, 21vw, 360px); }
+  .gate.jmodes .gate-main { grid-template-rows: minmax(180px, 1.25fr) minmax(295px, 1fr); }
+  .gate.jmodes .gate-modes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gate.jmodes .mode-card .mode-art { height: 100%; width: 100%; aspect-ratio: auto; }
+  .gate.jmodes .mode-card .mode-body { grid-template-columns: minmax(0, 1fr); }
+  .jmodes .desk-recent h3 { display: flex; align-items: start; flex-wrap: wrap; gap: var(--sp-1); }
+  .jmodes .desk-recent .desk-all { margin-left: 0; }
+}
+@media (max-width: 899px), (max-height: 559px) {
+  .gate.jmodes .gate-modes { grid-template-columns: minmax(0, 1fr); }
+  .gate.jmodes .gate-banner { height: clamp(160px, 26vh, 290px); }
+  .gate.jmodes .mode-card { min-height: 150px; }
+  .gate.jmodes .mode-card .mode-body {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    grid-template-rows: 1fr;
+    align-items: center;
+    gap: var(--gap);
+  }
+  .gate.jmodes .mode-card .mode-art { align-self: stretch; height: auto; aspect-ratio: auto; }
+  .gate.jmodes .mode-saved .mode-body { padding-bottom: var(--sp-4); }
+  .gate.jmodes .mode-saved .mode-txt { padding-bottom: 48px; }
+  .mode-saved .mode-resume { left: calc(40% + var(--gap)); }
+  body.at-gate #gate-nav { background: var(--bg-2); border-color: var(--line-strong); }
+  #gate-nav button { min-width: 44px; min-height: 48px; color: var(--muted); }
+  #gate-nav button[aria-current] { color: var(--gold-2); }
+  #gate-nav button[aria-current]::before { background: var(--primary); }
+  #gate-nav button .ico { width: 20px; height: 20px; }
+  #gate-nav button:focus-visible { outline: 2px solid var(--gold-2); outline-offset: -3px; }
 }
