@@ -216,7 +216,7 @@ Dos dez achados, o Codex confirmou 4 como corrigidos e 6 como parciais, e trouxe
 
 | Achado | Correção |
 |---|---|
-| 1 parcial: a etiqueta vale para o PR inteiro, mesmo com o contrato ampliado depois dela | **Não dá para resolver por código** (a CI não sabe quando a etiqueta foi posta). Virou regra do `AGENTS.md`: contrato mudou depois da etiqueta, o agente avisa e o usuário tira e põe de novo depois de conferir |
+| 1 parcial: a etiqueta vale para o PR inteiro, mesmo com o contrato ampliado depois dela Primeiro virou regra do `AGENTS.md` (achava-se que a CI não sabia quando a etiqueta foi posta). Resolvido por código em 21/11/2026 (#59, tarefa `harness-portao`): a timeline do PR diz quem pôs a etiqueta e quando, o `aprovacao.yml` registra o contrato nesse momento e o `check:escopo` vence a aprovação se ele mudou |
 | 2 parcial: o check do `pre-push` rodava na árvore com mudanças fora do commit | O `pre-push` exige árvore limpa |
 | 3 parcial: sem tema, fora da CI, era só aviso mesmo depois do prazo | A partir de 02/12/2026, sem tema é erro em qualquer lugar (`CHECK_TEMA=<tema>` resolve) |
 | 6 parcial: a Roleta passava com uma origem só | Os grupos esperados vêm dos dados (8 origens) e da lista de modos da Jornada; faltando ou sobrando é erro |

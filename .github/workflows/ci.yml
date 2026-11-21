@@ -30,19 +30,36 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      # Correção automática (docs/processo/issues.md): no PR de feature/issue-<n>, a etiqueta correcao-automatica da issue
-      # vale como aprovação do contrato (check:escopo).
-      - name: Etiquetas da issue
-        id: issue
-        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'feature/issue-')
+      # Aprovações do usuário (scripts/check-aprovacao.ts; AGENTS.md, "Escopo"): só contam as etiquetas que o dono do
+      # repositório pôs, e a contrato-aprovado vale para o contrato registrado pelo aprovacao.yml no momento da etiqueta.
+      # No PR de feature/issue-<n>, a correcao-automatica da issue (posta pelo dono) vale como aprovação (docs/processo/issues.md).
+      - name: Aprovações do usuário
+        id: aprov
+        if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
           HEAD_REF: ${{ github.head_ref }}
+          DONO: ${{ github.repository_owner }}
         run: |
+          export TIMELINE_PR="$RUNNER_TEMP/timeline-pr.json" COMENTARIOS_PR="$RUNNER_TEMP/comentarios-pr.json"
           n="${HEAD_REF#feature/issue-}"
-          case "$n" in ''|*[!0-9]*) exit 0 ;; esac
-          echo "etiquetas=$(gh issue view "$n" --json labels --jq '[.labels[].name] | join(",")' || true)" >> "$GITHUB_OUTPUT"
+          if [ "$n" != "$HEAD_REF" ] && [ -n "$n" ] && [ "${n#*[!0-9]}" = "$n" ]; then
+            export TIMELINE_ISSUE="$RUNNER_TEMP/timeline-issue.json"
+            export ATUAIS_ISSUE="$(gh issue view "$n" --json labels --jq '[.labels[].name] | join(",")' || true)"
+            gh api "repos/$GH_REPO/issues/$n/timeline" --paginate > "$TIMELINE_ISSUE" || echo '[]' > "$TIMELINE_ISSUE"
+          fi
+          # O aprovacao.yml roda junto com esta CI quando a etiqueta entra: espera o registro dele por até 1 minuto.
+          for tentativa in 1 2 3 4 5 6 7; do
+            export ATUAIS_PR="$(gh pr view "$PR" --json labels --jq '[.labels[].name] | join(",")')"
+            gh api "repos/$GH_REPO/issues/$PR/timeline" --paginate > "$TIMELINE_PR"
+            gh api "repos/$GH_REPO/issues/$PR/comments" --paginate > "$COMENTARIOS_PR"
+            saida=$(node scripts/check-aprovacao.ts ci)
+            printf '%s\n' "$saida" | grep -q '^falta_registro=true$' && [ "$tentativa" -lt 7 ] || break
+            echo "Esperando o registro do contrato aprovado (aprovacao.yml)..."; sleep 10
+          done
+          printf '%s\n' "$saida" | tee -a "$GITHUB_OUTPUT"
       # No push não há GITHUB_BASE_REF: se a branch tem PR aberto, compara com a base dele, como na execução do PR
       # (PR empilhado sobre outra branch, ou para o staging). Sem PR, vale a base pelo nome da branch (harness.ts).
       - name: Base do PR da branch
@@ -61,8 +78,9 @@ jobs:
           CHECK_BASE: ${{ steps.base.outputs.check_base }}
           CHECK_ESTRITO: ${{ github.event_name == 'pull_request' }}
           CHECK_PR: ${{ github.event_name == 'pull_request' }}
-          CHECK_ETIQUETAS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
-          CHECK_ISSUE_ETIQUETAS: ${{ steps.issue.outputs.etiquetas }}
+          CHECK_ETIQUETAS: ${{ steps.aprov.outputs.etiquetas }}
+          CHECK_ISSUE_ETIQUETAS: ${{ steps.aprov.outputs.issue_etiquetas }}
+          CHECK_CONTRATOS: ${{ steps.aprov.outputs.contratos }}
 
   # Guarda da meta de vitória (scripts/check-meta.ts): simulação curta com seed fixa. Quebrou: proponha ao usuário com
   # a tabela de antes e depois, nunca ajuste número para passar (AGENTS.md).
