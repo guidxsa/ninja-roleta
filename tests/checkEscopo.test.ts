@@ -66,6 +66,26 @@ describe('escopo', () => {
     expect(rules(run(files, md, { labels: ['outra'], hoje: DEPOIS }))).toEqual(['erro:contrato-aprovado']);
   });
 
+  it('a aprovação vale para o contrato como estava quando a etiqueta foi posta (#59)', () => {
+    const files = ['src/core/roleta/battle.ts'];
+    const aprovado = { labels: [ETIQUETA_APROVADO], contratoBlob: 'b1' };
+    expect(run(files, md, { ...aprovado, contratosAprovados: { 'docs/tarefas/veneno.md': 'b1' } })).toEqual([]);
+    // contrato mudou depois da etiqueta, ou etiqueta sem registro: aviso antes da data, erro depois
+    expect(rules(run(files, md, { ...aprovado, contratosAprovados: { 'docs/tarefas/veneno.md': 'b0' } }))).toEqual(['aviso:contrato-aprovado']);
+    const vencido = run(files, md, { ...aprovado, contratosAprovados: { 'docs/tarefas/veneno.md': 'b0' }, hoje: DEPOIS });
+    expect(rules(vencido)).toEqual(['erro:contrato-aprovado']);
+    expect(vencido[0]!.message).toMatch(/venceu/);
+    expect(run(files, md, { ...aprovado, contratosAprovados: null, hoje: DEPOIS })[0]!.message).toMatch(/registro/);
+    // fora do PR (contratosAprovados undefined) não confere
+    expect(run(files, md, { labels: [ETIQUETA_APROVADO] })).toEqual([]);
+  });
+
+  it('aprovação vencida não libera balanceamento na correção automática', () => {
+    const md7 = '---\nobjetivo: x\nissue: 7\nescopo: ["src/**"]\n---\n';
+    const f = run(['src/data/balance.ts'], md7, { branch: 'feature/issue-7', labels: [ETIQUETA_APROVADO], contratosAprovados: null, issueLabels: [ETIQUETA_AUTOMATICA] });
+    expect(rules(f)).toEqual(['erro:correcao-automatica']);
+  });
+
   it('correção automática: a issue com a etiqueta do loop vale como aprovação (docs/processo/issues.md)', () => {
     const md7 = `---
 objetivo: Corrige a issue 7.

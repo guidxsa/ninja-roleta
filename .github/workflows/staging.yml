@@ -1,9 +1,11 @@
 # Staging (docs/processo/fluxo.md): o PR dos agentes entra sozinho no staging quando a CI e a revisão cruzada aprovam;
 # o staging chega ao master só pelo PR permanente, com o merge e a tag do usuário.
 #
-# - portao: status revisao-cruzada no commit da ponta do PR. O Codex sem achados (comentário "Didn't find any major
-#   issues") aprova o PR do Claude; o veredito do Claude aprova o do Codex (revisao-claude.yml, job automatica); a
-#   etiqueta revisao-dispensada (do usuário) e o PR de sincronização master → staging passam direto.
+# - portao: status revisao-cruzada no commit da ponta do PR. O Codex aprova o PR do Claude pelo bloco
+#   codex-review-state:v1 do comentário de resumo dele (revisão concluída, sem achado pendente, do commit da ponta;
+#   scripts/check-aprovacao.ts); o veredito do Claude aprova o do Codex (revisao-claude.yml, job automatica); a
+#   etiqueta revisao-dispensada posta pelo dono do repositório e o PR de sincronização master → staging passam direto.
+#   O caminho do comentário do Codex (issue_comment) roda a versão deste arquivo do master: chega lá na release.
 # - automerge: liga o auto-merge nativo do GitHub; ele faz o merge quando check, meta e revisao-cruzada ficam verdes
 #   (proteção do staging).
 # - fecha-issue: o "Closes #n" só fecha a issue no merge no master; no staging, o workflow fecha com um aviso.
@@ -20,7 +22,7 @@ on:
     branches: [staging]
     types: [opened, reopened, synchronize, ready_for_review, labeled, closed]
   issue_comment:
-    types: [created]
+    types: [created, edited] # o Codex edita o comentário de resumo a cada revisão
   push:
     branches: [staging, master]
   workflow_dispatch:
@@ -44,14 +46,23 @@ jobs:
       (github.event_name == 'pull_request' && github.event.action != 'closed' &&
        github.event.pull_request.head.repo.full_name == github.repository) ||
       (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
-       github.event.comment.user.login == 'chatgpt-codex-connector[bot]' &&
-       contains(github.event.comment.body, 'Didn''t find any major issues'))
+       github.event.comment.user.login == 'chatgpt-codex-connector[bot]')
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
       PR: ${{ github.event.pull_request.number || github.event.issue.number }}
-      COMENTADO_EM: ${{ github.event.comment.created_at }}
+      DONO: ${{ github.repository_owner }}
+      DO_CODEX: ${{ github.event_name == 'issue_comment' }}
     steps:
+      # Só o script de leitura (scripts/check-aprovacao.ts, sem dependências): roda com o node, sem npm ci.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/check-aprovacao.ts
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
       - name: Status revisao-cruzada
         run: |
           info=$(gh pr view "$PR" --json baseRefName,headRefName,headRefOid,body,labels,isCrossRepository)
@@ -60,12 +71,29 @@ jobs:
           [ "$(jq -r .isCrossRepository <<< "$info")" = "false" ] || { echo "::notice::PR de fork: sem portão."; exit 0; }
           verde() { gh api "repos/$GH_REPO/statuses/$sha" -f state=success -f context=revisao-cruzada -f description="$1" > /dev/null; echo "revisao-cruzada verde em $sha: $1"; }
           if [ "$head" = "master" ]; then verde "Sincronização com o master (já aprovado)"; exit 0; fi
-          if jq -e --arg l "$DISPENSA" '[.labels[].name] | index($l)' <<< "$info" > /dev/null; then verde "Revisão dispensada pelo usuário"; exit 0; fi
-          if [ -n "$COMENTADO_EM" ]; then
-            # PR do Claude: o Codex sem achados, depois do último commit (a aprovação vale para a ponta revisada).
+          if jq -e --arg l "$DISPENSA" '[.labels[].name] | index($l)' <<< "$info" > /dev/null; then
+            # Só a etiqueta posta pelo dono do repositório (a timeline diz quem pôs): bot ou agente no Actions não dispensa.
+            gh api "repos/$GH_REPO/issues/$PR/timeline" --paginate > "$RUNNER_TEMP/timeline.json"
+            if [ "$(ETIQUETA="$DISPENSA" TIMELINE="$RUNNER_TEMP/timeline.json" node scripts/check-aprovacao.ts dono)" = "sim" ]; then
+              verde "Revisão dispensada pelo usuário"; exit 0
+            fi
+            echo "::warning::A etiqueta $DISPENSA não foi posta por $DONO: não abre o portão."
+          fi
+          if [ "$DO_CODEX" = "true" ]; then
+            # PR do Claude: vale o estado que o Codex mantém no comentário de resumo, para o commit da ponta.
             jq -r .body <<< "$info" | grep -qi 'Implementou: claude' || { echo "::notice::Não é PR do Claude."; exit 0; }
-            ultimo=$(gh api "repos/$GH_REPO/commits/$sha" --jq .commit.committer.date)
-            if [[ "$COMENTADO_EM" > "$ultimo" ]]; then verde "Revisão do Codex sem achados"; else echo "::notice::Comentário anterior ao último commit ($ultimo)."; fi
+            gh api "repos/$GH_REPO/issues/$PR/comments" --paginate > "$RUNNER_TEMP/comentarios.json"
+            veredito=$(PONTA="$sha" COMENTARIOS="$RUNNER_TEMP/comentarios.json" node scripts/check-aprovacao.ts codex)
+            echo "Estado da revisão do Codex na ponta $sha: $veredito"
+            case "$veredito" in
+              aprovado) verde "Revisão do Codex sem achados" ;;
+              sem-estado)
+                # O formato do Codex mudou ou o comentário de resumo sumiu: avisa uma vez, para o portão não travar calado.
+                if ! grep -q '<!-- portao:sem-estado-codex -->' "$RUNNER_TEMP/comentarios.json"; then
+                  printf '%s\n' "O Codex comentou, mas o portão não achou o bloco \`codex-review-state:v1\` que diz o commit revisado e se sobrou achado. O \`revisao-cruzada\` fica pendente: confira a revisão e, se aprovar, ponha a etiqueta \`$DISPENSA\` (docs/processo/fluxo.md, \"Entrada no staging\")." "" '<!-- portao:sem-estado-codex -->' > "$RUNNER_TEMP/aviso.md"
+                  gh pr comment "$PR" --body-file "$RUNNER_TEMP/aviso.md"
+                fi ;;
+            esac
             exit 0
           fi
           # Sem aprovação ainda: pendente, só se o commit não tem status (uma etiqueta nova não apaga a aprovação).

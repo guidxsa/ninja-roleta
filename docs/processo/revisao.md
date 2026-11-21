@@ -13,13 +13,13 @@ Instruções de revisão para os dois agentes (AGENTS.md, "Review guidelines"). 
 O "Implementou" vem do modelo de PR (`.github/pull_request_template.md`): quem abre o PR preenche `claude`, `codex` ou `humano`. O workflow procura o texto exato "Implementou" + dois-pontos + "codex" no corpo do PR (sem diferenciar maiúsculas): num PR do Claude, não escreva essa combinação em outro lugar da descrição, ou o Claude revisaria o próprio PR.
 
 **Configuração (uma vez, pelo usuário)**:
-- **Claude no GitHub**: na máquina com o Claude Code, `claude setup-token`; o token vai em Settings → Secrets and variables → Actions → New repository secret, com o nome `CLAUDE_CODE_OAUTH_TOKEN`. Usa o limite do plano, sem custo extra. Sem o segredo, o workflow avisa e pula a revisão, sem travar o PR.
+- **Claude no GitHub**: na máquina com o Claude Code, `claude setup-token`; o token vai em Settings → Secrets and variables → Actions → New repository secret, com o nome `CLAUDE_CODE_OAUTH_TOKEN`. Usa o limite do plano, sem custo extra. Sem o segredo, a revisão é pulada e o PR do Codex fica parado no portão `revisao-cruzada` (obrigatório no staging): o job `automatica` avisa no PR uma vez, e o usuário configura o segredo e pede `@claude revise`, ou põe `revisao-dispensada`.
 - **Codex**: ligar a revisão de código do repositório nas configurações do Codex.
 - **App do Claude no repositório** (para o loop): o `claude-code-action` usa o token do app do Claude para publicar e dar push. Instale com `/install-github-app` no Claude Code ou em github.com/apps/claude. Push feito com o token do app dispara a CI; com o `GITHUB_TOKEN` do Actions, não dispararia.
 
 ## Portão do staging
 
-A aprovação abre o auto-merge no `staging` ([fluxo.md](fluxo.md#entrada-no-staging)): o veredito `aprovado` ou `ressalvas` do Claude, ou o "Didn't find any major issues" do Codex depois do último commit, deixa verde o status `revisao-cruzada` do commit revisado. Commit novo volta a esperar a revisão.
+A aprovação abre o auto-merge no `staging` ([fluxo.md](fluxo.md#entrada-no-staging)): o veredito `aprovado` ou `ressalvas` do Claude, ou o bloco `codex-review-state:v1` do Codex (revisão concluída, sem achado pendente, do commit da ponta), deixa verde o status `revisao-cruzada` do commit revisado. Commit novo volta a esperar a revisão. A `revisao-dispensada` só abre o portão se foi posta pelo dono do repositório.
 
 ## Loop
 
@@ -27,7 +27,7 @@ A revisão roda em loop no PR, sem ninguém no meio: o revisor aponta achados, o
 
 | PR de | Revisão com achados | Correção | Nova revisão | Para quando |
 |---|---|---|---|---|
-| Claude ("Implementou: claude") | O Codex publica uma revisão (`pull_request_review` de `chatgpt-codex-connector[bot]`) | Job `corrige`: o Claude avalia cada achado, corrige o que procede dentro do contrato, roda `npm run check`, faz commit e push e publica um resumo | O workflow confere o push e comenta `@codex review` | O Codex responde "Didn't find any major issues" (só comentário, sem revisão) |
+| Claude ("Implementou: claude") | O Codex publica uma revisão (`pull_request_review` de `chatgpt-codex-connector[bot]`) | Job `corrige`: o Claude avalia cada achado, corrige o que procede dentro do contrato, roda `npm run check`, faz commit e push e publica um resumo | O workflow confere o push e comenta `@codex review` | O Codex não acha nada: só comenta, sem revisão, e o bloco de estado dele diz que não sobrou achado (é o que abre o portão) |
 | Codex ("Implementou: codex" ou `codex/*`) | Job `automatica`: o resumo do Claude termina com o marcador `veredito=mudancas` | O workflow comenta `@codex address that feedback`; o Codex corrige e dá push | O push (`synchronize`) roda o `automatica` de novo | Veredito "aprovado" ou "aprovado com ressalvas" (ressalva é melhoria futura, não volta para o Codex) |
 
 **Travas**:

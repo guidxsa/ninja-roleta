@@ -2,6 +2,16 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Portão e aprovações que não se abrem sozinhos (processo, sem versão, 21/11/2026)
+
+Avaliação do processo pedida pelo usuário, que virou as issues #47 a #63; esta é a tarefa `harness-portao` (#47, #49, #57, #59, #62). Decisões do usuário nesta conversa: resolver as issues só com o Claude, porque a cota do Codex acabou (a revisão é `@claude revise` mais a leitura dele, e o portão abre com `revisao-dispensada`), e pôr tudo no staging atual, junto com a reformulação do plano A, em vez de soltar versões 0.95.z.
+
+- **Portão pelo estado do Codex**: o Codex mantém no comentário de resumo um bloco `codex-review-state:v1` com o SHA completo do commit revisado e se sobrou achado (visto nos PRs #42, #44 e #45). O portão passou a ler esse bloco em vez da frase "Didn't find any major issues" e da comparação de horários, que deixava passar um commit enviado durante a revisão.
+- **Etiquetas só do dono**: `contrato-aprovado`, `revisao-dispensada` e `correcao-automatica` só valem postas pelo dono do repositório (timeline). Barra os agentes do Actions; os locais usam a conta do usuário, então ficam pelas negações do `.claude/settings.json` (Claude) e pela regra escrita (Codex).
+- **Aprovação vencida**: o `aprovacao.yml` (`pull_request_target`, sem código do PR) registra o blob do contrato quando a etiqueta entra; o `check:escopo` vence a aprovação se o contrato mudou. A CI espera o registro por até 1 minuto.
+- **Decidido sozinho** (para revisar): sem o registro (etiqueta posta antes desta mudança), a aprovação conta como vencida, com o mesmo nível da falta de etiqueta (aviso até 02/12/2026); o portão avisa no PR uma vez quando o Codex comenta sem o bloco de estado; o script roda com o `node` direto (Node 24 tira os tipos), sem `npm ci`, no portão.
+- **Fica para depois**: #48 (quem revisa) depende de decisão do usuário, porque os commits do Claude e do Codex local saem com o mesmo autor.
+
 ## Jornada na meta 90/65/40/15 (v0.95.0, 17/11/2026)
 
 Item 37/38 de `decisoes.md`, pedido do usuário. Alavancas (decididas sozinho, para revisar): `difficultyMult` em `src/data/jornada/balance.ts` (História 1,26 / 1,05 / 1,04 / 1; Caminho Ninja 1,24 / 1,11 / 1,08 / 1,04), força por estágio própria do Hardcore da História (1,04 / 1,08 / 1,7 / 1,9) e ajustes de status das classes (`adjust` em `src/data/lineages.ts`): Prodígio −35 HP e −5 taijutsu (era −10 e −3), Hyuuga −8 HP e −2 taijutsu (chakra +12 mantido), Uchiha +20 HP e ninjutsu +6, genjutsu +1 (era +5 HP, +3, −1). As fixtures do UI Lab e os testes de roteiro usam a força por dificuldade neutra.
