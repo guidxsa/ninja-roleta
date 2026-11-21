@@ -54,7 +54,7 @@ Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não fo
    npm version 0.Y.0 --no-git-tag-version
    ```
    Confira a linha nova no fim da tabela do `CHANGELOG.md` e ajuste o texto se precisar (é o que quem joga lê).
-4. Testar, commitar (`Prepara a release v0.Y.0`), push e PR para o `staging`. Ele entra pelo auto-merge como qualquer contribuição.
+4. Testar, commitar (`Prepara a release v0.Y.0`), push e PR para o `staging`. Ele entra pelo auto-merge como qualquer contribuição. **Sem contrato em `docs/tarefas/` e sem `contrato-aprovado`**: o `check:escopo` dá à `feature/release-v<x.y.z>` um contrato implícito (o seu "prepara" é a aprovação) e recusa qualquer arquivo além de `CHANGELOG.md`, `changelog.d/*.md` e da versão do `package.json`/`package-lock.json`. Precisou mexer em outra coisa: `feature/<tema>` à parte, com contrato.
 5. Relate: versão, o que entra, link do preview (https://guidxsa.github.io/ninja-roleta/staging/) e do PR permanente. **Pare** e peça o "publica v0.Y.0".
 
 ## C. Publicar release (só com "publica v0.Y.0" nesta conversa)
@@ -71,7 +71,7 @@ Só para o que não pode esperar a release. Na dúvida, contribuição normal (A
 
 1. `git fetch origin master && git switch -c hotfix/<tema> origin/master`; contrato `docs/tarefas/<tema>.md`.
 2. Correção, teste e doc; linha `v0.Y.Z` no fim da tabela do `CHANGELOG.md` (o z sobe a partir da última tag do `master`) e `npm version 0.Y.Z --no-git-tag-version`.
-3. Testar, commitar (`Corrige <o que> (v0.Y.Z)`), push e PR para o `master`. **Pare** e peça aprovação.
+3. Testar, commitar (`Corrige <o que> (v0.Y.Z)`), push e PR para o `master`. Peça a revisão cruzada no PR (`@codex review`, ou `@claude revise` se o hotfix é do Codex): no `master` não há portão, ela não trava o merge, mas o usuário confere antes. **Pare** e peça aprovação.
 4. Com o "publica v0.Y.Z": merge com **Create a merge commit**, tag no merge commit, push da tag. A sincronização com o staging é automática; com conflito, resolva numa `feature/sincroniza-<data>` a partir do staging, com merge do `master`, e PR para o staging.
 
 ## Tag (só na publicação)

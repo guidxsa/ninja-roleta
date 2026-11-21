@@ -264,7 +264,7 @@ jobs:
         if: steps.rodada.outputs.ok == 'true'
         with:
           ref: ${{ github.event.pull_request.head.ref }} # a branch, para o commit ir para ela
-          fetch-depth: 0 # o check:regras compara com o origin/master
+          fetch-depth: 0 # o check:regras compara com a base do PR (origin/staging ou origin/master)
           persist-credentials: false # o push usa só a credencial que o claude-code-action configura
       - uses: actions/setup-node@v4
         if: steps.rodada.outputs.ok == 'true'

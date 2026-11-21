@@ -39,7 +39,7 @@ Formato `x.y.z`. O jogo segue em `0.y.z` até o usuário pedir o v1.0.0; o major
 ## Release (y)
 
 1. **Sugestão**: o PR permanente `staging → master` (título "Próxima versão (proposta v0.Y.0)") é reescrito a cada push no staging com os fragmentos, os PRs integrados e o link do preview. Com um fragmento de `peso: alto` ou 8 itens, o workflow comenta uma sugestão de release, uma vez por ciclo. O agente também sugere no resumo quando vê algo de peso.
-2. **Preparar** (o usuário pede "prepara a v0.Y.0"): o agente abre `feature/release-v0.Y.0` a partir do staging com `npx tsx scripts/staging.ts release 0.Y.0` (junta os fragmentos numa linha do `CHANGELOG.md` e os apaga) e `npm version 0.Y.0 --no-git-tag-version`; o PR entra no staging pelo auto-merge.
+2. **Preparar** (o usuário pede "prepara a v0.Y.0"): o agente abre `feature/release-v0.Y.0` a partir do staging com `npx tsx scripts/staging.ts release 0.Y.0` (junta os fragmentos numa linha do `CHANGELOG.md` e os apaga) e `npm version 0.Y.0 --no-git-tag-version`; o PR entra no staging pelo auto-merge. A branch tem **contrato implícito**: sem `docs/tarefas/` e sem `contrato-aprovado` (o "prepara" do usuário é a aprovação), e o `check:escopo` recusa qualquer arquivo além de `CHANGELOG.md`, `changelog.d/*.md` e da versão no `package.json`/`package-lock.json`.
 3. **Testar**: o usuário abre o preview do staging.
 4. **Publicar** (só com "publica v0.Y.0"): merge do PR permanente com **Create a merge commit**, tag anotada `v0.Y.0` no merge commit e push só da tag (skill `lancar-versao`). O push no `master` publica o Pages e abre a sincronização.
 
@@ -48,7 +48,7 @@ Formato `x.y.z`. O jogo segue em `0.y.z` até o usuário pedir o v1.0.0; o major
 Só para o que não pode esperar a release (jogo quebrado em produção).
 
 1. `hotfix/<tema>` a partir do `master`, com contrato `docs/tarefas/<tema>.md` (o `check:escopo` lê o tema de `hotfix/<tema>`), a linha `v0.Y.Z` no `CHANGELOG.md` e `npm version 0.Y.Z --no-git-tag-version`.
-2. PR para o `master`; revisão cruzada como sempre; merge e tag só com aprovação do usuário.
+2. PR para o `master`; o agente pede a revisão cruzada (`@codex review` ou `@claude revise`). No `master` não há portão `revisao-cruzada` (travaria também o PR permanente da release): a revisão não trava, e o merge do usuário, que confere a revisão antes, é a garantia. Merge e tag só com aprovação do usuário.
 3. O workflow abre o PR `master → staging` e ele entra sozinho (o portão passa direto: o conteúdo já foi aprovado no `master`). Conflito: o agente resolve numa `feature/sincroniza-<data>` a partir do staging, com merge do `master`, e abre o PR para o staging.
 
 ## Preview

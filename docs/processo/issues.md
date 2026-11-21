@@ -1,6 +1,6 @@
 # Issues
 
-Toda inconsistência achada vira uma **issue descritiva** no GitHub, para nada se perder num resumo ou num comentário de PR. A que é claramente um erro, sem nada para o usuário avaliar, os agentes corrigem sozinhos em [loop](#loop): pegam a issue, corrigem num PR e a issue fecha quando o usuário mergeia. Regra resumida no [AGENTS.md](../../AGENTS.md#issues).
+Toda inconsistência achada vira uma **issue descritiva** no GitHub, para nada se perder num resumo ou num comentário de PR. A que é claramente um erro, sem nada para o usuário avaliar, os agentes corrigem sozinhos em [loop](#loop): pegam a issue e corrigem num PR, que entra sozinho no `staging` com a revisão aprovada; a issue fecha nesse merge e a correção chega à produção na release, com o merge do usuário no `master`. Regra resumida no [AGENTS.md](../../AGENTS.md#issues).
 
 ## Quando abrir
 
@@ -86,7 +86,7 @@ Toda issue do fluxo tem `inconsistencia` e **uma** destas:
 
 **Modelo e métricas**: o job `corrige` escolhe o modelo pelo perfil da issue (leve ou padrão, alternado por issue quando `PILOTO_PERFIS=on`, com escalada na 2ª tentativa) e, depois de cada execução, comenta na issue o consumo (tokens por modelo, tempo, turnos, resultado). O job `corrige` da revisão faz o mesmo nos PRs de `feature/issue-<n>`. Regras e relatório (`npm run metricas`) em [metricas.md](metricas.md).
 
-**O usuário entra** na triagem (`precisa-decisao`), quando o loop para (2 tentativas sem PR, limite de rodadas da revisão) e no merge.
+**O usuário entra** na triagem (`precisa-decisao`), quando o loop para (2 tentativas sem PR, limite de rodadas da revisão) e no merge do `master` (release).
 
 **Configuração**: a mesma da revisão (segredo `CLAUDE_CODE_OAUTH_TOKEN` e app do Claude no repositório, [revisao.md](revisao.md)) e as etiquetas `inconsistencia`, `correcao-automatica` e `precisa-decisao`. Sem o segredo, o workflow avisa e pula.
 

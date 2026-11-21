@@ -17,6 +17,12 @@ export const ETIQUETA_AUTOMATICA = 'correcao-automatica';
 export const NUNCA_AUTOMATICO = ['src/data/balance*'];
 /** Branch da correção automática de uma issue. */
 export const ISSUE_BRANCH = /^feature\/issue-(\d+)$/;
+/**
+ * Branch da release (docs/processo/fluxo.md, "Release"): contrato implícito, sem docs/tarefas nem etiqueta, porque o
+ * "prepara a v0.Y.0" do usuário é a aprovação. O diff só pode juntar os fragmentos no CHANGELOG e subir a versão.
+ */
+export const RELEASE_BRANCH = /^feature\/release-v\d+\.\d+\.\d+$/;
+export const ESCOPO_RELEASE = ['CHANGELOG.md', 'changelog.d/*.md'];
 
 /**
  * Sempre dentro do escopo: changelog e registro de decisões, que toda tarefa pode tocar. O package.json e o
@@ -103,6 +109,21 @@ export function checkEscopo({
   const exigido = hoje >= EXIGIR_CONTRATO_A_PARTIR;
   // staging e master juntam várias tarefas, cada uma conferida no próprio PR (docs/processo/fluxo.md).
   if (/^(staging|master)$/.test(branch) && !env.CHECK_TEMA) return [];
+  if (RELEASE_BRANCH.test(branch) && !env.CHECK_TEMA) {
+    const soltos = files.filter(
+      (f) => !matchesAny(f, ESCOPO_RELEASE) && !(f === 'package.json' && packageOnlyVersion) && !(f === 'package-lock.json' && lockOnlyVersion),
+    );
+    return soltos.length
+      ? [
+          {
+            level: 'erro',
+            rule: 'fora-do-escopo',
+            message: `A branch de release só junta os fragmentos (CHANGELOG.md, changelog.d/*.md) e sobe a versão do package.json; o resto vai numa feature/<tema> com contrato:`,
+            files: soltos,
+          },
+        ]
+      : [];
+  }
   const { tema, origem } = temaDaTarefa(branch, files, env);
   if (!tema)
     return [

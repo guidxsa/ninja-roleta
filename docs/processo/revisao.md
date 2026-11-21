@@ -1,6 +1,6 @@
 # Revisão de PR
 
-Instruções de revisão para os dois agentes (AGENTS.md, "Review guidelines"). Quem implementa não revisa: o PR do Codex é revisado pelo Claude e o do Claude, pelo Codex. A revisão informa; quem decide e faz o merge é o usuário. Achado que bloqueia o merge volta sozinho para o autor corrigir, em [loop](#loop); a melhoria futura vira uma [issue](issues.md).
+Instruções de revisão para os dois agentes (AGENTS.md, "Review guidelines"). Quem implementa não revisa: o PR do Codex é revisado pelo Claude e o do Claude, pelo Codex. A revisão decide a entrada no `staging`: aprovada, o PR entra sozinho ([portão](#portão-do-staging)); o merge no `master` é do usuário. Achado que bloqueia o merge volta sozinho para o autor corrigir, em [loop](#loop); a melhoria futura vira uma [issue](issues.md).
 
 ## Como chega
 
@@ -23,7 +23,7 @@ A aprovação abre o auto-merge no `staging` ([fluxo.md](fluxo.md#entrada-no-sta
 
 ## Loop
 
-A revisão roda em loop no PR, sem ninguém no meio: o revisor aponta achados, o autor corrige e pede nova revisão, até não haver achado ou acabar o limite de rodadas. O merge continua do usuário.
+A revisão roda em loop no PR, sem ninguém no meio: o revisor aponta achados, o autor corrige e pede nova revisão, até não haver achado ou acabar o limite de rodadas. Aprovado, o PR entra sozinho no `staging`; o merge no `master` continua do usuário.
 
 | PR de | Revisão com achados | Correção | Nova revisão | Para quando |
 |---|---|---|---|---|
@@ -38,7 +38,7 @@ A revisão roda em loop no PR, sem ninguém no meio: o revisor aponta achados, o
 - **Revisão velha**: se o PR andou depois da revisão do Codex, o job `corrige` não corrige (a revisão do commit novo vale mais).
 - **Achado que não procede**: o Claude não corrige o que não procede, sai do escopo do contrato ou depende de decisão do usuário (balanceamento, por exemplo); explica no resumo e, se o achado é real mas fora do escopo, abre uma [issue](issues.md). Sem commit, o workflow não pede nova revisão e avisa que o loop parou.
 
-**O usuário entra** quando o loop para sem aprovação (limite, achado recusado, trava) e no merge. Para pedir mais uma rodada depois do limite, basta comentar à mão `@codex review` (PR do Claude) ou o pedido de correção ao Codex (PR do Codex).
+**O usuário entra** quando o loop para sem aprovação (limite, achado recusado, trava), na `revisao-dispensada` e no merge do `master`. Para pedir mais uma rodada depois do limite, basta comentar à mão `@codex review` (PR do Claude) ou o pedido de correção ao Codex (PR do Codex).
 
 A action do Claude recusa execuções disparadas por bots. Os jobs `automatica` (push do Codex) e `corrige` (revisão do Codex) liberam só `chatgpt-codex-connector` (`allowed_bots`).
 
