@@ -70,4 +70,16 @@ export const gate: Scenario[] = [
       return gate;
     },
   },
+  {
+    id: 'gate.avatar:few',
+    title: 'Escolha do avatar (poucos liberados, bloqueados em silhueta)',
+    group: 'Entrada',
+    profile: profiles.mid,
+    setup: (s) => seedRunHistory(s, 3),
+    mount: () => {
+      const gate = modeScreen();
+      openAvatarPicker();
+      return gate;
+    },
+  },
 ];
