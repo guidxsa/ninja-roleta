@@ -1,4 +1,5 @@
 // Utilitários de DOM do protótipo, usados pelo Roleta (main.ts) e pela Jornada (jornada/).
+import { pushLayer } from './back';
 
 // Sessão das telas: voltar ao menu (goHome) troca a sessão. O fluxo antigo fica órfão: as esperas dele
 // (sleep) nunca mais continuam e o choose dele fica numa tela que já saiu, então ele não redesenha nada.
@@ -119,6 +120,12 @@ export function openDialog(overlay: HTMLElement): void {
   if (!overlay.hasAttribute('tabindex')) overlay.tabIndex = -1;
   if (!overlay.isConnected) document.body.appendChild(overlay);
   overlay.focus({ preventScroll: true });
+  // O voltar do navegador fecha a janela pelo mesmo botão dela (back.ts).
+  const release = pushLayer(() => {
+    const close = overlay.querySelector<HTMLElement>('[data-close]');
+    if (close) close.click();
+    else overlay.remove();
+  });
 
   const onKey = (e: KeyboardEvent) => {
     if (!overlay.isConnected) return done();
@@ -150,6 +157,7 @@ export function openDialog(overlay: HTMLElement): void {
     closed = true;
     document.removeEventListener('keydown', onKey, true);
     watch.disconnect();
+    release();
     if (back?.isConnected) back.focus({ preventScroll: true });
   }
   // Captura: vê a dica ainda aberta antes de o Escape dela a fechar.

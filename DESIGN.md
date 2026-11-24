@@ -203,7 +203,7 @@ Cantos retos (`--radius: 2px`) e **chanfro** (`--cut` 10px, 6px pequeno, 14px em
 
 ### Portão da Vila
 
-O letreiro em pincel ocupa o céu à esquerda. A pintura da vila se dissolve no grafite, e os três pergaminhos se aproximam de sua base. Cada um tem rolos de madeira nas extremidades e uma ilustração em tinta sobre papel. A barraca de Arcade usa violeta, o portão e o mapa da História usam laranja, e a estrada da Campanha usa verde. O pergaminho inteiro abre o modo.
+O letreiro em pincel ocupa o céu à esquerda. A pintura da vila se dissolve no grafite, e os três pergaminhos se aproximam de sua base. Cada um tem rolos de madeira nas extremidades e uma ilustração em tinta sobre papel. A barraca de Arcade usa violeta, a História usa laranja e a estrada da Campanha usa verde. O card da História é o único com personagens: o Time 7 de costas olhando a vila (Naruto, Sasuke, Sakura e Kakashi), porque o modo segue os arcos canônicos do time; a descrição cita os arcos, do teste dos sinos ao Vale do Fim. O pergaminho inteiro abre o modo.
 
 Abaixo de 768 px, a Ficha compacta fica entre a cena e os pergaminhos empilhados. De 768 a 1023 px, Ficha e Conquistas ficam lado a lado e cada modo ocupa uma coluna. A partir de 1024 px, a lateral fixa reúne os destinos e a coluna direita recebe Ficha e Conquistas. A silhueta do avatar e a Ficha compartilham `--profile-paper`. A alça com a folha de Konoha abre as ferramentas por toque, foco ou aproximação do mouse.
 

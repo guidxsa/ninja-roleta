@@ -6,7 +6,7 @@ export const jornadaPtBR = {
   modes: {
     title: 'Escolha o modo',
     roleta: { name: 'Arcade', desc: 'Gire sua origem e enfrente seis lutas rápidas.' },
-    story: { name: 'História', desc: 'Viva os arcos do mangá com o Time 7.' },
+    story: { name: 'História', desc: 'Do teste dos sinos ao Vale do Fim, os arcos do Time 7.' },
     path: { name: 'Campanha', desc: 'Escolha sua classe e trace sua rota pelo mapa.' },
   },
 

@@ -1,12 +1,14 @@
 // Portão da Vila (escolha de modo), barra lateral do PC, avatar, ficha do perfil e nome do jogador.
 import { lineageKey } from '../src/core/achievements';
-import { avatarChoices, currentAvatar } from '../src/core/avatar';
+import { avatarCatalog, avatarChoices, currentAvatar, type AvatarEntry } from '../src/core/avatar';
 import { achievements } from '../src/data/achievements';
 import { jornadaAchievements } from '../src/data/jornada/achievements';
+import { roletaVillains } from '../src/data/roleta/villains';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { saveProfile, bestRoletaCycle, PLAYER_NAME_MAX, cleanPlayerName } from '../src/state/profile';
 import { loadRuns } from '../src/state/runHistory';
 import { achievementIcon } from './achievementIcons';
+import { pushLayer } from './back';
 import { AVATAR_CUTS, sceneMedia, sceneFx, emblem, sceneVars, icon, ninjaPortrait } from './art';
 import { h, show, goHome, esc, openDialog } from './dom';
 import type { JornadaEntry } from './jornada';
@@ -14,7 +16,7 @@ import { jornadaHost } from './jornadaHost';
 import { modeCard } from './modeCard';
 import { askPlayerName } from './playerName';
 import { type RegistryPage, type HistoryFilter, registryPages, registryScreen } from './registry';
-import { syncSheetBtn } from './roleta/common';
+import { data, syncSheetBtn } from './roleta/common';
 import { ses, DIFFICULTIES } from './roleta/session';
 import { tip } from './tooltip';
 
@@ -33,17 +35,25 @@ let pending: GateRoute | undefined;
 let activeView: { root: HTMLElement; select: (route: GateRoute) => void } | undefined;
 let activeNav: NavId = 'home';
 
-/** Atalhos de dentro de uma partida usam a mesma confirmação do retorno ao Portão. */
-export function navigateGate(route: GateRoute): void {
+/** Camadas do voltar (back.ts): a página do Registro aberta e a partida em andamento. */
+let releasePage: (() => void) | undefined;
+let releaseRun: (() => void) | undefined;
+
+/**
+ * Atalhos de dentro de uma partida usam a mesma confirmação do retorno ao Portão. Devolve `false` se o jogador
+ * cancelou a saída (o voltar do navegador fica na partida).
+ */
+export function navigateGate(route: GateRoute): boolean {
   if (activeView?.root.isConnected) {
     activeView.select(route);
-    return;
+    return true;
   }
   const inJornada = document.body.classList.contains('mode-jornada');
   const warning = inJornada && ses.jornadaSheet ? S.ui.homeConfirmJornada : !inJornada && ses.campLive ? S.ui.homeConfirmRoleta : null;
-  if (warning && !window.confirm(warning)) return;
+  if (warning && !window.confirm(warning)) return false;
   pending = route;
   goHome();
+  return true;
 }
 
 function markNav(id: NavId): void {
@@ -65,14 +75,32 @@ export async function modeScreen(): Promise<GatePick> {
   syncSheetBtn();
   document.getElementById('dots')!.replaceChildren();
   document.body.classList.add('at-gate');
+  // Voltou ao Portão: a partida acabou, e a entrada dela sai do histórico.
+  releaseRun?.();
+  releaseRun = undefined;
   while ('page' in route) {
+    // Uma entrada só para o Registro inteiro: trocar de aba não empilha, e o voltar leva ao Portão.
+    if (route.page !== 'home' && !releasePage) {
+      releasePage = pushLayer(() => {
+        releasePage = undefined;
+        activeView?.select({ page: 'home' });
+      });
+    } else if (route.page === 'home' && releasePage) {
+      const release = releasePage;
+      releasePage = undefined;
+      release();
+    }
     markNav(route.page);
     const root = route.page === 'home' ? gateScreen() : registryScreen(route.page, route.filter, route.historyMode);
     route = await new Promise<GateRoute>(select => { activeView = { root, select }; });
   }
+  releasePage?.();
+  releasePage = undefined;
   activeView = undefined;
   document.body.classList.remove('at-gate');
   markNav(route.mode);
+  // Na partida, o voltar do navegador pede a mesma confirmação do botão do Portão; o Esc não sai da luta.
+  releaseRun = pushLayer(() => navigateGate({ page: 'home' }), { esc: false });
   return route;
 }
 
@@ -99,12 +127,46 @@ function gateScreen(): HTMLElement {
   }, true);
   root.querySelectorAll<HTMLButtonElement>('.mode-card').forEach(button =>
     button.addEventListener('click', () => navigateGate({ mode: button.dataset.choice as GateMode })));
-  root.querySelector('[data-desk-name]')?.addEventListener('change', (event) => {
-    setPlayerName((event.target as HTMLInputElement).value);
-    root.querySelector('[data-display-name]')!.textContent = ses.profile.playerName || S.ui.desk.namePlaceholder;
-  });
-  root.querySelector('[data-avatar]')?.addEventListener('click', openAvatarPicker);
+  wireProfileCard(root);
   return root;
+}
+
+/** Liga a Ficha: o avatar abre a escolha e o nome vira campo no lugar. */
+export function wireProfileCard(root: HTMLElement): void {
+  root.querySelector('[data-avatar]')?.addEventListener('click', openAvatarPicker);
+  root.querySelector<HTMLButtonElement>('[data-name-edit]')?.addEventListener('click', (event) => editName(event.currentTarget as HTMLButtonElement));
+}
+
+/** Troca o nome da Ficha por um campo no mesmo lugar: Enter ou sair do campo grava, Esc cancela. */
+function editName(button: HTMLButtonElement): void {
+  const D = S.ui.desk;
+  const input = h(`<input type="text" class="name-input" data-desk-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" aria-label="${S.ui.playerName.label}" placeholder="${D.namePlaceholder}" value="${esc(ses.profile.playerName ?? '')}">`) as HTMLInputElement;
+  let done = false;
+  const finish = (save: boolean) => {
+    if (done) return;
+    done = true;
+    if (save) setPlayerName(input.value);
+    button.querySelector('[data-display-name]')!.textContent = ses.profile.playerName || D.namePlaceholder;
+    input.remove();
+    button.hidden = false;
+    button.focus({ preventScroll: true });
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      finish(true);
+    } else if (e.key === 'Escape') {
+      // O Esc do campo só cancela a edição: não chega ao voltar da tela.
+      e.preventDefault();
+      e.stopPropagation();
+      finish(false);
+    }
+  });
+  input.addEventListener('blur', () => finish(true));
+  button.hidden = true;
+  button.after(input);
+  input.focus();
+  input.select();
 }
 
 export function installSideNav(): void {
@@ -126,10 +188,28 @@ export function installSideNav(): void {
   }
 }
 
-/** Avatares liberados agora (core puro: origens jogadas no Roleta e conquistas da Jornada). */
+/** Retrato de cada vilão do Arcade (a chave de imagem dele, que pode ser genérica: thug, mist...). */
+const villainPortraitKey = (v: { id: string; portrait?: string }) => v.portrait?.split(':')[1] ?? v.id;
+
+/** Avatares liberados agora (core puro: origens jogadas, conquistas da Jornada e vilões do Livro Bingo). */
 export function avatarOptions(): string[] {
   const played = loadRuns(ses.storage).map((r) => lineageKey(r.origin));
-  return avatarChoices({ playedLineages: [...new Set(played)], achievements: Object.keys(ses.profile.achievements) });
+  const seenVillains = roletaVillains.filter((v) => (ses.profile.villains[v.id]?.faced ?? 0) > 0).map(villainPortraitKey);
+  return avatarChoices({ playedLineages: [...new Set(played)], achievements: Object.keys(ses.profile.achievements), seenVillains });
+}
+
+/** Todos os avatares do jogo, para a escolha mostrar também os bloqueados. */
+export function avatarEntries(): AvatarEntry[] {
+  return avatarCatalog({ lineages: data.lineages.map((l) => l.id), arcadeVillains: roletaVillains.map(villainPortraitKey) });
+}
+
+/** Dica de um avatar bloqueado: onde ele se libera. */
+function unlockHint(entry: AvatarEntry): string {
+  const H = S.ui.desk.avatarHow;
+  const achName = (id: string) => S.jornada.achievements.list[id]?.name ?? S.achievements.list[id]?.name ?? id;
+  return entry.unlock
+    .map((u) => (u.kind === 'achievement' ? H.achievement(achName(u.id)) : u.kind === 'villain' ? H.villain : H.lineage))
+    .join(' ');
 }
 
 /** Desenho do avatar a partir da chave de retrato (`ninja:<chave>`). */
@@ -143,38 +223,45 @@ export function avatarArt(spec: string, size: 'sm' | 'md' | 'lg', onPaper = fals
 /** Nome do avatar na escolha: a origem, ou um nome próprio (visual do Sasuke). */
 export function avatarName(spec: string): string {
   const key = spec.split(':')[1] ?? 'common';
-  return S.ui.desk.avatarNames[key] ?? S.lineages[key as keyof typeof S.lineages] ?? key;
+  return S.ui.desk.avatarNames[key] ?? S.lineages[key as keyof typeof S.lineages] ?? S.jornada.names[key]
+    ?? S.villains[key as keyof typeof S.villains] ?? key;
 }
 
-/** Botão do avatar na Ficha expandida: mostra o atual e abre a escolha. */
-export function avatarButton(size: 'sm' | 'md'): string {
+/** Lápis de editar ao lado do avatar e do nome da Ficha (só visual: o botão inteiro edita). */
+const editMark = () => `<span class="edit-mark" aria-hidden="true">${icon('pencil')}</span>`;
+
+/** Botão do avatar no topo da Ficha: mostra o atual e abre a escolha. */
+export function avatarButton(): string {
   const D = S.ui.desk;
   const spec = currentAvatar(ses.profile.avatar, avatarOptions());
-  return `<button type="button" class="avatar-btn" data-avatar aria-label="${D.avatarEdit}"${tip(D.avatarTitle, D.avatarTip)}>${avatarArt(spec, size, size === 'md')}</button>`;
+  return `<button type="button" class="avatar-btn" data-avatar aria-label="${D.avatarEdit}"${tip(D.avatarTitle, D.avatarTip)}><span data-avatar-preview>${avatarArt(spec, 'md', true)}</span>${editMark()}</button>`;
 }
 
-/** Janela de escolha do avatar. Escolher grava no perfil e redesenha os botões abertos. */
+/** Janela de escolha do avatar, em grupos. Os bloqueados aparecem em silhueta, com a dica de onde se liberam. */
 export function openAvatarPicker(): void {
   const D = S.ui.desk;
   const choices = avatarOptions();
   const now = currentAvatar(ses.profile.avatar, choices);
+  const entries = avatarEntries();
+  const option = (e: AvatarEntry) => choices.includes(e.key)
+    ? `<button type="button" class="avatar-opt" data-pick="${esc(e.key)}" aria-pressed="${e.key === now}">${avatarArt(e.key, 'md')}<small>${esc(avatarName(e.key))}</small></button>`
+    : `<span class="avatar-opt locked" tabindex="0" role="img" aria-label="${D.avatarLocked}: ${esc(unlockHint(e))}"${tip(D.avatarLocked, unlockHint(e))}>${avatarArt(e.key, 'md', true)}<small>${D.avatarLocked}</small></span>`;
+  const groups = (['origins', 'allies', 'villains'] as const).map((group) => {
+    const list = entries.filter((e) => e.group === group);
+    const got = list.filter((e) => choices.includes(e.key)).length;
+    return `<section class="avatar-group"><h3 class="ach-cat">${D.avatarGroups[group]} <small class="muted">${S.achievements.progress(got, list.length)}</small></h3>
+      <div class="avatar-grid">${list.map(option).join('')}</div></section>`;
+  }).join('');
   const overlay = h(`<div class="modal" aria-label="${D.avatarPick}"><div class="modal-body avatar-pick">
     <div class="modal-head"><h2>${D.avatarPick}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
-    <div class="avatar-grid">${choices
-      .map((spec) => `<button type="button" class="avatar-opt" data-pick="${esc(spec)}" aria-pressed="${spec === now}">${avatarArt(spec, 'md')}<small>${esc(avatarName(spec))}</small></button>`)
-      .join('')}</div></div></div>`);
+    ${groups}</div></div>`);
   overlay.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
     const pick = t.closest<HTMLElement>('[data-pick]');
     if (pick) {
       ses.profile = { ...ses.profile, avatar: pick.dataset.pick! };
       saveProfile(ses.storage, ses.profile);
-      document.querySelectorAll<HTMLElement>('[data-avatar]').forEach((b) => {
-        const onPaper = Boolean(b.closest('.desk-id'));
-        b.innerHTML = avatarArt(ses.profile.avatar!, onPaper ? 'md' : 'sm', onPaper);
-      });
-      const preview = document.querySelector('[data-avatar-preview]');
-      if (preview) preview.innerHTML = avatarArt(ses.profile.avatar!, 'md', true);
+      document.querySelectorAll<HTMLElement>('[data-avatar-preview]').forEach((p) => (p.innerHTML = avatarArt(ses.profile.avatar!, 'md', true)));
       overlay.remove();
       return;
     }
@@ -202,18 +289,16 @@ export function profileCard(): string {
     [D.stats.villains, String(Object.keys(ses.profile.villains).length)],
     [D.stats.relics, String(Object.keys(ses.profile.relics).length)],
   ];
-  const spec = currentAvatar(ses.profile.avatar, avatarOptions());
   return `<section class="parchment desk-profile">
     <h3>${D.profileTitle}</h3>
-    <details class="ninja-record"><summary>
-      <span data-avatar-preview>${avatarArt(spec, 'md', true)}</span>
-      <span class="record-summary"><strong data-display-name>${esc(ses.profile.playerName || D.namePlaceholder)}</strong>
+    <div class="ninja-id">${avatarButton()}
+      <span class="record-summary">
+        <span class="ninja-name"><button type="button" class="name-btn" data-name-edit aria-label="${D.nameEdit}"${tip(D.nameTitle, D.nameTip)}><strong data-display-name>${esc(ses.profile.playerName || D.namePlaceholder)}</strong>${editMark()}</button></span>
         <span>${D.nav.roleta} · ${D.diffLine(runs.length, wins)}</span>
         <span>${D.campaignRecord} · ${best ? D.campaignResult(best.cycle, best.stage, best.won) : D.none}</span>
-        <b>${D.recordTitle} ${icon('chevron')}</b></span>
-    </summary>
-    <div class="desk-id">${avatarButton('md')}
-      <label class="field"><span>${S.ui.playerName.label}</span><input type="text" data-desk-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${D.namePlaceholder}" value="${esc(ses.profile.playerName ?? '')}"></label></div>
+      </span>
+    </div>
+    <details class="ninja-record"><summary><b>${D.recordTitle} ${icon('chevron')}</b></summary>
     <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>
   </section>`;
 }

@@ -95,46 +95,6 @@
   padding: 5px 0;
   border-top: 1px solid var(--sh-terra-3);
 }
-.gate-aside .desk-id {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-}
-.gate-aside .desk-id [data-avatar] {
-  padding: 0;
-  background: none;
-  border: none;
-  box-shadow: none;
-}
-.gate-aside .desk-id [data-avatar] > .portrait {
-  width: clamp(100px, 16vh, 185px);
-  height: auto;
-  aspect-ratio: 1;
-  border: none;
-  box-shadow: none;
-  mask: linear-gradient(#000 78%, transparent);
-  mix-blend-mode: multiply;
-  filter: sepia(0.55) saturate(0.7);
-}
-.gate-aside .desk-id .field {
-  width: 100%;
-  align-items: center;
-}
-.gate-aside .desk-id .field > span {
-  position: absolute;
-  clip-path: inset(50%);
-}
-.gate-aside .desk-id .field input {
-  color: var(--shinobi-ink);
-  border: 0;
-  background: color-mix(in srgb, var(--sh-papel-3) 30%, transparent);
-  box-shadow: none;
-  text-align: center;
-  width: min(100%, 220px);
-  font: 700 23px/1.05 var(--shinobi-serif);
-  padding: 2px 6px;
-  height: 30px;
-}
 .gate-aside .jprogress + .desk-seal {
   display: none;
 }
@@ -425,25 +385,51 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
 .gate.jmodes .gate-aside > .parchment { margin: 0; padding: var(--sp-3); rotate: none; }
 .gate.jmodes .gate-aside > .desk-profile::before { background: var(--profile-paper); }
 .gate.jmodes .gate-aside > .desk-recent { display: none; }
-.jmodes .ninja-record summary {
+/* Topo da Ficha: avatar e nome sempre à vista, cada um um botão de editar com o lápis ao lado. */
+.jmodes .ninja-id {
   display: grid; grid-template-columns: 68px minmax(0, 1fr); align-items: center; gap: var(--gap);
-  color: var(--paper-ink); border: 0; list-style: none; padding: 0;
+  color: var(--paper-ink);
+}
+.jmodes .ninja-id .avatar-btn { position: relative; width: 100%; color: var(--paper-ink); }
+.jmodes .ninja-id .avatar-btn > .edit-mark { position: absolute; right: 0; bottom: 4%; }
+.edit-mark {
+  display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px;
+  color: var(--paper-ink); background: var(--profile-paper, var(--paper)); border: 1px solid var(--paper-muted);
+  border-radius: 50%; opacity: .75; transition: opacity var(--dur-1);
+}
+.edit-mark .ico { width: 13px; height: 13px; }
+:is(.avatar-btn, .name-btn):is(:hover, :focus-visible) .edit-mark { opacity: 1; border-color: var(--primary); color: var(--primary); }
+.ninja-name { display: flex; min-width: 0; }
+.name-btn {
+  display: inline-flex; align-items: center; gap: var(--sp-2); max-width: 100%; min-height: 44px; padding: 0;
+  color: inherit; background: none; border: 0; font: inherit; text-align: inherit; cursor: pointer;
+}
+.name-btn:focus-visible, .jmodes .ninja-id .avatar-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.name-btn strong { min-width: 0; }
+.name-input {
+  width: min(100%, 240px); min-height: 44px; padding: 2px 6px; color: var(--paper-ink);
+  background: color-mix(in srgb, var(--paper-2) 60%, transparent); border: 0; border-bottom: 2px solid var(--primary);
+  border-radius: 0; font: 700 var(--fs-xl)/1.1 var(--font-hand);
+}
+.name-input:focus { outline: none; }
+.jmodes .ninja-record summary {
+  display: flex; align-items: center; min-height: 36px; margin-top: var(--sp-2);
+  color: var(--paper-ink); border: 0; list-style: none; padding: 0; cursor: pointer;
 }
 .ninja-record summary::-webkit-details-marker { display: none; }
 .record-summary { display: grid; gap: var(--sp-1); min-width: 0; font: var(--fs-sm)/1.25 var(--font-body); }
 .record-summary strong { font: 700 var(--fs-2xl)/1.1 var(--font-hand); overflow-wrap: anywhere; }
-.record-summary b { display: flex; align-items: center; gap: var(--sp-1); font-family: var(--font-hud); }
-.record-summary b .ico { width: 1em; height: 1em; rotate: 90deg; }
-.ninja-record[open] .record-summary b .ico { rotate: -90deg; }
-.jmodes .ninja-record .desk-id { grid-template-columns: 50px 1fr; margin: var(--gap) 0; }
-.jmodes .ninja-record .desk-id .field input { text-align: left; font-size: var(--fs-lg); }
+.ninja-record summary b { display: flex; align-items: center; gap: var(--sp-1); font-family: var(--font-hud); }
+.ninja-record summary b .ico { width: 1em; height: 1em; rotate: 90deg; }
+.ninja-record[open] summary b .ico { rotate: -90deg; }
+.jmodes .ninja-record dl { margin-top: var(--sp-2); }
 .jmodes [data-avatar-preview], .jmodes .avatar-art, .avatar-gallery .avatar-art { display: block; min-width: 0; }
-.jmodes .ninja-record .portrait, .avatar-gallery .portrait {
+.jmodes .ninja-id .portrait, .avatar-gallery .portrait {
   display: block; width: 100%; height: auto; aspect-ratio: 1; border: 0; box-shadow: none;
   border-radius: 0; mask: none; filter: none; background: var(--profile-paper);
 }
 .jmodes .avatar-art img, .avatar-gallery .avatar-art img { clip-path: var(--avatar-cut); }
-.jmodes .ninja-record .portrait svg > rect[fill^='url(#bg-'] { fill: var(--profile-paper); }
+.jmodes .ninja-id .portrait svg > rect[fill^='url(#bg-'] { fill: var(--profile-paper); }
 .gate.jmodes .gate-modes {
   grid-area: modes; display: grid; grid-template-columns: minmax(0, 1fr);
   align-items: stretch; gap: var(--gap); padding: 0 var(--sp-3) var(--sp-3);
@@ -504,8 +490,7 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
   .gate.jmodes { min-height: calc(100svh - 132px); grid-template-rows: minmax(240px, .95fr) auto minmax(270px, 1fr); }
   .gate.jmodes .gate-banner { height: 100%; }
   .gate.jmodes .gate-aside { grid-template-columns: 1fr 1fr; align-items: stretch; }
-  .jmodes .ninja-record summary { grid-template-columns: minmax(80px, .75fr) 1fr; }
-  .jmodes .ninja-record { margin-block: var(--sp-4); }
+  .jmodes .ninja-id { grid-template-columns: minmax(80px, .75fr) 1fr; margin-top: var(--sp-3); }
 }
 @media (min-width: 1024px) {
   body.at-gate { --side-w: clamp(118px, 10vw, 160px); }
@@ -518,9 +503,9 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
   .gate.jmodes .gate-banner { height: 100%; }
   .gate.jmodes .gate-modes { margin-top: -35px; }
   .gate.jmodes .gate-aside { display: flex; flex-direction: column; margin: 0; padding: var(--sp-3); overflow: auto; }
-  .jmodes .ninja-record summary { grid-template-columns: 1fr; justify-items: center; text-align: center; }
-  .jmodes [data-avatar-preview] { width: min(90%, 21vh); }
-  .jmodes .record-summary b { justify-content: center; }
+  .jmodes .ninja-id { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .jmodes .ninja-name, .jmodes .ninja-record summary { justify-content: center; }
+  .jmodes .ninja-id .avatar-btn { width: min(90%, 21vh); }
   .gate.jmodes .gate-head { top: 18%; }
   .gate.jmodes .mode-txt { min-height: calc(var(--fs-6xl) * 1.1 + var(--fs-md) * 2.7 + var(--gap)); }
   .jmodes .desk-recent li { grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-1) var(--sp-2); }

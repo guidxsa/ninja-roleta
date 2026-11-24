@@ -98,9 +98,6 @@
 
   /* Coluna direita: ficha do perfil, progresso da Jornada e conquistas recentes, em pergaminho. */
   .gate-aside > .parchment h3 { margin: 0 0 8px; font: 700 var(--fs-2xl)/1.1 var(--font-hand); }
-  .desk-id { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
-  .desk-id > span { flex: none; }
-  .desk-id .field { flex: 1; min-width: 0; }
   .desk-profile dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0; }
   .desk-profile dt { color: var(--muted); font-size: var(--fs-sm); }
   .desk-profile dd { margin: 0; text-align: right; font: 700 var(--fs-md)/1.4 var(--font-hud); letter-spacing: .03em; }
@@ -174,8 +171,6 @@
   .desk-prog .jprogress h3 { padding-right: 46px; }
   /* A miniatura do capítulo, colada torta dentro do pergaminho. */
   .gate-aside .jthumb { rotate: 3deg; box-shadow: 3px 5px 0 rgba(0, 0, 0, .28); }
-  /* Avatar num medalhão de madeira. */
-  .desk-id > span .portrait { border-radius: 50%; border: 0; box-shadow: 0 0 0 4px #6a4527, 0 0 0 6px #3f2715, 3px 6px 0 6px rgba(0, 0, 0, .25); }
 
   /* Faixa de frases: um traço de pincel abre a frase. */
   .quote-strip::before { content: ''; display: inline-block; width: 30px; height: 6px; margin-right: 10px; vertical-align: middle; background: var(--accent); -webkit-mask: var(--brush) center / 100% 100% no-repeat; mask: var(--brush) center / 100% 100% no-repeat; }
@@ -245,7 +240,6 @@
   .gate-modes .mode-card small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
   .gate-aside > .parchment h3 { font-size: var(--fs-xl); }
   .desk-profile dl { gap: 2px 12px; }
-  .desk-id { margin-bottom: 6px; }
   @container gate-main (max-width: 720px) {
     .gate-modes .mode-art { aspect-ratio: clamp(2.2, var(--ratio, 2.4), 3); }
     .gate-modes .mode-card small { display: none; }

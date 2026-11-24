@@ -72,3 +72,10 @@ body.at-gate main:has(.registry) { max-width: min(100%, 1080px); }
 @media (max-width: 479px) {
   .registry-tabs { display: grid; grid-template-columns: 1fr 1fr; }
 }
+/* Escolha do avatar em grupos (Origens, Aliados, Vilões); o bloqueado é uma silhueta com a dica de onde se libera. */
+.avatar-group + .avatar-group { margin-top: var(--sp-3); }
+.avatar-opt.locked { cursor: help; color: var(--muted); }
+.avatar-opt.locked .portrait { filter: brightness(0) invert(.32); background: none; border-color: var(--line); }
+.avatar-opt.locked .avatar-art img { clip-path: var(--avatar-cut); }
+.avatar-opt.locked .avatar-art { display: block; }
+.avatar-opt.locked:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
