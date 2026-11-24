@@ -41,8 +41,8 @@ Mecanismos de navegação:
 | URL `?teste` | `parseLabParams` em `src/core/lab.ts` | Abre o laboratório antigo no lugar do Portão (só Roleta) |
 | URL `?seed=N` | idem | Fixa o RNG da **primeira** run da página (Roleta e Jornada) |
 | Botão Portão (`#home-btn`) | `askHome()` | `goHome()` corta a tela atual (símbolo `HOME`) e volta ao Portão; pede `window.confirm` com run em andamento |
-| Barra lateral (`#side-nav`, só PC) | `installSideNav()` | Início, Arcade, História, Campanha e Registro (escolha de seção em popup) |
-| Barra inferior (`#gate-nav`, só celular) | `installSideNav()` | Os mesmos cinco destinos da lateral, no Portão |
+| Barra lateral (`#side-nav`, só PC) | `installSideNav()` | Início, Arcade, História, Campanha, Histórico, Livro Bingo, Relíquias e Conquistas |
+| Barra inferior (`#gate-nav`, só celular) | `installSideNav()` | Início, Arcade, História, Campanha e Registro no Portão e nas páginas do Registro até 1023 px |
 | Cabeçalho | `installHeaderToggles()` | Instantâneo, Animado, Efeitos, Música, Ficha, Registro |
 | Erro no fluxo | `errorScreen()` | Captura exceção, mostra o aviso e volta ao Portão |
 
@@ -74,9 +74,9 @@ Legenda da última coluna: **Direto?** / **Visto**.
 
 | Id | Tela | Onde | Acesso | Dados | Estados alternativos | Responsivo | Direto? / Visto |
 |---|---|---|---|---|---|---|---|
-| `gate.home` | Portão da Vila | `modeScreen()` em `gate.ts` | Abrir o jogo | Perfil, `jornada_run_v1`, conquistas recentes, arte `portao` | Vazio (`gate.home`, `:empty-story`), médio (`:mid-new`, `:mid` com Campanha), cheio (`:full`, `:full-story`), cena viva (`:animado`). Continuar só no card do save | Celular em coluna com barra inferior. Desktop com três modos lado a lado, ficha, recentes e lateral | Sim / sim |
+| `gate.home` | Portão da Vila | `modeScreen()` em `gate.ts` | Abrir o jogo | Perfil, `jornada_run_v1`, conquistas recentes, arte `portao` | Vazio (`gate.home`, `:empty-story`), médio (`:mid-new`, `:mid` com Campanha), cheio (`:full`, `:full-story`), cena viva (`:animado`). O próprio card abre o modo | Celular com Ficha compacta e modos em pilha. Tablet com Ficha e Conquistas lado a lado e três modos em colunas. Desktop com lateral fixa | Sim / sim |
 | `gate.name` | Pedir o nome do ninja | `askPlayerName()` em `playerName.ts` | 1ª entrada no Roleta ou no Caminho Ninja | `profile.playerName` indefinido | Confirmar ou pular | Pergaminho centralizado | Não (some depois da 1ª vez) / não |
-| `gate.avatar` | Escolha do avatar (modal) | `openAvatarPicker()` | Avatar na ficha do Portão (PC) ou no Registro | Avatares liberados (`avatarChoices`: origens jogadas e conquistas) | Poucos ou muitos avatares liberados; atual marcado | Grade | Sim (com Registro) / não |
+| `gate.avatar` | Escolha do avatar (modal) | `openAvatarPicker()` | Avatar na Ficha expandida do Portão | Avatares liberados (`avatarChoices`: origens jogadas e conquistas) | Poucos ou muitos avatares liberados; atual marcado | Grade. `gate.avatar:paper` mostra cada recorte de `AVATAR_CUTS` sobre o papel | Sim / não |
 | `gate.error` | Tela de erro | `errorScreen()` | Exceção dentro de uma tela | Erro capturado | Detalhe técnico em `<details>` | Simples | Não (precisa forçar erro) / não |
 | `gate.toast` | Aviso flutuante | `toast()` | Conquista, compartilhar, erro fora do fluxo, salvar falhou, ryō convertido | Texto + ícone | Vários em fila (conquistas a cada 2,8 s) | Fixo sobre a tela | Não / não |
 | `gate.confirm-native` | `window.confirm` do navegador | `askHome()`, `installSideNav()`, abandono da Roleta | Sair com run em andamento | — | — | Nativo, fora do design system | Não / não |
@@ -184,7 +184,7 @@ abandono (Roleta: `window.confirm`; Jornada: `confirmDialog`) e o compartilhar (
 
 | Id | Tela | Onde | Acesso | Dados | Estados alternativos | Direto? / Visto |
 |---|---|---|---|---|---|---|
-| `meta.registry.history` | Registro: Histórico | `openRegistry('history')` + `historyTab()` | Barra lateral, barra inferior ou cabeçalho | Runs salvas | Filtros Geral / Origens (`originsTab`) / Dificuldade (`difficultyStats`); mostrar rerolagens; vazio | Sim / não |
+| `meta.registry.history` | Registro: Histórico | `registryScreen('history')` | Barra lateral, barra inferior ou cabeçalho | Runs salvas | Arcade com filtros Geral, Origens e Dificuldade. História (`:story`, `:story-full`) e Campanha (`:path`, `:path-full`) com estados vazios e cheios. Continuar na aba do save | Sim / não |
 | `meta.registry.bingo` | Registro: Livro Bingo | `bingoTab()` | idem | `profile.villains` | Vilão desconhecido, enfrentado, derrotado (carimbo) | Sim / não |
 | `meta.registry.relics` | Registro: Relíquias | `relicCollection()` em `jornada/relics.ts` | idem | `profile.relics` | Descobertas e não descobertas | Sim / não |
 | `meta.registry.achievements` | Registro: Conquistas | `achievementsTab()` | Registro → Conquistas | `profile.achievements` | Liberada, travada, oculta, com progresso; categorias + seção da Jornada | Sim / não |

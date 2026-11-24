@@ -28,6 +28,14 @@ const svg = (body: string, viewBox = '0 0 24 24', cls = 'ico') =>
 // Ícones (24×24). `currentColor` herda a cor do componente.
 
 const ICONS: Record<string, string> = {
+  house: '<path d="M3 11 12 3l9 8M5 10v11h5v-6h4v6h5V10" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>',
+  fortuneWheel: '<path d="M12 2a10 10 0 1 0 .01 0M12 2v20M2 12h20M5 5l14 14M5 19 19 5" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>',
+  navScroll: '<path d="M7 3h12a2 2 0 0 1 0 4h-2M17 5v13a3 3 0 0 1-3 3H5a2 2 0 0 1 0-4h9M7 17V5a2 2 0 0 1 2-2m1 5h4m-4 4h4" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>',
+  navRoute: '<path d="M5 20v-3c0-5 7-4 7-10V3m0 9c1-3 7-2 7-8m-4 2 4-3 2 4M9 6l3-3 3 3" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>',
+  clock: '<path d="M12 3a9 9 0 1 0 .01 0M12 6v6l4 2" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>',
+  navBook: '<path d="M12 6C9 3 5 3 2 4v15c4-1 7-1 10 2 3-3 6-3 10-2V4c-4-1-7-1-10 2Zm0 0v15" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>',
+  navChest: '<path d="M3 11V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v11H3zM3 11h7m4 0h7m-10-1h2v4h-2z" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>',
+  trophy: '<path d="M7 3h10v5c0 4-2 7-5 7S7 12 7 8Zm10 2h4v2c0 3-2 5-5 5M7 5H3v2c0 3 2 5 5 5m4 3v5m-4 1h8" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>',
   konoha: '<path d="M21.8 4.2c-1.5 2-2.8 3.2-5.2 2.2C10 3.5 4.9 7.4 4.9 12.9c0 4.2 3.4 7 7.4 6.6 4.2-.4 6.6-4.2 4.8-7.5-1.4-2.6-5.1-3-6.9-.8-1.4 1.7-.7 4 1.1 4.4 1.4.3 2.7-.6 2.7-1.8M5.2 10.9 1.8 19.5h9.9" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/>',
   // Elementos
   fire: '<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 1.6-4.6 3-6 .2 2 1 3 2.2 3.6C10.6 8.8 11 5.4 12 2z" fill="currentColor"/><path d="M12 13c.8 1.6 3 2.4 3 5a3 3 0 0 1-6 0c0-1.6 1.2-2.4 1.6-3.6.4.8.8 1.2 1.4 1.4-.3-1-.3-1.8 0-2.8z" fill="#fff3" />',
@@ -271,15 +279,16 @@ export const SCENE_ART: Record<string, SceneArt> = {
   'perspectiva-sasuke': { file: 'noite', focus: [30, 58] },
   // Entrada da Jornada e card do modo: o time 7, com o Naruto à direita.
   'jornada': { focus: [62, 46] },
-  'modo-jornada': { focus: [72, 46] },
+  'modo-jornada': { focus: [50, 50] },
   'modo-roleta': { focus: [50, 50] },
   // Arcos da História do Naruto, pelo id do estágio (src/data/jornada/stages.ts).
   'arco-waves': { file: 'waves', focus: [62, 34] },
   'arco-exam': { file: 'chunnin', focus: [50, 58] },
   'arco-sannin': { file: 'sannin', focus: [50, 30] },
   'arco-retrieval': { file: 'sasuke', focus: [26, 40] },
-  // Caminho Ninja: card da entrada da Jornada e pôster da preparação (o Minato).
-  'modo-caminho': { file: 'caminho-ninja', focus: [50, 30] },
+  // A rota ilustra o modo. O pôster da preparação conserva seu enquadramento.
+  'caminho-ninja': { focus: [50, 30] },
+  'modo-caminho': { focus: [50, 50] },
   // Roleta no PC (todas opcionais; sem imagem, vale o cenário desenhado): palco do sorteio e uma por categoria de vilão.
   'roleta-boss': { file: 'roleta-chefe' },
 };
@@ -290,7 +299,8 @@ const sceneFocus = (key: string): readonly [number, number] => SCENE_ART[key]?.f
 export function sceneImage(name: string): string | null {
   const image = customImage('cenas', sceneFile(name));
   // O SVG de amostra contém instruções de substituição. Sem a pintura, vale a cena de Konoha do CSS.
-  return name === 'portao' && image?.endsWith('.svg') ? null : image;
+  const sample = name === 'portao' || name === 'modo-jornada' || name === 'modo-roleta';
+  return sample && image?.endsWith('.svg') ? null : image;
 }
 
 /** Vídeo próprio (`img/<pasta>/<nome>.webm|mp4`), se existir: a versão animada de uma vaga. */
@@ -418,7 +428,7 @@ export const AVATAR_CUTS: Readonly<Record<string, string>> = {
   hyuuga: 'polygon(40% 0%, 61% 0%, 66% 3%, 71% 9%, 76% 26%, 78% 48%, 79% 53%, 79% 66%, 78% 70%, 78% 62%, 75% 73%, 71% 74%, 70% 76%, 75% 82%, 88% 88%, 96% 99%, 1% 99%, 0% 95%, 1% 94%, 1% 93%, 3% 91%, 3% 90%, 5% 86%, 9% 83%, 16% 81%, 19% 78%, 21% 79%, 23% 76%, 20% 66%, 20% 53%, 23% 37%, 23% 24%, 26% 15%, 29% 8%, 35% 3%)',
   uzumaki: 'polygon(43% 0%, 51% 0%, 53% 1%, 53% 0%, 56% 2%, 56% 4%, 62% 4%, 67% 9%, 68% 13%, 71% 15%, 73% 15%, 74% 14%, 71% 18%, 73% 21%, 73% 24%, 76% 25%, 73% 27%, 71% 29%, 75% 29%, 80% 32%, 85% 38%, 78% 39%, 80% 50%, 74% 46%, 71% 38%, 70% 44%, 69% 44%, 69% 42%, 68% 44%, 68% 46%, 71% 47%, 68% 48%, 69% 51%, 67% 51%, 71% 56%, 78% 56%, 81% 57%, 81% 60%, 78% 56%, 75% 57%, 79% 61%, 79% 66%, 76% 69%, 83% 71%, 93% 78%, 98% 88%, 99% 99%, 1% 99%, 1% 97%, 0% 98%, 6% 86%, 9% 83%, 22% 78%, 22% 71%, 21% 71%, 20% 73%, 20% 76%, 19% 71%, 26% 63%, 24% 62%, 22% 64%, 22% 63%, 25% 60%, 31% 59%, 33% 56%, 32% 53%, 29% 54%, 31% 52%, 28% 49%, 28% 53%, 26% 49%, 22% 49%, 24% 48%, 23% 43%, 21% 45%, 20% 47%, 20% 43%, 16% 43%, 19% 41%, 19% 36%, 18% 35%, 16% 39%, 16% 35%, 18% 32%, 14% 30%, 18% 29%, 19% 24%, 15% 22%, 14% 19%, 18% 20%, 20% 18%, 22% 14%, 21% 14%, 18% 16%, 18% 14%, 26% 9%, 23% 7%, 28% 7%, 29% 6%, 29% 3%, 31% 4%, 34% 5%, 34% 3%)',
   senju: 'polygon(0% 89%, 4% 86%, 7% 74%, 10% 69%, 14% 66%, 25% 61%, 29% 58%, 29% 54%, 34% 49%, 33% 44%, 30% 40%, 30% 33%, 27% 34%, 28% 30%, 23% 30%, 26% 25%, 21% 26%, 25% 20%, 22% 21%, 25% 16%, 23% 16%, 28% 12%, 26% 9%, 32% 9%, 30% 6%, 37% 7%, 34% 4%, 41% 4%, 42% 1%, 46% 3%, 46% 0%, 54% 3%, 58% 0%, 58% 4%, 64% 2%, 63% 5%, 67% 5%, 65% 8%, 70% 10%, 69% 11%, 72% 15%, 70% 15%, 72% 20%, 69% 20%, 71% 27%, 68% 25%, 67% 32%, 66% 36%, 66% 48%, 70% 48%, 72% 54%, 73% 60%, 81% 61%, 87% 67%, 92% 74%, 94% 82%, 97% 87%, 100% 87%, 100% 100%, 0% 100%)',
-  naruto: 'polygon(47% 2%, 49% 4%, 53% 3%, 54% 5%, 57% 3%, 59% 5%, 64% 4%, 66% 6%, 67% 5%, 68% 7%, 70% 6%, 73% 8%, 75% 10%, 78% 11%, 79% 18%, 83% 18%, 80% 19%, 81% 20%, 81% 27%, 78% 27%, 81% 31%, 82% 38%, 83% 38%, 84% 36%, 85% 37%, 84% 39%, 88% 44%, 83% 43%, 82% 44%, 83% 48%, 81% 49%, 83% 55%, 81% 53%, 79% 54%, 78% 52%, 76% 56%, 71% 60%, 71% 63%, 67% 64%, 71% 70%, 72% 79%, 76% 83%, 88% 87%, 92% 91%, 96% 99%, 3% 99%, 7% 92%, 11% 88%, 16% 84%, 24% 82%, 28% 79%, 28% 70%, 33% 67%, 33% 64%, 31% 64%, 31% 60%, 26% 54%, 26% 49%, 23% 49%, 23% 47%, 21% 44%, 21% 39%, 17% 39%, 18% 36%, 18% 36%, 20% 34%, 19% 33%, 18% 33%, 18% 31%, 19% 30%, 14% 28%, 19% 24%, 18% 23%, 19% 21%, 18% 18%, 23% 16%, 22% 13%, 26% 14%, 28% 11%, 31% 10%, 31% 7%, 38% 6%, 40% 4%, 46% 5%)',
+  naruto: 'polygon(47.4% 2.8%, 54% 7.2%, 60% 13%, 63.2% 9.6%, 66% 5.2%, 68% 16.4%, 76% 12%, 73.6% 22%, 81.8% 22.6%, 76.2% 29.2%, 80.2% 34.6%, 74.8% 34.8%, 75.8% 37.6%, 81% 37.4%, 84.4% 39.4%, 88% 43.6%, 83.6% 42.8%, 79.4% 43.4%, 76.6% 44.4%, 79.4% 47.4%, 81.4% 50.4%, 83.2% 55.2%, 78.4% 51.8%, 75.4% 50.4%, 73.4% 47.6%, 73% 46.6%, 73.2% 51%, 72.8% 54.6%, 71% 57.2%, 68.6% 59.4%, 68.2% 64%, 67.2% 62.8%, 66.4% 64.8%, 65.4% 64.2%, 64.6% 67.4%, 63.6% 66.6%, 63% 68.8%, 62.2% 67.4%, 61.8% 69.2%, 65% 67.8%, 68% 68.6%, 70.2% 69.4%, 71.4% 71%, 71.8% 77.6%, 72.4% 80.2%, 75% 81.8%, 81.6% 83.8%, 87.4% 86.6%, 91% 89.8%, 94.2% 95.2%, 96.2% 100%, 3.6% 100%, 5.8% 95%, 9% 90%, 12.6% 87%, 18% 84.2%, 24.6% 82%, 27.4% 80.4%, 28% 75.4%, 28.2% 71%, 29.6% 69.2%, 31.4% 68.4%, 34.8% 67.6%, 33.8% 64.4%, 33.4% 67.2%, 32% 63.4%, 31.2% 64%, 31.2% 59.8%, 29% 57.6%, 27.2% 54.6%, 26.4% 51.6%, 26.8% 47.8%, 27.6% 46.8%, 27.2% 43.8%, 24.6% 47.2%, 25% 41.8%, 21.2% 44.2%, 23% 39.2%, 24% 37.4%, 17.6% 39.6%, 20.4% 34.8%, 23.2% 30.8%, 14.8% 28.4%, 20.4% 24.4%, 26.4% 21.6%, 21.8% 13.6%, 27.6% 14.6%, 35.4% 14.8%, 32% 7.6%, 41.4% 9.6%, 46.4% 11.8%, 44.8% 8.6%, 48.6% 11%)',
   sasuke: 'polygon(74% 1%, 69% 10%, 86% 10%, 78% 19%, 76% 21%, 89% 28%, 82% 29%, 77% 32%, 83% 41%, 76% 39%, 76% 43%, 74% 42%, 74% 43%, 74% 53%, 71% 64%, 71% 62%, 70% 62%, 70% 68%, 75% 70%, 73% 84%, 76% 88%, 89% 93%, 93% 99%, 4% 99%, 9% 92%, 23% 87%, 25% 83%, 23% 74%, 23% 70%, 29% 67%, 28% 64%, 28% 63%, 27% 64%, 26% 58%, 24% 59%, 24% 61%, 23% 56%, 16% 59%, 16% 58%, 19% 48%, 23% 46%, 23% 36%, 25% 28%, 28% 23%, 36% 14%, 42% 11%, 57% 4%, 56% 7%, 57% 8%, 69% 4%)',
 };
 

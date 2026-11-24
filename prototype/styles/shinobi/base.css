@@ -250,7 +250,6 @@ body header.top {
   transition: opacity var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
 }
 .top.open #top-tools { visibility: visible; transform: none; opacity: 1; }
-.registry-links { display: grid; gap: var(--sp-2); }
 @media (pointer: coarse) {
   .top-grip::after { content: ''; position: absolute; inset: 0 0 auto; min-height: var(--tap); }
   .top.open .top-grip::after { inset: auto; min-height: 0; }

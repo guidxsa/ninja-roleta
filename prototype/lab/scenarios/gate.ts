@@ -1,5 +1,7 @@
 // Cenários de entrada: Portão da Vila, nome do jogador e avatar.
-import { modeScreen, openAvatarPicker } from '../../gate';
+import { AVATAR_CUTS } from '../../art';
+import { choose, esc, h, show } from '../../dom';
+import { avatarArt, avatarName, modeScreen, openAvatarPicker } from '../../gate';
 import { askPlayerName } from '../../playerName';
 import { profiles, seedRunHistory } from '../fixtures/profiles';
 import { pathRun, saveRun, storyRun } from '../fixtures/jornada';
@@ -47,6 +49,13 @@ export const gate: Scenario[] = [
       document.documentElement.toggleAttribute('data-animated', true);
       return modeScreen();
     },
+  },
+  {
+    id: 'gate.avatar:paper', title: 'Ficha com cada avatar', group: 'Entrada',
+    mount: () => choose(show(h(`<section class="avatar-gallery"><h2>Ficha com cada avatar</h2>${Object.keys(AVATAR_CUTS).map(key => {
+      const spec = 'ninja:' + key;
+      return `<figure>${avatarArt(spec, 'md', true)}<figcaption>${esc(avatarName(spec))}</figcaption></figure>`;
+    }).join('')}</section>`))),
   },
   { id: 'gate.name', title: 'Pedir o nome do ninja', group: 'Entrada', mount: () => askPlayerName() },
   {

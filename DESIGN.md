@@ -203,9 +203,11 @@ Cantos retos (`--radius: 2px`) e **chanfro** (`--cut` 10px, 6px pequeno, 14px em
 
 ### Portão da Vila
 
-A pintura da vila em azul e grafite ocupa a largura da composição central. Os telhados do primeiro plano se dissolvem no fundo. O letreiro deixa a torre livre no recorte. Arcade, História e Campanha têm um pergaminho cada, com arte própria e uma ação. Quando há uma Jornada salva, o pergaminho do modo reúne **Continuar** e **Nova partida**.
+O letreiro em pincel ocupa o céu à esquerda. A pintura da vila se dissolve no grafite, e os três pergaminhos se aproximam de sua base. Cada um tem rolos de madeira nas extremidades e uma ilustração em tinta sobre papel. A barraca de Arcade usa violeta, o portão e o mapa da História usam laranja, e a estrada da Campanha usa verde. O pergaminho inteiro abre o modo.
 
-No celular os modos ficam em coluna, acima da navegação de cinco destinos. No desktop ficam lado a lado entre a cena e o rodapé. Na coluna direita, a silhueta do avatar e a Ficha do ninja compartilham o token de papel `--profile-paper`. A barra de ferramentas abre pela alça com a folha de Konoha, pelo foco ou pela borda superior com o mouse.
+Abaixo de 768 px, a Ficha compacta fica entre a cena e os pergaminhos empilhados. De 768 a 1023 px, Ficha e Conquistas ficam lado a lado e cada modo ocupa uma coluna. A partir de 1024 px, a lateral fixa reúne os destinos e a coluna direita recebe Ficha e Conquistas. A silhueta do avatar e a Ficha compartilham `--profile-paper`. A alça com a folha de Konoha abre as ferramentas por toque, foco ou aproximação do mouse.
+
+O Registro ocupa a área principal. Em telas com barra inferior, quatro abas dão acesso às seções. Dentro do Histórico, o jogador escolhe Arcade, História ou Campanha. A ação **Continuar** fica junto da parada salva no modo correspondente.
 
 ### Panels
 - **Painel laqueado** (`.card`, `.panel`, `.chamfer`): grafite com grão, filete de aço desenhado pela camada de baixo, aba vermelha curta no topo marcando o dono. Padding 12px.

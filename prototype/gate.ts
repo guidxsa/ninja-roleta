@@ -6,15 +6,14 @@ import { jornadaAchievements } from '../src/data/jornada/achievements';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { saveProfile, bestRoletaCycle, PLAYER_NAME_MAX, cleanPlayerName } from '../src/state/profile';
 import { loadRuns } from '../src/state/runHistory';
-import { loadJornada } from '../src/state/jornadaSave';
 import { achievementIcon } from './achievementIcons';
-import { AVATAR_CUTS, sceneMedia, sceneFx, emblem, sceneVars, cloud, icon, ninjaPortrait } from './art';
-import { h, show, choose, goHome, esc, openDialog } from './dom';
-import { entryForRun, type JornadaEntry } from './jornada';
+import { AVATAR_CUTS, sceneMedia, sceneFx, emblem, sceneVars, icon, ninjaPortrait } from './art';
+import { h, show, goHome, esc, openDialog } from './dom';
+import type { JornadaEntry } from './jornada';
 import { jornadaHost } from './jornadaHost';
 import { modeCard } from './modeCard';
 import { askPlayerName } from './playerName';
-import { type RegistryPage, openRegistry } from './registry';
+import { type RegistryPage, type HistoryFilter, registryPages, registryScreen } from './registry';
 import { syncSheetBtn } from './roleta/common';
 import { ses, DIFFICULTIES } from './roleta/session';
 import { tip } from './tooltip';
@@ -22,114 +21,90 @@ import { tip } from './tooltip';
 type GateMode = 'roleta' | JornadaEntry;
 interface GatePick { mode: GateMode; resume?: boolean }
 
-/** Escolha direta do Portão, compartilhada pelos cards e pela navegação. */
-export async function modeScreen(): Promise<GatePick> {
-  // A barra lateral pediu um modo de dentro de uma run: abre direto nele.
-  if (pendingMode) {
-    const m = pendingMode;
-    pendingMode = null;
-    markNav(m);
-    return { mode: m };
-  }
-  const M = S.jornada.modes;
-  const D = S.ui.desk;
-  // No Portão da Vila não há run: some o botão do menu e o da Ficha.
-  ses.camp = null;
-  ses.campLive = false;
-  syncSheetBtn();
-  document.body.classList.add('at-gate');
-  document.getElementById('dots')!.innerHTML = '';
-  const G = S.ui.gate;
-  const hero = sceneMedia('portao');
-  const saved = loadJornada(ses.storage);
-  const savedMode = saved && entryForRun(saved);
-  const quote = G.quotes[Math.floor(Math.random() * G.quotes.length)]!;
-  const gateCard = (id: GateMode, artKey: string, seal: string, cta: string) => modeCard({
-    id, art: sceneMedia(artKey) ?? emblem(id === 'roleta' ? 'roleta' : 'jornada'), artVars: sceneVars(artKey),
-    seal, ...M[id], cta: savedMode === id ? G.newRun : cta,
-    resume: savedMode === id ? { choice: 'continue', label: S.ui.continue } : undefined,
-  });
-  const root = show(
-    h(`<div class="screen jmodes gate">
-      <div class="gate-main">
-        <div class="gate-banner">
-          <header class="gate-head">
-            <span class="gate-cloud l" aria-hidden="true">${cloud()}</span><span class="gate-cloud r" aria-hidden="true">${cloud()}</span>
-            <h1 class="logo">${S.ui.title.split(' ').map((w, i) => `<span class="l${i + 1}">${w}</span>`).join('')}</h1>
-          </header>
-          <div class="gate-hero" aria-hidden="true">${hero ?? ''}${sceneFx()}</div>
-          <blockquote class="parchment gate-quote"><div><p>${quote.text}</p><cite>${quote.by}</cite></div>
-            <span class="seal quote-seal" aria-hidden="true">影</span></blockquote>
-        </div>
-        <p class="gate-sub">${M.title}</p>
-        <nav class="gate-modes" aria-label="${M.title}">
-          ${gateCard('roleta', 'modo-roleta', '運', D.ctaRoleta)}
-          ${gateCard('story', 'modo-jornada', '史', S.jornada.start.storyCta)}
-          ${gateCard('path', 'modo-caminho', '道', S.jornada.start.pathCta)}
-        </nav>
-      </div>
-      <aside class="gate-aside">${profileCard()}${recentCard()}</aside>
-    </div>`),
-  );
-  // A barra lateral escolhe o modo pelo mesmo botão do card enquanto o Início está na tela.
-  gateApi = { root };
-  // A coluna direita (PC) só esmaece o pé quando de fato rola.
-  const aside = root.querySelector<HTMLElement>('.gate-aside');
-  if (aside) requestAnimationFrame(() => aside.classList.toggle('scrolls', aside.scrollHeight > aside.clientHeight + 1));
-  root.querySelector('[data-desk-name]')?.addEventListener('change', (e) => setPlayerName((e.target as HTMLInputElement).value));
-  root.querySelector('.desk-id [data-avatar]')?.addEventListener('click', openAvatarPicker);
-  markNav('home');
-  const pick = await choose<GateMode | 'continue'>(root);
-  gateApi = null;
-  document.body.classList.remove('at-gate');
-  if (pick === 'continue') {
-    // Só existe botão de retomada quando o card foi montado com este save.
-    if (!savedMode) return modeScreen();
-    markNav(savedMode);
-    return { mode: savedMode, resume: true };
-  }
-  markNav(pick);
-  return { mode: pick };
-}
-
-// ---------------------------------------------------------------------------
-// Casca do PC (docs/visual.md, "Celular e desktop"): barra lateral persistente, Início em painéis, Registro em
-// popup e a faixa de frases no pé. No celular nada disto aparece (o CSS esconde a partir de 900px).
-
-type NavId = 'home' | GateMode | 'registry';
-const destinations: readonly NavId[] = ['home', 'roleta', 'story', 'path', 'registry'];
-const navIcons: Record<NavId | RegistryPage, string> = {
-  home: 'home', roleta: 'dice', story: 'scroll', path: 'kunai', registry: 'book',
-  history: 'book', bingo: 'card', relics: 'sparkle', achievements: 'medal',
+type GateRoute = { page: 'home' } | { page: RegistryPage; filter?: HistoryFilter; historyMode?: GateMode } | GatePick;
+type NavId = GateMode | RegistryPage | 'home' | 'registry';
+const modes = ['roleta', 'story', 'path'] as const;
+const navIcons: Record<NavId, string> = {
+  home: 'house', roleta: 'fortuneWheel', story: 'navScroll', path: 'navRoute', registry: 'navBook',
+  history: 'clock', bingo: 'navBook', relics: 'navChest', achievements: 'trophy',
 };
-const registryPages: RegistryPage[] = ['history', 'bingo', 'relics', 'achievements'];
 
-let pendingMode: GateMode | null = null;
-let gateApi: { root: HTMLElement } | null = null;
+let pending: GateRoute | undefined;
+let activeView: { root: HTMLElement; select: (route: GateRoute) => void } | undefined;
 let activeNav: NavId = 'home';
+
+/** Atalhos de dentro de uma partida usam a mesma confirmação do retorno ao Portão. */
+export function navigateGate(route: GateRoute): void {
+  if (activeView?.root.isConnected) {
+    activeView.select(route);
+    return;
+  }
+  const inJornada = document.body.classList.contains('mode-jornada');
+  const warning = inJornada && ses.jornadaSheet ? S.ui.homeConfirmJornada : !inJornada && ses.campLive ? S.ui.homeConfirmRoleta : null;
+  if (warning && !window.confirm(warning)) return;
+  pending = route;
+  goHome();
+}
 
 function markNav(id: NavId): void {
   activeNav = id;
-  document.querySelectorAll<HTMLElement>('#side-nav [data-nav], #gate-nav [data-nav]').forEach((b) => {
-    if (b.dataset.nav === id) b.setAttribute('aria-current', 'page');
-    else b.removeAttribute('aria-current');
-  });
+  for (const key of ['side-nav', 'gate-nav']) {
+    const active = key === 'gate-nav' && registryPages.some(page => page === id) ? 'registry' : id;
+    document.querySelectorAll<HTMLElement>(`#${key} [data-nav]`).forEach(button => {
+      if (button.dataset.nav === active) button.setAttribute('aria-current', 'page');
+      else button.removeAttribute('aria-current');
+    });
+  }
 }
 
-/** Escolher uma seção mantém a tela atual por baixo do Registro. */
-function openRegistryMenu(): void {
-  const D = S.ui.desk;
-  const overlay = h(`<div class="modal" aria-label="${S.ui.gate.registry}"><div class="modal-body">
-    <div class="modal-head"><h2>${S.ui.gate.registry}</h2><button class="btn small" data-close aria-label="${S.ui.close}">${icon('close')}</button></div>
-    <div class="registry-links">${registryPages.map((page) => `<button class="btn" data-page="${page}">${icon(navIcons[page])} ${D.nav[page]}</button>`).join('')}</div>
-    </div></div>`);
-  overlay.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    const page = target.closest<HTMLElement>('[data-page]')?.dataset.page as RegistryPage | undefined;
-    if (page || target === overlay || target.closest('[data-close]')) overlay.remove();
-    if (page) queueMicrotask(() => openRegistry(page));
+export async function modeScreen(): Promise<GatePick> {
+  let route: GateRoute = pending ?? { page: 'home' };
+  pending = undefined;
+  ses.camp = null;
+  ses.campLive = false;
+  syncSheetBtn();
+  document.getElementById('dots')!.replaceChildren();
+  document.body.classList.add('at-gate');
+  while ('page' in route) {
+    markNav(route.page);
+    const root = route.page === 'home' ? gateScreen() : registryScreen(route.page, route.filter, route.historyMode);
+    route = await new Promise<GateRoute>(select => { activeView = { root, select }; });
+  }
+  activeView = undefined;
+  document.body.classList.remove('at-gate');
+  markNav(route.mode);
+  return route;
+}
+
+function gateScreen(): HTMLElement {
+  const M = S.jornada.modes;
+  const artKeys = { roleta: 'modo-roleta', story: 'modo-jornada', path: 'modo-caminho' };
+  const gateCard = (id: GateMode) => modeCard({
+    id, art: sceneMedia(artKeys[id]) ?? emblem(id === 'roleta' ? 'roleta' : 'jornada'),
+    artVars: sceneVars(artKeys[id]), ...M[id],
   });
-  openDialog(overlay);
+  const root = show(h(`<div class="screen jmodes gate">
+    <div class="gate-banner">
+      <div class="gate-hero" aria-hidden="true">${sceneMedia('portao') ?? ''}${sceneFx()}</div>
+      <header class="gate-head"><h1 class="logo">${S.ui.title.split(' ').map((word, i) => `<span class="l${i + 1}">${word}</span>`).join(' ')}</h1></header>
+    </div>
+    <aside class="gate-aside">${profileCard()}${recentCard()}</aside>
+    <nav class="gate-modes" aria-label="${M.title}">${modes.map(gateCard).join('')}</nav>
+  </div>`));
+  root.addEventListener('error', event => {
+    const media = event.target;
+    if (!(media instanceof HTMLImageElement || media instanceof HTMLVideoElement)) return;
+    const art = media.closest('.mode-art');
+    if (art) art.innerHTML = emblem(art.closest('[data-choice="roleta"]') ? 'roleta' : 'jornada');
+  }, true);
+  root.querySelectorAll<HTMLButtonElement>('.mode-card').forEach(button =>
+    button.addEventListener('click', () => navigateGate({ mode: button.dataset.choice as GateMode })));
+  root.querySelector('[data-desk-name]')?.addEventListener('change', (event) => {
+    setPlayerName((event.target as HTMLInputElement).value);
+    root.querySelector('[data-display-name]')!.textContent = ses.profile.playerName || S.ui.desk.namePlaceholder;
+  });
+  root.querySelector('[data-avatar]')?.addEventListener('click', openAvatarPicker);
+  return root;
 }
 
 export function installSideNav(): void {
@@ -138,21 +113,15 @@ export function installSideNav(): void {
   for (const key of ['side-nav', 'gate-nav']) {
     const nav = document.getElementById(key)!;
     nav.setAttribute('aria-label', D.navLabel);
-    const brand = key === 'side-nav' ? `<span class="side-brand seal brand-seal" aria-hidden="true">${icon('konoha')}</span>` : '';
-    nav.innerHTML = brand + destinations.map(item).join('');
-    nav.addEventListener('click', (e) => {
-      const id = (e.target as HTMLElement).closest<HTMLElement>('[data-nav]')?.dataset.nav as NavId | undefined;
+    const main = (['home', ...modes] as const).map(item).join('');
+    nav.innerHTML = key === 'side-nav'
+      ? `<span class="side-brand seal brand-seal" aria-hidden="true">${icon('konoha')}</span>${main}<hr>${registryPages.map(item).join('')}`
+      : main + item('registry');
+    nav.addEventListener('click', (event) => {
+      const id = (event.target as HTMLElement).closest<HTMLElement>('[data-nav]')?.dataset.nav as NavId | undefined;
       if (!id || id === activeNav) return;
-      if (id === 'registry') return openRegistryMenu();
-      if (gateApi) {
-        gateApi.root.querySelector<HTMLButtonElement>(`[data-choice="${id}"]`)?.click();
-        return;
-      }
-      const inJornada = document.body.classList.contains('mode-jornada');
-      const text = inJornada && ses.jornadaSheet ? S.ui.homeConfirmJornada : !inJornada && ses.camp && ses.campLive ? S.ui.homeConfirmRoleta : null;
-      if (text && !window.confirm(text)) return;
-      pendingMode = id === 'home' ? null : id;
-      goHome();
+      if (id === 'roleta' || id === 'story' || id === 'path') navigateGate({ mode: id });
+      else navigateGate({ page: id === 'registry' ? 'history' : id });
     });
   }
 }
@@ -177,7 +146,7 @@ export function avatarName(spec: string): string {
   return S.ui.desk.avatarNames[key] ?? S.lineages[key as keyof typeof S.lineages] ?? key;
 }
 
-/** Botão do avatar (ficha do Início e Registro): mostra o atual e abre a escolha. */
+/** Botão do avatar na Ficha expandida: mostra o atual e abre a escolha. */
 export function avatarButton(size: 'sm' | 'md'): string {
   const D = S.ui.desk;
   const spec = currentAvatar(ses.profile.avatar, avatarOptions());
@@ -204,6 +173,8 @@ export function openAvatarPicker(): void {
         const onPaper = Boolean(b.closest('.desk-id'));
         b.innerHTML = avatarArt(ses.profile.avatar!, onPaper ? 'md' : 'sm', onPaper);
       });
+      const preview = document.querySelector('[data-avatar-preview]');
+      if (preview) preview.innerHTML = avatarArt(ses.profile.avatar!, 'md', true);
       overlay.remove();
       return;
     }
@@ -225,28 +196,35 @@ export function profileCard(): string {
     [D.stats.roletaRuns, String(runs.length)],
     [D.stats.roletaWins, String(wins)],
     [D.stats.bestCycle, bestCycle !== null ? String(bestCycle) : D.none],
-    [D.stats.jornada, best ? S.jornada.start.best(best.cycle, best.stage, best.won) : D.none],
+    [D.stats.jornada, best ? D.campaignResult(best.cycle, best.stage, best.won) : D.none],
     // Só as do catálogo atual: ids antigos no perfil davam 78/64.
     [D.stats.achievements, `${countedIds.filter((id) => id in ses.profile.achievements).length}/${counted}`],
     [D.stats.villains, String(Object.keys(ses.profile.villains).length)],
     [D.stats.relics, String(Object.keys(ses.profile.relics).length)],
   ];
-  return `<section class="parchment desk-profile"><span class="desk-pin" aria-hidden="true">${icon('kunai')}</span>
+  const spec = currentAvatar(ses.profile.avatar, avatarOptions());
+  return `<section class="parchment desk-profile">
     <h3>${D.profileTitle}</h3>
+    <details class="ninja-record"><summary>
+      <span data-avatar-preview>${avatarArt(spec, 'md', true)}</span>
+      <span class="record-summary"><strong data-display-name>${esc(ses.profile.playerName || D.namePlaceholder)}</strong>
+        <span>${D.nav.roleta} · ${D.diffLine(runs.length, wins)}</span>
+        <span>${D.campaignRecord} · ${best ? D.campaignResult(best.cycle, best.stage, best.won) : D.none}</span>
+        <b>${D.recordTitle} ${icon('chevron')}</b></span>
+    </summary>
     <div class="desk-id">${avatarButton('md')}
       <label class="field"><span>${S.ui.playerName.label}</span><input type="text" data-desk-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${D.namePlaceholder}" value="${esc(ses.profile.playerName ?? '')}"></label></div>
-    <details class="ninja-record"><summary>Registro do ninja</summary><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>
+    <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></details>
   </section>`;
 }
 
 /** Conquistas recentes (coluna direita do Início), com o atalho para a página. */
 export function recentCard(): string {
   const recent = jornadaHost.recentAchievements(3);
-  if (!recent.length) return '';
   const J = S.jornada.start;
-  return `<section class="parchment jrecent desk-recent"><h3>${J.recentTitle} <button type="button" class="btn small desk-all" data-profile="achievements">${S.ui.desk.seeAll} ${icon('chevron')}</button></h3><ul>${recent
+  return `<section class="parchment jrecent desk-recent"><h3>${J.recentTitle} <button type="button" class="btn small desk-all" data-profile="achievements">${S.ui.desk.seeAll} ${icon('chevron')}</button></h3>${recent.length ? `<ul>${recent
     .map((a) => `<li><span class="seal ach-ico" aria-hidden="true">${achievementIcon(a.id)}</span><span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><time>${J.when(a.days)}</time></li>`)
-    .join('')}</ul></section>`;
+    .join('')}</ul>` : `<p class="small">${S.ui.desk.emptyAchievements}</p>`}</section>`;
 }
 
 /** Estatística por dificuldade (filtro do Histórico): runs, vitórias, % e o melhor ciclo do Roleta. */

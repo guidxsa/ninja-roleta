@@ -385,7 +385,7 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
     h(`<div class="screen jpath">
       <header class="jsub-head"><button class="btn small" data-choice="back">${J.start.back}</button><h2>${G.title}</h2><p class="muted">${G.desc}</p></header>
       <section class="jc-panel jpath-poster" aria-hidden="true">
-        <span class="jc-art art-frame">${sceneMedia('modo-caminho') ?? sceneMedia('jornada') ?? ''}${sceneFx()}</span>
+        <span class="jc-art art-frame">${sceneMedia('caminho-ninja') ?? sceneMedia('jornada') ?? ''}${sceneFx()}</span>
         <div class="jc-body parchment"><span class="seal jc-seal">道</span><h3>${J.start.pathStages}</h3>
           <ol class="jpath-stages">${data.generic.stages.map((g, i) => `<li><span class="seal ghost">${ARC_NUMERALS[i] ?? i + 1}</span>${J.stages[g.id] ?? g.id}</li>`).join('')}</ol></div>
       </section>

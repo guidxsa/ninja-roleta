@@ -35,9 +35,11 @@ Referências do usuário (07/11/2026): o painel do Project Rasengan, o logo de S
 
 ## Telas no estilo novo
 
-- **Portão da Vila.** A cena de vila ao entardecer se dissolve no grafite. Abaixo do letreiro, três pergaminhos abrem diretamente Arcade, História ou Campanha. Uma Jornada salva mostra **Continuar** e **Nova partida** no pergaminho do modo correspondente. O painel separado de progresso saiu do Portão.
-- **Celular.** Os pergaminhos se empilham, com arte ao lado do texto. A barra inferior do Portão reúne Início, Arcade, História, Campanha e Registro. Os cinco alvos têm pelo menos 44 px e respeitam a área segura. Conquistas fica no Registro.
-- **Desktop.** A lateral persistente oferece os mesmos destinos. A Ficha do ninja e as conquistas recentes ocupam a coluna direita. A ficha usa um único tom de papel sob o nome e a silhueta recortada de qualquer avatar. O Registro do ninja se expande na ficha. A faixa de frases fica no rodapé.
+- **Portão da Vila.** O letreiro Ninshu Roots ocupa o céu da vila. Na base da pintura, três pergaminhos ilustrados abrem Arcade, História e Campanha. Cada pergaminho é um único controle. A retomada de uma Jornada salva fica na aba do modo no Histórico.
+- **Celular, abaixo de 768 px.** Sob a cena, a Ficha compacta mostra avatar, nome, runs e vitórias do Arcade e recorde da Campanha. Um toque expande o Registro do ninja com a edição do perfil. Os pergaminhos se empilham com a arte acima do texto. A navegação inferior reúne Início, Arcade, História, Campanha e Registro. Cada alvo tem pelo menos 44 px.
+- **Tablet, de 768 a 1023 px.** Sob a cena larga, Ficha e Conquistas dividem uma linha. Os três pergaminhos ocupam colunas de mesma altura. A navegação segue no rodapé.
+- **Desktop, a partir de 1024 px.** A lateral fixa dá acesso aos modos e às quatro seções do Registro. Cena e pergaminhos ocupam o centro. Ficha e Conquistas ficam à direita. A citação aparece em `#quote-strip`.
+- **Registro.** Histórico, Livro Bingo, Relíquias e Conquistas abrem na área principal. No celular e no tablet, as seções também têm abas no topo. No Histórico, Arcade oferece os filtros Geral, Origens e Dificuldade. História e Campanha mostram o save correspondente e as conquistas da Jornada. Campanha inclui seu recorde. Voltar e Início retornam ao Portão.
 - **Ferramentas.** A alça de Konoha abre a barra superior por toque, foco do teclado ou aproximação do mouse à borda superior. Os controles permanecem acessíveis enquanto recebem foco. A barra recolhe ao sair, tocar fora, tocar novamente na alça ou usar Escape. Com movimento reduzido a mudança é imediata.
 
 ### Composição Shinobi nas telas jogáveis
@@ -167,7 +169,8 @@ O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype
 | `g1`, `g2`, `g3` | os mesmos | Miniatura do Caminho Ninja | Cenário do estágio |
 | `roleta` | (vazia) | Palco do sorteio da origem no PC | Cenário desenhado de Konoha |
 | `roleta-genin`, `roleta-chunin`, `roleta-jounin`, `roleta-boss` | `roleta-genin`, `roleta-chunin`, `roleta-jounin`, `roleta-chefe` (vazias) | Roleta no PC: painel do mapa do ciclo, palco das roletas e fundo da arena da luta, pela categoria da luta atual | Cenário desenhado: Konoha, arena, floresta, Vale do Fim |
-| `modo-caminho` | `caminho-ninja` (o Minato) | Card e pôster do Caminho Ninja | Retrato do ninja comum no card; a arte `jornada` no pôster |
+| `modo-caminho` | `modo-caminho.webp` | Pergaminho da Campanha, rota em tinta verde | Emblema da Jornada |
+| `caminho-ninja` | `caminho-ninja` (Minato) | Pôster da preparação da Campanha | Arte `jornada` |
 
 `sasuke2` (Itachi e Sasuke) está reservada para a campanha do Sasuke ([historia-sasuke.md](jornada/historia-sasuke.md)).
 
