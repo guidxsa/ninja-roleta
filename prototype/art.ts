@@ -274,7 +274,7 @@ export const villageCrest = (id: keyof typeof VILLAGES): string => svg(VILLAGES[
 export interface SceneArt { file?: string; focus?: readonly [x: number, y: number] }
 const DEFAULT_FOCUS: readonly [number, number] = [50, 35];
 export const SCENE_ART: Record<string, SceneArt> = {
-  portao: { focus: [66, 48] },
+  portao: { focus: [44, 40] },
   // Os pôsteres pertencem à escolha da perspectiva da História.
   'perspectiva-naruto': { file: 'dia', focus: [64, 62] },
   'perspectiva-sasuke': { file: 'noite', focus: [30, 58] },

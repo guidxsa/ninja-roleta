@@ -163,10 +163,10 @@ O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype
 
 | Chave | Arquivo hoje | Onde | Sem a imagem |
 |---|---|---|---|
-| `portao` | `portao.webp` | Vila ao entardecer, com foco na torre | Cena SVG de Konoha |
+| `portao` | `portao.webp` | O portão da vila e o monte dos rostos à noite, em tinta índigo com as lanternas acesas | Cena SVG de Konoha |
 | `perspectiva-naruto`, `perspectiva-sasuke` | `dia`, `noite` | Pôsteres das perspectivas da História | Painel de perspectiva |
 | `jornada` | `jornada` | Banner da entrada da Jornada | Cena de Konoha |
-| `modo-jornada`, `modo-roleta` | os mesmos | Arte dos cards de modo | Emblema em aquarela |
+| `modo-jornada`, `modo-roleta` | os mesmos | Arte dos cards de modo (`modo-jornada`: o Time 7 de costas sobre o telhado, em tinta laranja) | Emblema em aquarela |
 | `arco-waves`, `arco-exam`, `arco-sannin`, `arco-retrieval` | `waves`, `chunnin`, `sannin`, `sasuke` (a equipe do resgate) | Faixa de arcos da História e miniatura do card de progresso | Cenário do estágio |
 | `g1`, `g2`, `g3` | os mesmos | Miniatura do Caminho Ninja | Cenário do estágio |
 | `roleta` | (vazia) | Palco do sorteio da origem no PC | Cenário desenhado de Konoha |
@@ -178,7 +178,7 @@ O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype
 
 ### Cena do Portão
 
-O letreiro ocupa o céu à esquerda. O foco da pintura mantém a torre e os telhados visíveis nos recortes estreitos. O modo Animado acrescenta névoa e vaga-lumes.
+O letreiro ocupa a faixa escura à esquerda, livre na pintura. O foco mantém o monte dos rostos e o portão visíveis nos recortes estreitos; em 360 px o letreiro encosta no primeiro rosto. O modo Animado acrescenta névoa e vaga-lumes.
 
 ### Roleta no PC
 
