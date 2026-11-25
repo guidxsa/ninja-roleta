@@ -166,7 +166,7 @@ O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype
 | `portao` | `portao.webp` | O portão da vila e o Monte Hokage (os cinco rostos) ao pôr do sol, céu em brasa e sombras índigo, lanternas acesas | Cena SVG de Konoha |
 | `perspectiva-naruto`, `perspectiva-sasuke` | `dia`, `noite` | Pôsteres das perspectivas da História | Painel de perspectiva |
 | `jornada` | `jornada` | Banner da entrada da Jornada | Cena de Konoha |
-| `modo-jornada`, `modo-roleta` | os mesmos | Arte dos cards de modo (`modo-jornada`: o Time 7 de costas sobre o telhado, em tinta laranja) | Emblema em aquarela |
+| `modo-jornada`, `modo-roleta` | os mesmos | Arte dos cards de modo (`modo-jornada`: o Time 7 de costas sobre o telhado, em tinta laranja; `modo-roleta`: um duelo na arena de fatias, a origem Uchiha de costas contra o Orochimaru, em tinta ameixa) | Emblema em aquarela |
 | `arco-waves`, `arco-exam`, `arco-sannin`, `arco-retrieval` | `waves`, `chunnin`, `sannin`, `sasuke` (a equipe do resgate) | Faixa de arcos da História e miniatura do card de progresso | Cenário do estágio |
 | `g1`, `g2`, `g3` | os mesmos | Miniatura do Caminho Ninja | Cenário do estágio |
 | `roleta` | (vazia) | Palco do sorteio da origem no PC | Cenário desenhado de Konoha |
