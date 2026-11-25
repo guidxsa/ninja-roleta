@@ -417,8 +417,14 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
   color: var(--paper-ink); border: 0; list-style: none; padding: 0; cursor: pointer;
 }
 .ninja-record summary::-webkit-details-marker { display: none; }
-.record-summary { display: grid; gap: var(--sp-1); min-width: 0; font: var(--fs-sm)/1.25 var(--font-body); }
-.record-summary strong { font: 700 var(--fs-2xl)/1.1 var(--font-hand); overflow-wrap: anywhere; }
+.record-summary { display: grid; gap: var(--sp-1); justify-self: stretch; min-width: 0; font: var(--fs-sm)/1.25 var(--font-body); container-type: inline-size; }
+/* O nome fica numa linha só: encolhe com a coluna (16 letras cabem) e só corta com reticências em último caso. */
+.record-summary strong {
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font: 700 clamp(var(--fs-md), 9.5cqi, var(--fs-2xl))/1.1 var(--font-hand);
+}
+/* Cada linha da Ficha quebra só entre o rótulo e o valor, nunca no meio de um deles. */
+.record-line > span { white-space: nowrap; }
 .ninja-record summary b { display: flex; align-items: center; gap: var(--sp-1); font-family: var(--font-hud); }
 .ninja-record summary b .ico { width: 1em; height: 1em; rotate: 90deg; }
 .ninja-record[open] summary b .ico { rotate: -90deg; }

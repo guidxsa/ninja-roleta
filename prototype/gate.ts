@@ -9,7 +9,7 @@ import { saveProfile, bestRoletaCycle, PLAYER_NAME_MAX, cleanPlayerName } from '
 import { loadRuns } from '../src/state/runHistory';
 import { achievementIcon } from './achievementIcons';
 import { pushLayer } from './back';
-import { AVATAR_CUTS, sceneMedia, sceneFx, emblem, sceneVars, icon, ninjaPortrait } from './art';
+import { AVATAR_CUTS, GENERIC_AVATAR_CUT, sceneMedia, sceneFx, emblem, sceneVars, icon, ninjaPortrait } from './art';
 import { h, show, goHome, esc, openDialog } from './dom';
 import type { JornadaEntry } from './jornada';
 import { jornadaHost } from './jornadaHost';
@@ -213,10 +213,11 @@ function unlockHint(entry: AvatarEntry): string {
 }
 
 /** Desenho do avatar a partir da chave de retrato (`ninja:<chave>`). */
-export function avatarArt(spec: string, size: 'sm' | 'md' | 'lg', onPaper = false): string {
+export function avatarArt(spec: string, size: 'sm' | 'md' | 'lg', onPaper = false, locked = false): string {
   const key = spec.split(':')[1] ?? 'common';
   const portrait = ninjaPortrait(key, size);
-  const cut = onPaper && AVATAR_CUTS[key];
+  // Bloqueado sem recorte próprio: a silhueta genérica, para não virar um quadrado cinza.
+  const cut = onPaper && (AVATAR_CUTS[key] ?? (locked ? GENERIC_AVATAR_CUT : undefined));
   return cut ? `<span class="avatar-art" style="--avatar-cut:${cut}">${portrait}</span>` : portrait;
 }
 
@@ -245,7 +246,7 @@ export function openAvatarPicker(): void {
   const entries = avatarEntries();
   const option = (e: AvatarEntry) => choices.includes(e.key)
     ? `<button type="button" class="avatar-opt" data-pick="${esc(e.key)}" aria-pressed="${e.key === now}">${avatarArt(e.key, 'md')}<small>${esc(avatarName(e.key))}</small></button>`
-    : `<span class="avatar-opt locked" tabindex="0" role="img" aria-label="${D.avatarLocked}: ${esc(unlockHint(e))}"${tip(D.avatarLocked, unlockHint(e))}>${avatarArt(e.key, 'md', true)}<small>${D.avatarLocked}</small></span>`;
+    : `<span class="avatar-opt locked" tabindex="0" role="img" aria-label="${D.avatarLocked}: ${esc(unlockHint(e))}"${tip(D.avatarLocked, unlockHint(e))}>${avatarArt(e.key, 'md', true, true)}<small>${D.avatarLocked}</small></span>`;
   const groups = (['origins', 'allies', 'villains'] as const).map((group) => {
     const list = entries.filter((e) => e.group === group);
     const got = list.filter((e) => choices.includes(e.key)).length;
@@ -294,8 +295,8 @@ export function profileCard(): string {
     <div class="ninja-id">${avatarButton()}
       <span class="record-summary">
         <span class="ninja-name"><button type="button" class="name-btn" data-name-edit aria-label="${D.nameEdit}"${tip(D.nameTitle, D.nameTip)}><strong data-display-name>${esc(ses.profile.playerName || D.namePlaceholder)}</strong>${editMark()}</button></span>
-        <span>${D.nav.roleta} · ${D.diffLine(runs.length, wins)}</span>
-        <span>${D.campaignRecord} · ${best ? D.campaignResult(best.cycle, best.stage, best.won) : D.none}</span>
+        <span class="record-line"><span>${D.nav.roleta} ·</span> <span>${D.diffLine(runs.length, wins)}</span></span>
+        <span class="record-line"><span>${D.campaignRecord} ·</span> <span>${best ? D.campaignResult(best.cycle, best.stage, best.won) : D.none}</span></span>
       </span>
     </div>
     <details class="ninja-record"><summary><b>${D.recordTitle} ${icon('chevron')}</b></summary>
