@@ -163,7 +163,7 @@ O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype
 
 | Chave | Arquivo hoje | Onde | Sem a imagem |
 |---|---|---|---|
-| `portao` | `portao.webp` | O portão da vila e o monte dos rostos à noite, em tinta índigo com as lanternas acesas | Cena SVG de Konoha |
+| `portao` | `portao.webp` | O portão da vila e o Monte Hokage (os cinco rostos) ao pôr do sol, céu em brasa e sombras índigo, lanternas acesas | Cena SVG de Konoha |
 | `perspectiva-naruto`, `perspectiva-sasuke` | `dia`, `noite` | Pôsteres das perspectivas da História | Painel de perspectiva |
 | `jornada` | `jornada` | Banner da entrada da Jornada | Cena de Konoha |
 | `modo-jornada`, `modo-roleta` | os mesmos | Arte dos cards de modo (`modo-jornada`: o Time 7 de costas sobre o telhado, em tinta laranja) | Emblema em aquarela |
@@ -178,7 +178,7 @@ O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype
 
 ### Cena do Portão
 
-O letreiro ocupa a faixa escura à esquerda, livre na pintura. O foco mantém o monte dos rostos e o portão visíveis nos recortes estreitos; em 360 px o letreiro encosta no primeiro rosto. O modo Animado acrescenta névoa e vaga-lumes.
+O Monte Hokage é o centro da pintura e nada o cobre. No tablet (768 a 1023 px), a pintura aparece inteira e o letreiro fica no alto da faixa escura da esquerda; no celular e no desktop, onde essa faixa não comporta o letreiro, ele desce para baixo dos rostos, sobre os telhados. O foco mantém os cinco rostos e o portão nos recortes estreitos. O modo Animado acrescenta névoa e vaga-lumes.
 
 ### Roleta no PC
 

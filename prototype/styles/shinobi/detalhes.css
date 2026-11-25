@@ -372,7 +372,8 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
 .jmodes .gate-banner .gate-hero img { object-position: var(--fx) var(--fy); filter: none; }
 .jmodes .gate-banner .gate-hero::after { display: none; }
 .gate.jmodes .gate-banner .gate-hero::before { background: none; }
-.gate.jmodes .gate-head { left: 5%; top: 15%; width: auto; }
+/* O letreiro fica embaixo dos rostos do Monte Hokage, sobre os telhados: no alto ele cobria os rostos. */
+.gate.jmodes .gate-head { left: 5%; top: 46%; width: auto; }
 .gate.jmodes .gate-head .logo {
   height: auto; font: 400 var(--fs-brand)/.98 var(--font-display);
   color: var(--paper); text-shadow: var(--title-shadow); transform: rotate(-4deg);
@@ -497,6 +498,8 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
   .gate.jmodes .gate-banner { height: 100%; }
   .gate.jmodes .gate-aside { grid-template-columns: 1fr 1fr; align-items: stretch; }
   .jmodes .ninja-id { grid-template-columns: minmax(80px, .75fr) 1fr; margin-top: var(--sp-3); }
+  /* Faixa larga: a pintura aparece inteira e a faixa escura da esquerda comporta o letreiro no alto. */
+  .gate.jmodes .gate-head { top: 15%; }
 }
 @media (min-width: 1024px) {
   body.at-gate { --side-w: clamp(118px, 10vw, 160px); }
@@ -512,7 +515,7 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
   .jmodes .ninja-id { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .jmodes .ninja-name, .jmodes .ninja-record summary { justify-content: center; }
   .jmodes .ninja-id .avatar-btn { width: min(90%, 21vh); }
-  .gate.jmodes .gate-head { top: 18%; }
+  .gate.jmodes .gate-head { top: 50%; }
   .gate.jmodes .mode-txt { min-height: calc(var(--fs-6xl) * 1.1 + var(--fs-md) * 2.7 + var(--gap)); }
   .jmodes .desk-recent li { grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-1) var(--sp-2); }
   .jmodes .desk-recent li .ach-ico { grid-row: span 2; align-self: start; }
