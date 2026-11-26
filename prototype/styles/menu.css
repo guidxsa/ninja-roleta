@@ -163,17 +163,20 @@ body.at-gate { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 body.at-gate .gate-nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: grid; grid-template-columns: repeat(5, 1fr);
   max-width: var(--col-max); margin: 0 auto; padding-bottom: env(safe-area-inset-bottom);
-  background: rgba(16, 12, 9, .95); border-top: 1px solid #6e5428; backdrop-filter: blur(6px);
+  background: var(--gate-nav-bg); border-top: 1px solid var(--gold-deep); backdrop-filter: blur(6px);
 }
 .gate-nav button {
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 60px;
-  border: 0; background: none; color: #cbbf9f; cursor: pointer; font: 600 var(--fs-xs)/1 var(--font-hud); letter-spacing: .05em; text-transform: uppercase;
+  border: 0; background: none; color: var(--nav-ink); cursor: pointer; font: 600 var(--fs-xs)/1 var(--font-hud); letter-spacing: .05em; text-transform: uppercase;
 }
-.gate-nav .kanji { font-size: var(--fs-2xl); color: #ece3d0; }
+.gate-nav .kanji { font-size: var(--fs-2xl); color: var(--text); }
 .gate-nav .kanji.two { font-size: var(--fs-md); line-height: 21px; letter-spacing: -.04em; }
-.gate-nav button[aria-current] { color: #dcbd78; cursor: default; }
-.gate-nav button[aria-current]::before { content: ''; position: absolute; top: 0; left: 24%; right: 24%; height: 3px; background: #b5161f; }
-.gate-nav button:hover:not([aria-current]), .gate-nav button:focus-visible { color: #fff; outline: none; }
+.gate-nav button[aria-current] { color: var(--gold-2); cursor: default; }
+.gate-nav button[aria-current]::before { content: ''; position: absolute; top: 0; left: 24%; right: 24%; height: 3px; background: var(--primary); }
+.gate-nav button:hover:not([aria-current]) { color: var(--nav-ink-hover); outline: none; }
+.gate-nav button:focus-visible { color: var(--nav-ink-hover); outline: 2px solid var(--gold-2); outline-offset: -3px; }
+/* O anel começa abaixo do traço de 3px que marca a aba atual. */
+#gate-nav button[aria-current]:focus-visible { outline-offset: -5px; }
 .gate-nav button:focus-visible .kanji { text-decoration: underline; }
 
 @media (min-width: 900px) and (min-height: 560px) {

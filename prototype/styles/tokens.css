@@ -41,6 +41,20 @@
   --paper-muted: #574632;
   --wood: #4a2f1c;
 
+  /* Navegação do Portão e da barra lateral. */
+  --nav-ink: #cbbf9f;
+  --nav-ink-hover: #fff;
+  --gate-nav-bg: rgba(16, 12, 9, .95);
+  --side-nav-bg-top: #2b1a10;
+  --side-nav-bg-bottom: #1a110a;
+  --side-nav-rim: rgba(255, 222, 170, .08);
+  --side-nav-divider: rgba(255, 222, 170, .18);
+  --side-nav-hover-bg: rgba(255, 222, 170, .06);
+  --side-nav-current-ink: #ffd88a;
+  --side-nav-current-edge: #b5671f;
+  --side-nav-current-bg-top: rgba(232, 112, 26, .28);
+  --side-nav-current-bg-bottom: rgba(232, 112, 26, .1);
+
   /* Escala tipográfica (v0.74.0): nada abaixo de 12px em texto. Display e kanji seguem os próprios clamp. */
   --fs-xs: 12px;
   --fs-sm: 13px;
