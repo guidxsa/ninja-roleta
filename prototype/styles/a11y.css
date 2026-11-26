@@ -31,6 +31,7 @@
   .avatar-btn { min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; }
   .toggle { min-height: 44px; }
   .jsheet-tab { min-height: 44px; }
+  .jmodes .ninja-record > summary { min-height: 44px; }
 }
 
 /* --- Movimento -------------------------------------------------------------------------------------------------------- */

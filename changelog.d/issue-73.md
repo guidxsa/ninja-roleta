@@ -1,0 +1,1 @@
+- Na Ficha do ninja, a faixa "Registro do ninja" ficou mais fácil de tocar no celular (área de 44px).
