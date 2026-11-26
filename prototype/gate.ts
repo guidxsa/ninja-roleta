@@ -303,7 +303,7 @@ export function profileCard(): string {
     <h3>${D.profileTitle}</h3>
     <div class="ninja-id">${avatarButton()}
       <span class="record-summary">
-        <span class="ninja-name"><button type="button" class="name-btn" data-name-edit aria-label="${D.nameEdit}"${tip(D.nameTitle, D.nameTip)}><strong data-display-name>${esc(ses.profile.playerName || D.namePlaceholder)}</strong>${editMark()}</button></span>
+        <span class="ninja-name"><button type="button" class="name-btn" data-name-edit${tip(D.nameTitle, D.nameTip)}><strong data-display-name>${esc(ses.profile.playerName || D.namePlaceholder)}</strong><span class="sr-only">, ${D.nameEdit}</span>${editMark()}</button></span>
         <span class="record-line"><span>${D.nav.roleta} ·</span> <span>${D.diffLine(runs.length, wins)}</span></span>
         <span class="record-line"><span>${D.campaignRecord} ·</span> <span>${best ? D.campaignResult(best.cycle, best.stage, best.won) : D.none}</span></span>
       </span>
