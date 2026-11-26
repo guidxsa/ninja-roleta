@@ -23,7 +23,7 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra late
   - o **elenco de cada arco** da História, pela conquista do arco (`ARC_CAST`): Sino na mão libera o Time 7 (Naruto, Sasuke, Sakura, Kakashi), Iruka e Mizuki; Ponte do Naruto, os Irmãos Demônio, Zabuza e Haku; Coração de chunin, os genins do Exame (Shikamaru, Chōji, Kiba, Rock Lee, Neji), o trio do Som, Kabuto, Gaara e Orochimaru; Vale do Fim, Jiraiya, Tsunade e os Quatro do Som com Kimimaro;
   - os **vilões já enfrentados no Arcade** (Livro Bingo), pelo retrato de cada um.
 - A escolha agrupa Origens, Aliados e Vilões, com o total liberado de cada grupo. O bloqueado aparece em silhueta, com a dica de onde se libera (`avatarCatalog`).
-- Sobre o papel da Ficha, o retrato usa o recorte de `AVATAR_CUTS` (`prototype/art.ts`), conferido no cenário “Ficha com cada avatar” do UI Lab. Retrato de fundo escuro ou com textura fica sem recorte e mostra o próprio fundo.
+- Na Ficha, o avatar mostra o retrato inteiro, com o fundo original da arte, num quadro de tinta. O recorte de `AVATAR_CUTS` (`prototype/art.ts`) só desenha a silhueta do avatar bloqueado na escolha (sem recorte próprio, a silhueta genérica), conferido no cenário “Ficha com cada avatar” do UI Lab.
 - Fica no perfil (`avatar`) como a chave do retrato (`ninja:<chave>`; a imagem vem de img/ninja ou img/viloes). Se o escolhido deixar de estar liberado, vale o padrão.
 - Os personagens vistos na Jornada ainda não ficam registrados; quando ficarem, ampliam este pool.
 
