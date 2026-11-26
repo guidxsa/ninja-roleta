@@ -501,6 +501,13 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
   /* Faixa larga: a pintura aparece inteira e a faixa escura da esquerda comporta o letreiro no alto. */
   .gate.jmodes .gate-head { top: 15%; }
 }
+/* De 900 a 1023 px a casca do PC (shell.css) ainda põe o Portão em duas colunas numa linha só, e os pergaminhos passavam
+   por cima da Ficha e de Conquistas. Aqui a cena e os modos ficam numa linha e a Ficha e Conquistas, lado a lado, na seguinte. */
+@media (min-width: 900px) and (max-width: 1023px) and (min-height: 560px) {
+  .gate.jmodes { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'main' 'aside'; grid-template-rows: minmax(0, 1fr) minmax(270px, auto); }
+  .gate.jmodes .gate-main { min-height: auto; grid-template-rows: minmax(240px, .95fr) auto; }
+  .gate.jmodes .gate-aside { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; }
+}
 @media (min-width: 1024px) {
   body.at-gate { --side-w: clamp(118px, 10vw, 160px); }
   body.at-gate:has(.jmodes) { height: max(100dvh, var(--floor-h)); }
