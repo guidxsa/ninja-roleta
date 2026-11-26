@@ -1,4 +1,5 @@
 import type { Difficulty } from '../core/difficulty';
+import type { RunStats } from '../core/runStats';
 import type { Element, Origin } from '../core/types';
 
 
@@ -22,6 +23,30 @@ export interface RunRecord {
   /** Roleta enxuto (v0.46.0): ciclo alcançado (contando do 0) e lutas vencidas. Ausentes nos registros da campanha antiga. */
   cycle?: number;
   fights?: number;
+  /** Detalhes para o Registro (desde o histórico detalhado): ausentes nos registros anteriores. Vilões em ordem, com o resultado de cada luta. */
+  foes?: { id: string; won: boolean }[];
+  /** Quem derrotou o jogador (a última luta perdida). */
+  fallenTo?: string;
+  relics?: string[];
+  /** Eventos pré-luta sorteados: id → vezes. */
+  events?: Record<string, number>;
+  /** Maior golpe do jogador na run. */
+  bestHit?: number;
+}
+
+export type RunDetails = Required<Pick<RunRecord, 'foes' | 'relics' | 'events' | 'bestHit'>> & Pick<RunRecord, 'fallenTo'>;
+
+/** Os detalhes que o Registro mostra, tirados do que a run já calcula (lutas, eventos e relíquias). */
+export function runDetails(stats: RunStats, relics: readonly string[]): RunDetails {
+  const fights = stats.fights.filter((f) => !f.exam);
+  const last = fights[fights.length - 1];
+  return {
+    foes: fights.map((f) => ({ id: f.villainId, won: f.won })),
+    ...(last && !last.won ? { fallenTo: last.villainId } : {}),
+    relics: [...relics],
+    events: { ...stats.preEvents },
+    bestHit: fights.reduce((m, f) => Math.max(m, f.bestHit), 0),
+  };
 }
 
 /** Subconjunto do `localStorage` usado aqui (injetável nos testes). */
@@ -100,7 +125,7 @@ export function startRun(
 export function updateRun(
   storage: KeyValueStorage,
   id: string,
-  patch: Partial<Pick<RunRecord, 'status' | 'furthestStage' | 'revivesUsed' | 'difficulty' | 'cycle' | 'fights'>>,
+  patch: Partial<Pick<RunRecord, 'status' | 'furthestStage' | 'revivesUsed' | 'difficulty' | 'cycle' | 'fights' | keyof RunDetails>>,
   now: Date,
   maxRuns: number,
 ): void {

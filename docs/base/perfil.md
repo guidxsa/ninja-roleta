@@ -4,7 +4,7 @@ O que fica salvo no aparelho entre as runs: conquistas, Livro Bingo, estatístic
 
 A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra lateral do PC, a barra inferior do Portão da Vila ou a faixa de Conquistas) abre em popup, uma seção por vez, cada uma com o seu selo: Histórico (歴, com os filtros Geral, Origens e Dificuldade), Conquistas (功), Livro Bingo (手配) e Relíquias (宝, a coleção da Jornada: [reliquias.md](../jornada/reliquias.md#coleção)). No Livro Bingo, quem já foi derrotado ganha o carimbo 勝; quem nunca apareceu fica na sombra com 謎.
 
-**Dados que não deu para ler** (v0.60.0): se o histórico ou o perfil estiverem corrompidos, o jogo segue com eles vazios, mas antes guarda o conteúdo em `runs_v1_backup` ou `profile_v1_backup` (a primeira cópia fica), para a gravação seguinte não apagar tudo sem volta. Uma linha estragada do histórico sai sozinha, sem levar as outras.
+**Dados que não deu para ler** (v0.60.0): se o histórico ou o perfil estiverem corrompidos, o jogo segue com eles vazios, mas antes guarda o conteúdo em `runs_v1_backup`, `jornada_runs_v1_backup` ou `profile_v1_backup` (a primeira cópia fica), para a gravação seguinte não apagar tudo sem volta. Uma linha estragada do histórico sai sozinha, sem levar as outras.
 
 ## Nome do jogador
 
@@ -21,11 +21,11 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra late
   - cada origem jogada no Arcade (pelo histórico) ou com a vitória registrada (`win_<linhagem>`, que fica mesmo depois de a run sair do histórico);
   - Uchiha (Chama do clã) e Hyuuga (Olhos abertos) pelas conquistas da Jornada, e o visual do Sasuke (Mil pássaros) para quem já tinha;
   - o **elenco de cada arco** da História, pela conquista do arco (`ARC_CAST`): Sino na mão libera o Time 7 (Naruto, Sasuke, Sakura, Kakashi), Iruka e Mizuki; Ponte do Naruto, os Irmãos Demônio, Zabuza e Haku; Coração de chunin, os genins do Exame (Shikamaru, Chōji, Kiba, Rock Lee, Neji), o trio do Som, Kabuto, Gaara e Orochimaru; Vale do Fim, Jiraiya, Tsunade e os Quatro do Som com Kimimaro;
-  - os **vilões já enfrentados no Arcade** (Livro Bingo), pelo retrato de cada um.
+  - os **vilões já enfrentados no Arcade** (Livro Bingo), pelo retrato de cada um;
+  - quem já **lutou na Jornada**, dos dois lados (`jornadaAllies` e `jornadaFoes`), se estiver no elenco acima: lutar com a Sakura ou contra o Zabuza libera o retrato sem esperar a conquista do arco. Os ninjas genéricos e as transformações não entram.
 - A escolha agrupa Origens, Aliados e Vilões, com o total liberado de cada grupo. O bloqueado aparece em silhueta, com a dica de onde se libera (`avatarCatalog`).
 - Sobre o papel da Ficha, o retrato usa o recorte de `AVATAR_CUTS` (`prototype/art.ts`), conferido no cenário “Ficha com cada avatar” do UI Lab. Retrato de fundo escuro ou com textura fica sem recorte e mostra o próprio fundo.
 - Fica no perfil (`avatar`) como a chave do retrato (`ninja:<chave>`; a imagem vem de img/ninja ou img/viloes). Se o escolhido deixar de estar liberado, vale o padrão.
-- Os personagens vistos na Jornada ainda não ficam registrados; quando ficarem, ampliam este pool.
 
 ## Recorde do modo infinito
 
@@ -121,9 +121,20 @@ O perfil é um só para os dois modos. A aba Conquistas mostra as do Roleta (Mar
 
 Dano sofrido conta golpes, disputas, queimadura, veneno e autoferimento. Os segredos ligados à reforma elemental e ao Senju (ver [registro.md](../registro.md)) entram junto com eles.
 
+## Histórico da Jornada
+
+- `localStorage`, chave própria (`jornada_runs_v1`), separada do histórico do Arcade (`runs_v1`): as runs da Jornada não entram nos recordes por origem, no melhor ciclo, no desempenho por dificuldade nem no texto de compartilhar. Mesmo limite: as últimas 100 runs.
+- Grava no fim da run, nos dois modos (História e Caminho Ninja), e quando uma run salva que já andou é trocada por uma nova (como abandonada). O Caminho Ninja regrava o mesmo registro a cada ciclo; uma run que venceu um ciclo continua vencida se cair depois, como no Arcade.
+- Registro (`jornadaRunRecord`, `src/state/jornadaRuns.ts`): modo, protagonista e classe, perspectiva da História, elemento (e o segundo, do Uchiha), dificuldade, resultado, ciclo, estágio e parada alcançados, nível, relíquias, aliados caídos, lutas e vitórias, maior golpe e as datas.
+- As runs jogadas antes deste histórico não aparecem: não ficaram salvas. O recorde do Caminho Ninja continua valendo.
+
 ## Livro Bingo
 
-Um cartão por vilão (inclusive os rivais do exame), na ordem dos dados. Quem nunca foi enfrentado aparece como silhueta. Para cada um: lutas, vitórias, quantas vezes derrotou o jogador (perder no exame também conta), o maior golpe do jogador nele e o maior golpe dele no jogador.
+Um cartão por inimigo, em três seções: **Arcade** (os vilões do Roleta, por categoria), **História** (os inimigos da Jornada, por arco) e **Campanha** (os do Caminho Ninja, por estágio). O mesmo personagem nos dois modos tem uma entrada em cada seção, com os números de cada um. Quem nunca foi enfrentado aparece como silhueta, com 謎. Para cada um: lutas, vitórias, quantas vezes derrotou o jogador (perder no exame, ou gastar uma Vontade do Fogo na Jornada, também conta), o maior golpe do jogador nele e o maior golpe dele no jogador.
+
+- **Arcade**: `villains`, gravado no fim de cada luta do Roleta.
+- **Jornada** (`jornadaFoes`): gravado no fim de cada luta (`foeFights`, `src/core/jornada/foes.ts`). Vários inimigos do mesmo tipo na luta (os capangas do Gatō) contam como uma luta só; a lição do sino conta como vitória.
+- Tocar num inimigo já visto abre a **ficha**: retrato grande, nome, uma descrição curta, as técnicas (tipo, dano e custo na dica), os atributos, a passiva e os números do jogador contra ele. O fundo segue o arco (ou a categoria, no Arcade) e a moldura sobe de grau com o nível: comum, elite e chefe, com o carimbo de procurado ([visual.md](../visual.md#livro-bingo)).
 
 ## Origens
 
