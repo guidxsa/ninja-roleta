@@ -33,7 +33,15 @@ export interface AvatarSource {
   achievements: readonly string[];
   /** Retratos dos vilões já enfrentados no Arcade (Livro Bingo). */
   seenVillains?: readonly string[];
+  /**
+   * Retratos de quem lutou na Jornada (aliados e inimigos). Só liberam quem já é avatar (o elenco dos arcos e os
+   * personagens das conquistas), na forma base: os genéricos e as transformações ficam de fora.
+   */
+  seenJornada?: readonly string[];
 }
+
+/** Quem a Jornada pode liberar ao aparecer numa luta: o elenco dos arcos e os personagens das conquistas. */
+const JORNADA_CAST = new Set([...Object.values(JORNADA_AVATARS), ...Object.values(ARC_CAST).flatMap((c) => [...c.allies, ...c.villains].map(key))]);
 
 /**
  * Avatares disponíveis, em ordem estável: o padrão, as origens jogadas no Roleta (ou com a vitória registrada, que
@@ -52,6 +60,7 @@ export function avatarChoices(src: AvatarSource): string[] {
     if (src.achievements.includes(id)) [...cast.allies, ...cast.villains].forEach((p) => add(key(p)));
   }
   for (const p of src.seenVillains ?? []) add(key(p));
+  for (const p of src.seenJornada ?? []) if (JORNADA_CAST.has(key(p))) add(key(p));
   return out;
 }
 

@@ -1,4 +1,5 @@
 import { lineageKey } from '../core/achievements';
+import type { FoeFight } from '../core/jornada/foes';
 import type { FightSummary } from '../core/runStats';
 import { winAchievementId } from '../data/achievements';
 import { RELIC_RENAMES } from '../data/jornada/relics';
@@ -46,6 +47,10 @@ export interface Profile {
   hardcoreUnlocked?: true;
   /** Avatar escolhido (chave de retrato, `ninja:<chave>`; v0.63.0). Sem o campo: o padrão. */
   avatar?: string;
+  /** Livro Bingo da Jornada: id do inimigo → contadores (separado do Arcade: os números diferem entre os modos). */
+  jornadaFoes?: Record<string, VillainRecord>;
+  /** Aliados que já lutaram na Jornada (ids das fichas), para a escolha de avatar. */
+  jornadaAllies?: string[];
 }
 
 export interface RoletaReach {
@@ -95,6 +100,8 @@ export function loadProfile(storage: KeyValueStorage): Profile {
       ...(typeof parsed.roleta?.cycle === 'number' && typeof parsed.roleta?.fights === 'number' ? { roleta: parsed.roleta } : {}),
       ...(parsed.hardcoreUnlocked === true ? { hardcoreUnlocked: true as const } : {}),
       ...(typeof parsed.avatar === 'string' && parsed.avatar.length <= 64 ? { avatar: parsed.avatar } : {}),
+      ...(parsed.jornadaFoes && typeof parsed.jornadaFoes === 'object' && !Array.isArray(parsed.jornadaFoes) ? { jornadaFoes: parsed.jornadaFoes } : {}),
+      ...(Array.isArray(parsed.jornadaAllies) ? { jornadaAllies: parsed.jornadaAllies.filter((id): id is string => typeof id === 'string') } : {}),
     };
   } catch {
     if (raw) backupUnreadable(storage, PROFILE_STORAGE_KEY, raw);
@@ -136,6 +143,23 @@ export function recordFight(profile: Profile, fight: FightSummary): Profile {
     worstHit: Math.max(v.worstHit, fight.worstHit),
   };
   return { ...profile, villains: { ...profile.villains, [fight.villainId]: next } };
+}
+
+/** Uma luta da Jornada no Livro Bingo: cada inimigo dela e os aliados que lutaram (para a escolha de avatar). */
+export function recordJornadaFight(profile: Profile, foes: readonly FoeFight[], allies: readonly string[]): Profile {
+  const book = { ...profile.jornadaFoes };
+  for (const f of foes) {
+    const v = book[f.id] ?? { faced: 0, defeated: 0, killedYou: 0, bestHit: 0, worstHit: 0 };
+    book[f.id] = {
+      faced: v.faced + 1,
+      defeated: v.defeated + (f.won ? 1 : 0),
+      killedYou: v.killedYou + (f.won ? 0 : 1),
+      bestHit: Math.max(v.bestHit, f.bestHit),
+      worstHit: Math.max(v.worstHit, f.worstHit),
+    };
+  }
+  const seen = [...new Set([...(profile.jornadaAllies ?? []), ...allies])];
+  return { ...profile, jornadaFoes: book, jornadaAllies: seen };
 }
 
 export function unlockAchievements(profile: Profile, ids: string[], now: Date): Profile {

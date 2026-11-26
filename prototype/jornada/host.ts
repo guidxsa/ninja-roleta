@@ -1,6 +1,7 @@
 // O que a Jornada precisa do resto do protótipo (main.ts): armazenamento, preferências, perfil e som.
 import type { Difficulty } from '../../src/core/difficulty';
 import type { JRun } from '../../src/core/jornada/run';
+import type { JBattle } from '../../src/core/jornada/types';
 import type { JornadaReach } from '../../src/state/profile';
 import type { KeyValueStorage } from '../../src/state/runHistory';
 import type { Mood } from '../audio';
@@ -31,8 +32,13 @@ export interface JornadaHost {
   setSheet: (open: (() => void) | null) => void;
   /** Recorde do modo infinito do Caminho Ninja (null = nenhum). */
   jornadaRecord: () => JornadaReach | null;
-  /** Grava até onde a run do Caminho Ninja chegou; devolve se bateu o recorde. */
-  recordJornada: (run: JRun) => boolean;
+  /**
+   * Grava a run no histórico da Jornada (`abandoned`: trocada por outra antes de acabar) e, no Caminho Ninja, até onde
+   * chegou; devolve se bateu o recorde.
+   */
+  recordJornada: (run: JRun, abandoned?: boolean) => boolean;
+  /** Uma luta encerrada no Livro Bingo da Jornada (`won` como no fim da luta: a lição do sino conta como vitória). */
+  noteFight: (battle: JBattle, won: boolean) => void;
   /** As conquistas mais recentes do perfil, da mais nova para a mais antiga (dias desde que saíram). */
   /** `onlyJornada`: só as conquistas da Jornada (a entrada da Jornada); sem ele, todas (o Início). */
   recentAchievements: (limit: number, onlyJornada?: boolean) => { id: string; name: string; desc: string; days: number }[];

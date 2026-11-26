@@ -4,18 +4,22 @@ import { achievements } from '../src/data/achievements';
 import { campaign } from '../src/data/campaign';
 import { jornadaAchievements } from '../src/data/jornada/achievements';
 import { lineages as allLineages } from '../src/data/lineages';
-import { roletaVillains as villains } from '../src/data/roleta/villains';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { loadJornada } from '../src/state/jornadaSave';
 import { originRecords } from '../src/state/profile';
-import { loadRuns } from '../src/state/runHistory';
+import { storyStages } from '../src/core/jornada/run';
+import { jornadaData } from '../src/data/jornada';
+import { loadJornadaRuns, type JornadaRunRecord } from '../src/state/jornadaRuns';
+import { loadRuns, type RunRecord } from '../src/state/runHistory';
 import { achievementIcon } from './achievementIcons';
-import { icon } from './art';
-import { h, show } from './dom';
+import { bingoPage } from './bingoSheet';
+import { clanSymbol, icon } from './art';
+import { esc, h, show } from './dom';
 import { navigateGate, difficultyStats } from './gate';
-import { relicCollection } from './jornada/relics';
+import { relicCollection, relicName } from './jornada/relics';
 import { data, foePortrait, villainName, stageName, originLabel, diffChip } from './roleta/common';
 import { ses } from './roleta/session';
+import { tip } from './tooltip';
 
 export type ProfileTab = 'history' | 'achievements' | 'bingo' | 'origins' | 'relics';
 export type RegistryPage = 'history' | 'bingo' | 'relics' | 'achievements';
@@ -47,8 +51,9 @@ export function registryScreen(page: RegistryPage, filter: HistoryFilter = 'gene
   const fill = () => {
     body.replaceChildren();
     if (page === 'relics') return relicCollection(body, ses.profile.relics);
+    if (page === 'bingo') return bingoPage(body);
     if (page !== 'history') {
-      body.innerHTML = page === 'bingo' ? bingoTab() : achievementsTab();
+      body.innerHTML = achievementsTab();
       return;
     }
     root.querySelector<HTMLElement>('.desk-filters')!.hidden = mode !== 'roleta';
@@ -63,7 +68,9 @@ export function registryScreen(page: RegistryPage, filter: HistoryFilter = 'gene
     const record = mode === 'path' ? `<p><b>${D.campaignRecord}</b> · ${best ? D.campaignResult(best.cycle, best.stage, best.won) : D.none}</p>` : '';
     body.innerHTML = `${record}${matching
       ? `<div class="registry-save"><strong>${D.savedStop(saved.stageIndex + 1, saved.stopIndex + 1)}</strong><button type="button" class="btn primary" data-choice="continue">${S.ui.continue}</button></div>`
-      : `<p class="muted">${D.historyEmpty[mode]}</p>`}${jornadaAchievementsSection(new Set(Object.keys(ses.profile.achievements)))}`;
+      : `<p class="muted">${D.historyEmpty[mode]}</p>`}${jornadaHistory(mode)}${jornadaAchievementsSection(new Set(Object.keys(ses.profile.achievements)))}`;
+    const list = body.querySelector<HTMLElement>('.history');
+    if (list) bindRunRows(list);
   };
   root.addEventListener('click', event => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
@@ -125,24 +132,6 @@ export function jornadaAchievementsSection(unlocked: ReadonlySet<string>): strin
     .join('')}</ul>`;
 }
 
-export function bingoTab(): string {
-  const P = S.profile;
-  return `<p class="muted small">${P.bingoIntro}</p><ul class="bingo">${villains
-    .map((v) => {
-      const r = ses.profile.villains[v.id];
-      if (!r || r.faced === 0) {
-        return `<li class="bingo-card unknown">${foePortrait(v.id, 'sm')}<span><b>${P.unknownVillain}</b></span><span class="bingo-stamp kanji" aria-hidden="true">謎</span></li>`;
-      }
-      const lines = [P.faced(r.faced), P.defeated(r.defeated), r.killedYou ? P.killedYou(r.killedYou) : '']
-        .filter(Boolean)
-        .join(' · ');
-      const stamp = r.defeated > 0 ? '<span class="bingo-stamp kanji" aria-hidden="true">勝</span>' : '';
-      return `<li class="bingo-card${r.defeated > 0 ? ' beaten' : ''}">${foePortrait(v.id, 'sm')}<span><b>${villainName(v.id)}</b><small>${lines}</small>
-        <small class="muted">${P.bestHit(r.bestHit)} · ${P.worstHit(r.worstHit)}</small></span>${stamp}</li>`;
-    })
-    .join('')}</ul>`;
-}
-
 export function originsTab(): string {
   const P = S.profile;
   const rec = originRecords(loadRuns(ses.storage));
@@ -167,29 +156,28 @@ export function historyTab(container: HTMLElement) {
   container.innerHTML = `<label class="toggle"><input type="checkbox" id="show-rerolls"> ${S.ui.showRerolls}</label>
     <ul class="history"></ul>`;
   const list = container.querySelector<HTMLElement>('.history')!;
+  bindRunRows(list);
 
   const render = (withRerolls: boolean) => {
     const shown = runs.filter((r) => withRerolls || r.status !== 'reroll');
     list.innerHTML = shown.length
       ? shown
-          .map((r) => {
-            const date = new Date(r.startedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+          .map((r, i) => {
             const o = r.origin;
             const origin = `${originLabel(o)}${o.elements.map((e) => ` · ${S.elements[e]}`).join('')}${o.jinchuuriki ? ` · ${S.origin.jinchuuriki}` : ''}`;
-
             const stage = campaign[r.furthestStage];
             // Roleta enxuto: ciclo e lutas; registros antigos: a etapa da campanha.
             const reached =
               r.status === 'reroll'
                 ? ''
                 : r.fights !== undefined
-                  ? ` · ${S.roleta.run.reached((r.cycle ?? 0) + 1, r.fights)}`
+                  ? S.roleta.run.reached((r.cycle ?? 0) + 1, r.fights)
                   : r.status !== 'victory' && stage
-                    ? ` · ${S.ui.reachedStage(stageName(stage))}`
+                    ? S.ui.reachedStage(stageName(stage))
                     : '';
-            const diff = r.difficulty ? ` ${diffChip(r.difficulty)}` : '';
-            return `<li><div class="row between"><b>${origin}</b><span>${diff} <span class="chip st-${r.status}">${S.ui.runStatus[r.status]}</span></span></div>
-              <small class="muted">${date}${reached}${r.revivesUsed > 0 ? ` · ${S.ui.revivesUsed(r.revivesUsed)}` : ''}</small></li>`;
+            const line = [runDate(r.startedAt), reached, r.revivesUsed > 0 ? S.ui.revivesUsed(r.revivesUsed) : ''].filter(Boolean).join(' · ');
+            const tags = `${r.difficulty ? diffChip(r.difficulty) : ''} <span class="chip st-${r.status}">${S.ui.runStatus[r.status]}</span>`;
+            return runRow(`r${i}`, clanSymbol(o.lineageId), 'roleta', origin, line, tags, roletaDetails(r, origin, reached));
           })
           .join('')
       : `<li class="muted">${S.ui.historyEmpty}</li>`;
@@ -198,4 +186,114 @@ export function historyTab(container: HTMLElement) {
   container.querySelector<HTMLInputElement>('#show-rerolls')!.addEventListener('change', (e) => {
     render((e.target as HTMLInputElement).checked);
   });
+}
+
+const runDate = (iso: string) => (iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '');
+
+/** Ícone de cada modo na linha do Histórico (os mesmos da navegação). */
+const MODE_ICONS: Record<HistoryMode, string> = { roleta: 'fortuneWheel', story: 'navScroll', path: 'navRoute' };
+
+/**
+ * Linha do Histórico: o cabeçalho é um botão que abre os detalhes (`aria-expanded`), com o símbolo da origem ou da
+ * classe, o ícone do modo, o nome, a linha curta e os chips de dificuldade e resultado.
+ */
+function runRow(id: string, symbol: string, mode: HistoryMode, title: string, line: string, tags: string, details: string): string {
+  return `<li class="run-row"><button type="button" class="run-head" aria-expanded="false" aria-controls="run-${id}">
+      <span class="run-sym" aria-hidden="true">${symbol}<span class="run-mode">${icon(MODE_ICONS[mode])}</span></span>
+      <span class="run-main"><b>${title}</b><small class="muted">${line}</small></span>
+      <span class="run-tags">${tags}</span><span class="run-caret" aria-hidden="true">${icon('chevron')}</span></button>
+    <div class="run-details" id="run-${id}" role="region" aria-label="${S.profile.run.details}" hidden>${details}</div></li>`;
+}
+
+/** Abre e fecha a linha tocada (mais de uma pode ficar aberta, para comparar runs). */
+function bindRunRows(list: HTMLElement) {
+  list.addEventListener('click', (event) => {
+    const head = (event.target as HTMLElement).closest<HTMLButtonElement>('.run-head');
+    if (!head) return;
+    const open = head.getAttribute('aria-expanded') !== 'true';
+    head.setAttribute('aria-expanded', String(open));
+    head.closest('.run-row')!.classList.toggle('open', open);
+    list.querySelector<HTMLElement>(`#${head.getAttribute('aria-controls')}`)!.hidden = !open;
+  });
+}
+
+const fact = (label: string, value: string) => (value ? `<dt>${label}</dt><dd>${value}</dd>` : '');
+const relicList = (ids: readonly string[] | undefined) => (ids?.length ? ids.map((id) => esc(relicName(id))).join(', ') : S.profile.run.none);
+
+function roletaDetails(r: RunRecord, origin: string, reached: string): string {
+  const R = S.profile.run;
+  if (r.status === 'reroll') return `<p class="muted small">${R.oldRecord}</p>`;
+  const old = r.foes === undefined;
+  const foes = r.foes?.length
+    ? `<ol class="run-foes">${r.foes
+        .map(
+          (f) =>
+            `<li class="${f.won ? 'won' : 'lost'}"${tip(villainName(f.id), f.won ? R.won : R.lost)}>${foePortrait(f.id, 'sm')}<span class="run-foe-mark" aria-hidden="true">${icon(f.won ? 'check' : 'close')}</span><span class="sr-only">${villainName(f.id)}: ${f.won ? R.won : R.lost}</span></li>`,
+        )
+        .join('')}</ol>`
+    : '';
+  const events =
+    r.events && Object.keys(r.events).length
+      ? Object.entries(r.events)
+          .map(([id, n]) => `${S.events[id]?.name ?? id}${n > 1 ? ` ×${n}` : ''}`)
+          .join(', ')
+      : R.none;
+  const facts = [
+    fact(R.origin, origin),
+    fact(R.difficulty, r.difficulty ? S.difficulty[r.difficulty].name : ''),
+    fact(R.reached, reached),
+    old ? '' : fact(R.fallenTo, r.fallenTo ? villainName(r.fallenTo) : ''),
+    old ? '' : fact(R.relics, relicList(r.relics)),
+    old ? '' : fact(R.events, events),
+    old ? '' : fact(R.bestHit, String(r.bestHit ?? 0)),
+    fact(R.revives, String(r.revivesUsed)),
+    fact(R.date, runDate(r.startedAt)),
+    fact(R.seed, r.seed !== undefined ? String(r.seed) : ''),
+  ].join('');
+  return `<dl class="run-facts">${facts}</dl>${foes ? `<h4 class="run-sub">${R.foes}</h4>${foes}` : ''}${old ? `<p class="muted small">${R.oldRecord}</p>` : ''}`;
+}
+
+/** Clã do protagonista da Jornada: o Naruto é Uzumaki, o Sasuke é Uchiha; no Caminho Ninja, a classe. */
+const jornadaClan = (r: JornadaRunRecord) => (r.hero === 'naruto' ? 'uzumaki' : r.hero === 'sasuke' ? 'uchiha' : r.classId === 'common' ? null : r.classId);
+
+function jornadaStageName(r: JornadaRunRecord): string {
+  const stages = r.mode === 'generic' ? jornadaData.generic.stages : storyStages({ campaign: r.campaign }, jornadaData);
+  const id = stages[r.stageIndex]?.id;
+  return id ? S.jornada.stages[id] ?? id : '';
+}
+
+/** As runs terminadas da História ou da Campanha (`jornada_runs_v1`), mais recente primeiro. */
+export function jornadaHistory(mode: 'story' | 'path'): string {
+  const R = S.profile.run;
+  const J = S.jornada;
+  const runs = loadJornadaRuns(ses.storage).filter((r) => r.mode === (mode === 'story' ? 'canon' : 'generic'));
+  if (!runs.length) return `<p class="muted">${R.empty[mode]}</p>`;
+  return `<h3 class="run-sub">${R.finished}</h3><ul class="history">${runs
+    .map((r, i) => {
+      const hero = J.names[r.hero] ?? r.hero;
+      const klass = r.mode === 'generic' ? J.genericStart.classes[r.classId]?.name ?? r.classId : '';
+      const element = [r.element, r.secondElement]
+        .filter((e): e is NonNullable<typeof e> => Boolean(e))
+        .map((e) => S.elements[e])
+        .join(' · ');
+      const title = [r.mode === 'generic' ? klass : hero, element].filter(Boolean).join(' · ');
+      const reached = R.stage(r.cycle + 1, r.stageIndex + 1, r.stopIndex + 1, jornadaStageName(r));
+      const line = [runDate(r.updatedAt), reached].filter(Boolean).join(' · ');
+      const tags = `${diffChip(r.difficulty)} <span class="chip st-${r.status}">${S.ui.runStatus[r.status]}</span>`;
+      const facts = [
+        fact(R.hero, hero),
+        fact(R.klass, klass),
+        fact(R.element, element),
+        fact(R.difficulty, S.difficulty[r.difficulty].name),
+        fact(R.reached, reached),
+        fact(R.level, String(r.level)),
+        fact(R.foes, R.fights(r.fights, r.wins)),
+        fact(R.alliesLost, String(r.alliesLost)),
+        fact(R.bestHit, String(r.bestHit)),
+        fact(R.relics, relicList(r.relics)),
+        fact(R.date, runDate(r.startedAt)),
+      ].join('');
+      return runRow(`${mode}${i}`, clanSymbol(jornadaClan(r)), mode, title, line, tags, `<dl class="run-facts">${facts}</dl>`);
+    })
+    .join('')}</ul>`;
 }

@@ -265,7 +265,7 @@ const recoveryLine = (d: Difficulty) => {
 async function replaceSaved(host: JornadaHost, saved: JRun | null): Promise<boolean> {
   if (!saved) return true;
   if (!(await confirmDialog(J.start.overwrite, U.overwriteYes, J.battle.cancel))) return false;
-  if (saved.cycle > 0 || saved.stageIndex > 0 || saved.stopIndex > 0) host.recordJornada(saved);
+  if (saved.cycle > 0 || saved.stageIndex > 0 || saved.stopIndex > 0) host.recordJornada(saved, true);
   return true;
 }
 
@@ -1047,6 +1047,7 @@ export async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<Sto
     // Desistir no meio da luta: como o Abandonar da trilha, a run acaba em derrota (sem Vontade do Fogo).
     if (res.abandoned) return { ...run, status: 'defeat' };
     const { run: next, outcome } = finishFight(run, res.battle, data);
+    host.noteFight(res.battle, outcome.won);
     if (outcome.retry) {
       await notice(J.battle.lost, U.retry, { place: stopScene(run, data), seal: 'retry', ...heroFace(host, run) });
       run = next;

@@ -3,6 +3,8 @@ import { lineageKey } from '../src/core/achievements';
 import { avatarCatalog, avatarChoices, currentAvatar, type AvatarEntry } from '../src/core/avatar';
 import { achievements } from '../src/data/achievements';
 import { jornadaAchievements } from '../src/data/jornada/achievements';
+import { charactersById } from '../src/data/jornada/characters';
+import { enemiesById } from '../src/data/jornada/enemies';
 import { roletaVillains } from '../src/data/roleta/villains';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { saveProfile, bestRoletaCycle, PLAYER_NAME_MAX, cleanPlayerName } from '../src/state/profile';
@@ -195,7 +197,13 @@ const villainPortraitKey = (v: { id: string; portrait?: string }) => v.portrait?
 export function avatarOptions(): string[] {
   const played = loadRuns(ses.storage).map((r) => lineageKey(r.origin));
   const seenVillains = roletaVillains.filter((v) => (ses.profile.villains[v.id]?.faced ?? 0) > 0).map(villainPortraitKey);
-  return avatarChoices({ playedLineages: [...new Set(played)], achievements: Object.keys(ses.profile.achievements), seenVillains });
+  // Quem lutou na Jornada, pela chave do retrato (a forma base de cada ficha).
+  const portraitKey = (p?: string) => p?.split(':')[1];
+  const seenJornada = [
+    ...(ses.profile.jornadaAllies ?? []).map((id) => portraitKey(charactersById[id]?.portrait)),
+    ...Object.keys(ses.profile.jornadaFoes ?? {}).map((id) => portraitKey(enemiesById[id]?.portrait)),
+  ].filter((k): k is string => Boolean(k));
+  return avatarChoices({ playedLineages: [...new Set(played)], achievements: Object.keys(ses.profile.achievements), seenVillains, seenJornada });
 }
 
 /** Todos os avatares do jogo, para a escolha mostrar também os bloqueados. */

@@ -2,6 +2,17 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Histórico detalhado e fichas do Livro Bingo (sem versão, 25/11/2026)
+
+Tarefa `registro-fichas` (2b do plano das telas), com contrato aprovado pelo usuário. Nenhuma regra nem número de jogo mudou; as simulações saem iguais às do staging (mesma seed).
+
+- **Dados novos**: os detalhes da run do Arcade no `runs_v1` (`runDetails`), o histórico da Jornada em `jornada_runs_v1` e o Livro Bingo da Jornada em `profile.jornadaFoes`, todos opcionais: save antigo carrega igual.
+- **Decidido sozinho** (para revisar):
+  - **Descrições**: 55, e não as 65 do contrato, porque o mesmo personagem nos dois modos divide uma descrição.
+  - **Grau da ficha pela parada**: o grau segue o `kind` da parada. Por isso o Kimimaro da História sai comum (a luta dele no Vale do Fim é comum) e o Zabuza das Ondas sai elite (o chefe do arco é o Haku).
+  - **Avatares da Jornada**: lutar com alguém ou contra alguém libera o retrato só de quem já era avatar (elenco dos arcos e personagens das conquistas). Os genéricos e as transformações ficaram de fora, para não exigir recortes novos.
+  - **Fundos da Campanha**: os estágios g1, g2 e g3 usam os fundos de Ondas, Exame e Sannin. Enquanto o lote 2 não chega, a ficha usa uma vinheta da cor do arco.
+
 ## Docs do processo alinhados ao staging (processo, sem versão, 21/11/2026)
 
 Tarefa `harness-docs` (#56, #58, #60, #61, #63), segunda das três da avaliação do processo. O usuário escolheu, nas quatro decisões, a opção recomendada:

@@ -207,7 +207,7 @@ O letreiro em pincel ocupa o céu à esquerda. A pintura da vila se dissolve no 
 
 Abaixo de 768 px, a Ficha compacta fica entre a cena e os pergaminhos empilhados. De 768 a 1023 px, Ficha e Conquistas ficam lado a lado e cada modo ocupa uma coluna. A partir de 1024 px, a lateral fixa reúne os destinos e a coluna direita recebe Ficha e Conquistas. O avatar fica num quadro de tinta, com o fundo original do retrato, sobre o papel da Ficha (`--profile-paper`). A alça com a folha de Konoha abre as ferramentas por toque, foco ou aproximação do mouse.
 
-O Registro ocupa a área principal. Em telas com barra inferior, quatro abas dão acesso às seções. Dentro do Histórico, o jogador escolhe Arcade, História ou Campanha. A ação **Continuar** fica junto da parada salva no modo correspondente.
+O Registro ocupa a área principal. Em telas com barra inferior, quatro abas dão acesso às seções. Dentro do Histórico, o jogador escolhe Arcade, História ou Campanha. A ação **Continuar** fica junto da parada salva no modo correspondente. Cada run do Histórico é uma linha que abre os detalhes. No Livro Bingo, a ficha de cada inimigo é papel de cartaz com o fundo do arco e a moldura pelo grau (comum, elite e chefe com o carimbo 手配), em tela cheia no celular e num painel ao lado no desktop.
 
 ### Panels
 - **Painel laqueado** (`.card`, `.panel`, `.chamfer`): grafite com grão, filete de aço desenhado pela camada de baixo, aba vermelha curta no topo marcando o dono. Padding 12px.

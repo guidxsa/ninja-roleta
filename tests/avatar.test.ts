@@ -45,6 +45,11 @@ describe('avatar do perfil (v0.63.0)', () => {
     expect([...all].sort()).toEqual([...cat].sort());
   });
 
+  it('quem lutou na Jornada libera o avatar se for do elenco (forma base); genéricos e transformações não', () => {
+    const out = avatarChoices({ playedLineages: [], achievements: [], seenJornada: ['zabuza', 'sakura', 'thug', 'sasukeCurse', 'leafGeninA'] });
+    expect(out).toEqual([DEFAULT_AVATAR, 'ninja:zabuza', 'ninja:sakura']);
+  });
+
   it('o escolhido vale só se ainda estiver liberado', () => {
     const choices = ['ninja:common', 'ninja:uchiha'];
     expect(currentAvatar('ninja:uchiha', choices)).toBe('ninja:uchiha');

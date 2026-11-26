@@ -21,7 +21,7 @@ import { type RTechniqueDef } from '../../src/data/roleta/techniques';
 import { roletaVillainsById as villainsById } from '../../src/data/roleta/villains';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { achievementsFromHistory, saveProfile, syncHardcoreUnlock, recordFight, killedByCounts, unlockAchievements, discoverRelics } from '../../src/state/profile';
-import { loadRuns, type RunStatus, updateRun } from '../../src/state/runHistory';
+import { loadRuns, runDetails, type RunStatus, updateRun } from '../../src/state/runHistory';
 import { fighterPortrait, villainPortrait, icon, clanSymbol, ninjaPortrait, sceneMedia } from '../art';
 import { type Mood, mood } from '../audio';
 import { barPct, barTone, barLayers, patchBar } from '../bars';
@@ -338,7 +338,8 @@ export function track(patch: { status?: RunStatus; furthestStage?: number; diffi
 
   // Runs do laboratório não entram no histórico.
   if (!ses.camp) return;
-  updateRun(ses.storage, ses.camp.runId, { ...patch, revivesUsed: ses.camp.player.revivesUsed }, new Date(), data.balance.history.maxRuns);
+  const details = runDetails(ses.camp.stats, ses.camp.player.relics ?? []);
+  updateRun(ses.storage, ses.camp.runId, { ...patch, ...details, revivesUsed: ses.camp.player.revivesUsed }, new Date(), data.balance.history.maxRuns);
 }
 
 export function applyStep(step: Step) {
