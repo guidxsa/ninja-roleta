@@ -134,7 +134,7 @@ Um cartão por inimigo, em três seções: **Arcade** (os vilões do Roleta, por
 
 - **Arcade**: `villains`, gravado no fim de cada luta do Roleta.
 - **Jornada** (`jornadaFoes`): gravado no fim de cada luta (`foeFights`, `src/core/jornada/foes.ts`). Vários inimigos do mesmo tipo na luta (os capangas do Gatō) contam como uma luta só; a lição do sino conta como vitória.
-- Tocar num inimigo já visto abre a **ficha**: retrato grande, nome, uma descrição curta, as técnicas (tipo, dano e custo na dica), os atributos, a passiva e os números do jogador contra ele. O fundo segue o arco (ou a categoria, no Arcade) e a moldura sobe de grau com o nível: comum, elite e chefe, com o carimbo de procurado ([visual.md](../visual.md#livro-bingo)).
+- Tocar num inimigo já visto abre a **ficha**: retrato grande, nome, uma descrição curta, as técnicas (tipo, dano e custo na dica), os atributos, a passiva e os números do jogador contra ele. O fundo segue o arco (ou a categoria, no Arcade) e a moldura sobe de grau com o nível: comum, elite e chefe, com o carimbo de procurado ([visual.md](../visual.md#telas-no-estilo-novo)).
 
 ## Origens
 

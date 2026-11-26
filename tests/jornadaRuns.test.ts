@@ -26,7 +26,7 @@ describe('histórico da Jornada (jornada_runs_v1)', () => {
 
   it('grava a run lida do save, com o elemento do protagonista e os números da run', () => {
     const st = memoryStorage();
-    const run = { ...newRun(7, 'medium', jornadaData), status: 'defeat' as const, stageIndex: 1, stopIndex: 3, level: 5 };
+    const run = { ...newRun(7, 'normal', jornadaData), status: 'defeat' as const, stageIndex: 1, stopIndex: 3, level: 5 };
     run.stats = { fights: 6, wins: 5, alliesLost: 2, bestHit: 41 };
     recordJornadaRun(st, jornadaRunRecord(run, t0), 100);
     const [r] = loadJornadaRuns(st);
