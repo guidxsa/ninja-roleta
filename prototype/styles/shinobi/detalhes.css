@@ -431,12 +431,12 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
 .ninja-record[open] summary b .ico { rotate: -90deg; }
 .jmodes .ninja-record dl { margin-top: var(--sp-2); }
 .jmodes [data-avatar-preview], .jmodes .avatar-art, .avatar-gallery .avatar-art { display: block; min-width: 0; }
+/* O avatar mostra o retrato inteiro, com o fundo original da arte, num quadro de tinta como os do Livro Bingo. */
 .jmodes .ninja-id .portrait, .avatar-gallery .portrait {
-  display: block; width: 100%; height: auto; aspect-ratio: 1; border: 0; box-shadow: none;
-  border-radius: 0; mask: none; filter: none; background: var(--profile-paper);
+  display: block; width: 100%; height: auto; aspect-ratio: 1; border: 2px solid var(--paper-ink);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--paper-ink) 45%, transparent); border-radius: 0; mask: none; filter: none;
 }
 .jmodes .avatar-art img, .avatar-gallery .avatar-art img { clip-path: var(--avatar-cut); }
-.jmodes .ninja-id .portrait svg > rect[fill^='url(#bg-'] { fill: var(--profile-paper); }
 .gate.jmodes .gate-modes {
   grid-area: modes; display: grid; grid-template-columns: minmax(0, 1fr);
   align-items: stretch; gap: var(--gap); padding: 0 var(--sp-3) var(--sp-3);

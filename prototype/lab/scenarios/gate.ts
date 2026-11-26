@@ -51,10 +51,10 @@ export const gate: Scenario[] = [
     },
   },
   {
-    id: 'gate.avatar:paper', title: 'Ficha com cada avatar', group: 'Entrada',
+    id: 'gate.avatar:paper', title: 'Ficha com cada avatar (com o fundo, e a silhueta de bloqueado)', group: 'Entrada',
     mount: () => choose(show(h(`<section class="avatar-gallery"><h2>Ficha com cada avatar</h2>${Object.keys(AVATAR_CUTS).map(key => {
       const spec = 'ninja:' + key;
-      return `<figure>${avatarArt(spec, 'md', true)}<figcaption>${esc(avatarName(spec))}</figcaption></figure>`;
+      return `<figure>${avatarArt(spec, 'md', true)}${avatarArt(spec, 'md', true, true)}<figcaption>${esc(avatarName(spec))}</figcaption></figure>`;
     }).join('')}</section>`))),
   },
   { id: 'gate.name', title: 'Pedir o nome do ninja', group: 'Entrada', mount: () => askPlayerName() },

@@ -217,7 +217,8 @@ export function avatarArt(spec: string, size: 'sm' | 'md' | 'lg', onPaper = fals
   const key = spec.split(':')[1] ?? 'common';
   const portrait = ninjaPortrait(key, size);
   // Bloqueado sem recorte próprio: a silhueta genérica, para não virar um quadrado cinza.
-  const cut = onPaper && (AVATAR_CUTS[key] ?? (locked ? GENERIC_AVATAR_CUT : undefined));
+  // O retrato mostra o fundo original da arte; só o bloqueado vira silhueta (o recorte dele ou o genérico).
+  const cut = onPaper && locked && (AVATAR_CUTS[key] ?? GENERIC_AVATAR_CUT);
   return cut ? `<span class="avatar-art" style="--avatar-cut:${cut}">${portrait}</span>` : portrait;
 }
 
