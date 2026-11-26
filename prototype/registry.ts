@@ -1,4 +1,4 @@
-// Registro ninja (popup): Histórico, Livro Bingo, Relíquias e Conquistas.
+// Páginas do Registro ninja: Histórico, Livro Bingo, Relíquias e Conquistas.
 import { type AchievementCategory } from '../src/core/achievements';
 import { achievements } from '../src/data/achievements';
 import { campaign } from '../src/data/campaign';
@@ -6,64 +6,80 @@ import { jornadaAchievements } from '../src/data/jornada/achievements';
 import { lineages as allLineages } from '../src/data/lineages';
 import { roletaVillains as villains } from '../src/data/roleta/villains';
 import { ptBR as S } from '../src/data/strings/ptBR';
-import { PLAYER_NAME_MAX, originRecords } from '../src/state/profile';
+import { loadJornada } from '../src/state/jornadaSave';
+import { originRecords } from '../src/state/profile';
 import { loadRuns } from '../src/state/runHistory';
 import { achievementIcon } from './achievementIcons';
 import { icon } from './art';
-import { h, esc, openDialog } from './dom';
-import { avatarButton, setPlayerName, openAvatarPicker, difficultyStats } from './gate';
+import { h, show } from './dom';
+import { navigateGate, difficultyStats } from './gate';
 import { relicCollection } from './jornada/relics';
 import { data, foePortrait, villainName, stageName, originLabel, diffChip } from './roleta/common';
 import { ses } from './roleta/session';
 
 export type ProfileTab = 'history' | 'achievements' | 'bingo' | 'origins' | 'relics';
 export type RegistryPage = 'history' | 'bingo' | 'relics' | 'achievements';
+export const registryPages: readonly RegistryPage[] = ['history', 'bingo', 'relics', 'achievements'];
+export type HistoryMode = 'roleta' | 'story' | 'path';
 export type HistoryFilter = 'general' | 'origins' | 'difficulty';
 /** Selo de cada seção do Registro: 歴 histórico, 功 conquistas, 手配 Livro Bingo (procurados), 宝 relíquias. */
 export const REGISTRY_KANJI: Record<RegistryPage, string> = { history: '歴', achievements: '功', bingo: '手配', relics: '宝' };
 
-/** Entradas antigas (barra superior, barra do Portão, faixa de Conquistas): Origens vira o filtro do Histórico. */
+/** Os atalhos antigos de Origens continuam no filtro do Arcade. */
 export function openProfile(tab: ProfileTab = 'history') {
-  if (tab === 'origins') openRegistry('history', 'origins');
-  else openRegistry(tab);
+  navigateGate(tab === 'origins' ? { page: 'history', filter: 'origins' } : { page: tab });
 }
 
-/**
- * Registro em popup (um padrão só, em todo lugar): uma seção por vez, num pergaminho com rolos. O Histórico filtra por
- * Geral, Origens e Dificuldade. O nome do jogador aparece no topo só no celular (no PC ele fica na Ficha do Início).
- */
-export function openRegistry(page: RegistryPage, filter: HistoryFilter = 'general') {
+export function registryScreen(page: RegistryPage, filter: HistoryFilter = 'general', mode: HistoryMode = 'roleta'): HTMLElement {
   const D = S.ui.desk;
   const k = REGISTRY_KANJI[page];
-  const overlay = h(`<div class="modal" aria-label="${D.nav[page]}"><div class="modal-body profile registry">
-    <span class="scroll-roll t" aria-hidden="true"></span><span class="scroll-roll b" aria-hidden="true"></span>
-    <div class="modal-head"><span class="seal${k.length > 1 ? ' two' : ''}" aria-hidden="true">${k}</span><h2>${D.nav[page]}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
-    <div class="reg-id">${avatarButton('sm')}<label class="field profile-name reg-name"><span>${S.ui.playerName.label}</span><input type="text" data-player-name maxlength="${PLAYER_NAME_MAX}" autocomplete="nickname" placeholder="${S.ui.playerName.placeholder}" value="${esc(ses.profile.playerName ?? '')}"></label></div>
-    ${page === 'history' ? `<div class="segmented desk-filters">${(['general', 'origins', 'difficulty'] as const).map((f) => `<button class="btn seg" data-filter="${f}" aria-pressed="${f === filter}">${D.filters[f]}</button>`).join('')}</div>` : ''}
-    <div class="profile-body"></div></div></div>`);
-  const body = overlay.querySelector<HTMLElement>('.profile-body')!;
-  overlay.querySelector('[data-player-name]')!.addEventListener('change', (e) => setPlayerName((e.target as HTMLInputElement).value));
-  overlay.querySelector('[data-avatar]')?.addEventListener('click', openAvatarPicker);
-  const fill = (f: HistoryFilter) => {
+  const root = show(h(`<section class="screen registry profile">
+    <header class="registry-head"><span class="seal${k.length > 1 ? ' two' : ''}" aria-hidden="true">${k}</span>
+      <h1>${D.nav[page]}</h1><button type="button" class="btn small" data-back>${S.ui.back}</button></header>
+    <nav class="registry-tabs" aria-label="${D.nav.registry}">${registryPages.map(id =>
+      `<button type="button" class="btn" data-page="${id}"${id === page ? ' aria-current="page"' : ''}>${D.nav[id]}</button>`).join('')}</nav>
+    ${page === 'history' ? `<div class="history-modes segmented" role="group" aria-label="${S.jornada.modes.title}">${(['roleta', 'story', 'path'] as const).map(id =>
+      `<button type="button" class="btn seg" data-mode="${id}" aria-pressed="${id === mode}">${D.nav[id]}</button>`).join('')}</div>
+      <div class="desk-filters segmented" role="group" aria-label="${D.nav.roleta}">${(['general', 'origins', 'difficulty'] as const).map(id =>
+      `<button type="button" class="btn seg" data-filter="${id}" aria-pressed="${id === filter}">${D.filters[id]}</button>`).join('')}</div>` : ''}
+    <div class="profile-body"></div></section>`));
+  const body = root.querySelector<HTMLElement>('.profile-body')!;
+  const fill = () => {
     body.replaceChildren();
-    if (page === 'history') {
-      if (f === 'general') historyTab(body);
-      else body.innerHTML = f === 'origins' ? originsTab() : difficultyStats();
-    } else if (page === 'relics') relicCollection(body, ses.profile.relics);
-    else body.innerHTML = page === 'bingo' ? bingoTab() : achievementsTab();
+    if (page === 'relics') return relicCollection(body, ses.profile.relics);
+    if (page !== 'history') {
+      body.innerHTML = page === 'bingo' ? bingoTab() : achievementsTab();
+      return;
+    }
+    root.querySelector<HTMLElement>('.desk-filters')!.hidden = mode !== 'roleta';
+    if (mode === 'roleta') {
+      if (filter === 'general') historyTab(body);
+      else body.innerHTML = filter === 'origins' ? originsTab() : difficultyStats();
+      return;
+    }
+    const saved = loadJornada(ses.storage);
+    const matching = saved && saved.mode === (mode === 'story' ? 'canon' : 'generic');
+    const best = mode === 'path' && ses.profile.jornada?.generic;
+    const record = mode === 'path' ? `<p><b>${D.campaignRecord}</b> · ${best ? D.campaignResult(best.cycle, best.stage, best.won) : D.none}</p>` : '';
+    body.innerHTML = `${record}${matching
+      ? `<div class="registry-save"><strong>${D.savedStop(saved.stageIndex + 1, saved.stopIndex + 1)}</strong><button type="button" class="btn primary" data-choice="continue">${S.ui.continue}</button></div>`
+      : `<p class="muted">${D.historyEmpty[mode]}</p>`}${jornadaAchievementsSection(new Set(Object.keys(ses.profile.achievements)))}`;
   };
-  overlay.querySelector('.desk-filters')?.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-filter]');
-    if (!b) return;
-    overlay.querySelectorAll('[data-filter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    fill(b.dataset.filter as HistoryFilter);
+  root.addEventListener('click', event => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
+    if (!button) return;
+    if (button.hasAttribute('data-back')) return navigateGate({ page: 'home' });
+    if (button.dataset.page) return navigateGate({ page: button.dataset.page as RegistryPage });
+    if (button.dataset.choice === 'continue') return navigateGate({ mode, resume: true });
+    if (button.dataset.mode) mode = button.dataset.mode as HistoryMode;
+    else if (button.dataset.filter) filter = button.dataset.filter as HistoryFilter;
+    else return;
+    root.querySelectorAll<HTMLElement>('[data-mode], [data-filter]').forEach(el =>
+      el.setAttribute('aria-pressed', String(el.dataset.mode === mode || el.dataset.filter === filter)));
+    fill();
   });
-  // Escape, foco e o fim do listener ficam com openDialog (antes o keydown ficava preso quando goHome fechava a janela).
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay || (e.target as HTMLElement).closest('[data-close]')) overlay.remove();
-  });
-  fill(filter);
-  openDialog(overlay);
+  fill();
+  return root;
 }
 
 /** Selo da conquista: o ícone dela num selo dourado quando liberada; contorno com cadeado quando não. */

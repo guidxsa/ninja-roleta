@@ -15,12 +15,17 @@ A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra late
 
 ## Avatar
 
-- Desde a v0.63.0, o avatar da Ficha do ninja (Início do PC) e do topo do Registro ninja é editável: tocar nele abre a escolha.
-- Dá para escolher entre os personagens jogáveis **já liberados** (`avatarChoices`, `src/core/avatar.ts`):
+- O avatar e o nome ficam no topo da Ficha do ninja, sempre à vista (também na faixa do celular). Tocar no avatar abre a escolha; tocar no nome vira um campo no lugar (Enter ou sair grava, Esc cancela). Um lápis ao lado de cada um mostra que é editável. O “Registro do ninja” recolhível guarda só os números.
+- Dá para escolher entre os personagens **já liberados ou vistos** (`avatarChoices`, `src/core/avatar.ts`), só na forma base (sem marca da maldição, Sharingan ou transformação):
   - o ninja comum, sempre;
-  - cada origem jogada no Roleta (pelo histórico) ou com a vitória registrada (`win_<linhagem>`, que fica mesmo depois de a run sair do histórico);
-  - personagens da Jornada pelas conquistas: Naruto (Sino na mão), Uchiha (Chama do clã), Hyuuga (Olhos abertos) e o visual do Sasuke (Mil pássaros), que não se libera mais desde a v0.86.0 (saiu o easter egg): fica nos perfis que já tinham e volta com a campanha do Sasuke.
-- Fica no perfil (`avatar`) como a chave do retrato (`ninja:<chave>`; o Naruto é `ninja:naruto` desde a v0.90.0). Por enquanto é o desenho SVG; quando houver imagem própria com a mesma chave, ela entra no lugar. Se o escolhido deixar de estar liberado, vale o padrão.
+  - cada origem jogada no Arcade (pelo histórico) ou com a vitória registrada (`win_<linhagem>`, que fica mesmo depois de a run sair do histórico);
+  - Uchiha (Chama do clã) e Hyuuga (Olhos abertos) pelas conquistas da Jornada, e o visual do Sasuke (Mil pássaros) para quem já tinha;
+  - o **elenco de cada arco** da História, pela conquista do arco (`ARC_CAST`): Sino na mão libera o Time 7 (Naruto, Sasuke, Sakura, Kakashi), Iruka e Mizuki; Ponte do Naruto, os Irmãos Demônio, Zabuza e Haku; Coração de chunin, os genins do Exame (Shikamaru, Chōji, Kiba, Rock Lee, Neji), o trio do Som, Kabuto, Gaara e Orochimaru; Vale do Fim, Jiraiya, Tsunade e os Quatro do Som com Kimimaro;
+  - os **vilões já enfrentados no Arcade** (Livro Bingo), pelo retrato de cada um.
+- A escolha agrupa Origens, Aliados e Vilões, com o total liberado de cada grupo. O bloqueado aparece em silhueta, com a dica de onde se libera (`avatarCatalog`).
+- Sobre o papel da Ficha, o retrato usa o recorte de `AVATAR_CUTS` (`prototype/art.ts`), conferido no cenário “Ficha com cada avatar” do UI Lab. Retrato de fundo escuro ou com textura fica sem recorte e mostra o próprio fundo.
+- Fica no perfil (`avatar`) como a chave do retrato (`ninja:<chave>`; a imagem vem de img/ninja ou img/viloes). Se o escolhido deixar de estar liberado, vale o padrão.
+- Os personagens vistos na Jornada ainda não ficam registrados; quando ficarem, ampliam este pool.
 
 ## Recorde do modo infinito
 

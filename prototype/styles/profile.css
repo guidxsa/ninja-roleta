@@ -18,8 +18,6 @@
 /* Avatar (v0.63.0): botão com o retrato e a janela de escolha. */
 .avatar-btn { display: inline-grid; padding: 0; border: 0; background: none; cursor: pointer; border-radius: var(--radius); }
 .avatar-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.reg-id { display: flex; align-items: flex-end; gap: 10px; }
-.reg-id .reg-name { flex: 1; min-width: 0; }
 .avatar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; padding: 4px 0; }
 .avatar-opt {
   display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 44px; padding: 8px 4px;
@@ -54,3 +52,30 @@
 .field input:focus { outline: 2px solid var(--accent-2); outline-offset: 1px; }
 .profile-name { margin-bottom: 8px; }
 .jname-skip { align-self: center; }
+
+/* Registro na área principal. Só o Histórico acrescenta modos e filtros. */
+body.at-gate main:has(.registry) { max-width: min(100%, 1080px); }
+.registry { gap: var(--gap); padding: var(--sp-3) 0; }
+.registry-head { display: flex; align-items: center; gap: var(--gap); }
+.registry-head h1 { margin: 0; font: 700 clamp(var(--fs-3xl), 4vw, var(--fs-6xl))/1.12 var(--font-hand); }
+.registry-head [data-back] { margin-left: auto; }
+.registry-tabs, .registry .segmented { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.registry :is(.registry-tabs, .segmented) button { min-height: 44px; flex: 1 1 auto; }
+.registry-tabs [aria-current], .registry .seg[aria-pressed=true] { border-color: var(--gold); color: var(--gold-2); }
+.registry .desk-filters .btn { background: transparent; }
+.registry-save { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--gap); }
+.registry .profile-body { padding: var(--sp-4); background: var(--surface); border-block: 1px solid var(--line); }
+@media (min-width: 1024px) {
+  .registry-tabs { display: none; }
+}
+
+@media (max-width: 479px) {
+  .registry-tabs { display: grid; grid-template-columns: 1fr 1fr; }
+}
+/* Escolha do avatar em grupos (Origens, Aliados, Vilões); o bloqueado é uma silhueta com a dica de onde se libera. */
+.avatar-group + .avatar-group { margin-top: var(--sp-3); }
+.avatar-opt.locked { cursor: help; color: var(--muted); }
+.avatar-opt.locked .portrait { filter: brightness(0) invert(.32); background: none; border-color: var(--line); }
+.avatar-opt.locked .avatar-art img { clip-path: var(--avatar-cut); }
+.avatar-opt.locked .avatar-art { display: block; }
+.avatar-opt.locked:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }

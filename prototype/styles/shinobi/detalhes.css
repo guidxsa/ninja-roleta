@@ -95,46 +95,6 @@
   padding: 5px 0;
   border-top: 1px solid var(--sh-terra-3);
 }
-.gate-aside .desk-id {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-}
-.gate-aside .desk-id [data-avatar] {
-  padding: 0;
-  background: none;
-  border: none;
-  box-shadow: none;
-}
-.gate-aside .desk-id [data-avatar] > .portrait {
-  width: clamp(100px, 16vh, 185px);
-  height: auto;
-  aspect-ratio: 1;
-  border: none;
-  box-shadow: none;
-  mask: linear-gradient(#000 78%, transparent);
-  mix-blend-mode: multiply;
-  filter: sepia(0.55) saturate(0.7);
-}
-.gate-aside .desk-id .field {
-  width: 100%;
-  align-items: center;
-}
-.gate-aside .desk-id .field > span {
-  position: absolute;
-  clip-path: inset(50%);
-}
-.gate-aside .desk-id .field input {
-  color: var(--shinobi-ink);
-  border: 0;
-  background: color-mix(in srgb, var(--sh-papel-3) 30%, transparent);
-  box-shadow: none;
-  text-align: center;
-  width: min(100%, 220px);
-  font: 700 23px/1.05 var(--shinobi-serif);
-  padding: 2px 6px;
-  height: 30px;
-}
 .gate-aside .jprogress + .desk-seal {
   display: none;
 }
@@ -165,7 +125,6 @@
   }
 }
 @media (max-width: 899px), (max-height: 559px) {
-  .gate-resume > .desk-prog,
   .gate .jprogress {
     padding: 7px 10px !important;
     margin: 0;
@@ -243,9 +202,6 @@
   .gate .jprogress .btn > .chip {
     font-size: 10px;
     padding: 2px 4px;
-  }
-  .gate .gate-resume .desk-seal {
-    display: none;
   }
   .gate .gate-banner {
     height: clamp(145px, 22vh, 210px);
@@ -389,4 +345,196 @@
 }
 .jbattle.bridge-live .jb-side {
   align-items: center;
+}
+
+/* Portão da Vila. Cena, Ficha e pergaminhos dividem uma grade própria em cada largura. */
+body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); padding: 0; }
+.gate.jmodes {
+  --profile-paper: var(--sh-papel-5);
+  display: grid;
+  grid-template-areas: "scene" "profile" "modes";
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+.gate.jmodes .gate-banner {
+  grid-area: scene;
+  display: block;
+  width: 100%;
+  height: clamp(240px, 37svh, 400px);
+  border: 0;
+  background: transparent;
+  container-type: normal;
+}
+.gate.jmodes .gate-banner .gate-hero {
+  background: var(--scene-art) center / cover no-repeat, var(--scene);
+  mask: linear-gradient(to bottom, var(--ink) 73%, transparent);
+}
+.jmodes .gate-banner .gate-hero img { object-position: var(--fx) var(--fy); filter: none; }
+.jmodes .gate-banner .gate-hero::after { display: none; }
+.gate.jmodes .gate-banner .gate-hero::before { background: none; }
+/* O letreiro fica embaixo dos rostos do Monte Hokage, sobre os telhados: no alto ele cobria os rostos. */
+.gate.jmodes .gate-head { left: 5%; top: 46%; width: auto; }
+.gate.jmodes .gate-head .logo {
+  height: auto; font: 400 var(--fs-brand)/.98 var(--font-display);
+  color: var(--paper); text-shadow: var(--title-shadow); transform: rotate(-4deg);
+}
+.gate.jmodes .gate-head .logo span { display: block; color: inherit; }
+.gate.jmodes .gate-aside {
+  grid-area: profile; display: grid; gap: var(--gap); container-type: normal;
+  margin: -20px var(--sp-3) var(--sp-4); padding: 0; align-content: start; overflow: visible;
+}
+.gate.jmodes .gate-aside > .parchment { margin: 0; padding: var(--sp-3); rotate: none; }
+.gate.jmodes .gate-aside > .desk-profile::before { background: var(--profile-paper); }
+.gate.jmodes .gate-aside > .desk-recent { display: none; }
+/* Topo da Ficha: avatar e nome sempre à vista, cada um um botão de editar com o lápis ao lado. */
+.jmodes .ninja-id {
+  display: grid; grid-template-columns: 68px minmax(0, 1fr); align-items: center; gap: var(--gap);
+  color: var(--paper-ink);
+}
+.jmodes .ninja-id .avatar-btn { position: relative; width: 100%; color: var(--paper-ink); }
+.jmodes .ninja-id .avatar-btn > .edit-mark { position: absolute; right: 0; bottom: 4%; }
+.edit-mark {
+  display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px;
+  color: var(--paper-ink); background: var(--profile-paper, var(--paper)); border: 1px solid var(--paper-muted);
+  border-radius: 50%; opacity: .75; transition: opacity var(--dur-1);
+}
+.edit-mark .ico { width: 13px; height: 13px; }
+:is(.avatar-btn, .name-btn):is(:hover, :focus-visible) .edit-mark { opacity: 1; border-color: var(--primary); color: var(--primary); }
+.ninja-name { display: flex; min-width: 0; }
+.name-btn {
+  display: inline-flex; align-items: center; gap: var(--sp-2); max-width: 100%; min-height: 44px; padding: 0;
+  color: inherit; background: none; border: 0; font: inherit; text-align: inherit; cursor: pointer;
+}
+.name-btn:focus-visible, .jmodes .ninja-id .avatar-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.name-btn strong { min-width: 0; }
+.name-input {
+  width: min(100%, 240px); min-height: 44px; padding: 2px 6px; color: var(--paper-ink);
+  background: color-mix(in srgb, var(--paper-2) 60%, transparent); border: 0; border-bottom: 2px solid var(--primary);
+  border-radius: 0; font: 700 var(--fs-xl)/1.1 var(--font-hand);
+}
+.name-input:focus { outline: none; }
+.jmodes .ninja-record summary {
+  display: flex; align-items: center; min-height: 36px; margin-top: var(--sp-2);
+  color: var(--paper-ink); border: 0; list-style: none; padding: 0; cursor: pointer;
+}
+.ninja-record summary::-webkit-details-marker { display: none; }
+.record-summary { display: grid; gap: var(--sp-1); justify-self: stretch; min-width: 0; font: var(--fs-sm)/1.25 var(--font-body); container-type: inline-size; }
+/* O nome fica numa linha só: encolhe com a coluna (16 letras cabem) e só corta com reticências em último caso. */
+.record-summary strong {
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font: 700 clamp(var(--fs-md), 9.5cqi, var(--fs-2xl))/1.1 var(--font-hand);
+}
+/* Cada linha da Ficha quebra só entre o rótulo e o valor, nunca no meio de um deles. */
+.record-line > span { white-space: nowrap; }
+.ninja-record summary b { display: flex; align-items: center; gap: var(--sp-1); font-family: var(--font-hud); }
+.ninja-record summary b .ico { width: 1em; height: 1em; rotate: 90deg; }
+.ninja-record[open] summary b .ico { rotate: -90deg; }
+.jmodes .ninja-record dl { margin-top: var(--sp-2); }
+.jmodes [data-avatar-preview], .jmodes .avatar-art, .avatar-gallery .avatar-art { display: block; min-width: 0; }
+.jmodes .ninja-id .portrait, .avatar-gallery .portrait {
+  display: block; width: 100%; height: auto; aspect-ratio: 1; border: 0; box-shadow: none;
+  border-radius: 0; mask: none; filter: none; background: var(--profile-paper);
+}
+.jmodes .avatar-art img, .avatar-gallery .avatar-art img { clip-path: var(--avatar-cut); }
+.jmodes .ninja-id .portrait svg > rect[fill^='url(#bg-'] { fill: var(--profile-paper); }
+.gate.jmodes .gate-modes {
+  grid-area: modes; display: grid; grid-template-columns: minmax(0, 1fr);
+  align-items: stretch; gap: var(--gap); padding: 0 var(--sp-3) var(--sp-3);
+}
+.gate.jmodes .mode-card { width: 100%; height: auto; min-height: 0; padding: 0; rotate: none; }
+.gate.jmodes .mode-card::before {
+  inset: var(--sp-2) var(--sp-1);
+  background: var(--grain-dark), linear-gradient(100deg, var(--paper-2), var(--paper) 16% 84%, var(--paper-2));
+}
+.gate.jmodes .mode-card:is(:focus-visible, :hover)::before { outline: 2px solid var(--gold); }
+.gate.jmodes .mode-card .scroll-roll.b { top: auto; bottom: 0; background-image: url('img/shinobi/rolo-base.png'); }
+.gate.jmodes .mode-card .mode-body {
+  width: 100%; height: 100%; display: grid; grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto; align-items: stretch;
+  padding: var(--sp-4) var(--sp-3) var(--sp-5); gap: var(--sp-1);
+}
+.gate.jmodes .mode-card .mode-body::after { content: none; }
+.gate.jmodes .mode-card .mode-art {
+  display: block; position: relative; height: clamp(124px, 22svh, 178px); width: 100%;
+  margin: 0; aspect-ratio: auto; mask: none; border: 0; box-shadow: none;
+  background: none; mix-blend-mode: multiply;
+}
+.gate.jmodes .mode-card .mode-art::before, .gate.jmodes .mode-card .mode-art::after { content: none; }
+.gate.jmodes .mode-art :is(img, svg) { width: 100%; height: 100%; object-fit: contain; filter: none; }
+.gate.jmodes .mode-txt { align-self: start; gap: var(--sp-2); padding: 0 var(--sp-2); }
+.gate.jmodes .mode-txt b { font: 700 clamp(var(--fs-4xl), 2.55vw, var(--fs-6xl))/1.1 var(--font-hand); }
+.gate.jmodes .mode-txt small {
+  display: block; width: auto; max-width: 42ch; margin: 0; padding: 0;
+  font: var(--fs-md)/1.35 var(--font-body); color: var(--paper-muted); background: none; text-shadow: none;
+}
+.jmodes .desk-recent h3 { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-1); }
+.jmodes .desk-recent .desk-all { margin: 0; }
+.avatar-gallery {
+  --profile-paper: var(--sh-papel-5); padding: var(--gap);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: var(--gap);
+  background: var(--profile-paper); color: var(--paper-ink);
+}
+.avatar-gallery h2 { grid-column: 1/-1; color: inherit; text-shadow: none; }
+.avatar-gallery figure { margin: 0; text-align: center; }
+@media (max-width: 1023px) {
+  body.at-gate { padding-left: 0; padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+  body.at-gate #side-nav { display: none; }
+  body.at-gate #gate-nav { display: grid; max-width: none; background: var(--bg-2); border-color: var(--line-strong); }
+  #gate-nav button { min-height: 52px; color: var(--muted); }
+  #gate-nav button[aria-current] { color: var(--gold-2); }
+  #gate-nav button[aria-current]::before { background: var(--primary); }
+  #gate-nav button .ico { width: 20px; height: 20px; }
+  #gate-nav button:focus-visible { outline: 2px solid var(--gold-2); outline-offset: -3px; }
+}
+@media (min-width: 768px) {
+  .gate.jmodes .gate-modes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gate.jmodes .mode-card .mode-art { height: 100%; min-height: 110px; }
+  .gate.jmodes .gate-aside > .desk-recent { display: block; }
+  .gate.jmodes .mode-card .mode-body { padding-block: var(--sp-5); }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  body.at-gate:has(.jmodes) { height: auto; }
+  .gate.jmodes { min-height: calc(100svh - 132px); grid-template-rows: minmax(240px, .95fr) auto minmax(270px, 1fr); }
+  .gate.jmodes .gate-banner { height: 100%; }
+  .gate.jmodes .gate-aside { grid-template-columns: 1fr 1fr; align-items: stretch; }
+  .jmodes .ninja-id { grid-template-columns: minmax(80px, .75fr) 1fr; margin-top: var(--sp-3); }
+  /* Faixa larga: a pintura aparece inteira e a faixa escura da esquerda comporta o letreiro no alto. */
+  .gate.jmodes .gate-head { top: 15%; }
+}
+@media (min-width: 1024px) {
+  body.at-gate { --side-w: clamp(118px, 10vw, 160px); }
+  body.at-gate:has(.jmodes) { height: max(100dvh, var(--floor-h)); }
+  .gate.jmodes {
+    grid-template-areas: "scene profile" "modes profile";
+    grid-template-columns: minmax(0, 1fr) clamp(208px, 20vw, 325px);
+    grid-template-rows: minmax(215px, 1.12fr) minmax(245px, .88fr);
+  }
+  .gate.jmodes .gate-banner { height: 100%; }
+  .gate.jmodes .gate-modes { margin-top: -35px; }
+  .gate.jmodes .gate-aside { display: flex; flex-direction: column; margin: 0; padding: var(--sp-3); overflow: auto; }
+  .jmodes .ninja-id { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .jmodes .ninja-name, .jmodes .ninja-record summary { justify-content: center; }
+  .jmodes .ninja-id .avatar-btn { width: min(90%, 21vh); }
+  .gate.jmodes .gate-head { top: 50%; }
+  .gate.jmodes .mode-txt { min-height: calc(var(--fs-6xl) * 1.1 + var(--fs-md) * 2.7 + var(--gap)); }
+  .jmodes .desk-recent li { grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-1) var(--sp-2); }
+  .jmodes .desk-recent li .ach-ico { grid-row: span 2; align-self: start; }
+  .jmodes .desk-recent li time { grid-column: 2; font-size: var(--fs-sm); }
+  .jmodes .desk-recent h3 { font-size: clamp(var(--fs-xl), 1.6vw, var(--fs-3xl)); }
+}
+
+/* Em uma janela larga e baixa, a lateral continua acessível e a página pode rolar. */
+@media (min-width: 1024px) and (max-height: 559px) {
+  body.at-gate { padding-left: var(--side-w); padding-bottom: 0; }
+  body.at-gate #gate-nav { display: none; }
+  body.at-gate #side-nav {
+    display: flex; flex-direction: column; gap: var(--sp-1); position: fixed; inset: 0 auto 0 0;
+    width: var(--side-w); overflow: auto; background: var(--bg-2); padding: var(--sp-2);
+  }
+  body.at-gate #side-nav button {
+    display: flex; align-items: center; gap: var(--sp-2); min-height: 44px;
+    font: var(--fs-md)/1.2 var(--font-hud); color: var(--text); background: var(--surface); border: 0;
+  }
+  body.at-gate #side-nav [aria-current] { background: var(--primary); }
+  body.at-gate #side-nav .ico { width: 20px; height: 20px; }
 }

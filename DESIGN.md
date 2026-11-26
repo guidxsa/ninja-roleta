@@ -201,6 +201,14 @@ Cantos retos (`--radius: 2px`) e **chanfro** (`--cut` 10px, 6px pequeno, 14px em
 - **Segmentado** (`.seg`): dificuldade pinta o selecionado (folha, dourado, vermelho, tinta).
 - **Regra:** botão tem ícone, nome e números principais; efeitos e bloqueios vão para a dica.
 
+### Portão da Vila
+
+O letreiro em pincel ocupa o céu à esquerda. A pintura da vila se dissolve no grafite, e os três pergaminhos se aproximam de sua base. Cada um tem rolos de madeira nas extremidades e uma ilustração em tinta sobre papel. A barraca de Arcade usa violeta, a História usa laranja e a estrada da Campanha usa verde. O card da História é o único com personagens: o Time 7 de costas olhando a vila (Naruto, Sasuke, Sakura e Kakashi), porque o modo segue os arcos canônicos do time; a descrição cita os arcos, do teste dos sinos ao Vale do Fim. O pergaminho inteiro abre o modo.
+
+Abaixo de 768 px, a Ficha compacta fica entre a cena e os pergaminhos empilhados. De 768 a 1023 px, Ficha e Conquistas ficam lado a lado e cada modo ocupa uma coluna. A partir de 1024 px, a lateral fixa reúne os destinos e a coluna direita recebe Ficha e Conquistas. A silhueta do avatar e a Ficha compartilham `--profile-paper`. A alça com a folha de Konoha abre as ferramentas por toque, foco ou aproximação do mouse.
+
+O Registro ocupa a área principal. Em telas com barra inferior, quatro abas dão acesso às seções. Dentro do Histórico, o jogador escolhe Arcade, História ou Campanha. A ação **Continuar** fica junto da parada salva no modo correspondente.
+
 ### Panels
 - **Painel laqueado** (`.card`, `.panel`, `.chamfer`): grafite com grão, filete de aço desenhado pela camada de baixo, aba vermelha curta no topo marcando o dono. Padding 12px.
 - **Pergaminho** (`.parchment`): papel com grão, manchas e borda queimada; título em Kalam. Botão primário dentro usa dourado claro.
