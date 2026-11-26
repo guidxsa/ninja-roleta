@@ -2,7 +2,7 @@
 
 O que fica salvo no aparelho entre as runs: conquistas, Livro Bingo, estatísticas por origem, coleção de relíquias, recorde do modo infinito e nome do jogador. A run continua só em memória (F5 reseta); o perfil vive no `localStorage` (`profile_v1`), ao lado do histórico de runs ([campanha.md](../roleta/campanha.md#histórico-de-runs)).
 
-A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra lateral do PC, a barra inferior do Portão da Vila ou a faixa de Conquistas) abre em popup, uma seção por vez, cada uma com o seu selo: Histórico (歴, com os filtros Geral, Origens e Dificuldade), Conquistas (功), Livro Bingo (手配) e Relíquias (宝, a coleção da Jornada: [reliquias.md](../jornada/reliquias.md#coleção)). No Livro Bingo, quem já foi derrotado ganha o carimbo 勝; quem nunca apareceu fica na sombra com 謎.
+A tela **Registro ninja** (o perfil; botão do livro no cabeçalho, a barra lateral do PC, a barra inferior do Portão da Vila ou a faixa de Conquistas) abre na área principal, uma seção por vez, cada uma com o seu selo: Histórico (歴, com os filtros Geral, Origens e Dificuldade), Conquistas (功), Livro Bingo (手配) e Relíquias (宝, a coleção da Jornada: [reliquias.md](../jornada/reliquias.md#coleção)). No Livro Bingo, quem já foi derrotado ganha o carimbo 勝; quem nunca apareceu fica na sombra com 謎.
 
 **Dados que não deu para ler** (v0.60.0): se o histórico ou o perfil estiverem corrompidos, o jogo segue com eles vazios, mas antes guarda o conteúdo em `runs_v1_backup`, `jornada_runs_v1_backup` ou `profile_v1_backup` (a primeira cópia fica), para a gravação seguinte não apagar tudo sem volta. Uma linha estragada do histórico sai sozinha, sem levar as outras.
 

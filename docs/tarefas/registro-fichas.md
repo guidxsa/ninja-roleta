@@ -81,4 +81,6 @@ Docs lidos: [AGENTS.md](../../AGENTS.md), [docs/visual.md](../visual.md), [docs/
 
 ## Achados
 
-Preenchido durante o trabalho, com o número da issue de cada achado fora do escopo ([issues.md](../processo/issues.md)).
+- #67: `docs/roleta/campanha.md` (seção "Histórico de runs") não cita os campos novos do registro do Arcade; o arquivo ficou fora do escopo aprovado.
+- #68: `scripts/revisar-visual.ts` não acha cenários do Lab com id montado por template (as fotos desta tarefa saíram de um executor à parte, fora do repositório).
+- #69: o Livro Bingo da História mostra duas fichas chamadas "Gaara" (`gaara` e `gaaraWeak`).
