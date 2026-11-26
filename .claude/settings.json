@@ -14,12 +14,8 @@
       "Bash(git * --no-verify*)",
       "Bash(git commit -n*)",
       "Bash(git config core.hooksPath*)",
-      "Bash(gh *contrato-aprovado*)",
-      "Bash(gh *revisao-dispensada*)",
       "Bash(gh *correcao-automatica*)",
       "Bash(gh api *labels*)",
-      "PowerShell(gh *contrato-aprovado*)",
-      "PowerShell(gh *revisao-dispensada*)",
       "PowerShell(gh *correcao-automatica*)",
       "PowerShell(gh api *labels*)"
     ]

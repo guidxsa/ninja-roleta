@@ -757,3 +757,11 @@ Roteiro de contas e progresso (combinado em 30/10/2026; a fase 1, o Laboratório
 ## 19/11/2026 — Identidade de Ninshu Roots
 
 O jogo adota o nome Ninshu Roots, a folha de Konoha sobre azulejo vermelho e o tema único escuro grafite. O Portão usa a arte noturna já disponível e conserva a citação sorteada.
+
+## Staging como playground, revisão na release e delegação por área (processo, 26/11/2026)
+
+Pedido do usuário depois da revisão do fluxo: tirar a revisão cruzada, porque o staging é um playground onde ele aceita erro, e deixar a revisão humana na passagem staging → master; o Codex fica com o visual (é melhor com o Impeccable) e o Claude com mecânica, balanceamento e estrutura; o Claude aciona o Codex local quando o pedido é visual. Contrato em [tarefas/harness-fluxo.md](tarefas/harness-fluxo.md).
+
+Motivo, medido no GitHub: 9 dos 13 PRs anteriores entraram com `revisao-dispensada` (cota do Codex desde 21/11 e a action do Claude, que só roda com o workflow igual ao do `master`, #79), e cerca de metade entrou sem `contrato-aprovado`. Antes: portão `revisao-cruzada`, loop de correção em até 3 rodadas, etiquetas `contrato-aprovado` e `revisao-dispensada`, `aprovacao.yml`. Depois: auto-merge com `check` e `meta`; PR de processo com merge do usuário; contrato sem etiqueta (aprovação na conversa no campo `aprovado`); PR permanente com a seção "Mudanças no processo" e a revisão de IA do lote (`codex exec review`) no "prepara"; aviso do `check:escopo` quando o agente sai da sua área; `npm run delegar` ([processo/delegacao.md](processo/delegacao.md)); `docs/processo/`, skills e modelos na lista protegida (#53, em parte). Issues resolvidas: #48, #49, #50, #57, #59, #61, #62 e #79.
+
+Decidido sem o usuário (seguindo as recomendações do contrato, que ele aprovou): um PR só; worktrees do Codex em `~/worktrees/ninja-roleta`; o Codex roda sem rede e não commita nem dá push (o 1º teste real, PR #82, mostrou que o sandbox não grava no `.git`; o Claude confere, commita e publica); o `staging.yml` passa a `pull_request_target`, para um PR não desligar a própria trava; a branch `feature/issue-<n>` continua exigindo a `correcao-automatica` posta pelo dono; a data de 02/12/2026 passa a exigir só o contrato.

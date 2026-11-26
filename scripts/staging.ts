@@ -1,11 +1,14 @@
 // Staging e release (docs/processo/fluxo.md). Cada PR para o staging traz um fragmento changelog.d/<tema>.md; a release
-// junta os fragmentos numa linha do CHANGELOG.md.
+// junta os fragmentos numa linha do CHANGELOG.md. O PR permanente é onde o usuário revisa o lote: sem revisão cruzada no
+// staging, ele lista à parte cada arquivo de processo alterado.
 //   tsx scripts/staging.ts pr               → JSON {titulo, corpo, sugerir, sugestao} do PR permanente (workflow staging.yml)
 //   tsx scripts/staging.ts release 0.96.0   → junta os fragmentos no CHANGELOG.md e apaga os fragmentos
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { PROTECTED } from './check-regras';
+import { matchesAny } from './harness';
 
 export const PASTA = 'changelog.d';
 export const LEIAME = 'LEIAME.md';
@@ -69,6 +72,11 @@ export function parseIntegrados(log: string): Integrado[] {
     });
 }
 
+/** Arquivos de processo (a lista protegida do check:regras) entre os alterados no lote. */
+export function arquivosDeProcesso(files: string[]): string[] {
+  return files.filter((f) => matchesAny(f, PROTECTED) || f === 'package.json').sort();
+}
+
 export interface PrPermanente {
   titulo: string;
   corpo: string;
@@ -76,7 +84,15 @@ export interface PrPermanente {
   sugestao: string;
 }
 
-export function montarPr(versaoAtual: string, fragmentos: Fragmento[], integrados: Integrado[], ponta: string, preview: string, sugerirCom: number): PrPermanente {
+export function montarPr(
+  versaoAtual: string,
+  fragmentos: Fragmento[],
+  integrados: Integrado[],
+  ponta: string,
+  preview: string,
+  sugerirCom: number,
+  processo: string[] = [],
+): PrPermanente {
   const proxima = proximaVersao(versaoAtual);
   const altos = fragmentos.filter((f) => f.peso === 'alto').length;
   const corpo = [
@@ -92,10 +108,20 @@ export function montarPr(versaoAtual: string, fragmentos: Fragmento[], integrado
     '',
     ...(integrados.length ? integrados.map((i) => `- ${i.pr ? `#${i.pr} ` : ''}${i.titulo}`) : ['- Nenhum.']),
     '',
+    `## Mudanças no processo (${processo.length} arquivo(s))`,
+    '',
+    ...(processo.length
+      ? [
+          'O staging não tem revisão cruzada: confira aqui o que mudou nas regras e nas verificações dos agentes (workflows, hooks, `AGENTS.md`, scripts de verificação, skills, `docs/processo/`; no `package.json`, os `scripts`).',
+          '',
+          ...processo.map((f) => `- \`${f}\``),
+        ]
+      : ['- Nenhuma.']),
+    '',
     '## Como lançar',
     '',
-    `1. Peça ao agente "prepara a v${proxima}": ele abre \`feature/release-v${proxima}\` para o staging com \`npx tsx scripts/staging.ts release ${proxima}\` e \`npm version ${proxima} --no-git-tag-version\`.`,
-    `2. Teste o preview e diga "publica v${proxima}": merge deste PR e tag \`v${proxima}\` no merge commit.`,
+    `1. Peça ao agente "prepara a v${proxima}": ele abre \`feature/release-v${proxima}\` para o staging com \`npx tsx scripts/staging.ts release ${proxima}\` e \`npm version ${proxima} --no-git-tag-version\`, e publica aqui uma revisão de IA do lote inteiro (só informa, não trava).`,
+    `2. Teste o preview, leia a revisão e as mudanças no processo e diga "publica v${proxima}": merge deste PR e tag \`v${proxima}\` no merge commit.`,
     '',
   ].join('\n');
   const sugerir = altos > 0 || fragmentos.length >= sugerirCom;
@@ -125,7 +151,16 @@ function main(): void {
     const atual = versaoDoPackage(git('show', 'origin/master:package.json'));
     const log = git('log', '--merges', '--first-parent', '--format=%s%x1f%b%x1e', 'origin/master..HEAD');
     const ponta = git('rev-parse', '--short', 'HEAD').trim();
-    const pr = montarPr(atual, lerFragmentos(), parseIntegrados(log), ponta, process.env.PREVIEW ?? '/staging/', Number(process.env.SUGERIR_COM_ITENS) || 8);
+    const alterados = git('diff', '--name-only', 'origin/master...HEAD').split('\n').map((l) => l.trim()).filter(Boolean);
+    const pr = montarPr(
+      atual,
+      lerFragmentos(),
+      parseIntegrados(log),
+      ponta,
+      process.env.PREVIEW ?? '/staging/',
+      Number(process.env.SUGERIR_COM_ITENS) || 8,
+      arquivosDeProcesso(alterados),
+    );
     process.stdout.write(JSON.stringify(pr));
   } else if (cmd === 'release' && arg && /^\d+\.\d+\.\d+$/.test(arg)) {
     const fragmentos = lerFragmentos();
