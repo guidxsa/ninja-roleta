@@ -1,6 +1,6 @@
 // Delegação ao Codex local (scripts/delegar.ts; docs/processo/delegacao.md).
 import { describe, expect, it } from 'vitest';
-import { argsCodex, lerArgs, montarPrompt, motivoRecusa, pastaPadrao } from '../scripts/delegar';
+import { argsCodex, lerArgs, linhaDeComando, montarPrompt, motivoRecusa, pastaPadrao } from '../scripts/delegar';
 
 const contrato = (agente: string, escopo = '["prototype/styles/**"]') => `---\nobjetivo: x\nescopo: ${escopo}\nagente: ${agente}\n---\n`;
 
@@ -29,27 +29,18 @@ describe('como o Codex roda', () => {
     });
   });
 
-  it('escrita só no worktree e no .git comum, sem rede, prompt pela entrada padrão', () => {
-    expect(argsCodex('/wt/letreiro', '/repo/.git', '/wt/letreiro.resultado.md')).toEqual([
-      'exec',
-      '-s',
-      'workspace-write',
-      '-C',
-      '/wt/letreiro',
-      '--add-dir',
-      '/repo/.git',
-      '-o',
-      '/wt/letreiro.resultado.md',
-      '-',
-    ]);
+  it('escrita só no worktree, sem rede, prompt pela entrada padrão; aspas no que tem espaço', () => {
+    const args = argsCodex('/wt/letreiro', '/wt/letreiro.resultado.md');
+    expect(args).toEqual(['exec', '-s', 'workspace-write', '-C', '/wt/letreiro', '-o', '/wt/letreiro.resultado.md', '-']);
+    expect(linhaDeComando(args)).toBe('codex exec -s workspace-write -C /wt/letreiro -o /wt/letreiro.resultado.md -');
+    expect(linhaDeComando(['-C', 'C:/Meus Docs/wt'])).toBe('codex -C "C:/Meus Docs/wt"');
   });
 
   it('o prompt aponta o contrato e deixa push e PR com o Claude', () => {
     const p = montarPrompt('letreiro');
     expect(p).toContain('docs/tarefas/letreiro.md');
     expect(p).toContain('feature/letreiro');
-    expect(p).toMatch(/Não dê push, não abra PR/);
-    expect(p).toContain('sem Co-Authored-By');
+    expect(p).toMatch(/Não faça commit .*não dê push, não abra PR/);
     expect(p).not.toContain('Nota do Claude');
     expect(montarPrompt('letreiro', ' mais contraste ')).toMatch(/Nota do Claude para esta rodada:\nmais contraste$/);
   });

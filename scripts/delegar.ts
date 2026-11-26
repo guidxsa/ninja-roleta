@@ -1,7 +1,7 @@
 // Delegação ao Codex local (docs/processo/delegacao.md; AGENTS.md, "Dois agentes"). O Claude escreve o contrato com
 // `agente: codex` e o briefing; este script cria o worktree da feature/<tema> a partir do origin/staging, commita o
-// contrato e roda o `codex exec` nele, sem rede. O Codex implementa, roda o npm run check e commita; o push e o PR ficam
-// com o Claude, depois de conferir.
+// contrato e roda o `codex exec` nele, sem rede. O Codex implementa e roda o npm run check, sem commitar (o sandbox dele
+// não grava no .git, visto no 1º teste, 26/11/2026); o Claude confere, commita, dá push e abre o PR.
 // Uso: npm run delegar -- <tema> [--contrato <arquivo>] [--nota "<texto>"] [--seco]
 //   <tema>       a branch será feature/<tema> e o contrato, docs/tarefas/<tema>.md
 //   --contrato   onde está o contrato escrito pelo Claude (padrão: docs/tarefas/<tema>.md no diretório atual)
@@ -50,17 +50,22 @@ export function montarPrompt(tema: string, nota = ''): string {
     '   a skill impeccable, se estiver instalada; para conferir a tela, .claude/skills/revisar-visual/SKILL.md.',
     '3. Não mude ids, data-* nem as classes que o TS consulta (são contrato, AGENTS.md "Interface").',
     '4. Rode npm run check até passar. Se o jogador nota a mudança, escreva changelog.d/' + tema + '.md (docs/processo/fluxo.md).',
-    '5. Faça commits em português, sem Co-Authored-By nem outra linha de atribuição. Não dê push, não abra PR, não troque',
-    '   de branch e não apague o worktree: o Claude confere e publica.',
+    '5. Não faça commit (o sandbox não grava no .git), não dê push, não abra PR, não troque de branch e não apague o',
+    '   worktree: deixe as mudanças no worktree. O Claude confere, commita e publica.',
     '6. Termine com um resumo no formato de .github/pull_request_template.md: objetivo, fora do escopo, caminhos tocados,',
     '   como verificou (com a saída do npm run check) e achados fora do escopo.',
     ...(nota.trim() ? ['', 'Nota do Claude para esta rodada:', nota.trim()] : []),
   ].join('\n');
 }
 
-/** Argumentos do `codex exec`: escrita só no worktree e no .git comum (onde o commit grava), sem rede. */
-export function argsCodex(worktree: string, gitComum: string, saida: string): string[] {
-  return ['exec', '-s', 'workspace-write', '-C', worktree, '--add-dir', gitComum, '-o', saida, '-'];
+/** Argumentos do `codex exec`: escrita só no worktree, sem rede; o prompt vai pela entrada padrão. */
+export function argsCodex(worktree: string, saida: string): string[] {
+  return ['exec', '-s', 'workspace-write', '-C', worktree, '-o', saida, '-'];
+}
+
+/** Linha de comando para o shell (no Windows o codex é o atalho codex.cmd do npm): aspas em volta do que tem espaço. */
+export function linhaDeComando(args: string[]): string {
+  return ['codex', ...args.map((a) => (/[\s"]/.test(a) ? `"${a.replaceAll('"', '\\"')}"` : a))].join(' ');
 }
 
 const git = (cwd: string, ...args: string[]): string => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
@@ -104,17 +109,16 @@ function main(): void {
   }
 
   const raiz = git(process.cwd(), 'rev-parse', '--show-toplevel');
-  const gitComum = resolve(raiz, git(raiz, 'rev-parse', '--git-common-dir'));
   const pasta = pastaPadrao();
   const worktree = join(pasta, tema);
   const saida = join(pasta, `${tema}.resultado.md`);
   const log = join(pasta, `${tema}.log`);
   const branch = `feature/${tema}`;
   const prompt = montarPrompt(tema, nota);
-  const args = argsCodex(worktree, gitComum, saida);
+  const args = argsCodex(worktree, saida);
 
   if (seco) {
-    console.log(JSON.stringify({ worktree, branch, gitComum, saida, log, comando: ['codex', ...args], prompt }, null, 2));
+    console.log(JSON.stringify({ worktree, branch, saida, log, comando: linhaDeComando(args), prompt }, null, 2));
     return;
   }
 
@@ -133,22 +137,18 @@ function main(): void {
     git(worktree, 'add', caminhoDoContrato(tema));
     git(worktree, 'commit', '-q', '-m', `Contrato da tarefa ${tema} (delegada ao Codex)`);
   }
-  const antes = git(worktree, 'rev-parse', 'HEAD');
 
   console.log(`delegar: rodando o Codex em ${worktree} (log em ${log})...`);
   const fd = openSync(log, 'a');
-  // No Windows o codex é um atalho do npm (codex.cmd): precisa do shell, que não põe aspas sozinho.
-  const win = process.platform === 'win32';
-  const r = spawnSync('codex', win ? args.map((a) => (/\s/.test(a) ? `"${a}"` : a)) : args, { input: prompt, stdio: ['pipe', fd, fd], shell: win });
-  const commits = git(worktree, 'log', '--oneline', `${antes}..HEAD`);
-  const sujo = git(worktree, 'status', '--porcelain');
+  // Uma linha só para o shell: com a lista de argumentos e shell, o Node concatena sem aspas (aviso DEP0190).
+  const r = spawnSync(linhaDeComando(args), { input: prompt, stdio: ['pipe', fd, fd], shell: true });
+  const mudancas = git(worktree, 'status', '--porcelain');
   console.log(
     [
       `delegar: o Codex terminou (código ${r.status ?? r.error?.message ?? '?'}).`,
       `Resumo dele: ${saida}`,
-      `Commits novos:\n${commits || '(nenhum)'}`,
-      sujo ? `Atenção, mudanças sem commit no worktree:\n${sujo}` : 'Worktree limpo.',
-      `Próximo passo (Claude): conferir o diff e o resumo; git -C "${worktree}" push -u origin ${branch}; gh pr create --base staging.`,
+      `Mudanças para conferir (sem commit):\n${mudancas || '(nenhuma)'}`,
+      `Próximo passo (Claude): git -C "${worktree}" diff; conferir contra o contrato; git add <arquivos> e commit; git -C "${worktree}" push -u origin ${branch}; gh pr create --base staging.`,
     ].join('\n\n'),
   );
   if (r.status !== 0) process.exitCode = 1;

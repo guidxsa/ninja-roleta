@@ -27,7 +27,7 @@ Funciona sem a máquina. Cada tarefa roda num container com o repositório e ter
 
 ## Codex acionado pelo Claude
 
-O Claude aciona o Codex desta máquina, sem interface, quando recebe um pedido visual: `npm run delegar -- <tema>` roda o `codex exec` num worktree da `feature/<tema>`, sem rede, com o contrato já commitado. O Codex implementa, roda o `npm run check` e commita; o push e o PR ficam com o Claude. Passo a passo em [delegacao.md](delegacao.md). Pré-requisito: o Codex CLI instalado (`npm i -g @openai/codex`) e logado (`codex login`, conta do ChatGPT).
+O Claude aciona o Codex desta máquina, sem interface, quando recebe um pedido visual: `npm run delegar -- <tema>` roda o `codex exec` num worktree da `feature/<tema>`, sem rede, com o contrato já commitado. O Codex implementa e roda o `npm run check`, sem commitar (o sandbox não grava no `.git`); o commit, o push e o PR ficam com o Claude. Passo a passo em [delegacao.md](delegacao.md). Pré-requisito: o Codex CLI instalado (`npm i -g @openai/codex`) e logado (`codex login`, conta do ChatGPT).
 
 ## O que segura a qualidade do Codex
 

@@ -10,13 +10,15 @@ Cada agente tem a sua área ([AGENTS.md](../../AGENTS.md#dois-agentes)): o **Cod
    - recusa contrato sem `agente: codex` ou sem `escopo`, e tema de processo, de issue ou de release;
    - cria o worktree da `feature/<tema>` a partir do `origin/staging` em `~/worktrees/ninja-roleta/<tema>` (fora do OneDrive, que trava a remoção de worktrees; outra pasta com `DELEGAR_PASTA`) e roda o `npm ci`;
    - commita o contrato (commit do Claude, antes de o Codex começar);
-   - roda `codex exec -s workspace-write -C <worktree> --add-dir <.git comum> -o <tema>.resultado.md` com o prompt padrão pela entrada padrão. O sandbox escreve só no worktree e no `.git` (onde o commit grava) e fica **sem rede**;
-   - no fim, mostra o código de saída, o resumo do Codex, os commits novos e se sobrou mudança sem commit. O log fica em `<tema>.log`, ao lado.
-4. **O Codex** lê o `AGENTS.md` e o contrato, segue a skill da tarefa (Impeccable e `revisar-visual`, que estão instalados na máquina), não muda ids nem `data-*`, roda `npm run check`, commita sem `Co-Authored-By` e termina com o resumo no formato do modelo de PR. Não dá push, não abre PR e não troca de branch.
-5. **O Claude confere** o resumo, o diff (`git -C <worktree> diff origin/staging...HEAD`) e as fotos, se houver. Faltou algo: roda de novo com `--nota "<o que corrigir>"`, no mesmo worktree. Pronto: `git -C <worktree> push -u origin feature/<tema>` (o `pre-push` roda o `npm run check`) e `gh pr create --base staging`, com "Agente: codex (delegado pelo Claude)" no corpo. O PR entra no staging com `check` e `meta`, como qualquer outro.
+   - roda `codex exec -s workspace-write -C <worktree> -o <tema>.resultado.md` com o prompt padrão pela entrada padrão. O sandbox escreve só no worktree e fica **sem rede**; o `.git` fica só de leitura, então o Codex **não commita** (visto no 1º teste, 26/11/2026: `Permission denied` no `index.lock`);
+   - no fim, mostra o código de saída, o resumo do Codex e as mudanças para conferir. O log fica em `<tema>.log`, ao lado.
+4. **O Codex** lê o `AGENTS.md` e o contrato, segue a skill da tarefa (Impeccable e `revisar-visual`, que estão instalados na máquina), não muda ids nem `data-*`, roda `npm run check` e termina com o resumo no formato do modelo de PR. Não commita, não dá push, não abre PR e não troca de branch.
+5. **O Claude confere** o resumo, o diff (`git -C <worktree> diff`) e as fotos, se houver, contra o contrato. Faltou algo: roda de novo com `--nota "<o que corrigir>"`, no mesmo worktree. Pronto: commita pelo nome dos arquivos, com "Implementado pelo Codex (delegado pelo Claude)" na mensagem e sem `Co-Authored-By`, dá `git -C <worktree> push -u origin feature/<tema>` (o `pre-push` roda o `npm run check`) e `gh pr create --base staging`, com "Agente: codex (delegado pelo Claude)" no corpo. O PR entra no staging com `check` e `meta`, como qualquer outro.
 6. **Depois do merge**: `npm run limpar -- --aplicar --worktrees` remove o worktree limpo da branch integrada, também fora do clone (ele lê o `git worktree list`). O resumo e o log ficam na pasta até alguém apagar.
 
-A regra de um agente por branch continua: o Claude só commita o contrato antes e só faz o push depois; enquanto o Codex trabalha, ninguém mais mexe na branch.
+A regra de um agente por branch continua: o Claude escreve o contrato antes e, depois que o Codex termina, só confere, commita o que ele fez e publica; enquanto o Codex trabalha, ninguém mais mexe na branch.
+
+**1º teste real** (26/11/2026, tarefa `nav-tokens`, PR #82): o Codex trocou as cores soltas da navegação por tokens e deu foco visível, com `npm run check` verde e fotos do UI Lab iguais fora do foco. Só o commit falhou no sandbox, o que levou à regra acima.
 
 ## Tarefa com as duas partes
 

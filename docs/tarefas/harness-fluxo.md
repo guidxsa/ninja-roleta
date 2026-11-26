@@ -52,9 +52,9 @@ Conversa de 26/11/2026, depois da revisão do fluxo dos agentes:
 6. **Delegação ao Codex local (`npm run delegar -- <tema>`, `scripts/delegar.ts`).** O Claude:
    1. escreve o contrato com `agente: codex` e o briefing visual;
    2. roda o script, que cria o worktree da `feature/<tema>` a partir do `origin/staging` numa pasta fora do OneDrive e commita o contrato;
-   3. o script roda `codex exec -s workspace-write -C <worktree> -o <resultado>` com o prompt padrão (ler `AGENTS.md` e o contrato, implementar, `npm run check`, commitar, sem rede);
-   4. com o Codex terminado, o Claude confere o resultado e o `check`, dá push da branch (o `pre-push` roda) e abre o PR com base `staging`.
-   - O Codex não dá push nem abre PR, porque o sandbox dele fica sem rede. A regra de um agente por branch continua: o Claude só escreve o contrato antes e só faz o push depois.
+   3. o script roda `codex exec -s workspace-write -C <worktree> -o <resultado>` com o prompt padrão (ler `AGENTS.md` e o contrato, implementar, `npm run check`, sem rede);
+   4. com o Codex terminado, o Claude confere o resultado e o `check`, commita o que ele fez, dá push da branch (o `pre-push` roda) e abre o PR com base `staging`.
+   - O Codex não commita, não dá push nem abre PR: o sandbox dele fica sem rede e com o `.git` só de leitura (visto no 1º teste, PR #82; o plano dizia que ele commitaria). A regra de um agente por branch continua: o Claude só escreve o contrato antes e, depois, confere, commita e publica.
    - O guia fica em `docs/processo/delegacao.md`.
 7. **Proteção do processo (#53, em parte).** A `PROTECTED` do `check-regras.ts` ganha `docs/processo/**`, `.claude/skills/**`, `.github/pull_request_template.md`, `.github/ISSUE_TEMPLATE/**`, `scripts/staging.ts` e `scripts/delegar.ts`.
 8. **Docs no mesmo commit.**
@@ -83,4 +83,6 @@ Conversa de 26/11/2026, depois da revisão do fluxo dos agentes:
 
 ## Achados
 
-- Nenhum ainda.
+- `scripts/metricas.ts:217`: comentário ainda cita `revisao-cruzada` (fora do escopo).
+- #53: corrigida só em parte (faltam `scripts/metricas*.ts`, `.agents/**` e `.codex/**`).
+- #81: `revisar-visual` fala em 1280 px e o script usa 1440 px (achado do Codex no 1º teste).
