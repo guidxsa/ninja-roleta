@@ -1,14 +1,14 @@
 ---
 name: lancar-versao
-description: Entrega e lança versões do Ninshu Roots pelo fluxo feature → staging → master. Contribuir (ao fim de toda funcionalidade, mecânica, ajuste ou correção, inclusive ao fim da skill nova-mecanica, sem esperar o usuário pedir "commita") - testa, commita numa branch feature/*, escreve o fragmento changelog.d, faz push só da branch e abre o PR para o staging, que entra sozinho com a revisão aprovada. Preparar release (o usuário pede "prepara a v0.Y.0" ou o PR permanente sugere) - junta os fragmentos no CHANGELOG e sobe a versão no staging. Publicar release e hotfix - merge no master, tag vX.Y.Z e deploy, só com aprovação explícita. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github", "hotfix" ou "faz a tag".
+description: Entrega e lança versões do Ninshu Roots pelo fluxo feature → staging → master. Contribuir (ao fim de toda funcionalidade, mecânica, ajuste ou correção, inclusive ao fim da skill nova-mecanica, sem esperar o usuário pedir "commita") - testa, commita numa branch feature/*, escreve o fragmento changelog.d, faz push só da branch e abre o PR para o staging, que entra sozinho com check e meta verdes. Preparar release (o usuário pede "prepara a v0.Y.0" ou o PR permanente sugere) - junta os fragmentos no CHANGELOG, sobe a versão no staging e publica a revisão de IA do lote no PR permanente. Publicar release e hotfix - merge no master, tag vX.Y.Z e deploy, só com aprovação explícita. Também use quando ele disser "sobe a versão", "fecha a versão", "publica", "lança", "manda pro github", "hotfix" ou "faz a tag".
 ---
 
 # Lançar versão (Ninshu Roots)
 
 Regras do fluxo em [docs/processo/fluxo.md](../../../docs/processo/fluxo.md). Resumo:
 
-- **Contribuir**: todo trabalho vai num PR para o **`staging`**, que entra sozinho (auto-merge) com `check`, `meta` e a revisão cruzada aprovada. Sem perguntar "posso commitar?".
-- **Release (sobe o y)**: o staging vai para o `master` de uma vez, com aprovação do usuário.
+- **Contribuir**: todo trabalho vai num PR para o **`staging`**, o playground, que entra sozinho (auto-merge) com `check` e `meta` verdes, sem revisão cruzada. O PR de processo (`feature/harness*`) espera o merge do usuário. Sem perguntar "posso commitar?".
+- **Release (sobe o y)**: o staging vai para o `master` de uma vez, com aprovação do usuário. É a revisão humana do lote.
 - **Hotfix (sobe o z)**: correção urgente direto no `master`, com aprovação do usuário.
 
 **Nunca dê push direto no `master` nem no `staging`** (o Pages publica a cada push no `master`). Commits, tags e PRs **sem `Co-Authored-By`** nem outra linha de atribuição. Aprovação de uma versão não vale para a seguinte. O major (`v1.0.0`) só sobe quando o usuário pedir.
@@ -41,8 +41,8 @@ Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não fo
 2. Implementação, testes e docs no mesmo commit (AGENTS.md).
 3. Quem joga nota a mudança: fragmento `changelog.d/<tema>.md` ([LEIAME](../../../changelog.d/LEIAME.md)), com `peso: alto` para mecânica, tela, modo ou sistema novo. **Não** edite o `CHANGELOG.md` nem a versão do `package.json`.
 4. Testar, commitar e `git push -u origin feature/<tema>`.
-5. PR: `gh pr create --base staging` pelo modelo `.github/pull_request_template.md`, com "Implementou: claude". Título com o que muda, nunca o nome da branch.
-6. Relato curto ao usuário: o que entrou, testes, link do PR. Diga que ele entra sozinho no staging quando o Codex aprovar (e, se o contrato não é de issue, depois da etiqueta `contrato-aprovado`). Se a mudança tem peso, sugira a release.
+5. PR: `gh pr create --base staging` pelo modelo `.github/pull_request_template.md`, com o agente (o do contrato; "codex (delegado pelo Claude)" na [delegação](../../../docs/processo/delegacao.md)). Título com o que muda, nunca o nome da branch.
+6. Relato curto ao usuário: o que entrou, testes, link do PR. Diga que ele entra sozinho no staging com `check` e `meta` verdes (o PR de processo espera o merge dele). Se a mudança tem peso, sugira a release.
 
 ## B. Preparar release (o usuário pede "prepara a v0.Y.0")
 
@@ -54,8 +54,13 @@ Se falhar, **não commite**: corrija se o erro for do trabalho atual; se não fo
    npm version 0.Y.0 --no-git-tag-version
    ```
    Confira a linha nova no fim da tabela do `CHANGELOG.md` e ajuste o texto se precisar (é o que quem joga lê).
-4. Testar, commitar (`Prepara a release v0.Y.0`), push e PR para o `staging`. Ele entra pelo auto-merge como qualquer contribuição. **Sem contrato em `docs/tarefas/` e sem `contrato-aprovado`**: o `check:escopo` dá à `feature/release-v<x.y.z>` um contrato implícito (o seu "prepara" é a aprovação) e recusa qualquer arquivo além de `CHANGELOG.md`, `changelog.d/*.md` e da versão do `package.json`/`package-lock.json`. Precisou mexer em outra coisa: `feature/<tema>` à parte, com contrato.
-5. Relate: versão, o que entra, link do preview (https://guidxsa.github.io/ninja-roleta/staging/) e do PR permanente. **Pare** e peça o "publica v0.Y.0".
+4. Testar, commitar (`Prepara a release v0.Y.0`), push e PR para o `staging`. Ele entra pelo auto-merge como qualquer contribuição. **Sem contrato em `docs/tarefas/`**: o `check:escopo` dá à `feature/release-v<x.y.z>` um contrato implícito (o seu "prepara" é a aprovação) e recusa qualquer arquivo além de `CHANGELOG.md`, `changelog.d/*.md` e da versão do `package.json`/`package-lock.json`. Precisou mexer em outra coisa: `feature/<tema>` à parte, com contrato.
+5. **Revisão de IA do lote** ([revisao.md](../../../docs/processo/revisao.md)), só para informar: na `feature/release-v0.Y.0`, rode
+   ```bash
+   codex exec review --base origin/master -o <scratchpad>/revisao-v0.Y.0.md "Revise o lote da release v0.Y.0 seguindo docs/processo/revisao.md, com atenção aos arquivos de processo alterados."
+   ```
+   (confira as opções com `codex exec review --help`; sem o Codex, um subagente do Claude com o mesmo pedido). Publique o resultado no PR permanente com `gh pr comment <n> --body-file <arquivo>`, com o título "Revisão de IA do lote (só informa)".
+6. Relate: versão, o que entra, o veredito da revisão, as mudanças no processo do lote, link do preview (https://guidxsa.github.io/ninja-roleta/staging/) e do PR permanente. **Pare** e peça o "publica v0.Y.0".
 
 ## C. Publicar release (só com "publica v0.Y.0" nesta conversa)
 
@@ -71,7 +76,7 @@ Só para o que não pode esperar a release. Na dúvida, contribuição normal (A
 
 1. `git fetch origin master && git switch -c hotfix/<tema> origin/master`; contrato `docs/tarefas/<tema>.md`.
 2. Correção, teste e doc; linha `v0.Y.Z` no fim da tabela do `CHANGELOG.md` (o z sobe a partir da última tag do `master`) e `npm version 0.Y.Z --no-git-tag-version`.
-3. Testar, commitar (`Corrige <o que> (v0.Y.Z)`), push e PR para o `master`. Peça a revisão cruzada no PR (`@codex review`, ou `@claude revise` se o hotfix é do Codex): no `master` não há portão, ela não trava o merge, mas o usuário confere antes. **Pare** e peça aprovação.
+3. Testar, commitar (`Corrige <o que> (v0.Y.Z)`), push e PR para o `master`. Não há revisão automática: o usuário confere o PR antes do merge (e pode pedir `@claude revise`). **Pare** e peça aprovação.
 4. Com o "publica v0.Y.Z": merge com **Create a merge commit**, tag no merge commit, push da tag. A sincronização com o staging é automática; com conflito, resolva numa `feature/sincroniza-<data>` a partir do staging, com merge do `master`, e PR para o staging.
 
 ## Tag (só na publicação)

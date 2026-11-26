@@ -1,15 +1,11 @@
-# Staging (docs/processo/fluxo.md): o PR dos agentes entra sozinho no staging quando a CI e a revisão cruzada aprovam;
-# o staging chega ao master só pelo PR permanente, com o merge e a tag do usuário.
+# Staging (docs/processo/fluxo.md): playground dos agentes. O PR entra sozinho quando a CI aprova (check e meta), sem
+# revisão cruzada; a revisão humana é a release, no PR permanente staging → master, com o merge e a tag do usuário.
 #
-# - portao: status revisao-cruzada no commit da ponta do PR. O Codex aprova o PR do Claude pelo bloco
-#   codex-review-state:v1 do comentário de resumo dele (revisão concluída, sem achado pendente, do commit da ponta;
-#   scripts/check-aprovacao.ts); o veredito do Claude aprova o do Codex (revisao-claude.yml, job automatica); a
-#   etiqueta revisao-dispensada posta pelo dono do repositório e o PR de sincronização master → staging passam direto.
-#   O caminho do comentário do Codex (issue_comment) roda a versão deste arquivo do master: chega lá na release.
-# - automerge: liga o auto-merge nativo do GitHub; ele faz o merge quando check, meta e revisao-cruzada ficam verdes
-#   (proteção do staging).
+# - automerge: liga o auto-merge nativo do GitHub; ele faz o merge quando check e meta ficam verdes (proteção do
+#   staging). PR de processo (feature/harness*) não entra sozinho: o merge é do usuário (AGENTS.md, "Dois agentes").
 # - fecha-issue: o "Closes #n" só fecha a issue no merge no master; no staging, o workflow fecha com um aviso.
-# - integrado: a cada push no staging, reescreve o PR permanente staging → master e sugere a release.
+# - integrado: a cada push no staging, reescreve o PR permanente staging → master (com a seção dos arquivos de processo
+#   alterados no lote) e sugere a release.
 # - sincroniza: a cada push no master (release ou hotfix), abre o PR master → staging se o staging não tem o master.
 #
 # Token: o segredo STAGING_TOKEN (token fino do dono, só deste repositório, com Contents e Pull requests de escrita).
@@ -18,11 +14,11 @@
 name: Staging
 
 on:
-  pull_request:
+  # pull_request_target: roda a versão deste arquivo do staging, não a do PR, então um PR não desliga a própria trava
+  # (o PR de processo sem auto-merge). Nenhum job aqui faz checkout nem executa código do PR.
+  pull_request_target:
     branches: [staging]
-    types: [opened, reopened, synchronize, ready_for_review, labeled, closed]
-  issue_comment:
-    types: [created, edited] # o Codex edita o comentário de resumo a cada revisão
+    types: [opened, reopened, ready_for_review, closed]
   push:
     branches: [staging, master]
   workflow_dispatch:
@@ -32,95 +28,41 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
-  statuses: write
 
 env:
   GH_REPO: ${{ github.repository }}
-  DISPENSA: revisao-dispensada
   # Sugestão de release no PR permanente: um item de peso alto ou este número de itens acumulados.
   SUGERIR_COM_ITENS: 8
 
 jobs:
-  portao:
-    if: >-
-      (github.event_name == 'pull_request' && github.event.action != 'closed' &&
-       github.event.pull_request.head.repo.full_name == github.repository) ||
-      (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
-       github.event.comment.user.login == 'chatgpt-codex-connector[bot]')
-    runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
-      PR: ${{ github.event.pull_request.number || github.event.issue.number }}
-      DONO: ${{ github.repository_owner }}
-      DO_CODEX: ${{ github.event_name == 'issue_comment' }}
-    steps:
-      # Só o script de leitura (scripts/check-aprovacao.ts, sem dependências): roda com o node, sem npm ci.
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: scripts/check-aprovacao.ts
-          sparse-checkout-cone-mode: false
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - name: Status revisao-cruzada
-        run: |
-          info=$(gh pr view "$PR" --json baseRefName,headRefName,headRefOid,body,labels,isCrossRepository)
-          base=$(jq -r .baseRefName <<< "$info"); head=$(jq -r .headRefName <<< "$info"); sha=$(jq -r .headRefOid <<< "$info")
-          [ "$base" = "staging" ] || { echo "::notice::PR #$PR não é para o staging."; exit 0; }
-          [ "$(jq -r .isCrossRepository <<< "$info")" = "false" ] || { echo "::notice::PR de fork: sem portão."; exit 0; }
-          verde() { gh api "repos/$GH_REPO/statuses/$sha" -f state=success -f context=revisao-cruzada -f description="$1" > /dev/null; echo "revisao-cruzada verde em $sha: $1"; }
-          if [ "$head" = "master" ]; then verde "Sincronização com o master (já aprovado)"; exit 0; fi
-          if jq -e --arg l "$DISPENSA" '[.labels[].name] | index($l)' <<< "$info" > /dev/null; then
-            # Só a etiqueta posta pelo dono do repositório (a timeline diz quem pôs): bot ou agente no Actions não dispensa.
-            gh api "repos/$GH_REPO/issues/$PR/timeline" --paginate > "$RUNNER_TEMP/timeline.json"
-            if [ "$(ETIQUETA="$DISPENSA" TIMELINE="$RUNNER_TEMP/timeline.json" node scripts/check-aprovacao.ts dono)" = "sim" ]; then
-              verde "Revisão dispensada pelo usuário"; exit 0
-            fi
-            echo "::warning::A etiqueta $DISPENSA não foi posta por $DONO: não abre o portão."
-          fi
-          if [ "$DO_CODEX" = "true" ]; then
-            # PR do Claude: vale o estado que o Codex mantém no comentário de resumo, para o commit da ponta.
-            jq -r .body <<< "$info" | grep -qi 'Implementou: claude' || { echo "::notice::Não é PR do Claude."; exit 0; }
-            gh api "repos/$GH_REPO/issues/$PR/comments" --paginate > "$RUNNER_TEMP/comentarios.json"
-            veredito=$(PONTA="$sha" COMENTARIOS="$RUNNER_TEMP/comentarios.json" node scripts/check-aprovacao.ts codex)
-            echo "Estado da revisão do Codex na ponta $sha: $veredito"
-            case "$veredito" in
-              aprovado) verde "Revisão do Codex sem achados" ;;
-              sem-estado)
-                # O formato do Codex mudou ou o comentário de resumo sumiu: avisa uma vez, para o portão não travar calado.
-                if ! grep -q '<!-- portao:sem-estado-codex -->' "$RUNNER_TEMP/comentarios.json"; then
-                  printf '%s\n' "O Codex comentou, mas o portão não achou o bloco \`codex-review-state:v1\` que diz o commit revisado e se sobrou achado. O \`revisao-cruzada\` fica pendente: confira a revisão e, se aprovar, ponha a etiqueta \`$DISPENSA\` (docs/processo/fluxo.md, \"Entrada no staging\")." "" '<!-- portao:sem-estado-codex -->' > "$RUNNER_TEMP/aviso.md"
-                  gh pr comment "$PR" --body-file "$RUNNER_TEMP/aviso.md"
-                fi ;;
-            esac
-            exit 0
-          fi
-          # Sem aprovação ainda: pendente, só se o commit não tem status (uma etiqueta nova não apaga a aprovação).
-          atual=$(gh api "repos/$GH_REPO/commits/$sha/status" --jq '[.statuses[] | select(.context == "revisao-cruzada")][0].state // empty')
-          [ -n "$atual" ] || gh api "repos/$GH_REPO/statuses/$sha" -f state=pending -f context=revisao-cruzada -f description="Esperando a revisão do outro agente" > /dev/null
-
   automerge:
     if: >-
-      github.event_name == 'pull_request' && !github.event.pull_request.draft &&
+      github.event_name == 'pull_request_target' && !github.event.pull_request.draft &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       contains(fromJSON('["opened", "reopened", "ready_for_review"]'), github.event.action)
     runs-on: ubuntu-latest
     env:
       PR: ${{ github.event.pull_request.number }}
+      HEAD: ${{ github.head_ref }}
       TOKEN: ${{ secrets.STAGING_TOKEN }}
     steps:
       - name: Ligar o auto-merge
         run: |
+          # PR de processo muda as próprias verificações: o merge é do usuário, que confere antes (AGENTS.md).
+          case "$HEAD" in
+            feature/harness|feature/harness-*)
+              echo "::notice::PR de processo ($HEAD): sem auto-merge; o merge é do usuário."
+              exit 0 ;;
+          esac
           if [ -z "$TOKEN" ]; then
             echo "::warning::Sem o segredo STAGING_TOKEN: auto-merge não ligado no PR #$PR; o merge no staging fica à mão (docs/processo/fluxo.md)."
             exit 0
           fi
-          # Merge commit (preserva os commits da branch); nunca --admin: espera check, meta e revisao-cruzada.
+          # Merge commit (preserva os commits da branch); nunca --admin: espera check e meta.
           GH_TOKEN="$TOKEN" gh pr merge "$PR" --auto --merge
 
   fecha-issue:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged
+    if: github.event_name == 'pull_request_target' && github.event.action == 'closed' && github.event.pull_request.merged
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}

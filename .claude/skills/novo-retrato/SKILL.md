@@ -7,6 +7,8 @@ description: Fluxo para criar, refazer ou trocar o retrato ilustrado (WebP) de u
 
 O retrato precisa parecer da mesma série que os outros 94 e funcionar de 24px a 170px. Ele sai de imagens-modelo escolhidas pelo usuário e de uma revisão humana com ajustes até a aprovação. Quem gera a imagem pode ser o usuário, o Codex ou outra ferramenta; este fluxo vale para qualquer um e guarda o necessário para refazer o retrato depois.
 
+**Quem faz: o Codex** (área do visual, AGENTS.md "Dois agentes"). Pedido que chega ao Claude é [delegado](../../../docs/processo/delegacao.md): contrato com `agente: codex` e `npm run delegar -- <tema>`.
+
 ## 1. Contrato e chave
 
 1. Contrato em `docs/tarefas/<tema>.md` (AGENTS.md, "Escopo"). Escopo típico: `public/img/<pasta>/<chave>.webp`, `public/img/retratos.json` e, se uma ficha passar a usar a imagem, o dado que aponta a chave.

@@ -23,6 +23,7 @@
     "docs:tabelas": "tsx scripts/doc-tables.ts",
     "metricas": "tsx scripts/metricas-relatorio.ts",
     "limpar": "tsx scripts/limpar-branches.ts",
+    "delegar": "tsx scripts/delegar.ts",
     "prepare": "git config core.hooksPath .githooks || true"
   },
   "devDependencies": {

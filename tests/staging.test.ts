@@ -1,6 +1,6 @@
 // Staging e release (docs/processo/fluxo.md; scripts/staging.ts).
 import { describe, expect, it } from 'vitest';
-import { aplicarRelease, montarPr, parseFragmento, parseIntegrados, proximaVersao } from '../scripts/staging';
+import { aplicarRelease, arquivosDeProcesso, montarPr, parseFragmento, parseIntegrados, proximaVersao } from '../scripts/staging';
 
 const changelog = ['# Changelog', '', '| Versão | O que mudou |', '|---|---|', '| v0.95.1 | Retratos. |', '| v0.95.2 | Jinchuuriki. |', ''].join('\n');
 
@@ -50,5 +50,15 @@ describe('PR permanente', () => {
     expect(montarPr('0.95.2', [parseFragmento('b', '---\npeso: alto\n---\nTela nova.')], [], 'x', 'p', 8).sugerir).toBe(true);
     expect(montarPr('0.95.2', Array.from({ length: 8 }, (_, i) => parseFragmento(`f${i}`, 'x')), [], 'x', 'p', 8).sugerir).toBe(true);
     expect(pr.sugestao).toContain('<!-- staging:sugestao -->');
+  });
+
+  it('lista à parte os arquivos de processo do lote, onde o usuário revisa sem revisão cruzada no staging', () => {
+    const alterados = ['src/core/a.ts', '.github/workflows/ci.yml', 'docs/processo/fluxo.md', 'AGENTS.md', 'prototype/x.ts', 'package.json', '.claude/skills/lancar-versao/SKILL.md'];
+    const processo = arquivosDeProcesso(alterados);
+    expect(processo).toEqual(['.claude/skills/lancar-versao/SKILL.md', '.github/workflows/ci.yml', 'AGENTS.md', 'docs/processo/fluxo.md', 'package.json']);
+    const pr = montarPr('0.95.2', [], [], 'x', 'p', 8, processo);
+    expect(pr.corpo).toContain('## Mudanças no processo (5 arquivo(s))');
+    expect(pr.corpo).toContain('- `.github/workflows/ci.yml`');
+    expect(montarPr('0.95.2', [], [], 'x', 'p', 8).corpo).toContain('## Mudanças no processo (0 arquivo(s))\n\n- Nenhuma.');
   });
 });

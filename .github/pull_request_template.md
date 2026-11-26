@@ -1,6 +1,6 @@
 <!-- Contrato resumido da tarefa (AGENTS.md, "Como trabalhar"). Apague o que não se aplica.
-     Base do PR: staging (todo trabalho; entra sozinho com a revisão aprovada). master só para hotfix/<tema>
-     e para o PR permanente do staging (docs/processo/fluxo.md). -->
+     Base do PR: staging (todo trabalho; entra sozinho com check e meta verdes, e o PR de processo com o merge do
+     usuário). master só para hotfix/<tema> e para o PR permanente do staging (docs/processo/fluxo.md). -->
 
 ## Objetivo
 <!-- Uma frase. Contrato: docs/tarefas/<tema>.md -->
@@ -24,7 +24,6 @@
 ## Achados fora do escopo
 <!-- Bugs, melhorias ou docs desatualizados vistos e não corrigidos, cada um com a issue aberta (#n; docs/processo/issues.md). -->
 
-## Agentes
-<!-- Depois de "Implementou:", escreva uma palavra só: claude, codex ou humano. É por ela que a revisão automática sabe quem revisa (docs/processo/revisao.md). -->
-- Implementou: 
-- Revisou: <!-- o outro -->
+## Agente
+<!-- Quem implementou, como no "agente:" do contrato (claude, codex ou humano). Delegado ao Codex: diga (docs/processo/delegacao.md). -->
+- Agente: 

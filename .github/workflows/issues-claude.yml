@@ -1,8 +1,7 @@
 # Loop das issues (AGENTS.md, "Issues"; docs/processo/issues.md): o Claude corrige sozinho a issue com a etiqueta
 # correcao-automatica. Cria a branch feature/issue-<n>, escreve o contrato a partir da issue, corrige, roda o
-# npm run check, dá push e abre o PR com "Closes #<n>". Daí em diante vale o loop da revisão cruzada
-# (revisao-claude.yml, job corrige); aprovado, o PR entra sozinho no staging e o staging.yml fecha a issue. O merge no
-# master (release) é do usuário.
+# npm run check, dá push e abre o PR com "Closes #<n>". Com check e meta verdes, o PR entra sozinho no staging e o
+# staging.yml fecha a issue; a revisão humana é a release (merge no master, do usuário).
 # Se a issue não for um erro claro, o Claude explica na issue e o workflow troca a etiqueta por precisa-decisao.
 # Autentica como a revisão (segredo CLAUDE_CODE_OAUTH_TOKEN); sem ele, avisa e pula.
 name: Issues do Claude
@@ -63,7 +62,7 @@ jobs:
             info=$(gh issue view "$n" --json state,labels --jq '"\(.state) \([.labels[].name] | join(","))"') || continue
             case "$info" in OPEN\ *) ;; *) echo "::notice::#$n fechada: pulada."; continue ;; esac
             case ",${info#* }," in *",$ETIQUETA,"*) ;; *) echo "::notice::#$n sem a etiqueta $ETIQUETA: pulada."; continue ;; esac
-            # Já tem branch ou PR: o loop da revisão cuida dela.
+            # Já tem branch ou PR: a correção já foi tentada (o usuário decide o próximo passo).
             if gh api "repos/$GH_REPO/branches/feature/issue-$n" --silent 2>/dev/null; then
               echo "::notice::#$n já tem a branch feature/issue-$n: pulada."; continue
             fi
@@ -145,7 +144,7 @@ jobs:
           ETAPA: issue
         run: npx tsx scripts/metricas-execucao.ts perfil || echo "::warning::Perfil não escolhido, modelo padrão."
       # Push: só "git push origin HEAD" (a branch feature/issue-<n> em checkout; sem --force, sem outra branch).
-      # Sem gh pr merge: o PR entra pelo auto-merge do staging, depois da revisão. Commit sem atribuição, conferido no passo seguinte.
+      # Sem gh pr merge: o PR entra pelo auto-merge do staging, com check e meta verdes. Commit sem atribuição, conferido no passo seguinte.
       - uses: anthropics/claude-code-action@v1
         id: claude
         if: steps.token.outputs.ok == 'true'
@@ -169,8 +168,7 @@ jobs:
             4. Faça commit em português, sem Co-Authored-By nem outra linha de atribuição, e dê push com exatamente
                "git push origin HEAD".
             5. Abra o PR (gh pr create --base ${{ steps.base.outputs.ref }} --head feature/issue-${{ matrix.issue }}) seguindo
-               .github/pull_request_template.md, com "Closes #${{ matrix.issue }}" no corpo, "- Implementou: claude",
-               "- Revisou: codex" e a saída do npm run check. Não mencione o Codex com arroba.
+               .github/pull_request_template.md, com "Closes #${{ matrix.issue }}" no corpo e a saída do npm run check. Não mencione o Codex com arroba.
             Se não conseguir corrigir dentro dessas regras, não faça push: comente na issue o que tentou e por quê parou.
           claude_args: >-
             --allowedTools "Read,Edit,Write,Glob,Grep,Bash(npm run check),Bash(npm run check:*),Bash(npm test),Bash(npm test:*),Bash(npm run typecheck),Bash(npm run proto),Bash(npm run sim:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git push origin HEAD),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh issue list:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(gh pr view:*)"

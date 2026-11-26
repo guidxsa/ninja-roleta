@@ -7,6 +7,8 @@ description: Revisão visual de telas do Ninshu Roots pelo UI Lab - fotografa os
 
 O jogo deve parecer parte do universo shinobi (critério de `docs/visual.md`) e celular e desktop são pares, cada um com sua composição. Esta skill olha as telas de verdade, não o código.
 
+**Quem faz: o Codex** (área do visual, AGENTS.md "Dois agentes"). Pedido que chega ao Claude é [delegado](../../../docs/processo/delegacao.md): contrato com `agente: codex` e `npm run delegar -- <tema>`.
+
 ## 1. Escolher os cenários
 
 1. Veja o que mudou (`git diff --name-only origin/master...`) e ache os cenários do UI Lab que mostram essas telas: `docs/ui-lab/SCREEN_INVENTORY.md` liga tela a cenário, e os ids estão em `prototype/lab/scenarios/`.
