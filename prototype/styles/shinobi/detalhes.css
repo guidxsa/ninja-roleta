@@ -414,7 +414,7 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
 }
 .name-input:focus { outline: none; }
 .jmodes .ninja-record summary {
-  display: flex; align-items: center; min-height: 36px; margin-top: var(--sp-2);
+  display: flex; align-items: center; min-height: var(--tap); margin-top: var(--sp-2);
   color: var(--paper-ink); border: 0; list-style: none; padding: 0; cursor: pointer;
 }
 .ninja-record summary::-webkit-details-marker { display: none; }
@@ -494,6 +494,8 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   body.at-gate:has(.jmodes) { height: auto; }
+  /* A casca de desktop entra aos 900 px, mas o Portão ainda usa as três linhas do tablet. */
+  body.at-gate:has(.jmodes) main { display: block; }
   .gate.jmodes { min-height: calc(100svh - 132px); grid-template-rows: minmax(240px, .95fr) auto minmax(270px, 1fr); }
   .gate.jmodes .gate-banner { height: 100%; }
   .gate.jmodes .gate-aside { grid-template-columns: 1fr 1fr; align-items: stretch; }
