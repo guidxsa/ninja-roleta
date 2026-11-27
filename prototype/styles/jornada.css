@@ -642,8 +642,6 @@
 .gate.jgate.jhub .gate-head .logo span { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
 .gate.jgate.jhub .mode-card .mode-body { flex-direction: column; align-items: stretch; }
 .gate.jgate.jhub .mode-card .mode-art { display: block; flex: 1 1 0; width: 100%; min-height: calc(120 * var(--ui-unit)); }
-.jcamp .jmode-generic { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
-.jcamp .jmode-generic .difficulty-box { margin: 0; }
 .jpath-stages-card h3 { margin: 0 0 var(--sp-1); font: 700 var(--fs-xl)/1.1 var(--font-hand); color: var(--paper-ink); }
 /* Janela da perspectiva da História: maior que as outras janelas, com a arte, os arcos e o Começar. */
 .jpersp-modal .modal-body.jpersp { max-width: min(100%, calc(var(--modal-max) * 1.25)); gap: var(--gap); }
@@ -654,11 +652,24 @@
 .jpersp-desc { margin: 0; }
 .jpersp-actions { display: flex; flex-wrap: wrap; gap: var(--gap); }
 .jpersp-actions .btn { flex: 1 1 14rem; }
+/* Arco com dica: o foco do teclado também mostra a descrição (tooltip.ts). */
+.jpersp .jarc[data-tip] { cursor: help; }
+.jpersp .jarc[data-tip]:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* Cardápio da Campanha e janela da Classe aleatória: do tamanho da janela da perspectiva. */
+:is(.jclass-modal, .jrandom-modal) .modal-body.jmodal { max-width: min(100%, calc(var(--modal-max) * 1.25)); gap: var(--gap); }
+.jclass-menu-body { display: grid; gap: var(--gap); }
+.jclass-detail { display: flex; align-items: center; gap: var(--gap); }
+.jclass-detail .jstart-face { flex: none; }
+.jclass-info h3 { margin: 0; }
+.jclass-info p { margin: var(--sp-1) 0 0; }
+.jrandom-pool h3 { margin: 0 0 var(--sp-2); }
+.jrandom-pool ul { display: flex; flex-wrap: wrap; gap: var(--gap); margin: 0; padding: 0; list-style: none; }
+.jrandom-pool li { display: flex; align-items: center; gap: var(--sp-2); }
+.jrandom-reward { display: flex; align-items: center; gap: var(--sp-2); margin: 0; font-weight: 700; }
 @media (min-width: 900px) and (min-height: 560px) {
   .jhub .jstart-back { display: inline-flex; }
-  /* A preparação da Campanha é mais alta que um card de modo: a linha dela segue o conteúdo e o painel de arte encolhe. */
-  .gate.jcamp .gate-main { grid-template-rows: minmax(calc(160 * var(--ui-unit)), 1fr) auto; }
-  .jpersp-modal { align-items: center; }
+  .jclass-menu-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: start; }
+  :is(.jpersp-modal, .jclass-modal, .jrandom-modal) { align-items: center; }
 }
 .jother-saved { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); color: var(--paper-ink); }
 .jother-saved .ico { flex: none; width: var(--fs-2xl); height: var(--fs-2xl); }

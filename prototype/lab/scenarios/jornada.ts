@@ -15,8 +15,8 @@ const jornada =
     return screen(ctx);
   };
 
-/** Abre a janela de uma perspectiva da História logo depois de montar a tela (o card já está no DOM). */
-function openPerspective(screen: Promise<unknown>, id: 'naruto' | 'sasuke'): Promise<unknown> {
+/** Abre a janela de um card (perspectiva da História, cardápio ou Classe aleatória) logo depois de montar a tela. */
+function openPerspective(screen: Promise<unknown>, id: 'naruto' | 'sasuke' | 'pick' | 'random'): Promise<unknown> {
   document.querySelector<HTMLElement>(`.mode-card[data-choice="${id}"]`)?.click();
   return screen;
 }
@@ -107,6 +107,26 @@ export const jornadaScenarios: Scenario[] = [
     title: 'Janela do Sasuke (em breve)',
     group: 'Jornada',
     mount: jornada((ctx) => openPerspective(campaignScreen(ctx.jornadaHost, null), 'sasuke')),
+  },
+  {
+    id: 'jornada.path.menu',
+    title: 'Campanha: cardápio de classes (tudo liberado)',
+    group: 'Jornada',
+    profile: profiles.full,
+    mount: jornada((ctx) => openPerspective(pathSetupScreen(ctx.jornadaHost, null), 'pick')),
+  },
+  {
+    id: 'jornada.path.menu:locked',
+    title: 'Campanha: cardápio com Uchiha e Hyuuga travados',
+    group: 'Jornada',
+    mount: jornada((ctx) => openPerspective(pathSetupScreen(ctx.jornadaHost, null), 'pick')),
+  },
+  {
+    id: 'jornada.path.random',
+    title: 'Campanha: Classe aleatória (o que pode sair e a recompensa)',
+    group: 'Jornada',
+    profile: profiles.full,
+    mount: jornada((ctx) => openPerspective(pathSetupScreen(ctx.jornadaHost, null), 'random')),
   },
   {
     id: 'jornada.path.setup',

@@ -26,6 +26,9 @@ import {
   memberSheet,
   memberState,
   newGenericRun,
+  newRandomGenericRun,
+  openGenericClasses,
+  drewRandomly,
   newRun,
   nextFightTeam,
   nodeChoices,
@@ -472,82 +475,154 @@ function choiceHero(classId: string, element: ElementChoice): string {
 }
 
 /**
- * Campanha (Caminho Ninja), na casca do Portão: o painel com a arte e os três estágios, a preparação (o retrato, que
- * acompanha a classe e o elemento escolhidos, as classes, o elemento do Comum, a dificuldade e o Começar) e a coluna com
- * a run salva e as conquistas recentes. Depois do Começar, a revelação.
+ * Campanha (Caminho Ninja), na composição da História: o painel com a arte e os três estágios, dois cards (Escolher a
+ * classe, que abre o cardápio, e Classe aleatória, que abre a janela da recompensa) e a coluna com a run salva, a
+ * dificuldade, o recorde e as conquistas recentes. Depois do Começar, a revelação.
  */
 export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Promise<JRun | null> {
   const box = difficultyBox(host);
   const mine = saved?.mode === 'generic';
   const stages = `<div class="parchment gate-quote jpath-stages-card"><h3>${J.start.pathStages}</h3>
       <ol class="jpath-stages">${data.generic.stages.map((g, i) => `<li><span class="seal ghost">${ARC_NUMERALS[i] ?? i + 1}</span>${J.stages[g.id] ?? g.id}</li>`).join('')}</ol></div>`;
-  const face = (id: string) => fighterPortrait(id, portraitSpec(id), 'md');
   const root = show(
     h(`<div class="screen gate jgate jhub jcamp">
       <div class="gate-main">
         ${hubBanner(J.modes.path.name, CAMPAIGN_ART, stages)}
-        <section class="parchment jmode-panel jmode-generic">
-          <div class="jmode-card"><div class="jstart-face" data-class-face>${face(choiceHero('common', 'random'))}</div>
-            <div><h3>${J.start.pathPick}</h3>${bestLine(host)}<p class="muted small">${J.start.infiniteNote}</p></div></div>
-          <div class="jclasses">${['common', 'uchiha', 'hyuuga']
-            .map((id) => {
-              const def = data.generic.classes.find((c) => c.id === id);
-              const open = def && (!def.unlock || host.unlocked().has(def.unlock));
-              const note = !def ? G.soonClass : open ? G.classes[id]!.desc : G.locked[id]!;
-              return `<button class="jclass${open ? '' : ' off'}" data-class="${id}" aria-pressed="${id === 'common'}" ${open ? '' : 'aria-disabled="true"'}>
-                <b>${open ? '' : `${icon('lock', 'lock')} `}${G.classes[id]!.name}</b><small>${note}</small></button>`;
-            })
-            .join('')}</div>
-          <div class="jel-pick" data-elements role="group" aria-label="${G.elementTitle}">${ELEMENT_CHOICES.map((c) => elementChoiceButton(c)).join('')}</div>
-          ${box.html}
-          <button class="btn${mine ? '' : ' primary'} big" data-choice="generic">${icon('dice')} ${mine ? J.start.restartPath : G.start}</button>
-        </section>
+        <nav class="gate-modes" aria-label="${J.modes.path.name}">
+          ${modeCard({ id: 'pick', art: sceneMedia('modo-caminho') ?? '', artVars: sceneVars('modo-caminho'), name: G.chooseCard.name, desc: G.chooseCard.desc, cta: G.chooseCard.cta })}
+          ${modeCard({ id: 'random', art: classFan(), artVars: '--ratio:1.25', name: G.randomCard.name, desc: G.randomCard.desc, cta: G.randomCard.cta })}
+        </nav>
       </div>
       <aside class="gate-aside">
         ${savedCard(saved, 'path')}
+        ${box.html}
+        ${bestLine(host)}
         ${recentSection(host)}
         <button class="btn small jstart-back" data-choice="back">${J.start.back}</button>
       </aside>
     </div>`),
   );
-  let classId = 'common';
-  // Elemento do Comum: um elemento, o prodígio (sem elemento) ou sortear (com a relíquia bônus).
-  let element: ElementChoice = 'random';
-  const faceSlot = root.querySelector<HTMLElement>('[data-class-face]')!;
-  const syncFace = () => {
-    faceSlot.innerHTML = face(choiceHero(classId, classId === 'common' ? element : 'random'));
-  };
-  root.querySelector('.jclasses')!.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-class]');
-    if (!b || b.getAttribute('aria-disabled') === 'true') return;
-    classId = b.dataset.class!;
-    root.querySelectorAll('[data-class]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    // Só o Comum escolhe o elemento.
-    root.querySelector<HTMLElement>('[data-elements]')!.hidden = classId !== 'common';
-    syncFace();
-  });
-  root.querySelector('[data-elements]')!.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-element]');
-    if (!b) return;
-    const v = b.dataset.element!;
-    element = v === 'random' ? 'random' : v === 'none' ? null : (v as Element);
-    root.querySelectorAll('[data-element]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    syncFace();
-  });
   box.wire(root);
   for (;;) {
-    const c = await choose<'generic' | 'back' | 'continue'>(root);
+    const c = await choose<'pick' | 'random' | 'continue' | 'back'>(root);
     if (c === 'back') return null;
     if (c === 'continue') {
       if (saved && mine) return saved;
       continue;
     }
-    if (!(await replaceSaved(host, saved))) continue;
-    await host.ensurePlayerName();
-    const run = newGenericRun(host.nextSeed(), currentDifficulty(host), classId, data, host.unlocked(), null, classId === 'common' ? element : 'random');
+    let run: JRun;
+    if (c === 'pick') {
+      const pick = await classMenuDialog(host, mine);
+      if (!pick || !(await replaceSaved(host, saved))) continue;
+      await host.ensurePlayerName();
+      run = newGenericRun(host.nextSeed(), currentDifficulty(host), pick.classId, data, host.unlocked(), null, pick.classId === 'common' ? pick.element : 'random');
+    } else {
+      if (!(await randomClassDialog(host, mine)) || !(await replaceSaved(host, saved))) continue;
+      await host.ensurePlayerName();
+      run = newRandomGenericRun(host.nextSeed(), currentDifficulty(host), data, host.unlocked());
+    }
     await revealScreen(host, run);
     return run;
   }
+}
+
+const classFace = (id: string, size: 'sm' | 'md' | 'lg' = 'lg') => fighterPortrait(id, portraitSpec(id), size);
+
+/** Os retratos das classes em leque (como o leque de arcos): a arte do card Classe aleatória. */
+function classFan(): string {
+  return `<span class="jarc-fan">${data.generic.classes.map((c, i) => `<span class="jarc-fan-i art-frame" style="--i:${i + 0.5}">${classFace(c.hero)}</span>`).join('')}</span>`;
+}
+
+/** Espera a escolha de uma janela: o `data-pick` tocado, ou `null` pelo X, pelo fundo, pelo Esc ou pelo voltar. */
+function dialogPick<T extends string>(el: HTMLElement): Promise<T | null> {
+  return new Promise((resolve) => {
+    el.addEventListener('click', (e) => {
+      const t = e.target as HTMLElement;
+      if (t === el || t.closest('[data-close]')) {
+        el.remove();
+        resolve(null);
+        return;
+      }
+      const b = t.closest<HTMLElement>('[data-pick]');
+      if (!b || b.getAttribute('aria-disabled') === 'true') return;
+      el.remove();
+      resolve(b.dataset.pick as T);
+    });
+  });
+}
+
+/**
+ * Cardápio da Campanha: a lista de classes e, ao lado, o retrato da escolhida em destaque com a descrição dela (o retrato
+ * acompanha a classe e, no Comum, o elemento: o Prodígio quando fica sem). O Comum escolhe um dos cinco elementos ou o
+ * Prodígio; o sorteio com recompensa é o outro card.
+ */
+async function classMenuDialog(host: JornadaHost, mine: boolean): Promise<{ classId: string; element: ElementChoice } | null> {
+  const unlocked = host.unlocked();
+  let classId = 'common';
+  let element: ElementChoice = 'fire';
+  const el = h(`<div class="modal jclass-modal" aria-label="${J.start.pathPick}"><div class="modal-body jmodal jclass-menu">
+    <div class="modal-head"><h2>${J.start.pathPick}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
+    <div class="jclass-menu-body">
+      <div class="jclasses" role="group" aria-label="${G.classTitle}">${['common', 'uchiha', 'hyuuga']
+        .map((id) => {
+          const def = data.generic.classes.find((c) => c.id === id);
+          const open = def && (!def.unlock || unlocked.has(def.unlock));
+          const note = !def ? G.soonClass : open ? G.classes[id]!.desc : G.locked[id]!;
+          return `<button type="button" class="jclass${open ? '' : ' off'}" data-class="${id}" aria-pressed="${id === classId}" ${open ? '' : 'aria-disabled="true"'}>
+            <b>${open ? '' : `${icon('lock', 'lock')} `}${G.classes[id]!.name}</b><small>${note}</small></button>`;
+        })
+        .join('')}</div>
+      <div class="jclass-detail">
+        <div class="jstart-face" data-class-face>${classFace(choiceHero(classId, element))}</div>
+        <div class="jclass-info"><h3 data-class-name>${G.classes[classId]!.name}</h3><p data-class-info>${G.classInfo[classId]}</p></div>
+      </div>
+    </div>
+    <div class="jel-pick" data-elements role="group" aria-label="${G.elementTitle}">${ELEMENT_CHOICES.filter((c) => c !== 'random').map((c) => elementChoiceButton(c, 'fire')).join('')}</div>
+    <p class="muted small">${bestLine(host)}${J.start.infiniteNote}</p>
+    <button type="button" class="btn primary big" data-pick="start">${icon('dice')} ${mine ? J.start.restartPath : G.start}</button>
+  </div></div>`);
+  const sync = () => {
+    el.querySelector('[data-class-face]')!.innerHTML = classFace(choiceHero(classId, classId === 'common' ? element : 'random'));
+    el.querySelector('[data-class-name]')!.textContent = G.classes[classId]!.name;
+    el.querySelector('[data-class-info]')!.textContent = G.classInfo[classId] ?? '';
+    // Só o Comum escolhe o elemento.
+    el.querySelector<HTMLElement>('[data-elements]')!.hidden = classId !== 'common';
+  };
+  el.querySelector('.jclasses')!.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-class]');
+    if (!b || b.getAttribute('aria-disabled') === 'true') return;
+    classId = b.dataset.class!;
+    el.querySelectorAll('[data-class]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    sync();
+  });
+  el.querySelector('[data-elements]')!.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-element]');
+    if (!b) return;
+    const v = b.dataset.element!;
+    element = v === 'none' ? null : (v as Element);
+    el.querySelectorAll('[data-element]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    sync();
+  });
+  openDialog(el);
+  const pick = await dialogPick<'start'>(el);
+  return pick ? { classId, element } : null;
+}
+
+/**
+ * Janela da Classe aleatória: o que pode sair (as classes liberadas, com o retrato) e a recompensa. O Sortear e começar
+ * devolve `true`; a classe e o elemento saem da seed da run (`newRandomGenericRun`) e a revelação mostra os dois.
+ */
+async function randomClassDialog(host: JornadaHost, mine: boolean): Promise<boolean> {
+  const pool = openGenericClasses(data, host.unlocked());
+  const el = h(`<div class="modal jrandom-modal" aria-label="${G.randomCard.name}"><div class="modal-body jmodal jrandom-class">
+    <div class="modal-head"><h2>${G.randomCard.name}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
+    <p>${G.randomDesc}</p>
+    <div class="jrandom-pool"><h3>${G.randomPool}</h3><ul>${pool.map((c) => `<li>${classFace(c.hero, 'sm')}<b>${G.classes[c.id]?.name ?? c.id}</b></li>`).join('')}</ul></div>
+    <p class="jrandom-reward">${icon('chest')} ${G.randomReward}</p>
+    <button type="button" class="btn primary big" data-pick="start">${icon('dice')} ${mine ? `${G.randomStart} · ${J.start.restartPath}` : G.randomStart}</button>
+  </div></div>`);
+  openDialog(el);
+  return (await dialogPick<'start'>(el)) === 'start';
 }
 
 /** No celular a faixa de arcos rola de lado: abre no arco atual (sem scrollIntoView, que rolaria a página). */
@@ -580,7 +655,9 @@ function arcStrip(saved: JRun | null, records: readonly JornadaRunRecord[]): str
         : state === 'done' ? `<small>${icon('check')} ${J.start.arcDone}</small>`
         : state === 'ahead' ? `<small>${icon('lock')} ${J.start.arcAhead}</small>`
         : '';
-      return `<li class="jarc${state === 'next' ? '' : ` is-${state}`}" data-arc="${s.id}"${state === 'now' ? ' aria-current="step"' : ''}>
+      const name = J.stages[s.id] ?? s.id;
+      const info = J.start.arcInfo[s.id];
+      return `<li class="jarc${state === 'next' ? '' : ` is-${state}`}" data-arc="${s.id}"${state === 'now' ? ' aria-current="step"' : ''}${info ? ` tabindex="0"${tip(name, info)}` : ''}>
         <span class="jarc-art art-frame${art ? '' : ` jscene scene-${s.scene}`}" aria-hidden="true">${art ?? ''}</span>
         <span class="seal jarc-n" aria-hidden="true">${ARC_NUMERALS[i] ?? i + 1}</span>
         <b>${J.stages[s.id] ?? s.id}</b>${note}</li>`;
@@ -613,8 +690,8 @@ function bestLine(host: JornadaHost): string {
 /** Opções de elemento do Comum na tela de início. */
 const ELEMENT_CHOICES = ['random', 'fire', 'wind', 'lightning', 'earth', 'water', 'none'] as const;
 
-function elementChoiceButton(c: (typeof ELEMENT_CHOICES)[number]): string {
-  const pressed = `aria-pressed="${c === 'random'}"`;
+function elementChoiceButton(c: (typeof ELEMENT_CHOICES)[number], selected: (typeof ELEMENT_CHOICES)[number] = 'random'): string {
+  const pressed = `aria-pressed="${c === selected}"`;
   if (c === 'random') return `<button type="button" class="jel jel-random" data-element="random" ${pressed}${tip(G.elementRandom, G.elementRandomTip)}>${icon('dice')}<span>${G.elementRandom}</span></button>`;
   if (c === 'none') return `<button type="button" class="jel" data-element="none" ${pressed}${tip(G.elementProdigy, G.elementProdigyTip)}>${icon('taijutsu')}<span>${G.elementProdigy}</span></button>`;
   return `<button type="button" class="jel" data-element="${c}" style="--c:${ELEMENT_COLORS[c]}" ${pressed}${tip(S.elements[c], G.elementChoiceTip(S.elements[c]))}>${icon(c)}<span>${S.elements[c]}</span></button>`;
@@ -634,14 +711,14 @@ export async function revealScreen(host: JornadaHost, run: JRun): Promise<void> 
   const [a, b] = run.supports.map((id) => memberName(host, run, id));
   const line = el ? `${icon(el)} ${G.revealElement(S.elements[el])}` : noElement ? G.revealHyuuga : G.revealProdigy;
   // A relíquia bônus é a que veio além da inicial.
-  const bonus = run.elementPick === 'random' ? run.relics.find((id) => data.relics.find((r) => r.id === id)?.tier !== 'starter') : undefined;
+  const bonus = drewRandomly(run) ? run.relics.find((id) => data.relics.find((r) => r.id === id)?.tier !== 'starter') : undefined;
   // O momento da Jornada não é uma roleta (identidade do outro modo): o elemento cai como um carimbo de tinta sobre o
   // retrato, e a equipe aparece inteira, com o elemento de cada um. Prodígio: 体 (corpo); Hyuuga: 天 (o céu do Kaiten).
   const seal = el ? REVEAL_KANJI[el] ?? '忍' : noElement ? '天' : '体';
   // O nome do parceiro já traz o elemento ("Kenta (Água)"); o protagonista está no alto, então a fileira mostra os dois.
   const member = (id: string) => `<li>${fighterPortrait(id, portraitSpec(id, run), 'md')}<b>${memberName(host, run, id)}</b></li>`;
   const root = show(
-    h(`<div class="screen jreveal jreveal-path"><h2>${run.elementPick === 'random' ? G.revealTitle : G.revealChosen}</h2>
+    h(`<div class="screen jreveal jreveal-path"><h2>${run.classPick === 'random' ? G.revealClassTitle : run.elementPick === 'random' ? G.revealTitle : G.revealChosen}</h2>
       <div class="jreveal-stage"><div class="jstart-face pop">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'lg')}</div>
         <span class="seal stamp jreveal-seal el-${el ?? 'none'}" aria-hidden="true">${seal}</span></div>
       <h3 class="center jreveal-name">${heroName(host, run)}</h3>

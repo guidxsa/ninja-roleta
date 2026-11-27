@@ -48,7 +48,7 @@ A História é organizada em **campanhas** (`CampaignDef` em `src/core/jornada/d
 
 - **Naruto** (dia): a única jogável, em 4 arcos ([historia.md](historia.md)).
 - **Sasuke** (noite): em desenvolvimento ([historia-sasuke.md](historia-sasuke.md)).
-- Fluxo de entrada: no Portão, o card **História** abre o Modo História, com os cards Naruto e Sasuke (em breve), e cada card abre a janela da perspectiva; o card **Campanha** abre a preparação (classe, elemento e dificuldade). Cada tela tem a dificuldade e o Continuar da run salva do seu modo ([run.md](run.md#tela-de-início), [visual.md](../visual.md#entrada-da-jornada)).
+- Fluxo de entrada: no Portão, o card **História** abre o Modo História, com os cards Naruto e Sasuke (em breve), e cada card abre a janela da perspectiva; o card **Campanha** abre a tela com os cards Escolher a classe (o cardápio) e Classe aleatória (com a relíquia extra). Cada tela tem a dificuldade e o Continuar da run salva do seu modo ([run.md](run.md#tela-de-início), [visual.md](../visual.md#entrada-da-jornada)).
 - A run guarda a campanha (`campaign`; sem ela, Naruto) e lê os arcos por `storyStages`. Shippuden entra como campanhas novas, sem sistema novo.
 
 ## Perfil e conquistas

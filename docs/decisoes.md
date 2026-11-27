@@ -8,6 +8,18 @@ O que espera o usuário. Um item por decisão; o histórico e os números comple
 
 ## Balanceamento
 
+51. **Classe aleatória e o Comum sem o Sortear** (tarefa `modos-jornada`, 27/11/2026, [registro](registro.md#classe-aleatória-com-relíquia-27112026)). O usuário decidiu: a Classe aleatória sempre dá a relíquia extra, e o Sortear saiu do cardápio. Nada foi compensado. Fora de ±5: o **Comum escolhido** (agora sempre sem relíquia) fica em 30,7% no Difícil (meta 40); o **Hyuuga sorteado** sobe para 79% no Médio (já estava em 74); a Classe aleatória fica em 95,3% no Fácil. A guarda da meta (`check:meta`) continua medindo o Comum com a relíquia (o sorteio antigo), que não é mais o caminho do cardápio. Alavancas possíveis: devolver a relíquia ao Comum escolhido, trocar a relíquia da Classe aleatória por algo menor, ou passar a guarda a medir o Comum escolhido.
+
+| Modo (vitória %, 300 runs, seed 2) | Fácil | Médio | Difícil | Hardcore |
+|---|---:|---:|---:|---:|
+| Comum, elemento sorteado + relíquia (o "Sortear" antigo) | 90,0 | 64,0 | 38,7 | 18,7 |
+| Comum escolhido no cardápio, sem relíquia | 90,0 | 63,0 | 30,7 | 14,0 |
+| Uchiha escolhido | 91,0 | 69,0 | 38,0 | 14,0 |
+| Uchiha sorteado + relíquia | 95,0 | 68,0 | 40,3 | 19,3 |
+| Hyuuga escolhido | 98,7 | 74,3 | 37,0 | 11,7 |
+| Hyuuga sorteado + relíquia | 98,0 | 79,0 | 44,3 | 12,0 |
+| Classe aleatória (a mistura das três) | 95,3 | 67,3 | 43,0 | 16,3 |
+
 49. **Jornada na meta: conferir** (v0.95.0, [registro](registro.md#jornada-na-meta-90654015-v0950-17112026)). Tudo dentro de ±5, menos o Hyuuga no Fácil e no Médio (99 e 74). Para revisar: as alavancas decididas sozinho (força por dificuldade de cada tipo de run, Hardcore da História por estágio, status das classes) e o infinito, que quase não aperta.
 38. **Os três modos contra a meta nova** (v0.88.3, 300 runs, seed 2; Fácil / Médio / Difícil / Hardcore):
 

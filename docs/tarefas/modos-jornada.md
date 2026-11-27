@@ -1,8 +1,8 @@
 ---
-objetivo: Refazer a estrutura das telas da História e da Campanha na composição do Portão (painel de arte, cards e coluna lateral), com a janela de cada perspectiva da História e o retrato da Campanha que acompanha a classe, sem mudar regra nem número.
-escopo: ["docs/tarefas/modos-jornada.md", "prototype/jornada/index.ts", "src/data/strings/jornada.ts", "prototype/styles/jornada.css", "prototype/lab/scenarios/jornada.ts", "prototype/lab/fixtures/*.ts", "tests/uilab.test.ts", "docs/jornada/run.md", "docs/jornada/README.md", "docs/visual.md", "docs/ui-lab/SCREEN_INVENTORY.md", "changelog.d/modos-jornada.md"]
-fora: ["src/core/**", "src/sim/**", "src/state/**", "src/data/balance*.ts", "src/data/**/balance*.ts", "src/data/jornada/**", "src/data/roleta/**", "prototype/gate.ts", "prototype/main.ts", "prototype/roleta/**", "public/img/**", "prototype/art.ts", "package.json", "package-lock.json", "CHANGELOG.md", ".github/**"]
-pronto: ["npm run check verde", "a História abre na composição do Portão: painel com a arte jornada, cards Naruto e Sasuke (este em breve) e a coluna com a run salva, a dificuldade e as conquistas recentes", "tocar num card abre uma janela grande com a arte, a descrição, os arcos com o progresso e o Começar ou o Continuar e o Recomeçar; Esc e voltar fecham", "a Campanha usa a mesma composição; a dificuldade fica abaixo da escolha da classe", "o retrato ao lado da escolha da classe muda com a classe (e com o Prodígio no Comum sem elemento)", "Continuar, Recomeçar, o aviso do outro modo e o progresso dos arcos continuam funcionando", "ordem do foco igual à ordem visual no celular (issue #95)", "UI Lab em 390, 768, 1280, 1920 e 2560 sem rolagem horizontal", "docs e fragmento no mesmo commit, PR para staging"]
+objetivo: Refazer as telas da História e da Campanha na composição do Portão (painel de arte, dois cards com janela própria e coluna lateral), com a dica de cada arco da História e, na Campanha, o cardápio de classes e a classe aleatória com a relíquia extra.
+escopo: ["docs/tarefas/modos-jornada.md", "src/core/jornada/run.ts", "tests/jornadaAleatoria.test.ts", "scripts/sim-jornada.ts", "docs/jornada/classes.md", "docs/jornada/caminho-ninja.md", "docs/balanceamento/benchmark.md", "prototype/jornada/index.ts", "src/data/strings/jornada.ts", "prototype/styles/jornada.css", "prototype/lab/scenarios/jornada.ts", "prototype/lab/fixtures/*.ts", "tests/uilab.test.ts", "docs/jornada/run.md", "docs/jornada/README.md", "docs/visual.md", "docs/ui-lab/SCREEN_INVENTORY.md", "changelog.d/modos-jornada.md"]
+fora: ["src/core/roleta/**", "src/core/jornada/battle*.ts", "src/sim/**", "src/state/**", "src/data/balance*.ts", "src/data/**/balance*.ts", "src/data/jornada/**", "src/data/roleta/**", "prototype/gate.ts", "prototype/main.ts", "prototype/roleta/**", "public/img/**", "prototype/art.ts", "package.json", "package-lock.json", "CHANGELOG.md", ".github/**"]
+pronto: ["npm run check verde", "a História abre na composição do Portão: painel com a arte jornada, cards Naruto e Sasuke (este em breve) e a coluna com a run salva, a dificuldade e as conquistas recentes", "tocar num card abre uma janela grande com a arte, a descrição, os arcos com o progresso e o Começar ou o Continuar e o Recomeçar; Esc e voltar fecham", "cada arco da História mostra uma descrição breve ao passar o mouse ou tocar (dica destacada, não janela)", "a Campanha usa a mesma composição da História: cards Escolher a classe e Classe aleatória, com a dificuldade na coluna", "Escolher a classe abre o cardápio: lista de classes, o retrato da escolhida em destaque com a descrição ao lado (Prodígio no Comum sem elemento) e o elemento do Comum sem a opção de sortear", "Classe aleatória sorteia a classe entre as liberadas (e o elemento, no Comum) e sempre dá a relíquia extra, com teste", "simulação de antes e depois da regra nova, sem compensar balanceamento", "Continuar, Recomeçar, o aviso do outro modo e o progresso dos arcos continuam funcionando", "ordem do foco igual à ordem visual no celular (issue #95)", "UI Lab em 390, 768, 1280, 1920 e 2560 sem rolagem horizontal", "docs e fragmento no mesmo commit, PR para staging"]
 agente: claude
 aprovado: 2026-11-27
 ---
@@ -51,10 +51,22 @@ Pela divisão de 26/11, a estrutura (HTML gerado, janela, retrato que muda, orde
 
 Regras, números, saves; o Portão, o Registro, o Arcade e a run da Jornada; imagens novas (a do painel da Campanha vem no passo 8); o acabamento fino (Codex).
 
+## Ampliação (27/11/2026, aprovada pelo usuário na conversa)
+
+Retorno sobre o PR #98: "a composição do Modo História me agradou muito; repetir para a Campanha, com uma alteração conceitual".
+
+- **História:** passar o mouse ou o dedo num arco mostra uma descrição breve dele, num bloco informativo destacado (a dica do projeto, `tip()`), não numa janela. Se poluir, considerar trocar a janela da perspectiva por uma tela.
+- **Campanha, na composição da História:** dois cards e a coluna com a run salva, a dificuldade e as conquistas recentes.
+  - **Escolher a classe** abre um cardápio: a lista de classes, a imagem da classe escolhida em destaque e a descrição ao lado; no Comum, o elemento (ou o Prodígio). A opção "Sortear o elemento" sai do cardápio (resposta do usuário: "Tirar do cardápio").
+  - **Classe aleatória** abre a janela da recompensa e sorteia a classe. Resposta do usuário: "Sorteia classe, sempre relíquia": a classe sai entre as liberadas (e o elemento, no Comum) e a run **sempre** ganha a relíquia extra. Hoje ela só vem quando o Comum sorteia o elemento; Uchiha e Hyuuga, de elemento fixo, não ganham nada. **É regra nova** (skill `nova-mecanica`): core, teste, simulação de antes e depois e docs. Nada de balanceamento é compensado sem o usuário.
+- **Core** (`src/core/jornada/run.ts`): `newRandomGenericRun(seed, difficulty, data, unlocked)` sorteia a classe pela seed e chama `newGenericRun` com o elemento sorteado e a marca `classPick: 'random'`, que dá a relíquia do sorteio (`elementDraw.randomBonus`) também às classes de elemento fixo. A revelação mostra a relíquia nos dois casos.
+- **Simulação** (`scripts/sim-jornada.ts`): `--aleatoria` mede a classe aleatória e cada classe com e sem a relíquia, sem mudar os grupos padrão da guarda da meta (`check:meta`).
+
 ## Decisões para o usuário
 
 - **Arte do painel da Campanha:** não há no projeto uma arte de painel própria (as que existem são pergaminho, retratos de arco ou já usadas pela História e pelas perspectivas). Proposta: gerar uma nova pelo Codex (passo 8) e, até ela chegar, usar provisoriamente a mesma arte `jornada` da História.
 - **Conquistas recentes na História:** voltam na coluna, como no layout antigo.
+- **Elemento padrão no cardápio do Comum:** sem o "Sortear", o cardápio abre com o Fogo marcado (o primeiro da lista).
 
 ## Achados
 

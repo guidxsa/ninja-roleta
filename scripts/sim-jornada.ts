@@ -20,6 +20,7 @@ import {
   chooseNode,
   choosingNode,
   newGenericRun,
+  newRandomGenericRun,
   nodeChoices,
   buyTalent,
   heroMovable,
@@ -279,17 +280,34 @@ function pickNode(run: JRun, rng: Rng): string {
 let patch: ((run: JRun) => JRun) | null = null;
 
 function newModeRun(seed: number, difficulty: Difficulty, mode: Mode): JRun {
-  const cls = mode === 'generic:prodigy' ? 'common' : mode.split(':')[1]!;
+  // `--aleatoria`: `generic:aleatoria` (card Classe aleatória), `generic:<classe>+sorteio` (a classe com a relíquia do
+  // sorteio) e `generic:common-sem` (o Comum de elemento sorteado sem a relíquia, como quem escolhe no cardápio).
+  if (mode === 'generic:aleatoria') return patchRun(newRandomGenericRun(seed, difficulty, data, UNLOCKED));
+  const [base, extra] = mode.split('+') as [string, string | undefined];
+  const cls = base === 'generic:prodigy' || base === 'generic:common-sem' ? 'common' : base.split(':')[1]!;
   // O Comum sorteia o elemento (e ganha a relíquia do sorteio); o prodígio é escolhido direto (sem elemento).
-  const run = mode === 'canon' ? newRun(seed, difficulty, data) : newGenericRun(seed, difficulty, cls, data, UNLOCKED, null, mode === 'generic:prodigy' ? null : 'random');
-  return patch ? patch(run) : run;
+  let run = base === 'canon' ? newRun(seed, difficulty, data) : newGenericRun(seed, difficulty, cls, data, UNLOCKED, null, base === 'generic:prodigy' ? null : 'random', extra === 'sorteio');
+  if (base === 'generic:common-sem') run = { ...run, relics: run.relics.filter((id) => data.relics.find((r) => r.id === id)?.tier === 'starter') };
+  return patchRun(run);
 }
+
+const patchRun = (run: JRun): JRun => (patch ? patch(run) : run);
 
 /** Vitória (%) de `runs` runs de um modo e dificuldade, com o remendo de agora. */
 function winRate(mode: Mode, d: Difficulty, runs: number): number {
   let wins = 0;
   for (let i = 0; i < runs; i++) if (play(SEED * 100003 + i, d, mode).run.status === 'victory') wins++;
   return (wins / runs) * 100;
+}
+
+// `--aleatoria` (docs/balanceamento/benchmark.md): o card Classe aleatória da Campanha e cada classe com e sem a
+// relíquia do sorteio, nas quatro dificuldades. Não entra na guarda da meta (`check:meta` mede os grupos padrão).
+if (process.argv.includes('--aleatoria')) {
+  const modes = ['generic:common', 'generic:common-sem', 'generic:uchiha', 'generic:uchiha+sorteio', 'generic:hyuuga', 'generic:hyuuga+sorteio', 'generic:aleatoria'];
+  console.log(`Classe aleatória · ${RUNS} runs · seed ${SEED} · vitória (%)`);
+  console.log(`modo | ${DIFFS.join(' | ')}`);
+  for (const m of modes) console.log(`${m} | ${DIFFS.map((d) => winRate(m, d, RUNS).toFixed(1)).join(' | ')}`);
+  process.exit(0);
 }
 
 // `--reliquias` (docs/balanceamento/benchmark.md): valor marginal de cada relíquia (a vitória com ela desde o começo,
