@@ -213,6 +213,12 @@ Em monitores grandes, a pintura do Monte Hokage ocupa a linha maior da grade e o
 
 O Registro ocupa a área principal. Em telas com barra inferior, quatro abas dão acesso às seções. Dentro do Histórico, o jogador escolhe Arcade, História ou Campanha. A ação **Continuar** fica junto da parada salva no modo correspondente. Cada run do Histórico é uma linha que abre os detalhes. No Livro Bingo, a ficha de cada inimigo é papel de cartaz com o fundo do arco e a moldura pelo grau (comum, elite e chefe com o carimbo 手配), em tela cheia no celular e num painel ao lado no desktop.
 
+### História e Campanha
+
+As telas de modo usam o letreiro em pincel sobre a arte. Os pergaminhos abaixo têm rolos de madeira, papel liso e ilustração com borda de tinta em uma área própria. A etiqueta de laca indica a ação disponível. Um contorno tracejado marca o **Em breve** do Sasuke. Desktop distribui o painel de arte e os pergaminhos no centro e o progresso, a dificuldade e as conquistas à direita. Celular empilha essas regiões na ordem do HTML.
+
+A perspectiva abre a janela mais larga. Os quatro arcos usam filete duplo dourado, moldura de laca, filete simples e contorno tracejado para expressar, respectivamente, concluído, atual, próximo e ainda não alcançado. A dica de arco usa papel e título manuscrito. No cardápio, as classes aparecem em uma lista de laca e a classe selecionada tem uma ficha de papel com retrato e descrição lado a lado. A janela de classe aleatória mostra os retratos em fileira e destaca a recompensa numa faixa de papel com o baú.
+
 ### Panels
 - **Painel laqueado** (`.card`, `.panel`, `.chamfer`): grafite com grão, filete de aço desenhado pela camada de baixo, aba vermelha curta no topo marcando o dono. Padding 12px.
 - **Pergaminho** (`.parchment`): papel com grão, manchas e borda queimada; título em Kalam. Botão primário dentro usa dourado claro.

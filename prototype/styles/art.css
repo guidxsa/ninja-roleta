@@ -71,7 +71,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   :root[data-animated]:not([data-instant]) .scene-fx { display: block; }
-  :root[data-animated]:not([data-instant]) :is(.gate-hero, .jc-panel:not(.is-locked) .jc-art, .jtrail-art) .scene-media img {
+  :root[data-animated]:not([data-instant]) :is(.gate-hero, .jpersp:not(.is-locked) .jpersp-art, .jtrail-art) .scene-media img {
     transform-origin: var(--fx, 50%) var(--fy, 35%); animation: sceneBreath var(--dur-breath) ease-in-out infinite alternate;
   }
 }

@@ -1,0 +1,1 @@
+**História e Campanha ganharam novos pergaminhos.** As telas de modo destacam a arte e as escolhas. Na História, os quatro arcos cabem na janela com a descrição de cada um. Na Campanha, o cardápio dá destaque ao retrato da classe e o sorteio põe a relíquia extra em evidência.

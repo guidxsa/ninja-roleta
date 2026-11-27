@@ -53,4 +53,4 @@ Nenhuma prévia: se o acabamento pedir mudança de estrutura no HTML, pare e des
 
 ## Achados
 
-(preenchido durante o trabalho)
+- Com recorde da Campanha, a nota do cardápio põe um `<p>` dentro de outro (`bestLine` dentro do parágrafo da nota) e perde a formatação de texto auxiliar. É do TS do PR #98, fora deste escopo: issue #99 (aberta pelo Claude; o conector do Codex pedia aprovação).
