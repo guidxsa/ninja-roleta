@@ -578,7 +578,7 @@ async function classMenuDialog(host: JornadaHost, mine: boolean): Promise<{ clas
       </div>
     </div>
     <div class="jel-pick" data-elements role="group" aria-label="${G.elementTitle}">${ELEMENT_CHOICES.filter((c) => c !== 'random').map((c) => elementChoiceButton(c, 'fire')).join('')}</div>
-    <p class="muted small">${bestLine(host)}${J.start.infiniteNote}</p>
+    ${bestLine(host)}<p class="muted small">${J.start.infiniteNote}</p>
     <button type="button" class="btn primary big" data-pick="start">${icon('dice')} ${mine ? J.start.restartPath : G.start}</button>
   </div></div>`);
   const sync = () => {
