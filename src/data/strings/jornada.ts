@@ -39,6 +39,11 @@ export const jornadaPtBR = {
     arcsTitle: 'Arcos da História',
     arcNow: 'Você está aqui',
     arcDone: 'Concluído',
+    arcAhead: 'Ainda não alcançado',
+    /** Run salva do outro modo na tela de um modo: começar aqui a substitui (há um save só da Jornada). */
+    otherSaved: (mode: string) => `Você tem uma run da ${mode} salva. Começar aqui substitui essa run.`,
+    restartCanon: 'Recomeçar a História',
+    restartPath: 'Começar uma nova run',
     chapter: 'Capítulo atual',
     stageOf: (n: number, total: number) => `Estágio ${n} de ${total}`,
     completion: { canon: 'Conclusão da História', generic: 'Caminho Ninja' } as Record<'canon' | 'generic', string>,

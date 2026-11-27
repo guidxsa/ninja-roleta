@@ -66,6 +66,7 @@ import { jornadaData as data } from '../../src/data/jornada';
 import { newJornadaAchievements } from '../../src/data/jornada/achievements';
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { loadJornada, saveJornada } from '../../src/state/jornadaSave';
+import { loadJornadaRuns, storyArcsCleared, type JornadaRunRecord } from '../../src/state/jornadaRuns';
 import { arcMedia, fighterPortrait, icon, sceneFx, sceneMedia, sceneVars } from '../art';
 import { choose, confirmDialog, esc, h, openDialog, show, sleep } from '../dom';
 import { tip } from '../tooltip';
@@ -278,9 +279,7 @@ function persist(host: JornadaHost, run: JRun): void {
 }
 
 export async function entryScreen(host: JornadaHost, saved: JRun | null): Promise<'continue' | 'story' | 'path' | 'back'> {
-  const hardcoreOk = host.unlocked().has('j_canonHard');
-  let diff = host.difficulty();
-  if (diff === 'hardcore' && !hardcoreOk) diff = 'normal';
+  const box = difficultyBox(host);
   const hero = sceneMedia('jornada');
   const recent = host.recentAchievements(3, true);
   const quote = J.start.quotes[Math.floor(Math.random() * J.start.quotes.length)]!;
@@ -302,12 +301,7 @@ export async function entryScreen(host: JornadaHost, saved: JRun | null): Promis
       </div>
       <aside class="gate-aside">
         ${saved ? progressCard(saved) : ''}
-        <div class="difficulty-box parchment"><h3>${J.start.difficulty}</h3>
-          <div class="segmented">${DIFFICULTIES.map(
-            (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === diff}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? `${icon('lock')} ` : ''}${S.difficulty[d].name}</button>`,
-          ).join('')}</div>
-          <p class="center small" data-recovery>${recoveryLine(diff)}</p>
-          <p class="muted center small">${hardcoreOk ? J.start.willOfFireNote : J.start.hardcoreLocked}</p></div>
+        ${box.html}
         ${
           recent.length
             ? `<section class="parchment jrecent"><h3>${J.start.recentTitle}</h3><ul>${recent
@@ -318,15 +312,43 @@ export async function entryScreen(host: JornadaHost, saved: JRun | null): Promis
       </aside>
     </div>`),
   );
-  root.querySelector('.segmented')!.addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-diff]');
-    if (!b || b.disabled) return;
-    diff = b.dataset.diff as Difficulty;
-    host.setDifficulty(diff);
-    root.querySelectorAll('[data-diff]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-    root.querySelector('[data-recovery]')!.innerHTML = recoveryLine(diff);
-  });
+  box.wire(root);
   return choose<'continue' | 'story' | 'path' | 'back'>(root);
+}
+
+/**
+ * Dificuldade da Jornada (a mesma do Arcade: `ses.settings.difficulty`), nas telas da História e da Campanha. O Hardcore
+ * fica travado até vencer a História no Difícil; a run salva guarda a dela, e a escolha vale para a próxima.
+ */
+function difficultyBox(host: JornadaHost): { html: string; wire: (root: HTMLElement) => void } {
+  const hardcoreOk = host.unlocked().has('j_canonHard');
+  const diff = currentDifficulty(host);
+  const html = `<div class="difficulty-box parchment"><h3>${J.start.difficulty}</h3>
+          <div class="segmented">${DIFFICULTIES.map(
+            (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === diff}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? `${icon('lock')} ` : ''}${S.difficulty[d].name}</button>`,
+          ).join('')}</div>
+          <p class="center small" data-recovery>${recoveryLine(diff)}</p>
+          <p class="muted center small">${hardcoreOk ? J.start.willOfFireNote : J.start.hardcoreLocked}</p></div>`;
+  const wire = (root: HTMLElement) =>
+    root.querySelector('.difficulty-box .segmented')!.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-diff]');
+      if (!b || b.disabled) return;
+      const d = b.dataset.diff as Difficulty;
+      host.setDifficulty(d);
+      root.querySelectorAll('[data-diff]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      root.querySelector('[data-recovery]')!.innerHTML = recoveryLine(d);
+    });
+  return { html, wire };
+}
+
+/**
+ * Topo da tela de um modo: a run salva e a dificuldade. A run deste modo vem no card de progresso, com o Continuar; a do
+ * outro modo, num aviso de que começar aqui a substitui (a Jornada tem um save só, `jornada_run_v1`).
+ */
+function modeTop(saved: JRun | null, entry: JornadaEntry, difficulty: string): string {
+  const mine = saved !== null && entryForRun(saved) === entry;
+  const other = saved && !mine ? `<p class="parchment jother-saved small" role="note">${icon('warning')}<span>${J.start.otherSaved(J.modes[entryForRun(saved)].name)}</span></p>` : '';
+  return `<div class="jmode-top">${saved && mine ? progressCard(saved) : other}${difficulty}</div>`;
 }
 
 /** Os arcos da História em leque, como arte do card Modo História. */
@@ -345,9 +367,13 @@ const PERSPECTIVES = [
 /** Modo História: escolher a perspectiva. Dia e noite lado a lado; a do Sasuke fica travada até existir. */
 export async function campaignScreen(host: JornadaHost, saved: JRun | null): Promise<JRun | null> {
   const C = J.start.campaigns;
+  const box = difficultyBox(host);
+  const mine = saved?.mode === 'canon';
+  const records = loadJornadaRuns(host.storage);
   const root = show(
     h(`<div class="screen jcampaigns">
       <header class="jsub-head"><button class="btn small" data-choice="back">${J.start.back}</button><h2>${J.start.storyName}</h2><p class="muted">${C.pick}</p></header>
+      ${modeTop(saved, 'story', box.html)}
       <div class="jc-duo">${PERSPECTIVES.map((p) => {
         const open = Boolean(data.campaigns[p.id]);
         const art = sceneMedia(p.art);
@@ -357,17 +383,19 @@ export async function campaignScreen(host: JornadaHost, saved: JRun | null): Pro
           <div class="jc-body parchment">
             <span class="seal jc-seal" aria-hidden="true">${p.seal}</span>
             <h3>${txt.name}</h3><p class="small">${txt.desc}</p>
-            ${open ? arcStrip(saved) : `<p class="jc-soon">${icon('lock')} ${C.soon}</p>`}
-            ${open ? `<button class="btn primary big" data-choice="${p.id}">${icon('scroll')} ${J.start.startCanon}</button>` : ''}
+            ${open ? arcStrip(saved, records) : `<p class="jc-soon">${icon('lock')} ${C.soon}</p>`}
+            ${open ? `<button class="btn${mine ? '' : ' primary'} big" data-choice="${p.id}">${icon('scroll')} ${mine ? J.start.restartCanon : J.start.startCanon}</button>` : ''}
           </div>
         </section>`;
       }).join('')}</div>
     </div>`),
   );
+  box.wire(root);
   scrollToNowArc(root);
   for (;;) {
     const c = await choose<string>(root);
     if (c === 'back') return null;
+    if (c === 'continue' && saved && mine) return saved;
     if (!data.campaigns[c] || !(await replaceSaved(host, saved))) continue;
     return newRun(host.nextSeed(), currentDifficulty(host), data, host.unlocked());
   }
@@ -381,9 +409,12 @@ function currentDifficulty(host: JornadaHost): Difficulty {
 
 /** Caminho Ninja: classe e elemento (só o Comum), depois a revelação. */
 export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Promise<JRun | null> {
+  const box = difficultyBox(host);
+  const mine = saved?.mode === 'generic';
   const root = show(
     h(`<div class="screen jpath">
       <header class="jsub-head"><button class="btn small" data-choice="back">${J.start.back}</button><h2>${G.title}</h2><p class="muted">${G.desc}</p></header>
+      ${modeTop(saved, 'path', box.html)}
       <section class="jc-panel jpath-poster" aria-hidden="true">
         <span class="jc-art art-frame">${sceneMedia('caminho-ninja') ?? sceneMedia('jornada') ?? ''}${sceneFx()}</span>
         <div class="jc-body parchment"><span class="seal jc-seal">道</span><h3>${J.start.pathStages}</h3>
@@ -402,7 +433,7 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
           })
           .join('')}</div>
         <div class="jel-pick" data-elements role="group" aria-label="${G.elementTitle}">${ELEMENT_CHOICES.map((c) => elementChoiceButton(c)).join('')}</div>
-        <button class="btn primary big" data-choice="generic">${icon('dice')} ${G.start}</button>
+        <button class="btn${mine ? '' : ' primary'} big" data-choice="generic">${icon('dice')} ${mine ? J.start.restartPath : G.start}</button>
       </section>
     </div>`),
   );
@@ -424,9 +455,14 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
     element = v === 'random' ? 'random' : v === 'none' ? null : (v as Element);
     root.querySelectorAll('[data-element]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
   });
+  box.wire(root);
   for (;;) {
-    const c = await choose<'generic' | 'back'>(root);
+    const c = await choose<'generic' | 'back' | 'continue'>(root);
     if (c === 'back') return null;
+    if (c === 'continue') {
+      if (saved && mine) return saved;
+      continue;
+    }
     if (!(await replaceSaved(host, saved))) continue;
     await host.ensurePlayerName();
     const run = newGenericRun(host.nextSeed(), currentDifficulty(host), classId, data, host.unlocked(), null, classId === 'common' ? element : 'random');
@@ -446,19 +482,29 @@ const ARC_NUMERALS = ['一', '二', '三', '四'];
 
 /**
  * Os arcos da campanha do Naruto em pergaminhos abertos (docs/visual.md, "Arcos da Jornada"): a arte de cada arco
- * (SCENE_ART), o número e o nome. Com uma run da História salva, o arco atual fica em destaque e os de antes, marcados.
+ * (SCENE_ART), o número e o nome. O arco da run salva fica em destaque; os que alguma run já passou (histórico
+ * `jornada_runs_v1`) ou que a run salva deixou para trás, concluídos; o próximo a jogar, sem marca; os outros, ainda não
+ * alcançados (desbotados, só leitura: a História é linear).
  */
-function arcStrip(saved: JRun | null): string {
-  const stages = storyStages({ campaign: saved?.mode === 'canon' ? saved.campaign : undefined }, data);
+function arcStrip(saved: JRun | null, records: readonly JornadaRunRecord[]): string {
+  const campaign = saved?.mode === 'canon' ? saved.campaign : undefined;
+  const stages = storyStages({ campaign }, data);
   const now = saved?.mode === 'canon' ? saved.stageIndex : -1;
+  const cleared = storyArcsCleared(records, stages.length, campaign);
+  const next = now >= 0 ? now : cleared;
   return `<ol class="jarcs" aria-label="${J.start.arcsTitle}">${stages
     .map((s, i) => {
       const art = arcMedia(s.id);
-      const state = i === now ? ' is-now' : i < now ? ' is-done' : '';
-      return `<li class="jarc${state}" data-arc="${s.id}"${i === now ? ' aria-current="step"' : ''}>
+      const state = i === now ? 'now' : i < now || i < cleared ? 'done' : i === next ? 'next' : 'ahead';
+      const note =
+        state === 'now' ? `<small>${J.start.arcNow}</small>`
+        : state === 'done' ? `<small>${icon('check')} ${J.start.arcDone}</small>`
+        : state === 'ahead' ? `<small>${icon('lock')} ${J.start.arcAhead}</small>`
+        : '';
+      return `<li class="jarc${state === 'next' ? '' : ` is-${state}`}" data-arc="${s.id}"${state === 'now' ? ' aria-current="step"' : ''}>
         <span class="jarc-art art-frame${art ? '' : ` jscene scene-${s.scene}`}" aria-hidden="true">${art ?? ''}</span>
         <span class="seal jarc-n" aria-hidden="true">${ARC_NUMERALS[i] ?? i + 1}</span>
-        <b>${J.stages[s.id] ?? s.id}</b>${i === now ? `<small>${J.start.arcNow}</small>` : i < now ? `<small>${icon('check')} ${J.start.arcDone}</small>` : ''}</li>`;
+        <b>${J.stages[s.id] ?? s.id}</b>${note}</li>`;
     })
     .join('')}</ol>`;
 }
