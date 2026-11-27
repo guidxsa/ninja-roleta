@@ -489,8 +489,8 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
       <div class="gate-main">
         ${hubBanner(J.modes.path.name, CAMPAIGN_ART, stages)}
         <nav class="gate-modes" aria-label="${J.modes.path.name}">
-          ${modeCard({ id: 'pick', art: sceneMedia('modo-caminho') ?? '', artVars: sceneVars('modo-caminho'), name: G.chooseCard.name, desc: G.chooseCard.desc, cta: G.chooseCard.cta })}
-          ${modeCard({ id: 'random', art: classFan(), artVars: '--ratio:1.25', name: G.randomCard.name, desc: G.randomCard.desc, cta: G.randomCard.cta })}
+          ${modeCard({ id: 'pick', art: classFan(), artVars: '--ratio:1.25', name: G.chooseCard.name, desc: G.chooseCard.desc, cta: G.chooseCard.cta })}
+          ${modeCard({ id: 'random', art: mysteryFan(), artVars: '--ratio:1.25', name: G.randomCard.name, desc: G.randomCard.desc, cta: G.randomCard.cta })}
         </nav>
       </div>
       <aside class="gate-aside">
@@ -528,9 +528,17 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
 
 const classFace = (id: string, size: 'sm' | 'md' | 'lg' = 'lg') => fighterPortrait(id, portraitSpec(id), size);
 
-/** Os retratos das classes em leque (como o leque de arcos): a arte do card Classe aleatória. */
+/** Os retratos das classes em leque (como o leque de arcos): a arte do card Escolher a classe. */
 function classFan(): string {
-  return `<span class="jarc-fan">${data.generic.classes.map((c, i) => `<span class="jarc-fan-i art-frame" style="--i:${i + 0.5}">${classFace(c.hero)}</span>`).join('')}</span>`;
+  return `<span class="jarc-fan jclass-fan">${data.generic.classes.map((c, i) => `<span class="jarc-fan-i art-frame" style="--i:${i + 0.5}">${classFace(c.hero)}</span>`).join('')}</span>`;
+}
+
+/**
+ * Arte do card Classe aleatória: os mesmos retratos em sombra (quem vai sair ainda é segredo), uma interrogação e o selo
+ * da vantagem (+1 relíquia). O acabamento é do tema (shinobi/jornada-modos.css).
+ */
+function mysteryFan(): string {
+  return `<span class="jarc-fan jclass-fan jfan-mystery">${data.generic.classes.map((c, i) => `<span class="jarc-fan-i art-frame" style="--i:${i + 0.5}">${classFace(c.hero)}</span>`).join('')}<span class="jfan-mark" aria-hidden="true">?</span><span class="jfan-bonus" aria-hidden="true">${icon('chest')}<b>${G.randomBonusBadge}</b></span></span>`;
 }
 
 /** Espera a escolha de uma janela: o `data-pick` tocado, ou `null` pelo X, pelo fundo, pelo Esc ou pelo voltar. */
@@ -578,7 +586,7 @@ async function classMenuDialog(host: JornadaHost, mine: boolean): Promise<{ clas
       </div>
     </div>
     <div class="jel-pick" data-elements role="group" aria-label="${G.elementTitle}">${ELEMENT_CHOICES.filter((c) => c !== 'random').map((c) => elementChoiceButton(c, 'fire')).join('')}</div>
-    <p class="muted small">${bestLine(host)}${J.start.infiniteNote}</p>
+    ${bestLine(host)}<p class="muted small">${J.start.infiniteNote}</p>
     <button type="button" class="btn primary big" data-pick="start">${icon('dice')} ${mine ? J.start.restartPath : G.start}</button>
   </div></div>`);
   const sync = () => {

@@ -1052,6 +1052,8 @@ export const jornadaPtBR = {
     randomDesc: 'A classe sai entre as que você já liberou e o elemento é sorteado (o Comum pode virar o prodígio do taijutsu). Quem deixa a sorte escolher começa com uma relíquia comum extra.',
     randomPool: 'Pode sair',
     randomReward: 'Recompensa: +1 relíquia comum',
+    /** Selo da vantagem na arte do card Classe aleatória. */
+    randomBonusBadge: '+1 relíquia',
     randomStart: 'Sortear e começar',
     revealClassTitle: 'Sorteio da classe',
     revealSecond: (el: string) => `Segundo elemento: ${el}.`,
