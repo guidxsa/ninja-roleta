@@ -7,6 +7,7 @@
  *                                                   (coluna até --col-max, grades de 2 colunas)
  *   desktop    (min-width: 900px) and (min-height: 560px)   colunas e painéis laterais, até --shell-max
  *   wide       (min-width: 1280px) and (min-height: 560px)  mais uma região (equipe, campo e ações)
+ *   grande     (min-width: 2200px) and (min-height: 1200px) escala fluida de interface e casca até 3600px
  *   compacta   desktop and (max-height: 720px)      menos detalhe, arte e letreiro menores
  *   piso       desktop and (max-height: 619px)      a página rola em vez de espremer ("cabe na janela" sai)
  *   toque      (pointer: coarse)                    alvos de toque maiores (--tap), nada só no hover

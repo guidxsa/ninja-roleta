@@ -42,6 +42,8 @@
   /* Número de dano é informação: com menos movimento ele aparece parado em vez de sumir em 0,01 ms. */
   .jfloat { animation: none !important; opacity: 1; }
   .jt-node.st-available .jt-seal, .jt-node.st-upgradable .jt-seal, .jnode-map.choice, .jmap-hero, .jmap-lines path.open { animation: none; }
+  /* Opções do baú do chefe: sem entrada atrasada, para não responderem ao toque antes de aparecer. */
+  .jrboss-opt { animation: none; }
 }
 
 /* --- Contraste que o token sozinho não resolve ----------------------------------------------------------------------- */
