@@ -376,9 +376,6 @@ function arcFan(): string {
   return `<span class="jarc-fan">${arts.map((a, i) => `<span class="jarc-fan-i art-frame" style="--i:${i}">${a}</span>`).join('')}</span>`;
 }
 
-/** Arte do painel da Campanha: provisoriamente a da História, até a arte própria (docs/tarefas/modos-jornada.md). */
-const CAMPAIGN_ART = 'jornada';
-
 /** Perspectivas da História: as campanhas dos dados e a do Sasuke, ainda em design (em breve). */
 const PERSPECTIVES = [
   { id: 'naruto', art: 'perspectiva-naruto', seal: '陽', time: 'day' },
@@ -487,7 +484,7 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
   const root = show(
     h(`<div class="screen gate jgate jhub jcamp">
       <div class="gate-main">
-        ${hubBanner(J.modes.path.name, CAMPAIGN_ART, stages)}
+        ${hubBanner(J.modes.path.name, 'caminho-ninja', stages)}
         <nav class="gate-modes" aria-label="${J.modes.path.name}">
           ${modeCard({ id: 'pick', art: classFan(), artVars: '--ratio:1.25', name: G.chooseCard.name, desc: G.chooseCard.desc, cta: G.chooseCard.cta })}
           ${modeCard({ id: 'random', art: mysteryFan(), artVars: '--ratio:1.25', name: G.randomCard.name, desc: G.randomCard.desc, cta: G.randomCard.cta })}
