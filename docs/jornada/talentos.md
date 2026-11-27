@@ -7,7 +7,7 @@ A árvore **reinicia a cada run** e custa pontos de talento ([progressao.md](pro
 - **Liberar**: cada nó pede o anterior do mesmo ramo, ou um dos nós indicados depois de uma bifurcação. Basta o anterior no **nível 1**.
 - **Bifurcação**: alguns pontos do ramo oferecem dois caminhos. Escolher um fecha o outro nesta run ("Você escolheu o outro caminho").
 - **Níveis**: a maioria dos talentos é **única**, principalmente os passivos. Alguns, quase sempre técnicas, sobem de nível, com limite de 2 ou 3 e um custo próprio por nível. Dá para voltar e subir um talento antigo a qualquer momento, mesmo depois de avançar no ramo.
-- **Ramos canônicos** (v0.67.0): a raiz de Sapos, Kyuubi e Rasengan é **dada pela história** (`grantedBy`): entra carimbada, sem custo, no marco ([historia.md](historia.md#momentos-canônicos)). Antes disso, aparece tracejada como "Vem pela história", e o resto do ramo fica fechado. Os níveis da raiz continuam pagos.
+- **Ramos canônicos** (v0.67.0): a raiz de Sapos, Kyuubi e Rasengan é **dada pela história** (`grantedBy`): entra carimbada, sem custo, no marco ([historia.md](cronologia.md#cronologia-adaptada)). Antes disso, aparece tracejada como "Vem pela história", e o resto do ramo fica fechado. Os níveis da raiz continuam pagos.
 - **Laços** (v0.68.0): a raiz (Não vou desistir) também vem pela história: a lição do teste do sino.
 - **Talento final** (`capstone`): o último nó de cada ramo do Naruto, com aro dourado na tela; desde a v0.71.0, cada um muda uma regra do combate. Desde a v0.84.0 o Comum também tem, o prodígio desde a v0.85.0, o Uchiha desde a v0.86.0 e o Hyuuga desde a v0.87.0 (revisão em [decisoes.md](../decisoes.md)).
 - **Combinação** (`requiresAll`, v0.71.0): talento que pede a junção de dois ramos ([abaixo](#combinações)).
@@ -145,7 +145,7 @@ No código: `requiresAll` no nó (`src/core/jornada/talents.ts`); as regras dos 
 
 ## Comum (Caminho Ninja)
 
-Refeita na v0.84.0, no molde do Naruto: o ninja que faz de tudo. Desde a v0.93.0 se compra pelo [rascunho](#rascunho), com um núcleo por ramo. **Seis ramos em anel**, cada um com raiz, **bifurcação**, junção, um nó a mais e um **talento final** que muda uma regra; **seis combinações** ligam ramos vizinhos e **três assinaturas** premiam combos fortes. Um ramo custa 10 pontos; a árvore toda, uns 80, e uma run rende ~18: dá para fechar um ramo e meio, ou montar um combo. O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.md#sorteio-do-elemento)).
+Refeita na v0.84.0, no molde do Naruto: o ninja que faz de tudo. Desde a v0.93.0 se compra pelo [rascunho](#rascunho), com um núcleo por ramo. **Seis ramos em anel**, cada um com raiz, **bifurcação**, junção, um nó a mais e um **talento final** que muda uma regra; **seis combinações** ligam ramos vizinhos e **três assinaturas** premiam combos fortes. Um ramo custa 10 pontos; a árvore toda, uns 80, e uma run rende ~18: dá para fechar um ramo e meio, ou montar um combo. O ramo Elemento ensina as técnicas do elemento sorteado ([classes.md](classes.md#elemento-escolher-ou-sortear)).
 
 | Ramo | Estilo | Bifurcação | Talento final (a regra que muda) |
 |---|---|---|---|

@@ -5,8 +5,9 @@ const pts = (n: number) => `${n} ${n === 1 ? 'ponto' : 'pontos'}`;
 export const jornadaPtBR = {
   modes: {
     title: 'Escolha o modo',
-    roleta: { name: 'Roleta', desc: 'Rápido, tudo na sorte. Uma run de poucos minutos, ótima para o ônibus.' },
-    jornada: { name: 'Jornada', desc: 'Mais lento e com mais controle: equipe, talentos, relíquias, a História do Naruto e o seu Caminho Ninja.' },
+    roleta: { name: 'Arcade', desc: 'Gire sua origem e enfrente seis lutas rápidas.' },
+    story: { name: 'História', desc: 'Do teste dos sinos ao Vale do Fim, os arcos do Time 7.' },
+    path: { name: 'Campanha', desc: 'Escolha sua classe e trace sua rota pelo mapa.' },
   },
 
   start: {

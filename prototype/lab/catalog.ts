@@ -1,4 +1,4 @@
-// Catálogo do UI Lab: lista de cenários, larguras de tela, tema e instantâneo, e o quadro num iframe do tamanho certo
+// Catálogo do UI Lab: lista de cenários, larguras de tela, instantâneo, e o quadro num iframe do tamanho certo
 // (só o iframe dispara as mesmas media queries do aparelho). A única coisa gravada é a última escolha do catálogo.
 import { esc } from '../dom';
 import type { FrameStatus } from './frame';
@@ -18,7 +18,6 @@ const GROUPS: Group[] = ['Entrada', 'Roleta', 'Jornada', 'Narrativa', 'Combate',
 interface CatalogPrefs {
   id: string;
   size: string;
-  theme: 'light' | 'dark';
   instant: boolean;
 }
 
@@ -44,12 +43,10 @@ export function runCatalog(params: URLSearchParams): void {
   const state: CatalogPrefs = {
     id: params.get('s') ?? saved.id ?? first,
     size: params.get('w') ?? saved.size ?? '390',
-    theme: (params.get('theme') ?? saved.theme) === 'light' ? 'light' : 'dark',
     instant: params.has('instant') ? params.get('instant') === '1' : Boolean(saved.instant),
   };
   if (!SCENARIOS.some((s) => s.id === state.id)) state.id = first;
   document.body.classList.add('uilab-catalog');
-  document.documentElement.dataset.theme = state.theme;
 
   const list = GROUPS.map((g) => {
     const items = SCENARIOS.filter((s) => s.group === g);
@@ -69,7 +66,6 @@ export function runCatalog(params: URLSearchParams): void {
     <main class="uilab-stage">
       <div class="uilab-tools">
         <div class="segmented" role="group" aria-label="Largura">${SIZES.map((z) => `<button type="button" class="btn seg" data-size="${z.id}" title="${z.label}">${z.id}</button>`).join('')}</div>
-        <div class="segmented" role="group" aria-label="Tema"><button type="button" class="btn seg" data-theme-pick="dark">Sumi</button><button type="button" class="btn seg" data-theme-pick="light">Pergaminho</button></div>
         <label class="uilab-check"><input type="checkbox" data-instant> Instantâneo</label>
         <span class="uilab-status" data-status></span>
         <button type="button" class="btn small" data-reload>Repetir</button>
@@ -83,7 +79,7 @@ export function runCatalog(params: URLSearchParams): void {
   const device = root.querySelector<HTMLElement>('.uilab-device')!;
   const viewport = root.querySelector<HTMLElement>('.uilab-viewport')!;
   const status = root.querySelector<HTMLElement>('[data-status]')!;
-  const frameUrl = () => `?s=${encodeURIComponent(state.id)}&frame=1&theme=${state.theme}${state.instant ? '&instant=1' : ''}`;
+  const frameUrl = () => `?s=${encodeURIComponent(state.id)}&frame=1${state.instant ? '&instant=1' : ''}`;
 
   /** Escala o aparelho para caber na área, sem mudar a largura que o iframe enxerga. */
   const fit = () => {
@@ -98,12 +94,10 @@ export function runCatalog(params: URLSearchParams): void {
   const sync = (reload = true) => {
     root.querySelectorAll<HTMLElement>('[data-id]').forEach((b) => b.setAttribute('aria-current', String(b.dataset.id === state.id)));
     root.querySelectorAll<HTMLElement>('[data-size]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.size === state.size)));
-    root.querySelectorAll<HTMLElement>('[data-theme-pick]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themePick === state.theme)));
     root.querySelector<HTMLInputElement>('[data-instant]')!.checked = state.instant;
     root.querySelector<HTMLAnchorElement>('[data-alone]')!.href = frameUrl();
-    document.documentElement.dataset.theme = state.theme;
     savePrefs(state);
-    window.history.replaceState(null, '', `?s=${encodeURIComponent(state.id)}&w=${state.size}&theme=${state.theme}${state.instant ? '&instant=1' : ''}`);
+    window.history.replaceState(null, '', `?s=${encodeURIComponent(state.id)}&w=${state.size}${state.instant ? '&instant=1' : ''}`);
     fit();
     if (reload) {
       status.textContent = '';
@@ -117,8 +111,6 @@ export function runCatalog(params: URLSearchParams): void {
     if (pick) return ((state.id = pick.dataset.id!), sync());
     const size = t.closest<HTMLElement>('[data-size]');
     if (size) return ((state.size = size.dataset.size!), sync());
-    const theme = t.closest<HTMLElement>('[data-theme-pick]');
-    if (theme) return ((state.theme = theme.dataset.themePick as 'light' | 'dark'), sync());
     if (t.closest('[data-reload]')) sync();
   });
   root.querySelector('[data-instant]')!.addEventListener('change', (e) => {

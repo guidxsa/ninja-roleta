@@ -1,14 +1,15 @@
 # Modelos, esforço e métricas
 
-Como escolher quem executa uma tarefa, com que modelo e esforço, e como medir o consumo até o PR ficar pronto para merge. A fase 1 é um piloto no [loop das issues](issues.md#loop), só com o Claude.
+Como escolher quem executa uma tarefa, com que modelo e esforço, e como medir o consumo até o PR ficar pronto para merge. A fase 1 é um piloto no [loop das issues](issues.md#loop), só com o Claude. Desde 26/11/2026 não há revisão cruzada nem rodadas de correção no PR ([revisao.md](revisao.md)): o piloto mede só a etapa `issue`, e a etapa `revisao-<rodada>` fica nos registros antigos.
 
 ## Como escolher
 
-1. **Ambiente e ferramentas**: quem consegue reproduzir e verificar (o `check:meta` no Windows pede a máquina; mudança visual pede UI Lab e navegador, hoje com o Claude, [codex.md](codex.md)).
-2. **Qualidade observada**: entre os que têm as ferramentas, quem fecha tarefas parecidas com checks verdes, menos achados bloqueantes na primeira revisão e menos rodadas.
-3. **Consumo até o PR pronto**, com a revisão do outro agente incluída. Tempo e cota disponível desempatam.
+1. **Área do agente**: o visual é do Codex e a implementação é do Claude ([AGENTS.md](../../AGENTS.md#dois-agentes)); o pedido da área do outro é [delegado](delegacao.md).
+2. **Ambiente e ferramentas**: quem consegue reproduzir e verificar (o `check:meta` no Windows pede a máquina; mudança visual pede UI Lab e navegador, por isso a delegação usa o Codex local).
+3. **Qualidade observada**: entre os que têm as ferramentas, quem fecha tarefas parecidas com checks verdes e menos problemas achados na release.
+4. **Consumo até o PR pronto**. Tempo e cota disponível desempatam.
 
-O executor e o modelo são escolhas separadas: se a tarefa passa do Claude para o Codex, o Claude revisa; se o executor só sobe de modelo, o revisor continua o outro agente.
+O executor e o modelo são escolhas separadas.
 
 | Dificuldade | Exemplos | Configuração inicial |
 |---|---|---|
@@ -27,12 +28,12 @@ Os modelos estão em `MODELOS` (`scripts/metricas.ts`). O esforço só vira vari
 
 - **Liga** com a variável de repositório `PILOTO_PERFIS=on` (Settings → Secrets and variables → Actions → Variables). Desligado, tudo roda no padrão; o registro vale sempre.
 - **Alternância**: issue ímpar começa no `leve`, par no `padrao`. O perfil com que a issue começou fica registrado e vale mais que a paridade.
-- **Escalada** (sobe para o `padrao`, nunca desce na mesma issue): na 2ª tentativa da issue (a 1ª terminou sem PR) e, no PR de `feature/issue-<n>`, da 2ª rodada de correção da revisão em diante. Falha de ambiente (o `npm ci` quebrou) não escala.
-- **Fora do piloto**: os jobs `automatica` e `comentario` da revisão (PR do Codex) e as tarefas comuns seguem como estão.
+- **Escalada** (sobe para o `padrao`, nunca desce na mesma issue): na 2ª tentativa da issue (a 1ª terminou sem PR). Falha de ambiente (o `npm ci` quebrou) não escala.
+- **Fora do piloto**: a revisão à mão (`@claude revise`), a delegação ao Codex e as tarefas comuns seguem como estão.
 
 ## Registro
 
-Cada execução do Claude no loop (correção da issue e cada rodada de correção no PR) deixa um comentário na issue com uma linha legível e um marcador `<!-- metricas:{...} -->` (`scripts/metricas-execucao.ts registra`); a mesma linha vai no resumo do job. Nada é gravado no repositório.
+Cada execução do Claude no loop (a correção da issue) deixa um comentário na issue com uma linha legível e um marcador `<!-- metricas:{...} -->` (`scripts/metricas-execucao.ts registra`); a mesma linha vai no resumo do job. Nada é gravado no repositório.
 
 | Campo | O que é |
 |---|---|
@@ -50,7 +51,7 @@ Os tokens vêm do `execution_file` do `claude-code-action`. **Entrada normalizad
 `npm run metricas` (com o `gh` autenticado) lê os marcadores das issues com `inconsistencia` e o estado dos PRs `feature/issue-<n>`, e imprime duas tabelas em Markdown:
 
 - **por issue**: perfil inicial, se escalou, execuções e rodadas somadas (as tentativas que falharam entram), revisões do Codex com achados, tokens normalizados, custo estimado, se o PR foi mergeado;
-- **por categoria × perfil inicial**: issues, **concluídas** (PR mergeado: o `master` exige os checks verdes), **mediana de tokens normalizados até o PR pronto**, mediana de tempo, quantas escalaram.
+- **por categoria × perfil inicial**: issues, **concluídas** (PR mergeado no `staging`, que exige `check` e `meta`; a chegada ao `master` depende da data da release, não do agente), **mediana de tokens normalizados até o PR pronto**, mediana de tempo, quantas escalaram.
 
 A categoria vem da etiqueta `cat:<nome>` posta na triagem ([issues.md](issues.md#triagem)); sem ela, `sem-categoria`.
 

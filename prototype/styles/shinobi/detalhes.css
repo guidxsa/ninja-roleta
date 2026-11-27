@@ -1,0 +1,542 @@
+/* Ajustes da leitura em tamanho real */
+:root {
+  --shinobi-booth-wash: linear-gradient(#13203699, #18232be8);
+  --shinobi-booth-view: url('img/cenas/noite.jpg');
+}
+:is(.rorigin, .rrelic) {
+  background-image:
+    url('img/shinobi/pilar.png'), url('img/shinobi/pilar.png'), url('img/shinobi/balcao.png'), var(--shinobi-booth-wash),
+    var(--shinobi-booth-view);
+}
+:is(.rorigin, .rrelic)::before {
+  background: url('img/shinobi/cortina.png') center top/100% 65% no-repeat;
+}
+:is(.rorigin, .rrelic)::after {
+  content: '';
+  position: absolute;
+  top: 1.7%;
+  right: var(--post);
+  height: clamp(52px, 12vh, 135px);
+  width: clamp(27px, 5.8vh, 72px);
+  z-index: -1;
+  background: url('img/shinobi/lanterna-d.png') center/100% 100% no-repeat;
+  clip-path: polygon(
+    40% 0,
+    56% 0,
+    58% 7%,
+    74% 11%,
+    91% 17%,
+    98% 31%,
+    99% 77%,
+    90% 89%,
+    69% 94%,
+    62% 100%,
+    38% 100%,
+    32% 94%,
+    13% 88%,
+    2% 74%,
+    0 29%,
+    10% 18%,
+    32% 10%
+  );
+}
+:is(.rorigin, .rrelic) .wheel-wrap::after {
+  border-radius: 50%;
+  mask: radial-gradient(circle, #000 64%, transparent 70%);
+}
+.rrelic #results .jrcard::before {
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--sh-papel-1) 14%, transparent) 55%, color-mix(in srgb, var(--sh-terra-8) 50%, transparent) 100%), var(--shinobi-paper);
+}
+.rrelic .jrcard[data-relic='kakashiBell'] .jrcard-ico {
+  mask: radial-gradient(ellipse farthest-side at center, #000 69%, transparent 100%);
+  background-blend-mode: multiply;
+}
+.rwheel.rrelic:has(.rside .sticky-cta) > .rside {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.lineage-wheel .range-name {
+  font:
+    700 10px Georgia,
+    serif;
+  fill: var(--sh-tinta-5);
+  pointer-events: none;
+}
+.gate .gate-banner .gate-head::before,
+.gate .gate-banner .gate-quote,
+.gate .desk-pin {
+  display: none;
+}
+.gate .mode-cta {
+  mask: none;
+  clip-path: none;
+}
+.gate::before {
+  inset: 0;
+}
+.gate .gate-banner .gate-hero img {
+  filter: brightness(1.5) saturate(0.91);
+}
+.gate.jgate .gate-banner .gate-hero {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--sh-sumi-4) 33%, transparent), transparent 65%),
+    url('img/cenas/noite.jpg') center 48% / cover;
+}
+.gate.jgate .gate-banner .gate-hero > * {
+  display: none;
+}
+.ninja-record {
+  color: var(--shinobi-muted);
+  font: 600 13px var(--font-hud);
+}
+.ninja-record summary {
+  cursor: pointer;
+  padding: 5px 0;
+  border-top: 1px solid var(--sh-terra-3);
+}
+.gate-aside .jprogress + .desk-seal {
+  display: none;
+}
+@media (min-width: 900px) and (min-height: 560px) {
+  .gate-aside .jprogress {
+    padding: 12px 14px;
+  }
+  .gate-aside .jprogress-row b {
+    font: 700 19px/1.08 var(--shinobi-serif);
+  }
+  .gate-aside .jprogress-row .jthumb {
+    max-height: 65px;
+    rotate: 0;
+  }
+  .jmap-screen .jtrail-map > .jmap {
+    height: max(100%, calc(var(--rows) * 32px + 78px));
+  }
+  .jtree-screen .jt-detail .jt-card small {
+    font-size: clamp(16px, 1.4vw, 22px);
+    line-height: 1.4;
+  }
+  .jtree-screen .jt-detail .jt-card {
+    gap: 14px;
+  }
+  .jtree-screen .jt-detail .btn {
+    min-height: 54px;
+    margin-top: 10px;
+  }
+}
+@media (max-width: 899px), (max-height: 559px) {
+  .gate .jprogress {
+    padding: 7px 10px !important;
+    margin: 0;
+    min-height: 0;
+  }
+  .gate .jprogress {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+    gap: 2px 7px;
+    align-items: center;
+    position: relative;
+  }
+  .gate .jprogress > h3 {
+    grid-column: 1/2;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font: 700 18px/1.12 var(--shinobi-serif);
+  }
+  .gate .jprogress .jprogress-row {
+    grid-column: 1/2;
+    display: block;
+    margin: 0;
+    min-height: 0;
+  }
+  .gate .jprogress .jprogress-row small,
+  .gate .jprogress .jthumb {
+    display: none;
+  }
+  .gate .jprogress .jprogress-row b {
+    font: 600 13px/1.1 var(--shinobi-serif);
+  }
+  .gate .jprogress .jprogress-row p {
+    display: inline;
+    margin: 0 0 0 5px;
+    font: 12px var(--shinobi-serif);
+  }
+  .gate .jprogress .jprogress-bar {
+    grid-column: 1/2;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin: 0;
+  }
+  .gate .jprogress-bar > span {
+    font-size: 10px;
+  }
+  .gate .jprogress-bar > b {
+    font-size: 12px;
+  }
+  .gate .jprogress-bar > i {
+    flex: 1;
+    height: 3px;
+  }
+  .gate .jprogress .btn {
+    grid-column: 2;
+    grid-row: 1/4;
+    align-self: stretch;
+    justify-self: end;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 4px 6px;
+    min-height: 42px;
+    max-width: 85px;
+    font: 700 13px/1.12 var(--shinobi-serif);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .gate .jprogress .btn > .ico {
+    display: none;
+  }
+  .gate .jprogress .btn > .chip {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+  .gate .gate-banner {
+    height: clamp(145px, 22vh, 210px);
+  }
+  .jmap-screen .jtrail-map > .jmap {
+    height: max(clamp(290px, 49dvh, 630px), calc(var(--rows) * 29px + 44px));
+  }
+  .jmap-screen .jnode-map:not(.k-boss) {
+    height: 27px;
+    width: 27px;
+  }
+  .rrelic #results .jrcard {
+    padding: 10px;
+    min-height: 0;
+  }
+  .rrelic .jrcard[data-relic='kakashiBell'] .jrcard-ico {
+    height: clamp(93px, 15vh, 149px);
+  }
+}
+.branch-pattern {
+  left: 0;
+  bottom: 10%;
+  width: 23%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.27;
+  mix-blend-mode: multiply;
+  mask-image: radial-gradient(ellipse, #000 0 58%, transparent 73%);
+}
+[data-branch-art='rasengan'] .branch-pattern,
+[data-branch-art='rotation'] .branch-pattern {
+  background: repeating-radial-gradient(ellipse at 47% 48%, transparent 0 8%, var(--sh-terra-10) 9% 10%, transparent 11% 19%);
+  rotate: -24deg;
+}
+[data-branch-art='trigrams'] .branch-pattern,
+[data-branch-art='byakugan'] .branch-pattern {
+  background:
+    radial-gradient(circle at center, transparent 0 26%, var(--sh-uva-1) 27% 29%, transparent 30% 50%, var(--sh-uva-1) 51% 53%, transparent 54%),
+    repeating-conic-gradient(from -8deg, transparent 0 16deg, var(--sh-sumi-1) 17deg 22deg, transparent 23deg 45deg);
+  mask-image: radial-gradient(circle, transparent 0 12%, #000 13% 64%, transparent 66%);
+}
+[data-branch-art='sharingan'] .branch-pattern,
+[data-branch-art='illusions'] .branch-pattern {
+  background:
+    radial-gradient(ellipse at 52% 18%, var(--sh-laca-9) 0 8%, transparent 9%), radial-gradient(ellipse at 79% 70%, var(--sh-laca-9) 0 8%, transparent 9%),
+    radial-gradient(ellipse at 22% 68%, var(--sh-laca-9) 0 8%, transparent 9%),
+    radial-gradient(circle, transparent 0 44%, var(--sh-laca-9) 45% 47%, transparent 48%);
+}
+[data-school='naruto']:is([data-branch-art='kyuubi'], [data-branch-art='toads']) .school-r {
+  background-position: right bottom;
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  mask-image: linear-gradient(330deg, #000 5%, #0009 34%, transparent 55%);
+  filter: sepia(0.57) saturate(0.68);
+}
+.jt-branch.on {
+  background: linear-gradient(100deg, color-mix(in srgb, var(--sh-terra-9) 20%, transparent), transparent 45%, color-mix(in srgb, var(--sh-terra-12) 24%, transparent)), var(--shinobi-paper);
+}
+
+.route-number {
+  display: none;
+}
+@media (max-width: 899px), (max-height: 559px) {
+  .jmap-screen .route-number {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    right: -6px;
+    top: -8px;
+    min-width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1px solid var(--sh-papel-4);
+    background: var(--sh-laca-6);
+    color: var(--sh-papel-2);
+    font: 700 10px/1 var(--font-hud);
+    pointer-events: none;
+  }
+}
+:is(.rorigin, .rrelic)::before {
+  background-size: 141% 75%;
+}
+:is(.rorigin, .rrelic) .festival-lamp {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  left: var(--post);
+  top: 2%;
+  height: clamp(51px, 11vh, 128px);
+  width: clamp(26px, 5.6vh, 70px);
+  background: url('img/shinobi/lanterna-e.png') center/100% 100% no-repeat;
+  clip-path: polygon(
+    40% 0,
+    56% 0,
+    58% 7%,
+    75% 11%,
+    91% 19%,
+    98% 32%,
+    99% 77%,
+    90% 89%,
+    69% 94%,
+    62% 100%,
+    38% 100%,
+    32% 94%,
+    13% 88%,
+    2% 74%,
+    0 29%,
+    10% 18%,
+    32% 10%
+  );
+}
+.gate .mode-txt small {
+  background: linear-gradient(100deg, color-mix(in srgb, var(--sh-papel-3) 70%, transparent) 45%, transparent);
+  border-radius: 2px;
+}
+@media (max-width: 599px) {
+  .jgate .mode-txt small {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+.jbattle.bridge.bridge-live .jb-field-art {
+  background:
+    linear-gradient(color-mix(in srgb, var(--sh-noite-1) 27%, transparent), color-mix(in srgb, var(--sh-noite-1) 32%, transparent)),
+    url('img/shinobi/ponte-limpa.png') left top/315% 202% no-repeat;
+}
+.jbattle.bridge.bridge-live .jf {
+  display: flex;
+  flex-direction: column;
+  max-width: 142px;
+  padding: 6px;
+  background: color-mix(in srgb, var(--sh-tinta-7) 81%, transparent);
+}
+.jbattle.bridge.bridge-live .jf .jf-art > .portrait {
+  width: clamp(48px, 8vh, 94px);
+  height: auto;
+}
+.jbattle.bridge-live .jb-side {
+  align-items: center;
+}
+
+/* Portão da Vila. Cena, Ficha e pergaminhos dividem uma grade própria em cada largura. */
+body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); padding: 0; }
+.gate.jmodes {
+  --profile-paper: var(--sh-papel-5);
+  display: grid;
+  grid-template-areas: "scene" "profile" "modes";
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+.gate.jmodes .gate-banner {
+  grid-area: scene;
+  display: block;
+  width: 100%;
+  height: clamp(240px, 37svh, 400px);
+  border: 0;
+  background: transparent;
+  container-type: normal;
+}
+.gate.jmodes .gate-banner .gate-hero {
+  background: var(--scene-art) center / cover no-repeat, var(--scene);
+  mask: linear-gradient(to bottom, var(--ink) 73%, transparent);
+}
+.jmodes .gate-banner .gate-hero img { object-position: var(--fx) var(--fy); filter: none; }
+.jmodes .gate-banner .gate-hero::after { display: none; }
+.gate.jmodes .gate-banner .gate-hero::before { background: none; }
+/* O letreiro fica embaixo dos rostos do Monte Hokage, sobre os telhados: no alto ele cobria os rostos. */
+.gate.jmodes .gate-head { left: 5%; top: 46%; width: auto; }
+.gate.jmodes .gate-head .logo {
+  height: auto; font: 400 var(--fs-brand)/.98 var(--font-display);
+  color: var(--paper); text-shadow: var(--title-shadow); transform: rotate(-4deg);
+}
+.gate.jmodes .gate-head .logo span { display: block; color: inherit; }
+.gate.jmodes .gate-aside {
+  grid-area: profile; display: grid; gap: var(--gap); container-type: normal;
+  margin: -20px var(--sp-3) var(--sp-4); padding: 0; align-content: start; overflow: visible;
+}
+.gate.jmodes .gate-aside > .parchment { margin: 0; padding: var(--sp-3); rotate: none; }
+.gate.jmodes .gate-aside > .desk-profile::before { background: var(--profile-paper); }
+.gate.jmodes .gate-aside > .desk-recent { display: none; }
+/* Topo da Ficha: avatar e nome sempre à vista, cada um um botão de editar com o lápis ao lado. */
+.jmodes .ninja-id {
+  display: grid; grid-template-columns: 68px minmax(0, 1fr); align-items: center; gap: var(--gap);
+  color: var(--paper-ink);
+}
+.jmodes .ninja-id .avatar-btn { position: relative; width: 100%; color: var(--paper-ink); }
+.jmodes .ninja-id .avatar-btn > .edit-mark { position: absolute; right: 0; bottom: 4%; }
+.edit-mark {
+  display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px;
+  color: var(--paper-ink); background: var(--profile-paper, var(--paper)); border: 1px solid var(--paper-muted);
+  border-radius: 50%; opacity: .75; transition: opacity var(--dur-1);
+}
+.edit-mark .ico { width: 13px; height: 13px; }
+:is(.avatar-btn, .name-btn):is(:hover, :focus-visible) .edit-mark { opacity: 1; border-color: var(--primary); color: var(--primary); }
+.ninja-name { display: flex; min-width: 0; }
+.name-btn {
+  display: inline-flex; align-items: center; gap: var(--sp-2); max-width: 100%; min-height: 44px; padding: 0;
+  color: inherit; background: none; border: 0; font: inherit; text-align: inherit; cursor: pointer;
+}
+.name-btn:focus-visible, .jmodes .ninja-id .avatar-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.name-btn strong { min-width: 0; }
+.name-input {
+  width: min(100%, 240px); min-height: 44px; padding: 2px 6px; color: var(--paper-ink);
+  background: color-mix(in srgb, var(--paper-2) 60%, transparent); border: 0; border-bottom: 2px solid var(--primary);
+  border-radius: 0; font: 700 var(--fs-xl)/1.1 var(--font-hand);
+}
+.name-input:focus { outline: none; }
+.jmodes .ninja-record summary {
+  display: flex; align-items: center; min-height: var(--tap); margin-top: var(--sp-2);
+  color: var(--paper-ink); border: 0; list-style: none; padding: 0; cursor: pointer;
+}
+.ninja-record summary::-webkit-details-marker { display: none; }
+.record-summary { display: grid; gap: var(--sp-1); justify-self: stretch; min-width: 0; font: var(--fs-sm)/1.25 var(--font-body); container-type: inline-size; }
+/* O nome fica numa linha só: encolhe com a coluna (16 letras cabem) e só corta com reticências em último caso. */
+.record-summary strong {
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font: 700 clamp(var(--fs-md), 9.5cqi, var(--fs-2xl))/1.1 var(--font-hand);
+}
+/* Cada linha da Ficha quebra só entre o rótulo e o valor, nunca no meio de um deles. */
+.record-line > span { white-space: nowrap; }
+.ninja-record summary b { display: flex; align-items: center; gap: var(--sp-1); font-family: var(--font-hud); }
+.ninja-record summary b .ico { width: 1em; height: 1em; rotate: 90deg; }
+.ninja-record[open] summary b .ico { rotate: -90deg; }
+.jmodes .ninja-record dl { margin-top: var(--sp-2); }
+.jmodes [data-avatar-preview], .jmodes .avatar-art, .avatar-gallery .avatar-art { display: block; min-width: 0; }
+/* O avatar mostra o retrato inteiro, com o fundo original da arte, num quadro de tinta como os do Livro Bingo. */
+.jmodes .ninja-id .portrait, .avatar-gallery .portrait {
+  display: block; width: 100%; height: auto; aspect-ratio: 1; border: 2px solid var(--paper-ink);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--paper-ink) 45%, transparent); border-radius: 0; mask: none; filter: none;
+}
+.jmodes .avatar-art img, .avatar-gallery .avatar-art img { clip-path: var(--avatar-cut); }
+.gate.jmodes .gate-modes {
+  grid-area: modes; display: grid; grid-template-columns: minmax(0, 1fr);
+  align-items: stretch; gap: var(--gap); padding: 0 var(--sp-3) var(--sp-3);
+}
+.gate.jmodes .mode-card { width: 100%; height: auto; min-height: 0; padding: 0; rotate: none; }
+.gate.jmodes .mode-card::before {
+  inset: var(--sp-2) var(--sp-1);
+  background: var(--grain-dark), linear-gradient(100deg, var(--paper-2), var(--paper) 16% 84%, var(--paper-2));
+}
+.gate.jmodes .mode-card:is(:focus-visible, :hover)::before { outline: 2px solid var(--gold); }
+.gate.jmodes .mode-card .scroll-roll.b { top: auto; bottom: 0; background-image: url('img/shinobi/rolo-base.png'); }
+.gate.jmodes .mode-card .mode-body {
+  width: 100%; height: 100%; display: grid; grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto; align-items: stretch;
+  padding: var(--sp-4) var(--sp-3) var(--sp-5); gap: var(--sp-1);
+}
+.gate.jmodes .mode-card .mode-body::after { content: none; }
+.gate.jmodes .mode-card .mode-art {
+  display: block; position: relative; height: clamp(124px, 22svh, 178px); width: 100%;
+  margin: 0; aspect-ratio: auto; mask: none; border: 0; box-shadow: none;
+  background: none; mix-blend-mode: multiply;
+}
+.gate.jmodes .mode-card .mode-art::before, .gate.jmodes .mode-card .mode-art::after { content: none; }
+.gate.jmodes .mode-art :is(img, svg) { width: 100%; height: 100%; object-fit: contain; filter: none; }
+.gate.jmodes .mode-txt { align-self: start; gap: var(--sp-2); padding: 0 var(--sp-2); }
+.gate.jmodes .mode-txt b { font: 700 clamp(var(--fs-4xl), 2.55vw, var(--fs-6xl))/1.1 var(--font-hand); }
+.gate.jmodes .mode-txt small {
+  display: block; width: auto; max-width: 42ch; margin: 0; padding: 0;
+  font: var(--fs-md)/1.35 var(--font-body); color: var(--paper-muted); background: none; text-shadow: none;
+}
+.jmodes .desk-recent h3 { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-1); }
+.jmodes .desk-recent .desk-all { margin: 0; }
+.avatar-gallery {
+  --profile-paper: var(--sh-papel-5); padding: var(--gap);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: var(--gap);
+  background: var(--profile-paper); color: var(--paper-ink);
+}
+.avatar-gallery h2 { grid-column: 1/-1; color: inherit; text-shadow: none; }
+.avatar-gallery figure { margin: 0; text-align: center; }
+@media (max-width: 1023px) {
+  body.at-gate { padding-left: 0; padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+  body.at-gate #side-nav { display: none; }
+  body.at-gate #gate-nav { display: grid; max-width: none; background: var(--bg-2); border-color: var(--line-strong); }
+  #gate-nav button { min-height: 52px; color: var(--muted); }
+  #gate-nav button[aria-current] { color: var(--gold-2); }
+  #gate-nav button[aria-current]::before { background: var(--primary); }
+  #gate-nav button .ico { width: 20px; height: 20px; }
+  #gate-nav button:focus-visible { outline: 2px solid var(--gold-2); outline-offset: -3px; }
+}
+@media (min-width: 768px) {
+  .gate.jmodes .gate-modes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .gate.jmodes .mode-card .mode-art { height: 100%; min-height: 110px; }
+  .gate.jmodes .gate-aside > .desk-recent { display: block; }
+  .gate.jmodes .mode-card .mode-body { padding-block: var(--sp-5); }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  body.at-gate:has(.jmodes) { height: auto; }
+  /* A casca de desktop entra aos 900 px, mas o Portão ainda usa as três linhas do tablet. */
+  body.at-gate:has(.jmodes) main { display: block; }
+  .gate.jmodes { min-height: calc(100svh - 132px); grid-template-rows: minmax(240px, .95fr) auto minmax(270px, 1fr); }
+  .gate.jmodes .gate-banner { height: 100%; }
+  .gate.jmodes .gate-aside { grid-template-columns: 1fr 1fr; align-items: stretch; }
+  .jmodes .ninja-id { grid-template-columns: minmax(80px, .75fr) 1fr; margin-top: var(--sp-3); }
+  /* Faixa larga: a pintura aparece inteira e a faixa escura da esquerda comporta o letreiro no alto. */
+  .gate.jmodes .gate-head { top: 15%; }
+}
+@media (min-width: 1024px) {
+  body.at-gate { --side-w: clamp(118px, 10vw, 160px); }
+  body.at-gate:has(.jmodes) { height: max(100dvh, var(--floor-h)); }
+  .gate.jmodes {
+    grid-template-areas: "scene profile" "modes profile";
+    grid-template-columns: minmax(0, 1fr) clamp(208px, 20vw, 325px);
+    grid-template-rows: minmax(215px, 1.12fr) minmax(245px, .88fr);
+  }
+  .gate.jmodes .gate-banner { height: 100%; }
+  .gate.jmodes .gate-modes { margin-top: -35px; }
+  .gate.jmodes .gate-aside { display: flex; flex-direction: column; margin: 0; padding: var(--sp-3); overflow: auto; }
+  .jmodes .ninja-id { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .jmodes .ninja-name, .jmodes .ninja-record summary { justify-content: center; }
+  .jmodes .ninja-id .avatar-btn { width: min(90%, 21vh); }
+  .gate.jmodes .gate-head { top: 50%; }
+  .gate.jmodes .mode-txt { min-height: calc(var(--fs-6xl) * 1.1 + var(--fs-md) * 2.7 + var(--gap)); }
+  .jmodes .desk-recent li { grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-1) var(--sp-2); }
+  .jmodes .desk-recent li .ach-ico { grid-row: span 2; align-self: start; }
+  .jmodes .desk-recent li time { grid-column: 2; font-size: var(--fs-sm); }
+  .jmodes .desk-recent h3 { font-size: clamp(var(--fs-xl), 1.6vw, var(--fs-3xl)); }
+}
+
+/* Em uma janela larga e baixa, a lateral continua acessível e a página pode rolar. */
+@media (min-width: 1024px) and (max-height: 559px) {
+  body.at-gate { padding-left: var(--side-w); padding-bottom: 0; }
+  body.at-gate #gate-nav { display: none; }
+  body.at-gate #side-nav {
+    display: flex; flex-direction: column; gap: var(--sp-1); position: fixed; inset: 0 auto 0 0;
+    width: var(--side-w); overflow: auto; background: var(--bg-2); padding: var(--sp-2);
+  }
+  body.at-gate #side-nav button {
+    display: flex; align-items: center; gap: var(--sp-2); min-height: 44px;
+    font: var(--fs-md)/1.2 var(--font-hud); color: var(--text); background: var(--surface); border: 0;
+  }
+  body.at-gate #side-nav [aria-current] { background: var(--primary); }
+  body.at-gate #side-nav .ico { width: 20px; height: 20px; }
+}

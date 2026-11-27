@@ -45,6 +45,4 @@
 }
 
 /* --- Contraste que o token sozinho não resolve ----------------------------------------------------------------------- */
-/* Selo dourado no tema claro: tinta clara sobre o dourado escuro (a tinta escura dava 3,26:1). */
-:root[data-theme='light'] .seal.gold { color: var(--accent-ink); }
 .seal.ghost { color: var(--steel); }

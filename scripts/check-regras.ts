@@ -14,7 +14,13 @@ export const PROTECTED = [
   '.claude/hooks/**',
   'scripts/harness.ts',
   'scripts/check-*.ts',
+  'scripts/staging.ts',
+  'scripts/delegar.ts',
   '.github/workflows/**',
+  '.github/pull_request_template.md',
+  '.github/ISSUE_TEMPLATE/**',
+  'docs/processo/**',
+  '.claude/skills/**',
 ];
 /** Branch de processo: `feature/harness` ou `feature/harness-<tema>` (AGENTS.md, "Dois agentes"). */
 export const HARNESS_BRANCH = /^feature\/harness(-[a-z0-9-]+)?$/;
@@ -141,7 +147,7 @@ export interface RegrasInput {
   strict: boolean;
   /** Conteúdo dos arquivos do core (todos, alterados ou não). */
   core: { file: string; src: string }[];
-  /** Os scripts do package.json mudaram em relação ao master? */
+  /** Os scripts do package.json mudaram em relação à base da branch (staging ou master)? */
   scriptsChanged?: boolean;
 }
 

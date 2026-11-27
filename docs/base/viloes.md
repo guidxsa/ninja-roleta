@@ -72,7 +72,7 @@ Pesos de `reactions` (provisórios). Resistir é o padrão; as outras só entram
 | Kabuto | 2 | 1 | 3 | Médico calculista. |
 | Orochimaru | 2 | 2 | 2 (troca de pele) | Escorregadio. |
 
-Os genins do exame têm nomes próprios no jogo (não são do universo original). O Gaara foi aliviado de 160 de HP por ser o gargalo da campanha. O XP segue a curva planejada em [progressao.md](progressao.md#curva-planejada).
+Os genins do exame têm nomes próprios no jogo (não são do universo original). O Gaara foi aliviado de 160 de HP por ser o gargalo da campanha. O XP segue a curva planejada em [progressao.md](progressao.md#curva-da-campanha-clássica-reserva).
 
 ## Moveset
 

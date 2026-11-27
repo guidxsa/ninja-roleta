@@ -37,7 +37,7 @@ Desde a v0.59.0, quem tem ninjutsu começa com o **Bunshin no Jutsu** (fora do m
 | Mika | 85 | 36 | 10 | 6/8/5 | 5/7 | — | healer | Kunai, Kai (libertar), Reanimação, Bunshin no Jutsu |
 
 - O Sasuke aprende o **Chidori** ao chegar no exame chunin (estágio 2).
-- As técnicas novas do Naruto vêm da árvore de talentos ([talentos.md](talentos.md)) e dos marcos da história: Kuchiyose no Jutsu, Rasengan e o chakra da Kyuubi ([historia.md](historia.md#momentos-canônicos)).
+- As técnicas novas do Naruto vêm da árvore de talentos ([talentos.md](talentos.md)) e dos marcos da história: Kuchiyose no Jutsu, Rasengan e o chakra da Kyuubi ([historia.md](cronologia.md#cronologia-adaptada)).
 - No mangá, antes do timeskip, a Sakura ainda não é médica: o papel dela é tático (soltar aliado preso, armadilhas).
 - A equipe de resgate entra no estágio 3 da História ([historia.md](historia.md)). O Akamaru luta dentro do kit do Kiba, porque cada lado tem no máximo 3 lutadores.
 - No Caminho Ninja, o protagonista usa o nome do jogador, quando informado ([perfil.md](../base/perfil.md#nome-do-jogador)).

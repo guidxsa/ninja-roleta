@@ -1,4 +1,5 @@
 // Componentes visuais de roleta. O resultado já vem sorteado pelo core; aqui só se anima até ele.
+import { enhanceWheel } from './lineageEmblems';
 import { land, spinStart, swish, tick } from './audio';
 import { announce, sleep } from './dom';
 import { fitLabel, sliceFont, type LabelFit } from './wheelLabel';
@@ -9,6 +10,7 @@ export interface WheelSlice {
   color: string;
   /** SVG opcional mostrado na legenda (símbolo do clã, elemento). */
   icon?: string;
+  originId?: string;
 }
 
 export interface Wheel {
@@ -239,12 +241,18 @@ export function createWheel(slices: WheelSlice[]): Wheel {
     return li;
   });
 
+  enhanceWheel(el, svg, slices, ranges, items, paths);
   el.append(wrap, legend);
   let rotation = 0;
 
   return {
     el,
     async spinTo(index, ms) {
+      if (el.classList.contains('lineage-wheel')) {
+        el.classList.remove('is-reading');
+        paths.forEach((path) => path.classList.remove('read'));
+        items.forEach((item) => item.querySelector('button')?.setAttribute('aria-pressed', 'false'));
+      }
       const p = landingPoint(ranges[index]!) * 360;
       // Gira no sentido horário até o ponto sorteado ficar sob o ponteiro (no topo).
       const target = Math.ceil((rotation + (ms > 0 ? 5 * 360 : 0) + p) / 360) * 360 - p;

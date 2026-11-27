@@ -25,7 +25,7 @@ async function main() {
   document.getElementById('home-btn')!.addEventListener('click', askHome);
   const round = async () => {
     const pick = await modeScreen();
-    if (pick !== 'roleta') return runJornada(jornadaHost, { resume: pick === 'jornada-continue' });
+    if (pick.mode !== 'roleta') return runJornada(jornadaHost, { entry: pick.mode, resume: pick.resume });
     await ensurePlayerName();
     await originScreen();
     await runCampaign();

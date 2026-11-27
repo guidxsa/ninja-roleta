@@ -1,4 +1,4 @@
-# Ninja Roleta (nome provisório)
+# Ninshu Roots
 
 Jogo de browser de sessões curtas, movido a roletas, inspirado no universo ninja de Naruto.
 
@@ -25,7 +25,7 @@ npm run proto                              # gera dist/prototipo.html (abre dire
 
 `?seed=42` na URL fixa as roletas: a mesma seed dá a mesma sequência de sorteios. É o link que o Compartilhar gera, e serve para reproduzir um bug. Exemplo: https://guidxsa.github.io/ninja-roleta/?seed=42
 
-O laboratório de telas (UI Lab) roda só no computador de quem desenvolve: `npm run lab` gera `dist-lab/lab.html`, que abre por um servidor local (ex.: `python -m http.server 4178 --directory dist-lab`). Ele mostra cada tela do jogo num estado pronto, em várias larguras e nos dois temas, sem tocar nos saves. Ver [docs/ui-lab/ARCHITECTURE.md](docs/ui-lab/ARCHITECTURE.md).
+O laboratório de telas (UI Lab) roda só no computador de quem desenvolve: `npm run lab` gera `dist-lab/lab.html`, que abre por um servidor local (ex.: `python -m http.server 4178 --directory dist-lab`). Ele mostra cada tela do jogo num estado pronto, em várias larguras em grafite, sem tocar nos saves. Ver [docs/ui-lab/ARCHITECTURE.md](docs/ui-lab/ARCHITECTURE.md).
 
 ## Estrutura
 

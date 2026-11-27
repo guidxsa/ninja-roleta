@@ -1,4 +1,5 @@
-# Verifica cada branch de trabalho e cada PR antes do merge no master (o master publica no Pages a cada push).
+# Verifica cada branch de trabalho e cada PR antes do merge (no staging, sozinho com check e meta verdes; no master, do
+# usuário, que publica no Pages a cada push).
 # Mesmos passos do build de produção, sem publicar.
 name: Verificar
 
@@ -6,8 +7,7 @@ on:
   push:
     branches: ['feature/**', 'hotfix/**', staging]
   pull_request:
-    # labeled/unlabeled: a etiqueta contrato-aprovado (check:escopo) roda a verificação de novo
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
@@ -30,19 +30,23 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      # Correção automática (docs/processo/issues.md): no PR de feature/issue-<n>, a etiqueta correcao-automatica da issue
-      # vale como aprovação do contrato (check:escopo).
-      - name: Etiquetas da issue
-        id: issue
+      # Correção automática (docs/processo/issues.md): no PR de feature/issue-<n>, a branch só vale com a correcao-automatica
+      # que o dono do repositório pôs na issue (scripts/check-aprovacao.ts; bot e agente no Actions não promovem issue).
+      - name: Etiquetas da issue do loop
+        id: aprov
         if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'feature/issue-')
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           HEAD_REF: ${{ github.head_ref }}
+          DONO: ${{ github.repository_owner }}
         run: |
           n="${HEAD_REF#feature/issue-}"
-          case "$n" in ''|*[!0-9]*) exit 0 ;; esac
-          echo "etiquetas=$(gh issue view "$n" --json labels --jq '[.labels[].name] | join(",")' || true)" >> "$GITHUB_OUTPUT"
+          case "$n" in ''|*[!0-9]*) echo "issue_etiquetas=" >> "$GITHUB_OUTPUT"; exit 0 ;; esac
+          export TIMELINE_ISSUE="$RUNNER_TEMP/timeline-issue.json"
+          export ATUAIS_ISSUE="$(gh issue view "$n" --json labels --jq '[.labels[].name] | join(",")' || true)"
+          gh api "repos/$GH_REPO/issues/$n/timeline" --paginate > "$TIMELINE_ISSUE" || echo '[]' > "$TIMELINE_ISSUE"
+          node scripts/check-aprovacao.ts ci | tee -a "$GITHUB_OUTPUT"
       # No push não há GITHUB_BASE_REF: se a branch tem PR aberto, compara com a base dele, como na execução do PR
       # (PR empilhado sobre outra branch, ou para o staging). Sem PR, vale a base pelo nome da branch (harness.ts).
       - name: Base do PR da branch
@@ -61,14 +65,12 @@ jobs:
           CHECK_BASE: ${{ steps.base.outputs.check_base }}
           CHECK_ESTRITO: ${{ github.event_name == 'pull_request' }}
           CHECK_PR: ${{ github.event_name == 'pull_request' }}
-          CHECK_ETIQUETAS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
-          CHECK_ISSUE_ETIQUETAS: ${{ steps.issue.outputs.etiquetas }}
+          CHECK_ISSUE_ETIQUETAS: ${{ steps.aprov.outputs.issue_etiquetas }}
 
   # Guarda da meta de vitória (scripts/check-meta.ts): simulação curta com seed fixa. Quebrou: proponha ao usuário com
   # a tabela de antes e depois, nunca ajuste número para passar (AGENTS.md).
   meta:
-    # Roda em todo evento, inclusive de etiqueta: um check pulado conta como aprovado no GitHub, e uma execução de
-    # etiqueta que cancela a anterior (concurrency) não pode deixar a meta sem medir.
+    # Roda em todo evento: um check pulado conta como aprovado no GitHub.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

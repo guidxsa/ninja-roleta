@@ -1,6 +1,6 @@
 {
   "name": "ninja-roleta",
-  "version": "0.95.2",
+  "version": "0.96.0",
   "private": true,
   "description": "Jogo de browser de fã, inspirado no universo ninja, movido a roletas. Sem fins lucrativos.",
   "license": "MIT",
@@ -22,6 +22,8 @@
     "lab:seed": "tsx scripts/lab-seed.ts",
     "docs:tabelas": "tsx scripts/doc-tables.ts",
     "metricas": "tsx scripts/metricas-relatorio.ts",
+    "limpar": "tsx scripts/limpar-branches.ts",
+    "delegar": "tsx scripts/delegar.ts",
     "prepare": "git config core.hooksPath .githooks || true"
   },
   "devDependencies": {

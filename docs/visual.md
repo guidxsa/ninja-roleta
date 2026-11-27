@@ -11,7 +11,7 @@ O jogo deve parecer parte do universo de Naruto, e não um site com tema de Naru
 
 ## Cores
 
-A paleta é a de sempre: temas **Sumi** (escuro) e **Pergaminho** (claro), com o botão dia/noite; sem escolha, o jogo segue o aparelho. Vermelho é ação e perigo, dourado é conquista. As três cores da v0.55.0 (Verde, Laranja e Marrom) saíram na v0.56.0, a pedido do usuário.
+Ninshu Roots usa um único tema Sumi. O fundo vai do grafite `#1a1918` ao cinza `#24221f`. Vermelho marca ação e perigo, e dourado marca conquistas. O nome e a folha de Konoha em traço claro sobre azulejo vermelho identificam o jogo e o PWA.
 
 - `--primary` (ação e navegação) existe separado de `--accent` (perigo, chefe, carimbo), mas hoje aponta para o mesmo vermelho.
 - **Peças com cor fixa**, por serem objetos do mundo: a barraca da roda, a carta do mapa, os cenários, os cards de modo e a barra inferior do Portão.
@@ -20,7 +20,7 @@ A paleta é a de sempre: temas **Sumi** (escuro) e **Pergaminho** (claro), com o
 
 Referências do usuário (07/11/2026): o painel do Project Rasengan, o logo de Shadow Rising e dois mockups "Jornada Naruto" (desktop e celular). O que veio delas, em `prototype/styles/ornaments.css`:
 
-- **Pergaminho de borda rasgada** (`.parchment`): papel com grão, manchas e borda queimada sobre o fundo; os tons de texto dentro dele são sempre os escuros do papel, nos dois temas.
+- **Pergaminho de borda rasgada** (`.parchment`): papel com grão, manchas e borda queimada sobre o fundo; os tons de texto dentro dele são sempre os escuros do papel.
 - **Nuvens em espiral** (`cloud()` em `prototype/art.ts`), como ornamento.
 - **Faixa de pergaminho** com rolos (`.scroll-banner`).
 - **Letra manuscrita** (`--font-hand`, Kalam) em títulos de painel, citação e nome dos modos; letreiros seguem em pincel (`--font-display`).
@@ -35,9 +35,23 @@ Referências do usuário (07/11/2026): o painel do Project Rasengan, o logo de S
 
 ## Telas no estilo novo
 
-- **Portão da Vila**: logo com nuvens, destaque (ilustração ou Konoha), citação sorteada em pergaminho, cards Jornada e Roleta, faixa de Conquistas e **barra inferior** com o Registro ninja (Início, Histórico, Livro Bingo, Relíquias, Origens), que só aparece no Portão.
-- **Casca do PC** (pedido do usuário, a partir de uma referência de composição): **barra lateral** persistente em todas as telas (Início, Jornada, Roleta; Histórico, Livro Bingo, Relíquias, Conquistas); o **Início** em painéis, com o destaque (imagem `portao`, logo e citação) e os dois modos lado a lado no centro e, à direita, a **Ficha do ninja** (nome, avatar padrão e números do perfil), o **Progresso da Jornada** (o botão continua a run direto) e as **Conquistas recentes**; o **Registro abre em popup** em qualquer tela e em qualquer entrada (barra lateral, botão Registro, barra do Portão no celular), uma seção por vez, num pergaminho vertical com rolos; o Histórico filtra por Geral, Origens e Dificuldade; a janela antiga de abas saiu (pedido do usuário: um padrão só); no pé, a **faixa de frases** sorteadas. O Portão "Vila com placas" foi tentado antes e rejeitado. **Direção de arte** (pedido do usuário: "menos caixas, mais composição"; revista em 11/11/2026, quando ele apontou que as peças brigavam entre si em outras resoluções): **cada peça no seu espaço**. A ilustração do destaque é a cena, sem moldura, com a borda dissolvida em tinta, e o logo e a citação ficam dentro dela, em cantos opostos; os modos são pergaminhos desenrolados com rolos de madeira, em células próprias abaixo da cena, com a arte **dentro** do papel (moldura de tinta), um selo (道, 運) no canto e a ação numa pincelada vermelha; a coluna direita são pergaminhos levemente desalinhados, um abaixo do outro, com a kunai, o selo e a miniatura dentro do próprio pergaminho, títulos sublinhados a pincel e o avatar num medalhão; o papel dos pergaminhos do Início é envelhecido (mais quente, queimado nas bordas, com manchas e tinta mais escura); as pinceladas têm falhas de cerda. Saíram os cards subindo sobre a cena, a arte vazando do papel, a citação cruzando a borda e a pilha sobreposta. **Vagas de textura** em `public/img/ui/` (`papel`, `madeira`, `pincel`, `fundo`): cada imagem que existir entra no lugar do desenho do CSS. Se o PC agradar, o usuário pretende levar essa linguagem ao celular.
-- **Entrada da Jornada**: banner com a chamada, card **Progresso da Jornada** (capítulo, parada, miniatura, % de conclusão e o botão Continuar), painéis em pergaminho e **Conquistas recentes** (as 3 mais novas do perfil).
+- **Portão da Vila.** O letreiro Ninshu Roots ocupa o céu da vila. Na base da pintura, três pergaminhos ilustrados abrem Arcade, História e Campanha. Cada pergaminho é um único controle. A retomada de uma Jornada salva fica na aba do modo no Histórico.
+- **Celular, abaixo de 768 px.** Sob a cena, a Ficha compacta mostra avatar, nome, runs e vitórias do Arcade e recorde da Campanha. Um toque expande o Registro do ninja com os números do perfil. Os pergaminhos se empilham com a arte acima do texto. A navegação inferior reúne Início, Arcade, História, Campanha e Registro. Cada alvo tem pelo menos 44 px.
+- **Tablet, de 768 a 1023 px.** Sob a cena larga, Ficha e Conquistas dividem uma linha. Os três pergaminhos ocupam colunas de mesma altura. A navegação segue no rodapé.
+- **Desktop, a partir de 1024 px.** A lateral fixa dá acesso aos modos e às quatro seções do Registro. Cena e pergaminhos ocupam o centro. Ficha e Conquistas ficam à direita. A citação aparece em `#quote-strip`.
+- **Registro.** Histórico, Livro Bingo, Relíquias e Conquistas abrem na área principal. No celular e no tablet, as seções também têm abas no topo. No Histórico, Arcade oferece os filtros Geral, Origens e Dificuldade. História e Campanha mostram o save correspondente, as runs terminadas e as conquistas da Jornada. Campanha inclui seu recorde. Cada run é uma linha-botão (`aria-expanded`): o símbolo da origem ou da classe com o ícone do modo no canto, o nome, a data e até onde foi, os chips de dificuldade e resultado e uma seta. Aberta, mostra os detalhes numa lista de rótulo e valor e, no Arcade, os vilões em ordem com o retrato e a marca de vitória ou derrota. Mais de uma linha pode ficar aberta, para comparar. A run de antes do histórico detalhado mostra o que tem e a nota "detalhes não registrados". Voltar e Início retornam ao Portão.
+- **Livro Bingo** (`prototype/bingoSheet.ts`). Três seções (Arcade, História e Campanha) num seletor segmentado; dentro, um grupo por categoria, arco ou estágio, com quantos já foram vistos. O inimigo visto é uma linha-botão que abre a **ficha**; o que nunca apareceu fica na sombra, com 謎. A ficha é papel de cartaz: o fundo vem do arco (lote 2: `bingo-ondas`, `bingo-exame`, `bingo-sannin`, `bingo-resgate` e `bingo-arcade`; a Campanha usa o arco equivalente) com o miolo liso para a leitura, e enquanto a imagem não existe, uma vinheta da cor do arco. A moldura sobe de grau: comum com filete simples, elite com filete duplo dourado e chefe com borda vermelha grossa e o carimbo 手配 (procurado) sobre o canto do retrato. No celular e no tablet a ficha cobre a tela (janela: voltar, Esc e o voltar do navegador fecham); a partir de 1024 px, abre num painel ao lado da lista, que acompanha a rolagem.
+- **Voltar e Esc** (`prototype/back.ts`). Esc fecha a camada de cima, nesta ordem: a dica, o campo em edição, a janela e a página (Registro, ou a tela com botão de voltar, como as entradas da História e da Campanha). O botão voltar do navegador (e do Android) faz o mesmo: cada janela e o Registro inteiro põem uma entrada no histórico (trocar de aba não empilha). No Portão, o voltar sai da página, sem armadilha. Dentro da partida, o Esc não tira o jogador da luta e o voltar pede a mesma confirmação do botão do Portão.
+- **Ficha.** Avatar e nome no topo, sempre à vista, cada um com o lápis de editar ([perfil.md](base/perfil.md#avatar)). O nome fica numa linha só e encolhe com a coluna; as linhas de números quebram só entre o rótulo e o valor. O avatar mostra o retrato com o fundo original da arte, num quadro de tinta com sombra dura, como os retratos do Livro Bingo. Na escolha, o avatar bloqueado aparece em silhueta (o retrato sem recorte usa a silhueta genérica de cabeça e ombros).
+- **Ferramentas.** A alça de Konoha abre a barra superior por toque, foco do teclado ou aproximação do mouse à borda superior. Os controles permanecem acessíveis enquanto recebem foco. A barra recolhe ao sair, tocar fora, tocar novamente na alça ou usar Escape. Com movimento reduzido a mudança é imediata.
+
+### Composição Shinobi nas telas jogáveis
+
+- Na barraca de linhagem, os emblemas aparecem na roda e na legenda, junto do nome e da chance. Tocar no emblema da legenda destaca a fatia. Na vitória, a relíquia sorteada ganha um cartão junto da roda, com acesso à Ficha e à próxima parada.
+- No mapa do Caminho Ninja, os botões abaixo da carta correspondem aos nós acessíveis. Quando dois destinos têm o mesmo tipo, o número de rota liga cada botão ao seu nó. No celular, vida, chakra e ryō ficam à vista com um botão para expandir a ficha.
+- O Time 7 abre com a faixa do capítulo, Kakashi no telhado e as escolhas no pergaminho. Na batalha da ponte, as artes dos combatentes carregam na abertura. O campo acompanha mudanças de forma e de equipe, e as ações seguem o estado do turno.
+- Na árvore de talentos, a paisagem e o símbolo acompanham a classe e o ramo. No desktop largo, as abas escolhem o ramo da carta à esquerda, com nome, efeito e custo do talento à direita. No celular, o detalhe fica no rodapé.
+
 
 ## Três materiais
 
@@ -106,7 +120,8 @@ Etapa 0 da evolução visual (v0.74.0), em `prototype/styles/tokens.css` e `a11y
 
 - **Escala tipográfica** em tokens (`--fs-xs` 12px a `--fs-6xl` 32px). **Nada de texto abaixo de 12px**; os 280 tamanhos soltos dos CSS de tela foram para a escala (display e kanji seguem os próprios `clamp`). Tamanho novo entra na escala, não em px solto.
 - **Escala de espaço** (`--sp-1` 4px a `--sp-6` 32px) para o que for escrito daqui em diante; os paddings antigos não foram reescritos.
-- **Contraste** (WCAG AA, 4,5:1 para texto): `--accent-text` é o vermelho para texto e ícone sobre superfície (o fundo vermelho segue com `--accent`); o hover do vermelho e, no tema claro, dourado, cinza de apoio, XP, chakra e folha foram escurecidos até passar. O selo dourado do tema claro usa tinta clara.
+- **Paleta Shinobi** (`--sh-<família>-<n>` no `:root` de `prototype/styles/shinobi/base.css`, issue #37). As famílias são papel, ouro, terra, tinta, laca, folha, noite, uva e sumi, numeradas da mais clara para a mais escura. Nas folhas `shinobi/`, cor de componente só por token, e transparência por `color-mix(... N%, transparent)`. Cor nova entra na paleta; as exceções são as máscaras, onde o preto é só alfa. `tests/shinobi-tokens.test.ts` confere.
+- **Contraste** (WCAG AA, 4,5:1 para texto): `--accent-text` é o vermelho para texto e ícone sobre superfície (o fundo vermelho segue com `--accent`).
 - **Foco**: todo controle tem anel visível (regra de especificidade zero, que não atrapalha os que já tinham o seu); selos da árvore, cards de lutador, nós do mapa e as barras de navegação ganharam anel próprio.
 - **Alvos de toque**: a área que responde tem 44px mesmo quando o desenho é menor (recolher painel, nó do mapa, relíquias na luta); botões pequenos e de fechar sobem para 44px em tela de toque.
 - **Movimento**: os pulsos de chamada tocam algumas vezes e param; com menos movimento, o número de dano aparece parado em vez de sumir.
@@ -149,27 +164,22 @@ O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype
 
 | Chave | Arquivo hoje | Onde | Sem a imagem |
 |---|---|---|---|
-| `portao-dia`, `portao-noite` | `dia`, `noite` | Destaque do Portão (dualidade, abaixo) | `portao`, e depois a cena de Konoha |
+| `portao` | `portao.webp` | O portão da vila e o Monte Hokage (os cinco rostos) ao pôr do sol, céu em brasa e sombras índigo, lanternas acesas | Cena SVG de Konoha |
+| `perspectiva-naruto`, `perspectiva-sasuke` | `dia`, `noite` | Pôsteres das perspectivas da História | Painel de perspectiva |
 | `jornada` | `jornada` | Banner da entrada da Jornada | Cena de Konoha |
-| `modo-jornada`, `modo-roleta` | os mesmos | Arte dos cards de modo | Emblema em aquarela |
+| `modo-jornada`, `modo-roleta` | os mesmos | Arte dos cards de modo (`modo-jornada`: o Time 7 de costas sobre o telhado, em tinta laranja; `modo-roleta`: um duelo na arena de fatias, a origem Uchiha de costas contra o Orochimaru, em tinta ameixa) | Emblema em aquarela |
 | `arco-waves`, `arco-exam`, `arco-sannin`, `arco-retrieval` | `waves`, `chunnin`, `sannin`, `sasuke` (a equipe do resgate) | Faixa de arcos da História e miniatura do card de progresso | Cenário do estágio |
 | `g1`, `g2`, `g3` | os mesmos | Miniatura do Caminho Ninja | Cenário do estágio |
 | `roleta` | (vazia) | Palco do sorteio da origem no PC | Cenário desenhado de Konoha |
 | `roleta-genin`, `roleta-chunin`, `roleta-jounin`, `roleta-boss` | `roleta-genin`, `roleta-chunin`, `roleta-jounin`, `roleta-chefe` (vazias) | Roleta no PC: painel do mapa do ciclo, palco das roletas e fundo da arena da luta, pela categoria da luta atual | Cenário desenhado: Konoha, arena, floresta, Vale do Fim |
-| `modo-caminho` | `caminho-ninja` (o Minato) | Card e pôster do Caminho Ninja | Retrato do ninja comum no card; a arte `jornada` no pôster |
+| `modo-caminho` | `modo-caminho.webp` | Pergaminho da Campanha: um ninja de costas na encruzilhada, com a placa de setas e os caminhos se dividindo, em tinta verde | Emblema da Jornada |
+| `caminho-ninja` | `caminho-ninja` (Minato) | Pôster da preparação da Campanha | Arte `jornada` |
 
 `sasuke2` (Itachi e Sasuke) está reservada para a campanha do Sasuke ([historia-sasuke.md](jornada/historia-sasuke.md)).
 
-### Dualidade Naruto e Sasuke
+### Cena do Portão
 
-A dualidade é o eixo da identidade. O Portão mostra **o Naruto observando Konoha de dia** e **o Sasuke à noite**, conforme o tema: o claro (Pergaminho) é o dia e o escuro (Sumi), a noite.
-
-- As duas versões ficam montadas (`.duo-day` e `.duo-night`) e o CSS por `data-theme` troca devagar (`--dur-dawn`), como um amanhecer. A cena do dia fica sempre opaca por baixo e só a da noite entra e sai por cima: nenhum quadro da troca fica sem imagem (o desenho de Konoha do fundo só aparece quando não há arte).
-- Junto da cena mudam a frase (falas do personagem da vez), o selo 陽/影 e a legenda "Naruto/Sasuke observa Konoha". Não é só um papel de parede.
-- Os dois estão em lados opostos da arte (o Naruto à direita, o Sasuke à esquerda): um espelha o outro. O foco de cada uma fica no `SCENE_ART`.
-- Leitura: o logo do PC fica claro com sombra nos dois temas, e há uma sombra de tinta no canto do logo.
-- Nenhum dos dois é o lado "bom". As falas mostram o que move cada um.
-- Animado: `dia.webm` e `noite.webm` viram as versões em vídeo sem mudar código.
+O Monte Hokage é o centro da pintura e nada o cobre. No tablet (768 a 1023 px), a pintura aparece inteira e o letreiro fica no alto da faixa escura da esquerda; no celular e no desktop, onde essa faixa não comporta o letreiro, ele desce para baixo dos rostos, sobre os telhados. O foco mantém os cinco rostos e o portão nos recortes estreitos. O modo Animado acrescenta névoa e vaga-lumes.
 
 ### Roleta no PC
 
@@ -181,19 +191,23 @@ O Roleta tem composição própria no PC (`prototype/styles/roleta-desk.css`), n
 - **Trilha** (PC e celular): cada etapa tem duas linhas, o **Evento** pré-luta (dado, etiqueta dourada; depois de acontecer, o nome) e o **Confronto** (marco, rosto, categoria e vilão; etiqueta vermelha). Etapa vencida expande e mostra o que deu (XP, status, nível, itens, relíquia do baú), pelo registro da run.
 - **Luta** (`.rb-desk`): o layout da luta da Jornada. A arte da categoria é o fundo da luta; no centro, o vilão em cima, a arena (faixas de iniciativa e de acerto) no meio e você embaixo, sem caixa; à esquerda, a ficha do vilão (atributos, passivas, técnicas) e o registro da luta; à direita, as ações. Até 1279px, duas colunas (o campo e as ações; a ficha e o registro embaixo do campo).
 - **Mapa**: o botão principal é "Seguir: evento pré-luta" até o evento acontecer, depois "Lutar"; embaixo, **Abandonar run** em cor de perigo (também no pé das ações da luta). O vilão fica no meio da cena.
-- **Cores**: no tema claro o dourado (`--gold`, `--gold-2`) é escuro o bastante para o papel; a Ficha aberta do mapa usa o papel da janela da ficha nos dois temas.
+- **Cores**: a Ficha aberta do mapa usa o papel da janela da ficha.
 - **Fim da run**: à esquerda, um pergaminho com o selo e o carimbo 勝/敗, o título e os números; à direita, a trilha (com o que cada etapa deu) e a Ficha resumida; as ações embaixo.
 
 ### Entrada da Jornada
 
-A entrada da Jornada usa a **composição do Início** (a mesma casca `.gate`, com o modificador `.jgate`):
+A antiga entrada da Jornada permanece disponível como cenário do UI Lab e usa a **composição do Início** (a mesma casca `.gate`, com o modificador `.jgate`):
 - destaque com a arte `jornada`, o título "Modo Jornada" no lugar do logo e uma frase em pergaminho;
 - dois cards-pergaminho sobre a cena: **Modo História** (selo 史, arte em leque com os quatro arcos) e **Caminho Ninja** (selo 道);
 - à direita, Progresso da Jornada (Continuar direto), Dificuldade e Conquistas recentes. No celular, a pilha: destaque, progresso, modos, dificuldade e conquistas.
 
-Cada card abre a sua tela:
-- **Modo História → Escolha a perspectiva**: dois pôsteres lado a lado, cada um com a arte numa célula e o pergaminho embaixo (as duas artes com a mesma altura, os dois pergaminhos também; em janela baixa, o Começar sobe para a linha do título): o Naruto de dia (arte `portao-dia`, os arcos e o Começar) e o Sasuke à noite (arte `portao-noite`, papel frio, travado: "Em breve"). As perspectivas vêm das campanhas (`data.campaigns`); a do Sasuke destrava quando os dados dela existirem.
+No jogo, os dois cards da Jornada abrem suas preparações diretamente no Portão:
+- **Modo História → Escolha a perspectiva**: dois pôsteres lado a lado, cada um com a arte numa célula e o pergaminho embaixo (as duas artes com a mesma altura, os dois pergaminhos também; em janela baixa, o Começar sobe para a linha do título): o Naruto de dia (arte `perspectiva-naruto`, os arcos e o Começar) e o Sasuke à noite (arte `perspectiva-sasuke`, papel frio, travado: "Em breve"). As perspectivas vêm das campanhas (`data.campaigns`); a do Sasuke destrava quando os dados dela existirem.
 - **Caminho Ninja → Preparar**: o pôster (a arte e, embaixo, o pergaminho com os três estágios) e, ao lado, classe, elemento e Começar.
+
+### Dualidade Naruto e Sasuke
+
+Na escolha da perspectiva, a ilustração diurna identifica Naruto e a noturna identifica Sasuke. Ambas aparecem sobre o mesmo grafite.
 
 ### Arcos da Jornada
 
@@ -254,7 +268,7 @@ Os retratos ilustrados da v0.95.1 foram gerados por IA a partir de imagens-model
 1. **Imagens-modelo**: o usuário escolhe imagens com as características que quer no retrato (traço, enquadramento, expressão, detalhe do traje) e as guarda em `prototype/lab/refs/<chave>` (fora do git e do jogo; a galeria do UI Lab mostra cada uma ao lado do retrato).
 2. **Instrução**: um texto curto dizendo o que pegar de cada imagem e o que seguir da tabela acima. Para manter a série, junte dois retratos já aprovados do mesmo grupo (aliados ou vilões).
 3. **Geração** pela ferramenta de IA.
-4. **Revisão humana**: o usuário compara na galeria, nos dois temas e em tamanho pequeno e grande, e pede ajustes até aprovar. Cada pedido vai para `ajustes` no manifesto.
+4. **Revisão humana**: o usuário compara na galeria e em tamanho pequeno e grande, e pede ajustes até aprovar. Cada pedido vai para `ajustes` no manifesto.
 
 ## Celular e desktop
 

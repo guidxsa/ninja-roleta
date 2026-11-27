@@ -1,11 +1,13 @@
 ---
 name: novo-retrato
-description: Fluxo para criar, refazer ou trocar o retrato ilustrado (WebP) de um personagem, vilão, forma ou variante do Ninja Roleta, no mesmo estilo dos outros. Use sempre que o usuário pedir retrato novo, arte de personagem, trocar ou corrigir uma imagem de public/img/ninja, viloes ou jornada, ou disser que um rosto "ficou estranho". Não serve para cenários (public/img/cenas) nem para os desenhos SVG de reserva (prototype/portraits).
+description: Fluxo para criar, refazer ou trocar o retrato ilustrado (WebP) de um personagem, vilão, forma ou variante do Ninshu Roots, no mesmo estilo dos outros. Use sempre que o usuário pedir retrato novo, arte de personagem, trocar ou corrigir uma imagem de public/img/ninja, viloes ou jornada, ou disser que um rosto "ficou estranho". Não serve para cenários (public/img/cenas) nem para os desenhos SVG de reserva (prototype/portraits).
 ---
 
-# Novo retrato (Ninja Roleta)
+# Novo retrato (Ninshu Roots)
 
 O retrato precisa parecer da mesma série que os outros 94 e funcionar de 24px a 170px. Ele sai de imagens-modelo escolhidas pelo usuário e de uma revisão humana com ajustes até a aprovação. Quem gera a imagem pode ser o usuário, o Codex ou outra ferramenta; este fluxo vale para qualquer um e guarda o necessário para refazer o retrato depois.
+
+**Quem faz: o Codex** (área do visual, AGENTS.md "Dois agentes"). Pedido que chega ao Claude é [delegado](../../../docs/processo/delegacao.md): contrato com `agente: codex` e `npm run delegar -- <tema>`.
 
 ## 1. Contrato e chave
 
@@ -33,7 +35,7 @@ Acrescente ou atualize a entrada em `public/img/retratos.json`, em ordem de arqu
 
 ## 4. Revisão humana (ciclo até aprovar)
 
-1. `npm run lab` e o cenário `meta.portraits` (galeria): o retrato novo ao lado da imagem-modelo e dos outros do grupo, nos temas Sumi e Pergaminho, em tamanho pequeno (ordem de iniciativa) e grande (cena). A skill `revisar-visual` tira as fotos (`npx tsx scripts/revisar-visual.ts meta.portraits`).
+1. `npm run lab` e o cenário `meta.portraits` (galeria): o retrato novo ao lado da imagem-modelo e dos outros do grupo, sobre o grafite e sobre o papel, em tamanho pequeno (ordem de iniciativa) e grande (cena). A skill `revisar-visual` tira as fotos (`npx tsx scripts/revisar-visual.ts meta.portraits`).
 2. Mostre ao usuário. Cada ajuste pedido vai para `ajustes` no manifesto; ajuste a instrução, gere de novo e mostre outra vez.
 3. Só com o aval dele: `"aprovado": true`.
 

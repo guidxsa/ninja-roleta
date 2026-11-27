@@ -8,24 +8,7 @@ import { openProfile, type ProfileTab } from './registry';
 import { installTooltips } from './tooltip';
 import { sleep, h, goHome, show, esc, choose } from './dom';
 import { VERSION, openSheet, toast, track, syncSheetBtn } from './roleta/common';
-import { type Theme, ses, saveSettings } from './roleta/session';
-
-/** Tema aplicado: o escolhido no botão ou o do aparelho. */
-export const deviceTheme = window.matchMedia?.('(prefers-color-scheme: light)');
-export const currentTheme = (): Theme => ses.settings.theme ?? (deviceTheme?.matches ? 'light' : 'dark');
-export const THEME_COLORS: Record<Theme, string> = { dark: '#0d0c0b', light: '#e6dac0' };
-
-export function applyTheme() {
-  const theme = currentTheme();
-  document.documentElement.dataset.theme = theme;
-  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute('content', THEME_COLORS[theme]));
-  const btn = document.getElementById('theme-btn')!;
-  // O botão mostra para onde vai: sol à noite, lua de dia.
-  const next = theme === 'dark' ? S.ui.themeDay : S.ui.themeNight;
-  btn.innerHTML = `${icon(theme === 'dark' ? 'sun' : 'moon')}${toolLabel('theme')}`;
-  btn.title = next;
-  btn.setAttribute('aria-label', next);
-}
+import { ses, saveSettings } from './roleta/session';
 
 /** Nome curto ao lado do ícone da barra: o CSS só mostra no PC (≥ 1280px). */
 export function toolLabel(key: keyof typeof S.ui.toolLabels): string {
@@ -46,18 +29,12 @@ export function setAnimated(on: boolean) {
   document.documentElement.toggleAttribute('data-animated', on);
 }
 
-/** Botões do cabeçalho: instantâneo, dia/noite, efeitos sonoros e música. */
+/** Botões do cabeçalho: instantâneo, animação, efeitos sonoros e música. */
 export function installHeaderToggles() {
   setInstantCss(ses.settings.instant);
   // Modo das cenas antes de qualquer tela.
   setAnimated(ses.settings.animated);
-  applyTheme();
-  deviceTheme?.addEventListener?.('change', applyTheme);
-  document.getElementById('theme-btn')!.addEventListener('click', () => {
-    ses.settings.theme = currentTheme() === 'dark' ? 'light' : 'dark';
-    saveSettings();
-    applyTheme();
-  });
+  document.querySelector('.brand-seal')!.innerHTML = icon('konoha');
 
   const toggles = [
     { id: 'instant-btn', key: 'instant', on: 'lightning', off: 'lightning', label: S.ui.instant, apply: setInstantCss },
@@ -82,6 +59,39 @@ export function installHeaderToggles() {
       render();
     });
   }
+}
+
+/** A alça continua focável com o painel recolhido. Os controles só entram no Tab quando visíveis. */
+function installHeaderGrip(): void {
+  const top = document.querySelector<HTMLElement>('header.top')!;
+  const grip = top.querySelector<HTMLButtonElement>('.top-grip')!;
+  grip.innerHTML = icon('konoha');
+  grip.setAttribute('aria-label', S.ui.gate.tools);
+  const setOpen = (open: boolean) => {
+    top.classList.toggle('open', open);
+    grip.setAttribute('aria-expanded', String(open));
+  };
+  const fine = matchMedia('(pointer: fine)');
+  top.addEventListener('pointerenter', (e) => { if (fine.matches && e.pointerType === 'mouse') setOpen(true); });
+  top.addEventListener('pointerleave', (e) => {
+    if (e.pointerType === 'mouse' && !top.querySelector(':focus-visible')) setOpen(false);
+  });
+  top.addEventListener('focusin', (e) => {
+    if ((e.target as HTMLElement).matches(':focus-visible')) setOpen(true);
+  });
+  top.addEventListener('focusout', (e) => {
+    if (!top.contains(e.relatedTarget as Node | null)) setOpen(false);
+  });
+  grip.addEventListener('click', () => setOpen(!top.classList.contains('open')));
+  top.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      grip.focus();
+      setOpen(false);
+    }
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if (!top.contains(e.target as Node)) setOpen(false);
+  });
 }
 
 /** Garante as fontes embutidas antes de medir texto (rótulos da roleta). Sem suporte, segue sem esperar. */
@@ -178,6 +188,7 @@ export function installQuoteStrip(): void {
 export async function installShell(): Promise<void> {
   installAudio(ses.settings);
   installHeaderToggles();
+  installHeaderGrip();
   document.getElementById('history-btn')!.addEventListener('click', () => openProfile());
   // Atalhos do Portão da Vila para o registro ninja.
   document.addEventListener('click', (e) => {
@@ -213,22 +224,6 @@ export async function installShell(): Promise<void> {
   document.getElementById('home-btn')!.innerHTML = `${icon('home')}<span>${S.ui.homeShort}</span>`;
   document.getElementById('home-btn')!.title = S.ui.home;
   document.getElementById('home-btn')!.setAttribute('aria-label', S.ui.home);
-  const gateNav = document.getElementById('gate-nav')!;
-  gateNav.setAttribute('aria-label', S.ui.gate.registry);
-  const navItem = (kanji: string, label: string, attr = '') =>
-    `<button type="button" ${attr}><span class="kanji${kanji.length > 1 ? ' two' : ''}" aria-hidden="true">${kanji}</span>${label}</button>`;
-  gateNav.innerHTML =
-    navItem('忍', S.ui.gate.home, 'aria-current="page"') +
-    (
-      [
-        ['history', '歴'],
-        ['bingo', '手配'],
-        ['relics', '宝'],
-        ['origins', '族'],
-      ] as const
-    )
-      .map(([tab, kanji]) => navItem(kanji, S.profile.tabs[tab], `data-profile="${tab}"`))
-      .join('');
   document.getElementById('history-btn')!.innerHTML = `${icon('book')}${toolLabel('history')}`;
 
   installTooltips();

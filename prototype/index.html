@@ -1,21 +1,14 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0d0c0b" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#e6dac0" media="(prefers-color-scheme: light)" />
-    <title>Ninja Roleta</title>
+    <meta name="theme-color" content="#1a1918" />
+    <title>Ninshu Roots</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icon-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="icon-192.png" />
     <script>
-      // Tema antes da primeira pintura (sem piscar): o escolhido no botão ou o do aparelho.
-      try {
-        var t = JSON.parse(localStorage.getItem('proto_settings_v1') || '{}').theme;
-      } catch (e) {}
-      document.documentElement.dataset.theme =
-        t === 'light' || t === 'dark' ? t : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
       // Modo instantâneo também encurta as transições da interface (CSS em styles/instant.css).
       try {
         var s = JSON.parse(localStorage.getItem('proto_settings_v1') || '{}');
@@ -31,14 +24,15 @@
   </head>
   <body>
     <header class="top">
+      <button class="top-grip" type="button" aria-controls="top-tools" aria-expanded="false"></button>
+      <div id="top-tools">
       <div class="top-bar">
-        <span class="brand" aria-hidden="true"><span class="seal">忍</span><span class="brand-name">Ninja Roleta</span></span>
+        <span class="brand" aria-hidden="true"><span class="seal brand-seal"></span><span class="brand-name">Ninshu Roots</span></span>
         <button class="btn small" id="home-btn" title="Portão da Vila" aria-label="Portão da Vila"></button>
         <div class="top-actions">
           <div class="tool-group">
             <button class="btn small" id="instant-btn"></button>
             <button class="btn small" id="anim-btn"></button>
-            <button class="btn small" id="theme-btn"></button>
             <button class="btn small" id="sfx-btn"></button>
             <button class="btn small" id="music-btn"></button>
           </div>
@@ -49,6 +43,7 @@
         </div>
       </div>
       <div class="dots" id="dots"></div>
+      </div>
     </header>
     <nav class="side-nav" id="side-nav"></nav>
     <main id="screen" tabindex="-1"></main>

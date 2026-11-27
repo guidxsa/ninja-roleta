@@ -8,7 +8,7 @@ O que espera o usuário. Um item por decisão; o histórico e os números comple
 
 ## Balanceamento
 
-49. **Jornada na meta: conferir** (v0.95.0, [registro](registro.md#jornada-na-meta-906540-15-v0950-17112026)). Tudo dentro de ±5, menos o Hyuuga no Fácil e no Médio (99 e 74). Para revisar: as alavancas decididas sozinho (força por dificuldade de cada tipo de run, Hardcore da História por estágio, status das classes) e o infinito, que quase não aperta.
+49. **Jornada na meta: conferir** (v0.95.0, [registro](registro.md#jornada-na-meta-90654015-v0950-17112026)). Tudo dentro de ±5, menos o Hyuuga no Fácil e no Médio (99 e 74). Para revisar: as alavancas decididas sozinho (força por dificuldade de cada tipo de run, Hardcore da História por estágio, status das classes) e o infinito, que quase não aperta.
 38. **Os três modos contra a meta nova** (v0.88.3, 300 runs, seed 2; Fácil / Médio / Difícil / Hardcore):
 
     | Modo | Hoje | Fora da meta |

@@ -90,8 +90,23 @@ describe('regras sobre o diff', () => {
   });
 
   it('arquivos do processo e scripts do package.json só mudam em feature/harness(-<tema>)', () => {
-    for (const f of ['AGENTS.md', 'CLAUDE.md', '.githooks/pre-push', '.claude/settings.json', 'scripts/check-escopo.ts', '.github/workflows/ci.yml'])
+    for (const f of [
+      'AGENTS.md',
+      'CLAUDE.md',
+      '.githooks/pre-push',
+      '.claude/settings.json',
+      'scripts/check-escopo.ts',
+      '.github/workflows/ci.yml',
+      // #53: o que os agentes seguem como regra e o que roda com segredo também é processo
+      'docs/processo/fluxo.md',
+      '.claude/skills/lancar-versao/SKILL.md',
+      '.github/pull_request_template.md',
+      '.github/ISSUE_TEMPLATE/inconsistencia.yml',
+      'scripts/staging.ts',
+      'scripts/delegar.ts',
+    ])
       expect(rules(run([f])), f).toEqual(['erro:processo-protegido']);
+    expect(rules(run(['docs/tarefas/veneno.md']))).toEqual([]);
     expect(rules(run(['package.json'], { scriptsChanged: true }))).toEqual(['erro:processo-protegido']);
     expect(run(['package.json'], { scriptsChanged: false })).toEqual([]);
     expect(run(['AGENTS.md'], { branch: 'feature/harness-2' })).toEqual([]);

@@ -123,19 +123,18 @@ function memberName(host: JornadaHost, run: JRun, id: string): string {
 let live: JRun | null = null;
 const keep = (run: JRun): JRun => (live = run);
 
-/** Card "Progresso da Jornada" para o Início do PC ('' sem run salva). O botão (data-choice="continue") continua direto. */
-export function jornadaProgressCard(storage: JornadaHost['storage']): string {
-  const saved = loadJornada(storage);
-  return saved ? progressCard(saved) : '';
-}
+export type JornadaEntry = 'story' | 'path';
+export const entryForRun = (run: JRun): JornadaEntry => run.mode === 'canon' ? 'story' : 'path';
 
-/** `resume`: atalho do Início, que pula a tela de entrada quando há run salva. */
-export async function runJornada(host: JornadaHost, opts: { resume?: boolean } = {}): Promise<void> {
+export async function runJornada(host: JornadaHost, opts: { entry: JornadaEntry; resume?: boolean }): Promise<void> {
   // Layout próprio (mais largo no PC).
   document.body.classList.add('mode-jornada');
   forgetLiveBattle();
   try {
-    await jornadaLoop(host, opts.resume ?? false);
+    const saved = loadJornada(host.storage);
+    const setup = opts.entry === 'story' ? campaignScreen : pathSetupScreen;
+    const run = opts.resume && saved && entryForRun(saved) === opts.entry ? saved : await setup(host, saved);
+    if (run) await jornadaLoop(host, run);
   } finally {
     document.body.classList.remove('mode-jornada');
     host.setSheet(null);
@@ -199,12 +198,10 @@ const heroFace = (host: JornadaHost, run: JRun) => ({
 /** Ryō de pontos convertidos (árvore completa) já avisado na tela: o resto vira um toast. */
 let announcedTalentRyo = 0;
 
-async function jornadaLoop(host: JornadaHost, resume: boolean): Promise<void> {
+async function jornadaLoop(host: JornadaHost, initial: JRun): Promise<void> {
   installFolds();
-  let run = (resume ? loadJornada(host.storage) : null) ?? (await startScreen(host));
-  if (!run) return;
   // O retrato das conquistas da árvore acompanha o perfil (save antigo, conquista liberada fora da run).
-  run = keep(syncUnlocks(run, host.unlocked(), data));
+  let run = keep(syncUnlocks(initial, host.unlocked(), data));
   announcedTalentRyo = run.stats.talentRyo ?? 0;
   markRelicsSeen(run.relics);
   host.discoverRelics(run.relics);
@@ -262,29 +259,13 @@ const recoveryLine = (d: Difficulty) => {
 };
 
 /**
- * Entrada da Jornada (docs/visual.md, "Entrada da Jornada"): a mesma composição do Início. Destaque com a arte da
- * Jornada, os dois modos em pergaminho (Modo História e Caminho Ninja) e, ao lado, progresso, dificuldade e conquistas.
- * Cada modo abre a sua tela: a escolha da perspectiva (Naruto ou Sasuke) ou a preparação do Caminho Ninja.
- */
-async function startScreen(host: JornadaHost): Promise<JRun | null> {
-  for (;;) {
-    const saved = loadJornada(host.storage);
-    const pick = await entryScreen(host, saved);
-    if (pick === 'back') return null;
-    if (pick === 'continue' && saved) return saved;
-    const run = pick === 'story' ? await campaignScreen(host, saved) : await pathSetupScreen(host, saved);
-    if (run) return run;
-  }
-}
-
-/**
  * Confirma trocar a run salva (o recorde dela conta antes) e libera o começo de uma nova. A salva não é apagada aqui:
  * a nova a substitui quando é salva pela primeira vez, então sair no meio (nome, revelação) não perde as duas.
  */
 async function replaceSaved(host: JornadaHost, saved: JRun | null): Promise<boolean> {
   if (!saved) return true;
   if (!(await confirmDialog(J.start.overwrite, U.overwriteYes, J.battle.cancel))) return false;
-  if (saved.cycle > 0 || saved.stageIndex > 0 || saved.stopIndex > 0) host.recordJornada(saved);
+  if (saved.cycle > 0 || saved.stageIndex > 0 || saved.stopIndex > 0) host.recordJornada(saved, true);
   return true;
 }
 
@@ -357,8 +338,8 @@ function arcFan(): string {
 
 /** Perspectivas da História: as campanhas dos dados e a do Sasuke, ainda em design (em breve). */
 const PERSPECTIVES = [
-  { id: 'naruto', art: 'portao-dia', seal: '陽', time: 'day' },
-  { id: 'sasuke', art: 'portao-noite', seal: '影', time: 'night' },
+  { id: 'naruto', art: 'perspectiva-naruto', seal: '陽', time: 'day' },
+  { id: 'sasuke', art: 'perspectiva-sasuke', seal: '影', time: 'night' },
 ] as const;
 
 /** Modo História: escolher a perspectiva. Dia e noite lado a lado; a do Sasuke fica travada até existir. */
@@ -404,7 +385,7 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
     h(`<div class="screen jpath">
       <header class="jsub-head"><button class="btn small" data-choice="back">${J.start.back}</button><h2>${G.title}</h2><p class="muted">${G.desc}</p></header>
       <section class="jc-panel jpath-poster" aria-hidden="true">
-        <span class="jc-art art-frame">${sceneMedia('modo-caminho') ?? sceneMedia('jornada') ?? ''}${sceneFx()}</span>
+        <span class="jc-art art-frame">${sceneMedia('caminho-ninja') ?? sceneMedia('jornada') ?? ''}${sceneFx()}</span>
         <div class="jc-body parchment"><span class="seal jc-seal">道</span><h3>${J.start.pathStages}</h3>
           <ol class="jpath-stages">${data.generic.stages.map((g, i) => `<li><span class="seal ghost">${ARC_NUMERALS[i] ?? i + 1}</span>${J.stages[g.id] ?? g.id}</li>`).join('')}</ol></div>
       </section>
@@ -925,10 +906,36 @@ function nodeJitter(id: string): { x: number; y: number } {
   return { x: ((h & 0xff) / 255 - 0.5) * 7, y: (((h >> 8) & 0xff) / 255 - 0.5) * 16 };
 }
 
+function mapHud(host: JornadaHost, run: JRun): string {
+  const state = memberState(run, run.hero, data);
+  const sheet = memberSheet(run, run.hero, data);
+  const stat = (symbol: string, label: string, value: string) =>
+    `<span>${icon(symbol)}<span><small>${label}</small><b>${value}</b></span></span>`;
+  return `<button class="compact-status" type="button" data-toggle-build aria-controls="map-build" aria-expanded="false">
+    ${stat('heart', 'Vida', state.hp + '/' + sheet.maxHp)}${stat('ninjutsu', 'Chakra', state.chakra + '/' + sheet.maxChakra)}${stat('coin', 'Ryō', String(run.ryo))}
+    <span class="expand-build">${icon('scroll')} Ficha ${icon('chevron')}</span></button><div id="map-build">${hud(host, run)}</div>`;
+}
+
+/** Numera da esquerda para a direita. Destinos do mesmo tipo levam o mesmo número no mapa e no botão. */
+function mapChoices(nodes: MapNode[], routeNumbers: Map<string, number>): string {
+  const buttons = nodes.map((node, index) => {
+    const label = nodeKindName(node.kind);
+    const number = routeNumbers.get(node.id);
+    const symbol = node.kind === 'unknown' ? '<b>?</b>' : icon(NODE_ICONS[node.kind]!);
+    return `<button type="button" class="btn primary map-destination" data-node="${node.id}" aria-label="${label}, rota ${index + 1}">${symbol} ${label}${number ? ' · ' + number : ''}</button>`;
+  });
+  return `<nav class="map-destinations" aria-label="${M.choose}">${buttons.join('')}</nav>`;
+}
+
 /** Mapa do estágio: de baixo para cima, chefe no topo, rota feita em pincelada e o herói na posição atual. */
 function mapView(run: JRun, hudHtml: string): string {
   const map = run.map!;
-  const choices = new Set(nodeChoices(run).map((n) => n.id));
+  const destinations = nodeChoices(run).slice().sort((a, b) => a.col - b.col);
+  const choices = new Set(destinations.map((node) => node.id));
+  const routeNumbers = new Map<string, number>();
+  destinations.forEach((node, i) => {
+    if (destinations.some((other) => other.kind === node.kind && other.id !== node.id)) routeNumbers.set(node.id, i + 1);
+  });
   const done = new Set(run.path);
   const ahead = reachableFrom(map, [...choices]);
   // Posições em % do campo interno da carta (.jmap-field, com margem para o chefe, a rosa e o herói não tocarem a
@@ -964,7 +971,8 @@ function mapView(run: JRun, hudHtml: string): string {
       const p = pos(n);
       // O conteúdo é só ícone (ou "?"): o nome do tipo de parada vai no rótulo, com o chefe quando é ele.
       const label = n.kind === 'boss' ? `${nodeKindName(n.kind)}: ${boss.map((id) => J.names[id] ?? id).join(' e ')}` : nodeKindName(n.kind);
-      return `<button class="jnode-map k-${n.kind} ${st}" style="left:${fmt(p.x)}%;top:${fmt(p.y)}%" data-node="${n.id}" aria-label="${esc(label)}" ${st === 'choice' ? '' : 'aria-disabled="true"'}${tip(nodeKindName(n.kind), nodeKindDesc(n.kind))}>${inner}</button>`;
+      const number = routeNumbers.get(n.id);
+      return `<button class="jnode-map k-${n.kind} ${st}" style="left:${fmt(p.x)}%;top:${fmt(p.y)}%" data-node="${n.id}" aria-label="${esc(label)}${number ? ', rota ' + number : ''}" ${st === 'choice' ? '' : 'aria-disabled="true"'}${tip(nodeKindName(n.kind), nodeKindDesc(n.kind))}>${inner}${number ? `<small class="route-number" aria-hidden="true">${number}</small>` : ''}</button>`;
     })
     .join('');
   // O herói fica no último nó feito; antes da primeira escolha, embaixo do mapa.
@@ -982,18 +990,19 @@ function mapView(run: JRun, hudHtml: string): string {
       <svg class="jmap-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>${nodes}
       <span class="jmap-hero" style="left:${fmt(here.x)}%;top:${fmt(here.y)}%" aria-hidden="true">${fighterPortrait(run.hero, portraitSpec(run.hero, run), 'sm')}</span>
     </div></div></div>
-    <div class="jlegend-chips" aria-label="${U.legend}">${legend}</div>`;
+    <div class="jlegend-chips" aria-label="${U.legend}">${legend}</div>${mapChoices(destinations, routeNumbers)}`;
 }
 
 export async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
   let cur = run;
   const root = show(
     h(`<div class="screen jtrail-screen jmap-screen">
-      ${mapView(cur, hud(host, cur))}
+      ${mapView(cur, mapHud(host, cur))}
     </div>`),
   );
   const refreshHud = () => {
-    root.querySelector('[data-hud]')!.innerHTML = hud(host, cur);
+    root.querySelector('[data-hud]')!.innerHTML = mapHud(host, cur);
+    root.querySelector('[data-toggle-build]')?.setAttribute('aria-expanded', String(root.classList.contains('build-expanded')));
     persist(host, cur);
   };
   const redrawShop = dockShop(root, host, () => cur, (r) => (cur = r), refreshHud);
@@ -1001,8 +1010,6 @@ export async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
     refreshHud();
     redrawShop();
   });
-  // Rola o mapa até os nós que dá para escolher (no celular o mapa é comprido).
-  root.querySelector('.jnode-map.choice')?.scrollIntoView({ block: 'center', behavior: host.instant() ? 'auto' : 'smooth' });
   return new Promise((resolve) => {
     root.addEventListener('click', (e) => {
       const t = e.target as HTMLElement;
@@ -1010,7 +1017,12 @@ export async function mapScreen(host: JornadaHost, run: JRun): Promise<JRun> {
         void confirmDialog(U.abandonConfirm, U.abandonYes, U.keepPlaying).then((yes) => yes && resolve({ ...cur, status: 'defeat' }));
         return;
       }
-      const b = t.closest<HTMLElement>('.jnode-map.choice');
+      const toggle = t.closest('[data-toggle-build]');
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', String(root.classList.toggle('build-expanded')));
+        return;
+      }
+      const b = t.closest<HTMLElement>('.jnode-map.choice, .map-destination');
       if (b) resolve(chooseNode(cur, b.dataset.node!));
     });
   });
@@ -1035,6 +1047,7 @@ export async function fightStop(host: JornadaHost, run0: JRun, stop: Extract<Sto
     // Desistir no meio da luta: como o Abandonar da trilha, a run acaba em derrota (sem Vontade do Fogo).
     if (res.abandoned) return { ...run, status: 'defeat' };
     const { run: next, outcome } = finishFight(run, res.battle, data);
+    host.noteFight(res.battle, outcome.won);
     if (outcome.retry) {
       await notice(J.battle.lost, U.retry, { place: stopScene(run, data), seal: 'retry', ...heroFace(host, run) });
       run = next;
@@ -1078,7 +1091,8 @@ export async function eventStop(host: JornadaHost, run0: JRun): Promise<JRun> {
     const root = show(
       h(
         sceneScreen({
-          cls: 'jevent',
+          cls: def.id === 'team7' ? 'jevent team-seven' : 'jevent',
+          chapter: def.id === 'team7' ? stageName(run) : undefined,
           above: gainsStrip(),
           place: stopScene(run, data),
           face: def.face ?? null,

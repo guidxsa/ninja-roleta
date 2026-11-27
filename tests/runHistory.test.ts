@@ -4,11 +4,13 @@ import {
   isHardcoreUnlocked,
   loadRuns,
   markAbandonedRuns,
+  runDetails,
   startRun,
   updateRun,
   type KeyValueStorage,
 } from '../src/state/runHistory';
 import { bestRoletaCycle, emptyProfile, loadProfile, PROFILE_STORAGE_KEY, saveProfile, syncHardcoreUnlock } from '../src/state/profile';
+import { emptyRunStats, type FightSummary } from '../src/core/runStats';
 import type { Origin } from '../src/core/types';
 
 function memoryStorage(): KeyValueStorage & { data: Map<string, string> } {
@@ -163,5 +165,31 @@ describe('hardcore', () => {
     const r = loadRuns(st)[0]!;
     expect([r.status, r.cycle, r.fights]).toEqual(['victory', 2, 9]);
     expect(isHardcoreUnlocked(loadRuns(st), 'hard')).toBe(true);
+  });
+});
+
+describe('detalhes da run do Arcade', () => {
+  const fight = (villainId: string, won: boolean, bestHit: number) =>
+    ({ villainId, exam: false, won, damageTaken: 0, hpPctEnd: 1, bestHit, bestCrit: 0, worstHit: 0 }) as unknown as FightSummary;
+
+  it('vilões em ordem, quem derrotou, relíquias, eventos e maior golpe', () => {
+    const stats = { ...emptyRunStats(), fights: [fight('thug', true, 14), fight('zabuza', false, 31)], preEvents: { ramen: 2 } };
+    expect(runDetails(stats, ['kunaiPouch'])).toEqual({
+      foes: [{ id: 'thug', won: true }, { id: 'zabuza', won: false }],
+      fallenTo: 'zabuza',
+      relics: ['kunaiPouch'],
+      events: { ramen: 2 },
+      bestHit: 31,
+    });
+    expect(runDetails({ ...stats, fights: [fight('thug', true, 5)] }, []).fallenTo).toBeUndefined();
+  });
+
+  it('o registro guarda os detalhes, e o registro antigo continua carregando sem eles', () => {
+    const st = memoryStorage();
+    startRun(st, { id: 'a', origin, now }, 100);
+    updateRun(st, 'a', { status: 'defeat', ...runDetails({ ...emptyRunStats(), fights: [fight('haku', false, 9)] }, []) }, now, 100);
+    expect(loadRuns(st)[0]).toMatchObject({ foes: [{ id: 'haku', won: false }], fallenTo: 'haku', bestHit: 9 });
+    st.setItem(RUNS_STORAGE_KEY, JSON.stringify([{ id: 'old', startedAt: '', updatedAt: '', status: 'victory', furthestStage: 3, revivesUsed: 0, origin }]));
+    expect(loadRuns(st)[0]!.foes).toBeUndefined();
   });
 });

@@ -1,6 +1,9 @@
 // O que a Jornada usa do protótipo (JornadaHost), ligado à sessão.
 import { ptBR as S } from '../src/data/strings/ptBR';
-import { unlockAchievements, saveProfile, discoverRelics, recordJornadaReach, reachOf } from '../src/state/profile';
+import { foeFights } from '../src/core/jornada/foes';
+import { balance } from '../src/data/balance';
+import { jornadaRunRecord, recordJornadaRun } from '../src/state/jornadaRuns';
+import { unlockAchievements, saveProfile, discoverRelics, recordJornadaReach, recordJornadaFight, reachOf } from '../src/state/profile';
 import { mood } from './audio';
 import { ensurePlayerName } from './gate';
 import { type JornadaHost } from './jornada/host';
@@ -46,13 +49,19 @@ export const jornadaHost: JornadaHost = {
     saveProfile(ses.storage, ses.profile);
   },
   jornadaRecord: () => ses.profile.jornada?.generic ?? null,
-  recordJornada: (run) => {
+  recordJornada: (run, abandoned = false) => {
+    recordJornadaRun(ses.storage, jornadaRunRecord(run, new Date(), abandoned), balance.history.maxRuns);
     if (run.mode !== 'generic') return false;
     const next = recordJornadaReach(ses.profile, reachOf(run));
     if (next === ses.profile) return false;
     ses.profile = next;
     saveProfile(ses.storage, ses.profile);
     return true;
+  },
+  noteFight: (battle, won) => {
+    const allies = [...new Set(battle.fighters.filter((f) => f.side === 'ally').map((f) => f.defId))];
+    ses.profile = recordJornadaFight(ses.profile, foeFights(battle, won), allies);
+    saveProfile(ses.storage, ses.profile);
   },
   recentAchievements: (limit, onlyJornada = false) =>
     Object.entries(ses.profile.achievements)

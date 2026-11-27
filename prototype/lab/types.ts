@@ -9,7 +9,6 @@ export type Group = 'Entrada' | 'Roleta' | 'Jornada' | 'Narrativa' | 'Combate' |
 
 /** Preferências do quadro: vêm da URL (o catálogo monta a URL). */
 export interface LabPrefs {
-  theme: 'light' | 'dark';
   instant: boolean;
 }
 
