@@ -50,4 +50,4 @@ Celular, tablet e desktop até 1920 px; telas de entrada da História e da Campa
 
 ## Achados
 
-(preenchido durante o trabalho)
+- No cenário `roleta.chest`, com movimento reduzido, a segunda e a terceira relíquias aparecem depois de 120 e 240 ms. Os atrasos de `animation-delay` já ocorrem nas faixas anteriores à tarefa. Issue #88, aberta pelo Claude (o conector do GitHub do Codex pedia aprovação).

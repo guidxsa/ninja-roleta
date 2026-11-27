@@ -1,0 +1,326 @@
+/* Monitores grandes: a mesma unidade dimensiona o texto e as peças que o cercam. */
+@media (min-width: 2200px) and (min-height: 1200px) {
+  /* A entrada da História e a preparação da Campanha têm composição própria. */
+  body:not(:has(.jcampaigns, .jpath)) {
+    --side-w: calc(156 * var(--ui-unit));
+  }
+  body.at-gate:not(:has(.jcampaigns, .jpath)) {
+    --side-w: calc(168 * var(--ui-unit));
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) .side-nav {
+    padding: var(--sp-4) var(--sp-2);
+    gap: var(--sp-1);
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) .side-nav button {
+    gap: var(--sp-2);
+    padding: var(--sp-2);
+    min-height: calc(44 * var(--ui-unit));
+    font-size: var(--fs-lg);
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) .side-nav button .ico {
+    width: var(--fs-2xl);
+    height: var(--fs-2xl);
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) .side-nav .side-brand {
+    --s: calc(46 * var(--ui-unit));
+    margin-block: var(--sp-3) var(--sp-5);
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) header.top {
+    --grip-h: var(--fs-3xl);
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) .top-grip {
+    width: calc(64 * var(--ui-unit));
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) .top-grip .ico {
+    width: var(--fs-2xl);
+    height: var(--fs-xl);
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) footer {
+    padding: var(--sp-2) var(--sp-5);
+    font-size: var(--fs-xs);
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) .quote-strip {
+    font-size: var(--fs-md);
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) .btn {
+    min-height: calc(48 * var(--ui-unit));
+    padding-inline: var(--sp-4);
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) .top .btn {
+    min-height: var(--tap);
+  }
+  body:where(:not(:has(.jcampaigns, .jpath))) .btn.big {
+    min-height: calc(56 * var(--ui-unit));
+  }
+
+  /* A cena e os pergaminhos têm linhas próprias. A coluna de perfil acompanha a largura da mesa. */
+  .gate.jmodes {
+    grid-template-columns: minmax(0, 1fr) minmax(0, min(24%, calc(460 * var(--ui-unit))));
+    grid-template-rows: minmax(0, 1.3fr) minmax(0, .7fr);
+  }
+  .gate.jmodes .gate-modes {
+    gap: var(--gap-lg);
+    min-height: 0;
+    margin-top: 0;
+    padding: 0 var(--sp-4) var(--sp-4);
+  }
+  .gate.jmodes .mode-card .mode-art {
+    min-height: calc(110 * var(--ui-unit));
+  }
+  .gate.jmodes .mode-txt b {
+    font-size: var(--fs-6xl);
+  }
+  .gate.jmodes .gate-aside {
+    gap: var(--gap-lg);
+    padding: var(--sp-5) var(--sp-5) var(--sp-4) var(--sp-3);
+  }
+  .gate.jmodes .gate-aside > .parchment {
+    padding: var(--sp-5);
+  }
+  .gate.jmodes .ninja-id .avatar-btn {
+    width: min(85%, 23vh);
+  }
+  .jmodes .edit-mark {
+    width: var(--fs-4xl);
+    height: var(--fs-4xl);
+  }
+  .jmodes .edit-mark .ico {
+    width: var(--fs-md);
+    height: var(--fs-md);
+  }
+  .jmodes .desk-recent li {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .jmodes .desk-recent li :is(.ach-ico, time) {
+    grid-row: auto;
+    grid-column: auto;
+  }
+
+  /* Registro: mantém a medida da lista e reserva espaço extra para consultar a ficha aberta. */
+  body.at-gate main:has(.registry) {
+    max-width: min(100%, calc(1080 * var(--ui-unit)));
+    padding-inline: var(--sp-5);
+  }
+  body.at-gate main:has(.bingo-panel:not([hidden])) {
+    max-width: min(100%, calc(1320 * var(--ui-unit)));
+  }
+  .bingo-book:has(.bingo-panel:not([hidden])) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, calc(460 * var(--ui-unit)));
+    gap: var(--gap-lg);
+  }
+
+  /* Arcade: o diâmetro acompanha a altura até o novo teto, com espaço para a legenda e os resultados. */
+  :is(.rorigin, .rrelic) {
+    --wheel-max: calc(640 * var(--ui-unit));
+  }
+  .rorigin:not(.rolled) .wheel-box:has(.lineage-wheel) {
+    max-width: calc(1120 * var(--ui-unit));
+    column-gap: var(--gap-lg);
+  }
+  .rorigin:not(.rolled) .lineage-wheel .wheel-wrap {
+    width: min(100%, 59vh, var(--wheel-max));
+  }
+  .rorigin:not(.rolled) .lineage-wheel .legend,
+  .rorigin:not(.rolled) .wheel-box:has(.lineage-wheel) .spin {
+    max-width: calc(420 * var(--ui-unit));
+  }
+  .rorigin:not(.rolled) .lineage-wheel .legend button {
+    min-height: calc(48 * var(--ui-unit));
+    font-size: var(--fs-3xl);
+  }
+  .rorigin:not(.rolled) .rstage-box:has(.lineage-wheel),
+  .rorigin.rolled > .rstage-box {
+    align-content: center;
+  }
+  .rorigin.rolled > .rside {
+    align-self: center;
+    max-height: 100%;
+    gap: var(--gap);
+  }
+  .rstage-box > #slot {
+    width: min(100%, calc(620 * var(--ui-unit)));
+  }
+  .rstage-box .wheel-wrap {
+    width: min(100%, 48vh, calc(580 * var(--ui-unit)));
+  }
+  .rwheel.rrelic .wheel-wrap {
+    width: min(93%, 52vh, var(--wheel-max));
+  }
+  .rrelic #results .jrcard {
+    min-height: min(43vh, calc(470 * var(--ui-unit)));
+  }
+  .rrelic .sticky-cta .btn {
+    font-size: var(--fs-2xl);
+  }
+  .rmap {
+    gap: var(--gap) var(--gap-lg);
+  }
+  .rmap-foe, .rmap > .sticky-cta {
+    width: min(100%, calc(480 * var(--ui-unit)));
+  }
+  .screen.battle.rb-desk {
+    gap: var(--gap) var(--gap-lg);
+    grid-template-columns: minmax(0, .83fr) minmax(0, 1.65fr) minmax(0, 1fr);
+    padding: var(--sp-4);
+  }
+  .rb-desk > .arena {
+    width: min(100%, calc(620 * var(--ui-unit)));
+  }
+  .rb-desk > :is(#vslot, #pcard) {
+    width: min(100%, calc(440 * var(--ui-unit)));
+  }
+  .rb-desk :is(#vcard, #pcard) .hud-face .portrait {
+    width: min(13vh, calc(128 * var(--ui-unit)));
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .rend {
+    max-width: calc(1400 * var(--ui-unit));
+    gap: var(--gap) var(--gap-lg);
+  }
+  body:has(main > .jrboss:not(.jboss)) main {
+    display: grid;
+    align-items: safe center;
+    max-width: var(--shell-max);
+    padding: var(--sp-5);
+  }
+  .screen.jrboss:not(.jboss) {
+    max-width: calc(1240 * var(--ui-unit));
+    gap: var(--gap-lg);
+    padding-block: var(--sp-6);
+  }
+  .jrboss:not(.jboss) .jrboss-row {
+    gap: var(--gap-lg);
+  }
+  .jrboss:not(.jboss) .jrboss-opt {
+    padding: var(--sp-6) var(--sp-4);
+  }
+  .jrboss:not(.jboss) .jrslot.huge {
+    width: calc(96 * var(--ui-unit));
+    height: calc(96 * var(--ui-unit));
+  }
+  .jrboss:not(.jboss) .jrslot.huge .ico {
+    width: calc(66 * var(--ui-unit));
+    height: calc(66 * var(--ui-unit));
+  }
+
+  /* Jornada: palco e painéis continuam proporcionais, com nós e retratos acompanhando a escala. */
+  .jtrail-screen, .jtrail-screen.jmap-screen {
+    grid-template-columns: minmax(0, .73fr) minmax(0, 1.55fr) minmax(0, .67fr);
+    gap: var(--gap) var(--gap-lg);
+  }
+  .jtrail-screen .jcol {
+    gap: var(--gap);
+  }
+  .jtrail-scene .jstop {
+    padding-block: var(--sp-2);
+  }
+  .jtrail-screen .jstage-name h2 {
+    font-size: var(--fs-6xl);
+  }
+  .jmap-screen .jmap-field {
+    inset: calc(66 * var(--ui-unit)) var(--sp-6) calc(46 * var(--ui-unit));
+  }
+  .jmap-screen .jnode-map:not(.k-boss) {
+    width: var(--tap);
+    height: var(--tap);
+  }
+  .jmap-screen .jnode-map.k-boss {
+    width: calc(54 * var(--ui-unit));
+    height: calc(54 * var(--ui-unit));
+  }
+  .jmap-screen .jnode-map .ico {
+    width: var(--fs-2xl);
+    height: var(--fs-2xl);
+  }
+  .jmap-screen .jnode-map .portrait-sm {
+    width: 90%;
+    height: 90%;
+  }
+  .jmap-screen .jlegend-chip {
+    font-size: var(--fs-sm);
+  }
+  .jbattle {
+    gap: var(--gap) var(--gap-lg);
+    padding: var(--sp-3);
+  }
+  .jbattle .jb-head {
+    font-size: var(--fs-5xl);
+  }
+  .jbattle .jb-head [data-round] {
+    font-size: var(--fs-xl);
+  }
+  .jbattle :is(.jb-left, .jb-right),
+  .jbattle .jb-right .jb-menu {
+    padding: var(--sp-3);
+    gap: var(--sp-2);
+  }
+  .jbattle .jf-art .portrait-md {
+    width: min(11vh, 6.5vw, calc(150 * var(--ui-unit)));
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .jbattle .jb-menu .jmove {
+    min-height: calc(64 * var(--ui-unit));
+  }
+  .jbattle .jb-menu .jmove-txt b {
+    font-size: var(--fs-xl);
+  }
+  .jshop-screen .jt-body {
+    max-width: calc(1040 * var(--ui-unit));
+    padding: var(--sp-6) var(--sp-5);
+    gap: var(--gap);
+  }
+  .jshop-screen .jshop-paper {
+    padding: var(--sp-5);
+  }
+  .jtree-screen:has(.jt-branches) .jt-body {
+    max-width: calc(1780 * var(--ui-unit));
+    padding: var(--sp-3);
+    gap: var(--gap);
+  }
+  .jtree-screen .jt-branch.on {
+    display: flex;
+    flex-direction: column;
+  }
+  .jtree-screen .jt-grid {
+    flex: none;
+    max-width: calc(790 * var(--ui-unit));
+    margin-block: auto;
+  }
+  /* A altura do selo cresce em torno do ponto onde a linha da árvore já termina. */
+  .jtree-screen .jt-node {
+    --node-size: min(calc(44 * var(--ui-unit)), 64px);
+    width: calc(104 * var(--ui-unit));
+    margin-left: calc(-52 * var(--ui-unit));
+    margin-top: calc(var(--node-size) / -2);
+    gap: var(--sp-1);
+  }
+  .jtree-screen .jt-node .jt-seal {
+    width: var(--node-size);
+    height: var(--node-size);
+    margin: 0;
+  }
+  .jtree-screen .jt-node .jt-seal .ico {
+    width: var(--fs-2xl);
+    height: var(--fs-2xl);
+  }
+  .jtree-screen .jt-node .jt-name {
+    font-size: var(--fs-md);
+  }
+  .jtree-screen .jt-node .jt-link {
+    font-size: var(--fs-xs);
+  }
+  .jtree-screen .jt-tab {
+    min-height: calc(44 * var(--ui-unit));
+  }
+  .jtree-screen .jt-tab b {
+    font-size: var(--fs-3xl);
+  }
+  .jtree-screen .jt-detail .jt-card small {
+    font-size: var(--fs-3xl);
+    max-width: 65ch;
+  }
+}

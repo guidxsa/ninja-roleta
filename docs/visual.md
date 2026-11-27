@@ -280,8 +280,9 @@ Decidido com o usuário (07/11/2026): **celular e desktop são pares**. Comparti
 |---|---|---|
 | Celular | < 600px | Vertical, por prioridade; a base de todo arquivo de estilo |
 | Tablet ("celular expandido") | ≥ 600px, fora do desktop | A ordem do celular usando a largura: coluna até 860px (`--col-max`), cena e logo maiores, cards e painéis em 2 colunas (modos lado a lado com a arte em cima, as duas perspectivas, ficha e opções da origem), roda pela altura. Barra inferior, sem barra lateral. O celular deitado (altura < 560) também fica aqui |
-| Desktop | ≥ 900px **e** altura ≥ 560px | Colunas e painéis laterais, até `--shell-max` (2240px). Tablet deitado é desktop compacto |
+| Desktop | ≥ 900px **e** altura ≥ 560px | Colunas e painéis laterais, com `--shell-max` de 1920px. Tablet deitado é desktop compacto |
 | Widescreen | ≥ 1280px **e** altura ≥ 560px | Mais uma região (equipe, campo e ações; contexto ao lado do mapa) |
+| Monitor grande | ≥ 2200px **e** altura ≥ 1200px | Casca até 3600px. A unidade `--ui-unit` cresce com a menor dimensão até 1,8× e dimensiona texto, ícones, alvos e espaços. No Portão, Ficha e Conquistas ganham até 24% da largura da casca. A escolha da perspectiva da História e a preparação da Campanha usam a faixa Desktop |
 | Compacta | desktop **e** altura ≤ 720px | Menos detalhe: cena, roda e citação menores, técnicas da luta 2 por linha com botões mais baixos, legenda da roda em 3 colunas |
 | Piso | desktop **e** altura < 620px (`--floor-h`) | A tela é montada com 620px de altura e a página rola um pouco, em vez de espremer e sobrepor |
 | Toque | `pointer: coarse` | Alvos de pelo menos 44px (`--tap`) nos botões pequenos; as dicas já abrem com o toque longo |
@@ -291,15 +292,15 @@ Decidido com o usuário (07/11/2026): **celular e desktop são pares**. Comparti
 - **Notebook estreito** (900–1279px): barra lateral de 76px, coluna direita do Início e coluna da build mais estreitas.
 - **Escala fluida pela menor dimensão**: arte, retratos e roda usam `clamp` com `min(vw, vh)`, para crescer com a tela sem estourar a altura.
 - Telas simples da Jornada (sorteio, nome, descanso, baú, fim) ficam numa coluna central de leitura no desktop.
-- Janelas: 520px no celular, 720px no tablet e 860px no desktop (`--modal-max`).
+- Janelas: 520px no celular, 720px no tablet e 860px no desktop (`--modal-max`). Em monitor grande, o limite do desktop acompanha a unidade da interface.
 
 A CSS não aceita `var()` em `@media`, então as condições se repetem nas telas; a referência fica no topo de `prototype/styles/base.css` e, para o TS, em `prototype/layout.ts` (`DESK`, `WIDE`).
 
 **Quanto menos rolagem, melhor** (pedido do usuário, v0.57.2). No desktop, trilha, mapa e luta cabem na janela pelo layout, não por um número: o corpo tem a altura da tela e a tela do jogo ocupa o que sobra entre a barra e o rodapé (flex). Só a trilha, a carta e as colunas rolam por dentro, e só se faltar altura. As medidas que pesam na altura acompanham a janela com `clamp(mín, Xvh, máx)`: faixa do cenário da trilha, espaço entre as paradas e retratos da luta. A carta do mapa estica até a coluna (nós em % de um campo interno com margem) e só rola abaixo de 48px por linha; no celular, 74px por linha, como sempre.
 
-**Layout fluido** (v0.57.5): as peças crescem e se reorganizam com a janela, sem degraus fixos. As colunas laterais têm largura em `vw` com `clamp` (mínimo, proporção, máximo); as grades de botões usam `repeat(auto-fill, minmax(...))` e ganham colunas quando sobra largura (as técnicas da luta: 2 por linha no Full HD, 3 no 4K); retratos e espaços seguem `vw` e `vh`. O detalhe acompanha a altura: abaixo de 760px só o essencial, a partir de 880px a ficha completa.
+**Layout fluido** (v0.57.5): as peças crescem e se reorganizam com a janela. As colunas laterais usam proporções com limites e as grades que usam `repeat(auto-fill, minmax(...))` ganham colunas quando sobra largura. Retratos e espaços acompanham a largura e a altura úteis. O detalhe acompanha a altura: abaixo de 760px só o essencial, a partir de 880px a ficha completa.
 
-Toda tela nova precisa das composições de celular, tablet e desktop, conferidas nos tamanhos reais da área do navegador, sem rolagem horizontal e, no desktop com altura ≥ 620px, sem rolagem da página: 390×844 (celular), 768×1024 e 820×1180 (tablet em pé), 1024×768 e 1180×820 (tablet deitado), 1100×800, 1280×620 (Full HD com escala de 150%), 1366×650 e 1366×657 (notebook), 1536×730 (Full HD com escala de 125%), 1920×950 (Full HD) e 2560×1300 (4K com escala).
+Toda tela nova precisa das composições de celular, tablet e desktop, conferidas nos tamanhos reais da área do navegador, sem rolagem horizontal. Nas telas que cabem na janela no desktop com altura ≥ 620px, só os painéis internos rolam. As referências incluem 390×844 (celular), 768×1024 e 820×1180 (tablet em pé), 1024×768 e 1180×820 (tablet deitado), 1100×800, 1280×620 (Full HD com escala de 150%), 1280×800, 1366×650, 1366×657 e 1440×900 (notebook), 1536×730 (Full HD com escala de 125%), 1920×950 e 1920×1080 (Full HD), 2560×1300 e 2560×1440 (2K ou 4K com escala) e 3840×2160 (4K).
 
 | Tela | Desktop | Situação |
 |---|---|---|
