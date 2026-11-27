@@ -98,22 +98,94 @@
   aspect-ratio: 2.5;
   background: var(--paper-2);
 }
-.gate.jhub .mode-art:has(.jarc-fan) {
+.gate.jhub .mode-art:has(.jclass-fan) {
   background: var(--grain-dark), var(--paper-2);
 }
-.jcamp .jarc-fan-i {
-  height: 80%;
-  max-width: 30%;
+.jclass-fan {
+  container-type: size;
+}
+.jclass-fan .jarc-fan-i {
+  width: min(32cqw, 76cqh, calc(220 * var(--ui-unit)));
+  height: auto;
+  aspect-ratio: 1;
   margin-inline: -1.5%;
   border-color: var(--paper);
   box-shadow: 2px 3px 0 var(--shadow-soft);
 }
-.jcamp .jarc-fan-i .portrait {
+.jclass-fan .portrait {
   width: 100%;
   height: 100%;
   border: 0;
+  border-radius: var(--radius);
   box-shadow: none;
 }
+.jfan-mystery .jarc-fan-i {
+  margin-inline: -3%;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.jfan-mystery .portrait { visibility: hidden; }
+/* Contornos dos três retratos de classe, derivados dos recortes do avatar (AVATAR_CUTS).
+   Usar a forma no papel mantém a silhueta disponível mesmo sem carregar o retrato. */
+.jfan-mystery .jarc-fan-i::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--grain), var(--class-shadow, var(--paper-muted));
+  clip-path: var(--class-cut, inset(50%));
+}
+.jfan-mystery .jarc-fan-i:nth-child(1) {
+  --class-cut: polygon(
+    40% 0%, 54% 0%, 59% 4%, 61% 0%, 63% 6%, 72% 9%, 73% 13%, 78% 11%,
+    74% 16%, 80% 21%, 76% 23%, 78% 28%, 75% 37%, 83% 47%, 75% 45%, 76% 57%,
+    69% 49%, 64% 60%, 75% 66%, 74% 78%, 93% 88%, 98% 99%, 0% 99%, 1% 85%,
+    21% 76%, 23% 61%, 33% 59%, 24% 46%, 24% 41%, 19% 39%, 21% 34%, 16% 29%,
+    20% 25%, 16% 19%, 23% 17%, 23% 14%, 26% 10%, 24% 6%, 34% 6%, 34% 2%, 44% 3%
+  );
+}
+.jfan-mystery .jarc-fan-i:nth-child(2) {
+  --class-shadow: var(--paper-ink);
+  --class-cut: polygon(
+    35% 0%, 53% 0%, 59% 3%, 59% 0%, 63% 6%, 70% 8%, 68% 9%, 76% 15%,
+    72% 18%, 76% 23%, 73% 23%, 76% 31%, 73% 31%, 72% 39%, 70% 38%, 70% 43%,
+    66% 51%, 77% 52%, 76% 69%, 93% 79%, 99% 99%, 1% 99%, 7% 86%, 23% 76%,
+    19% 61%, 34% 54%, 28% 44%, 26% 49%, 24% 41%, 21% 43%, 23% 38%, 19% 41%,
+    16% 36%, 19% 33%, 19% 28%, 14% 29%, 19% 19%, 14% 18%, 22% 13%, 18% 9%, 28% 6%, 23% 3%
+  );
+}
+.jfan-mystery .jarc-fan-i:nth-child(3) {
+  --class-cut: polygon(
+    40% 0%, 61% 0%, 66% 3%, 71% 9%, 76% 26%, 79% 53%, 79% 66%, 78% 70%,
+    78% 62%, 75% 73%, 70% 76%, 75% 82%, 88% 88%, 96% 99%, 1% 99%, 0% 95%,
+    5% 86%, 9% 83%, 23% 76%, 20% 66%, 20% 53%, 23% 37%, 23% 24%, 26% 15%, 29% 8%, 35% 3%
+  );
+}
+.jfan-mark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--paper);
+  font: 400 clamp(var(--fs-6xl), 50cqh, calc(80 * var(--ui-unit)))/1 var(--font-display);
+  text-shadow: var(--title-shadow);
+}
+.jfan-bonus {
+  position: absolute;
+  right: max(var(--sp-2), 5cqw);
+  bottom: max(var(--sp-2), 5cqh);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--gold);
+  background: var(--paper-ink);
+  color: var(--primary-ink);
+  font: 700 var(--fs-sm)/1 var(--font-hud);
+}
+.jfan-bonus .ico { width: var(--fs-lg); height: var(--fs-lg); color: var(--gold-2); }
+.jfan-bonus b { font: inherit; color: inherit; }
+.jfan-bonus b::after { content: none; }
 .gate.jhub .mode-txt {
   flex: none;
   gap: var(--sp-1);
@@ -246,8 +318,30 @@
 @media (min-width: 900px) and (min-height: 560px) and (max-height: 720px) {
   .gate.jhub .mode-txt small { display: none; }
 }
+/* O painel de arte ocupa a mesma célula que a cena do Início. */
+@media (min-width: 1024px) {
+  .gate.jhub {
+    display: grid;
+    grid-template-areas: 'main aside';
+    grid-template-columns: var(--gate-columns);
+    gap: 0;
+  }
+  .gate.jhub .gate-main {
+    grid-template-rows: var(--gate-rows);
+    gap: 0;
+    min-height: 0;
+  }
+  .gate.jhub .gate-banner {
+    display: block;
+    height: 100%;
+    container: gate-banner / size;
+  }
+  .gate.jhub .gate-modes {
+    padding: var(--sp-2) var(--sp-2) var(--sp-3);
+  }
+  .gate.jhub .gate-aside { min-height: 0; overflow-y: auto; }
+}
 @media (min-width: 2200px) and (min-height: 1200px) {
-  .gate.jhub { grid-template-columns: minmax(0, 1fr) min(24%, calc(420 * var(--ui-unit))); }
   .gate.jhub .gate-aside { padding: var(--sp-3) var(--sp-2); gap: var(--gap-lg); }
   .gate.jhub .gate-aside > .parchment { padding: var(--sp-4); }
   .gate.jhub .gate-aside h3 { font-size: var(--fs-3xl); }
@@ -276,7 +370,12 @@
 }
 :is(.jpersp, .jclass-menu, .jrandom-class) p { margin: 0; }
 .jpersp-modal .jpersp.modal-body { max-width: calc(1.18 * var(--modal-max)); }
-.jclass-modal .jclass-menu.modal-body { max-width: var(--modal-max); }
+.jclass-modal .jclass-menu.modal-body {
+  --class-element-h: max(var(--tap), calc(60 * var(--ui-unit)));
+  --class-elements-h: calc(2 * var(--class-element-h) + var(--sp-1));
+  max-width: var(--modal-max);
+  block-size: calc(700 * var(--ui-unit));
+}
 .jrandom-modal .jrandom-class.modal-body { max-width: calc(560 * var(--ui-unit)); }
 
 .jpersp .modal-head h2 {
@@ -404,9 +503,14 @@ body:has(.jpersp .jarc.tip-on) #tip-box .tip-title {
   }
 }
 
-.jclass-menu-body {
+.jclass-menu .jclass-menu-body {
+  flex: 1 1 auto;
   display: grid;
   gap: var(--gap);
+  min-height: 0;
+  overflow-y: auto;
+  align-content: start;
+  padding: 3px;
 }
 .jclass-menu .jclasses {
   grid-template-columns: minmax(0, 1fr);
@@ -467,9 +571,18 @@ body:has(.jpersp .jarc.tip-on) #tip-box .tip-title {
 }
 .jclass-menu .jel-pick {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: var(--class-element-h);
   gap: var(--sp-1);
 }
-.jclass-menu .jel { min-height: max(var(--tap), calc(44 * var(--ui-unit))); }
+/* O grupo oculto continua fora do foco e da árvore de acessibilidade. */
+.jclass-menu .jel-pick[hidden] + p {
+  margin-block-start: calc(var(--class-elements-h) + var(--gap));
+}
+.jclass-menu .jel {
+  justify-content: center;
+  padding: var(--sp-1);
+}
+.jclass-menu .jel .ico { width: var(--fs-2xl); height: var(--fs-2xl); }
 
 .jrandom-pool h3 {
   margin: 0 0 var(--sp-2);
@@ -524,7 +637,11 @@ body:has(.jpersp .jarc.tip-on) #tip-box .tip-title {
 
 @media (min-width: 600px) {
   .jpersp .jarcs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .jclass-menu-body {
+  .jclass-modal .jclass-menu.modal-body {
+    --class-elements-h: var(--class-element-h);
+    block-size: calc(550 * var(--ui-unit));
+  }
+  .jclass-menu .jclass-menu-body {
     grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
     align-items: start;
   }

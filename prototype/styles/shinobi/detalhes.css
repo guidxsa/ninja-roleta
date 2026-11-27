@@ -476,16 +476,6 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
 }
 .avatar-gallery h2 { grid-column: 1/-1; color: inherit; text-shadow: none; }
 .avatar-gallery figure { margin: 0; text-align: center; }
-@media (max-width: 1023px) {
-  body.at-gate { padding-left: 0; padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
-  body.at-gate #side-nav { display: none; }
-  body.at-gate #gate-nav { display: grid; max-width: none; background: var(--bg-2); border-color: var(--line-strong); }
-  #gate-nav button { min-height: 52px; color: var(--muted); }
-  #gate-nav button[aria-current] { color: var(--gold-2); }
-  #gate-nav button[aria-current]::before { background: var(--primary); }
-  #gate-nav button .ico { width: 20px; height: 20px; }
-  #gate-nav button:focus-visible { outline: 2px solid var(--gold-2); outline-offset: -3px; }
-}
 @media (min-width: 768px) {
   .gate.jmodes .gate-modes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .gate.jmodes .mode-card .mode-art { height: 100%; min-height: 110px; }
@@ -504,12 +494,24 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
   .gate.jmodes .gate-head { top: 15%; }
 }
 @media (min-width: 1024px) {
-  body.at-gate { --side-w: clamp(118px, 10vw, 160px); }
-  body.at-gate:has(.jmodes) { height: max(100dvh, var(--floor-h)); }
+  body:has(main > :is(.jmodes, .jhub)) { height: max(100dvh, var(--floor-h)); }
+  main#screen:has(> .jmodes, > .jhub) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-width: var(--shell-max);
+    padding: 0;
+  }
+  :is(.gate.jmodes, .gate.jhub) {
+    --gate-columns: minmax(0, 1fr) clamp(208px, 20vw, 325px);
+    --gate-rows: minmax(215px, 1.12fr) minmax(245px, .88fr);
+    flex: 1 1 0;
+    min-height: 0;
+  }
   .gate.jmodes {
     grid-template-areas: "scene profile" "modes profile";
-    grid-template-columns: minmax(0, 1fr) clamp(208px, 20vw, 325px);
-    grid-template-rows: minmax(215px, 1.12fr) minmax(245px, .88fr);
+    grid-template-columns: var(--gate-columns);
+    grid-template-rows: var(--gate-rows);
   }
   .gate.jmodes .gate-banner { height: 100%; }
   .gate.jmodes .gate-modes { margin-top: -35px; }
@@ -523,20 +525,4 @@ body.at-gate main:has(.jmodes) { width: 100%; max-width: var(--shell-max); paddi
   .jmodes .desk-recent li .ach-ico { grid-row: span 2; align-self: start; }
   .jmodes .desk-recent li time { grid-column: 2; font-size: var(--fs-sm); }
   .jmodes .desk-recent h3 { font-size: clamp(var(--fs-xl), 1.6vw, var(--fs-3xl)); }
-}
-
-/* Em uma janela larga e baixa, a lateral continua acessível e a página pode rolar. */
-@media (min-width: 1024px) and (max-height: 559px) {
-  body.at-gate { padding-left: var(--side-w); padding-bottom: 0; }
-  body.at-gate #gate-nav { display: none; }
-  body.at-gate #side-nav {
-    display: flex; flex-direction: column; gap: var(--sp-1); position: fixed; inset: 0 auto 0 0;
-    width: var(--side-w); overflow: auto; background: var(--bg-2); padding: var(--sp-2);
-  }
-  body.at-gate #side-nav button {
-    display: flex; align-items: center; gap: var(--sp-2); min-height: 44px;
-    font: var(--fs-md)/1.2 var(--font-hud); color: var(--text); background: var(--surface); border: 0;
-  }
-  body.at-gate #side-nav [aria-current] { background: var(--primary); }
-  body.at-gate #side-nav .ico { width: 20px; height: 20px; }
 }

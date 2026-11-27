@@ -1,1 +1,3 @@
 **História e Campanha ganharam novos pergaminhos.** As telas de modo destacam a arte e as escolhas. Na História, os quatro arcos cabem na janela com a descrição de cada um. Na Campanha, o cardápio dá destaque ao retrato da classe e o sorteio põe a relíquia extra em evidência.
+
+**Navegação estável entre os modos.** A lateral e a alça de Konoha mantêm o alinhamento, inclusive em janelas baixas. O painel da História acompanha as dimensões da cena do Início no desktop. Na Campanha, as classes aparecem em leque, o sorteio ganha silhuetas com o selo da relíquia extra e o cardápio conserva o tamanho ao trocar de classe.

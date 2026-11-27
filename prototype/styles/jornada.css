@@ -545,11 +545,6 @@
   rotate: calc((var(--i) - 1.5) * 7deg); translate: 0 calc((var(--i) - 1.5) * (var(--i) - 1.5) * 2%);
   border: 2px solid var(--paper); box-shadow: 1px 3px 4px rgba(0, 0, 0, .35); background: var(--bg-2);
 }
-/* Card Classe aleatória: os retratos em sombra, a interrogação no meio e o selo da vantagem (mínimo; acabamento no tema). */
-.jfan-mystery .jarc-fan-i :is(img, svg) { filter: brightness(0) opacity(.75); }
-.jfan-mark { position: absolute; inset: 0; display: grid; place-items: center; font: 700 calc(var(--fs-6xl) * 2) / 1 var(--font-display); color: var(--paper); text-shadow: 0 2px 6px var(--ink); pointer-events: none; }
-.jfan-bonus { position: absolute; right: 6%; bottom: 6%; display: inline-flex; align-items: center; gap: var(--sp-1); padding: var(--sp-1) var(--sp-2); font: 700 var(--fs-sm) / 1 var(--font-hud); color: var(--paper-ink); background: var(--paper); border: 1px solid var(--gold-deep); }
-.jfan-bonus .ico { width: var(--fs-lg); height: var(--fs-lg); }
 @media (min-width: 900px) and (min-height: 560px) {
   body:has(.jgate) { height: max(100dvh, var(--floor-h)); }
   /* A sombra dos cards de modo (::after deslocado) passava da borda: rolagem lateral de 8px a 1024. */

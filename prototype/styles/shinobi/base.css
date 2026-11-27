@@ -137,15 +137,16 @@ select:focus-visible,
   font: 700 18px var(--shinobi-serif);
   letter-spacing: 0;
 }
-@media (min-width: 900px) and (min-height: 560px) {
+@media (min-width: 1024px), (min-width: 900px) and (min-height: 560px) {
   :root {
-    --side-w: clamp(84px, 9vw, 148px);
+    --side-w: clamp(128px, 10vw, 160px);
   }
   .side-nav {
     background: var(--shinobi-sumi);
     border-right: 1px solid var(--sh-terra-5);
     padding: 14px 7px;
     gap: 5px;
+    scrollbar-width: thin;
   }
   .side-nav .side-brand {
     margin-block: 12px 22px;
@@ -165,12 +166,15 @@ select:focus-visible,
     height: 18px;
     flex: none;
   }
+  .side-nav button > span { white-space: nowrap; }
   .side-nav button[aria-current] {
     background: var(--shinobi-lacquer);
     color: var(--sh-papel-1);
     border-color: var(--sh-laca-3);
     box-shadow: none;
   }
+}
+@media (min-width: 900px) and (min-height: 560px) {
   .top,
   body.mode-jornada .top,
   body:has(.rwheel) main,
@@ -224,11 +228,14 @@ body header.top {
 .top-grip {
   display: grid;
   place-items: center;
-  position: relative;
+  /* A rolagem da página não desloca a alça em relação à lateral e à janela. */
+  position: fixed;
+  top: 0;
+  left: calc((100vw + var(--side-w, 0px)) / 2);
+  translate: -50%;
   z-index: 1;
   width: 64px;
   height: var(--grip-h);
-  margin-inline: auto;
   padding: 0;
   color: var(--gold-2);
   border: 0;
