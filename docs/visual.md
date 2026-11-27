@@ -202,24 +202,26 @@ A antiga entrada da Jornada permanece disponível como cenário do UI Lab e usa 
 - à direita, Progresso da Jornada (Continuar direto), Dificuldade e Conquistas recentes. No celular, a pilha: destaque, progresso, modos, dificuldade e conquistas.
 
 No jogo, os dois cards da Jornada abrem suas preparações diretamente no Portão:
-- **Modo História → Escolha a perspectiva**: dois pôsteres lado a lado, cada um com a arte numa célula e o pergaminho embaixo (as duas artes com a mesma altura, os dois pergaminhos também; em janela baixa, o Começar sobe para a linha do título): o Naruto de dia (arte `perspectiva-naruto`, os arcos e o Começar) e o Sasuke à noite (arte `perspectiva-sasuke`, papel frio, travado: "Em breve"). As perspectivas vêm das campanhas (`data.campaigns`); a do Sasuke destrava quando os dados dela existirem.
-- **Caminho Ninja → Preparar**: o pôster (a arte e, embaixo, o pergaminho com os três estágios) e, ao lado, classe, elemento e Começar.
+- **Modo História → Escolha a perspectiva.** O pôster maior é do Naruto e reúne a gravura do Time 7 que abre a História no Portão, os quatro arcos e o botão de começar. A partir do tablet, a vila de dia divide o espaço da ilustração com o Time 7. Sasuke tem pôster próprio com a vila à noite, papel frio e o selo de bloqueio **Em breve**. Sua perspectiva abre quando os dados da campanha existirem (`data.campaigns`).
+- **Caminho Ninja → Preparar.** A gravura da encruzilhada acompanha o pergaminho com os três estágios. No celular e tablet, a preparação com classe, elemento e Começar vem em seguida. No desktop, pôster e preparação ocupam colunas.
 
-No topo das duas telas, uma faixa com a run salva (o card **Progresso da Jornada** com o Continuar, se for deste modo, ou o aviso de que começar substitui a do outro modo) e a **Dificuldade da Jornada** ([run.md](jornada/run.md#tela-de-início)). Composição mínima: o acabamento é uma tarefa visual à parte.
+No desktop, a **Dificuldade da Jornada** divide o topo com o cabeçalho e o bilhete da run salva. Em janelas estreitas e baixas da História, o bilhete fica sob a dificuldade para dar altura ao pôster do Time 7. No celular e tablet, o bilhete vem antes do pôster e a dificuldade depois do conteúdo dos modos. Os quatro níveis ficam numa linha, com recuperação e nota do Hardcore abaixo. Quando há uma run do próprio modo, o bilhete mostra capítulo, parada e progresso. **Continuar** leva a laca e o botão para iniciar outra run é secundário. Se o save pertencer ao outro modo, uma nota junto ao botão de começar avisa sobre a substituição. [Regras do save e da dificuldade](jornada/run.md#tela-de-início).
 
 ### Dualidade Naruto e Sasuke
 
-Na escolha da perspectiva, a ilustração diurna identifica Naruto e a noturna identifica Sasuke. Ambas aparecem sobre o mesmo grafite.
+Na escolha da perspectiva, a gravura quente do Time 7 e a vila diurna identificam Naruto. A ilustração noturna e o papel frio identificam Sasuke. O grafite é comum aos dois pôsteres.
 
 ### Arcos da Jornada
 
-Na escolha da perspectiva, o painel do Naruto mostra os quatro arcos como **pergaminhos abertos**:
-- a arte de cada arco recortada em retrato, com a borda de tinta no PC e o papel rasgado no celular;
-- o número em selo (一 a 四) e o nome em letra de mão;
-- o arco da run salva sobe com a moldura ("Você está aqui"); os já passados, pela run salva ou pelo histórico, desbotam em sépia ("Concluído"); o próximo a jogar fica sem marca; os ainda não alcançados ficam em cinza, com cadeado;
-- no celular, a faixa rola de lado e abre no arco atual.
+O painel do Naruto apresenta os quatro arcos em cartões de papel, cada um com a ilustração inteira, o número em selo (一 a 四) e o nome em letra de mão.
 
-O foco de cada arte (onde estão os rostos) vem do `SCENE_ART`. Na run da História, o painel da trilha mostra a arte do arco atual no lugar do cenário desenhado: no PC, a lista de paradas numa célula (rola por dentro) e a arte na célula ao lado, com a borda de tinta; no celular e no tablet, a arte no alto do painel. Número e nome do arco vão em selo e letra de mão, dentro da arte. Sem arte, volta o cenário do local. O combate continua com o local da parada.
+- O arco da run salva leva moldura de laca e o rótulo **Você está aqui**.
+- Os arcos concluídos usam gravura em sépia e marca de confirmação.
+- O próximo a jogar fica em cores, com filete dourado.
+- Os arcos ainda não alcançados usam gravura desbotada, borda tracejada, dobra no canto e cadeado.
+- No celular, a faixa rola de lado e abre no arco atual. Tablet e desktop mostram os quatro em linha.
+
+Na run da História, o painel da trilha mostra a arte do arco atual no lugar do cenário desenhado, com o foco do `SCENE_ART`. No PC, a lista de paradas rola na célula ao lado da arte com borda de tinta. No celular e no tablet, a arte fica no alto do painel. Número e nome do arco vão em selo e letra de mão, dentro da arte. Sem arte, volta o cenário do local. O combate continua com o local da parada.
 
 ## Locais
 
@@ -281,10 +283,10 @@ Decidido com o usuário (07/11/2026): **celular e desktop são pares**. Comparti
 | Faixa | Condição | Composição |
 |---|---|---|
 | Celular | < 600px | Vertical, por prioridade; a base de todo arquivo de estilo |
-| Tablet ("celular expandido") | ≥ 600px, fora do desktop | A ordem do celular usando a largura: coluna até 860px (`--col-max`), cena e logo maiores, cards e painéis em 2 colunas (modos lado a lado com a arte em cima, as duas perspectivas, ficha e opções da origem), roda pela altura. Barra inferior, sem barra lateral. O celular deitado (altura < 560) também fica aqui |
+| Tablet ("celular expandido") | ≥ 600px, fora do desktop | A ordem do celular usando a largura: coluna até 860px (`--col-max`), cena e logo maiores, cards e painéis em 2 colunas (modos lado a lado com a arte em cima, ficha e opções da origem), roda pela altura. As perspectivas ficam empilhadas com ilustração e conteúdo lado a lado no pôster de Sasuke. Barra inferior, sem barra lateral. O celular deitado (altura < 560) também fica aqui |
 | Desktop | ≥ 900px **e** altura ≥ 560px | Colunas e painéis laterais, com `--shell-max` de 1920px. Tablet deitado é desktop compacto |
 | Widescreen | ≥ 1280px **e** altura ≥ 560px | Mais uma região (equipe, campo e ações; contexto ao lado do mapa) |
-| Monitor grande | ≥ 2200px **e** altura ≥ 1200px | Casca até 3600px. A unidade `--ui-unit` cresce com a menor dimensão até 1,8× e dimensiona texto, ícones, alvos e espaços. No Portão, Ficha e Conquistas ganham até 24% da largura da casca. A escolha da perspectiva da História e a preparação da Campanha usam a faixa Desktop |
+| Monitor grande | ≥ 2200px **e** altura ≥ 1200px | Casca até 3600px. A unidade `--ui-unit` cresce com a menor dimensão até 1,8× e dimensiona texto, ícones, alvos e espaços. No Portão, Ficha e Conquistas ganham até 24% da largura da casca. Os pôsteres, os controles e as notas de História e Campanha acompanham a escala |
 | Compacta | desktop **e** altura ≤ 720px | Menos detalhe: cena, roda e citação menores, técnicas da luta 2 por linha com botões mais baixos, legenda da roda em 3 colunas |
 | Piso | desktop **e** altura < 620px (`--floor-h`) | A tela é montada com 620px de altura e a página rola um pouco, em vez de espremer e sobrepor |
 | Toque | `pointer: coarse` | Alvos de pelo menos 44px (`--tap`) nos botões pequenos; as dicas já abrem com o toque longo |

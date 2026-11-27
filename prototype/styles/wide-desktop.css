@@ -1,55 +1,54 @@
 /* Monitores grandes: a mesma unidade dimensiona o texto e as peças que o cercam. */
 @media (min-width: 2200px) and (min-height: 1200px) {
-  /* A entrada da História e a preparação da Campanha têm composição própria. */
-  body:not(:has(.jcampaigns, .jpath)) {
+  body {
     --side-w: calc(156 * var(--ui-unit));
   }
-  body.at-gate:not(:has(.jcampaigns, .jpath)) {
+  body.at-gate {
     --side-w: calc(168 * var(--ui-unit));
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) .side-nav {
+  body .side-nav {
     padding: var(--sp-4) var(--sp-2);
     gap: var(--sp-1);
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) .side-nav button {
+  body .side-nav button {
     gap: var(--sp-2);
     padding: var(--sp-2);
     min-height: calc(44 * var(--ui-unit));
     font-size: var(--fs-lg);
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) .side-nav button .ico {
+  body .side-nav button .ico {
     width: var(--fs-2xl);
     height: var(--fs-2xl);
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) .side-nav .side-brand {
+  body .side-nav .side-brand {
     --s: calc(46 * var(--ui-unit));
     margin-block: var(--sp-3) var(--sp-5);
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) header.top {
+  body header.top {
     --grip-h: var(--fs-3xl);
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) .top-grip {
+  body .top-grip {
     width: calc(64 * var(--ui-unit));
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) .top-grip .ico {
+  body .top-grip .ico {
     width: var(--fs-2xl);
     height: var(--fs-xl);
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) footer {
+  body footer {
     padding: var(--sp-2) var(--sp-5);
     font-size: var(--fs-xs);
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) .quote-strip {
+  body .quote-strip {
     font-size: var(--fs-md);
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) .btn {
+  body .btn {
     min-height: calc(48 * var(--ui-unit));
     padding-inline: var(--sp-4);
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) .top .btn {
+  body .top .btn {
     min-height: var(--tap);
   }
-  body:where(:not(:has(.jcampaigns, .jpath))) .btn.big {
+  body .btn.big {
     min-height: calc(56 * var(--ui-unit));
   }
 

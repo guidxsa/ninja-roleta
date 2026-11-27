@@ -52,4 +52,5 @@ Nenhuma prévia: se a composição pedir mudança de estrutura no HTML, pare e d
 
 ## Achados
 
-(preenchido durante o trabalho)
+- Em `jornada.story.pick:saved` a 390 × 844, o Tab passa por **Continuar**, pelos níveis de dificuldade e depois por **Recomeçar a História**. A ordem visual põe a dificuldade no fim. Alinhar o foco à pilha exige reorganizar o HTML gerado. Issue #95.
+- Em `jornada.entry:saved` a 900 × 620, a casca desktop compartilhada corta os nomes da barra lateral. Neste trabalho, os rótulos foram ajustados nas duas entradas do contrato. Issue #96.

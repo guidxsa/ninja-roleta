@@ -41,6 +41,12 @@
   --paper-muted: #574632;
   --wood: #4a2f1c;
 
+  /* Papel frio da perspectiva do Sasuke. */
+  --story-night-paper: #cfd2d6;
+  --story-night-paper-deep: #a9aeb6;
+  --story-night-ink: #141822;
+  --story-night-muted: #3a4150;
+
   /* Navegação do Portão e da barra lateral. */
   --nav-ink: #cbbf9f;
   --nav-ink-hover: #fff;
@@ -167,7 +173,7 @@
   :root { --shell-max: 1920px; --modal-max: 860px; }
 }
 @media (min-width: 2200px) and (min-height: 1200px) {
-  :root:not(:has(.jcampaigns, .jpath)) {
+  :root {
     --ui-unit: clamp(1.1px, min(.05vw, .09vh), 1.8px);
     --shell-max: 3600px;
     --modal-max: calc(860 * var(--ui-unit));

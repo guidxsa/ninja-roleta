@@ -1,0 +1,1 @@
+**História e Campanha de cara nova.** Retome a run pelo bilhete de progresso, ajuste a dificuldade numa fileira e veja o Time 7 ao lado dos quatro arcos ilustrados. As telas de preparação aproveitam melhor o celular e os monitores grandes.

@@ -175,7 +175,7 @@ Paleta de tinta e papel: grafite quase preto, papel envelhecido, vermelho laca e
 
 Celular e desktop são pares, cada um com composição própria. Celular: coluna vertical (largura útil até 520px, 860px em tablet), um toque por ação, botões grandes e CTA fixo no pé (`.sticky-cta`). Desktop (≥ 900 × 560 px): barra lateral persistente, painéis em colunas e `--shell-max` de 1920px. A partir de 1280 × 560 px, as telas de jogo podem abrir uma terceira região. Com menos de 620px de altura, a página rola.
 
-Em monitores grandes (≥ 2200 × 1200 px), `--shell-max` sobe para 3600px. A unidade `--ui-unit` cresce de 1,1× a 1,8× segundo a largura e a altura úteis. Ela dimensiona os tokens `--fs-*`, `--sp-*`, a navegação, os alvos e as peças de jogo. A escolha da perspectiva da História e a preparação da Campanha usam a faixa Desktop.
+Em monitores grandes (≥ 2200 × 1200 px), `--shell-max` sobe para 3600px. A unidade `--ui-unit` cresce de 1,1× a 1,8× segundo a largura e a altura úteis. Ela dimensiona os tokens `--fs-*`, `--sp-*`, a navegação, os alvos e as peças de jogo, incluindo os pôsteres e controles da História e da Campanha.
 
 O ritmo parte de `--gap` de 12px e usa `--gap-lg` fluido no desktop. Os alvos partem de 36px, ou 44px em ponteiro grosseiro, e crescem em monitores grandes.
 
