@@ -2,7 +2,7 @@
 objetivo: Dar o acabamento visual às telas de modo da História e da Campanha e às três janelas (perspectiva, cardápio de classes e classe aleatória), mantendo a composição aprovada pelo usuário e sem mudar o que elas fazem.
 escopo: ["docs/tarefas/modos-jornada-visual.md", "prototype/styles/**", "prototype/lab/**", "docs/visual.md", "DESIGN.md", "docs/ui-lab/**", "changelog.d/modos-jornada-visual.md"]
 fora: ["src/**", "prototype/*.ts", "prototype/jornada/**", "prototype/roleta/**", "public/img/**", "scripts/**", ".claude/**", ".github/**", "package.json", "package-lock.json", "CHANGELOG.md", "AGENTS.md", "CLAUDE.md"]
-pronto: ["npm run check verde", "as duas telas e as três janelas em 390, 768, 1280, 1920, 2560 e 3840 sem rolagem horizontal; no desktop com altura ≥ 620, a tela cabe na janela e o botão principal da janela fica visível", "fotos de antes e depois de todos os cenários do briefing", "o resto do jogo sem mudança visual (Portão, Registro, Arcade, run da Jornada)", "o CSS morto da estrutura anterior removido", "docs/visual.md e DESIGN.md com o acabamento", "fragmento changelog.d/modos-jornada-visual.md"]
+pronto: ["npm run check verde", "as duas telas e as três janelas em 390, 768, 1280, 1920, 2560 e 3840 sem rolagem horizontal; no desktop com altura ≥ 620, a tela cabe na janela e o botão principal da janela fica visível", "fotos de antes e depois de todos os cenários do briefing", "o resto do jogo sem mudança visual além da casca compartilhada da rodada 2 (Portão, Registro, Arcade, run da Jornada)", "rodada 2: barra lateral, logo de Konoha e alça da barra superior iguais no Início e nos modos (largura, tamanho e centro), sem o rótulo Livro Bingo quebrar; navegação disponível nos modos também em janela baixa; painel da História com as mesmas dimensões do painel do Início; cards da Campanha com o acabamento da marcação nova; cardápio de classes com tamanho fixo", "o CSS morto da estrutura anterior removido", "docs/visual.md e DESIGN.md com o acabamento", "fragmento changelog.d/modos-jornada-visual.md"]
 agente: codex
 aprovado: 2026-11-27
 ---
@@ -42,6 +42,19 @@ aprovado: 2026-11-27
 **Não mudar** (o TS consulta; são contrato): `data-choice` (`naruto`, `sasuke`, `pick`, `random`, `continue`, `back`), `data-pick` (`start`, `continue`), `data-close`, `data-diff`, `data-recovery`, `data-arc`, `data-tip`, `data-campaign`, `data-class`, `data-class-face`, `data-class-name`, `data-class-info`, `data-element`, `data-elements`, `aria-*`, e as classes `.jhub`, `.jstory`, `.jcamp`, `.jpersp`, `.jpersp-modal`, `.jclass-modal`, `.jclass-menu`, `.jrandom-modal`, `.jrandom-class`, `.mode-card`, `.jarc`, `.is-now`, `.is-done`, `.is-ahead`, `.difficulty-box`, `.segmented`, `.jprogress`, `.jother-saved`, `.jstart-face`, `.jclasses`, `.jel-pick`, `.jstart-back`, `.gate`, `.jgate`, `.gate-modes`, `.gate-aside`.
 
 **A ordem do HTML é a da tela, também no celular** (issue #95, resolvida no PR #98): não reordene com `order` de um jeito que faça o foco do teclado pular.
+
+## Rodada 2 (27/11/2026, retorno do usuário sobre o PR #100)
+
+Comparando 1920×1080 e 3840×2160 (janela e tela cheia):
+
+1. **Casca igual em todas as telas.** A logo de Konoha da barra lateral e a própria barra mudam de tamanho entre o Início e os modos (Arcade, História, Campanha). Medido pelo Claude: em 1920×940, a barra tem 160px no Início (`body.at-gate`) e 148px nos modos; em 1536×730, 153px e 138px (`--side-w` muda com `body.at-gate` em `shinobi/base.css` e `wide-desktop.css`). Nos modos, o rótulo "Livro Bingo" quebra em duas linhas (37px de altura contra 18px no Início). A alça da barra superior (símbolo de Konoha) centraliza em lugares diferentes (centro em x=1040 no Início e 1034 nos modos). Quer a mesma barra, a mesma logo e a mesma alça em todas as telas, nos dois tamanhos.
+2. **Barra some nos modos em 1080p com janela.** "Quando abro um dos modos no 1080p a barra some completamente em modo janela e fica mal formatada em tela cheia." O Claude não reproduziu com 1920×940, 1536×730, 1920×600 nem 1280×600 (a barra aparece). Hipótese: janela com menos de 560px de altura, onde a casca vira a do celular e a barra inferior (`#gate-nav`) fica escondida dentro dos modos, sem navegação. Reproduza (inclusive com o zoom de 125% do Windows: 1536px de largura) e garanta navegação visível nos modos em qualquer janela. Se a causa for TS, pare e descreva.
+3. **Painel da História** com as mesmas dimensões (largura e altura) do painel do Início, para manter o padrão. A distribuição foi aprovada como "excelente".
+4. **Cards da Campanha** (marcação nova do PR #102, já nesta branch): **Escolher a classe** mostra os retratos das classes em leque (`.jclass-fan`); **Classe aleatória** mostra os mesmos retratos em sombra (`.jfan-mystery`), uma interrogação (`.jfan-mark`) e o selo da vantagem (`.jfan-bonus`, baú e "+1 relíquia"). Pedido: algo desconhecido ou misterioso (interrogação, sombra de um personagem escondido) e algo que remeta a uma vantagem. Hoje as sombras viram retângulos pretos (o retrato tem fundo): faça a sombra do personagem, não do quadro.
+5. **Cardápio com tamanho fixo.** A janela do cardápio muda de altura quando a classe muda (o Comum mostra os elementos; as outras escondem): "o efeito do resize incomoda". Reserve a altura (por exemplo, o espaço dos elementos fica ocupado mesmo escondido, ou a janela tem altura própria) para que trocar de classe não redimensione a janela.
+6. **Painel da Campanha**: a arte nova (sem personagens canônicos, no estilo do painel da História) vem num lote de imagens à parte (Lote 4); por ora, mantenha a provisória bem enquadrada.
+
+O usuário vai revisar os textos e as descrições depois, de forma unificada: não mude textos.
 
 ## Fora do escopo
 
