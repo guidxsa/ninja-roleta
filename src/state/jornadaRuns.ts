@@ -97,3 +97,17 @@ export function recordJornadaRun(storage: KeyValueStorage, record: JornadaRunRec
     // Armazenamento cheio ou bloqueado: o histórico é conveniência, o jogo segue.
   }
 }
+
+/**
+ * Quantos arcos da História alguma run já passou, numa perspectiva (sem `campaign`: a do Naruto). Vitória conta todos;
+ * derrota ou abandono, os de antes do arco em que parou. Só leitura, para a tela da História marcar os concluídos.
+ */
+export function storyArcsCleared(records: readonly JornadaRunRecord[], arcCount: number, campaign = 'naruto'): number {
+  let best = 0;
+  for (const r of records) {
+    if (r.mode !== 'canon' || (r.campaign ?? 'naruto') !== campaign) continue;
+    const cleared = r.status === 'victory' ? arcCount : Math.max(0, Math.min(arcCount, Math.floor(Number(r.stageIndex) || 0)));
+    best = Math.max(best, cleared);
+  }
+  return best;
+}

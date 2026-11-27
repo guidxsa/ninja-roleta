@@ -205,6 +205,8 @@ No jogo, os dois cards da Jornada abrem suas preparações diretamente no Portã
 - **Modo História → Escolha a perspectiva**: dois pôsteres lado a lado, cada um com a arte numa célula e o pergaminho embaixo (as duas artes com a mesma altura, os dois pergaminhos também; em janela baixa, o Começar sobe para a linha do título): o Naruto de dia (arte `perspectiva-naruto`, os arcos e o Começar) e o Sasuke à noite (arte `perspectiva-sasuke`, papel frio, travado: "Em breve"). As perspectivas vêm das campanhas (`data.campaigns`); a do Sasuke destrava quando os dados dela existirem.
 - **Caminho Ninja → Preparar**: o pôster (a arte e, embaixo, o pergaminho com os três estágios) e, ao lado, classe, elemento e Começar.
 
+No topo das duas telas, uma faixa com a run salva (o card **Progresso da Jornada** com o Continuar, se for deste modo, ou o aviso de que começar substitui a do outro modo) e a **Dificuldade da Jornada** ([run.md](jornada/run.md#tela-de-início)). Composição mínima: o acabamento é uma tarefa visual à parte.
+
 ### Dualidade Naruto e Sasuke
 
 Na escolha da perspectiva, a ilustração diurna identifica Naruto e a noturna identifica Sasuke. Ambas aparecem sobre o mesmo grafite.
@@ -214,7 +216,7 @@ Na escolha da perspectiva, a ilustração diurna identifica Naruto e a noturna i
 Na escolha da perspectiva, o painel do Naruto mostra os quatro arcos como **pergaminhos abertos**:
 - a arte de cada arco recortada em retrato, com a borda de tinta no PC e o papel rasgado no celular;
 - o número em selo (一 a 四) e o nome em letra de mão;
-- o arco da run salva sobe com a moldura ("Você está aqui") e os anteriores desbotam ("Concluído");
+- o arco da run salva sobe com a moldura ("Você está aqui"); os já passados, pela run salva ou pelo histórico, desbotam em sépia ("Concluído"); o próximo a jogar fica sem marca; os ainda não alcançados ficam em cinza, com cadeado;
 - no celular, a faixa rola de lado e abre no arco atual.
 
 O foco de cada arte (onde estão os rostos) vem do `SCENE_ART`. Na run da História, o painel da trilha mostra a arte do arco atual no lugar do cenário desenhado: no PC, a lista de paradas numa célula (rola por dentro) e a arte na célula ao lado, com a borda de tinta; no celular e no tablet, a arte no alto do painel. Número e nome do arco vão em selo e letra de mão, dentro da arte. Sem arte, volta o cenário do local. O combate continua com o local da parada.
