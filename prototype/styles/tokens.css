@@ -55,26 +55,27 @@
   --side-nav-current-bg-top: rgba(232, 112, 26, .28);
   --side-nav-current-bg-bottom: rgba(232, 112, 26, .1);
 
-  /* Escala tipográfica (v0.74.0): nada abaixo de 12px em texto. Display e kanji seguem os próprios clamp. */
-  --fs-xs: 12px;
-  --fs-sm: 13px;
-  --fs-md: 14px;
-  --fs-base: 15px;
-  --fs-lg: 16px;
-  --fs-xl: 18px;
-  --fs-2xl: 20px;
-  --fs-3xl: 22px;
-  --fs-4xl: 24px;
-  --fs-5xl: 28px;
-  --fs-6xl: 32px;
-  --fs-brand: clamp(36px, 6vw, 90px);
+  /* Unidade da interface. Só a faixa de monitores grandes amplia a escala. */
+  --ui-unit: 1px;
+  --fs-xs: calc(12 * var(--ui-unit));
+  --fs-sm: calc(13 * var(--ui-unit));
+  --fs-md: calc(14 * var(--ui-unit));
+  --fs-base: calc(15 * var(--ui-unit));
+  --fs-lg: calc(16 * var(--ui-unit));
+  --fs-xl: calc(18 * var(--ui-unit));
+  --fs-2xl: calc(20 * var(--ui-unit));
+  --fs-3xl: calc(22 * var(--ui-unit));
+  --fs-4xl: calc(24 * var(--ui-unit));
+  --fs-5xl: calc(28 * var(--ui-unit));
+  --fs-6xl: calc(32 * var(--ui-unit));
+  --fs-brand: clamp(36px, 6vw, calc(90 * var(--ui-unit)));
   /* Escala de espaço (múltiplos de 4): para o que for escrito daqui em diante. */
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 24px;
-  --sp-6: 32px;
+  --sp-1: calc(4 * var(--ui-unit));
+  --sp-2: calc(8 * var(--ui-unit));
+  --sp-3: calc(12 * var(--ui-unit));
+  --sp-4: calc(16 * var(--ui-unit));
+  --sp-5: calc(24 * var(--ui-unit));
+  --sp-6: calc(32 * var(--ui-unit));
 
   /* Funcionais (dessaturados para viver na paleta) */
   --hp: #5f9a5c;
@@ -124,12 +125,12 @@
   /* Coluna das telas sem composição de desktop: a do celular; no tablet, mais larga (celular expandido). */
   --col-max: 520px;
   /* Espaço entre peças de uma tela: o mesmo em toda grade (docs/visual.md, "Cada peça no seu espaço"). */
-  --gap: 12px;
-  --gap-lg: clamp(14px, 1.6vw, 28px);
+  --gap: var(--sp-3);
+  --gap-lg: clamp(14px, 1.6vw, calc(28 * var(--ui-unit)));
   /* Janelas (modais): celular, tablet e desktop. */
   --modal-max: 520px;
   /* Alvo mínimo dos botões pequenos; com toque, 44px (faixa "toque" em base.css). */
-  --tap: 36px;
+  --tap: calc(36 * var(--ui-unit));
   /* Piso de altura do desktop: abaixo dele a página rola em vez de espremer as colunas (faixa "piso" em base.css). */
   --floor-h: 620px;
   /* Escala fluida: tamanhos de arte e letreiro do desktop usam min(vw, vh) com clamp, para acompanhar a
@@ -162,5 +163,14 @@
 
 /* Faixas (base.css): só tokens mudam aqui; as telas cuidam da composição. */
 @media (min-width: 600px) { :root { --col-max: 860px; --modal-max: 720px; } }
-@media (min-width: 900px) and (min-height: 560px) { :root { --modal-max: 860px; } }
-@media (pointer: coarse) { :root { --tap: 44px; } }
+@media (min-width: 900px) and (min-height: 560px) {
+  :root { --shell-max: 1920px; --modal-max: 860px; }
+}
+@media (min-width: 2200px) and (min-height: 1200px) {
+  :root:not(:has(.jcampaigns, .jpath)) {
+    --ui-unit: clamp(1.1px, min(.05vw, .09vh), 1.8px);
+    --shell-max: 3600px;
+    --modal-max: calc(860 * var(--ui-unit));
+  }
+}
+@media (pointer: coarse) { :root { --tap: calc(44 * var(--ui-unit)); } }

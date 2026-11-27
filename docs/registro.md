@@ -2,6 +2,15 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Monitores grandes (sem versão, 26/11/2026)
+
+Na tarefa [telas-4k](tarefas/telas-4k.md), o Codex escolheu `--shell-max` de 3600px a partir de 2200 × 1200 px. A barra lateral fica fora desse limite e a escala da interface acompanha a largura e a altura. Assim, em 4K, a casca ocupa os 3538px disponíveis ao lado da barra do Portão. Em janelas maiores, o limite contém a abertura das colunas.
+
+| Portão com perfil médio no UI Lab | Casca | Coluna de Ficha e Conquistas | Fonte do corpo |
+|---|---:|---:|---:|
+| 2560 × 1440, antes → depois | 1920 → 2345px | 325 → 563px | 15 → 19,2px |
+| 3840 × 2160, antes → depois | 1920 → 3538px | 325 → 828px | 15 → 27px |
+
 ## Histórico detalhado e fichas do Livro Bingo (sem versão, 25/11/2026)
 
 Tarefa `registro-fichas` (2b do plano das telas), com contrato aprovado pelo usuário. Nenhuma regra nem número de jogo mudou; as simulações saem iguais às do staging (mesma seed).

@@ -140,7 +140,6 @@ select:focus-visible,
 @media (min-width: 900px) and (min-height: 560px) {
   :root {
     --side-w: clamp(84px, 9vw, 148px);
-    --shell-max: 1920px;
   }
   .side-nav {
     background: var(--shinobi-sumi);

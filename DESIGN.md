@@ -113,7 +113,7 @@ components:
 
 A interface é um conjunto de objetos de papel, tinta, madeira e laca pousados numa mesa: pergaminhos de borda rasgada, selos (hanko) carimbados, pinceladas, placas e cartas de mapa. Nada parece componente de site. Quem conhece a obra deve sentir que está navegando pelo mundo shinobi, mesmo sem nenhum personagem na tela.
 
-O letreiro do Portão usa `--font-display` e a escala fluida `--fs-brand` (36 a 90 px). A folha de Konoha em traço marfim sobre um azulejo vermelho identifica Ninshu Roots. O fundo Sumi é grafite. Os pergaminhos usam tinta escura sobre papel envelhecido.
+O letreiro do Portão usa `--font-display` e a escala fluida `--fs-brand`, de 36 a 90 px nas faixas padrão e com teto de 162 px em monitores grandes. A folha de Konoha em traço marfim sobre um azulejo vermelho identifica Ninshu Roots. O fundo Sumi é grafite. Os pergaminhos usam tinta escura sobre papel envelhecido.
 
 A voz é artesanal e ritual (cada ação tem gesto: carimbar, desenrolar, pingar tinta), tensa e contida (vermelho raro, dourado só para conquista) e direta e legível (toque grande, números claros, a ambientação nunca atrapalha a função). A exceção festiva é a roleta, que ganha cor e ritmo de barraca de festival contra o resto sóbrio. Celular e desktop são pares, cada um com composição própria.
 
@@ -173,9 +173,11 @@ Paleta de tinta e papel: grafite quase preto, papel envelhecido, vermelho laca e
 
 ## Layout
 
-Celular e desktop são pares, não ampliação um do outro. Celular: coluna vertical (largura útil até 520px, 860px em tablet), um toque por ação, botões grandes e CTA fixo no pé (`.sticky-cta`). Desktop: casca com barra lateral persistente e painéis em colunas, largura máxima 2240px, com piso de altura de 620px abaixo do qual a página rola em vez de espremer. As faixas consideram largura e altura.
+Celular e desktop são pares, cada um com composição própria. Celular: coluna vertical (largura útil até 520px, 860px em tablet), um toque por ação, botões grandes e CTA fixo no pé (`.sticky-cta`). Desktop (≥ 900 × 560 px): barra lateral persistente, painéis em colunas e `--shell-max` de 1920px. A partir de 1280 × 560 px, as telas de jogo podem abrir uma terceira região. Com menos de 620px de altura, a página rola.
 
-Ritmo: espaço entre peças `--gap` 12px (`--gap-lg` fluido no desktop), o mesmo em toda grade. Alvo de toque mínimo 36px, 44px em ponteiro grosseiro.
+Em monitores grandes (≥ 2200 × 1200 px), `--shell-max` sobe para 3600px. A unidade `--ui-unit` cresce de 1,1× a 1,8× segundo a largura e a altura úteis. Ela dimensiona os tokens `--fs-*`, `--sp-*`, a navegação, os alvos e as peças de jogo. A escolha da perspectiva da História e a preparação da Campanha usam a faixa Desktop.
+
+O ritmo parte de `--gap` de 12px e usa `--gap-lg` fluido no desktop. Os alvos partem de 36px, ou 44px em ponteiro grosseiro, e crescem em monitores grandes.
 
 **Cada peça no seu espaço.** A arte preenche a célula com foco nos rostos, sem moldura e sem vazar; peças não se sobrepõem nem cruzam bordas. A forma de cada imagem é lida no build e reservada, para nada pular ao carregar.
 
@@ -206,6 +208,8 @@ Cantos retos (`--radius: 2px`) e **chanfro** (`--cut` 10px, 6px pequeno, 14px em
 O letreiro em pincel ocupa o céu à esquerda. A pintura da vila se dissolve no grafite, e os três pergaminhos se aproximam de sua base. Cada um tem rolos de madeira nas extremidades e uma ilustração em tinta sobre papel. A barraca de Arcade usa violeta, a História usa laranja e a estrada da Campanha usa verde. O card da História é o único com personagens: o Time 7 de costas olhando a vila (Naruto, Sasuke, Sakura e Kakashi), porque o modo segue os arcos canônicos do time; a descrição cita os arcos, do teste dos sinos ao Vale do Fim. O pergaminho inteiro abre o modo.
 
 Abaixo de 768 px, a Ficha compacta fica entre a cena e os pergaminhos empilhados. De 768 a 1023 px, Ficha e Conquistas ficam lado a lado e cada modo ocupa uma coluna. A partir de 1024 px, a lateral fixa reúne os destinos e a coluna direita recebe Ficha e Conquistas. O avatar fica num quadro de tinta, com o fundo original do retrato, sobre o papel da Ficha (`--profile-paper`). A alça com a folha de Konoha abre as ferramentas por toque, foco ou aproximação do mouse.
+
+Em monitores grandes, a pintura do Monte Hokage ocupa a linha maior da grade e os três pergaminhos dividem a linha abaixo. A coluna de Ficha e Conquistas acompanha a largura útil, até 24% da casca.
 
 O Registro ocupa a área principal. Em telas com barra inferior, quatro abas dão acesso às seções. Dentro do Histórico, o jogador escolhe Arcade, História ou Campanha. A ação **Continuar** fica junto da parada salva no modo correspondente. Cada run do Histórico é uma linha que abre os detalhes. No Livro Bingo, a ficha de cada inimigo é papel de cartaz com o fundo do arco e a moldura pelo grau (comum, elite e chefe com o carimbo 手配), em tela cheia no celular e num painel ao lado no desktop.
 
