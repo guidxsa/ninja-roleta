@@ -2,6 +2,20 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Classe aleatória com relíquia (27/11/2026)
+
+Tarefa [modos-jornada](tarefas/modos-jornada.md), decisão do usuário: o card Classe aleatória da Campanha sorteia a classe entre as liberadas (e o elemento, no Comum) e **sempre** dá a relíquia do sorteio, também ao Uchiha e ao Hyuuga; o "Sortear o elemento" saiu do cardápio. Antes, só o Comum que sorteava o elemento ganhava a relíquia. Simulação nova `--aleatoria` (`npm run sim:jornada -- 300 2 --aleatoria`); os grupos padrão da guarda da meta não mudaram. Revisão em [decisoes.md](decisoes.md) (item 51).
+
+| Modo (vitória %, 300 runs, seed 2) | Fácil | Médio | Difícil | Hardcore |
+|---|---:|---:|---:|---:|
+| Comum, elemento sorteado + relíquia (o "Sortear" antigo) | 90,0 | 64,0 | 38,7 | 18,7 |
+| Comum escolhido no cardápio, sem relíquia | 90,0 | 63,0 | 30,7 | 14,0 |
+| Uchiha escolhido | 91,0 | 69,0 | 38,0 | 14,0 |
+| Uchiha sorteado + relíquia | 95,0 | 68,0 | 40,3 | 19,3 |
+| Hyuuga escolhido | 98,7 | 74,3 | 37,0 | 11,7 |
+| Hyuuga sorteado + relíquia | 98,0 | 79,0 | 44,3 | 12,0 |
+| Classe aleatória (a mistura das três) | 95,3 | 67,3 | 43,0 | 16,3 |
+
 ## Monitores grandes (sem versão, 26/11/2026)
 
 Na tarefa [telas-4k](tarefas/telas-4k.md), o Codex escolheu `--shell-max` de 3600px a partir de 2200 × 1200 px. A barra lateral fica fora desse limite e a escala da interface acompanha a largura e a altura. Assim, em 4K, a casca ocupa os 3538px disponíveis ao lado da barra do Portão. Em janelas maiores, o limite contém a abertura das colunas.

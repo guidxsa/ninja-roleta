@@ -201,11 +201,14 @@ A antiga entrada da Jornada permanece disponível como cenário do UI Lab e usa 
 - dois cards-pergaminho sobre a cena: **Modo História** (selo 史, arte em leque com os quatro arcos) e **Caminho Ninja** (selo 道);
 - à direita, Progresso da Jornada (Continuar direto), Dificuldade e Conquistas recentes. No celular, a pilha: destaque, progresso, modos, dificuldade e conquistas.
 
-No jogo, os dois cards da Jornada abrem suas preparações diretamente no Portão:
-- **Modo História → Escolha a perspectiva**: dois pôsteres lado a lado, cada um com a arte numa célula e o pergaminho embaixo (as duas artes com a mesma altura, os dois pergaminhos também; em janela baixa, o Começar sobe para a linha do título): o Naruto de dia (arte `perspectiva-naruto`, os arcos e o Começar) e o Sasuke à noite (arte `perspectiva-sasuke`, papel frio, travado: "Em breve"). As perspectivas vêm das campanhas (`data.campaigns`); a do Sasuke destrava quando os dados dela existirem.
-- **Caminho Ninja → Preparar**: o pôster (a arte e, embaixo, o pergaminho com os três estágios) e, ao lado, classe, elemento e Começar.
+No jogo, o card **História** e o card **Campanha** do Portão abrem as telas de modo, nessa mesma composição (classes `.gate.jgate.jhub`), com o letreiro "Modo História" ou "Modo Campanha" no lugar do letreiro pintado:
+- **Modo História** (`.jstory`): o painel com a arte `jornada` e uma frase; dois cards, **Naruto** (arte `perspectiva-naruto`, selo 陽) e **Sasuke** (arte `perspectiva-sasuke`, selo 影, "Em breve"); na coluna, a run salva (Progresso da Jornada com o Continuar, ou o aviso de que começar substitui a da Campanha), a **Dificuldade da Jornada** e as Conquistas recentes. As perspectivas vêm das campanhas (`data.campaigns`); a do Sasuke destrava quando os dados dela existirem.
+- **Janela da perspectiva** (`.jpersp`): o card abre uma janela maior que as outras, com a arte, a descrição, os quatro arcos com o progresso ([Arcos da Jornada](#arcos-da-jornada); passar o mouse, tocar ou focar um arco mostra a descrição breve dele numa dica destacada) e o **Começar a História**, ou o **Continuar** e o **Recomeçar a História** quando a História está salva. A do Sasuke mostra a descrição e o "Em breve". Fecha pelo X, pelo fundo, pelo Esc e pelo voltar.
+- **Modo Campanha** (`.jcamp`), na composição da História: o painel com a arte (provisoriamente a `jornada`, até a arte própria) e os três estágios; os cards **Escolher a classe** (arte `modo-caminho`) e **Classe aleatória** (os retratos das classes em leque); na coluna, a run salva, a dificuldade, o recorde e as Conquistas recentes.
+- **Cardápio** (`.jclass-menu`): a lista de classes e, ao lado, o retrato da escolhida em destaque com a descrição (o retrato acompanha a classe e, no Comum, mostra o Prodígio sem elemento); embaixo, o elemento do Comum e o Começar.
+- **Classe aleatória** (`.jrandom-class`): o que a sorte faz, as classes que podem sair (retrato e nome) e a recompensa, com o **Sortear e começar**.
 
-No topo das duas telas, uma faixa com a run salva (o card **Progresso da Jornada** com o Continuar, se for deste modo, ou o aviso de que começar substitui a do outro modo) e a **Dificuldade da Jornada** ([run.md](jornada/run.md#tela-de-início)). Composição mínima: o acabamento é uma tarefa visual à parte.
+Nas duas telas a ordem do HTML é a da tela, também no celular, onde a casca da entrada antiga reordenava a pilha: o foco do teclado segue o que se vê. Composição mínima: o acabamento é uma tarefa visual à parte.
 
 ### Dualidade Naruto e Sasuke
 
@@ -216,7 +219,7 @@ Na escolha da perspectiva, a ilustração diurna identifica Naruto e a noturna i
 Na escolha da perspectiva, o painel do Naruto mostra os quatro arcos como **pergaminhos abertos**:
 - a arte de cada arco recortada em retrato, com a borda de tinta no PC e o papel rasgado no celular;
 - o número em selo (一 a 四) e o nome em letra de mão;
-- o arco da run salva sobe com a moldura ("Você está aqui"); os já passados, pela run salva ou pelo histórico, desbotam em sépia ("Concluído"); o próximo a jogar fica sem marca; os ainda não alcançados ficam em cinza, com cadeado;
+- (na janela da perspectiva) o arco da run salva sobe com a moldura ("Você está aqui"); os já passados, pela run salva ou pelo histórico, desbotam em sépia ("Concluído"); o próximo a jogar fica sem marca; os ainda não alcançados ficam em cinza, com cadeado;
 - no celular, a faixa rola de lado e abre no arco atual.
 
 O foco de cada arte (onde estão os rostos) vem do `SCENE_ART`. Na run da História, o painel da trilha mostra a arte do arco atual no lugar do cenário desenhado: no PC, a lista de paradas numa célula (rola por dentro) e a arte na célula ao lado, com a borda de tinta; no celular e no tablet, a arte no alto do painel. Número e nome do arco vão em selo e letra de mão, dentro da arte. Sem arte, volta o cenário do local. O combate continua com o local da parada.

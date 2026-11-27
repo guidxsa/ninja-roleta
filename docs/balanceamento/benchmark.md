@@ -14,6 +14,7 @@ Cenários padronizados para acompanhar o desempenho dos três modos a cada mudan
 | Só um modo e algumas dificuldades | `npm run sim:jornada -- 300 2 --modo=canon --dif=normal,hard` (combina com `--auditoria`) | 20 s |
 | Valor marginal das relíquias da Jornada (História e Comum, Difícil) e iniciais | `npm run sim:jornada -- 400 2 --reliquias` | 25 min |
 | Só as iniciais das classes | `npm run sim:jornada -- 400 2 --iniciais` | 3 min |
+| Classe aleatória da Campanha e cada classe com e sem a relíquia do sorteio | `npm run sim:jornada -- 300 2 --aleatoria` | 2 min |
 | Builds da árvore do Naruto | `npm run sim:jornada -- 300 2 --ramos --talentos` | 5 min |
 | Builds de uma classe do Caminho Ninja | `npm run sim:jornada -- 300 2 --ramos --classe=commonNinja` (ou `prodigy`, `uchihaNinja`, `hyuugaNinja`) | 4 min |
 | Modo infinito do Caminho Ninja (até N ciclos) | `npm run sim:jornada -- 300 2 5` | varia |

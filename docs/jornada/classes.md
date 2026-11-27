@@ -6,7 +6,7 @@ As classes são as protagonistas do Caminho Ninja ([caminho-ninja.md](caminho-ni
 
 ## Elemento: escolher ou sortear
 
-- **Comum**: na tela de início, o jogador **escolhe** o elemento (fogo, vento, raio, terra, água ou **Prodígio**, sem elemento) ou **sorteia**. O sorteio é escondido (sem roleta na tela): os 5 elementos com peso 16 cada e **nenhum** com peso 20 (20%). **Quem sorteia ganha uma relíquia comum aleatória** no começo da run (`elementDraw.randomBonus`), mostrada na revelação.
+- **Comum**: no cardápio **Escolher a classe**, o jogador **escolhe** o elemento (fogo, vento, raio, terra, água ou **Prodígio**, sem elemento). Desde a tarefa `modos-jornada`, o sorteio com recompensa saiu do cardápio e virou o card [Classe aleatória](#classe-aleatória). O sorteio do elemento é escondido (sem roleta na tela): os 5 elementos com peso 16 cada e **nenhum** com peso 20 (20%).
 - **Comum sem elemento é o prodígio do taijutsu**: outra ficha (só taijutsu, mais HP e speed), outra árvore e a ativa Portões no lugar do Esforço.
 - **Uchiha**: sempre e só **Fogo** (v0.59.0: saiu o segundo elemento). Não escolhe.
 - **Hyuuga**: sem ninjutsu elemental (v0.43.0): luta com o Byakugan e o Punho Suave. Desde a v0.59.0 tem uma **natureza sorteada em silêncio**, só informativa, sem técnica (`noElement`); o Prodígio também.
@@ -14,6 +14,16 @@ As classes são as protagonistas do Caminho Ninja ([caminho-ninja.md](caminho-ni
 - O sorteio acontece sempre por baixo, mesmo com escolha: a mesma seed dá o mesmo mapa, os mesmos suportes e os mesmos chefes.
 - Os 2 suportes sorteiam o elemento (nunca "nenhum"), a menos que a ficha tenha um fixo (Uchiha: fogo) ou não use ninjutsu elemental (Hyuuga: natureza silenciosa).
 - A tela de revelação mostra o elemento, a relíquia bônus (quando sorteou) e os parceiros.
+
+## Classe aleatória
+
+O segundo card da Campanha ([run.md](run.md#tela-de-início)): a sorte escolhe a classe e o elemento, e a run começa com uma relíquia extra.
+
+- A classe sai entre as **liberadas** (o Comum sempre; Uchiha e Hyuuga pelas conquistas), com peso igual, por um gerador próprio da seed (`newRandomGenericRun`, `src/core/jornada/run.ts`): a mesma seed dá o mesmo mapa, os mesmos suportes e os mesmos chefes que a classe escolhida daria.
+- O elemento sai sorteado como acima; no Comum, pode cair o Prodígio.
+- **Sempre** ganha uma relíquia comum aleatória no começo da run (`elementDraw.randomBonus`), também nas classes de elemento fixo (Uchiha, Hyuuga), que antes nunca ganhavam: a run guarda `classPick: 'random'` (`drewRandomly`). A revelação abre com "Sorteio da classe" e mostra a relíquia.
+- Medida contra a meta (`npm run sim:jornada -- 300 2 --aleatoria`, [benchmark](../balanceamento/benchmark.md)); o efeito no Comum escolhido e no Hyuuga está em [decisoes.md](../decisoes.md) (item 51).
+
 
 ## Base única e status derivados
 
