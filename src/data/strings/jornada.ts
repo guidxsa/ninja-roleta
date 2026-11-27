@@ -44,6 +44,7 @@ export const jornadaPtBR = {
     otherSaved: (mode: string) => `Você tem uma run da ${mode} salva. Começar aqui substitui essa run.`,
     restartCanon: 'Recomeçar a História',
     restartPath: 'Começar uma nova run',
+    soonCta: 'Em breve',
     chapter: 'Capítulo atual',
     stageOf: (n: number, total: number) => `Estágio ${n} de ${total}`,
     completion: { canon: 'Conclusão da História', generic: 'Caminho Ninja' } as Record<'canon' | 'generic', string>,

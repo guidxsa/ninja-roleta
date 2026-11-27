@@ -281,7 +281,6 @@ function persist(host: JornadaHost, run: JRun): void {
 export async function entryScreen(host: JornadaHost, saved: JRun | null): Promise<'continue' | 'story' | 'path' | 'back'> {
   const box = difficultyBox(host);
   const hero = sceneMedia('jornada');
-  const recent = host.recentAchievements(3, true);
   const quote = J.start.quotes[Math.floor(Math.random() * J.start.quotes.length)]!;
   const root = show(
     h(`<div class="screen gate jgate">
@@ -302,13 +301,7 @@ export async function entryScreen(host: JornadaHost, saved: JRun | null): Promis
       <aside class="gate-aside">
         ${saved ? progressCard(saved) : ''}
         ${box.html}
-        ${
-          recent.length
-            ? `<section class="parchment jrecent"><h3>${J.start.recentTitle}</h3><ul>${recent
-                .map((a) => `<li><span class="seal ach-ico" aria-hidden="true">${achievementIcon(a.id)}</span><span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><time>${J.start.when(a.days)}</time></li>`)
-                .join('')}</ul></section>`
-            : ''
-        }
+        ${recentSection(host)}
       </aside>
     </div>`),
   );
@@ -342,13 +335,35 @@ function difficultyBox(host: JornadaHost): { html: string; wire: (root: HTMLElem
 }
 
 /**
- * Topo da tela de um modo: a run salva e a dificuldade. A run deste modo vem no card de progresso, com o Continuar; a do
- * outro modo, num aviso de que começar aqui a substitui (a Jornada tem um save só, `jornada_run_v1`).
+ * A run salva na coluna da tela de um modo. A deste modo vem no card de progresso, com o Continuar; a do outro modo, num
+ * aviso de que começar aqui a substitui (a Jornada tem um save só, `jornada_run_v1`).
  */
-function modeTop(saved: JRun | null, entry: JornadaEntry, difficulty: string): string {
-  const mine = saved !== null && entryForRun(saved) === entry;
-  const other = saved && !mine ? `<p class="parchment jother-saved small" role="note">${icon('warning')}<span>${J.start.otherSaved(J.modes[entryForRun(saved)].name)}</span></p>` : '';
-  return `<div class="jmode-top">${saved && mine ? progressCard(saved) : other}${difficulty}</div>`;
+function savedCard(saved: JRun | null, entry: JornadaEntry): string {
+  if (!saved) return '';
+  if (entryForRun(saved) === entry) return progressCard(saved);
+  return `<p class="parchment jother-saved small" role="note">${icon('warning')}<span>${J.start.otherSaved(J.modes[entryForRun(saved)].name)}</span></p>`;
+}
+
+/** As 3 conquistas mais novas do perfil (coluna das telas da Jornada). */
+function recentSection(host: JornadaHost): string {
+  const recent = host.recentAchievements(3, true);
+  if (!recent.length) return '';
+  return `<section class="parchment jrecent"><h3>${J.start.recentTitle}</h3><ul>${recent
+    .map((a) => `<li><span class="seal ach-ico" aria-hidden="true">${achievementIcon(a.id)}</span><span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><time>${J.start.when(a.days)}</time></li>`)
+    .join('')}</ul></section>`;
+}
+
+/**
+ * Painel de arte das telas de modo, na casca do Portão (docs/visual.md, "Entrada da Jornada"): a arte ao fundo, o
+ * letreiro "Modo <nome>" e, embaixo, um pergaminho (a frase, na História; os estágios, na Campanha).
+ */
+function hubBanner(name: string, art: string, scroll: string): string {
+  const hero = sceneMedia(art);
+  return `<div class="gate-banner">
+      <header class="gate-head"><h1 class="logo jlogo"><span class="l1">${J.start.logoTop}</span><span class="l2">${name}</span></h1></header>
+      <div class="gate-hero" aria-hidden="true">${hero ?? ''}${hero ? sceneFx() : ''}</div>
+      ${scroll}
+    </div>`;
 }
 
 /** Os arcos da História em leque, como arte do card Modo História. */
@@ -358,47 +373,89 @@ function arcFan(): string {
   return `<span class="jarc-fan">${arts.map((a, i) => `<span class="jarc-fan-i art-frame" style="--i:${i}">${a}</span>`).join('')}</span>`;
 }
 
+/** Arte do painel da Campanha: provisoriamente a da História, até a arte própria (docs/tarefas/modos-jornada.md). */
+const CAMPAIGN_ART = 'jornada';
+
 /** Perspectivas da História: as campanhas dos dados e a do Sasuke, ainda em design (em breve). */
 const PERSPECTIVES = [
   { id: 'naruto', art: 'perspectiva-naruto', seal: '陽', time: 'day' },
   { id: 'sasuke', art: 'perspectiva-sasuke', seal: '影', time: 'night' },
 ] as const;
 
-/** Modo História: escolher a perspectiva. Dia e noite lado a lado; a do Sasuke fica travada até existir. */
+/**
+ * Modo História, na casca do Portão: o painel com a arte `jornada`, um card por perspectiva (Naruto; Sasuke em breve) e
+ * a coluna com a run salva, a dificuldade e as conquistas recentes. O card abre a janela da perspectiva
+ * (`perspectiveDialog`), com os arcos e o Começar. A ordem do HTML é a da tela (o celular não reordena, issue #95).
+ */
 export async function campaignScreen(host: JornadaHost, saved: JRun | null): Promise<JRun | null> {
   const C = J.start.campaigns;
   const box = difficultyBox(host);
-  const mine = saved?.mode === 'canon';
   const records = loadJornadaRuns(host.storage);
+  const quote = J.start.quotes[Math.floor(Math.random() * J.start.quotes.length)]!;
   const root = show(
-    h(`<div class="screen jcampaigns">
-      <header class="jsub-head"><button class="btn small" data-choice="back">${J.start.back}</button><h2>${J.start.storyName}</h2><p class="muted">${C.pick}</p></header>
-      ${modeTop(saved, 'story', box.html)}
-      <div class="jc-duo">${PERSPECTIVES.map((p) => {
-        const open = Boolean(data.campaigns[p.id]);
-        const art = sceneMedia(p.art);
-        const txt = C[p.id];
-        return `<section class="jc-panel jc-${p.time}${open ? '' : ' is-locked'}" data-campaign="${p.id}"${open ? '' : ' aria-disabled="true"'}>
-          <span class="jc-art art-frame" aria-hidden="true">${art ?? ''}${art && open ? sceneFx(p.time) : ''}</span>
-          <div class="jc-body parchment">
-            <span class="seal jc-seal" aria-hidden="true">${p.seal}</span>
-            <h3>${txt.name}</h3><p class="small">${txt.desc}</p>
-            ${open ? arcStrip(saved, records) : `<p class="jc-soon">${icon('lock')} ${C.soon}</p>`}
-            ${open ? `<button class="btn${mine ? '' : ' primary'} big" data-choice="${p.id}">${icon('scroll')} ${mine ? J.start.restartCanon : J.start.startCanon}</button>` : ''}
-          </div>
-        </section>`;
-      }).join('')}</div>
+    h(`<div class="screen gate jgate jhub jstory">
+      <div class="gate-main">
+        ${hubBanner(J.modes.story.name, 'jornada', `<blockquote class="parchment gate-quote"><p>${quote.text}</p><cite>${quote.by}</cite></blockquote>`)}
+        <nav class="gate-modes" aria-label="${C.pick}">${PERSPECTIVES.map((p) => {
+          const open = Boolean(data.campaigns[p.id]);
+          return modeCard({ id: p.id, art: sceneMedia(p.art) ?? '', artVars: sceneVars(p.art), seal: p.seal, name: C[p.id].name, desc: C[p.id].desc, cta: open ? J.start.storyCta : J.start.soonCta });
+        }).join('')}</nav>
+      </div>
+      <aside class="gate-aside">
+        ${savedCard(saved, 'story')}
+        ${box.html}
+        ${recentSection(host)}
+        <button class="btn small jstart-back" data-choice="back">${J.start.back}</button>
+      </aside>
     </div>`),
   );
   box.wire(root);
-  scrollToNowArc(root);
   for (;;) {
     const c = await choose<string>(root);
     if (c === 'back') return null;
-    if (c === 'continue' && saved && mine) return saved;
-    if (!data.campaigns[c] || !(await replaceSaved(host, saved))) continue;
+    if (c === 'continue' && saved?.mode === 'canon') return saved;
+    const p = PERSPECTIVES.find((x) => x.id === c);
+    if (!p) continue;
+    const pick = await perspectiveDialog(p, saved, records);
+    if (pick === 'continue' && saved?.mode === 'canon') return saved;
+    if (pick !== 'start' || !data.campaigns[p.id] || !(await replaceSaved(host, saved))) continue;
     return newRun(host.nextSeed(), currentDifficulty(host), data, host.unlocked());
   }
+}
+
+/**
+ * Janela de uma perspectiva da História: a arte, a descrição, os quatro arcos com o progresso e o botão. Com a História
+ * salva (desta perspectiva), Continuar e Recomeçar; sem ela, Começar. A do Sasuke só conta o que vem ("Em breve").
+ * Fecha pelo X, pelo fundo, pelo Esc e pelo voltar do navegador (openDialog).
+ */
+function perspectiveDialog(p: (typeof PERSPECTIVES)[number], saved: JRun | null, records: readonly JornadaRunRecord[]): Promise<'start' | 'continue' | null> {
+  const C = J.start.campaigns;
+  const open = Boolean(data.campaigns[p.id]);
+  const mine = open && saved?.mode === 'canon' && (saved.campaign ?? 'naruto') === p.id;
+  const art = sceneMedia(p.art);
+  const el = h(`<div class="modal jpersp-modal" aria-label="${C[p.id].name}"><div class="modal-body jmodal jpersp jc-${p.time}${open ? '' : ' is-locked'}" data-campaign="${p.id}">
+    <div class="modal-head"><h2><span class="seal jc-seal" aria-hidden="true">${p.seal}</span> ${C[p.id].name}</h2><button class="btn small close" data-close aria-label="${S.ui.close}" title="${S.ui.close}">${icon('close')}</button></div>
+    <span class="jpersp-art art-frame" aria-hidden="true">${art ?? ''}${art && open ? sceneFx(p.time) : ''}</span>
+    <p class="jpersp-desc">${C[p.id].desc}</p>
+    ${open ? arcStrip(saved, records) : `<p class="jc-soon">${icon('lock')} ${C.soon}</p>`}
+    ${open ? `<div class="jpersp-actions">${mine ? `<button type="button" class="btn primary big" data-pick="continue">${icon('scroll')} ${J.start.continue}</button>` : ''}<button type="button" class="btn${mine ? '' : ' primary'} big" data-pick="start">${icon('scroll')} ${mine ? J.start.restartCanon : J.start.startCanon}</button></div>` : ''}
+  </div></div>`);
+  openDialog(el);
+  scrollToNowArc(el);
+  return new Promise((resolve) => {
+    el.addEventListener('click', (e) => {
+      const t = e.target as HTMLElement;
+      if (t === el || t.closest('[data-close]')) {
+        el.remove();
+        resolve(null);
+        return;
+      }
+      const b = t.closest<HTMLElement>('[data-pick]');
+      if (!b) return;
+      el.remove();
+      resolve(b.dataset.pick as 'start' | 'continue');
+    });
+  });
 }
 
 /** Dificuldade válida para começar (o Hardcore só depois de liberado). */
@@ -407,37 +464,59 @@ function currentDifficulty(host: JornadaHost): Difficulty {
   return d === 'hardcore' && !host.unlocked().has('j_canonHard') ? 'normal' : d;
 }
 
-/** Caminho Ninja: classe e elemento (só o Comum), depois a revelação. */
+/** Herói da run que a escolha daria: o da classe, ou o Prodígio quando o Comum fica sem elemento. */
+function choiceHero(classId: string, element: ElementChoice): string {
+  const def = data.generic.classes.find((c) => c.id === classId);
+  if (!def) return 'commonNinja';
+  return element === null && def.noElementHero ? def.noElementHero : def.hero;
+}
+
+/**
+ * Campanha (Caminho Ninja), na casca do Portão: o painel com a arte e os três estágios, a preparação (o retrato, que
+ * acompanha a classe e o elemento escolhidos, as classes, o elemento do Comum, a dificuldade e o Começar) e a coluna com
+ * a run salva e as conquistas recentes. Depois do Começar, a revelação.
+ */
 export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Promise<JRun | null> {
   const box = difficultyBox(host);
   const mine = saved?.mode === 'generic';
+  const stages = `<div class="parchment gate-quote jpath-stages-card"><h3>${J.start.pathStages}</h3>
+      <ol class="jpath-stages">${data.generic.stages.map((g, i) => `<li><span class="seal ghost">${ARC_NUMERALS[i] ?? i + 1}</span>${J.stages[g.id] ?? g.id}</li>`).join('')}</ol></div>`;
+  const face = (id: string) => fighterPortrait(id, portraitSpec(id), 'md');
   const root = show(
-    h(`<div class="screen jpath">
-      <header class="jsub-head"><button class="btn small" data-choice="back">${J.start.back}</button><h2>${G.title}</h2><p class="muted">${G.desc}</p></header>
-      ${modeTop(saved, 'path', box.html)}
-      <section class="jc-panel jpath-poster" aria-hidden="true">
-        <span class="jc-art art-frame">${sceneMedia('caminho-ninja') ?? sceneMedia('jornada') ?? ''}${sceneFx()}</span>
-        <div class="jc-body parchment"><span class="seal jc-seal">道</span><h3>${J.start.pathStages}</h3>
-          <ol class="jpath-stages">${data.generic.stages.map((g, i) => `<li><span class="seal ghost">${ARC_NUMERALS[i] ?? i + 1}</span>${J.stages[g.id] ?? g.id}</li>`).join('')}</ol></div>
-      </section>
-      <section class="parchment jmode-panel jmode-generic">
-        <div class="jmode-card"><div class="jstart-face">${fighterPortrait('commonNinja', 'ninja:common', 'md')}</div>
-          <div><h3>${J.start.pathPick}</h3>${bestLine(host)}<p class="muted small">${J.start.infiniteNote}</p></div></div>
-        <div class="jclasses">${['common', 'uchiha', 'hyuuga']
-          .map((id) => {
-            const def = data.generic.classes.find((c) => c.id === id);
-            const open = def && (!def.unlock || host.unlocked().has(def.unlock));
-            const note = !def ? G.soonClass : open ? G.classes[id]!.desc : G.locked[id]!;
-            return `<button class="jclass${open ? '' : ' off'}" data-class="${id}" aria-pressed="${id === 'common'}" ${open ? '' : 'aria-disabled="true"'}>
-              <b>${open ? '' : `${icon('lock', 'lock')} `}${G.classes[id]!.name}</b><small>${note}</small></button>`;
-          })
-          .join('')}</div>
-        <div class="jel-pick" data-elements role="group" aria-label="${G.elementTitle}">${ELEMENT_CHOICES.map((c) => elementChoiceButton(c)).join('')}</div>
-        <button class="btn${mine ? '' : ' primary'} big" data-choice="generic">${icon('dice')} ${mine ? J.start.restartPath : G.start}</button>
-      </section>
+    h(`<div class="screen gate jgate jhub jcamp">
+      <div class="gate-main">
+        ${hubBanner(J.modes.path.name, CAMPAIGN_ART, stages)}
+        <section class="parchment jmode-panel jmode-generic">
+          <div class="jmode-card"><div class="jstart-face" data-class-face>${face(choiceHero('common', 'random'))}</div>
+            <div><h3>${J.start.pathPick}</h3>${bestLine(host)}<p class="muted small">${J.start.infiniteNote}</p></div></div>
+          <div class="jclasses">${['common', 'uchiha', 'hyuuga']
+            .map((id) => {
+              const def = data.generic.classes.find((c) => c.id === id);
+              const open = def && (!def.unlock || host.unlocked().has(def.unlock));
+              const note = !def ? G.soonClass : open ? G.classes[id]!.desc : G.locked[id]!;
+              return `<button class="jclass${open ? '' : ' off'}" data-class="${id}" aria-pressed="${id === 'common'}" ${open ? '' : 'aria-disabled="true"'}>
+                <b>${open ? '' : `${icon('lock', 'lock')} `}${G.classes[id]!.name}</b><small>${note}</small></button>`;
+            })
+            .join('')}</div>
+          <div class="jel-pick" data-elements role="group" aria-label="${G.elementTitle}">${ELEMENT_CHOICES.map((c) => elementChoiceButton(c)).join('')}</div>
+          ${box.html}
+          <button class="btn${mine ? '' : ' primary'} big" data-choice="generic">${icon('dice')} ${mine ? J.start.restartPath : G.start}</button>
+        </section>
+      </div>
+      <aside class="gate-aside">
+        ${savedCard(saved, 'path')}
+        ${recentSection(host)}
+        <button class="btn small jstart-back" data-choice="back">${J.start.back}</button>
+      </aside>
     </div>`),
   );
   let classId = 'common';
+  // Elemento do Comum: um elemento, o prodígio (sem elemento) ou sortear (com a relíquia bônus).
+  let element: ElementChoice = 'random';
+  const faceSlot = root.querySelector<HTMLElement>('[data-class-face]')!;
+  const syncFace = () => {
+    faceSlot.innerHTML = face(choiceHero(classId, classId === 'common' ? element : 'random'));
+  };
   root.querySelector('.jclasses')!.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-class]');
     if (!b || b.getAttribute('aria-disabled') === 'true') return;
@@ -445,15 +524,15 @@ export async function pathSetupScreen(host: JornadaHost, saved: JRun | null): Pr
     root.querySelectorAll('[data-class]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     // Só o Comum escolhe o elemento.
     root.querySelector<HTMLElement>('[data-elements]')!.hidden = classId !== 'common';
+    syncFace();
   });
-  // Elemento do Comum: um elemento, o prodígio (sem elemento) ou sortear (com a relíquia bônus).
-  let element: ElementChoice = 'random';
   root.querySelector('[data-elements]')!.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-element]');
     if (!b) return;
     const v = b.dataset.element!;
     element = v === 'random' ? 'random' : v === 'none' ? null : (v as Element);
     root.querySelectorAll('[data-element]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    syncFace();
   });
   box.wire(root);
   for (;;) {

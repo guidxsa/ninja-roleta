@@ -9,15 +9,16 @@ Estrutura de uma run: tipos de run, paradas, eventos e minijogos, dificuldade, s
 
 ## Tela de início
 
-Cada modo tem a sua: o card **História** do Portão abre a escolha da perspectiva e o card **Campanha** abre a preparação do Caminho Ninja ([visual.md](../visual.md#entrada-da-jornada)). No topo das duas:
+Cada modo tem a sua, na composição do Portão ([visual.md](../visual.md#entrada-da-jornada)): o card **História** abre o Modo História, com um card por perspectiva (Naruto; Sasuke em breve) que abre a janela dela, e o card **Campanha** abre a preparação do Caminho Ninja. Nas duas:
 
-- **Run salva deste modo**: o card **Progresso da Jornada** (capítulo, parada, % de conclusão e o botão **Continuar**, com a dificuldade dela e, no modo infinito, o chip do ciclo). O Continuar segue a run sem passar pela preparação. O botão de começar vira **Recomeçar a História** (ou **Começar uma nova run**, na Campanha) e pede a confirmação de substituir a salva.
+- **Run salva deste modo**: na coluna, o card **Progresso da Jornada** (capítulo, parada, % de conclusão e o botão **Continuar**, com a dificuldade dela e, no modo infinito, o chip do ciclo). O Continuar segue a run sem passar pela preparação. Na janela da perspectiva, o Continuar e o **Recomeçar a História**; na Campanha, o botão de começar vira **Começar uma nova run**. Recomeçar pede a confirmação de substituir a salva.
 - **Run salva do outro modo**: um aviso de que começar aqui substitui a run da História ou da Campanha (a Jornada tem um save só).
-- **Dificuldade da Jornada**: a mesma do Arcade (uma escolha só, `proto_settings_v1`), com o Hardcore travado até vencer a História no Difícil. A dificuldade da run salva não muda: a escolha vale para a próxima run.
+- **Dificuldade da Jornada**: a mesma do Arcade (uma escolha só, `proto_settings_v1`), com o Hardcore travado até vencer a História no Difícil. Na História, fica na coluna; na Campanha, logo abaixo da escolha da classe. A dificuldade da run salva não muda: a escolha vale para a próxima run.
+- **Retrato da Campanha**: acompanha a escolha (o herói da classe, ou o Prodígio quando o Comum fica sem elemento), o mesmo que a run vai ter.
 
-Na História, os arcos do Naruto marcam o progresso do jogador: **concluído** (alguma run já passou dele, pelo histórico `jornada_runs_v1`, ou a run salva o deixou para trás), **Você está aqui** (o arco da run salva), o próximo a jogar sem marca e os outros **ainda não alcançados**, desbotados. É só leitura: a História é linear e sempre começa no primeiro arco (`storyArcsCleared`, `src/state/jornadaRuns.ts`). A Campanha mostra o recorde do modo infinito a partir de um ciclo vencido.
+Na janela da perspectiva, os arcos do Naruto marcam o progresso do jogador: **concluído** (alguma run já passou dele, pelo histórico `jornada_runs_v1`, ou a run salva o deixou para trás), **Você está aqui** (o arco da run salva), o próximo a jogar sem marca e os outros **ainda não alcançados**, desbotados. É só leitura: a História é linear e sempre começa no primeiro arco (`storyArcsCleared`, `src/state/jornadaRuns.ts`). A Campanha mostra o recorde do modo infinito a partir de um ciclo vencido.
 
-A antiga entrada da Jornada (os dois cartões e as **Conquistas recentes**) ficou só como cenário do UI Lab. A conclusão é `journeyProgress` (`src/core/jornada/run.ts`): na História, paradas feitas sobre todas; no Caminho Ninja, estágios vencidos mais as linhas andadas no mapa.
+A antiga entrada da Jornada (os cartões Modo História e Caminho Ninja) ficou só como cenário do UI Lab; a composição dela é a das telas de modo. A conclusão é `journeyProgress` (`src/core/jornada/run.ts`): na História, paradas feitas sobre todas; no Caminho Ninja, estágios vencidos mais as linhas andadas no mapa.
 
 ## Paradas
 

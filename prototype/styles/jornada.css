@@ -630,12 +630,36 @@
 }
 
 /*
- * Topo das telas de modo (História e Campanha): a run salva (card de progresso com o Continuar, ou o aviso de que
- * começar substitui a do outro modo) e a dificuldade. Composição mínima; o acabamento vem na tarefa visual seguinte.
+ * Telas de modo na casca do Portão (História e Campanha, docs/visual.md "Entrada da Jornada"). A casca .jgate reordena a
+ * pilha no celular; aqui a ordem é a do HTML, para o foco seguir a tela (issue #95). O Voltar fica visível também no PC.
+ * Composição mínima; o acabamento vem na tarefa visual seguinte.
  */
-.jmode-top { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: var(--gap); align-items: start; }
-.jmode-top > * { min-width: 0; margin: 0; }
-.jmode-top .jprogress-bar { margin-block: var(--sp-2); }
+.jhub :is(.jprogress, .jother-saved, .gate-modes, .difficulty-box, .jrecent, .jstart-back) { order: 0; }
+.jhub .jstart-back { align-self: flex-start; }
+/* O tema pinta o letreiro "Modo Jornada" e troca a arte dos cards por pergaminhos fixos (shinobi/entradas.css): nas telas
+   de modo, o letreiro é o nome do modo e cada card mostra a arte dele (a perspectiva). */
+.gate.jgate.jhub .gate-head .logo { background: none; }
+.gate.jgate.jhub .gate-head .logo span { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+.gate.jgate.jhub .mode-card .mode-body { flex-direction: column; align-items: stretch; }
+.gate.jgate.jhub .mode-card .mode-art { display: block; flex: 1 1 0; width: 100%; min-height: calc(120 * var(--ui-unit)); }
+.jcamp .jmode-generic { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.jcamp .jmode-generic .difficulty-box { margin: 0; }
+.jpath-stages-card h3 { margin: 0 0 var(--sp-1); font: 700 var(--fs-xl)/1.1 var(--font-hand); color: var(--paper-ink); }
+/* Janela da perspectiva da História: maior que as outras janelas, com a arte, os arcos e o Começar. */
+.jpersp-modal .modal-body.jpersp { max-width: min(100%, calc(var(--modal-max) * 1.25)); gap: var(--gap); }
+.jpersp .modal-head h2 { display: flex; align-items: center; gap: var(--sp-2); }
+.jpersp .jc-seal { position: static; rotate: 0deg; }
+.jpersp-art { display: block; position: relative; aspect-ratio: 16 / 7; overflow: hidden; background: var(--bg-2); }
+.jpersp.is-locked .jpersp-art :is(img, video) { filter: saturate(.55) brightness(.75); }
+.jpersp-desc { margin: 0; }
+.jpersp-actions { display: flex; flex-wrap: wrap; gap: var(--gap); }
+.jpersp-actions .btn { flex: 1 1 14rem; }
+@media (min-width: 900px) and (min-height: 560px) {
+  .jhub .jstart-back { display: inline-flex; }
+  /* A preparação da Campanha é mais alta que um card de modo: a linha dela segue o conteúdo e o painel de arte encolhe. */
+  .gate.jcamp .gate-main { grid-template-rows: minmax(calc(160 * var(--ui-unit)), 1fr) auto; }
+  .jpersp-modal { align-items: center; }
+}
 .jother-saved { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); color: var(--paper-ink); }
 .jother-saved .ico { flex: none; width: var(--fs-2xl); height: var(--fs-2xl); }
 
