@@ -209,9 +209,19 @@ O letreiro em pincel ocupa o céu à esquerda. A pintura da vila se dissolve no 
 
 Abaixo de 768 px, a Ficha compacta fica entre a cena e os pergaminhos empilhados. De 768 a 1023 px, Ficha e Conquistas ficam lado a lado e cada modo ocupa uma coluna. A partir de 1024 px, a lateral fixa reúne os destinos e a coluna direita recebe Ficha e Conquistas. O avatar fica num quadro de tinta, com o fundo original do retrato, sobre o papel da Ficha (`--profile-paper`). A alça com a folha de Konoha abre as ferramentas por toque, foco ou aproximação do mouse.
 
+Início, Registro e os modos usam a mesma largura de barra lateral, tamanho de marca e centro da alça de Konoha. Em janelas largas e baixas, a lateral permanece acessível com rolagem interna. Abaixo de 1024 px, a barra inferior acompanha o Início, o Registro e as entradas dos modos.
+
 Em monitores grandes, a pintura do Monte Hokage ocupa a linha maior da grade e os três pergaminhos dividem a linha abaixo. A coluna de Ficha e Conquistas acompanha a largura útil, até 24% da casca.
 
 O Registro ocupa a área principal. Em telas com barra inferior, quatro abas dão acesso às seções. Dentro do Histórico, o jogador escolhe Arcade, História ou Campanha. A ação **Continuar** fica junto da parada salva no modo correspondente. Cada run do Histórico é uma linha que abre os detalhes. No Livro Bingo, a ficha de cada inimigo é papel de cartaz com o fundo do arco e a moldura pelo grau (comum, elite e chefe com o carimbo 手配), em tela cheia no celular e num painel ao lado no desktop.
+
+### História e Campanha
+
+As telas de modo usam o letreiro em pincel sobre a arte. Os pergaminhos abaixo têm rolos de madeira, papel liso e ilustração com borda de tinta em uma área própria. A etiqueta de laca indica a ação disponível. Um contorno tracejado marca o **Em breve** do Sasuke. Desktop distribui o painel de arte e os pergaminhos no centro e o progresso, a dificuldade e as conquistas à direita. Celular empilha essas regiões na ordem do HTML.
+
+A partir de 1024 px, o painel de arte tem as dimensões da cena do Início. Na Campanha, o leque de retratos de **Escolher a classe** contrasta com as silhuetas de tinta no papel de **Classe aleatória**. A interrogação identifica o sorteio e o selo com baú destaca a relíquia extra.
+
+A perspectiva abre a janela mais larga. Os quatro arcos usam filete duplo dourado, moldura de laca, filete simples e contorno tracejado para expressar, respectivamente, concluído, atual, próximo e ainda não alcançado. A dica de arco usa papel e título manuscrito. No cardápio, as classes aparecem em uma lista de laca e a classe selecionada tem uma ficha de papel com retrato e descrição lado a lado. A janela reserva espaço para os elementos do Comum e conserva o tamanho ao trocar de classe. A janela de classe aleatória mostra os retratos em fileira e destaca a recompensa numa faixa de papel com o baú.
 
 ### Panels
 - **Painel laqueado** (`.card`, `.panel`, `.chamfer`): grafite com grão, filete de aço desenhado pela camada de baixo, aba vermelha curta no topo marcando o dono. Padding 12px.

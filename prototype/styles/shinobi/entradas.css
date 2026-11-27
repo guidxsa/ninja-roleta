@@ -39,10 +39,10 @@
   filter: drop-shadow(1px 3px 3px color-mix(in srgb, var(--sh-sumi-4) 60%, transparent));
   text-align: left;
 }
-.gate.jgate .gate-head .logo {
+.gate.jgate:where(:not(.jhub)) .gate-head .logo {
   background: url('img/shinobi/jornada-letreiro.png') left center/contain no-repeat;
 }
-.gate.jgate .gate-head .logo span {
+.gate.jgate:where(:not(.jhub)) .gate-head .logo span {
   position: absolute;
   width: 1px;
   height: 1px;
