@@ -1,0 +1,70 @@
+/*
+ * Lobby do Arcade (prototype/roleta/screens/lobby.ts): só o mínimo de funcionamento sobre a casca das telas de modo
+ * (.gate.jgate.jhub, em shinobi/jornada-modos.css). As peças seguem a ordem do HTML em todas as faixas (issue #95).
+ * O acabamento visual é do Codex (docs/tarefas/arcade-lobby.md).
+ */
+.gate.jhub.rlobby .rlobby-start {
+  display: grid;
+  gap: var(--gap);
+  align-content: start;
+  min-width: 0;
+}
+.gate.jhub.rlobby .rlobby-spin {
+  justify-content: center;
+  width: 100%;
+  min-height: calc(var(--tap) + var(--sp-3));
+  font-size: var(--fs-xl);
+}
+.gate.jhub.rlobby .rlobby-tag {
+  margin: 0;
+}
+.rlobby-totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2) var(--gap);
+  margin: 0;
+}
+.rlobby-totals > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.rlobby-totals dt {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.rlobby-totals dd {
+  margin: 0;
+  font: 700 var(--fs-lg)/1.1 var(--font-hud);
+}
+.rlobby-diffs {
+  margin-top: var(--sp-3);
+}
+.rlobby-diffs summary {
+  cursor: pointer;
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.rlobby-diffs .history {
+  margin: 0;
+}
+.jrecent li.rlobby-run {
+  grid-template-columns: auto minmax(0, 1fr);
+  row-gap: var(--sp-1);
+}
+.rlobby-run-txt {
+  min-width: 0;
+}
+.rlobby-run-tags {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+.rorigin-diff {
+  margin: 0 0 var(--sp-2);
+}

@@ -6,17 +6,33 @@ import { roletaVillainsById as villainsById } from '../../src/data/roleta/villai
 import { ptBR as S } from '../../src/data/strings/ptBR';
 import { recordRoletaReach, saveProfile } from '../../src/state/profile';
 import { icon } from '../art';
+import { ensurePlayerName } from '../gate';
 import { relicName } from '../jornada/relics';
 import { setRun, getRun, track, villainName, noteFight, checkAchievements, stepLog } from './common';
 import { battleScreen } from './screens/battle';
 import { endScreen } from './screens/end';
 import { eventScreen } from './screens/event';
+import { arcadeLobby } from './screens/lobby';
 import { mapScreen } from './screens/map';
+import { originScreen } from './screens/origin';
 import { levelUps, relicRewardScreen, chestScreen, noticeScreen } from './screens/rewards';
 import { ses } from './session';
 
 // ---------------------------------------------------------------------------
 // Fluxo da campanha
+
+/**
+ * O Arcade a partir do Portão: lobby → nome (só na primeira vez) → roletas de origem → run. O fim da run (Nova run ou
+ * abandono) volta ao lobby; o Voltar do lobby volta ao Portão.
+ */
+export async function playArcade(): Promise<void> {
+  for (;;) {
+    if ((await arcadeLobby()) === 'back') return;
+    await ensurePlayerName();
+    await originScreen();
+    await runCampaign();
+  }
+}
 
 /**
  * Run do Roleta enxuto (docs/roleta/run.md): a cada passo, sorteia o vilão da categoria, gira o evento, luta, ganha o

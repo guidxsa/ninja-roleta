@@ -185,7 +185,7 @@ O Monte Hokage é o centro da pintura e nada o cobre. No tablet (768 a 1023 px),
 ### Roleta no PC
 
 O Roleta tem composição própria no PC (`prototype/styles/roleta-desk.css`), nos moldes da Jornada, e cabe na janela; no celular nada muda.
-- **Sorteio da origem**: a roda no centro, sobre a arte `roleta`; com os resultados, a roda some e entram as opções centradas (a Ficha à esquerda; a Dificuldade, o Re-rolar e o Começar à direita). O botão Ficha da barra só aparece depois das roletas, para não entregar a classe.
+- **Sorteio da origem**: a roda no centro, sobre a arte `roleta`; com os resultados, a roda some e entram as opções centradas (a Ficha à esquerda; a dificuldade escolhida no lobby, o Re-rolar e o Começar à direita). O botão Ficha da barra só aparece depois das roletas, para não entregar a classe.
 - **Outras telas de roleta** (evento, recompensa, nível, melhoria, aviso: `.rwheel`): a roda sozinha no centro, sobre a arte da vaga, sem a Ficha. Durante as roletas, o nome do evento fica como etiqueta no alto do palco; no fim, o resultado e as mudanças aparecem num popup sobre o palco, com **Ficha** (abre a janela) e a ação. Nas telas com carimbo grande e sem roda (aviso, nível, melhoria), o carimbo fica no palco à esquerda e o card à direita, sem escurecer: o popup escondia o carimbo. O jokenpô do evento usa mãos grandes no palco.
 - **Roda parada no lugar** (v0.76.15): roletas seguidas nascem na mesma posição. No PC a roda fica presa no alto do palco (centrada, ela subia e descia quando a caixa mudava de altura); no evento, o espaço da etiqueta fica reservado desde a primeira roleta, com a roda um pouco menor para a legenda caber. No celular o "Girar" usado some sem tirar o espaço, e os resultados da origem ficam numa linha só, que rola de lado. No combate, as ações aparecem desativadas já durante a iniciativa (entrando depois, o painel mudava a grade e a arena pulava), a faixa de acerto tem a altura reservada e só a primeira entra com o pop.
 - **Mapa do ciclo** (`.rmap`), em duas colunas: à esquerda, a **Ficha aberta em painéis minimizáveis** (ficha e atributos, relíquias e bolsa, técnicas, passivas), como os da Jornada; à direita, o título, a trilha e a cena da categoria com o **vilão por cima** da arte, e o Lutar embaixo.
@@ -194,6 +194,15 @@ O Roleta tem composição própria no PC (`prototype/styles/roleta-desk.css`), n
 - **Mapa**: o botão principal é "Seguir: evento pré-luta" até o evento acontecer, depois "Lutar"; embaixo, **Abandonar run** em cor de perigo (também no pé das ações da luta). O vilão fica no meio da cena.
 - **Cores**: a Ficha aberta do mapa usa o papel da janela da ficha.
 - **Fim da run**: à esquerda, um pergaminho com o selo e o carimbo 勝/敗, o título e os números; à direita, a trilha (com o que cada etapa deu) e a Ficha resumida; as ações embaixo.
+
+### Lobby do Arcade
+
+O card Arcade do Portão abre o lobby (`.gate.jgate.jhub.rlobby`), na mesma casca das telas de modo da Jornada ([abaixo](#entrada-da-jornada)), na ordem da leitura em todas as faixas:
+- o painel com a arte `modo-roleta` e o letreiro "Modo Arcade";
+- o bloco de começar (`.rlobby-start`): a **Dificuldade** (`.difficulty-box`, com a linha do desempenho na escolhida) e o botão grande **Girar**, que fica acima da dobra no celular;
+- na coluna, o **Desempenho** (`.rlobby-stats`: runs, vitórias, melhor ciclo, origens vencidas e, recolhida, a conta por dificuldade), as **Últimas runs** (`.rlobby-runs`) e as **Conquistas do Arcade** (`.rlobby-ach`), cada lista com o atalho para o Registro, e o Voltar.
+
+No celular, tudo em pilha, com no máximo uma tela de rolagem; no desktop, o painel e o bloco de começar à esquerda e a coluna à direita, que rola por dentro. Por enquanto o CSS é o mínimo de funcionamento (`roleta-lobby.css`); o acabamento vem numa tarefa visual própria.
 
 ### Entrada da Jornada
 
