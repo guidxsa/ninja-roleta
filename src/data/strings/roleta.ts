@@ -131,6 +131,27 @@ export const roletaPtBR = {
     stunGuard: { name: 'Firme', desc: 'Acabou de sair de um atordoamento: não pode ser atordoado de novo até agir uma vez.' },
   } as Record<string, { name: string; desc: string }>,
 
+  /** Lobby do Arcade (docs/roleta/run.md, "Dificuldade e histórico"): a tela entre o Portão e as roletas de origem. */
+  lobby: {
+    logo: 'Arcade',
+    spin: 'Girar',
+    spinTip: 'Sorteia a sua origem nas roletas e começa a run na dificuldade escolhida.',
+    statsTitle: 'Desempenho',
+    runsLabel: 'Runs',
+    winsLabel: 'Vitórias',
+    bestCycleLabel: 'Melhor ciclo',
+    originsLabel: 'Origens vencidas',
+    originsValue: (won: number, total: number) => `${won}/${total}`,
+    byDifficulty: 'Por dificuldade',
+    lastTitle: 'Últimas runs',
+    lastEmpty: 'Suas runs aparecem aqui depois do primeiro giro.',
+    seeHistory: 'Ver histórico',
+    achTitle: 'Conquistas do Arcade',
+    achEmpty: 'Suas conquistas do Arcade aparecem aqui.',
+    seeAchievements: 'Ver todas',
+    chosenDifficulty: 'Dificuldade da run',
+  },
+
   run: {
     title: 'Ciclo',
     cycle: (n: number) => `Ciclo ${n}`,

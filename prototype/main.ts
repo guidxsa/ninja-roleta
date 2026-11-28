@@ -4,12 +4,11 @@ import { parseSeedParam } from '../src/core/lab';
 import { ptBR as S } from '../src/data/strings/ptBR';
 import { markAbandonedRuns } from '../src/state/runHistory';
 import { untilHome, HOME } from './dom';
-import { modeScreen, ensurePlayerName } from './gate';
+import { modeScreen } from './gate';
 import { runJornada } from './jornada';
 import { jornadaHost } from './jornadaHost';
 import { data, backfillProfile } from './roleta/common';
-import { runCampaign } from './roleta/run';
-import { originScreen } from './roleta/screens/origin';
+import { playArcade } from './roleta/run';
 import { initSession, browserStorage, ses } from './roleta/session';
 import { installErrorHandlers, registerServiceWorker, installShell, askHome, leftToMenu, errorScreen } from './shell';
 
@@ -26,9 +25,7 @@ async function main() {
   const round = async () => {
     const pick = await modeScreen();
     if (pick.mode !== 'roleta') return runJornada(jornadaHost, { entry: pick.mode, resume: pick.resume });
-    await ensurePlayerName();
-    await originScreen();
-    await runCampaign();
+    await playArcade();
   };
   for (;;) {
     try {

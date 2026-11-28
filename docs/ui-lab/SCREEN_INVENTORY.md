@@ -29,7 +29,7 @@ Não existe roteador. O jogo é **uma página só** (`prototype/index.html`, mon
 main()  (prototype/main.ts)
  ├─ ?teste → labFlow() → labScreen() → battleScreen() | runCampaign()
  └─ modeScreen()  (Portão da Vila)
-     ├─ roleta  → ensurePlayerName() → originScreen() → runCampaign()
+     ├─ roleta  → playArcade(): arcadeLobby() → ensurePlayerName() → originScreen() → runCampaign() → lobby de novo
      ├─ story   → runJornada({entry: 'story'}) → perspectiva ou parada salva
      └─ path    → runJornada({entry: 'path'}) → preparação ou parada salva
 ```
@@ -83,12 +83,13 @@ Legenda da última coluna: **Direto?** / **Visto**.
 
 ### 2.2 Roleta
 
-Fluxo: Portão → nome → origem → (mapa → evento → luta → recompensas)* → fim. Tudo em `prototype/main.ts`, estado em
-`camp` (só em memória).
+Fluxo: Portão → lobby → nome → origem → (mapa → evento → luta → recompensas)* → fim → lobby. O laço fica em
+`playArcade()` (`prototype/roleta/run.ts`), estado em `camp` (só em memória).
 
 | Id | Tela | Onde | Acesso | Dados | Estados alternativos | Responsivo | Direto? / Visto |
 |---|---|---|---|---|---|---|---|
-| `roleta.origin` | Roletas de origem + dificuldade | `originScreen()` | Card Arcade no Portão | RNG, `rollOrigin`, perfil (Hardcore liberado?) | Antes, durante e depois dos giros (`rolled`); 1 a N roletas conforme a linhagem (elementos, kekkei genkai, jinchuuriki); Hardcore travado ou liberado; "Girar de novo" | `rwheel`: palco + coluna `rside` lado a lado no PC | Sim (1 clique) / não |
+| `roleta.lobby` | Lobby do Arcade | `arcadeLobby()` em `roleta/screens/lobby.ts` | Card Arcade no Portão; fim da run | Perfil, `runs_v1`, `proto_settings_v1` (dificuldade), conquistas do Arcade | Primeiro acesso, sem runs nem conquistas (`roleta.lobby`); histórico e conquistas (`:mid`); Hardcore liberado e histórico cheio (`:full`); conta por dificuldade recolhida | Casca `.gate.jgate.jhub.rlobby`: pilha no celular (Girar acima da dobra); painel e começar à esquerda, coluna à direita no desktop | Sim (1 clique) / não |
+| `roleta.origin` | Roletas de origem | `originScreen()` | Girar no lobby | RNG, `rollOrigin`, dificuldade do lobby | Antes, durante e depois dos giros (`rolled`); 1 a N roletas conforme a linhagem (elementos, kekkei genkai, jinchuuriki); chip da dificuldade escolhida (`:hardcore`); "Girar de novo" | `rwheel`: palco + coluna `rside` lado a lado no PC | Sim (2 cliques) / não |
 | `roleta.map` | Mapa do ciclo | `mapScreen(eventDone)` | Depois da origem e entre lutas | `camp.run`, vilão sorteado, `camp.log` | Botão "Evento" ou "Lutar" (`eventDone`); chip de ciclo só do ciclo 2; botão Pesos (equipar/tirar) só com o item; trilha com etapas feitas que expandem (`<details>`); categoria genin/chunin/jounin/chefe muda arte e selo | Ficha em painéis (`sheetPanels`) no PC; `sticky-cta` | Lab (campanha a partir de etapa) / não |
 | `roleta.event` | Evento pré-luta | `eventScreen()` | Botão Evento no mapa | RNG (`roletaPreFightEvents`, 7 eventos com peso, total 100) | Um subfluxo por evento (abaixo); Moeda viciada oferece girar de novo (`spinRoll`); resultado com efeito e HUD pulsando | `rwheel` | Não / não |
 | `roleta.event.training` | Treino | `eventScreen` case `training` | Evento sorteado | RNG | Escolha de foco elemental existe no código mas `focus` está sempre vazio (só a roleta roda) | — | Não / não |

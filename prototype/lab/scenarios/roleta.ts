@@ -12,11 +12,12 @@ import { getRun, openSheet, villainName } from '../../roleta/common';
 import { battleScreen } from '../../roleta/screens/battle';
 import { endScreen } from '../../roleta/screens/end';
 import { eventScreen } from '../../roleta/screens/event';
+import { arcadeLobby } from '../../roleta/screens/lobby';
 import { mapScreen } from '../../roleta/screens/map';
 import { originScreen } from '../../roleta/screens/origin';
 import { chestScreen, levelUps, noticeScreen, relicRewardScreen } from '../../roleta/screens/rewards';
 import { ses } from '../../roleta/session';
-import { profiles } from '../fixtures/profiles';
+import { profiles, seedRunHistory } from '../fixtures/profiles';
 import { roletaCamp, type RoletaFixture } from '../fixtures/roleta';
 import type { Scenario } from '../types';
 
@@ -69,8 +70,12 @@ const SEEDS: Record<string, number> = {
 };
 
 export const roleta: Scenario[] = [
-  { id: 'roleta.origin', title: 'Roletas de origem e dificuldade', group: 'Roleta', mount: () => originScreen() },
-  { id: 'roleta.origin:hardcore', title: 'Origem com o Hardcore liberado', group: 'Roleta', profile: profiles.full, mount: () => originScreen() },
+  { id: 'roleta.lobby', title: 'Lobby do Arcade, primeiro acesso', group: 'Roleta', mount: () => arcadeLobby() },
+  { id: 'roleta.lobby:mid', title: 'Lobby com histórico e conquistas', group: 'Roleta', profile: profiles.mid, setup: (s) => seedRunHistory(s, 8), mount: () => arcadeLobby() },
+  { id: 'roleta.lobby:full', title: 'Lobby com o Hardcore liberado', group: 'Roleta', profile: profiles.full, setup: (s) => seedRunHistory(s, 20), mount: () => arcadeLobby() },
+
+  { id: 'roleta.origin', title: 'Roletas de origem (dificuldade do lobby)', group: 'Roleta', mount: () => originScreen() },
+  { id: 'roleta.origin:hardcore', title: 'Origem com o Hardcore escolhido', group: 'Roleta', profile: profiles.full, mount: () => ((ses.settings.difficulty = 'hardcore'), originScreen()) },
 
   { id: 'roleta.map', title: 'Mapa do ciclo, antes do evento', group: 'Roleta', mount: () => (roletaCamp(), mapScreen(false)) },
   { id: 'roleta.map:fight', title: 'Mapa depois do evento (botão Lutar)', group: 'Roleta', mount: () => (roletaCamp({ step: 2, level: 3 }), mapScreen(true)) },
