@@ -109,8 +109,13 @@ describe('fixtures', () => {
 
 describe('isolamento', () => {
   const lab = files('prototype/lab');
-  // As ferramentas do lab (scripts/lab-*.ts) podem importar dele; o jogo e o build do jogo não.
-  const outside = [...files('prototype').filter((f) => !f.startsWith('prototype/lab/')), ...files('src'), ...files('scripts').filter((f) => !/\/lab-[^/]+\.ts$/.test(f))];
+  // As ferramentas do lab (scripts/lab-*.ts e o revisar-visual, que lê a lista de cenários) podem importar dele; o jogo e
+  // o build do jogo não.
+  const outside = [
+    ...files('prototype').filter((f) => !f.startsWith('prototype/lab/')),
+    ...files('src'),
+    ...files('scripts').filter((f) => !/\/(lab-[^/]+|revisar-visual)\.ts$/.test(f)),
+  ];
 
   it('nada fora de prototype/lab importa do lab', () => {
     for (const f of outside) expect(readFileSync(f, 'utf8'), f).not.toMatch(/from '[^']*\/lab\/[^']*'/);

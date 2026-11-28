@@ -38,7 +38,7 @@ Formato `x.y.z`. O jogo segue em `0.y.z` até o usuário pedir o v1.0.0; o major
 ## Release (y)
 
 1. **Sugestão**: o PR permanente `staging → master` (título "Próxima versão (proposta v0.Y.0)") é reescrito a cada push no staging com os fragmentos, os PRs integrados, a seção **"Mudanças no processo"** (cada arquivo de processo alterado no lote, pela lista protegida do `check:regras`) e o link do preview. Com um fragmento de `peso: alto` ou 8 itens, o workflow comenta uma sugestão de release, uma vez por ciclo. O agente também sugere no resumo quando vê algo de peso.
-2. **Preparar** (o usuário pede "prepara a v0.Y.0"): o agente abre `feature/release-v0.Y.0` a partir do staging com `npx tsx scripts/staging.ts release 0.Y.0` (junta os fragmentos numa linha do `CHANGELOG.md` e os apaga) e `npm version 0.Y.0 --no-git-tag-version`; o PR entra no staging pelo auto-merge. O agente também roda a revisão de IA do lote inteiro (`codex exec review` contra o `origin/master`) e publica no PR permanente ([revisao.md](revisao.md)): ela só informa. A branch tem **contrato implícito**: sem `docs/tarefas/` e sem `contrato-aprovado` (o "prepara" do usuário é a aprovação), e o `check:escopo` recusa qualquer arquivo além de `CHANGELOG.md`, `changelog.d/*.md` e da versão no `package.json`/`package-lock.json`.
+2. **Preparar** (o usuário pede "prepara a v0.Y.0"): o agente abre `feature/release-v0.Y.0` a partir do staging com `npx tsx scripts/staging.ts release 0.Y.0` (junta os fragmentos numa linha do `CHANGELOG.md` e os apaga) e `npm version 0.Y.0 --no-git-tag-version`; o PR entra no staging pelo auto-merge. O agente também roda a revisão de IA do lote inteiro (`codex exec review` contra o `origin/master`) e publica no PR permanente ([revisao.md](revisao.md)): ela só informa. A branch tem **contrato implícito**: sem `docs/tarefas/` (o "prepara" do usuário é a aprovação), e o `check:escopo` recusa qualquer arquivo além de `CHANGELOG.md`, `changelog.d/*.md` e da versão no `package.json`/`package-lock.json`.
 3. **Revisar**: o usuário abre o preview do staging, lê a revisão de IA e confere as mudanças no processo. É a revisão humana do lote.
 4. **Publicar** (só com "publica v0.Y.0"): merge do PR permanente com **Create a merge commit**, tag anotada `v0.Y.0` no merge commit e push só da tag (skill `lancar-versao`). O push no `master` publica o Pages e abre a sincronização.
 
@@ -64,6 +64,7 @@ O Pages publica a produção na raiz e o staging em `/staging/` (`.github/workfl
 - Repositório: **Allow auto-merge** ligado.
 - Proteção do `staging`: PR obrigatório; checks `check` e `meta`, sem exigir branch atualizada (com merges seguidos, cada PR ficaria para trás do outro; a CI do push no staging confere o resultado junto); sem force-push e sem apagar; sem aprovação humana.
 - Proteção do `master`: PR obrigatório e checks `check` e `meta`.
+- Os checks `check` e `meta` exigidos são os do PR. No push, os mesmos jobs se chamam `check (push)` e `meta (push)` (`ci.yml`): conferem a branch, mas não contam para a proteção, para um check do push (sem o modo estrito nem a etiqueta da issue do loop) não cobrir nem travar, cancelado, o do PR no mesmo commit.
 
 ## O que é do usuário
 

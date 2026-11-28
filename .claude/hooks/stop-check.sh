@@ -5,7 +5,7 @@
 input=$(cat)
 cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
 # Os caminhos do jogo e todos os do processo (a lista PROTECTED de scripts/check-regras.ts, mais package.json).
-[ -z "$(git status --porcelain -- src prototype tests scripts AGENTS.md CLAUDE.md .githooks .claude .github package.json 2>/dev/null)" ] && exit 0
+[ -z "$(git status --porcelain -- src prototype tests scripts AGENTS.md CLAUDE.md .githooks .claude .github .codex docs/processo skills-lock.json package.json 2>/dev/null)" ] && exit 0
 if out=$( { npm run --silent typecheck && npm run --silent check:regras; } 2>&1 ); then
   exit 0
 fi

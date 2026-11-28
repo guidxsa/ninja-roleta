@@ -1,6 +1,6 @@
 ---
 name: revisar-visual
-description: Revisão visual de telas do Ninshu Roots pelo UI Lab - fotografa os cenários afetados em celular (390px) e desktop (1280px), no tema grafite e com menos movimento, e confere contra docs/visual.md e as regras de interface do AGENTS.md. Use depois de mexer em interface (prototype/, estilos, art.ts, retratos), antes de fechar uma versão com mudança visual, ou quando o usuário disser "como ficou", "confere a tela", "ficou feio no celular".
+description: Revisão visual de telas do Ninshu Roots pelo UI Lab - fotografa os cenários afetados do celular ao widescreen (360, 390, 768, 1024, 1280 e 1440px), no tema grafite e com menos movimento, e confere contra docs/visual.md e as regras de interface do AGENTS.md. Use depois de mexer em interface (prototype/, estilos, art.ts, retratos), antes de fechar uma versão com mudança visual, ou quando o usuário disser "como ficou", "confere a tela", "ficou feio no celular".
 ---
 
 # Revisar visual (Ninshu Roots)
@@ -30,7 +30,7 @@ npm run lab
 npx tsx scripts/revisar-visual.ts <id> <id> ...      # ou --prefixo=jornada.shop, ou --todos
 ```
 
-Sai uma foto por cenário × {celular, desktop} × {Sumi, Sumi com menos movimento} em `dist-lab/revisao/` (fora do git). O terminal marca `VER` quando há rolagem horizontal ou erro no console.
+Sai uma foto por cenário × tamanho × {Sumi, Sumi com menos movimento} em `dist-lab/revisao/` (fora do git). Os tamanhos são os de `VIEWPORTS` no script, pelas faixas do `docs/visual.md`: celular (360 e 390 px), tablet (768 px), desktop (1024 px) e widescreen (1280 px, onde a faixa começa, e 1440 px, o notebook comum). O `tests/revisarVisual.test.ts` confere que esta lista e o script dizem o mesmo. O terminal marca `VER` quando há rolagem horizontal ou erro no console.
 
 Olhe as fotos (o agente lê as imagens). Fotos que o usuário vai ver: gere de novo com `deviceScaleFactor: 2` se precisar de nitidez.
 
