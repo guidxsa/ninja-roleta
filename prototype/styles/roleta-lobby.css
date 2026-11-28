@@ -1,63 +1,232 @@
-/*
- * Lobby do Arcade (prototype/roleta/screens/lobby.ts): só o mínimo de funcionamento sobre a casca das telas de modo
- * (.gate.jgate.jhub, em shinobi/jornada-modos.css). As peças seguem a ordem do HTML em todas as faixas (issue #95).
- * O acabamento visual é do Codex (docs/tarefas/arcade-lobby.md).
- */
-.gate.jhub.rlobby .rlobby-start {
+/* O painel usa a célula de arte da História. Os controles seguem a ordem do HTML. */
+.rlobby .gate-banner .gate-hero :is(img, video) {
+  object-position: var(--fx, 50%) var(--fy, 50%);
+  filter: brightness(1.9) saturate(1.35);
+}
+.rlobby .gate-banner .gate-hero::after {
+  background: linear-gradient(180deg, var(--shadow-soft), transparent 55%);
+}
+.gate.jhub.rlobby .gate-head {
+  inset-inline: var(--sp-4);
+  width: auto;
+}
+.gate.jhub.rlobby .jlogo {
+  text-align: center;
+}
+.gate.jhub.rlobby .jlogo .l1 {
+  text-shadow: var(--sp-1) var(--sp-1) var(--plum);
+}
+.gate.jhub.rlobby .jlogo .l2 {
+  color: var(--plum-ink);
+  paint-order: stroke fill;
+  -webkit-text-stroke: .07em var(--plum);
+  text-shadow: .055em .07em var(--plum), .08em .1em var(--ink);
+}
+.gate.jhub.rlobby .gate-banner .rlobby-tag {
+  display: block;
+  position: absolute;
+  inset: auto auto var(--sp-2) var(--sp-2);
+  width: fit-content;
+  max-width: calc(100% - 2 * var(--sp-2));
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  font: 700 var(--fs-md)/1.3 var(--font-hand);
+}
+
+.rlobby .rlobby-start {
   display: grid;
+  align-content: center;
   gap: var(--gap);
-  align-content: start;
   min-width: 0;
 }
-.gate.jhub.rlobby .rlobby-spin {
-  justify-content: center;
-  width: 100%;
-  min-height: calc(var(--tap) + var(--sp-3));
-  font-size: var(--fs-xl);
-}
-.gate.jhub.rlobby .rlobby-tag {
+.rlobby .difficulty-box {
   margin: 0;
+  padding: var(--sp-3) var(--sp-4);
 }
+.rlobby .difficulty-box h3 {
+  font: 700 var(--fs-3xl)/1.1 var(--font-hand);
+  letter-spacing: normal;
+  color: var(--paper-ink);
+}
+.rlobby .segmented {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+.rlobby .difficulty-box .seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  min-height: max(44px, var(--tap));
+  padding: var(--sp-2);
+}
+.rlobby .seg .ico {
+  width: var(--fs-lg);
+  height: var(--fs-lg);
+}
+.rlobby .difficulty-box .seg.diff-hard[aria-pressed='true'] {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+  color: var(--accent-ink);
+}
+.rlobby .difficulty-box p {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-md);
+  line-height: 1.35;
+}
+.rlobby .difficulty-box #diff-desc {
+  margin-top: var(--sp-2);
+}
+.rlobby [data-diff-stats] {
+  font-family: var(--font-hud);
+  font-weight: 600;
+}
+
+.rlobby .btn.primary.rlobby-spin {
+  --spin-fill: var(--shinobi-lacquer);
+  isolation: isolate;
+  min-height: max(calc(56 * var(--ui-unit)), calc(var(--tap) + var(--sp-4)));
+  background: none;
+  box-shadow: none;
+  clip-path: none;
+  font-size: var(--fs-4xl);
+}
+.rlobby .rlobby-spin::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--spin-fill);
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+  box-shadow: inset 0 0 0 1px var(--gold), inset 0 calc(-1 * var(--sp-1)) var(--primary-deep);
+}
+.rlobby .btn.primary.rlobby-spin:hover:not(:disabled) {
+  --spin-fill: var(--primary-2);
+  background: none;
+}
+.rlobby .btn.primary.rlobby-spin:active:not(:disabled) {
+  --spin-fill: var(--primary-deep);
+  background: none;
+}
+.rlobby .btn.primary.rlobby-spin:focus-visible {
+  outline: 2px solid var(--gold-2);
+  outline-offset: var(--sp-1);
+}
+.rlobby-spin .ico {
+  width: var(--fs-6xl);
+  height: var(--fs-6xl);
+}
+
+.gate.jhub.rlobby .gate-aside > .parchment {
+  display: block;
+  padding: var(--sp-3);
+}
+.gate.rlobby .gate-aside h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-1) var(--sp-2);
+  margin: 0 0 var(--sp-2);
+  padding: 0 0 var(--sp-1);
+  font: 700 var(--fs-3xl)/1.1 var(--font-hand);
+  letter-spacing: normal;
+}
+.gate.rlobby .gate-aside h3::after {
+  content: none;
+}
+.rlobby .desk-all {
+  min-height: var(--tap);
+  padding-inline: var(--sp-2);
+  font-size: var(--fs-sm);
+}
+.rlobby .gate-aside p {
+  margin: 0;
+  font-size: var(--fs-md);
+}
+
 .rlobby-totals {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sp-2) var(--gap);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: var(--sp-1) var(--gap);
   margin: 0;
 }
 .rlobby-totals > div {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
   min-width: 0;
 }
 .rlobby-totals dt {
-  color: var(--muted);
-  font-size: var(--fs-sm);
+  color: var(--paper-ink);
+  font: 600 var(--fs-md)/1.2 var(--font-hud);
 }
 .rlobby-totals dd {
+  flex: none;
   margin: 0;
-  font: 700 var(--fs-lg)/1.1 var(--font-hud);
+  font: 700 var(--fs-xl)/1.2 var(--font-hud);
+  font-variant-numeric: tabular-nums;
 }
 .rlobby-diffs {
-  margin-top: var(--sp-3);
+  margin-top: var(--sp-2);
+  border-top: 1px solid var(--line);
 }
 .rlobby-diffs summary {
   cursor: pointer;
   min-height: var(--tap);
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: var(--sp-2);
+  padding-inline: var(--sp-1);
+  font: 700 var(--fs-md)/1.2 var(--font-hud);
+}
+.rlobby-diffs summary:hover {
+  color: var(--accent-deep);
+}
+.rlobby-diffs summary:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+.rlobby-diffs[open] summary .ico {
+  rotate: 90deg;
 }
 .rlobby-diffs .history {
   margin: 0;
 }
-.jrecent li.rlobby-run {
-  grid-template-columns: auto minmax(0, 1fr);
-  row-gap: var(--sp-1);
+.rlobby-diffs .history li {
+  padding: calc(var(--sp-1) / 2) var(--sp-1);
 }
-.rlobby-run-txt {
-  min-width: 0;
+.rlobby-diffs .history .row {
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+.rlobby .jrecent li {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sp-1) var(--sp-2);
+  padding-block: var(--sp-2);
+}
+.rlobby .jrecent li:first-child {
+  padding-top: var(--sp-1);
+}
+.rlobby .jrecent li:last-child {
+  padding-bottom: var(--sp-1);
+}
+.rlobby .jrecent .seal {
+  --s: var(--sp-6);
+  align-self: start;
+  border-radius: var(--radius);
+}
+.rlobby .jrecent b {
+  font: 700 var(--fs-lg)/1.15 var(--font-hud);
+  overflow-wrap: anywhere;
+}
+.rlobby .jrecent small {
+  margin-top: var(--sp-1);
+  line-height: 1.2;
 }
 .rlobby-run-tags {
   grid-column: 2;
@@ -65,6 +234,127 @@
   flex-wrap: wrap;
   gap: var(--sp-1);
 }
-.rorigin-diff {
+.rlobby-run-tags .chip {
+  font-weight: 700;
+}
+.rlobby-run-tags .chip.diff-easy {
+  color: var(--good);
+  border-color: var(--good);
+}
+.rlobby-run-tags .chip.diff-hard {
+  color: var(--accent-deep);
+}
+.rlobby .rlobby-ach time {
+  grid-column: 2;
+  font: 600 var(--fs-sm)/1.15 var(--font-hud);
+}
+.rlobby .rlobby-ach {
+  container: arcade-achievements / inline-size;
+}
+@container arcade-achievements (min-width: 290px) {
+  .rlobby .rlobby-ach li {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .rlobby .rlobby-ach time {
+    grid-column: auto;
+  }
+}
+
+.rorigin .rorigin-diff {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-height: var(--tap);
   margin: 0 0 var(--sp-2);
+  padding: var(--sp-1) var(--sp-2);
+  border-block: 1px solid var(--line-strong);
+  background: var(--shinobi-sumi);
+  color: var(--text);
+  font: 600 var(--fs-lg)/1.2 var(--font-hud);
+  text-align: start;
+}
+.rorigin-diff .chip {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+.rorigin .rorigin-diff .chip.diff-easy { color: var(--good); }
+.rorigin .rorigin-diff .chip.diff-hard { color: var(--accent-text); }
+
+@media (min-width: 600px) and (max-width: 899px), (min-width: 600px) and (max-height: 559px) {
+  .rorigin .rorigin-diff {
+    align-self: stretch;
+    margin: 0;
+  }
+}
+@media (min-width: 600px) {
+  .rlobby .segmented {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 600px) and (max-width: 1023px) {
+  .rlobby .gate-banner .gate-hero :is(img, video) {
+    object-position: var(--fx, 50%) 22%;
+  }
+  .gate.jhub.rlobby .gate-aside {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  .rlobby-stats {
+    grid-column: 1 / -1;
+  }
+  .rlobby .jstart-back {
+    justify-self: start;
+  }
+}
+@media (min-width: 900px) and (max-width: 1023px) and (min-height: 560px) {
+  body:has(.gate.jhub.rlobby) {
+    height: auto;
+  }
+  .gate.jhub.rlobby {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas: 'main' 'aside';
+    flex: none;
+  }
+  .gate.jhub.rlobby .gate-main {
+    grid-template-rows: auto auto;
+  }
+  .gate.jhub.rlobby .gate-banner {
+    height: clamp(170px, 27vh, 275px);
+  }
+  .gate.jhub.rlobby .gate-aside {
+    container-type: normal;
+    overflow: visible;
+    padding: 0;
+  }
+}
+@media (min-width: 1024px) {
+  .rlobby .rlobby-start {
+    width: min(100%, calc(720 * var(--ui-unit)));
+    justify-self: center;
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .gate.jhub.rlobby .gate-aside {
+    padding-inline: var(--sp-1) var(--sp-2);
+    padding-bottom: var(--sp-3);
+    scrollbar-color: var(--shinobi-edge) transparent;
+  }
+  .gate.jhub.rlobby .gate-banner .rlobby-tag {
+    inset: auto auto var(--sp-4) var(--sp-4);
+    padding: var(--sp-2) var(--sp-4);
+  }
+}
+@container gate-banner (min-aspect-ratio: 12/5) {
+  .rlobby .gate-banner .gate-hero :is(img, video) {
+    object-position: var(--fx, 50%) 22%;
+  }
+}
+@container gate-banner (max-height: 230px) {
+  .gate.jhub.rlobby .gate-banner .rlobby-tag {
+    inset: auto auto var(--sp-2) var(--sp-2);
+  }
 }
