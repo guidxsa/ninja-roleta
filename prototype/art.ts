@@ -282,6 +282,7 @@ export const SCENE_ART: Record<string, SceneArt> = {
   'jornada': { focus: [62, 46] },
   'modo-jornada': { focus: [50, 50] },
   'modo-roleta': { focus: [50, 50] },
+  arcade: { focus: [55, 49] },
   // Arcos da História do Naruto, pelo id do estágio (src/data/jornada/stages.ts).
   'arco-waves': { file: 'waves', focus: [62, 34] },
   'arco-exam': { file: 'chunnin', focus: [50, 58] },

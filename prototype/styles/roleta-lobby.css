@@ -1,7 +1,6 @@
 /* O painel usa a célula de arte da História. Os controles seguem a ordem do HTML. */
 .rlobby .gate-banner .gate-hero :is(img, video) {
   object-position: var(--fx, 50%) var(--fy, 50%);
-  filter: brightness(1.9) saturate(1.35);
 }
 .rlobby .gate-banner .gate-hero::after {
   background: linear-gradient(180deg, var(--shadow-soft), transparent 55%);
@@ -10,8 +9,9 @@
   inset-inline: var(--sp-4);
   width: auto;
 }
-.gate.jhub.rlobby .jlogo {
-  text-align: center;
+.gate.jhub.rlobby .gate-head .jlogo {
+  text-align: start;
+  font-size: clamp(var(--fs-3xl), 6cqw, var(--fs-brand));
 }
 .gate.jhub.rlobby .jlogo .l1 {
   text-shadow: var(--sp-1) var(--sp-1) var(--plum);
@@ -294,8 +294,8 @@
   }
 }
 @media (min-width: 600px) and (max-width: 1023px) {
-  .rlobby .gate-banner .gate-hero :is(img, video) {
-    object-position: var(--fx, 50%) 22%;
+  .gate.jhub.rlobby .gate-banner {
+    height: clamp(210px, 40vw, 320px);
   }
   .gate.jhub.rlobby .gate-aside {
     display: grid;
@@ -323,9 +323,6 @@
   .gate.jhub.rlobby .gate-main {
     grid-template-rows: auto auto;
   }
-  .gate.jhub.rlobby .gate-banner {
-    height: clamp(170px, 27vh, 275px);
-  }
   .gate.jhub.rlobby .gate-aside {
     container-type: normal;
     overflow: visible;
@@ -350,7 +347,7 @@
 }
 @container gate-banner (min-aspect-ratio: 12/5) {
   .rlobby .gate-banner .gate-hero :is(img, video) {
-    object-position: var(--fx, 50%) 22%;
+    object-position: var(--fx, 50%) 10%;
   }
 }
 @container gate-banner (max-height: 230px) {
