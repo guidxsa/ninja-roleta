@@ -78,12 +78,7 @@ Cada versão do histórico tem uma tag `vX.Y.Z`. Algumas foram criadas depois, s
 | `v0.93.0` | `31cbef3` | Commit próprio, com o título "v0.91.0": a versão foi renumerada ao juntar as branches da fase 2 (outra branch já usava a v0.91.0). |
 | `v0.93.1` | `ba8197c` | Commit próprio, com o título "v0.91.1": renumerada como a `v0.93.0`. |
 
-Critérios antigos do **v1.0.0**, de antes da decisão de 18/11/2026 de lançá-lo em breve a partir do staging; o mantenedor decide o que deles ainda vale ([decisões](docs/decisoes.md), item 50):
-
-- interface final em `src/ui` no lugar do protótipo;
-- nome definitivo;
-- campanha completa e balanceada, com todos os sistemas dos `docs/` implementados;
-- textos visíveis em arquivos de strings, prontos para tradução.
+O **v1.0.0** sai do staging quando o mantenedor sentir que há uma entrega completa, depois de um rebalanceamento com o plano visual, o harness, a revisão narrativa da História e a árvore de talentos nova já no jogo. O caminho e o que fica para depois do 1.0 estão nas [decisões](docs/decisoes.md), item 50.
 
 ## Histórico de versões
 
