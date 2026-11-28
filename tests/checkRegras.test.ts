@@ -1,6 +1,7 @@
 // Verificações do processo (AGENTS.md, "Como trabalhar"; scripts/check-regras.ts).
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { BALANCE_FILE, checkRegras, codeOnly, coreViolations, HARNESS_BRANCH } from '../scripts/check-regras';
+import { BALANCE_FILE, checkRegras, codeOnly, coreViolations, HARNESS_BRANCH, PROTECTED, skillsCopiadas } from '../scripts/check-regras';
 import { baseCandidates, globToRegExp, lockfileOnlyVersion, matchesAny, packageJsonChange } from '../scripts/harness';
 
 const run = (files: string[], over: Partial<Parameters<typeof checkRegras>[0]> = {}) =>
@@ -104,6 +105,13 @@ describe('regras sobre o diff', () => {
       '.github/ISSUE_TEMPLATE/inconsistencia.yml',
       'scripts/staging.ts',
       'scripts/delegar.ts',
+      // #53 (27/11): configuração do Codex, versão do Impeccable e scripts que workflows e hooks executam
+      '.codex/hooks.json',
+      'skills-lock.json',
+      'scripts/metricas-execucao.ts',
+      'scripts/metricas.ts',
+      'scripts/limpar-branches.ts',
+      'scripts/revisar-visual.ts',
     ])
       expect(rules(run([f])), f).toEqual(['erro:processo-protegido']);
     expect(rules(run(['docs/tarefas/veneno.md']))).toEqual([]);
@@ -162,5 +170,23 @@ describe('fluxo com staging (docs/processo/fluxo.md)', () => {
     expect(baseCandidates('staging')).toEqual(['origin/master', 'master']);
     expect(baseCandidates('feature/veneno', { GITHUB_BASE_REF: 'master' })[0]).toBe('origin/master');
     expect(baseCandidates('feature/veneno', { CHECK_BASE: 'abc', GITHUB_BASE_REF: 'staging' }).slice(0, 2)).toEqual(['abc', 'origin/staging']);
+  });
+});
+
+describe('espelhos da lista PROTECTED (#53, #58)', () => {
+  it('o hook Stop olha todo caminho protegido', () => {
+    const sh = readFileSync('.claude/hooks/stop-check.sh', 'utf8');
+    const paths = /git status --porcelain -- ([^)]*?) 2>/.exec(sh)![1]!.split(/\s+/);
+    for (const glob of PROTECTED) {
+      const coberto = paths.some((p) => glob === p || glob.startsWith(`${p}/`));
+      expect(coberto, glob).toBe(true);
+    }
+  });
+
+  it('skill do projeto copiada em .agents/skills dá aviso; o Impeccable não', () => {
+    expect(skillsCopiadas(['impeccable'], ['lancar-versao', 'revisar-visual'])).toEqual([]);
+    const f = skillsCopiadas(['impeccable', 'lancar-versao'], ['lancar-versao', 'revisar-visual']);
+    expect(f.map((x) => `${x.level}:${x.rule}`)).toEqual(['aviso:skill-copiada']);
+    expect(f[0]!.files).toEqual(['.agents/skills/lancar-versao']);
   });
 });

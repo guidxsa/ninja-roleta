@@ -37,7 +37,7 @@ O Codex não tem um hook equivalente ao `Stop` do Claude Code (que impede encerr
 |---|---|---|
 | `git commit` | `check:regras` sobre o que vai no commit | `.githooks/pre-commit` |
 | `git push` deste clone | `npm run check` na branch que sobe, com a árvore limpa; recusa push no `master` e no `staging`, push forçado, push de branch que não é a atual e push com mudanças fora do commit | `.githooks/pre-push` |
-| PR e push em `feature/**`, `hotfix/**` e `staging` | `npm run check` (no PR, `check:regras` estrito) e `check:meta` | `.github/workflows/ci.yml` |
+| PR e push em `feature/**`, `hotfix/**` e `staging` | `npm run check` (no PR, `check:regras` estrito) e `check:meta`; os exigidos para o merge são os do PR (`check` e `meta`; no push, `check (push)` e `meta (push)`) | `.github/workflows/ci.yml` |
 | Merge no `staging` | sozinho (auto-merge) com `check` e `meta` verdes; o PR de processo, o dono ([fluxo.md](fluxo.md)) | `.github/workflows/staging.yml` e proteção do `staging` |
 | Merge no `master` | só o dono, que revisa o lote: o PR permanente do staging (release) e os hotfix, com `check` e `meta` verdes | proteção de branch no GitHub, configurada pelo usuário |
 
@@ -47,7 +47,9 @@ O Codex usa as mesmas skills do Claude lendo o arquivo: a tabela "Skills e fluxo
 
 **Arquivo local** (nota, prompt, rascunho que não vai para o git): ponha em `.git/info/exclude` do seu clone, nunca no `.gitignore` versionado. O pre-push, o `check:escopo` e o hook Stop do Claude contam arquivo não rastreado como mudança, e um arquivo solto na raiz quebra o push ou aparece como fora do escopo.
 
-A exceção é a skill de terceiros Impeccable, instalada por agente em `.agents/skills/impeccable/` (instalação e versão no [AGENTS.md](../../AGENTS.md#skills-e-fluxos)). Os hooks dela ficam em `.codex/hooks.json` e acham o launcher pela raiz do git, então funcionam com a sessão aberta em qualquer subpasta; sem a skill instalada, não fazem nada.
+Na máquina, o `npm run check` (pelo `check:regras`) avisa quando acha em `.agents/skills/` uma cópia de skill do projeto.
+
+A exceção é a skill de terceiros Impeccable, instalada por agente em `.agents/skills/impeccable/` (instalação e versão no [AGENTS.md](../../AGENTS.md#skills-e-fluxos)). Os hooks dela ficam em `.codex/hooks.json` e acham o launcher pela raiz do git, então funcionam com a sessão aberta em qualquer subpasta; sem a skill instalada, não fazem nada. Eles rodam código de terceiros fora do git (risco aceito pelo usuário, #54): o `.codex/hooks.json` e o `skills-lock.json` são arquivos de processo, e atualizar o Impeccable é tarefa de processo.
 
 ## Prompt de início de tarefa
 

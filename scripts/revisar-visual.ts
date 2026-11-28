@@ -3,18 +3,21 @@
 //      [--chromium=/caminho/do/chromium]   (ou a variável PW_CHROMIUM; sem nenhum, tenta o padrão e /opt/pw-browsers/chromium)
 // Saída: PNGs em dist-lab/revisao/ (fora do git) e, no terminal, os erros do console de cada foto.
 // Precisa do Playwright com o Chromium (no ambiente na nuvem já vem; na sua máquina: npx playwright install chromium).
-import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { SCENARIOS } from '../prototype/lab/registry';
 
 const LAB = 'dist-lab/lab.html';
 const FALLBACK_CHROMIUM = '/opt/pw-browsers/chromium';
+/** Celular (360, 390), tablet (768), desktop (1024) e widescreen (1280, onde a faixa começa, e 1440): docs/visual.md. */
 export const VIEWPORTS = [
   { nome: '360', width: 360, height: 780 },
   { nome: '390', width: 390, height: 844 },
   { nome: '768', width: 768, height: 1024 },
   { nome: '1024', width: 1024, height: 720 },
+  { nome: '1280', width: 1280, height: 800 },
   { nome: '1440', width: 1440, height: 900 },
 ];
 export const VARIANTES = [
@@ -22,12 +25,12 @@ export const VARIANTES = [
   { nome: 'sumi-still', still: true },
 ];
 
-/** Ids dos cenários, lidos dos arquivos de prototype/lab/scenarios (sem carregar o lab, que precisa de DOM). */
-export function scenarioIds(dir = 'prototype/lab/scenarios'): string[] {
-  const ids = readdirSync(dir)
-    .filter((f) => f.endsWith('.ts'))
-    .flatMap((f) => [...readFileSync(join(dir, f), 'utf8').matchAll(/\bid:\s*['"`]([\w.:-]+)['"`]/g)].map((m) => m[1]!));
-  return [...new Set(ids)].sort();
+/**
+ * Ids dos cenários, da lista registrada no lab (`prototype/lab/registry.ts`), inclusive os montados por template (#68).
+ * A lista carrega sem DOM, como no tests/uilab.test.ts: o DOM só entra quando um cenário é montado.
+ */
+export function scenarioIds(): string[] {
+  return [...new Set(SCENARIOS.map((s) => s.id))].sort();
 }
 
 export const shotUrl = (lab: string, id: string, still: boolean): string =>

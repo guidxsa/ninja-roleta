@@ -2,6 +2,7 @@
 // Uso: npm run check:regras [-- --estrito] [-- --preparado]
 //   --estrito   balance sem registro vira erro (na CI do PR, CHECK_ESTRITO=true faz o mesmo)
 //   --preparado só o que está no índice, para o pre-commit (arquivos e conteúdo do core como vão no commit)
+import { existsSync, readdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { currentBranch, gitChanges, inCi, indexFiles, packageJsonChange, readVersion, matchesAny, report, type Finding } from './harness';
 
@@ -21,6 +22,13 @@ export const PROTECTED = [
   '.github/ISSUE_TEMPLATE/**',
   'docs/processo/**',
   '.claude/skills/**',
+  // Configuração do Codex e versão fixada do Impeccable, que os hooks dele executam (AGENTS.md, "Skills e fluxos").
+  '.codex/**',
+  'skills-lock.json',
+  // Scripts que os workflows (com segredo) e os hooks executam sozinhos, e a ferramenta de verificação visual.
+  'scripts/metricas*.ts',
+  'scripts/limpar-branches.ts',
+  'scripts/revisar-visual.ts',
 ];
 /** Branch de processo: `feature/harness` ou `feature/harness-<tema>` (AGENTS.md, "Dois agentes"). */
 export const HARNESS_BRANCH = /^feature\/harness(-[a-z0-9-]+)?$/;
@@ -198,6 +206,26 @@ export function checkRegras({ files, branch, strict, core, scriptsChanged = fals
   return out;
 }
 
+/**
+ * Skills do projeto copiadas em `.agents/skills/` (pasta fora do git que o Codex carrega sozinho): a cópia fica velha sem
+ * ninguém ver (docs/processo/codex.md, "Skills"). Só o Impeccable, de terceiros, mora lá.
+ */
+export function skillsCopiadas(agentes: readonly string[], projeto: readonly string[]): Finding[] {
+  const copias = agentes.filter((s) => projeto.includes(s)).map((s) => `.agents/skills/${s}`);
+  return copias.length
+    ? [
+        {
+          level: 'aviso',
+          rule: 'skill-copiada',
+          message: 'Cópia de skill do projeto em .agents/skills/ (o Codex lê a cópia velha). Apague-a: a única fonte é .claude/skills/.',
+          files: copias,
+        },
+      ]
+    : [];
+}
+
+const pastas = (dir: string): string[] => (existsSync(dir) ? readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name) : []);
+
 function main(): void {
   const strict = process.argv.includes('--estrito') || process.env.CHECK_ESTRITO === 'true';
   const staged = process.argv.includes('--preparado');
@@ -216,6 +244,7 @@ function main(): void {
       rule: 'contexto-git',
       message: `Não deu para listar os arquivos alterados (${changes.problem}): só a pureza do core foi conferida.`,
     });
+  if (!inCi()) findings.push(...skillsCopiadas(pastas('.agents/skills'), pastas('.claude/skills')));
   const mode = [strict && 'estrito', staged && 'preparado'].filter(Boolean).join(', ');
   process.exitCode = report(`check:regras${mode ? ` (${mode})` : ''}, ${changes.files.length} arquivo(s) alterado(s)`, findings);
 }

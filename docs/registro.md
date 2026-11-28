@@ -2,6 +2,10 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Incongruências do harness (sem versão, 27/11/2026)
+
+Tarefa de processo [harness-incongruencias](tarefas/harness-incongruencias.md), com o contrato e as opções aprovados pelo usuário. Nenhuma regra nem número de jogo mudou. A trava de balanceamento da correção automática passa a cobrir o `balance.ts` de cada modo (#51); as negações do Claude Code valem também no PowerShell e pegam as formas que escapavam (#52); a lista `PROTECTED` ganha a configuração do Codex, o `skills-lock.json` e os scripts que workflows e hooks executam (#53); os hooks do Impeccable ficam, protegidos e com o risco escrito (#54); no push, os jobs da CI se chamam `check (push)` e `meta (push)` (#55); o `check:regras` avisa da cópia de skill em `.agents/skills/` (#58); o `revisar-visual` lê os cenários do registro do lab e fotografa também em 1280 px (#68, #81).
+
 ## Classe aleatória com relíquia (27/11/2026)
 
 Tarefa [modos-jornada](tarefas/modos-jornada.md), decisão do usuário: o card Classe aleatória da Campanha sorteia a classe entre as liberadas (e o elemento, no Comum) e **sempre** dá a relíquia do sorteio, também ao Uchiha e ao Hyuuga; o "Sortear o elemento" saiu do cardápio. Antes, só o Comum que sorteava o elemento ganhava a relíquia. Simulação nova `--aleatoria` (`npm run sim:jornada -- 300 2 --aleatoria`); os grupos padrão da guarda da meta não mudaram. Revisão em [decisoes.md](decisoes.md) (item 51).

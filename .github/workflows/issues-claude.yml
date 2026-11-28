@@ -160,8 +160,8 @@ jobs:
                não altere arquivos: comente na issue (gh issue comment) o motivo, terminando com uma linha só com
                <!-- loop-issues:precisa-decisao -->, e pare.
             2. Escreva o contrato docs/tarefas/issue-${{ matrix.issue }}.md pelo modelo docs/processo/tarefa-modelo.md, com
-               "issue: ${{ matrix.issue }}" no frontmatter e o escopo mais estreito que resolve (nunca src/data/balance*,
-               AGENTS.md, CLAUDE.md, .github/, .githooks/, .claude/ ou scripts/check-*).
+               "issue: ${{ matrix.issue }}" no frontmatter e o escopo mais estreito que resolve (nunca src/data/**/balance*,
+               AGENTS.md, CLAUDE.md, .github/, .githooks/, .claude/, .codex/, docs/processo/ ou scripts/ de processo).
             3. Corrija, com teste antes da fórmula e doc no mesmo commit, como manda o AGENTS.md. Se quem joga nota a
                mudança, descreva-a em changelog.d/issue-${{ matrix.issue }}.md (docs/processo/fluxo.md); não edite o
                CHANGELOG.md nem a versão. Rode npm run check até passar.

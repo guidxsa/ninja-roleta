@@ -93,6 +93,19 @@ escopo: ["src/**"]
     expect(rules(run(['src/data/balance.ts'], md7, { branch: 'feature/issue-7' }))).toEqual(['erro:correcao-automatica']);
   });
 
+  it('a trava de balanceamento cobre o balance.ts de cada modo (#51)', () => {
+    const md7 = `---
+objetivo: x
+issue: 7
+escopo: ["src/**"]
+---
+`;
+    const balance = ['src/data/balance.ts', 'src/data/roleta/balance.ts', 'src/data/jornada/balance.ts'];
+    const f = run([...balance, 'src/data/roleta/origens.ts'], md7, { branch: 'feature/issue-7', issueLabels: [ETIQUETA_AUTOMATICA] });
+    expect(rules(f)).toEqual(['erro:correcao-automatica']);
+    expect(f[0]!.files).toEqual(balance);
+  });
+
   it('arquivo da área do outro agente dá aviso, sem barrar (AGENTS.md, "Dois agentes")', () => {
     const tudo = (agente: string) => `---\nobjetivo: x\nescopo: ["src/**", "prototype/**", "public/**"]\nagente: ${agente}\n---\n`;
     const visual = ['prototype/styles/shinobi/a.css', 'public/img/ninja/x.webp'];

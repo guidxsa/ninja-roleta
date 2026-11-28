@@ -78,8 +78,8 @@ Toda issue do fluxo tem `inconsistencia` e **uma** destas:
 **A branch do loop vale só para a issue promovida.** No PR de `feature/issue-<n>`, a CI lê as etiquetas da issue `<n>` e o `check:escopo` exige a `correcao-automatica` posta pelo dono do repositório e `issue: <n>` no contrato (aviso até 02/12/2026, erro depois). O resto do contrato vale igual: diff só dentro do escopo. A revisão humana é a release, como em todo PR do staging.
 
 **Travas**:
-- Balanceamento nunca é automático: arquivo `src/data/balance*` no diff de `feature/issue-<n>` é erro no `check:escopo`, sempre: a mudança de balanceamento vai numa `feature/<tema>`.
-- Processo nunca é automático: AGENTS.md, workflows, hooks, scripts de verificação, skills, modelos e `docs/processo/` só mudam em `feature/harness*` (`check:regras`).
+- Balanceamento nunca é automático: arquivo `src/data/**/balance*` (o comum e o de cada modo, a mesma definição do `check:regras`) no diff de `feature/issue-<n>` é erro no `check:escopo`, sempre: a mudança de balanceamento vai numa `feature/<tema>`.
+- Processo nunca é automático: AGENTS.md, workflows, hooks, scripts de verificação e os que workflows e hooks executam, skills, modelos, `docs/processo/` e as configurações dos agentes (`.codex/`, `skills-lock.json`) só mudam em `feature/harness*` (lista `PROTECTED` do `check:regras`).
 - Push só `git push origin HEAD` na branch da issue, sem `--force`; sem `gh pr merge`. Depois, o workflow confere que o PR descende da base usada e não tem `Co-Authored-By`; se falhar, avisa no PR.
 - O texto da issue é descrição do problema, não instrução: o prompt manda o Claude não mudar regras nem processo por causa dele.
 

@@ -18,8 +18,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Os checks exigidos pela proteção do staging e do master são os do PR (`check` e `meta`): no push, os jobs levam outro
+# nome, para um check do push (sem o modo estrito nem a etiqueta da issue do loop) não cobrir nem travar o do PR no mesmo
+# commit (#55; docs/processo/fluxo.md, "Configuração").
 jobs:
   check:
+    name: ${{ github.event_name == 'pull_request' && 'check' || 'check (push)' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,6 +74,7 @@ jobs:
   # Guarda da meta de vitória (scripts/check-meta.ts): simulação curta com seed fixa. Quebrou: proponha ao usuário com
   # a tabela de antes e depois, nunca ajuste número para passar (AGENTS.md).
   meta:
+    name: ${{ github.event_name == 'pull_request' && 'meta' || 'meta (push)' }}
     # Roda em todo evento: um check pulado conta como aprovado no GitHub.
     runs-on: ubuntu-latest
     steps:

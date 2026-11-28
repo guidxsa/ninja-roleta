@@ -6,20 +6,25 @@
 // branch do loop só vale com a `correcao-automatica` dele e o contrato com `issue: <n>` (docs/processo/issues.md).
 // Uso: npm run check:escopo
 import { pathToFileURL } from 'node:url';
+import { BALANCE_FILE } from './check-regras';
 import { currentBranch, gitChanges, inCi, lockfileOnlyVersion, matchesAny, packageJsonChange, readVersion, report, type Finding } from './harness';
 
 /** Sem contrato (ou sem tema): aviso até esta data, erro a partir dela (o hábito pegar). */
 export const EXIGIR_CONTRATO_A_PARTIR = '2026-12-02';
 /** Etiqueta da issue que o loop corrige sozinho, posta pelo usuário: o que libera a branch feature/issue-<n>. */
 export const ETIQUETA_AUTOMATICA = 'correcao-automatica';
-/** O que a correção automática nunca toca: balanceamento é sempre do usuário (AGENTS.md, "Convenções"). */
-export const NUNCA_AUTOMATICO = ['src/data/balance*'];
+/**
+ * O que a correção automática nunca toca: balanceamento é sempre do usuário (AGENTS.md, "Convenções"). Mesma definição
+ * do check:regras (`BALANCE_FILE`): o `balance.ts` comum e o de cada modo (`src/data/roleta/`, `src/data/jornada/`).
+ */
+export const nuncaAutomatico = (f: string): boolean => BALANCE_FILE.test(f);
 /**
  * Área de cada agente (AGENTS.md, "Dois agentes"): o Codex no visual, o Claude na implementação. Arquivo da área do outro
  * agente, pelo `agente:` do contrato, dá aviso (às vezes um ajuste pequeno do outro lado faz sentido).
  */
 export const AREA_VISUAL = ['prototype/styles/**', 'public/img/**'];
-export const AREA_IMPLEMENTACAO = ['src/core/**', 'src/data/balance*', 'src/data/*/balance*'];
+export const AREA_IMPLEMENTACAO = ['src/core/**'];
+const daImplementacao = (f: string): boolean => matchesAny(f, AREA_IMPLEMENTACAO) || BALANCE_FILE.test(f);
 /** Branch da correção automática de uma issue. */
 export const ISSUE_BRANCH = /^feature\/issue-(\d+)$/;
 /**
@@ -154,7 +159,7 @@ export function checkEscopo({
       rule: 'correcao-automatica',
       message: `A branch feature/issue-${issue} é do loop das issues: precisa da etiqueta "${ETIQUETA_AUTOMATICA}" posta pelo usuário na issue #${issue} e de "issue: ${issue}" em ${path}. Outra tarefa vai numa feature/<tema>.`,
     });
-  const automaticos = issue ? files.filter((f) => matchesAny(f, NUNCA_AUTOMATICO)) : [];
+  const automaticos = issue ? files.filter(nuncaAutomatico) : [];
   if (automaticos.length)
     out.push({
       level: 'erro',
@@ -163,7 +168,7 @@ export function checkEscopo({
       files: automaticos,
     });
   const outraArea =
-    c.agente === 'claude' ? files.filter((f) => matchesAny(f, AREA_VISUAL)) : c.agente === 'codex' ? files.filter((f) => matchesAny(f, AREA_IMPLEMENTACAO)) : [];
+    c.agente === 'claude' ? files.filter((f) => matchesAny(f, AREA_VISUAL)) : c.agente === 'codex' ? files.filter(daImplementacao) : [];
   if (outraArea.length)
     out.push({
       level: 'aviso',
