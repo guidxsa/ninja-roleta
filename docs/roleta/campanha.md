@@ -147,7 +147,7 @@ Regras do veneno em [efeitos.md](../base/efeitos.md#envenenamento). O sapo não 
 
 ## Dificuldade
 
-Escolhida na tela de origem; fica salva como preferência do aparelho e no histórico.
+Escolhida no lobby do Arcade, antes das roletas da origem ([run.md](run.md#dificuldade-e-histórico)); fica salva como preferência do aparelho e no histórico.
 
 | Dificuldade | Força dos vilões (HP, ataques e resistências) |
 |---|---|

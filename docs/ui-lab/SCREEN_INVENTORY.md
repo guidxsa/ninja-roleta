@@ -29,7 +29,7 @@ Não existe roteador. O jogo é **uma página só** (`prototype/index.html`, mon
 main()  (prototype/main.ts)
  ├─ ?teste → labFlow() → labScreen() → battleScreen() | runCampaign()
  └─ modeScreen()  (Portão da Vila)
-     ├─ roleta  → ensurePlayerName() → originScreen() → runCampaign()
+     ├─ roleta  → playArcade(): arcadeLobby() → ensurePlayerName() → originScreen() → runCampaign() → lobby de novo
      ├─ story   → runJornada({entry: 'story'}) → perspectiva ou parada salva
      └─ path    → runJornada({entry: 'path'}) → preparação ou parada salva
 ```
@@ -83,12 +83,13 @@ Legenda da última coluna: **Direto?** / **Visto**.
 
 ### 2.2 Roleta
 
-Fluxo: Portão → nome → origem → (mapa → evento → luta → recompensas)* → fim. Tudo em `prototype/main.ts`, estado em
-`camp` (só em memória).
+Fluxo: Portão → lobby → nome → origem → (mapa → evento → luta → recompensas)* → fim → lobby. O laço fica em
+`playArcade()` (`prototype/roleta/run.ts`), estado em `camp` (só em memória).
 
 | Id | Tela | Onde | Acesso | Dados | Estados alternativos | Responsivo | Direto? / Visto |
 |---|---|---|---|---|---|---|---|
-| `roleta.origin` | Roletas de origem + dificuldade | `originScreen()` | Card Arcade no Portão | RNG, `rollOrigin`, perfil (Hardcore liberado?) | Antes, durante e depois dos giros (`rolled`); 1 a N roletas conforme a linhagem (elementos, kekkei genkai, jinchuuriki); Hardcore travado ou liberado; "Girar de novo" | `rwheel`: palco + coluna `rside` lado a lado no PC | Sim (1 clique) / não |
+| `roleta.lobby` | Lobby do Arcade | `arcadeLobby()` em `roleta/screens/lobby.ts` | Card Arcade no Portão; fim da run | Perfil, `runs_v1`, `proto_settings_v1` (dificuldade), conquistas do Arcade | Primeiro acesso, sem runs nem conquistas (`roleta.lobby`); histórico e conquistas (`:mid`); Hardcore liberado e histórico cheio (`:full`); conta por dificuldade recolhida | Casca `.gate.jgate.jhub.rlobby`: pilha no celular (Girar acima da dobra); painel e começar à esquerda, coluna à direita no desktop | Sim (1 clique) / não |
+| `roleta.origin` | Roletas de origem | `originScreen()` | Girar no lobby | RNG, `rollOrigin`, dificuldade do lobby | Antes, durante e depois dos giros (`rolled`); 1 a N roletas conforme a linhagem (elementos, kekkei genkai, jinchuuriki); chip da dificuldade escolhida (`:hardcore`); "Girar de novo" | `rwheel`: palco + coluna `rside` lado a lado no PC | Sim (2 cliques) / não |
 | `roleta.map` | Mapa do ciclo | `mapScreen(eventDone)` | Depois da origem e entre lutas | `camp.run`, vilão sorteado, `camp.log` | Botão "Evento" ou "Lutar" (`eventDone`); chip de ciclo só do ciclo 2; botão Pesos (equipar/tirar) só com o item; trilha com etapas feitas que expandem (`<details>`); categoria genin/chunin/jounin/chefe muda arte e selo | Ficha em painéis (`sheetPanels`) no PC; `sticky-cta` | Lab (campanha a partir de etapa) / não |
 | `roleta.event` | Evento pré-luta | `eventScreen()` | Botão Evento no mapa | RNG (`roletaPreFightEvents`, 7 eventos com peso, total 100) | Um subfluxo por evento (abaixo); Moeda viciada oferece girar de novo (`spinRoll`); resultado com efeito e HUD pulsando | `rwheel` | Não / não |
 | `roleta.event.training` | Treino | `eventScreen` case `training` | Evento sorteado | RNG | Escolha de foco elemental existe no código mas `focus` está sempre vazio (só a roleta roda) | — | Não / não |
@@ -114,8 +115,11 @@ Tudo em `prototype/jornada/`, run salva a cada parada (`jornada_run_v1`). Duas v
 | Id | Tela | Onde | Acesso | Dados | Estados alternativos | Responsivo | Direto? / Visto |
 |---|---|---|---|---|---|---|---|
 | `jornada.entry` | Entrada da Jornada | `entryScreen()` em `jornada/index.ts` | Cenário legado do UI Lab | Save, conquistas (`j_canonHard` libera Hardcore), recentes | Com ou sem card de progresso; Hardcore travado/liberado; com ou sem conquistas recentes; frase sorteada | Composição do Portão: `gate-main` + `gate-aside` | Sim (1 clique) / não |
-| `jornada.story.pick` | Modo História: escolher perspectiva | `campaignScreen()` | Card História | `data.campaigns`, save | Naruto aberto; Sasuke travado ("em breve") enquanto não houver `campaigns.sasuke`; faixa de arcos com arco atual e feitos (só com run da História salva); confirmação de sobrescrever save | Dois painéis dia/noite; arcos rolam de lado no celular | Sim (2 cliques) / não |
-| `jornada.path.setup` | Caminho Ninja: preparação | `pathSetupScreen()` | Card Caminho Ninja | Conquistas (classes Uchiha/Hyuuga), recorde | Classes travadas/abertas; seletor de elemento só no Comum; linha de recorde só a partir de 1 ciclo vencido | Pôster + painel | Sim (2 cliques) / não |
+| `jornada.story.pick` | Modo História (composição do Portão) | `campaignScreen()` | Card História | `data.campaigns`, save, `jornada_runs_v1`, conquistas (`j_canonHard`, recentes) | Cards Naruto e Sasuke (em breve); coluna com o Progresso (Continuar) da História salva ou o aviso da Campanha salva (`:saved`, `:other`), dificuldade e conquistas recentes; Hardcore travado ou aberto (`:full`); histórico para a janela (`:history`) | Painel de arte + cards + coluna; no celular, a pilha na ordem do HTML | Sim (2 cliques) / não |
+| `jornada.story.dialog` | Janela da perspectiva | `perspectiveDialog()` | Card Naruto ou Sasuke | Save, `jornada_runs_v1` | Arcos concluído, atual, próximo e ainda não alcançado; Continuar e Recomeçar com a História salva, Começar sem ela; Sasuke em breve (`:sasuke`); confirmação de sobrescrever save | Janela maior que as outras, centrada no PC | Sim (2 cliques) / não |
+| `jornada.path.setup` | Modo Campanha (composição da História) | `pathSetupScreen()` | Card Campanha | Conquistas (classes, `j_canonHard`, recentes), recorde, save | Cards Escolher a classe e Classe aleatória; coluna com o Continuar da Campanha salva ou o aviso da História salva (`:saved`, `:other`), dificuldade, recorde e conquistas | Painel de arte + cards + coluna | Sim (2 cliques) / não |
+| `jornada.path.menu` | Cardápio de classes | `classMenuDialog()` | Card Escolher a classe | Conquistas (Uchiha/Hyuuga) | Classes abertas ou travadas (`:locked`); retrato e descrição da escolhida; elemento só no Comum, sem Sortear; Prodígio no Comum sem elemento | Janela maior, lista e destaque lado a lado no PC | Sim (2 cliques) / não |
+| `jornada.path.random` | Classe aleatória | `randomClassDialog()` | Card Classe aleatória | Conquistas (classes liberadas) | O que pode sair (retratos) e a recompensa; Sortear e começar leva à revelação "Sorteio da classe" com a relíquia | Janela | Sim (2 cliques) / não |
 | `jornada.path.reveal` | Revelação do herói | `revealScreen()` | Começar o Caminho Ninja | Run nova (RNG) | Elemento sorteado vs escolhido; prodígio sem elemento; Hyuuga sem elemento; 2º elemento do Uchiha; relíquia bônus de quem sorteou | Coluna centralizada | Não / não |
 | `jornada.trail` | Trilha da História (parada atual) | `playStop()` (ramo canon) | Cada parada da História | Run, `stages`, arte do arco | Próxima parada é luta (inimigos, IA, objetivo especial) ou não; faixa "O que mudou" no topo depois de evento; equipe da luta; dica rotativa; legenda; chip de ciclo; loja fixa só no widescreen | Celular: coluna. PC: `jcol-l` (HUD) + trilha + `jcol-r`. WIDE: loja acoplada (`dockShop`). Seções dobráveis (`fold.ts`, guardado no aparelho) | Não (só com save) / não |
 | `jornada.map` | Mapa do Caminho Ninja | `mapScreen()` / `mapView()` | Escolha de nó no Caminho Ninja | `run.map` (gerado por seed), `path` | Nós feito, escolha, adiante, morto; chefe no topo com retrato; nó "?" desconhecido; card "Sua run"; loja acoplada no WIDE | Mapa vertical; colunas no PC | Não / não |

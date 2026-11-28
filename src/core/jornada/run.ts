@@ -42,6 +42,11 @@ export interface JRun {
    * ganha uma relíquia comum) ou fixo pela classe (História, Uchiha, Hyuuga).
    */
   elementPick: ElementPick;
+  /**
+   * Caminho Ninja: a classe saiu do card "Classe aleatória" (sorteada entre as liberadas). Ganha a relíquia do sorteio
+   * mesmo com elemento fixo (Uchiha, Hyuuga). Sem o campo: a classe foi escolhida (e saves antigos).
+   */
+  classPick?: 'random';
   /** Visual do protagonista (personalização liberada por easter egg, ex.: "sasuke"). */
   skin: string | null;
   /** Caminho Ninja: suportes das lutas comuns. */
@@ -223,6 +228,7 @@ export function newGenericRun(
   unlocked: ReadonlySet<string> = new Set(),
   skin: string | null = null,
   choice: ElementChoice = 'random',
+  randomClass = false,
 ): JRun {
   const cls = data.generic.classes.find((c) => c.id === classId);
   if (!cls) throw new Error(`classe desconhecida: ${classId}`);
@@ -243,6 +249,7 @@ export function newGenericRun(
   run.mode = 'generic';
   run.classId = classId;
   run.elementPick = !canChoose ? 'fixed' : choice === 'random' ? 'random' : 'chosen';
+  if (randomClass) run.classPick = 'random';
   if (cls.secondElement) {
     let second = drawElement(rng, data, true);
     while (second === element) second = drawElement(rng, data, true);
@@ -257,11 +264,31 @@ export function newGenericRun(
   run.map = generateMap(rng, data);
   // O nível I do elemento entra no moveset.
   run.moveset = heroMovable(run, data).slice(0, MOVESET_SIZE);
-  if (run.elementPick === 'random') {
+  if (drewRandomly(run)) {
     const bonus = rollRelic(fitRelics(run, data), run.relics, data.j.elementDraw.randomBonus, rng);
     if (bonus) run = gainRelic(run, bonus, data);
   }
   return run;
+}
+
+/** A run ganhou a relíquia do sorteio: o Comum sorteou o elemento ou a classe saiu do card "Classe aleatória". */
+export const drewRandomly = (run: Pick<JRun, 'elementPick' | 'classPick'>): boolean => run.elementPick === 'random' || run.classPick === 'random';
+
+/** Classes do Caminho Ninja que o perfil já liberou (o Comum sempre; as outras pela conquista). */
+export function openGenericClasses(data: JornadaData, unlocked: ReadonlySet<string>): JornadaData['generic']['classes'] {
+  return data.generic.classes.filter((c) => !c.unlock || unlocked.has(c.unlock));
+}
+
+/**
+ * Card "Classe aleatória" (docs/jornada/classes.md#classe-aleatória): a seed sorteia a classe entre as liberadas, o
+ * elemento sai sorteado (no Comum, inclusive o Prodígio) e a run sempre ganha a relíquia do sorteio. O sorteio da classe
+ * usa um gerador próprio da seed, para não mudar o mapa, os suportes e os chefes que a mesma seed daria.
+ */
+export function newRandomGenericRun(seed: number, difficulty: Difficulty, data: JornadaData, unlocked: ReadonlySet<string> = new Set()): JRun {
+  const pool = openGenericClasses(data, unlocked);
+  const pick = createRng(seed ^ 0x2545f491);
+  const cls = pool[Math.min(pool.length - 1, Math.floor(pick() * pool.length))]!;
+  return newGenericRun(seed, difficulty, cls.id, data, unlocked, null, 'random', true);
 }
 
 /**

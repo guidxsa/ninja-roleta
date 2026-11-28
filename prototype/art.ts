@@ -282,13 +282,14 @@ export const SCENE_ART: Record<string, SceneArt> = {
   'jornada': { focus: [62, 46] },
   'modo-jornada': { focus: [50, 50] },
   'modo-roleta': { focus: [50, 50] },
+  arcade: { focus: [55, 49] },
   // Arcos da História do Naruto, pelo id do estágio (src/data/jornada/stages.ts).
   'arco-waves': { file: 'waves', focus: [62, 34] },
   'arco-exam': { file: 'chunnin', focus: [50, 58] },
   'arco-sannin': { file: 'sannin', focus: [50, 30] },
   'arco-retrieval': { file: 'sasuke', focus: [26, 40] },
-  // A rota ilustra o modo. O pôster da preparação conserva seu enquadramento.
-  'caminho-ninja': { focus: [50, 30] },
+  // No painel da Campanha, o recorte acompanha o ninja e a bifurcação.
+  'caminho-ninja': { focus: [62, 45] },
   'modo-caminho': { focus: [50, 50] },
   // Roleta no PC (todas opcionais; sem imagem, vale o cenário desenhado): palco do sorteio e uma por categoria de vilão.
   'roleta-boss': { file: 'roleta-chefe' },

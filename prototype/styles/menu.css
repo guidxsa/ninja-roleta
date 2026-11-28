@@ -157,18 +157,26 @@ body.at-gate #home-btn, body:not(.at-gate) .brand, body:not(.has-sheet) #sheet-b
 .mode-body > .ico { width: 26px; height: 26px; color: var(--paper-ink); transition: transform var(--dur-2) var(--ease); }
 .mode-card:hover .mode-body > .ico { transform: translateX(3px); }
 
-/* Barra inferior do Portão: o Registro ninja ao alcance do polegar. Escura, como no mockup. */
+/* Barra inferior do Portão e das entradas dos modos: o Registro ninja ao alcance do polegar. */
 .gate-nav { display: none; }
-body.at-gate { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
-body.at-gate .gate-nav {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: grid; grid-template-columns: repeat(5, 1fr);
-  max-width: var(--col-max); margin: 0 auto; padding-bottom: env(safe-area-inset-bottom);
-  background: var(--gate-nav-bg); border-top: 1px solid var(--gold-deep); backdrop-filter: blur(6px);
+@media (max-width: 1023px) {
+  body:is(.at-gate, :has(main > :is(.jhub, .rorigin, .jname))) {
+    --side-w: 0px;
+    padding-left: 0;
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+  body:is(.at-gate, :has(main > :is(.jhub, .rorigin, .jname))) #side-nav { display: none; }
+  body:is(.at-gate, :has(main > :is(.jhub, .rorigin, .jname))) .gate-nav {
+    position: fixed; inset: auto 0 0; z-index: 6; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin: 0; padding-bottom: env(safe-area-inset-bottom);
+    background: var(--bg-2); border-top: 1px solid var(--line-strong);
+  }
 }
 .gate-nav button {
-  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 60px;
-  border: 0; background: none; color: var(--nav-ink); cursor: pointer; font: 600 var(--fs-xs)/1 var(--font-hud); letter-spacing: .05em; text-transform: uppercase;
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 52px;
+  border: 0; background: none; color: var(--muted); cursor: pointer; font: 600 var(--fs-xs)/1 var(--font-hud); letter-spacing: .05em; text-transform: uppercase;
 }
+.gate-nav button .ico { width: 20px; height: 20px; }
 .gate-nav .kanji { font-size: var(--fs-2xl); color: var(--text); }
 .gate-nav .kanji.two { font-size: var(--fs-md); line-height: 21px; letter-spacing: -.04em; }
 .gate-nav button[aria-current] { color: var(--gold-2); cursor: default; }

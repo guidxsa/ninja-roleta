@@ -7,7 +7,7 @@
 .side-nav, .gate-aside, .quote-strip, .mode-cta { display: none; }
 .gate-main, .gate-banner { display: contents; }
 
-@media (min-width: 900px) and (min-height: 560px) {
+@media (min-width: 1024px), (min-width: 900px) and (min-height: 560px) {
   :root { --side-w: 92px; }
   body { padding-left: var(--side-w); }
 
@@ -31,12 +31,11 @@
     color: var(--side-nav-current-ink); border-color: var(--side-nav-current-edge); box-shadow: inset 3px 0 0 var(--primary);
     background: linear-gradient(180deg, var(--side-nav-current-bg-top), var(--side-nav-current-bg-bottom));
   }
-  /* O Menu da barra superior sai (a barra lateral tem o Início); a barra inferior do Portão é só do celular. */
+  /* A navegação da casca já oferece Início. */
   #home-btn { display: none !important; }
-  /* O progresso da Jornada salva fica na coluna direita; o card do celular (acima dos modos) sai. */
-  body.at-gate { padding-bottom: 0; }
-  body.at-gate .gate-nav { display: none; }
+}
 
+@media (min-width: 900px) and (min-height: 560px) {
   /* Rodapé: frase sorteada à esquerda; o aviso de projeto de fã e a versão à direita, pequenos. */
   footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; max-width: var(--shell-max); padding: 8px 24px 12px; text-align: left; }
   .quote-strip { display: block; flex: 1; min-width: 0; margin: 0; font: 400 var(--fs-lg)/1.3 var(--font-hand); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; }

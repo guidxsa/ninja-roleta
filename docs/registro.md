@@ -2,6 +2,20 @@
 
 Histórico das decisões e das simulações por versão, movido do `CLAUDE.md` na v0.47.2 sem cortes. É consulta: as regras vigentes estão nos outros docs e o que falta decidir está em [decisoes.md](decisoes.md). Ao fechar uma versão que muda o design, acrescentar o resumo e a simulação na frente certa.
 
+## Classe aleatória com relíquia (27/11/2026)
+
+Tarefa [modos-jornada](tarefas/modos-jornada.md), decisão do usuário: o card Classe aleatória da Campanha sorteia a classe entre as liberadas (e o elemento, no Comum) e **sempre** dá a relíquia do sorteio, também ao Uchiha e ao Hyuuga; o "Sortear o elemento" saiu do cardápio. Antes, só o Comum que sorteava o elemento ganhava a relíquia. Simulação nova `--aleatoria` (`npm run sim:jornada -- 300 2 --aleatoria`); os grupos padrão da guarda da meta não mudaram. Revisão em [decisoes.md](decisoes.md) (item 51).
+
+| Modo (vitória %, 300 runs, seed 2) | Fácil | Médio | Difícil | Hardcore |
+|---|---:|---:|---:|---:|
+| Comum, elemento sorteado + relíquia (o "Sortear" antigo) | 90,0 | 64,0 | 38,7 | 18,7 |
+| Comum escolhido no cardápio, sem relíquia | 90,0 | 63,0 | 30,7 | 14,0 |
+| Uchiha escolhido | 91,0 | 69,0 | 38,0 | 14,0 |
+| Uchiha sorteado + relíquia | 95,0 | 68,0 | 40,3 | 19,3 |
+| Hyuuga escolhido | 98,7 | 74,3 | 37,0 | 11,7 |
+| Hyuuga sorteado + relíquia | 98,0 | 79,0 | 44,3 | 12,0 |
+| Classe aleatória (a mistura das três) | 95,3 | 67,3 | 43,0 | 16,3 |
+
 ## Monitores grandes (sem versão, 26/11/2026)
 
 Na tarefa [telas-4k](tarefas/telas-4k.md), o Codex escolheu `--shell-max` de 3600px a partir de 2200 × 1200 px. A barra lateral fica fora desse limite e a escala da interface acompanha a largura e a altura. Assim, em 4K, a casca ocupa os 3538px disponíveis ao lado da barra do Portão. Em janelas maiores, o limite contém a abertura das colunas.
@@ -774,3 +788,7 @@ Pedido do usuário depois da revisão do fluxo: tirar a revisão cruzada, porque
 Motivo, medido no GitHub: 9 dos 13 PRs anteriores entraram com `revisao-dispensada` (cota do Codex desde 21/11 e a action do Claude, que só roda com o workflow igual ao do `master`, #79), e cerca de metade entrou sem `contrato-aprovado`. Antes: portão `revisao-cruzada`, loop de correção em até 3 rodadas, etiquetas `contrato-aprovado` e `revisao-dispensada`, `aprovacao.yml`. Depois: auto-merge com `check` e `meta`; PR de processo com merge do usuário; contrato sem etiqueta (aprovação na conversa no campo `aprovado`); PR permanente com a seção "Mudanças no processo" e a revisão de IA do lote (`codex exec review`) no "prepara"; aviso do `check:escopo` quando o agente sai da sua área; `npm run delegar` ([processo/delegacao.md](processo/delegacao.md)); `docs/processo/`, skills e modelos na lista protegida (#53, em parte). Issues resolvidas: #48, #49, #50, #57, #59, #61, #62 e #79.
 
 Decidido sem o usuário (seguindo as recomendações do contrato, que ele aprovou): um PR só; worktrees do Codex em `~/worktrees/ninja-roleta`; o Codex roda sem rede e não commita nem dá push (o 1º teste real, PR #82, mostrou que o sandbox não grava no `.git`; o Claude confere, commita e publica); o `staging.yml` passa a `pull_request_target`, para um PR não desligar a própria trava; a branch `feature/issue-<n>` continua exigindo a `correcao-automatica` posta pelo dono; a data de 02/12/2026 passa a exigir só o contrato.
+
+## Caminho até o v1.0.0 (27/11/2026)
+
+O usuário decidiu na revisão dos planos: o v1.0.0 sai quando houver uma entrega completa, depois de um rebalanceamento com todas as mudanças no jogo. Antes dele vêm o plano visual (lobby do Arcade e palco de combate), o harness (as issues de processo), a revisão narrativa da História feita por ele e a árvore de talentos nova; depois do 1.0 ficam os personagens e as classes novas (incluindo a versão suporte do prodígio), a campanha do Sasuke, os minijogos novos e o perfil. A release v0.97.0 saiu com o item 51 aberto, que entra no rebalanceamento final. Ordem e pendências em [decisões](decisoes.md), item 50.

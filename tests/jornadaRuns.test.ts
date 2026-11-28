@@ -3,7 +3,7 @@ import { foeFights } from '../src/core/jornada/foes';
 import { newRun } from '../src/core/jornada/run';
 import type { JBattle } from '../src/core/jornada/types';
 import { jornadaData } from '../src/data/jornada';
-import { JORNADA_RUNS_KEY, jornadaRunRecord, loadJornadaRuns, recordJornadaRun } from '../src/state/jornadaRuns';
+import { JORNADA_RUNS_KEY, jornadaRunRecord, loadJornadaRuns, recordJornadaRun, storyArcsCleared, type JornadaRunRecord } from '../src/state/jornadaRuns';
 import { emptyProfile, loadProfile, PROFILE_STORAGE_KEY, recordJornadaFight } from '../src/state/profile';
 import type { KeyValueStorage } from '../src/state/runHistory';
 
@@ -100,5 +100,38 @@ describe('Livro Bingo da Jornada', () => {
     const p = loadProfile(st);
     expect(p.jornadaFoes).toBeUndefined();
     expect(p.jornadaAllies).toEqual(['naruto']);
+  });
+});
+
+describe('arcos da História já passados (storyArcsCleared)', () => {
+  const rec = (over: Partial<JornadaRunRecord>): JornadaRunRecord => ({
+    ...jornadaRunRecord(newRun(1, 'normal', jornadaData), t0),
+    ...over,
+  });
+
+  it('sem runs da História: nenhum arco', () => {
+    expect(storyArcsCleared([], 4)).toBe(0);
+    expect(storyArcsCleared([rec({ mode: 'generic', status: 'victory' })], 4)).toBe(0);
+  });
+
+  it('derrota ou abandono contam os arcos antes do que parou; vale o melhor', () => {
+    const runs = [rec({ status: 'defeat', stageIndex: 1 }), rec({ status: 'abandoned', stageIndex: 2 }), rec({ status: 'defeat', stageIndex: 0 })];
+    expect(storyArcsCleared(runs, 4)).toBe(2);
+  });
+
+  it('vitória conta todos os arcos', () => {
+    expect(storyArcsCleared([rec({ status: 'defeat', stageIndex: 1 }), rec({ status: 'victory', stageIndex: 3 })], 4)).toBe(4);
+  });
+
+  it('cada perspectiva conta só as próprias runs (sem campaign: a do Naruto)', () => {
+    const sasuke = rec({ status: 'victory', campaign: 'sasuke' });
+    expect(storyArcsCleared([sasuke], 4)).toBe(0);
+    expect(storyArcsCleared([sasuke], 4, 'sasuke')).toBe(4);
+  });
+
+  it('registro estranho (estágio fora da faixa ou ausente) não passa do total nem quebra', () => {
+    const odd = { ...rec({ status: 'defeat' }), stageIndex: undefined } as unknown as JornadaRunRecord;
+    expect(storyArcsCleared([odd, rec({ status: 'defeat', stageIndex: 9 })], 4)).toBe(4);
+    expect(storyArcsCleared([odd], 4)).toBe(0);
   });
 });

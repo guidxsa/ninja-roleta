@@ -39,6 +39,19 @@ export const jornadaPtBR = {
     arcsTitle: 'Arcos da História',
     arcNow: 'Você está aqui',
     arcDone: 'Concluído',
+    arcAhead: 'Ainda não alcançado',
+    /** Run salva do outro modo na tela de um modo: começar aqui a substitui (há um save só da Jornada). */
+    otherSaved: (mode: string) => `Você tem uma run da ${mode} salva. Começar aqui substitui essa run.`,
+    restartCanon: 'Recomeçar a História',
+    restartPath: 'Começar uma nova run',
+    soonCta: 'Em breve',
+    /** Descrição breve de cada arco (dica ao passar o mouse ou tocar no arco, na janela da perspectiva). */
+    arcInfo: {
+      waves: 'Do roubo do Pergaminho dos Selos ao teste dos guizos do Kakashi, e a missão no País das Ondas contra Zabuza e Haku.',
+      exam: 'O Exame Chunin: a Floresta da Morte, o encontro com o Orochimaru, as preliminares e a luta contra o Gaara.',
+      sannin: 'A busca pela Tsunade ao lado do Jiraiya, com Kabuto e Orochimaru no caminho.',
+      retrieval: 'O resgate do Sasuke: os ninjas do Som, o Kimimaro e o confronto no Vale do Fim.',
+    } as Record<string, string>,
     chapter: 'Capítulo atual',
     stageOf: (n: number, total: number) => `Estágio ${n} de ${total}`,
     completion: { canon: 'Conclusão da História', generic: 'Caminho Ninja' } as Record<'canon' | 'generic', string>,
@@ -1022,12 +1035,27 @@ export const jornadaPtBR = {
     classTitle: 'Classe',
     start: 'Começar o Caminho Ninja',
     classes: {
-      common: { name: 'Comum', desc: 'Escolha o elemento ou sorteie (+1 relíquia).' },
+      common: { name: 'Comum', desc: 'Escolha o elemento ou o Prodígio.' },
       uchiha: { name: 'Uchiha', desc: 'Fogo e Sharingan.' },
       hyuuga: { name: 'Hyuuga', desc: 'Byakugan e Punho Suave.' },
     } as Record<string, { name: string; desc: string }>,
     locked: { uchiha: 'Vença o Caminho Ninja no Médio ou acima com um Comum de fogo.', hyuuga: 'Vença o Caminho Ninja no Médio ou acima com o prodígio.' } as Record<string, string>,
     soonClass: 'Na próxima versão',
+    /** Descrição da classe no cardápio, ao lado do retrato em destaque. */
+    classInfo: {
+      common: 'O ninja de qualquer vila: você escolhe o elemento e cresce pela árvore da classe. Sem elemento, vira o prodígio do taijutsu.',
+      uchiha: 'Sempre do Fogo, com o Sharingan.',
+      hyuuga: 'Sem ninjutsu elemental: luta com o Byakugan e o Punho Suave.',
+    } as Record<string, string>,
+    chooseCard: { name: 'Escolher a classe', desc: 'Monte o seu ninja: a classe e o elemento, do seu jeito.', cta: 'Escolher' },
+    randomCard: { name: 'Classe aleatória', desc: 'A sorte escolhe a classe e o elemento. Recompensa: uma relíquia extra.', cta: 'Sortear' },
+    randomDesc: 'A classe sai entre as que você já liberou e o elemento é sorteado (o Comum pode virar o prodígio do taijutsu). Quem deixa a sorte escolher começa com uma relíquia comum extra.',
+    randomPool: 'Pode sair',
+    randomReward: 'Recompensa: +1 relíquia comum',
+    /** Selo da vantagem na arte do card Classe aleatória. */
+    randomBonusBadge: '+1 relíquia',
+    randomStart: 'Sortear e começar',
+    revealClassTitle: 'Sorteio da classe',
     revealSecond: (el: string) => `Segundo elemento: ${el}.`,
     revealNoSecond: 'Sem segundo elemento.',
     revealTitle: 'Sorteio do elemento',

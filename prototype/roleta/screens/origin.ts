@@ -1,9 +1,8 @@
-// Roleta: roletas de origem e escolha da dificuldade.
+// Roleta: roletas de origem (a dificuldade se escolhe antes, no lobby).
 import { crest, clanPaint } from '../../lineageEmblems';
-import { type Difficulty } from '../../../src/core/difficulty';
 import { hasElementalNinjutsu } from '../../../src/core/nature';
 import { lineageOf, type OriginStep, rollOrigin } from '../../../src/core/origin';
-import { type PlayerState, withDifficulty } from '../../../src/core/player';
+import { type PlayerState } from '../../../src/core/player';
 import { createRoletaPlayer } from '../../../src/core/roleta/player';
 import { newRoletaRun } from '../../../src/core/roleta/run';
 import { emptyRunStats } from '../../../src/core/runStats';
@@ -16,8 +15,8 @@ import { show, h, sleep, choose } from '../../dom';
 import { ELEMENT_COLORS, ELEMENT_ICON } from '../../tips';
 import { tip } from '../../tooltip';
 import { type WheelSlice } from '../../wheel';
-import { elChip, data, TIER_COLORS, progressDots, nextRunSeed, hardcoreUnlocked, rstage, bigWheel, syncSheetBtn, playerPanel, track, checkAchievements, NO_MODS } from '../common';
-import { ses, DEFAULT_DIFFICULTY, DIFFICULTIES, saveSettings } from '../session';
+import { diffChip, elChip, data, TIER_COLORS, progressDots, nextRunSeed, hardcoreUnlocked, rstage, bigWheel, syncSheetBtn, playerPanel, track, checkAchievements, NO_MODS } from '../common';
+import { ses, DEFAULT_DIFFICULTY } from '../session';
 
 // ---------------------------------------------------------------------------
 // Tela: origem
@@ -95,10 +94,9 @@ export async function originScreen(): Promise<void> {
     const seed = nextRunSeed();
     const roll = rollOrigin(ses.rng, data);
     const runId = `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
-    // Hardcore bloqueado (ainda não venceu no Difícil): cai para a dificuldade padrão.
-    const hardcoreOk = hardcoreUnlocked();
-    if (ses.settings.difficulty === 'hardcore' && !hardcoreOk) ses.settings.difficulty = DEFAULT_DIFFICULTY;
-    let player = createRoletaPlayer(roll.origin, rdata, ses.settings.difficulty);
+    // Hardcore bloqueado (ainda não venceu no Difícil): cai para a dificuldade padrão (o lobby já faz; aqui é a garantia).
+    if (ses.settings.difficulty === 'hardcore' && !hardcoreUnlocked()) ses.settings.difficulty = DEFAULT_DIFFICULTY;
+    const player = createRoletaPlayer(roll.origin, rdata, ses.settings.difficulty);
     ses.camp = {
       runId,
       origin: roll.origin,
@@ -135,32 +133,11 @@ export async function originScreen(): Promise<void> {
     ohud.innerHTML = playerPanel(player);
     slot.classList.add('done');
     const after = root.querySelector<HTMLElement>('#after')!;
-    after.innerHTML = `<div class="difficulty-box">
-      <h3>${S.ui.difficulty}</h3>
-      <div class="segmented">${DIFFICULTIES.map(
-        (d) => `<button class="btn seg diff-${d}" data-diff="${d}" aria-pressed="${d === ses.settings.difficulty}" ${d === 'hardcore' && !hardcoreOk ? 'disabled' : ''}>${d === 'hardcore' && !hardcoreOk ? `${icon('lock')} ` : ''}${S.difficulty[d].name}</button>`,
-      ).join('')}</div>
-      <p class="muted center small" id="diff-desc">${S.difficulty[ses.settings.difficulty].desc}</p>
-      ${hardcoreOk ? '' : `<p class="muted center small">${icon('lock')} ${S.ui.hardcoreLocked}</p>`}
-    </div>
+    // A dificuldade vem do lobby (lobby.ts): aqui só aparece, ao lado do Re-rolar e do Começar.
+    after.innerHTML = `<p class="center small rorigin-diff">${S.roleta.lobby.chosenDifficulty}: ${diffChip(ses.camp.difficulty)}</p>
     <div class="actions-row">
       <button class="btn" data-choice="reroll">${icon('dice')} ${S.ui.reroll}</button>
       <button class="btn primary" data-choice="start">${S.ui.startCampaign}</button></div>`;
-    // A dificuldade só pode mudar antes de começar a campanha.
-    after.querySelector('.segmented')!.addEventListener('click', (e) => {
-      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-diff]');
-      if (!btn || !ses.camp || (btn as HTMLButtonElement).disabled) return;
-      const d = btn.dataset.diff as Difficulty;
-      ses.settings.difficulty = d;
-      ses.camp.difficulty = d;
-      player = withDifficulty(player, d, data);
-      ses.camp.player = player;
-      ses.camp.run = newRoletaRun(player, d);
-      saveSettings();
-      after.querySelectorAll('[data-diff]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
-      after.querySelector('#diff-desc')!.textContent = S.difficulty[d].desc;
-      ohud.innerHTML = playerPanel(player);
-    });
     const choice = await choose<'reroll' | 'start'>(after);
     if (choice === 'start') {
       // A run só entra no histórico quando começa: re-rolar ou sair durante o sorteio não deixa registro.

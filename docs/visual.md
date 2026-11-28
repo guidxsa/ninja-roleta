@@ -39,6 +39,7 @@ Referências do usuário (07/11/2026): o painel do Project Rasengan, o logo de S
 - **Celular, abaixo de 768 px.** Sob a cena, a Ficha compacta mostra avatar, nome, runs e vitórias do Arcade e recorde da Campanha. Um toque expande o Registro do ninja com os números do perfil. Os pergaminhos se empilham com a arte acima do texto. A navegação inferior reúne Início, Arcade, História, Campanha e Registro. Cada alvo tem pelo menos 44 px.
 - **Tablet, de 768 a 1023 px.** Sob a cena larga, Ficha e Conquistas dividem uma linha. Os três pergaminhos ocupam colunas de mesma altura. A navegação segue no rodapé.
 - **Desktop, a partir de 1024 px.** A lateral fixa dá acesso aos modos e às quatro seções do Registro. Cena e pergaminhos ocupam o centro. Ficha e Conquistas ficam à direita. A citação aparece em `#quote-strip`.
+- **Navegação compartilhada.** No desktop, a lateral, a marca e a alça de Konoha conservam largura, tamanho e alinhamento entre o Início, o Registro e os modos. A lateral fica disponível em janelas largas e baixas a partir de 1024 px e rola por dentro se faltar altura. Em larguras menores, Início, Registro e entradas dos modos usam a barra inferior.
 - **Registro.** Histórico, Livro Bingo, Relíquias e Conquistas abrem na área principal. No celular e no tablet, as seções também têm abas no topo. No Histórico, Arcade oferece os filtros Geral, Origens e Dificuldade. História e Campanha mostram o save correspondente, as runs terminadas e as conquistas da Jornada. Campanha inclui seu recorde. Cada run é uma linha-botão (`aria-expanded`): o símbolo da origem ou da classe com o ícone do modo no canto, o nome, a data e até onde foi, os chips de dificuldade e resultado e uma seta. Aberta, mostra os detalhes numa lista de rótulo e valor e, no Arcade, os vilões em ordem com o retrato e a marca de vitória ou derrota. Mais de uma linha pode ficar aberta, para comparar. A run de antes do histórico detalhado mostra o que tem e a nota "detalhes não registrados". Voltar e Início retornam ao Portão.
 - **Livro Bingo** (`prototype/bingoSheet.ts`). Três seções (Arcade, História e Campanha) num seletor segmentado; dentro, um grupo por categoria, arco ou estágio, com quantos já foram vistos. O inimigo visto é uma linha-botão que abre a **ficha**; o que nunca apareceu fica na sombra, com 謎. A ficha é papel de cartaz: o fundo vem do arco (lote 2: `bingo-ondas`, `bingo-exame`, `bingo-sannin`, `bingo-resgate` e `bingo-arcade`; a Campanha usa o arco equivalente) com o miolo liso para a leitura, e enquanto a imagem não existe, uma vinheta da cor do arco. A moldura sobe de grau: comum com filete simples, elite com filete duplo dourado e chefe com borda vermelha grossa e o carimbo 手配 (procurado) sobre o canto do retrato. No celular e no tablet a ficha cobre a tela (janela: voltar, Esc e o voltar do navegador fecham); a partir de 1024 px, abre num painel ao lado da lista, que acompanha a rolagem.
 - **Voltar e Esc** (`prototype/back.ts`). Esc fecha a camada de cima, nesta ordem: a dica, o campo em edição, a janela e a página (Registro, ou a tela com botão de voltar, como as entradas da História e da Campanha). O botão voltar do navegador (e do Android) faz o mesmo: cada janela e o Registro inteiro põem uma entrada no histórico (trocar de aba não empilha). No Portão, o voltar sai da página, sem armadilha. Dentro da partida, o Esc não tira o jogador da luta e o voltar pede a mesma confirmação do botão do Portão.
@@ -167,13 +168,14 @@ O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype
 | `portao` | `portao.webp` | O portão da vila e o Monte Hokage (os cinco rostos) ao pôr do sol, céu em brasa e sombras índigo, lanternas acesas | Cena SVG de Konoha |
 | `perspectiva-naruto`, `perspectiva-sasuke` | `dia`, `noite` | Pôsteres das perspectivas da História | Painel de perspectiva |
 | `jornada` | `jornada` | Banner da entrada da Jornada | Cena de Konoha |
-| `modo-jornada`, `modo-roleta` | os mesmos | Arte dos cards de modo (`modo-jornada`: o Time 7 de costas sobre o telhado, em tinta laranja; `modo-roleta`: um duelo na arena de fatias, a origem Uchiha de costas contra o Orochimaru, em tinta ameixa) | Emblema em aquarela |
+| `modo-jornada`, `modo-roleta` | os mesmos | Arte dos cards de modo. Em `modo-jornada`, o Time 7 aparece de costas sobre o telhado, em tinta laranja. Em `modo-roleta`, o Uchiha segura a kunai na borda próxima e Orochimaru espera com a cobra na borda oposta da roleta, em tinta ameixa sobre transparência | Emblema em aquarela |
 | `arco-waves`, `arco-exam`, `arco-sannin`, `arco-retrieval` | `waves`, `chunnin`, `sannin`, `sasuke` (a equipe do resgate) | Faixa de arcos da História e miniatura do card de progresso | Cenário do estágio |
 | `g1`, `g2`, `g3` | os mesmos | Miniatura do Caminho Ninja | Cenário do estágio |
 | `roleta` | (vazia) | Palco do sorteio da origem no PC | Cenário desenhado de Konoha |
 | `roleta-genin`, `roleta-chunin`, `roleta-jounin`, `roleta-boss` | `roleta-genin`, `roleta-chunin`, `roleta-jounin`, `roleta-chefe` (vazias) | Roleta no PC: painel do mapa do ciclo, palco das roletas e fundo da arena da luta, pela categoria da luta atual | Cenário desenhado: Konoha, arena, floresta, Vale do Fim |
 | `modo-caminho` | `modo-caminho.webp` | Pergaminho da Campanha: um ninja de costas na encruzilhada, com a placa de setas e os caminhos se dividindo, em tinta verde | Emblema da Jornada |
-| `caminho-ninja` | `caminho-ninja` (Minato) | Pôster da preparação da Campanha | Arte `jornada` |
+| `caminho-ninja` | `caminho-ninja.webp` | Painel da Campanha. Ninja de costas e trilha bifurcada ao crepúsculo, com foco em 62% × 45% e espaço para o letreiro à esquerda | Fundo do painel |
+| `arcade` | `arcade.webp` | Painel do Arcade. O Uchiha de costas segura a kunai junto à borda próxima da roleta de pedra. Orochimaru e a cobra esperam na borda oposta, ao crepúsculo. O recorte acompanha o duelo em 55% × 49% | Fundo do painel |
 
 `sasuke2` (Itachi e Sasuke) está reservada para a campanha do Sasuke ([historia-sasuke.md](jornada/historia-sasuke.md)).
 
@@ -184,7 +186,7 @@ O Monte Hokage é o centro da pintura e nada o cobre. No tablet (768 a 1023 px),
 ### Roleta no PC
 
 O Roleta tem composição própria no PC (`prototype/styles/roleta-desk.css`), nos moldes da Jornada, e cabe na janela; no celular nada muda.
-- **Sorteio da origem**: a roda no centro, sobre a arte `roleta`; com os resultados, a roda some e entram as opções centradas (a Ficha à esquerda; a Dificuldade, o Re-rolar e o Começar à direita). O botão Ficha da barra só aparece depois das roletas, para não entregar a classe.
+- **Sorteio da origem**: a roda no centro, sobre a arte `roleta`; com os resultados, a roda some e entram as opções centradas (a Ficha à esquerda; a dificuldade escolhida no lobby, o Re-rolar e o Começar à direita). O botão Ficha da barra só aparece depois das roletas, para não entregar a classe.
 - **Outras telas de roleta** (evento, recompensa, nível, melhoria, aviso: `.rwheel`): a roda sozinha no centro, sobre a arte da vaga, sem a Ficha. Durante as roletas, o nome do evento fica como etiqueta no alto do palco; no fim, o resultado e as mudanças aparecem num popup sobre o palco, com **Ficha** (abre a janela) e a ação. Nas telas com carimbo grande e sem roda (aviso, nível, melhoria), o carimbo fica no palco à esquerda e o card à direita, sem escurecer: o popup escondia o carimbo. O jokenpô do evento usa mãos grandes no palco.
 - **Roda parada no lugar** (v0.76.15): roletas seguidas nascem na mesma posição. No PC a roda fica presa no alto do palco (centrada, ela subia e descia quando a caixa mudava de altura); no evento, o espaço da etiqueta fica reservado desde a primeira roleta, com a roda um pouco menor para a legenda caber. No celular o "Girar" usado some sem tirar o espaço, e os resultados da origem ficam numa linha só, que rola de lado. No combate, as ações aparecem desativadas já durante a iniciativa (entrando depois, o painel mudava a grade e a arena pulava), a faixa de acerto tem a altura reservada e só a primeira entra com o pop.
 - **Mapa do ciclo** (`.rmap`), em duas colunas: à esquerda, a **Ficha aberta em painéis minimizáveis** (ficha e atributos, relíquias e bolsa, técnicas, passivas), como os da Jornada; à direita, o título, a trilha e a cena da categoria com o **vilão por cima** da arte, e o Lutar embaixo.
@@ -194,6 +196,17 @@ O Roleta tem composição própria no PC (`prototype/styles/roleta-desk.css`), n
 - **Cores**: a Ficha aberta do mapa usa o papel da janela da ficha.
 - **Fim da run**: à esquerda, um pergaminho com o selo e o carimbo 勝/敗, o título e os números; à direita, a trilha (com o que cada etapa deu) e a Ficha resumida; as ações embaixo.
 
+### Lobby do Arcade
+
+O card Arcade do Portão abre o lobby (`.gate.jgate.jhub.rlobby`), na mesma casca das telas de modo da Jornada ([abaixo](#entrada-da-jornada)), na ordem da leitura em todas as faixas:
+- O letreiro em pincel usa ameixa e marfim rosado sobre o céu escuro à esquerda da pintura `arcade`. A frase fica numa tira de pergaminho no canto inferior, inclusive no celular.
+- Logo abaixo da arte, o pergaminho da **Dificuldade** reúne a descrição e o desempenho da opção marcada. O **Difícil** selecionado usa marfim sobre laca funda. O botão **Girar** leva o símbolo da roda em traço claro.
+- Na coluna, o **Desempenho** reúne os totais e a conta recolhível por dificuldade. **Últimas runs** e **Conquistas do Arcade** usam fichas de papel com selos, chips e atalhos para o Registro. O Voltar encerra a coluna.
+
+No celular, tudo fica em pilha. **Girar** fica acima da dobra, com no máximo uma tela de rolagem a mais. No tablet, as duas listas de papel dividem a linha abaixo do Desempenho. No desktop, o painel tem as dimensões da História e o bloco de começar fica centralizado na célula abaixo. A coluna usa a grade do Início e rola por dentro quando o histórico e as conquistas passam da altura disponível.
+
+Na tela de origem, a dificuldade escolhida aparece numa faixa de grafite junto do **Re-rolar** e do **Começar Campanha**.
+
 ### Entrada da Jornada
 
 A antiga entrada da Jornada permanece disponível como cenário do UI Lab e usa a **composição do Início** (a mesma casca `.gate`, com o modificador `.jgate`):
@@ -201,9 +214,14 @@ A antiga entrada da Jornada permanece disponível como cenário do UI Lab e usa 
 - dois cards-pergaminho sobre a cena: **Modo História** (selo 史, arte em leque com os quatro arcos) e **Caminho Ninja** (selo 道);
 - à direita, Progresso da Jornada (Continuar direto), Dificuldade e Conquistas recentes. No celular, a pilha: destaque, progresso, modos, dificuldade e conquistas.
 
-No jogo, os dois cards da Jornada abrem suas preparações diretamente no Portão:
-- **Modo História → Escolha a perspectiva**: dois pôsteres lado a lado, cada um com a arte numa célula e o pergaminho embaixo (as duas artes com a mesma altura, os dois pergaminhos também; em janela baixa, o Começar sobe para a linha do título): o Naruto de dia (arte `perspectiva-naruto`, os arcos e o Começar) e o Sasuke à noite (arte `perspectiva-sasuke`, papel frio, travado: "Em breve"). As perspectivas vêm das campanhas (`data.campaigns`); a do Sasuke destrava quando os dados dela existirem.
-- **Caminho Ninja → Preparar**: o pôster (a arte e, embaixo, o pergaminho com os três estágios) e, ao lado, classe, elemento e Começar.
+No jogo, os cards **História** e **Campanha** do Portão abrem as telas de modo (`.gate.jgate.jhub`). O letreiro em pincel fica no canto da arte. Cada card é um pergaminho de papel liso, com rolos de madeira, uma ilustração com borda de tinta e a ação junto ao nome.
+- **Modo História** (`.jstory`): o painel com a arte `jornada` e uma frase; dois cards, **Naruto** (arte `perspectiva-naruto`, selo 陽) e **Sasuke** (arte `perspectiva-sasuke`, selo 影, "Em breve"); na coluna, a run salva (Progresso da Jornada com o Continuar, ou o aviso de que começar substitui a da Campanha), a **Dificuldade da Jornada** e as Conquistas recentes. As perspectivas vêm das campanhas (`data.campaigns`); a do Sasuke destrava quando os dados dela existirem.
+- **Janela da perspectiva** (`.jpersp`): o card abre uma janela maior que as outras, com a arte, a descrição, os quatro arcos com o progresso ([Arcos da Jornada](#arcos-da-jornada); passar o mouse, tocar ou focar um arco mostra a descrição breve dele numa dica destacada) e o **Começar a História**, ou o **Continuar** e o **Recomeçar a História** quando a História está salva. A do Sasuke mostra a descrição e o "Em breve". Fecha pelo X, pelo fundo, pelo Esc e pelo voltar.
+- **Modo Campanha** (`.jcamp`), na composição da História: o painel com o panorama do Caminho Ninja e os três estágios. **Escolher a classe** apresenta os retratos das classes em leque (`.jclass-fan`). **Classe aleatória** mostra as silhuetas dos personagens sobre papel, a interrogação e o selo com baú e "+1 relíquia" (`.jfan-mystery`). Na coluna ficam a run salva, a dificuldade, o recorde e as Conquistas recentes.
+- **Cardápio** (`.jclass-menu`). A lista de classes se distingue da ficha em papel, com o retrato grande e a descrição ao lado. O retrato acompanha a escolha e, no Comum, mostra o Prodígio sem elemento. O cadeado, o contorno tracejado e o texto legível identificam as classes travadas. A janela mantém as dimensões e a posição de **Começar** ao trocar de classe. O espaço dos elementos fica reservado quando o grupo é ocultado.
+- **Classe aleatória** (`.jrandom-class`). As classes que podem sair formam uma fileira de retratos com nome. Uma faixa de papel com ícone de baú destaca a relíquia extra acima de **Sortear e começar**.
+
+No celular, o painel de arte e os dois pergaminhos aparecem em pilha, seguidos da coluna com progresso, dificuldade e conquistas. A partir de 600 px os pergaminhos ficam lado a lado. Na faixa desktop, a coluna passa à direita. A partir de 1024 px, História e Campanha compartilham as medidas da grade do Início, e o painel de arte ocupa a mesma célula da cena do Portão, inclusive em monitores grandes. A ordem do foco acompanha a leitura nas três faixas. Em janela desktop baixa, o texto menor dos pergaminhos cede espaço para título, arte e ação.
 
 ### Dualidade Naruto e Sasuke
 
@@ -211,11 +229,14 @@ Na escolha da perspectiva, a ilustração diurna identifica Naruto e a noturna i
 
 ### Arcos da Jornada
 
-Na escolha da perspectiva, o painel do Naruto mostra os quatro arcos como **pergaminhos abertos**:
-- a arte de cada arco recortada em retrato, com a borda de tinta no PC e o papel rasgado no celular;
-- o número em selo (一 a 四) e o nome em letra de mão;
-- o arco da run salva sobe com a moldura ("Você está aqui") e os anteriores desbotam ("Concluído");
-- no celular, a faixa rola de lado e abre no arco atual.
+Na janela do Naruto, os quatro arcos ficam em duas colunas no celular e em uma fileira a partir de 600 px. Cada arco traz arte, número em selo (一 a 四) e nome em letra de mão.
+
+- **Concluído** tem filete duplo dourado e marca de confirmação.
+- **Você está aqui** tem moldura e selo de laca com o nome do estado.
+- **Próximo** tem filete simples.
+- **Ainda não alcançado** tem moldura tracejada, cadeado e arte dessaturada.
+
+A dica de cada arco usa papel, título manuscrito e filete de laca. O toque e o foco de teclado permitem ler a descrição com a grade aberta.
 
 O foco de cada arte (onde estão os rostos) vem do `SCENE_ART`. Na run da História, o painel da trilha mostra a arte do arco atual no lugar do cenário desenhado: no PC, a lista de paradas numa célula (rola por dentro) e a arte na célula ao lado, com a borda de tinta; no celular e no tablet, a arte no alto do painel. Número e nome do arco vão em selo e letra de mão, dentro da arte. Sem arte, volta o cenário do local. O combate continua com o local da parada.
 
