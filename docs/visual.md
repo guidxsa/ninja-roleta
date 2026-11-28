@@ -198,11 +198,13 @@ O Roleta tem composição própria no PC (`prototype/styles/roleta-desk.css`), n
 ### Lobby do Arcade
 
 O card Arcade do Portão abre o lobby (`.gate.jgate.jhub.rlobby`), na mesma casca das telas de modo da Jornada ([abaixo](#entrada-da-jornada)), na ordem da leitura em todas as faixas:
-- o painel com a arte `modo-roleta` e o letreiro "Modo Arcade";
-- o bloco de começar (`.rlobby-start`): a **Dificuldade** (`.difficulty-box`, com a linha do desempenho na escolhida) e o botão grande **Girar**, que fica acima da dobra no celular;
-- na coluna, o **Desempenho** (`.rlobby-stats`: runs, vitórias, melhor ciclo, origens vencidas e, recolhida, a conta por dificuldade), as **Últimas runs** (`.rlobby-runs`) e as **Conquistas do Arcade** (`.rlobby-ach`), cada lista com o atalho para o Registro, e o Voltar.
+- A arte `modo-roleta` é iluminada no próprio painel e o letreiro em pincel usa ameixa e marfim rosado. A frase fica numa tira de pergaminho no canto inferior, inclusive no celular.
+- Logo abaixo da arte, o pergaminho da **Dificuldade** reúne a descrição e o desempenho da opção marcada. O **Difícil** selecionado usa marfim sobre laca funda. O botão **Girar** leva o símbolo da roda em traço claro.
+- Na coluna, o **Desempenho** reúne os totais e a conta recolhível por dificuldade. **Últimas runs** e **Conquistas do Arcade** usam fichas de papel com selos, chips e atalhos para o Registro. O Voltar encerra a coluna.
 
-No celular, tudo em pilha, com no máximo uma tela de rolagem; no desktop, o painel e o bloco de começar à esquerda e a coluna à direita, que rola por dentro. Por enquanto o CSS é o mínimo de funcionamento (`roleta-lobby.css`); o acabamento vem numa tarefa visual própria.
+No celular, tudo fica em pilha. **Girar** fica acima da dobra, com no máximo uma tela de rolagem a mais. No tablet, as duas listas de papel dividem a linha abaixo do Desempenho. No desktop, o painel tem as dimensões da História e o bloco de começar fica centralizado na célula abaixo. A coluna usa a grade do Início e rola por dentro quando o histórico e as conquistas passam da altura disponível.
+
+Na tela de origem, a dificuldade escolhida aparece numa faixa de grafite junto do **Re-rolar** e do **Começar Campanha**.
 
 ### Entrada da Jornada
 

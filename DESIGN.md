@@ -215,6 +215,12 @@ Em monitores grandes, a pintura do Monte Hokage ocupa a linha maior da grade e o
 
 O Registro ocupa a área principal. Em telas com barra inferior, quatro abas dão acesso às seções. Dentro do Histórico, o jogador escolhe Arcade, História ou Campanha. A ação **Continuar** fica junto da parada salva no modo correspondente. Cada run do Histórico é uma linha que abre os detalhes. No Livro Bingo, a ficha de cada inimigo é papel de cartaz com o fundo do arco e a moldura pelo grau (comum, elite e chefe com o carimbo 手配), em tela cheia no celular e num painel ao lado no desktop.
 
+### Lobby do Arcade
+
+O pincel rosado sobre ameixa distingue o letreiro do Arcade. A ilustração iluminada ocupa a mesma célula de arte da História e a frase do modo fica sobre uma tira de papel no canto inferior. Na célula de baixo, o seletor de dificuldade e o desempenho da opção escolhida ficam num pergaminho. **Girar** usa laca vermelha com a roda em traço claro e chanfro na camada de fundo. O Difícil ativo combina laca funda e marfim.
+
+Desempenho, últimas runs e conquistas ficam no papel, com números em HUD, selos compactos e chips de dificuldade e resultado. A coluna usa a grade do Início com menos margem interna. No tablet, as listas dividem uma linha abaixo do Desempenho, seguindo a ordem do HTML. O chip da dificuldade escolhida reaparece na origem, numa faixa de grafite junto das ações.
+
 ### História e Campanha
 
 As telas de modo usam o letreiro em pincel sobre a arte. Os pergaminhos abaixo têm rolos de madeira, papel liso e ilustração com borda de tinta em uma área própria. A etiqueta de laca indica a ação disponível. Um contorno tracejado marca o **Em breve** do Sasuke. Desktop distribui o painel de arte e os pergaminhos no centro e o progresso, a dificuldade e as conquistas à direita. Celular empilha essas regiões na ordem do HTML.
