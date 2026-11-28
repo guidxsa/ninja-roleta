@@ -175,6 +175,7 @@ O código pede a arte por **chave**, e um mapa único (`SCENE_ART` em `prototype
 | `roleta-genin`, `roleta-chunin`, `roleta-jounin`, `roleta-boss` | `roleta-genin`, `roleta-chunin`, `roleta-jounin`, `roleta-chefe` (vazias) | Roleta no PC: painel do mapa do ciclo, palco das roletas e fundo da arena da luta, pela categoria da luta atual | Cenário desenhado: Konoha, arena, floresta, Vale do Fim |
 | `modo-caminho` | `modo-caminho.webp` | Pergaminho da Campanha: um ninja de costas na encruzilhada, com a placa de setas e os caminhos se dividindo, em tinta verde | Emblema da Jornada |
 | `caminho-ninja` | `caminho-ninja.webp` | Painel da Campanha. Ninja de costas e trilha bifurcada ao crepúsculo, com foco em 62% × 45% e espaço para o letreiro à esquerda | Fundo do painel |
+| `arcade` | `arcade.webp` | Painel do Arcade. O Uchiha de costas segura a kunai junto à borda próxima da roleta de pedra. Orochimaru e a cobra esperam na borda oposta, ao crepúsculo. O recorte acompanha o duelo em 55% × 49% | Fundo do painel |
 
 `sasuke2` (Itachi e Sasuke) está reservada para a campanha do Sasuke ([historia-sasuke.md](jornada/historia-sasuke.md)).
 
@@ -198,7 +199,7 @@ O Roleta tem composição própria no PC (`prototype/styles/roleta-desk.css`), n
 ### Lobby do Arcade
 
 O card Arcade do Portão abre o lobby (`.gate.jgate.jhub.rlobby`), na mesma casca das telas de modo da Jornada ([abaixo](#entrada-da-jornada)), na ordem da leitura em todas as faixas:
-- A arte `modo-roleta` é iluminada no próprio painel e o letreiro em pincel usa ameixa e marfim rosado. A frase fica numa tira de pergaminho no canto inferior, inclusive no celular.
+- O letreiro em pincel usa ameixa e marfim rosado sobre o céu escuro à esquerda da pintura `arcade`. A frase fica numa tira de pergaminho no canto inferior, inclusive no celular.
 - Logo abaixo da arte, o pergaminho da **Dificuldade** reúne a descrição e o desempenho da opção marcada. O **Difícil** selecionado usa marfim sobre laca funda. O botão **Girar** leva o símbolo da roda em traço claro.
 - Na coluna, o **Desempenho** reúne os totais e a conta recolhível por dificuldade. **Últimas runs** e **Conquistas do Arcade** usam fichas de papel com selos, chips e atalhos para o Registro. O Voltar encerra a coluna.
 

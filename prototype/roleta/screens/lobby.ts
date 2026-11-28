@@ -33,7 +33,7 @@ export async function arcadeLobby(): Promise<'spin' | 'back'> {
   if (ses.settings.difficulty === 'hardcore' && !hardcoreOk) ses.settings.difficulty = DEFAULT_DIFFICULTY;
   const runs = loadRuns(ses.storage);
   const sum = arcadeLobbySummary(ses.profile, runs);
-  const hero = sceneMedia('modo-roleta');
+  const hero = sceneMedia('arcade');
 
   const root = show(
     h(`<div class="screen gate jgate jhub rlobby">
